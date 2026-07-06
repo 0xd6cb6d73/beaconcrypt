@@ -21,9 +21,11 @@ pub use server::{
 	decrypt_beacon_message, decrypt_beacon_message_signed, encrypt_to_beacon,
 	encrypt_to_beacon_signed, register_beacon,
 };
-pub use shared::{free_vec, init, set_identity_seq, sign_message, verify_signature};
+pub use shared::{
+	BeaconCryptAgent, free_vec, init, set_identity_seq, sign_message, verify_signature,
+};
 
-capnp::generated_code!(mod phase1_capnp);
-capnp::generated_code!(mod phase2_capnp);
-capnp::generated_code!(mod cryptoframe_capnp);
-capnp::generated_code!(mod protogram_capnp);
+capnp::generated_code!(pub mod phase1_capnp);
+capnp::generated_code!(pub mod phase2_capnp);
+capnp::generated_code!(pub mod cryptoframe_capnp);
+capnp::generated_code!(pub mod protogram_capnp);

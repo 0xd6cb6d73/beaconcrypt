@@ -155,14 +155,14 @@ pub fn decode_kem(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
 }
 
 mod systems {
-	pub(crate) struct X25519;
-	pub(crate) struct Hkdf;
+	pub struct X25519;
+	pub struct Hkdf;
 	#[cfg(feature = "server")]
-	pub(crate) struct Pqxdh;
+	pub struct Pqxdh;
 }
 mod roles {
-	pub(crate) struct ChainKey;
-	pub(crate) struct DerivedSecret;
+	pub struct ChainKey;
+	pub struct DerivedSecret;
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
