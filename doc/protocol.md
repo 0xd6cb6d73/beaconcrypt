@@ -39,19 +39,12 @@ Every time something is encrypted, it is wrapped in a Cap’n Proto message call
 
 The first two points are deemed to be relatively unnecessary given our usage. Indeed, we do not expect that an attacker will come into possession of a legitimate encryption key (unless our scheme is otherwise catastrophically broken), which makes `invisible salamander`-style attacks unviable. Additionally, it is currently unclear to me what an attacker might want to accomplish with such an attack. While the `CryptoFrame` contains little information, an active attacker might trivially perform a DoS attack by modifiying the sequence number. As such, it is recommended to use the signature layer to ensure the metadata is protected.
 
-# Signature
-A signed message called a `ProtoGram` is used to guarantee that `CryptoFrame`s are not tampered with. This is the top-most level message. The signature process works as follows:
-- The `ProtoGram` message is constructed and its `keyId` set to the identifier of the keypair used to sign the message
-- The buffer is signed using libsodium's `sign` API
-  - The detached signature API must not be used
-- The `data` field is set to the resulting signed buffer
-
 # Protocol message
 ## ProtoGram
 This is intended to be the top level message when the caller opts to use digital signatures. It is defined in [protogram.capnp](../src/schema/protogram.capnp). Its role is to tell the reader which cryptographic identity signed the `data` member. Cryptographic identities are identified using a single 64 unsigned integer, often called `keyId` or `kid`. When signature is opted into, the reader must look up the cryptographic identity associated with the `keyId` and verify that the signature over `data` is valid for that identity (e.g. that the public key can verify the signature). Once this is done, the reader can use the contents of the `data` member for any purpose, although the intent is for it to carry a serialized `CryptoFrame`.
 
 ## CryptoFrame
-This is the most basic framing for an encrypted message within beaconcrypt. It carries a key identifier (`seq`), a direction flag `sToB` or `stob` and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
+This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../src/schema/cryptoframe.capnp). It carries a key identifier (`seq`), a direction flag `sToB` or `stob` and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
 - Ratchet their `send` keychain forward
 - Use their current `send` key to encrypt the message and place it in `cipherText`
   -  Abort processing if this fails
@@ -70,7 +63,7 @@ To read a `CryptoFrame`, the reader must:
 - Delete the `seq` key on their `recv` keychain if decryption was successful
 
 ## InitKex
-This message starts the beacon registration process by initiating the `PQXDH` protocol run. It must only be run once per beacon instance. It is appropriate to send this message by itself to the server, once serialized, even if user otherwise opts into digital signatures for the rest of the protocol. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. When referring to encoded public keys, it is meant that the caller will prepend a byte indicating the type of the key before the public key buffer. The same is true when speaking of encoded KEM keys. The beacon builds this message as follows:
+This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../src/schema/phase1.capnp).It must only be run once per beacon instance. It is appropriate to send this message by itself to the server, once serialized, even if user otherwise opts into digital signatures for the rest of the protocol. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. When referring to encoded public keys, it is meant that the caller will prepend a byte indicating the type of the key before the public key buffer. The same is true when speaking of encoded KEM keys. The beacon builds this message as follows:
 - Set `identityKey` to the beacon's Ed25519 encoded identity public key
 - Set `preKey` to the beacon's X25519 encoded prekey public key signed under the beacon's identity key
 - Set `oneTimeKey` to the beacon's X25519 encoded onetime public key signed under the beacon's identity key
@@ -92,7 +85,7 @@ The server must use this message as follows:
 - Return the KEM ciphertext, derived secret, ephemeral public key and beacon public key
 
 ## KexResponse
-This message enables the beacon to obtain the elements it needs to derive the shared secret. It is intrinsically linked to the corresponding `InitKex` which intiated the protocol run. It is expected that the server will create this message immediately after parsing a valid `InitKex`. It also potentially carries the first of the server's messages to the beacon. The server must contruct it as follows:
+This message enables the beacon to obtain the elements it needs to derive the shared secret. It is defined in [phase2.capnp](../src/schema/phase2.capnp) It is intrinsically linked to the corresponding `InitKex` which intiated the protocol run. It is expected that the server will create this message immediately after parsing a valid `InitKex`. It also potentially carries the first of the server's messages to the beacon. The server must contruct it as follows:
 - Create a new key ID to assign to the beacon
 - Register a new known cryptographic identity using the beacon's public key and newly created key ID
   - At this point, the beacon is registered from the point of view of beaconcrypt

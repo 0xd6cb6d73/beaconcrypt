@@ -7,6 +7,8 @@ Generic C2 PQ-safe cryptographic transport protocol intended to protect against 
 - a protocol specification, with an associated threat model
 - a reference implementation
 
+See the `doc` folder for the specification, threat model and rationale.
+
 ## What this is not
 A C2 transport protocol. This protocol is only concerned with cryptographically protecting the data transmitted between a beacon and its server. It does not know anything about how data should be transported or where. Therefore, the intent is for this protocol to be used in a way that ryhmes with this:
 ```c++
