@@ -1,0 +1,34 @@
+[package]
+name = "beaconcrypt"
+version = "0.1.0"
+edition = "2024"
+license-file = "LICENSE"
+readme = "README.md"
+description = "Cryptographic transport for C2 channels"
+rust-version = "1.96"
+
+[lib]
+name = "beaconcrypt"
+crate-type = ["staticlib"]
+
+[build-dependencies]
+capnpc = "0.26"
+cbindgen = "0.29"
+
+[dependencies]
+capnp = "0.26"
+libsodium-rs = "0.2"
+zeroize = "1.9"
+libcrux-ml-dsa = { version = "0.0.9", optional = true }
+
+[features]
+default = ["beacon", "server"]
+server = []
+beacon = []
+ml-dsa = ["dep:libcrux-ml-dsa"]
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"
