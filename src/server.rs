@@ -6,10 +6,10 @@ use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign};
 
 use crate::{
-	build_additional_data, phase1_capnp, phase2_capnp,
+	phase1_capnp, phase2_capnp,
 	shared::{
-		BeaconCryptAgent, DhSecret, RegistrationOutput, STATE, SYM_RATCHET_INFO, decode_ec,
-		decode_kem, derive_root_key,
+		BeaconCryptAgent, DhSecret, RegistrationOutput, STATE, SYM_RATCHET_INFO,
+		build_additional_data, decode_ec, decode_kem, derive_root_key,
 	},
 };
 
