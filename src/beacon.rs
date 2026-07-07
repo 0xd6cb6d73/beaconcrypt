@@ -64,6 +64,7 @@ impl BeaconCryptAgent {
 			crypto_scalarmult::scalarmult(self.get_onetime_sk().as_bytes(), ephemeral.as_bytes())?
 				.into();
 		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, shared_secret)?;
+		self.delete_onetime_keypair();
 
 		self.add_server_pk(server_id.clone());
 		self.set_identity_kid(response.get_key_id());

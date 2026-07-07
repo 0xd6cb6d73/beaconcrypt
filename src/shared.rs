@@ -753,6 +753,11 @@ impl BeaconCryptAgent {
 		&self.onetime_key_sk
 	}
 
+	pub fn delete_onetime_keypair(&mut self) {
+		self.onetime_key_pk = crypto_kx::PublicKey::from([0u8; 32]);
+		self.onetime_key_sk = crypto_kx::SecretKey::from([0u8; 32]);
+	}
+
 	pub fn get_pq_pk(&self) -> &crypto_kem::mlkem768::PublicKey {
 		&self.pq_key_pk
 	}
