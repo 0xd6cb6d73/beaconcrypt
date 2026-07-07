@@ -108,6 +108,7 @@ Upon reception, the beacon must process this message as follows:
   - dh3 = DH(`beacon_prekex_pk`, `server_ephemeral_pk`)
   - dh4 = DH(`beacon_onetime_sk`, `server_ephemeral_pk`)
 - Compute the derived secret `KDF(DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
+- Delete its one-time keypair.
 - Save the server's public key
 - Save its own key ID using the `keyId` field
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings

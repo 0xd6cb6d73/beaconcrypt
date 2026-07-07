@@ -7,8 +7,7 @@ use std::sync::{LazyLock, Mutex};
 use std::{mem, vec};
 
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
-#[cfg(feature = "ml-dsa")]
-use libcrux_ml_dsa::ml_dsa_65;
+
 use libcrux_ml_dsa::ml_dsa_87;
 use libcrux_ml_kem::mlkem1024;
 use libsodium_rs::{
@@ -678,10 +677,6 @@ impl CryptoProvider for BeaconCryptPqxdh {
 				&[0u8; crypto_sign::SECRETKEYBYTES],
 			)
 			.unwrap(),
-			#[cfg(feature = "ml-dsa")]
-			identity_pq: libcrux_ml_dsa::ml_dsa_65::generate_key_pair(
-				[0u8; libcrux_ml_dsa::KEY_GENERATION_RANDOMNESS_SIZE],
-			),
 			identity_key_kid: 0,
 
 			prekey_pk: crypto_kx::PublicKey::from_bytes(&[0u8; crypto_kx::PUBLICKEYBYTES]).unwrap(),
@@ -714,10 +709,6 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		let prekey = crypto_kx::KeyPair::generate().unwrap();
 		let onetime = crypto_kx::KeyPair::generate().unwrap();
 		let pqkey = crypto_kem::mlkem768::KeyPair::generate().unwrap();
-		#[cfg(feature = "ml-dsa")]
-		let binding = libsodium_rs::random::bytes(libcrux_ml_dsa::KEY_GENERATION_RANDOMNESS_SIZE);
-		#[cfg(feature = "ml-dsa")]
-		let pq_sig_rand = *binding.as_array::<ML_DSA_RAND_SIZE>().unwrap();
 		let known = if let Some(pk) = server_pk {
 			let mut hm = HashMap::new();
 			hm.insert(
@@ -735,8 +726,6 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		Self {
 			identity_key_pk: id_keypair.public_key,
 			identity_key_sk: id_keypair.secret_key,
-			#[cfg(feature = "ml-dsa")]
-			identity_pq: libcrux_ml_dsa::ml_dsa_65::generate_key_pair(pq_sig_rand),
 			// this will be overwritten when the agent registers
 			identity_key_kid: server_kid,
 			prekey_pk: prekey.public_key,
@@ -875,6 +864,11 @@ impl BeaconCryptPqxdh {
 
 	pub fn get_onetime_sk(&self) -> &crypto_kx::SecretKey {
 		&self.onetime_key_sk
+	}
+
+	pub fn delete_onetime_keypair(&mut self) {
+		self.onetime_key_pk = crypto_kx::PublicKey::from([0u8; 32]);
+		self.onetime_key_sk = crypto_kx::SecretKey::from([0u8; 32]);
 	}
 }
 

@@ -79,6 +79,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 				.ok()?
 				.into();
 		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, shared_secret).ok()?;
+		self.delete_onetime_keypair();
 
 		self.add_server_pk(server_id.clone());
 		self.set_identity_kid(response.get_key_id());
@@ -438,6 +439,8 @@ pub extern "C" fn init_for_server(
 
 #[cfg(test)]
 mod tests {
+	use libsodium_rs::crypto_kx;
+
 	use crate::{
 		beacon::ProviderBeacon,
 		server::ProviderServer,
@@ -509,5 +512,19 @@ mod tests {
 		let dec_b1_m1 = b1.decrypt_message(&b1_m1, 0, true).unwrap();
 		let dec_b1_m2 = b1.decrypt_message(&b1_m2, 0, true).unwrap();
 		assert_eq!(dec_b1_m1, dec_b1_m2);
+	}
+
+	#[test]
+	fn beacon_delete_onetime() {
+		let mut server = BeaconCryptPqxdh::new(false, 0, None);
+		let server_id = server.get_identity_pk().to_owned();
+
+		let empty = [0u8; crypto_kx::PUBLICKEYBYTES];
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
+		assert!(b1.get_onetime_pk().as_bytes() != empty);
+		assert!(b1.get_onetime_sk().as_bytes() != empty);
+		let _ = test_register_beacon(&mut server, &mut b1);
+		assert!(b1.get_onetime_pk().as_bytes() == empty);
+		assert!(b1.get_onetime_sk().as_bytes() == empty);
 	}
 }
