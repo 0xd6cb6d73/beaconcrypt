@@ -8,7 +8,7 @@ use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign};
 use crate::{
 	phase1_capnp, phase2_capnp,
 	shared::{
-		BeaconCryptAgent, DhSecret, RegistrationOutput, STATE, SYM_RATCHET_INFO,
+		BeaconCryptPqxdh, CryptoProvider, DhSecret, RegistrationOutput, STATE, SYM_RATCHET_INFO,
 		build_additional_data, decode_ec, decode_kem, derive_root_key,
 	},
 };
@@ -18,58 +18,74 @@ pub struct RegResponse {
 	kid: u64,
 }
 
-impl BeaconCryptAgent {
-	pub fn get_shared_secret(
+pub trait ProviderServer {
+	fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput>;
+
+	fn build_registration_response(
 		&mut self,
-		buffer: &[u8],
-	) -> Result<RegistrationOutput, Box<dyn std::error::Error>> {
+		reg_out: RegistrationOutput,
+		data: Option<&[u8]>,
+	) -> Option<RegResponse>;
+}
+
+impl ProviderServer for BeaconCryptPqxdh {
+	fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput> {
 		let reader = capnp::serialize::read_message(buffer, ReaderOptions::new()).unwrap();
 		let typed_reader = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(reader);
 		let registration = typed_reader.get().unwrap();
 
-		let decoded_beacon_id = decode_ec(registration.get_identity_key()?)?;
-		let remote_id = crypto_sign::PublicKey::from_bytes(&decoded_beacon_id)?;
-		let pq_verified = crypto_sign::verify(registration.get_pq_key()?, &remote_id).unwrap();
-		let prekey_verified = crypto_sign::verify(registration.get_pre_key()?, &remote_id).unwrap();
+		let decoded_beacon_id = decode_ec(registration.get_identity_key().ok()?).ok()?;
+		let remote_id = crypto_sign::PublicKey::from_bytes(&decoded_beacon_id).ok()?;
+		let pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id).unwrap();
+		let prekey_verified =
+			crypto_sign::verify(registration.get_pre_key().ok()?, &remote_id).unwrap();
 		let onetime_verified =
-			crypto_sign::verify(registration.get_one_time_key()?, &remote_id).unwrap();
+			crypto_sign::verify(registration.get_one_time_key().ok()?, &remote_id).unwrap();
 
-		let beacon_prekey = crypto_kx::PublicKey::from_bytes(&decode_ec(&prekey_verified)?)?;
-		let beacon_onetime = crypto_kx::PublicKey::from_bytes(&decode_ec(&onetime_verified)?)?;
-		let ephemeral = crypto_kx::KeyPair::generate()?;
-		let pq_pub = crypto_kem::mlkem768::PublicKey::from_bytes(&decode_kem(&pq_verified)?)?;
-		let (kem_ciphertext, kem_shared) = crypto_kem::mlkem768::encapsulate(&pq_pub)?;
+		let beacon_prekey =
+			crypto_kx::PublicKey::from_bytes(&decode_ec(&prekey_verified).ok()?).ok()?;
+		let beacon_onetime =
+			crypto_kx::PublicKey::from_bytes(&decode_ec(&onetime_verified).ok()?).ok()?;
+		let ephemeral = crypto_kx::KeyPair::generate().ok()?;
+		let pq_pub =
+			crypto_kem::mlkem768::PublicKey::from_bytes(&decode_kem(&pq_verified).ok()?).ok()?;
+		let (kem_ciphertext, kem_shared) = crypto_kem::mlkem768::encapsulate(&pq_pub).ok()?;
 
-		let remote_id_kex = crypto_sign::ed25519_pk_to_curve25519(&remote_id)?;
-		let id_kex_sk = crypto_sign::ed25519_sk_to_curve25519(self.get_identity_sk())?;
-		let dh1: DhSecret =
-			crypto_scalarmult::scalarmult(&id_kex_sk, beacon_prekey.as_bytes())?.into();
+		let remote_id_kex = crypto_sign::ed25519_pk_to_curve25519(&remote_id).ok()?;
+		let id_kex_sk = crypto_sign::ed25519_sk_to_curve25519(self.get_identity_sk()).ok()?;
+		let dh1: DhSecret = crypto_scalarmult::scalarmult(&id_kex_sk, beacon_prekey.as_bytes())
+			.ok()?
+			.into();
 		let dh2: DhSecret =
-			crypto_scalarmult::scalarmult(ephemeral.secret_key.as_bytes(), &remote_id_kex)?.into();
+			crypto_scalarmult::scalarmult(ephemeral.secret_key.as_bytes(), &remote_id_kex)
+				.ok()?
+				.into();
 		let dh3: DhSecret = crypto_scalarmult::scalarmult(
 			ephemeral.secret_key.as_bytes(),
 			beacon_prekey.as_bytes(),
-		)?
+		)
+		.ok()?
 		.into();
 		let dh4: DhSecret = crypto_scalarmult::scalarmult(
 			ephemeral.secret_key.as_bytes(),
 			beacon_onetime.as_bytes(),
-		)?
+		)
+		.ok()?
 		.into();
 
-		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, kem_shared)?;
+		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, kem_shared).ok()?;
 		let server_id = self.get_identity_pk().clone();
 		self.set_associated_data(build_additional_data(server_id, remote_id.clone()));
 
-		Ok(RegistrationOutput {
+		Some(RegistrationOutput {
 			kem_ciphertext,
 			derived_secret: derived_secret.into(),
 			ephemeral: ephemeral.public_key,
 			public_key: remote_id,
 		})
-	} // ephemeral and kem_shared are deleted and zeroized here
+	} // ephemeral and kem
 
-	pub fn build_registration_response(
+	fn build_registration_response(
 		&mut self,
 		reg_out: RegistrationOutput,
 		data: Option<&[u8]>,
@@ -147,7 +163,7 @@ pub unsafe extern "C" fn register_beacon(
 	let bytes_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
 	let mut state = STATE.lock().unwrap();
 	match state.get_shared_secret(bytes_vec.as_slice()) {
-		Ok(secrets) => {
+		Some(secrets) => {
 			let to_encrypt = if data.is_null() || data_len == 0 {
 				None
 			} else {
@@ -173,7 +189,7 @@ pub unsafe extern "C" fn register_beacon(
 				None => -1i32,
 			}
 		}
-		Err(_) => -1i32,
+		None => -1i32,
 	}
 }
 
@@ -359,11 +375,15 @@ pub unsafe extern "C" fn encrypt_to_beacon_signed(
 
 #[cfg(test)]
 mod tests {
-	use crate::shared::BeaconCryptAgent;
+	use crate::{
+		beacon::ProviderBeacon,
+		server::ProviderServer,
+		shared::{BeaconCryptPqxdh, CryptoProvider},
+	};
 
 	fn test_register_beacon(
-		server: &mut BeaconCryptAgent,
-		beacon: &mut BeaconCryptAgent,
+		server: &mut BeaconCryptPqxdh,
+		beacon: &mut BeaconCryptPqxdh,
 	) -> Vec<u8> {
 		let message = [0xFFu8; 32];
 
@@ -377,12 +397,12 @@ mod tests {
 
 	#[test]
 	fn server_can_register_multiple() {
-		let mut server = BeaconCryptAgent::new(false, 0, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptAgent::new(true, 0, Some(server_id.as_bytes()));
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
 		let b1_reg = test_register_beacon(&mut server, &mut b1);
-		let mut b2 = BeaconCryptAgent::new(true, 0, Some(server_id.as_bytes()));
+		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
 		let b2_reg = test_register_beacon(&mut server, &mut b2);
 
 		assert_eq!(b1_reg, b2_reg);
@@ -390,12 +410,12 @@ mod tests {
 
 	#[test]
 	fn server_encrypt_to_multiple() {
-		let mut server = BeaconCryptAgent::new(false, 0, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptAgent::new(true, 0, Some(server_id.as_bytes()));
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
 		let _ = test_register_beacon(&mut server, &mut b1);
-		let mut b2 = BeaconCryptAgent::new(true, 0, Some(server_id.as_bytes()));
+		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
 		let _ = test_register_beacon(&mut server, &mut b2);
 
 		assert!(server.get_id_by_seq(1).is_some());
@@ -409,10 +429,10 @@ mod tests {
 
 	#[test]
 	fn server_encrypt_multiple() {
-		let mut server = BeaconCryptAgent::new(false, 0, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptAgent::new(true, 0, Some(server_id.as_bytes()));
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
 		let _ = test_register_beacon(&mut server, &mut b1);
 
 		assert!(server.get_id_by_seq(1).is_some());
