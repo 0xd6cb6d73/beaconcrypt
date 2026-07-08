@@ -2,7 +2,11 @@
 
 #[cfg(feature = "beacon")]
 mod beacon;
+#[cfg(feature = "cnsa2")]
+mod cnsa2;
 mod error;
+#[cfg(feature = "pqxdh")]
+mod pqxdh;
 #[cfg(feature = "server")]
 mod server;
 mod shared;
@@ -16,14 +20,15 @@ pub use beacon::{
 pub use error::{
 	CipherTextError, DecodingError, DecryptionError, EncodingError, KeyGenError, SignatureError,
 };
+#[cfg(feature = "pqxdh")]
+pub use pqxdh::BeaconCryptPqxdh;
 #[cfg(feature = "server")]
 pub use server::{
 	decrypt_beacon_message, decrypt_beacon_message_signed, encrypt_to_beacon,
 	encrypt_to_beacon_signed, register_beacon,
 };
 pub use shared::{
-	BeaconCryptPqxdh, CryptoProvider, free_vec, init, set_identity_seq, sign_message,
-	verify_signature,
+	CryptoProvider, free_vec, init, set_identity_seq, sign_message, verify_signature,
 };
 
 capnp::generated_code!(pub mod phase1_capnp);

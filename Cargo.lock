@@ -89,6 +89,7 @@ dependencies = [
  "capnp",
  "capnpc",
  "cbindgen",
+ "libcrux-aesgcm",
  "libcrux-ml-dsa",
  "libcrux-ml-kem",
  "libsodium-rs",
@@ -493,6 +494,18 @@ name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
+
+[[package]]
+name = "libcrux-aesgcm"
+version = "0.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b934645bf352ac97dcd15d3320d112fb666e0d6e36d43f775fd56f798d8076ef"
+dependencies = [
+ "libcrux-intrinsics",
+ "libcrux-platform",
+ "libcrux-secrets",
+ "libcrux-traits",
+]
 
 [[package]]
 name = "libcrux-intrinsics"
