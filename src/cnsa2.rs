@@ -7,29 +7,24 @@ use crate::server::RegistrationOutput;
 #[cfg(feature = "server")]
 use crate::server::{ProviderServer, RegResponse};
 use crate::shared::{
-	AEAD_KEY_LEN, AeadSecretBuffer, KEX_KDF_OUT_LEN, MlKemSharedSecret, RatchetManager,
-	RemotePrincipal, SYM_RATCHET_INFO, SignaturePk, create_protogram_reader,
+	KEX_KDF_OUT_LEN, MlKemSharedSecret, RatchetManager, RemotePrincipal, SYM_RATCHET_INFO,
+	SignaturePk, create_protogram_reader,
 };
 #[cfg(feature = "beacon")]
 use crate::shared::{KemType, SignType, decode_kem, decode_sign, encode_kem, encode_sign};
-use crate::{CryptoProvider, cryptoframe_capnp, protogram_capnp};
+use crate::{CryptoProvider, protogram_capnp};
 #[cfg(feature = "beacon")]
 use crate::{phase1_capnp, phase2_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
-use libcrux_aesgcm::AeadConsts as _;
-use libcrux_aesgcm::{AesGcm256, AesGcm256Key, AesGcm256Nonce, AesGcm256Tag, NONCE_LEN, TAG_LEN};
 #[cfg(feature = "beacon")]
 use libcrux_ml_dsa::SIGNING_RANDOMNESS_SIZE;
 use libcrux_ml_dsa::ml_dsa_87;
 use libcrux_ml_kem::{SHARED_SECRET_SIZE, mlkem1024};
-use libsodium_rs::{SodiumError, crypto_kdf, crypto_kx, crypto_sign, ensure_init, random};
+use libsodium_rs::{crypto_kdf, crypto_kx, ensure_init, random};
 use std::collections::HashMap;
 #[cfg(feature = "server")]
 use std::marker::PhantomData;
 use std::vec;
-
-pub type AeadKey = AesGcm256Key;
-pub type AeadNonce = AesGcm256Nonce;
 
 pub const CNSA2_INFO: &[u8; 35] = b"Cnsa2_ML_DSA_87_SHA-512_ML-KEM-1024";
 pub const AD_SIZE: usize =
@@ -42,22 +37,9 @@ pub const ML_DSA_87_SIG_SIZE: usize = ml_dsa_87::MLDSA87Signature::len();
 pub const ML_DSA_87_PUBKEY_SIZE: usize = ml_dsa_87::MLDSA87VerificationKey::len();
 pub const ML_KEM_1024_CT_SIZE: usize = mlkem1024::MlKem1024Ciphertext::len();
 pub const ML_DSA_87_ENC_PUBKEY_SIZE: usize = ML_DSA_87_PUBKEY_SIZE + 1;
-pub const ML_KEM_1024_ENC_CT_SIZE: usize = ML_KEM_1024_CT_SIZE + 1;
 pub const ML_KEM_1024_PUBKEY_SIZE: usize = mlkem1024::MlKem1024PublicKey::len();
 pub const ML_KEM_1024_ENCAP_RAN_SIZE: usize = SHARED_SECRET_SIZE;
 impl SignaturePk for ml_dsa_87::MLDSA87VerificationKey {}
-
-pub struct AesKey {
-	key: AesGcm256Key,
-}
-
-impl AesKey {
-	pub fn new() -> Self {
-		let mut buf = [0u8; AEAD_KEY_LEN];
-		random::fill_bytes(buf.as_mut_slice());
-		Self { key: buf.into() }
-	}
-}
 
 pub struct BeaconCryptCnsa2 {
 	identity_key_pk: ml_dsa_87::MLDSA87VerificationKey,
@@ -447,8 +429,6 @@ pub fn build_additional_data(
 
 #[cfg(test)]
 mod tests {
-	use libsodium_rs::crypto_kx;
-
 	use crate::{
 		beacon::ProviderBeacon, cnsa2::BeaconCryptCnsa2, server::ProviderServer,
 		shared::CryptoProvider,

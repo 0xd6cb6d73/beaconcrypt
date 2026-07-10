@@ -7,7 +7,7 @@ use crate::error::{DecodingError, EncodingError};
 use crate::pqxdh::{AD_SIZE, BeaconCryptPqxdh};
 use crate::{cryptoframe_capnp, protogram_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
-use libsodium_rs::{crypto_aead, crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
+use libsodium_rs::{crypto_aead, crypto_kdf};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -24,10 +24,10 @@ pub const AEAD_KEY_LEN: usize = 32;
 pub const AEAD_NONCE_LEN: usize = 12;
 pub const KDF_RATCHET_OUTPUT_LEN: usize = AEAD_KEY_LEN + KDF_STATE_SIZE + AEAD_NONCE_LEN;
 /// crypto_scalarmult::BYTES
+#[cfg(feature = "pqxdh")]
 pub const DH_OUT_LEN: usize = 32;
 // the maximum amounts of out-of-order messages we tolerate
 pub const RATCHET_MAX_GAP: u64 = 50;
-pub const KEM_SHARED_SECRET_SIZE: usize = 32;
 
 #[cfg(feature = "pqxdh")]
 pub type Provider = BeaconCryptPqxdh;
@@ -142,18 +142,19 @@ pub fn decode_kem(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
 }
 
 mod systems {
+	#[cfg(feature = "pqxdh")]
 	pub struct X25519;
 	pub struct Hkdf;
 	#[cfg(feature = "server")]
 	pub struct Pqxdh;
+	#[cfg(feature = "cnsa2")]
 	pub struct MlKem;
-	pub struct Aead;
 }
 mod roles {
 	pub struct ChainKey;
 	pub struct DerivedSecret;
+	#[cfg(feature = "cnsa2")]
 	pub struct SharedSecret;
-	pub struct EncryptionKey;
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
@@ -224,12 +225,13 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 	}
 }
 
+#[cfg(feature = "pqxdh")]
 pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>;
 pub type KdfState = SecretArr<KDF_STATE_SIZE, systems::Hkdf, roles::ChainKey>;
 #[cfg(feature = "server")]
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
+#[cfg(feature = "cnsa2")]
 pub type MlKemSharedSecret = SecretArr<KEM_SHARED_SECRET_SIZE, systems::MlKem, roles::SharedSecret>;
-pub type AeadSecretBuffer = SecretArr<32, systems::Aead, roles::EncryptionKey>;
 
 /// This function is safe to call multiple times
 /// ## Arguments

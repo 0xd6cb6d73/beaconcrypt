@@ -100,7 +100,7 @@ pub unsafe extern "C" fn register_beacon(
 						*response_len = response.serialized.len();
 						*response_capa = response.serialized.capacity();
 						mem::forget(response);
-						let mut pk = secrets.public_key.as_slice().to_vec();
+						let mut pk = secrets.public_key.as_ref().to_vec();
 						_pk = pk.as_mut_ptr();
 						*pk_len = pk.len();
 						*pk_capa = pk.capacity();

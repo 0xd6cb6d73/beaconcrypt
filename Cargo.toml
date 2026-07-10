@@ -24,7 +24,7 @@ libcrux-ml-kem = { version = "0.0.9", optional = true }
 libcrux-aesgcm = { version = "0.0.8", optional = true }
 
 [features]
-default = ["beacon", "server", "cnsa2"]
+default = ["beacon", "server", "pqxdh"]
 server = []
 beacon = []
 cnsa2 = ["dep:libcrux-ml-dsa", "dep:libcrux-ml-kem", "dep:libcrux-aesgcm"]

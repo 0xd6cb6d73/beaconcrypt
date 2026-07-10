@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: 0BSD
 
 use crate::beacon::ProviderBeacon;
-use crate::server::{ProviderServer, RegResponse};
+use crate::server::{ProviderServer, RegResponse, RegistrationOutput};
 use crate::shared::{
-	AD_SIZE, CurveType, DhSecret, KemType, RatchetManager, RegistrationOutput, RemotePrincipal,
-	SYM_RATCHET_INFO, SignaturePk, build_additional_data, create_protogram_reader, decode_kem,
-	decode_sign, derive_root_key, encode_ec, encode_kem,
+	DhSecret, KEX_KDF_OUT_LEN, KemType, RatchetManager, RemotePrincipal, SYM_RATCHET_INFO,
+	SignType, SignaturePk, create_protogram_reader, decode_kem, decode_sign, encode_kem,
+	encode_sign,
 };
 use crate::{CryptoProvider, phase1_capnp, phase2_capnp, protogram_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
-use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
+use libsodium_rs::{
+	SodiumError, crypto_kdf, crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init,
+};
 use std::collections::HashMap;
 use std::vec;
 
@@ -18,15 +20,6 @@ pub const AD_SIZE: usize =
 	PQXDH_INFO.len() + SYM_RATCHET_INFO.len() + ((crypto_sign::PUBLICKEYBYTES + 1) * 2);
 
 impl SignaturePk for crypto_sign::PublicKey {}
-
-#[cfg(feature = "server")]
-#[derive(Clone)]
-pub struct RegistrationOutput {
-	pub kem_ciphertext: crypto_kem::mlkem768::Ciphertext,
-	pub derived_secret: KexDerivedSecret,
-	pub ephemeral: crypto_kx::PublicKey,
-	pub public_key: crypto_sign::PublicKey,
-}
 
 pub struct BeaconCryptPqxdh {
 	identity_key_pk: crypto_sign::PublicKey,
@@ -265,10 +258,12 @@ impl BeaconCryptPqxdh {
 #[cfg(feature = "beacon")]
 impl ProviderBeacon for BeaconCryptPqxdh {
 	fn get_registration_bundle(&self) -> Option<Vec<u8>> {
+		use crate::shared::{SignType, encode_sign};
+
 		let mut msg = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
 		let mut bundle = msg.init_root();
 
-		let encoded_id = encode_ec(SignType::Ed25519, self.get_identity_pk().as_bytes()).ok()?;
+		let encoded_id = encode_sign(SignType::Ed25519, self.get_identity_pk().as_bytes()).ok()?;
 		bundle.set_identity_key(&encoded_id);
 
 		let encoded_prekey = encode_kem(KemType::X25519, self.get_prekey_pk().as_bytes()).ok()?;
@@ -470,9 +465,9 @@ pub fn build_additional_data(
 	let mut sym_proto = [0u8; SYM_RATCHET_INFO.len()];
 	sym_proto.copy_from_slice(SYM_RATCHET_INFO);
 	buffer.extend_from_slice(&sym_proto);
-	let mut encoded_server = encode_ec(CurveType::Ed25519, server_id.as_bytes()).unwrap();
+	let mut encoded_server = encode_sign(SignType::Ed25519, server_id.as_bytes()).unwrap();
 	buffer.append(&mut encoded_server);
-	let mut encoded_beacon = encode_ec(CurveType::Ed25519, beacon_id.as_bytes()).unwrap();
+	let mut encoded_beacon = encode_sign(SignType::Ed25519, beacon_id.as_bytes()).unwrap();
 	buffer.append(&mut encoded_beacon);
 	*buffer.as_array::<AD_SIZE>().unwrap()
 }
