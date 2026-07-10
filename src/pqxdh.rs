@@ -4,15 +4,29 @@ use crate::beacon::ProviderBeacon;
 use crate::server::{ProviderServer, RegResponse};
 use crate::shared::{
 	AD_SIZE, CurveType, DhSecret, KemType, RatchetManager, RegistrationOutput, RemotePrincipal,
-	SYM_RATCHET_INFO, SignaturePk, build_additional_data, create_protogram_reader, decode_ec,
-	decode_kem, derive_root_key, encode_ec, encode_kem,
+	SYM_RATCHET_INFO, SignaturePk, build_additional_data, create_protogram_reader, decode_kem,
+	decode_sign, derive_root_key, encode_ec, encode_kem,
 };
 use crate::{CryptoProvider, phase1_capnp, phase2_capnp, protogram_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
 use std::collections::HashMap;
 use std::vec;
+
+pub const PQXDH_INFO: &[u8; 35] = b"Pqxdh_CURVE25519_SHA-512_ML-KEM-768";
+pub const AD_SIZE: usize =
+	PQXDH_INFO.len() + SYM_RATCHET_INFO.len() + ((crypto_sign::PUBLICKEYBYTES + 1) * 2);
+
 impl SignaturePk for crypto_sign::PublicKey {}
+
+#[cfg(feature = "server")]
+#[derive(Clone)]
+pub struct RegistrationOutput {
+	pub kem_ciphertext: crypto_kem::mlkem768::Ciphertext,
+	pub derived_secret: KexDerivedSecret,
+	pub ephemeral: crypto_kx::PublicKey,
+	pub public_key: crypto_sign::PublicKey,
+}
 
 pub struct BeaconCryptPqxdh {
 	identity_key_pk: crypto_sign::PublicKey,
@@ -254,15 +268,14 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		let mut msg = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
 		let mut bundle = msg.init_root();
 
-		let encoded_id = encode_ec(CurveType::Ed25519, self.get_identity_pk().as_bytes()).ok()?;
+		let encoded_id = encode_ec(SignType::Ed25519, self.get_identity_pk().as_bytes()).ok()?;
 		bundle.set_identity_key(&encoded_id);
 
-		let encoded_prekey = encode_ec(CurveType::X25519, self.get_prekey_pk().as_bytes()).ok()?;
+		let encoded_prekey = encode_kem(KemType::X25519, self.get_prekey_pk().as_bytes()).ok()?;
 		let prekey_sig = crypto_sign::sign(&encoded_prekey, self.get_identity_sk()).ok()?;
 		bundle.set_pre_key(&prekey_sig);
 
-		let encoded_onetime =
-			encode_ec(CurveType::X25519, self.get_onetime_pk().as_bytes()).ok()?;
+		let encoded_onetime = encode_kem(KemType::X25519, self.get_onetime_pk().as_bytes()).ok()?;
 		let onetime_sig = crypto_sign::sign(&encoded_onetime, self.get_identity_sk()).ok()?;
 		bundle.set_one_time_key(&onetime_sig);
 
@@ -312,7 +325,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		self.add_server_pk(server_id.clone());
 		self.set_identity_kid(response.get_key_id());
 		let id = self.get_identity_pk().clone();
-		self.set_associated_data(build_additional_data(server_id.clone(), id));
+		self.set_associated_data(build_additional_data(server_id, id));
 		let mut info_str = vec![0u8; SYM_RATCHET_INFO.len()];
 		info_str.copy_from_slice(SYM_RATCHET_INFO);
 		let srv_key_id = self.get_server_kid();
@@ -335,7 +348,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 		let typed_reader = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(reader);
 		let registration = typed_reader.get().unwrap();
 
-		let decoded_beacon_id = decode_ec(registration.get_identity_key().ok()?).ok()?;
+		let decoded_beacon_id = decode_sign(registration.get_identity_key().ok()?).ok()?;
 		let remote_id = crypto_sign::PublicKey::from_bytes(&decoded_beacon_id).ok()?;
 		let pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id).unwrap();
 		let prekey_verified =
@@ -344,9 +357,9 @@ impl ProviderServer for BeaconCryptPqxdh {
 			crypto_sign::verify(registration.get_one_time_key().ok()?, &remote_id).unwrap();
 
 		let beacon_prekey =
-			crypto_kx::PublicKey::from_bytes(&decode_ec(&prekey_verified).ok()?).ok()?;
+			crypto_kx::PublicKey::from_bytes(&decode_kem(&prekey_verified).ok()?).ok()?;
 		let beacon_onetime =
-			crypto_kx::PublicKey::from_bytes(&decode_ec(&onetime_verified).ok()?).ok()?;
+			crypto_kx::PublicKey::from_bytes(&decode_kem(&onetime_verified).ok()?).ok()?;
 		let ephemeral = crypto_kx::KeyPair::generate().ok()?;
 		let pq_pub =
 			crypto_kem::mlkem768::PublicKey::from_bytes(&decode_kem(&pq_verified).ok()?).ok()?;
@@ -424,6 +437,44 @@ impl ProviderServer for BeaconCryptPqxdh {
 			kid: remote_kid,
 		})
 	}
+}
+
+pub fn derive_root_key(
+	dh1: DhSecret,
+	dh2: DhSecret,
+	dh3: DhSecret,
+	dh4: DhSecret,
+	shared_secret: crypto_kem::mlkem768::SharedSecret,
+) -> Result<Vec<u8>, SodiumError> {
+	// make sure to start inserting after sizeof(Ed25519) so the first bytes are filled with 0xFF as per the spec:
+	// https://signal.org/docs/specifications/pqxdh/#cryptographic-notation
+	let mut ikm = vec![0xFFu8; crypto_kx::PUBLICKEYBYTES];
+	ikm.extend_from_slice(dh1.as_slice());
+	ikm.extend_from_slice(dh2.as_slice());
+	ikm.extend_from_slice(dh3.as_slice());
+	ikm.extend_from_slice(dh4.as_slice());
+	ikm.extend_from_slice(shared_secret.as_bytes());
+
+	let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm)?;
+	crypto_kdf::hkdf::sha512::expand(KEX_KDF_OUT_LEN, Some(PQXDH_INFO), &prk)
+}
+
+pub fn build_additional_data(
+	server_id: crypto_sign::PublicKey,
+	beacon_id: crypto_sign::PublicKey,
+) -> [u8; AD_SIZE] {
+	let mut buffer = vec![0u8; 0];
+	let mut kex_proto = [0u8; PQXDH_INFO.len()];
+	kex_proto.copy_from_slice(PQXDH_INFO);
+	buffer.extend_from_slice(&kex_proto);
+	let mut sym_proto = [0u8; SYM_RATCHET_INFO.len()];
+	sym_proto.copy_from_slice(SYM_RATCHET_INFO);
+	buffer.extend_from_slice(&sym_proto);
+	let mut encoded_server = encode_ec(CurveType::Ed25519, server_id.as_bytes()).unwrap();
+	buffer.append(&mut encoded_server);
+	let mut encoded_beacon = encode_ec(CurveType::Ed25519, beacon_id.as_bytes()).unwrap();
+	buffer.append(&mut encoded_beacon);
+	*buffer.as_array::<AD_SIZE>().unwrap()
 }
 
 #[cfg(test)]

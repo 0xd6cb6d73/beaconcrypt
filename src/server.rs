@@ -1,11 +1,41 @@
 // SPDX-License-Identifier: 0BSD
 
-use crate::shared::{CryptoProvider, RegistrationOutput, STATE};
+#[cfg(feature = "cnsa2")]
+use libcrux_ml_dsa::ml_dsa_87;
+#[cfg(feature = "cnsa2")]
+use libcrux_ml_kem::mlkem1024;
+#[cfg(feature = "pqxdh")]
+use libsodium_rs::{crypto_kem, crypto_kx, crypto_sign};
+
+use crate::shared::{CryptoProvider, KexDerivedSecret, STATE};
+#[cfg(feature = "cnsa2")]
+use std::marker::PhantomData;
 use std::{mem, slice::from_raw_parts, vec};
+
+#[cfg(feature = "pqxdh")]
+type KemCiphertext = crypto_kem::mlkem768::Ciphertext;
+#[cfg(feature = "pqxdh")]
+type SignVerificationKey = crypto_sign::PublicKey;
+#[cfg(feature = "pqxdh")]
+type EphemeralKexPubKey = crypto_kx::PublicKey;
+#[cfg(feature = "cnsa2")]
+type KemCiphertext = mlkem1024::MlKem1024Ciphertext;
+#[cfg(feature = "cnsa2")]
+type SignVerificationKey = ml_dsa_87::MLDSA87VerificationKey;
+#[cfg(feature = "cnsa2")]
+type EphemeralKexPubKey = PhantomData<u8>;
 
 pub struct RegResponse {
 	pub serialized: Vec<u8>,
-	pub(crate) kid: u64,
+	pub kid: u64,
+}
+
+#[derive(Clone)]
+pub struct RegistrationOutput {
+	pub kem_ciphertext: KemCiphertext,
+	pub derived_secret: KexDerivedSecret,
+	pub ephemeral: EphemeralKexPubKey,
+	pub public_key: SignVerificationKey,
 }
 
 pub trait ProviderServer {
@@ -70,7 +100,7 @@ pub unsafe extern "C" fn register_beacon(
 						*response_len = response.serialized.len();
 						*response_capa = response.serialized.capacity();
 						mem::forget(response);
-						let mut pk = secrets.public_key.as_bytes().to_vec();
+						let mut pk = secrets.public_key.as_slice().to_vec();
 						_pk = pk.as_mut_ptr();
 						*pk_len = pk.len();
 						*pk_capa = pk.capacity();

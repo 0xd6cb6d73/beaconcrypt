@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: 0BSD
 
+#[cfg(feature = "cnsa2")]
+use crate::cnsa2::{AD_SIZE, BeaconCryptCnsa2};
 use crate::error::{DecodingError, EncodingError};
 #[cfg(feature = "pqxdh")]
-use crate::pqxdh::BeaconCryptPqxdh;
+use crate::pqxdh::{AD_SIZE, BeaconCryptPqxdh};
 use crate::{cryptoframe_capnp, protogram_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
-use libsodium_rs::{SodiumError, crypto_aead, crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
+use libsodium_rs::{crypto_aead, crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -13,12 +15,9 @@ use std::sync::{LazyLock, Mutex};
 use std::{mem, vec};
 use zeroize::{Zeroize, Zeroizing};
 
-pub const PQXDH_INFO: &[u8; 35] = b"Pqxdh_CURVE25519_SHA-512_ML-KEM-768";
 pub const KEX_KDF_OUT_LEN: usize = 32usize;
 pub const KDF_STATE_SIZE: usize = 32usize;
 pub const SYM_RATCHET_INFO: &[u8; 41] = b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
-pub const AD_SIZE: usize =
-	PQXDH_INFO.len() + SYM_RATCHET_INFO.len() + ((crypto_sign::PUBLICKEYBYTES + 1) * 2);
 /// crypto_aead::chacha20poly1305_ietf::KEYBYTES
 pub const AEAD_KEY_LEN: usize = 32;
 /// crypto_aead::chacha20poly1305_ietf::NPUBBYTES
@@ -28,6 +27,7 @@ pub const KDF_RATCHET_OUTPUT_LEN: usize = AEAD_KEY_LEN + KDF_STATE_SIZE + AEAD_N
 pub const DH_OUT_LEN: usize = 32;
 // the maximum amounts of out-of-order messages we tolerate
 pub const RATCHET_MAX_GAP: u64 = 50;
+pub const KEM_SHARED_SECRET_SIZE: usize = 32;
 
 #[cfg(feature = "pqxdh")]
 pub type Provider = BeaconCryptPqxdh;
@@ -38,27 +38,27 @@ pub static STATE: LazyLock<Mutex<Provider>> = LazyLock::new(|| Mutex::new(Provid
 pub static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 #[repr(u8)]
-pub enum CurveType {
+pub enum SignType {
 	Undefined = 0,
 	Ed25519 = 1,
-	X25519 = 2,
+	MlDsa87 = 2,
 }
 
-impl From<CurveType> for u8 {
-	fn from(value: CurveType) -> Self {
+impl From<SignType> for u8 {
+	fn from(value: SignType) -> Self {
 		match value {
-			CurveType::Undefined => 0,
-			CurveType::Ed25519 => 1,
-			CurveType::X25519 => 2,
+			SignType::Undefined => 0,
+			SignType::Ed25519 => 1,
+			SignType::MlDsa87 => 2,
 		}
 	}
 }
 
-impl From<u8> for CurveType {
+impl From<u8> for SignType {
 	fn from(value: u8) -> Self {
 		match value {
 			1 => Self::Ed25519,
-			2 => Self::X25519,
+			2 => Self::MlDsa87,
 			_ => Self::Undefined,
 		}
 	}
@@ -68,6 +68,8 @@ impl From<u8> for CurveType {
 pub enum KemType {
 	Undefined = 0,
 	MlKem768 = 1,
+	X25519 = 2,
+	MlKem1024 = 3,
 }
 
 impl From<KemType> for u8 {
@@ -75,6 +77,8 @@ impl From<KemType> for u8 {
 		match value {
 			KemType::Undefined => 0,
 			KemType::MlKem768 => 1,
+			KemType::X25519 => 2,
+			KemType::MlKem1024 => 3,
 		}
 	}
 }
@@ -83,41 +87,29 @@ impl From<u8> for KemType {
 	fn from(value: u8) -> Self {
 		match value {
 			1 => Self::MlKem768,
+			2 => Self::X25519,
+			3 => Self::MlKem1024,
 			_ => Self::Undefined,
 		}
 	}
 }
 
-pub fn encode_ec(curve_type: CurveType, pk_bytes: &[u8]) -> Result<Vec<u8>, EncodingError> {
-	match curve_type {
-		CurveType::Undefined => Err(EncodingError),
-		CurveType::Ed25519 => {
+pub fn encode_sign(sign_type: SignType, pk_bytes: &[u8]) -> Result<Vec<u8>, EncodingError> {
+	match sign_type {
+		SignType::Undefined => Err(EncodingError),
+		_ => {
 			let mut byt = Vec::from(pk_bytes);
-			byt.insert(0, curve_type.into());
-			Ok(byt)
-		}
-		CurveType::X25519 => {
-			let mut byt = Vec::from(pk_bytes);
-			byt.insert(0, curve_type.into());
+			byt.insert(0, sign_type.into());
 			Ok(byt)
 		}
 	}
 }
 
-pub fn decode_ec(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
-	if encoded_pk.len() < crypto_kx::PUBLICKEYBYTES + 1 {
-		return Err(DecodingError);
-	}
-	match CurveType::from(encoded_pk[0]) {
-		CurveType::Undefined => Err(DecodingError),
-		CurveType::Ed25519 => {
-			let mut key = vec![0u8; crypto_sign::PUBLICKEYBYTES + 1];
-			key.copy_from_slice(encoded_pk);
-			key.remove(0);
-			Ok(key)
-		}
-		CurveType::X25519 => {
-			let mut key = vec![0u8; crypto_kx::PUBLICKEYBYTES + 1];
+pub fn decode_sign(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
+	match SignType::from(encoded_pk[0]) {
+		SignType::Undefined => Err(DecodingError),
+		_ => {
+			let mut key = vec![0u8; encoded_pk.len()];
 			key.copy_from_slice(encoded_pk);
 			key.remove(0);
 			Ok(key)
@@ -128,7 +120,7 @@ pub fn decode_ec(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
 pub fn encode_kem(kem_type: KemType, pk_bytes: &[u8]) -> Result<Vec<u8>, EncodingError> {
 	match kem_type {
 		KemType::Undefined => Err(EncodingError),
-		KemType::MlKem768 => {
+		_ => {
 			let mut byt = Vec::from(pk_bytes);
 			byt.insert(0, kem_type.into());
 			Ok(byt)
@@ -138,13 +130,10 @@ pub fn encode_kem(kem_type: KemType, pk_bytes: &[u8]) -> Result<Vec<u8>, Encodin
 
 #[cfg(feature = "server")]
 pub fn decode_kem(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
-	if encoded_pk.len() < crypto_kem::mlkem768::PUBLICKEYBYTES + 1 {
-		return Err(DecodingError);
-	}
 	match KemType::from(encoded_pk[0]) {
 		KemType::Undefined => Err(DecodingError),
-		KemType::MlKem768 => {
-			let mut key = vec![0u8; crypto_kem::mlkem768::PUBLICKEYBYTES + 1];
+		_ => {
+			let mut key = vec![0u8; encoded_pk.len()];
 			key.copy_from_slice(encoded_pk);
 			key.remove(0);
 			Ok(key)
@@ -157,10 +146,14 @@ mod systems {
 	pub struct Hkdf;
 	#[cfg(feature = "server")]
 	pub struct Pqxdh;
+	pub struct MlKem;
+	pub struct Aead;
 }
 mod roles {
 	pub struct ChainKey;
 	pub struct DerivedSecret;
+	pub struct SharedSecret;
+	pub struct EncryptionKey;
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
@@ -208,7 +201,7 @@ impl<const S: usize, System, Role> Default for SecretArr<S, System, Role> {
 }
 
 impl<const S: usize, System, Role> SecretArr<S, System, Role> {
-	fn as_slice(&self) -> &[u8] {
+	pub fn as_slice(&self) -> &[u8] {
 		self.data.as_slice()
 	}
 
@@ -234,16 +227,9 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>;
 pub type KdfState = SecretArr<KDF_STATE_SIZE, systems::Hkdf, roles::ChainKey>;
 #[cfg(feature = "server")]
-pub type PqxdhSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
-
-#[cfg(feature = "server")]
-#[derive(Clone)]
-pub struct RegistrationOutput {
-	pub kem_ciphertext: crypto_kem::mlkem768::Ciphertext,
-	pub derived_secret: PqxdhSecret,
-	pub ephemeral: crypto_kx::PublicKey,
-	pub public_key: crypto_sign::PublicKey,
-}
+pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
+pub type MlKemSharedSecret = SecretArr<KEM_SHARED_SECRET_SIZE, systems::MlKem, roles::SharedSecret>;
+pub type AeadSecretBuffer = SecretArr<32, systems::Aead, roles::EncryptionKey>;
 
 /// This function is safe to call multiple times
 /// ## Arguments
@@ -625,44 +611,6 @@ pub trait CryptoProvider {
 			None => false,
 		}
 	}
-}
-
-pub fn derive_root_key(
-	dh1: DhSecret,
-	dh2: DhSecret,
-	dh3: DhSecret,
-	dh4: DhSecret,
-	shared_secret: crypto_kem::mlkem768::SharedSecret,
-) -> Result<Vec<u8>, SodiumError> {
-	// make sure to start inserting after sizeof(Ed25519) so the first bytes are filled with 0xFF as per the spec:
-	// https://signal.org/docs/specifications/pqxdh/#cryptographic-notation
-	let mut ikm = vec![0xFFu8; crypto_kx::PUBLICKEYBYTES];
-	ikm.extend_from_slice(dh1.as_slice());
-	ikm.extend_from_slice(dh2.as_slice());
-	ikm.extend_from_slice(dh3.as_slice());
-	ikm.extend_from_slice(dh4.as_slice());
-	ikm.extend_from_slice(shared_secret.as_bytes());
-
-	let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm)?;
-	crypto_kdf::hkdf::sha512::expand(KEX_KDF_OUT_LEN, Some(PQXDH_INFO), &prk)
-}
-
-pub fn build_additional_data(
-	server_id: crypto_sign::PublicKey,
-	beacon_id: crypto_sign::PublicKey,
-) -> [u8; AD_SIZE] {
-	let mut buffer = vec![0u8; 0];
-	let mut kex_proto = [0u8; PQXDH_INFO.len()];
-	kex_proto.copy_from_slice(PQXDH_INFO);
-	buffer.extend_from_slice(&kex_proto);
-	let mut sym_proto = [0u8; SYM_RATCHET_INFO.len()];
-	sym_proto.copy_from_slice(SYM_RATCHET_INFO);
-	buffer.extend_from_slice(&sym_proto);
-	let mut encoded_server = encode_ec(CurveType::Ed25519, server_id.as_bytes()).unwrap();
-	buffer.append(&mut encoded_server);
-	let mut encoded_beacon = encode_ec(CurveType::Ed25519, beacon_id.as_bytes()).unwrap();
-	buffer.append(&mut encoded_beacon);
-	*buffer.as_array::<AD_SIZE>().unwrap()
 }
 
 /// # Safety
