@@ -42,10 +42,17 @@ The C interfaces are probably not thread safe.
 
 # TODOs
 Test the C interface
-Make the server usable
 
 # Reference implementation
 I don't use rust a lot, so the code is probably fairly naive. It provides both a beacon and server implementation with C bindings through `cbindgen`. Ideally more bindings would be built on top of that so it can be used in the mythic server-side.
+
+## Profiles
+The reference implementation has two profiles: `PQXDH` and `CNSA2`. Profiles are controlled by cargo features. The CNSA2 profile only exists as a test for now. It uses a simple ML-KEM encapsulation for key exchange and the underlying libraries are not FIPS-approved. It is experimental and is likely broken. PQXDH is the intended target and the default.
+
+## Usage
+The reference implementation is a library that can currently be used either from rust or through C FFI. The C interface is currently not tested.
+
+From rust, usage is mostly just instanciating `CryptoProvider` objects. When using the C FFI, the library creates a global `CryptoProvider` object, whose methods are wrapped by the various functions in the interface.
 
 # Copyright
 This work is dedicated to the public domain.
