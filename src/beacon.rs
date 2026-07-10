@@ -308,6 +308,6 @@ pub extern "C" fn init_for_server(
 		let pk_slice = slice_from_raw_parts(server_pk, server_pk_len.try_into().unwrap());
 		let mut pk_vec = vec![0u8; crypto_sign::PUBLICKEYBYTES];
 		pk_vec.copy_from_slice(unsafe { pk_slice.as_ref().unwrap() });
-		*state = Provider::new(is_beacon, server_seq, Some(&pk_vec));
+		*state = Provider::new(is_beacon, server_seq, Some(&pk_vec), None, None);
 	}
 }

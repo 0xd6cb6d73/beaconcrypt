@@ -83,7 +83,13 @@ impl CryptoProvider for BeaconCryptCnsa2 {
 			known_ids: HashMap::new(),
 		}
 	}
-	fn new(is_beacon: bool, server_kid: u64, server_pk: Option<&[u8]>) -> Self {
+	fn new(
+		is_beacon: bool,
+		server_kid: u64,
+		server_id_pk: Option<&[u8]>,
+		_id_seed: Option<&[u8]>,
+		_prekey_seed: Option<&[u8]>,
+	) -> Self {
 		ensure_init().expect("Failed to initialize libsodium");
 
 		let sig_random =
@@ -94,17 +100,21 @@ impl CryptoProvider for BeaconCryptCnsa2 {
 		let kem_random = libsodium_rs::random::bytes(ML_KEM_1024_SEED_SIZE);
 		let kem_rand = *kem_random.as_array::<ML_KEM_1024_SEED_SIZE>().unwrap();
 		let kem = mlkem1024::generate_key_pair(kem_rand);
-		let known = if let Some(pk) = server_pk {
-			let mut hm = HashMap::new();
-			let pk_arr = pk.as_array::<ML_DSA_PK_SIZE>().unwrap().to_owned();
-			hm.insert(
-				server_kid,
-				RemotePrincipal::new(
-					ml_dsa_87::MLDSA87VerificationKey::new(pk_arr),
-					RatchetManager::new(),
-				),
-			);
-			hm
+		let known = if let Some(pk) = server_id_pk {
+			if !is_beacon {
+				HashMap::new()
+			} else {
+				let mut hm = HashMap::new();
+				let pk_arr = pk.as_array::<ML_DSA_PK_SIZE>().unwrap().to_owned();
+				hm.insert(
+					server_kid,
+					RemotePrincipal::new(
+						ml_dsa_87::MLDSA87VerificationKey::new(pk_arr),
+						RatchetManager::new(),
+					),
+				);
+				hm
+			}
 		} else {
 			HashMap::new()
 		};
@@ -450,12 +460,12 @@ mod tests {
 
 	#[test]
 	fn server_can_register_multiple() {
-		let mut server = BeaconCryptCnsa2::new(false, 0, None);
+		let mut server = BeaconCryptCnsa2::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()));
+		let mut b1 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()), None, None);
 		let b1_reg = test_register_beacon(&mut server, &mut b1);
-		let mut b2 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()));
+		let mut b2 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()), None, None);
 		let b2_reg = test_register_beacon(&mut server, &mut b2);
 
 		assert_eq!(b1_reg, b2_reg);
@@ -463,12 +473,12 @@ mod tests {
 
 	#[test]
 	fn server_encrypt_to_multiple() {
-		let mut server = BeaconCryptCnsa2::new(false, 0, None);
+		let mut server = BeaconCryptCnsa2::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()));
+		let mut b1 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()), None, None);
 		let _ = test_register_beacon(&mut server, &mut b1);
-		let mut b2 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()));
+		let mut b2 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()), None, None);
 		let _ = test_register_beacon(&mut server, &mut b2);
 
 		assert!(server.get_id_by_seq(1).is_some());
@@ -482,10 +492,10 @@ mod tests {
 
 	#[test]
 	fn server_encrypt_multiple() {
-		let mut server = BeaconCryptCnsa2::new(false, 0, None);
+		let mut server = BeaconCryptCnsa2::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()));
+		let mut b1 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()), None, None);
 		let _ = test_register_beacon(&mut server, &mut b1);
 
 		assert!(server.get_id_by_seq(1).is_some());
@@ -498,9 +508,9 @@ mod tests {
 
 	#[test]
 	fn beacon_sign_can_check() {
-		let server = BeaconCryptCnsa2::new(false, 0, None);
+		let server = BeaconCryptCnsa2::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk();
-		let beacon = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()));
+		let beacon = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()), None, None);
 		let message = [0xFFu8; 32];
 		let signed = server.sign_message(&message).unwrap();
 
@@ -509,9 +519,9 @@ mod tests {
 
 	#[test]
 	fn beacon_can_register() {
-		let mut server = BeaconCryptCnsa2::new(false, 0, None);
+		let mut server = BeaconCryptCnsa2::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk();
-		let mut beacon = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()));
+		let mut beacon = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()), None, None);
 		let message = [0xFFu8; 32];
 		let phase_1 = beacon.get_registration_bundle().unwrap();
 		let reg_out = server.get_shared_secret(&phase_1).unwrap();
@@ -525,17 +535,17 @@ mod tests {
 
 	#[test]
 	fn beacon_can_sign() {
-		let beacon = BeaconCryptCnsa2::new(true, 0, None);
+		let beacon = BeaconCryptCnsa2::new(true, 0, None, None, None);
 		let message = [0xFFu8; 32];
 		assert!(beacon.sign_message(&message).is_some());
 	}
 
 	#[test]
 	fn beacon_can_catch_up() {
-		let mut server = BeaconCryptCnsa2::new(false, 0, None);
+		let mut server = BeaconCryptCnsa2::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()));
+		let mut b1 = BeaconCryptCnsa2::new(true, 0, Some(server_id.as_slice()), None, None);
 		let _ = test_register_beacon(&mut server, &mut b1);
 		assert!(server.get_id_by_seq(1).is_some());
 

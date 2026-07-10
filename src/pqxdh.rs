@@ -3,9 +3,9 @@
 use crate::beacon::ProviderBeacon;
 use crate::server::{ProviderServer, RegResponse, RegistrationOutput};
 use crate::shared::{
-	DhSecret, KEX_KDF_OUT_LEN, KemType, RatchetManager, RemotePrincipal, SYM_RATCHET_INFO,
-	SignType, SignaturePk, create_protogram_reader, decode_kem, decode_sign, encode_kem,
-	encode_sign,
+	DhSecret, ED25519_SEED_SIZE, INITIALIZED, KEX_KDF_OUT_LEN, KemType, Provider, RatchetManager,
+	RemotePrincipal, STATE, SYM_RATCHET_INFO, SignType, SignaturePk, create_protogram_reader,
+	decode_kem, decode_sign, encode_kem, encode_sign,
 };
 use crate::{CryptoProvider, phase1_capnp, phase2_capnp, protogram_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
@@ -13,6 +13,8 @@ use libsodium_rs::{
 	SodiumError, crypto_kdf, crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init,
 };
 use std::collections::HashMap;
+use std::ptr::slice_from_raw_parts;
+use std::sync::atomic::Ordering;
 use std::vec;
 
 pub const PQXDH_INFO: &[u8; 35] = b"Pqxdh_CURVE25519_SHA-512_ML-KEM-768";
@@ -85,23 +87,49 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			known_ids: HashMap::new(),
 		}
 	}
-	fn new(is_beacon: bool, server_kid: u64, server_pk: Option<&[u8]>) -> Self {
+	fn new(
+		is_beacon: bool,
+		server_kid: u64,
+		server_id_pk: Option<&[u8]>,
+		id_seed: Option<&[u8]>,
+		prekey_seed: Option<&[u8]>,
+	) -> Self {
 		ensure_init().expect("Failed to initialize libsodium");
 
-		let id_keypair = crypto_sign::KeyPair::generate().unwrap();
-		let prekey = crypto_kx::KeyPair::generate().unwrap();
+		let id_keypair = if !is_beacon {
+			if let Some(seed) = id_seed {
+				crypto_sign::KeyPair::from_seed(seed).unwrap()
+			} else {
+				crypto_sign::KeyPair::generate().unwrap()
+			}
+		} else {
+			crypto_sign::KeyPair::generate().unwrap()
+		};
+		let prekey = if !is_beacon {
+			if let Some(seed) = prekey_seed {
+				crypto_kx::KeyPair::from_seed(seed).unwrap()
+			} else {
+				crypto_kx::KeyPair::generate().unwrap()
+			}
+		} else {
+			crypto_kx::KeyPair::generate().unwrap()
+		};
 		let onetime = crypto_kx::KeyPair::generate().unwrap();
 		let pqkey = crypto_kem::mlkem768::KeyPair::generate().unwrap();
-		let known = if let Some(pk) = server_pk {
-			let mut hm = HashMap::new();
-			hm.insert(
-				server_kid,
-				RemotePrincipal::new(
-					crypto_sign::PublicKey::from_bytes(&pk).unwrap(),
-					RatchetManager::new(),
-				),
-			);
-			hm
+		let known_id_pk = if let Some(pk) = server_id_pk {
+			if !is_beacon {
+				HashMap::new()
+			} else {
+				let mut hm = HashMap::new();
+				hm.insert(
+					server_kid,
+					RemotePrincipal::new(
+						crypto_sign::PublicKey::from_bytes(&pk).unwrap(),
+						RatchetManager::new(),
+					),
+				);
+				hm
+			}
 		} else {
 			HashMap::new()
 		};
@@ -120,7 +148,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			associated_data: [0u8; AD_SIZE],
 			is_beacon,
 			server_kid,
-			known_ids: known,
+			known_ids: known_id_pk,
 		}
 	}
 
@@ -472,12 +500,43 @@ pub fn build_additional_data(
 	*buffer.as_array::<AD_SIZE>().unwrap()
 }
 
+/// This function is safe to call multiple times. It is used to initialize a server with existing keys. This MUST only be called by a server
+/// ## Arguments
+///
+/// * `server_seq` - The ID of the server's identity key for the campaign
+#[unsafe(no_mangle)]
+pub extern "C" fn init_server_with_keys(
+	server_seq: u64,
+	id_seed: *const u8,
+	prekey_seed: *const u8,
+) {
+	if !INITIALIZED.swap(true, Ordering::AcqRel) {
+		let mut state = STATE.lock().unwrap();
+		let id_seed_slice = slice_from_raw_parts(id_seed, ED25519_SEED_SIZE);
+		let prekey_seed_slice = slice_from_raw_parts(prekey_seed, ED25519_SEED_SIZE);
+		let mut id_seed_vec = vec![0u8; crypto_sign::PUBLICKEYBYTES];
+		id_seed_vec.copy_from_slice(unsafe { id_seed_slice.as_ref().unwrap() });
+		let mut prekey_seed_vec = vec![0u8; crypto_sign::PUBLICKEYBYTES];
+		prekey_seed_vec.copy_from_slice(unsafe { prekey_seed_slice.as_ref().unwrap() });
+		*state = Provider::new(
+			false,
+			server_seq,
+			None,
+			Some(&id_seed_vec),
+			Some(&prekey_seed_vec),
+		);
+	}
+}
+
 #[cfg(test)]
 mod tests {
-	use libsodium_rs::crypto_kx;
+	use libsodium_rs::{crypto_kx, crypto_sign};
 
 	use crate::{
-		BeaconCryptPqxdh, beacon::ProviderBeacon, server::ProviderServer, shared::CryptoProvider,
+		BeaconCryptPqxdh,
+		beacon::ProviderBeacon,
+		server::ProviderServer,
+		shared::{CryptoProvider, ED25519_SEED_SIZE},
 	};
 
 	fn test_register_beacon(
@@ -496,12 +555,12 @@ mod tests {
 
 	#[test]
 	fn server_can_register_multiple() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
 		let b1_reg = test_register_beacon(&mut server, &mut b1);
-		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
+		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
 		let b2_reg = test_register_beacon(&mut server, &mut b2);
 
 		assert_eq!(b1_reg, b2_reg);
@@ -509,12 +568,12 @@ mod tests {
 
 	#[test]
 	fn server_encrypt_to_multiple() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
 		let _ = test_register_beacon(&mut server, &mut b1);
-		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
+		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
 		let _ = test_register_beacon(&mut server, &mut b2);
 
 		assert!(server.get_id_by_seq(1).is_some());
@@ -528,10 +587,10 @@ mod tests {
 
 	#[test]
 	fn server_encrypt_multiple() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
 		let _ = test_register_beacon(&mut server, &mut b1);
 
 		assert!(server.get_id_by_seq(1).is_some());
@@ -543,10 +602,40 @@ mod tests {
 	}
 
 	#[test]
+	fn server_init_from_id_seed() {
+		let empty = [0u8; ED25519_SEED_SIZE];
+		let seeded = crypto_sign::KeyPair::from_seed(&empty).unwrap();
+		let server = BeaconCryptPqxdh::new(false, 0, None, Some(&empty), None);
+		assert_eq!(
+			seeded.secret_key.as_bytes(),
+			server.get_identity_sk().as_bytes()
+		);
+		assert_eq!(
+			seeded.public_key.as_bytes(),
+			server.get_identity_pk().as_bytes()
+		);
+	}
+
+	#[test]
+	fn server_init_from_prekey_seed() {
+		let empty = [0u8; ED25519_SEED_SIZE];
+		let seeded = crypto_kx::KeyPair::from_seed(&empty).unwrap();
+		let server = BeaconCryptPqxdh::new(false, 0, None, None, Some(&empty));
+		assert_eq!(
+			seeded.secret_key.as_bytes(),
+			server.get_prekey_sk().as_bytes()
+		);
+		assert_eq!(
+			seeded.public_key.as_bytes(),
+			server.get_prekey_pk().as_bytes()
+		);
+	}
+
+	#[test]
 	fn beacon_sign_can_check() {
-		let server = BeaconCryptPqxdh::new(false, 0, None);
+		let server = BeaconCryptPqxdh::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk();
-		let beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
+		let beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
 		let message = [0xFFu8; 32];
 		let signed = server.sign_message(&message).unwrap();
 
@@ -555,9 +644,9 @@ mod tests {
 
 	#[test]
 	fn beacon_can_register() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk();
-		let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
 		let message = [0xFFu8; 32];
 		let phase_1 = beacon.get_registration_bundle().unwrap();
 		let reg_out = server.get_shared_secret(&phase_1).unwrap();
@@ -571,17 +660,17 @@ mod tests {
 
 	#[test]
 	fn beacon_can_sign() {
-		let beacon = BeaconCryptPqxdh::new(true, 0, None);
+		let beacon = BeaconCryptPqxdh::new(true, 0, None, None, None);
 		let message = [0xFFu8; 32];
 		assert!(beacon.sign_message(&message).is_some());
 	}
 
 	#[test]
 	fn beacon_can_catch_up() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
 		let _ = test_register_beacon(&mut server, &mut b1);
 		assert!(server.get_id_by_seq(1).is_some());
 
@@ -597,11 +686,11 @@ mod tests {
 
 	#[test]
 	fn beacon_delete_onetime() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
 		let empty = [0u8; crypto_kx::PUBLICKEYBYTES];
-		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()));
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
 		assert!(b1.get_onetime_pk().as_bytes() != empty);
 		assert!(b1.get_onetime_sk().as_bytes() != empty);
 		let _ = test_register_beacon(&mut server, &mut b1);

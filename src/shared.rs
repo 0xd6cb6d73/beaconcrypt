@@ -28,6 +28,10 @@ pub const KDF_RATCHET_OUTPUT_LEN: usize = AEAD_KEY_LEN + KDF_STATE_SIZE + AEAD_N
 pub const DH_OUT_LEN: usize = 32;
 // the maximum amounts of out-of-order messages we tolerate
 pub const RATCHET_MAX_GAP: u64 = 50;
+#[cfg(feature = "pqxdh")]
+pub const ED25519_SEED_SIZE: usize = 32;
+#[cfg(feature = "cnsa2")]
+pub const KEM_SHARED_SECRET_SIZE: usize = 32;
 
 #[cfg(feature = "pqxdh")]
 pub type Provider = BeaconCryptPqxdh;
@@ -242,7 +246,7 @@ pub type MlKemSharedSecret = SecretArr<KEM_SHARED_SECRET_SIZE, systems::MlKem, r
 pub extern "C" fn init(is_beacon: bool, server_seq: u64) {
 	if !INITIALIZED.swap(true, Ordering::AcqRel) {
 		let mut state = STATE.lock().unwrap();
-		*state = Provider::new(is_beacon, server_seq, None);
+		*state = Provider::new(is_beacon, server_seq, None, None, None);
 	}
 }
 
@@ -467,7 +471,13 @@ pub trait CryptoProvider {
 	type KemSecretKey;
 
 	fn default() -> Self;
-	fn new(is_beacon: bool, server_kid: u64, server_pk: Option<&[u8]>) -> Self;
+	fn new(
+		is_beacon: bool,
+		server_kid: u64,
+		server_id_pk: Option<&[u8]>,
+		id_seed: Option<&[u8]>,
+		prekey_seed: Option<&[u8]>,
+	) -> Self;
 	fn set_associated_data(&mut self, data: [u8; AD_SIZE]);
 	fn get_associated_data(&self) -> [u8; AD_SIZE];
 	/// ## Arguments
