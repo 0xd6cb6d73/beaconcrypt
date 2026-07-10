@@ -1,28 +1,23 @@
 // SPDX-License-Identifier: 0BSD
 
+#[cfg(feature = "cnsa2")]
+use crate::cnsa2::{AD_SIZE, BeaconCryptCnsa2};
+use crate::error::{DecodingError, EncodingError};
+#[cfg(feature = "pqxdh")]
+use crate::pqxdh::{AD_SIZE, BeaconCryptPqxdh};
+use crate::{cryptoframe_capnp, protogram_capnp};
+use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+use libsodium_rs::{crypto_aead, crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{LazyLock, Mutex};
 use std::{mem, vec};
-
-use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
-#[cfg(feature = "ml-dsa")]
-use libcrux_ml_dsa::ml_dsa_65;
-use libsodium_rs::{
-	SodiumError, crypto_aead, crypto_kdf, crypto_kem, crypto_kx, crypto_sign, ensure_init,
-};
 use zeroize::{Zeroize, Zeroizing};
 
-use crate::error::{DecodingError, EncodingError};
-use crate::{cryptoframe_capnp, protogram_capnp};
-
-pub const PQXDH_INFO: &[u8; 35] = b"Pqxdh_CURVE25519_SHA-512_ML-KEM-768";
 pub const KEX_KDF_OUT_LEN: usize = 32usize;
 pub const KDF_STATE_SIZE: usize = 32usize;
 pub const SYM_RATCHET_INFO: &[u8; 41] = b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
-pub const AD_SIZE: usize =
-	PQXDH_INFO.len() + SYM_RATCHET_INFO.len() + ((crypto_sign::PUBLICKEYBYTES + 1) * 2);
 /// crypto_aead::chacha20poly1305_ietf::KEYBYTES
 pub const AEAD_KEY_LEN: usize = 32;
 /// crypto_aead::chacha20poly1305_ietf::NPUBBYTES
@@ -32,35 +27,38 @@ pub const KDF_RATCHET_OUTPUT_LEN: usize = AEAD_KEY_LEN + KDF_STATE_SIZE + AEAD_N
 pub const DH_OUT_LEN: usize = 32;
 // the maximum amounts of out-of-order messages we tolerate
 pub const RATCHET_MAX_GAP: u64 = 50;
-#[cfg(feature = "ml-dsa")]
-const ML_DSA_RAND_SIZE: usize = libcrux_ml_dsa::KEY_GENERATION_RANDOMNESS_SIZE;
+pub const KEM_SHARED_SECRET_SIZE: usize = 32;
 
-pub static STATE: LazyLock<Mutex<BeaconCryptAgent>> =
-	LazyLock::new(|| Mutex::new(BeaconCryptAgent::default()));
+#[cfg(feature = "pqxdh")]
+pub type Provider = BeaconCryptPqxdh;
+#[cfg(feature = "cnsa2")]
+pub type Provider = BeaconCryptCnsa2;
+
+pub static STATE: LazyLock<Mutex<Provider>> = LazyLock::new(|| Mutex::new(Provider::default()));
 pub static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 #[repr(u8)]
-pub enum CurveType {
+pub enum SignType {
 	Undefined = 0,
 	Ed25519 = 1,
-	X25519 = 2,
+	MlDsa87 = 2,
 }
 
-impl From<CurveType> for u8 {
-	fn from(value: CurveType) -> Self {
+impl From<SignType> for u8 {
+	fn from(value: SignType) -> Self {
 		match value {
-			CurveType::Undefined => 0,
-			CurveType::Ed25519 => 1,
-			CurveType::X25519 => 2,
+			SignType::Undefined => 0,
+			SignType::Ed25519 => 1,
+			SignType::MlDsa87 => 2,
 		}
 	}
 }
 
-impl From<u8> for CurveType {
+impl From<u8> for SignType {
 	fn from(value: u8) -> Self {
 		match value {
 			1 => Self::Ed25519,
-			2 => Self::X25519,
+			2 => Self::MlDsa87,
 			_ => Self::Undefined,
 		}
 	}
@@ -70,6 +68,8 @@ impl From<u8> for CurveType {
 pub enum KemType {
 	Undefined = 0,
 	MlKem768 = 1,
+	X25519 = 2,
+	MlKem1024 = 3,
 }
 
 impl From<KemType> for u8 {
@@ -77,6 +77,8 @@ impl From<KemType> for u8 {
 		match value {
 			KemType::Undefined => 0,
 			KemType::MlKem768 => 1,
+			KemType::X25519 => 2,
+			KemType::MlKem1024 => 3,
 		}
 	}
 }
@@ -85,41 +87,29 @@ impl From<u8> for KemType {
 	fn from(value: u8) -> Self {
 		match value {
 			1 => Self::MlKem768,
+			2 => Self::X25519,
+			3 => Self::MlKem1024,
 			_ => Self::Undefined,
 		}
 	}
 }
 
-pub fn encode_ec(curve_type: CurveType, pk_bytes: &[u8]) -> Result<Vec<u8>, EncodingError> {
-	match curve_type {
-		CurveType::Undefined => Err(EncodingError),
-		CurveType::Ed25519 => {
+pub fn encode_sign(sign_type: SignType, pk_bytes: &[u8]) -> Result<Vec<u8>, EncodingError> {
+	match sign_type {
+		SignType::Undefined => Err(EncodingError),
+		_ => {
 			let mut byt = Vec::from(pk_bytes);
-			byt.insert(0, curve_type.into());
-			Ok(byt)
-		}
-		CurveType::X25519 => {
-			let mut byt = Vec::from(pk_bytes);
-			byt.insert(0, curve_type.into());
+			byt.insert(0, sign_type.into());
 			Ok(byt)
 		}
 	}
 }
 
-pub fn decode_ec(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
-	if encoded_pk.len() < crypto_kx::PUBLICKEYBYTES + 1 {
-		return Err(DecodingError);
-	}
-	match CurveType::from(encoded_pk[0]) {
-		CurveType::Undefined => Err(DecodingError),
-		CurveType::Ed25519 => {
-			let mut key = vec![0u8; crypto_sign::PUBLICKEYBYTES + 1];
-			key.copy_from_slice(encoded_pk);
-			key.remove(0);
-			Ok(key)
-		}
-		CurveType::X25519 => {
-			let mut key = vec![0u8; crypto_kx::PUBLICKEYBYTES + 1];
+pub fn decode_sign(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
+	match SignType::from(encoded_pk[0]) {
+		SignType::Undefined => Err(DecodingError),
+		_ => {
+			let mut key = vec![0u8; encoded_pk.len()];
 			key.copy_from_slice(encoded_pk);
 			key.remove(0);
 			Ok(key)
@@ -130,7 +120,7 @@ pub fn decode_ec(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
 pub fn encode_kem(kem_type: KemType, pk_bytes: &[u8]) -> Result<Vec<u8>, EncodingError> {
 	match kem_type {
 		KemType::Undefined => Err(EncodingError),
-		KemType::MlKem768 => {
+		_ => {
 			let mut byt = Vec::from(pk_bytes);
 			byt.insert(0, kem_type.into());
 			Ok(byt)
@@ -140,13 +130,10 @@ pub fn encode_kem(kem_type: KemType, pk_bytes: &[u8]) -> Result<Vec<u8>, Encodin
 
 #[cfg(feature = "server")]
 pub fn decode_kem(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
-	if encoded_pk.len() < crypto_kem::mlkem768::PUBLICKEYBYTES + 1 {
-		return Err(DecodingError);
-	}
 	match KemType::from(encoded_pk[0]) {
 		KemType::Undefined => Err(DecodingError),
-		KemType::MlKem768 => {
-			let mut key = vec![0u8; crypto_kem::mlkem768::PUBLICKEYBYTES + 1];
+		_ => {
+			let mut key = vec![0u8; encoded_pk.len()];
 			key.copy_from_slice(encoded_pk);
 			key.remove(0);
 			Ok(key)
@@ -159,10 +146,14 @@ mod systems {
 	pub struct Hkdf;
 	#[cfg(feature = "server")]
 	pub struct Pqxdh;
+	pub struct MlKem;
+	pub struct Aead;
 }
 mod roles {
 	pub struct ChainKey;
 	pub struct DerivedSecret;
+	pub struct SharedSecret;
+	pub struct EncryptionKey;
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
@@ -210,7 +201,7 @@ impl<const S: usize, System, Role> Default for SecretArr<S, System, Role> {
 }
 
 impl<const S: usize, System, Role> SecretArr<S, System, Role> {
-	fn as_slice(&self) -> &[u8] {
+	pub fn as_slice(&self) -> &[u8] {
 		self.data.as_slice()
 	}
 
@@ -236,16 +227,9 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>;
 pub type KdfState = SecretArr<KDF_STATE_SIZE, systems::Hkdf, roles::ChainKey>;
 #[cfg(feature = "server")]
-pub type PqxdhSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
-
-#[cfg(feature = "server")]
-#[derive(Clone)]
-pub struct RegistrationOutput {
-	pub kem_ciphertext: crypto_kem::mlkem768::Ciphertext,
-	pub derived_secret: PqxdhSecret,
-	pub ephemeral: crypto_kx::PublicKey,
-	pub public_key: crypto_sign::PublicKey,
-}
+pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
+pub type MlKemSharedSecret = SecretArr<KEM_SHARED_SECRET_SIZE, systems::MlKem, roles::SharedSecret>;
+pub type AeadSecretBuffer = SecretArr<32, systems::Aead, roles::EncryptionKey>;
 
 /// This function is safe to call multiple times
 /// ## Arguments
@@ -256,7 +240,7 @@ pub struct RegistrationOutput {
 pub extern "C" fn init(is_beacon: bool, server_seq: u64) {
 	if !INITIALIZED.swap(true, Ordering::AcqRel) {
 		let mut state = STATE.lock().unwrap();
-		*state = BeaconCryptAgent::new(is_beacon, server_seq, None);
+		*state = Provider::new(is_beacon, server_seq, None);
 	}
 }
 
@@ -266,11 +250,11 @@ pub struct KeyMaterial {
 }
 
 impl KeyMaterial {
-	fn get_key(&self) -> &crypto_aead::chacha20poly1305_ietf::Key {
+	fn get_key(&self) -> &AeadKey {
 		&self.key
 	}
 
-	fn get_nonce(&self) -> &crypto_aead::chacha20poly1305_ietf::Nonce {
+	fn get_nonce(&self) -> &AeadNonce {
 		&self.nonce
 	}
 }
@@ -449,17 +433,19 @@ impl RatchetManager {
 	}
 }
 
-struct RemotePrincipal {
-	pk: crypto_sign::PublicKey,
+pub trait SignaturePk {}
+
+pub struct RemotePrincipal<PkType: SignaturePk> {
+	pk: PkType,
 	ratchet: RatchetManager,
 }
 
-impl RemotePrincipal {
-	fn new(pk: crypto_sign::PublicKey, ratchet: RatchetManager) -> Self {
+impl<PkType: SignaturePk> RemotePrincipal<PkType> {
+	pub fn new(pk: PkType, ratchet: RatchetManager) -> Self {
 		Self { pk, ratchet }
 	}
 
-	pub fn get_pk(&self) -> &crypto_sign::PublicKey {
+	pub fn get_pk(&self) -> &PkType {
 		&self.pk
 	}
 
@@ -472,119 +458,16 @@ impl RemotePrincipal {
 	}
 }
 
-pub struct BeaconCryptAgent {
-	identity_key_pk: crypto_sign::PublicKey,
-	identity_key_sk: crypto_sign::SecretKey,
-	#[cfg(feature = "ml-dsa")]
-	identity_pq: libcrux_ml_dsa::ml_dsa_65::MLDSA65KeyPair,
-	identity_key_kid: u64,
+pub trait CryptoProvider {
+	type SignaturePublicKey;
+	type SignatureSecretKey;
+	type KemPublicKey;
+	type KemSecretKey;
 
-	prekey_pk: crypto_kx::PublicKey,
-	prekey_sk: crypto_kx::SecretKey,
-
-	onetime_key_pk: crypto_kx::PublicKey,
-	onetime_key_sk: crypto_kx::SecretKey,
-
-	pq_key_pk: crypto_kem::mlkem768::PublicKey,
-	pq_key_sk: crypto_kem::mlkem768::SecretKey,
-
-	additional_data: [u8; AD_SIZE],
-	// unfortunately we can't use static generics so we have to store the role at runtime
-	is_beacon: bool,
-	// stores the server's `seq` for the beacon. Stores the counter of remote `seq`s for the server
-	server_kid: u64,
-	known_ids: HashMap<u64, RemotePrincipal>,
-}
-
-impl Default for BeaconCryptAgent {
-	fn default() -> Self {
-		Self {
-			// our cryptographic identity, this is unique to the specific agent instance and uniquely identifies it to the server
-			identity_key_pk: crypto_sign::PublicKey::from_bytes(
-				&[0u8; crypto_sign::PUBLICKEYBYTES],
-			)
-			.unwrap(),
-			identity_key_sk: crypto_sign::SecretKey::from_bytes(
-				&[0u8; crypto_sign::SECRETKEYBYTES],
-			)
-			.unwrap(),
-			#[cfg(feature = "ml-dsa")]
-			identity_pq: libcrux_ml_dsa::ml_dsa_65::generate_key_pair(
-				[0u8; libcrux_ml_dsa::KEY_GENERATION_RANDOMNESS_SIZE],
-			),
-			identity_key_kid: 0,
-
-			prekey_pk: crypto_kx::PublicKey::from_bytes(&[0u8; crypto_kx::PUBLICKEYBYTES]).unwrap(),
-			prekey_sk: crypto_kx::SecretKey::from_bytes(&[0u8; crypto_kx::SECRETKEYBYTES]).unwrap(),
-
-			onetime_key_pk: crypto_kx::PublicKey::from_bytes(&[0u8; crypto_kx::PUBLICKEYBYTES])
-				.unwrap(),
-			onetime_key_sk: crypto_kx::SecretKey::from_bytes(&[0u8; crypto_kx::SECRETKEYBYTES])
-				.unwrap(),
-
-			pq_key_pk: crypto_kem::mlkem768::PublicKey::from_bytes(
-				&[0u8; crypto_kem::mlkem768::PUBLICKEYBYTES],
-			)
-			.unwrap(),
-			pq_key_sk: crypto_kem::mlkem768::SecretKey::from_bytes(
-				&[0u8; crypto_kem::mlkem768::SECRETKEYBYTES],
-			)
-			.unwrap(),
-
-			additional_data: [0u8; AD_SIZE],
-			is_beacon: true,
-			server_kid: 0,
-			known_ids: HashMap::new(),
-		}
-	}
-}
-
-impl BeaconCryptAgent {
-	pub fn new(is_beacon: bool, server_kid: u64, server_pk: Option<&[u8]>) -> Self {
-		ensure_init().expect("Failed to initialize libsodium");
-
-		let id_keypair = crypto_sign::KeyPair::generate().unwrap();
-		let prekey = crypto_kx::KeyPair::generate().unwrap();
-		let onetime = crypto_kx::KeyPair::generate().unwrap();
-		let pqkey = crypto_kem::mlkem768::KeyPair::generate().unwrap();
-		#[cfg(feature = "ml-dsa")]
-		let binding = libsodium_rs::random::bytes(libcrux_ml_dsa::KEY_GENERATION_RANDOMNESS_SIZE);
-		#[cfg(feature = "ml-dsa")]
-		let pq_sig_rand = *binding.as_array::<ML_DSA_RAND_SIZE>().unwrap();
-		let known = if let Some(pk) = server_pk {
-			let mut hm = HashMap::new();
-			hm.insert(
-				server_kid,
-				RemotePrincipal::new(
-					crypto_sign::PublicKey::from_bytes(&pk).unwrap(),
-					RatchetManager::new(),
-				),
-			);
-			hm
-		} else {
-			HashMap::new()
-		};
-
-		Self {
-			identity_key_pk: id_keypair.public_key,
-			identity_key_sk: id_keypair.secret_key,
-			#[cfg(feature = "ml-dsa")]
-			identity_pq: libcrux_ml_dsa::ml_dsa_65::generate_key_pair(pq_sig_rand),
-			// this will be overwritten when the agent registers
-			identity_key_kid: server_kid,
-			prekey_pk: prekey.public_key,
-			prekey_sk: prekey.secret_key,
-			onetime_key_pk: onetime.public_key,
-			onetime_key_sk: onetime.secret_key,
-			pq_key_pk: pqkey.public_key,
-			pq_key_sk: pqkey.secret_key,
-			additional_data: [0u8; AD_SIZE],
-			is_beacon,
-			server_kid,
-			known_ids: known,
-		}
-	}
-
+	fn default() -> Self;
+	fn new(is_beacon: bool, server_kid: u64, server_pk: Option<&[u8]>) -> Self;
+	fn set_associated_data(&mut self, data: [u8; AD_SIZE]);
+	fn get_associated_data(&self) -> [u8; AD_SIZE];
 	/// ## Arguments
 	/// * `data`   - Some a serialized `CryptoFrame` to be decrypted
 	/// * `stob` - The identifier of the party who encrypted `data`
@@ -593,8 +476,8 @@ impl BeaconCryptAgent {
 	/// ## Returns
 	/// * `None` if some other error happens.
 	/// * `Vec<u8>` containing a serialized `cryptoframe_capnp::crypto_frame`
-	pub fn decrypt_message(&mut self, data: &[u8], kid: u64, stob: bool) -> Option<Vec<u8>> {
-		let associated_data = self.additional_data;
+	fn decrypt_message(&mut self, data: &[u8], kid: u64, stob: bool) -> Option<Vec<u8>> {
+		let associated_data = self.get_associated_data();
 		match capnp::serialize::read_message(data, ReaderOptions::new()) {
 			Ok(reader) => {
 				let typed_reader =
@@ -631,8 +514,8 @@ impl BeaconCryptAgent {
 	/// ## Returns
 	/// * `None` if some other error happens.
 	/// * `Vec<u8>` containing a serialized `cryptoframe_capnp::crypto_frame`
-	pub fn encrypt_message(&mut self, bytes: &[u8], stob: bool, seq: u64) -> Option<Vec<u8>> {
-		let associated_data = self.additional_data;
+	fn encrypt_message(&mut self, bytes: &[u8], stob: bool, seq: u64) -> Option<Vec<u8>> {
+		let associated_data = self.get_associated_data();
 		let key_seq = self.ratchet_send(SYM_RATCHET_INFO, seq)?;
 		let key = self.get_send_key(key_seq, seq)?;
 		let plaintext = crypto_aead::chacha20poly1305_ietf::encrypt(
@@ -658,130 +541,23 @@ impl BeaconCryptAgent {
 			Err(_) => None,
 		}
 	}
-
-	/// ## Arguments
-	/// * `data`   - buffer to be signed, probably should be a serialized `cryptoframe_capnp::crypto_frame`
-	pub fn sign_message(&self, data: &[u8]) -> Option<Vec<u8>> {
-		let mut t_builder: TypedBuilder<protogram_capnp::proto_gram::Owned> =
-			TypedBuilder::<protogram_capnp::proto_gram::Owned>::new_default();
-		let mut builder: protogram_capnp::proto_gram::Builder<'_> = t_builder.init_root();
-		builder.set_key_seq(self.identity_key_kid);
-		let signed = crypto_sign::sign(&data, self.get_identity_sk()).ok()?;
-		builder.set_data(&signed);
-		let mut buffer = vec![];
-		capnp::serialize_packed::write_message(&mut buffer, t_builder.borrow_inner()).unwrap();
-		Some(buffer)
+	fn sign_message(&self, data: &[u8]) -> Option<Vec<u8>>;
+	fn verify_signature(&self, data: &[u8]) -> Option<Vec<u8>>;
+	fn set_identity_kid(&mut self, key_id: u64);
+	fn new_remote_kid(&mut self) -> u64;
+	fn add_known_kid(&mut self, key_id: u64, pk: Self::SignaturePublicKey);
+	fn get_server_id(&self) -> Option<&Self::SignaturePublicKey>;
+	fn get_server_kid(&self) -> u64;
+	fn add_server_pk(&mut self, pk: Self::SignaturePublicKey) {
+		self.add_known_kid(self.get_server_kid(), pk)
 	}
-
-	pub fn set_identity_kid(&mut self, key_id: u64) {
-		self.identity_key_kid = key_id;
-	}
-
-	/// ## Arguments
-	/// * `data`   - wire buffer to check the signature for, MUST be a serialized `protogram_capnp::proto_gram`
-	///
-	/// ## Returns
-	/// * `None` if signature verification fails or some other error happens.
-	/// * `Vec<u8>` containing the authenticated buffer with the signature stripped
-	pub fn verify_signature(&self, data: &[u8]) -> Option<Vec<u8>> {
-		let t_reader = create_protogram_reader(data)?;
-		let reader = t_reader.get().ok()?;
-		let message = reader.get_data().ok()?;
-		// hardcode this to avoid potential confusion
-		if self.is_beacon {
-			crypto_sign::verify(message, self.get_server_id()?)
-		} else {
-			crypto_sign::verify(message, self.get_id_by_seq(reader.get_key_seq())?)
-		}
-	}
-
-	pub fn add_known_kid(&mut self, key_id: u64, pk: crypto_sign::PublicKey) {
-		self.known_ids
-			.entry(key_id)
-			.or_insert(RemotePrincipal::new(pk, RatchetManager::new()));
-	}
-
-	pub fn set_associated_data(&mut self, data: [u8; AD_SIZE]) {
-		self.additional_data = data
-	}
-
-	pub fn add_server_pk(&mut self, pk: crypto_sign::PublicKey) {
-		self.add_known_kid(self.server_kid, pk)
-	}
-
-	pub fn get_server_id(&self) -> Option<&crypto_sign::PublicKey> {
-		if let Some(remote) = self.known_ids.get(&self.server_kid) {
-			Some(remote.get_pk())
-		} else {
-			None
-		}
-	}
-
-	pub fn get_server_kid(&self) -> u64 {
-		self.server_kid
-	}
-
-	pub fn get_id_by_seq(&self, seq: u64) -> Option<&crypto_sign::PublicKey> {
-		if let Some(remote) = self.known_ids.get(&seq) {
-			Some(remote.get_pk())
-		} else {
-			None
-		}
-	}
-
-	pub fn get_identity_pk(&self) -> &crypto_sign::PublicKey {
-		&self.identity_key_pk
-	}
-
-	pub fn get_identity_sk(&self) -> &crypto_sign::SecretKey {
-		&self.identity_key_sk
-	}
-
-	pub fn get_prekey_pk(&self) -> &crypto_kx::PublicKey {
-		&self.prekey_pk
-	}
-
-	pub fn get_prekey_sk(&self) -> &crypto_kx::SecretKey {
-		&self.prekey_sk
-	}
-
-	pub fn get_onetime_pk(&self) -> &crypto_kx::PublicKey {
-		&self.onetime_key_pk
-	}
-
-	pub fn get_onetime_sk(&self) -> &crypto_kx::SecretKey {
-		&self.onetime_key_sk
-	}
-
-	pub fn delete_onetime_keypair(&mut self) {
-		self.onetime_key_pk = crypto_kx::PublicKey::from([0u8; 32]);
-		self.onetime_key_sk = crypto_kx::SecretKey::from([0u8; 32]);
-	}
-
-	pub fn get_pq_pk(&self) -> &crypto_kem::mlkem768::PublicKey {
-		&self.pq_key_pk
-	}
-
-	pub fn get_pq_sk(&self) -> &crypto_kem::mlkem768::SecretKey {
-		&self.pq_key_sk
-	}
-
-	pub fn get_ratchet_manager(&self, kid: u64) -> Option<&RatchetManager> {
-		if let Some(remote) = self.known_ids.get(&kid) {
-			Some(remote.get_ratchet())
-		} else {
-			None
-		}
-	}
-
-	pub fn get_ratchet_manager_mut(&mut self, kid: u64) -> Option<&mut RatchetManager> {
-		if let Some(remote) = self.known_ids.get_mut(&kid) {
-			Some(remote.get_ratchet_mut())
-		} else {
-			None
-		}
-	}
-
+	fn get_id_by_seq(&self, seq: u64) -> Option<&Self::SignaturePublicKey>;
+	fn get_identity_pk(&self) -> &Self::SignaturePublicKey;
+	fn get_identity_sk(&self) -> &Self::SignatureSecretKey;
+	fn get_pq_pk(&self) -> &Self::KemPublicKey;
+	fn get_pq_sk(&self) -> &Self::KemSecretKey;
+	fn get_ratchet_manager(&self, kid: u64) -> Option<&RatchetManager>;
+	fn get_ratchet_manager_mut(&mut self, kid: u64) -> Option<&mut RatchetManager>;
 	/// ## Arguments
 	/// * `info` - The info buffer to use for the ratchet step(s)
 	/// * `until` - The message sequence number to ratchet to
@@ -790,44 +566,43 @@ impl BeaconCryptAgent {
 	/// ## Returns
 	/// * `None` if signature verification fails or some other error happens.
 	/// * `Vec<u8>` containing the authenticated buffer with the signature stripped
-	pub fn ratchet_recv_until(&mut self, info: &[u8], until: u64, kid: u64) -> Option<u64> {
+	fn ratchet_recv_until(&mut self, info: &[u8], until: u64, kid: u64) -> Option<u64> {
 		let remote = self.get_ratchet_manager_mut(kid)?;
 		remote.ratchet_recv_until(info, until)
 	}
 
-	pub fn ratchet_send(&mut self, info: &[u8], kid: u64) -> Option<u64> {
+	fn ratchet_send(&mut self, info: &[u8], kid: u64) -> Option<u64> {
 		let remote = self.get_ratchet_manager_mut(kid)?;
 		remote.ratchet_send(info)
 	}
-
-	pub fn get_send_key(&self, seq: u64, kid: u64) -> Option<&KeyMaterial> {
+	fn get_send_key(&self, seq: u64, kid: u64) -> Option<&KeyMaterial> {
 		match self.get_ratchet_manager(kid) {
 			Some(remote) => remote.get_send_key(seq),
 			None => None,
 		}
 	}
 
-	pub fn get_recv_key(&self, seq: u64, kid: u64) -> Option<&KeyMaterial> {
+	fn get_recv_key(&self, seq: u64, kid: u64) -> Option<&KeyMaterial> {
 		match self.get_ratchet_manager(kid) {
 			Some(remote) => remote.get_recv_key(seq),
 			None => None,
 		}
 	}
 
-	pub fn delete_send_key(&mut self, seq: u64, kid: u64) {
+	fn delete_send_key(&mut self, seq: u64, kid: u64) {
 		if let Some(remote) = self.get_ratchet_manager_mut(kid) {
 			remote.delete_send_key(seq)
 		}
 	}
 
-	pub fn delete_recv_key(&mut self, seq: u64, kid: u64) {
+	fn delete_recv_key(&mut self, seq: u64, kid: u64) {
 		if let Some(remote) = self.get_ratchet_manager_mut(kid) {
 			remote.delete_recv_key(seq)
 		}
 	}
 
-	/// You must call `BeaconCryptAgent::add_known_id` or `BeaconCryptAgent::add_server_id` before this
-	pub fn init_ratchets(&mut self, ikm: &[u8], info: &[u8], is_beacon: bool, seq: u64) -> bool {
+	/// You must call `add_known_id` or `add_server_id` before this
+	fn init_ratchets(&mut self, ikm: &[u8], info: &[u8], is_beacon: bool, seq: u64) -> bool {
 		match self.get_ratchet_manager_mut(seq) {
 			Some(remote) => {
 				remote.init_ratchets(ikm, info, is_beacon);
@@ -836,50 +611,6 @@ impl BeaconCryptAgent {
 			None => false,
 		}
 	}
-
-	#[cfg(feature = "server")]
-	pub fn new_remote_kid(&mut self) -> u64 {
-		self.server_kid += 1;
-		self.server_kid
-	}
-}
-
-pub fn derive_root_key(
-	dh1: DhSecret,
-	dh2: DhSecret,
-	dh3: DhSecret,
-	dh4: DhSecret,
-	shared_secret: crypto_kem::mlkem768::SharedSecret,
-) -> Result<Vec<u8>, SodiumError> {
-	// make sure to start inserting after sizeof(Ed25519) so the first bytes are filled with 0xFF as per the spec:
-	// https://signal.org/docs/specifications/pqxdh/#cryptographic-notation
-	let mut ikm = vec![0xFFu8; crypto_kx::PUBLICKEYBYTES];
-	ikm.extend_from_slice(dh1.as_slice());
-	ikm.extend_from_slice(dh2.as_slice());
-	ikm.extend_from_slice(dh3.as_slice());
-	ikm.extend_from_slice(dh4.as_slice());
-	ikm.extend_from_slice(shared_secret.as_bytes());
-
-	let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm)?;
-	crypto_kdf::hkdf::sha512::expand(KEX_KDF_OUT_LEN, Some(PQXDH_INFO), &prk)
-}
-
-pub fn build_additional_data(
-	server_id: crypto_sign::PublicKey,
-	beacon_id: crypto_sign::PublicKey,
-) -> [u8; AD_SIZE] {
-	let mut buffer = vec![0u8; 0];
-	let mut kex_proto = [0u8; PQXDH_INFO.len()];
-	kex_proto.copy_from_slice(PQXDH_INFO);
-	buffer.extend_from_slice(&kex_proto);
-	let mut sym_proto = [0u8; SYM_RATCHET_INFO.len()];
-	sym_proto.copy_from_slice(SYM_RATCHET_INFO);
-	buffer.extend_from_slice(&sym_proto);
-	let mut encoded_server = encode_ec(CurveType::Ed25519, server_id.as_bytes()).unwrap();
-	buffer.append(&mut encoded_server);
-	let mut encoded_beacon = encode_ec(CurveType::Ed25519, beacon_id.as_bytes()).unwrap();
-	buffer.append(&mut encoded_beacon);
-	*buffer.as_array::<AD_SIZE>().unwrap()
 }
 
 /// # Safety

@@ -20,12 +20,15 @@ capnp = "0.26"
 libsodium-rs = "0.2"
 zeroize = "1.9"
 libcrux-ml-dsa = { version = "0.0.9", optional = true }
+libcrux-ml-kem = { version = "0.0.9", optional = true }
+libcrux-aesgcm = { version = "0.0.8", optional = true }
 
 [features]
-default = ["beacon", "server"]
+default = ["beacon", "server", "cnsa2"]
 server = []
 beacon = []
-ml-dsa = ["dep:libcrux-ml-dsa"]
+cnsa2 = ["dep:libcrux-ml-dsa", "dep:libcrux-ml-kem", "dep:libcrux-aesgcm"]
+pqxdh = []
 
 [profile.release]
 strip = true
