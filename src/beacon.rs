@@ -17,7 +17,7 @@ pub trait ProviderBeacon {
 pub unsafe extern "C" fn process_initial_message(
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -31,7 +31,7 @@ pub unsafe extern "C" fn process_initial_message(
 	match state.finish_registration(net_vec.as_slice()) {
 		Some(mut plaintext) => {
 			unsafe {
-				_out = plaintext.as_mut_ptr();
+				*_out = plaintext.as_mut_ptr();
 				*out_len = plaintext.len();
 				*out_capa = plaintext.capacity();
 				mem::forget(plaintext);
@@ -50,7 +50,7 @@ pub unsafe extern "C" fn process_initial_message(
 pub unsafe extern "C" fn process_initial_message_signed(
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -66,7 +66,7 @@ pub unsafe extern "C" fn process_initial_message_signed(
 		Some(verified) => match state.finish_registration(&verified) {
 			Some(mut plaintext) => {
 				unsafe {
-					_out = plaintext.as_mut_ptr();
+					*_out = plaintext.as_mut_ptr();
 					*out_len = plaintext.len();
 					*out_capa = plaintext.capacity();
 					mem::forget(plaintext);
@@ -97,7 +97,7 @@ pub unsafe extern "C" fn process_initial_message_signed(
 pub unsafe extern "C" fn decrypt_server_message(
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -111,7 +111,7 @@ pub unsafe extern "C" fn decrypt_server_message(
 	match state.decrypt_message(&data_vec, srv_seq, true) {
 		Some(mut plaintext) => {
 			unsafe {
-				_out = plaintext.as_mut_ptr();
+				*_out = plaintext.as_mut_ptr();
 				*out_len = plaintext.len();
 				*out_capa = plaintext.capacity();
 				mem::forget(plaintext);
@@ -140,7 +140,7 @@ pub unsafe extern "C" fn decrypt_server_message(
 pub unsafe extern "C" fn decrypt_server_message_signed(
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -156,7 +156,7 @@ pub unsafe extern "C" fn decrypt_server_message_signed(
 			match state.decrypt_message(&verified, srv_seq, true) {
 				Some(mut plaintext) => {
 					unsafe {
-						_out = plaintext.as_mut_ptr();
+						*_out = plaintext.as_mut_ptr();
 						*out_len = plaintext.len();
 						*out_capa = plaintext.capacity();
 						mem::forget(plaintext);
@@ -188,7 +188,7 @@ pub unsafe extern "C" fn decrypt_server_message_signed(
 pub unsafe extern "C" fn encrypt_to_server(
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -201,7 +201,7 @@ pub unsafe extern "C" fn encrypt_to_server(
 	match state.encrypt_message(data_vec.as_slice(), false, srv_seq) {
 		Some(mut ciphertext) => {
 			unsafe {
-				_out = ciphertext.as_mut_ptr();
+				*_out = ciphertext.as_mut_ptr();
 				*out_len = ciphertext.len();
 				*out_capa = ciphertext.capacity();
 				mem::forget(ciphertext);
@@ -230,7 +230,7 @@ pub unsafe extern "C" fn encrypt_to_server(
 pub unsafe extern "C" fn encrypt_to_server_signed(
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -244,7 +244,7 @@ pub unsafe extern "C" fn encrypt_to_server_signed(
 		Some(ciphertext) => match state.sign_message(ciphertext.as_slice()) {
 			Some(mut signed) => {
 				unsafe {
-					_out = signed.as_mut_ptr();
+					*_out = signed.as_mut_ptr();
 					*out_len = signed.len();
 					*out_capa = signed.capacity();
 					mem::forget(signed);
@@ -272,7 +272,7 @@ pub unsafe extern "C" fn encrypt_to_server_signed(
 /// `0` on success, negative values on error
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn generate_registration(
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -280,7 +280,7 @@ pub unsafe extern "C" fn generate_registration(
 	match state.get_registration_bundle() {
 		Some(mut data) => {
 			unsafe {
-				_out = data.as_mut_ptr();
+				*_out = data.as_mut_ptr();
 				*out_len = data.len();
 				*out_capa = data.capacity();
 				mem::forget(data);

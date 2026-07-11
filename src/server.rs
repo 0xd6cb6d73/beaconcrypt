@@ -72,10 +72,10 @@ pub unsafe extern "C" fn register_beacon(
 	bytes_len: usize,
 	data: *const u8,
 	data_len: usize,
-	mut _response: *mut u8,
+	mut _response: *mut *mut u8,
 	response_len: *mut usize,
 	response_capa: *mut usize,
-	mut _pk: *mut u8,
+	mut _pk: *mut *mut u8,
 	pk_len: *mut usize,
 	pk_capa: *mut usize,
 	key_id: *mut u64,
@@ -96,12 +96,12 @@ pub unsafe extern "C" fn register_beacon(
 				Some(mut response) => {
 					let beacon_key_id = response.kid;
 					unsafe {
-						_response = response.serialized.as_mut_ptr();
+						*_response = response.serialized.as_mut_ptr();
 						*response_len = response.serialized.len();
 						*response_capa = response.serialized.capacity();
 						mem::forget(response);
 						let mut pk = secrets.public_key.as_ref().to_vec();
-						_pk = pk.as_mut_ptr();
+						*_pk = pk.as_mut_ptr();
 						*pk_len = pk.len();
 						*pk_capa = pk.capacity();
 						mem::forget(pk);
@@ -136,7 +136,7 @@ pub unsafe extern "C" fn decrypt_beacon_message(
 	seq: u64,
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -149,7 +149,7 @@ pub unsafe extern "C" fn decrypt_beacon_message(
 	match state.decrypt_message(&data_vec, seq, false) {
 		Some(mut plaintext) => {
 			unsafe {
-				_out = plaintext.as_mut_ptr();
+				*_out = plaintext.as_mut_ptr();
 				*out_len = plaintext.len();
 				*out_capa = plaintext.capacity();
 				mem::forget(plaintext);
@@ -180,7 +180,7 @@ pub unsafe extern "C" fn decrypt_beacon_message_signed(
 	seq: u64,
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -194,7 +194,7 @@ pub unsafe extern "C" fn decrypt_beacon_message_signed(
 		Some(verified) => match state.decrypt_message(&verified, seq, false) {
 			Some(mut plaintext) => {
 				unsafe {
-					_out = plaintext.as_mut_ptr();
+					*_out = plaintext.as_mut_ptr();
 					*out_len = plaintext.len();
 					*out_capa = plaintext.capacity();
 					mem::forget(plaintext);
@@ -227,7 +227,7 @@ pub unsafe extern "C" fn encrypt_to_beacon(
 	seq: u64,
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -239,7 +239,7 @@ pub unsafe extern "C" fn encrypt_to_beacon(
 	match state.encrypt_message(data_vec.as_slice(), true, seq) {
 		Some(mut ciphertext) => {
 			unsafe {
-				_out = ciphertext.as_mut_ptr();
+				*_out = ciphertext.as_mut_ptr();
 				*out_len = ciphertext.len();
 				*out_capa = ciphertext.capacity();
 				mem::forget(ciphertext);
@@ -270,7 +270,7 @@ pub unsafe extern "C" fn encrypt_to_beacon_signed(
 	seq: u64,
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -283,7 +283,7 @@ pub unsafe extern "C" fn encrypt_to_beacon_signed(
 		Some(ciphertext) => match state.sign_message(ciphertext.as_slice()) {
 			Some(mut signed) => {
 				unsafe {
-					_out = signed.as_mut_ptr();
+					*_out = signed.as_mut_ptr();
 					*out_len = signed.len();
 					*out_capa = signed.capacity();
 					mem::forget(signed);
