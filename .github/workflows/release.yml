@@ -77,6 +77,7 @@ jobs:
       uses: actions/download-artifact@v8
       with:
         path: ./dist
+        merge-multiple: true
     - name: Publish built binary to GitHub releases
       run: |
         gh release create ${{ github.ref_name }} --notes-from-tag ./dist/*
