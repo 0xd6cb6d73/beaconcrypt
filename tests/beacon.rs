@@ -21,7 +21,7 @@ fn beacon_can_catch_up() {
 
 	let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 	let _ = test_register_pqxdh_beacon(&mut server, &mut b1);
-	assert!(server.id_by_seq(1).is_some());
+	assert!(server.pk_by_kid(1).is_some());
 
 	let message = [0xFFu8; 32];
 	let b1_m1 = server.encrypt_message(&message, true, 1).unwrap();

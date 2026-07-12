@@ -6,5 +6,5 @@ struct ProtoGram {
    # signed buffer in libsodium format
    data @0 :Data;
    # This is the identifier of the key used to sign this message.
-   keySeq @1 :UInt64;
+   keyId @1 :UInt64;
 }

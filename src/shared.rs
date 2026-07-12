@@ -163,7 +163,7 @@ mod roles {
 
 pub struct VerifiedMessage {
 	pub data: Vec<u8>,
-	pub key_seq: u64,
+	pub key_id: u64,
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
@@ -246,12 +246,12 @@ pub type MlKemSharedSecret = SecretArr<KEM_SHARED_SECRET_SIZE, systems::MlKem, r
 /// ## Arguments
 ///
 /// * `is_beacon` - Whether the current instance is a beacon
-/// * `server_seq` - The ID of the server's identity key for the campaign
+/// * `server_kid` - The ID of the server's identity key for the campaign
 #[unsafe(no_mangle)]
-pub extern "C" fn init(is_beacon: bool, server_seq: u64) {
+pub extern "C" fn init(is_beacon: bool, server_kid: u64) {
 	if !INITIALIZED.swap(true, Ordering::AcqRel) {
 		let mut state = STATE.lock().unwrap();
-		*state = Provider::new(is_beacon, server_seq, None, None);
+		*state = Provider::new(is_beacon, server_kid, None, None);
 	}
 }
 
@@ -382,12 +382,12 @@ impl RatchetManager {
 		Some(current)
 	}
 
-	pub fn send_key(&self, id: u64) -> Option<&KeyMaterial> {
-		self.send_past.get(&id)
+	pub fn send_key(&self, seq: u64) -> Option<&KeyMaterial> {
+		self.send_past.get(&seq)
 	}
 
-	pub fn recv_key(&self, id: u64) -> Option<&KeyMaterial> {
-		self.recv_past.get(&id)
+	pub fn recv_key(&self, seq: u64) -> Option<&KeyMaterial> {
+		self.recv_past.get(&seq)
 	}
 
 	pub fn ratchet_recv(&mut self, info: &[u8]) -> Option<u64> {
@@ -431,12 +431,12 @@ impl RatchetManager {
 		combined.zeroize();
 	}
 
-	pub fn delete_send_key(&mut self, id: u64) {
-		self.send_past.remove(&id);
+	pub fn delete_send_key(&mut self, seq: u64) {
+		self.send_past.remove(&seq);
 	}
 
-	pub fn delete_recv_key(&mut self, id: u64) {
-		self.recv_past.remove(&id);
+	pub fn delete_recv_key(&mut self, seq: u64) {
+		self.recv_past.remove(&seq);
 	}
 }
 
@@ -521,22 +521,22 @@ pub trait CryptoProvider {
 	/// ## Arguments
 	/// * `data`   - Some arbitrary byte buffer to be encrypted
 	/// * `stob` - The direction of this message
-	/// * `seq` - The identifier for the remote to encrypt to
+	/// * `kid` - The identifier for the remote to encrypt to
 	///
 	/// ## Returns
 	/// * `None` if some other error happens.
 	/// * `Vec<u8>` containing a serialized `cryptoframe_capnp::crypto_frame`
-	fn encrypt_message(&mut self, bytes: &[u8], stob: bool, seq: u64) -> Option<Vec<u8>> {
+	fn encrypt_message(&mut self, bytes: &[u8], stob: bool, kid: u64) -> Option<Vec<u8>> {
 		let associated_data = self.associated_data();
-		let key_seq = self.ratchet_send(SYM_RATCHET_INFO, seq)?;
-		let key = self.send_key(key_seq, seq)?;
+		let key_seq = self.ratchet_send(SYM_RATCHET_INFO, kid)?;
+		let key = self.send_key(key_seq, kid)?;
 		let plaintext = crypto_aead::chacha20poly1305_ietf::encrypt(
 			bytes,
 			Some(associated_data.as_slice()),
 			key.get_nonce(),
 			key.get_key(),
 		);
-		self.delete_send_key(key_seq, seq);
+		self.delete_send_key(key_seq, kid);
 		match plaintext {
 			Ok(plaintext) => {
 				let mut t_builder =
@@ -563,7 +563,7 @@ pub trait CryptoProvider {
 	fn add_server_pk(&mut self, pk: Self::SignaturePublicKey) {
 		self.add_known_kid(self.server_kid(), pk)
 	}
-	fn id_by_seq(&self, seq: u64) -> Option<&Self::SignaturePublicKey>;
+	fn pk_by_kid(&self, kid: u64) -> Option<&Self::SignaturePublicKey>;
 	fn identity_pk(&self) -> &Self::SignaturePublicKey;
 	fn identity_sk(&self) -> &Self::SignatureSecretKey;
 	fn pq_pk(&self) -> Option<&Self::KemPublicKey>;
@@ -573,7 +573,7 @@ pub trait CryptoProvider {
 	/// ## Arguments
 	/// * `info` - The info buffer to use for the ratchet step(s)
 	/// * `until` - The message sequence number to ratchet to
-	/// * `seq` - The identity to ratchet for
+	/// * `kid` - The identity to ratchet for
 	///
 	/// ## Returns
 	/// * `None` if signature verification fails or some other error happens.
@@ -614,8 +614,8 @@ pub trait CryptoProvider {
 	}
 
 	/// You must call `add_known_id` or `add_server_id` before this
-	fn init_ratchets(&mut self, ikm: &[u8], info: &[u8], is_beacon: bool, seq: u64) -> bool {
-		match self.ratchet_manager_mut(seq) {
+	fn init_ratchets(&mut self, ikm: &[u8], info: &[u8], is_beacon: bool, kid: u64) -> bool {
+		match self.ratchet_manager_mut(kid) {
 			Some(remote) => {
 				remote.init_ratchets(ikm, info, is_beacon);
 				true
@@ -688,7 +688,7 @@ pub unsafe extern "C" fn verify_signature(
 				_out = verified.data.as_mut_ptr();
 				*out_len = verified.data.len();
 				*out_capa = verified.data.capacity();
-				*key_id = verified.key_seq;
+				*key_id = verified.key_id;
 				mem::forget(verified);
 			};
 			0

@@ -52,7 +52,7 @@ pub struct BeaconCryptCnsa2 {
 	associated_data: [u8; AD_SIZE],
 	// unfortunately we can't use static generics so we have to store the role at runtime
 	is_beacon: bool,
-	// stores the server's `seq` for the beacon. Stores the counter of remote `seq`s for the server
+	// stores the server's `key_id` for the beacon. Stores the counter of remote `key_id`s for the server
 	server_kid: u64,
 	known_ids: HashMap<u64, RemotePrincipal<ml_dsa_87::MLDSA87VerificationKey>>,
 }
@@ -139,7 +139,7 @@ impl CryptoProvider for BeaconCryptCnsa2 {
 		let mut t_builder: TypedBuilder<protogram_capnp::proto_gram::Owned> =
 			TypedBuilder::<protogram_capnp::proto_gram::Owned>::new_default();
 		let mut builder: protogram_capnp::proto_gram::Builder<'_> = t_builder.init_root();
-		builder.set_key_seq(self.identity_key_kid);
+		builder.set_key_id(self.identity_key_kid);
 		let ctx = [0u8; 0];
 		let random = libsodium_rs::random::bytes(ML_DSA_SIGN_RANDOM_SIZE);
 		let random_arr = random.as_array::<ML_DSA_SIGN_RANDOM_SIZE>().unwrap();
@@ -182,7 +182,7 @@ impl CryptoProvider for BeaconCryptCnsa2 {
 		let pubkey = if self.is_beacon {
 			self.get_server_id()?
 		} else {
-			self.get_id_by_seq(reader.get_key_seq())?
+			self.get_id_by_seq(reader.get_key_id())?
 		};
 		ml_dsa_87::verify(pubkey, &message, &ctx, &signature).ok()?;
 		Some(message)

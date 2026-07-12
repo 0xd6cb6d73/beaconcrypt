@@ -37,7 +37,7 @@ pub struct BeaconCryptPqxdh {
 	associated_data: [u8; AD_SIZE],
 	// unfortunately we can't use static generics so we have to store the role at runtime
 	is_beacon: bool,
-	// stores the server's `seq` for the beacon. Stores the counter of remote `seq`s for the server
+	// stores the server's `key_id` for the beacon. Stores the counter of remote `key_id`s for the server
 	server_kid: u64,
 	known_ids: HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
 }
@@ -139,7 +139,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		let mut t_builder: TypedBuilder<protogram_capnp::proto_gram::Owned> =
 			TypedBuilder::<protogram_capnp::proto_gram::Owned>::new_default();
 		let mut builder: protogram_capnp::proto_gram::Builder<'_> = t_builder.init_root();
-		builder.set_key_seq(self.identity_key_kid);
+		builder.set_key_id(self.identity_key_kid);
 		let signed = crypto_sign::sign(data, self.identity_sk()).ok()?;
 		builder.set_data(&signed);
 		let mut buffer = vec![];
@@ -161,16 +161,16 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		let t_reader = create_protogram_reader(data)?;
 		let reader = t_reader.get().ok()?;
 		let message = reader.get_data().ok()?;
-		let seq = reader.get_key_seq();
+		let key_id = reader.get_key_id();
 		// hardcode this to avoid potential confusion
 		let verified = if self.is_beacon {
 			crypto_sign::verify(message, self.server_id()?)?
 		} else {
-			crypto_sign::verify(message, self.id_by_seq(reader.get_key_seq())?)?
+			crypto_sign::verify(message, self.pk_by_kid(reader.get_key_id())?)?
 		};
 		Some(VerifiedMessage {
 			data: verified,
-			key_seq: seq,
+			key_id,
 		})
 	}
 
@@ -205,8 +205,8 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		self.server_kid
 	}
 
-	fn id_by_seq(&self, seq: u64) -> Option<&crypto_sign::PublicKey> {
-		if let Some(remote) = self.known_ids.get(&seq) {
+	fn pk_by_kid(&self, kid: u64) -> Option<&crypto_sign::PublicKey> {
+		if let Some(remote) = self.known_ids.get(&kid) {
 			Some(remote.pk())
 		} else {
 			None
@@ -510,16 +510,16 @@ pub fn build_additional_data(
 /// This function is safe to call multiple times.
 /// ## Arguments
 ///
-/// * `server_seq` - The ID of the server's identity key for the campaign
+/// * `server_kid` - The ID of the server's identity key for the campaign
 /// * `id_seed` - 32 byte Ed25519 seed for the server's identity key
 #[unsafe(no_mangle)]
-pub extern "C" fn init_server_from_seeds(server_seq: u64, id_seed: *const u8) {
+pub extern "C" fn init_server_from_seeds(server_kid: u64, id_seed: *const u8) {
 	if !INITIALIZED.swap(true, Ordering::AcqRel) {
 		let mut state = STATE.lock().unwrap();
 		let id_seed_slice = slice_from_raw_parts(id_seed, ED25519_SEED_SIZE);
 		let mut id_seed_vec = vec![0u8; crypto_sign::PUBLICKEYBYTES];
 		id_seed_vec.copy_from_slice(unsafe { id_seed_slice.as_ref().unwrap() });
-		*state = Provider::new(false, server_seq, None, Some(&id_seed_vec));
+		*state = Provider::new(false, server_kid, None, Some(&id_seed_vec));
 	}
 }
 
@@ -571,8 +571,8 @@ mod tests {
 		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let _ = test_register_beacon(&mut server, &mut b2);
 
-		assert!(server.id_by_seq(1).is_some());
-		assert!(server.id_by_seq(2).is_some());
+		assert!(server.pk_by_kid(1).is_some());
+		assert!(server.pk_by_kid(2).is_some());
 
 		let message = [0xFFu8; 32];
 		let b1_m1 = server.encrypt_message(&message, true, 1).unwrap();
@@ -588,7 +588,7 @@ mod tests {
 		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let _ = test_register_beacon(&mut server, &mut b1);
 
-		assert!(server.id_by_seq(1).is_some());
+		assert!(server.pk_by_kid(1).is_some());
 
 		let message = [0xFFu8; 32];
 		let b1_m1 = server.encrypt_message(&message, true, 1).unwrap();
@@ -652,7 +652,7 @@ mod tests {
 
 		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let _ = test_register_beacon(&mut server, &mut b1);
-		assert!(server.id_by_seq(1).is_some());
+		assert!(server.pk_by_kid(1).is_some());
 
 		let message = [0xFFu8; 32];
 		let b1_m1 = server.encrypt_message(&message, true, 1).unwrap();

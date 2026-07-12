@@ -116,13 +116,14 @@ pub unsafe extern "C" fn register_beacon(
 	}
 }
 
+/// This function takes a raw `cryptoframe_capnp::crypto_frame`. It needs to know the ID of the beacon that encrypted the message
 /// # Safety
 /// * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
 /// * The library will overwrite all the `out` parameters
 /// * It is not safe to read the `out` parameters if the function doesn't return `0`
 ///
 /// ## Arguments
-/// * `seq` - The sequence number for the beacon to encypt to
+/// * `key_id` - The ID of the beacon to decrypt for
 /// * `bytes` - A serialized `cryptoframe_capnp::crypto_frame`
 /// * `bytes_len` - The size of the `bytes` buffer
 /// * `out` - A caller-managed pointer that will contain the results in case of success. Call `free_vec` to free it once you're done
@@ -133,7 +134,7 @@ pub unsafe extern "C" fn register_beacon(
 /// `0` on success, negative values on error
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn decrypt_beacon_message(
-	seq: u64,
+	key_id: u64,
 	bytes: *const u8,
 	bytes_len: usize,
 	mut _out: *mut *mut u8,
@@ -146,7 +147,7 @@ pub unsafe extern "C" fn decrypt_beacon_message(
 	let mut state = STATE.lock().unwrap();
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
 
-	match state.decrypt_message(&data_vec, seq, false) {
+	match state.decrypt_message(&data_vec, key_id, false) {
 		Some(mut plaintext) => {
 			unsafe {
 				*_out = plaintext.as_mut_ptr();
@@ -160,14 +161,14 @@ pub unsafe extern "C" fn decrypt_beacon_message(
 	}
 }
 
+/// This function takes a raw `protogram_capnp::proto_gram` and returns a plaintext if the signature is valid. It does not need to know the ID of the beacon that created the message
 /// # Safety
 /// * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
 /// * The library will overwrite all the `out` parameters
 /// * It is not safe to read the `out` parameters if the function doesn't return `0`
 ///
 /// ## Arguments
-/// * `seq` - The sequence number for the beacon to encypt to
-/// * `bytes` - A serialized `cryptoframe_capnp::crypto_frame`
+/// * `bytes` - A serialized `protogram_capnp::proto_gram`
 /// * `bytes_len` - The size of the `bytes` buffer
 /// * `out` - A caller-managed pointer that will contain the results in case of success. Call `free_vec` to free it once you're done
 /// * `out_len` - The actual size of the `out` buffer
@@ -190,7 +191,7 @@ pub unsafe extern "C" fn decrypt_beacon_message_signed(
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
 
 	match state.verify_signature(data_vec.as_slice()) {
-		Some(verified) => match state.decrypt_message(&verified.data, verified.key_seq, false) {
+		Some(verified) => match state.decrypt_message(&verified.data, verified.key_id, false) {
 			Some(mut plaintext) => {
 				unsafe {
 					*_out = plaintext.as_mut_ptr();
@@ -206,13 +207,14 @@ pub unsafe extern "C" fn decrypt_beacon_message_signed(
 	}
 }
 
+/// Encrypts a plaintext to the beacon identified by `key_id`. The output is intended to be sent directly over the network
 /// # Safety
 /// * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
 /// * The library will overwrite all the `out` parameters
 /// * It is not safe to read the `out` parameters if the function doesn't return `0`
 ///
 /// ## Arguments
-/// * `seq` - The sequence number for the beacon to encypt to
+/// * `key_id` - The ID of the beacon to encypt for
 /// * `bytes` - Whatever you want to be encrypted to the server
 /// * `bytes_len` - The size of the `bytes` buffer
 /// * `out` - A caller-managed pointer that will contain the results in case of success. Call `free_vec` to free it once you're done
@@ -223,7 +225,7 @@ pub unsafe extern "C" fn decrypt_beacon_message_signed(
 /// `0` on success, negative values on error
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn encrypt_to_beacon(
-	seq: u64,
+	key_id: u64,
 	bytes: *const u8,
 	bytes_len: usize,
 	mut _out: *mut *mut u8,
@@ -235,7 +237,7 @@ pub unsafe extern "C" fn encrypt_to_beacon(
 	}
 	let mut state = STATE.lock().unwrap();
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
-	match state.encrypt_message(data_vec.as_slice(), true, seq) {
+	match state.encrypt_message(data_vec.as_slice(), true, key_id) {
 		Some(mut ciphertext) => {
 			unsafe {
 				*_out = ciphertext.as_mut_ptr();
@@ -249,13 +251,14 @@ pub unsafe extern "C" fn encrypt_to_beacon(
 	}
 }
 
+/// Encrypts a plaintext to the beacon identified by `key_id`. The output is intended to be sent directly over the network
 /// # Safety
 /// * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
 /// * The library will overwrite all the `out` parameters
 /// * It is not safe to read the `out` parameters if the function doesn't return `0`
 ///
 /// ## Arguments
-/// * `seq` - The sequence number for the beacon to encypt to
+/// * `key_id` - The sequence number for the beacon to encypt to
 /// * `bytes` - Whatever you want to be encrypted to the server
 /// * `bytes_len` - The size of the `bytes` buffer
 /// * `out` - A caller-managed pointer that will contain the results in case of success. Call `free_vec` to free it once you're done
@@ -266,7 +269,7 @@ pub unsafe extern "C" fn encrypt_to_beacon(
 /// `0` on success, negative values on error
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn encrypt_to_beacon_signed(
-	seq: u64,
+	key_id: u64,
 	bytes: *const u8,
 	bytes_len: usize,
 	mut _out: *mut *mut u8,
@@ -278,7 +281,7 @@ pub unsafe extern "C" fn encrypt_to_beacon_signed(
 	}
 	let mut state = STATE.lock().unwrap();
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
-	match state.encrypt_message(data_vec.as_slice(), false, seq) {
+	match state.encrypt_message(data_vec.as_slice(), false, key_id) {
 		Some(ciphertext) => match state.sign_message(ciphertext.as_slice()) {
 			Some(mut signed) => {
 				unsafe {

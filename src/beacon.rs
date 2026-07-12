@@ -107,8 +107,8 @@ pub unsafe extern "C" fn decrypt_server_message(
 	let mut state = STATE.lock().unwrap();
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
 
-	let srv_seq = state.server_kid();
-	match state.decrypt_message(&data_vec, srv_seq, true) {
+	let srv_kid = state.server_kid();
+	match state.decrypt_message(&data_vec, srv_kid, true) {
 		Some(mut plaintext) => {
 			unsafe {
 				*_out = plaintext.as_mut_ptr();
@@ -152,8 +152,8 @@ pub unsafe extern "C" fn decrypt_server_message_signed(
 
 	match state.verify_signature(data_vec.as_slice()) {
 		Some(verified) => {
-			let srv_seq = state.server_kid();
-			match state.decrypt_message(&verified.data, srv_seq, true) {
+			let srv_kid = state.server_kid();
+			match state.decrypt_message(&verified.data, srv_kid, true) {
 				Some(mut plaintext) => {
 					unsafe {
 						*_out = plaintext.as_mut_ptr();
@@ -197,8 +197,8 @@ pub unsafe extern "C" fn encrypt_to_server(
 	}
 	let mut state = STATE.lock().unwrap();
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
-	let srv_seq = state.server_kid();
-	match state.encrypt_message(data_vec.as_slice(), false, srv_seq) {
+	let srv_kid = state.server_kid();
+	match state.encrypt_message(data_vec.as_slice(), false, srv_kid) {
 		Some(mut ciphertext) => {
 			unsafe {
 				*_out = ciphertext.as_mut_ptr();
@@ -239,8 +239,8 @@ pub unsafe extern "C" fn encrypt_to_server_signed(
 	}
 	let mut state = STATE.lock().unwrap();
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
-	let srv_seq = state.server_kid();
-	match state.encrypt_message(data_vec.as_slice(), false, srv_seq) {
+	let srv_kid = state.server_kid();
+	match state.encrypt_message(data_vec.as_slice(), false, srv_kid) {
 		Some(ciphertext) => match state.sign_message(ciphertext.as_slice()) {
 			Some(mut signed) => {
 				unsafe {
@@ -295,11 +295,11 @@ pub unsafe extern "C" fn generate_registration(
 /// ## Arguments
 ///
 /// * `is_beacon` - Whether the current instance is a beacon
-/// * `server_seq` - The ID of the server's identity key for the campaign
+/// * `server_kid` - The ID of the server's identity key for the campaign
 #[unsafe(no_mangle)]
 pub extern "C" fn init_for_server(
 	is_beacon: bool,
-	server_seq: u64,
+	server_kid: u64,
 	server_pk: *const u8,
 	server_pk_len: u64,
 ) {
@@ -308,6 +308,6 @@ pub extern "C" fn init_for_server(
 		let pk_slice = slice_from_raw_parts(server_pk, server_pk_len.try_into().unwrap());
 		let mut pk_vec = vec![0u8; crypto_sign::PUBLICKEYBYTES];
 		pk_vec.copy_from_slice(unsafe { pk_slice.as_ref().unwrap() });
-		*state = Provider::new(is_beacon, server_seq, Some(&pk_vec), None);
+		*state = Provider::new(is_beacon, server_kid, Some(&pk_vec), None);
 	}
 }

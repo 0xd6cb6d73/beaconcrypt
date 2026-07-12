@@ -187,10 +187,10 @@ int32_t generate_registration(uint8_t **_out,
  * ## Arguments
  *
  * * `is_beacon` - Whether the current instance is a beacon
- * * `server_seq` - The ID of the server's identity key for the campaign
+ * * `server_kid` - The ID of the server's identity key for the campaign
  */
 void init_for_server(bool is_beacon,
-                     uint64_t server_seq,
+                     uint64_t server_kid,
                      const uint8_t *server_pk,
                      uint64_t server_pk_len);
 
@@ -200,10 +200,10 @@ void init_for_server(bool is_beacon,
  * This function is safe to call multiple times.
  * ## Arguments
  *
- * * `server_seq` - The ID of the server's identity key for the campaign
+ * * `server_kid` - The ID of the server's identity key for the campaign
  * * `id_seed` - 32 byte Ed25519 seed for the server's identity key
  */
-void init_server_from_seeds(uint64_t server_seq, const uint8_t *id_seed);
+void init_server_from_seeds(uint64_t server_kid, const uint8_t *id_seed);
 
 /**
  * # Safety
@@ -238,13 +238,14 @@ int32_t register_beacon(const uint8_t *bytes,
                         uint64_t *key_id);
 
 /**
+ * This function takes a raw `cryptoframe_capnp::crypto_frame`. It needs to know the ID of the beacon that encrypted the message
  * # Safety
  * * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
  * * The library will overwrite all the `out` parameters
  * * It is not safe to read the `out` parameters if the function doesn't return `0`
  *
  * ## Arguments
- * * `seq` - The sequence number for the beacon to encypt to
+ * * `key_id` - The ID of the beacon to decrypt for
  * * `bytes` - A serialized `cryptoframe_capnp::crypto_frame`
  * * `bytes_len` - The size of the `bytes` buffer
  * * `out` - A caller-managed pointer that will contain the results in case of success. Call `free_vec` to free it once you're done
@@ -254,7 +255,7 @@ int32_t register_beacon(const uint8_t *bytes,
  * ## Returns
  * `0` on success, negative values on error
  */
-int32_t decrypt_beacon_message(uint64_t seq,
+int32_t decrypt_beacon_message(uint64_t key_id,
                                const uint8_t *bytes,
                                uintptr_t bytes_len,
                                uint8_t **_out,
@@ -262,14 +263,14 @@ int32_t decrypt_beacon_message(uint64_t seq,
                                uintptr_t *out_capa);
 
 /**
+ * This function takes a raw `protogram_capnp::proto_gram` and returns a plaintext if the signature is valid. It does not need to know the ID of the beacon that created the message
  * # Safety
  * * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
  * * The library will overwrite all the `out` parameters
  * * It is not safe to read the `out` parameters if the function doesn't return `0`
  *
  * ## Arguments
- * * `seq` - The sequence number for the beacon to encypt to
- * * `bytes` - A serialized `cryptoframe_capnp::crypto_frame`
+ * * `bytes` - A serialized `protogram_capnp::proto_gram`
  * * `bytes_len` - The size of the `bytes` buffer
  * * `out` - A caller-managed pointer that will contain the results in case of success. Call `free_vec` to free it once you're done
  * * `out_len` - The actual size of the `out` buffer
@@ -285,13 +286,14 @@ int32_t decrypt_beacon_message_signed(const uint8_t *bytes,
                                       uintptr_t *out_capa);
 
 /**
+ * Encrypts a plaintext to the beacon identified by `key_id`. The output is intended to be sent directly over the network
  * # Safety
  * * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
  * * The library will overwrite all the `out` parameters
  * * It is not safe to read the `out` parameters if the function doesn't return `0`
  *
  * ## Arguments
- * * `seq` - The sequence number for the beacon to encypt to
+ * * `key_id` - The ID of the beacon to encypt for
  * * `bytes` - Whatever you want to be encrypted to the server
  * * `bytes_len` - The size of the `bytes` buffer
  * * `out` - A caller-managed pointer that will contain the results in case of success. Call `free_vec` to free it once you're done
@@ -301,7 +303,7 @@ int32_t decrypt_beacon_message_signed(const uint8_t *bytes,
  * ## Returns
  * `0` on success, negative values on error
  */
-int32_t encrypt_to_beacon(uint64_t seq,
+int32_t encrypt_to_beacon(uint64_t key_id,
                           const uint8_t *bytes,
                           uintptr_t bytes_len,
                           uint8_t **_out,
@@ -309,13 +311,14 @@ int32_t encrypt_to_beacon(uint64_t seq,
                           uintptr_t *out_capa);
 
 /**
+ * Encrypts a plaintext to the beacon identified by `key_id`. The output is intended to be sent directly over the network
  * # Safety
  * * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
  * * The library will overwrite all the `out` parameters
  * * It is not safe to read the `out` parameters if the function doesn't return `0`
  *
  * ## Arguments
- * * `seq` - The sequence number for the beacon to encypt to
+ * * `key_id` - The sequence number for the beacon to encypt to
  * * `bytes` - Whatever you want to be encrypted to the server
  * * `bytes_len` - The size of the `bytes` buffer
  * * `out` - A caller-managed pointer that will contain the results in case of success. Call `free_vec` to free it once you're done
@@ -325,7 +328,7 @@ int32_t encrypt_to_beacon(uint64_t seq,
  * ## Returns
  * `0` on success, negative values on error
  */
-int32_t encrypt_to_beacon_signed(uint64_t seq,
+int32_t encrypt_to_beacon_signed(uint64_t key_id,
                                  const uint8_t *bytes,
                                  uintptr_t bytes_len,
                                  uint8_t **_out,
@@ -337,9 +340,9 @@ int32_t encrypt_to_beacon_signed(uint64_t seq,
  * ## Arguments
  *
  * * `is_beacon` - Whether the current instance is a beacon
- * * `server_seq` - The ID of the server's identity key for the campaign
+ * * `server_kid` - The ID of the server's identity key for the campaign
  */
-void init(bool is_beacon, uint64_t server_seq);
+void init(bool is_beacon, uint64_t server_kid);
 
 /**
  * # Safety
