@@ -109,7 +109,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 				hm.insert(
 					server_kid,
 					RemotePrincipal::new(
-						crypto_sign::PublicKey::from_bytes(&pk).unwrap(),
+						crypto_sign::PublicKey::from_bytes(pk).unwrap(),
 						RatchetManager::new(),
 					),
 				);
@@ -123,7 +123,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			identity_key: id_keypair,
 			// this will be overwritten when the agent registers
 			identity_key_kid: server_kid,
-			prekey: prekey,
+			prekey,
 			onetime_key: onetime,
 			pq_key: pqkey,
 			associated_data: [0u8; AD_SIZE],
@@ -140,7 +140,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			TypedBuilder::<protogram_capnp::proto_gram::Owned>::new_default();
 		let mut builder: protogram_capnp::proto_gram::Builder<'_> = t_builder.init_root();
 		builder.set_key_seq(self.identity_key_kid);
-		let signed = crypto_sign::sign(&data, self.identity_sk()).ok()?;
+		let signed = crypto_sign::sign(data, self.identity_sk()).ok()?;
 		builder.set_data(&signed);
 		let mut buffer = vec![];
 		capnp::serialize_packed::write_message(&mut buffer, t_builder.borrow_inner()).unwrap();
@@ -185,7 +185,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 	}
 
 	fn associated_data(&self) -> [u8; AD_SIZE] {
-		self.associated_data.clone()
+		self.associated_data
 	}
 
 	fn server_id(&self) -> Option<&crypto_sign::PublicKey> {
@@ -277,13 +277,10 @@ impl BeaconCryptPqxdh {
 	}
 
 	pub fn delete_onetime_keypair(&mut self) {
-		match &mut self.onetime_key {
-			Some(onetime) => {
-				let mut keypair = crypto_kx::KeyPair::from_seed(&[0u8; ED25519_SEED_SIZE]).unwrap();
-				swap(onetime, &mut keypair);
-				self.onetime_key = None
-			}
-			None => (),
+		if let Some(onetime) = &mut self.onetime_key {
+			let mut keypair = crypto_kx::KeyPair::from_seed(&[0u8; ED25519_SEED_SIZE]).unwrap();
+			swap(onetime, &mut keypair);
+			self.onetime_key = None
 		}
 	}
 }
@@ -361,10 +358,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		self.init_ratchets(&derived_secret, &info_str, true, srv_key_id);
 
 		match response.get_app_cipher_text() {
-			Ok(ciphertext) => match self.decrypt_message(ciphertext, srv_key_id, true) {
-				Some(plaintext) => Some(plaintext),
-				None => None,
-			},
+			Ok(ciphertext) => self.decrypt_message(ciphertext, srv_key_id, true),
 			Err(_) => Some(vec![0u8; 0]),
 		}
 	}
@@ -455,7 +449,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 		let mut buffer = vec![];
 		if let Some(plaintext) = data {
 			let ciphertext = self.encrypt_message(plaintext, true, remote_kid)?;
-			let _ = bundle.set_app_cipher_text(&ciphertext);
+			bundle.set_app_cipher_text(&ciphertext);
 			capnp::serialize_packed::write_message(&mut buffer, msg.borrow_inner()).ok()?;
 		} else {
 			capnp::serialize_packed::write_message(&mut buffer, msg.borrow_inner()).ok()?;

@@ -526,7 +526,7 @@ pub trait CryptoProvider {
 		let key_seq = self.ratchet_send(SYM_RATCHET_INFO, seq)?;
 		let key = self.send_key(key_seq, seq)?;
 		let plaintext = crypto_aead::chacha20poly1305_ietf::encrypt(
-			&bytes,
+			bytes,
 			Some(associated_data.as_slice()),
 			key.get_nonce(),
 			key.get_key(),
@@ -647,13 +647,6 @@ pub fn create_protogram_reader(
 		}
 		Err(_) => None,
 	}
-}
-
-/// The beacon calls this to set its ID to that which it got from the server upon registering. In must be called exactly once. The server should not have a use for this.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn set_identity_seq(seq: u64) {
-	let mut state = STATE.lock().unwrap();
-	state.set_identity_kid(seq);
 }
 
 /// # Safety

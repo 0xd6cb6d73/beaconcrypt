@@ -27,9 +27,7 @@ pub use server::{
 	decrypt_beacon_message, decrypt_beacon_message_signed, encrypt_to_beacon,
 	encrypt_to_beacon_signed, register_beacon,
 };
-pub use shared::{
-	CryptoProvider, free_vec, init, set_identity_seq, sign_message, verify_signature,
-};
+pub use shared::{CryptoProvider, free_vec, init, sign_message, verify_signature};
 
 capnp::generated_code!(pub mod phase1_capnp);
 capnp::generated_code!(pub mod phase2_capnp);
