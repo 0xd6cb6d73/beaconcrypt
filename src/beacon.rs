@@ -107,7 +107,7 @@ pub unsafe extern "C" fn decrypt_server_message(
 	let mut state = STATE.lock().unwrap();
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
 
-	let srv_seq = state.get_server_kid();
+	let srv_seq = state.server_kid();
 	match state.decrypt_message(&data_vec, srv_seq, true) {
 		Some(mut plaintext) => {
 			unsafe {
@@ -152,7 +152,7 @@ pub unsafe extern "C" fn decrypt_server_message_signed(
 
 	match state.verify_signature(data_vec.as_slice()) {
 		Some(verified) => {
-			let srv_seq = state.get_server_kid();
+			let srv_seq = state.server_kid();
 			match state.decrypt_message(&verified, srv_seq, true) {
 				Some(mut plaintext) => {
 					unsafe {
@@ -197,7 +197,7 @@ pub unsafe extern "C" fn encrypt_to_server(
 	}
 	let mut state = STATE.lock().unwrap();
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
-	let srv_seq = state.get_server_kid();
+	let srv_seq = state.server_kid();
 	match state.encrypt_message(data_vec.as_slice(), false, srv_seq) {
 		Some(mut ciphertext) => {
 			unsafe {
@@ -239,7 +239,7 @@ pub unsafe extern "C" fn encrypt_to_server_signed(
 	}
 	let mut state = STATE.lock().unwrap();
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
-	let srv_seq = state.get_server_kid();
+	let srv_seq = state.server_kid();
 	match state.encrypt_message(data_vec.as_slice(), false, srv_seq) {
 		Some(ciphertext) => match state.sign_message(ciphertext.as_slice()) {
 			Some(mut signed) => {

@@ -6,6 +6,7 @@ license-file = "LICENSE"
 readme = "README.md"
 description = "Cryptographic transport for C2 channels"
 rust-version = "1.96"
+repository = "https://github.com/0xd6cb6d73/beaconcrypt"
 
 [lib]
 name = "beaconcrypt"
