@@ -30,11 +30,13 @@ jobs:
         cargo +nightly rustc --release -Z build-std=std,panic_abort --crate-type=staticlib
     - name: Run tests
       run: cargo test --verbose
+    - name: Rename
+      run: mv target/release/libbeaconcrypt.a target/release/libbeaconcrypt-${{ matrix.os }}.a
     - name: Upload release artifact
       uses: actions/upload-artifact@v7
       with:
         name: beaconcrypt-static-${{ matrix.os }}
-        path: target/release/libbeaconcrypt.a
+        path: target/release/libbeaconcrypt-${{ matrix.os }}.a
         retention-days: 7
 
   windows-build:
@@ -59,11 +61,13 @@ jobs:
       run: |
         $env:Path = "$env:Path;$(join-path $pwd '\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0')"
         cargo test --verbose
+    - name: Rename
+      run: mv target/release/beaconcrypt.lib target/release/beaconcrypt-${{ matrix.os }}.lib
     - name: Upload release artifact
       uses: actions/upload-artifact@v7
       with:
         name: beaconcrypt-static-${{ matrix.os }}
-        path: target/release/beaconcrypt.lib
+        path: target/release/beaconcrypt-${{ matrix.os }}.lib
         retention-days: 7
 
   release:
