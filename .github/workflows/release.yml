@@ -1,0 +1,77 @@
+name: Rust
+
+on:
+  push: 
+    tags: '*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ubuntu-build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Install cap'n proto
+      run: |
+        curl -O https://capnproto.org/capnproto-c++-1.5.0.tar.gz
+        tar zxf capnproto-c++-1.5.0.tar.gz
+        cd capnproto-c++-1.5.0
+        ./configure
+        make -j4 check
+        sudo make install
+    - name: Build
+      run: cargo +nightly build --release --config crate-type = ["staticlib"] -Z build-std=std,panic_abort 
+    - name: Run tests
+      run: cargo test --verbose
+    - name: Upload release artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: beaconcrypt-static-${{ matrix.os }}
+        path: target/release/libbeaconcrypt.a
+        retention-days: 7
+
+  windows-build:
+    strategy:
+      matrix:
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Install cap'n proto
+      run: |
+        curl.exe -O https://capnproto.org/capnproto-c++-win32-1.5.0.zip
+        Expand-Archive capnproto-c++-win32-1.5.0.zip
+    - name: Build
+      run: |
+        $env:Path = "$env:Path;$(join-path $pwd '\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0')"
+        cargo +nightly build --release --config crate-type = ["staticlib"] -Z build-std=std,panic_abort 
+    - name: Run tests
+      run: |
+        $env:Path = "$env:Path;$(join-path $pwd '\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0')"
+        cargo test --verbose
+    - name: Upload release artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: beaconcrypt-static-${{ matrix.os }}
+        path: target/release/beaconcrypt.lib
+        retention-days: 7
+
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v7
+    - name: Download release artifact
+      uses: actions/download-artifact@v8
+      with:
+        path: ./dist
+    - name: Publish built binary to GitHub releases
+      run: |
+        gh release create ${{ github.ref_name }} --notes-from-tag ./dist/*
