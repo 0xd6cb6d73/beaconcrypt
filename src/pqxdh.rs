@@ -659,8 +659,8 @@ mod tests {
 		let b1_m2 = server.encrypt_message(&message, true, 1).unwrap();
 		assert_ne!(b1_m1, b1_m2);
 
-		let dec_b1_m1 = b1.decrypt_message(&b1_m1, 0, true).unwrap();
 		let dec_b1_m2 = b1.decrypt_message(&b1_m2, 0, true).unwrap();
+		let dec_b1_m1 = b1.decrypt_message(&b1_m1, 0, true).unwrap();
 		assert_eq!(dec_b1_m1, dec_b1_m2);
 	}
 

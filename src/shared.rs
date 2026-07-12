@@ -402,9 +402,7 @@ impl RatchetManager {
 	}
 
 	pub fn ratchet_recv_until(&mut self, info: &[u8], until: u64) -> Option<u64> {
-		if until < self.recv_ctr || until > self.recv_ctr + RATCHET_MAX_GAP {
-			None
-		} else if until == self.recv_ctr {
+		if until <= self.recv_ctr || until > self.recv_ctr + RATCHET_MAX_GAP {
 			Some(until)
 		} else {
 			let diff = until - self.recv_ctr;
