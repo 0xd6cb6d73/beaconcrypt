@@ -25,7 +25,9 @@ jobs:
         make -j4 check
         sudo make install
     - name: Build
-      run: cargo +nightly build --release --config "crate-type = ['staticlib']" -Z build-std=std,panic_abort 
+      run: |
+        rustup component add rust-src --toolchain nightly
+        cargo +nightly build --release --config "crate-type = ['staticlib']" -Z build-std=std,panic_abort 
     - name: Run tests
       run: cargo test --verbose
     - name: Upload release artifact
@@ -50,6 +52,7 @@ jobs:
     - name: Build
       run: |
         $env:Path = "$env:Path;$(join-path $pwd '\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0')"
+        rustup component add rust-src --toolchain nightly-msvc
         cargo +nightly build --release --config "crate-type = ['staticlib']" -Z build-std=std,panic_abort 
     - name: Run tests
       run: |
