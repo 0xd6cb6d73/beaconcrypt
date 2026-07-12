@@ -27,7 +27,7 @@ jobs:
     - name: Build
       run: |
         rustup component add rust-src --toolchain nightly
-        cargo +nightly build --release --config "crate-type = ['staticlib']" -Z build-std=std,panic_abort 
+        cargo +nightly rustc --release -Z build-std=std,panic_abort --crate-type=staticlib
     - name: Run tests
       run: cargo test --verbose
     - name: Upload release artifact
@@ -53,7 +53,8 @@ jobs:
       run: |
         $env:Path = "$env:Path;$(join-path $pwd '\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0')"
         rustup component add rust-src --toolchain nightly-msvc
-        cargo +nightly build --release --config "crate-type = ['staticlib']" -Z build-std=std,panic_abort 
+        cargo +nightly rustc --release -Z build-std=std,panic_abort --crate-type=staticlib
+        ls target/release
     - name: Run tests
       run: |
         $env:Path = "$env:Path;$(join-path $pwd '\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0')"
