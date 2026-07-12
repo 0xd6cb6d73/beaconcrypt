@@ -13,6 +13,7 @@ use libsodium_rs::{
 	SodiumError, crypto_kdf, crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init,
 };
 use std::collections::HashMap;
+use std::mem::swap;
 use std::ptr::slice_from_raw_parts;
 use std::sync::atomic::Ordering;
 use std::vec;
@@ -24,18 +25,14 @@ pub const AD_SIZE: usize =
 impl SignaturePk for crypto_sign::PublicKey {}
 
 pub struct BeaconCryptPqxdh {
-	identity_key_pk: crypto_sign::PublicKey,
-	identity_key_sk: crypto_sign::SecretKey,
+	identity_key: crypto_sign::KeyPair,
 	identity_key_kid: u64,
 
-	prekey_pk: crypto_kx::PublicKey,
-	prekey_sk: crypto_kx::SecretKey,
+	prekey: Option<crypto_kx::KeyPair>,
 
-	onetime_key_pk: crypto_kx::PublicKey,
-	onetime_key_sk: crypto_kx::SecretKey,
+	onetime_key: Option<crypto_kx::KeyPair>,
 
-	pq_key_pk: crypto_kem::mlkem768::PublicKey,
-	pq_key_sk: crypto_kem::mlkem768::SecretKey,
+	pq_key: Option<crypto_kem::mlkem768::KeyPair>,
 
 	associated_data: [u8; AD_SIZE],
 	// unfortunately we can't use static generics so we have to store the role at runtime
@@ -54,32 +51,14 @@ impl CryptoProvider for BeaconCryptPqxdh {
 	fn default() -> Self {
 		Self {
 			// our cryptographic identity, this is unique to the specific agent instance and uniquely identifies it to the server
-			identity_key_pk: crypto_sign::PublicKey::from_bytes(
-				&[0u8; crypto_sign::PUBLICKEYBYTES],
-			)
-			.unwrap(),
-			identity_key_sk: crypto_sign::SecretKey::from_bytes(
-				&[0u8; crypto_sign::SECRETKEYBYTES],
-			)
-			.unwrap(),
+			identity_key: crypto_sign::KeyPair::from_seed(&[0u8; ED25519_SEED_SIZE]).unwrap(),
 			identity_key_kid: 0,
 
-			prekey_pk: crypto_kx::PublicKey::from_bytes(&[0u8; crypto_kx::PUBLICKEYBYTES]).unwrap(),
-			prekey_sk: crypto_kx::SecretKey::from_bytes(&[0u8; crypto_kx::SECRETKEYBYTES]).unwrap(),
+			prekey: None,
 
-			onetime_key_pk: crypto_kx::PublicKey::from_bytes(&[0u8; crypto_kx::PUBLICKEYBYTES])
-				.unwrap(),
-			onetime_key_sk: crypto_kx::SecretKey::from_bytes(&[0u8; crypto_kx::SECRETKEYBYTES])
-				.unwrap(),
+			onetime_key: None,
 
-			pq_key_pk: crypto_kem::mlkem768::PublicKey::from_bytes(
-				&[0u8; crypto_kem::mlkem768::PUBLICKEYBYTES],
-			)
-			.unwrap(),
-			pq_key_sk: crypto_kem::mlkem768::SecretKey::from_bytes(
-				&[0u8; crypto_kem::mlkem768::SECRETKEYBYTES],
-			)
-			.unwrap(),
+			pq_key: None,
 
 			associated_data: [0u8; AD_SIZE],
 			is_beacon: true,
@@ -92,7 +71,6 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		server_kid: u64,
 		server_id_pk: Option<&[u8]>,
 		id_seed: Option<&[u8]>,
-		prekey_seed: Option<&[u8]>,
 	) -> Self {
 		ensure_init().expect("Failed to initialize libsodium");
 
@@ -105,17 +83,24 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		} else {
 			crypto_sign::KeyPair::generate().unwrap()
 		};
-		let prekey = if !is_beacon {
-			if let Some(seed) = prekey_seed {
-				crypto_kx::KeyPair::from_seed(seed).unwrap()
-			} else {
-				crypto_kx::KeyPair::generate().unwrap()
-			}
+		// the server doesn't use prekeys
+		let prekey = if is_beacon {
+			Some(crypto_kx::KeyPair::generate().unwrap())
 		} else {
-			crypto_kx::KeyPair::generate().unwrap()
+			None
 		};
-		let onetime = crypto_kx::KeyPair::generate().unwrap();
-		let pqkey = crypto_kem::mlkem768::KeyPair::generate().unwrap();
+		// the server doesn't use one-time keys
+		let onetime = if is_beacon {
+			Some(crypto_kx::KeyPair::generate().unwrap())
+		} else {
+			None
+		};
+		// the server doesn't use its own ML-KEM keypair
+		let pqkey = if is_beacon {
+			Some(crypto_kem::mlkem768::KeyPair::generate().unwrap())
+		} else {
+			None
+		};
 		let known_id_pk = if let Some(pk) = server_id_pk {
 			if !is_beacon {
 				HashMap::new()
@@ -135,16 +120,12 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		};
 
 		Self {
-			identity_key_pk: id_keypair.public_key,
-			identity_key_sk: id_keypair.secret_key,
+			identity_key: id_keypair,
 			// this will be overwritten when the agent registers
 			identity_key_kid: server_kid,
-			prekey_pk: prekey.public_key,
-			prekey_sk: prekey.secret_key,
-			onetime_key_pk: onetime.public_key,
-			onetime_key_sk: onetime.secret_key,
-			pq_key_pk: pqkey.public_key,
-			pq_key_sk: pqkey.secret_key,
+			prekey: prekey,
+			onetime_key: onetime,
+			pq_key: pqkey,
 			associated_data: [0u8; AD_SIZE],
 			is_beacon,
 			server_kid,
@@ -228,19 +209,25 @@ impl CryptoProvider for BeaconCryptPqxdh {
 	}
 
 	fn get_identity_pk(&self) -> &crypto_sign::PublicKey {
-		&self.identity_key_pk
+		&self.identity_key.public_key
 	}
 
 	fn get_identity_sk(&self) -> &crypto_sign::SecretKey {
-		&self.identity_key_sk
+		&self.identity_key.secret_key
 	}
 
-	fn get_pq_pk(&self) -> &crypto_kem::mlkem768::PublicKey {
-		&self.pq_key_pk
+	fn get_pq_pk(&self) -> Option<&crypto_kem::mlkem768::PublicKey> {
+		match &self.pq_key {
+			Some(key) => Some(&key.public_key),
+			None => None,
+		}
 	}
 
-	fn get_pq_sk(&self) -> &crypto_kem::mlkem768::SecretKey {
-		&self.pq_key_sk
+	fn get_pq_sk(&self) -> Option<&crypto_kem::mlkem768::SecretKey> {
+		match &self.pq_key {
+			Some(key) => Some(&key.secret_key),
+			None => None,
+		}
 	}
 
 	fn get_ratchet_manager(&self, kid: u64) -> Option<&RatchetManager> {
@@ -261,25 +248,43 @@ impl CryptoProvider for BeaconCryptPqxdh {
 }
 
 impl BeaconCryptPqxdh {
-	pub fn get_prekey_pk(&self) -> &crypto_kx::PublicKey {
-		&self.prekey_pk
+	pub fn get_prekey_pk(&self) -> Option<&crypto_kx::PublicKey> {
+		match &self.prekey {
+			Some(key) => Some(&key.public_key),
+			None => None,
+		}
 	}
 
-	pub fn get_prekey_sk(&self) -> &crypto_kx::SecretKey {
-		&self.prekey_sk
+	pub fn get_prekey_sk(&self) -> Option<&crypto_kx::SecretKey> {
+		match &self.prekey {
+			Some(key) => Some(&key.secret_key),
+			None => None,
+		}
 	}
 
-	pub fn get_onetime_pk(&self) -> &crypto_kx::PublicKey {
-		&self.onetime_key_pk
+	pub fn get_onetime_pk(&self) -> Option<&crypto_kx::PublicKey> {
+		match &self.onetime_key {
+			Some(key) => Some(&key.public_key),
+			None => None,
+		}
 	}
 
-	pub fn get_onetime_sk(&self) -> &crypto_kx::SecretKey {
-		&self.onetime_key_sk
+	pub fn get_onetime_sk(&self) -> Option<&crypto_kx::SecretKey> {
+		match &self.onetime_key {
+			Some(key) => Some(&key.secret_key),
+			None => None,
+		}
 	}
 
 	pub fn delete_onetime_keypair(&mut self) {
-		self.onetime_key_pk = crypto_kx::PublicKey::from([0u8; 32]);
-		self.onetime_key_sk = crypto_kx::SecretKey::from([0u8; 32]);
+		match &mut self.onetime_key {
+			Some(onetime) => {
+				let mut keypair = crypto_kx::KeyPair::from_seed(&[0u8; ED25519_SEED_SIZE]).unwrap();
+				swap(onetime, &mut keypair);
+				self.onetime_key = None
+			}
+			None => (),
+		}
 	}
 }
 
@@ -294,15 +299,16 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		let encoded_id = encode_sign(SignType::Ed25519, self.get_identity_pk().as_bytes()).ok()?;
 		bundle.set_identity_key(&encoded_id);
 
-		let encoded_prekey = encode_kem(KemType::X25519, self.get_prekey_pk().as_bytes()).ok()?;
+		let encoded_prekey = encode_kem(KemType::X25519, self.get_prekey_pk()?.as_bytes()).ok()?;
 		let prekey_sig = crypto_sign::sign(&encoded_prekey, self.get_identity_sk()).ok()?;
 		bundle.set_pre_key(&prekey_sig);
 
-		let encoded_onetime = encode_kem(KemType::X25519, self.get_onetime_pk().as_bytes()).ok()?;
+		let encoded_onetime =
+			encode_kem(KemType::X25519, self.get_onetime_pk()?.as_bytes()).ok()?;
 		let onetime_sig = crypto_sign::sign(&encoded_onetime, self.get_identity_sk()).ok()?;
 		bundle.set_one_time_key(&onetime_sig);
 
-		let encoded_pq = encode_kem(KemType::MlKem768, self.get_pq_pk().as_bytes()).ok()?;
+		let encoded_pq = encode_kem(KemType::MlKem768, self.get_pq_pk()?.as_bytes()).ok()?;
 		let pq_sig = crypto_sign::sign(&encoded_pq, self.get_identity_sk()).ok()?;
 		bundle.set_pq_key(&pq_sig);
 
@@ -326,20 +332,20 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		let server_kex_id = crypto_sign::ed25519_pk_to_curve25519(&server_id).ok()?;
 		let beacon_kex_id = crypto_sign::ed25519_sk_to_curve25519(self.get_identity_sk()).ok()?;
 		let shared_secret =
-			crypto_kem::mlkem768::decapsulate(&kem_ciphertext, self.get_pq_sk()).ok()?;
+			crypto_kem::mlkem768::decapsulate(&kem_ciphertext, self.get_pq_sk()?).ok()?;
 		let dh1: DhSecret =
-			crypto_scalarmult::scalarmult(self.get_prekey_sk().as_bytes(), &server_kex_id)
+			crypto_scalarmult::scalarmult(self.get_prekey_sk()?.as_bytes(), &server_kex_id)
 				.ok()?
 				.into();
 		let dh2: DhSecret = crypto_scalarmult::scalarmult(&beacon_kex_id, ephemeral.as_bytes())
 			.ok()?
 			.into();
 		let dh3: DhSecret =
-			crypto_scalarmult::scalarmult(self.get_prekey_sk().as_bytes(), ephemeral.as_bytes())
+			crypto_scalarmult::scalarmult(self.get_prekey_sk()?.as_bytes(), ephemeral.as_bytes())
 				.ok()?
 				.into();
 		let dh4: DhSecret =
-			crypto_scalarmult::scalarmult(self.get_onetime_sk().as_bytes(), ephemeral.as_bytes())
+			crypto_scalarmult::scalarmult(self.get_onetime_sk()?.as_bytes(), ephemeral.as_bytes())
 				.ok()?
 				.into();
 		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, shared_secret).ok()?;
@@ -500,31 +506,21 @@ pub fn build_additional_data(
 	*buffer.as_array::<AD_SIZE>().unwrap()
 }
 
-/// This function is safe to call multiple times. It is used to initialize a server with existing keys. This MUST only be called by a server
+/// Initialize a server with existing keys from seeds. This MUST only be called by a server
+/// # Safety
+/// This function is safe to call multiple times.
 /// ## Arguments
 ///
 /// * `server_seq` - The ID of the server's identity key for the campaign
+/// * `id_seed` - 32 byte Ed25519 seed for the server's identity key
 #[unsafe(no_mangle)]
-pub extern "C" fn init_server_with_keys(
-	server_seq: u64,
-	id_seed: *const u8,
-	prekey_seed: *const u8,
-) {
+pub extern "C" fn init_server_from_seeds(server_seq: u64, id_seed: *const u8) {
 	if !INITIALIZED.swap(true, Ordering::AcqRel) {
 		let mut state = STATE.lock().unwrap();
 		let id_seed_slice = slice_from_raw_parts(id_seed, ED25519_SEED_SIZE);
-		let prekey_seed_slice = slice_from_raw_parts(prekey_seed, ED25519_SEED_SIZE);
 		let mut id_seed_vec = vec![0u8; crypto_sign::PUBLICKEYBYTES];
 		id_seed_vec.copy_from_slice(unsafe { id_seed_slice.as_ref().unwrap() });
-		let mut prekey_seed_vec = vec![0u8; crypto_sign::PUBLICKEYBYTES];
-		prekey_seed_vec.copy_from_slice(unsafe { prekey_seed_slice.as_ref().unwrap() });
-		*state = Provider::new(
-			false,
-			server_seq,
-			None,
-			Some(&id_seed_vec),
-			Some(&prekey_seed_vec),
-		);
+		*state = Provider::new(false, server_seq, None, Some(&id_seed_vec));
 	}
 }
 
@@ -555,12 +551,12 @@ mod tests {
 
 	#[test]
 	fn server_can_register_multiple() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let b1_reg = test_register_beacon(&mut server, &mut b1);
-		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
+		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let b2_reg = test_register_beacon(&mut server, &mut b2);
 
 		assert_eq!(b1_reg, b2_reg);
@@ -568,12 +564,12 @@ mod tests {
 
 	#[test]
 	fn server_encrypt_to_multiple() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let _ = test_register_beacon(&mut server, &mut b1);
-		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
+		let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let _ = test_register_beacon(&mut server, &mut b2);
 
 		assert!(server.get_id_by_seq(1).is_some());
@@ -587,10 +583,10 @@ mod tests {
 
 	#[test]
 	fn server_encrypt_multiple() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let _ = test_register_beacon(&mut server, &mut b1);
 
 		assert!(server.get_id_by_seq(1).is_some());
@@ -605,7 +601,7 @@ mod tests {
 	fn server_init_from_id_seed() {
 		let empty = [0u8; ED25519_SEED_SIZE];
 		let seeded = crypto_sign::KeyPair::from_seed(&empty).unwrap();
-		let server = BeaconCryptPqxdh::new(false, 0, None, Some(&empty), None);
+		let server = BeaconCryptPqxdh::new(false, 0, None, Some(&empty));
 		assert_eq!(
 			seeded.secret_key.as_bytes(),
 			server.get_identity_sk().as_bytes()
@@ -617,25 +613,10 @@ mod tests {
 	}
 
 	#[test]
-	fn server_init_from_prekey_seed() {
-		let empty = [0u8; ED25519_SEED_SIZE];
-		let seeded = crypto_kx::KeyPair::from_seed(&empty).unwrap();
-		let server = BeaconCryptPqxdh::new(false, 0, None, None, Some(&empty));
-		assert_eq!(
-			seeded.secret_key.as_bytes(),
-			server.get_prekey_sk().as_bytes()
-		);
-		assert_eq!(
-			seeded.public_key.as_bytes(),
-			server.get_prekey_pk().as_bytes()
-		);
-	}
-
-	#[test]
 	fn beacon_sign_can_check() {
-		let server = BeaconCryptPqxdh::new(false, 0, None, None, None);
+		let server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.get_identity_pk();
-		let beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
+		let beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let message = [0xFFu8; 32];
 		let signed = server.sign_message(&message).unwrap();
 
@@ -644,9 +625,9 @@ mod tests {
 
 	#[test]
 	fn beacon_can_register() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.get_identity_pk();
-		let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let message = [0xFFu8; 32];
 		let phase_1 = beacon.get_registration_bundle().unwrap();
 		let reg_out = server.get_shared_secret(&phase_1).unwrap();
@@ -660,17 +641,17 @@ mod tests {
 
 	#[test]
 	fn beacon_can_sign() {
-		let beacon = BeaconCryptPqxdh::new(true, 0, None, None, None);
+		let beacon = BeaconCryptPqxdh::new(true, 0, None, None);
 		let message = [0xFFu8; 32];
 		assert!(beacon.sign_message(&message).is_some());
 	}
 
 	#[test]
 	fn beacon_can_catch_up() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
-		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
 		let _ = test_register_beacon(&mut server, &mut b1);
 		assert!(server.get_id_by_seq(1).is_some());
 
@@ -686,15 +667,15 @@ mod tests {
 
 	#[test]
 	fn beacon_delete_onetime() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None, None, None);
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.get_identity_pk().to_owned();
 
 		let empty = [0u8; crypto_kx::PUBLICKEYBYTES];
-		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None, None);
-		assert!(b1.get_onetime_pk().as_bytes() != empty);
-		assert!(b1.get_onetime_sk().as_bytes() != empty);
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+		assert!(b1.get_onetime_pk().unwrap().as_bytes() != empty);
+		assert!(b1.get_onetime_sk().unwrap().as_bytes() != empty);
 		let _ = test_register_beacon(&mut server, &mut b1);
-		assert!(b1.get_onetime_pk().as_bytes() == empty);
-		assert!(b1.get_onetime_sk().as_bytes() == empty);
+		assert!(b1.get_onetime_pk() == None);
+		assert!(b1.get_onetime_sk() == None);
 	}
 }

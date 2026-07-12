@@ -246,7 +246,7 @@ pub type MlKemSharedSecret = SecretArr<KEM_SHARED_SECRET_SIZE, systems::MlKem, r
 pub extern "C" fn init(is_beacon: bool, server_seq: u64) {
 	if !INITIALIZED.swap(true, Ordering::AcqRel) {
 		let mut state = STATE.lock().unwrap();
-		*state = Provider::new(is_beacon, server_seq, None, None, None);
+		*state = Provider::new(is_beacon, server_seq, None, None);
 	}
 }
 
@@ -412,12 +412,8 @@ impl RatchetManager {
 	}
 
 	pub fn init_ratchets(&mut self, ikm: &[u8], info: &[u8], is_beacon: bool) {
-		let mut first_start: usize = 0;
-		let mut second_start: usize = KDF_STATE_SIZE;
-		if !is_beacon {
-			first_start = KDF_STATE_SIZE;
-			second_start = 0;
-		}
+		let first_start = if is_beacon { 0 } else { KDF_STATE_SIZE };
+		let second_start = if is_beacon { KDF_STATE_SIZE } else { 0 };
 		let prk = crypto_kdf::hkdf::sha512::extract(None, ikm).unwrap();
 		let mut combined =
 			crypto_kdf::hkdf::sha512::expand(KDF_STATE_SIZE * 2, Some(info), &prk).unwrap();
@@ -476,7 +472,6 @@ pub trait CryptoProvider {
 		server_kid: u64,
 		server_id_pk: Option<&[u8]>,
 		id_seed: Option<&[u8]>,
-		prekey_seed: Option<&[u8]>,
 	) -> Self;
 	fn set_associated_data(&mut self, data: [u8; AD_SIZE]);
 	fn get_associated_data(&self) -> [u8; AD_SIZE];
@@ -566,8 +561,8 @@ pub trait CryptoProvider {
 	fn get_id_by_seq(&self, seq: u64) -> Option<&Self::SignaturePublicKey>;
 	fn get_identity_pk(&self) -> &Self::SignaturePublicKey;
 	fn get_identity_sk(&self) -> &Self::SignatureSecretKey;
-	fn get_pq_pk(&self) -> &Self::KemPublicKey;
-	fn get_pq_sk(&self) -> &Self::KemSecretKey;
+	fn get_pq_pk(&self) -> Option<&Self::KemPublicKey>;
+	fn get_pq_sk(&self) -> Option<&Self::KemSecretKey>;
 	fn get_ratchet_manager(&self, kid: u64) -> Option<&RatchetManager>;
 	fn get_ratchet_manager_mut(&mut self, kid: u64) -> Option<&mut RatchetManager>;
 	/// ## Arguments
