@@ -11,7 +11,7 @@ jobs:
   ubuntu-build:
     strategy:
       matrix:
-        os: [ubuntu-latest ubuntu-24.04-arm]
+        os: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -25,7 +25,7 @@ jobs:
         make -j4 check
         sudo make install
     - name: Build
-      run: cargo +nightly build --release --config crate-type = ["staticlib"] -Z build-std=std,panic_abort 
+      run: cargo +nightly build --release --config "crate-type = ['staticlib']" -Z build-std=std,panic_abort 
     - name: Run tests
       run: cargo test --verbose
     - name: Upload release artifact
@@ -50,7 +50,7 @@ jobs:
     - name: Build
       run: |
         $env:Path = "$env:Path;$(join-path $pwd '\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0')"
-        cargo +nightly build --release --config crate-type = ["staticlib"] -Z build-std=std,panic_abort 
+        cargo +nightly build --release --config "crate-type = ['staticlib']" -Z build-std=std,panic_abort 
     - name: Run tests
       run: |
         $env:Path = "$env:Path;$(join-path $pwd '\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0')"
@@ -63,6 +63,7 @@ jobs:
         retention-days: 7
 
   release:
+    needs: [ubuntu-build, windows-build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
