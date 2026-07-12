@@ -80,3 +80,5 @@ jobs:
     - name: Publish built binary to GitHub releases
       run: |
         gh release create ${{ github.ref_name }} --notes-from-tag ./dist/*
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
