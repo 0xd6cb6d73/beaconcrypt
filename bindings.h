@@ -278,8 +278,7 @@ int32_t decrypt_beacon_message(uint64_t seq,
  * ## Returns
  * `0` on success, negative values on error
  */
-int32_t decrypt_beacon_message_signed(uint64_t seq,
-                                      const uint8_t *bytes,
+int32_t decrypt_beacon_message_signed(const uint8_t *bytes,
                                       uintptr_t bytes_len,
                                       uint8_t **_out,
                                       uintptr_t *out_len,
@@ -371,7 +370,8 @@ int32_t verify_signature(const uint8_t *bytes,
                          uintptr_t bytes_len,
                          uint8_t *_out,
                          uintptr_t *out_len,
-                         uintptr_t *out_capa);
+                         uintptr_t *out_capa,
+                         uint64_t *key_id);
 
 /**
  * # Safety

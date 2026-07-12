@@ -63,7 +63,7 @@ pub unsafe extern "C" fn process_initial_message_signed(
 
 	let mut state = STATE.lock().unwrap();
 	match state.verify_signature(net_vec.as_slice()) {
-		Some(verified) => match state.finish_registration(&verified) {
+		Some(verified) => match state.finish_registration(&verified.data) {
 			Some(mut plaintext) => {
 				unsafe {
 					*_out = plaintext.as_mut_ptr();
@@ -153,7 +153,7 @@ pub unsafe extern "C" fn decrypt_server_message_signed(
 	match state.verify_signature(data_vec.as_slice()) {
 		Some(verified) => {
 			let srv_seq = state.server_kid();
-			match state.decrypt_message(&verified, srv_seq, true) {
+			match state.decrypt_message(&verified.data, srv_seq, true) {
 				Some(mut plaintext) => {
 					unsafe {
 						*_out = plaintext.as_mut_ptr();

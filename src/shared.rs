@@ -161,6 +161,11 @@ mod roles {
 	pub struct SharedSecret;
 }
 
+pub struct VerifiedMessage {
+	pub data: Vec<u8>,
+	pub key_seq: u64,
+}
+
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
 pub struct SecretArr<const S: usize, System, Role> {
 	data: Zeroizing<[u8; S]>,
@@ -549,7 +554,7 @@ pub trait CryptoProvider {
 		}
 	}
 	fn sign_message(&self, data: &[u8]) -> Option<Vec<u8>>;
-	fn verify_signature(&self, data: &[u8]) -> Option<Vec<u8>>;
+	fn verify_signature(&self, data: &[u8]) -> Option<VerifiedMessage>;
 	fn set_identity_kid(&mut self, key_id: u64);
 	fn new_remote_kid(&mut self) -> u64;
 	fn add_known_kid(&mut self, key_id: u64, pk: Self::SignaturePublicKey);
@@ -670,6 +675,7 @@ pub unsafe extern "C" fn verify_signature(
 	mut _out: *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
+	key_id: *mut u64,
 ) -> i32 {
 	if bytes.is_null() || bytes_len == 0 {
 		return -1;
@@ -679,9 +685,10 @@ pub unsafe extern "C" fn verify_signature(
 	match state.verify_signature(data_vec.as_slice()) {
 		Some(mut verified) => {
 			unsafe {
-				_out = verified.as_mut_ptr();
-				*out_len = verified.len();
-				*out_capa = verified.capacity();
+				_out = verified.data.as_mut_ptr();
+				*out_len = verified.data.len();
+				*out_capa = verified.data.capacity();
+				*key_id = verified.key_seq;
 				mem::forget(verified);
 			};
 			0

@@ -4,8 +4,8 @@ use crate::beacon::ProviderBeacon;
 use crate::server::{ProviderServer, RegResponse, RegistrationOutput};
 use crate::shared::{
 	DhSecret, ED25519_SEED_SIZE, INITIALIZED, KEX_KDF_OUT_LEN, KemType, Provider, RatchetManager,
-	RemotePrincipal, STATE, SYM_RATCHET_INFO, SignType, SignaturePk, create_protogram_reader,
-	decode_kem, decode_sign, encode_kem, encode_sign,
+	RemotePrincipal, STATE, SYM_RATCHET_INFO, SignType, SignaturePk, VerifiedMessage,
+	create_protogram_reader, decode_kem, decode_sign, encode_kem, encode_sign,
 };
 use crate::{CryptoProvider, phase1_capnp, phase2_capnp, protogram_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
@@ -157,16 +157,21 @@ impl CryptoProvider for BeaconCryptPqxdh {
 	/// ## Returns
 	/// * `None` if signature verification fails or some other error happens.
 	/// * `Vec<u8>` containing the authenticated buffer with the signature stripped
-	fn verify_signature(&self, data: &[u8]) -> Option<Vec<u8>> {
+	fn verify_signature(&self, data: &[u8]) -> Option<VerifiedMessage> {
 		let t_reader = create_protogram_reader(data)?;
 		let reader = t_reader.get().ok()?;
 		let message = reader.get_data().ok()?;
+		let seq = reader.get_key_seq();
 		// hardcode this to avoid potential confusion
-		if self.is_beacon {
-			crypto_sign::verify(message, self.server_id()?)
+		let verified = if self.is_beacon {
+			crypto_sign::verify(message, self.server_id()?)?
 		} else {
-			crypto_sign::verify(message, self.id_by_seq(reader.get_key_seq())?)
-		}
+			crypto_sign::verify(message, self.id_by_seq(reader.get_key_seq())?)?
+		};
+		Some(VerifiedMessage {
+			data: verified,
+			key_seq: seq,
+		})
 	}
 
 	fn add_known_kid(&mut self, key_id: u64, pk: crypto_sign::PublicKey) {

@@ -177,7 +177,6 @@ pub unsafe extern "C" fn decrypt_beacon_message(
 /// `0` on success, negative values on error
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn decrypt_beacon_message_signed(
-	seq: u64,
 	bytes: *const u8,
 	bytes_len: usize,
 	mut _out: *mut *mut u8,
@@ -191,7 +190,7 @@ pub unsafe extern "C" fn decrypt_beacon_message_signed(
 	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
 
 	match state.verify_signature(data_vec.as_slice()) {
-		Some(verified) => match state.decrypt_message(&verified, seq, false) {
+		Some(verified) => match state.decrypt_message(&verified.data, verified.key_seq, false) {
 			Some(mut plaintext) => {
 				unsafe {
 					*_out = plaintext.as_mut_ptr();
