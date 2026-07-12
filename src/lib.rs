@@ -12,22 +12,18 @@ mod server;
 mod shared;
 
 #[cfg(feature = "beacon")]
-pub use beacon::{
-	decrypt_server_message, decrypt_server_message_signed, encrypt_to_server,
-	encrypt_to_server_signed, generate_registration, init_for_server, process_initial_message,
-	process_initial_message_signed,
-};
+pub use beacon::ProviderBeacon;
 pub use error::{
 	CipherTextError, DecodingError, DecryptionError, EncodingError, KeyGenError, SignatureError,
 };
 #[cfg(feature = "pqxdh")]
 pub use pqxdh::BeaconCryptPqxdh;
 #[cfg(feature = "server")]
-pub use server::{
-	decrypt_beacon_message, decrypt_beacon_message_signed, encrypt_to_beacon,
-	encrypt_to_beacon_signed, register_beacon,
+pub use server::{ProviderServer, RegResponse, RegistrationOutput};
+pub use shared::{
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, CryptoProvider, DH_OUT_LEN, ED25519_SEED_SIZE,
+	KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE, KEX_KDF_OUT_LEN, SignType,
 };
-pub use shared::{CryptoProvider, free_vec, init, sign_message, verify_signature};
 
 capnp::generated_code!(pub mod phase1_capnp);
 capnp::generated_code!(pub mod phase2_capnp);
