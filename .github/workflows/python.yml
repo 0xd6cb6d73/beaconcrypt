@@ -27,8 +27,6 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       - name: Set up Python
         run: uv python install 3.14
-      - name: Install deps
-        run: uv sync
       - name: Install cap'n proto
         run: |
           sudo apt install capnproto
