@@ -32,7 +32,7 @@ jobs:
           sudo apt install capnproto
 
       - name: Build source distribution
-        run: uv run maturin sdist --out dist
+        run: uvx maturin sdist --out dist
 
       - name: Upload source distribution
         uses: actions/upload-artifact@v4
