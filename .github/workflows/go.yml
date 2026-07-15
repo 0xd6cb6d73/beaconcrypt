@@ -104,7 +104,6 @@ jobs:
           module_path="$(go list -m)"
           version="${GITHUB_REF_NAME}"
           go_version="v${version}"
-          encoded_module="${module_path,,}"
 
           git fetch origin "refs/tags/${go_version}:refs/tags/${go_version}" || true
           if ! git rev-parse --verify --quiet "refs/tags/${go_version}" >/dev/null; then
@@ -112,5 +111,26 @@ jobs:
             git push origin "refs/tags/${go_version}"
           fi
 
-          curl --fail --show-error --location --retry 5 --retry-all-errors --retry-delay 10 \
-            "https://proxy.golang.org/${encoded_module}/@v/${go_version}.info"
+          tag_visible=false
+          for attempt in {1..30}; do
+            if git ls-remote --exit-code --tags origin "refs/tags/${go_version}" >/dev/null; then
+              tag_visible=true
+              break
+            fi
+            sleep 10
+          done
+          if [ "${tag_visible}" != "true" ]; then
+            echo "Timed out waiting for ${go_version} to become visible on origin" >&2
+            exit 1
+          fi
+
+          GOPROXY=direct go list -m "${module_path}@${go_version}"
+
+          for attempt in {1..30}; do
+            if go list -m "${module_path}@${go_version}"; then
+              exit 0
+            fi
+            sleep 10
+          done
+
+          go list -m "${module_path}@${go_version}"
