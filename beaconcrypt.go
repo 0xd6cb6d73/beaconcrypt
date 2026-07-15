@@ -4,7 +4,8 @@ package beaconcrypt
 
 /*
 #cgo windows LDFLAGS: -L${SRCDIR}/target/x86_64-pc-windows-gnu/debug -l:libbeaconcrypt.a -lbcrypt -lws2_32 -luserenv -ldbghelp -lntdll
-#cgo !windows LDFLAGS: -L${SRCDIR}/target/debug -l:libbeaconcrypt.a
+#cgo linux LDFLAGS: -L${SRCDIR}/target/debug -l:libbeaconcrypt.a
+#cgo darwin LDFLAGS: ${SRCDIR}/target/debug/libbeaconcrypt.a
 #include <stdint.h>
 #include <stdlib.h>
 
