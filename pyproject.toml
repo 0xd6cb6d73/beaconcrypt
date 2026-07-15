@@ -24,7 +24,7 @@ dev = [
 build-frontend = "build[uv]"
 
 [tool.cibuildwheel.linux]
-before-all = "yum install -y capnproto capnproto-devel libffi-devel"
+before-all = "apt install -y capnproto"
 
 [tool.cibuildwheel.windows]
 before-all = "choco install capnproto -y"
