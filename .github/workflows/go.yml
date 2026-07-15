@@ -1,0 +1,44 @@
+name: Go Module
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  GOPROXY: https://proxy.golang.org
+  GONOSUMDB: ""
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      - name: Install cap'n proto
+        run: sudo apt update && sudo apt install capnproto
+
+      - name: Build native library
+        run: cargo build --verbose
+
+      - name: Test Go module
+        run: go test ./...
+
+      - name: Publish module to Go proxy
+        run: |
+          module_path="$(go list -m)"
+          version="${GITHUB_REF_NAME}"
+          encoded_module="${module_path,,}"
+          curl --fail --show-error --location --retry 5 --retry-all-errors --retry-delay 10 \
+            "https://proxy.golang.org/${encoded_module}/@v/v${version}.info"
