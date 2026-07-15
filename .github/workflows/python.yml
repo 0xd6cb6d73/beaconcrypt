@@ -29,6 +29,9 @@ jobs:
         run: uv python install 3.14
       - name: Install deps
         run: uv sync
+      - name: Install cap'n proto
+        run: |
+          sudo apt install capnproto
 
       - name: Build source distribution
         run: uv run maturin sdist --out dist
