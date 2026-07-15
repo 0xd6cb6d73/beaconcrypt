@@ -10,7 +10,7 @@ repository = "https://github.com/0xd6cb6d73/beaconcrypt"
 
 [lib]
 name = "beaconcrypt"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib", "staticlib", "rlib"]
 
 [build-dependencies]
 capnpc = "0.26"

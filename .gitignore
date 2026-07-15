@@ -70,3 +70,8 @@ docs/_build/
 
 # Pyenv
 .python-version
+
+.gocache/
+.go-appdata/
+.go-localappdata/
+.gotelemetry/

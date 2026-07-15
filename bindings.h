@@ -47,6 +47,20 @@
 
 #define beaconcrypt_KEM_SHARED_SECRET_SIZE 32
 
+typedef struct beaconcrypt_BeaconCryptPqxdh beaconcrypt_BeaconCryptPqxdh;
+
+typedef struct beaconcrypt_GoBuffer {
+  uint8_t *ptr;
+  uintptr_t len;
+  uintptr_t cap;
+} beaconcrypt_GoBuffer;
+
+typedef struct beaconcrypt_GoRegistrationResponse {
+  struct beaconcrypt_GoBuffer response;
+  struct beaconcrypt_GoBuffer beacon_pk;
+  uint64_t key_id;
+} beaconcrypt_GoRegistrationResponse;
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -397,6 +411,61 @@ int32_t sign_message(const uint8_t *bytes,
                      uint8_t *_out,
                      uintptr_t *out_len,
                      uintptr_t *out_capa);
+
+void beaconcrypt_go_free_buffer(struct beaconcrypt_GoBuffer buffer);
+
+struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_go_server_new(uint64_t server_kid);
+
+struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_go_server_new_from_seed(uint64_t server_kid,
+                                                                         const uint8_t *seed_ptr,
+                                                                         uintptr_t seed_len);
+
+struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_go_beacon_new(uint64_t server_kid,
+                                                               const uint8_t *server_pk_ptr,
+                                                               uintptr_t server_pk_len);
+
+void beaconcrypt_go_free(struct beaconcrypt_BeaconCryptPqxdh *handle);
+
+struct beaconcrypt_GoBuffer beaconcrypt_go_identity_pk(const struct beaconcrypt_BeaconCryptPqxdh *handle);
+
+struct beaconcrypt_GoBuffer beaconcrypt_go_generate_registration(struct beaconcrypt_BeaconCryptPqxdh *handle);
+
+struct beaconcrypt_GoRegistrationResponse beaconcrypt_go_register_beacon(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                                         const uint8_t *reg_ptr,
+                                                                         uintptr_t reg_len,
+                                                                         const uint8_t *msg_ptr,
+                                                                         uintptr_t msg_len);
+
+struct beaconcrypt_GoBuffer beaconcrypt_go_process_initial_message(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                                   const uint8_t *ptr,
+                                                                   uintptr_t len);
+
+struct beaconcrypt_GoBuffer beaconcrypt_go_encrypt_to_beacon(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                             uint64_t key_id,
+                                                             const uint8_t *ptr,
+                                                             uintptr_t len);
+
+struct beaconcrypt_GoBuffer beaconcrypt_go_encrypt_to_beacon_signed(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                                    uint64_t key_id,
+                                                                    const uint8_t *ptr,
+                                                                    uintptr_t len);
+
+struct beaconcrypt_GoBuffer beaconcrypt_go_decrypt_beacon_message(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                                  uint64_t key_id,
+                                                                  const uint8_t *ptr,
+                                                                  uintptr_t len);
+
+struct beaconcrypt_GoBuffer beaconcrypt_go_encrypt_to_server(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                             const uint8_t *ptr,
+                                                             uintptr_t len);
+
+struct beaconcrypt_GoBuffer beaconcrypt_go_decrypt_server_message(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                                  const uint8_t *ptr,
+                                                                  uintptr_t len);
+
+struct beaconcrypt_GoBuffer beaconcrypt_go_decrypt_server_message_signed(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                                         const uint8_t *ptr,
+                                                                         uintptr_t len);
 
 #ifdef __cplusplus
 }  // extern "C"

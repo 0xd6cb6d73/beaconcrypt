@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: 0BSD
 
 fn main() {
+	if cfg!(windows) {
+		println!("cargo:rustc-link-lib=bcrypt");
+	}
+
 	capnpc::CompilerCommand::new()
 		.src_prefix("src/schema")
 		.import_path("src/schema")
@@ -26,6 +30,8 @@ fn main() {
 		.with_autogen_warning("// Do not modify manually.")
 		.with_item_prefix("beaconcrypt_")
 		.with_std_types(true)
+		.exclude_item("memset_explicit")
+		.exclude_item("SystemFunction036")
 		.generate()
 		.expect("Unable to generate bindings")
 		.write_to_file("bindings.h");
