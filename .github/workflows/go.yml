@@ -3,7 +3,7 @@ name: Go Module
 on:
   push:
     tags:
-      - "*"
+      - "[0-9]*.[0-9]*.[0-9]*"
 
 permissions:
   contents: read
@@ -14,8 +14,17 @@ env:
   GONOSUMDB: ""
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
+  test:
+    name: Test Go module on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-latest
+          - windows-latest
 
     steps:
       - uses: actions/checkout@v7
@@ -26,19 +35,82 @@ jobs:
           go-version-file: go.mod
           check-latest: true
 
-      - name: Install cap'n proto
+      - name: Set up MinGW on Windows
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          install: mingw-w64-x86_64-gcc
+
+      - name: Install cap'n proto on Linux
+        if: runner.os == 'Linux'
         run: sudo apt update && sudo apt install capnproto
 
+      - name: Install cap'n proto on macOS
+        if: runner.os == 'macOS'
+        run: brew install capnp
+
+      - name: Install cap'n proto on Windows
+        if: runner.os == 'Windows'
+        run: |
+          "C:\msys64\mingw64\bin" >> $env:GITHUB_PATH
+          curl.exe -O https://capnproto.org/capnproto-c++-win32-1.5.0.zip
+          Expand-Archive capnproto-c++-win32-1.5.0.zip
+          "$pwd\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0" >> $env:GITHUB_PATH
+
       - name: Build native library
+        if: runner.os != 'Windows'
         run: cargo build --verbose
 
+      - name: Build native library on Windows
+        if: runner.os == 'Windows'
+        env:
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
+        run: |
+          rustup target add x86_64-pc-windows-gnu
+          cargo build --verbose --target x86_64-pc-windows-gnu
+
       - name: Test Go module
+        if: runner.os != 'Windows'
+        env:
+          CGO_ENABLED: 1
         run: go test ./...
+
+      - name: Test Go module on Windows
+        if: runner.os == 'Windows'
+        env:
+          CGO_ENABLED: 1
+          CC: gcc
+        run: go test ./...
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          check-latest: true
 
       - name: Publish module to Go proxy
         run: |
           module_path="$(go list -m)"
           version="${GITHUB_REF_NAME}"
+          go_version="v${version}"
           encoded_module="${module_path,,}"
+
+          git fetch origin "refs/tags/${go_version}:refs/tags/${go_version}" || true
+          if ! git rev-parse --verify --quiet "refs/tags/${go_version}" >/dev/null; then
+            git tag "${go_version}" "${GITHUB_SHA}"
+            git push origin "refs/tags/${go_version}"
+          fi
+
           curl --fail --show-error --location --retry 5 --retry-all-errors --retry-delay 10 \
-            "https://proxy.golang.org/${encoded_module}/@v/v${version}.info"
+            "https://proxy.golang.org/${encoded_module}/@v/${go_version}.info"
