@@ -46,6 +46,11 @@ Test the C interface
 # Reference implementation
 I don't use rust a lot, so the code is probably fairly naive. It provides both a beacon and server implementation with C bindings through `cbindgen`. Ideally more bindings would be built on top of that so it can be used in the mythic server-side.
 
+## Building
+You will need [Capn'Proto](https://capnproto.org/install.html) (just the binaries) and a recent version of rust for every build.
+
+For windows, I prefer building with stable-gnu for normal usage, and nightly-gnu for release builds. You can find the exact arguments I use to the the static library as small as possible in [release.yml](/.github\workflows\release.yml). The MSVC toolchain is expected to work just as well, I just like mingw.
+
 ## Profiles
 The reference implementation has two profiles: `PQXDH` and `CNSA2`. Profiles are controlled by cargo features. The CNSA2 profile only exists as a test for now. It uses a simple ML-KEM encapsulation for key exchange and the underlying libraries are not FIPS-approved. It is experimental and is likely broken. PQXDH is the intended target and the default.
 
