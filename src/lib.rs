@@ -297,6 +297,28 @@ mod gobinds {
 	}
 
 	#[unsafe(no_mangle)]
+	pub extern "C" fn beaconcrypt_go_decrypt_beacon_message_signed(
+		handle: *mut BeaconCryptPqxdh,
+		ptr: *const u8,
+		len: usize,
+	) -> GoBuffer {
+		if handle.is_null() {
+			return empty_buffer();
+		}
+		let Some(data) = (unsafe { input(ptr, len) }) else {
+			return empty_buffer();
+		};
+		let provider = unsafe { &mut *handle };
+		match provider.verify_signature(data) {
+			Some(verified) => provider
+				.decrypt_message(&verified.data, verified.key_id, false)
+				.map(into_buffer)
+				.unwrap_or_else(empty_buffer),
+			None => empty_buffer(),
+		}
+	}
+
+	#[unsafe(no_mangle)]
 	pub extern "C" fn beaconcrypt_go_encrypt_to_server(
 		handle: *mut BeaconCryptPqxdh,
 		ptr: *const u8,
@@ -307,6 +329,29 @@ mod gobinds {
 		}
 		let provider = unsafe { &*handle };
 		encrypt(handle, ptr, len, false, provider.server_kid())
+	}
+
+	#[unsafe(no_mangle)]
+	pub extern "C" fn beaconcrypt_go_encrypt_to_server_signed(
+		handle: *mut BeaconCryptPqxdh,
+		ptr: *const u8,
+		len: usize,
+	) -> GoBuffer {
+		if handle.is_null() {
+			return empty_buffer();
+		}
+		let Some(data) = (unsafe { input(ptr, len) }) else {
+			return empty_buffer();
+		};
+		let provider = unsafe { &mut *handle };
+		let srv_kid = provider.server_kid();
+		match provider.encrypt_message(data, false, srv_kid) {
+			Some(ciphertext) => provider
+				.sign_message(ciphertext.as_slice())
+				.map(into_buffer)
+				.unwrap_or_else(empty_buffer),
+			None => empty_buffer(),
+		}
 	}
 
 	#[unsafe(no_mangle)]

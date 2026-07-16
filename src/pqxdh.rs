@@ -365,6 +365,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		self.init_ratchets(&derived_secret, &info_str, true, srv_key_id);
 
 		match response.get_app_cipher_text() {
+			Ok(ciphertext) if ciphertext.is_empty() => Some(vec![]),
 			Ok(ciphertext) => self.decrypt_message(ciphertext, srv_key_id, true),
 			Err(_) => Some(vec![0u8; 0]),
 		}

@@ -5,7 +5,7 @@ def register_beacon(
     server: BeaconCryptServer,
     beacon: BeaconCryptBeacon,
 ) -> bytes | None:
-    message = bytes(0xFF * 32)
+    message = bytes([0xFF]) * 32
     phase_1 = beacon.generate_registration()
     assert phase_1 is not None
     reg_out = server.register_beacon(phase_1, message)
@@ -22,3 +22,17 @@ def test_register():
     beacon = BeaconCryptBeacon(0, server_pk)
 
     assert register_beacon(server, beacon) is not None
+
+
+def test_register_without_initial_message():
+    server = BeaconCryptServer(0, None)
+    server_pk = server.id_pk()
+    beacon = BeaconCryptBeacon(0, server_pk)
+
+    phase_1 = beacon.generate_registration()
+    assert phase_1 is not None
+    reg_out = server.register_beacon(phase_1, None)
+    assert reg_out is not None
+
+    phase_2 = beacon.process_initial_message(reg_out.serialized())
+    assert phase_2 == b""

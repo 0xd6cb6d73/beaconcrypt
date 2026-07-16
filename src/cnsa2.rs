@@ -320,6 +320,7 @@ impl ProviderBeacon for BeaconCryptCnsa2 {
 		self.init_ratchets(&derived_secret, &info_str, true, srv_key_id);
 
 		match response.get_app_cipher_text() {
+			Ok(ciphertext) if ciphertext.is_empty() => Some(vec![]),
 			Ok(ciphertext) => match self.decrypt_message(ciphertext, srv_key_id, true) {
 				Some(plaintext) => Some(plaintext),
 				None => None,

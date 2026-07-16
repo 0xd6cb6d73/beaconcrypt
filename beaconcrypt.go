@@ -33,7 +33,9 @@ beaconcrypt_go_buffer beaconcrypt_go_process_initial_message(void *handle, const
 beaconcrypt_go_buffer beaconcrypt_go_encrypt_to_beacon(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_go_buffer beaconcrypt_go_encrypt_to_beacon_signed(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_go_buffer beaconcrypt_go_decrypt_beacon_message(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
+beaconcrypt_go_buffer beaconcrypt_go_decrypt_beacon_message_signed(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_go_buffer beaconcrypt_go_encrypt_to_server(void *handle, const uint8_t *ptr, uintptr_t len);
+beaconcrypt_go_buffer beaconcrypt_go_encrypt_to_server_signed(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_go_buffer beaconcrypt_go_decrypt_server_message(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_go_buffer beaconcrypt_go_decrypt_server_message_signed(void *handle, const uint8_t *ptr, uintptr_t len);
 */
@@ -203,12 +205,30 @@ func (s *Server) DecryptBeaconMessage(keyID uint64, ciphertext []byte) ([]byte, 
 	})
 }
 
+func (s *Server) DecryptBeaconMessageSigned(ciphertext []byte) ([]byte, error) {
+	if s == nil || s.handle == nil {
+		return nil, ErrClosed
+	}
+	return callUnary(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_go_buffer {
+		return C.beaconcrypt_go_decrypt_beacon_message_signed(s.handle, ptr, len)
+	})
+}
+
 func (b *Beacon) EncryptToServer(plaintext []byte) ([]byte, error) {
 	if b == nil || b.handle == nil {
 		return nil, ErrClosed
 	}
 	return callUnary(plaintext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_go_buffer {
 		return C.beaconcrypt_go_encrypt_to_server(b.handle, ptr, len)
+	})
+}
+
+func (b *Beacon) EncryptToServerSigned(plaintext []byte) ([]byte, error) {
+	if b == nil || b.handle == nil {
+		return nil, ErrClosed
+	}
+	return callUnary(plaintext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_go_buffer {
+		return C.beaconcrypt_go_encrypt_to_server_signed(b.handle, ptr, len)
 	})
 }
 
@@ -240,10 +260,13 @@ func callUnary(data []byte, call func(*C.uint8_t, C.uintptr_t) C.beaconcrypt_go_
 }
 
 func copyBuffer(buffer C.beaconcrypt_go_buffer) ([]byte, error) {
-	if buffer.ptr == nil || buffer.len == 0 {
+	if buffer.ptr == nil {
 		return nil, ErrCrypto
 	}
 	defer C.beaconcrypt_go_free_buffer(buffer)
+	if buffer.len == 0 {
+		return []byte{}, nil
+	}
 	return C.GoBytes(unsafe.Pointer(buffer.ptr), C.int(buffer.len)), nil
 }
 

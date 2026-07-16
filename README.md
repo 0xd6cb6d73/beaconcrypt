@@ -55,8 +55,19 @@ You will need [Capn'Proto](https://capnproto.org/install.html) (just the binarie
 
 For windows, I prefer building with stable-gnu for normal usage, and nightly-gnu for release builds. You can find the exact arguments I use to the the static library as small as possible in [release.yml](/.github\workflows\release.yml). The MSVC toolchain is expected to work just as well, I just like mingw.
 
+Build and run all tests:
+```bash
+cargo test
+cargo build --target x86_64-pc-windows-gnu
+go test ./...
+uv run maturin build --features pybinds --uv
+uv run --no-sync pytest tests
+```
+
 ## Profiles
 The reference implementation has two profiles: `PQXDH` and `CNSA2`. Profiles are controlled by cargo features. The CNSA2 profile only exists as a test for now. It uses a simple ML-KEM encapsulation for key exchange and the underlying libraries are not FIPS-approved. It is experimental and is likely broken. PQXDH is the intended target and the default.
+
+**CNSA2 is currently completely broken**
 
 ## Usage
 The reference implementation is a library that can currently be used either from rust or through C FFI. The C interface is currently not tested.

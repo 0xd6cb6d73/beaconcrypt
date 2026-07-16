@@ -455,9 +455,17 @@ struct beaconcrypt_GoBuffer beaconcrypt_go_decrypt_beacon_message(struct beaconc
                                                                   const uint8_t *ptr,
                                                                   uintptr_t len);
 
+struct beaconcrypt_GoBuffer beaconcrypt_go_decrypt_beacon_message_signed(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                                         const uint8_t *ptr,
+                                                                         uintptr_t len);
+
 struct beaconcrypt_GoBuffer beaconcrypt_go_encrypt_to_server(struct beaconcrypt_BeaconCryptPqxdh *handle,
                                                              const uint8_t *ptr,
                                                              uintptr_t len);
+
+struct beaconcrypt_GoBuffer beaconcrypt_go_encrypt_to_server_signed(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                                    const uint8_t *ptr,
+                                                                    uintptr_t len);
 
 struct beaconcrypt_GoBuffer beaconcrypt_go_decrypt_server_message(struct beaconcrypt_BeaconCryptPqxdh *handle,
                                                                   const uint8_t *ptr,
