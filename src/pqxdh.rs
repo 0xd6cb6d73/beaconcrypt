@@ -331,6 +331,9 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 			crypto_kx::PublicKey::from_bytes(response.get_ephemeral_key().ok()?).ok()?;
 		let server_id =
 			crypto_sign::PublicKey::from_bytes(response.get_identity_key().ok()?).ok()?;
+		if server_id != self.server_id()?.clone() {
+			return None;
+		}
 		let server_kex_id = crypto_sign::ed25519_pk_to_curve25519(&server_id).ok()?;
 		let beacon_kex_id = crypto_sign::ed25519_sk_to_curve25519(self.identity_sk()).ok()?;
 		let shared_secret =
@@ -353,7 +356,6 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, shared_secret).ok()?;
 		self.delete_onetime_keypair();
 
-		self.add_server_pk(server_id.clone());
 		self.set_identity_kid(response.get_key_id());
 		let id = self.identity_pk().clone();
 		self.set_associated_data(build_additional_data(server_id, id));
