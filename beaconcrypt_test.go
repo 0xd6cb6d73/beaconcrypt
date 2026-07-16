@@ -58,7 +58,11 @@ func newBeacon(t *testing.T, serverPK []byte) *Beacon {
 
 func TestRegister(t *testing.T) {
 	server := newServer(t)
-	beacon := newBeacon(t, nil)
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	beacon := newBeacon(t, serverPK)
 
 	if registerBeacon(t, server, beacon) == nil {
 		t.Fatal("expected registration to return initial message")
@@ -67,8 +71,12 @@ func TestRegister(t *testing.T) {
 
 func TestEncryptToMultiple(t *testing.T) {
 	server := newServer(t)
-	b1 := newBeacon(t, nil)
-	b2 := newBeacon(t, nil)
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	b1 := newBeacon(t, serverPK)
+	b2 := newBeacon(t, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
 	b1Initial := registerBeacon(t, server, b1)
@@ -92,7 +100,11 @@ func TestEncryptToMultiple(t *testing.T) {
 
 func TestEncryptMultiple(t *testing.T) {
 	server := newServer(t)
-	b1 := newBeacon(t, nil)
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	b1 := newBeacon(t, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
 	registerBeacon(t, server, b1)
@@ -112,7 +124,11 @@ func TestEncryptMultiple(t *testing.T) {
 
 func TestDecryptMultiple(t *testing.T) {
 	server := newServer(t)
-	beacon := newBeacon(t, nil)
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	beacon := newBeacon(t, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
 	registerBeacon(t, server, beacon)
@@ -143,7 +159,11 @@ func TestDecryptMultiple(t *testing.T) {
 
 func TestDecryptMultipleSigned(t *testing.T) {
 	server := newServer(t)
-	beacon := newBeacon(t, nil)
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	beacon := newBeacon(t, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
 	registerBeacon(t, server, beacon)
