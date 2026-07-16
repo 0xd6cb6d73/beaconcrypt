@@ -18,8 +18,9 @@ def register_beacon(
 
 def test_encrypt_to_multiple():
     server = BeaconCryptServer(0, None)
-    b1 = BeaconCryptBeacon(0, None)
-    b2 = BeaconCryptBeacon(0, None)
+    server_pk = server.id_pk()
+    b1 = BeaconCryptBeacon(0, server_pk)
+    b2 = BeaconCryptBeacon(0, server_pk)
     message = bytes(0x1 * 32)
 
     b1_initial = register_beacon(server, b1)
@@ -33,7 +34,8 @@ def test_encrypt_to_multiple():
 
 def test_encrypt_multiple():
     server = BeaconCryptServer(0, None)
-    b1 = BeaconCryptBeacon(0, None)
+    server_pk = server.id_pk()
+    b1 = BeaconCryptBeacon(0, server_pk)
     message = bytes(0x1 * 32)
 
     _ = register_beacon(server, b1)
@@ -45,7 +47,8 @@ def test_encrypt_multiple():
 
 def test_decrypt_multiple():
     server = BeaconCryptServer(0, None)
-    beacon = BeaconCryptBeacon(0, None)
+    server_pk = server.id_pk()
+    beacon = BeaconCryptBeacon(0, server_pk)
     message = bytes(0x1 * 32)
 
     _ = register_beacon(server, beacon)
@@ -61,7 +64,8 @@ def test_decrypt_multiple():
 
 def test_decrypt_multiple_signed():
     server = BeaconCryptServer(0, None)
-    beacon = BeaconCryptBeacon(0, None)
+    server_pk = server.id_pk()
+    beacon = BeaconCryptBeacon(0, server_pk)
     message = bytes(0x1 * 32)
 
     _ = register_beacon(server, beacon)

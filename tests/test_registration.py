@@ -18,6 +18,7 @@ def register_beacon(
 
 def test_register():
     server = BeaconCryptServer(0, None)
-    beacon = BeaconCryptBeacon(0, None)
+    server_pk = server.id_pk()
+    beacon = BeaconCryptBeacon(0, server_pk)
 
     assert register_beacon(server, beacon) is not None
