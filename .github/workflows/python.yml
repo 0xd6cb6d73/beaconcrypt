@@ -10,6 +10,8 @@ name: Upload Python Package
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "[0-9]*.[0-9]*.[0-9]*"
 
@@ -17,7 +19,7 @@ permissions:
   contents: read
 
 jobs:
-  sdist:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -36,6 +38,22 @@ jobs:
           uv run --group dev maturin develop --bindings pyo3 --features pybinds
           uv run --group dev pytest tests
 
+  sdist:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      - name: Set up Python
+        run: uv python install 3.14
+      - name: Install cap'n proto
+        run: |
+          sudo apt install capnproto
+
       - name: Build source distribution
         run: uvx maturin sdist --out dist
 
@@ -46,6 +64,8 @@ jobs:
           path: dist/
 
   wheels:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: test
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -74,6 +94,7 @@ jobs:
           path: dist/
 
   pypi-publish:
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     needs:
       - sdist
