@@ -143,7 +143,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		let signed = crypto_sign::sign(data, self.identity_sk()).ok()?;
 		builder.set_data(&signed);
 		let mut buffer = vec![];
-		capnp::serialize_packed::write_message(&mut buffer, t_builder.borrow_inner()).unwrap();
+		capnp::serialize_packed::write_message(&mut buffer, t_builder.borrow_inner()).ok()?;
 		Some(buffer)
 	}
 
@@ -315,7 +315,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		bundle.set_pq_key(&pq_sig);
 
 		let mut buffer = vec![];
-		capnp::serialize::write_message(&mut buffer, msg.borrow_inner()).unwrap();
+		capnp::serialize::write_message(&mut buffer, msg.borrow_inner()).ok()?;
 		Some(buffer)
 	}
 
@@ -374,17 +374,16 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 #[cfg(feature = "server")]
 impl ProviderServer for BeaconCryptPqxdh {
 	fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput> {
-		let reader = capnp::serialize::read_message(buffer, ReaderOptions::new()).unwrap();
+		let reader = capnp::serialize::read_message(buffer, ReaderOptions::new()).ok()?;
 		let typed_reader = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(reader);
-		let registration = typed_reader.get().unwrap();
+		let registration = typed_reader.get().ok()?;
 
 		let decoded_beacon_id = decode_sign(registration.get_identity_key().ok()?).ok()?;
 		let remote_id = crypto_sign::PublicKey::from_bytes(&decoded_beacon_id).ok()?;
-		let pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id).unwrap();
-		let prekey_verified =
-			crypto_sign::verify(registration.get_pre_key().ok()?, &remote_id).unwrap();
+		let pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id)?;
+		let prekey_verified = crypto_sign::verify(registration.get_pre_key().ok()?, &remote_id)?;
 		let onetime_verified =
-			crypto_sign::verify(registration.get_one_time_key().ok()?, &remote_id).unwrap();
+			crypto_sign::verify(registration.get_one_time_key().ok()?, &remote_id)?;
 
 		let beacon_prekey =
 			crypto_kx::PublicKey::from_bytes(&decode_kem(&prekey_verified).ok()?).ok()?;
