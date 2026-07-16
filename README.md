@@ -46,6 +46,10 @@ Test the C interface
 # Reference implementation
 I don't use rust a lot, so the code is probably fairly naive. It provides both a beacon and server implementation with C bindings through `cbindgen`. Ideally more bindings would be built on top of that so it can be used in the mythic server-side.
 
+The reference implementation expects that all beacons are compiled with the server's public key, and that beaconcrypt is initialized with it.
+
+The server is currently not very usable as it doesn't support saving the state of any individual beacon. This means that if your server goes down, you will not be able to communicate with any previously-registered beacons anymore. The server doesn't support being initialized with an Ed25519 seed (32 random bytes). Users wishing to use the server in practical cases should use this interface to ensure their server keeps its identity across reboots.
+
 ## Building
 You will need [Capn'Proto](https://capnproto.org/install.html) (just the binaries) and a recent version of rust for every build.
 
