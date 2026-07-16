@@ -25,12 +25,34 @@ fn register_beacon(
 }
 
 #[test]
+fn malformed_registration_is_rejected() {
+	let (mut server, _) = new_pair();
+
+	assert!(server.get_shared_secret(b"not a registration").is_none());
+}
+
+#[test]
 fn registration_can_omit_initial_message() {
 	let (mut server, mut beacon) = new_pair();
 
 	let response = register_beacon(&mut server, &mut beacon, None);
 
 	assert_eq!(response.kid, 1);
+}
+
+#[test]
+fn beacon_rejects_registration_response_from_wrong_server() {
+	let (mut expected_server, mut beacon) = new_pair();
+	let mut wrong_server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+	assert!(expected_server.get_shared_secret(&phase_1).is_some());
+	let reg_out = wrong_server.get_shared_secret(&phase_1).unwrap();
+	let phase_2 = wrong_server
+		.build_registration_response(reg_out, Some(b"wrong server"))
+		.unwrap();
+
+	assert!(beacon.finish_registration(&phase_2.serialized).is_none());
 }
 
 #[test]
@@ -69,6 +91,21 @@ fn beacon_can_encrypt_to_server_signed() {
 }
 
 #[test]
+fn signed_beacon_message_rejects_tampering() {
+	let (mut server, mut beacon) = new_pair();
+	register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
+
+	let ciphertext = beacon
+		.encrypt_message(b"beacon to server", false, SERVER_KID)
+		.unwrap();
+	let mut signed = beacon.sign_message(&ciphertext).unwrap();
+	let last = signed.len() - 1;
+	signed[last] ^= 0x01;
+
+	assert!(server.verify_signature(&signed).is_none());
+}
+
+#[test]
 fn signed_server_message_rejects_tampering() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
@@ -81,6 +118,30 @@ fn signed_server_message_rejects_tampering() {
 	signed[last] ^= 0x01;
 
 	assert!(beacon.verify_signature(&signed).is_none());
+}
+
+#[test]
+fn decrypt_rejects_wrong_direction() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
+
+	let server_to_beacon = server
+		.encrypt_message(b"server to beacon", true, response.kid)
+		.unwrap();
+	assert!(
+		server
+			.decrypt_message(&server_to_beacon, response.kid, false)
+			.is_none()
+	);
+
+	let beacon_to_server = beacon
+		.encrypt_message(b"beacon to server", false, SERVER_KID)
+		.unwrap();
+	assert!(
+		beacon
+			.decrypt_message(&beacon_to_server, SERVER_KID, true)
+			.is_none()
+	);
 }
 
 #[test]

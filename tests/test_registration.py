@@ -33,6 +33,36 @@ def test_register_without_initial_message():
     assert phase_1 is not None
     reg_out = server.register_beacon(phase_1, None)
     assert reg_out is not None
+    assert reg_out.key_id() == 1
 
     phase_2 = beacon.process_initial_message(reg_out.serialized())
     assert phase_2 == b""
+
+
+def test_server_from_seed_uses_stable_identity():
+    seed = bytes([0]) * 32
+
+    server_a = BeaconCryptServer(0, seed)
+    server_b = BeaconCryptServer(0, seed)
+
+    assert server_a.id_pk() == server_b.id_pk()
+
+
+def test_malformed_registration_is_rejected():
+    server = BeaconCryptServer(0, None)
+
+    assert server.register_beacon(b"not a registration", b"initial") is None
+
+
+def test_beacon_rejects_registration_response_from_wrong_server():
+    expected_server = BeaconCryptServer(0, None)
+    wrong_server = BeaconCryptServer(0, None)
+    beacon = BeaconCryptBeacon(0, expected_server.id_pk())
+
+    phase_1 = beacon.generate_registration()
+    assert phase_1 is not None
+    assert expected_server.register_beacon(phase_1, b"expected server") is not None
+    wrong_response = wrong_server.register_beacon(phase_1, b"wrong server")
+    assert wrong_response is not None
+
+    assert beacon.process_initial_message(wrong_response.serialized()) is None

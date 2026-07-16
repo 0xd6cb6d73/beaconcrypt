@@ -124,6 +124,21 @@ def test_beacon_encrypts_to_server_signed():
     assert plaintext == message
 
 
+def test_signed_beacon_message_rejects_tampering():
+    server = BeaconCryptServer(0, None)
+    server_pk = server.id_pk()
+    beacon = BeaconCryptBeacon(0, server_pk)
+    message = b"beacon to server"
+
+    _ = register_beacon(server, beacon)
+    signed = beacon.encrypt_to_server_signed(message)
+    assert signed is not None
+    tampered = bytearray(signed)
+    tampered[-1] ^= 0x01
+
+    assert server.decrypt_beacon_message_signed(bytes(tampered)) is None
+
+
 def test_signed_server_message_rejects_tampering():
     server = BeaconCryptServer(0, None)
     server_pk = server.id_pk()
@@ -137,6 +152,21 @@ def test_signed_server_message_rejects_tampering():
     tampered[-1] ^= 0x01
 
     assert beacon.decrypt_server_message_signed(bytes(tampered)) is None
+
+
+def test_decrypt_rejects_wrong_direction():
+    server = BeaconCryptServer(0, None)
+    server_pk = server.id_pk()
+    beacon = BeaconCryptBeacon(0, server_pk)
+
+    _ = register_beacon(server, beacon)
+    server_to_beacon = server.encrypt_to_beacon(b"server to beacon", 1)
+    assert server_to_beacon is not None
+    assert server.decrypt_beacon_message(server_to_beacon, 1) is None
+
+    beacon_to_server = beacon.encrypt_message_to_server(b"beacon to server")
+    assert beacon_to_server is not None
+    assert beacon.decrypt_server_message(beacon_to_server) is None
 
 
 def test_beacon_cannot_decrypt_message_for_different_beacon():

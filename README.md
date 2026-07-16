@@ -60,7 +60,7 @@ Build and run all tests:
 cargo test
 cargo build --target x86_64-pc-windows-gnu
 go test ./...
-uv run maturin build --features pybinds --uv
+uv run maturin develop --features pybinds --uv
 uv run --no-sync pytest tests
 ```
 

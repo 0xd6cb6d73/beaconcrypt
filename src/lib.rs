@@ -477,10 +477,11 @@ pub mod beaconcrypt_py {
 			reg_buffer: &[u8],
 			initial_message: Option<&[u8]>,
 		) -> Option<RegResponsePy> {
+			let initial_message = Some(initial_message.unwrap_or(&[]));
 			match self._0.get_shared_secret(reg_buffer) {
 				Some(secrets) => self
 					._0
-					.build_registration_response(secrets.clone(), initial_message)
+					.build_registration_response(secrets, initial_message)
 					.map(|response| response.into()),
 				None => None,
 			}
