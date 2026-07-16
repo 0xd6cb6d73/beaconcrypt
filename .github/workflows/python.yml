@@ -33,7 +33,7 @@ jobs:
 
       - name: Run Python tests
         run: |
-          uv run --group dev maturin develop --features pybinds
+          uv run --group dev maturin develop --bindings pyo3 --features pybinds
           uv run --group dev pytest tests
 
       - name: Build source distribution

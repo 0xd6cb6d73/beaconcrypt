@@ -12,6 +12,10 @@ classifiers = [
 ]
 dynamic = ["version"]
 
+[tool.maturin]
+bindings = "pyo3"
+features = ["pybinds"]
+
 [dependency-groups]
 dev = [
     "black>=26.5.1",
