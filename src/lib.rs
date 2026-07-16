@@ -475,9 +475,9 @@ pub mod beaconcrypt_py {
 	#[pymethods]
 	impl Beacon {
 		#[new]
-		fn new(server_kid: u64, server_id_pk: Option<&[u8]>) -> Self {
+		fn new(server_kid: u64, server_id_pk: &[u8]) -> Self {
 			Self {
-				_0: BeaconCryptPqxdh::new(true, server_kid, server_id_pk, None),
+				_0: BeaconCryptPqxdh::new(true, server_kid, Some(server_id_pk), None),
 			}
 		}
 
