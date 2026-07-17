@@ -15,6 +15,7 @@ dynamic = ["version"]
 [tool.maturin]
 bindings = "pyo3"
 features = ["pybinds"]
+include = ["beaconcrypt.pyi"]
 
 [tool.uv]
 # `maturin develop` owns the native extension installed in the development
@@ -53,4 +54,4 @@ fi
 before-all = "choco install capnproto -y"
 
 [tool.cibuildwheel.config-settings]
-build-args = "--features pybinds --generate-stubs"
+build-args = "--features pybinds"
