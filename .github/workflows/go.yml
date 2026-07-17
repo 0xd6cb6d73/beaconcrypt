@@ -61,7 +61,7 @@ jobs:
 
       - name: Build native library
         if: runner.os != 'Windows'
-        run: cargo build --verbose
+        run: cargo build --verbose --features gobinds
 
       - name: Build native library on Windows
         if: runner.os == 'Windows'
@@ -69,7 +69,7 @@ jobs:
           CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
         run: |
           rustup target add x86_64-pc-windows-gnu
-          cargo build --verbose --target x86_64-pc-windows-gnu
+          cargo build --verbose --target x86_64-pc-windows-gnu --features gobinds
 
       - name: Test Go module
         if: runner.os != 'Windows'

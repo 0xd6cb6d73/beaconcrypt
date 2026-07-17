@@ -58,7 +58,7 @@ For windows, I prefer building with stable-gnu for normal usage, and nightly-gnu
 Build and run all tests:
 ```bash
 cargo test
-cargo build --target x86_64-pc-windows-gnu
+cargo build --features gobinds --target x86_64-pc-windows-gnu
 go test ./...
 uv run maturin develop --uv
 uv run pytest tests

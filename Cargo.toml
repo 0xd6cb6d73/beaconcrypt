@@ -31,6 +31,7 @@ server = []
 beacon = []
 cnsa2 = ["dep:libcrux-ml-dsa", "dep:libcrux-ml-kem", "dep:libcrux-aesgcm"]
 pqxdh = []
+gobinds = ["beacon", "server", "pqxdh"]
 pybinds = ["dep:pyo3"]
 
 [profile.release]

@@ -28,7 +28,7 @@ jobs:
     - name: Build
       run: |
         rustup component add rust-src --toolchain nightly
-        cargo +nightly rustc --release -Z build-std=std,panic_abort --crate-type=staticlib
+        cargo +nightly rustc --release -Z build-std=std,panic_abort --no-default-features --features beacon,server,pqxdh --crate-type=staticlib
     - name: Run tests
       run: cargo test --verbose
     - name: Rename
@@ -56,7 +56,7 @@ jobs:
       run: |
         $env:Path = "$env:Path;$(join-path $pwd '\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0')"
         rustup component add rust-src --toolchain nightly-msvc
-        cargo +nightly rustc --release -Z build-std=std,panic_abort --crate-type=staticlib
+        cargo +nightly rustc --release -Z build-std=std,panic_abort --no-default-features --features beacon,server,pqxdh --crate-type=staticlib
         ls target/release
     - name: Run tests
       run: |
@@ -71,8 +71,44 @@ jobs:
         path: target/release/beaconcrypt-${{ matrix.os }}.lib
         retention-days: 7
 
+  windows-mingw-build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up MinGW
+      uses: msys2/setup-msys2@v2
+      with:
+        install: mingw-w64-x86_64-gcc
+    - name: Install cap'n proto
+      run: |
+        "C:\msys64\mingw64\bin" >> $env:GITHUB_PATH
+        curl.exe -O https://capnproto.org/capnproto-c++-win32-1.5.0.zip
+        Expand-Archive capnproto-c++-win32-1.5.0.zip
+        "$pwd\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0" >> $env:GITHUB_PATH
+    - name: Build
+      env:
+        CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
+      run: |
+        rustup target add x86_64-pc-windows-gnu --toolchain nightly
+        rustup component add rust-src --toolchain nightly
+        cargo +nightly rustc --release -Z build-std=std,panic_abort --target x86_64-pc-windows-gnu --no-default-features --features beacon,server,pqxdh --crate-type=staticlib
+        ls target/x86_64-pc-windows-gnu/release
+    - name: Run tests
+      env:
+        CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
+      run: cargo test --verbose --target x86_64-pc-windows-gnu
+    - name: Rename
+      run: mv target/x86_64-pc-windows-gnu/release/libbeaconcrypt.a target/x86_64-pc-windows-gnu/release/libbeaconcrypt-windows-mingw-x86_64.a
+    - name: Upload release artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: beaconcrypt-static-windows-mingw-x86_64
+        path: target/x86_64-pc-windows-gnu/release/libbeaconcrypt-windows-mingw-x86_64.a
+        retention-days: 7
+
   release:
-    needs: [ubuntu-build, windows-build]
+    needs: [ubuntu-build, windows-build, windows-mingw-build]
     runs-on: ubuntu-latest
     permissions:
       contents: write

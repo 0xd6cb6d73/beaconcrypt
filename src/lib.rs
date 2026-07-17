@@ -74,7 +74,7 @@ capnp::generated_code!(pub mod protogram_capnp);
 #[cfg(feature = "pybinds")]
 use pyo3::prelude::*;
 
-#[cfg(feature = "pqxdh")]
+#[cfg(feature = "gobinds")]
 mod gobinds {
 	use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer};
 	use std::mem;
