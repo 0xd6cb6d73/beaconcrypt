@@ -409,8 +409,10 @@ impl RatchetManager {
 	}
 
 	pub fn ratchet_recv_until(&mut self, info: &[u8], until: u64) -> Option<u64> {
-		if until <= self.recv_ctr || until > self.recv_ctr + RATCHET_MAX_GAP {
+		if until <= self.recv_ctr {
 			Some(until)
+		} else if until > self.recv_ctr + RATCHET_MAX_GAP {
+			None
 		} else {
 			let diff = until - self.recv_ctr;
 			for _ in 0..diff {
@@ -732,5 +734,219 @@ pub unsafe extern "C" fn sign_message(
 			0
 		}
 		None => -1,
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	fn key_bytes(key: &AeadKey) -> &[u8] {
+		key.as_ref()
+	}
+
+	fn nonce_bytes(nonce: &AeadNonce) -> &[u8] {
+		nonce.as_ref()
+	}
+
+	fn assert_key_material_eq(left: &KeyMaterial, right: &KeyMaterial) {
+		assert_eq!(key_bytes(left.get_key()), key_bytes(right.get_key()));
+		assert_eq!(
+			nonce_bytes(left.get_nonce()),
+			nonce_bytes(right.get_nonce())
+		);
+	}
+
+	#[test]
+	fn sign_type_discriminants_round_trip() {
+		assert_eq!(u8::from(SignType::Undefined), 0);
+		assert_eq!(u8::from(SignType::Ed25519), 1);
+		assert!(matches!(SignType::from(0), SignType::Undefined));
+		assert!(matches!(SignType::from(1), SignType::Ed25519));
+		assert!(matches!(SignType::from(u8::MAX), SignType::Undefined));
+	}
+
+	#[test]
+	fn kem_type_discriminants_round_trip() {
+		assert_eq!(u8::from(KemType::Undefined), 0);
+		assert_eq!(u8::from(KemType::MlKem768), 1);
+		assert_eq!(u8::from(KemType::X25519), 2);
+		assert!(matches!(KemType::from(0), KemType::Undefined));
+		assert!(matches!(KemType::from(1), KemType::MlKem768));
+		assert!(matches!(KemType::from(2), KemType::X25519));
+		assert!(matches!(KemType::from(u8::MAX), KemType::Undefined));
+	}
+
+	#[test]
+	fn signing_key_encoding_round_trips() {
+		let key = [0xA5; 32];
+		let encoded = encode_sign(SignType::Ed25519, &key).unwrap();
+
+		assert_eq!(encoded.len(), key.len() + 1);
+		assert_eq!(encoded[0], 1);
+		assert_eq!(decode_sign(&encoded).unwrap(), key);
+	}
+
+	#[test]
+	fn signing_key_encoding_rejects_invalid_inputs() {
+		assert!(encode_sign(SignType::Undefined, &[0; 32]).is_err());
+		assert!(decode_sign(&[]).is_err());
+		assert!(decode_sign(&[1; 32]).is_err());
+
+		let mut unknown_type = vec![0xA5; 33];
+		unknown_type[0] = u8::MAX;
+		assert!(decode_sign(&unknown_type).is_err());
+	}
+
+	#[test]
+	fn kem_key_encoding_round_trips() {
+		let x25519_key = [0x5A; 32];
+		let encoded_x25519 = encode_kem(KemType::X25519, &x25519_key).unwrap();
+		assert_eq!(encoded_x25519[0], 2);
+		assert_eq!(decode_kem(&encoded_x25519).unwrap(), x25519_key);
+
+		let ml_kem_key = [0xC3; 64];
+		let encoded_ml_kem = encode_kem(KemType::MlKem768, &ml_kem_key).unwrap();
+		assert_eq!(encoded_ml_kem[0], 1);
+		assert_eq!(decode_kem(&encoded_ml_kem).unwrap(), ml_kem_key);
+	}
+
+	#[test]
+	fn kem_key_encoding_rejects_invalid_inputs() {
+		assert!(encode_kem(KemType::Undefined, &[0; 32]).is_err());
+		assert!(decode_kem(&[]).is_err());
+		assert!(decode_kem(&[2; 32]).is_err());
+
+		let mut unknown_type = vec![0xA5; 33];
+		unknown_type[0] = u8::MAX;
+		assert!(decode_kem(&unknown_type).is_err());
+	}
+
+	#[test]
+	fn secret_array_conversions_preserve_only_exact_length_inputs() {
+		let exact = KdfState::from(vec![0x11; KDF_STATE_SIZE]);
+		let too_short = KdfState::from(vec![0x22; KDF_STATE_SIZE - 1]);
+		let too_long = KdfState::from(vec![0x33; KDF_STATE_SIZE + 1]);
+
+		assert_eq!(exact.as_slice(), &[0x11; KDF_STATE_SIZE]);
+		assert_eq!(too_short.as_slice(), &[0; KDF_STATE_SIZE]);
+		assert_eq!(too_long.as_slice(), &[0; KDF_STATE_SIZE]);
+		assert_eq!(exact.clone().as_slice(), exact.as_slice());
+	}
+
+	#[test]
+	fn kdf_output_is_split_into_key_state_and_nonce() {
+		let mut bytes = [0u8; KDF_RATCHET_OUTPUT_LEN];
+		bytes[..AEAD_KEY_LEN].fill(0x11);
+		bytes[AEAD_KEY_LEN..AEAD_KEY_LEN + KDF_STATE_SIZE].fill(0x22);
+		bytes[AEAD_KEY_LEN + KDF_STATE_SIZE..].fill(0x33);
+
+		let output = KdfOutput::from(bytes);
+
+		assert_eq!(key_bytes(&output.aead_key), &[0x11; AEAD_KEY_LEN]);
+		assert_eq!(output.kdf_state.as_slice(), &[0x22; KDF_STATE_SIZE]);
+		assert_eq!(nonce_bytes(&output.aead_nonce), &[0x33; AEAD_NONCE_LEN]);
+	}
+
+	#[test]
+	fn opposite_ratchet_roles_derive_matching_keys() {
+		let ikm = [0x42; KDF_STATE_SIZE];
+		let mut beacon = RatchetManager::new();
+		let mut server = RatchetManager::new();
+		beacon.init_ratchets(&ikm, SYM_RATCHET_INFO, true);
+		server.init_ratchets(&ikm, SYM_RATCHET_INFO, false);
+
+		let beacon_send = beacon.ratchet_send(SYM_RATCHET_INFO).unwrap();
+		let server_recv = server.ratchet_recv(SYM_RATCHET_INFO).unwrap();
+		assert_eq!(beacon_send, server_recv);
+		assert_key_material_eq(
+			beacon.send_key(beacon_send).unwrap(),
+			server.recv_key(server_recv).unwrap(),
+		);
+
+		let server_send = server.ratchet_send(SYM_RATCHET_INFO).unwrap();
+		let beacon_recv = beacon.ratchet_recv(SYM_RATCHET_INFO).unwrap();
+		assert_eq!(server_send, beacon_recv);
+		assert_key_material_eq(
+			server.send_key(server_send).unwrap(),
+			beacon.recv_key(beacon_recv).unwrap(),
+		);
+	}
+
+	#[test]
+	fn ratchet_generates_distinct_keys_and_deletes_used_keys() {
+		let mut ratchet = RatchetManager::new();
+		ratchet.init_ratchets(&[0x24; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+
+		let first = ratchet.ratchet_send(SYM_RATCHET_INFO).unwrap();
+		let second = ratchet.ratchet_send(SYM_RATCHET_INFO).unwrap();
+		assert_eq!((first, second), (1, 2));
+		assert_ne!(
+			key_bytes(ratchet.send_key(first).unwrap().get_key()),
+			key_bytes(ratchet.send_key(second).unwrap().get_key()),
+		);
+
+		ratchet.delete_send_key(first);
+		assert!(ratchet.send_key(first).is_none());
+		assert!(ratchet.send_key(second).is_some());
+	}
+
+	#[test]
+	fn receive_ratchet_caches_skipped_keys_within_the_gap() {
+		let mut ratchet = RatchetManager::new();
+		ratchet.init_ratchets(&[0x18; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+
+		assert_eq!(
+			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, RATCHET_MAX_GAP),
+			Some(RATCHET_MAX_GAP),
+		);
+		assert!(ratchet.recv_key(1).is_some());
+		assert!(ratchet.recv_key(RATCHET_MAX_GAP).is_some());
+		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 1), Some(1),);
+	}
+
+	#[test]
+	fn receive_ratchet_rejects_a_gap_over_the_limit_without_advancing() {
+		let mut ratchet = RatchetManager::new();
+		ratchet.init_ratchets(&[0x81; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+
+		assert_eq!(
+			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, RATCHET_MAX_GAP + 1),
+			None,
+		);
+		assert!(ratchet.recv_key(RATCHET_MAX_GAP + 1).is_none());
+		assert_eq!(ratchet.ratchet_recv(SYM_RATCHET_INFO), Some(1));
+	}
+
+	#[test]
+	fn remote_principal_exposes_its_key_and_ratchet() {
+		struct TestPublicKey([u8; 4]);
+		impl SignaturePk for TestPublicKey {}
+
+		let mut principal =
+			RemotePrincipal::new(TestPublicKey([1, 2, 3, 4]), RatchetManager::new());
+		assert_eq!(principal.pk().0, [1, 2, 3, 4]);
+		assert!(principal.ratchet().send_key(1).is_none());
+		assert_eq!(
+			principal.ratchet_mut().ratchet_send(SYM_RATCHET_INFO),
+			Some(1),
+		);
+		assert!(principal.ratchet().send_key(1).is_some());
+	}
+
+	#[test]
+	fn protogram_reader_accepts_packed_messages_and_rejects_garbage() {
+		let mut message = TypedBuilder::<protogram_capnp::proto_gram::Owned>::new_default();
+		let mut root = message.init_root();
+		root.set_key_id(42);
+		root.set_data(b"signed payload");
+		let mut serialized = vec![];
+		capnp::serialize_packed::write_message(&mut serialized, message.borrow_inner()).unwrap();
+
+		let parsed = create_protogram_reader(&serialized).unwrap();
+		let root = parsed.get().unwrap();
+		assert_eq!(root.get_key_id(), 42);
+		assert_eq!(root.get_data().unwrap(), b"signed payload");
+		assert!(create_protogram_reader(b"not a packed capnp message").is_none());
 	}
 }

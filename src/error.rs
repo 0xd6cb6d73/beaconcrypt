@@ -18,7 +18,7 @@ pub struct EncodingError;
 
 impl fmt::Display for EncodingError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "Key generation failure")
+		write!(f, "Encoding failure")
 	}
 }
 
@@ -29,7 +29,7 @@ pub struct DecodingError;
 
 impl fmt::Display for DecodingError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "Key generation failure")
+		write!(f, "Decoding failure")
 	}
 }
 
@@ -40,7 +40,7 @@ pub struct SignatureError;
 
 impl fmt::Display for SignatureError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "Key generation failure")
+		write!(f, "Signature failure")
 	}
 }
 
@@ -51,7 +51,7 @@ pub struct CipherTextError;
 
 impl fmt::Display for CipherTextError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "Key generation failure")
+		write!(f, "Ciphertext failure")
 	}
 }
 
@@ -62,8 +62,25 @@ pub struct DecryptionError;
 
 impl fmt::Display for DecryptionError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "Key generation failure")
+		write!(f, "Decryption failure")
 	}
 }
 
 impl Error for DecryptionError {}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn errors_implement_std_error() {
+		fn assert_error<T: Error>() {}
+
+		assert_error::<KeyGenError>();
+		assert_error::<EncodingError>();
+		assert_error::<DecodingError>();
+		assert_error::<SignatureError>();
+		assert_error::<CipherTextError>();
+		assert_error::<DecryptionError>();
+	}
+}

@@ -536,13 +536,19 @@ pub extern "C" fn init_server_from_seeds(server_kid: u64, id_seed: *const u8) {
 
 #[cfg(test)]
 mod tests {
-	use libsodium_rs::{crypto_kx, crypto_sign};
+	use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+	use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 
+	use super::{AD_SIZE, PQXDH_INFO, build_additional_data, derive_root_key};
 	use crate::{
 		BeaconCryptPqxdh,
 		beacon::ProviderBeacon,
+		phase1_capnp, protogram_capnp,
 		server::ProviderServer,
-		shared::{CryptoProvider, ED25519_SEED_SIZE},
+		shared::{
+			CryptoProvider, DH_OUT_LEN, DhSecret, ED25519_SEED_SIZE, SYM_RATCHET_INFO, decode_kem,
+			decode_sign,
+		},
 	};
 
 	fn test_register_beacon(
@@ -687,5 +693,175 @@ mod tests {
 		let _ = test_register_beacon(&mut server, &mut b1);
 		assert!(b1.get_onetime_pk() == None);
 		assert!(b1.get_onetime_sk() == None);
+	}
+
+	#[test]
+	fn provider_roles_create_only_their_required_key_material() {
+		let server = BeaconCryptPqxdh::new(false, 7, None, None);
+		assert!(!server.is_beacon());
+		assert_eq!(server.server_kid(), 7);
+		assert!(server.get_prekey_pk().is_none());
+		assert!(server.get_onetime_pk().is_none());
+		assert!(server.pq_pk().is_none());
+
+		let server_id = server.identity_pk().clone();
+		let beacon = BeaconCryptPqxdh::new(true, 7, Some(server_id.as_bytes()), None);
+		assert!(beacon.is_beacon());
+		assert!(beacon.get_prekey_pk().is_some());
+		assert!(beacon.get_prekey_sk().is_some());
+		assert!(beacon.get_onetime_pk().is_some());
+		assert!(beacon.get_onetime_sk().is_some());
+		assert!(beacon.pq_pk().is_some());
+		assert!(beacon.pq_sk().is_some());
+		assert_eq!(beacon.server_id(), Some(&server_id));
+	}
+
+	#[test]
+	fn adding_an_existing_key_id_does_not_replace_its_identity() {
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+		let first = crypto_sign::KeyPair::generate().unwrap().public_key;
+		let replacement = crypto_sign::KeyPair::generate().unwrap().public_key;
+
+		server.add_known_kid(9, first.clone());
+		server.add_known_kid(9, replacement);
+
+		assert_eq!(server.pk_by_kid(9), Some(&first));
+	}
+
+	#[test]
+	fn registration_bundle_authenticates_each_declared_public_key() {
+		let beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let serialized = beacon.get_registration_bundle().unwrap();
+		let message =
+			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
+		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
+		let registration = typed.get().unwrap();
+
+		let identity = registration.get_identity_key().unwrap();
+		assert_eq!(identity[0], 1);
+		assert_eq!(
+			decode_sign(identity).unwrap(),
+			beacon.identity_pk().as_bytes()
+		);
+
+		let prekey =
+			crypto_sign::verify(registration.get_pre_key().unwrap(), beacon.identity_pk()).unwrap();
+		assert_eq!(prekey[0], 2);
+		assert_eq!(
+			decode_kem(&prekey).unwrap(),
+			beacon.get_prekey_pk().unwrap().as_bytes()
+		);
+
+		let onetime = crypto_sign::verify(
+			registration.get_one_time_key().unwrap(),
+			beacon.identity_pk(),
+		)
+		.unwrap();
+		assert_eq!(onetime[0], 2);
+		assert_eq!(
+			decode_kem(&onetime).unwrap(),
+			beacon.get_onetime_pk().unwrap().as_bytes(),
+		);
+
+		let pq =
+			crypto_sign::verify(registration.get_pq_key().unwrap(), beacon.identity_pk()).unwrap();
+		assert_eq!(pq[0], 1);
+		assert_eq!(decode_kem(&pq).unwrap(), beacon.pq_pk().unwrap().as_bytes());
+	}
+
+	#[test]
+	fn server_rejects_a_registration_with_a_tampered_signed_key() {
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+		let beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let serialized = beacon.get_registration_bundle().unwrap();
+		let message =
+			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
+		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
+		let registration = typed.get().unwrap();
+		let mut tampered_prekey = registration.get_pre_key().unwrap().to_vec();
+		let last = tampered_prekey.len() - 1;
+		tampered_prekey[last] ^= 1;
+
+		let mut tampered = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
+		let mut root = tampered.init_root();
+		root.set_identity_key(registration.get_identity_key().unwrap());
+		root.set_pre_key(&tampered_prekey);
+		root.set_one_time_key(registration.get_one_time_key().unwrap());
+		root.set_pq_key(registration.get_pq_key().unwrap());
+		let mut tampered_serialized = vec![];
+		capnp::serialize::write_message(&mut tampered_serialized, tampered.borrow_inner()).unwrap();
+
+		assert!(server.get_shared_secret(&tampered_serialized).is_none());
+	}
+
+	#[test]
+	fn signature_verification_rejects_an_unknown_key_id() {
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+		let server_id = server.identity_pk().clone();
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+		test_register_beacon(&mut server, &mut beacon);
+
+		let signed = beacon.sign_message(b"authenticated message").unwrap();
+		let valid = server.verify_signature(&signed).unwrap();
+		assert_eq!(valid.key_id, 1);
+		assert_eq!(valid.data, b"authenticated message");
+
+		let message =
+			capnp::serialize_packed::read_message(&signed[..], ReaderOptions::new()).unwrap();
+		let typed = TypedReader::<_, protogram_capnp::proto_gram::Owned>::new(message);
+		let protogram = typed.get().unwrap();
+		let mut altered = TypedBuilder::<protogram_capnp::proto_gram::Owned>::new_default();
+		let mut root = altered.init_root();
+		root.set_key_id(2);
+		root.set_data(protogram.get_data().unwrap());
+		let mut altered_serialized = vec![];
+		capnp::serialize_packed::write_message(&mut altered_serialized, altered.borrow_inner())
+			.unwrap();
+
+		assert!(server.verify_signature(&altered_serialized).is_none());
+	}
+
+	#[test]
+	fn root_key_derivation_matches_the_pqxdh_transcript() {
+		let dh1 = DhSecret::from([0x11; DH_OUT_LEN]);
+		let dh2 = DhSecret::from([0x22; DH_OUT_LEN]);
+		let dh3 = DhSecret::from([0x33; DH_OUT_LEN]);
+		let dh4 = DhSecret::from([0x44; DH_OUT_LEN]);
+		let shared_bytes = [0x55; crypto_kem::mlkem768::SHAREDSECRETBYTES];
+		let shared = crypto_kem::mlkem768::SharedSecret::from_bytes(&shared_bytes).unwrap();
+
+		let actual =
+			derive_root_key(dh1.clone(), dh2.clone(), dh3.clone(), dh4.clone(), shared).unwrap();
+		let mut ikm = vec![0xFF; crypto_kx::PUBLICKEYBYTES];
+		ikm.extend_from_slice(dh1.as_slice());
+		ikm.extend_from_slice(dh2.as_slice());
+		ikm.extend_from_slice(dh3.as_slice());
+		ikm.extend_from_slice(dh4.as_slice());
+		ikm.extend_from_slice(&shared_bytes);
+		let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm).unwrap();
+		let expected =
+			crypto_kdf::hkdf::sha512::expand(actual.len(), Some(PQXDH_INFO), &prk).unwrap();
+
+		assert_eq!(actual, expected);
+	}
+
+	#[test]
+	fn additional_data_has_a_stable_order_and_layout() {
+		let server = crypto_sign::KeyPair::from_seed(&[0x61; ED25519_SEED_SIZE]).unwrap();
+		let beacon = crypto_sign::KeyPair::from_seed(&[0x62; ED25519_SEED_SIZE]).unwrap();
+		let actual = build_additional_data(server.public_key.clone(), beacon.public_key.clone());
+		let mut expected = Vec::with_capacity(AD_SIZE);
+		expected.extend_from_slice(PQXDH_INFO);
+		expected.extend_from_slice(SYM_RATCHET_INFO);
+		expected.push(1);
+		expected.extend_from_slice(server.public_key.as_bytes());
+		expected.push(1);
+		expected.extend_from_slice(beacon.public_key.as_bytes());
+
+		assert_eq!(actual.as_slice(), expected);
+		assert_ne!(
+			actual,
+			build_additional_data(beacon.public_key, server.public_key),
+		);
 	}
 }
