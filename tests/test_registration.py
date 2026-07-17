@@ -41,11 +41,14 @@ def test_register_without_initial_message():
 
 def test_server_from_seed_uses_stable_identity():
     seed = bytes([0]) * 32
+    expected_pk = bytes.fromhex(
+        "3b6a27bcceb6a42d62a3a8d02a6f0d73653215771de243a63ac048a18b59da29"
+    )
 
     server_a = BeaconCryptServer(0, seed)
     server_b = BeaconCryptServer(0, seed)
 
-    assert server_a.id_pk() == server_b.id_pk()
+    assert server_a.id_pk() == server_b.id_pk() == expected_pk
 
 
 def test_malformed_registration_is_rejected():

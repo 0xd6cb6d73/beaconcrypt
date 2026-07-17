@@ -465,7 +465,6 @@ pub mod beaconcrypt_py {
 			reg_buffer: &[u8],
 			initial_message: Option<&[u8]>,
 		) -> Option<RegResponsePy> {
-			let initial_message = Some(initial_message.unwrap_or(&[]));
 			match self._0.get_shared_secret(reg_buffer) {
 				Some(secrets) => self
 					._0
@@ -527,7 +526,6 @@ pub mod beaconcrypt_py {
 
 		fn decrypt_server_message(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
 			let srv_seq = self._0.server_kid();
-			println!("{}", srv_seq);
 			self._0.decrypt_message(&data, srv_seq)
 		}
 
