@@ -14,6 +14,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
 
     steps:
     - uses: actions/checkout@v7
@@ -45,6 +47,8 @@ jobs:
       matrix:
         os: [windows-latest]
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
 
     steps:
     - uses: actions/checkout@v7
@@ -73,6 +77,8 @@ jobs:
 
   windows-mingw-build:
     runs-on: windows-latest
+    permissions:
+      contents: read
 
     steps:
     - uses: actions/checkout@v7
