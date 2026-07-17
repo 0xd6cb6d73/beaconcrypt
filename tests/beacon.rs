@@ -24,11 +24,11 @@ fn beacon_can_catch_up() {
 	assert!(server.pk_by_kid(1).is_some());
 
 	let message = [0xFFu8; 32];
-	let b1_m1 = server.encrypt_message(&message, true, 1).unwrap();
-	let b1_m2 = server.encrypt_message(&message, true, 1).unwrap();
+	let b1_m1 = server.encrypt_message(&message, 1).unwrap();
+	let b1_m2 = server.encrypt_message(&message, 1).unwrap();
 	assert_ne!(b1_m1, b1_m2);
 
-	let dec_b1_m1 = b1.decrypt_message(&b1_m1, 0, true).unwrap();
-	let dec_b1_m2 = b1.decrypt_message(&b1_m2, 0, true).unwrap();
+	let dec_b1_m1 = b1.decrypt_message(&b1_m1, 0).unwrap();
+	let dec_b1_m2 = b1.decrypt_message(&b1_m2, 0).unwrap();
 	assert_eq!(dec_b1_m1, dec_b1_m2);
 }
