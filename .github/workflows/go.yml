@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - "[0-9]*.[0-9]*.[0-9]*"
+      - "v[0-9]*.[0-9]*.[0-9]*"
 
 permissions:
   contents: read
@@ -107,8 +107,7 @@ jobs:
       - name: Publish module to Go proxy
         run: |
           module_path="$(go list -m)"
-          version="${GITHUB_REF_NAME}"
-          go_version="v${version}"
+          go_version="${GITHUB_REF_NAME}"
 
           git fetch origin "refs/tags/${go_version}:refs/tags/${go_version}" || true
           if ! git rev-parse --verify --quiet "refs/tags/${go_version}" >/dev/null; then

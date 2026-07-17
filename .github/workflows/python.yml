@@ -13,7 +13,7 @@ on:
     branches:
       - main
     tags:
-      - "[0-9]*.[0-9]*.[0-9]*"
+      - "v[0-9]*.[0-9]*.[0-9]*"
 
 permissions:
   contents: read
@@ -119,9 +119,7 @@ jobs:
     # For more information, see: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#deployment-protection-rules
     environment:
       name: pypi
-      # OPTIONAL: uncomment and update to include your PyPI project URL in the deployment status:
-      # url: https://pypi.org/p/YOURPROJECT
-      url: https://pypi.org/project/beaconcrypt/${{ github.ref_name }}
+      url: https://pypi.org/project/beaconcrypt/
 
     steps:
       - name: Retrieve release distributions
