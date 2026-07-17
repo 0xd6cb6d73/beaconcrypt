@@ -35,8 +35,8 @@ jobs:
 
       - name: Run Python tests
         run: |
-          uv run --group dev maturin develop --bindings pyo3 --features pybinds
-          uv run --group dev pytest tests
+          uv run maturin develop --uv
+          uv run pytest tests
 
   sdist:
     if: startsWith(github.ref, 'refs/tags/')

@@ -16,6 +16,12 @@ dynamic = ["version"]
 bindings = "pyo3"
 features = ["pybinds"]
 
+[tool.uv]
+# `maturin develop` owns the native extension installed in the development
+# environment. Prevent uv's automatic project sync from replacing it with a
+# cached editable build before commands such as `uv run pytest`.
+package = false
+
 [dependency-groups]
 dev = [
     "black>=26.5.1",
