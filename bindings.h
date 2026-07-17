@@ -360,15 +360,6 @@ void init(bool is_beacon, uint64_t server_kid);
 
 /**
  * # Safety
- * * This function MUST only be called to clean up byte buffers returned by this library, do NOT use as a general `free`
- * * `ptr` should NOT be null and should point to a byte buffer of `len` length, in bytes.
- */
-void free_vec(uint8_t *ptr,
-              uintptr_t len,
-              uintptr_t capa);
-
-/**
- * # Safety
  * * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
  * * The library will overwrite all the `out` parameters
  * * It is not safe to read the `out` parameters if the function doesn't return `0`

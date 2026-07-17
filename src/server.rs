@@ -10,7 +10,7 @@ use libsodium_rs::{crypto_kem, crypto_kx, crypto_sign};
 use crate::shared::{CryptoProvider, KexDerivedSecret, STATE};
 #[cfg(feature = "cnsa2")]
 use std::marker::PhantomData;
-use std::{mem, slice::from_raw_parts, vec};
+use std::{mem, slice::from_raw_parts};
 
 #[cfg(feature = "pqxdh")]
 type KemCiphertext = crypto_kem::mlkem768::Ciphertext;
@@ -83,9 +83,9 @@ pub unsafe extern "C" fn register_beacon(
 	if bytes.is_null() || bytes_len == 0 {
 		return -1;
 	}
-	let bytes_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
 	let mut state = STATE.lock().unwrap();
-	match state.get_shared_secret(bytes_vec.as_slice()) {
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
+	match state.get_shared_secret(data_slice) {
 		Some(secrets) => {
 			let to_encrypt = if data.is_null() || data_len == 0 {
 				None
@@ -145,9 +145,9 @@ pub unsafe extern "C" fn decrypt_beacon_message(
 		return -1;
 	}
 	let mut state = STATE.lock().unwrap();
-	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
 
-	match state.decrypt_message(&data_vec, key_id) {
+	match state.decrypt_message(data_slice, key_id) {
 		Some(mut plaintext) => {
 			unsafe {
 				*_out = plaintext.as_mut_ptr();
@@ -188,9 +188,9 @@ pub unsafe extern "C" fn decrypt_beacon_message_signed(
 		return -1;
 	}
 	let mut state = STATE.lock().unwrap();
-	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
 
-	match state.verify_signature(data_vec.as_slice()) {
+	match state.verify_signature(data_slice) {
 		Some(verified) => match state.decrypt_message(&verified.data, verified.key_id) {
 			Some(mut plaintext) => {
 				unsafe {
@@ -236,8 +236,8 @@ pub unsafe extern "C" fn encrypt_to_beacon(
 		return -1;
 	}
 	let mut state = STATE.lock().unwrap();
-	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
-	match state.encrypt_message(data_vec.as_slice(), key_id) {
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
+	match state.encrypt_message(data_slice, key_id) {
 		Some(mut ciphertext) => {
 			unsafe {
 				*_out = ciphertext.as_mut_ptr();
@@ -280,8 +280,8 @@ pub unsafe extern "C" fn encrypt_to_beacon_signed(
 		return -1;
 	}
 	let mut state = STATE.lock().unwrap();
-	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
-	match state.encrypt_message(data_vec.as_slice(), key_id) {
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
+	match state.encrypt_message(data_slice, key_id) {
 		Some(ciphertext) => match state.sign_message(ciphertext.as_slice()) {
 			Some(mut signed) => {
 				unsafe {

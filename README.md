@@ -72,7 +72,7 @@ The reference implementation has two profiles: `PQXDH` and `CNSA2`. Profiles are
 ## Usage
 The reference implementation is a library that can currently be used either from rust or through C FFI. The C interface is currently not tested.
 
-From rust, usage is mostly just instanciating `CryptoProvider` objects. When using the C FFI, the library creates a global `CryptoProvider` object, whose methods are wrapped by the various functions in the interface. Look at tests for examples.
+From rust, usage is mostly just instanciating `CryptoProvider` objects. When using the C FFI, the library creates a global `CryptoProvider` object, whose methods are wrapped by the various functions in the interface. When using the C FFI, the caller is responsible for the buffers passed into the library. Assume the library does not do any copies, except for initialization functions, and never frees the buffers it is passed.
 
 # Copyright
 This work is dedicated to the public domain.

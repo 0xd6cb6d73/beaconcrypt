@@ -2,7 +2,7 @@
 
 use crate::shared::{CryptoProvider, INITIALIZED, Provider, STATE};
 use libsodium_rs::crypto_sign;
-use std::{mem, ptr::slice_from_raw_parts, sync::atomic::Ordering, vec};
+use std::{mem, ptr::slice_from_raw_parts, slice::from_raw_parts, sync::atomic::Ordering, vec};
 
 pub trait ProviderBeacon {
 	fn get_registration_bundle(&self) -> Option<Vec<u8>>;
@@ -24,11 +24,9 @@ pub unsafe extern "C" fn process_initial_message(
 	if bytes.is_null() || bytes_len == 0 {
 		return -1;
 	}
-	let mut net_vec = vec![0u8; bytes_len];
-	let net_slice = slice_from_raw_parts(bytes, bytes_len);
-	net_vec.copy_from_slice(unsafe { net_slice.as_ref().unwrap() });
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
 	let mut state = STATE.lock().unwrap();
-	match state.finish_registration(net_vec.as_slice()) {
+	match state.finish_registration(data_slice) {
 		Some(mut plaintext) => {
 			unsafe {
 				*_out = plaintext.as_mut_ptr();
@@ -57,12 +55,10 @@ pub unsafe extern "C" fn process_initial_message_signed(
 	if bytes.is_null() || bytes_len == 0 {
 		return -1;
 	}
-	let mut net_vec = vec![0u8; bytes_len];
-	let net_slice = slice_from_raw_parts(bytes, bytes_len);
-	net_vec.copy_from_slice(unsafe { net_slice.as_ref().unwrap() });
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
 
 	let mut state = STATE.lock().unwrap();
-	match state.verify_signature(net_vec.as_slice()) {
+	match state.verify_signature(data_slice) {
 		Some(verified) => match state.finish_registration(&verified.data) {
 			Some(mut plaintext) => {
 				unsafe {
@@ -105,10 +101,10 @@ pub unsafe extern "C" fn decrypt_server_message(
 		return -1;
 	}
 	let mut state = STATE.lock().unwrap();
-	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
 
 	let srv_kid = state.server_kid();
-	match state.decrypt_message(&data_vec, srv_kid) {
+	match state.decrypt_message(data_slice, srv_kid) {
 		Some(mut plaintext) => {
 			unsafe {
 				*_out = plaintext.as_mut_ptr();
@@ -148,9 +144,9 @@ pub unsafe extern "C" fn decrypt_server_message_signed(
 		return -1;
 	}
 	let mut state = STATE.lock().unwrap();
-	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
 
-	match state.verify_signature(data_vec.as_slice()) {
+	match state.verify_signature(data_slice) {
 		Some(verified) => {
 			let srv_kid = state.server_kid();
 			match state.decrypt_message(&verified.data, srv_kid) {
@@ -196,9 +192,9 @@ pub unsafe extern "C" fn encrypt_to_server(
 		return -1;
 	}
 	let mut state = STATE.lock().unwrap();
-	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
 	let srv_kid = state.server_kid();
-	match state.encrypt_message(data_vec.as_slice(), srv_kid) {
+	match state.encrypt_message(data_slice, srv_kid) {
 		Some(mut ciphertext) => {
 			unsafe {
 				*_out = ciphertext.as_mut_ptr();
@@ -238,9 +234,9 @@ pub unsafe extern "C" fn encrypt_to_server_signed(
 		return -1;
 	}
 	let mut state = STATE.lock().unwrap();
-	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
 	let srv_kid = state.server_kid();
-	match state.encrypt_message(data_vec.as_slice(), srv_kid) {
+	match state.encrypt_message(data_slice, srv_kid) {
 		Some(ciphertext) => match state.sign_message(ciphertext.as_slice()) {
 			Some(mut signed) => {
 				unsafe {

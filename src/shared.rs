@@ -10,6 +10,7 @@ use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{crypto_aead, crypto_kdf};
 use std::collections::HashMap;
 use std::marker::PhantomData;
+use std::slice::from_raw_parts;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{LazyLock, Mutex};
 use std::{mem, vec};
@@ -631,16 +632,6 @@ pub trait CryptoProvider {
 	}
 }
 
-/// # Safety
-/// * This function MUST only be called to clean up byte buffers returned by this library, do NOT use as a general `free`
-/// * `ptr` should NOT be null and should point to a byte buffer of `len` length, in bytes.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn free_vec(ptr: *mut u8, len: usize, capa: usize) {
-	if !ptr.is_null() {
-		unsafe { Vec::from_raw_parts(ptr, len, capa) };
-	}
-}
-
 pub fn create_protogram_reader(
 	data: &[u8],
 ) -> Option<TypedReader<capnp::serialize::OwnedSegments, protogram_capnp::proto_gram::Owned>> {
@@ -686,9 +677,9 @@ pub unsafe extern "C" fn verify_signature(
 	if bytes.is_null() || bytes_len == 0 {
 		return -1;
 	}
-	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
 	let state = STATE.lock().unwrap();
-	match state.verify_signature(data_vec.as_slice()) {
+	match state.verify_signature(data_slice) {
 		Some(mut verified) => {
 			unsafe {
 				_out = verified.data.as_mut_ptr();
@@ -728,9 +719,9 @@ pub unsafe extern "C" fn sign_message(
 	if bytes.is_null() || bytes_len == 0 {
 		return -1;
 	}
-	let data_vec = unsafe { vec::Vec::from_raw_parts(bytes.cast_mut(), bytes_len, bytes_len) };
+	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
 	let state = STATE.lock().unwrap();
-	match state.sign_message(data_vec.as_slice()) {
+	match state.sign_message(data_slice) {
 		Some(mut signed) => {
 			unsafe {
 				_out = signed.as_mut_ptr();
