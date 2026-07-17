@@ -34,7 +34,8 @@ pub struct BeaconCryptPqxdh {
 
 	pq_key: Option<crypto_kem::mlkem768::KeyPair>,
 
-	associated_data: [u8; AD_SIZE],
+	// only used by the beacon to cache the value, server computes it every time
+	associated_data: Option<[u8; AD_SIZE]>,
 	// unfortunately we can't use static generics so we have to store the role at runtime
 	is_beacon: bool,
 	// stores the server's `key_id` for the beacon. Stores the counter of remote `key_id`s for the server
@@ -60,7 +61,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 
 			pq_key: None,
 
-			associated_data: [0u8; AD_SIZE],
+			associated_data: None,
 			is_beacon: true,
 			server_kid: 0,
 			known_ids: HashMap::new(),
@@ -126,11 +127,15 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			prekey,
 			onetime_key: onetime,
 			pq_key: pqkey,
-			associated_data: [0u8; AD_SIZE],
+			associated_data: None,
 			is_beacon,
 			server_kid,
 			known_ids: known_id_pk,
 		}
+	}
+
+	fn is_beacon(&self) -> bool {
+		self.is_beacon
 	}
 
 	/// ## Arguments
@@ -186,11 +191,17 @@ impl CryptoProvider for BeaconCryptPqxdh {
 	}
 
 	fn set_associated_data(&mut self, data: [u8; AD_SIZE]) {
-		self.associated_data = data
+		self.associated_data = Some(data)
 	}
 
-	fn associated_data(&self) -> [u8; AD_SIZE] {
-		self.associated_data
+	fn associated_data(&self, kid: u64) -> Option<[u8; AD_SIZE]> {
+		if self.is_beacon {
+			// the beacon must have set its associated data at the end of registration
+			Some(self.associated_data?)
+		} else {
+			let k = self.pk_by_kid(kid)?;
+			Some(build_additional_data(self.identity_pk().clone(), k.clone()))
+		}
 	}
 
 	fn server_id(&self) -> Option<&crypto_sign::PublicKey> {
@@ -366,7 +377,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 
 		match response.get_app_cipher_text() {
 			Ok(ciphertext) if ciphertext.is_empty() => Some(vec![]),
-			Ok(ciphertext) => self.decrypt_message(ciphertext, srv_key_id, true),
+			Ok(ciphertext) => self.decrypt_message(ciphertext, srv_key_id),
 			Err(_) => Some(vec![0u8; 0]),
 		}
 	}
@@ -418,8 +429,6 @@ impl ProviderServer for BeaconCryptPqxdh {
 		.into();
 
 		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, kem_shared).ok()?;
-		let server_id = self.identity_pk().clone();
-		self.set_associated_data(build_additional_data(server_id, remote_id.clone()));
 
 		Some(RegistrationOutput {
 			kem_ciphertext,
@@ -455,7 +464,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 
 		let mut buffer = vec![];
 		if let Some(plaintext) = data {
-			let ciphertext = self.encrypt_message(plaintext, true, remote_kid)?;
+			let ciphertext = self.encrypt_message(plaintext, remote_kid)?;
 			bundle.set_app_cipher_text(&ciphertext);
 			capnp::serialize_packed::write_message(&mut buffer, msg.borrow_inner()).ok()?;
 		} else {
@@ -577,8 +586,8 @@ mod tests {
 		assert!(server.pk_by_kid(2).is_some());
 
 		let message = [0xFFu8; 32];
-		let b1_m1 = server.encrypt_message(&message, true, 1).unwrap();
-		let b2_m1 = server.encrypt_message(&message, true, 2).unwrap();
+		let b1_m1 = server.encrypt_message(&message, 1).unwrap();
+		let b2_m1 = server.encrypt_message(&message, 2).unwrap();
 		assert_ne!(b1_m1, b2_m1);
 	}
 
@@ -593,8 +602,8 @@ mod tests {
 		assert!(server.pk_by_kid(1).is_some());
 
 		let message = [0xFFu8; 32];
-		let b1_m1 = server.encrypt_message(&message, true, 1).unwrap();
-		let b1_m2 = server.encrypt_message(&message, true, 1).unwrap();
+		let b1_m1 = server.encrypt_message(&message, 1).unwrap();
+		let b1_m2 = server.encrypt_message(&message, 1).unwrap();
 		assert_ne!(b1_m1, b1_m2);
 	}
 
@@ -657,12 +666,12 @@ mod tests {
 		assert!(server.pk_by_kid(1).is_some());
 
 		let message = [0xFFu8; 32];
-		let b1_m1 = server.encrypt_message(&message, true, 1).unwrap();
-		let b1_m2 = server.encrypt_message(&message, true, 1).unwrap();
+		let b1_m1 = server.encrypt_message(&message, 1).unwrap();
+		let b1_m2 = server.encrypt_message(&message, 1).unwrap();
 		assert_ne!(b1_m1, b1_m2);
 
-		let dec_b1_m2 = b1.decrypt_message(&b1_m2, 0, true).unwrap();
-		let dec_b1_m1 = b1.decrypt_message(&b1_m1, 0, true).unwrap();
+		let dec_b1_m2 = b1.decrypt_message(&b1_m2, 0).unwrap();
+		let dec_b1_m1 = b1.decrypt_message(&b1_m1, 0).unwrap();
 		assert_eq!(dec_b1_m1, dec_b1_m2);
 	}
 

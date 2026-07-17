@@ -81,7 +81,8 @@ The server must use this message as follows:
   - dh2 = DH(`ephemeral_sk`, `beacon_id_pk_kex`)
   - dh3 = DH(`ephemeral_sk`, `beacon_prekey_pk`)
   - dh4 = DH(`ephemeral_sk`, `beacon_onetime_pk`)
-- Compute the derived secret `KDF(DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
+- Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
+  - `Padding` is 32 `0xFF` bytes
 - Return the KEM ciphertext, derived secret, ephemeral public key and beacon public key
 
 ## KexResponse
@@ -90,12 +91,11 @@ This message enables the beacon to obtain the elements it needs to derive the sh
 - Register a new known cryptographic identity using the beacon's public key and newly created key ID
   - At this point, the beacon is registered from the point of view of beaconcrypt
 - Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
-- Set the `keyId` field to its own identity key ID
-  - this is passed at initialization and is expected, though not required, to be unique per campaign
+- Set the `keyId` field to the newly generate beacon's key ID
 - Set the `ephemeralKey` field to the X25519 ephemeral public key from the corresponding `InitKex`
 - Set the `identityKey` to the server's Ed25519 public key
 - Set the `kemCipherText` to the KEM ciphertext from the corresponding `InitKex`
-- Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
+- Create the associated data byte string by concatenating the PQXDH and symmetric ratchet protocol strings, encoded server identity key, and encoded beacon identity key
 - Encrypt the first message, if any using a `CryptoFrame` and set `appCipherText` to its value if it exists
 - Return the beacon's public key and key ID to the caller so it can register it as required
 

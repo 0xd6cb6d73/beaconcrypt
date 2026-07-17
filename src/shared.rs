@@ -110,6 +110,9 @@ pub fn encode_sign(sign_type: SignType, pk_bytes: &[u8]) -> Result<Vec<u8>, Enco
 }
 
 pub fn decode_sign(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
+	if encoded_pk.len() < 33 {
+		return Err(DecodingError);
+	}
 	match SignType::from(encoded_pk[0]) {
 		SignType::Undefined => Err(DecodingError),
 		_ => {
@@ -134,6 +137,9 @@ pub fn encode_kem(kem_type: KemType, pk_bytes: &[u8]) -> Result<Vec<u8>, Encodin
 
 #[cfg(feature = "server")]
 pub fn decode_kem(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
+	if encoded_pk.len() < 33 {
+		return Err(DecodingError);
+	}
 	match KemType::from(encoded_pk[0]) {
 		KemType::Undefined => Err(DecodingError),
 		_ => {
@@ -477,7 +483,8 @@ pub trait CryptoProvider {
 		id_seed: Option<&[u8]>,
 	) -> Self;
 	fn set_associated_data(&mut self, data: [u8; AD_SIZE]);
-	fn associated_data(&self) -> [u8; AD_SIZE];
+	fn associated_data(&self, kid: u64) -> Option<[u8; AD_SIZE]>;
+	fn is_beacon(&self) -> bool;
 	/// ## Arguments
 	/// * `data`   - Some a serialized `CryptoFrame` to be decrypted
 	/// * `stob` - The identifier of the party who encrypted `data`
@@ -486,15 +493,15 @@ pub trait CryptoProvider {
 	/// ## Returns
 	/// * `None` if some other error happens.
 	/// * `Vec<u8>` containing a serialized `cryptoframe_capnp::crypto_frame`
-	fn decrypt_message(&mut self, data: &[u8], kid: u64, stob: bool) -> Option<Vec<u8>> {
-		let associated_data = self.associated_data();
+	fn decrypt_message(&mut self, data: &[u8], kid: u64) -> Option<Vec<u8>> {
+		let associated_data = self.associated_data(kid)?;
 		match capnp::serialize::read_message(data, ReaderOptions::new()) {
 			Ok(reader) => {
 				let typed_reader =
 					TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
 				match typed_reader.get() {
 					Ok(frame) => {
-						if frame.get_s_to_b() != stob {
+						if frame.get_s_to_b() != self.is_beacon() {
 							return None;
 						}
 						let key_seq =
@@ -505,9 +512,10 @@ pub trait CryptoProvider {
 							Some(associated_data.as_slice()),
 							key.get_nonce(),
 							key.get_key(),
-						);
+						)
+						.ok()?;
 						self.delete_recv_key(key_seq, kid);
-						plaintext.ok()
+						Some(plaintext)
 					}
 					Err(_) => None,
 				}
@@ -524,8 +532,8 @@ pub trait CryptoProvider {
 	/// ## Returns
 	/// * `None` if some other error happens.
 	/// * `Vec<u8>` containing a serialized `cryptoframe_capnp::crypto_frame`
-	fn encrypt_message(&mut self, bytes: &[u8], stob: bool, kid: u64) -> Option<Vec<u8>> {
-		let associated_data = self.associated_data();
+	fn encrypt_message(&mut self, bytes: &[u8], kid: u64) -> Option<Vec<u8>> {
+		let associated_data = self.associated_data(kid)?;
 		let key_seq = self.ratchet_send(SYM_RATCHET_INFO, kid)?;
 		let key = self.send_key(key_seq, kid)?;
 		let plaintext = crypto_aead::chacha20poly1305_ietf::encrypt(
@@ -542,7 +550,7 @@ pub trait CryptoProvider {
 				let mut builder: cryptoframe_capnp::crypto_frame::Builder<'_> =
 					t_builder.init_root();
 				builder.set_cipher_text(&plaintext);
-				builder.set_s_to_b(stob);
+				builder.set_s_to_b(!self.is_beacon());
 				builder.set_seq(key_seq);
 				let mut buffer = vec![];
 				capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).unwrap();

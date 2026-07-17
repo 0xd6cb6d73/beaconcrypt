@@ -260,7 +260,7 @@ mod gobinds {
 		ptr: *const u8,
 		len: usize,
 	) -> GoBuffer {
-		encrypt(handle, ptr, len, true, key_id)
+		encrypt(handle, ptr, len, key_id)
 	}
 
 	#[unsafe(no_mangle)]
@@ -277,7 +277,7 @@ mod gobinds {
 			return empty_buffer();
 		};
 		let provider = unsafe { &mut *handle };
-		match provider.encrypt_message(data, true, key_id) {
+		match provider.encrypt_message(data, key_id) {
 			Some(ciphertext) => provider
 				.sign_message(ciphertext.as_slice())
 				.map(into_buffer)
@@ -293,7 +293,7 @@ mod gobinds {
 		ptr: *const u8,
 		len: usize,
 	) -> GoBuffer {
-		decrypt(handle, ptr, len, key_id, false)
+		decrypt(handle, ptr, len, key_id)
 	}
 
 	#[unsafe(no_mangle)]
@@ -311,7 +311,7 @@ mod gobinds {
 		let provider = unsafe { &mut *handle };
 		match provider.verify_signature(data) {
 			Some(verified) => provider
-				.decrypt_message(&verified.data, verified.key_id, false)
+				.decrypt_message(&verified.data, verified.key_id)
 				.map(into_buffer)
 				.unwrap_or_else(empty_buffer),
 			None => empty_buffer(),
@@ -328,7 +328,7 @@ mod gobinds {
 			return empty_buffer();
 		}
 		let provider = unsafe { &*handle };
-		encrypt(handle, ptr, len, false, provider.server_kid())
+		encrypt(handle, ptr, len, provider.server_kid())
 	}
 
 	#[unsafe(no_mangle)]
@@ -345,7 +345,7 @@ mod gobinds {
 		};
 		let provider = unsafe { &mut *handle };
 		let srv_kid = provider.server_kid();
-		match provider.encrypt_message(data, false, srv_kid) {
+		match provider.encrypt_message(data, srv_kid) {
 			Some(ciphertext) => provider
 				.sign_message(ciphertext.as_slice())
 				.map(into_buffer)
@@ -364,7 +364,7 @@ mod gobinds {
 			return empty_buffer();
 		}
 		let provider = unsafe { &*handle };
-		decrypt(handle, ptr, len, provider.server_kid(), true)
+		decrypt(handle, ptr, len, provider.server_kid())
 	}
 
 	#[unsafe(no_mangle)]
@@ -382,20 +382,14 @@ mod gobinds {
 		let provider = unsafe { &mut *handle };
 		match provider.verify_signature(data) {
 			Some(verified) => provider
-				.decrypt_message(&verified.data, provider.server_kid(), true)
+				.decrypt_message(&verified.data, provider.server_kid())
 				.map(into_buffer)
 				.unwrap_or_else(empty_buffer),
 			None => empty_buffer(),
 		}
 	}
 
-	fn encrypt(
-		handle: *mut BeaconCryptPqxdh,
-		ptr: *const u8,
-		len: usize,
-		stob: bool,
-		key_id: u64,
-	) -> GoBuffer {
+	fn encrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize, key_id: u64) -> GoBuffer {
 		if handle.is_null() {
 			return empty_buffer();
 		}
@@ -404,18 +398,12 @@ mod gobinds {
 		};
 		let provider = unsafe { &mut *handle };
 		provider
-			.encrypt_message(data, stob, key_id)
+			.encrypt_message(data, key_id)
 			.map(into_buffer)
 			.unwrap_or_else(empty_buffer)
 	}
 
-	fn decrypt(
-		handle: *mut BeaconCryptPqxdh,
-		ptr: *const u8,
-		len: usize,
-		key_id: u64,
-		stob: bool,
-	) -> GoBuffer {
+	fn decrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize, key_id: u64) -> GoBuffer {
 		if handle.is_null() {
 			return empty_buffer();
 		}
@@ -424,7 +412,7 @@ mod gobinds {
 		};
 		let provider = unsafe { &mut *handle };
 		provider
-			.decrypt_message(data, key_id, stob)
+			.decrypt_message(data, key_id)
 			.map(into_buffer)
 			.unwrap_or_else(empty_buffer)
 	}
@@ -488,7 +476,7 @@ pub mod beaconcrypt_py {
 		}
 
 		fn decrypt_beacon_message(&mut self, data: Vec<u8>, kid: u64) -> Option<Vec<u8>> {
-			self._0.decrypt_message(&data, kid, false)
+			self._0.decrypt_message(&data, kid)
 		}
 
 		fn decrypt_beacon_message_signed(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
@@ -499,7 +487,7 @@ pub mod beaconcrypt_py {
 		}
 
 		fn encrypt_to_beacon(&mut self, data: Vec<u8>, kid: u64) -> Option<Vec<u8>> {
-			self._0.encrypt_message(&data, true, kid)
+			self._0.encrypt_message(&data, kid)
 		}
 
 		fn encrypt_to_beacon_signed(&mut self, data: Vec<u8>, kid: u64) -> Option<Vec<u8>> {
@@ -540,7 +528,7 @@ pub mod beaconcrypt_py {
 		fn decrypt_server_message(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
 			let srv_seq = self._0.server_kid();
 			println!("{}", srv_seq);
-			self._0.decrypt_message(&data, srv_seq, true)
+			self._0.decrypt_message(&data, srv_seq)
 		}
 
 		fn decrypt_server_message_signed(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
@@ -552,7 +540,7 @@ pub mod beaconcrypt_py {
 
 		fn encrypt_message_to_server(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
 			let srv_seq = self._0.server_kid();
-			self._0.encrypt_message(&data, false, srv_seq)
+			self._0.encrypt_message(&data, srv_seq)
 		}
 
 		fn encrypt_to_server_signed(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
