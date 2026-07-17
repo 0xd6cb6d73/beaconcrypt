@@ -53,4 +53,4 @@ fi
 before-all = "choco install capnproto -y"
 
 [tool.cibuildwheel.config-settings]
-build-args = "--features pybinds"
+build-args = "--features pybinds --generate-stubs"
