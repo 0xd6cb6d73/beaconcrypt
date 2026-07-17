@@ -78,7 +78,10 @@ mod gobinds;
 mod cbinds;
 
 #[cfg(feature = "pybinds")]
+mod pybinds;
+
+#[cfg(feature = "pybinds")]
 #[pyo3::pymodule(name = "beaconcrypt")]
-pub mod beaconcrypt_py {
-	include!("pybinds.rs");
+fn beaconcrypt_py(m: &pyo3::Bound<'_, pyo3::types::PyModule>) -> pyo3::PyResult<()> {
+	pybinds::register(m)
 }
