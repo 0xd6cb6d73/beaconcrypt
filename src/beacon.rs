@@ -5,7 +5,7 @@ use libsodium_rs::crypto_sign;
 use std::{mem, ptr::slice_from_raw_parts, slice::from_raw_parts, sync::atomic::Ordering, vec};
 
 pub trait ProviderBeacon {
-	fn get_registration_bundle(&self) -> Option<Vec<u8>>;
+	fn get_registration_bundle(&mut self) -> Option<Vec<u8>>;
 	fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>>;
 }
 
@@ -272,7 +272,7 @@ pub unsafe extern "C" fn generate_registration(
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
-	let state = STATE.lock().unwrap();
+	let mut state = STATE.lock().unwrap();
 	match state.get_registration_bundle() {
 		Some(mut data) => {
 			unsafe {

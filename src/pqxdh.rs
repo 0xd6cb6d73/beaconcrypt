@@ -91,12 +91,6 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		} else {
 			None
 		};
-		// the server doesn't use one-time keys
-		let onetime = if is_beacon {
-			Some(crypto_kx::KeyPair::generate().unwrap())
-		} else {
-			None
-		};
 		// the server doesn't use its own ML-KEM keypair
 		let pqkey = if is_beacon {
 			Some(crypto_kem::mlkem768::KeyPair::generate().unwrap())
@@ -126,7 +120,8 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			// this will be overwritten when the agent registers
 			identity_key_kid: server_kid,
 			prekey,
-			onetime_key: onetime,
+			// only the beacon uses it, and it generated at registration time
+			onetime_key: None,
 			pq_key: pqkey,
 			associated_data: None,
 			is_beacon,
@@ -303,6 +298,11 @@ impl BeaconCryptPqxdh {
 		}
 	}
 
+	pub fn new_onetime_keypair(&mut self) -> Option<()> {
+		self.onetime_key = Some(crypto_kx::KeyPair::generate().ok()?);
+		Some(())
+	}
+
 	pub fn delete_onetime_keypair(&mut self) {
 		if let Some(onetime) = &mut self.onetime_key {
 			let mut keypair = crypto_kx::KeyPair::from_seed(&[0u8; ED25519_SEED_SIZE]).unwrap();
@@ -314,7 +314,7 @@ impl BeaconCryptPqxdh {
 
 #[cfg(feature = "beacon")]
 impl ProviderBeacon for BeaconCryptPqxdh {
-	fn get_registration_bundle(&self) -> Option<Vec<u8>> {
+	fn get_registration_bundle(&mut self) -> Option<Vec<u8>> {
 		use crate::shared::{SignType, encode_sign};
 
 		let mut msg = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
@@ -327,6 +327,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		let prekey_sig = crypto_sign::sign(&encoded_prekey, self.identity_sk()).ok()?;
 		bundle.set_pre_key(&prekey_sig);
 
+		self.new_onetime_keypair()?;
 		let encoded_onetime =
 			encode_kem(KemType::X25519, self.get_onetime_pk()?.as_bytes()).ok()?;
 		let onetime_sig = crypto_sign::sign(&encoded_onetime, self.identity_sk()).ok()?;
@@ -394,6 +395,8 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 					// deletes the derived keychains but not the entire `RemotePrincipal` as the server is currently special-cased.
 					// I think this matches the protocol's requirements: "If the initial ciphertext fails to decrypt, then Bob aborts the protocol and deletes SK".
 					self.reset_known_kid(self.server_kid());
+					self.set_identity_kid(self.server_kid());
+					self.associated_data = None;
 					None
 				},
 				// PQXDH protcol run is now complete and the beacon is successfully registered
@@ -708,13 +711,25 @@ mod tests {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.identity_pk().to_owned();
 
-		let empty = [0u8; crypto_kx::PUBLICKEYBYTES];
+		// the beacon doesn't generate its one-time key until it generates its registration bundle
 		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
-		assert!(b1.get_onetime_pk().unwrap().as_bytes() != empty);
-		assert!(b1.get_onetime_sk().unwrap().as_bytes() != empty);
+		assert!(b1.get_onetime_pk() == None);
+		assert!(b1.get_onetime_sk() == None);
 		let _ = test_register_beacon(&mut server, &mut b1);
 		assert!(b1.get_onetime_pk() == None);
 		assert!(b1.get_onetime_sk() == None);
+	}
+
+	#[test]
+	fn beacon_generates_onetime() {
+		let server_id = [0u8; crypto_sign::PUBLICKEYBYTES];
+		// the beacon doesn't generate its one-time key until it generates its registration bundle
+		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(&server_id), None);
+		assert!(b1.get_onetime_pk() == None);
+		assert!(b1.get_onetime_sk() == None);
+		let _ = b1.get_registration_bundle();
+		assert!(b1.get_onetime_pk().is_some());
+		assert!(b1.get_onetime_sk().is_some());
 	}
 
 	#[test]
@@ -731,8 +746,8 @@ mod tests {
 		assert!(beacon.is_beacon());
 		assert!(beacon.get_prekey_pk().is_some());
 		assert!(beacon.get_prekey_sk().is_some());
-		assert!(beacon.get_onetime_pk().is_some());
-		assert!(beacon.get_onetime_sk().is_some());
+		assert!(beacon.get_onetime_pk().is_none());
+		assert!(beacon.get_onetime_sk().is_none());
 		assert!(beacon.pq_pk().is_some());
 		assert!(beacon.pq_sk().is_some());
 		assert_eq!(beacon.server_id(), Some(&server_id));
@@ -752,7 +767,7 @@ mod tests {
 
 	#[test]
 	fn registration_bundle_authenticates_each_declared_public_key() {
-		let beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
 		let serialized = beacon.get_registration_bundle().unwrap();
 		let message =
 			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
@@ -794,7 +809,7 @@ mod tests {
 	#[test]
 	fn server_rejects_a_registration_with_a_tampered_signed_key() {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
-		let beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
 		let serialized = beacon.get_registration_bundle().unwrap();
 		let message =
 			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
