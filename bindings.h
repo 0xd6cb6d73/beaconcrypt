@@ -388,7 +388,7 @@ void init(bool is_beacon, uint64_t server_kid);
  */
 int32_t verify_signature(const uint8_t *bytes,
                          uintptr_t bytes_len,
-                         uint8_t *_out,
+                         uint8_t **_out,
                          uintptr_t *out_len,
                          uintptr_t *out_capa,
                          uint64_t *key_id);
@@ -411,7 +411,7 @@ int32_t verify_signature(const uint8_t *bytes,
  */
 int32_t sign_message(const uint8_t *bytes,
                      uintptr_t bytes_len,
-                     uint8_t *_out,
+                     uint8_t **_out,
                      uintptr_t *out_len,
                      uintptr_t *out_capa);
 

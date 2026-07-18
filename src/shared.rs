@@ -687,7 +687,7 @@ pub fn create_protogram_reader(
 pub unsafe extern "C" fn verify_signature(
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 	key_id: *mut u64,
@@ -700,7 +700,7 @@ pub unsafe extern "C" fn verify_signature(
 	match state.verify_signature(data_slice) {
 		Some(mut verified) => {
 			unsafe {
-				_out = verified.data.as_mut_ptr();
+				*_out = verified.data.as_mut_ptr();
 				*out_len = verified.data.len();
 				*out_capa = verified.data.capacity();
 				*key_id = verified.key_id;
@@ -730,7 +730,7 @@ pub unsafe extern "C" fn verify_signature(
 pub unsafe extern "C" fn sign_message(
 	bytes: *const u8,
 	bytes_len: usize,
-	mut _out: *mut u8,
+	mut _out: *mut *mut u8,
 	out_len: *mut usize,
 	out_capa: *mut usize,
 ) -> i32 {
@@ -742,7 +742,7 @@ pub unsafe extern "C" fn sign_message(
 	match state.sign_message(data_slice) {
 		Some(mut signed) => {
 			unsafe {
-				_out = signed.as_mut_ptr();
+				*_out = signed.as_mut_ptr();
 				*out_len = signed.len();
 				*out_capa = signed.capacity();
 				mem::forget(signed);
