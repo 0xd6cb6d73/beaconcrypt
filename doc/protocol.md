@@ -96,7 +96,7 @@ This message enables the beacon to obtain the elements it needs to derive the sh
 - Set the `identityKey` to the server's Ed25519 public key
 - Set the `kemCipherText` to the KEM ciphertext from the corresponding `InitKex`
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
-- Encrypt the first message, if any using a `CryptoFrame` and set `appCipherText` to its value if it exists
+- Encrypt the first message if there is one, otherwise encrypt a single `0xFF` byte using a `CryptoFrame` and set `appCipherText` to its value
 - Return the beacon's public key and key ID to the caller so it can register it as required
 
 Upon reception, the beacon must process this message as follows:
@@ -114,8 +114,8 @@ Upon reception, the beacon must process this message as follows:
 - Save its own key ID using the `keyId` field
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
 - Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
-- Decrypt the `appCipherText` as a `CryproFrame` if it exists, using its `recv` keychain
-- If decryption is successful, return the plaintext to the caller
+- Decrypt the `appCipherText` as a `CryproFrame`, using its `recv` keychain
+- If decryption is successful, return the plaintext to the caller oherwise abort the protocol and delete the previously derived cryptographic state
 
 # Protocol details
 Once the session has been created, meaning a successful PQXDH run, the associated data (`AD`) is created. This is made up of the concatenation of the public keys of both parties, the key exchange protocol string and the ratchet protocol string. This associated data is used in every encryption for a given `(Server, Beacon)` tuple. It is then expected that beacons will read messages from the server from their transport protocol and hand them off to beaconcrypt immediately for decryption and deserialization. All encrypted buffers (`CryptoFrame`s) carry a sequence number `seq` and a direction flag `sToB`. These are used to handle out-of-order messages and protect against replay attempts, and therefore need to be protected. Thus, there is an outer layer which uses signatures to ensure the `CryptoFrame` are not modified in transit. This layer itself needs to identify the key pair used to sign the message. This is accomplished using a `keyId`. This signature layer is not mandatory, callers are given the choice whether to created signed messages or not. However, I do recommmend opting into it as it's very cheap and protects the critical `seq` field.
