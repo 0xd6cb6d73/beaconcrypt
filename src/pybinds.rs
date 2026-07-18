@@ -2,14 +2,6 @@
 
 use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer, RegResponse};
 use pyo3::prelude::*;
-use pyo3::types::PyModule;
-
-pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
-	m.add_class::<Beacon>()?;
-	m.add_class::<RegResponsePy>()?;
-	m.add_class::<Server>()?;
-	Ok(())
-}
 
 #[pyclass(name = "RegResponse")]
 pub struct RegResponsePy {

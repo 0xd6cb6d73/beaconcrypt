@@ -83,7 +83,8 @@ mod cbinds;
 mod pybinds;
 
 #[cfg(feature = "pybinds")]
-#[pyo3::pymodule(name = "beaconcrypt")]
-fn beaconcrypt_py(m: &pyo3::Bound<'_, pyo3::types::PyModule>) -> pyo3::PyResult<()> {
-	pybinds::register(m)
+#[pyo3::pymodule]
+mod beaconcrypt {
+	#[pymodule_export]
+	use crate::pybinds::{Beacon, RegResponsePy, Server};
 }
