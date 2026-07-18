@@ -59,10 +59,12 @@ Build and run all tests:
 ```bash
 cargo test
 cargo build --features gobinds --target x86_64-pc-windows-gnu
-go test ./...
+go test -a -count=1 .
 uv run maturin develop --uv
 uv run pytest tests
 ```
+
+The `-a` flag is required after rebuilding the Rust static library because Go's build cache does not detect changes to libraries linked through cgo. `-count=1` also prevents reuse of a cached successful test result.
 
 ## Profiles
 The reference implementation has two profiles: `PQXDH` and `CNSA2`. Profiles are controlled by cargo features. The CNSA2 profile only exists as a test for now. It uses a simple ML-KEM encapsulation for key exchange and the underlying libraries are not FIPS-approved. It is experimental and is likely broken. PQXDH is the intended target and the default.

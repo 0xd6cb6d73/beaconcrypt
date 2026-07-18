@@ -87,7 +87,7 @@ func TestRegister(t *testing.T) {
 	}
 }
 
-func TestRegisterWithoutInitialMessage(t *testing.T) {
+func TestRegisterWithoutInitialMessageReturnsWitness(t *testing.T) {
 	server := newServer(t)
 	serverPK, err := server.IdentityPK()
 	if err != nil {
@@ -103,8 +103,9 @@ func TestRegisterWithoutInitialMessage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(phase2) != 0 {
-		t.Fatalf("expected empty initial message, got %x", phase2)
+	witness := []byte{0xff}
+	if !bytes.Equal(phase2, witness) {
+		t.Fatalf("registration witness mismatch: got %x want %x", phase2, witness)
 	}
 }
 
