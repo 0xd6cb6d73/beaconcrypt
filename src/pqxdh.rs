@@ -341,7 +341,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		Some(buffer)
 	}
 
-	/// Returns the server's intitial message or a single 0xFF byte if the server didn't provide one.
+	/// Returns the server's intitial message or a single 0xFF byte if the server didn't provide one. A return value of `None` MUST be treated as a protocol failure
 	fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {
 		let reader = capnp::serialize_packed::read_message(bytes, ReaderOptions::new()).ok()?;
 		let typed_reader = TypedReader::<_, phase2_capnp::kex_response::Owned>::new(reader);
@@ -399,7 +399,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 				// PQXDH protcol run is now complete and the beacon is successfully registered
 				Some,
 			),
-			Err(_) => Some(vec![0u8; 0]),
+			Err(_) => None,
 		}
 	}
 }
