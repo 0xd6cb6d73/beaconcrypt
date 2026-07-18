@@ -67,9 +67,17 @@ uv run pytest tests
 The `-a` flag is required after rebuilding the Rust static library because Go's build cache does not detect changes to libraries linked through cgo. `-count=1` also prevents reuse of a cached successful test result.
 
 ## Usage
-The reference implementation is a library that can currently be used either from rust or through C FFI. The C interface is currently not tested.
+The reference implementation is a library that can currently be used either from rust, through C FFI, go and python bindings. The C interface is currently not tested.
 
-From rust, usage is mostly just instanciating `CryptoProvider` objects. When using the C FFI, the library creates a global `CryptoProvider` object, whose methods are wrapped by the various functions in the interface. When using the C FFI, the caller is responsible for the buffers passed into the library. Assume the library does not do any copies, except for initialization functions, and never frees the buffers it is passed.
+From Rust, usage is mostly just instantiating `CryptoProvider` objects. See the [example](examples/rust/main.rs) for usage.
+
+From python, you can just use the wheels published to pypi, see the [example](examples/python/main.py) for usage.
+
+There are two C interfaces at the moment. When using the legacy interface (without the `beaconcrypt` prefix) the library creates a global `CryptoProvider` object, whose methods are wrapped by the various functions in the interface. When using this interace, the caller is responsible for the buffers passed into the library. Assume the library does not do any copies, except for initialization functions, and never frees the buffers it is passed.
+
+Using the [newer](src/cbinds.rs) C interface which emulate the class interface, the caller is responsible for providing a valid state object to every function. See the [example](examples/c/main.c) for usage.
+
+Go is unfortunately the worst off as the bindings use cgo and therefore building your binary requires being able to link to a version of the library built with the `gobinds` feature. See the [example](examples/go/main.go) for usage.
 
 # Copyright
 This work is dedicated to the public domain.
