@@ -36,7 +36,9 @@ def test_register_without_initial_message():
     assert reg_out.key_id() == 1
 
     phase_2 = beacon.process_initial_message(reg_out.serialized())
-    assert phase_2 == b""
+    # `register_beacon` insert a single 0xFF byte if no initial message is provided to satisfy the upstream specification's requirement
+    # this allows the beacon to check that keychain derivation is correct
+    assert phase_2 == b"\xff"
 
 
 def test_server_from_seed_uses_stable_identity():

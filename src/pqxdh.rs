@@ -3,9 +3,10 @@
 use crate::beacon::ProviderBeacon;
 use crate::server::{ProviderServer, RegResponse, RegistrationOutput};
 use crate::shared::{
-	DhSecret, ED25519_SEED_SIZE, INITIALIZED, KEX_KDF_OUT_LEN, KemType, Provider, RatchetManager,
-	RemotePrincipal, STATE, SYM_RATCHET_INFO, SignType, SignaturePk, VerifiedMessage,
-	create_protogram_reader, decode_kem, decode_sign, encode_kem, encode_sign,
+	DhSecret, ED25519_SEED_SIZE, INITIALIZED, KEX_KDF_OUT_LEN, KemType, Provider,
+	REGISTRATION_WITNESS, RatchetManager, RemotePrincipal, STATE, SYM_RATCHET_INFO, SignType,
+	SignaturePk, VerifiedMessage, create_protogram_reader, decode_kem, decode_sign, encode_kem,
+	encode_sign,
 };
 use crate::{CryptoProvider, phase1_capnp, phase2_capnp, protogram_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
@@ -185,6 +186,16 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			.or_insert(RemotePrincipal::new(pk, RatchetManager::new()));
 	}
 
+	fn delete_known_kid(&mut self, key_id: u64) {
+		self.known_ids.remove(&key_id);
+	}
+
+	fn reset_known_kid(&mut self, key_id: u64) {
+		if let Some(to_reset) = self.ratchet_manager_mut(key_id) {
+			to_reset.reset()
+		}
+	}
+
 	fn new_remote_kid(&mut self) -> u64 {
 		self.server_kid += 1;
 		self.server_kid
@@ -330,6 +341,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		Some(buffer)
 	}
 
+	/// Returns the server's intitial message or a single 0xFF byte if the server didn't provide one.
 	fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {
 		let reader = capnp::serialize_packed::read_message(bytes, ReaderOptions::new()).ok()?;
 		let typed_reader = TypedReader::<_, phase2_capnp::kex_response::Owned>::new(reader);
@@ -376,8 +388,17 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		self.init_ratchets(&derived_secret, &info_str, true, srv_key_id);
 
 		match response.get_app_cipher_text() {
-			Ok(ciphertext) if ciphertext.is_empty() => Some(vec![]),
-			Ok(ciphertext) => self.decrypt_message(ciphertext, srv_key_id),
+			// https://signal.org/docs/specifications/pqxdh/#receiving-the-initial-message
+			Ok(ciphertext) => self.decrypt_message(ciphertext, srv_key_id).map_or_else(
+				|| {
+					// deletes the derived keychains but not the entire `RemotePrincipal` as the server is currently special-cased.
+					// I think this matches the protocol's requirements: "If the initial ciphertext fails to decrypt, then Bob aborts the protocol and deletes SK".
+					self.reset_known_kid(self.server_kid());
+					None
+				},
+				// PQXDH protcol run is now complete and the beacon is successfully registered
+				Some,
+			),
 			Err(_) => Some(vec![0u8; 0]),
 		}
 	}
@@ -463,13 +484,13 @@ impl ProviderServer for BeaconCryptPqxdh {
 		bundle.set_kem_cipher_text(reg_out.kem_ciphertext.as_bytes());
 
 		let mut buffer = vec![];
-		if let Some(plaintext) = data {
-			let ciphertext = self.encrypt_message(plaintext, remote_kid)?;
-			bundle.set_app_cipher_text(&ciphertext);
-			capnp::serialize_packed::write_message(&mut buffer, msg.borrow_inner()).ok()?;
+		let ciphertext = if let Some(plaintext) = data {
+			self.encrypt_message(plaintext, remote_kid)?
 		} else {
-			capnp::serialize_packed::write_message(&mut buffer, msg.borrow_inner()).ok()?;
+			self.encrypt_message(REGISTRATION_WITNESS, remote_kid)?
 		};
+		bundle.set_app_cipher_text(&ciphertext);
+		capnp::serialize_packed::write_message(&mut buffer, msg.borrow_inner()).ok()?;
 
 		Some(RegResponse {
 			serialized: buffer,

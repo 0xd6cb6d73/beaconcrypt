@@ -33,6 +33,9 @@ pub const RATCHET_MAX_GAP: u64 = 50;
 pub const ED25519_SEED_SIZE: usize = 32;
 #[cfg(feature = "cnsa2")]
 pub const KEM_SHARED_SECRET_SIZE: usize = 32;
+#[cfg(feature = "pqxdh")]
+/// Byte sequence used to test successful keychain derivation during registration. Used only if the server doesn't provide an initial message
+pub const REGISTRATION_WITNESS: &[u8; 1] = &[0xFF; 1];
 
 #[cfg(feature = "pqxdh")]
 pub type Provider = BeaconCryptPqxdh;
@@ -445,6 +448,15 @@ impl RatchetManager {
 	pub fn delete_recv_key(&mut self, seq: u64) {
 		self.recv_past.remove(&seq);
 	}
+
+	pub fn reset(&mut self) {
+		self.send_key = SendChain::default();
+		self.recv_key = RecvChain::default();
+		self.send_past = HashMap::new();
+		self.send_ctr = 0;
+		self.recv_past = HashMap::new();
+		self.recv_ctr = 0;
+	}
 }
 
 pub trait SignaturePk {}
@@ -567,6 +579,10 @@ pub trait CryptoProvider {
 	fn set_identity_kid(&mut self, key_id: u64);
 	fn new_remote_kid(&mut self) -> u64;
 	fn add_known_kid(&mut self, key_id: u64, pk: Self::SignaturePublicKey);
+	/// Delete a known identity from the state
+	fn delete_known_kid(&mut self, key_id: u64);
+	/// Reset an identity's ratchet state
+	fn reset_known_kid(&mut self, key_id: u64);
 	fn server_id(&self) -> Option<&Self::SignaturePublicKey>;
 	fn server_kid(&self) -> u64;
 	fn add_server_pk(&mut self, pk: Self::SignaturePublicKey) {
