@@ -165,6 +165,10 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		let message = reader.get_data().ok()?;
 		// hardcode this to avoid potential confusion
 		let verified = if self.is_beacon {
+			// do not process payloads signed under an unexpected key
+			if reader.get_key_id() != self.server_kid() {
+				return None;
+			}
 			(
 				self.server_kid(),
 				crypto_sign::verify(message, self.server_id()?)?,
