@@ -502,17 +502,18 @@ pub fn build_additional_data(
 	server_id: crypto_sign::PublicKey,
 	beacon_id: crypto_sign::PublicKey,
 ) -> [u8; AD_SIZE] {
+	// AD = EncodeEC(IKA) || EncodeEC(IKB) + what we choose, in this case both protocol strings
 	let mut buffer = vec![0u8; 0];
+	let mut encoded_server = encode_sign(SignType::Ed25519, server_id.as_bytes()).unwrap();
+	buffer.append(&mut encoded_server);
+	let mut encoded_beacon = encode_sign(SignType::Ed25519, beacon_id.as_bytes()).unwrap();
+	buffer.append(&mut encoded_beacon);
 	let mut kex_proto = [0u8; PQXDH_INFO.len()];
 	kex_proto.copy_from_slice(PQXDH_INFO);
 	buffer.extend_from_slice(&kex_proto);
 	let mut sym_proto = [0u8; SYM_RATCHET_INFO.len()];
 	sym_proto.copy_from_slice(SYM_RATCHET_INFO);
 	buffer.extend_from_slice(&sym_proto);
-	let mut encoded_server = encode_sign(SignType::Ed25519, server_id.as_bytes()).unwrap();
-	buffer.append(&mut encoded_server);
-	let mut encoded_beacon = encode_sign(SignType::Ed25519, beacon_id.as_bytes()).unwrap();
-	buffer.append(&mut encoded_beacon);
 	*buffer.as_array::<AD_SIZE>().unwrap()
 }
 
@@ -851,13 +852,12 @@ mod tests {
 		let beacon = crypto_sign::KeyPair::from_seed(&[0x62; ED25519_SEED_SIZE]).unwrap();
 		let actual = build_additional_data(server.public_key.clone(), beacon.public_key.clone());
 		let mut expected = Vec::with_capacity(AD_SIZE);
-		expected.extend_from_slice(PQXDH_INFO);
-		expected.extend_from_slice(SYM_RATCHET_INFO);
 		expected.push(1);
 		expected.extend_from_slice(server.public_key.as_bytes());
 		expected.push(1);
 		expected.extend_from_slice(beacon.public_key.as_bytes());
-
+		expected.extend_from_slice(PQXDH_INFO);
+		expected.extend_from_slice(SYM_RATCHET_INFO);
 		assert_eq!(actual.as_slice(), expected);
 		assert_ne!(
 			actual,

@@ -95,7 +95,7 @@ This message enables the beacon to obtain the elements it needs to derive the sh
 - Set the `ephemeralKey` field to the X25519 ephemeral public key from the corresponding `InitKex`
 - Set the `identityKey` to the server's Ed25519 public key
 - Set the `kemCipherText` to the KEM ciphertext from the corresponding `InitKex`
-- Create the associated data byte string by concatenating the PQXDH and symmetric ratchet protocol strings, encoded server identity key, and encoded beacon identity key
+- Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
 - Encrypt the first message, if any using a `CryptoFrame` and set `appCipherText` to its value if it exists
 - Return the beacon's public key and key ID to the caller so it can register it as required
 
