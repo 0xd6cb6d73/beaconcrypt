@@ -20,16 +20,12 @@ cbindgen = "0.29"
 capnp = "0.26"
 libsodium-rs = "0.2"
 zeroize = "1.9"
-libcrux-ml-dsa = { version = "0.0.9", optional = true }
-libcrux-ml-kem = { version = "0.0.9", optional = true }
-libcrux-aesgcm = { version = "0.0.8", optional = true }
 pyo3 = { version = "0.29.0", features = ["abi3-py311", "experimental-inspect"], optional = true }
 
 [features]
 default = ["beacon", "server", "pqxdh"]
 server = []
 beacon = []
-cnsa2 = ["dep:libcrux-ml-dsa", "dep:libcrux-ml-kem", "dep:libcrux-aesgcm"]
 pqxdh = []
 gobinds = ["beacon", "server", "pqxdh"]
 cbinds = ["beacon", "server", "pqxdh"]

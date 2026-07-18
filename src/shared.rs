@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: 0BSD
 
-#[cfg(feature = "cnsa2")]
-use crate::cnsa2::{AD_SIZE, BeaconCryptCnsa2};
 use crate::error::{DecodingError, EncodingError};
 #[cfg(feature = "pqxdh")]
 use crate::pqxdh::{AD_SIZE, BeaconCryptPqxdh};
@@ -31,16 +29,12 @@ pub const DH_OUT_LEN: usize = 32;
 pub const RATCHET_MAX_GAP: u64 = 50;
 #[cfg(feature = "pqxdh")]
 pub const ED25519_SEED_SIZE: usize = 32;
-#[cfg(feature = "cnsa2")]
-pub const KEM_SHARED_SECRET_SIZE: usize = 32;
 #[cfg(feature = "pqxdh")]
 /// Byte sequence used to test successful keychain derivation during registration. Used only if the server doesn't provide an initial message
 pub const REGISTRATION_WITNESS: &[u8; 1] = &[0xFF; 1];
 
 #[cfg(feature = "pqxdh")]
 pub type Provider = BeaconCryptPqxdh;
-#[cfg(feature = "cnsa2")]
-pub type Provider = BeaconCryptCnsa2;
 
 pub static STATE: LazyLock<Mutex<Provider>> = LazyLock::new(|| Mutex::new(Provider::default()));
 pub static INITIALIZED: AtomicBool = AtomicBool::new(false);
@@ -161,14 +155,10 @@ mod systems {
 	pub struct Hkdf;
 	#[cfg(feature = "server")]
 	pub struct Pqxdh;
-	#[cfg(feature = "cnsa2")]
-	pub struct MlKem;
 }
 mod roles {
 	pub struct ChainKey;
 	pub struct DerivedSecret;
-	#[cfg(feature = "cnsa2")]
-	pub struct SharedSecret;
 }
 
 pub struct VerifiedMessage {
@@ -249,8 +239,6 @@ pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>
 pub type KdfState = SecretArr<KDF_STATE_SIZE, systems::Hkdf, roles::ChainKey>;
 #[cfg(feature = "server")]
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
-#[cfg(feature = "cnsa2")]
-pub type MlKemSharedSecret = SecretArr<KEM_SHARED_SECRET_SIZE, systems::MlKem, roles::SharedSecret>;
 
 /// This function is safe to call multiple times
 /// ## Arguments

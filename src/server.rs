@@ -1,15 +1,9 @@
 // SPDX-License-Identifier: 0BSD
 
-#[cfg(feature = "cnsa2")]
-use libcrux_ml_dsa::ml_dsa_87;
-#[cfg(feature = "cnsa2")]
-use libcrux_ml_kem::mlkem1024;
 #[cfg(feature = "pqxdh")]
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_sign};
 
 use crate::shared::{CryptoProvider, KexDerivedSecret, STATE};
-#[cfg(feature = "cnsa2")]
-use std::marker::PhantomData;
 use std::{mem, slice::from_raw_parts};
 
 #[cfg(feature = "pqxdh")]
@@ -18,13 +12,6 @@ type KemCiphertext = crypto_kem::mlkem768::Ciphertext;
 type SignVerificationKey = crypto_sign::PublicKey;
 #[cfg(feature = "pqxdh")]
 type EphemeralKexPubKey = crypto_kx::PublicKey;
-#[cfg(feature = "cnsa2")]
-type KemCiphertext = mlkem1024::MlKem1024Ciphertext;
-#[cfg(feature = "cnsa2")]
-type SignVerificationKey = ml_dsa_87::MLDSA87VerificationKey;
-#[cfg(feature = "cnsa2")]
-type EphemeralKexPubKey = PhantomData<u8>;
-
 pub struct RegResponse {
 	pub serialized: Vec<u8>,
 	pub kid: u64,

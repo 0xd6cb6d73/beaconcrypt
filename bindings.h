@@ -10,16 +10,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-
-
-#define beaconcrypt_ML_DSA_SIGN_RANDOM_SIZE 32
-
-
-
-#define beaconcrypt_ML_DSA_87_ENC_PUBKEY_SIZE (beaconcrypt_ML_DSA_87_PUBKEY_SIZE + 1)
-
-#define beaconcrypt_ML_KEM_1024_ENCAP_RAN_SIZE beaconcrypt_SHARED_SECRET_SIZE
-
 #define beaconcrypt_KEX_KDF_OUT_LEN 32
 
 #define beaconcrypt_KDF_STATE_SIZE 32
@@ -44,8 +34,6 @@
 #define beaconcrypt_RATCHET_MAX_GAP 50
 
 #define beaconcrypt_ED25519_SEED_SIZE 32
-
-#define beaconcrypt_KEM_SHARED_SECRET_SIZE 32
 
 typedef struct beaconcrypt_BeaconCryptPqxdh beaconcrypt_BeaconCryptPqxdh;
 

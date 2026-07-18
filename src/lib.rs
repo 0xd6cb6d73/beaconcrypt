@@ -2,8 +2,6 @@
 
 #[cfg(feature = "beacon")]
 mod beacon;
-#[cfg(feature = "cnsa2")]
-mod cnsa2;
 mod error;
 #[cfg(feature = "pqxdh")]
 mod pqxdh;
