@@ -66,11 +66,6 @@ uv run pytest tests
 
 The `-a` flag is required after rebuilding the Rust static library because Go's build cache does not detect changes to libraries linked through cgo. `-count=1` also prevents reuse of a cached successful test result.
 
-## Profiles
-The reference implementation has two profiles: `PQXDH` and `CNSA2`. Profiles are controlled by cargo features. The CNSA2 profile only exists as a test for now. It uses a simple ML-KEM encapsulation for key exchange and the underlying libraries are not FIPS-approved. It is experimental and is likely broken. PQXDH is the intended target and the default.
-
-**CNSA2 is currently completely broken**
-
 ## Usage
 The reference implementation is a library that can currently be used either from rust or through C FFI. The C interface is currently not tested.
 
