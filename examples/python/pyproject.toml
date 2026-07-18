@@ -5,7 +5,7 @@ description = "Beaconcryt demo"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "beaconcrypt>=0.3.10",
+    "beaconcrypt>=0.3.11",
     "pynacl>=1.6.2",
 ]
 
