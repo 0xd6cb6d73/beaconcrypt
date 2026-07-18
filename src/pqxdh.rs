@@ -19,7 +19,8 @@ use std::ptr::slice_from_raw_parts;
 use std::sync::atomic::Ordering;
 use std::vec;
 
-pub const PQXDH_INFO: &[u8; 35] = b"Pqxdh_CURVE25519_SHA-512_ML-KEM-768";
+// https://signal.org/docs/specifications/pqxdh/#pqxdh-parameters: `info` An ASCII string identifying the application with a minimum length of 8 bytes
+pub const PQXDH_INFO: &[u8; 46] = b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768";
 pub const AD_SIZE: usize =
 	PQXDH_INFO.len() + SYM_RATCHET_INFO.len() + ((crypto_sign::PUBLICKEYBYTES + 1) * 2);
 
@@ -162,16 +163,19 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		let t_reader = create_protogram_reader(data)?;
 		let reader = t_reader.get().ok()?;
 		let message = reader.get_data().ok()?;
-		let key_id = reader.get_key_id();
 		// hardcode this to avoid potential confusion
 		let verified = if self.is_beacon {
-			crypto_sign::verify(message, self.server_id()?)?
+			(
+				self.server_kid(),
+				crypto_sign::verify(message, self.server_id()?)?,
+			)
 		} else {
-			crypto_sign::verify(message, self.pk_by_kid(reader.get_key_id())?)?
+			let kid = reader.get_key_id();
+			(kid, crypto_sign::verify(message, self.pk_by_kid(kid)?)?)
 		};
 		Some(VerifiedMessage {
-			data: verified,
-			key_id,
+			data: verified.1,
+			key_id: verified.0,
 		})
 	}
 
