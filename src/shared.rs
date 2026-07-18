@@ -40,6 +40,7 @@ pub static STATE: LazyLock<Mutex<Provider>> = LazyLock::new(|| Mutex::new(Provid
 pub static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 #[repr(u8)]
+#[derive(PartialEq)]
 pub enum SignType {
 	Undefined = 0,
 	Ed25519 = 1,
@@ -67,6 +68,7 @@ impl From<u8> for SignType {
 }
 
 #[repr(u8)]
+#[derive(PartialEq)]
 pub enum KemType {
 	Undefined = 0,
 	MlKem768 = 1,
@@ -107,13 +109,16 @@ pub fn encode_sign(sign_type: SignType, pk_bytes: &[u8]) -> Result<Vec<u8>, Enco
 	}
 }
 
-pub fn decode_sign(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
+pub fn decode_sign(encoded_pk: &[u8], expected: SignType) -> Result<Vec<u8>, DecodingError> {
 	if encoded_pk.len() < 33 {
 		return Err(DecodingError);
 	}
 	match SignType::from(encoded_pk[0]) {
 		SignType::Undefined => Err(DecodingError),
-		_ => {
+		sign => {
+			if sign != expected {
+				return Err(DecodingError);
+			}
 			let mut key = vec![0u8; encoded_pk.len()];
 			key.copy_from_slice(encoded_pk);
 			key.remove(0);
@@ -134,13 +139,16 @@ pub fn encode_kem(kem_type: KemType, pk_bytes: &[u8]) -> Result<Vec<u8>, Encodin
 }
 
 #[cfg(feature = "server")]
-pub fn decode_kem(encoded_pk: &[u8]) -> Result<Vec<u8>, DecodingError> {
+pub fn decode_kem(encoded_pk: &[u8], expected: KemType) -> Result<Vec<u8>, DecodingError> {
 	if encoded_pk.len() < 33 {
 		return Err(DecodingError);
 	}
 	match KemType::from(encoded_pk[0]) {
 		KemType::Undefined => Err(DecodingError),
-		_ => {
+		kem => {
+			if kem != expected {
+				return Err(DecodingError);
+			}
 			let mut key = vec![0u8; encoded_pk.len()];
 			key.copy_from_slice(encoded_pk);
 			key.remove(0);
@@ -788,18 +796,28 @@ mod tests {
 
 		assert_eq!(encoded.len(), key.len() + 1);
 		assert_eq!(encoded[0], 1);
-		assert_eq!(decode_sign(&encoded).unwrap(), key);
+		assert_eq!(decode_sign(&encoded, SignType::Ed25519).unwrap(), key);
+	}
+
+	#[test]
+	fn signing_key_encoding_rejects_type_mismatch() {
+		let key = [0xA5; 32];
+		let encoded = encode_sign(SignType::Ed25519, &key).unwrap();
+
+		assert_eq!(encoded.len(), key.len() + 1);
+		assert_eq!(encoded[0], 1);
+		assert!(decode_sign(&encoded, SignType::MlDsa87).is_err());
 	}
 
 	#[test]
 	fn signing_key_encoding_rejects_invalid_inputs() {
 		assert!(encode_sign(SignType::Undefined, &[0; 32]).is_err());
-		assert!(decode_sign(&[]).is_err());
-		assert!(decode_sign(&[1; 32]).is_err());
+		assert!(decode_sign(&[], SignType::Undefined).is_err());
+		assert!(decode_sign(&[1; 32], SignType::Undefined).is_err());
 
 		let mut unknown_type = vec![0xA5; 33];
 		unknown_type[0] = u8::MAX;
-		assert!(decode_sign(&unknown_type).is_err());
+		assert!(decode_sign(&unknown_type, SignType::Ed25519).is_err());
 	}
 
 	#[test]
@@ -807,23 +825,39 @@ mod tests {
 		let x25519_key = [0x5A; 32];
 		let encoded_x25519 = encode_kem(KemType::X25519, &x25519_key).unwrap();
 		assert_eq!(encoded_x25519[0], 2);
-		assert_eq!(decode_kem(&encoded_x25519).unwrap(), x25519_key);
+		assert_eq!(
+			decode_kem(&encoded_x25519, KemType::X25519).unwrap(),
+			x25519_key
+		);
 
 		let ml_kem_key = [0xC3; 64];
 		let encoded_ml_kem = encode_kem(KemType::MlKem768, &ml_kem_key).unwrap();
 		assert_eq!(encoded_ml_kem[0], 1);
-		assert_eq!(decode_kem(&encoded_ml_kem).unwrap(), ml_kem_key);
+		assert_eq!(
+			decode_kem(&encoded_ml_kem, KemType::MlKem768).unwrap(),
+			ml_kem_key
+		);
 	}
 
 	#[test]
 	fn kem_key_encoding_rejects_invalid_inputs() {
 		assert!(encode_kem(KemType::Undefined, &[0; 32]).is_err());
-		assert!(decode_kem(&[]).is_err());
-		assert!(decode_kem(&[2; 32]).is_err());
+		assert!(decode_kem(&[], KemType::Undefined).is_err());
+		assert!(decode_kem(&[2; 32], KemType::Undefined).is_err());
 
 		let mut unknown_type = vec![0xA5; 33];
 		unknown_type[0] = u8::MAX;
-		assert!(decode_kem(&unknown_type).is_err());
+		assert!(decode_kem(&unknown_type, KemType::Undefined).is_err());
+	}
+
+	#[test]
+	fn kem_key_encoding_rejects_type_mismatch() {
+		let x25519_key = [0x5A; 32];
+		let encoded_x25519 = encode_kem(KemType::X25519, &x25519_key).unwrap();
+
+		assert_eq!(encoded_x25519.len(), x25519_key.len() + 1);
+		assert_eq!(encoded_x25519[0], 2);
+		assert!(decode_kem(&encoded_x25519, KemType::MlKem768).is_err());
 	}
 
 	#[test]

@@ -427,7 +427,8 @@ impl ProviderServer for BeaconCryptPqxdh {
 		let typed_reader = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(reader);
 		let registration = typed_reader.get().ok()?;
 
-		let decoded_beacon_id = decode_sign(registration.get_identity_key().ok()?).ok()?;
+		let decoded_beacon_id =
+			decode_sign(registration.get_identity_key().ok()?, SignType::Ed25519).ok()?;
 		let remote_id = crypto_sign::PublicKey::from_bytes(&decoded_beacon_id).ok()?;
 		let pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id)?;
 		let prekey_verified = crypto_sign::verify(registration.get_pre_key().ok()?, &remote_id)?;
@@ -435,12 +436,16 @@ impl ProviderServer for BeaconCryptPqxdh {
 			crypto_sign::verify(registration.get_one_time_key().ok()?, &remote_id)?;
 
 		let beacon_prekey =
-			crypto_kx::PublicKey::from_bytes(&decode_kem(&prekey_verified).ok()?).ok()?;
+			crypto_kx::PublicKey::from_bytes(&decode_kem(&prekey_verified, KemType::X25519).ok()?)
+				.ok()?;
 		let beacon_onetime =
-			crypto_kx::PublicKey::from_bytes(&decode_kem(&onetime_verified).ok()?).ok()?;
+			crypto_kx::PublicKey::from_bytes(&decode_kem(&onetime_verified, KemType::X25519).ok()?)
+				.ok()?;
 		let ephemeral = crypto_kx::KeyPair::generate().ok()?;
-		let pq_pub =
-			crypto_kem::mlkem768::PublicKey::from_bytes(&decode_kem(&pq_verified).ok()?).ok()?;
+		let pq_pub = crypto_kem::mlkem768::PublicKey::from_bytes(
+			&decode_kem(&pq_verified, KemType::MlKem768).ok()?,
+		)
+		.ok()?;
 		let (kem_ciphertext, kem_shared) = crypto_kem::mlkem768::encapsulate(&pq_pub).ok()?;
 
 		let remote_id_kex = crypto_sign::ed25519_pk_to_curve25519(&remote_id).ok()?;
@@ -579,13 +584,13 @@ mod tests {
 
 	use super::{AD_SIZE, PQXDH_INFO, build_associated_data, derive_root_key};
 	use crate::{
-		BeaconCryptPqxdh,
+		BeaconCryptPqxdh, SignType,
 		beacon::ProviderBeacon,
 		phase1_capnp, protogram_capnp,
 		server::ProviderServer,
 		shared::{
-			CryptoProvider, DH_OUT_LEN, DhSecret, ED25519_SEED_SIZE, SYM_RATCHET_INFO, decode_kem,
-			decode_sign,
+			CryptoProvider, DH_OUT_LEN, DhSecret, ED25519_SEED_SIZE, KemType, SYM_RATCHET_INFO,
+			decode_kem, decode_sign,
 		},
 	};
 
@@ -790,7 +795,7 @@ mod tests {
 		let identity = registration.get_identity_key().unwrap();
 		assert_eq!(identity[0], 1);
 		assert_eq!(
-			decode_sign(identity).unwrap(),
+			decode_sign(identity, SignType::Ed25519).unwrap(),
 			beacon.identity_pk().as_bytes()
 		);
 
@@ -798,7 +803,7 @@ mod tests {
 			crypto_sign::verify(registration.get_pre_key().unwrap(), beacon.identity_pk()).unwrap();
 		assert_eq!(prekey[0], 2);
 		assert_eq!(
-			decode_kem(&prekey).unwrap(),
+			decode_kem(&prekey, KemType::X25519).unwrap(),
 			beacon.get_prekey_pk().unwrap().as_bytes()
 		);
 
@@ -809,14 +814,17 @@ mod tests {
 		.unwrap();
 		assert_eq!(onetime[0], 2);
 		assert_eq!(
-			decode_kem(&onetime).unwrap(),
+			decode_kem(&onetime, KemType::X25519).unwrap(),
 			beacon.get_onetime_pk().unwrap().as_bytes(),
 		);
 
 		let pq =
 			crypto_sign::verify(registration.get_pq_key().unwrap(), beacon.identity_pk()).unwrap();
 		assert_eq!(pq[0], 1);
-		assert_eq!(decode_kem(&pq).unwrap(), beacon.pq_pk().unwrap().as_bytes());
+		assert_eq!(
+			decode_kem(&pq, KemType::MlKem768).unwrap(),
+			beacon.pq_pk().unwrap().as_bytes()
+		);
 	}
 
 	#[test]
