@@ -4,18 +4,18 @@ requires-python = ">=3.11"
 
 [[package]]
 name = "beaconcrypt"
-version = "0.3.9"
+version = "0.3.10"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/75/4c/0a14766ac9b4839cdb91ca3f7c79af99c90b894f4a50967bcecbe028f2bc/beaconcrypt-0.3.9.tar.gz", hash = "sha256:160b576b69e2f801ec05d295ffdb426ad66c012bcb781453ef5e5dea2dea169f", size = 65753, upload-time = "2026-07-17T18:53:27.812Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/56/44/db552024b766bcab852a90c005e557af624dcccadaf432aed68c37eacf68/beaconcrypt-0.3.10.tar.gz", hash = "sha256:fa1a6a6129f052292f0169ae55fdbf4bd2c8f6770c5f890f99297ef05595c078", size = 87868, upload-time = "2026-07-17T20:51:07.73Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/77/0dffc5c24bea1472fefdb3f80f3e93760ef82b87eb29064e7bb094365bab/beaconcrypt-0.3.9-cp311-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:1a7440bf259539d6dfbb1bc55d5461c71b21476fcd79f69448ed6017a2af30a7", size = 410489, upload-time = "2026-07-17T18:53:17.89Z" },
-    { url = "https://files.pythonhosted.org/packages/b5/f7/6c6b630dabedb49c8f155dbd44030e55e99a733048b1f29da9aa4de5be54/beaconcrypt-0.3.9-cp311-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:d1567f7df61633355ce0b00b79b7ecc379d640fddb836ea73b0fb9b67cdb3c77", size = 494017, upload-time = "2026-07-17T18:53:19.134Z" },
-    { url = "https://files.pythonhosted.org/packages/f4/cd/6b73164e642a6433a792c613076ed695a9f83a8fd49be643b6ac75f9a3c6/beaconcrypt-0.3.9-cp311-abi3-win32.whl", hash = "sha256:e011760a4df9dff440c72223f9ef9f523a1f2d05aef400d65f9b35780154c02f", size = 301948, upload-time = "2026-07-17T18:53:20.393Z" },
-    { url = "https://files.pythonhosted.org/packages/ed/51/d2b9ec0b01f5260427de6a61ee0297b5202ccc999d8506baf8fad30623a7/beaconcrypt-0.3.9-cp311-abi3-win_amd64.whl", hash = "sha256:1fdd84faf35169adc5a944c9a397dc2e60cde2c43e33f1aadf4ae44c84954a59", size = 298972, upload-time = "2026-07-17T18:53:21.633Z" },
-    { url = "https://files.pythonhosted.org/packages/d8/c5/9f5480fa06bbda1017c57ef3a69bf157b256a7b4b6886dff7bf3abcfea38/beaconcrypt-0.3.9-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:d1a7e3f374f22d4cb4bb3651c9eb6a1cd70ba47d8e7a8eb39b3ee8fb02ac76bb", size = 409999, upload-time = "2026-07-17T18:53:22.888Z" },
-    { url = "https://files.pythonhosted.org/packages/7b/1e/6a763eaf272233faf405cf1c352bca1ce6b27a91d32616192a7719a0f385/beaconcrypt-0.3.9-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:1d71b88d643842cb440a39d7534165385db9c65a8095e1f9f6db3af53ad19bf2", size = 493800, upload-time = "2026-07-17T18:53:24.214Z" },
-    { url = "https://files.pythonhosted.org/packages/43/77/20d096c335dcbba57f1a171bf30f10d691e4692444106e2e76bfb96b0959/beaconcrypt-0.3.9-cp314-cp314t-win32.whl", hash = "sha256:eddacda85adee1990d3e718b838b7513a03bf0ae6ec137ff94aaa253795e2805", size = 300823, upload-time = "2026-07-17T18:53:25.391Z" },
-    { url = "https://files.pythonhosted.org/packages/e0/fc/9974793e9c2d40ddb30e7b57555825cb1062a872839004b16326f8a9dbc7/beaconcrypt-0.3.9-cp314-cp314t-win_amd64.whl", hash = "sha256:be35b13e7f4c5af088157b88e3ac5a8b7728c08cf797865af8f6f4898cce0a75", size = 298386, upload-time = "2026-07-17T18:53:26.701Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/78/e788f44bc239896177cb2e22d4059e24dde163339bc30585af092b72ad22/beaconcrypt-0.3.10-cp311-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:1f0d04485af75f1bdceb57222c02da2b1b6ea128f8e82fe187e9ff23b128ea00", size = 410479, upload-time = "2026-07-17T20:50:55.43Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/26/328d2c484ca7aff57b1d468f40b2da17e50c4019f5c5b34158b41704995c/beaconcrypt-0.3.10-cp311-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:9b654083ef43433cb731fc7db3a5f14c641b4c4588732e077c7465a523d8a797", size = 494046, upload-time = "2026-07-17T20:50:56.984Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/cc/132ac4ce321e80590a04e2ef7228c9123aa8b8bc672e3673b6feacc1e166/beaconcrypt-0.3.10-cp311-abi3-win32.whl", hash = "sha256:500f7dd130511d7dc6bc6063ebc36947377e2179de77b087a611c905647e16bd", size = 301953, upload-time = "2026-07-17T20:50:58.505Z" },
+    { url = "https://files.pythonhosted.org/packages/ce/8f/b11685295b112a0d73c9c322f73dcef8240b9aeb9c78ae07150edba141bb/beaconcrypt-0.3.10-cp311-abi3-win_amd64.whl", hash = "sha256:84975ab986b528f2941e3b9b3dc6ee336085ecf5296768919c4ed6535ea4b084", size = 298968, upload-time = "2026-07-17T20:50:59.986Z" },
+    { url = "https://files.pythonhosted.org/packages/12/ab/d9b09f49f1d25d45524e92d017d534f74f79374058ac0e8c8643d4f6541c/beaconcrypt-0.3.10-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:703ac5f015376fa4672e6fe19f1150b56bf6a87045f72f8c476d5882563e2b99", size = 409996, upload-time = "2026-07-17T20:51:01.597Z" },
+    { url = "https://files.pythonhosted.org/packages/29/ed/078cb49b4780597c32351d041382ec5736035a0fafadadbb1694d0421544/beaconcrypt-0.3.10-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:6e35aacc719104b64cb1be92a2bb3ab871f815b551a36029cbfe025c587fee13", size = 493814, upload-time = "2026-07-17T20:51:03.047Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/27/20622974ec72e2b0981495c371f88120dc0aaa286350a8693daab8af8e27/beaconcrypt-0.3.10-cp314-cp314t-win32.whl", hash = "sha256:bb2e6655b90446034feeba3b3e25b6315bb4ddb51bda4e887af79b305d33b54c", size = 300745, upload-time = "2026-07-17T20:51:04.812Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/3d/def1c9b18ca17f8f08af4b3be14b7bee8333e2efa0ee65c9f6c5c53b6651/beaconcrypt-0.3.10-cp314-cp314t-win_amd64.whl", hash = "sha256:08eb1180630d1619f12359f27a529c90ed3d3456456b15a06f666a656132376b", size = 298351, upload-time = "2026-07-17T20:51:06.329Z" },
 ]
 
 [[package]]
@@ -171,6 +171,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "beaconcrypt" },
+    { name = "beaconcrypt", specifier = ">=0.3.10" },
     { name = "pynacl", specifier = ">=1.6.2" },
 ]
