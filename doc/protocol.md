@@ -105,9 +105,10 @@ Upon reception, the beacon must process this message as follows:
 - Compute the 4 Diffie Hellman rounds
   - dh1 = DH(`beacon_prekey_sk`, `server_id_pk_kex`)
   - dh2 = DH(`beacon_id_sk_kex`, `server_ephemeral_pk`)
-  - dh3 = DH(`beacon_prekex_pk`, `server_ephemeral_pk`)
+  - dh3 = DH(`beacon_prekey_sk`, `server_ephemeral_pk`)
   - dh4 = DH(`beacon_onetime_sk`, `server_ephemeral_pk`)
-- Compute the derived secret `KDF(DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
+- Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
+  - `Padding` is 32 `0xFF` bytes
 - Delete its one-time keypair.
 - Save the server's public key
 - Save its own key ID using the `keyId` field
