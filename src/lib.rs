@@ -11,6 +11,8 @@ mod pqxdh;
 mod server;
 mod shared;
 
+/// # Safety
+/// This is a horrible hack to compensate for the fact that libsodium 0.2.4 fails to link to `memset_explicit` on Windows when using the GNU toolchain. You probably should not use this
 #[cfg(all(windows, target_env = "gnu"))]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn memset_explicit(
@@ -34,6 +36,8 @@ unsafe extern "system" {
 	) -> i32;
 }
 
+/// # Safety
+/// This is a horrible hack to compensate for the fact that libsodium 0.2.4 fails to link to `SystemFunction036` on Windows when using the GNU toolchain. You probably should not use this
 #[cfg(all(windows, target_env = "gnu"))]
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn SystemFunction036(
