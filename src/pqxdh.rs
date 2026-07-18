@@ -200,7 +200,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			Some(self.associated_data?)
 		} else {
 			let k = self.pk_by_kid(kid)?;
-			Some(build_additional_data(self.identity_pk().clone(), k.clone()))
+			Some(build_associated_data(self.identity_pk().clone(), k.clone()))
 		}
 	}
 
@@ -369,7 +369,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 
 		self.set_identity_kid(response.get_key_id());
 		let id = self.identity_pk().clone();
-		self.set_associated_data(build_additional_data(server_id, id));
+		self.set_associated_data(build_associated_data(server_id, id));
 		let mut info_str = vec![0u8; SYM_RATCHET_INFO.len()];
 		info_str.copy_from_slice(SYM_RATCHET_INFO);
 		let srv_key_id = self.server_kid();
@@ -498,7 +498,7 @@ pub fn derive_root_key(
 	crypto_kdf::hkdf::sha512::expand(KEX_KDF_OUT_LEN, Some(PQXDH_INFO), &prk)
 }
 
-pub fn build_additional_data(
+pub fn build_associated_data(
 	server_id: crypto_sign::PublicKey,
 	beacon_id: crypto_sign::PublicKey,
 ) -> [u8; AD_SIZE] {
@@ -540,7 +540,7 @@ mod tests {
 	use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 	use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 
-	use super::{AD_SIZE, PQXDH_INFO, build_additional_data, derive_root_key};
+	use super::{AD_SIZE, PQXDH_INFO, build_associated_data, derive_root_key};
 	use crate::{
 		BeaconCryptPqxdh,
 		beacon::ProviderBeacon,
@@ -847,10 +847,10 @@ mod tests {
 	}
 
 	#[test]
-	fn additional_data_has_a_stable_order_and_layout() {
+	fn associated_data_has_a_stable_order_and_layout() {
 		let server = crypto_sign::KeyPair::from_seed(&[0x61; ED25519_SEED_SIZE]).unwrap();
 		let beacon = crypto_sign::KeyPair::from_seed(&[0x62; ED25519_SEED_SIZE]).unwrap();
-		let actual = build_additional_data(server.public_key.clone(), beacon.public_key.clone());
+		let actual = build_associated_data(server.public_key.clone(), beacon.public_key.clone());
 		let mut expected = Vec::with_capacity(AD_SIZE);
 		expected.push(1);
 		expected.extend_from_slice(server.public_key.as_bytes());
@@ -861,7 +861,7 @@ mod tests {
 		assert_eq!(actual.as_slice(), expected);
 		assert_ne!(
 			actual,
-			build_additional_data(beacon.public_key, server.public_key),
+			build_associated_data(beacon.public_key, server.public_key),
 		);
 	}
 }
