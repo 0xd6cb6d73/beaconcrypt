@@ -98,7 +98,8 @@ impl Beacon {
 		self._0.get_registration_bundle()
 	}
 
-	/// Process the registration response and optional initial data. The raw buffer sent by the server must be passed as-is as `data`. The response contains the contents of the initial message, or nothing if there was none. Once this function returns, the beacon is registered
+	/// Process the registration response and optional initial data. The raw buffer sent by the server must be passed as-is as `data`.
+	/// The response contains the contents of the initial message, or `0xFF` if there was none. Once this function returns, the beacon is registered
 	fn process_initial_message(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
 		self._0.finish_registration(data.as_slice())
 	}

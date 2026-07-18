@@ -410,7 +410,12 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 				// PQXDH protcol run is now complete and the beacon is successfully registered
 				Some,
 			),
-			Err(_) => None,
+			Err(_) => {
+				self.reset_known_kid(self.server_kid());
+				self.set_identity_kid(self.server_kid());
+				self.associated_data = None;
+				None
+			}
 		}
 	}
 }
