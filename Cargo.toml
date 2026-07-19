@@ -12,6 +12,26 @@ repository = "https://github.com/0xd6cb6d73/beaconcrypt"
 name = "beaconcrypt"
 crate-type = ["cdylib", "staticlib", "rlib"]
 
+[[example]]
+name = "rust"
+path = "examples/rust/main.rs"
+required-features = ["pqxdh", "beacon", "server"]
+
+[[test]]
+name = "beacon"
+path = "tests/beacon.rs"
+required-features = ["pqxdh", "beacon", "server"]
+
+[[test]]
+name = "protocol"
+path = "tests/protocol.rs"
+required-features = ["pqxdh", "beacon", "server"]
+
+[[test]]
+name = "server"
+path = "tests/server.rs"
+required-features = ["pqxdh", "beacon", "server"]
+
 [build-dependencies]
 capnpc = "0.26"
 cbindgen = "0.29"
@@ -24,10 +44,10 @@ pyo3 = { version = "0.29.0", features = ["abi3-py311", "experimental-inspect"], 
 
 [features]
 default = ["beacon", "server", "pqxdh"]
-server = []
-beacon = []
+server = ["pqxdh"]
+beacon = ["pqxdh"]
 pqxdh = []
-gobinds = ["beacon", "server", "pqxdh"]
+gobinds = ["cbinds"]
 cbinds = ["beacon", "server", "pqxdh"]
 pybinds = ["dep:pyo3", "beacon", "server", "pqxdh"]
 all = ["gobinds", "pybinds", "cbinds"]

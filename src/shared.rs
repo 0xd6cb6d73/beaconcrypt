@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: 0BSD
 
-use crate::error::{DecodingError, EncodingError};
+#[cfg(feature = "server")]
+use crate::error::DecodingError;
+use crate::error::EncodingError;
 #[cfg(feature = "pqxdh")]
 use crate::pqxdh::{AD_SIZE, BeaconCryptPqxdh};
 use crate::{cryptoframe_capnp, protogram_capnp};
@@ -29,7 +31,7 @@ pub const DH_OUT_LEN: usize = 32;
 pub const RATCHET_MAX_GAP: u64 = 50;
 #[cfg(feature = "pqxdh")]
 pub const ED25519_SEED_SIZE: usize = 32;
-#[cfg(feature = "pqxdh")]
+#[cfg(feature = "server")]
 /// Byte sequence used to test successful keychain derivation during registration. Used only if the server doesn't provide an initial message
 pub const REGISTRATION_WITNESS: &[u8; 1] = &[0xFF; 1];
 
@@ -109,6 +111,7 @@ pub fn encode_sign(sign_type: SignType, pk_bytes: &[u8]) -> Result<Vec<u8>, Enco
 	}
 }
 
+#[cfg(feature = "server")]
 pub fn decode_sign(encoded_pk: &[u8], expected: SignType) -> Result<Vec<u8>, DecodingError> {
 	if encoded_pk.len() < 33 {
 		return Err(DecodingError);
@@ -127,6 +130,7 @@ pub fn decode_sign(encoded_pk: &[u8], expected: SignType) -> Result<Vec<u8>, Dec
 	}
 }
 
+#[cfg(feature = "beacon")]
 pub fn encode_kem(kem_type: KemType, pk_bytes: &[u8]) -> Result<Vec<u8>, EncodingError> {
 	match kem_type {
 		KemType::Undefined => Err(EncodingError),
@@ -227,6 +231,7 @@ impl<const S: usize, System, Role> SecretArr<S, System, Role> {
 		self.data.copy_from_slice(src);
 	}
 
+	#[cfg(feature = "server")]
 	pub fn inner(&self) -> &Zeroizing<[u8; S]> {
 		&self.data
 	}
@@ -789,6 +794,7 @@ mod tests {
 		assert!(matches!(KemType::from(u8::MAX), KemType::Undefined));
 	}
 
+	#[cfg(feature = "server")]
 	#[test]
 	fn signing_key_encoding_round_trips() {
 		let key = [0xA5; 32];
@@ -799,6 +805,7 @@ mod tests {
 		assert_eq!(decode_sign(&encoded, SignType::Ed25519).unwrap(), key);
 	}
 
+	#[cfg(feature = "server")]
 	#[test]
 	fn signing_key_encoding_rejects_type_mismatch() {
 		let key = [0xA5; 32];
@@ -809,6 +816,7 @@ mod tests {
 		assert!(decode_sign(&encoded, SignType::MlDsa87).is_err());
 	}
 
+	#[cfg(feature = "server")]
 	#[test]
 	fn signing_key_encoding_rejects_invalid_inputs() {
 		assert!(encode_sign(SignType::Undefined, &[0; 32]).is_err());
@@ -820,6 +828,7 @@ mod tests {
 		assert!(decode_sign(&unknown_type, SignType::Ed25519).is_err());
 	}
 
+	#[cfg(all(feature = "beacon", feature = "server"))]
 	#[test]
 	fn kem_key_encoding_round_trips() {
 		let x25519_key = [0x5A; 32];
@@ -839,6 +848,7 @@ mod tests {
 		);
 	}
 
+	#[cfg(all(feature = "beacon", feature = "server"))]
 	#[test]
 	fn kem_key_encoding_rejects_invalid_inputs() {
 		assert!(encode_kem(KemType::Undefined, &[0; 32]).is_err());
@@ -850,6 +860,7 @@ mod tests {
 		assert!(decode_kem(&unknown_type, KemType::Undefined).is_err());
 	}
 
+	#[cfg(all(feature = "beacon", feature = "server"))]
 	#[test]
 	fn kem_key_encoding_rejects_type_mismatch() {
 		let x25519_key = [0x5A; 32];

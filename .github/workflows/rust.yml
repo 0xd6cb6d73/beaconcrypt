@@ -22,5 +22,9 @@ jobs:
       run: sudo apt update && sudo apt install capnproto
     - name: Build
       run: cargo build --verbose
+    - name: Check PQXDH server build
+      run: cargo check --no-default-features --features pqxdh,server --lib
+    - name: Check PQXDH beacon build
+      run: cargo check --no-default-features --features pqxdh,beacon --lib
     - name: Run tests
       run: cargo test --verbose

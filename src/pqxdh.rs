@@ -1,23 +1,26 @@
 // SPDX-License-Identifier: 0BSD
 
-use crate::beacon::ProviderBeacon;
-use crate::server::{ProviderServer, RegResponse, RegistrationOutput};
 use crate::shared::{
-	DhSecret, ED25519_SEED_SIZE, INITIALIZED, KEX_KDF_OUT_LEN, KemType, Provider,
-	REGISTRATION_WITNESS, RatchetManager, RemotePrincipal, STATE, SYM_RATCHET_INFO, SignType,
-	SignaturePk, VerifiedMessage, create_protogram_reader, decode_kem, decode_sign, encode_kem,
-	encode_sign,
+	DhSecret, ED25519_SEED_SIZE, KEX_KDF_OUT_LEN, KemType, RatchetManager, RemotePrincipal,
+	SYM_RATCHET_INFO, SignType, SignaturePk, VerifiedMessage, create_protogram_reader, encode_sign,
 };
 use crate::{CryptoProvider, phase1_capnp, phase2_capnp, protogram_capnp};
+#[cfg(feature = "beacon")]
+use crate::{beacon::ProviderBeacon, shared::encode_kem};
+#[cfg(feature = "server")]
+use crate::{
+	server::{ProviderServer, RegResponse, RegistrationOutput},
+	shared::{INITIALIZED, Provider, REGISTRATION_WITNESS, STATE, decode_kem, decode_sign},
+};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{
 	SodiumError, crypto_kdf, crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init,
 };
 use std::collections::HashMap;
 use std::mem::swap;
-use std::ptr::slice_from_raw_parts;
-use std::sync::atomic::Ordering;
 use std::vec;
+#[cfg(feature = "server")]
+use std::{ptr::slice_from_raw_parts, sync::atomic::Ordering};
 
 // https://signal.org/docs/specifications/pqxdh/#pqxdh-parameters: `info` An ASCII string identifying the application with a minimum length of 8 bytes
 pub const PQXDH_INFO: &[u8; 46] = b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768";
@@ -566,6 +569,7 @@ pub fn build_associated_data(
 ///
 /// * `server_kid` - The ID of the server's identity key for the campaign
 /// * `id_seed` - 32 byte Ed25519 seed for the server's identity key
+#[cfg(feature = "server")]
 #[unsafe(no_mangle)]
 pub extern "C" fn init_server_from_seeds(server_kid: u64, id_seed: *const u8) {
 	if !INITIALIZED.swap(true, Ordering::AcqRel) {
@@ -577,7 +581,7 @@ pub extern "C" fn init_server_from_seeds(server_kid: u64, id_seed: *const u8) {
 	}
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "beacon", feature = "server"))]
 mod tests {
 	use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 	use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};

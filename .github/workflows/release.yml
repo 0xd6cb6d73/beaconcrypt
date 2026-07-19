@@ -98,19 +98,20 @@ jobs:
       run: |
         rustup target add x86_64-pc-windows-gnu --toolchain nightly
         rustup component add rust-src --toolchain nightly
-        cargo +nightly rustc --release -Z build-std=std,panic_abort --target x86_64-pc-windows-gnu --no-default-features --features beacon,server,pqxdh --crate-type=staticlib
+        cargo +nightly rustc --release -Z build-std=std,panic_abort --target x86_64-pc-windows-gnu --no-default-features --features gobinds --crate-type=staticlib
+        mv target/x86_64-pc-windows-gnu/release/libbeaconcrypt.a target/x86_64-pc-windows-gnu/release/libbeaconcrypt-gobinds-windows-mingw-x86_64.a
+        cargo +nightly rustc --release -Z build-std=std,panic_abort --target x86_64-pc-windows-gnu --no-default-features --features beacon --crate-type=staticlib
+        mv target/x86_64-pc-windows-gnu/release/libbeaconcrypt.a target/x86_64-pc-windows-gnu/release/libbeaconcrypt-beacon-windows-mingw-x86_64.a
         ls target/x86_64-pc-windows-gnu/release
     - name: Run tests
       env:
         CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
       run: cargo test --verbose --target x86_64-pc-windows-gnu
-    - name: Rename
-      run: mv target/x86_64-pc-windows-gnu/release/libbeaconcrypt.a target/x86_64-pc-windows-gnu/release/libbeaconcrypt-windows-mingw-x86_64.a
     - name: Upload release artifact
       uses: actions/upload-artifact@v7
       with:
         name: beaconcrypt-static-windows-mingw-x86_64
-        path: target/x86_64-pc-windows-gnu/release/libbeaconcrypt-windows-mingw-x86_64.a
+        path: target/x86_64-pc-windows-gnu/release/libbeaconcrypt-*.a
         retention-days: 7
 
   release:

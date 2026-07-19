@@ -73,10 +73,7 @@ capnp::generated_code!(pub mod phase2_capnp);
 capnp::generated_code!(pub mod cryptoframe_capnp);
 capnp::generated_code!(pub mod protogram_capnp);
 
-#[cfg(feature = "gobinds")]
-mod gobinds;
-
-#[cfg(feature = "cbinds")]
+#[cfg(any(feature = "cbinds", feature = "gobinds"))]
 mod cbinds;
 
 #[cfg(feature = "pybinds")]
