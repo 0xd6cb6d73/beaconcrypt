@@ -523,7 +523,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 	}
 
 	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<EncryptState> {
-		let ciphertext = self.encrypt_message(bytes, kid)?;
+		let ciphertext = self.encrypt_and_sign(bytes, kid)?;
 		let ratchet = self.ratchet_manager_mut(kid)?;
 		let state = ratchet.send_state();
 		Some(EncryptState {
@@ -533,14 +533,14 @@ impl ProviderServer for BeaconCryptPqxdh {
 		})
 	}
 
-	fn decrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<EncryptState> {
-		let plaintext = self.decrypt_message(bytes, kid)?;
-		let ratchet = self.ratchet_manager_mut(kid)?;
+	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<EncryptState> {
+		let verified = self.decrypt_signed(bytes)?;
+		let ratchet = self.ratchet_manager_mut(verified.key_id)?;
 		let state = ratchet.recv_state();
 		Some(EncryptState {
-			kid,
+			kid: verified.key_id,
 			key: state.clone(),
-			data: plaintext,
+			data: verified.data,
 		})
 	}
 }

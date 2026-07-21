@@ -264,12 +264,14 @@ fn encrypt_and_sign_encrypts_before_signing() {
 #[test]
 fn decrypt_signed_verifies_the_sender_and_uses_its_key_id() {
 	let (mut server, mut beacon) = new_pair();
-	register_beacon(&mut server, &mut beacon, None);
+	let response = register_beacon(&mut server, &mut beacon, None);
 	let message = b"signed beacon to server";
 	let ciphertext = beacon.encrypt_message(message, SERVER_KID).unwrap();
 	let signed = beacon.sign_message(&ciphertext).unwrap();
+	let verified = server.decrypt_signed(&signed).unwrap();
 
-	assert_eq!(server.decrypt_signed(&signed).unwrap(), message);
+	assert_eq!(verified.key_id, response.kid);
+	assert_eq!(verified.data, message);
 }
 
 #[test]
@@ -407,10 +409,9 @@ fn encrypt_and_update_returns_the_advanced_send_state() {
 	assert_eq!(update.key.as_slice(), ratchet.send_state().as_slice());
 	assert_ne!(update.key.as_slice(), send_state_before);
 	assert_eq!(ratchet.recv_state().as_slice(), recv_state_before);
-	assert_eq!(
-		beacon.decrypt_message(&update.data, SERVER_KID).unwrap(),
-		message
-	);
+	let verified = beacon.decrypt_signed(&update.data).unwrap();
+	assert_eq!(verified.key_id, SERVER_KID);
+	assert_eq!(verified.data, message);
 }
 
 #[test]
@@ -418,7 +419,7 @@ fn decrypt_and_update_returns_the_advanced_receive_state() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let message = b"beacon to server with updated state";
-	let ciphertext = beacon.encrypt_message(message, SERVER_KID).unwrap();
+	let ciphertext = beacon.encrypt_and_sign(message, SERVER_KID).unwrap();
 	let (send_state_before, recv_state_before) = {
 		let ratchet = server.ratchet_manager(response.kid).unwrap();
 		(
@@ -427,9 +428,7 @@ fn decrypt_and_update_returns_the_advanced_receive_state() {
 		)
 	};
 
-	let update = server
-		.decrypt_and_update(&ciphertext, response.kid)
-		.unwrap();
+	let update = server.decrypt_and_update(&ciphertext).unwrap();
 	let ratchet = server.ratchet_manager(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);

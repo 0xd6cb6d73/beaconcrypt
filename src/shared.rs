@@ -542,10 +542,16 @@ pub trait CryptoProvider {
 	///
 	/// ## Returns
 	/// * `None` if some other error happens.
-	/// * `Vec<u8>` containing the plaintext
-	fn decrypt_signed(&mut self, data: &[u8]) -> Option<Vec<u8>> {
+	/// * `VerifiedMessage` containing the plaintext and authenticated key ID
+	fn decrypt_signed(&mut self, data: &[u8]) -> Option<VerifiedMessage> {
 		match self.verify_signature(data) {
-			Some(verified) => self.decrypt_message(&verified.data, verified.key_id),
+			Some(verified) => {
+				let plaintext = self.decrypt_message(&verified.data, verified.key_id)?;
+				Some(VerifiedMessage {
+					data: plaintext,
+					key_id: verified.key_id,
+				})
+			}
 			None => None,
 		}
 	}
@@ -605,7 +611,7 @@ pub trait CryptoProvider {
 		}
 	}
 
-	/// implementation of the Chan and Rogaway `CTX` scheme: https://eprint.iacr.org/2022/1260.pdf
+	/// implementation of the Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>
 	/// `CT, T = ENC(K, N, A, M)`
 	///
 	/// `T* = H(K, N, A, T)`
