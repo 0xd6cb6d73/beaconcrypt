@@ -96,18 +96,22 @@ func run() error {
 	}
 
 	// Got the ping, maybe there's a task to send now.
-	ping, err := server.DecryptBeaconMessageSigned(sPing)
+	ping, err := server.DecryptAndUpdate(sPing)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Server got ping: %q\n", ping)
+	fmt.Printf("Server got ping: %q\n", ping.Data)
+	fmt.Printf("Key ID: %d\n", ping.KeyID)
+	fmt.Printf("Ratchet state: %x\n", ping.Key)
 
 	// The C2 needs to know what the beacon's ID is so it can encrypt to it.
-	sTask0, err := server.EncryptToBeaconSigned(sRegResp.KeyID, []byte("task contents"))
+	sTask0, err := server.EncryptAndUpdate(sRegResp.KeyID, []byte("task contents"))
 	if err != nil {
 		return err
 	}
-	if err := writeTransport(sTask0); err != nil {
+	fmt.Printf("Key ID: %d\n", sTask0.KeyID)
+	fmt.Printf("Ratchet state: %x\n", sTask0.Key)
+	if err := writeTransport(sTask0.Data); err != nil {
 		return err
 	}
 	bTask0, err := readTransport()
@@ -134,11 +138,13 @@ func run() error {
 		return err
 	}
 
-	task1, err := server.DecryptBeaconMessageSigned(sTask1)
+	task1, err := server.DecryptAndUpdate(sTask1)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Server got response to first task: %q\n", task1)
+	fmt.Printf("Server got response to first task: %q\n", task1.Data)
+	fmt.Printf("Key ID: %d\n", task1.KeyID)
+	fmt.Printf("Ratchet state: %x\n", task1.Key)
 
 	return nil
 }

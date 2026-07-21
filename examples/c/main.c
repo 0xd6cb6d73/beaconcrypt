@@ -2,6 +2,7 @@
 
 #include "bindings.h"
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,6 +34,14 @@ free_registration_response(beaconcrypt_RegistrationResponse *response) {
     free_buffer(&response->response);
     free_buffer(&response->beacon_pk);
     response->key_id = 0;
+  }
+}
+
+static void free_encrypt_state(beaconcrypt_EncryptState *state) {
+  if (state != NULL) {
+    free_buffer(&state->data);
+    free_buffer(&state->key);
+    state->key_id = 0;
   }
 }
 
@@ -107,6 +116,15 @@ static void print_text(const char *label, beaconcrypt_Buffer buffer) {
   printf("%s: %.*s\n", label, (int)buffer.len, (const char *)buffer.ptr);
 }
 
+static void print_state(const beaconcrypt_EncryptState *state) {
+  printf("Key ID: %" PRIu64 "\n", state->key_id);
+  printf("Ratchet state: ");
+  for (size_t i = 0; i < state->key.len; i++) {
+    printf("%02x", state->key.ptr[i]);
+  }
+  putchar('\n');
+}
+
 static int run(void) {
   int result = 1;
   uint8_t server_seed[32];
@@ -120,11 +138,11 @@ static int run(void) {
   beaconcrypt_RegistrationResponse s_reg_resp = {0};
   beaconcrypt_Buffer first_message = {0};
   beaconcrypt_Buffer b_ping = {0};
-  beaconcrypt_Buffer ping = {0};
-  beaconcrypt_Buffer s_task_0 = {0};
+  beaconcrypt_EncryptState ping = {0};
+  beaconcrypt_EncryptState s_task_0 = {0};
   beaconcrypt_Buffer task_0 = {0};
   beaconcrypt_Buffer b_task_1 = {0};
-  beaconcrypt_Buffer task_1 = {0};
+  beaconcrypt_EncryptState task_1 = {0};
 
   if (fill_random(server_seed, sizeof(server_seed)) != 0) {
     fprintf(stderr, "error: failed to generate server seed\n");
@@ -218,27 +236,31 @@ static int run(void) {
   }
 
   /* Got the ping, maybe there's a task to send now. */
-  ping = beaconcrypt_decrypt_beacon_message_signed(server, transport,
-                                                   transport_len);
+  ping = beaconcrypt_decrypt_and_update(server, transport, transport_len);
   free(transport);
   transport = NULL;
   transport_len = 0;
-  if (buffer_is_empty(ping)) {
+  if (buffer_is_empty(ping.data)) {
     fprintf(stderr, "error: failed to decrypt ping\n");
     goto cleanup;
   }
-  print_text("Server got ping", ping);
-  free_buffer(&ping);
+  print_text("Server got ping", ping.data);
+  print_state(&ping);
+  free_encrypt_state(&ping);
 
   /* The C2 needs to know what the beacon's ID is so it can encrypt to it. */
-  s_task_0 = beaconcrypt_encrypt_to_beacon_signed(
+  s_task_0 = beaconcrypt_encrypt_and_update(
       server, s_reg_resp.key_id, (const uint8_t *)"task contents", 13);
-  if (buffer_is_empty(s_task_0) ||
-      write_transport(s_task_0.ptr, s_task_0.len) != 0) {
+  if (buffer_is_empty(s_task_0.data)) {
     fprintf(stderr, "error: failed to send first task\n");
     goto cleanup;
   }
-  free_buffer(&s_task_0);
+  print_state(&s_task_0);
+  if (write_transport(s_task_0.data.ptr, s_task_0.data.len) != 0) {
+    fprintf(stderr, "error: failed to send first task\n");
+    goto cleanup;
+  }
+  free_encrypt_state(&s_task_0);
   if (read_transport(&transport, &transport_len) != 0) {
     fprintf(stderr, "error: failed to read first task transport\n");
     goto cleanup;
@@ -270,16 +292,16 @@ static int run(void) {
     goto cleanup;
   }
 
-  task_1 = beaconcrypt_decrypt_beacon_message_signed(server, transport,
-                                                     transport_len);
+  task_1 = beaconcrypt_decrypt_and_update(server, transport, transport_len);
   free(transport);
   transport = NULL;
   transport_len = 0;
-  if (buffer_is_empty(task_1)) {
+  if (buffer_is_empty(task_1.data)) {
     fprintf(stderr, "error: failed to decrypt task response\n");
     goto cleanup;
   }
-  print_text("Server got response to first task", task_1);
+  print_text("Server got response to first task", task_1.data);
+  print_state(&task_1);
 
   result = 0;
 
@@ -290,11 +312,11 @@ cleanup:
   free_registration_response(&s_reg_resp);
   free_buffer(&first_message);
   free_buffer(&b_ping);
-  free_buffer(&ping);
-  free_buffer(&s_task_0);
+  free_encrypt_state(&ping);
+  free_encrypt_state(&s_task_0);
   free_buffer(&task_0);
   free_buffer(&b_task_1);
-  free_buffer(&task_1);
+  free_encrypt_state(&task_1);
   if (beacon != NULL) {
     beaconcrypt_free(beacon);
   }

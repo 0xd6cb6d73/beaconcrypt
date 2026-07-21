@@ -61,20 +61,20 @@ fn main() {
 	let s_ping = fs::read(&transport).expect("failed to read ping from transport");
 
 	// Got the ping, maybe there's a task to send now.
-	let verified_ping = server
-		.verify_signature(&s_ping)
-		.expect("failed to verify ping signature");
 	let ping = server
-		.decrypt_message(&verified_ping.data, verified_ping.key_id)
+		.decrypt_and_update(&s_ping)
 		.expect("failed to decrypt ping");
-	println!("Server got ping: {}", String::from_utf8_lossy(&ping));
+	println!("Server got ping: {}", String::from_utf8_lossy(&ping.data));
+	println!("Key ID: {}", ping.kid);
+	println!("Ratchet state: {:?}", ping.key.as_slice());
 
 	// The C2 needs to know what the beacon's ID is so it can encrypt to it.
 	let s_task_0 = server
-		.encrypt_message(b"task contents", s_reg_resp.kid)
-		.and_then(|ciphertext| server.sign_message(&ciphertext))
+		.encrypt_and_update(b"task contents", s_reg_resp.kid)
 		.expect("failed to encrypt and sign task");
-	fs::write(&transport, s_task_0).expect("failed to write task to transport");
+	println!("Key ID: {}", s_task_0.kid);
+	println!("Ratchet state: {:?}", s_task_0.key.as_slice());
+	fs::write(&transport, &s_task_0.data).expect("failed to write task to transport");
 	let b_task_0 = fs::read(&transport).expect("failed to read task from transport");
 	let verified_task = beacon
 		.verify_signature(&b_task_0)
@@ -94,16 +94,15 @@ fn main() {
 		.expect("failed to encrypt and sign task response");
 	fs::write(&transport, b_task_1).expect("failed to write task response to transport");
 	let s_task_1 = fs::read(&transport).expect("failed to read task response from transport");
-	let verified_response = server
-		.verify_signature(&s_task_1)
-		.expect("failed to verify task response signature");
 	let task_1 = server
-		.decrypt_message(&verified_response.data, verified_response.key_id)
+		.decrypt_and_update(&s_task_1)
 		.expect("failed to decrypt task response");
 	println!(
 		"Server got response to first task: {}",
-		String::from_utf8_lossy(&task_1)
+		String::from_utf8_lossy(&task_1.data)
 	);
+	println!("Key ID: {}", task_1.kid);
+	println!("Ratchet state: {:?}", task_1.key.as_slice());
 
 	fs::remove_file(transport).expect("failed to remove transport file");
 }
