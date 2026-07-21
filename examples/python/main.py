@@ -34,12 +34,16 @@ def main():
     with open("transport", "rb") as f:
         s_ping = f.read()
     # got the ping, maybe there's a task to send now
-    ping = server.decrypt_beacon_message_signed(s_ping)
-    print(f"Server got ping: {ping}")
+    ping = server.decrypt_and_update(s_ping)
+    print(f"Server got ping: {ping.data()}")
+    print(f"Key ID: {ping.key_id()}")
+    print(f"Ratchet state: {ping.key()}")
     # The C2 needs to know what the beacon's ID is so it can encrypt to it
-    s_task_0 = server.encrypt_to_beacon_signed(b"task contents", s_reg_resp.key_id())
+    s_task_0 = server.encrypt_and_update(b"task contents", s_reg_resp.key_id())
+    print(f"Key ID: {s_task_0.key_id()}")
+    print(f"Ratchet state: {s_task_0.key()}")
     with open("transport", "wb") as f:
-        f.write(s_task_0)
+        f.write(s_task_0.data())
     with open("transport", "rb") as f:
         b_task_0 = f.read()
     task_0 = beacon.decrypt_server_message_signed(b_task_0)
@@ -50,8 +54,10 @@ def main():
         f.write(b_task_1)
     with open("transport", "rb") as f:
         s_task_1 = f.read()
-    task_1 = server.decrypt_beacon_message_signed(s_task_1)
-    print(f"Server got response to first task: {task_1}")
+    task_1 = server.decrypt_and_update(s_task_1)
+    print(f"Server got response to first task: {task_1.data()}")
+    print(f"Key ID: {task_1.key_id()}")
+    print(f"Ratchet state: {task_1.key()}")
 
 
 if __name__ == "__main__":
