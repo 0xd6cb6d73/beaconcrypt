@@ -9,7 +9,7 @@ It is assumed that the server's identity public key is compiled with beacon.
 ## Motivation for dropping certain properties
 The signal protocol, which is to say `PQXDH` + `triple ratchet`, is proven to provide two important properties: Forward Security (`FS`), and Post-Compromise Security (`PCS`). The former means that an attacker cannot learn how to decrypt previous messages by compromising a participant in beaconcrypt at a given point in time. The latter means that an attacker cannot learn how to decrypt future messages by compromising a participant in beaconcrypt at a given point in time. In the context of a C2 protocol, `PCS` seems unnecessary. Indeed, if an attacker can access the current cryptographic state of the application, one of two things has happened. First, they have compromised our beacon. At this point, the attacker can either run whatever they want themselves, or through our beacon and we have failed at preventing the attacker from injecting arbitrary commands. However, the attacker cannot read past messages because of `FS`, so the confidentiality of data that was previously exfiltrated is preserved provided they cannot just access it themselves. In the second case, the attacker has compromised the C2 server. This is game over with any C2 server I'm aware of, as at this point the attacker has access to all the data that was exfiltrated and can task any beacon the server knows about. It is this analysis that leads to `PCS` being dropped from the requirements for this protocol, while `FS` remains desirable. Another point is that `triple ratchet`, the PQ Continuous Key Agreement (`CKA`) mechanism used by signal is quite complicated and requires a lot of state management, which just smells like logic bugs to me.
 
-Additionally, the signal protocol also provides something called `message commitment`. Authenticated encryption with associated data (AEAD) has the property that two plaintexts encrypted under two different keys can generate the same ciphertext and authentication tag. This may allow an attacker to exploit a confused deputy to get one principal to obtain a different message than other participants. This attack is often called `invisible salamanders`. Because beaconcrypt only has two principals, and the attacker needs to know the legitimate key to perform this attack, it is deemed out of scope.
+Additionally, the signal protocol also provides something called `message commitment`. Authenticated encryption with associated data (AEAD) has the property that two plaintexts encrypted under two different keys can generate the same ciphertext and authentication tag. This may allow an attacker to exploit a confused deputy to get one principal to obtain a different message than other participants. This attack is often called `invisible salamanders`. Beaconcrypt provides strong commitment, that is to say it commits to the key, nonce, associated data and message through the use of [Chan and Rogaway's `CTX` scheme](https://eprint.iacr.org/2022/1260). The `CTX` scheme is slightly modified, in that beaconcrypt still transmits the original AEAD tag alonside the `CTX` tag. This is done to remain compatible with the public libsodium interface.
 
 ## Primitives
 | Purpose | Primitive | Bit strength | Rationale |
@@ -33,11 +33,9 @@ The beacon receives the initial message and uses the `phase2` bundle to perform 
 
 # Message encryption
 Every time something is encrypted, it is wrapped in a Cap’n Proto message called a `CryptoFrame`. This embeds minor metadata that allows managing out-of order messages. Every `CryptoFrame` is encrypted under a distinct key, obtained from the principal's `send` KDF chain, which is then ratcheted forward. Nonces are also obtained from the KDF chain, because keys are only used once there is no possible reuse. Keys are deleted once they have been used, this is always immediate for keys on the `send` chains. Keys on the `receive` chains might need to be kept for longer in cases where multiple messages are recieved out of order, in which case the implementation needs to ratchet forward to the required sequence nmuber. All the intermediate keys need to be saved by the implementation, such that they can be used to decrypt the other messages when they are processed. This skipping must be constrained to some gap between the current known counter and the target, to avoid potential unbounded memory consumption. The encryption uses an AEAD scheme, as such, the content of the plaintext is authenticated. However, this scheme doesn't provide the following:
-- Key commitment
-- Message commitment
 - Authenticated `CryptoFrame` metadata
 
-The first two points are deemed to be relatively unnecessary given our usage. Indeed, we do not expect that an attacker will come into possession of a legitimate encryption key (unless our scheme is otherwise catastrophically broken), which makes `invisible salamander`-style attacks unviable. Additionally, it is currently unclear to me what an attacker might want to accomplish with such an attack. While the `CryptoFrame` contains little information, an active attacker might trivially perform a DoS attack by modifiying the sequence number. As such, it is recommended to use the signature layer to ensure the metadata is protected.
+While the `CryptoFrame` contains little information, an active attacker might trivially perform a DoS attack by modifiying the sequence number to trigger excessive ratcheting. As such, it is recommended to use the signature layer to ensure this metadata is protected.
 
 # Protocol message
 ## ProtoGram
@@ -46,8 +44,10 @@ This is intended to be the top level message when the caller opts to use digital
 ## CryptoFrame
 This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../src/schema/cryptoframe.capnp). It carries a key identifier (`seq`), a direction flag `sToB` or `stob` and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
 - Ratchet their `send` keychain forward
-- Use their current `send` key to encrypt the message and place it in `cipherText`
-  -  Abort processing if this fails
+- Use their current `send` key to encrypt the message into a pair of temporary variables `CT` and `T` 
+- Compute the commitment `T*` using `Hash(Key, Nonce, Associated Data, T)`
+  - The hash function is Blake2b with a 512bit output length
+- Append `T` and `T*` to `CT` and place the resulting buffer in `cipherText`
 - Set `seq` to the number of the current key
 - Set `sToB` to true if the writer is a server or to false if the writer is a beacon
 - Delete the current `send` key
@@ -59,7 +59,12 @@ To read a `CryptoFrame`, the reader must:
   -  The reference implementation tolerates ratcheting up to 50 keys forward, this number was pulled out of a hat
   - Abort processing if the difference is too large
 - Ratchet their `recv` keychain forward to `seq`
-- Use the key associated with `seq` to decrypt `cipherText`
+- Extract `CT`, `T` and `T*` from the `cipherText` field
+- Compute the commitment `T*'` using `Hash(Key, Nonce, Associated Data, T)`
+  - The hash function is Blake2b with a 512bit output length
+- Perform a constant-time comparison of `T*` and `T*'`
+  - Abort processing if there is a mismatch
+- Use the key associated with `seq` to decrypt 
 - Delete the `seq` key on their `recv` keychain if decryption was successful
 
 ## InitKex

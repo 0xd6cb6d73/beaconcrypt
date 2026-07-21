@@ -535,7 +535,9 @@ pub trait CryptoProvider {
 								- crypto_aead::chacha20poly1305_ietf::ABYTES
 								..ct_len - COMMITMENT_SIZE],
 						)?;
-						let commited = memcmp(&commitment, &ciphertext[ct_len - COMMITMENT_SIZE..]);
+						if !memcmp(&commitment, &ciphertext[ct_len - COMMITMENT_SIZE..]) {
+							return None;
+						}
 						let plaintext = crypto_aead::chacha20poly1305_ietf::decrypt(
 							&ciphertext[..ct_len - COMMITMENT_SIZE],
 							Some(associated_data.as_slice()),
@@ -543,9 +545,6 @@ pub trait CryptoProvider {
 							key.key(),
 						)
 						.ok()?;
-						if !commited {
-							return None;
-						}
 						self.delete_recv_key(key_seq, kid);
 						Some(plaintext)
 					}
