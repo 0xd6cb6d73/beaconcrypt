@@ -35,6 +35,8 @@
 
 #define beaconcrypt_ED25519_SEED_SIZE 32
 
+#define beaconcrypt_COMMITMENT_SIZE 64
+
 typedef struct beaconcrypt_BeaconCryptPqxdh beaconcrypt_BeaconCryptPqxdh;
 
 typedef struct beaconcrypt_Buffer {

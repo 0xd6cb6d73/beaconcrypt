@@ -7,7 +7,8 @@ use crate::error::EncodingError;
 use crate::pqxdh::{AD_SIZE, BeaconCryptPqxdh};
 use crate::{cryptoframe_capnp, protogram_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
-use libsodium_rs::{crypto_aead, crypto_kdf};
+use libsodium_rs::utils::memcmp;
+use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::slice::from_raw_parts;
@@ -34,6 +35,7 @@ pub const ED25519_SEED_SIZE: usize = 32;
 #[cfg(feature = "server")]
 /// Byte sequence used to test successful keychain derivation during registration. Used only if the server doesn't provide an initial message
 pub const REGISTRATION_WITNESS: &[u8; 1] = &[0xFF; 1];
+pub const COMMITMENT_SIZE: usize = 64;
 
 #[cfg(feature = "pqxdh")]
 pub type Provider = BeaconCryptPqxdh;
@@ -272,11 +274,11 @@ pub struct KeyMaterial {
 }
 
 impl KeyMaterial {
-	fn get_key(&self) -> &AeadKey {
+	fn key(&self) -> &AeadKey {
 		&self.key
 	}
 
-	fn get_nonce(&self) -> &AeadNonce {
+	fn nonce(&self) -> &AeadNonce {
 		&self.nonce
 	}
 }
@@ -523,13 +525,27 @@ pub trait CryptoProvider {
 						let key_seq =
 							self.ratchet_recv_until(SYM_RATCHET_INFO, frame.get_seq(), kid)?;
 						let key = self.recv_key(key_seq, kid)?;
+						let ciphertext = frame.get_cipher_text().ok()?;
+						let ct_len = ciphertext.len();
+						let commitment = self.build_commitment(
+							key,
+							associated_data.as_slice(),
+							&ciphertext[ct_len
+								- COMMITMENT_SIZE
+								- crypto_aead::chacha20poly1305_ietf::ABYTES
+								..ct_len - COMMITMENT_SIZE],
+						)?;
+						let commited = memcmp(&commitment, &ciphertext[ct_len - COMMITMENT_SIZE..]);
 						let plaintext = crypto_aead::chacha20poly1305_ietf::decrypt(
-							frame.get_cipher_text().unwrap(),
+							&ciphertext[..ct_len - COMMITMENT_SIZE],
 							Some(associated_data.as_slice()),
-							key.get_nonce(),
-							key.get_key(),
+							key.nonce(),
+							key.key(),
 						)
 						.ok()?;
+						if !commited {
+							return None;
+						}
 						self.delete_recv_key(key_seq, kid);
 						Some(plaintext)
 					}
@@ -552,15 +568,18 @@ pub trait CryptoProvider {
 		let associated_data = self.associated_data(kid)?;
 		let key_seq = self.ratchet_send(SYM_RATCHET_INFO, kid)?;
 		let key = self.send_key(key_seq, kid)?;
-		let plaintext = crypto_aead::chacha20poly1305_ietf::encrypt(
+		let plaintext = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
 			bytes,
 			Some(associated_data.as_slice()),
-			key.get_nonce(),
-			key.get_key(),
+			key.nonce(),
+			key.key(),
 		);
-		self.delete_send_key(key_seq, kid);
 		match plaintext {
-			Ok(plaintext) => {
+			Ok((mut plaintext, mut tag)) => {
+				let mut commitment =
+					self.build_commitment(key, &associated_data, tag.as_slice())?;
+				plaintext.append(&mut tag);
+				plaintext.append(&mut commitment);
 				let mut t_builder =
 					TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
 				let mut builder: cryptoframe_capnp::crypto_frame::Builder<'_> =
@@ -570,10 +589,32 @@ pub trait CryptoProvider {
 				builder.set_seq(key_seq);
 				let mut buffer = vec![];
 				capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).unwrap();
+				self.delete_send_key(key_seq, kid);
 				Some(buffer)
 			}
-			Err(_) => None,
+			Err(_) => {
+				self.delete_send_key(key_seq, kid);
+				None
+			}
 		}
+	}
+	/// implementation of the Chan and Rogaway `CTX` scheme: https://eprint.iacr.org/2022/1260.pdf
+	/// `CT, T = ENC(K, N, A, M)`
+	///
+	/// `T* = H(K, N, A, T)`
+	///
+	/// the paper omits the original tag from the output. It is included here so we can keep using the libsodium interface
+	///
+	/// `CT* = CT || T || T*`
+	fn build_commitment(&self, secret: &KeyMaterial, ad: &[u8], tag: &[u8]) -> Option<Vec<u8>> {
+		let key = secret.key().as_bytes();
+		let nonce = secret.nonce().as_bytes();
+		let mut input = vec![];
+		input.extend_from_slice(key);
+		input.extend_from_slice(nonce);
+		input.extend_from_slice(ad);
+		input.extend_from_slice(tag);
+		crypto_generichash::generichash(input.as_slice(), None, COMMITMENT_SIZE).ok()
 	}
 	fn sign_message(&self, data: &[u8]) -> Option<Vec<u8>>;
 	fn verify_signature(&self, data: &[u8]) -> Option<VerifiedMessage>;
@@ -767,11 +808,8 @@ mod tests {
 	}
 
 	fn assert_key_material_eq(left: &KeyMaterial, right: &KeyMaterial) {
-		assert_eq!(key_bytes(left.get_key()), key_bytes(right.get_key()));
-		assert_eq!(
-			nonce_bytes(left.get_nonce()),
-			nonce_bytes(right.get_nonce())
-		);
+		assert_eq!(key_bytes(left.key()), key_bytes(right.key()));
+		assert_eq!(nonce_bytes(left.nonce()), nonce_bytes(right.nonce()));
 	}
 
 	#[test]
@@ -931,8 +969,8 @@ mod tests {
 		let second = ratchet.ratchet_send(SYM_RATCHET_INFO).unwrap();
 		assert_eq!((first, second), (1, 2));
 		assert_ne!(
-			key_bytes(ratchet.send_key(first).unwrap().get_key()),
-			key_bytes(ratchet.send_key(second).unwrap().get_key()),
+			key_bytes(ratchet.send_key(first).unwrap().key()),
+			key_bytes(ratchet.send_key(second).unwrap().key()),
 		);
 
 		ratchet.delete_send_key(first);
