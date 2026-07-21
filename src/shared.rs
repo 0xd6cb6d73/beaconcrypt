@@ -627,6 +627,7 @@ pub trait CryptoProvider {
 		input.extend_from_slice(nonce);
 		input.extend_from_slice(ad);
 		input.extend_from_slice(tag);
+		input.zeroize();
 		crypto_generichash::generichash(input.as_slice(), None, COMMITMENT_SIZE).ok()
 	}
 	fn sign_message(&self, data: &[u8]) -> Option<Vec<u8>>;

@@ -21,6 +21,7 @@ use libsodium_rs::{
 use std::collections::HashMap;
 use std::mem::swap;
 use std::vec;
+use zeroize::Zeroize;
 
 // https://signal.org/docs/specifications/pqxdh/#pqxdh-parameters: `info` An ASCII string identifying the application with a minimum length of 8 bytes
 pub const PQXDH_INFO: &[u8; 46] = b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768";
@@ -321,6 +322,14 @@ impl BeaconCryptPqxdh {
 			self.onetime_key = None
 		}
 	}
+
+	pub fn delete_pq_keypair(&mut self) {
+		if let Some(pq_key) = &mut self.pq_key {
+			let mut keypair = crypto_kem::mlkem768::KeyPair::from_seed(&[0u8; 64]).unwrap();
+			swap(pq_key, &mut keypair);
+			self.pq_key = None;
+		}
+	}
 }
 
 #[cfg(feature = "beacon")]
@@ -390,6 +399,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 				.into();
 		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, shared_secret).ok()?;
 		self.delete_onetime_keypair();
+		self.delete_pq_keypair();
 
 		self.set_identity_kid(response.get_key_id());
 		let id = self.identity_pk().clone();
@@ -562,6 +572,7 @@ pub fn derive_root_key(
 	ikm.extend_from_slice(shared_secret.as_bytes());
 
 	let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm)?;
+	ikm.zeroize();
 	crypto_kdf::hkdf::sha512::expand(KEX_KDF_OUT_LEN, Some(PQXDH_INFO), &prk)
 }
 
