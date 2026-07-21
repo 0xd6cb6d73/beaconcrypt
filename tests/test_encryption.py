@@ -207,7 +207,7 @@ def test_server_encrypt_and_update_returns_ratchet_state():
     assert update is not None
     assert update.key_id() == beacon_kid
     assert len(update.key()) == 32
-    assert beacon.decrypt_server_message(update.data()) == message
+    assert beacon.decrypt_server_message_signed(update.data()) == message
 
 
 def test_server_decrypt_and_update_returns_ratchet_state():
@@ -216,8 +216,8 @@ def test_server_decrypt_and_update_returns_ratchet_state():
     message = b"beacon to server with updated state"
 
     beacon_kid = register_beacon(server, beacon)
-    ciphertext = beacon.encrypt_message_to_server(message)
-    update = server.decrypt_and_update(ciphertext, beacon_kid)
+    ciphertext = beacon.encrypt_to_server_signed(message)
+    update = server.decrypt_and_update(ciphertext)
 
     assert update is not None
     assert update.key_id() == beacon_kid

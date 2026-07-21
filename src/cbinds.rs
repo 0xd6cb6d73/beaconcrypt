@@ -254,7 +254,7 @@ pub extern "C" fn beaconcrypt_decrypt_beacon_message_signed(
 	let provider = unsafe { &mut *handle };
 	provider
 		.decrypt_signed(data)
-		.map(into_buffer)
+		.map(|verified| into_buffer(verified.data))
 		.unwrap_or_else(empty_buffer)
 }
 
@@ -281,7 +281,6 @@ pub extern "C" fn beaconcrypt_encrypt_and_update(
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_decrypt_and_update(
 	handle: *mut BeaconCryptPqxdh,
-	key_id: u64,
 	ptr: *const u8,
 	len: usize,
 ) -> EncryptState {
@@ -293,7 +292,7 @@ pub extern "C" fn beaconcrypt_decrypt_and_update(
 	};
 	let provider = unsafe { &mut *handle };
 	provider
-		.decrypt_and_update(data, key_id)
+		.decrypt_and_update(data)
 		.map(into_encrypt_state)
 		.unwrap_or_else(empty_encrypt_state)
 }
@@ -359,7 +358,7 @@ pub extern "C" fn beaconcrypt_decrypt_server_message_signed(
 	let provider = unsafe { &mut *handle };
 	provider
 		.decrypt_signed(data)
-		.map(into_buffer)
+		.map(|verified| into_buffer(verified.data))
 		.unwrap_or_else(empty_buffer)
 }
 

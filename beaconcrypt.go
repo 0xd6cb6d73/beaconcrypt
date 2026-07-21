@@ -41,7 +41,7 @@ beaconcrypt_buffer beaconcrypt_encrypt_to_beacon_signed(void *handle, uint64_t k
 beaconcrypt_buffer beaconcrypt_decrypt_beacon_message(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_decrypt_beacon_message_signed(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_encrypt_state beaconcrypt_encrypt_and_update(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_encrypt_state beaconcrypt_decrypt_and_update(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
+beaconcrypt_encrypt_state beaconcrypt_decrypt_and_update(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_encrypt_to_server(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_encrypt_to_server_signed(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_decrypt_server_message(void *handle, const uint8_t *ptr, uintptr_t len);
@@ -237,12 +237,12 @@ func (s *Server) EncryptAndUpdate(keyID uint64, plaintext []byte) (*EncryptState
 	})
 }
 
-func (s *Server) DecryptAndUpdate(keyID uint64, ciphertext []byte) (*EncryptState, error) {
+func (s *Server) DecryptAndUpdate(ciphertext []byte) (*EncryptState, error) {
 	if s == nil || s.handle == nil {
 		return nil, ErrClosed
 	}
 	return callStateUpdate(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_encrypt_state {
-		return C.beaconcrypt_decrypt_and_update(s.handle, C.uint64_t(keyID), ptr, len)
+		return C.beaconcrypt_decrypt_and_update(s.handle, ptr, len)
 	})
 }
 

@@ -541,7 +541,7 @@ func TestServerEncryptAndUpdateReturnsRatchetState(t *testing.T) {
 	if len(update.Key) != 32 {
 		t.Fatalf("state key length mismatch: got %d want 32", len(update.Key))
 	}
-	plaintext, err := beacon.DecryptServerMessage(update.Data)
+	plaintext, err := beacon.DecryptServerMessageSigned(update.Data)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -560,11 +560,11 @@ func TestServerDecryptAndUpdateReturnsRatchetState(t *testing.T) {
 	registration := registerBeacon(t, server, beacon)
 	message := []byte("beacon to server with updated state")
 
-	ciphertext, err := beacon.EncryptToServer(message)
+	ciphertext, err := beacon.EncryptToServerSigned(message)
 	if err != nil {
 		t.Fatal(err)
 	}
-	update, err := server.DecryptAndUpdate(registration.KeyID, ciphertext)
+	update, err := server.DecryptAndUpdate(ciphertext)
 	if err != nil {
 		t.Fatal(err)
 	}

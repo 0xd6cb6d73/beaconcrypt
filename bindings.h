@@ -114,7 +114,6 @@ struct beaconcrypt_EncryptState beaconcrypt_encrypt_and_update(struct beaconcryp
                                                                uintptr_t len);
 
 struct beaconcrypt_EncryptState beaconcrypt_decrypt_and_update(struct beaconcrypt_BeaconCryptPqxdh *handle,
-                                                               uint64_t key_id,
                                                                const uint8_t *ptr,
                                                                uintptr_t len);
 
