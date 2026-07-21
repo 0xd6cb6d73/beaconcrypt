@@ -509,6 +509,9 @@ pub trait CryptoProvider {
 						let key = self.recv_key(key_seq, kid)?;
 						let ciphertext = frame.get_cipher_text().ok()?;
 						let ct_len = ciphertext.len();
+						if ct_len <= COMMITMENT_SIZE + crypto_aead::chacha20poly1305_ietf::ABYTES {
+							return None;
+						}
 						let commitment = self.build_commitment(
 							key,
 							associated_data.as_slice(),
