@@ -12,7 +12,7 @@ use crate::{beacon::ProviderBeacon, shared::encode_kem};
 #[cfg(feature = "server")]
 use crate::{
 	server::{ProviderServer, RegResponse, RegistrationOutput},
-	shared::{INITIALIZED, Provider, REGISTRATION_WITNESS, STATE, decode_kem, decode_sign},
+	shared::{REGISTRATION_WITNESS, decode_kem, decode_sign},
 };
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{
@@ -21,8 +21,6 @@ use libsodium_rs::{
 use std::collections::HashMap;
 use std::mem::swap;
 use std::vec;
-#[cfg(feature = "server")]
-use std::{ptr::slice_from_raw_parts, sync::atomic::Ordering};
 
 // https://signal.org/docs/specifications/pqxdh/#pqxdh-parameters: `info` An ASCII string identifying the application with a minimum length of 8 bytes
 pub const PQXDH_INFO: &[u8; 46] = b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768";
@@ -584,25 +582,6 @@ pub fn build_associated_data(
 	sym_proto.copy_from_slice(SYM_RATCHET_INFO);
 	buffer.extend_from_slice(&sym_proto);
 	*buffer.as_array::<AD_SIZE>().unwrap()
-}
-
-/// Initialize a server with existing keys from seeds. This MUST only be called by a server
-/// # Safety
-/// This function is safe to call multiple times.
-/// ## Arguments
-///
-/// * `server_kid` - The ID of the server's identity key for the campaign
-/// * `id_seed` - 32 byte Ed25519 seed for the server's identity key
-#[cfg(feature = "server")]
-#[unsafe(no_mangle)]
-pub extern "C" fn init_server_from_seeds(server_kid: u64, id_seed: *const u8) {
-	if !INITIALIZED.swap(true, Ordering::AcqRel) {
-		let mut state = STATE.lock().unwrap();
-		let id_seed_slice = slice_from_raw_parts(id_seed, ED25519_SEED_SIZE);
-		let mut id_seed_vec = vec![0u8; crypto_sign::PUBLICKEYBYTES];
-		id_seed_vec.copy_from_slice(unsafe { id_seed_slice.as_ref().unwrap() });
-		*state = Provider::new(false, server_kid, None, Some(&id_seed_vec));
-	}
 }
 
 #[cfg(all(test, feature = "beacon", feature = "server"))]

@@ -4,17 +4,14 @@
 use crate::error::DecodingError;
 use crate::error::EncodingError;
 #[cfg(feature = "pqxdh")]
-use crate::pqxdh::{AD_SIZE, BeaconCryptPqxdh};
+use crate::pqxdh::AD_SIZE;
 use crate::{cryptoframe_capnp, protogram_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::utils::memcmp;
 use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
 use std::collections::HashMap;
 use std::marker::PhantomData;
-use std::slice::from_raw_parts;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{LazyLock, Mutex};
-use std::{mem, vec};
+use std::vec;
 use zeroize::{Zeroize, Zeroizing};
 
 pub const KEX_KDF_OUT_LEN: usize = 32usize;
@@ -36,12 +33,6 @@ pub const ED25519_SEED_SIZE: usize = 32;
 /// Byte sequence used to test successful keychain derivation during registration. Used only if the server doesn't provide an initial message
 pub const REGISTRATION_WITNESS: &[u8; 1] = &[0xFF; 1];
 pub const COMMITMENT_SIZE: usize = 64;
-
-#[cfg(feature = "pqxdh")]
-pub type Provider = BeaconCryptPqxdh;
-
-pub static STATE: LazyLock<Mutex<Provider>> = LazyLock::new(|| Mutex::new(Provider::default()));
-pub static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 #[repr(u8)]
 #[derive(PartialEq)]
@@ -254,19 +245,6 @@ pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>
 pub type KdfState = SecretArr<KDF_STATE_SIZE, systems::Hkdf, roles::ChainKey>;
 #[cfg(feature = "server")]
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
-
-/// This function is safe to call multiple times
-/// ## Arguments
-///
-/// * `is_beacon` - Whether the current instance is a beacon
-/// * `server_kid` - The ID of the server's identity key for the campaign
-#[unsafe(no_mangle)]
-pub extern "C" fn init(is_beacon: bool, server_kid: u64) {
-	if !INITIALIZED.swap(true, Ordering::AcqRel) {
-		let mut state = STATE.lock().unwrap();
-		*state = Provider::new(is_beacon, server_kid, None, None);
-	}
-}
 
 pub struct KeyMaterial {
 	key: AeadKey,
@@ -737,90 +715,6 @@ pub fn create_protogram_reader(
 			}
 		}
 		Err(_) => None,
-	}
-}
-
-/// # Safety
-/// * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
-/// * The library will overwrite all the `out` parameters
-/// * It is not safe to read the `out` parameters if the function doesn't return `0`
-///
-/// ## Arguments
-/// * `bytes` - A serialized `protogram_capnp::proto_gram`
-/// * `bytes_len` - The size of the `bytes` buffer
-/// * `out` - A caller-managed pointer that will contain the results in case of success. Call `free_vec` to free it once you're done
-/// * `out_len` - The actual size of the `out` buffer
-/// * `out_capa` - The size of the underlying allocation for the `out` buffer
-///
-/// ## Returns
-/// `0` on success, negative values on error
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn verify_signature(
-	bytes: *const u8,
-	bytes_len: usize,
-	mut _out: *mut *mut u8,
-	out_len: *mut usize,
-	out_capa: *mut usize,
-	key_id: *mut u64,
-) -> i32 {
-	if bytes.is_null() || bytes_len == 0 {
-		return -1;
-	}
-	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
-	let state = STATE.lock().unwrap();
-	match state.verify_signature(data_slice) {
-		Some(mut verified) => {
-			unsafe {
-				*_out = verified.data.as_mut_ptr();
-				*out_len = verified.data.len();
-				*out_capa = verified.data.capacity();
-				*key_id = verified.key_id;
-				mem::forget(verified);
-			};
-			0
-		}
-		None => -1,
-	}
-}
-
-/// # Safety
-/// * `bytes` should NOT be null and should point to a byte buffer of `bytes_len` length, in bytes.
-/// * The library will overwrite all the `out` parameters
-/// * It is not safe to read the `out` parameters if the function doesn't return `0`
-///
-/// ## Arguments
-/// * `bytes` - Buffer to sign, probably should be a `cryptoframe_capnp::crypto_frame`
-/// * `bytes_len` - The size of the `bytes` buffer
-/// * `out` - A caller-managed pointer that will contain the results in case of success. Call `free_vec` to free it once you're done
-/// * `out_len` - The actual size of the `out` buffer
-/// * `out_capa` - The size of the underlying allocation for the `out` buffer
-///
-/// ## Returns
-/// `0` on success, negative values on error
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn sign_message(
-	bytes: *const u8,
-	bytes_len: usize,
-	mut _out: *mut *mut u8,
-	out_len: *mut usize,
-	out_capa: *mut usize,
-) -> i32 {
-	if bytes.is_null() || bytes_len == 0 {
-		return -1;
-	}
-	let data_slice = unsafe { from_raw_parts(bytes, bytes_len) };
-	let state = STATE.lock().unwrap();
-	match state.sign_message(data_slice) {
-		Some(mut signed) => {
-			unsafe {
-				*_out = signed.as_mut_ptr();
-				*out_len = signed.len();
-				*out_capa = signed.capacity();
-				mem::forget(signed);
-			};
-			0
-		}
-		None => -1,
 	}
 }
 

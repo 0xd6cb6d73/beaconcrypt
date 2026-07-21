@@ -48,7 +48,7 @@ I don't use rust a lot, so the code is probably fairly naive. It provides both a
 
 The reference implementation expects that all beacons are compiled with the server's public key, and that beaconcrypt is initialized with it.
 
-The server is currently not very usable as it doesn't support saving the state of any individual beacon. This means that if your server goes down, you will not be able to communicate with any previously-registered beacons anymore. The server doesn't support being initialized with an Ed25519 seed (32 random bytes). Users wishing to use the server in practical cases should use this interface to ensure their server keeps its identity across reboots.
+The server is currently not very usable as it doesn't support saving the state of any individual beacon. This means that if your server goes down, you will not be able to communicate with any previously-registered beacons anymore. The server does support being initialized with an Ed25519 seed (32 random bytes). Users wishing to use the server in practical cases should use this interface to ensure their server keeps its identity across reboots.
 
 ## Building
 You will need [Capn'Proto](https://capnproto.org/install.html) (just the binaries) and a recent version of rust for every build.
@@ -67,15 +67,13 @@ uv run pytest tests
 The `-a` flag is required after rebuilding the Rust static library because Go's build cache does not detect changes to libraries linked through cgo. `-count=1` also prevents reuse of a cached successful test result.
 
 ## Usage
-The reference implementation is a library that can currently be used either from rust, through C FFI, go and python bindings. The C interface is currently not tested.
+The reference implementation is a library that can currently be used either from rust, through C FFI, go and python bindings. The C interface is currently only tested through the go bindings.
 
 From Rust, usage is mostly just instantiating `CryptoProvider` objects. See the [example](examples/rust/main.rs) for usage.
 
 From python, you can just use the wheels published to pypi, see the [example](examples/python/main.py) for usage.
 
-There are two C interfaces at the moment. When using the legacy interface (without the `beaconcrypt` prefix) the library creates a global `CryptoProvider` object, whose methods are wrapped by the various functions in the interface. When using this interace, the caller is responsible for the buffers passed into the library. Assume the library does not do any copies, except for initialization functions, and never frees the buffers it is passed.
-
-Using the [newer](src/cbinds.rs) C interface which emulate the class interface, the caller is responsible for providing a valid state object to every function. See the [example](examples/c/main.c) for usage.
+The [C interface](src/cbinds.rs) emulates the class interface, the caller is responsible for providing a valid state object to every function. See the [example](examples/c/main.c) for usage.
 
 Go is unfortunately the worst off as the bindings use cgo and therefore building your binary requires being able to link to a version of the library built with the `gobinds` feature. See the [example](examples/go/main.go) for usage.
 
