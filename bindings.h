@@ -51,6 +51,12 @@ typedef struct beaconcrypt_RegistrationResponse {
   uint64_t key_id;
 } beaconcrypt_RegistrationResponse;
 
+typedef struct beaconcrypt_EncryptState {
+  struct beaconcrypt_Buffer data;
+  struct beaconcrypt_Buffer key;
+  uint64_t key_id;
+} beaconcrypt_EncryptState;
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -101,6 +107,16 @@ struct beaconcrypt_Buffer beaconcrypt_decrypt_beacon_message(struct beaconcrypt_
 struct beaconcrypt_Buffer beaconcrypt_decrypt_beacon_message_signed(struct beaconcrypt_BeaconCryptPqxdh *handle,
                                                                     const uint8_t *ptr,
                                                                     uintptr_t len);
+
+struct beaconcrypt_EncryptState beaconcrypt_encrypt_and_update(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                               uint64_t key_id,
+                                                               const uint8_t *ptr,
+                                                               uintptr_t len);
+
+struct beaconcrypt_EncryptState beaconcrypt_decrypt_and_update(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                               uint64_t key_id,
+                                                               const uint8_t *ptr,
+                                                               uintptr_t len);
 
 struct beaconcrypt_Buffer beaconcrypt_encrypt_to_server(struct beaconcrypt_BeaconCryptPqxdh *handle,
                                                         const uint8_t *ptr,

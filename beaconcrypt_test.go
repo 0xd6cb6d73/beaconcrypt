@@ -521,6 +521,64 @@ func TestBeaconEncryptsToServerSigned(t *testing.T) {
 	}
 }
 
+func TestServerEncryptAndUpdateReturnsRatchetState(t *testing.T) {
+	server := newServer(t)
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	beacon := newBeacon(t, serverPK)
+	registration := registerBeacon(t, server, beacon)
+	message := []byte("server to beacon with updated state")
+
+	update, err := server.EncryptAndUpdate(registration.KeyID, message)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if update.KeyID != registration.KeyID {
+		t.Fatalf("state key ID mismatch: got %d want %d", update.KeyID, registration.KeyID)
+	}
+	if len(update.Key) != 32 {
+		t.Fatalf("state key length mismatch: got %d want 32", len(update.Key))
+	}
+	plaintext, err := beacon.DecryptServerMessage(update.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(plaintext, message) {
+		t.Fatalf("server-to-beacon decrypt mismatch: got %q want %q", plaintext, message)
+	}
+}
+
+func TestServerDecryptAndUpdateReturnsRatchetState(t *testing.T) {
+	server := newServer(t)
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	beacon := newBeacon(t, serverPK)
+	registration := registerBeacon(t, server, beacon)
+	message := []byte("beacon to server with updated state")
+
+	ciphertext, err := beacon.EncryptToServer(message)
+	if err != nil {
+		t.Fatal(err)
+	}
+	update, err := server.DecryptAndUpdate(registration.KeyID, ciphertext)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if update.KeyID != registration.KeyID {
+		t.Fatalf("state key ID mismatch: got %d want %d", update.KeyID, registration.KeyID)
+	}
+	if len(update.Key) != 32 {
+		t.Fatalf("state key length mismatch: got %d want 32", len(update.Key))
+	}
+	if !bytes.Equal(update.Data, message) {
+		t.Fatalf("beacon-to-server decrypt mismatch: got %q want %q", update.Data, message)
+	}
+}
+
 func TestSignedBeaconMessageRejectsTampering(t *testing.T) {
 	server := newServer(t)
 	serverPK, err := server.IdentityPK()

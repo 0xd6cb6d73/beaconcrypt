@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 
+use crate::server::EncryptState as ProviderEncryptState;
 use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer};
 use std::mem;
 use std::slice;
@@ -15,6 +16,13 @@ pub struct Buffer {
 pub struct RegistrationResponse {
 	pub response: Buffer,
 	pub beacon_pk: Buffer,
+	pub key_id: u64,
+}
+
+#[repr(C)]
+pub struct EncryptState {
+	pub data: Buffer,
+	pub key: Buffer,
 	pub key_id: u64,
 }
 
@@ -34,6 +42,22 @@ fn into_buffer(mut data: Vec<u8>) -> Buffer {
 	};
 	mem::forget(data);
 	buffer
+}
+
+fn empty_encrypt_state() -> EncryptState {
+	EncryptState {
+		data: empty_buffer(),
+		key: empty_buffer(),
+		key_id: 0,
+	}
+}
+
+fn into_encrypt_state(state: ProviderEncryptState) -> EncryptState {
+	EncryptState {
+		data: into_buffer(state.data),
+		key: into_buffer(state.key.as_slice().to_vec()),
+		key_id: state.kid,
+	}
 }
 
 unsafe fn input<'a>(ptr: *const u8, len: usize) -> Option<&'a [u8]> {
@@ -199,13 +223,10 @@ pub extern "C" fn beaconcrypt_encrypt_to_beacon_signed(
 		return empty_buffer();
 	};
 	let provider = unsafe { &mut *handle };
-	match provider.encrypt_message(data, key_id) {
-		Some(ciphertext) => provider
-			.sign_message(ciphertext.as_slice())
-			.map(into_buffer)
-			.unwrap_or_else(empty_buffer),
-		None => empty_buffer(),
-	}
+	provider
+		.encrypt_and_sign(data, key_id)
+		.map(into_buffer)
+		.unwrap_or_else(empty_buffer)
 }
 
 #[unsafe(no_mangle)]
@@ -231,13 +252,50 @@ pub extern "C" fn beaconcrypt_decrypt_beacon_message_signed(
 		return empty_buffer();
 	};
 	let provider = unsafe { &mut *handle };
-	match provider.verify_signature(data) {
-		Some(verified) => provider
-			.decrypt_message(&verified.data, verified.key_id)
-			.map(into_buffer)
-			.unwrap_or_else(empty_buffer),
-		None => empty_buffer(),
+	provider
+		.decrypt_signed(data)
+		.map(into_buffer)
+		.unwrap_or_else(empty_buffer)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_encrypt_and_update(
+	handle: *mut BeaconCryptPqxdh,
+	key_id: u64,
+	ptr: *const u8,
+	len: usize,
+) -> EncryptState {
+	if handle.is_null() {
+		return empty_encrypt_state();
 	}
+	let Some(data) = (unsafe { input(ptr, len) }) else {
+		return empty_encrypt_state();
+	};
+	let provider = unsafe { &mut *handle };
+	provider
+		.encrypt_and_update(data, key_id)
+		.map(into_encrypt_state)
+		.unwrap_or_else(empty_encrypt_state)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_decrypt_and_update(
+	handle: *mut BeaconCryptPqxdh,
+	key_id: u64,
+	ptr: *const u8,
+	len: usize,
+) -> EncryptState {
+	if handle.is_null() {
+		return empty_encrypt_state();
+	}
+	let Some(data) = (unsafe { input(ptr, len) }) else {
+		return empty_encrypt_state();
+	};
+	let provider = unsafe { &mut *handle };
+	provider
+		.decrypt_and_update(data, key_id)
+		.map(into_encrypt_state)
+		.unwrap_or_else(empty_encrypt_state)
 }
 
 #[unsafe(no_mangle)]
@@ -267,13 +325,10 @@ pub extern "C" fn beaconcrypt_encrypt_to_server_signed(
 	};
 	let provider = unsafe { &mut *handle };
 	let srv_kid = provider.server_kid();
-	match provider.encrypt_message(data, srv_kid) {
-		Some(ciphertext) => provider
-			.sign_message(ciphertext.as_slice())
-			.map(into_buffer)
-			.unwrap_or_else(empty_buffer),
-		None => empty_buffer(),
-	}
+	provider
+		.encrypt_and_sign(data, srv_kid)
+		.map(into_buffer)
+		.unwrap_or_else(empty_buffer)
 }
 
 #[unsafe(no_mangle)]
@@ -302,13 +357,10 @@ pub extern "C" fn beaconcrypt_decrypt_server_message_signed(
 		return empty_buffer();
 	};
 	let provider = unsafe { &mut *handle };
-	match provider.verify_signature(data) {
-		Some(verified) => provider
-			.decrypt_message(&verified.data, provider.server_kid())
-			.map(into_buffer)
-			.unwrap_or_else(empty_buffer),
-		None => empty_buffer(),
-	}
+	provider
+		.decrypt_signed(data)
+		.map(into_buffer)
+		.unwrap_or_else(empty_buffer)
 }
 
 fn encrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize, key_id: u64) -> Buffer {

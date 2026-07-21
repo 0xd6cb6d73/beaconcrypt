@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 
+use crate::server::EncryptState;
 use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer, RegResponse};
 use pyo3::prelude::*;
 
@@ -21,6 +22,32 @@ impl RegResponsePy {
 
 impl From<RegResponse> for RegResponsePy {
 	fn from(value: RegResponse) -> Self {
+		Self { _0: value }
+	}
+}
+
+#[pyclass(name = "EncryptState")]
+pub struct EncryptStatePy {
+	_0: EncryptState,
+}
+
+#[pymethods]
+impl EncryptStatePy {
+	pub fn data(&self) -> &Vec<u8> {
+		&self._0.data
+	}
+
+	pub fn key(&self) -> &[u8] {
+		self._0.key.as_slice()
+	}
+
+	pub fn key_id(&self) -> u64 {
+		self._0.kid
+	}
+}
+
+impl From<EncryptState> for EncryptStatePy {
+	fn from(value: EncryptState) -> Self {
 		Self { _0: value }
 	}
 }
@@ -58,10 +85,7 @@ impl Server {
 	}
 
 	fn decrypt_beacon_message_signed(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
-		match self._0.verify_signature(&data) {
-			Some(verified) => self.decrypt_beacon_message(verified.data, verified.key_id),
-			None => None,
-		}
+		self._0.decrypt_signed(&data)
 	}
 
 	fn encrypt_to_beacon(&mut self, data: Vec<u8>, kid: u64) -> Option<Vec<u8>> {
@@ -69,10 +93,19 @@ impl Server {
 	}
 
 	fn encrypt_to_beacon_signed(&mut self, data: Vec<u8>, kid: u64) -> Option<Vec<u8>> {
-		match self.encrypt_to_beacon(data, kid) {
-			Some(ciphertext) => self._0.sign_message(ciphertext.as_slice()),
-			None => None,
-		}
+		self._0.encrypt_and_sign(&data, kid)
+	}
+
+	fn encrypt_and_update(&mut self, data: Vec<u8>, kid: u64) -> Option<EncryptStatePy> {
+		self._0
+			.encrypt_and_update(&data, kid)
+			.map(|state| state.into())
+	}
+
+	fn decrypt_and_update(&mut self, data: Vec<u8>, kid: u64) -> Option<EncryptStatePy> {
+		self._0
+			.decrypt_and_update(&data, kid)
+			.map(|state| state.into())
 	}
 
 	fn id_pk(&self) -> &[u8] {
@@ -110,10 +143,7 @@ impl Beacon {
 	}
 
 	fn decrypt_server_message_signed(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
-		match self._0.verify_signature(&data) {
-			Some(verified) => self.decrypt_server_message(verified.data),
-			None => None,
-		}
+		self._0.decrypt_signed(&data)
 	}
 
 	fn encrypt_message_to_server(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
@@ -122,9 +152,7 @@ impl Beacon {
 	}
 
 	fn encrypt_to_server_signed(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
-		match self.encrypt_message_to_server(data) {
-			Some(ciphertext) => self._0.sign_message(ciphertext.as_slice()),
-			None => None,
-		}
+		let srv_seq = self._0.server_kid();
+		self._0.encrypt_and_sign(&data, srv_seq)
 	}
 }

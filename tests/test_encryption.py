@@ -196,6 +196,35 @@ def test_beacon_encrypts_to_server_signed():
     assert plaintext == message
 
 
+def test_server_encrypt_and_update_returns_ratchet_state():
+    server = BeaconCryptServer(0, None)
+    beacon = BeaconCryptBeacon(0, server.id_pk())
+    message = b"server to beacon with updated state"
+
+    beacon_kid = register_beacon(server, beacon)
+    update = server.encrypt_and_update(message, beacon_kid)
+
+    assert update is not None
+    assert update.key_id() == beacon_kid
+    assert len(update.key()) == 32
+    assert beacon.decrypt_server_message(update.data()) == message
+
+
+def test_server_decrypt_and_update_returns_ratchet_state():
+    server = BeaconCryptServer(0, None)
+    beacon = BeaconCryptBeacon(0, server.id_pk())
+    message = b"beacon to server with updated state"
+
+    beacon_kid = register_beacon(server, beacon)
+    ciphertext = beacon.encrypt_message_to_server(message)
+    update = server.decrypt_and_update(ciphertext, beacon_kid)
+
+    assert update is not None
+    assert update.key_id() == beacon_kid
+    assert len(update.key()) == 32
+    assert update.data() == message
+
+
 def test_signed_beacon_message_rejects_tampering():
     server = BeaconCryptServer(0, None)
     server_pk = server.id_pk()

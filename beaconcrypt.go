@@ -21,6 +21,12 @@ typedef struct {
 	uint64_t key_id;
 } beaconcrypt_registration_response;
 
+typedef struct {
+	beaconcrypt_buffer data;
+	beaconcrypt_buffer key;
+	uint64_t key_id;
+} beaconcrypt_encrypt_state;
+
 void beaconcrypt_free_buffer(beaconcrypt_buffer buffer);
 void *beaconcrypt_server_new(uint64_t server_kid);
 void *beaconcrypt_server_new_from_seed(uint64_t server_kid, const uint8_t *seed_ptr, uintptr_t seed_len);
@@ -34,6 +40,8 @@ beaconcrypt_buffer beaconcrypt_encrypt_to_beacon(void *handle, uint64_t key_id, 
 beaconcrypt_buffer beaconcrypt_encrypt_to_beacon_signed(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_decrypt_beacon_message(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_decrypt_beacon_message_signed(void *handle, const uint8_t *ptr, uintptr_t len);
+beaconcrypt_encrypt_state beaconcrypt_encrypt_and_update(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
+beaconcrypt_encrypt_state beaconcrypt_decrypt_and_update(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_encrypt_to_server(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_encrypt_to_server_signed(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_decrypt_server_message(void *handle, const uint8_t *ptr, uintptr_t len);
@@ -66,6 +74,12 @@ type RegistrationResponse struct {
 	Serialized []byte
 	BeaconPK   []byte
 	KeyID      uint64
+}
+
+type EncryptState struct {
+	Data  []byte
+	Key   []byte
+	KeyID uint64
 }
 
 func NewServer(serverKID uint64) (*Server, error) {
@@ -214,6 +228,24 @@ func (s *Server) DecryptBeaconMessageSigned(ciphertext []byte) ([]byte, error) {
 	})
 }
 
+func (s *Server) EncryptAndUpdate(keyID uint64, plaintext []byte) (*EncryptState, error) {
+	if s == nil || s.handle == nil {
+		return nil, ErrClosed
+	}
+	return callStateUpdate(plaintext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_encrypt_state {
+		return C.beaconcrypt_encrypt_and_update(s.handle, C.uint64_t(keyID), ptr, len)
+	})
+}
+
+func (s *Server) DecryptAndUpdate(keyID uint64, ciphertext []byte) (*EncryptState, error) {
+	if s == nil || s.handle == nil {
+		return nil, ErrClosed
+	}
+	return callStateUpdate(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_encrypt_state {
+		return C.beaconcrypt_decrypt_and_update(s.handle, C.uint64_t(keyID), ptr, len)
+	})
+}
+
 func (b *Beacon) EncryptToServer(plaintext []byte) ([]byte, error) {
 	if b == nil || b.handle == nil {
 		return nil, ErrClosed
@@ -257,6 +289,29 @@ func callUnary(data []byte, call func(*C.uint8_t, C.uintptr_t) C.beaconcrypt_buf
 	ptr, free := cBytes(data)
 	defer free()
 	return copyBuffer(call(ptr, C.uintptr_t(len(data))))
+}
+
+func callStateUpdate(data []byte, call func(*C.uint8_t, C.uintptr_t) C.beaconcrypt_encrypt_state) (*EncryptState, error) {
+	if len(data) == 0 {
+		return nil, ErrEmptyData
+	}
+	ptr, free := cBytes(data)
+	defer free()
+	state := call(ptr, C.uintptr_t(len(data)))
+	output, err := copyBuffer(state.data)
+	if err != nil {
+		C.beaconcrypt_free_buffer(state.key)
+		return nil, err
+	}
+	key, err := copyBuffer(state.key)
+	if err != nil {
+		return nil, err
+	}
+	return &EncryptState{
+		Data:  output,
+		Key:   key,
+		KeyID: uint64(state.key_id),
+	}, nil
 }
 
 func copyBuffer(buffer C.beaconcrypt_buffer) ([]byte, error) {
