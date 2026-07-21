@@ -42,19 +42,16 @@ While the `CryptoFrame` contains little information, an active attacker might tr
 This is intended to be the top level message when the caller opts to use digital signatures. It is defined in [protogram.capnp](../src/schema/protogram.capnp). Its role is to tell the reader which cryptographic identity signed the `data` member. Cryptographic identities are identified using a single 64 unsigned integer, often called `keyId` or `kid`. When signature is opted into, the reader must look up the cryptographic identity associated with the `keyId` and verify that the signature over `data` is valid for that identity (e.g. that the public key can verify the signature). Once this is done, the reader can use the contents of the `data` member for any purpose, although the intent is for it to carry a serialized `CryptoFrame`.
 
 ## CryptoFrame
-This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../src/schema/cryptoframe.capnp). It carries a key identifier (`seq`), a direction flag `sToB` or `stob` and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
+This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../src/schema/cryptoframe.capnp). It carries a key identifier (`seq`),  and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
 - Ratchet their `send` keychain forward
 - Use their current `send` key to encrypt the message into a pair of temporary variables `CT` and `T` 
 - Compute the commitment `T*` using `Hash(Key, Nonce, Associated Data, T)`
   - The hash function is Blake2b with a 512bit output length
 - Append `T` and `T*` to `CT` and place the resulting buffer in `cipherText`
 - Set `seq` to the number of the current key
-- Set `sToB` to true if the writer is a server or to false if the writer is a beacon
 - Delete the current `send` key
 
 To read a `CryptoFrame`, the reader must:
-- Check that the direction flag `sToB` is true if the reader is a beacon or false if the reader is a server
-  -  Abort processing if there is a mismatch
 - Check that the difference between `seq` and the current sequence number of the `recv` chain is acceptable
   -  The reference implementation tolerates ratcheting up to 50 keys forward, this number was pulled out of a hat
   - Abort processing if the difference is too large
@@ -123,4 +120,4 @@ Upon reception, the beacon must process this message as follows:
 - If decryption is successful, return the plaintext to the caller oherwise abort the protocol and delete the previously derived cryptographic state
 
 # Protocol details
-Once the session has been created, meaning a successful PQXDH run, the associated data (`AD`) is created. This is made up of the concatenation of the public keys of both parties, the key exchange protocol string and the ratchet protocol string. This associated data is used in every encryption for a given `(Server, Beacon)` tuple. It is then expected that beacons will read messages from the server from their transport protocol and hand them off to beaconcrypt immediately for decryption and deserialization. All encrypted buffers (`CryptoFrame`s) carry a sequence number `seq` and a direction flag `sToB`. These are used to handle out-of-order messages and protect against replay attempts, and therefore need to be protected. Thus, there is an outer layer which uses signatures to ensure the `CryptoFrame` are not modified in transit. This layer itself needs to identify the key pair used to sign the message. This is accomplished using a `keyId`. This signature layer is not mandatory, callers are given the choice whether to created signed messages or not. However, I do recommmend opting into it as it's very cheap and protects the critical `seq` field.
+Once the session has been created, meaning a successful PQXDH run, the associated data (`AD`) is created. This is made up of the concatenation of the public keys of both parties, the key exchange protocol string and the ratchet protocol string. This associated data is used in every encryption for a given `(Server, Beacon)` tuple. It is then expected that beacons will read messages from the server from their transport protocol and hand them off to beaconcrypt immediately for decryption and deserialization. All encrypted buffers (`CryptoFrame`s) carry  a sequence number `seq`. These are used to handle out-of-order messages and protect against replay attempts, and therefore need to be protected. Thus, there is an outer layer which uses signatures to ensure the `CryptoFrame` are not modified in transit. This layer itself needs to identify the key pair used to sign the message. This is accomplished using a `keyId`. This signature layer is not mandatory, callers are given the choice whether to created signed messages or not. However, I do recommmend opting into it as it's very cheap and protects the critical `seq` field.

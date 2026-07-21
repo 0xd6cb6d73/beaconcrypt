@@ -513,7 +513,6 @@ pub trait CryptoProvider {
 	fn is_beacon(&self) -> bool;
 	/// ## Arguments
 	/// * `data`   - Some a serialized `CryptoFrame` to be decrypted
-	/// * `stob` - The identifier of the party who encrypted `data`
 	/// * `is_beacon` - Whether the caller is a beacon
 	///
 	/// ## Returns
@@ -527,9 +526,6 @@ pub trait CryptoProvider {
 					TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
 				match typed_reader.get() {
 					Ok(frame) => {
-						if frame.get_s_to_b() != self.is_beacon() {
-							return None;
-						}
 						let key_seq =
 							self.ratchet_recv_until(SYM_RATCHET_INFO, frame.get_seq(), kid)?;
 						let key = self.recv_key(key_seq, kid)?;
@@ -578,7 +574,6 @@ pub trait CryptoProvider {
 
 	/// ## Arguments
 	/// * `data`   - Some arbitrary byte buffer to be encrypted
-	/// * `stob` - The direction of this message
 	/// * `kid` - The identifier for the remote to encrypt to
 	///
 	/// ## Returns
@@ -605,7 +600,6 @@ pub trait CryptoProvider {
 				let mut builder: cryptoframe_capnp::crypto_frame::Builder<'_> =
 					t_builder.init_root();
 				builder.set_cipher_text(&plaintext);
-				builder.set_s_to_b(!self.is_beacon());
 				builder.set_seq(key_seq);
 				let mut buffer = vec![];
 				capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).unwrap();

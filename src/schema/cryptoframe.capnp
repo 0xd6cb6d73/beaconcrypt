@@ -4,8 +4,6 @@
 
 struct CryptoFrame {
     seq @0 :UInt64;
-    # Whether this message was sent from the server to a beacon
-    sToB @1 :Bool;
-    # libsodium-style buffer with ciphertext || tag, our code should not attempt to parse this
-    cipherText @2 :Data;
+    # libsodium-style buffer with ciphertext || tag || commitment
+    cipherText @1 :Data;
 }

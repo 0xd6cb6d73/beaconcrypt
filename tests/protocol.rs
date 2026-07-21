@@ -37,7 +37,6 @@ fn corrupt_aead_ciphertext(serialized: &[u8]) -> Vec<u8> {
 	let mut message = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
 	let mut corrupted = message.init_root();
 	corrupted.set_seq(frame.get_seq());
-	corrupted.set_s_to_b(frame.get_s_to_b());
 	corrupted.set_cipher_text(&ciphertext);
 
 	let mut serialized = vec![];
