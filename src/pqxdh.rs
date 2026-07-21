@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 
+#[cfg(feature = "server")]
+use crate::server::EncryptState;
 use crate::shared::{
 	DhSecret, ED25519_SEED_SIZE, KEX_KDF_OUT_LEN, KemType, RatchetManager, RemotePrincipal,
 	SYM_RATCHET_INFO, SignType, SignaturePk, VerifiedMessage, create_protogram_reader, encode_sign,
@@ -519,6 +521,28 @@ impl ProviderServer for BeaconCryptPqxdh {
 		Some(RegResponse {
 			serialized: buffer,
 			kid: remote_kid,
+		})
+	}
+
+	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<EncryptState> {
+		let ciphertext = self.encrypt_message(bytes, kid)?;
+		let ratchet = self.ratchet_manager_mut(kid)?;
+		let state = ratchet.send_state();
+		Some(EncryptState {
+			kid,
+			key: state.clone(),
+			data: ciphertext,
+		})
+	}
+
+	fn decrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<EncryptState> {
+		let plaintext = self.decrypt_message(bytes, kid)?;
+		let ratchet = self.ratchet_manager_mut(kid)?;
+		let state = ratchet.recv_state();
+		Some(EncryptState {
+			kid,
+			key: state.clone(),
+			data: plaintext,
 		})
 	}
 }

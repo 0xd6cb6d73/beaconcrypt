@@ -247,6 +247,33 @@ fn beacon_can_encrypt_to_server_signed() {
 }
 
 #[test]
+fn encrypt_and_sign_encrypts_before_signing() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	let message = b"signed server to beacon";
+
+	let signed = server.encrypt_and_sign(message, response.kid).unwrap();
+	let verified = beacon.verify_signature(&signed).unwrap();
+
+	assert_eq!(verified.key_id, SERVER_KID);
+	assert_eq!(
+		beacon.decrypt_message(&verified.data, SERVER_KID).unwrap(),
+		message
+	);
+}
+
+#[test]
+fn decrypt_signed_verifies_the_sender_and_uses_its_key_id() {
+	let (mut server, mut beacon) = new_pair();
+	register_beacon(&mut server, &mut beacon, None);
+	let message = b"signed beacon to server";
+	let ciphertext = beacon.encrypt_message(message, SERVER_KID).unwrap();
+	let signed = beacon.sign_message(&ciphertext).unwrap();
+
+	assert_eq!(server.decrypt_signed(&signed).unwrap(), message);
+}
+
+#[test]
 fn signed_beacon_message_rejects_tampering() {
 	let (mut server, mut beacon) = new_pair();
 	register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
@@ -359,4 +386,56 @@ fn server_can_retry_decryption_after_corrupted_aead_message() {
 		server.decrypt_message(&ciphertext, response.kid).unwrap(),
 		message
 	);
+}
+
+#[test]
+fn encrypt_and_update_returns_the_advanced_send_state() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	let message = b"server to beacon with updated state";
+	let (send_state_before, recv_state_before) = {
+		let ratchet = server.ratchet_manager(response.kid).unwrap();
+		(
+			ratchet.send_state().as_slice().to_vec(),
+			ratchet.recv_state().as_slice().to_vec(),
+		)
+	};
+
+	let update = server.encrypt_and_update(message, response.kid).unwrap();
+	let ratchet = server.ratchet_manager(response.kid).unwrap();
+
+	assert_eq!(update.kid, response.kid);
+	assert_eq!(update.key.as_slice(), ratchet.send_state().as_slice());
+	assert_ne!(update.key.as_slice(), send_state_before);
+	assert_eq!(ratchet.recv_state().as_slice(), recv_state_before);
+	assert_eq!(
+		beacon.decrypt_message(&update.data, SERVER_KID).unwrap(),
+		message
+	);
+}
+
+#[test]
+fn decrypt_and_update_returns_the_advanced_receive_state() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	let message = b"beacon to server with updated state";
+	let ciphertext = beacon.encrypt_message(message, SERVER_KID).unwrap();
+	let (send_state_before, recv_state_before) = {
+		let ratchet = server.ratchet_manager(response.kid).unwrap();
+		(
+			ratchet.send_state().as_slice().to_vec(),
+			ratchet.recv_state().as_slice().to_vec(),
+		)
+	};
+
+	let update = server
+		.decrypt_and_update(&ciphertext, response.kid)
+		.unwrap();
+	let ratchet = server.ratchet_manager(response.kid).unwrap();
+
+	assert_eq!(update.kid, response.kid);
+	assert_eq!(update.data, message);
+	assert_eq!(update.key.as_slice(), ratchet.recv_state().as_slice());
+	assert_ne!(update.key.as_slice(), recv_state_before);
+	assert_eq!(ratchet.send_state().as_slice(), send_state_before);
 }

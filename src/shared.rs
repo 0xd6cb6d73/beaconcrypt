@@ -460,6 +460,14 @@ impl RatchetManager {
 		self.recv_past = HashMap::new();
 		self.recv_ctr = 0;
 	}
+
+	pub fn send_state(&self) -> &KdfState {
+		&self.send_key.state
+	}
+
+	pub fn recv_state(&self) -> &KdfState {
+		&self.recv_key.state
+	}
 }
 
 pub trait SignaturePk {}
@@ -556,6 +564,19 @@ pub trait CryptoProvider {
 	}
 
 	/// ## Arguments
+	/// * `data`   - A serialized `ProtoGram` to be decrypted
+	///
+	/// ## Returns
+	/// * `None` if some other error happens.
+	/// * `Vec<u8>` containing the plaintext
+	fn decrypt_signed(&mut self, data: &[u8]) -> Option<Vec<u8>> {
+		match self.verify_signature(data) {
+			Some(verified) => self.decrypt_message(&verified.data, verified.key_id),
+			None => None,
+		}
+	}
+
+	/// ## Arguments
 	/// * `data`   - Some arbitrary byte buffer to be encrypted
 	/// * `stob` - The direction of this message
 	/// * `kid` - The identifier for the remote to encrypt to
@@ -597,6 +618,21 @@ pub trait CryptoProvider {
 			}
 		}
 	}
+
+	/// /// ## Arguments
+	/// * `data`   - Some arbitrary byte buffer to be encrypted
+	/// * `kid` - The identifier for the remote to encrypt to
+	///
+	/// ## Returns
+	/// * `None` if some other error happens.
+	/// * `Vec<u8>` containing a serialized `protogram_capnp::proto_gram`
+	fn encrypt_and_sign(&mut self, bytes: &[u8], kid: u64) -> Option<Vec<u8>> {
+		match self.encrypt_message(bytes, kid) {
+			Some(ciphertext) => self.sign_message(ciphertext.as_slice()),
+			None => None,
+		}
+	}
+
 	/// implementation of the Chan and Rogaway `CTX` scheme: https://eprint.iacr.org/2022/1260.pdf
 	/// `CT, T = ENC(K, N, A, M)`
 	///
