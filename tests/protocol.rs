@@ -3,6 +3,8 @@ use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
 const SERVER_KID: u64 = 0;
+const TAG_SIZE: usize = 16;
+const COMMITMENT_SIZE: usize = 64;
 
 fn new_pair() -> (BeaconCryptPqxdh, BeaconCryptPqxdh) {
 	let server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
@@ -60,6 +62,38 @@ fn crypto_frame_seq(serialized: &[u8]) -> u64 {
 	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
 	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
 	typed.get().unwrap().get_seq()
+}
+
+fn crypto_frame_ciphertext(serialized: &[u8]) -> Vec<u8> {
+	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
+	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
+	typed.get().unwrap().get_cipher_text().unwrap().to_vec()
+}
+
+fn assert_server_frame_tampering_is_rejected(mut tamper: impl FnMut(&mut Vec<u8>, &[u8])) {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	let plaintext = b"message whose authenticated fields will be tampered with";
+	let valid = server.encrypt_message(plaintext, response.kid).unwrap();
+	let donor = server
+		.encrypt_message(
+			b"a second message supplies independently generated fields",
+			response.kid,
+		)
+		.unwrap();
+	let seq = crypto_frame_seq(&valid);
+	let mut ciphertext = crypto_frame_ciphertext(&valid);
+	let donor_ciphertext = crypto_frame_ciphertext(&donor);
+
+	tamper(&mut ciphertext, &donor_ciphertext);
+	let tampered = serialize_crypto_frame(seq, &ciphertext);
+
+	assert!(beacon.decrypt_message(&tampered, SERVER_KID).is_none());
+	assert_eq!(
+		beacon.decrypt_message(&valid, SERVER_KID).unwrap(),
+		plaintext,
+		"rejecting a tampered frame must not consume its receive key"
+	);
 }
 
 struct KexResponseParts {
@@ -525,7 +559,7 @@ fn malformed_crypto_frame_ciphertext_lengths_are_rejected_without_panicking() {
 		.unwrap();
 	let seq = crypto_frame_seq(&valid);
 
-	for len in [0, 1, 15, 16, 63, 64, 79] {
+	for len in [0, 1, 15, 16, 63, 64, 79, 80] {
 		let malformed = serialize_crypto_frame(seq, &vec![0xA5; len]);
 		let result = catch_unwind(AssertUnwindSafe(|| {
 			beacon.decrypt_message(&malformed, SERVER_KID)
@@ -543,23 +577,94 @@ fn malformed_crypto_frame_ciphertext_lengths_are_rejected_without_panicking() {
 }
 
 #[test]
-fn empty_plaintext_round_trips_in_both_directions() {
+fn empty_plaintext_is_rejected_without_advancing_send_ratchets() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
+	let server_state = server
+		.ratchet_manager(response.kid)
+		.unwrap()
+		.send_state()
+		.as_slice()
+		.to_vec();
+	let beacon_state = beacon
+		.ratchet_manager(SERVER_KID)
+		.unwrap()
+		.send_state()
+		.as_slice()
+		.to_vec();
 
-	let to_beacon = server.encrypt_message(b"", response.kid).unwrap();
+	assert!(server.encrypt_message(b"", response.kid).is_none());
+	assert!(beacon.encrypt_message(b"", SERVER_KID).is_none());
+	assert_eq!(
+		server
+			.ratchet_manager(response.kid)
+			.unwrap()
+			.send_state()
+			.as_slice(),
+		server_state
+	);
 	assert_eq!(
 		beacon
-			.decrypt_message(&to_beacon, SERVER_KID)
-			.expect("an empty plaintext is represented by a valid 80-byte ciphertext"),
-		b""
+			.ratchet_manager(SERVER_KID)
+			.unwrap()
+			.send_state()
+			.as_slice(),
+		beacon_state
 	);
 
-	let to_server = beacon.encrypt_message(b"", SERVER_KID).unwrap();
+	let to_beacon = server.encrypt_message(b"non-empty", response.kid).unwrap();
+	let to_server = beacon.encrypt_message(b"non-empty", SERVER_KID).unwrap();
+	assert_eq!(
+		beacon.decrypt_message(&to_beacon, SERVER_KID).unwrap(),
+		b"non-empty"
+	);
 	assert_eq!(
 		server.decrypt_message(&to_server, response.kid).unwrap(),
-		b""
+		b"non-empty"
 	);
+}
+
+#[test]
+fn commitment_corruption_is_rejected() {
+	assert_server_frame_tampering_is_rejected(|ciphertext, _| {
+		let commitment_start = ciphertext.len() - COMMITMENT_SIZE;
+		ciphertext[commitment_start] ^= 0x01;
+	});
+}
+
+#[test]
+fn missing_tag_is_rejected() {
+	assert_server_frame_tampering_is_rejected(|ciphertext, _| {
+		let tag_start = ciphertext.len() - COMMITMENT_SIZE - TAG_SIZE;
+		ciphertext.drain(tag_start..tag_start + TAG_SIZE);
+	});
+}
+
+#[test]
+fn missing_commitment_is_rejected() {
+	assert_server_frame_tampering_is_rejected(|ciphertext, _| {
+		ciphertext.truncate(ciphertext.len() - COMMITMENT_SIZE);
+	});
+}
+
+#[test]
+fn tag_corruption_is_rejected() {
+	assert_server_frame_tampering_is_rejected(|ciphertext, _| {
+		let tag_start = ciphertext.len() - COMMITMENT_SIZE - TAG_SIZE;
+		ciphertext[tag_start] ^= 0x01;
+	});
+}
+
+#[test]
+fn swapped_tag_and_commitment_are_rejected() {
+	assert_server_frame_tampering_is_rejected(|ciphertext, _| {
+		let tag_start = ciphertext.len() - COMMITMENT_SIZE - TAG_SIZE;
+		let commitment_start = ciphertext.len() - COMMITMENT_SIZE;
+		let mut swapped = ciphertext[..tag_start].to_vec();
+		swapped.extend_from_slice(&ciphertext[commitment_start..]);
+		swapped.extend_from_slice(&ciphertext[tag_start..commitment_start]);
+		*ciphertext = swapped;
+	});
 }
 
 #[test]
