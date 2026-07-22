@@ -3,8 +3,9 @@
 #[cfg(feature = "server")]
 use crate::server::EncryptState;
 use crate::shared::{
-	DhSecret, ED25519_SEED_SIZE, KEX_KDF_OUT_LEN, KemType, RatchetManager, RemotePrincipal,
-	SYM_RATCHET_INFO, SignType, SignaturePk, VerifiedMessage, create_protogram_reader, encode_sign,
+	DhSecret, ED25519_SEED_SIZE, KEX_KDF_OUT_LEN, KemType, KexDerivedSecret, RatchetManager,
+	RemotePrincipal, SYM_RATCHET_INFO, SignType, SignaturePk, VerifiedMessage,
+	create_protogram_reader, encode_sign,
 };
 use crate::{CryptoProvider, phase1_capnp, phase2_capnp, protogram_capnp};
 #[cfg(feature = "beacon")]
@@ -16,7 +17,7 @@ use crate::{
 };
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{
-	SodiumError, crypto_kdf, crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init,
+	crypto_kdf, crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init,
 };
 use std::collections::HashMap;
 use std::mem::swap;
@@ -397,7 +398,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 			crypto_scalarmult::scalarmult(self.get_onetime_sk()?.as_bytes(), ephemeral.as_bytes())
 				.ok()?
 				.into();
-		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, shared_secret).ok()?;
+		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, shared_secret)?;
 		self.delete_onetime_keypair();
 		self.delete_pq_keypair();
 
@@ -407,7 +408,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		let mut info_str = vec![0u8; SYM_RATCHET_INFO.len()];
 		info_str.copy_from_slice(SYM_RATCHET_INFO);
 		let srv_key_id = self.server_kid();
-		self.init_ratchets(&derived_secret, &info_str, true, srv_key_id);
+		self.init_ratchets(derived_secret.as_slice(), &info_str, true, srv_key_id);
 
 		match response.get_app_cipher_text() {
 			// https://signal.org/docs/specifications/pqxdh/#receiving-the-initial-message
@@ -483,11 +484,11 @@ impl ProviderServer for BeaconCryptPqxdh {
 		.ok()?
 		.into();
 
-		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, kem_shared).ok()?;
+		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, kem_shared)?;
 
 		Some(RegistrationOutput {
 			kem_ciphertext,
-			derived_secret: derived_secret.into(),
+			derived_secret,
 			ephemeral: ephemeral.public_key,
 			public_key: remote_id,
 		})
@@ -561,7 +562,7 @@ pub fn derive_root_key(
 	dh3: DhSecret,
 	dh4: DhSecret,
 	shared_secret: crypto_kem::mlkem768::SharedSecret,
-) -> Result<Vec<u8>, SodiumError> {
+) -> Option<KexDerivedSecret> {
 	// make sure to start inserting after sizeof(Ed25519) so the first bytes are filled with 0xFF as per the spec:
 	// https://signal.org/docs/specifications/pqxdh/#cryptographic-notation
 	let mut ikm = vec![0xFFu8; crypto_kx::PUBLICKEYBYTES];
@@ -571,9 +572,13 @@ pub fn derive_root_key(
 	ikm.extend_from_slice(dh4.as_slice());
 	ikm.extend_from_slice(shared_secret.as_bytes());
 
-	let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm)?;
+	let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm).ok()?;
 	ikm.zeroize();
-	crypto_kdf::hkdf::sha512::expand(KEX_KDF_OUT_LEN, Some(PQXDH_INFO), &prk)
+	let derived: KexDerivedSecret =
+		crypto_kdf::hkdf::sha512::expand(KEX_KDF_OUT_LEN, Some(PQXDH_INFO), &prk)
+			.ok()?
+			.into();
+	Some(derived)
 }
 
 pub fn build_associated_data(
@@ -602,13 +607,13 @@ mod tests {
 
 	use super::{AD_SIZE, PQXDH_INFO, build_associated_data, derive_root_key};
 	use crate::{
-		BeaconCryptPqxdh, SignType,
+		BeaconCryptPqxdh, KDF_STATE_SIZE, SignType,
 		beacon::ProviderBeacon,
 		phase1_capnp, protogram_capnp,
 		server::ProviderServer,
 		shared::{
-			CryptoProvider, DH_OUT_LEN, DhSecret, ED25519_SEED_SIZE, KemType, SYM_RATCHET_INFO,
-			decode_kem, decode_sign,
+			CryptoProvider, DH_OUT_LEN, DhSecret, ED25519_SEED_SIZE, KemType, KexDerivedSecret,
+			SYM_RATCHET_INFO, decode_kem, decode_sign,
 		},
 	};
 
@@ -1013,16 +1018,18 @@ mod tests {
 		ikm.extend_from_slice(dh4.as_slice());
 		ikm.extend_from_slice(&shared_bytes);
 		let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm).unwrap();
-		let expected =
-			crypto_kdf::hkdf::sha512::expand(actual.len(), Some(PQXDH_INFO), &prk).unwrap();
+		let expected: KexDerivedSecret =
+			crypto_kdf::hkdf::sha512::expand(KDF_STATE_SIZE, Some(PQXDH_INFO), &prk)
+				.unwrap()
+				.into();
 		let known_answer = [
 			0xcb, 0xcf, 0x9d, 0x12, 0xdb, 0x13, 0x92, 0x7a, 0xc3, 0x3a, 0x04, 0x9c, 0xb6, 0x10,
 			0x94, 0x8b, 0xaf, 0x33, 0x9b, 0x5c, 0x8c, 0x78, 0x2a, 0x2e, 0xaf, 0x14, 0x3e, 0x12,
 			0x3b, 0xda, 0xa7, 0xe2,
 		];
 
-		assert_eq!(actual, expected);
-		assert_eq!(actual, known_answer);
+		assert_eq!(actual.as_slice(), expected.as_slice());
+		assert_eq!(actual.as_slice(), known_answer.as_slice());
 	}
 
 	#[test]
