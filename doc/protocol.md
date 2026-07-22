@@ -102,6 +102,8 @@ This message enables the beacon to obtain the elements it needs to derive the sh
 - Return the beacon's public key and key ID to the caller so it can register it as required
 
 Upon reception, the beacon must process this message as follows:
+- Check that `identityKey` contains the same key as the compiled-in server key
+  - Abort in case of mismatch
 - Decapsulate the shared PQ secret using `kemCipherText` adn the beacon's KEM secret key
 - Convert the beacon's identity secret key and the server's identity public key from `identityKey` to X25519 format using libsodium's `ed25519_sk_to_curve25519` and `ed25519_pk_to_curve25519` respectively (thereafter they will use the `_kex` suffix)
 - Compute the 4 Diffie Hellman rounds
