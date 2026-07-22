@@ -194,7 +194,7 @@ impl<const S: usize, System, Role> From<Vec<u8>> for SecretArr<S, System, Role> 
 	fn from(value: Vec<u8>) -> Self {
 		if value.len() == S {
 			SecretArr {
-				data: value.as_array::<S>().unwrap().to_owned().into(),
+				data: (*value.as_array::<S>().unwrap()).into(),
 				_system: PhantomData,
 				_role: PhantomData,
 			}
