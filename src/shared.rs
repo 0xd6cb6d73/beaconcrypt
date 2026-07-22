@@ -158,7 +158,6 @@ mod systems {
 	#[cfg(feature = "pqxdh")]
 	pub struct X25519;
 	pub struct Hkdf;
-	#[cfg(feature = "server")]
 	pub struct Pqxdh;
 }
 mod roles {
@@ -243,7 +242,6 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 #[cfg(feature = "pqxdh")]
 pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>;
 pub type KdfState = SecretArr<KDF_STATE_SIZE, systems::Hkdf, roles::ChainKey>;
-#[cfg(feature = "server")]
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
 
 pub struct KeyMaterial {
