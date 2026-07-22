@@ -630,8 +630,9 @@ pub trait CryptoProvider {
 		input.extend_from_slice(nonce);
 		input.extend_from_slice(ad);
 		input.extend_from_slice(tag);
+		let hash = crypto_generichash::generichash(input.as_slice(), None, COMMITMENT_SIZE).ok();
 		input.zeroize();
-		crypto_generichash::generichash(input.as_slice(), None, COMMITMENT_SIZE).ok()
+		hash
 	}
 	fn sign_message(&self, data: &[u8]) -> Option<Vec<u8>>;
 	fn verify_signature(&self, data: &[u8]) -> Option<VerifiedMessage>;
@@ -868,6 +869,38 @@ mod tests {
 		assert_eq!(nonce_bytes(&output.aead_nonce), &[0x33; AEAD_NONCE_LEN]);
 	}
 
+	///key = bytes([0x11]) * 32
+	///nonce = bytes([0x22]) * 12
+	///ad = b"beaconcrypt-test-associated-data"
+	///tag = bytes([0x33]) * 16
+	///
+	///print(hashlib.blake2b(key + nonce + ad + tag, digest_size=64).hexdigest())
+	#[cfg(all(feature = "beacon", feature = "server", feature = "pqxdh"))]
+	#[test]
+	fn commitment_matches_blake2b_known_answer() {
+		let provider = crate::BeaconCryptPqxdh::new(false, 0, None, None);
+		let secret = KeyMaterial {
+			key: [0x11; AEAD_KEY_LEN].into(),
+			nonce: [0x22; AEAD_NONCE_LEN].into(),
+		};
+		let associated_data = b"beaconcrypt-test-associated-data";
+		let tag = [0x33; crypto_aead::chacha20poly1305_ietf::ABYTES];
+		let expected = [
+			0x70, 0x30, 0xfe, 0xf1, 0x6e, 0x30, 0x69, 0xe7, 0x8e, 0xf8, 0x98, 0x27, 0xa4, 0x8b,
+			0x06, 0x22, 0x7f, 0x41, 0xce, 0x10, 0xd4, 0x0a, 0x5f, 0x0d, 0x54, 0x7e, 0xe9, 0xd0,
+			0xfd, 0xc0, 0x7c, 0x26, 0x9b, 0xf4, 0xb4, 0xc7, 0xdc, 0xbe, 0xb0, 0x70, 0x9b, 0x89,
+			0x8f, 0xa8, 0xba, 0xe3, 0x7f, 0x18, 0xda, 0x12, 0xa6, 0x0e, 0x7a, 0xbf, 0xcc, 0x4a,
+			0xf2, 0xb0, 0xba, 0x93, 0x70, 0xf4, 0xe8, 0xec,
+		];
+
+		assert_eq!(
+			provider
+				.build_commitment(&secret, associated_data, &tag)
+				.unwrap(),
+			expected
+		);
+	}
+
 	#[test]
 	fn opposite_ratchet_roles_derive_matching_keys() {
 		let ikm = [0x42; KDF_STATE_SIZE];
@@ -936,6 +969,27 @@ mod tests {
 		);
 		assert!(ratchet.recv_key(RATCHET_MAX_GAP + 1).is_none());
 		assert_eq!(ratchet.ratchet_recv(SYM_RATCHET_INFO), Some(1));
+	}
+
+	#[test]
+	#[ignore = "known specification bug: per-frame gaps do not bound the total skipped-key cache"]
+	fn receive_ratchet_bounds_total_cached_skipped_keys() {
+		let mut ratchet = RatchetManager::new();
+		ratchet.init_ratchets(&[0x91; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+
+		for batch in 1..=4 {
+			let target = batch * RATCHET_MAX_GAP;
+			assert_eq!(
+				ratchet.ratchet_recv_until(SYM_RATCHET_INFO, target),
+				Some(target)
+			);
+			ratchet.delete_recv_key(target);
+			assert!(
+				ratchet.recv_past.len() <= RATCHET_MAX_GAP as usize,
+				"cached {} skipped keys after receiving sequence {target}",
+				ratchet.recv_past.len()
+			);
+		}
 	}
 
 	#[test]
