@@ -1,5 +1,6 @@
 use beaconcrypt::*;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 
 const SERVER_KID: u64 = 0;
 
@@ -41,6 +42,83 @@ fn corrupt_aead_ciphertext(serialized: &[u8]) -> Vec<u8> {
 
 	let mut serialized = vec![];
 	capnp::serialize::write_message(&mut serialized, message.borrow_inner()).unwrap();
+	serialized
+}
+
+fn serialize_crypto_frame(seq: u64, ciphertext: &[u8]) -> Vec<u8> {
+	let mut message = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
+	let mut frame = message.init_root();
+	frame.set_seq(seq);
+	frame.set_cipher_text(ciphertext);
+
+	let mut serialized = vec![];
+	capnp::serialize::write_message(&mut serialized, message.borrow_inner()).unwrap();
+	serialized
+}
+
+fn crypto_frame_seq(serialized: &[u8]) -> u64 {
+	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
+	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
+	typed.get().unwrap().get_seq()
+}
+
+struct KexResponseParts {
+	identity_key: Vec<u8>,
+	ephemeral_key: Vec<u8>,
+	kem_ciphertext: Vec<u8>,
+	app_ciphertext: Vec<u8>,
+	key_id: u64,
+}
+
+fn parse_kex_response(serialized: &[u8]) -> KexResponseParts {
+	let message = capnp::serialize_packed::read_message(serialized, ReaderOptions::new()).unwrap();
+	let typed = TypedReader::<_, phase2_capnp::kex_response::Owned>::new(message);
+	let response = typed.get().unwrap();
+	KexResponseParts {
+		identity_key: response.get_identity_key().unwrap().to_vec(),
+		ephemeral_key: response.get_ephemeral_key().unwrap().to_vec(),
+		kem_ciphertext: response.get_kem_cipher_text().unwrap().to_vec(),
+		app_ciphertext: response.get_app_cipher_text().unwrap().to_vec(),
+		key_id: response.get_key_id(),
+	}
+}
+
+fn serialize_kex_response(parts: &KexResponseParts) -> Vec<u8> {
+	let mut message = TypedBuilder::<phase2_capnp::kex_response::Owned>::new_default();
+	let mut response = message.init_root();
+	response.set_identity_key(&parts.identity_key);
+	response.set_ephemeral_key(&parts.ephemeral_key);
+	response.set_kem_cipher_text(&parts.kem_ciphertext);
+	response.set_app_cipher_text(&parts.app_ciphertext);
+	response.set_key_id(parts.key_id);
+
+	let mut serialized = vec![];
+	capnp::serialize_packed::write_message(&mut serialized, message.borrow_inner()).unwrap();
+	serialized
+}
+
+fn pending_registration(initial_message: &[u8]) -> (BeaconCryptPqxdh, Vec<u8>) {
+	let (mut server, mut beacon) = new_pair();
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+	let reg_out = server.get_shared_secret(&phase_1).unwrap();
+	let response = server
+		.build_registration_response(reg_out, Some(initial_message))
+		.unwrap();
+	(beacon, response.serialized)
+}
+
+fn rewrite_protogram_key_id(serialized: &[u8], key_id: u64) -> Vec<u8> {
+	let message = capnp::serialize_packed::read_message(serialized, ReaderOptions::new()).unwrap();
+	let typed = TypedReader::<_, protogram_capnp::proto_gram::Owned>::new(message);
+	let original = typed.get().unwrap();
+
+	let mut message = TypedBuilder::<protogram_capnp::proto_gram::Owned>::new_default();
+	let mut rewritten = message.init_root();
+	rewritten.set_key_id(key_id);
+	rewritten.set_data(original.get_data().unwrap());
+
+	let mut serialized = vec![];
+	capnp::serialize_packed::write_message(&mut serialized, message.borrow_inner()).unwrap();
 	serialized
 }
 
@@ -436,4 +514,169 @@ fn decrypt_and_update_returns_the_advanced_receive_state() {
 	assert_eq!(update.key.as_slice(), ratchet.recv_state().as_slice());
 	assert_ne!(update.key.as_slice(), recv_state_before);
 	assert_eq!(ratchet.send_state().as_slice(), send_state_before);
+}
+
+#[test]
+fn malformed_crypto_frame_ciphertext_lengths_are_rejected_without_panicking() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	let valid = server
+		.encrypt_message(b"valid after malformed frames", response.kid)
+		.unwrap();
+	let seq = crypto_frame_seq(&valid);
+
+	for len in [0, 1, 15, 16, 63, 64, 79] {
+		let malformed = serialize_crypto_frame(seq, &vec![0xA5; len]);
+		let result = catch_unwind(AssertUnwindSafe(|| {
+			beacon.decrypt_message(&malformed, SERVER_KID)
+		}));
+		assert!(
+			matches!(result, Ok(None)),
+			"ciphertext length {len} was not rejected cleanly"
+		);
+	}
+
+	assert_eq!(
+		beacon.decrypt_message(&valid, SERVER_KID).unwrap(),
+		b"valid after malformed frames"
+	);
+}
+
+#[test]
+fn empty_plaintext_round_trips_in_both_directions() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+
+	let to_beacon = server.encrypt_message(b"", response.kid).unwrap();
+	assert_eq!(
+		beacon
+			.decrypt_message(&to_beacon, SERVER_KID)
+			.expect("an empty plaintext is represented by a valid 80-byte ciphertext"),
+		b""
+	);
+
+	let to_server = beacon.encrypt_message(b"", SERVER_KID).unwrap();
+	assert_eq!(
+		server.decrypt_message(&to_server, response.kid).unwrap(),
+		b""
+	);
+}
+
+#[test]
+fn beacon_rejects_tampered_registration_ephemeral_key() {
+	let (mut beacon, response) = pending_registration(b"initial message");
+	let mut parts = parse_kex_response(&response);
+	parts.ephemeral_key[0] ^= 0x01;
+
+	assert!(
+		beacon
+			.finish_registration(&serialize_kex_response(&parts))
+			.is_none()
+	);
+}
+
+#[test]
+fn beacon_rejects_tampered_registration_kem_ciphertext() {
+	let (mut beacon, response) = pending_registration(b"initial message");
+	let mut parts = parse_kex_response(&response);
+	parts.kem_ciphertext[0] ^= 0x01;
+
+	assert!(
+		beacon
+			.finish_registration(&serialize_kex_response(&parts))
+			.is_none()
+	);
+}
+
+#[test]
+fn failed_initial_ciphertext_clears_registration_state() {
+	let (mut beacon, response) = pending_registration(b"initial message");
+	let mut parts = parse_kex_response(&response);
+	parts.app_ciphertext = corrupt_aead_ciphertext(&parts.app_ciphertext);
+
+	assert!(
+		beacon
+			.finish_registration(&serialize_kex_response(&parts))
+			.is_none()
+	);
+	assert!(beacon.get_onetime_pk().is_none());
+	assert!(beacon.get_onetime_sk().is_none());
+	assert!(beacon.pq_pk().is_none());
+	assert!(beacon.pq_sk().is_none());
+	assert!(beacon.associated_data(SERVER_KID).is_none());
+
+	let ratchet = beacon.ratchet_manager(SERVER_KID).unwrap();
+	assert_eq!(ratchet.send_state().as_slice(), &[0; KDF_STATE_SIZE]);
+	assert_eq!(ratchet.recv_state().as_slice(), &[0; KDF_STATE_SIZE]);
+}
+
+#[test]
+fn malformed_initial_ciphertext_is_rejected_without_panicking() {
+	for malformed_app_ciphertext in [Vec::new(), serialize_crypto_frame(1, &[0xA5; 79])] {
+		let (mut beacon, response) = pending_registration(b"initial message");
+		let mut parts = parse_kex_response(&response);
+		parts.app_ciphertext = malformed_app_ciphertext;
+
+		let result = catch_unwind(AssertUnwindSafe(|| {
+			beacon.finish_registration(&serialize_kex_response(&parts))
+		}));
+		assert!(matches!(result, Ok(None)));
+		assert!(beacon.get_onetime_sk().is_none());
+		assert!(beacon.pq_sk().is_none());
+		assert!(beacon.associated_data(SERVER_KID).is_none());
+	}
+}
+
+#[test]
+#[ignore = "known specification bug: KexResponse.keyId is not authenticated"]
+fn beacon_rejects_tampered_registration_key_id() {
+	let (mut beacon, response) = pending_registration(b"initial message");
+	let mut parts = parse_kex_response(&response);
+	parts.key_id = parts.key_id.wrapping_add(1);
+
+	assert!(
+		beacon
+			.finish_registration(&serialize_kex_response(&parts))
+			.is_none()
+	);
+}
+
+#[test]
+#[ignore = "known conformance bug: InitKex generation is not single-use"]
+fn beacon_generates_only_one_registration_bundle() {
+	let (_, mut beacon) = new_pair();
+	assert!(beacon.get_registration_bundle().is_some());
+	assert!(beacon.get_registration_bundle().is_none());
+}
+
+#[test]
+#[ignore = "known protocol gap: replayed InitKex messages are accepted"]
+fn server_rejects_replayed_registration_bundle() {
+	let (mut server, mut beacon) = new_pair();
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+
+	assert!(server.get_shared_secret(&phase_1).is_some());
+	assert!(server.get_shared_secret(&phase_1).is_none());
+}
+
+#[test]
+#[ignore = "known key-ID binding gap when one identity has multiple IDs"]
+fn signed_message_cannot_be_relabelled_to_an_alias_key_id() {
+	let (mut server, mut beacon) = new_pair();
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+	let registration = server.get_shared_secret(&phase_1).unwrap();
+	let first = server
+		.build_registration_response(registration.clone(), None)
+		.unwrap();
+	let alias = server
+		.build_registration_response(registration, None)
+		.unwrap();
+	beacon.finish_registration(&first.serialized).unwrap();
+
+	let signed = beacon
+		.encrypt_and_sign(b"authenticated beacon message", SERVER_KID)
+		.unwrap();
+	let relabelled = rewrite_protogram_key_id(&signed, alias.kid);
+
+	assert!(server.decrypt_signed(&relabelled).is_none());
 }
