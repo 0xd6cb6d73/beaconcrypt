@@ -770,8 +770,14 @@ fn signed_message_cannot_be_relabelled_to_an_alias_key_id() {
 	let (mut server, mut beacon) = new_pair();
 	let phase_1 = beacon.get_registration_bundle().unwrap();
 	let registration = server.get_shared_secret(&phase_1).unwrap();
+	let duplicate_registration = RegistrationOutput {
+		kem_ciphertext: registration.kem_ciphertext.clone(),
+		derived_secret: registration.derived_secret.clone(),
+		ephemeral: registration.ephemeral.clone(),
+		public_key: registration.public_key.clone(),
+	};
 	let first = server
-		.build_registration_response(registration.clone(), None)
+		.build_registration_response(duplicate_registration, None)
 		.unwrap();
 	let alias = server
 		.build_registration_response(registration, None)
