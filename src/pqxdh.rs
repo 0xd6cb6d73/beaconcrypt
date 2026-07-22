@@ -743,17 +743,21 @@ mod tests {
 	}
 
 	#[test]
-	fn beacon_delete_onetime() {
+	fn beacon_deletes_one_time_and_pq_keys_after_registration() {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.identity_pk().to_owned();
 
-		// the beacon doesn't generate its one-time key until it generates its registration bundle
+		// The beacon doesn't generate its one-time key until it generates its registration bundle.
 		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
-		assert!(b1.get_onetime_pk() == None);
-		assert!(b1.get_onetime_sk() == None);
+		assert!(b1.get_onetime_pk().is_none());
+		assert!(b1.get_onetime_sk().is_none());
+		assert!(b1.pq_pk().is_some());
+		assert!(b1.pq_sk().is_some());
 		let _ = test_register_beacon(&mut server, &mut b1);
-		assert!(b1.get_onetime_pk() == None);
-		assert!(b1.get_onetime_sk() == None);
+		assert!(b1.get_onetime_pk().is_none());
+		assert!(b1.get_onetime_sk().is_none());
+		assert!(b1.pq_pk().is_none());
+		assert!(b1.pq_sk().is_none());
 	}
 
 	#[test]
@@ -871,6 +875,100 @@ mod tests {
 	}
 
 	#[test]
+	fn server_rejects_tampering_of_each_signed_registration_key() {
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let serialized = beacon.get_registration_bundle().unwrap();
+		let message =
+			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
+		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
+		let registration = typed.get().unwrap();
+		let identity = registration.get_identity_key().unwrap().to_vec();
+		let prekey = registration.get_pre_key().unwrap().to_vec();
+		let onetime = registration.get_one_time_key().unwrap().to_vec();
+		let pq = registration.get_pq_key().unwrap().to_vec();
+
+		for field in ["preKey", "oneTimeKey", "pqKey"] {
+			let mut tampered_prekey = prekey.clone();
+			let mut tampered_onetime = onetime.clone();
+			let mut tampered_pq = pq.clone();
+			let selected = match field {
+				"preKey" => &mut tampered_prekey,
+				"oneTimeKey" => &mut tampered_onetime,
+				"pqKey" => &mut tampered_pq,
+				_ => unreachable!(),
+			};
+			let last = selected.len() - 1;
+			selected[last] ^= 1;
+
+			let mut message = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
+			let mut root = message.init_root();
+			root.set_identity_key(&identity);
+			root.set_pre_key(&tampered_prekey);
+			root.set_one_time_key(&tampered_onetime);
+			root.set_pq_key(&tampered_pq);
+			let mut tampered = vec![];
+			capnp::serialize::write_message(&mut tampered, message.borrow_inner()).unwrap();
+
+			assert!(
+				server.get_shared_secret(&tampered).is_none(),
+				"server accepted tampered {field}"
+			);
+		}
+	}
+
+	#[test]
+	fn server_rejects_signed_registration_keys_with_wrong_type_prefixes() {
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let serialized = beacon.get_registration_bundle().unwrap();
+		let message =
+			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
+		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
+		let registration = typed.get().unwrap();
+
+		let identity = registration.get_identity_key().unwrap().to_vec();
+		let prekey =
+			crypto_sign::verify(registration.get_pre_key().unwrap(), beacon.identity_pk()).unwrap();
+		let onetime = crypto_sign::verify(
+			registration.get_one_time_key().unwrap(),
+			beacon.identity_pk(),
+		)
+		.unwrap();
+		let pq =
+			crypto_sign::verify(registration.get_pq_key().unwrap(), beacon.identity_pk()).unwrap();
+
+		for field in ["preKey", "oneTimeKey", "pqKey"] {
+			let mut wrong_prekey = prekey.clone();
+			let mut wrong_onetime = onetime.clone();
+			let mut wrong_pq = pq.clone();
+			match field {
+				"preKey" => wrong_prekey[0] = u8::from(KemType::MlKem768),
+				"oneTimeKey" => wrong_onetime[0] = u8::from(KemType::MlKem768),
+				"pqKey" => wrong_pq[0] = u8::from(KemType::X25519),
+				_ => unreachable!(),
+			}
+
+			let wrong_prekey = crypto_sign::sign(&wrong_prekey, beacon.identity_sk()).unwrap();
+			let wrong_onetime = crypto_sign::sign(&wrong_onetime, beacon.identity_sk()).unwrap();
+			let wrong_pq = crypto_sign::sign(&wrong_pq, beacon.identity_sk()).unwrap();
+			let mut message = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
+			let mut root = message.init_root();
+			root.set_identity_key(&identity);
+			root.set_pre_key(&wrong_prekey);
+			root.set_one_time_key(&wrong_onetime);
+			root.set_pq_key(&wrong_pq);
+			let mut wrong_type = vec![];
+			capnp::serialize::write_message(&mut wrong_type, message.borrow_inner()).unwrap();
+
+			assert!(
+				server.get_shared_secret(&wrong_type).is_none(),
+				"server accepted a wrong type prefix in {field}"
+			);
+		}
+	}
+
+	#[test]
 	fn signature_verification_rejects_an_unknown_key_id() {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.identity_pk().clone();
@@ -917,8 +1015,14 @@ mod tests {
 		let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm).unwrap();
 		let expected =
 			crypto_kdf::hkdf::sha512::expand(actual.len(), Some(PQXDH_INFO), &prk).unwrap();
+		let known_answer = [
+			0xcb, 0xcf, 0x9d, 0x12, 0xdb, 0x13, 0x92, 0x7a, 0xc3, 0x3a, 0x04, 0x9c, 0xb6, 0x10,
+			0x94, 0x8b, 0xaf, 0x33, 0x9b, 0x5c, 0x8c, 0x78, 0x2a, 0x2e, 0xaf, 0x14, 0x3e, 0x12,
+			0x3b, 0xda, 0xa7, 0xe2,
+		];
 
 		assert_eq!(actual, expected);
+		assert_eq!(actual, known_answer);
 	}
 
 	#[test]
