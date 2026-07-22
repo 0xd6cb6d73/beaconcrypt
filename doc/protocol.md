@@ -85,6 +85,7 @@ The server must use this message as follows:
   - dh4 = DH(`ephemeral_sk`, `beacon_onetime_pk`)
 - Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
   - `Padding` is 32 `0xFF` bytes
+- Delete all Diffie Hellman output
 - Return the KEM ciphertext, derived secret, ephemeral public key and beacon public key
 
 ## KexResponse
@@ -93,12 +94,14 @@ This message enables the beacon to obtain the elements it needs to derive the sh
 - Register a new known cryptographic identity using the beacon's public key and newly created key ID
   - At this point, the beacon is registered from the point of view of beaconcrypt
 - Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
+- Delete the derived secret
 - Set the `keyId` field to the newly generate beacon's key ID
 - Set the `ephemeralKey` field to the X25519 ephemeral public key from the corresponding `InitKex`
 - Set the `identityKey` to the server's Ed25519 public key
 - Set the `kemCipherText` to the KEM ciphertext from the corresponding `InitKex`
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
 - Encrypt the first message if there is one, otherwise encrypt a single `0xFF` byte using a `CryptoFrame` and set `appCipherText` to its value
+- Delete the ephemeral key pair
 - Return the beacon's public key and key ID to the caller so it can register it as required
 
 Upon reception, the beacon must process this message as follows:
@@ -114,10 +117,12 @@ Upon reception, the beacon must process this message as follows:
 - Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
   - `Padding` is 32 `0xFF` bytes
 - Delete its one-time keypair.
-- Save the server's public key
+- Delete its PQ keypair
+- Delete all Diffie Hellman output
 - Save its own key ID using the `keyId` field
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
 - Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
+- Delete the derived secret
 - Decrypt the `appCipherText` as a `CryproFrame`, using its `recv` keychain
 - If decryption is successful, return the plaintext to the caller oherwise abort the protocol and delete the previously derived cryptographic state
 
