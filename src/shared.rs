@@ -567,6 +567,9 @@ pub trait CryptoProvider {
 	/// * `None` if some other error happens.
 	/// * `Vec<u8>` containing a serialized `cryptoframe_capnp::crypto_frame`
 	fn encrypt_message(&mut self, bytes: &[u8], kid: u64) -> Option<Vec<u8>> {
+		if bytes.is_empty() {
+			return None;
+		}
 		let associated_data = self.associated_data(kid)?;
 		let key_seq = self.ratchet_send(SYM_RATCHET_INFO, kid)?;
 		let key = self.send_key(key_seq, kid)?;
