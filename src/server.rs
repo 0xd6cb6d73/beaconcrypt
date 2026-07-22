@@ -16,7 +16,6 @@ pub struct RegResponse {
 	pub kid: u64,
 }
 
-#[derive(Clone)]
 pub struct RegistrationOutput {
 	pub kem_ciphertext: KemCiphertext,
 	pub derived_secret: KexDerivedSecret,
