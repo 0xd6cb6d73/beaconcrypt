@@ -5,6 +5,7 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 const SERVER_KID: u64 = 0;
 const TAG_SIZE: usize = 16;
 const COMMITMENT_SIZE: usize = 64;
+const RECEIVE_GAP_LIMIT: u64 = 50;
 
 fn new_pair() -> (BeaconCryptPqxdh, BeaconCryptPqxdh) {
 	let server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
@@ -78,6 +79,39 @@ fn crypto_frame_ciphertext(serialized: &[u8]) -> Vec<u8> {
 	typed.get().unwrap().get_cipher_text().unwrap().to_vec()
 }
 
+fn rewrite_crypto_frame_seq(serialized: &[u8], seq: u64) -> Vec<u8> {
+	serialize_crypto_frame(
+		seq,
+		crypto_frame_key_id(serialized),
+		&crypto_frame_ciphertext(serialized),
+	)
+}
+
+fn corrupt_crypto_frame_commitment(serialized: &[u8]) -> Vec<u8> {
+	let seq = crypto_frame_seq(serialized);
+	let key_id = crypto_frame_key_id(serialized);
+	let mut ciphertext = crypto_frame_ciphertext(serialized);
+	let commitment_start = ciphertext.len() - COMMITMENT_SIZE;
+	ciphertext[commitment_start] ^= 0x01;
+	serialize_crypto_frame(seq, key_id, &ciphertext)
+}
+
+fn receive_state(crypto: &BeaconCryptPqxdh, kid: u64) -> Vec<u8> {
+	crypto
+		.ratchet_manager(kid)
+		.unwrap()
+		.recv_state()
+		.as_slice()
+		.to_vec()
+}
+
+fn cached_receive_key_count(crypto: &BeaconCryptPqxdh, kid: u64, start: u64, end: u64) -> usize {
+	let ratchet = crypto.ratchet_manager(kid).unwrap();
+	(start..=end)
+		.filter(|seq| ratchet.recv_key(*seq).is_some())
+		.count()
+}
+
 fn assert_server_frame_tampering_is_rejected(mut tamper: impl FnMut(&mut Vec<u8>, &[u8])) {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
@@ -102,6 +136,195 @@ fn assert_server_frame_tampering_is_rejected(mut tamper: impl FnMut(&mut Vec<u8>
 		beacon.decrypt_message(&valid).unwrap().plaintext,
 		plaintext,
 		"rejecting a tampered frame must not consume its receive key"
+	);
+}
+
+fn assert_sequence_relabelling_is_rejected(
+	sender: &mut BeaconCryptPqxdh,
+	receiver: &mut BeaconCryptPqxdh,
+	sender_target_kid: u64,
+) {
+	let first_plaintext = b"first sequence-bound message";
+	let second_plaintext = b"second sequence-bound message";
+	let first = sender
+		.encrypt_message(first_plaintext, sender_target_kid)
+		.unwrap();
+	let second = sender
+		.encrypt_message(second_plaintext, sender_target_kid)
+		.unwrap();
+	let first_seq = crypto_frame_seq(&first);
+	let second_seq = crypto_frame_seq(&second);
+	assert_eq!(second_seq, first_seq + 1);
+
+	let relabelled = rewrite_crypto_frame_seq(&first, second_seq);
+	assert!(receiver.decrypt_message(&relabelled).is_none());
+	assert_eq!(
+		receiver.decrypt_message(&first).unwrap().plaintext,
+		first_plaintext
+	);
+	assert_eq!(
+		receiver.decrypt_message(&second).unwrap().plaintext,
+		second_plaintext
+	);
+}
+
+fn assert_invalid_future_frames_cannot_grow_receive_cache(
+	sender: &mut BeaconCryptPqxdh,
+	receiver: &mut BeaconCryptPqxdh,
+	sender_target_kid: u64,
+	receiver_remote_kid: u64,
+) {
+	let first_plaintext = b"first message remains usable after forged future frames";
+	let second_plaintext = b"second message remains usable after forged future frames";
+	let first = sender
+		.encrypt_message(first_plaintext, sender_target_kid)
+		.unwrap();
+	let second = sender
+		.encrypt_message(second_plaintext, sender_target_kid)
+		.unwrap();
+	let first_seq = crypto_frame_seq(&first);
+	assert_eq!(crypto_frame_seq(&second), first_seq + 1);
+	let current_seq = first_seq - 1;
+	let initial_state = receive_state(receiver, receiver_remote_kid);
+	let corrupted = corrupt_crypto_frame_commitment(&first);
+
+	for rejected_seq in [0, current_seq + RECEIVE_GAP_LIMIT + 1, u64::MAX] {
+		let forged = rewrite_crypto_frame_seq(&corrupted, rejected_seq);
+		assert!(
+			receiver.decrypt_message(&forged).is_none(),
+			"forged sequence {rejected_seq} was accepted"
+		);
+		assert_eq!(
+			receive_state(receiver, receiver_remote_kid),
+			initial_state,
+			"out-of-range sequence {rejected_seq} advanced the receive state"
+		);
+		assert!(
+			receiver
+				.ratchet_manager(receiver_remote_kid)
+				.unwrap()
+				.recv_key(first_seq)
+				.is_none()
+		);
+	}
+
+	let last_cached_seq = current_seq + RECEIVE_GAP_LIMIT;
+	for forged_seq in first_seq..=last_cached_seq {
+		let forged = rewrite_crypto_frame_seq(&corrupted, forged_seq);
+		assert!(
+			receiver.decrypt_message(&forged).is_none(),
+			"invalid frame at sequence {forged_seq} was accepted"
+		);
+		assert_eq!(
+			cached_receive_key_count(receiver, receiver_remote_kid, first_seq, last_cached_seq),
+			(forged_seq - current_seq) as usize,
+			"unexpected cache size after forged sequence {forged_seq}"
+		);
+	}
+
+	let saturated_state = receive_state(receiver, receiver_remote_kid);
+	assert_eq!(
+		cached_receive_key_count(receiver, receiver_remote_kid, first_seq, last_cached_seq),
+		RECEIVE_GAP_LIMIT as usize
+	);
+
+	for rejected_seq in [
+		last_cached_seq + 1,
+		last_cached_seq + 2,
+		last_cached_seq + RECEIVE_GAP_LIMIT,
+		u64::MAX,
+	] {
+		let forged = rewrite_crypto_frame_seq(&corrupted, rejected_seq);
+		assert!(
+			receiver.decrypt_message(&forged).is_none(),
+			"forged sequence {rejected_seq} was accepted after cache saturation"
+		);
+		assert_eq!(
+			receive_state(receiver, receiver_remote_kid),
+			saturated_state,
+			"forged sequence {rejected_seq} advanced a saturated receive state"
+		);
+		assert_eq!(
+			cached_receive_key_count(receiver, receiver_remote_kid, first_seq, last_cached_seq),
+			RECEIVE_GAP_LIMIT as usize
+		);
+		assert!(
+			receiver
+				.ratchet_manager(receiver_remote_kid)
+				.unwrap()
+				.recv_key(rejected_seq)
+				.is_none()
+		);
+	}
+
+	assert_eq!(
+		receiver.decrypt_message(&first).unwrap().plaintext,
+		first_plaintext
+	);
+	assert_eq!(
+		receiver.decrypt_message(&second).unwrap().plaintext,
+		second_plaintext
+	);
+	assert_eq!(
+		receive_state(receiver, receiver_remote_kid),
+		saturated_state
+	);
+	assert_eq!(
+		cached_receive_key_count(receiver, receiver_remote_kid, first_seq, last_cached_seq),
+		RECEIVE_GAP_LIMIT as usize - 2
+	);
+
+	let recovered_boundary_seq = last_cached_seq + 2;
+	let recovered_boundary =
+		rewrite_crypto_frame_seq(&corrupted, recovered_boundary_seq);
+	assert!(
+		receiver.decrypt_message(&recovered_boundary).is_none(),
+		"invalid frame at the recovered cache boundary was accepted"
+	);
+	let recovered_state = receive_state(receiver, receiver_remote_kid);
+	assert_ne!(
+		recovered_state, saturated_state,
+		"freeing two cached keys did not permit two more ratchet steps"
+	);
+	assert_eq!(
+		cached_receive_key_count(
+			receiver,
+			receiver_remote_kid,
+			first_seq + 2,
+			recovered_boundary_seq,
+		),
+		RECEIVE_GAP_LIMIT as usize,
+		"receive cache did not refill to its exact boundary"
+	);
+
+	let over_recovered_boundary_seq = recovered_boundary_seq + 1;
+	let over_recovered_boundary =
+		rewrite_crypto_frame_seq(&corrupted, over_recovered_boundary_seq);
+	assert!(
+		receiver.decrypt_message(&over_recovered_boundary).is_none(),
+		"invalid frame beyond the recovered cache boundary was accepted"
+	);
+	assert_eq!(
+		receive_state(receiver, receiver_remote_kid),
+		recovered_state,
+		"frame beyond the recovered boundary advanced the receive state"
+	);
+	assert_eq!(
+		cached_receive_key_count(
+			receiver,
+			receiver_remote_kid,
+			first_seq + 2,
+			recovered_boundary_seq,
+		),
+		RECEIVE_GAP_LIMIT as usize,
+		"frame beyond the recovered boundary grew the receive cache"
+	);
+	assert!(
+		receiver
+			.ratchet_manager(receiver_remote_kid)
+			.unwrap()
+			.recv_key(over_recovered_boundary_seq)
+			.is_none()
 	);
 }
 
@@ -596,6 +819,45 @@ fn empty_plaintext_is_rejected_without_advancing_send_ratchets() {
 	assert_eq!(
 		server.decrypt_message(&to_server).unwrap().plaintext,
 		b"non-empty"
+	);
+}
+
+#[test]
+fn crypto_frame_sequence_is_bound_in_both_directions() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_sequence_relabelling_is_rejected(&mut server, &mut beacon, response.kid);
+
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_sequence_relabelling_is_rejected(&mut beacon, &mut server, SERVER_KID);
+	assert!(
+		server
+			.ratchet_manager(response.kid)
+			.unwrap()
+			.recv_key(1)
+			.is_none()
+	);
+}
+
+#[test]
+fn invalid_future_frames_cannot_grow_receive_cache_beyond_gap() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_invalid_future_frames_cannot_grow_receive_cache(
+		&mut server,
+		&mut beacon,
+		response.kid,
+		SERVER_KID,
+	);
+
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_invalid_future_frames_cannot_grow_receive_cache(
+		&mut beacon,
+		&mut server,
+		SERVER_KID,
+		response.kid,
 	);
 }
 

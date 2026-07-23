@@ -724,6 +724,41 @@ mod tests {
 		assert_eq!(nonce_bytes(left.nonce()), nonce_bytes(right.nonce()));
 	}
 
+	fn commitment_for_test(
+		key: [u8; AEAD_KEY_LEN],
+		nonce: [u8; AEAD_NONCE_LEN],
+		ad: &[u8],
+		tag: &[u8],
+		seq: u64,
+		kid: u64,
+	) -> Vec<u8> {
+		let secret = KeyMaterial {
+			key: key.into(),
+			nonce: nonce.into(),
+		};
+		build_commitment(&secret, ad, tag, seq, kid).unwrap()
+	}
+
+	#[cfg(all(feature = "beacon", feature = "server", feature = "pqxdh"))]
+	fn decode_hex<const N: usize>(hex: &str) -> [u8; N] {
+		fn nibble(byte: u8) -> u8 {
+			match byte {
+				b'0'..=b'9' => byte - b'0',
+				b'a'..=b'f' => byte - b'a' + 10,
+				b'A'..=b'F' => byte - b'A' + 10,
+				_ => panic!("invalid hexadecimal fixture"),
+			}
+		}
+
+		assert_eq!(hex.len(), N * 2);
+		let mut decoded = [0; N];
+		for (index, output) in decoded.iter_mut().enumerate() {
+			let offset = index * 2;
+			*output = (nibble(hex.as_bytes()[offset]) << 4) | nibble(hex.as_bytes()[offset + 1]);
+		}
+		decoded
+	}
+
 	#[test]
 	fn sign_type_discriminants_round_trip() {
 		assert_eq!(u8::from(SignType::Undefined), 0);
@@ -852,8 +887,9 @@ mod tests {
 	///ad = b"beaconcrypt-test-associated-data"
 	///tag = bytes([0x33]) * 16
 	///seq = (0x44).to_bytes(8, "little")
+	///kid = (0x55).to_bytes(8, "little")
 	///
-	///print(hashlib.blake2b(key + nonce + ad + tag + seq, digest_size=64).hexdigest())
+	///print(hashlib.blake2b(key + nonce + ad + tag + seq + kid, digest_size=64).hexdigest())
 	#[cfg(all(feature = "beacon", feature = "server", feature = "pqxdh"))]
 	#[test]
 	fn commitment_matches_blake2b_known_answer() {
@@ -876,6 +912,133 @@ mod tests {
 		assert_eq!(
 			build_commitment(&secret, associated_data, &tag, key_seq, key_id).unwrap(),
 			expected
+		);
+	}
+
+	#[cfg(all(feature = "beacon", feature = "server", feature = "pqxdh"))]
+	#[test]
+	fn commitment_binds_every_context_bit() {
+		let mut key = [0x11; AEAD_KEY_LEN];
+		let mut nonce = [0x22; AEAD_NONCE_LEN];
+		let mut associated_data = [0x33; AD_SIZE];
+		let mut tag = [0x44; crypto_aead::chacha20poly1305_ietf::ABYTES];
+		let seq = 0x0123_4567_89AB_CDEF;
+		let kid = 0xFEDC_BA98_7654_3210;
+		let expected = commitment_for_test(key, nonce, &associated_data, &tag, seq, kid);
+
+		for byte in 0..key.len() {
+			for bit in 0..u8::BITS {
+				key[byte] ^= 1 << bit;
+				assert_ne!(
+					commitment_for_test(key, nonce, &associated_data, &tag, seq, kid),
+					expected,
+					"key byte {byte}, bit {bit} is not bound"
+				);
+				key[byte] ^= 1 << bit;
+			}
+		}
+
+		for byte in 0..nonce.len() {
+			for bit in 0..u8::BITS {
+				nonce[byte] ^= 1 << bit;
+				assert_ne!(
+					commitment_for_test(key, nonce, &associated_data, &tag, seq, kid),
+					expected,
+					"nonce byte {byte}, bit {bit} is not bound"
+				);
+				nonce[byte] ^= 1 << bit;
+			}
+		}
+
+		for byte in 0..associated_data.len() {
+			for bit in 0..u8::BITS {
+				associated_data[byte] ^= 1 << bit;
+				assert_ne!(
+					commitment_for_test(key, nonce, &associated_data, &tag, seq, kid),
+					expected,
+					"associated-data byte {byte}, bit {bit} is not bound"
+				);
+				associated_data[byte] ^= 1 << bit;
+			}
+		}
+
+		for byte in 0..tag.len() {
+			for bit in 0..u8::BITS {
+				tag[byte] ^= 1 << bit;
+				assert_ne!(
+					commitment_for_test(key, nonce, &associated_data, &tag, seq, kid),
+					expected,
+					"AEAD-tag byte {byte}, bit {bit} is not bound"
+				);
+				tag[byte] ^= 1 << bit;
+			}
+		}
+
+		for bit in 0..u64::BITS {
+			assert_ne!(
+				commitment_for_test(key, nonce, &associated_data, &tag, seq ^ (1 << bit), kid),
+				expected,
+				"sequence bit {bit} is not bound"
+			);
+			assert_ne!(
+				commitment_for_test(key, nonce, &associated_data, &tag, seq, kid ^ (1 << bit)),
+				expected,
+				"key-id bit {bit} is not bound"
+			);
+		}
+	}
+
+	#[cfg(all(feature = "beacon", feature = "server", feature = "pqxdh"))]
+	#[test]
+	fn commitment_separates_real_chacha20poly1305_multi_opening() {
+		// This fixture fixes two keys, a nonce, ciphertext, and the first associated-data
+		// block, then solves the Poly1305 accumulator modulo 2^130 - 5 for the second
+		// associated-data block. The shared ciphertext and tag therefore authenticate two
+		// distinct plaintext/context openings under the base AEAD.
+		let key_one = decode_hex::<AEAD_KEY_LEN>(
+			"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+		);
+		let key_two = decode_hex::<AEAD_KEY_LEN>(
+			"967712731b5091e4e42b5fa6241e3b02108fedc55c561d80af04c2095d3edbe7",
+		);
+		let nonce = decode_hex::<AEAD_NONCE_LEN>("000102030405060708090a0b");
+		let ad_one = decode_hex::<16>("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff");
+		let ad_two = decode_hex::<16>("3a09eec3daf672a00f13351df1986203");
+		let ciphertext = decode_hex::<16>("00112233445566778899aabbccddeeff");
+		let tag = decode_hex::<{ crypto_aead::chacha20poly1305_ietf::ABYTES }>(
+			"8867608090128f8c1a4711d553773215",
+		);
+		let expected_plaintext_one = decode_hex::<16>("89ea2a336d42c3373f1a954854c0e09c");
+		let expected_plaintext_two = decode_hex::<16>("3c6ab3eb035de373e2b5d4a81a3cd13f");
+		let aead_key_one: AeadKey = key_one.into();
+		let aead_key_two: AeadKey = key_two.into();
+		let aead_nonce: AeadNonce = nonce.into();
+		let mut ciphertext_and_tag = ciphertext.to_vec();
+		ciphertext_and_tag.extend_from_slice(&tag);
+
+		let plaintext_one = crypto_aead::chacha20poly1305_ietf::decrypt(
+			&ciphertext_and_tag,
+			Some(&ad_one),
+			&aead_nonce,
+			&aead_key_one,
+		)
+		.unwrap();
+		let plaintext_two = crypto_aead::chacha20poly1305_ietf::decrypt(
+			&ciphertext_and_tag,
+			Some(&ad_two),
+			&aead_nonce,
+			&aead_key_two,
+		)
+		.unwrap();
+		assert_eq!(plaintext_one, expected_plaintext_one);
+		assert_eq!(plaintext_two, expected_plaintext_two);
+		assert_ne!(plaintext_one, plaintext_two);
+
+		let commitment_one = commitment_for_test(key_one, nonce, &ad_one, &tag, 1, 7);
+		let commitment_two = commitment_for_test(key_two, nonce, &ad_two, &tag, 1, 7);
+		assert_ne!(
+			commitment_one, commitment_two,
+			"CTX commitment must separate the base AEAD's two valid openings"
 		);
 	}
 
