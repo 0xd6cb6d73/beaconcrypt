@@ -37,6 +37,11 @@
 
 #define beaconcrypt_COMMITMENT_SIZE 64
 
+/**
+ * crypto_aead::chacha20poly1305_ietf::ABYTES
+ */
+#define beaconcrypt_MESSAGE_OVERHEAD (beaconcrypt_COMMITMENT_SIZE + 16)
+
 typedef struct beaconcrypt_BeaconCryptPqxdh beaconcrypt_BeaconCryptPqxdh;
 
 typedef struct beaconcrypt_Buffer {
@@ -94,19 +99,9 @@ struct beaconcrypt_Buffer beaconcrypt_encrypt_to_beacon(struct beaconcrypt_Beaco
                                                         const uint8_t *ptr,
                                                         uintptr_t len);
 
-struct beaconcrypt_Buffer beaconcrypt_encrypt_to_beacon_signed(struct beaconcrypt_BeaconCryptPqxdh *handle,
-                                                               uint64_t key_id,
-                                                               const uint8_t *ptr,
-                                                               uintptr_t len);
-
 struct beaconcrypt_Buffer beaconcrypt_decrypt_beacon_message(struct beaconcrypt_BeaconCryptPqxdh *handle,
-                                                             uint64_t key_id,
                                                              const uint8_t *ptr,
                                                              uintptr_t len);
-
-struct beaconcrypt_Buffer beaconcrypt_decrypt_beacon_message_signed(struct beaconcrypt_BeaconCryptPqxdh *handle,
-                                                                    const uint8_t *ptr,
-                                                                    uintptr_t len);
 
 struct beaconcrypt_EncryptState beaconcrypt_encrypt_and_update(struct beaconcrypt_BeaconCryptPqxdh *handle,
                                                                uint64_t key_id,
@@ -121,17 +116,9 @@ struct beaconcrypt_Buffer beaconcrypt_encrypt_to_server(struct beaconcrypt_Beaco
                                                         const uint8_t *ptr,
                                                         uintptr_t len);
 
-struct beaconcrypt_Buffer beaconcrypt_encrypt_to_server_signed(struct beaconcrypt_BeaconCryptPqxdh *handle,
-                                                               const uint8_t *ptr,
-                                                               uintptr_t len);
-
 struct beaconcrypt_Buffer beaconcrypt_decrypt_server_message(struct beaconcrypt_BeaconCryptPqxdh *handle,
                                                              const uint8_t *ptr,
                                                              uintptr_t len);
-
-struct beaconcrypt_Buffer beaconcrypt_decrypt_server_message_signed(struct beaconcrypt_BeaconCryptPqxdh *handle,
-                                                                    const uint8_t *ptr,
-                                                                    uintptr_t len);
 
 #ifdef __cplusplus
 }  // extern "C"

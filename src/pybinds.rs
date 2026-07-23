@@ -80,20 +80,14 @@ impl Server {
 		}
 	}
 
-	fn decrypt_beacon_message(&mut self, data: Vec<u8>, kid: u64) -> Option<Vec<u8>> {
-		self._0.decrypt_message(&data, kid)
-	}
-
-	fn decrypt_beacon_message_signed(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
-		self._0.decrypt_signed(&data).map(|verified| verified.data)
+	fn decrypt_beacon_message(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
+		self._0
+			.decrypt_message(&data)
+			.map(|decrypted| decrypted.plaintext)
 	}
 
 	fn encrypt_to_beacon(&mut self, data: Vec<u8>, kid: u64) -> Option<Vec<u8>> {
 		self._0.encrypt_message(&data, kid)
-	}
-
-	fn encrypt_to_beacon_signed(&mut self, data: Vec<u8>, kid: u64) -> Option<Vec<u8>> {
-		self._0.encrypt_and_sign(&data, kid)
 	}
 
 	fn encrypt_and_update(&mut self, data: Vec<u8>, kid: u64) -> Option<EncryptStatePy> {
@@ -136,21 +130,13 @@ impl Beacon {
 	}
 
 	fn decrypt_server_message(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
-		let srv_seq = self._0.server_kid();
-		self._0.decrypt_message(&data, srv_seq)
-	}
-
-	fn decrypt_server_message_signed(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
-		self._0.decrypt_signed(&data).map(|verified| verified.data)
+		self._0
+			.decrypt_message(&data)
+			.map(|decrypted| decrypted.plaintext)
 	}
 
 	fn encrypt_message_to_server(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
 		let srv_seq = self._0.server_kid();
 		self._0.encrypt_message(&data, srv_seq)
-	}
-
-	fn encrypt_to_server_signed(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
-		let srv_seq = self._0.server_kid();
-		self._0.encrypt_and_sign(&data, srv_seq)
 	}
 }

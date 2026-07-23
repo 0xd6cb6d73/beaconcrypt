@@ -210,52 +210,12 @@ pub extern "C" fn beaconcrypt_encrypt_to_beacon(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn beaconcrypt_encrypt_to_beacon_signed(
-	handle: *mut BeaconCryptPqxdh,
-	key_id: u64,
-	ptr: *const u8,
-	len: usize,
-) -> Buffer {
-	if handle.is_null() {
-		return empty_buffer();
-	}
-	let Some(data) = (unsafe { input(ptr, len) }) else {
-		return empty_buffer();
-	};
-	let provider = unsafe { &mut *handle };
-	provider
-		.encrypt_and_sign(data, key_id)
-		.map(into_buffer)
-		.unwrap_or_else(empty_buffer)
-}
-
-#[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_decrypt_beacon_message(
 	handle: *mut BeaconCryptPqxdh,
-	key_id: u64,
 	ptr: *const u8,
 	len: usize,
 ) -> Buffer {
-	decrypt(handle, ptr, len, key_id)
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn beaconcrypt_decrypt_beacon_message_signed(
-	handle: *mut BeaconCryptPqxdh,
-	ptr: *const u8,
-	len: usize,
-) -> Buffer {
-	if handle.is_null() {
-		return empty_buffer();
-	}
-	let Some(data) = (unsafe { input(ptr, len) }) else {
-		return empty_buffer();
-	};
-	let provider = unsafe { &mut *handle };
-	provider
-		.decrypt_signed(data)
-		.map(|verified| into_buffer(verified.data))
-		.unwrap_or_else(empty_buffer)
+	decrypt(handle, ptr, len)
 }
 
 #[unsafe(no_mangle)]
@@ -311,55 +271,12 @@ pub extern "C" fn beaconcrypt_encrypt_to_server(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn beaconcrypt_encrypt_to_server_signed(
-	handle: *mut BeaconCryptPqxdh,
-	ptr: *const u8,
-	len: usize,
-) -> Buffer {
-	if handle.is_null() {
-		return empty_buffer();
-	}
-	let Some(data) = (unsafe { input(ptr, len) }) else {
-		return empty_buffer();
-	};
-	let provider = unsafe { &mut *handle };
-	let srv_kid = provider.server_kid();
-	provider
-		.encrypt_and_sign(data, srv_kid)
-		.map(into_buffer)
-		.unwrap_or_else(empty_buffer)
-}
-
-#[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_decrypt_server_message(
 	handle: *mut BeaconCryptPqxdh,
 	ptr: *const u8,
 	len: usize,
 ) -> Buffer {
-	if handle.is_null() {
-		return empty_buffer();
-	}
-	let provider = unsafe { &*handle };
-	decrypt(handle, ptr, len, provider.server_kid())
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn beaconcrypt_decrypt_server_message_signed(
-	handle: *mut BeaconCryptPqxdh,
-	ptr: *const u8,
-	len: usize,
-) -> Buffer {
-	if handle.is_null() {
-		return empty_buffer();
-	}
-	let Some(data) = (unsafe { input(ptr, len) }) else {
-		return empty_buffer();
-	};
-	let provider = unsafe { &mut *handle };
-	provider
-		.decrypt_signed(data)
-		.map(|verified| into_buffer(verified.data))
-		.unwrap_or_else(empty_buffer)
+	decrypt(handle, ptr, len)
 }
 
 fn encrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize, key_id: u64) -> Buffer {
@@ -376,7 +293,7 @@ fn encrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize, key_id: u6
 		.unwrap_or_else(empty_buffer)
 }
 
-fn decrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize, key_id: u64) -> Buffer {
+fn decrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize) -> Buffer {
 	if handle.is_null() {
 		return empty_buffer();
 	}
@@ -385,7 +302,7 @@ fn decrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize, key_id: u6
 	};
 	let provider = unsafe { &mut *handle };
 	provider
-		.decrypt_message(data, key_id)
-		.map(into_buffer)
+		.decrypt_message(data)
+		.map(|decrypted| into_buffer(decrypted.plaintext))
 		.unwrap_or_else(empty_buffer)
 }

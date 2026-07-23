@@ -37,15 +37,11 @@ beaconcrypt_buffer beaconcrypt_generate_registration(void *handle);
 beaconcrypt_registration_response beaconcrypt_register_beacon(void *handle, const uint8_t *reg_ptr, uintptr_t reg_len, const uint8_t *msg_ptr, uintptr_t msg_len);
 beaconcrypt_buffer beaconcrypt_process_initial_message(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_encrypt_to_beacon(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_encrypt_to_beacon_signed(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_decrypt_beacon_message(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_decrypt_beacon_message_signed(void *handle, const uint8_t *ptr, uintptr_t len);
+beaconcrypt_buffer beaconcrypt_decrypt_beacon_message(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_encrypt_state beaconcrypt_encrypt_and_update(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_encrypt_state beaconcrypt_decrypt_and_update(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_encrypt_to_server(void *handle, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_encrypt_to_server_signed(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_decrypt_server_message(void *handle, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_decrypt_server_message_signed(void *handle, const uint8_t *ptr, uintptr_t len);
 */
 import "C"
 
@@ -201,30 +197,12 @@ func (s *Server) EncryptToBeacon(keyID uint64, plaintext []byte) ([]byte, error)
 	})
 }
 
-func (s *Server) EncryptToBeaconSigned(keyID uint64, plaintext []byte) ([]byte, error) {
-	if s == nil || s.handle == nil {
-		return nil, ErrClosed
-	}
-	return callUnary(plaintext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
-		return C.beaconcrypt_encrypt_to_beacon_signed(s.handle, C.uint64_t(keyID), ptr, len)
-	})
-}
-
-func (s *Server) DecryptBeaconMessage(keyID uint64, ciphertext []byte) ([]byte, error) {
+func (s *Server) DecryptBeaconMessage(ciphertext []byte) ([]byte, error) {
 	if s == nil || s.handle == nil {
 		return nil, ErrClosed
 	}
 	return callUnary(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
-		return C.beaconcrypt_decrypt_beacon_message(s.handle, C.uint64_t(keyID), ptr, len)
-	})
-}
-
-func (s *Server) DecryptBeaconMessageSigned(ciphertext []byte) ([]byte, error) {
-	if s == nil || s.handle == nil {
-		return nil, ErrClosed
-	}
-	return callUnary(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
-		return C.beaconcrypt_decrypt_beacon_message_signed(s.handle, ptr, len)
+		return C.beaconcrypt_decrypt_beacon_message(s.handle, ptr, len)
 	})
 }
 
@@ -255,30 +233,12 @@ func (b *Beacon) EncryptToServer(plaintext []byte) ([]byte, error) {
 	})
 }
 
-func (b *Beacon) EncryptToServerSigned(plaintext []byte) ([]byte, error) {
-	if b == nil || b.handle == nil {
-		return nil, ErrClosed
-	}
-	return callUnary(plaintext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
-		return C.beaconcrypt_encrypt_to_server_signed(b.handle, ptr, len)
-	})
-}
-
 func (b *Beacon) DecryptServerMessage(ciphertext []byte) ([]byte, error) {
 	if b == nil || b.handle == nil {
 		return nil, ErrClosed
 	}
 	return callUnary(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
 		return C.beaconcrypt_decrypt_server_message(b.handle, ptr, len)
-	})
-}
-
-func (b *Beacon) DecryptServerMessageSigned(ciphertext []byte) ([]byte, error) {
-	if b == nil || b.handle == nil {
-		return nil, ErrClosed
-	}
-	return callUnary(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
-		return C.beaconcrypt_decrypt_server_message_signed(b.handle, ptr, len)
 	})
 }
 

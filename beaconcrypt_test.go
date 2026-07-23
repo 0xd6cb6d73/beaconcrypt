@@ -244,11 +244,11 @@ func TestServerUsesPerBeaconAssociatedData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	plainFromB1, err := server.DecryptBeaconMessage(b1Registration.KeyID, fromB1)
+	plainFromB1, err := server.DecryptBeaconMessage(fromB1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	plainFromB2, err := server.DecryptBeaconMessage(b2Registration.KeyID, fromB2)
+	plainFromB2, err := server.DecryptBeaconMessage(fromB2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,7 +292,7 @@ func TestServerCanDecryptFromBeaconAAfterRegisteringBeaconB(t *testing.T) {
 	beaconA := newBeacon(t, serverPK)
 	beaconB := newBeacon(t, serverPK)
 
-	beaconARegistration := registerBeacon(t, server, beaconA)
+	registerBeacon(t, server, beaconA)
 	registerBeacon(t, server, beaconB)
 
 	message := []byte("beacon A to server after registering beacon B")
@@ -300,7 +300,7 @@ func TestServerCanDecryptFromBeaconAAfterRegisteringBeaconB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	plaintext, err := server.DecryptBeaconMessage(beaconARegistration.KeyID, ciphertext)
+	plaintext, err := server.DecryptBeaconMessage(ciphertext)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -318,7 +318,7 @@ func TestServerCanDecryptFromBeaconAAfterEncryptingToBeaconB(t *testing.T) {
 	beaconA := newBeacon(t, serverPK)
 	beaconB := newBeacon(t, serverPK)
 
-	beaconARegistration := registerBeacon(t, server, beaconA)
+	registerBeacon(t, server, beaconA)
 	beaconBRegistration := registerBeacon(t, server, beaconB)
 
 	toBeaconB, err := server.EncryptToBeacon(beaconBRegistration.KeyID, []byte("server to beacon B"))
@@ -337,7 +337,7 @@ func TestServerCanDecryptFromBeaconAAfterEncryptingToBeaconB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	plainFromBeaconA, err := server.DecryptBeaconMessage(beaconARegistration.KeyID, fromBeaconA)
+	plainFromBeaconA, err := server.DecryptBeaconMessage(fromBeaconA)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -405,41 +405,6 @@ func TestDecryptMultiple(t *testing.T) {
 	}
 }
 
-func TestDecryptMultipleSigned(t *testing.T) {
-	server := newServer(t)
-	serverPK, err := server.IdentityPK()
-	if err != nil {
-		t.Fatal(err)
-	}
-	beacon := newBeacon(t, serverPK)
-	message := bytes.Repeat([]byte{0x01}, 32)
-
-	registration := registerBeacon(t, server, beacon)
-	m1, err := server.EncryptToBeaconSigned(registration.KeyID, message)
-	if err != nil {
-		t.Fatal(err)
-	}
-	m2, err := server.EncryptToBeaconSigned(registration.KeyID, message)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if bytes.Equal(m1, m2) {
-		t.Fatal("expected different signed ciphertexts")
-	}
-
-	plain1, err := beacon.DecryptServerMessageSigned(m1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	plain2, err := beacon.DecryptServerMessageSigned(m2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(plain1, message) || !bytes.Equal(plain2, message) {
-		t.Fatalf("decrypted signed messages mismatch: got %x and %x want %x", plain1, plain2, message)
-	}
-}
-
 func TestDecryptCatchUp(t *testing.T) {
 	server := newServer(t)
 	serverPK, err := server.IdentityPK()
@@ -484,40 +449,17 @@ func TestBeaconEncryptsToServer(t *testing.T) {
 	beacon := newBeacon(t, serverPK)
 	message := []byte("beacon to server")
 
-	registration := registerBeacon(t, server, beacon)
+	registerBeacon(t, server, beacon)
 	ciphertext, err := beacon.EncryptToServer(message)
 	if err != nil {
 		t.Fatal(err)
 	}
-	plaintext, err := server.DecryptBeaconMessage(registration.KeyID, ciphertext)
+	plaintext, err := server.DecryptBeaconMessage(ciphertext)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(plaintext, message) {
 		t.Fatalf("beacon-to-server decrypt mismatch: got %x want %x", plaintext, message)
-	}
-}
-
-func TestBeaconEncryptsToServerSigned(t *testing.T) {
-	server := newServer(t)
-	serverPK, err := server.IdentityPK()
-	if err != nil {
-		t.Fatal(err)
-	}
-	beacon := newBeacon(t, serverPK)
-	message := []byte("signed beacon to server")
-
-	registerBeacon(t, server, beacon)
-	signed, err := beacon.EncryptToServerSigned(message)
-	if err != nil {
-		t.Fatal(err)
-	}
-	plaintext, err := server.DecryptBeaconMessageSigned(signed)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(plaintext, message) {
-		t.Fatalf("signed beacon-to-server decrypt mismatch: got %x want %x", plaintext, message)
 	}
 }
 
@@ -541,7 +483,7 @@ func TestServerEncryptAndUpdateReturnsRatchetState(t *testing.T) {
 	if len(update.Key) != 32 {
 		t.Fatalf("state key length mismatch: got %d want 32", len(update.Key))
 	}
-	plaintext, err := beacon.DecryptServerMessageSigned(update.Data)
+	plaintext, err := beacon.DecryptServerMessage(update.Data)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -560,7 +502,7 @@ func TestServerDecryptAndUpdateReturnsRatchetState(t *testing.T) {
 	registration := registerBeacon(t, server, beacon)
 	message := []byte("beacon to server with updated state")
 
-	ciphertext, err := beacon.EncryptToServerSigned(message)
+	ciphertext, err := beacon.EncryptToServer(message)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -579,7 +521,7 @@ func TestServerDecryptAndUpdateReturnsRatchetState(t *testing.T) {
 	}
 }
 
-func TestSignedBeaconMessageRejectsTampering(t *testing.T) {
+func TestAuthenticatedBeaconMessageRejectsTampering(t *testing.T) {
 	server := newServer(t)
 	serverPK, err := server.IdentityPK()
 	if err != nil {
@@ -588,18 +530,18 @@ func TestSignedBeaconMessageRejectsTampering(t *testing.T) {
 	beacon := newBeacon(t, serverPK)
 
 	registerBeacon(t, server, beacon)
-	signed, err := beacon.EncryptToServerSigned([]byte("beacon to server"))
+	ciphertext, err := beacon.EncryptToServer([]byte("beacon to server"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	signed[len(signed)-1] ^= 0x01
+	ciphertext[len(ciphertext)-1] ^= 0x01
 
-	if _, err := server.DecryptBeaconMessageSigned(signed); err == nil {
-		t.Fatal("expected tampered signed beacon message to be rejected")
+	if _, err := server.DecryptBeaconMessage(ciphertext); err == nil {
+		t.Fatal("expected tampered authenticated beacon message to be rejected")
 	}
 }
 
-func TestSignedServerMessageRejectsTampering(t *testing.T) {
+func TestAuthenticatedServerMessageRejectsTampering(t *testing.T) {
 	server := newServer(t)
 	serverPK, err := server.IdentityPK()
 	if err != nil {
@@ -608,14 +550,14 @@ func TestSignedServerMessageRejectsTampering(t *testing.T) {
 	beacon := newBeacon(t, serverPK)
 
 	registration := registerBeacon(t, server, beacon)
-	signed, err := server.EncryptToBeaconSigned(registration.KeyID, []byte("server to beacon"))
+	ciphertext, err := server.EncryptToBeacon(registration.KeyID, []byte("server to beacon"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	signed[len(signed)-1] ^= 0x01
+	ciphertext[len(ciphertext)-1] ^= 0x01
 
-	if _, err := beacon.DecryptServerMessageSigned(signed); err == nil {
-		t.Fatal("expected tampered signed message to be rejected")
+	if _, err := beacon.DecryptServerMessage(ciphertext); err == nil {
+		t.Fatal("expected tampered authenticated message to be rejected")
 	}
 }
 
@@ -632,7 +574,7 @@ func TestDecryptRejectsWrongDirection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := server.DecryptBeaconMessage(registration.KeyID, serverToBeacon); err == nil {
+	if _, err := server.DecryptBeaconMessage(serverToBeacon); err == nil {
 		t.Fatal("expected server-to-beacon ciphertext to be rejected by beacon-message decryptor")
 	}
 
@@ -729,17 +671,17 @@ func TestServerCanRetryDecryptionAfterCorruptedAEADMessage(t *testing.T) {
 	beacon := newBeacon(t, serverPK)
 	message := bytes.Repeat([]byte{0x01}, 32)
 
-	registration := registerBeacon(t, server, beacon)
+	registerBeacon(t, server, beacon)
 	ciphertext, err := beacon.EncryptToServer(message)
 	if err != nil {
 		t.Fatal(err)
 	}
 	corrupted := corruptAEADCiphertext(t, ciphertext)
 
-	if _, err := server.DecryptBeaconMessage(registration.KeyID, corrupted); err == nil {
+	if _, err := server.DecryptBeaconMessage(corrupted); err == nil {
 		t.Fatal("expected corrupted ciphertext to be rejected")
 	}
-	plaintext, err := server.DecryptBeaconMessage(registration.KeyID, ciphertext)
+	plaintext, err := server.DecryptBeaconMessage(ciphertext)
 	if err != nil {
 		t.Fatal(err)
 	}
