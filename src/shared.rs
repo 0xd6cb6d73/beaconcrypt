@@ -390,7 +390,9 @@ impl RatchetManager {
 	pub fn ratchet_recv_until(&mut self, info: &[u8], until: u64) -> Option<u64> {
 		if until <= self.recv_ctr {
 			Some(until)
-		} else if until > self.recv_ctr + RATCHET_MAX_GAP {
+		} else if until > self.recv_ctr + RATCHET_MAX_GAP
+			|| self.recv_past.len() as u64 + (until - self.recv_ctr) > RATCHET_MAX_GAP
+		{
 			None
 		} else {
 			let diff = until - self.recv_ctr;
@@ -948,24 +950,25 @@ mod tests {
 	}
 
 	#[test]
-	#[ignore = "known specification bug: per-frame gaps do not bound the total skipped-key cache"]
 	fn receive_ratchet_bounds_total_cached_skipped_keys() {
 		let mut ratchet = RatchetManager::new();
 		ratchet.init_ratchets(&[0x91; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
 
-		for batch in 1..=4 {
-			let target = batch * RATCHET_MAX_GAP;
-			assert_eq!(
-				ratchet.ratchet_recv_until(SYM_RATCHET_INFO, target),
-				Some(target)
-			);
-			ratchet.delete_recv_key(target);
-			assert!(
-				ratchet.recv_past.len() <= RATCHET_MAX_GAP as usize,
-				"cached {} skipped keys after receiving sequence {target}",
-				ratchet.recv_past.len()
-			);
-		}
+		assert_eq!(
+			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, RATCHET_MAX_GAP),
+			Some(RATCHET_MAX_GAP),
+		);
+		ratchet.delete_recv_key(RATCHET_MAX_GAP);
+		assert_eq!(ratchet.recv_past.len(), RATCHET_MAX_GAP as usize - 1);
+
+		let denied_target = RATCHET_MAX_GAP * 2;
+		assert_eq!(
+			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, denied_target),
+			None,
+		);
+		assert_eq!(ratchet.recv_ctr, RATCHET_MAX_GAP);
+		assert!(ratchet.recv_key(RATCHET_MAX_GAP + 1).is_none());
+		assert_eq!(ratchet.recv_past.len(), RATCHET_MAX_GAP as usize - 1);
 	}
 
 	#[test]
