@@ -4,10 +4,9 @@
 use crate::server::EncryptState;
 use crate::shared::{
 	DhSecret, ED25519_SEED_SIZE, KEX_KDF_OUT_LEN, KemType, KexDerivedSecret, RatchetManager,
-	RemotePrincipal, SYM_RATCHET_INFO, SignType, SignaturePk, VerifiedMessage,
-	create_protogram_reader, encode_sign,
+	RemotePrincipal, SYM_RATCHET_INFO, SignType, SignaturePk, encode_sign,
 };
-use crate::{CryptoProvider, phase1_capnp, phase2_capnp, protogram_capnp};
+use crate::{CryptoProvider, phase1_capnp, phase2_capnp};
 #[cfg(feature = "beacon")]
 use crate::{beacon::ProviderBeacon, shared::encode_kem};
 #[cfg(feature = "server")]
@@ -140,52 +139,12 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		self.is_beacon
 	}
 
-	/// ## Arguments
-	/// * `data`   - buffer to be signed, probably should be a serialized `cryptoframe_capnp::crypto_frame`
-	fn sign_message(&self, data: &[u8]) -> Option<Vec<u8>> {
-		let mut t_builder: TypedBuilder<protogram_capnp::proto_gram::Owned> =
-			TypedBuilder::<protogram_capnp::proto_gram::Owned>::new_default();
-		let mut builder: protogram_capnp::proto_gram::Builder<'_> = t_builder.init_root();
-		builder.set_key_id(self.identity_key_kid);
-		let signed = crypto_sign::sign(data, self.identity_sk()).ok()?;
-		builder.set_data(&signed);
-		let mut buffer = vec![];
-		capnp::serialize_packed::write_message(&mut buffer, t_builder.borrow_inner()).ok()?;
-		Some(buffer)
-	}
-
 	fn set_identity_kid(&mut self, key_id: u64) {
 		self.identity_key_kid = key_id;
 	}
 
-	/// ## Arguments
-	/// * `data`   - wire buffer to check the signature for, MUST be a serialized `protogram_capnp::proto_gram`
-	///
-	/// ## Returns
-	/// * `None` if signature verification fails or some other error happens.
-	/// * `Vec<u8>` containing the authenticated buffer with the signature stripped
-	fn verify_signature(&self, data: &[u8]) -> Option<VerifiedMessage> {
-		let t_reader = create_protogram_reader(data)?;
-		let reader = t_reader.get().ok()?;
-		let message = reader.get_data().ok()?;
-		// hardcode this to avoid potential confusion
-		let verified = if self.is_beacon {
-			// do not process payloads signed under an unexpected key
-			if reader.get_key_id() != self.server_kid() {
-				return None;
-			}
-			(
-				self.server_kid(),
-				crypto_sign::verify(message, self.server_id()?)?,
-			)
-		} else {
-			let kid = reader.get_key_id();
-			(kid, crypto_sign::verify(message, self.pk_by_kid(kid)?)?)
-		};
-		Some(VerifiedMessage {
-			data: verified.1,
-			key_id: verified.0,
-		})
+	fn identity_key_kid(&self) -> u64 {
+		self.identity_key_kid
 	}
 
 	fn add_known_kid(&mut self, key_id: u64, pk: crypto_sign::PublicKey) {
@@ -412,7 +371,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 
 		match response.get_app_cipher_text() {
 			// https://signal.org/docs/specifications/pqxdh/#receiving-the-initial-message
-			Ok(ciphertext) => self.decrypt_message(ciphertext, srv_key_id).map_or_else(
+			Ok(ciphertext) => self.decrypt_message(ciphertext).map_or_else(
 				|| {
 					// deletes the derived keychains but not the entire `RemotePrincipal` as the server is currently special-cased.
 					// I think this matches the protocol's requirements: "If the initial ciphertext fails to decrypt, then Bob aborts the protocol and deletes SK".
@@ -422,7 +381,7 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 					None
 				},
 				// PQXDH protcol run is now complete and the beacon is successfully registered
-				Some,
+				|decrypted| Some(decrypted.plaintext),
 			),
 			Err(_) => {
 				self.reset_known_kid(self.server_kid());
@@ -513,7 +472,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 
 		let mut msg = TypedBuilder::<phase2_capnp::kex_response::Owned>::new_default();
 		let mut bundle = msg.init_root();
-		bundle.set_key_id(self.server_kid());
+		bundle.set_key_id(remote_kid);
 		bundle.set_ephemeral_key(reg_out.ephemeral.as_bytes());
 		bundle.set_identity_key(self.identity_pk().as_bytes());
 		bundle.set_kem_cipher_text(reg_out.kem_ciphertext.as_bytes());
@@ -534,7 +493,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 	}
 
 	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<EncryptState> {
-		let ciphertext = self.encrypt_and_sign(bytes, kid)?;
+		let ciphertext = self.encrypt_message(bytes, kid)?;
 		let ratchet = self.ratchet_manager_mut(kid)?;
 		let state = ratchet.send_state();
 		Some(EncryptState {
@@ -545,13 +504,13 @@ impl ProviderServer for BeaconCryptPqxdh {
 	}
 
 	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<EncryptState> {
-		let verified = self.decrypt_signed(bytes)?;
-		let ratchet = self.ratchet_manager_mut(verified.key_id)?;
+		let decrypted = self.decrypt_message(bytes)?;
+		let ratchet = self.ratchet_manager_mut(decrypted.key_id)?;
 		let state = ratchet.recv_state();
 		Some(EncryptState {
-			kid: verified.key_id,
+			kid: decrypted.key_id,
 			key: state.clone(),
-			data: verified.data,
+			data: decrypted.plaintext,
 		})
 	}
 }
@@ -609,7 +568,7 @@ mod tests {
 	use crate::{
 		BeaconCryptPqxdh, KDF_STATE_SIZE, SignType,
 		beacon::ProviderBeacon,
-		phase1_capnp, protogram_capnp,
+		phase1_capnp,
 		server::ProviderServer,
 		shared::{
 			CryptoProvider, DH_OUT_LEN, DhSecret, ED25519_SEED_SIZE, KemType, KexDerivedSecret,
@@ -695,17 +654,6 @@ mod tests {
 	}
 
 	#[test]
-	fn beacon_sign_can_check() {
-		let server = BeaconCryptPqxdh::new(false, 0, None, None);
-		let server_id = server.identity_pk();
-		let beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
-		let message = [0xFFu8; 32];
-		let signed = server.sign_message(&message).unwrap();
-
-		assert!(beacon.verify_signature(signed.as_slice()).is_some());
-	}
-
-	#[test]
 	fn beacon_can_register() {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.identity_pk();
@@ -722,13 +670,6 @@ mod tests {
 	}
 
 	#[test]
-	fn beacon_can_sign() {
-		let beacon = BeaconCryptPqxdh::new(true, 0, None, None);
-		let message = [0xFFu8; 32];
-		assert!(beacon.sign_message(&message).is_some());
-	}
-
-	#[test]
 	fn beacon_can_catch_up() {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.identity_pk().to_owned();
@@ -742,9 +683,10 @@ mod tests {
 		let b1_m2 = server.encrypt_message(&message, 1).unwrap();
 		assert_ne!(b1_m1, b1_m2);
 
-		let dec_b1_m2 = b1.decrypt_message(&b1_m2, 0).unwrap();
-		let dec_b1_m1 = b1.decrypt_message(&b1_m1, 0).unwrap();
-		assert_eq!(dec_b1_m1, dec_b1_m2);
+		let dec_b1_m2 = b1.decrypt_message(&b1_m2).unwrap();
+		let dec_b1_m1 = b1.decrypt_message(&b1_m1).unwrap();
+		assert_eq!(dec_b1_m1.plaintext, dec_b1_m2.plaintext);
+		assert_eq!(dec_b1_m1.key_id, dec_b1_m2.key_id);
 	}
 
 	#[test]
@@ -770,8 +712,8 @@ mod tests {
 		let server_id = [0u8; crypto_sign::PUBLICKEYBYTES];
 		// the beacon doesn't generate its one-time key until it generates its registration bundle
 		let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(&server_id), None);
-		assert!(b1.get_onetime_pk() == None);
-		assert!(b1.get_onetime_sk() == None);
+		assert!(b1.get_onetime_pk().is_none());
+		assert!(b1.get_onetime_sk().is_none());
 		let _ = b1.get_registration_bundle();
 		assert!(b1.get_onetime_pk().is_some());
 		assert!(b1.get_onetime_sk().is_some());
@@ -971,33 +913,6 @@ mod tests {
 				"server accepted a wrong type prefix in {field}"
 			);
 		}
-	}
-
-	#[test]
-	fn signature_verification_rejects_an_unknown_key_id() {
-		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
-		let server_id = server.identity_pk().clone();
-		let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
-		test_register_beacon(&mut server, &mut beacon);
-
-		let signed = beacon.sign_message(b"authenticated message").unwrap();
-		let valid = server.verify_signature(&signed).unwrap();
-		assert_eq!(valid.key_id, 1);
-		assert_eq!(valid.data, b"authenticated message");
-
-		let message =
-			capnp::serialize_packed::read_message(&signed[..], ReaderOptions::new()).unwrap();
-		let typed = TypedReader::<_, protogram_capnp::proto_gram::Owned>::new(message);
-		let protogram = typed.get().unwrap();
-		let mut altered = TypedBuilder::<protogram_capnp::proto_gram::Owned>::new_default();
-		let mut root = altered.init_root();
-		root.set_key_id(2);
-		root.set_data(protogram.get_data().unwrap());
-		let mut altered_serialized = vec![];
-		capnp::serialize_packed::write_message(&mut altered_serialized, altered.borrow_inner())
-			.unwrap();
-
-		assert!(server.verify_signature(&altered_serialized).is_none());
 	}
 
 	#[test]

@@ -32,42 +32,39 @@ The server uses these values to perform its leg of the `PQXDH` protocol and init
 The beacon receives the initial message and uses the `phase2` bundle to perform the final leg of the `PQXDH` protocol run. It uses the shared secret to initialize its KDF chains, then attempts to decrypt the bundled ciphertext using its receive chain. If this is successful, the session is established. At this point, the beacon and the server share symmetric cryptographic material that they can use to ratchet forward and rotate keys per message, without involving assymetric crypto.
 
 # Message encryption
-Every time something is encrypted, it is wrapped in a Cap’n Proto message called a `CryptoFrame`. This embeds minor metadata that allows managing out-of order messages. Every `CryptoFrame` is encrypted under a distinct key, obtained from the principal's `send` KDF chain, which is then ratcheted forward. Nonces are also obtained from the KDF chain, because keys are only used once there is no possible reuse. Keys are deleted once they have been used, this is always immediate for keys on the `send` chains. Keys on the `receive` chains might need to be kept for longer in cases where multiple messages are recieved out of order, in which case the implementation needs to ratchet forward to the required sequence nmuber. All the intermediate keys need to be saved by the implementation, such that they can be used to decrypt the other messages when they are processed. This skipping must be constrained to some gap between the current known counter and the target, to avoid potential unbounded memory consumption. The encryption uses an AEAD scheme, as such, the content of the plaintext is authenticated. However, this scheme doesn't provide the following:
-- Authenticated `CryptoFrame` metadata
-
-While the `CryptoFrame` contains little information, an active attacker might trivially perform a DoS attack by modifiying the sequence number to trigger excessive ratcheting. As such, it is recommended to use the signature layer to ensure this metadata is protected.
+Every time something is encrypted, it is wrapped in a Cap’n Proto message called a `CryptoFrame`. This embeds minor metadata that allows managing out-of order messages. Every `CryptoFrame` is encrypted under a distinct key, obtained from the principal's `send` KDF chain, which is then ratcheted forward. Nonces are also obtained from the KDF chain, because keys are only used once there is no possible reuse. Keys are deleted once they have been used, this is always immediate for keys on the `send` chains. Keys on the `receive` chains might need to be kept for longer in cases where multiple messages are recieved out of order, in which case the implementation needs to ratchet forward to the required sequence nmuber. All the intermediate keys need to be saved by the implementation, such that they can be used to decrypt the other messages when they are processed. This skipping must be constrained to some gap between the current known counter and the target, to avoid potential unbounded memory consumption. The encryption uses an AEAD scheme, so the plaintext is authenticated. The `CryptoFrame` metadata is bound to the message by the commitment described below: `seq` prevents replay and supports out-of-order delivery, while `keyId` identifies the sender and selects the corresponding receive ratchet.
 
 # Protocol message
-## ProtoGram
-This is intended to be the top level message when the caller opts to use digital signatures. It is defined in [protogram.capnp](../src/schema/protogram.capnp). Its role is to tell the reader which cryptographic identity signed the `data` member. Cryptographic identities are identified using a single 64 unsigned integer, often called `keyId` or `kid`. When signature is opted into, the reader must look up the cryptographic identity associated with the `keyId` and verify that the signature over `data` is valid for that identity (e.g. that the public key can verify the signature). Once this is done, the reader can use the contents of the `data` member for any purpose, although the intent is for it to carry a serialized `CryptoFrame`.
-
 ## CryptoFrame
-This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../src/schema/cryptoframe.capnp). It carries a key identifier (`seq`),  and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
+This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../src/schema/cryptoframe.capnp). It carries a key identifier (`seq`), a key identifier `keyId`, and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
 - Ratchet their `send` keychain forward and get the sequence number `key_seq`
 - Use their current `send` key to encrypt the message into a pair of temporary variables `CT` and `T` 
-- Compute the commitment `T*` using `Hash(Key, Nonce, Associated Data, T, key_seq)`
+- Compute the commitment `T*` using `Hash(Key, Nonce, Associated Data, T, key_seq, key_id)`
   - The hash function is unkeyed Blake2b with a 512bit output length
-  - `key_seq` is serialized as a little-endian 64-bit unsigned integer
+  - `key_seq` and `key_id` are serialized as little-endian 64-bit unsigned integers
+  - `key_id` is the principal's public key identifier
 - Append `T` and `T*` to `CT` and place the resulting buffer in `cipherText`
 - Set `seq` to `key_seq`
+- Set `keyId` to `key_id`
 - Delete the current `send` key
 
 To read a `CryptoFrame`, the reader must:
+- Use `keyId` to select the sender's identity, associated data, and receive ratchet
 - Check that the difference between `seq` and the current sequence number of the `recv` chain is acceptable
   -  The reference implementation tolerates ratcheting up to 50 keys forward, this number was pulled out of a hat
   - Abort processing if the difference is too large
 - Ratchet their `recv` keychain forward to `seq`
 - Extract `CT`, `T` and `T*` from the `cipherText` field
-- Compute the commitment `T*'` using `Hash(Key, Nonce, Associated Data, T, seq)`
+- Compute the commitment `T*'` using `Hash(Key, Nonce, Associated Data, T, seq, keyId)`
   - The hash function is unkeyed Blake2b with a 512bit output length
-  - `seq` is serialized as a little-endian 64-bit unsigned integer
+  - `seq` and `keyId` are serialized as little-endian 64-bit unsigned integers
 - Perform a constant-time comparison of `T*` and `T*'`
   - Abort processing if there is a mismatch
 - Use the key associated with `seq` to decrypt 
 - Delete the `seq` key on their `recv` keychain if decryption was successful
 
 ## InitKex
-This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../src/schema/phase1.capnp).It must only be run once per beacon instance. It is appropriate to send this message by itself to the server, once serialized, even if user otherwise opts into digital signatures for the rest of the protocol. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. When referring to encoded public keys, it is meant that the caller will prepend a byte indicating the type of the key before the public key buffer. The same is true when speaking of encoded KEM keys. The beacon builds this message as follows:
+This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../src/schema/phase1.capnp). It must only be run once per beacon instance. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. When referring to encoded public keys, it is meant that the caller will prepend a byte indicating the type of the key before the public key buffer. The same is true when speaking of encoded KEM keys. The beacon builds this message as follows:
 - Set `identityKey` to the beacon's Ed25519 encoded identity public key
 - Set `preKey` to the beacon's X25519 encoded prekey public key signed under the beacon's identity key
 - Set `oneTimeKey` to the beacon's X25519 encoded onetime public key signed under the beacon's identity key
@@ -129,4 +126,4 @@ Upon reception, the beacon must process this message as follows:
 - If decryption is successful, return the plaintext to the caller oherwise abort the protocol and delete the previously derived cryptographic state
 
 # Protocol details
-Once the session has been created, meaning a successful PQXDH run, the associated data (`AD`) is created. This is made up of the concatenation of the public keys of both parties, the key exchange protocol string and the ratchet protocol string. This associated data is used in every encryption for a given `(Server, Beacon)` tuple. It is then expected that beacons will read messages from the server from their transport protocol and hand them off to beaconcrypt immediately for decryption and deserialization. All encrypted buffers (`CryptoFrame`s) carry  a sequence number `seq`. These are used to handle out-of-order messages and protect against replay attempts, and therefore need to be protected. Thus, there is an outer layer which uses signatures to ensure the `CryptoFrame` are not modified in transit. This layer itself needs to identify the key pair used to sign the message. This is accomplished using a `keyId`. This signature layer is not mandatory, callers are given the choice whether to created signed messages or not. However, I do recommmend opting into it as it's very cheap and protects the critical `seq` field.
+Once the session has been created, meaning a successful PQXDH run, the associated data (`AD`) is created. This is made up of the concatenation of the public keys of both parties, the key exchange protocol string and the ratchet protocol string. This associated data is used in every encryption for a given `(Server, Beacon)` tuple. It is then expected that beacons will read messages from the server from their transport protocol and hand them off to beaconcrypt immediately for decryption and deserialization. All encrypted buffers (`CryptoFrame`s) carry a sequence number `seq` and sender identity `keyId`. The commitment binds both fields to the ciphertext, so modifying either field causes decryption to fail.

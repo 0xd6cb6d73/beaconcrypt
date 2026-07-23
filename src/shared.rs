@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: 0BSD
 
+use crate::cryptoframe_capnp;
 #[cfg(feature = "server")]
 use crate::error::DecodingError;
 use crate::error::EncodingError;
 #[cfg(feature = "pqxdh")]
 use crate::pqxdh::AD_SIZE;
-use crate::{cryptoframe_capnp, protogram_capnp};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::utils::memcmp;
 use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
@@ -33,6 +33,8 @@ pub const ED25519_SEED_SIZE: usize = 32;
 /// Byte sequence used to test successful keychain derivation during registration. Used only if the server doesn't provide an initial message
 pub const REGISTRATION_WITNESS: &[u8; 1] = &[0xFF; 1];
 pub const COMMITMENT_SIZE: usize = 64;
+/// crypto_aead::chacha20poly1305_ietf::ABYTES
+pub const MESSAGE_OVERHEAD: usize = COMMITMENT_SIZE + 16;
 
 #[repr(u8)]
 #[derive(PartialEq)]
@@ -163,11 +165,6 @@ mod systems {
 mod roles {
 	pub struct ChainKey;
 	pub struct DerivedSecret;
-}
-
-pub struct VerifiedMessage {
-	pub data: Vec<u8>,
-	pub key_id: u64,
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
@@ -471,6 +468,12 @@ impl<PkType: SignaturePk> RemotePrincipal<PkType> {
 	}
 }
 
+#[derive(Debug, Eq, PartialEq)]
+pub struct Decrypted {
+	pub plaintext: Vec<u8>,
+	pub key_id: u64,
+}
+
 pub trait CryptoProvider {
 	type SignaturePublicKey;
 	type SignatureSecretKey;
@@ -488,26 +491,29 @@ pub trait CryptoProvider {
 	fn associated_data(&self, kid: u64) -> Option<[u8; AD_SIZE]>;
 	fn is_beacon(&self) -> bool;
 	/// ## Arguments
-	/// * `data`   - Some a serialized `CryptoFrame` to be decrypted
-	/// * `is_beacon` - Whether the caller is a beacon
+	/// * `data`   - A serialized `CryptoFrame` to be decrypted
 	///
 	/// ## Returns
-	/// * `None` if some other error happens.
-	/// * `Vec<u8>` containing a serialized `cryptoframe_capnp::crypto_frame`
-	fn decrypt_message(&mut self, data: &[u8], kid: u64) -> Option<Vec<u8>> {
-		let associated_data = self.associated_data(kid)?;
+	/// * `None` if some error happens, decryptio or commitment fails
+	/// * `Vec<u8>` containing the plaintext
+	fn decrypt_message(&mut self, data: &[u8]) -> Option<Decrypted> {
+		if data.is_empty() {
+			return None;
+		}
 		match capnp::serialize::read_message(data, ReaderOptions::new()) {
 			Ok(reader) => {
 				let typed_reader =
 					TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
 				match typed_reader.get() {
 					Ok(frame) => {
+						let kid = frame.get_key_id();
+						let associated_data = self.associated_data(kid)?;
 						let key_seq =
 							self.ratchet_recv_until(SYM_RATCHET_INFO, frame.get_seq(), kid)?;
 						let key = self.recv_key(key_seq, kid)?;
 						let ciphertext = frame.get_cipher_text().ok()?;
 						let ct_len = ciphertext.len();
-						if ct_len <= COMMITMENT_SIZE + crypto_aead::chacha20poly1305_ietf::ABYTES {
+						if ct_len <= MESSAGE_OVERHEAD {
 							return None;
 						}
 						let commitment = build_commitment(
@@ -518,6 +524,7 @@ pub trait CryptoProvider {
 								- crypto_aead::chacha20poly1305_ietf::ABYTES
 								..ct_len - COMMITMENT_SIZE],
 							key_seq,
+							kid,
 						)?;
 						if !memcmp(&commitment, &ciphertext[ct_len - COMMITMENT_SIZE..]) {
 							return None;
@@ -530,31 +537,15 @@ pub trait CryptoProvider {
 						)
 						.ok()?;
 						self.delete_recv_key(key_seq, kid);
-						Some(plaintext)
+						Some(Decrypted {
+							plaintext,
+							key_id: kid,
+						})
 					}
 					Err(_) => None,
 				}
 			}
 			Err(_) => None,
-		}
-	}
-
-	/// ## Arguments
-	/// * `data`   - A serialized `ProtoGram` to be decrypted
-	///
-	/// ## Returns
-	/// * `None` if some other error happens.
-	/// * `VerifiedMessage` containing the plaintext and authenticated key ID
-	fn decrypt_signed(&mut self, data: &[u8]) -> Option<VerifiedMessage> {
-		match self.verify_signature(data) {
-			Some(verified) => {
-				let plaintext = self.decrypt_message(&verified.data, verified.key_id)?;
-				Some(VerifiedMessage {
-					data: plaintext,
-					key_id: verified.key_id,
-				})
-			}
-			None => None,
 		}
 	}
 
@@ -580,8 +571,9 @@ pub trait CryptoProvider {
 		);
 		match plaintext {
 			Ok((mut plaintext, mut tag)) => {
+				let self_kid = self.identity_key_kid();
 				let mut commitment =
-					build_commitment(key, &associated_data, tag.as_slice(), key_seq)?;
+					build_commitment(key, &associated_data, tag.as_slice(), key_seq, self_kid)?;
 				plaintext.append(&mut tag);
 				plaintext.append(&mut commitment);
 				let mut t_builder =
@@ -590,6 +582,7 @@ pub trait CryptoProvider {
 					t_builder.init_root();
 				builder.set_cipher_text(&plaintext);
 				builder.set_seq(key_seq);
+				builder.set_key_id(self_kid);
 				let mut buffer = vec![];
 				capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).unwrap();
 				self.delete_send_key(key_seq, kid);
@@ -602,23 +595,8 @@ pub trait CryptoProvider {
 		}
 	}
 
-	/// /// ## Arguments
-	/// * `data`   - Some arbitrary byte buffer to be encrypted
-	/// * `kid` - The identifier for the remote to encrypt to
-	///
-	/// ## Returns
-	/// * `None` if some other error happens.
-	/// * `Vec<u8>` containing a serialized `protogram_capnp::proto_gram`
-	fn encrypt_and_sign(&mut self, bytes: &[u8], kid: u64) -> Option<Vec<u8>> {
-		match self.encrypt_message(bytes, kid) {
-			Some(ciphertext) => self.sign_message(ciphertext.as_slice()),
-			None => None,
-		}
-	}
-
-	fn sign_message(&self, data: &[u8]) -> Option<Vec<u8>>;
-	fn verify_signature(&self, data: &[u8]) -> Option<VerifiedMessage>;
 	fn set_identity_kid(&mut self, key_id: u64);
+	fn identity_key_kid(&self) -> u64;
 	fn new_remote_kid(&mut self) -> u64;
 	fn add_known_kid(&mut self, key_id: u64, pk: Self::SignaturePublicKey);
 	/// Delete a known identity from the state
@@ -692,25 +670,6 @@ pub trait CryptoProvider {
 	}
 }
 
-pub fn create_protogram_reader(
-	data: &[u8],
-) -> Option<TypedReader<capnp::serialize::OwnedSegments, protogram_capnp::proto_gram::Owned>> {
-	// protograms are always packed
-	match capnp::serialize_packed::read_message(data, ReaderOptions::new()) {
-		Ok(reader) => {
-			let typed_reader: TypedReader<
-				capnp::serialize::OwnedSegments,
-				protogram_capnp::proto_gram::Owned,
-			> = TypedReader::<_, protogram_capnp::proto_gram::Owned>::new(reader);
-			match typed_reader.get() {
-				Ok(_) => Some(typed_reader),
-				Err(_) => None,
-			}
-		}
-		Err(_) => None,
-	}
-}
-
 /// implementation of the Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>
 /// `CT, T = ENC(K, N, A, M)`
 ///
@@ -725,7 +684,13 @@ pub fn create_protogram_reader(
 /// * Nonce
 /// * Associated data
 /// * key `seq`
-fn build_commitment(secret: &KeyMaterial, ad: &[u8], tag: &[u8], seq: u64) -> Option<Vec<u8>> {
+fn build_commitment(
+	secret: &KeyMaterial,
+	ad: &[u8],
+	tag: &[u8],
+	seq: u64,
+	kid: u64,
+) -> Option<Vec<u8>> {
 	let key = secret.key().as_bytes();
 	let nonce = secret.nonce().as_bytes();
 	let mut input = vec![];
@@ -734,6 +699,7 @@ fn build_commitment(secret: &KeyMaterial, ad: &[u8], tag: &[u8], seq: u64) -> Op
 	input.extend_from_slice(ad);
 	input.extend_from_slice(tag);
 	input.extend_from_slice(&seq.to_le_bytes());
+	input.extend_from_slice(&kid.to_le_bytes());
 	let hash = crypto_generichash::generichash(input.as_slice(), None, COMMITMENT_SIZE).ok();
 	input.zeroize();
 	hash
@@ -896,16 +862,17 @@ mod tests {
 		let associated_data = b"beaconcrypt-test-associated-data";
 		let tag = [0x33; crypto_aead::chacha20poly1305_ietf::ABYTES];
 		let expected = [
-			0x63, 0x8a, 0x6c, 0x96, 0xf8, 0x20, 0xdb, 0x8a, 0xc9, 0x90, 0x95, 0xce, 0x60, 0xad,
-			0x5b, 0xfe, 0x1e, 0xd4, 0xf0, 0xa7, 0x02, 0xe7, 0x6d, 0xde, 0x18, 0x3c, 0x33, 0x59,
-			0x40, 0x26, 0x78, 0xd4, 0x62, 0xd2, 0x43, 0x3b, 0xad, 0xa1, 0xd4, 0xde, 0xa0, 0x0e,
-			0x05, 0x9c, 0x50, 0x79, 0xe2, 0xf7, 0x62, 0x46, 0xbd, 0x1f, 0x60, 0x98, 0x17, 0x7c,
-			0x88, 0x2b, 0x29, 0xd4, 0x8c, 0xbd, 0xde, 0xde,
+			0x79, 0xe9, 0x43, 0x04, 0x98, 0xeb, 0x1e, 0x76, 0x9e, 0xc1, 0xd5, 0x20, 0x33, 0x87,
+			0x9d, 0x4a, 0xb3, 0x9c, 0xc7, 0xfe, 0xda, 0xe4, 0xaa, 0x12, 0x87, 0x62, 0x97, 0xcb,
+			0x36, 0xd3, 0x1b, 0x98, 0x81, 0x93, 0x3d, 0x34, 0x54, 0xca, 0xf6, 0x96, 0x08, 0xf4,
+			0xf8, 0xf0, 0x1e, 0x07, 0x44, 0xf6, 0xb9, 0xb5, 0x63, 0x0a, 0xb3, 0x03, 0xef, 0xea,
+			0x88, 0xf5, 0x25, 0x5b, 0x97, 0xac, 0x2a, 0x6a,
 		];
 		let key_seq = 0x44u64;
+		let key_id = 0x55u64;
 
 		assert_eq!(
-			build_commitment(&secret, associated_data, &tag, key_seq).unwrap(),
+			build_commitment(&secret, associated_data, &tag, key_seq, key_id).unwrap(),
 			expected
 		);
 	}
@@ -1015,21 +982,5 @@ mod tests {
 			Some(1),
 		);
 		assert!(principal.ratchet().send_key(1).is_some());
-	}
-
-	#[test]
-	fn protogram_reader_accepts_packed_messages_and_rejects_garbage() {
-		let mut message = TypedBuilder::<protogram_capnp::proto_gram::Owned>::new_default();
-		let mut root = message.init_root();
-		root.set_key_id(42);
-		root.set_data(b"signed payload");
-		let mut serialized = vec![];
-		capnp::serialize_packed::write_message(&mut serialized, message.borrow_inner()).unwrap();
-
-		let parsed = create_protogram_reader(&serialized).unwrap();
-		let root = parsed.get().unwrap();
-		assert_eq!(root.get_key_id(), 42);
-		assert_eq!(root.get_data().unwrap(), b"signed payload");
-		assert!(create_protogram_reader(b"not a packed capnp message").is_none());
 	}
 }

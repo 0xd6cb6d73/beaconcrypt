@@ -38,9 +38,9 @@ pub trait ProviderServer {
 		data: Option<&[u8]>,
 	) -> Option<RegResponse>;
 
-	/// Encrypt and sign some bytes to `kid` and return the ciphertext, `kid` and new state of the send keychain for `kid`
+	/// Encrypt some bytes to `kid` and return the ciphertext, `kid` and new state of the send keychain for `kid`
 	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<EncryptState>;
-	/// Decrypt a signed message using the recv keychain associated with a `kid` obtained from the signed struct
+	/// Decrypt a message using the recv keychain associated with the sender ID in the encrypted frame
 	/// and return the plaintext, `kid` and new state of the recv keychain for `kid`
 	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<EncryptState>;
 }
