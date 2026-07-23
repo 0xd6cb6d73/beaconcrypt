@@ -55,8 +55,7 @@ fn main() {
 
 	let b_ping = beacon
 		.encrypt_message(b"ping", SERVER_KID)
-		.and_then(|ciphertext| beacon.sign_message(&ciphertext))
-		.expect("failed to encrypt and sign ping");
+		.expect("failed to encrypt ping");
 	fs::write(&transport, b_ping).expect("failed to write ping to transport");
 	let s_ping = fs::read(&transport).expect("failed to read ping from transport");
 
@@ -71,27 +70,24 @@ fn main() {
 	// The C2 needs to know what the beacon's ID is so it can encrypt to it.
 	let s_task_0 = server
 		.encrypt_and_update(b"task contents", s_reg_resp.kid)
-		.expect("failed to encrypt and sign task");
+		.expect("failed to encrypt task");
 	println!("Key ID: {}", s_task_0.kid);
 	println!("Ratchet state: {:?}", s_task_0.key.as_slice());
 	fs::write(&transport, &s_task_0.data).expect("failed to write task to transport");
 	let b_task_0 = fs::read(&transport).expect("failed to read task from transport");
-	let verified_task = beacon
-		.verify_signature(&b_task_0)
-		.expect("failed to verify task signature");
 	let task_0 = beacon
-		.decrypt_message(&verified_task.data, verified_task.key_id)
+		.decrypt_message(&b_task_0)
 		.expect("failed to decrypt task");
+	assert_eq!(task_0.key_id, SERVER_KID);
 	println!(
 		"Beacon got first task: {}",
-		String::from_utf8_lossy(&task_0)
+		String::from_utf8_lossy(&task_0.plaintext)
 	);
 
 	// Process the task and send the response.
 	let b_task_1 = beacon
 		.encrypt_message(b"task response", SERVER_KID)
-		.and_then(|ciphertext| beacon.sign_message(&ciphertext))
-		.expect("failed to encrypt and sign task response");
+		.expect("failed to encrypt task response");
 	fs::write(&transport, b_task_1).expect("failed to write task response to transport");
 	let s_task_1 = fs::read(&transport).expect("failed to read task response from transport");
 	let task_1 = server

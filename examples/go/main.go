@@ -83,7 +83,7 @@ func run() error {
 	}
 	fmt.Printf("Beacon got initial message: %q\n", firstMessage)
 
-	bPing, err := beacon.EncryptToServerSigned([]byte("ping"))
+	bPing, err := beacon.EncryptToServer([]byte("ping"))
 	if err != nil {
 		return err
 	}
@@ -119,14 +119,14 @@ func run() error {
 		return err
 	}
 
-	task0, err := beacon.DecryptServerMessageSigned(bTask0)
+	task0, err := beacon.DecryptServerMessage(bTask0)
 	if err != nil {
 		return err
 	}
 	fmt.Printf("Beacon got first task: %q\n", task0)
 
 	// Process task and send the response.
-	bTask1, err := beacon.EncryptToServerSigned([]byte("task response"))
+	bTask1, err := beacon.EncryptToServer([]byte("task response"))
 	if err != nil {
 		return err
 	}

@@ -30,7 +30,7 @@ def main():
     # do whatever you like with the initial message
     first_message = beacon.process_initial_message(b_reg_1)
     print(f"Beacon got intial message: {first_message}")
-    b_ping = beacon.encrypt_to_server_signed(b"ping")
+    b_ping = beacon.encrypt_message_to_server(b"ping")
     with open("transport", "wb") as f:
         f.write(b_ping)
     with open("transport", "rb") as f:
@@ -48,10 +48,10 @@ def main():
         f.write(s_task_0.data())
     with open("transport", "rb") as f:
         b_task_0 = f.read()
-    task_0 = beacon.decrypt_server_message_signed(b_task_0)
+    task_0 = beacon.decrypt_server_message(b_task_0)
     print(f"Beacon got first task: {task_0}")
     # process task and send the response
-    b_task_1 = beacon.encrypt_to_server_signed(b"task response")
+    b_task_1 = beacon.encrypt_message_to_server(b"task response")
     with open("transport", "wb") as f:
         f.write(b_task_1)
     with open("transport", "rb") as f:

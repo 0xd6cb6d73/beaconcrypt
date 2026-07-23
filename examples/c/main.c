@@ -223,8 +223,7 @@ static int run(void) {
   print_text("Beacon got initial message", first_message);
   free_buffer(&first_message);
 
-  b_ping =
-      beaconcrypt_encrypt_to_server_signed(beacon, (const uint8_t *)"ping", 4);
+  b_ping = beaconcrypt_encrypt_to_server(beacon, (const uint8_t *)"ping", 4);
   if (buffer_is_empty(b_ping) || write_transport(b_ping.ptr, b_ping.len) != 0) {
     fprintf(stderr, "error: failed to send ping\n");
     goto cleanup;
@@ -266,8 +265,8 @@ static int run(void) {
     goto cleanup;
   }
 
-  task_0 = beaconcrypt_decrypt_server_message_signed(beacon, transport,
-                                                     transport_len);
+  task_0 =
+      beaconcrypt_decrypt_server_message(beacon, transport, transport_len);
   free(transport);
   transport = NULL;
   transport_len = 0;
@@ -279,7 +278,7 @@ static int run(void) {
   free_buffer(&task_0);
 
   /* Process task and send the response. */
-  b_task_1 = beaconcrypt_encrypt_to_server_signed(
+  b_task_1 = beaconcrypt_encrypt_to_server(
       beacon, (const uint8_t *)"task response", 13);
   if (buffer_is_empty(b_task_1) ||
       write_transport(b_task_1.ptr, b_task_1.len) != 0) {

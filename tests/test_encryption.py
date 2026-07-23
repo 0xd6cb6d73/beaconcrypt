@@ -53,8 +53,8 @@ def test_server_uses_per_beacon_associated_data():
 
     from_b1 = b1.encrypt_message_to_server(b"b1 to server")
     from_b2 = b2.encrypt_message_to_server(b"b2 to server")
-    assert server.decrypt_beacon_message(from_b1, b1_kid) == b"b1 to server"
-    assert server.decrypt_beacon_message(from_b2, b2_kid) == b"b2 to server"
+    assert server.decrypt_beacon_message(from_b1) == b"b1 to server"
+    assert server.decrypt_beacon_message(from_b2) == b"b2 to server"
 
 
 def test_server_can_encrypt_to_beacon_a_after_registering_beacon_b():
@@ -82,7 +82,7 @@ def test_server_can_decrypt_from_beacon_a_after_registering_beacon_b():
 
     message = b"beacon A to server after registering beacon B"
     ciphertext = beacon_a.encrypt_message_to_server(message)
-    assert server.decrypt_beacon_message(ciphertext, beacon_a_kid) == message
+    assert server.decrypt_beacon_message(ciphertext) == message
 
 
 def test_server_can_decrypt_from_beacon_a_after_encrypting_to_beacon_b():
@@ -99,7 +99,7 @@ def test_server_can_decrypt_from_beacon_a_after_encrypting_to_beacon_b():
 
     from_beacon_a = beacon_a.encrypt_message_to_server(b"beacon A to server")
     assert (
-        server.decrypt_beacon_message(from_beacon_a, beacon_a_kid)
+        server.decrypt_beacon_message(from_beacon_a)
         == b"beacon A to server"
     )
 
@@ -134,23 +134,6 @@ def test_decrypt_multiple():
     assert plain2 == plain1 == message
 
 
-def test_decrypt_multiple_signed():
-    server = BeaconCryptServer(0, None)
-    server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
-    message = bytes([0x1]) * 32
-
-    beacon_kid = register_beacon(server, beacon)
-    m1 = server.encrypt_to_beacon_signed(message, beacon_kid)
-    m2 = server.encrypt_to_beacon_signed(message, beacon_kid)
-    assert m1 != m2
-
-    plain1 = beacon.decrypt_server_message_signed(m1)
-    plain2 = beacon.decrypt_server_message_signed(m2)
-    assert plain2 is not None and plain1 is not None
-    assert plain2 == plain1 == message
-
-
 def test_decrypt_catch_up():
     server = BeaconCryptServer(0, None)
     server_pk = server.id_pk()
@@ -178,21 +161,7 @@ def test_beacon_encrypts_to_server():
     ciphertext = beacon.encrypt_message_to_server(message)
     assert ciphertext is not None
 
-    plaintext = server.decrypt_beacon_message(ciphertext, beacon_kid)
-    assert plaintext == message
-
-
-def test_beacon_encrypts_to_server_signed():
-    server = BeaconCryptServer(0, None)
-    server_pk = server.id_pk()
-    beacon = BeaconCryptBeacon(0, server_pk)
-    message = b"signed beacon to server"
-
-    register_beacon(server, beacon)
-    signed = beacon.encrypt_to_server_signed(message)
-    assert signed is not None
-
-    plaintext = server.decrypt_beacon_message_signed(signed)
+    plaintext = server.decrypt_beacon_message(ciphertext)
     assert plaintext == message
 
 
@@ -207,7 +176,7 @@ def test_server_encrypt_and_update_returns_ratchet_state():
     assert update is not None
     assert update.key_id() == beacon_kid
     assert len(update.key()) == 32
-    assert beacon.decrypt_server_message_signed(update.data()) == message
+    assert beacon.decrypt_server_message(update.data()) == message
 
 
 def test_server_decrypt_and_update_returns_ratchet_state():
@@ -216,7 +185,7 @@ def test_server_decrypt_and_update_returns_ratchet_state():
     message = b"beacon to server with updated state"
 
     beacon_kid = register_beacon(server, beacon)
-    ciphertext = beacon.encrypt_to_server_signed(message)
+    ciphertext = beacon.encrypt_message_to_server(message)
     update = server.decrypt_and_update(ciphertext)
 
     assert update is not None
@@ -225,34 +194,34 @@ def test_server_decrypt_and_update_returns_ratchet_state():
     assert update.data() == message
 
 
-def test_signed_beacon_message_rejects_tampering():
+def test_authenticated_beacon_message_rejects_tampering():
     server = BeaconCryptServer(0, None)
     server_pk = server.id_pk()
     beacon = BeaconCryptBeacon(0, server_pk)
     message = b"beacon to server"
 
-    register_beacon(server, beacon)
-    signed = beacon.encrypt_to_server_signed(message)
-    assert signed is not None
-    tampered = bytearray(signed)
+    beacon_kid = register_beacon(server, beacon)
+    ciphertext = beacon.encrypt_message_to_server(message)
+    assert ciphertext is not None
+    tampered = bytearray(ciphertext)
     tampered[-1] ^= 0x01
 
-    assert server.decrypt_beacon_message_signed(bytes(tampered)) is None
+    assert server.decrypt_beacon_message(bytes(tampered)) is None
 
 
-def test_signed_server_message_rejects_tampering():
+def test_authenticated_server_message_rejects_tampering():
     server = BeaconCryptServer(0, None)
     server_pk = server.id_pk()
     beacon = BeaconCryptBeacon(0, server_pk)
     message = b"server to beacon"
 
     beacon_kid = register_beacon(server, beacon)
-    signed = server.encrypt_to_beacon_signed(message, beacon_kid)
-    assert signed is not None
-    tampered = bytearray(signed)
+    ciphertext = server.encrypt_to_beacon(message, beacon_kid)
+    assert ciphertext is not None
+    tampered = bytearray(ciphertext)
     tampered[-1] ^= 0x01
 
-    assert beacon.decrypt_server_message_signed(bytes(tampered)) is None
+    assert beacon.decrypt_server_message(bytes(tampered)) is None
 
 
 def test_decrypt_rejects_wrong_direction():
@@ -263,7 +232,7 @@ def test_decrypt_rejects_wrong_direction():
     beacon_kid = register_beacon(server, beacon)
     server_to_beacon = server.encrypt_to_beacon(b"server to beacon", beacon_kid)
     assert server_to_beacon is not None
-    assert server.decrypt_beacon_message(server_to_beacon, beacon_kid) is None
+    assert server.decrypt_beacon_message(server_to_beacon) is None
 
     beacon_to_server = beacon.encrypt_message_to_server(b"beacon to server")
     assert beacon_to_server is not None
@@ -323,5 +292,5 @@ def test_server_can_retry_decryption_after_corrupted_aead_message():
     ciphertext = beacon.encrypt_message_to_server(message)
     corrupted = corrupt_aead_ciphertext(ciphertext)
 
-    assert server.decrypt_beacon_message(corrupted, beacon_kid) is None
-    assert server.decrypt_beacon_message(ciphertext, beacon_kid) == message
+    assert server.decrypt_beacon_message(corrupted) is None
+    assert server.decrypt_beacon_message(ciphertext) == message
