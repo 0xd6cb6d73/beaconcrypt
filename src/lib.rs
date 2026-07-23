@@ -64,14 +64,13 @@ pub use pqxdh::BeaconCryptPqxdh;
 #[cfg(feature = "server")]
 pub use server::{ProviderServer, RegResponse, RegistrationOutput};
 pub use shared::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, CryptoProvider, DH_OUT_LEN, ED25519_SEED_SIZE,
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, CryptoProvider, DH_OUT_LEN, Decrypted, ED25519_SEED_SIZE,
 	KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE, KEX_KDF_OUT_LEN, SignType,
 };
 
 capnp::generated_code!(pub mod phase1_capnp);
 capnp::generated_code!(pub mod phase2_capnp);
 capnp::generated_code!(pub mod cryptoframe_capnp);
-capnp::generated_code!(pub mod protogram_capnp);
 
 #[cfg(any(feature = "cbinds", feature = "gobinds"))]
 mod cbinds;

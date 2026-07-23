@@ -12,7 +12,6 @@ fn main() {
 		.file("src/schema/phase1.capnp")
 		.file("src/schema/phase2.capnp")
 		.file("src/schema/cryptoframe.capnp")
-		.file("src/schema/protogram.capnp")
 		.run()
 		.expect("schema compiler command");
 

@@ -28,7 +28,8 @@ fn beacon_can_catch_up() {
 	let b1_m2 = server.encrypt_message(&message, 1).unwrap();
 	assert_ne!(b1_m1, b1_m2);
 
-	let dec_b1_m1 = b1.decrypt_message(&b1_m1, 0).unwrap();
-	let dec_b1_m2 = b1.decrypt_message(&b1_m2, 0).unwrap();
-	assert_eq!(dec_b1_m1, dec_b1_m2);
+	let dec_b1_m1 = b1.decrypt_message(&b1_m1).unwrap();
+	let dec_b1_m2 = b1.decrypt_message(&b1_m2).unwrap();
+	assert_eq!(dec_b1_m1.plaintext, dec_b1_m2.plaintext);
+	assert_eq!(dec_b1_m1.key_id, dec_b1_m2.key_id);
 }
