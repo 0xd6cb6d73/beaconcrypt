@@ -510,13 +510,14 @@ pub trait CryptoProvider {
 						if ct_len <= COMMITMENT_SIZE + crypto_aead::chacha20poly1305_ietf::ABYTES {
 							return None;
 						}
-						let commitment = self.build_commitment(
+						let commitment = build_commitment(
 							key,
 							associated_data.as_slice(),
 							&ciphertext[ct_len
 								- COMMITMENT_SIZE
 								- crypto_aead::chacha20poly1305_ietf::ABYTES
 								..ct_len - COMMITMENT_SIZE],
+							key_seq,
 						)?;
 						if !memcmp(&commitment, &ciphertext[ct_len - COMMITMENT_SIZE..]) {
 							return None;
@@ -580,7 +581,7 @@ pub trait CryptoProvider {
 		match plaintext {
 			Ok((mut plaintext, mut tag)) => {
 				let mut commitment =
-					self.build_commitment(key, &associated_data, tag.as_slice())?;
+					build_commitment(key, &associated_data, tag.as_slice(), key_seq)?;
 				plaintext.append(&mut tag);
 				plaintext.append(&mut commitment);
 				let mut t_builder =
@@ -615,26 +616,6 @@ pub trait CryptoProvider {
 		}
 	}
 
-	/// implementation of the Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>
-	/// `CT, T = ENC(K, N, A, M)`
-	///
-	/// `T* = H(K, N, A, T)`
-	///
-	/// the paper omits the original tag from the output. It is included here so we can keep using the libsodium interface
-	///
-	/// `CT* = CT || T || T*`
-	fn build_commitment(&self, secret: &KeyMaterial, ad: &[u8], tag: &[u8]) -> Option<Vec<u8>> {
-		let key = secret.key().as_bytes();
-		let nonce = secret.nonce().as_bytes();
-		let mut input = vec![];
-		input.extend_from_slice(key);
-		input.extend_from_slice(nonce);
-		input.extend_from_slice(ad);
-		input.extend_from_slice(tag);
-		let hash = crypto_generichash::generichash(input.as_slice(), None, COMMITMENT_SIZE).ok();
-		input.zeroize();
-		hash
-	}
 	fn sign_message(&self, data: &[u8]) -> Option<Vec<u8>>;
 	fn verify_signature(&self, data: &[u8]) -> Option<VerifiedMessage>;
 	fn set_identity_kid(&mut self, key_id: u64);
@@ -728,6 +709,34 @@ pub fn create_protogram_reader(
 		}
 		Err(_) => None,
 	}
+}
+
+/// implementation of the Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>
+/// `CT, T = ENC(K, N, A, M)`
+///
+/// `T* = H(K, N, A, T)`
+///
+/// the paper omits the original tag from the output. It is included here so we can keep using the libsodium interface
+///
+/// `CT* = CT || T || T*`
+/// This commitment scheme commits to:
+/// * Message
+/// * Key
+/// * Nonce
+/// * Associated data
+/// * key `seq`
+fn build_commitment(secret: &KeyMaterial, ad: &[u8], tag: &[u8], seq: u64) -> Option<Vec<u8>> {
+	let key = secret.key().as_bytes();
+	let nonce = secret.nonce().as_bytes();
+	let mut input = vec![];
+	input.extend_from_slice(key);
+	input.extend_from_slice(nonce);
+	input.extend_from_slice(ad);
+	input.extend_from_slice(tag);
+	input.extend_from_slice(&seq.to_le_bytes());
+	let hash = crypto_generichash::generichash(input.as_slice(), None, COMMITMENT_SIZE).ok();
+	input.zeroize();
+	hash
 }
 
 #[cfg(test)]
@@ -879,7 +888,6 @@ mod tests {
 	#[cfg(all(feature = "beacon", feature = "server", feature = "pqxdh"))]
 	#[test]
 	fn commitment_matches_blake2b_known_answer() {
-		let provider = crate::BeaconCryptPqxdh::new(false, 0, None, None);
 		let secret = KeyMaterial {
 			key: [0x11; AEAD_KEY_LEN].into(),
 			nonce: [0x22; AEAD_NONCE_LEN].into(),
@@ -893,11 +901,10 @@ mod tests {
 			0x8f, 0xa8, 0xba, 0xe3, 0x7f, 0x18, 0xda, 0x12, 0xa6, 0x0e, 0x7a, 0xbf, 0xcc, 0x4a,
 			0xf2, 0xb0, 0xba, 0x93, 0x70, 0xf4, 0xe8, 0xec,
 		];
+		let key_seq = 0x44u64;
 
 		assert_eq!(
-			provider
-				.build_commitment(&secret, associated_data, &tag)
-				.unwrap(),
+			build_commitment(&secret, associated_data, &tag, key_seq).unwrap(),
 			expected
 		);
 	}

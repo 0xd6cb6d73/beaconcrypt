@@ -43,12 +43,13 @@ This is intended to be the top level message when the caller opts to use digital
 
 ## CryptoFrame
 This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../src/schema/cryptoframe.capnp). It carries a key identifier (`seq`),  and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
-- Ratchet their `send` keychain forward
+- Ratchet their `send` keychain forward and get the sequence number `key_seq`
 - Use their current `send` key to encrypt the message into a pair of temporary variables `CT` and `T` 
-- Compute the commitment `T*` using `Hash(Key, Nonce, Associated Data, T)`
-  - The hash function is Blake2b with a 512bit output length
+- Compute the commitment `T*` using `Hash(Key, Nonce, Associated Data, T, key_seq)`
+  - The hash function is unkeyed Blake2b with a 512bit output length
+  - `key_seq` is serialized as a little-endian 64-bit unsigned integer
 - Append `T` and `T*` to `CT` and place the resulting buffer in `cipherText`
-- Set `seq` to the number of the current key
+- Set `seq` to `key_seq`
 - Delete the current `send` key
 
 To read a `CryptoFrame`, the reader must:
@@ -57,8 +58,9 @@ To read a `CryptoFrame`, the reader must:
   - Abort processing if the difference is too large
 - Ratchet their `recv` keychain forward to `seq`
 - Extract `CT`, `T` and `T*` from the `cipherText` field
-- Compute the commitment `T*'` using `Hash(Key, Nonce, Associated Data, T)`
-  - The hash function is Blake2b with a 512bit output length
+- Compute the commitment `T*'` using `Hash(Key, Nonce, Associated Data, T, seq)`
+  - The hash function is unkeyed Blake2b with a 512bit output length
+  - `seq` is serialized as a little-endian 64-bit unsigned integer
 - Perform a constant-time comparison of `T*` and `T*'`
   - Abort processing if there is a mismatch
 - Use the key associated with `seq` to decrypt 
