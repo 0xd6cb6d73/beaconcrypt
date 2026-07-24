@@ -5,6 +5,7 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 const SERVER_KID: u64 = 0;
 const TAG_SIZE: usize = 16;
 const COMMITMENT_SIZE: usize = 64;
+const CRYPTO_PAYLOAD_OVERHEAD: usize = TAG_SIZE + COMMITMENT_SIZE;
 const RECEIVE_GAP_LIMIT: u64 = 50;
 
 fn new_pair() -> (BeaconCryptPqxdh, BeaconCryptPqxdh) {
@@ -275,8 +276,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	);
 
 	let recovered_boundary_seq = last_cached_seq + 2;
-	let recovered_boundary =
-		rewrite_crypto_frame_seq(&corrupted, recovered_boundary_seq);
+	let recovered_boundary = rewrite_crypto_frame_seq(&corrupted, recovered_boundary_seq);
 	assert!(
 		receiver.decrypt_message(&recovered_boundary).is_none(),
 		"invalid frame at the recovered cache boundary was accepted"
@@ -298,8 +298,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	);
 
 	let over_recovered_boundary_seq = recovered_boundary_seq + 1;
-	let over_recovered_boundary =
-		rewrite_crypto_frame_seq(&corrupted, over_recovered_boundary_seq);
+	let over_recovered_boundary = rewrite_crypto_frame_seq(&corrupted, over_recovered_boundary_seq);
 	assert!(
 		receiver.decrypt_message(&over_recovered_boundary).is_none(),
 		"invalid frame beyond the recovered cache boundary was accepted"
@@ -326,6 +325,263 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 			.recv_key(over_recovered_boundary_seq)
 			.is_none()
 	);
+}
+
+fn assert_every_inner_payload_bit_is_authenticated(
+	sender: &mut BeaconCryptPqxdh,
+	receiver: &mut BeaconCryptPqxdh,
+	sender_target_kid: u64,
+) {
+	let plaintext = b"every ciphertext, tag, and commitment bit is authenticated";
+	let valid = sender
+		.encrypt_message(plaintext, sender_target_kid)
+		.unwrap();
+	let seq = crypto_frame_seq(&valid);
+	let key_id = crypto_frame_key_id(&valid);
+	let payload = crypto_frame_ciphertext(&valid);
+	assert!(payload.len() > CRYPTO_PAYLOAD_OVERHEAD);
+
+	for byte in 0..payload.len() {
+		for bit in 0..u8::BITS {
+			let mut mutated_payload = payload.clone();
+			mutated_payload[byte] ^= 1 << bit;
+			let mutated = serialize_crypto_frame(seq, key_id, &mutated_payload);
+			assert!(
+				receiver.decrypt_message(&mutated).is_none(),
+				"accepted mutation at payload byte {byte}, bit {bit}"
+			);
+		}
+	}
+
+	assert_eq!(
+		receiver.decrypt_message(&valid).unwrap().plaintext,
+		plaintext,
+		"failed mutations must not consume the authentic frame's receive key"
+	);
+}
+
+fn assert_valid_frame_components_cannot_be_spliced(
+	sender: &mut BeaconCryptPqxdh,
+	receiver: &mut BeaconCryptPqxdh,
+	sender_target_kid: u64,
+) {
+	let plaintext_one = [0x11; 32];
+	let plaintext_two = [0x22; 32];
+	let first = sender
+		.encrypt_message(&plaintext_one, sender_target_kid)
+		.unwrap();
+	let second = sender
+		.encrypt_message(&plaintext_two, sender_target_kid)
+		.unwrap();
+	let first_seq = crypto_frame_seq(&first);
+	let second_seq = crypto_frame_seq(&second);
+	let key_id = crypto_frame_key_id(&first);
+	let first_payload = crypto_frame_ciphertext(&first);
+	let second_payload = crypto_frame_ciphertext(&second);
+	assert_eq!(second_seq, first_seq + 1);
+	assert_eq!(crypto_frame_key_id(&second), key_id);
+	assert_eq!(first_payload.len(), second_payload.len());
+
+	let body_end = first_payload.len() - CRYPTO_PAYLOAD_OVERHEAD;
+	let tag_end = first_payload.len() - COMMITMENT_SIZE;
+	let mut body_splice = first_payload.clone();
+	body_splice[..body_end].copy_from_slice(&second_payload[..body_end]);
+	let mut tag_splice = first_payload.clone();
+	tag_splice[body_end..tag_end].copy_from_slice(&second_payload[body_end..tag_end]);
+	let mut commitment_splice = first_payload.clone();
+	commitment_splice[tag_end..].copy_from_slice(&second_payload[tag_end..]);
+	let mut authenticated_suffix_splice = first_payload.clone();
+	authenticated_suffix_splice[body_end..].copy_from_slice(&second_payload[body_end..]);
+
+	for (name, payload) in [
+		("ciphertext body", body_splice),
+		("AEAD tag", tag_splice),
+		("commitment", commitment_splice),
+		("tag and commitment", authenticated_suffix_splice),
+		("complete payload under the wrong sequence", second_payload),
+	] {
+		let spliced = serialize_crypto_frame(first_seq, key_id, &payload);
+		assert!(
+			receiver.decrypt_message(&spliced).is_none(),
+			"accepted a frame with a spliced {name}"
+		);
+	}
+
+	assert_eq!(
+		receiver.decrypt_message(&first).unwrap().plaintext,
+		plaintext_one
+	);
+	assert_eq!(
+		receiver.decrypt_message(&second).unwrap().plaintext,
+		plaintext_two
+	);
+}
+
+fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
+	sender: &mut BeaconCryptPqxdh,
+	receiver: &mut BeaconCryptPqxdh,
+	sender_target_kid: u64,
+	receiver_remote_kid: u64,
+) {
+	let frames = (0..RECEIVE_GAP_LIMIT)
+		.map(|index| {
+			let plaintext = format!("receive-window-message-{index}").into_bytes();
+			let frame = sender
+				.encrypt_message(&plaintext, sender_target_kid)
+				.unwrap();
+			(plaintext, frame)
+		})
+		.collect::<Vec<_>>();
+	let first_seq = crypto_frame_seq(&frames[0].1);
+	let boundary_seq = crypto_frame_seq(&frames.last().unwrap().1);
+	let sender_kid = crypto_frame_key_id(&frames[0].1);
+	assert_eq!(boundary_seq - first_seq + 1, RECEIVE_GAP_LIMIT);
+
+	let initial_state = receive_state(receiver, receiver_remote_kid);
+	for len in 0..=CRYPTO_PAYLOAD_OVERHEAD {
+		let malformed = serialize_crypto_frame(boundary_seq, sender_kid, &vec![0xA5; len]);
+		let result = catch_unwind(AssertUnwindSafe(|| receiver.decrypt_message(&malformed)));
+		assert!(
+			matches!(result, Ok(None)),
+			"future frame with {len} payload bytes was not rejected cleanly"
+		);
+		assert_eq!(
+			receive_state(receiver, receiver_remote_kid),
+			initial_state,
+			"short future frame with {len} payload bytes advanced the receive ratchet"
+		);
+		assert_eq!(
+			cached_receive_key_count(receiver, receiver_remote_kid, first_seq, boundary_seq,),
+			0,
+			"short future frame with {len} payload bytes cached receive keys"
+		);
+	}
+
+	let boundary = &frames.last().unwrap().1;
+	let corrupted_commitment = corrupt_crypto_frame_commitment(boundary);
+	assert!(receiver.decrypt_message(&corrupted_commitment).is_none());
+	let boundary_state = receive_state(receiver, receiver_remote_kid);
+	assert_ne!(boundary_state, initial_state);
+	assert_eq!(
+		cached_receive_key_count(receiver, receiver_remote_kid, first_seq, boundary_seq),
+		RECEIVE_GAP_LIMIT as usize
+	);
+
+	for attempt in 0..3 {
+		assert!(
+			receiver.decrypt_message(&corrupted_commitment).is_none(),
+			"repeated invalid boundary frame was accepted on attempt {attempt}"
+		);
+		assert_eq!(
+			receive_state(receiver, receiver_remote_kid),
+			boundary_state,
+			"repeated invalid boundary frame advanced the ratchet"
+		);
+		assert_eq!(
+			cached_receive_key_count(receiver, receiver_remote_kid, first_seq, boundary_seq,),
+			RECEIVE_GAP_LIMIT as usize
+		);
+	}
+
+	let corrupted_ciphertext = corrupt_aead_ciphertext(boundary);
+	assert!(receiver.decrypt_message(&corrupted_ciphertext).is_none());
+	assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
+	assert_eq!(
+		cached_receive_key_count(receiver, receiver_remote_kid, first_seq, boundary_seq),
+		RECEIVE_GAP_LIMIT as usize
+	);
+
+	let boundary_plaintext = &frames.last().unwrap().0;
+	assert_eq!(
+		receiver.decrypt_message(boundary).unwrap().plaintext,
+		boundary_plaintext.as_slice()
+	);
+	assert!(
+		receiver
+			.ratchet_manager(receiver_remote_kid)
+			.unwrap()
+			.recv_key(boundary_seq)
+			.is_none()
+	);
+	assert!(receiver.decrypt_message(boundary).is_none());
+	assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
+
+	for index in (0..frames.len() - 1).rev() {
+		let (plaintext, frame) = &frames[index];
+		assert_eq!(
+			receiver.decrypt_message(frame).unwrap().plaintext,
+			plaintext.as_slice(),
+			"failed to decrypt cached frame at index {index}"
+		);
+		assert!(
+			receiver.decrypt_message(frame).is_none(),
+			"replayed cached frame at index {index} was accepted"
+		);
+		assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
+		assert_eq!(
+			cached_receive_key_count(receiver, receiver_remote_kid, first_seq, boundary_seq,),
+			index,
+			"unexpected receive-cache size after index {index}"
+		);
+	}
+}
+
+fn assert_truncated_frames_reject_cleanly(
+	sender: &mut BeaconCryptPqxdh,
+	receiver: &mut BeaconCryptPqxdh,
+	sender_target_kid: u64,
+	receiver_remote_kid: u64,
+) {
+	let plaintext = b"authentic frame remains usable after every truncated prefix";
+	let valid = sender
+		.encrypt_message(plaintext, sender_target_kid)
+		.unwrap();
+	let corrupted = corrupt_crypto_frame_commitment(&valid);
+	let initial_state = receive_state(receiver, receiver_remote_kid);
+
+	for cut in 0..corrupted.len() {
+		let result = catch_unwind(AssertUnwindSafe(|| {
+			receiver.decrypt_message(&corrupted[..cut])
+		}));
+		assert!(
+			matches!(result, Ok(None)),
+			"serialized frame prefix of {cut} bytes was not rejected cleanly"
+		);
+	}
+
+	assert_eq!(
+		receive_state(receiver, receiver_remote_kid),
+		initial_state,
+		"a strict serialized prefix advanced the receive ratchet"
+	);
+	assert_eq!(
+		receiver.decrypt_message(&valid).unwrap().plaintext,
+		plaintext
+	);
+}
+
+fn assert_message_size_boundaries_round_trip(
+	sender: &mut BeaconCryptPqxdh,
+	receiver: &mut BeaconCryptPqxdh,
+	sender_target_kid: u64,
+) {
+	for len in [1, 15, 16, 17, 63, 64, 65, 255, 256, 4096] {
+		let plaintext = (0..len)
+			.map(|index| (index % (u8::MAX as usize + 1)) as u8)
+			.collect::<Vec<_>>();
+		let frame = sender
+			.encrypt_message(&plaintext, sender_target_kid)
+			.unwrap();
+		assert_eq!(
+			crypto_frame_ciphertext(&frame).len(),
+			plaintext.len() + CRYPTO_PAYLOAD_OVERHEAD
+		);
+		assert_eq!(
+			receiver.decrypt_message(&frame).unwrap().plaintext,
+			plaintext,
+			"failed round trip for a {len}-byte plaintext"
+		);
+	}
 }
 
 struct KexResponseParts {
@@ -647,13 +903,24 @@ fn beacon_cannot_decrypt_message_for_different_beacon() {
 	let mut b1 = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
 	let mut b2 = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
 	let b1_response = register_beacon(&mut server, &mut b1, Some(&[0xFF; 32]));
-	let _ = register_beacon(&mut server, &mut b2, Some(&[0xFF; 32]));
+	let b2_response = register_beacon(&mut server, &mut b2, Some(&[0xFF; 32]));
 
-	let ciphertext = server
+	let for_b1 = server
 		.encrypt_message(b"for b1 only", b1_response.kid)
 		.unwrap();
+	let for_b2 = server
+		.encrypt_message(b"for b2 only", b2_response.kid)
+		.unwrap();
 
-	assert!(b2.decrypt_message(&ciphertext).is_none());
+	assert!(b2.decrypt_message(&for_b1).is_none());
+	assert_eq!(
+		b2.decrypt_message(&for_b2).unwrap().plaintext,
+		b"for b2 only"
+	);
+	assert_eq!(
+		b1.decrypt_message(&for_b1).unwrap().plaintext,
+		b"for b1 only"
+	);
 }
 
 #[test]
@@ -862,6 +1129,71 @@ fn invalid_future_frames_cannot_grow_receive_cache_beyond_gap() {
 }
 
 #[test]
+fn every_inner_payload_bit_is_authenticated_in_both_directions() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_every_inner_payload_bit_is_authenticated(&mut server, &mut beacon, response.kid);
+
+	let (mut server, mut beacon) = new_pair();
+	register_beacon(&mut server, &mut beacon, None);
+	assert_every_inner_payload_bit_is_authenticated(&mut beacon, &mut server, SERVER_KID);
+}
+
+#[test]
+fn valid_frame_components_cannot_be_spliced_in_both_directions() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_valid_frame_components_cannot_be_spliced(&mut server, &mut beacon, response.kid);
+
+	let (mut server, mut beacon) = new_pair();
+	register_beacon(&mut server, &mut beacon, None);
+	assert_valid_frame_components_cannot_be_spliced(&mut beacon, &mut server, SERVER_KID);
+}
+
+#[test]
+fn receive_window_boundary_survives_rejection_retry_and_replay_in_both_directions() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_receive_window_boundary_survives_rejection_retry_and_replay(
+		&mut server,
+		&mut beacon,
+		response.kid,
+		SERVER_KID,
+	);
+
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_receive_window_boundary_survives_rejection_retry_and_replay(
+		&mut beacon,
+		&mut server,
+		SERVER_KID,
+		response.kid,
+	);
+}
+
+#[test]
+fn every_truncated_frame_prefix_rejects_cleanly_in_both_directions() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_truncated_frames_reject_cleanly(&mut server, &mut beacon, response.kid, SERVER_KID);
+
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_truncated_frames_reject_cleanly(&mut beacon, &mut server, SERVER_KID, response.kid);
+}
+
+#[test]
+fn message_size_boundaries_round_trip_in_both_directions() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	assert_message_size_boundaries_round_trip(&mut server, &mut beacon, response.kid);
+
+	let (mut server, mut beacon) = new_pair();
+	register_beacon(&mut server, &mut beacon, None);
+	assert_message_size_boundaries_round_trip(&mut beacon, &mut server, SERVER_KID);
+}
+
+#[test]
 fn commitment_corruption_is_rejected() {
 	assert_server_frame_tampering_is_rejected(|ciphertext, _| {
 		let commitment_start = ciphertext.len() - COMMITMENT_SIZE;
@@ -1029,4 +1361,8 @@ fn encrypted_message_cannot_be_relabelled_to_an_alias_key_id() {
 	let relabelled = rewrite_crypto_frame_key_id(&ciphertext, alias.kid);
 
 	assert!(server.decrypt_message(&relabelled).is_none());
+	assert_eq!(
+		server.decrypt_message(&ciphertext).unwrap().plaintext,
+		b"authenticated beacon message"
+	);
 }
