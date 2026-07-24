@@ -917,6 +917,8 @@ mod tests {
 
 	#[test]
 	fn root_key_derivation_matches_the_pqxdh_transcript() {
+		// Reproduced independently by `python scripts/generate_kat_vectors.py` and
+		// `go run scripts/generate_kat_vectors.go` (`[pqxdh-root-key]`).
 		let dh1 = DhSecret::from([0x11; DH_OUT_LEN]);
 		let dh2 = DhSecret::from([0x22; DH_OUT_LEN]);
 		let dh3 = DhSecret::from([0x33; DH_OUT_LEN]);

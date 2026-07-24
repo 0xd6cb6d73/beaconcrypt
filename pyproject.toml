@@ -27,7 +27,8 @@ package = false
 dev = [
     "black>=26.5.1",
     "pytest>=9.1.1",
-    "maturin>=1.14,<2.0"
+    "maturin>=1.14,<2.0",
+    "pycryptodome>=3.23.0",
 ]
 
 [tool.cibuildwheel]

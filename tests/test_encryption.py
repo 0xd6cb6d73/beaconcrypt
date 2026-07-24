@@ -98,10 +98,7 @@ def test_server_can_decrypt_from_beacon_a_after_encrypting_to_beacon_b():
     assert beacon_b.decrypt_server_message(to_beacon_b) == b"server to beacon B"
 
     from_beacon_a = beacon_a.encrypt_message_to_server(b"beacon A to server")
-    assert (
-        server.decrypt_beacon_message(from_beacon_a)
-        == b"beacon A to server"
-    )
+    assert server.decrypt_beacon_message(from_beacon_a) == b"beacon A to server"
 
 
 def test_encrypt_multiple():
