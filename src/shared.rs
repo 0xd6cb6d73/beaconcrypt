@@ -358,12 +358,12 @@ impl RatchetManager {
 	}
 
 	pub fn ratchet_send(&mut self, info: &[u8]) -> Option<u64> {
-		self.send_ctr += 1;
-		let current = self.send_ctr;
-		let keys = self.send_key.ratchet(info);
+		let current = self.send_ctr.checked_add(1)?;
 		if self.send_past.contains_key(&current) {
 			return None;
 		}
+		let keys = self.send_key.ratchet(info);
+		self.send_ctr = current;
 		self.send_past.insert(current, keys);
 		Some(current)
 	}
@@ -377,12 +377,12 @@ impl RatchetManager {
 	}
 
 	pub fn ratchet_recv(&mut self, info: &[u8]) -> Option<u64> {
-		self.recv_ctr += 1;
-		let current = self.recv_ctr;
-		let keys = self.recv_key.ratchet(info);
+		let current = self.recv_ctr.checked_add(1)?;
 		if self.recv_past.contains_key(&current) {
 			return None;
 		}
+		let keys = self.recv_key.ratchet(info);
+		self.recv_ctr = current;
 		self.recv_past.insert(current, keys);
 		Some(current)
 	}
@@ -390,14 +390,13 @@ impl RatchetManager {
 	pub fn ratchet_recv_until(&mut self, info: &[u8], until: u64) -> Option<u64> {
 		if until <= self.recv_ctr {
 			Some(until)
-		} else if until > self.recv_ctr + RATCHET_MAX_GAP
-			|| self.recv_past.len() as u64 + (until - self.recv_ctr) > RATCHET_MAX_GAP
-		{
-			None
 		} else {
 			let diff = until - self.recv_ctr;
+			if diff > RATCHET_MAX_GAP || self.recv_past.len() as u64 + diff > RATCHET_MAX_GAP {
+				return None;
+			}
 			for _ in 0..diff {
-				self.ratchet_recv(info);
+				self.ratchet_recv(info)?;
 			}
 			assert_eq!(until, self.recv_ctr);
 			Some(self.recv_ctr)
@@ -510,14 +509,14 @@ pub trait CryptoProvider {
 					Ok(frame) => {
 						let kid = frame.get_key_id();
 						let associated_data = self.associated_data(kid)?;
-						let key_seq =
-							self.ratchet_recv_until(SYM_RATCHET_INFO, frame.get_seq(), kid)?;
-						let key = self.recv_key(key_seq, kid)?;
 						let ciphertext = frame.get_cipher_text().ok()?;
 						let ct_len = ciphertext.len();
 						if ct_len <= MESSAGE_OVERHEAD {
 							return None;
 						}
+						let key_seq =
+							self.ratchet_recv_until(SYM_RATCHET_INFO, frame.get_seq(), kid)?;
+						let key = self.recv_key(key_seq, kid)?;
 						let commitment = build_commitment(
 							key,
 							associated_data.as_slice(),
@@ -686,6 +685,7 @@ pub trait CryptoProvider {
 /// * Nonce
 /// * Associated data
 /// * key `seq`
+/// * sender key identifier `kid`
 fn build_commitment(
 	secret: &KeyMaterial,
 	ad: &[u8],
@@ -693,6 +693,9 @@ fn build_commitment(
 	seq: u64,
 	kid: u64,
 ) -> Option<Vec<u8>> {
+	if tag.len() != crypto_aead::chacha20poly1305_ietf::ABYTES {
+		return None;
+	}
 	let key = secret.key().as_bytes();
 	let nonce = secret.nonce().as_bytes();
 	let mut input = vec![];
@@ -739,7 +742,6 @@ mod tests {
 		build_commitment(&secret, ad, tag, seq, kid).unwrap()
 	}
 
-	#[cfg(all(feature = "beacon", feature = "server", feature = "pqxdh"))]
 	fn decode_hex<const N: usize>(hex: &str) -> [u8; N] {
 		fn nibble(byte: u8) -> u8 {
 			match byte {
@@ -882,15 +884,62 @@ mod tests {
 		assert_eq!(nonce_bytes(&output.aead_nonce), &[0x33; AEAD_NONCE_LEN]);
 	}
 
-	///key = bytes([0x11]) * 32
-	///nonce = bytes([0x22]) * 12
-	///ad = b"beaconcrypt-test-associated-data"
-	///tag = bytes([0x33]) * 16
-	///seq = (0x44).to_bytes(8, "little")
-	///kid = (0x55).to_bytes(8, "little")
+	#[test]
+	fn ratchet_matches_hkdf_sha512_known_answer_over_two_steps() {
+		// Reproduced independently by `python scripts/generate_kat_vectors.py` and
+		// `go run scripts/generate_kat_vectors.go` (`[ratchet]`).
+		let mut ratchet = SendChain::from([0x24; KDF_STATE_SIZE]);
+
+		let first = ratchet.ratchet(SYM_RATCHET_INFO);
+		assert_eq!(
+			key_bytes(first.key()),
+			decode_hex::<AEAD_KEY_LEN>(
+				"f57007f1b1c7a62a7d6cdfa5df07538c43d83656906764d607e627401906e42a"
+			)
+		);
+		assert_eq!(
+			nonce_bytes(first.nonce()),
+			decode_hex::<AEAD_NONCE_LEN>("43483e81091a393409afbf53")
+		);
+		assert_eq!(
+			ratchet.state.as_slice(),
+			decode_hex::<KDF_STATE_SIZE>(
+				"5936897d8bd06b7daf70bd0d64b2f607a055fd843ddb779051cb975bbb02b1d3"
+			)
+		);
+
+		let second = ratchet.ratchet(SYM_RATCHET_INFO);
+		assert_eq!(
+			key_bytes(second.key()),
+			decode_hex::<AEAD_KEY_LEN>(
+				"f30ee97ccdc39577bb1320268d7fc10d55c53649e879e98a9670d58b9a1539d0"
+			)
+		);
+		assert_eq!(
+			nonce_bytes(second.nonce()),
+			decode_hex::<AEAD_NONCE_LEN>("d497a96123dfcbe5700b5cc0")
+		);
+		assert_eq!(
+			ratchet.state.as_slice(),
+			decode_hex::<KDF_STATE_SIZE>(
+				"d11e3c43fa3bbfec95a41973521d7e1b4aacddfc96591fe40fa30e9581b5e4e2"
+			)
+		);
+	}
+
+	/// Reproduced independently by `python scripts/generate_kat_vectors.py` and
+	/// `go run scripts/generate_kat_vectors.go` (`[commitment]`).
 	///
-	///print(hashlib.blake2b(key + nonce + ad + tag + seq + kid, digest_size=64).hexdigest())
-	#[cfg(all(feature = "beacon", feature = "server", feature = "pqxdh"))]
+	/// ```python
+	/// import hashlib
+	/// key = bytes([0x11]) * 32
+	/// nonce = bytes([0x22]) * 12
+	/// ad = b"beaconcrypt-test-associated-data"
+	/// tag = bytes([0x33]) * 16
+	/// seq = (0x44).to_bytes(8, "little")
+	/// kid = (0x55).to_bytes(8, "little")
+	/// print(hashlib.blake2b(key + nonce + ad + tag + seq + kid, digest_size=64).hexdigest())
+	/// ```
 	#[test]
 	fn commitment_matches_blake2b_known_answer() {
 		let secret = KeyMaterial {
@@ -915,7 +964,84 @@ mod tests {
 		);
 	}
 
-	#[cfg(all(feature = "beacon", feature = "server", feature = "pqxdh"))]
+	#[test]
+	fn commitment_rejects_non_chacha_tag_lengths() {
+		let secret = KeyMaterial {
+			key: [0x51; AEAD_KEY_LEN].into(),
+			nonce: [0x52; AEAD_NONCE_LEN].into(),
+		};
+
+		for tag_len in 0..=32 {
+			let result = build_commitment(&secret, b"associated data", &vec![0x53; tag_len], 1, 2);
+			if tag_len == crypto_aead::chacha20poly1305_ietf::ABYTES {
+				assert!(result.is_some());
+			} else {
+				assert!(result.is_none(), "accepted a {tag_len}-byte AEAD tag");
+			}
+		}
+	}
+
+	#[test]
+	fn rfc8439_aead_and_commitment_known_answer() {
+		// The AEAD inputs and expected ciphertext/tag are from RFC 8439 section 2.8.2.
+		// Independent reproductions and outer commitment calculations are in the Python
+		// and Go KAT generators (`[rfc8439-and-commitment]`).
+		let key = decode_hex::<AEAD_KEY_LEN>(
+			"808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f",
+		);
+		let nonce = decode_hex::<AEAD_NONCE_LEN>("070000004041424344454647");
+		let associated_data = decode_hex::<12>("50515253c0c1c2c3c4c5c6c7");
+		let plaintext = b"Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
+		let expected_ciphertext = decode_hex::<114>(
+			"d31a8d34648e60db7b86afbc53ef7ec2a4aded51296e08fea9e2b5a736ee62d6\
+			 3dbea45e8ca9671282fafb69da92728b1a71de0a9e060b2905d6a5b67ecd3b36\
+			 92ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc\
+			 3ff4def08e4b7a9de576d26586cec64b6116",
+		);
+		let expected_tag = decode_hex::<16>("1ae10b594f09e26a7e902ecbd0600691");
+		let expected_commitment = decode_hex::<COMMITMENT_SIZE>(
+			"cccff653b25cf3c21703c6648f4388867be568d607148b026045306e9cc21b37\
+			 acd3e91c883f0eb70adde401e33871ae8171f1fe81341938fb9d73afd76c91ba",
+		);
+		let aead_key: AeadKey = key.into();
+		let aead_nonce: AeadNonce = nonce.into();
+		let (ciphertext, tag) = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
+			plaintext,
+			Some(&associated_data),
+			&aead_nonce,
+			&aead_key,
+		)
+		.unwrap();
+
+		assert_eq!(ciphertext, expected_ciphertext);
+		assert_eq!(tag, expected_tag);
+
+		let commitment = commitment_for_test(
+			key,
+			nonce,
+			&associated_data,
+			&tag,
+			0x0123_4567_89AB_CDEF,
+			0xFEDC_BA98_7654_3210,
+		);
+		assert_eq!(commitment, expected_commitment);
+
+		let mut wire_payload = ciphertext;
+		wire_payload.extend_from_slice(&tag);
+		wire_payload.extend_from_slice(&commitment);
+		assert_eq!(wire_payload.len(), plaintext.len() + MESSAGE_OVERHEAD);
+		assert_eq!(&wire_payload[..plaintext.len()], &expected_ciphertext);
+		assert_eq!(
+			&wire_payload[plaintext.len()..plaintext.len() + expected_tag.len()],
+			&expected_tag
+		);
+		assert_eq!(
+			&wire_payload[plaintext.len() + expected_tag.len()..],
+			&expected_commitment
+		);
+	}
+
+	#[cfg(feature = "pqxdh")]
 	#[test]
 	fn commitment_binds_every_context_bit() {
 		let mut key = [0x11; AEAD_KEY_LEN];
@@ -988,13 +1114,13 @@ mod tests {
 		}
 	}
 
-	#[cfg(all(feature = "beacon", feature = "server", feature = "pqxdh"))]
 	#[test]
 	fn commitment_separates_real_chacha20poly1305_multi_opening() {
-		// This fixture fixes two keys, a nonce, ciphertext, and the first associated-data
-		// block, then solves the Poly1305 accumulator modulo 2^130 - 5 for the second
-		// associated-data block. The shared ciphertext and tag therefore authenticate two
-		// distinct plaintext/context openings under the base AEAD.
+		// This fixed fixture has two keys and associated-data blocks under which the shared
+		// ciphertext and tag authenticate distinct plaintext/context openings. Both
+		// openings are independently verified by the Python and Go KAT generators.
+		// Its construction source and Poly1305 derivation are in
+		// `scripts/derive_multi_opening.py` and `doc/multi-opening-fixture.md`.
 		let key_one = decode_hex::<AEAD_KEY_LEN>(
 			"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
 		);
@@ -1036,6 +1162,16 @@ mod tests {
 
 		let commitment_one = commitment_for_test(key_one, nonce, &ad_one, &tag, 1, 7);
 		let commitment_two = commitment_for_test(key_two, nonce, &ad_two, &tag, 1, 7);
+		let expected_commitment_one = decode_hex::<COMMITMENT_SIZE>(
+			"0573b9e328176e47de0251b211aa5347c72a61abf8e095bc7ac854982711f135\
+			 25c0741341ac59f7db41163fba77aadf8592df71b25a3b02099b6b4b00a3c403",
+		);
+		let expected_commitment_two = decode_hex::<COMMITMENT_SIZE>(
+			"322268a07252f76c4e894cab1e124db622ecf299f5050ed23768dd79b9e804ad\
+			 22c48e36ff3b0e3e1c6984ee81d96c9d2900672298c6350d8413dbb49b5dcdd1",
+		);
+		assert_eq!(commitment_one, expected_commitment_one);
+		assert_eq!(commitment_two, expected_commitment_two);
 		assert_ne!(
 			commitment_one, commitment_two,
 			"CTX commitment must separate the base AEAD's two valid openings"
@@ -1083,6 +1219,54 @@ mod tests {
 		ratchet.delete_send_key(first);
 		assert!(ratchet.send_key(first).is_none());
 		assert!(ratchet.send_key(second).is_some());
+	}
+
+	#[test]
+	fn ratchets_reject_counter_exhaustion_without_mutating_state() {
+		let mut send = RatchetManager::new();
+		send.init_ratchets(&[0xA1; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+		send.send_ctr = u64::MAX - 1;
+		assert_eq!(send.ratchet_send(SYM_RATCHET_INFO), Some(u64::MAX));
+		let send_state = send.send_state().as_slice().to_vec();
+		let send_cache_len = send.send_past.len();
+		assert_eq!(send.ratchet_send(SYM_RATCHET_INFO), None);
+		assert_eq!(send.send_ctr, u64::MAX);
+		assert_eq!(send.send_state().as_slice(), send_state);
+		assert_eq!(send.send_past.len(), send_cache_len);
+		assert!(send.send_key(0).is_none());
+
+		let mut recv = RatchetManager::new();
+		recv.init_ratchets(&[0xA2; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+		recv.recv_ctr = u64::MAX;
+		let recv_state = recv.recv_state().as_slice().to_vec();
+		assert_eq!(recv.ratchet_recv(SYM_RATCHET_INFO), None);
+		assert_eq!(recv.recv_ctr, u64::MAX);
+		assert_eq!(recv.recv_state().as_slice(), recv_state);
+		assert!(recv.recv_past.is_empty());
+		assert!(recv.recv_key(0).is_none());
+	}
+
+	#[test]
+	fn receive_ratchet_handles_exact_gap_near_counter_exhaustion() {
+		for distance in [RATCHET_MAX_GAP, RATCHET_MAX_GAP - 1] {
+			let mut ratchet = RatchetManager::new();
+			ratchet.init_ratchets(&[0xA3; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+			ratchet.recv_ctr = u64::MAX - distance;
+
+			assert_eq!(
+				ratchet.ratchet_recv_until(SYM_RATCHET_INFO, u64::MAX),
+				Some(u64::MAX)
+			);
+			assert_eq!(ratchet.recv_ctr, u64::MAX);
+			assert_eq!(ratchet.recv_past.len(), distance as usize);
+			assert!(ratchet.recv_key(u64::MAX - distance + 1).is_some());
+			assert!(ratchet.recv_key(u64::MAX).is_some());
+
+			let state_at_exhaustion = ratchet.recv_state().as_slice().to_vec();
+			assert_eq!(ratchet.ratchet_recv(SYM_RATCHET_INFO), None);
+			assert_eq!(ratchet.recv_state().as_slice(), state_at_exhaustion);
+			assert_eq!(ratchet.recv_past.len(), distance as usize);
+		}
 	}
 
 	#[test]
