@@ -45,8 +45,8 @@ Let:
 ```text
 p = 2^130 - 5
 OTK = first 32 bytes of ChaCha20_Block(K, counter=0, N)
-r = clamp(LE128(OTK[0..16]))
-s = LE128(OTK[16..32])
+r = clamp(LE128(OTK[0..15]))
+s = LE128(OTK[16..31])
 ```
 
 RFC 8439 appends a high `1` bit to each Poly1305 block. For a full 16-byte
