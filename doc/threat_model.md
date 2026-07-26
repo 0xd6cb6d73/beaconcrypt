@@ -24,6 +24,8 @@ The adversaries has two modes, active or passive. An active adversary means they
 
 This threat model assumes that the adversary will not attempt to compromise the C2 server or the beacon itself and that it has no access to the environment in which either of these are running. In other words, the attacker only exists on the wire.
 
+*This is obviously unreasonable*, an active PQ attacker is highly likely state-sponsored, at least in the short to medium term. Such an attacker almost certainly does not mind RCEing your C2. However, I think this limitation is required to bound analysis to those aspects that beaconcrypt itself can address. The rest is up to C2 developpers.
+
 # C2 protocol
 ## Principals
 Our protocol has two principals:
@@ -31,8 +33,6 @@ Our protocol has two principals:
 - The beacon, a piece of software running on compromised machines which receives taskings from the server and sends responses back to it
 
 The means of communications between these principals is unspecified and can be either public or private, but it is assumed to happen over the open-internet.
-
-*This is obviously unreasonable*, an active PQ attacker is highly likely state-sponsored, at least in the short to medium term. Such an attacker almost certainly does not mind RCEing your C2. However, I think this limitation is required to bound analysis to those aspects that beaconcrypt itself can address. The rest is up to C2 developpers.
 
 ## Goals
 Our protocol aims to provide a confidential and integrity-protected way for the server to send its taskings to the beacons. It must be computationally infeasible for attackers to substitute their tasking with a legitimate one. The beacon must be able to verify that the received taskings are legitimate and to send a response with the same guarantees.
