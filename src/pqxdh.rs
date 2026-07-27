@@ -781,7 +781,7 @@ mod tests {
 
 		let prekey =
 			crypto_sign::verify(registration.get_pre_key().unwrap(), beacon.identity_pk()).unwrap();
-		assert_eq!(prekey[0], 2);
+		assert_eq!(prekey[0], 4);
 		assert_eq!(
 			decode_kem(&prekey, KemType::X25519).unwrap(),
 			beacon.get_prekey_pk().unwrap().as_bytes()
@@ -792,7 +792,7 @@ mod tests {
 			beacon.identity_pk(),
 		)
 		.unwrap();
-		assert_eq!(onetime[0], 2);
+		assert_eq!(onetime[0], 4);
 		assert_eq!(
 			decode_kem(&onetime, KemType::X25519).unwrap(),
 			beacon.get_onetime_pk().unwrap().as_bytes(),
@@ -800,7 +800,7 @@ mod tests {
 
 		let pq =
 			crypto_sign::verify(registration.get_pq_key().unwrap(), beacon.identity_pk()).unwrap();
-		assert_eq!(pq[0], 1);
+		assert_eq!(pq[0], 3);
 		assert_eq!(
 			decode_kem(&pq, KemType::MlKem768).unwrap(),
 			beacon.pq_pk().unwrap().as_bytes()

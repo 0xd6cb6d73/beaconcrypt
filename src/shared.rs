@@ -15,6 +15,11 @@ use std::marker::PhantomData;
 use std::vec;
 use zeroize::{Zeroize, Zeroizing};
 
+#[path = "deser.rs"]
+mod deser;
+#[path = "ser.rs"]
+mod ser;
+
 pub const KEX_KDF_OUT_LEN: usize = 32usize;
 pub const KDF_STATE_SIZE: usize = 32usize;
 pub const SYM_RATCHET_INFO: &[u8; 41] = b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
@@ -69,18 +74,18 @@ impl From<u8> for SignType {
 #[derive(PartialEq)]
 pub enum KemType {
 	Undefined = 0,
-	MlKem768 = 1,
-	X25519 = 2,
-	MlKem1024 = 3,
+	MlKem768 = 3,
+	X25519 = 4,
+	MlKem1024 = 5,
 }
 
 impl From<KemType> for u8 {
 	fn from(value: KemType) -> Self {
 		match value {
 			KemType::Undefined => 0,
-			KemType::MlKem768 => 1,
-			KemType::X25519 => 2,
-			KemType::MlKem1024 => 3,
+			KemType::MlKem768 => 3,
+			KemType::X25519 => 4,
+			KemType::MlKem1024 => 5,
 		}
 	}
 }
@@ -88,9 +93,9 @@ impl From<KemType> for u8 {
 impl From<u8> for KemType {
 	fn from(value: u8) -> Self {
 		match value {
-			1 => Self::MlKem768,
-			2 => Self::X25519,
-			3 => Self::MlKem1024,
+			3 => Self::MlKem768,
+			4 => Self::X25519,
+			5 => Self::MlKem1024,
 			_ => Self::Undefined,
 		}
 	}
@@ -162,15 +167,108 @@ mod systems {
 	#[derive(PartialEq)]
 	pub struct X25519;
 	#[derive(PartialEq)]
-	pub struct Hkdf;
+	pub struct HkdfSha512;
 	#[derive(PartialEq)]
 	pub struct Pqxdh;
+	#[derive(PartialEq)]
+	pub struct Chacha20Poly1305Ietf;
+
+	#[repr(u8)]
+	#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+	pub enum Identifier {
+		Undefined = 0,
+		HkdfSha512 = 6,
+		Chacha20Poly1305Ietf = 7,
+	}
+
+	impl From<Identifier> for u8 {
+		fn from(value: Identifier) -> Self {
+			match value {
+				Identifier::Undefined => 0,
+				Identifier::HkdfSha512 => 6,
+				Identifier::Chacha20Poly1305Ietf => 7,
+			}
+		}
+	}
+
+	impl From<u8> for Identifier {
+		fn from(value: u8) -> Self {
+			match value {
+				6 => Self::HkdfSha512,
+				7 => Self::Chacha20Poly1305Ietf,
+				_ => Self::Undefined,
+			}
+		}
+	}
+
+	pub trait Identified {
+		const IDENTIFIER: Identifier;
+	}
+
+	impl Identified for HkdfSha512 {
+		const IDENTIFIER: Identifier = Identifier::HkdfSha512;
+	}
+
+	impl Identified for Chacha20Poly1305Ietf {
+		const IDENTIFIER: Identifier = Identifier::Chacha20Poly1305Ietf;
+	}
 }
 mod roles {
 	#[derive(PartialEq)]
 	pub struct ChainKey;
 	#[derive(PartialEq)]
 	pub struct DerivedSecret;
+	#[derive(PartialEq)]
+	pub struct EncryptionKey;
+	#[derive(PartialEq)]
+	pub struct Nonce;
+
+	#[repr(u8)]
+	#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+	pub enum Identifier {
+		Undefined = 0,
+		ChainKey = 8,
+		EncryptionKey = 9,
+		Nonce = 10,
+	}
+
+	impl From<Identifier> for u8 {
+		fn from(value: Identifier) -> Self {
+			match value {
+				Identifier::Undefined => 0,
+				Identifier::ChainKey => 8,
+				Identifier::EncryptionKey => 9,
+				Identifier::Nonce => 10,
+			}
+		}
+	}
+
+	impl From<u8> for Identifier {
+		fn from(value: u8) -> Self {
+			match value {
+				8 => Self::ChainKey,
+				9 => Self::EncryptionKey,
+				10 => Self::Nonce,
+				_ => Self::Undefined,
+			}
+		}
+	}
+
+	pub trait Identified {
+		const IDENTIFIER: Identifier;
+	}
+
+	impl Identified for ChainKey {
+		const IDENTIFIER: Identifier = Identifier::ChainKey;
+	}
+
+	impl Identified for EncryptionKey {
+		const IDENTIFIER: Identifier = Identifier::EncryptionKey;
+	}
+
+	impl Identified for Nonce {
+		const IDENTIFIER: Identifier = Identifier::Nonce;
+	}
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
@@ -190,7 +288,7 @@ impl<const S: usize, System: 'static, Role: 'static, OtherSystem: 'static, Other
 		eq &= memcmp(self.data.as_slice(), other.data.as_slice());
 		eq &= TypeId::of::<System>() == TypeId::of::<OtherSystem>();
 		eq &= TypeId::of::<Role>() == TypeId::of::<OtherRole>();
-		return eq;
+		eq
 	}
 }
 
@@ -256,7 +354,7 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 
 #[cfg(feature = "pqxdh")]
 pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>;
-pub type KdfState = SecretArr<KDF_STATE_SIZE, systems::Hkdf, roles::ChainKey>;
+pub type KdfState = SecretArr<KDF_STATE_SIZE, systems::HkdfSha512, roles::ChainKey>;
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
 
 pub struct KeyMaterial {
@@ -802,11 +900,11 @@ mod tests {
 	#[test]
 	fn kem_type_discriminants_round_trip() {
 		assert_eq!(u8::from(KemType::Undefined), 0);
-		assert_eq!(u8::from(KemType::MlKem768), 1);
-		assert_eq!(u8::from(KemType::X25519), 2);
+		assert_eq!(u8::from(KemType::MlKem768), 3);
+		assert_eq!(u8::from(KemType::X25519), 4);
 		assert!(matches!(KemType::from(0), KemType::Undefined));
-		assert!(matches!(KemType::from(1), KemType::MlKem768));
-		assert!(matches!(KemType::from(2), KemType::X25519));
+		assert!(matches!(KemType::from(3), KemType::MlKem768));
+		assert!(matches!(KemType::from(4), KemType::X25519));
 		assert!(matches!(KemType::from(u8::MAX), KemType::Undefined));
 	}
 
@@ -849,7 +947,7 @@ mod tests {
 	fn kem_key_encoding_round_trips() {
 		let x25519_key = [0x5A; 32];
 		let encoded_x25519 = encode_kem(KemType::X25519, &x25519_key).unwrap();
-		assert_eq!(encoded_x25519[0], 2);
+		assert_eq!(encoded_x25519[0], 4);
 		assert_eq!(
 			decode_kem(&encoded_x25519, KemType::X25519).unwrap(),
 			x25519_key
@@ -857,7 +955,7 @@ mod tests {
 
 		let ml_kem_key = [0xC3; 64];
 		let encoded_ml_kem = encode_kem(KemType::MlKem768, &ml_kem_key).unwrap();
-		assert_eq!(encoded_ml_kem[0], 1);
+		assert_eq!(encoded_ml_kem[0], 3);
 		assert_eq!(
 			decode_kem(&encoded_ml_kem, KemType::MlKem768).unwrap(),
 			ml_kem_key
@@ -883,7 +981,7 @@ mod tests {
 		let encoded_x25519 = encode_kem(KemType::X25519, &x25519_key).unwrap();
 
 		assert_eq!(encoded_x25519.len(), x25519_key.len() + 1);
-		assert_eq!(encoded_x25519[0], 2);
+		assert_eq!(encoded_x25519[0], 4);
 		assert!(decode_kem(&encoded_x25519, KemType::MlKem768).is_err());
 	}
 
@@ -932,7 +1030,7 @@ mod tests {
 
 	#[test]
 	fn secret_arrays_with_different_roles_are_not_equal() {
-		type OtherRole = SecretArr<KDF_STATE_SIZE, systems::Hkdf, roles::DerivedSecret>;
+		type OtherRole = SecretArr<KDF_STATE_SIZE, systems::HkdfSha512, roles::DerivedSecret>;
 
 		let left = KdfState::from([0x11; KDF_STATE_SIZE]);
 		let right = OtherRole::from([0x11; KDF_STATE_SIZE]);
