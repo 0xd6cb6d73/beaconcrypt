@@ -342,6 +342,8 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 		let beacon_kex_id = crypto_sign::ed25519_sk_to_curve25519(self.identity_sk()).ok()?;
 		let shared_secret =
 			crypto_kem::mlkem768::decapsulate(&kem_ciphertext, self.pq_sk()?).ok()?;
+
+		let all_zeroes: DhSecret = [0u8; crypto_scalarmult::SCALARBYTES].into();
 		let dh1: DhSecret =
 			crypto_scalarmult::scalarmult(self.get_prekey_sk()?.as_bytes(), &server_kex_id)
 				.ok()?
@@ -357,6 +359,10 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 			crypto_scalarmult::scalarmult(self.get_onetime_sk()?.as_bytes(), ephemeral.as_bytes())
 				.ok()?
 				.into();
+		if all_zeroes == dh1 || all_zeroes == dh2 || all_zeroes == dh3 || all_zeroes == dh4 {
+			return None;
+		}
+
 		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, shared_secret)?;
 		self.delete_onetime_keypair();
 		self.delete_pq_keypair();
@@ -423,6 +429,8 @@ impl ProviderServer for BeaconCryptPqxdh {
 
 		let remote_id_kex = crypto_sign::ed25519_pk_to_curve25519(&remote_id).ok()?;
 		let id_kex_sk = crypto_sign::ed25519_sk_to_curve25519(self.identity_sk()).ok()?;
+
+		let all_zeroes: DhSecret = [0u8; crypto_scalarmult::SCALARBYTES].into();
 		let dh1: DhSecret = crypto_scalarmult::scalarmult(&id_kex_sk, beacon_prekey.as_bytes())
 			.ok()?
 			.into();
@@ -442,6 +450,9 @@ impl ProviderServer for BeaconCryptPqxdh {
 		)
 		.ok()?
 		.into();
+		if all_zeroes == dh1 || all_zeroes == dh2 || all_zeroes == dh3 || all_zeroes == dh4 {
+			return None;
+		}
 
 		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, kem_shared)?;
 

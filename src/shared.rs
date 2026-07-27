@@ -158,16 +158,22 @@ pub fn decode_kem(encoded_pk: &[u8], expected: KemType) -> Result<Vec<u8>, Decod
 
 mod systems {
 	#[cfg(feature = "pqxdh")]
+	#[derive(PartialEq)]
 	pub struct X25519;
+	#[derive(PartialEq)]
 	pub struct Hkdf;
+	#[derive(PartialEq)]
 	pub struct Pqxdh;
 }
 mod roles {
+	#[derive(PartialEq)]
 	pub struct ChainKey;
+	#[derive(PartialEq)]
 	pub struct DerivedSecret;
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
+#[derive(PartialEq)]
 pub struct SecretArr<const S: usize, System, Role> {
 	data: Zeroizing<[u8; S]>,
 	// what cryptosystem this is used in (X25519, ML-KEM...)
