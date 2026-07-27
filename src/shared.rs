@@ -9,6 +9,7 @@ use crate::pqxdh::AD_SIZE;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::utils::memcmp;
 use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
+use std::any::TypeId;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::vec;
@@ -173,13 +174,24 @@ mod roles {
 }
 
 // this design is stolen from https://github.com/celabshq/libcrux/issues/1390
-#[derive(PartialEq)]
 pub struct SecretArr<const S: usize, System, Role> {
 	data: Zeroizing<[u8; S]>,
 	// what cryptosystem this is used in (X25519, ML-KEM...)
 	_system: PhantomData<System>,
 	// what role does this play within the given cryptosystem (signing key, KDF state..)
 	_role: PhantomData<Role>,
+}
+
+impl<const S: usize, System: 'static, Role: 'static, OtherSystem: 'static, OtherRole: 'static>
+	PartialEq<SecretArr<S, OtherSystem, OtherRole>> for SecretArr<S, System, Role>
+{
+	fn eq(&self, other: &SecretArr<S, OtherSystem, OtherRole>) -> bool {
+		let mut eq: bool = true;
+		eq &= memcmp(self.data.as_slice(), other.data.as_slice());
+		eq &= TypeId::of::<System>() == TypeId::of::<OtherSystem>();
+		eq &= TypeId::of::<Role>() == TypeId::of::<OtherRole>();
+		return eq;
+	}
 }
 
 impl<const S: usize, System, Role> From<[u8; S]> for SecretArr<S, System, Role> {
@@ -874,6 +886,48 @@ mod tests {
 		assert_eq!(too_short.as_slice(), &[0; KDF_STATE_SIZE]);
 		assert_eq!(too_long.as_slice(), &[0; KDF_STATE_SIZE]);
 		assert_eq!(exact.clone().as_slice(), exact.as_slice());
+	}
+
+	#[test]
+	fn secret_arrays_with_identical_contents_are_equal() {
+		let left = KdfState::from([0x11; KDF_STATE_SIZE]);
+		let right = KdfState::from([0x11; KDF_STATE_SIZE]);
+
+		assert!(left == right);
+		assert!(right == left);
+	}
+
+	#[test]
+	fn secret_arrays_with_different_contents_are_not_equal() {
+		let left = KdfState::from([0x11; KDF_STATE_SIZE]);
+		let mut different = [0x11; KDF_STATE_SIZE];
+		different[KDF_STATE_SIZE - 1] = 0x22;
+		let right = KdfState::from(different);
+
+		assert!(left != right);
+		assert!(right != left);
+	}
+
+	#[test]
+	fn secret_arrays_with_different_systems_are_not_equal() {
+		type OtherSystem = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::ChainKey>;
+
+		let left = KdfState::from([0x11; KDF_STATE_SIZE]);
+		let right = OtherSystem::from([0x11; KDF_STATE_SIZE]);
+
+		assert!(left != right);
+		assert!(right != left);
+	}
+
+	#[test]
+	fn secret_arrays_with_different_roles_are_not_equal() {
+		type OtherRole = SecretArr<KDF_STATE_SIZE, systems::Hkdf, roles::DerivedSecret>;
+
+		let left = KdfState::from([0x11; KDF_STATE_SIZE]);
+		let right = OtherRole::from([0x11; KDF_STATE_SIZE]);
+
+		assert!(left != right);
+		assert!(right != left);
 	}
 
 	#[test]
