@@ -111,7 +111,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 					server_kid,
 					RemotePrincipal::new(
 						crypto_sign::PublicKey::from_bytes(pk).unwrap(),
-						RatchetManager::new(),
+						RatchetManager::default(),
 					),
 				);
 				hm
@@ -150,7 +150,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 	fn add_known_kid(&mut self, key_id: u64, pk: crypto_sign::PublicKey) {
 		self.known_ids
 			.entry(key_id)
-			.or_insert(RemotePrincipal::new(pk, RatchetManager::new()));
+			.or_insert(RemotePrincipal::new(pk, RatchetManager::default()));
 	}
 
 	fn delete_known_kid(&mut self, key_id: u64) {

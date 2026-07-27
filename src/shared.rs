@@ -364,6 +364,17 @@ pub struct RatchetManager {
 }
 
 impl RatchetManager {
+	pub fn default() -> Self {
+		Self {
+			send_key: SendChain::default(),
+			recv_key: RecvChain::default(),
+			send_past: HashMap::new(),
+			send_ctr: 0,
+			recv_past: HashMap::new(),
+			recv_ctr: 0,
+		}
+	}
+
 	pub fn new() -> Self {
 		Self {
 			send_key: SendChain::default(),
@@ -1241,8 +1252,8 @@ mod tests {
 	#[test]
 	fn opposite_ratchet_roles_derive_matching_keys() {
 		let ikm = [0x42; KDF_STATE_SIZE];
-		let mut beacon = RatchetManager::new();
-		let mut server = RatchetManager::new();
+		let mut beacon = RatchetManager::default();
+		let mut server = RatchetManager::default();
 		beacon.init_ratchets(&ikm, SYM_RATCHET_INFO, true);
 		server.init_ratchets(&ikm, SYM_RATCHET_INFO, false);
 
@@ -1265,7 +1276,7 @@ mod tests {
 
 	#[test]
 	fn ratchet_generates_distinct_keys_and_deletes_used_keys() {
-		let mut ratchet = RatchetManager::new();
+		let mut ratchet = RatchetManager::default();
 		ratchet.init_ratchets(&[0x24; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
 
 		let first = ratchet.ratchet_send(SYM_RATCHET_INFO).unwrap();
@@ -1283,7 +1294,7 @@ mod tests {
 
 	#[test]
 	fn ratchets_reject_counter_exhaustion_without_mutating_state() {
-		let mut send = RatchetManager::new();
+		let mut send = RatchetManager::default();
 		send.init_ratchets(&[0xA1; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
 		send.send_ctr = u64::MAX - 1;
 		assert_eq!(send.ratchet_send(SYM_RATCHET_INFO), Some(u64::MAX));
@@ -1295,7 +1306,7 @@ mod tests {
 		assert_eq!(send.send_past.len(), send_cache_len);
 		assert!(send.send_key(0).is_none());
 
-		let mut recv = RatchetManager::new();
+		let mut recv = RatchetManager::default();
 		recv.init_ratchets(&[0xA2; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
 		recv.recv_ctr = u64::MAX;
 		let recv_state = recv.recv_state().as_slice().to_vec();
@@ -1309,7 +1320,7 @@ mod tests {
 	#[test]
 	fn receive_ratchet_handles_exact_gap_near_counter_exhaustion() {
 		for distance in [RATCHET_MAX_GAP, RATCHET_MAX_GAP - 1] {
-			let mut ratchet = RatchetManager::new();
+			let mut ratchet = RatchetManager::default();
 			ratchet.init_ratchets(&[0xA3; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
 			ratchet.recv_ctr = u64::MAX - distance;
 
@@ -1331,7 +1342,7 @@ mod tests {
 
 	#[test]
 	fn receive_ratchet_caches_skipped_keys_within_the_gap() {
-		let mut ratchet = RatchetManager::new();
+		let mut ratchet = RatchetManager::default();
 		ratchet.init_ratchets(&[0x18; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
 
 		assert_eq!(
@@ -1345,7 +1356,7 @@ mod tests {
 
 	#[test]
 	fn receive_ratchet_rejects_a_gap_over_the_limit_without_advancing() {
-		let mut ratchet = RatchetManager::new();
+		let mut ratchet = RatchetManager::default();
 		ratchet.init_ratchets(&[0x81; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
 
 		assert_eq!(
@@ -1358,7 +1369,7 @@ mod tests {
 
 	#[test]
 	fn receive_ratchet_bounds_total_cached_skipped_keys() {
-		let mut ratchet = RatchetManager::new();
+		let mut ratchet = RatchetManager::default();
 		ratchet.init_ratchets(&[0x91; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
 
 		assert_eq!(
@@ -1384,7 +1395,7 @@ mod tests {
 		impl SignaturePk for TestPublicKey {}
 
 		let mut principal =
-			RemotePrincipal::new(TestPublicKey([1, 2, 3, 4]), RatchetManager::new());
+			RemotePrincipal::new(TestPublicKey([1, 2, 3, 4]), RatchetManager::default());
 		assert_eq!(principal.pk().0, [1, 2, 3, 4]);
 		assert!(principal.ratchet().send_key(1).is_none());
 		assert_eq!(
