@@ -19,6 +19,10 @@ use zeroize::{Zeroize, Zeroizing};
 mod deser;
 #[path = "ser.rs"]
 mod ser;
+#[cfg(feature = "server")]
+pub(crate) use deser::deserialize_known_ids;
+#[cfg(feature = "server")]
+pub(crate) use ser::serialize_known_ids;
 
 pub const KEX_KDF_OUT_LEN: usize = 32usize;
 pub const KDF_STATE_SIZE: usize = 32usize;
@@ -473,15 +477,8 @@ impl RatchetManager {
 		}
 	}
 
-	pub fn new() -> Self {
-		Self {
-			send_key: SendChain::default(),
-			recv_key: RecvChain::default(),
-			send_past: HashMap::new(),
-			send_ctr: 0,
-			recv_past: HashMap::new(),
-			recv_ctr: 0,
-		}
+	pub fn from_json(json: String) -> Self {
+		serde_json::from_str(&json).unwrap()
 	}
 
 	pub fn ratchet_send(&mut self, info: &[u8]) -> Option<u64> {

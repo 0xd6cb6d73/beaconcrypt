@@ -4,10 +4,18 @@ use super::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, AeadKey, AeadNonce, KeyMaterial, Ratchet, RatchetManager,
 	SecretArr, roles, systems,
 };
+#[cfg(feature = "server")]
+use super::{RemotePrincipal, SignType, encode_sign};
+#[cfg(feature = "server")]
+use libsodium_rs::crypto_sign;
+#[cfg(feature = "server")]
+use serde::ser::{Error as _, SerializeMap};
 use serde::{
 	Serialize, Serializer,
 	ser::{SerializeStruct, SerializeTuple},
 };
+#[cfg(feature = "server")]
+use std::collections::HashMap;
 use std::marker::PhantomData;
 
 struct ByteBuffer<'a>(&'a [u8]);
@@ -137,5 +145,60 @@ impl Serialize for RatchetManager {
 		state.serialize_field("recv_past", &self.recv_past)?;
 		state.serialize_field("recv_ctr", &self.recv_ctr)?;
 		state.end()
+	}
+}
+
+#[cfg(feature = "server")]
+struct EncodedSignaturePublicKey<'a>(&'a crypto_sign::PublicKey);
+
+#[cfg(feature = "server")]
+impl Serialize for EncodedSignaturePublicKey<'_> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let encoded = encode_sign(SignType::Ed25519, self.0.as_bytes())
+			.map_err(|error| S::Error::custom(error.to_string()))?;
+		ByteBuffer(&encoded).serialize(serializer)
+	}
+}
+
+#[cfg(feature = "server")]
+impl Serialize for RemotePrincipal<crypto_sign::PublicKey> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let mut state = serializer.serialize_struct("RemotePrincipal", 2)?;
+		state.serialize_field("pk", &EncodedSignaturePublicKey(self.pk()))?;
+		state.serialize_field("ratchet", self.ratchet())?;
+		state.end()
+	}
+}
+
+#[cfg(feature = "server")]
+struct SerializableKnownIds<'a>(&'a HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>);
+
+#[cfg(feature = "server")]
+pub(crate) fn serialize_known_ids(
+	known_ids: &HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+) -> Option<String> {
+	serde_json::to_string(&SerializableKnownIds(known_ids)).ok()
+}
+
+#[cfg(feature = "server")]
+impl Serialize for SerializableKnownIds<'_> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let mut entries: Vec<_> = self.0.iter().collect();
+		entries.sort_unstable_by_key(|(kid, _)| **kid);
+
+		let mut map = serializer.serialize_map(Some(entries.len()))?;
+		for (kid, principal) in entries {
+			map.serialize_entry(kid, principal)?;
+		}
+		map.end()
 	}
 }

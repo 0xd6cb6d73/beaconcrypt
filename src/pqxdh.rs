@@ -12,7 +12,9 @@ use crate::{beacon::ProviderBeacon, shared::encode_kem};
 #[cfg(feature = "server")]
 use crate::{
 	server::{ProviderServer, RegResponse, RegistrationOutput},
-	shared::{REGISTRATION_WITNESS, decode_kem, decode_sign},
+	shared::{
+		REGISTRATION_WITNESS, decode_kem, decode_sign, deserialize_known_ids, serialize_known_ids,
+	},
 };
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{
@@ -102,7 +104,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		} else {
 			None
 		};
-		let known_id_pk = if let Some(pk) = server_id_pk {
+		let known_ids = if let Some(pk) = server_id_pk {
 			if !is_beacon {
 				HashMap::new()
 			} else {
@@ -131,7 +133,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			associated_data: None,
 			is_beacon,
 			server_kid,
-			known_ids: known_id_pk,
+			known_ids,
 		}
 	}
 
@@ -523,6 +525,44 @@ impl ProviderServer for BeaconCryptPqxdh {
 			key: state.clone(),
 			data: decrypted.plaintext,
 		})
+	}
+
+	fn export_state(&self) -> Option<String> {
+		serialize_known_ids(&self.known_ids)
+	}
+
+	fn from_state(server_kid: u64, id_seed: Option<&[u8]>, server_state: String) -> Self {
+		ensure_init().expect("Failed to initialize libsodium");
+
+		let id_keypair = if let Some(seed) = id_seed {
+			crypto_sign::KeyPair::from_seed(seed).unwrap()
+		} else {
+			crypto_sign::KeyPair::generate().unwrap()
+		};
+		// the server doesn't use prekeys
+		let prekey = None;
+		// the server doesn't use its own ML-KEM keypair
+		let pqkey = None;
+		let known_ids = deserialize_known_ids(&server_state).unwrap();
+		let next_remote_kid = known_ids
+			.keys()
+			.max()
+			.copied()
+			.map_or(server_kid, |known_kid| server_kid.max(known_kid));
+
+		Self {
+			identity_key: id_keypair,
+			// this will be overwritten when the agent registers
+			identity_key_kid: server_kid,
+			prekey,
+			// only the beacon uses it, and it generated at registration time
+			onetime_key: None,
+			pq_key: pqkey,
+			associated_data: None,
+			is_beacon: false,
+			server_kid: next_remote_kid,
+			known_ids,
+		}
 	}
 }
 

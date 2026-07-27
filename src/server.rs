@@ -43,4 +43,7 @@ pub trait ProviderServer {
 	/// Decrypt a message using the recv keychain associated with the sender ID in the encrypted frame
 	/// and return the plaintext, `kid` and new state of the recv keychain for `kid`
 	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<EncryptState>;
+	/// Export the current ratchet state as JSON for all known principals
+	fn export_state(&self) -> Option<String>;
+	fn from_state(server_kid: u64, id_seed: Option<&[u8]>, server_state: String) -> Self;
 }

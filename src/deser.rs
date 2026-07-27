@@ -4,6 +4,12 @@ use super::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, KeyMaterial, Ratchet, RatchetManager, RecvChain, SecretArr,
 	SendChain, roles, systems,
 };
+#[cfg(feature = "server")]
+use super::{RemotePrincipal, SignType, decode_sign};
+#[cfg(feature = "server")]
+use libsodium_rs::crypto_sign;
+#[cfg(feature = "server")]
+use serde::de::MapAccess;
 use serde::{
 	Deserialize, Deserializer,
 	de::{self, Error as _, IgnoredAny, SeqAccess, Visitor},
@@ -253,6 +259,77 @@ impl<'de> Deserialize<'de> for RatchetManager {
 	}
 }
 
+#[cfg(feature = "server")]
+#[derive(Deserialize)]
+#[serde(rename = "RemotePrincipal")]
+struct RemotePrincipalData {
+	pk: Vec<u8>,
+	ratchet: RatchetManager,
+}
+
+#[cfg(feature = "server")]
+impl<'de> Deserialize<'de> for RemotePrincipal<crypto_sign::PublicKey> {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
+		let data = RemotePrincipalData::deserialize(deserializer)?;
+		let decoded = decode_sign(&data.pk, SignType::Ed25519)
+			.map_err(|error| D::Error::custom(error.to_string()))?;
+		let pk = crypto_sign::PublicKey::from_bytes(&decoded)
+			.map_err(|_| D::Error::custom("invalid Ed25519 public key"))?;
+		Ok(Self::new(pk, data.ratchet))
+	}
+}
+
+#[cfg(feature = "server")]
+struct DeserializedKnownIds(HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>);
+
+#[cfg(feature = "server")]
+pub(crate) fn deserialize_known_ids(
+	state: &str,
+) -> Option<HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>> {
+	let DeserializedKnownIds(known_ids) = serde_json::from_str(state).ok()?;
+	Some(known_ids)
+}
+
+#[cfg(feature = "server")]
+struct KnownIdsVisitor;
+
+#[cfg(feature = "server")]
+impl<'de> Visitor<'de> for KnownIdsVisitor {
+	type Value = DeserializedKnownIds;
+
+	fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+		formatter.write_str("a map from key IDs to remote principals")
+	}
+
+	fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+	where
+		A: MapAccess<'de>,
+	{
+		let mut known_ids = HashMap::with_capacity(map.size_hint().unwrap_or(0));
+		while let Some(kid) = map.next_key()? {
+			if known_ids.contains_key(&kid) {
+				return Err(A::Error::custom(format!("duplicate key ID {kid}")));
+			}
+			let principal = map.next_value()?;
+			known_ids.insert(kid, principal);
+		}
+		Ok(DeserializedKnownIds(known_ids))
+	}
+}
+
+#[cfg(feature = "server")]
+impl<'de> Deserialize<'de> for DeserializedKnownIds {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
+		deserializer.deserialize_map(KnownIdsVisitor)
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -294,7 +371,7 @@ mod tests {
 	}
 
 	fn populated_manager() -> RatchetManager {
-		let mut manager = RatchetManager::new();
+		let mut manager = RatchetManager::default();
 		manager.init_ratchets(&[0x42; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
 
 		for _ in 0..3 {
@@ -314,7 +391,7 @@ mod tests {
 
 	#[test]
 	fn default_ratchet_manager_round_trips() {
-		let manager = RatchetManager::new();
+		let manager = RatchetManager::default();
 		let serialized = serde_json::to_string(&manager).unwrap();
 		let restored = serde_json::from_str(&serialized).unwrap();
 
@@ -446,7 +523,7 @@ mod tests {
 
 	#[test]
 	fn legacy_and_malformed_typed_arrays_are_rejected() {
-		let serialized = serde_json::to_value(RatchetManager::new()).unwrap();
+		let serialized = serde_json::to_value(RatchetManager::default()).unwrap();
 
 		let mut legacy = serialized.clone();
 		legacy["send_key"] = json!(vec![0; KDF_STATE_SIZE]);
@@ -463,11 +540,11 @@ mod tests {
 
 	#[test]
 	fn missing_and_duplicate_fields_are_rejected() {
-		let mut missing = serde_json::to_value(RatchetManager::new()).unwrap();
+		let mut missing = serde_json::to_value(RatchetManager::default()).unwrap();
 		missing.as_object_mut().unwrap().remove("recv_ctr");
 		assert!(serde_json::from_value::<RatchetManager>(missing).is_err());
 
-		let serialized = serde_json::to_string(&RatchetManager::new()).unwrap();
+		let serialized = serde_json::to_string(&RatchetManager::default()).unwrap();
 		let duplicate = serialized.replacen("\"send_ctr\":0", "\"send_ctr\":0,\"send_ctr\":1", 1);
 		assert!(serde_json::from_str::<RatchetManager>(&duplicate).is_err());
 	}
