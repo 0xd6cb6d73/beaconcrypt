@@ -82,6 +82,21 @@ crypto packages from `golang.org/x/crypto`. Their output should be identical;
 any difference indicates that the vectors or one of the generators has
 diverged.
 
+### Wycheproof
+
+The test suite includes pinned [C2SP Wycheproof](https://github.com/C2SP/wycheproof)
+vectors for X25519, Ed25519, ChaCha20-Poly1305-IETF, HKDF-SHA-512 and
+ML-KEM-768. After cloning, initialize the vector submodule before running the
+normal test suite:
+
+```bash
+git submodule update --init --recursive
+cargo test
+```
+
+See [the Wycheproof test documentation](doc/wycheproof.md) for the coverage
+matrix, result semantics and update procedure.
+
 ## Usage
 The reference implementation is a library that can currently be used either from rust, through C FFI, go and python bindings. The C interface is currently only tested through the go bindings. Note that 0-length messages are explicitly disallowed by the reference implementation, as my feeling is that such messages have no purpose except testing parser edge cases. The library also doesn't handle chnking of any kind and will try to process entire messages at once in memory. It is expected that the caller should handle chunking itself if that is required.
 
