@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 
 use crate::server::{RecvState, SendState};
-use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer};
+use crate::{BeaconCryptPqxdh, CryptoProvider, ED25519_SEED_SIZE, ProviderBeacon, ProviderServer};
 use std::mem;
 use std::slice;
 
@@ -100,6 +100,39 @@ pub extern "C" fn beaconcrypt_server_new_from_seed(
 	Box::into_raw(Box::new(BeaconCryptPqxdh::new(
 		false, server_kid, None, seed,
 	)))
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_server_new_from_state(
+	server_kid: u64,
+	seed_ptr: *const u8,
+	seed_len: usize,
+	state_ptr: *const u8,
+	state_len: usize,
+) -> *mut BeaconCryptPqxdh {
+	let seed = match seed_len {
+		0 => None,
+		ED25519_SEED_SIZE => {
+			let Some(seed) = (unsafe { input(seed_ptr, seed_len) }) else {
+				return std::ptr::null_mut();
+			};
+			Some(seed)
+		}
+		_ => return std::ptr::null_mut(),
+	};
+	let Some(state) = (unsafe { input(state_ptr, state_len) }) else {
+		return std::ptr::null_mut();
+	};
+	let Ok(state) = std::str::from_utf8(state) else {
+		return std::ptr::null_mut();
+	};
+	let Some(provider) =
+		<BeaconCryptPqxdh as ProviderServer>::try_from_state(server_kid, seed, state)
+	else {
+		return std::ptr::null_mut();
+	};
+
+	Box::into_raw(Box::new(provider))
 }
 
 #[unsafe(no_mangle)]
@@ -247,6 +280,26 @@ pub extern "C" fn beaconcrypt_encrypt_and_update(
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_encrypt_and_update_json(
+	handle: *mut BeaconCryptPqxdh,
+	key_id: u64,
+	ptr: *const u8,
+	len: usize,
+) -> Buffer {
+	if handle.is_null() {
+		return empty_buffer();
+	}
+	let Some(data) = (unsafe { input(ptr, len) }) else {
+		return empty_buffer();
+	};
+	let provider = unsafe { &mut *handle };
+	provider
+		.encrypt_and_update_json(data, key_id)
+		.map(|state| into_buffer(state.into_bytes()))
+		.unwrap_or_else(empty_buffer)
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_decrypt_and_update(
 	handle: *mut BeaconCryptPqxdh,
 	ptr: *const u8,
@@ -263,6 +316,37 @@ pub extern "C" fn beaconcrypt_decrypt_and_update(
 		.decrypt_and_update(data)
 		.map(into_recv_state)
 		.unwrap_or_else(empty_encrypt_state)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_decrypt_and_update_json(
+	handle: *mut BeaconCryptPqxdh,
+	ptr: *const u8,
+	len: usize,
+) -> Buffer {
+	if handle.is_null() {
+		return empty_buffer();
+	}
+	let Some(data) = (unsafe { input(ptr, len) }) else {
+		return empty_buffer();
+	};
+	let provider = unsafe { &mut *handle };
+	provider
+		.decrypt_and_update_json(data)
+		.map(|state| into_buffer(state.into_bytes()))
+		.unwrap_or_else(empty_buffer)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_export_state(handle: *const BeaconCryptPqxdh) -> Buffer {
+	if handle.is_null() {
+		return empty_buffer();
+	}
+	let provider = unsafe { &*handle };
+	provider
+		.export_state()
+		.map(|state| into_buffer(state.into_bytes()))
+		.unwrap_or_else(empty_buffer)
 }
 
 #[unsafe(no_mangle)]

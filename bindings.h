@@ -74,6 +74,12 @@ struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_server_new_from_seed(uint64_t s
                                                                       const uint8_t *seed_ptr,
                                                                       uintptr_t seed_len);
 
+struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_server_new_from_state(uint64_t server_kid,
+                                                                       const uint8_t *seed_ptr,
+                                                                       uintptr_t seed_len,
+                                                                       const uint8_t *state_ptr,
+                                                                       uintptr_t state_len);
+
 struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_beacon_new(uint64_t server_kid,
                                                             const uint8_t *server_pk_ptr,
                                                             uintptr_t server_pk_len);
@@ -108,9 +114,20 @@ struct beaconcrypt_EncryptState beaconcrypt_encrypt_and_update(struct beaconcryp
                                                                const uint8_t *ptr,
                                                                uintptr_t len);
 
+struct beaconcrypt_Buffer beaconcrypt_encrypt_and_update_json(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                              uint64_t key_id,
+                                                              const uint8_t *ptr,
+                                                              uintptr_t len);
+
 struct beaconcrypt_EncryptState beaconcrypt_decrypt_and_update(struct beaconcrypt_BeaconCryptPqxdh *handle,
                                                                const uint8_t *ptr,
                                                                uintptr_t len);
+
+struct beaconcrypt_Buffer beaconcrypt_decrypt_and_update_json(struct beaconcrypt_BeaconCryptPqxdh *handle,
+                                                              const uint8_t *ptr,
+                                                              uintptr_t len);
+
+struct beaconcrypt_Buffer beaconcrypt_export_state(const struct beaconcrypt_BeaconCryptPqxdh *handle);
 
 struct beaconcrypt_Buffer beaconcrypt_encrypt_to_server(struct beaconcrypt_BeaconCryptPqxdh *handle,
                                                         const uint8_t *ptr,

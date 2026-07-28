@@ -198,3 +198,12 @@ fn empty_known_ids_state_round_trips_without_lowering_the_kid_counter() {
 	assert_eq!(restored.server_kid(), 7);
 	assert!(restored.pk_by_kid(1).is_none());
 }
+
+#[test]
+fn fallible_state_restore_rejects_invalid_seed_and_state() {
+	let short_seed = [0u8; ED25519_SEED_SIZE - 1];
+	assert!(
+		<BeaconCryptPqxdh as ProviderServer>::try_from_state(0, Some(&short_seed), "{}").is_none()
+	);
+	assert!(<BeaconCryptPqxdh as ProviderServer>::try_from_state(0, None, "not JSON").is_none());
+}

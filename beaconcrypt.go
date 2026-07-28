@@ -30,6 +30,7 @@ typedef struct {
 void beaconcrypt_free_buffer(beaconcrypt_buffer buffer);
 void *beaconcrypt_server_new(uint64_t server_kid);
 void *beaconcrypt_server_new_from_seed(uint64_t server_kid, const uint8_t *seed_ptr, uintptr_t seed_len);
+void *beaconcrypt_server_new_from_state(uint64_t server_kid, const uint8_t *seed_ptr, uintptr_t seed_len, const uint8_t *state_ptr, uintptr_t state_len);
 void *beaconcrypt_beacon_new(uint64_t server_kid, const uint8_t *server_pk_ptr, uintptr_t server_pk_len);
 void beaconcrypt_free(void *handle);
 beaconcrypt_buffer beaconcrypt_identity_pk(const void *handle);
@@ -39,7 +40,10 @@ beaconcrypt_buffer beaconcrypt_process_initial_message(void *handle, const uint8
 beaconcrypt_buffer beaconcrypt_encrypt_to_beacon(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_decrypt_beacon_message(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_encrypt_state beaconcrypt_encrypt_and_update(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
+beaconcrypt_buffer beaconcrypt_encrypt_and_update_json(void *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_encrypt_state beaconcrypt_decrypt_and_update(void *handle, const uint8_t *ptr, uintptr_t len);
+beaconcrypt_buffer beaconcrypt_decrypt_and_update_json(void *handle, const uint8_t *ptr, uintptr_t len);
+beaconcrypt_buffer beaconcrypt_export_state(const void *handle);
 beaconcrypt_buffer beaconcrypt_encrypt_to_server(void *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_decrypt_server_message(void *handle, const uint8_t *ptr, uintptr_t len);
 */
@@ -95,6 +99,33 @@ func NewServerFromSeed(serverKID uint64, seed []byte) (*Server, error) {
 	ptr, free := cBytes(seed)
 	defer free()
 	handle := C.beaconcrypt_server_new_from_seed(C.uint64_t(serverKID), ptr, C.uintptr_t(len(seed)))
+	if handle == nil {
+		return nil, ErrCrypto
+	}
+	server := &Server{handle: handle}
+	runtime.SetFinalizer(server, (*Server).Close)
+	return server, nil
+}
+
+func NewServerFromState(serverKID uint64, seed []byte, state string) (*Server, error) {
+	if len(seed) != 0 && len(seed) != 32 {
+		return nil, ErrSeedSize
+	}
+	if len(state) == 0 {
+		return nil, ErrEmptyData
+	}
+	seedPtr, seedFree := cBytes(seed)
+	defer seedFree()
+	stateBytes := []byte(state)
+	statePtr, stateFree := cBytes(stateBytes)
+	defer stateFree()
+	handle := C.beaconcrypt_server_new_from_state(
+		C.uint64_t(serverKID),
+		seedPtr,
+		C.uintptr_t(len(seed)),
+		statePtr,
+		C.uintptr_t(len(stateBytes)),
+	)
 	if handle == nil {
 		return nil, ErrCrypto
 	}
@@ -215,6 +246,19 @@ func (s *Server) EncryptAndUpdate(keyID uint64, plaintext []byte) (*EncryptState
 	})
 }
 
+func (s *Server) EncryptAndUpdateJSON(keyID uint64, plaintext []byte) (string, error) {
+	if s == nil || s.handle == nil {
+		return "", ErrClosed
+	}
+	data, err := callUnary(plaintext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
+		return C.beaconcrypt_encrypt_and_update_json(s.handle, C.uint64_t(keyID), ptr, len)
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
 func (s *Server) DecryptAndUpdate(ciphertext []byte) (*EncryptState, error) {
 	if s == nil || s.handle == nil {
 		return nil, ErrClosed
@@ -222,6 +266,30 @@ func (s *Server) DecryptAndUpdate(ciphertext []byte) (*EncryptState, error) {
 	return callStateUpdate(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_encrypt_state {
 		return C.beaconcrypt_decrypt_and_update(s.handle, ptr, len)
 	})
+}
+
+func (s *Server) DecryptAndUpdateJSON(ciphertext []byte) (string, error) {
+	if s == nil || s.handle == nil {
+		return "", ErrClosed
+	}
+	data, err := callUnary(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
+		return C.beaconcrypt_decrypt_and_update_json(s.handle, ptr, len)
+	})
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func (s *Server) ExportState() (string, error) {
+	if s == nil || s.handle == nil {
+		return "", ErrClosed
+	}
+	data, err := copyBuffer(C.beaconcrypt_export_state(s.handle))
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 func (b *Beacon) EncryptToServer(plaintext []byte) ([]byte, error) {

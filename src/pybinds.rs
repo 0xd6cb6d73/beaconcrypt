@@ -2,6 +2,7 @@
 
 use crate::server::{RecvState, SendState};
 use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer, RegResponse};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 #[pyclass(name = "RegResponse")]
@@ -82,6 +83,13 @@ impl Server {
 		}
 	}
 
+	#[staticmethod]
+	fn from_state(kid: u64, id_seed: Option<&[u8]>, server_state: &str) -> PyResult<Self> {
+		<BeaconCryptPqxdh as ProviderServer>::try_from_state(kid, id_seed, server_state)
+			.map(|provider| Self { _0: provider })
+			.ok_or_else(|| PyValueError::new_err("invalid server identity seed or state"))
+	}
+
 	fn register_beacon(
 		&mut self,
 		reg_buffer: &[u8],
@@ -112,8 +120,20 @@ impl Server {
 			.map(|state| state.into())
 	}
 
+	fn encrypt_and_update_json(&mut self, data: Vec<u8>, kid: u64) -> Option<String> {
+		self._0.encrypt_and_update_json(&data, kid)
+	}
+
 	fn decrypt_and_update(&mut self, data: Vec<u8>) -> Option<EncryptStatePy> {
 		self._0.decrypt_and_update(&data).map(|state| state.into())
+	}
+
+	fn decrypt_and_update_json(&mut self, data: Vec<u8>) -> Option<String> {
+		self._0.decrypt_and_update_json(&data)
+	}
+
+	fn export_state(&self) -> Option<String> {
+		self._0.export_state()
 	}
 
 	fn id_pk(&self) -> &[u8] {

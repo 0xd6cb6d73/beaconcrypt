@@ -539,38 +539,36 @@ impl ProviderServer for BeaconCryptPqxdh {
 		serialize_known_ids(&self.known_ids)
 	}
 
-	fn from_state(server_kid: u64, id_seed: Option<&[u8]>, server_state: String) -> Self {
-		ensure_init().expect("Failed to initialize libsodium");
+	fn try_from_state(server_kid: u64, id_seed: Option<&[u8]>, server_state: &str) -> Option<Self> {
+		ensure_init().ok()?;
 
 		let id_keypair = if let Some(seed) = id_seed {
-			crypto_sign::KeyPair::from_seed(seed).unwrap()
+			crypto_sign::KeyPair::from_seed(seed).ok()?
 		} else {
-			crypto_sign::KeyPair::generate().unwrap()
+			crypto_sign::KeyPair::generate().ok()?
 		};
-		// the server doesn't use prekeys
-		let prekey = None;
-		// the server doesn't use its own ML-KEM keypair
-		let pqkey = None;
-		let known_ids = deserialize_known_ids(&server_state).unwrap();
+		let known_ids = deserialize_known_ids(server_state)?;
 		let next_remote_kid = known_ids
 			.keys()
 			.max()
 			.copied()
 			.map_or(server_kid, |known_kid| server_kid.max(known_kid));
 
-		Self {
+		Some(Self {
 			identity_key: id_keypair,
 			// this will be overwritten when the agent registers
 			identity_key_kid: server_kid,
-			prekey,
+			// the server doesn't use prekeys
+			prekey: None,
 			// only the beacon uses it, and it generated at registration time
 			onetime_key: None,
-			pq_key: pqkey,
+			// the server doesn't use its own ML-KEM keypair
+			pq_key: None,
 			associated_data: None,
 			is_beacon: false,
 			server_kid: next_remote_kid,
 			known_ids,
-		}
+		})
 	}
 }
 

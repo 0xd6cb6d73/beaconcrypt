@@ -980,6 +980,66 @@ fn server_can_retry_decryption_after_corrupted_aead_message() {
 }
 
 #[test]
+fn encrypt_and_update_returns_the_advanced_send_state() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	let message = b"server to beacon with structured updated state";
+	let (send_state_before, recv_state_before) = {
+		let ratchet = server.ratchet_manager(response.kid).unwrap();
+		(
+			ratchet.send_state().as_slice().to_vec(),
+			ratchet.recv_state().as_slice().to_vec(),
+		)
+	};
+
+	let update: SendState = server.encrypt_and_update(message, response.kid).unwrap();
+	let ratchet = server.ratchet_manager(response.kid).unwrap();
+
+	assert_eq!(update.kid, response.kid);
+	assert_eq!(update.key.as_slice(), ratchet.send_state().as_slice());
+	assert_ne!(update.key.as_slice(), send_state_before);
+	assert_eq!(ratchet.recv_state().as_slice(), recv_state_before);
+	let decrypted = beacon.decrypt_message(&update.data).unwrap();
+	assert_eq!(decrypted.key_id, SERVER_KID);
+	assert_eq!(decrypted.plaintext, message);
+}
+
+#[test]
+fn decrypt_and_update_returns_the_advanced_receive_state() {
+	let (mut server, mut beacon) = new_pair();
+	let response = register_beacon(&mut server, &mut beacon, None);
+	let message = b"beacon to server with structured updated state";
+	let ciphertext = beacon.encrypt_message(message, SERVER_KID).unwrap();
+	let (send_state_before, recv_state_before) = {
+		let ratchet = server.ratchet_manager(response.kid).unwrap();
+		(
+			ratchet.send_state().as_slice().to_vec(),
+			ratchet.recv_state().as_slice().to_vec(),
+		)
+	};
+
+	let update: RecvState = server.decrypt_and_update(&ciphertext).unwrap();
+	let ratchet = server.ratchet_manager(response.kid).unwrap();
+
+	assert_eq!(update.kid, response.kid);
+	assert_eq!(update.data, message);
+	assert_eq!(update.key.as_slice(), ratchet.recv_state().as_slice());
+	assert_ne!(update.key.as_slice(), recv_state_before);
+	assert_eq!(ratchet.send_state().as_slice(), send_state_before);
+}
+
+#[test]
+fn structured_update_failures_return_none() {
+	let (mut server, _) = new_pair();
+
+	let encrypted: Option<SendState> = server.encrypt_and_update(b"message", u64::MAX);
+	assert!(encrypted.is_none());
+
+	let decrypted: Option<RecvState> = server.decrypt_and_update(b"not a frame");
+	assert!(decrypted.is_none());
+}
+
+#[test]
 fn encrypt_and_update_json_returns_the_advanced_send_state() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);

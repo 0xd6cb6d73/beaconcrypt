@@ -62,7 +62,7 @@ pub use error::{
 #[cfg(feature = "pqxdh")]
 pub use pqxdh::BeaconCryptPqxdh;
 #[cfg(feature = "server")]
-pub use server::{ProviderServer, RegResponse, RegistrationOutput};
+pub use server::{ProviderServer, RecvState, RegResponse, RegistrationOutput, SendState};
 pub use shared::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, CryptoProvider, DH_OUT_LEN, Decrypted, ED25519_SEED_SIZE,
 	KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE, KEX_KDF_OUT_LEN, SignType,
