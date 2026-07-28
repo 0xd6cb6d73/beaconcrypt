@@ -103,7 +103,7 @@ func run() error {
 	fmt.Printf("Server got ping: %q\n", ping.Data)
 	fmt.Printf("Key ID: %d\n", ping.KeyID)
 	fmt.Printf("Consumed key sequence: %d\n", ping.Seq)
-	fmt.Printf("Ratchet state: %s\n", ping.State)
+	fmt.Printf("Ratchet state updated (%d bytes)\n", len(ping.State))
 
 	// The C2 needs to know what the beacon's ID is so it can encrypt to it.
 	sTask0, err := server.EncryptAndUpdate(sRegResp.KeyID, []byte("task contents"))
@@ -112,7 +112,7 @@ func run() error {
 	}
 	fmt.Printf("Key ID: %d\n", sTask0.KeyID)
 	fmt.Printf("Consumed key sequence: %d\n", sTask0.Seq)
-	fmt.Printf("Ratchet state: %s\n", sTask0.State)
+	fmt.Printf("Ratchet state updated (%d bytes)\n", len(sTask0.State))
 	if err := writeTransport(sTask0.Data); err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func run() error {
 	fmt.Printf("Server got response to first task: %q\n", task1.Data)
 	fmt.Printf("Key ID: %d\n", task1.KeyID)
 	fmt.Printf("Consumed key sequence: %d\n", task1.Seq)
-	fmt.Printf("Ratchet state: %s\n", task1.State)
+	fmt.Printf("Ratchet state updated (%d bytes)\n", len(task1.State))
 
 	return nil
 }

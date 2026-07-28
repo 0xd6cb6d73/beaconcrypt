@@ -8,6 +8,7 @@ import (
 	"errors"
 	"reflect"
 	"strconv"
+	"sync"
 	"testing"
 )
 
@@ -1306,5 +1307,79 @@ func TestServerCanRetryDecryptionAfterCorruptedAEADMessage(t *testing.T) {
 	}
 	if !bytes.Equal(plaintext, message) {
 		t.Fatalf("retry decrypt mismatch: got %x want %x", plaintext, message)
+	}
+}
+
+func TestConcurrentHandleUseIsSerialized(t *testing.T) {
+	server := newServer(t)
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	beacon := newBeacon(t, serverPK)
+	registration := registerBeacon(t, server, beacon)
+
+	const workers = 16
+	errs := make(chan error, workers*2)
+	var wg sync.WaitGroup
+	for range workers {
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			_, err := server.EncryptToBeacon(registration.KeyID, []byte("server message"))
+			errs <- err
+		}()
+		go func() {
+			defer wg.Done()
+			_, err := beacon.EncryptToServer([]byte("beacon message"))
+			errs <- err
+		}()
+	}
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		if err != nil {
+			t.Errorf("concurrent operation failed: %v", err)
+		}
+	}
+}
+
+func TestConcurrentCloseIsSafe(t *testing.T) {
+	server, err := NewServer(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		server.Close()
+		t.Fatal(err)
+	}
+	beacon, err := NewBeacon(0, serverPK)
+	if err != nil {
+		server.Close()
+		t.Fatal(err)
+	}
+
+	const workers = 16
+	var wg sync.WaitGroup
+	for range workers {
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			server.Close()
+		}()
+		go func() {
+			defer wg.Done()
+			beacon.Close()
+		}()
+	}
+	wg.Wait()
+
+	if _, err := server.IdentityPK(); !errors.Is(err, ErrClosed) {
+		t.Fatalf("server operation after concurrent Close returned %v, want ErrClosed", err)
+	}
+	if _, err := beacon.GenerateRegistration(); !errors.Is(err, ErrClosed) {
+		t.Fatalf("beacon operation after concurrent Close returned %v, want ErrClosed", err)
 	}
 }
