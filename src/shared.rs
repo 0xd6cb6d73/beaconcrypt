@@ -217,13 +217,14 @@ mod systems {
 		const IDENTIFIER: Identifier = Identifier::Chacha20Poly1305Ietf;
 	}
 }
-mod roles {
-	#[derive(PartialEq)]
-	pub struct ChainKey;
+pub mod roles {
+	pub trait ChainKey {}
 	#[derive(PartialEq)]
 	pub struct DerivedSecret;
 	pub struct ChainSendKey;
+	impl ChainKey for ChainSendKey {}
 	pub struct ChainRecvKey;
+	impl ChainKey for ChainRecvKey {}
 	pub struct EncryptionSendKey;
 	pub struct EncryptionRecvKey;
 	pub struct SendNonce;
@@ -381,7 +382,10 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 
 #[cfg(feature = "pqxdh")]
 pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>;
-pub type KdfState = SecretArr<KDF_STATE_SIZE, systems::HkdfSha512, roles::ChainKey>;
+/// Expected to be bound by [roles::ChainKey] but the compiler doesn't enforce it
+pub type KdfState<Role> = SecretArr<KDF_STATE_SIZE, systems::HkdfSha512, Role>;
+pub type KdfSendState = KdfState<roles::ChainSendKey>;
+pub type KdfRecvState = KdfState<roles::ChainRecvKey>;
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
 
 pub struct KeyMaterial {
@@ -402,13 +406,13 @@ impl KeyMaterial {
 pub type AeadKey = crypto_aead::chacha20poly1305_ietf::Key;
 pub type AeadNonce = crypto_aead::chacha20poly1305_ietf::Nonce;
 
-struct KdfOutput {
+struct KdfOutput<Role: roles::ChainKey> {
 	aead_key: AeadKey,
-	kdf_state: KdfState,
+	kdf_state: KdfState<Role>,
 	aead_nonce: AeadNonce,
 }
 
-impl From<[u8; KDF_RATCHET_OUTPUT_LEN]> for KdfOutput {
+impl<Role: roles::ChainKey> From<[u8; KDF_RATCHET_OUTPUT_LEN]> for KdfOutput<Role> {
 	fn from(mut value: [u8; KDF_RATCHET_OUTPUT_LEN]) -> Self {
 		let mut key = [0u8; AEAD_KEY_LEN];
 		key.copy_from_slice(&value[0..AEAD_KEY_LEN]);
@@ -431,27 +435,22 @@ pub trait Ratchetable {
 	fn ratchet(&mut self, info: &[u8]) -> KeyMaterial;
 }
 
-pub struct RatchetRoleSend;
-pub struct RatchetRoleRecv;
-
-pub struct Ratchet<Role> {
-	state: KdfState,
-	_role: PhantomData<Role>,
+pub struct Ratchet<Role: roles::ChainKey> {
+	state: KdfState<Role>,
 }
 
-impl<Role> From<[u8; KDF_STATE_SIZE]> for Ratchet<Role> {
+impl<Role: roles::ChainKey> From<[u8; KDF_STATE_SIZE]> for Ratchet<Role> {
 	fn from(value: [u8; KDF_STATE_SIZE]) -> Self {
 		Self {
 			state: value.into(),
-			_role: PhantomData,
 		}
 	}
 }
 
-impl<Role> Ratchetable for Ratchet<Role> {
+impl<Role: roles::ChainKey> Ratchetable for Ratchet<Role> {
 	fn ratchet(&mut self, info: &[u8]) -> KeyMaterial {
 		let prk = crypto_kdf::hkdf::sha512::extract(None, self.state.as_slice()).unwrap();
-		let out: KdfOutput =
+		let out: KdfOutput<Role> =
 			(*crypto_kdf::hkdf::sha512::expand(KDF_RATCHET_OUTPUT_LEN, Some(info), &prk)
 				.unwrap()
 				.as_array::<KDF_RATCHET_OUTPUT_LEN>()
@@ -464,17 +463,16 @@ impl<Role> Ratchetable for Ratchet<Role> {
 		}
 	}
 }
-impl<Role> Default for Ratchet<Role> {
+impl<Role: roles::ChainKey> Default for Ratchet<Role> {
 	fn default() -> Self {
 		Self {
 			state: [0u8; KDF_STATE_SIZE].into(),
-			_role: PhantomData,
 		}
 	}
 }
 
-type SendChain = Ratchet<RatchetRoleSend>;
-type RecvChain = Ratchet<RatchetRoleRecv>;
+type SendChain = Ratchet<roles::ChainSendKey>;
+type RecvChain = Ratchet<roles::ChainRecvKey>;
 
 pub struct RatchetManager {
 	/// current state of the KDF on the send chain
@@ -582,11 +580,11 @@ impl RatchetManager {
 		self.recv_ctr = 0;
 	}
 
-	pub fn send_state(&self) -> &KdfState {
+	pub fn send_state(&self) -> &KdfSendState {
 		&self.send_key.state
 	}
 
-	pub fn recv_state(&self) -> &KdfState {
+	pub fn recv_state(&self) -> &KdfRecvState {
 		&self.recv_key.state
 	}
 }
@@ -1007,9 +1005,9 @@ mod tests {
 
 	#[test]
 	fn secret_array_conversions_preserve_only_exact_length_inputs() {
-		let exact = KdfState::from(vec![0x11; KDF_STATE_SIZE]);
-		let too_short = KdfState::from(vec![0x22; KDF_STATE_SIZE - 1]);
-		let too_long = KdfState::from(vec![0x33; KDF_STATE_SIZE + 1]);
+		let exact = KdfSendState::from(vec![0x11; KDF_STATE_SIZE]);
+		let too_short = KdfSendState::from(vec![0x22; KDF_STATE_SIZE - 1]);
+		let too_long = KdfSendState::from(vec![0x33; KDF_STATE_SIZE + 1]);
 
 		assert_eq!(exact.as_slice(), &[0x11; KDF_STATE_SIZE]);
 		assert_eq!(too_short.as_slice(), &[0; KDF_STATE_SIZE]);
@@ -1019,8 +1017,8 @@ mod tests {
 
 	#[test]
 	fn secret_arrays_with_identical_contents_are_equal() {
-		let left = KdfState::from([0x11; KDF_STATE_SIZE]);
-		let right = KdfState::from([0x11; KDF_STATE_SIZE]);
+		let left = KdfSendState::from([0x11; KDF_STATE_SIZE]);
+		let right = KdfSendState::from([0x11; KDF_STATE_SIZE]);
 
 		assert!(left == right);
 		assert!(right == left);
@@ -1028,10 +1026,10 @@ mod tests {
 
 	#[test]
 	fn secret_arrays_with_different_contents_are_not_equal() {
-		let left = KdfState::from([0x11; KDF_STATE_SIZE]);
+		let left = KdfSendState::from([0x11; KDF_STATE_SIZE]);
 		let mut different = [0x11; KDF_STATE_SIZE];
 		different[KDF_STATE_SIZE - 1] = 0x22;
-		let right = KdfState::from(different);
+		let right = KdfSendState::from(different);
 
 		assert!(left != right);
 		assert!(right != left);
@@ -1039,9 +1037,9 @@ mod tests {
 
 	#[test]
 	fn secret_arrays_with_different_systems_are_not_equal() {
-		type OtherSystem = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::ChainKey>;
+		type OtherSystem = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::ChainSendKey>;
 
-		let left = KdfState::from([0x11; KDF_STATE_SIZE]);
+		let left = KdfSendState::from([0x11; KDF_STATE_SIZE]);
 		let right = OtherSystem::from([0x11; KDF_STATE_SIZE]);
 
 		assert!(left != right);
@@ -1050,10 +1048,8 @@ mod tests {
 
 	#[test]
 	fn secret_arrays_with_different_roles_are_not_equal() {
-		type OtherRole = SecretArr<KDF_STATE_SIZE, systems::HkdfSha512, roles::DerivedSecret>;
-
-		let left = KdfState::from([0x11; KDF_STATE_SIZE]);
-		let right = OtherRole::from([0x11; KDF_STATE_SIZE]);
+		let left = KdfSendState::from([0x11; KDF_STATE_SIZE]);
+		let right = KdfRecvState::from([0x11; KDF_STATE_SIZE]);
 
 		assert!(left != right);
 		assert!(right != left);
@@ -1066,7 +1062,7 @@ mod tests {
 		bytes[AEAD_KEY_LEN..AEAD_KEY_LEN + KDF_STATE_SIZE].fill(0x22);
 		bytes[AEAD_KEY_LEN + KDF_STATE_SIZE..].fill(0x33);
 
-		let output = KdfOutput::from(bytes);
+		let output = KdfOutput::<roles::ChainSendKey>::from(bytes);
 
 		assert_eq!(key_bytes(&output.aead_key), &[0x11; AEAD_KEY_LEN]);
 		assert_eq!(output.kdf_state.as_slice(), &[0x22; KDF_STATE_SIZE]);

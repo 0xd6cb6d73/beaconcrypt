@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 
-use crate::server::EncryptState as ProviderEncryptState;
+use crate::server::{RecvState, SendState};
 use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer};
 use std::mem;
 use std::slice;
@@ -52,7 +52,15 @@ fn empty_encrypt_state() -> EncryptState {
 	}
 }
 
-fn into_encrypt_state(state: ProviderEncryptState) -> EncryptState {
+fn into_send_state(state: SendState) -> EncryptState {
+	EncryptState {
+		data: into_buffer(state.data),
+		key: into_buffer(state.key.as_slice().to_vec()),
+		key_id: state.kid,
+	}
+}
+
+fn into_recv_state(state: RecvState) -> EncryptState {
 	EncryptState {
 		data: into_buffer(state.data),
 		key: into_buffer(state.key.as_slice().to_vec()),
@@ -234,7 +242,7 @@ pub extern "C" fn beaconcrypt_encrypt_and_update(
 	let provider = unsafe { &mut *handle };
 	provider
 		.encrypt_and_update(data, key_id)
-		.map(into_encrypt_state)
+		.map(into_send_state)
 		.unwrap_or_else(empty_encrypt_state)
 }
 
@@ -253,7 +261,7 @@ pub extern "C" fn beaconcrypt_decrypt_and_update(
 	let provider = unsafe { &mut *handle };
 	provider
 		.decrypt_and_update(data)
-		.map(into_encrypt_state)
+		.map(into_recv_state)
 		.unwrap_or_else(empty_encrypt_state)
 }
 

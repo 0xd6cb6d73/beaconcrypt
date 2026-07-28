@@ -3,7 +3,7 @@
 #[cfg(feature = "pqxdh")]
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_sign};
 
-use crate::shared::{KdfState, KexDerivedSecret};
+use crate::shared::{KdfState, KexDerivedSecret, roles};
 
 #[cfg(feature = "pqxdh")]
 type KemCiphertext = crypto_kem::mlkem768::Ciphertext;
@@ -23,11 +23,14 @@ pub struct RegistrationOutput {
 	pub public_key: SignVerificationKey,
 }
 
-pub struct EncryptState {
+pub struct StateUpdate<Role: roles::ChainKey> {
 	pub kid: u64,
-	pub key: KdfState,
+	pub key: KdfState<Role>,
 	pub data: Vec<u8>,
 }
+
+pub type SendState = StateUpdate<roles::ChainSendKey>;
+pub type RecvState = StateUpdate<roles::ChainRecvKey>;
 
 pub trait ProviderServer {
 	fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput>;
@@ -39,10 +42,10 @@ pub trait ProviderServer {
 	) -> Option<RegResponse>;
 
 	/// Encrypt some bytes to `kid` and return the ciphertext, `kid` and new state of the send keychain for `kid`
-	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<EncryptState>;
+	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState>;
 	/// Decrypt a message using the recv keychain associated with the sender ID in the encrypted frame
 	/// and return the plaintext, `kid` and new state of the recv keychain for `kid`
-	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<EncryptState>;
+	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<RecvState>;
 	/// Export the current ratchet state as JSON for all known principals
 	fn export_state(&self) -> Option<String>;
 	fn from_state(server_kid: u64, id_seed: Option<&[u8]>, server_state: String) -> Self;

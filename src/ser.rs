@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: 0BSD
 
 use super::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager,
-	RatchetRoleRecv, RatchetRoleSend, roles, systems,
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager, roles,
+	systems,
 };
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, encode_sign};
@@ -60,7 +60,7 @@ where
 	}
 }
 
-impl Serialize for Ratchet<RatchetRoleSend> {
+impl Serialize for Ratchet<roles::ChainSendKey> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,
@@ -75,7 +75,7 @@ impl Serialize for Ratchet<RatchetRoleSend> {
 	}
 }
 
-impl Serialize for Ratchet<RatchetRoleRecv> {
+impl Serialize for Ratchet<roles::ChainRecvKey> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,

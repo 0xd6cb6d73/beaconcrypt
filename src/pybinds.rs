@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 
-use crate::server::EncryptState;
+use crate::server::{RecvState, SendState};
 use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer, RegResponse};
 use pyo3::prelude::*;
 
@@ -28,27 +28,43 @@ impl From<RegResponse> for RegResponsePy {
 
 #[pyclass(name = "EncryptState")]
 pub struct EncryptStatePy {
-	_0: EncryptState,
+	data: Vec<u8>,
+	key: Vec<u8>,
+	kid: u64,
 }
 
 #[pymethods]
 impl EncryptStatePy {
 	pub fn data(&self) -> &Vec<u8> {
-		&self._0.data
+		&self.data
 	}
 
 	pub fn key(&self) -> &[u8] {
-		self._0.key.as_slice()
+		&self.key
 	}
 
 	pub fn key_id(&self) -> u64 {
-		self._0.kid
+		self.kid
 	}
 }
 
-impl From<EncryptState> for EncryptStatePy {
-	fn from(value: EncryptState) -> Self {
-		Self { _0: value }
+impl From<SendState> for EncryptStatePy {
+	fn from(value: SendState) -> Self {
+		Self {
+			data: value.data,
+			key: value.key.as_slice().to_vec(),
+			kid: value.kid,
+		}
+	}
+}
+
+impl From<RecvState> for EncryptStatePy {
+	fn from(value: RecvState) -> Self {
+		Self {
+			data: value.data,
+			key: value.key.as_slice().to_vec(),
+			kid: value.kid,
+		}
 	}
 }
 

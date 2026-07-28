@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: 0BSD
 
 use super::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager,
-	RatchetRoleRecv, RatchetRoleSend, RecvChain, SendChain, roles, systems,
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager, RecvChain,
+	SendChain, roles, systems,
 };
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, decode_sign};
@@ -163,7 +163,7 @@ where
 	}
 }
 
-impl<'de> Deserialize<'de> for Ratchet<RatchetRoleSend> {
+impl<'de> Deserialize<'de> for Ratchet<roles::ChainSendKey> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
 		D: Deserializer<'de>,
@@ -174,12 +174,11 @@ impl<'de> Deserialize<'de> for Ratchet<RatchetRoleSend> {
 			)?;
 		Ok(Self {
 			state: (*typed.buffer.0).into(),
-			_role: PhantomData,
 		})
 	}
 }
 
-impl<'de> Deserialize<'de> for Ratchet<RatchetRoleRecv> {
+impl<'de> Deserialize<'de> for Ratchet<roles::ChainRecvKey> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
 		D: Deserializer<'de>,
@@ -190,7 +189,6 @@ impl<'de> Deserialize<'de> for Ratchet<RatchetRoleRecv> {
 			)?;
 		Ok(Self {
 			state: (*typed.buffer.0).into(),
-			_role: PhantomData,
 		})
 	}
 }
