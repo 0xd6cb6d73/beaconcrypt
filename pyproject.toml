@@ -53,6 +53,3 @@ fi
 
 [tool.cibuildwheel.windows]
 before-all = "choco install capnproto -y"
-
-[tool.cibuildwheel.config-settings]
-build-args = "--release --features pybinds"
