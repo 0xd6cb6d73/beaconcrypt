@@ -41,6 +41,7 @@ static void free_encrypt_state(beaconcrypt_EncryptState *state) {
   if (state != NULL) {
     free_buffer(&state->data);
     free_buffer(&state->key);
+    free_buffer(&state->state);
     state->key_id = 0;
   }
 }
@@ -118,11 +119,9 @@ static void print_text(const char *label, beaconcrypt_Buffer buffer) {
 
 static void print_state(const beaconcrypt_EncryptState *state) {
   printf("Key ID: %" PRIu64 "\n", state->key_id);
-  printf("Ratchet state: ");
-  for (size_t i = 0; i < state->key.len; i++) {
-    printf("%02x", state->key.ptr[i]);
-  }
-  putchar('\n');
+  printf("Consumed key sequence: %" PRIu64 "\n", state->seq);
+  printf("Ratchet state: %.*s\n", (int)state->state.len,
+         (const char *)state->state.ptr);
 }
 
 static int run(void) {

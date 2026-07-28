@@ -1,3 +1,4 @@
+import copy
 import json
 
 import pytest
@@ -14,6 +15,7 @@ def register_beacon(
 
     response = server.register_beacon(phase_1, None)
     assert response is not None
+    assert len(response.beacon_pk()) == 32
     assert beacon.process_initial_message(response.serialized()) == b"\xff"
     return response.key_id()
 
@@ -57,6 +59,46 @@ def test_json_update_failures_return_none():
     assert server.decrypt_and_update_json(b"not a frame") is None
 
 
+def test_structured_and_json_updates_match_across_the_binding_boundary():
+    seed = bytes([0x31]) * 32
+    server = BeaconCryptServer(0, seed)
+    beacon = BeaconCryptBeacon(0, server.id_pk())
+    beacon_kid = register_beacon(server, beacon)
+    initial_state = server.export_state()
+    assert initial_state is not None
+
+    structured_server = BeaconCryptServer.from_state(0, seed, initial_state)
+    json_server = BeaconCryptServer.from_state(0, seed, initial_state)
+
+    outbound = b"compare structured and JSON encryption updates"
+    structured_send = structured_server.encrypt_and_update(outbound, beacon_kid)
+    serialized_send = json_server.encrypt_and_update_json(outbound, beacon_kid)
+    assert structured_send is not None
+    assert serialized_send is not None
+    json_send = json.loads(serialized_send)
+
+    assert structured_send.key_id() == json_send["kid"]
+    assert structured_send.seq() == json_send["seq"]
+    assert structured_send.data() == bytes(json_send["data"])
+    assert json.loads(structured_send.state()) == json_send["state"]
+    assert structured_send.key() == bytes(json_send["state"]["send_key"][2])
+
+    inbound = b"compare structured and JSON decryption updates"
+    ciphertext = beacon.encrypt_message_to_server(inbound)
+    assert ciphertext is not None
+    structured_recv = structured_server.decrypt_and_update(ciphertext)
+    serialized_recv = json_server.decrypt_and_update_json(ciphertext)
+    assert structured_recv is not None
+    assert serialized_recv is not None
+    json_recv = json.loads(serialized_recv)
+
+    assert structured_recv.key_id() == json_recv["kid"]
+    assert structured_recv.seq() == json_recv["seq"]
+    assert structured_recv.data() == bytes(json_recv["data"])
+    assert json.loads(structured_recv.state()) == json_recv["state"]
+    assert structured_recv.key() == bytes(json_recv["state"]["recv_key"][2])
+
+
 def test_seeded_export_restore_continues_sessions_and_next_kid():
     seed = bytes([0x51]) * 32
     server = BeaconCryptServer(0, seed)
@@ -91,6 +133,29 @@ def test_seeded_export_restore_continues_sessions_and_next_kid():
     assert register_beacon(restored, next_beacon) == beacon_kid + 1
 
 
+def test_export_restore_preserves_cached_out_of_order_receive_keys():
+    seed = bytes([0x71]) * 32
+    server = BeaconCryptServer(0, seed)
+    beacon = BeaconCryptBeacon(0, server.id_pk())
+    register_beacon(server, beacon)
+
+    ciphertexts = [
+        beacon.encrypt_message_to_server(message)
+        for message in (b"first", b"second", b"third")
+    ]
+    assert all(ciphertext is not None for ciphertext in ciphertexts)
+    assert server.decrypt_beacon_message(ciphertexts[2]) == b"third"
+
+    state = server.export_state()
+    assert state is not None
+    encoded = json.loads(state)
+    assert set(encoded["1"]["ratchet"]["recv_past"]) == {"1", "2"}
+
+    restored = BeaconCryptServer.from_state(0, seed, state)
+    assert restored.decrypt_beacon_message(ciphertexts[0]) == b"first"
+    assert restored.decrypt_beacon_message(ciphertexts[1]) == b"second"
+
+
 def test_empty_state_restore_preserves_kid_floor():
     server = BeaconCryptServer(7, None)
     state = server.export_state()
@@ -114,3 +179,31 @@ def test_empty_state_restore_preserves_kid_floor():
 def test_restore_rejects_invalid_seed_or_state(seed: bytes | None, state: str):
     with pytest.raises(ValueError, match="invalid server identity seed or state"):
         BeaconCryptServer.from_state(0, seed, state)
+
+
+def test_restore_rejects_tampered_exported_state():
+    seed = bytes([0x61]) * 32
+    server = BeaconCryptServer(0, seed)
+    beacon = BeaconCryptBeacon(0, server.id_pk())
+    register_beacon(server, beacon)
+    state = server.export_state()
+    assert state is not None
+    encoded = json.loads(state)
+
+    wrong_key_type = copy.deepcopy(encoded)
+    wrong_key_type["1"]["pk"][0] = 2
+    short_key = copy.deepcopy(encoded)
+    short_key["1"]["pk"].pop()
+    malformed_ratchet = copy.deepcopy(encoded)
+    malformed_ratchet["1"]["ratchet"]["send_key"][0] = 0
+    entry = state[1:-1]
+    duplicate_kid = f"{{{entry},{entry}}}"
+
+    for malformed in (
+        json.dumps(wrong_key_type),
+        json.dumps(short_key),
+        json.dumps(malformed_ratchet),
+        duplicate_kid,
+    ):
+        with pytest.raises(ValueError, match="invalid server identity seed or state"):
+            BeaconCryptServer.from_state(0, seed, malformed)

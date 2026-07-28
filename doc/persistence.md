@@ -65,6 +65,14 @@ fn encrypt_and_update_json(&mut self, bytes: &[u8], kid: u64) -> Option<String>;
 /// as a JSON string.
 fn decrypt_and_update_json(&mut self, bytes: &[u8]) -> Option<String>;
 ```
+
+The Python and Go structured wrappers expose the complete `RatchetManager` as
+JSON through `EncryptState.state()` and `EncryptState.State`, respectively.
+Their existing `key()` and `Key` members remain available as directional
+convenience values and must equal the `send_key` or `recv_key` contained in the
+complete state. The binding test suites compare these structured values with
+the JSON interface from identical server snapshots.
+
 The JSON output looks like this:
 ```json
 {

@@ -24,6 +24,7 @@ typedef struct {
 typedef struct {
 	beaconcrypt_buffer data;
 	beaconcrypt_buffer key;
+	beaconcrypt_buffer state;
 	uint64_t key_id;
 	uint64_t seq;
 } beaconcrypt_encrypt_state;
@@ -78,8 +79,11 @@ type RegistrationResponse struct {
 }
 
 type EncryptState struct {
-	Data  []byte
-	Key   []byte
+	Data []byte
+	// Key is the current directional KDF state.
+	Key []byte
+	// State is the complete ratchet state serialized as JSON.
+	State string
 	KeyID uint64
 	Seq   uint64
 }
@@ -331,15 +335,22 @@ func callStateUpdate(data []byte, call func(*C.uint8_t, C.uintptr_t) C.beaconcry
 	output, err := copyBuffer(state.data)
 	if err != nil {
 		C.beaconcrypt_free_buffer(state.key)
+		C.beaconcrypt_free_buffer(state.state)
 		return nil, err
 	}
 	key, err := copyBuffer(state.key)
+	if err != nil {
+		C.beaconcrypt_free_buffer(state.state)
+		return nil, err
+	}
+	serializedState, err := copyBuffer(state.state)
 	if err != nil {
 		return nil, err
 	}
 	return &EncryptState{
 		Data:  output,
 		Key:   key,
+		State: string(serializedState),
 		KeyID: uint64(state.key_id),
 		Seq:   uint64(state.seq),
 	}, nil

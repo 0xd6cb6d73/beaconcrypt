@@ -16,6 +16,10 @@ impl RegResponsePy {
 		&self._0.serialized
 	}
 
+	pub fn beacon_pk(&self) -> &[u8] {
+		&self._0.beacon_pk
+	}
+
 	pub fn key_id(&self) -> u64 {
 		self._0.kid
 	}
@@ -31,6 +35,7 @@ impl From<RegResponse> for RegResponsePy {
 pub struct EncryptStatePy {
 	data: Vec<u8>,
 	key: Vec<u8>,
+	state: String,
 	kid: u64,
 	seq: u64,
 }
@@ -45,6 +50,11 @@ impl EncryptStatePy {
 		&self.key
 	}
 
+	/// Return the complete ratchet state as JSON.
+	pub fn state(&self) -> &str {
+		&self.state
+	}
+
 	pub fn key_id(&self) -> u64 {
 		self.kid
 	}
@@ -54,25 +64,33 @@ impl EncryptStatePy {
 	}
 }
 
-impl From<SendState> for EncryptStatePy {
-	fn from(value: SendState) -> Self {
-		Self {
+impl TryFrom<SendState> for EncryptStatePy {
+	type Error = serde_json::Error;
+
+	fn try_from(value: SendState) -> Result<Self, Self::Error> {
+		let state = serde_json::to_string(&value.state)?;
+		Ok(Self {
 			data: value.data,
 			key: value.state.send_state().as_slice().to_vec(),
+			state,
 			kid: value.kid,
 			seq: value.seq,
-		}
+		})
 	}
 }
 
-impl From<RecvState> for EncryptStatePy {
-	fn from(value: RecvState) -> Self {
-		Self {
+impl TryFrom<RecvState> for EncryptStatePy {
+	type Error = serde_json::Error;
+
+	fn try_from(value: RecvState) -> Result<Self, Self::Error> {
+		let state = serde_json::to_string(&value.state)?;
+		Ok(Self {
 			data: value.data,
 			key: value.state.recv_state().as_slice().to_vec(),
+			state,
 			kid: value.kid,
 			seq: value.seq,
-		}
+		})
 	}
 }
 
@@ -126,7 +144,7 @@ impl Server {
 	fn encrypt_and_update(&mut self, data: Vec<u8>, kid: u64) -> Option<EncryptStatePy> {
 		self._0
 			.encrypt_and_update(&data, kid)
-			.map(|state| state.into())
+			.and_then(|state| state.try_into().ok())
 	}
 
 	fn encrypt_and_update_json(&mut self, data: Vec<u8>, kid: u64) -> Option<String> {
@@ -134,7 +152,9 @@ impl Server {
 	}
 
 	fn decrypt_and_update(&mut self, data: Vec<u8>) -> Option<EncryptStatePy> {
-		self._0.decrypt_and_update(&data).map(|state| state.into())
+		self._0
+			.decrypt_and_update(&data)
+			.and_then(|state| state.try_into().ok())
 	}
 
 	fn decrypt_and_update_json(&mut self, data: Vec<u8>) -> Option<String> {

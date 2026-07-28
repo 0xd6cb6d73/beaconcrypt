@@ -22,7 +22,10 @@ pub struct RegistrationResponse {
 #[repr(C)]
 pub struct EncryptState {
 	pub data: Buffer,
+	/// Current directional KDF state, retained as a convenience value.
 	pub key: Buffer,
+	/// Complete RatchetManager serialized as JSON.
+	pub state: Buffer,
 	pub key_id: u64,
 	pub seq: u64,
 }
@@ -49,27 +52,32 @@ fn empty_encrypt_state() -> EncryptState {
 	EncryptState {
 		data: empty_buffer(),
 		key: empty_buffer(),
+		state: empty_buffer(),
 		key_id: 0,
 		seq: 0,
 	}
 }
 
-fn into_send_state(state: SendState) -> EncryptState {
-	EncryptState {
+fn into_send_state(state: SendState) -> Option<EncryptState> {
+	let serialized_state = serde_json::to_vec(&state.state).ok()?;
+	Some(EncryptState {
 		data: into_buffer(state.data),
 		key: into_buffer(state.state.send_state().as_slice().to_vec()),
+		state: into_buffer(serialized_state),
 		key_id: state.kid,
 		seq: state.seq,
-	}
+	})
 }
 
-fn into_recv_state(state: RecvState) -> EncryptState {
-	EncryptState {
+fn into_recv_state(state: RecvState) -> Option<EncryptState> {
+	let serialized_state = serde_json::to_vec(&state.state).ok()?;
+	Some(EncryptState {
 		data: into_buffer(state.data),
 		key: into_buffer(state.state.recv_state().as_slice().to_vec()),
+		state: into_buffer(serialized_state),
 		key_id: state.kid,
 		seq: state.seq,
-	}
+	})
 }
 
 unsafe fn input<'a>(ptr: *const u8, len: usize) -> Option<&'a [u8]> {
@@ -210,7 +218,6 @@ pub extern "C" fn beaconcrypt_register_beacon(
 			key_id: 0,
 		};
 	};
-	let beacon_pk = secret.public_key.as_ref().to_vec();
 	let Some(response) = provider.build_registration_response(secret, message) else {
 		return RegistrationResponse {
 			response: empty_buffer(),
@@ -220,7 +227,7 @@ pub extern "C" fn beaconcrypt_register_beacon(
 	};
 	RegistrationResponse {
 		response: into_buffer(response.serialized),
-		beacon_pk: into_buffer(beacon_pk),
+		beacon_pk: into_buffer(response.beacon_pk),
 		key_id: response.kid,
 	}
 }
@@ -279,7 +286,7 @@ pub extern "C" fn beaconcrypt_encrypt_and_update(
 	let provider = unsafe { &mut *handle };
 	provider
 		.encrypt_and_update(data, key_id)
-		.map(into_send_state)
+		.and_then(into_send_state)
 		.unwrap_or_else(empty_encrypt_state)
 }
 
@@ -318,7 +325,7 @@ pub extern "C" fn beaconcrypt_decrypt_and_update(
 	let provider = unsafe { &mut *handle };
 	provider
 		.decrypt_and_update(data)
-		.map(into_recv_state)
+		.and_then(into_recv_state)
 		.unwrap_or_else(empty_encrypt_state)
 }
 

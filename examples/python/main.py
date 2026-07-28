@@ -1,4 +1,4 @@
-import base64
+import json
 
 from beaconcrypt import BeaconCryptBeacon, BeaconCryptServer
 from nacl.utils import random
@@ -39,11 +39,13 @@ def main():
     ping = server.decrypt_and_update(s_ping)
     print(f"Server got ping: {ping.data()}")
     print(f"Key ID: {ping.key_id()}")
-    print(f"Ratchet state: {base64.b64encode(ping.key())}")
+    print(f"Consumed key sequence: {ping.seq()}")
+    print(f"Ratchet state: {json.loads(ping.state())}")
     # The C2 needs to know what the beacon's ID is so it can encrypt to it
     s_task_0 = server.encrypt_and_update(b"task contents", s_reg_resp.key_id())
     print(f"Key ID: {s_task_0.key_id()}")
-    print(f"Ratchet state: {base64.b64encode(s_task_0.key())}")
+    print(f"Consumed key sequence: {s_task_0.seq()}")
+    print(f"Ratchet state: {json.loads(s_task_0.state())}")
     with open("transport", "wb") as f:
         f.write(s_task_0.data())
     with open("transport", "rb") as f:
@@ -59,7 +61,8 @@ def main():
     task_1 = server.decrypt_and_update(s_task_1)
     print(f"Server got response to first task: {task_1.data()}")
     print(f"Key ID: {task_1.key_id()}")
-    print(f"Ratchet state: {base64.b64encode(task_1.key())}")
+    print(f"Consumed key sequence: {task_1.seq()}")
+    print(f"Ratchet state: {json.loads(task_1.state())}")
 
 
 if __name__ == "__main__":

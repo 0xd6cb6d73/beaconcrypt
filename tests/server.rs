@@ -143,6 +143,37 @@ fn known_ids_round_trip_and_continue_each_session() {
 }
 
 #[test]
+fn known_ids_round_trip_preserves_cached_out_of_order_receive_keys() {
+	let seed = [0x71; ED25519_SEED_SIZE];
+	let mut server = BeaconCryptPqxdh::new(false, 0, None, Some(&seed));
+	let server_id = server.identity_pk().to_owned();
+	let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	test_register_pqxdh_beacon(&mut server, &mut beacon);
+
+	let first = beacon.encrypt_message(b"first", 0).unwrap();
+	let second = beacon.encrypt_message(b"second", 0).unwrap();
+	let third = beacon.encrypt_message(b"third", 0).unwrap();
+	assert_eq!(server.decrypt_message(&third).unwrap().plaintext, b"third");
+
+	let state = server.export_state().unwrap();
+	let encoded: Value = serde_json::from_str(&state).unwrap();
+	let cached = encoded["1"]["ratchet"]["recv_past"].as_object().unwrap();
+	assert_eq!(cached.len(), 2);
+	assert!(cached.contains_key("1"));
+	assert!(cached.contains_key("2"));
+
+	let mut restored: BeaconCryptPqxdh = ProviderServer::from_state(0, Some(&seed), state);
+	assert_eq!(
+		restored.decrypt_message(&first).unwrap().plaintext,
+		b"first"
+	);
+	assert_eq!(
+		restored.decrypt_message(&second).unwrap().plaintext,
+		b"second"
+	);
+}
+
+#[test]
 fn invalid_known_ids_state_is_rejected() {
 	let seed = [0x61; ED25519_SEED_SIZE];
 	let mut server = BeaconCryptPqxdh::new(false, 0, None, Some(&seed));
