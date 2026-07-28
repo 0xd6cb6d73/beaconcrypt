@@ -477,6 +477,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 		let mut info_str = vec![0u8; SYM_RATCHET_INFO.len()];
 		info_str.copy_from_slice(SYM_RATCHET_INFO);
 		let remote_kid = self.new_remote_kid();
+		let beacon_pk = reg_out.public_key.as_bytes().to_vec();
 		self.add_known_kid(remote_kid, reg_out.public_key);
 		self.init_ratchets(
 			reg_out.derived_secret.inner().as_slice(),
@@ -503,6 +504,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 
 		Some(RegResponse {
 			serialized: buffer,
+			beacon_pk,
 			kid: remote_kid,
 		})
 	}
