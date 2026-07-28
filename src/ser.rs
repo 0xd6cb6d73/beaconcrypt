@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: 0BSD
 
 use super::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, AeadKey, AeadNonce, KeyMaterial, Ratchet, RatchetManager,
-	SecretArr, roles, systems,
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager,
+	RatchetRoleRecv, RatchetRoleSend, roles, systems,
 };
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, encode_sign};
 #[cfg(feature = "server")]
 use libsodium_rs::crypto_sign;
 #[cfg(feature = "server")]
-use serde::ser::{Error as _, SerializeMap};
+use serde::ser::Error as _;
 use serde::{
 	Serialize, Serializer,
-	ser::{SerializeStruct, SerializeTuple},
+	ser::{SerializeMap, SerializeStruct, SerializeTuple},
 };
-#[cfg(feature = "server")]
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -35,40 +34,10 @@ struct TypedArray<'a, const N: usize, System, Role> {
 	_type: PhantomData<(System, Role)>,
 }
 
-impl<'a, const N: usize, System, Role> From<&'a SecretArr<N, System, Role>>
-	for TypedArray<'a, N, System, Role>
-{
-	fn from(value: &'a SecretArr<N, System, Role>) -> Self {
+impl<'a, const N: usize, System, Role> TypedArray<'a, N, System, Role> {
+	fn new(buffer: &'a [u8; N]) -> Self {
 		Self {
-			buffer: value
-				.as_slice()
-				.try_into()
-				.expect("SecretArr always contains exactly N bytes"),
-			_type: PhantomData,
-		}
-	}
-}
-
-impl<'a> From<&'a AeadKey>
-	for TypedArray<'a, AEAD_KEY_LEN, systems::Chacha20Poly1305Ietf, roles::EncryptionKey>
-{
-	fn from(value: &'a AeadKey) -> Self {
-		Self {
-			buffer: value
-				.as_bytes()
-				.try_into()
-				.expect("AeadKey always contains AEAD_KEY_LEN bytes"),
-			_type: PhantomData,
-		}
-	}
-}
-
-impl<'a> From<&'a AeadNonce>
-	for TypedArray<'a, AEAD_NONCE_LEN, systems::Chacha20Poly1305Ietf, roles::Nonce>
-{
-	fn from(value: &'a AeadNonce) -> Self {
-		Self {
-			buffer: value.as_bytes(),
+			buffer,
 			_type: PhantomData,
 		}
 	}
@@ -91,39 +60,69 @@ where
 	}
 }
 
-impl<const N: usize, System, Role> Serialize for SecretArr<N, System, Role>
+impl Serialize for Ratchet<RatchetRoleSend> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let buffer = self
+			.state
+			.as_slice()
+			.try_into()
+			.expect("ratchet state always contains KDF_STATE_SIZE bytes");
+		TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, roles::ChainSendKey>::new(buffer)
+			.serialize(serializer)
+	}
+}
+
+impl Serialize for Ratchet<RatchetRoleRecv> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let buffer = self
+			.state
+			.as_slice()
+			.try_into()
+			.expect("ratchet state always contains KDF_STATE_SIZE bytes");
+		TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, roles::ChainRecvKey>::new(buffer)
+			.serialize(serializer)
+	}
+}
+
+struct DirectionalKeyMaterialRef<'a, KeyRole, NonceRole> {
+	material: &'a KeyMaterial,
+	_roles: PhantomData<(KeyRole, NonceRole)>,
+}
+
+impl<'a, KeyRole, NonceRole> DirectionalKeyMaterialRef<'a, KeyRole, NonceRole> {
+	fn new(material: &'a KeyMaterial) -> Self {
+		Self {
+			material,
+			_roles: PhantomData,
+		}
+	}
+}
+
+impl<KeyRole, NonceRole> Serialize for DirectionalKeyMaterialRef<'_, KeyRole, NonceRole>
 where
-	System: systems::Identified,
-	Role: roles::Identified,
+	KeyRole: roles::Identified,
+	NonceRole: roles::Identified,
 {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,
 	{
-		TypedArray::<N, System, Role>::from(self).serialize(serializer)
-	}
-}
-
-impl<Role> Serialize for Ratchet<Role> {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: Serializer,
-	{
-		self.state.serialize(serializer)
-	}
-}
-
-impl Serialize for KeyMaterial {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: Serializer,
-	{
+		let key_buffer = self
+			.material
+			.key
+			.as_bytes()
+			.try_into()
+			.expect("AeadKey always contains AEAD_KEY_LEN bytes");
 		let key =
-			TypedArray::<AEAD_KEY_LEN, systems::Chacha20Poly1305Ietf, roles::EncryptionKey>::from(
-				&self.key,
-			);
-		let nonce = TypedArray::<AEAD_NONCE_LEN, systems::Chacha20Poly1305Ietf, roles::Nonce>::from(
-			&self.nonce,
+			TypedArray::<AEAD_KEY_LEN, systems::Chacha20Poly1305Ietf, KeyRole>::new(key_buffer);
+		let nonce = TypedArray::<AEAD_NONCE_LEN, systems::Chacha20Poly1305Ietf, NonceRole>::new(
+			self.material.nonce.as_bytes(),
 		);
 		let mut state = serializer.serialize_struct("KeyMaterial", 2)?;
 		state.serialize_field("key", &key)?;
@@ -132,17 +131,57 @@ impl Serialize for KeyMaterial {
 	}
 }
 
+struct DirectionalKeyMapRef<'a, KeyRole, NonceRole> {
+	keys: &'a HashMap<u64, KeyMaterial>,
+	_roles: PhantomData<(KeyRole, NonceRole)>,
+}
+
+impl<'a, KeyRole, NonceRole> DirectionalKeyMapRef<'a, KeyRole, NonceRole> {
+	fn new(keys: &'a HashMap<u64, KeyMaterial>) -> Self {
+		Self {
+			keys,
+			_roles: PhantomData,
+		}
+	}
+}
+
+impl<KeyRole, NonceRole> Serialize for DirectionalKeyMapRef<'_, KeyRole, NonceRole>
+where
+	KeyRole: roles::Identified,
+	NonceRole: roles::Identified,
+{
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let mut map = serializer.serialize_map(Some(self.keys.len()))?;
+		for (sequence, material) in self.keys {
+			map.serialize_entry(
+				sequence,
+				&DirectionalKeyMaterialRef::<KeyRole, NonceRole>::new(material),
+			)?;
+		}
+		map.end()
+	}
+}
+
 impl Serialize for RatchetManager {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,
 	{
+		let send_past = DirectionalKeyMapRef::<roles::EncryptionSendKey, roles::SendNonce>::new(
+			&self.send_past,
+		);
+		let recv_past = DirectionalKeyMapRef::<roles::EncryptionRecvKey, roles::RecvNonce>::new(
+			&self.recv_past,
+		);
 		let mut state = serializer.serialize_struct("RatchetManager", 6)?;
 		state.serialize_field("send_key", &self.send_key)?;
 		state.serialize_field("recv_key", &self.recv_key)?;
-		state.serialize_field("send_past", &self.send_past)?;
+		state.serialize_field("send_past", &send_past)?;
 		state.serialize_field("send_ctr", &self.send_ctr)?;
-		state.serialize_field("recv_past", &self.recv_past)?;
+		state.serialize_field("recv_past", &recv_past)?;
 		state.serialize_field("recv_ctr", &self.recv_ctr)?;
 		state.end()
 	}

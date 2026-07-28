@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: 0BSD
 
 use super::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, KeyMaterial, Ratchet, RatchetManager, RecvChain, SecretArr,
-	SendChain, roles, systems,
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager,
+	RatchetRoleRecv, RatchetRoleSend, RecvChain, SendChain, roles, systems,
 };
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, decode_sign};
@@ -163,31 +163,33 @@ where
 	}
 }
 
-impl<'de, const N: usize, System, Role> Deserialize<'de> for SecretArr<N, System, Role>
-where
-	System: systems::Identified,
-	Role: roles::Identified,
-{
+impl<'de> Deserialize<'de> for Ratchet<RatchetRoleSend> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
 		D: Deserializer<'de>,
 	{
-		let typed = TypedArray::<N, System, Role>::deserialize(deserializer)?;
+		let typed =
+			TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, roles::ChainSendKey>::deserialize(
+				deserializer,
+			)?;
 		Ok(Self {
-			data: typed.buffer.0,
-			_system: PhantomData,
+			state: (*typed.buffer.0).into(),
 			_role: PhantomData,
 		})
 	}
 }
 
-impl<'de, Role> Deserialize<'de> for Ratchet<Role> {
+impl<'de> Deserialize<'de> for Ratchet<RatchetRoleRecv> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
 		D: Deserializer<'de>,
 	{
+		let typed =
+			TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, roles::ChainRecvKey>::deserialize(
+				deserializer,
+			)?;
 		Ok(Self {
-			state: Deserialize::deserialize(deserializer)?,
+			state: (*typed.buffer.0).into(),
 			_role: PhantomData,
 		})
 	}
@@ -195,20 +197,35 @@ impl<'de, Role> Deserialize<'de> for Ratchet<Role> {
 
 #[derive(Deserialize)]
 #[serde(rename = "KeyMaterial")]
-struct KeyMaterialData {
-	key: TypedArray<AEAD_KEY_LEN, systems::Chacha20Poly1305Ietf, roles::EncryptionKey>,
-	nonce: TypedArray<AEAD_NONCE_LEN, systems::Chacha20Poly1305Ietf, roles::Nonce>,
+struct KeyMaterialData<Key, Nonce> {
+	key: Key,
+	nonce: Nonce,
 }
 
-impl<'de> Deserialize<'de> for KeyMaterial {
+struct DirectionalKeyMaterial<KeyRole, NonceRole> {
+	material: KeyMaterial,
+	_roles: PhantomData<(KeyRole, NonceRole)>,
+}
+
+impl<'de, KeyRole, NonceRole> Deserialize<'de> for DirectionalKeyMaterial<KeyRole, NonceRole>
+where
+	KeyRole: roles::Identified,
+	NonceRole: roles::Identified,
+{
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
 		D: Deserializer<'de>,
 	{
-		let data = KeyMaterialData::deserialize(deserializer)?;
+		let data = KeyMaterialData::<
+			TypedArray<AEAD_KEY_LEN, systems::Chacha20Poly1305Ietf, KeyRole>,
+			TypedArray<AEAD_NONCE_LEN, systems::Chacha20Poly1305Ietf, NonceRole>,
+		>::deserialize(deserializer)?;
 		Ok(Self {
-			key: (*data.key.buffer.0).into(),
-			nonce: (*data.nonce.buffer.0).into(),
+			material: KeyMaterial {
+				key: (*data.key.buffer.0).into(),
+				nonce: (*data.nonce.buffer.0).into(),
+			},
+			_roles: PhantomData,
 		})
 	}
 }
@@ -218,9 +235,9 @@ impl<'de> Deserialize<'de> for KeyMaterial {
 struct RatchetManagerData {
 	send_key: SendChain,
 	recv_key: RecvChain,
-	send_past: HashMap<u64, KeyMaterial>,
+	send_past: HashMap<u64, DirectionalKeyMaterial<roles::EncryptionSendKey, roles::SendNonce>>,
 	send_ctr: u64,
-	recv_past: HashMap<u64, KeyMaterial>,
+	recv_past: HashMap<u64, DirectionalKeyMaterial<roles::EncryptionRecvKey, roles::RecvNonce>>,
 	recv_ctr: u64,
 }
 
@@ -248,12 +265,22 @@ impl<'de> Deserialize<'de> for RatchetManager {
 				"recv_past contains a sequence outside 1..=recv_ctr",
 			));
 		}
+		let send_past = data
+			.send_past
+			.into_iter()
+			.map(|(sequence, directed)| (sequence, directed.material))
+			.collect();
+		let recv_past = data
+			.recv_past
+			.into_iter()
+			.map(|(sequence, directed)| (sequence, directed.material))
+			.collect();
 		Ok(Self {
 			send_key: data.send_key,
 			recv_key: data.recv_key,
-			send_past: data.send_past,
+			send_past,
 			send_ctr: data.send_ctr,
-			recv_past: data.recv_past,
+			recv_past,
 			recv_ctr: data.recv_ctr,
 		})
 	}
@@ -422,31 +449,43 @@ mod tests {
 	}
 
 	#[test]
-	fn serialized_keys_and_nonces_include_their_type_identifiers() {
+	fn serialized_keys_and_nonces_include_their_directional_type_identifiers() {
 		let serialized = serde_json::to_value(populated_manager()).unwrap();
 		let cases = [
 			(
 				&serialized["send_key"],
 				systems::Identifier::HkdfSha512,
-				roles::Identifier::ChainKey,
+				roles::Identifier::ChainSendKey,
 				KDF_STATE_SIZE,
 			),
 			(
 				&serialized["recv_key"],
 				systems::Identifier::HkdfSha512,
-				roles::Identifier::ChainKey,
+				roles::Identifier::ChainRecvKey,
 				KDF_STATE_SIZE,
 			),
 			(
 				&serialized["send_past"]["1"]["key"],
 				systems::Identifier::Chacha20Poly1305Ietf,
-				roles::Identifier::EncryptionKey,
+				roles::Identifier::EncryptionSendKey,
 				AEAD_KEY_LEN,
+			),
+			(
+				&serialized["recv_past"]["2"]["key"],
+				systems::Identifier::Chacha20Poly1305Ietf,
+				roles::Identifier::EncryptionRecvKey,
+				AEAD_KEY_LEN,
+			),
+			(
+				&serialized["send_past"]["1"]["nonce"],
+				systems::Identifier::Chacha20Poly1305Ietf,
+				roles::Identifier::SendNonce,
+				AEAD_NONCE_LEN,
 			),
 			(
 				&serialized["recv_past"]["2"]["nonce"],
 				systems::Identifier::Chacha20Poly1305Ietf,
-				roles::Identifier::Nonce,
+				roles::Identifier::RecvNonce,
 				AEAD_NONCE_LEN,
 			),
 		];
@@ -493,10 +532,14 @@ mod tests {
 			(
 				&["recv_key"][..],
 				1,
-				u8::from(roles::Identifier::EncryptionKey),
+				u8::from(roles::Identifier::ChainSendKey),
 			),
 			(&["send_past", "1", "key"][..], 0, 0),
-			(&["send_past", "1", "key"][..], 1, u8::MAX),
+			(
+				&["send_past", "1", "key"][..],
+				1,
+				u8::from(roles::Identifier::EncryptionRecvKey),
+			),
 			(
 				&["recv_past", "2", "nonce"][..],
 				0,
@@ -505,8 +548,9 @@ mod tests {
 			(
 				&["recv_past", "2", "nonce"][..],
 				1,
-				u8::from(roles::Identifier::EncryptionKey),
+				u8::from(roles::Identifier::SendNonce),
 			),
+			(&["recv_past", "2", "key"][..], 1, u8::MAX),
 		];
 
 		for (path, identifier_index, replacement) in mutations {
@@ -516,6 +560,48 @@ mod tests {
 				typed = &mut typed[*segment];
 			}
 			typed[identifier_index] = json!(replacement);
+
+			assert!(serde_json::from_value::<RatchetManager>(malformed).is_err());
+		}
+	}
+
+	#[test]
+	fn send_and_recv_key_arrays_cannot_be_substituted() {
+		let serialized = serde_json::to_value(populated_manager()).unwrap();
+		let substitutions = [
+			(&["send_key"][..], &["recv_key"][..]),
+			(&["recv_key"][..], &["send_key"][..]),
+			(
+				&["send_past", "1", "key"][..],
+				&["recv_past", "2", "key"][..],
+			),
+			(
+				&["recv_past", "2", "key"][..],
+				&["send_past", "1", "key"][..],
+			),
+			(
+				&["send_past", "1", "nonce"][..],
+				&["recv_past", "2", "nonce"][..],
+			),
+			(
+				&["recv_past", "2", "nonce"][..],
+				&["send_past", "1", "nonce"][..],
+			),
+		];
+
+		for (destination, source) in substitutions {
+			let mut replacement = &serialized;
+			for segment in source {
+				replacement = &replacement[*segment];
+			}
+			let replacement = replacement.clone();
+
+			let mut malformed = serialized.clone();
+			let mut destination_value = &mut malformed;
+			for segment in destination {
+				destination_value = &mut destination_value[*segment];
+			}
+			*destination_value = replacement;
 
 			assert!(serde_json::from_value::<RatchetManager>(malformed).is_err());
 		}
@@ -564,9 +650,17 @@ mod tests {
 		));
 
 		assert_eq!(u8::from(roles::Identifier::Undefined), 0);
-		assert_eq!(u8::from(roles::Identifier::ChainKey), 8);
-		assert_eq!(u8::from(roles::Identifier::EncryptionKey), 9);
-		assert_eq!(u8::from(roles::Identifier::Nonce), 10);
+		for (identifier, encoded) in [
+			(roles::Identifier::ChainSendKey, 8),
+			(roles::Identifier::ChainRecvKey, 9),
+			(roles::Identifier::EncryptionSendKey, 10),
+			(roles::Identifier::EncryptionRecvKey, 11),
+			(roles::Identifier::SendNonce, 12),
+			(roles::Identifier::RecvNonce, 13),
+		] {
+			assert_eq!(u8::from(identifier), encoded);
+			assert_eq!(roles::Identifier::from(encoded), identifier);
+		}
 		assert!(matches!(
 			roles::Identifier::from(0),
 			roles::Identifier::Undefined

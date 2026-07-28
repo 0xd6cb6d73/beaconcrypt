@@ -222,27 +222,35 @@ mod roles {
 	pub struct ChainKey;
 	#[derive(PartialEq)]
 	pub struct DerivedSecret;
-	#[derive(PartialEq)]
-	pub struct EncryptionKey;
-	#[derive(PartialEq)]
-	pub struct Nonce;
+	pub struct ChainSendKey;
+	pub struct ChainRecvKey;
+	pub struct EncryptionSendKey;
+	pub struct EncryptionRecvKey;
+	pub struct SendNonce;
+	pub struct RecvNonce;
 
 	#[repr(u8)]
 	#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 	pub enum Identifier {
 		Undefined = 0,
-		ChainKey = 8,
-		EncryptionKey = 9,
-		Nonce = 10,
+		ChainSendKey = 8,
+		ChainRecvKey = 9,
+		EncryptionSendKey = 10,
+		EncryptionRecvKey = 11,
+		SendNonce = 12,
+		RecvNonce = 13,
 	}
 
 	impl From<Identifier> for u8 {
 		fn from(value: Identifier) -> Self {
 			match value {
 				Identifier::Undefined => 0,
-				Identifier::ChainKey => 8,
-				Identifier::EncryptionKey => 9,
-				Identifier::Nonce => 10,
+				Identifier::ChainSendKey => 8,
+				Identifier::ChainRecvKey => 9,
+				Identifier::EncryptionSendKey => 10,
+				Identifier::EncryptionRecvKey => 11,
+				Identifier::SendNonce => 12,
+				Identifier::RecvNonce => 13,
 			}
 		}
 	}
@@ -250,9 +258,12 @@ mod roles {
 	impl From<u8> for Identifier {
 		fn from(value: u8) -> Self {
 			match value {
-				8 => Self::ChainKey,
-				9 => Self::EncryptionKey,
-				10 => Self::Nonce,
+				8 => Self::ChainSendKey,
+				9 => Self::ChainRecvKey,
+				10 => Self::EncryptionSendKey,
+				11 => Self::EncryptionRecvKey,
+				12 => Self::SendNonce,
+				13 => Self::RecvNonce,
 				_ => Self::Undefined,
 			}
 		}
@@ -262,16 +273,28 @@ mod roles {
 		const IDENTIFIER: Identifier;
 	}
 
-	impl Identified for ChainKey {
-		const IDENTIFIER: Identifier = Identifier::ChainKey;
+	impl Identified for ChainSendKey {
+		const IDENTIFIER: Identifier = Identifier::ChainSendKey;
 	}
 
-	impl Identified for EncryptionKey {
-		const IDENTIFIER: Identifier = Identifier::EncryptionKey;
+	impl Identified for ChainRecvKey {
+		const IDENTIFIER: Identifier = Identifier::ChainRecvKey;
 	}
 
-	impl Identified for Nonce {
-		const IDENTIFIER: Identifier = Identifier::Nonce;
+	impl Identified for EncryptionSendKey {
+		const IDENTIFIER: Identifier = Identifier::EncryptionSendKey;
+	}
+
+	impl Identified for EncryptionRecvKey {
+		const IDENTIFIER: Identifier = Identifier::EncryptionRecvKey;
+	}
+
+	impl Identified for SendNonce {
+		const IDENTIFIER: Identifier = Identifier::SendNonce;
+	}
+
+	impl Identified for RecvNonce {
+		const IDENTIFIER: Identifier = Identifier::RecvNonce;
 	}
 }
 
