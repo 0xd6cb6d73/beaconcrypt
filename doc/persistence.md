@@ -32,11 +32,11 @@ The server object exposes a `export_state` method, which produces the following 
 
 The way to read this is that the server knows about 2 beacons, with keyId 1 and 2. Every object then contains the beacon's public key as well as the full state of their associated ratchets. Note that the keys are strongly-typed arrays, which server code should not try to parse. I expect that this method would be rather slow, as it will extract and serialize the entirety of the beaconcrypt instance's crypto state. Therefore, the server has access to the following interface:
 ```rust
-/// Encrypt some bytes to `kid` and return the ciphertext, `kid` and new state
-/// of the send keychain for `kid`
+/// Encrypt some bytes to `kid` and return the ciphertext, `kid`, consumed key sequence,
+/// and complete ratchet state for `kid`.
 fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState>;
 /// Decrypt a message using the recv keychain associated with the sender ID in the encrypted frame
-/// and return the plaintext, `kid` and new state of the recv keychain for `kid`
+/// and return the plaintext, `kid`, consumed key sequence, and complete ratchet state for `kid`.
 fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<RecvState>;
 ```
 
@@ -44,28 +44,41 @@ The returned type looks like this:
 ```rust
 pub struct StateUpdate<Role: roles::ChainKey> {
 	pub kid: u64,
-	pub key: KdfState<Role>,
+	/// The sequence number of the key consumed by this operation.
+	pub seq: u64,
+	pub state: RatchetManager,
 	pub data: Vec<u8>,
+	pub(crate) _role: PhantomData<Role>,
 }
 
 pub type SendState = StateUpdate<roles::ChainSendKey>;
 pub type RecvState = StateUpdate<roles::ChainRecvKey>;
 ```
 
-This type is wrapped by the various bindings to provide nativee structs. However, there is also a JSON interface:
+This type is wrapped by the various bindings to provide native structs. However, there is also a JSON interface:
 ```rust
-/// Encrypt some bytes to `kid` and return the ciphertext, `kid` and new state of the send keychain for `kid` as a JSON string
+/// Encrypt some bytes to `kid` and return the ciphertext, `kid`, consumed key sequence,
+/// and complete ratchet state for `kid` as a JSON string.
 fn encrypt_and_update_json(&mut self, bytes: &[u8], kid: u64) -> Option<String>;
 /// Decrypt a message using the recv keychain associated with the sender ID in the encrypted frame
-/// and return the plaintext, `kid` and new state of the recv keychain for `kid` as a JSON string
+/// and return the plaintext, `kid`, consumed key sequence, and complete ratchet state for `kid`
+/// as a JSON string.
 fn decrypt_and_update_json(&mut self, bytes: &[u8]) -> Option<String>;
 ```
 The JSON output looks like this:
 ```json
 {
     "kid": 1,
-    "key": [6,8,[194,31,149,100,15,174,115,69,241,227,96,72,201,19,141,95,213,196,143,140,70,161,199,45,22,161,169,84,122,48,176,236]],
+    "seq": 2,
+    "state": {
+        "send_key": [6,8,[194,31,149,100,15,174,115,69,241,227,96,72,201,19,141,95,213,196,143,140,70,161,199,45,22,161,169,84,122,48,176,236]],
+        "recv_key": [6,9,[171,11,55,200,145,194,88,3,54,90,129,116,208,31,217,146,194,6,40,38,184,222,233,43,198,132,151,204,51,182,233,11]],
+        "send_past": {},
+        "send_ctr": 2,
+        "recv_past": {},
+        "recv_ctr": 1
+    },
     "data": [0,0,0,0,19,0,0,0,0,0,0,0,2,0,1,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,154,3,0,0,56,233,14,12,69,80,85,248,14,234,235,...]
 }
 ```
-This should hopefully provide a more efficient interface for server implementations to update their persisted state than the full-state extraction. Note that the key uses the same strongly-typed format that the other format uses.
+This provides a more efficient interface for server implementations to update one beacon's persisted state than extracting every known beacon. The snapshot includes both ratchet directions and any cached skipped-message keys, and its keys use the same strongly-typed format as the full export.
