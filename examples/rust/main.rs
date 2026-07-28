@@ -12,7 +12,8 @@ const REGISTRATION_MESSAGE: &[u8] = b"registration ok";
 #[derive(serde::Deserialize)]
 struct StateUpdate {
 	kid: u64,
-	key: (u8, u8, Vec<u8>),
+	seq: u64,
+	state: serde_json::Value,
 	data: Vec<u8>,
 }
 
@@ -77,7 +78,8 @@ fn main() {
 	let ping = deserialize_state_update(&ping);
 	println!("Server got ping: {}", String::from_utf8_lossy(&ping.data));
 	println!("Key ID: {}", ping.kid);
-	println!("Ratchet state: {:?}", ping.key.2);
+	println!("Consumed key sequence: {}", ping.seq);
+	println!("Ratchet state: {}", ping.state);
 
 	// The C2 needs to know what the beacon's ID is so it can encrypt to it.
 	let s_task_0 = server
@@ -85,7 +87,8 @@ fn main() {
 		.expect("failed to encrypt task");
 	let s_task_0 = deserialize_state_update(&s_task_0);
 	println!("Key ID: {}", s_task_0.kid);
-	println!("Ratchet state: {:?}", s_task_0.key.2);
+	println!("Consumed key sequence: {}", s_task_0.seq);
+	println!("Ratchet state: {}", s_task_0.state);
 	fs::write(&transport, &s_task_0.data).expect("failed to write task to transport");
 	let b_task_0 = fs::read(&transport).expect("failed to read task from transport");
 	let task_0 = beacon
@@ -112,7 +115,8 @@ fn main() {
 		String::from_utf8_lossy(&task_1.data)
 	);
 	println!("Key ID: {}", task_1.kid);
-	println!("Ratchet state: {:?}", task_1.key.2);
+	println!("Consumed key sequence: {}", task_1.seq);
+	println!("Ratchet state: {}", task_1.state);
 
 	fs::remove_file(transport).expect("failed to remove transport file");
 }

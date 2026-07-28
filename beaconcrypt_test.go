@@ -25,31 +25,43 @@ type jsonStateUpdate struct {
 	Data      []byte
 }
 
-func decodeJSONStateUpdate(t *testing.T, serialized string) jsonStateUpdate {
+func decodeJSONStateUpdate(t *testing.T, serialized string, keyField string) jsonStateUpdate {
 	t.Helper()
 
 	var encoded struct {
-		KID  uint64            `json:"kid"`
-		Seq  uint64            `json:"seq"`
-		Key  []json.RawMessage `json:"key"`
-		Data []byte            `json:"data"`
+		KID   uint64 `json:"kid"`
+		Seq   uint64 `json:"seq"`
+		State struct {
+			SendKey []json.RawMessage `json:"send_key"`
+			RecvKey []json.RawMessage `json:"recv_key"`
+		} `json:"state"`
+		Data []byte `json:"data"`
 	}
 	if err := json.Unmarshal([]byte(serialized), &encoded); err != nil {
 		t.Fatalf("state update is not valid JSON: %v", err)
 	}
-	if len(encoded.Key) != 3 {
-		t.Fatalf("state key tuple length mismatch: got %d want 3", len(encoded.Key))
+	var key []json.RawMessage
+	switch keyField {
+	case "send_key":
+		key = encoded.State.SendKey
+	case "recv_key":
+		key = encoded.State.RecvKey
+	default:
+		t.Fatalf("unknown ratchet key field %q", keyField)
+	}
+	if len(key) != 3 {
+		t.Fatalf("state %s tuple length mismatch: got %d want 3", keyField, len(key))
 	}
 
 	var system, role uint8
-	var key []byte
-	if err := json.Unmarshal(encoded.Key[0], &system); err != nil {
+	var keyBytes []byte
+	if err := json.Unmarshal(key[0], &system); err != nil {
 		t.Fatalf("invalid state key system tag: %v", err)
 	}
-	if err := json.Unmarshal(encoded.Key[1], &role); err != nil {
+	if err := json.Unmarshal(key[1], &role); err != nil {
 		t.Fatalf("invalid state key role tag: %v", err)
 	}
-	if err := json.Unmarshal(encoded.Key[2], &key); err != nil {
+	if err := json.Unmarshal(key[2], &keyBytes); err != nil {
 		t.Fatalf("invalid state key payload: %v", err)
 	}
 	return jsonStateUpdate{
@@ -57,7 +69,7 @@ func decodeJSONStateUpdate(t *testing.T, serialized string) jsonStateUpdate {
 		Seq:       encoded.Seq,
 		KeySystem: system,
 		KeyRole:   role,
-		Key:       key,
+		Key:       keyBytes,
 		Data:      encoded.Data,
 	}
 }
@@ -596,7 +608,7 @@ func TestServerEncryptAndUpdateJSONReturnsDirectionalRatchetState(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	update := decodeJSONStateUpdate(t, serialized)
+	update := decodeJSONStateUpdate(t, serialized, "send_key")
 	if update.KID != registration.KeyID {
 		t.Fatalf("state key ID mismatch: got %d want %d", update.KID, registration.KeyID)
 	}
@@ -642,7 +654,7 @@ func TestServerDecryptAndUpdateJSONReturnsDirectionalRatchetState(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	update := decodeJSONStateUpdate(t, serialized)
+	update := decodeJSONStateUpdate(t, serialized, "recv_key")
 	if update.KID != registration.KeyID {
 		t.Fatalf("state key ID mismatch: got %d want %d", update.KID, registration.KeyID)
 	}

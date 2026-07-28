@@ -57,7 +57,7 @@ fn empty_encrypt_state() -> EncryptState {
 fn into_send_state(state: SendState) -> EncryptState {
 	EncryptState {
 		data: into_buffer(state.data),
-		key: into_buffer(state.key.as_slice().to_vec()),
+		key: into_buffer(state.state.send_state().as_slice().to_vec()),
 		key_id: state.kid,
 		seq: state.seq,
 	}
@@ -66,7 +66,7 @@ fn into_send_state(state: SendState) -> EncryptState {
 fn into_recv_state(state: RecvState) -> EncryptState {
 	EncryptState {
 		data: into_buffer(state.data),
-		key: into_buffer(state.key.as_slice().to_vec()),
+		key: into_buffer(state.state.recv_state().as_slice().to_vec()),
 		key_id: state.kid,
 		seq: state.seq,
 	}

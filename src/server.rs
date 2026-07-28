@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: 0BSD
 
+use std::marker::PhantomData;
+
 #[cfg(feature = "pqxdh")]
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_sign};
 
-use crate::shared::{KdfState, KexDerivedSecret, roles};
+use crate::shared::{KexDerivedSecret, RatchetManager, roles};
 
 #[cfg(feature = "pqxdh")]
 type KemCiphertext = crypto_kem::mlkem768::Ciphertext;
@@ -27,8 +29,9 @@ pub struct StateUpdate<Role: roles::ChainKey> {
 	pub kid: u64,
 	/// The sequence number of the key consumed by this operation.
 	pub seq: u64,
-	pub key: KdfState<Role>,
+	pub state: RatchetManager,
 	pub data: Vec<u8>,
+	pub(crate) _role: PhantomData<Role>,
 }
 
 pub type SendState = StateUpdate<roles::ChainSendKey>;
@@ -44,18 +47,17 @@ pub trait ProviderServer {
 	) -> Option<RegResponse>;
 
 	/// Encrypt some bytes to `kid` and return the ciphertext, `kid`, consumed key sequence,
-	/// and new state of the send keychain for `kid`.
+	/// and complete ratchet state for `kid`.
 	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState>;
 	/// Encrypt some bytes to `kid` and return the ciphertext, `kid`, consumed key sequence,
-	/// and new state of the send keychain for `kid` as a JSON string.
+	/// and complete ratchet state for `kid` as a JSON string.
 	fn encrypt_and_update_json(&mut self, bytes: &[u8], kid: u64) -> Option<String>;
 	/// Decrypt a message using the recv keychain associated with the sender ID in the encrypted frame
-	/// and return the plaintext, `kid`, consumed key sequence, and new state of the recv keychain
-	/// for `kid`.
+	/// and return the plaintext, `kid`, consumed key sequence, and complete ratchet state for `kid`.
 	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<RecvState>;
 	/// Decrypt a message using the recv keychain associated with the sender ID in the encrypted frame
-	/// and return the plaintext, `kid`, consumed key sequence, and new state of the recv keychain
-	/// for `kid` as a JSON string.
+	/// and return the plaintext, `kid`, consumed key sequence, and complete ratchet state for `kid`
+	/// as a JSON string.
 	fn decrypt_and_update_json(&mut self, bytes: &[u8]) -> Option<String>;
 	/// Export the current ratchet state as JSON for all known principals
 	fn export_state(&self) -> Option<String>;

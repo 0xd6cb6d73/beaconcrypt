@@ -30,8 +30,9 @@ def test_json_updates_include_direction_tags_and_payloads():
 
     assert send_update["kid"] == beacon_kid
     assert send_update["seq"] == 2
-    assert send_update["key"][:2] == [6, 8]
-    assert len(send_update["key"][2]) == 32
+    assert send_update["state"]["send_key"][:2] == [6, 8]
+    assert len(send_update["state"]["send_key"][2]) == 32
+    assert send_update["state"]["recv_key"][:2] == [6, 9]
     assert beacon.decrypt_server_message(bytes(send_update["data"])) == outbound
 
     inbound = b"beacon to server JSON update"
@@ -43,8 +44,9 @@ def test_json_updates_include_direction_tags_and_payloads():
 
     assert recv_update["kid"] == beacon_kid
     assert recv_update["seq"] == 1
-    assert recv_update["key"][:2] == [6, 9]
-    assert len(recv_update["key"][2]) == 32
+    assert recv_update["state"]["recv_key"][:2] == [6, 9]
+    assert len(recv_update["state"]["recv_key"][2]) == 32
+    assert recv_update["state"]["send_key"][:2] == [6, 8]
     assert bytes(recv_update["data"]) == inbound
 
 

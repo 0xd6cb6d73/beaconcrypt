@@ -58,7 +58,7 @@ impl From<SendState> for EncryptStatePy {
 	fn from(value: SendState) -> Self {
 		Self {
 			data: value.data,
-			key: value.key.as_slice().to_vec(),
+			key: value.state.send_state().as_slice().to_vec(),
 			kid: value.kid,
 			seq: value.seq,
 		}
@@ -69,7 +69,7 @@ impl From<RecvState> for EncryptStatePy {
 	fn from(value: RecvState) -> Self {
 		Self {
 			data: value.data,
-			key: value.key.as_slice().to_vec(),
+			key: value.state.recv_state().as_slice().to_vec(),
 			kid: value.kid,
 			seq: value.seq,
 		}

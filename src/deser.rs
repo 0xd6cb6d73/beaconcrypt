@@ -7,6 +7,8 @@ use super::{
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, decode_sign};
 #[cfg(feature = "server")]
+use crate::server::StateUpdate;
+#[cfg(feature = "server")]
 use libsodium_rs::crypto_sign;
 #[cfg(feature = "server")]
 use serde::de::MapAccess;
@@ -286,6 +288,33 @@ impl<'de> Deserialize<'de> for RatchetManager {
 
 #[cfg(feature = "server")]
 #[derive(Deserialize)]
+#[serde(rename = "StateUpdate")]
+struct StateUpdateData {
+	kid: u64,
+	seq: u64,
+	state: RatchetManager,
+	data: Vec<u8>,
+}
+
+#[cfg(feature = "server")]
+impl<'de, Role: roles::ChainKey> Deserialize<'de> for StateUpdate<Role> {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
+		let data = StateUpdateData::deserialize(deserializer)?;
+		Ok(Self {
+			kid: data.kid,
+			seq: data.seq,
+			state: data.state,
+			data: data.data,
+			_role: PhantomData,
+		})
+	}
+}
+
+#[cfg(feature = "server")]
+#[derive(Deserialize)]
 #[serde(rename = "RemotePrincipal")]
 struct RemotePrincipalData {
 	pk: Vec<u8>,
@@ -412,6 +441,31 @@ mod tests {
 	#[test]
 	fn ratchet_manager_implements_serde_traits() {
 		assert_serde_traits::<RatchetManager>();
+	}
+
+	#[cfg(feature = "server")]
+	#[test]
+	fn state_updates_round_trip_the_complete_ratchet_state() {
+		use crate::server::{RecvState, SendState};
+
+		assert_serde_traits::<SendState>();
+		assert_serde_traits::<RecvState>();
+
+		let state = populated_manager();
+		let update = SendState {
+			kid: 7,
+			seq: 3,
+			state: state.clone(),
+			data: vec![0x31, 0x32],
+			_role: PhantomData,
+		};
+		let serialized = serde_json::to_string(&update).unwrap();
+		let restored: SendState = serde_json::from_str(&serialized).unwrap();
+
+		assert_eq!(restored.kid, update.kid);
+		assert_eq!(restored.seq, update.seq);
+		assert_eq!(restored.data, update.data);
+		assert_manager_eq(&restored.state, &state);
 	}
 
 	#[test]

@@ -8,18 +8,6 @@ const COMMITMENT_SIZE: usize = 64;
 const CRYPTO_PAYLOAD_OVERHEAD: usize = TAG_SIZE + COMMITMENT_SIZE;
 const RECEIVE_GAP_LIMIT: u64 = 50;
 
-#[derive(serde::Deserialize)]
-struct StateUpdate {
-	kid: u64,
-	seq: u64,
-	key: (u8, u8, Vec<u8>),
-	data: Vec<u8>,
-}
-
-fn deserialize_state_update(serialized: &str) -> StateUpdate {
-	serde_json::from_str(serialized).expect("state update should be valid JSON")
-}
-
 fn new_pair() -> (BeaconCryptPqxdh, BeaconCryptPqxdh) {
 	let server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
 	let server_id = server.identity_pk().to_owned();
@@ -998,8 +986,11 @@ fn encrypt_and_update_returns_the_advanced_send_state() {
 
 	assert_eq!(update.kid, response.kid);
 	assert_eq!(update.seq, crypto_frame_seq(&update.data));
-	assert_eq!(update.key.as_slice(), ratchet.send_state().as_slice());
-	assert_ne!(update.key.as_slice(), send_state_before);
+	assert_eq!(
+		update.state.send_state().as_slice(),
+		ratchet.send_state().as_slice()
+	);
+	assert_ne!(update.state.send_state().as_slice(), send_state_before);
 	assert_eq!(ratchet.recv_state().as_slice(), recv_state_before);
 	let decrypted = beacon.decrypt_message(&update.data).unwrap();
 	assert_eq!(decrypted.key_id, SERVER_KID);
@@ -1026,8 +1017,11 @@ fn decrypt_and_update_returns_the_advanced_receive_state() {
 	assert_eq!(update.kid, response.kid);
 	assert_eq!(update.seq, ciphertext.seq);
 	assert_eq!(update.data, message);
-	assert_eq!(update.key.as_slice(), ratchet.recv_state().as_slice());
-	assert_ne!(update.key.as_slice(), recv_state_before);
+	assert_eq!(
+		update.state.recv_state().as_slice(),
+		ratchet.recv_state().as_slice()
+	);
+	assert_ne!(update.state.recv_state().as_slice(), recv_state_before);
 	assert_eq!(ratchet.send_state().as_slice(), send_state_before);
 }
 
@@ -1058,13 +1052,17 @@ fn encrypt_and_update_json_returns_the_advanced_send_state() {
 	let serialized = server
 		.encrypt_and_update_json(message, response.kid)
 		.unwrap();
-	let update = deserialize_state_update(&serialized);
+	let update: SendState =
+		serde_json::from_str(&serialized).expect("send update should be valid JSON");
 	let ratchet = server.ratchet_manager(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
 	assert_eq!(update.seq, crypto_frame_seq(&update.data));
-	assert_eq!(update.key.2, ratchet.send_state().as_slice());
-	assert_ne!(update.key.2, send_state_before);
+	assert_eq!(
+		update.state.send_state().as_slice(),
+		ratchet.send_state().as_slice()
+	);
+	assert_ne!(update.state.send_state().as_slice(), send_state_before);
 	assert_eq!(ratchet.recv_state().as_slice(), recv_state_before);
 	let decrypted = beacon.decrypt_message(&update.data).unwrap();
 	assert_eq!(decrypted.key_id, SERVER_KID);
@@ -1086,14 +1084,18 @@ fn decrypt_and_update_json_returns_the_advanced_receive_state() {
 	};
 
 	let serialized = server.decrypt_and_update_json(&ciphertext).unwrap();
-	let update = deserialize_state_update(&serialized);
+	let update: RecvState =
+		serde_json::from_str(&serialized).expect("receive update should be valid JSON");
 	let ratchet = server.ratchet_manager(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
 	assert_eq!(update.seq, ciphertext.seq);
 	assert_eq!(update.data, message);
-	assert_eq!(update.key.2, ratchet.recv_state().as_slice());
-	assert_ne!(update.key.2, recv_state_before);
+	assert_eq!(
+		update.state.recv_state().as_slice(),
+		ratchet.recv_state().as_slice()
+	);
+	assert_ne!(update.state.recv_state().as_slice(), recv_state_before);
 	assert_eq!(ratchet.send_state().as_slice(), send_state_before);
 }
 

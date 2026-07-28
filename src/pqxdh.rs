@@ -21,6 +21,8 @@ use libsodium_rs::{
 	crypto_kdf, crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init,
 };
 use std::collections::HashMap;
+#[cfg(feature = "server")]
+use std::marker::PhantomData;
 use std::mem::swap;
 use std::vec;
 use zeroize::Zeroize;
@@ -508,12 +510,12 @@ impl ProviderServer for BeaconCryptPqxdh {
 	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState> {
 		let encrypted = self.encrypt_message(bytes, kid)?;
 		let ratchet = self.ratchet_manager_mut(kid)?;
-		let state = ratchet.send_state();
 		Some(SendState {
 			kid,
 			seq: encrypted.seq,
-			key: state.clone(),
+			state: ratchet.clone(),
 			data: encrypted.ciphertext,
+			_role: PhantomData,
 		})
 	}
 
@@ -524,12 +526,12 @@ impl ProviderServer for BeaconCryptPqxdh {
 	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<RecvState> {
 		let decrypted = self.decrypt_message(bytes)?;
 		let ratchet = self.ratchet_manager_mut(decrypted.key_id)?;
-		let state = ratchet.recv_state();
 		Some(RecvState {
 			kid: decrypted.key_id,
 			seq: decrypted.seq,
-			key: state.clone(),
+			state: ratchet.clone(),
 			data: decrypted.plaintext,
+			_role: PhantomData,
 		})
 	}
 

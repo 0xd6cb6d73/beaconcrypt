@@ -96,7 +96,7 @@ impl<Role: roles::ChainKey> Serialize for StateUpdate<Role> {
 		let mut state = serializer.serialize_struct("StateUpdate", 4)?;
 		state.serialize_field("kid", &self.kid)?;
 		state.serialize_field("seq", &self.seq)?;
-		state.serialize_field("key", &KdfStateRef(&self.key))?;
+		state.serialize_field("state", &self.state)?;
 		state.serialize_field("data", &ByteBuffer(&self.data))?;
 		state.end()
 	}
@@ -261,23 +261,27 @@ mod tests {
 	use serde_json::json;
 
 	#[test]
-	fn state_update_keys_use_the_ratchet_typed_array_format() {
+	fn state_updates_include_the_complete_ratchet_state() {
 		let send_bytes = [0x21; KDF_STATE_SIZE];
-		let send_ratchet = Ratchet::<roles::ChainSendKey>::from(send_bytes);
+		let mut send_state = RatchetManager::default();
+		send_state.send_key = Ratchet::<roles::ChainSendKey>::from(send_bytes);
 		let send_update = SendState {
 			kid: 7,
 			seq: 11,
-			key: send_bytes.into(),
+			state: send_state.clone(),
 			data: vec![0x31, 0x32],
+			_role: PhantomData,
 		};
 
 		let recv_bytes = [0x41; KDF_STATE_SIZE];
-		let recv_ratchet = Ratchet::<roles::ChainRecvKey>::from(recv_bytes);
+		let mut recv_state = RatchetManager::default();
+		recv_state.recv_key = Ratchet::<roles::ChainRecvKey>::from(recv_bytes);
 		let recv_update = RecvState {
 			kid: 9,
 			seq: 13,
-			key: recv_bytes.into(),
+			state: recv_state.clone(),
 			data: vec![0x51, 0x52],
+			_role: PhantomData,
 		};
 
 		let send = serde_json::to_value(send_update).unwrap();
@@ -288,7 +292,7 @@ mod tests {
 			json!({
 				"kid": 7,
 				"seq": 11,
-				"key": serde_json::to_value(send_ratchet).unwrap(),
+				"state": serde_json::to_value(send_state).unwrap(),
 				"data": [0x31, 0x32],
 			})
 		);
@@ -297,7 +301,7 @@ mod tests {
 			json!({
 				"kid": 9,
 				"seq": 13,
-				"key": serde_json::to_value(recv_ratchet).unwrap(),
+				"state": serde_json::to_value(recv_state).unwrap(),
 				"data": [0x51, 0x52],
 			})
 		);

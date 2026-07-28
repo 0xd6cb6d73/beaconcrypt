@@ -393,6 +393,7 @@ pub type KdfSendState = KdfState<roles::ChainSendKey>;
 pub type KdfRecvState = KdfState<roles::ChainRecvKey>;
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
 
+#[derive(Clone)]
 pub struct KeyMaterial {
 	key: AeadKey,
 	nonce: AeadNonce,
@@ -411,6 +412,7 @@ impl KeyMaterial {
 pub type AeadKey = crypto_aead::chacha20poly1305_ietf::Key;
 pub type AeadNonce = crypto_aead::chacha20poly1305_ietf::Nonce;
 
+#[derive(Clone)]
 struct KdfOutput<Role: roles::ChainKey> {
 	aead_key: AeadKey,
 	kdf_state: KdfState<Role>,
@@ -476,9 +478,18 @@ impl<Role: roles::ChainKey> Default for Ratchet<Role> {
 	}
 }
 
+impl<Role: roles::ChainKey> Clone for Ratchet<Role> {
+	fn clone(&self) -> Self {
+		Self {
+			state: self.state.clone(),
+		}
+	}
+}
+
 type SendChain = Ratchet<roles::ChainSendKey>;
 type RecvChain = Ratchet<roles::ChainRecvKey>;
 
+#[derive(Clone)]
 pub struct RatchetManager {
 	/// current state of the KDF on the send chain
 	send_key: SendChain,
