@@ -64,7 +64,7 @@ where
 
 struct KdfStateRef<'a, Role: roles::ChainKey>(&'a KdfState<Role>);
 
-impl<Role: roles::ChainKey> Serialize for KdfStateRef<'_, Role> {
+impl<Role: roles::ChainKey + roles::Identified> Serialize for KdfStateRef<'_, Role> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,
@@ -78,7 +78,7 @@ impl<Role: roles::ChainKey> Serialize for KdfStateRef<'_, Role> {
 	}
 }
 
-impl<Role: roles::ChainKey> Serialize for Ratchet<Role> {
+impl<Role: roles::ChainKey + roles::Identified> Serialize for Ratchet<Role> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,

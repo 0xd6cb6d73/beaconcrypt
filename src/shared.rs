@@ -15,8 +15,10 @@ use std::marker::{PhantomData, PhantomPinned};
 use std::vec;
 use zeroize::{Zeroize, Zeroizing};
 
+#[cfg(feature = "server")]
 #[path = "deser.rs"]
 mod deser;
+#[cfg(feature = "server")]
 #[path = "ser.rs"]
 mod ser;
 #[cfg(feature = "server")]
@@ -174,9 +176,11 @@ mod systems {
 	pub struct HkdfSha512;
 	#[derive(PartialEq)]
 	pub struct Pqxdh;
+	#[cfg(feature = "server")]
 	#[derive(PartialEq)]
 	pub struct Chacha20Poly1305Ietf;
 
+	#[cfg(feature = "server")]
 	#[repr(u8)]
 	#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 	pub enum Identifier {
@@ -185,6 +189,7 @@ mod systems {
 		Chacha20Poly1305Ietf = 7,
 	}
 
+	#[cfg(feature = "server")]
 	impl From<Identifier> for u8 {
 		fn from(value: Identifier) -> Self {
 			match value {
@@ -195,6 +200,7 @@ mod systems {
 		}
 	}
 
+	#[cfg(feature = "server")]
 	impl From<u8> for Identifier {
 		fn from(value: u8) -> Self {
 			match value {
@@ -205,31 +211,39 @@ mod systems {
 		}
 	}
 
+	#[cfg(feature = "server")]
 	pub trait Identified {
 		const IDENTIFIER: Identifier;
 	}
 
+	#[cfg(feature = "server")]
 	impl Identified for HkdfSha512 {
 		const IDENTIFIER: Identifier = Identifier::HkdfSha512;
 	}
 
+	#[cfg(feature = "server")]
 	impl Identified for Chacha20Poly1305Ietf {
 		const IDENTIFIER: Identifier = Identifier::Chacha20Poly1305Ietf;
 	}
 }
 pub mod roles {
-	pub trait ChainKey: Identified {}
+	pub trait ChainKey {}
 	#[derive(PartialEq)]
 	pub struct DerivedSecret;
 	pub struct ChainSendKey;
 	impl ChainKey for ChainSendKey {}
 	pub struct ChainRecvKey;
 	impl ChainKey for ChainRecvKey {}
+	#[cfg(feature = "server")]
 	pub struct EncryptionSendKey;
+	#[cfg(feature = "server")]
 	pub struct EncryptionRecvKey;
+	#[cfg(feature = "server")]
 	pub struct SendNonce;
+	#[cfg(feature = "server")]
 	pub struct RecvNonce;
 
+	#[cfg(feature = "server")]
 	#[repr(u8)]
 	#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 	pub enum Identifier {
@@ -242,6 +256,7 @@ pub mod roles {
 		RecvNonce = 13,
 	}
 
+	#[cfg(feature = "server")]
 	impl From<Identifier> for u8 {
 		fn from(value: Identifier) -> Self {
 			match value {
@@ -256,6 +271,7 @@ pub mod roles {
 		}
 	}
 
+	#[cfg(feature = "server")]
 	impl From<u8> for Identifier {
 		fn from(value: u8) -> Self {
 			match value {
@@ -270,30 +286,37 @@ pub mod roles {
 		}
 	}
 
+	#[cfg(feature = "server")]
 	pub trait Identified {
 		const IDENTIFIER: Identifier;
 	}
 
+	#[cfg(feature = "server")]
 	impl Identified for ChainSendKey {
 		const IDENTIFIER: Identifier = Identifier::ChainSendKey;
 	}
 
+	#[cfg(feature = "server")]
 	impl Identified for ChainRecvKey {
 		const IDENTIFIER: Identifier = Identifier::ChainRecvKey;
 	}
 
+	#[cfg(feature = "server")]
 	impl Identified for EncryptionSendKey {
 		const IDENTIFIER: Identifier = Identifier::EncryptionSendKey;
 	}
 
+	#[cfg(feature = "server")]
 	impl Identified for EncryptionRecvKey {
 		const IDENTIFIER: Identifier = Identifier::EncryptionRecvKey;
 	}
 
+	#[cfg(feature = "server")]
 	impl Identified for SendNonce {
 		const IDENTIFIER: Identifier = Identifier::SendNonce;
 	}
 
+	#[cfg(feature = "server")]
 	impl Identified for RecvNonce {
 		const IDENTIFIER: Identifier = Identifier::RecvNonce;
 	}
@@ -514,6 +537,7 @@ impl RatchetManager {
 		}
 	}
 
+	#[cfg(feature = "server")]
 	pub fn from_json(json: String) -> Self {
 		serde_json::from_str(&json).unwrap()
 	}

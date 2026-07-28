@@ -9,3 +9,5 @@ dependencies = [
     "pynacl>=1.6.2",
 ]
 
+[tool.uv.sources]
+beaconcrypt = { path = "../../target/wheels/beaconcrypt-0.4.0-cp311-abi3-win_amd64.whl" }
