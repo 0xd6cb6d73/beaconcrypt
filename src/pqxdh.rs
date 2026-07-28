@@ -516,6 +516,10 @@ impl ProviderServer for BeaconCryptPqxdh {
 		})
 	}
 
+	fn encrypt_and_update_json(&mut self, bytes: &[u8], kid: u64) -> Option<String> {
+		serde_json::to_string(&self.encrypt_and_update(bytes, kid)?).ok()
+	}
+
 	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<RecvState> {
 		let decrypted = self.decrypt_message(bytes)?;
 		let ratchet = self.ratchet_manager_mut(decrypted.key_id)?;
@@ -525,6 +529,10 @@ impl ProviderServer for BeaconCryptPqxdh {
 			key: state.clone(),
 			data: decrypted.plaintext,
 		})
+	}
+
+	fn decrypt_and_update_json(&mut self, bytes: &[u8]) -> Option<String> {
+		serde_json::to_string(&self.decrypt_and_update(bytes)?).ok()
 	}
 
 	fn export_state(&self) -> Option<String> {

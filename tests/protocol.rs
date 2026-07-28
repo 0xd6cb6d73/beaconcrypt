@@ -8,6 +8,17 @@ const COMMITMENT_SIZE: usize = 64;
 const CRYPTO_PAYLOAD_OVERHEAD: usize = TAG_SIZE + COMMITMENT_SIZE;
 const RECEIVE_GAP_LIMIT: u64 = 50;
 
+#[derive(serde::Deserialize)]
+struct StateUpdate {
+	kid: u64,
+	key: (u8, u8, Vec<u8>),
+	data: Vec<u8>,
+}
+
+fn deserialize_state_update(serialized: &str) -> StateUpdate {
+	serde_json::from_str(serialized).expect("state update should be valid JSON")
+}
+
 fn new_pair() -> (BeaconCryptPqxdh, BeaconCryptPqxdh) {
 	let server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
 	let server_id = server.identity_pk().to_owned();
@@ -969,7 +980,7 @@ fn server_can_retry_decryption_after_corrupted_aead_message() {
 }
 
 #[test]
-fn encrypt_and_update_returns_the_advanced_send_state() {
+fn encrypt_and_update_json_returns_the_advanced_send_state() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let message = b"server to beacon with updated state";
@@ -981,12 +992,15 @@ fn encrypt_and_update_returns_the_advanced_send_state() {
 		)
 	};
 
-	let update = server.encrypt_and_update(message, response.kid).unwrap();
+	let serialized = server
+		.encrypt_and_update_json(message, response.kid)
+		.unwrap();
+	let update = deserialize_state_update(&serialized);
 	let ratchet = server.ratchet_manager(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
-	assert_eq!(update.key.as_slice(), ratchet.send_state().as_slice());
-	assert_ne!(update.key.as_slice(), send_state_before);
+	assert_eq!(update.key.2, ratchet.send_state().as_slice());
+	assert_ne!(update.key.2, send_state_before);
 	assert_eq!(ratchet.recv_state().as_slice(), recv_state_before);
 	let decrypted = beacon.decrypt_message(&update.data).unwrap();
 	assert_eq!(decrypted.key_id, SERVER_KID);
@@ -994,7 +1008,7 @@ fn encrypt_and_update_returns_the_advanced_send_state() {
 }
 
 #[test]
-fn decrypt_and_update_returns_the_advanced_receive_state() {
+fn decrypt_and_update_json_returns_the_advanced_receive_state() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let message = b"beacon to server with updated state";
@@ -1007,14 +1021,27 @@ fn decrypt_and_update_returns_the_advanced_receive_state() {
 		)
 	};
 
-	let update = server.decrypt_and_update(&ciphertext).unwrap();
+	let serialized = server.decrypt_and_update_json(&ciphertext).unwrap();
+	let update = deserialize_state_update(&serialized);
 	let ratchet = server.ratchet_manager(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
 	assert_eq!(update.data, message);
-	assert_eq!(update.key.as_slice(), ratchet.recv_state().as_slice());
-	assert_ne!(update.key.as_slice(), recv_state_before);
+	assert_eq!(update.key.2, ratchet.recv_state().as_slice());
+	assert_ne!(update.key.2, recv_state_before);
 	assert_eq!(ratchet.send_state().as_slice(), send_state_before);
+}
+
+#[test]
+fn update_json_failures_return_none() {
+	let (mut server, _) = new_pair();
+
+	assert!(
+		server
+			.encrypt_and_update_json(b"message", u64::MAX)
+			.is_none()
+	);
+	assert!(server.decrypt_and_update_json(b"not a frame").is_none());
 }
 
 #[test]

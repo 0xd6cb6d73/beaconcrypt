@@ -9,6 +9,17 @@ use beaconcrypt::{
 const SERVER_KID: u64 = 0;
 const REGISTRATION_MESSAGE: &[u8] = b"registration ok";
 
+#[derive(serde::Deserialize)]
+struct StateUpdate {
+	kid: u64,
+	key: (u8, u8, Vec<u8>),
+	data: Vec<u8>,
+}
+
+fn deserialize_state_update(serialized: &str) -> StateUpdate {
+	serde_json::from_str(serialized).expect("failed to deserialize state update")
+}
+
 fn main() {
 	libsodium_rs::ensure_init().expect("failed to initialize libsodium");
 	let server_seed = libsodium_rs::random::bytes(ED25519_SEED_SIZE);
@@ -61,18 +72,20 @@ fn main() {
 
 	// Got the ping, maybe there's a task to send now.
 	let ping = server
-		.decrypt_and_update(&s_ping)
+		.decrypt_and_update_json(&s_ping)
 		.expect("failed to decrypt ping");
+	let ping = deserialize_state_update(&ping);
 	println!("Server got ping: {}", String::from_utf8_lossy(&ping.data));
 	println!("Key ID: {}", ping.kid);
-	println!("Ratchet state: {:?}", ping.key.as_slice());
+	println!("Ratchet state: {:?}", ping.key.2);
 
 	// The C2 needs to know what the beacon's ID is so it can encrypt to it.
 	let s_task_0 = server
-		.encrypt_and_update(b"task contents", s_reg_resp.kid)
+		.encrypt_and_update_json(b"task contents", s_reg_resp.kid)
 		.expect("failed to encrypt task");
+	let s_task_0 = deserialize_state_update(&s_task_0);
 	println!("Key ID: {}", s_task_0.kid);
-	println!("Ratchet state: {:?}", s_task_0.key.as_slice());
+	println!("Ratchet state: {:?}", s_task_0.key.2);
 	fs::write(&transport, &s_task_0.data).expect("failed to write task to transport");
 	let b_task_0 = fs::read(&transport).expect("failed to read task from transport");
 	let task_0 = beacon
@@ -91,14 +104,15 @@ fn main() {
 	fs::write(&transport, b_task_1).expect("failed to write task response to transport");
 	let s_task_1 = fs::read(&transport).expect("failed to read task response from transport");
 	let task_1 = server
-		.decrypt_and_update(&s_task_1)
+		.decrypt_and_update_json(&s_task_1)
 		.expect("failed to decrypt task response");
+	let task_1 = deserialize_state_update(&task_1);
 	println!(
 		"Server got response to first task: {}",
 		String::from_utf8_lossy(&task_1.data)
 	);
 	println!("Key ID: {}", task_1.kid);
-	println!("Ratchet state: {:?}", task_1.key.as_slice());
+	println!("Ratchet state: {:?}", task_1.key.2);
 
 	fs::remove_file(transport).expect("failed to remove transport file");
 }

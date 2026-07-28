@@ -218,7 +218,7 @@ mod systems {
 	}
 }
 pub mod roles {
-	pub trait ChainKey {}
+	pub trait ChainKey: Identified {}
 	#[derive(PartialEq)]
 	pub struct DerivedSecret;
 	pub struct ChainSendKey;

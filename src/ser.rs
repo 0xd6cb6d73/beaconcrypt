@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: 0BSD
 
 use super::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager, roles,
-	systems,
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KdfState, KeyMaterial, Ratchet, RatchetManager,
+	roles, systems,
 };
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, encode_sign};
+#[cfg(feature = "server")]
+use crate::server::StateUpdate;
 #[cfg(feature = "server")]
 use libsodium_rs::crypto_sign;
 #[cfg(feature = "server")]
@@ -60,33 +62,42 @@ where
 	}
 }
 
-impl Serialize for Ratchet<roles::ChainSendKey> {
+struct KdfStateRef<'a, Role: roles::ChainKey>(&'a KdfState<Role>);
+
+impl<Role: roles::ChainKey> Serialize for KdfStateRef<'_, Role> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,
 	{
 		let buffer = self
-			.state
+			.0
 			.as_slice()
 			.try_into()
-			.expect("ratchet state always contains KDF_STATE_SIZE bytes");
-		TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, roles::ChainSendKey>::new(buffer)
-			.serialize(serializer)
+			.expect("KDF state always contains KDF_STATE_SIZE bytes");
+		TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, Role>::new(buffer).serialize(serializer)
 	}
 }
 
-impl Serialize for Ratchet<roles::ChainRecvKey> {
+impl<Role: roles::ChainKey> Serialize for Ratchet<Role> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,
 	{
-		let buffer = self
-			.state
-			.as_slice()
-			.try_into()
-			.expect("ratchet state always contains KDF_STATE_SIZE bytes");
-		TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, roles::ChainRecvKey>::new(buffer)
-			.serialize(serializer)
+		KdfStateRef(&self.state).serialize(serializer)
+	}
+}
+
+#[cfg(feature = "server")]
+impl<Role: roles::ChainKey> Serialize for StateUpdate<Role> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let mut state = serializer.serialize_struct("StateUpdate", 3)?;
+		state.serialize_field("kid", &self.kid)?;
+		state.serialize_field("key", &KdfStateRef(&self.key))?;
+		state.serialize_field("data", &ByteBuffer(&self.data))?;
+		state.end()
 	}
 }
 
@@ -239,5 +250,51 @@ impl Serialize for SerializableKnownIds<'_> {
 			map.serialize_entry(kid, principal)?;
 		}
 		map.end()
+	}
+}
+
+#[cfg(all(test, feature = "server"))]
+mod tests {
+	use super::*;
+	use crate::server::{RecvState, SendState};
+	use serde_json::json;
+
+	#[test]
+	fn state_update_keys_use_the_ratchet_typed_array_format() {
+		let send_bytes = [0x21; KDF_STATE_SIZE];
+		let send_ratchet = Ratchet::<roles::ChainSendKey>::from(send_bytes);
+		let send_update = SendState {
+			kid: 7,
+			key: send_bytes.into(),
+			data: vec![0x31, 0x32],
+		};
+
+		let recv_bytes = [0x41; KDF_STATE_SIZE];
+		let recv_ratchet = Ratchet::<roles::ChainRecvKey>::from(recv_bytes);
+		let recv_update = RecvState {
+			kid: 9,
+			key: recv_bytes.into(),
+			data: vec![0x51, 0x52],
+		};
+
+		let send = serde_json::to_value(send_update).unwrap();
+		let recv = serde_json::to_value(recv_update).unwrap();
+
+		assert_eq!(
+			send,
+			json!({
+				"kid": 7,
+				"key": serde_json::to_value(send_ratchet).unwrap(),
+				"data": [0x31, 0x32],
+			})
+		);
+		assert_eq!(
+			recv,
+			json!({
+				"kid": 9,
+				"key": serde_json::to_value(recv_ratchet).unwrap(),
+				"data": [0x51, 0x52],
+			})
+		);
 	}
 }
