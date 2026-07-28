@@ -25,6 +25,7 @@ typedef struct {
 	beaconcrypt_buffer data;
 	beaconcrypt_buffer key;
 	uint64_t key_id;
+	uint64_t seq;
 } beaconcrypt_encrypt_state;
 
 void beaconcrypt_free_buffer(beaconcrypt_buffer buffer);
@@ -80,6 +81,7 @@ type EncryptState struct {
 	Data  []byte
 	Key   []byte
 	KeyID uint64
+	Seq   uint64
 }
 
 func NewServer(serverKID uint64) (*Server, error) {
@@ -339,6 +341,7 @@ func callStateUpdate(data []byte, call func(*C.uint8_t, C.uintptr_t) C.beaconcry
 		Data:  output,
 		Key:   key,
 		KeyID: uint64(state.key_id),
+		Seq:   uint64(state.seq),
 	}, nil
 }
 

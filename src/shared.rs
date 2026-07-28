@@ -623,6 +623,36 @@ impl<PkType: SignaturePk> RemotePrincipal<PkType> {
 pub struct Decrypted {
 	pub plaintext: Vec<u8>,
 	pub key_id: u64,
+	/// The sequence number of the key consumed to decrypt this message.
+	pub seq: u64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Encrypted {
+	pub ciphertext: Vec<u8>,
+	pub key_id: u64,
+	/// The sequence number of the key consumed to encrypt this message.
+	pub seq: u64,
+}
+
+impl std::ops::Deref for Encrypted {
+	type Target = [u8];
+
+	fn deref(&self) -> &Self::Target {
+		&self.ciphertext
+	}
+}
+
+impl std::ops::DerefMut for Encrypted {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.ciphertext
+	}
+}
+
+impl AsRef<[u8]> for Encrypted {
+	fn as_ref(&self) -> &[u8] {
+		&self.ciphertext
+	}
 }
 
 pub trait CryptoProvider {
@@ -645,8 +675,8 @@ pub trait CryptoProvider {
 	/// * `data`   - A serialized `CryptoFrame` to be decrypted
 	///
 	/// ## Returns
-	/// * `None` if some error happens, decryptio or commitment fails
-	/// * `Vec<u8>` containing the plaintext
+	/// * `None` if some error happens, or decryption or commitment verification fails
+	/// * [`Decrypted`] containing the plaintext and consumed key metadata
 	fn decrypt_message(&mut self, data: &[u8]) -> Option<Decrypted> {
 		if data.is_empty() {
 			return None;
@@ -691,6 +721,7 @@ pub trait CryptoProvider {
 						Some(Decrypted {
 							plaintext,
 							key_id: kid,
+							seq: key_seq,
 						})
 					}
 					Err(_) => None,
@@ -706,8 +737,9 @@ pub trait CryptoProvider {
 	///
 	/// ## Returns
 	/// * `None` if some other error happens.
-	/// * `Vec<u8>` containing a serialized `cryptoframe_capnp::crypto_frame`
-	fn encrypt_message(&mut self, bytes: &[u8], kid: u64) -> Option<Vec<u8>> {
+	/// * [`Encrypted`] containing a serialized `cryptoframe_capnp::crypto_frame` and consumed key
+	///   metadata
+	fn encrypt_message(&mut self, bytes: &[u8], kid: u64) -> Option<Encrypted> {
 		if bytes.is_empty() {
 			return None;
 		}
@@ -737,7 +769,11 @@ pub trait CryptoProvider {
 				let mut buffer = vec![];
 				capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).unwrap();
 				self.delete_send_key(key_seq, kid);
-				Some(buffer)
+				Some(Encrypted {
+					ciphertext: buffer,
+					key_id: kid,
+					seq: key_seq,
+				})
 			}
 			Err(_) => {
 				self.delete_send_key(key_seq, kid);

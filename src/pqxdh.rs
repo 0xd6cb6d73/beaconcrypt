@@ -491,12 +491,12 @@ impl ProviderServer for BeaconCryptPqxdh {
 		bundle.set_kem_cipher_text(reg_out.kem_ciphertext.as_bytes());
 
 		let mut buffer = vec![];
-		let ciphertext = if let Some(plaintext) = data {
+		let encrypted = if let Some(plaintext) = data {
 			self.encrypt_message(plaintext, remote_kid)?
 		} else {
 			self.encrypt_message(REGISTRATION_WITNESS, remote_kid)?
 		};
-		bundle.set_app_cipher_text(&ciphertext);
+		bundle.set_app_cipher_text(&encrypted.ciphertext);
 		capnp::serialize_packed::write_message(&mut buffer, msg.borrow_inner()).ok()?;
 
 		Some(RegResponse {
@@ -506,13 +506,14 @@ impl ProviderServer for BeaconCryptPqxdh {
 	}
 
 	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState> {
-		let ciphertext = self.encrypt_message(bytes, kid)?;
+		let encrypted = self.encrypt_message(bytes, kid)?;
 		let ratchet = self.ratchet_manager_mut(kid)?;
 		let state = ratchet.send_state();
 		Some(SendState {
 			kid,
+			seq: encrypted.seq,
 			key: state.clone(),
-			data: ciphertext,
+			data: encrypted.ciphertext,
 		})
 	}
 
@@ -526,6 +527,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 		let state = ratchet.recv_state();
 		Some(RecvState {
 			kid: decrypted.key_id,
+			seq: decrypted.seq,
 			key: state.clone(),
 			data: decrypted.plaintext,
 		})
@@ -740,8 +742,8 @@ mod tests {
 		let b1_m2 = server.encrypt_message(&message, 1).unwrap();
 		assert_ne!(b1_m1, b1_m2);
 
-		let dec_b1_m2 = b1.decrypt_message(&b1_m2).unwrap();
-		let dec_b1_m1 = b1.decrypt_message(&b1_m1).unwrap();
+		let dec_b1_m2 = b1.decrypt_message(&b1_m2.ciphertext).unwrap();
+		let dec_b1_m1 = b1.decrypt_message(&b1_m1.ciphertext).unwrap();
 		assert_eq!(dec_b1_m1.plaintext, dec_b1_m2.plaintext);
 		assert_eq!(dec_b1_m1.key_id, dec_b1_m2.key_id);
 	}

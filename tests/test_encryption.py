@@ -172,6 +172,7 @@ def test_server_encrypt_and_update_returns_ratchet_state():
 
     assert update is not None
     assert update.key_id() == beacon_kid
+    assert update.seq() == 2
     assert len(update.key()) == 32
     assert beacon.decrypt_server_message(update.data()) == message
 
@@ -187,6 +188,7 @@ def test_server_decrypt_and_update_returns_ratchet_state():
 
     assert update is not None
     assert update.key_id() == beacon_kid
+    assert update.seq() == 1
     assert len(update.key()) == 32
     assert update.data() == message
 

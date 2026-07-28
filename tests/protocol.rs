@@ -11,6 +11,7 @@ const RECEIVE_GAP_LIMIT: u64 = 50;
 #[derive(serde::Deserialize)]
 struct StateUpdate {
 	kid: u64,
+	seq: u64,
 	key: (u8, u8, Vec<u8>),
 	data: Vec<u8>,
 }
@@ -996,6 +997,7 @@ fn encrypt_and_update_returns_the_advanced_send_state() {
 	let ratchet = server.ratchet_manager(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
+	assert_eq!(update.seq, crypto_frame_seq(&update.data));
 	assert_eq!(update.key.as_slice(), ratchet.send_state().as_slice());
 	assert_ne!(update.key.as_slice(), send_state_before);
 	assert_eq!(ratchet.recv_state().as_slice(), recv_state_before);
@@ -1022,6 +1024,7 @@ fn decrypt_and_update_returns_the_advanced_receive_state() {
 	let ratchet = server.ratchet_manager(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
+	assert_eq!(update.seq, ciphertext.seq);
 	assert_eq!(update.data, message);
 	assert_eq!(update.key.as_slice(), ratchet.recv_state().as_slice());
 	assert_ne!(update.key.as_slice(), recv_state_before);
@@ -1059,6 +1062,7 @@ fn encrypt_and_update_json_returns_the_advanced_send_state() {
 	let ratchet = server.ratchet_manager(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
+	assert_eq!(update.seq, crypto_frame_seq(&update.data));
 	assert_eq!(update.key.2, ratchet.send_state().as_slice());
 	assert_ne!(update.key.2, send_state_before);
 	assert_eq!(ratchet.recv_state().as_slice(), recv_state_before);
@@ -1086,6 +1090,7 @@ fn decrypt_and_update_json_returns_the_advanced_receive_state() {
 	let ratchet = server.ratchet_manager(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
+	assert_eq!(update.seq, ciphertext.seq);
 	assert_eq!(update.data, message);
 	assert_eq!(update.key.2, ratchet.recv_state().as_slice());
 	assert_ne!(update.key.2, recv_state_before);

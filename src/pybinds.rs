@@ -32,6 +32,7 @@ pub struct EncryptStatePy {
 	data: Vec<u8>,
 	key: Vec<u8>,
 	kid: u64,
+	seq: u64,
 }
 
 #[pymethods]
@@ -47,6 +48,10 @@ impl EncryptStatePy {
 	pub fn key_id(&self) -> u64 {
 		self.kid
 	}
+
+	pub fn seq(&self) -> u64 {
+		self.seq
+	}
 }
 
 impl From<SendState> for EncryptStatePy {
@@ -55,6 +60,7 @@ impl From<SendState> for EncryptStatePy {
 			data: value.data,
 			key: value.key.as_slice().to_vec(),
 			kid: value.kid,
+			seq: value.seq,
 		}
 	}
 }
@@ -65,6 +71,7 @@ impl From<RecvState> for EncryptStatePy {
 			data: value.data,
 			key: value.key.as_slice().to_vec(),
 			kid: value.kid,
+			seq: value.seq,
 		}
 	}
 }
@@ -111,7 +118,9 @@ impl Server {
 	}
 
 	fn encrypt_to_beacon(&mut self, data: Vec<u8>, kid: u64) -> Option<Vec<u8>> {
-		self._0.encrypt_message(&data, kid)
+		self._0
+			.encrypt_message(&data, kid)
+			.map(|encrypted| encrypted.ciphertext)
 	}
 
 	fn encrypt_and_update(&mut self, data: Vec<u8>, kid: u64) -> Option<EncryptStatePy> {
@@ -173,6 +182,8 @@ impl Beacon {
 
 	fn encrypt_message_to_server(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
 		let srv_seq = self._0.server_kid();
-		self._0.encrypt_message(&data, srv_seq)
+		self._0
+			.encrypt_message(&data, srv_seq)
+			.map(|encrypted| encrypted.ciphertext)
 	}
 }

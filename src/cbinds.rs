@@ -24,6 +24,7 @@ pub struct EncryptState {
 	pub data: Buffer,
 	pub key: Buffer,
 	pub key_id: u64,
+	pub seq: u64,
 }
 
 fn empty_buffer() -> Buffer {
@@ -49,6 +50,7 @@ fn empty_encrypt_state() -> EncryptState {
 		data: empty_buffer(),
 		key: empty_buffer(),
 		key_id: 0,
+		seq: 0,
 	}
 }
 
@@ -57,6 +59,7 @@ fn into_send_state(state: SendState) -> EncryptState {
 		data: into_buffer(state.data),
 		key: into_buffer(state.key.as_slice().to_vec()),
 		key_id: state.kid,
+		seq: state.seq,
 	}
 }
 
@@ -65,6 +68,7 @@ fn into_recv_state(state: RecvState) -> EncryptState {
 		data: into_buffer(state.data),
 		key: into_buffer(state.key.as_slice().to_vec()),
 		key_id: state.kid,
+		seq: state.seq,
 	}
 }
 
@@ -381,7 +385,7 @@ fn encrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize, key_id: u6
 	let provider = unsafe { &mut *handle };
 	provider
 		.encrypt_message(data, key_id)
-		.map(into_buffer)
+		.map(|encrypted| into_buffer(encrypted.ciphertext))
 		.unwrap_or_else(empty_buffer)
 }
 

@@ -93,8 +93,9 @@ impl<Role: roles::ChainKey> Serialize for StateUpdate<Role> {
 	where
 		S: Serializer,
 	{
-		let mut state = serializer.serialize_struct("StateUpdate", 3)?;
+		let mut state = serializer.serialize_struct("StateUpdate", 4)?;
 		state.serialize_field("kid", &self.kid)?;
+		state.serialize_field("seq", &self.seq)?;
 		state.serialize_field("key", &KdfStateRef(&self.key))?;
 		state.serialize_field("data", &ByteBuffer(&self.data))?;
 		state.end()
@@ -265,6 +266,7 @@ mod tests {
 		let send_ratchet = Ratchet::<roles::ChainSendKey>::from(send_bytes);
 		let send_update = SendState {
 			kid: 7,
+			seq: 11,
 			key: send_bytes.into(),
 			data: vec![0x31, 0x32],
 		};
@@ -273,6 +275,7 @@ mod tests {
 		let recv_ratchet = Ratchet::<roles::ChainRecvKey>::from(recv_bytes);
 		let recv_update = RecvState {
 			kid: 9,
+			seq: 13,
 			key: recv_bytes.into(),
 			data: vec![0x51, 0x52],
 		};
@@ -284,6 +287,7 @@ mod tests {
 			send,
 			json!({
 				"kid": 7,
+				"seq": 11,
 				"key": serde_json::to_value(send_ratchet).unwrap(),
 				"data": [0x31, 0x32],
 			})
@@ -292,6 +296,7 @@ mod tests {
 			recv,
 			json!({
 				"kid": 9,
+				"seq": 13,
 				"key": serde_json::to_value(recv_ratchet).unwrap(),
 				"data": [0x51, 0x52],
 			})

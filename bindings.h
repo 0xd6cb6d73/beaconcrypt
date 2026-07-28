@@ -60,6 +60,7 @@ typedef struct beaconcrypt_EncryptState {
   struct beaconcrypt_Buffer data;
   struct beaconcrypt_Buffer key;
   uint64_t key_id;
+  uint64_t seq;
 } beaconcrypt_EncryptState;
 
 #ifdef __cplusplus

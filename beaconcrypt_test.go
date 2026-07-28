@@ -18,6 +18,7 @@ const (
 
 type jsonStateUpdate struct {
 	KID       uint64
+	Seq       uint64
 	KeySystem uint8
 	KeyRole   uint8
 	Key       []byte
@@ -29,6 +30,7 @@ func decodeJSONStateUpdate(t *testing.T, serialized string) jsonStateUpdate {
 
 	var encoded struct {
 		KID  uint64            `json:"kid"`
+		Seq  uint64            `json:"seq"`
 		Key  []json.RawMessage `json:"key"`
 		Data []byte            `json:"data"`
 	}
@@ -52,6 +54,7 @@ func decodeJSONStateUpdate(t *testing.T, serialized string) jsonStateUpdate {
 	}
 	return jsonStateUpdate{
 		KID:       encoded.KID,
+		Seq:       encoded.Seq,
 		KeySystem: system,
 		KeyRole:   role,
 		Key:       key,
@@ -532,6 +535,9 @@ func TestServerEncryptAndUpdateReturnsRatchetState(t *testing.T) {
 	if update.KeyID != registration.KeyID {
 		t.Fatalf("state key ID mismatch: got %d want %d", update.KeyID, registration.KeyID)
 	}
+	if update.Seq != 2 {
+		t.Fatalf("state sequence mismatch: got %d want 2", update.Seq)
+	}
 	if len(update.Key) != 32 {
 		t.Fatalf("state key length mismatch: got %d want 32", len(update.Key))
 	}
@@ -565,6 +571,9 @@ func TestServerDecryptAndUpdateReturnsRatchetState(t *testing.T) {
 	if update.KeyID != registration.KeyID {
 		t.Fatalf("state key ID mismatch: got %d want %d", update.KeyID, registration.KeyID)
 	}
+	if update.Seq != 1 {
+		t.Fatalf("state sequence mismatch: got %d want 1", update.Seq)
+	}
 	if len(update.Key) != 32 {
 		t.Fatalf("state key length mismatch: got %d want 32", len(update.Key))
 	}
@@ -590,6 +599,9 @@ func TestServerEncryptAndUpdateJSONReturnsDirectionalRatchetState(t *testing.T) 
 	update := decodeJSONStateUpdate(t, serialized)
 	if update.KID != registration.KeyID {
 		t.Fatalf("state key ID mismatch: got %d want %d", update.KID, registration.KeyID)
+	}
+	if update.Seq != 2 {
+		t.Fatalf("state sequence mismatch: got %d want 2", update.Seq)
 	}
 	if update.KeySystem != kdfStateSystemID || update.KeyRole != chainSendKeyRole {
 		t.Fatalf(
@@ -633,6 +645,9 @@ func TestServerDecryptAndUpdateJSONReturnsDirectionalRatchetState(t *testing.T) 
 	update := decodeJSONStateUpdate(t, serialized)
 	if update.KID != registration.KeyID {
 		t.Fatalf("state key ID mismatch: got %d want %d", update.KID, registration.KeyID)
+	}
+	if update.Seq != 1 {
+		t.Fatalf("state sequence mismatch: got %d want 1", update.Seq)
 	}
 	if update.KeySystem != kdfStateSystemID || update.KeyRole != chainReceiveRole {
 		t.Fatalf(
