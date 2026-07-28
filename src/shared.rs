@@ -11,7 +11,7 @@ use libsodium_rs::utils::memcmp;
 use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
 use std::any::TypeId;
 use std::collections::HashMap;
-use std::marker::PhantomData;
+use std::marker::{PhantomData, PhantomPinned};
 use std::vec;
 use zeroize::{Zeroize, Zeroizing};
 
@@ -306,6 +306,7 @@ pub struct SecretArr<const S: usize, System, Role> {
 	_system: PhantomData<System>,
 	// what role does this play within the given cryptosystem (signing key, KDF state..)
 	_role: PhantomData<Role>,
+	_pin: PhantomPinned,
 }
 
 impl<const S: usize, System: 'static, Role: 'static, OtherSystem: 'static, OtherRole: 'static>
@@ -326,6 +327,7 @@ impl<const S: usize, System, Role> From<[u8; S]> for SecretArr<S, System, Role> 
 			data: value.into(),
 			_system: PhantomData,
 			_role: PhantomData,
+			_pin: PhantomPinned,
 		}
 	}
 }
@@ -338,6 +340,7 @@ impl<const S: usize, System, Role> From<Vec<u8>> for SecretArr<S, System, Role> 
 				data: (*value.as_array::<S>().unwrap()).into(),
 				_system: PhantomData,
 				_role: PhantomData,
+				_pin: PhantomPinned,
 			}
 		} else {
 			SecretArr::default()
@@ -351,6 +354,7 @@ impl<const S: usize, System, Role> Default for SecretArr<S, System, Role> {
 			data: [0u8; S].into(),
 			_system: PhantomData,
 			_role: PhantomData,
+			_pin: PhantomPinned,
 		}
 	}
 }
@@ -376,6 +380,7 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 			data: self.data.clone(),
 			_system: self._system,
 			_role: self._role,
+			_pin: PhantomPinned,
 		}
 	}
 }
