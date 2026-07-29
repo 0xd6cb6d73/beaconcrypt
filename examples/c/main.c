@@ -32,7 +32,6 @@ static void
 free_registration_response(beaconcrypt_RegistrationResponse *response) {
   if (response != NULL) {
     free_buffer(&response->response);
-    free_buffer(&response->beacon_pk);
     response->key_id = 0;
   }
 }
@@ -40,7 +39,6 @@ free_registration_response(beaconcrypt_RegistrationResponse *response) {
 static void free_encrypt_state(beaconcrypt_EncryptState *state) {
   if (state != NULL) {
     free_buffer(&state->data);
-    free_buffer(&state->key);
     free_buffer(&state->state);
     state->key_id = 0;
   }

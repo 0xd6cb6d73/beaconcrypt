@@ -15,7 +15,7 @@ def register_beacon(
 
     response = server.register_beacon(phase_1, None)
     assert response is not None
-    assert len(response.beacon_pk()) == 32
+    assert response.key_id() > 0
     assert beacon.process_initial_message(response.serialized()) == b"\xff"
     return response.key_id()
 
@@ -81,7 +81,6 @@ def test_structured_and_json_updates_match_across_the_binding_boundary():
     assert structured_send.seq() == json_send["seq"]
     assert structured_send.data() == bytes(json_send["data"])
     assert json.loads(structured_send.state()) == json_send["state"]
-    assert structured_send.key() == bytes(json_send["state"]["send_key"][2])
 
     inbound = b"compare structured and JSON decryption updates"
     ciphertext = beacon.encrypt_message_to_server(inbound)
@@ -96,7 +95,6 @@ def test_structured_and_json_updates_match_across_the_binding_boundary():
     assert structured_recv.seq() == json_recv["seq"]
     assert structured_recv.data() == bytes(json_recv["data"])
     assert json.loads(structured_recv.state()) == json_recv["state"]
-    assert structured_recv.key() == bytes(json_recv["state"]["recv_key"][2])
 
 
 def test_seeded_export_restore_continues_sessions_and_next_kid():

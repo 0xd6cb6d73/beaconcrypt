@@ -15,15 +15,12 @@ pub struct Buffer {
 #[repr(C)]
 pub struct RegistrationResponse {
 	pub response: Buffer,
-	pub beacon_pk: Buffer,
 	pub key_id: u64,
 }
 
 #[repr(C)]
 pub struct EncryptState {
 	pub data: Buffer,
-	/// Current directional KDF state, retained as a convenience value.
-	pub key: Buffer,
 	/// Complete RatchetManager serialized as JSON.
 	pub state: Buffer,
 	pub key_id: u64,
@@ -51,7 +48,6 @@ fn into_buffer(mut data: Vec<u8>) -> Buffer {
 fn empty_encrypt_state() -> EncryptState {
 	EncryptState {
 		data: empty_buffer(),
-		key: empty_buffer(),
 		state: empty_buffer(),
 		key_id: 0,
 		seq: 0,
@@ -62,7 +58,6 @@ fn into_send_state(state: SendState) -> Option<EncryptState> {
 	let serialized_state = serde_json::to_vec(&state.state).ok()?;
 	Some(EncryptState {
 		data: into_buffer(state.data),
-		key: into_buffer(state.state.send_state().as_slice().to_vec()),
 		state: into_buffer(serialized_state),
 		key_id: state.kid,
 		seq: state.seq,
@@ -73,7 +68,6 @@ fn into_recv_state(state: RecvState) -> Option<EncryptState> {
 	let serialized_state = serde_json::to_vec(&state.state).ok()?;
 	Some(EncryptState {
 		data: into_buffer(state.data),
-		key: into_buffer(state.state.recv_state().as_slice().to_vec()),
 		state: into_buffer(serialized_state),
 		key_id: state.kid,
 		seq: state.seq,
@@ -198,7 +192,6 @@ pub extern "C" fn beaconcrypt_register_beacon(
 	if handle.is_null() {
 		return RegistrationResponse {
 			response: empty_buffer(),
-			beacon_pk: empty_buffer(),
 			key_id: 0,
 		};
 	}
@@ -206,7 +199,6 @@ pub extern "C" fn beaconcrypt_register_beacon(
 	let Some(registration) = (unsafe { input(reg_ptr, reg_len) }) else {
 		return RegistrationResponse {
 			response: empty_buffer(),
-			beacon_pk: empty_buffer(),
 			key_id: 0,
 		};
 	};
@@ -214,20 +206,17 @@ pub extern "C" fn beaconcrypt_register_beacon(
 	let Some(secret) = provider.get_shared_secret(registration) else {
 		return RegistrationResponse {
 			response: empty_buffer(),
-			beacon_pk: empty_buffer(),
 			key_id: 0,
 		};
 	};
 	let Some(response) = provider.build_registration_response(secret, message) else {
 		return RegistrationResponse {
 			response: empty_buffer(),
-			beacon_pk: empty_buffer(),
 			key_id: 0,
 		};
 	};
 	RegistrationResponse {
 		response: into_buffer(response.serialized),
-		beacon_pk: into_buffer(response.beacon_pk),
 		key_id: response.kid,
 	}
 }

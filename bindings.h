@@ -52,16 +52,11 @@ typedef struct beaconcrypt_Buffer {
 
 typedef struct beaconcrypt_RegistrationResponse {
   struct beaconcrypt_Buffer response;
-  struct beaconcrypt_Buffer beacon_pk;
   uint64_t key_id;
 } beaconcrypt_RegistrationResponse;
 
 typedef struct beaconcrypt_EncryptState {
   struct beaconcrypt_Buffer data;
-  /**
-   * Current directional KDF state, retained as a convenience value.
-   */
-  struct beaconcrypt_Buffer key;
   /**
    * Complete RatchetManager serialized as JSON.
    */

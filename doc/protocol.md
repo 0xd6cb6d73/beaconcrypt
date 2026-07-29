@@ -103,7 +103,7 @@ This message enables the beacon to obtain the elements it needs to derive the sh
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
 - Encrypt the first message if there is one, otherwise encrypt a single `0xFF` byte using a `CryptoFrame` and set `appCipherText` to its value
 - Delete the ephemeral key pair
-- Return the beacon's public key and key ID to the caller so it can register it as required
+- Return the serialized registration response and key ID to the caller
 
 Upon reception, the beacon must process this message as follows:
 - Check that `identityKey` contains the same key as the compiled-in server key

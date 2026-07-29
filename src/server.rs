@@ -15,8 +15,6 @@ type SignVerificationKey = crypto_sign::PublicKey;
 type EphemeralKexPubKey = crypto_kx::PublicKey;
 pub struct RegResponse {
 	pub serialized: Vec<u8>,
-	/// Raw Ed25519 public key of the newly registered beacon.
-	pub beacon_pk: Vec<u8>,
 	pub kid: u64,
 }
 

@@ -10,7 +10,7 @@ def register_beacon(
     assert phase_1 is not None
     reg_out = server.register_beacon(phase_1, message)
     assert reg_out is not None
-    assert len(reg_out.beacon_pk()) == 32
+    assert reg_out.key_id() > 0
     phase2 = beacon.process_initial_message(reg_out.serialized())
     assert phase2 is not None
     assert phase2 == message

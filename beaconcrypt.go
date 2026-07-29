@@ -17,13 +17,11 @@ typedef struct {
 
 typedef struct {
 	beaconcrypt_buffer response;
-	beaconcrypt_buffer beacon_pk;
 	uint64_t key_id;
 } beaconcrypt_registration_response;
 
 typedef struct {
 	beaconcrypt_buffer data;
-	beaconcrypt_buffer key;
 	beaconcrypt_buffer state;
 	uint64_t key_id;
 	uint64_t seq;
@@ -84,14 +82,11 @@ type Beacon struct {
 
 type RegistrationResponse struct {
 	Serialized []byte
-	BeaconPK   []byte
 	KeyID      uint64
 }
 
 type EncryptState struct {
 	Data []byte
-	// Key is the current directional KDF state.
-	Key []byte
 	// State is the complete ratchet state serialized as JSON.
 	State string
 	KeyID uint64
@@ -211,16 +206,10 @@ func (s *Server) RegisterBeacon(registration, initialMessage []byte) (*Registrat
 		)
 		serialized, err := copyBuffer(response.response)
 		if err != nil {
-			C.beaconcrypt_free_buffer(response.beacon_pk)
-			return nil, err
-		}
-		beaconPK, err := copyBuffer(response.beacon_pk)
-		if err != nil {
 			return nil, err
 		}
 		return &RegistrationResponse{
 			Serialized: serialized,
-			BeaconPK:   beaconPK,
 			KeyID:      uint64(response.key_id),
 		}, nil
 	})
@@ -401,12 +390,6 @@ func callStateUpdate(data []byte, call func(*C.uint8_t, C.uintptr_t) C.beaconcry
 	state := call(ptr, C.uintptr_t(len(data)))
 	output, err := copyBuffer(state.data)
 	if err != nil {
-		C.beaconcrypt_free_buffer(state.key)
-		C.beaconcrypt_free_buffer(state.state)
-		return nil, err
-	}
-	key, err := copyBuffer(state.key)
-	if err != nil {
 		C.beaconcrypt_free_buffer(state.state)
 		return nil, err
 	}
@@ -416,7 +399,6 @@ func callStateUpdate(data []byte, call func(*C.uint8_t, C.uintptr_t) C.beaconcry
 	}
 	return &EncryptState{
 		Data:  output,
-		Key:   key,
 		State: string(serializedState),
 		KeyID: uint64(state.key_id),
 		Seq:   uint64(state.seq),

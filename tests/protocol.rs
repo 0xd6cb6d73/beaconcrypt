@@ -25,10 +25,7 @@ fn register_beacon(
 	let phase_2 = server
 		.build_registration_response(reg_out, initial_message)
 		.unwrap();
-	assert_eq!(
-		phase_2.beacon_pk,
-		server.pk_by_kid(phase_2.kid).unwrap().as_bytes()
-	);
+	assert_eq!(server.pk_by_kid(phase_2.kid), Some(beacon.identity_pk()));
 	let plaintext = beacon.finish_registration(&phase_2.serialized).unwrap();
 	// `build_registration_response` insert a single 0xFF byte if no initial message is provided to satisfy the upstream specification's requirement
 	// this allows the beacon to check that keychain derivation is correct

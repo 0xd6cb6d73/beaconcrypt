@@ -175,7 +175,6 @@ def test_server_encrypt_and_update_returns_ratchet_state():
     assert update is not None
     assert update.key_id() == beacon_kid
     assert update.seq() == 2
-    assert len(update.key()) == 32
     state = json.loads(update.state())
     assert set(state) == {
         "send_key",
@@ -186,7 +185,7 @@ def test_server_encrypt_and_update_returns_ratchet_state():
         "recv_ctr",
     }
     assert state["send_key"][:2] == [6, 8]
-    assert bytes(state["send_key"][2]) == update.key()
+    assert len(state["send_key"][2]) == 32
     assert beacon.decrypt_server_message(update.data()) == message
 
 
@@ -202,7 +201,6 @@ def test_server_decrypt_and_update_returns_ratchet_state():
     assert update is not None
     assert update.key_id() == beacon_kid
     assert update.seq() == 1
-    assert len(update.key()) == 32
     state = json.loads(update.state())
     assert set(state) == {
         "send_key",
@@ -213,7 +211,7 @@ def test_server_decrypt_and_update_returns_ratchet_state():
         "recv_ctr",
     }
     assert state["recv_key"][:2] == [6, 9]
-    assert bytes(state["recv_key"][2]) == update.key()
+    assert len(state["recv_key"][2]) == 32
     assert update.data() == message
 
 

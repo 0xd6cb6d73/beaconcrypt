@@ -162,9 +162,6 @@ func registerBeaconWithInitial(t *testing.T, server *Server, beacon *Beacon, mes
 	if regOut.KeyID == 0 {
 		t.Fatal("expected non-zero beacon key id")
 	}
-	if len(regOut.BeaconPK) != 32 {
-		t.Fatalf("beacon public key length mismatch: got %d want 32", len(regOut.BeaconPK))
-	}
 	return regOut
 }
 
@@ -599,9 +596,6 @@ func TestServerEncryptAndUpdateReturnsRatchetState(t *testing.T) {
 	if update.Seq != 2 {
 		t.Fatalf("state sequence mismatch: got %d want 2", update.Seq)
 	}
-	if len(update.Key) != 32 {
-		t.Fatalf("state key length mismatch: got %d want 32", len(update.Key))
-	}
 	system, role, key := decodeJSONRatchetKey(t, json.RawMessage(update.State), "send_key")
 	if system != kdfStateSystemID || role != chainSendKeyRole {
 		t.Fatalf(
@@ -612,8 +606,8 @@ func TestServerEncryptAndUpdateReturnsRatchetState(t *testing.T) {
 			chainSendKeyRole,
 		)
 	}
-	if !bytes.Equal(update.Key, key) {
-		t.Fatalf("directional key does not match complete state: got %x want %x", update.Key, key)
+	if len(key) != ratchetStateBytes {
+		t.Fatalf("state key length mismatch: got %d want %d", len(key), ratchetStateBytes)
 	}
 	plaintext, err := beacon.DecryptServerMessage(update.Data)
 	if err != nil {
@@ -648,9 +642,6 @@ func TestServerDecryptAndUpdateReturnsRatchetState(t *testing.T) {
 	if update.Seq != 1 {
 		t.Fatalf("state sequence mismatch: got %d want 1", update.Seq)
 	}
-	if len(update.Key) != 32 {
-		t.Fatalf("state key length mismatch: got %d want 32", len(update.Key))
-	}
 	system, role, key := decodeJSONRatchetKey(t, json.RawMessage(update.State), "recv_key")
 	if system != kdfStateSystemID || role != chainReceiveRole {
 		t.Fatalf(
@@ -661,8 +652,8 @@ func TestServerDecryptAndUpdateReturnsRatchetState(t *testing.T) {
 			chainReceiveRole,
 		)
 	}
-	if !bytes.Equal(update.Key, key) {
-		t.Fatalf("directional key does not match complete state: got %x want %x", update.Key, key)
+	if len(key) != ratchetStateBytes {
+		t.Fatalf("state key length mismatch: got %d want %d", len(key), ratchetStateBytes)
 	}
 	if !bytes.Equal(update.Data, message) {
 		t.Fatalf("beacon-to-server decrypt mismatch: got %q want %q", update.Data, message)
@@ -720,9 +711,6 @@ func TestStructuredAndJSONUpdatesMatchAcrossTheCGoBoundary(t *testing.T) {
 	if !bytes.Equal(structuredSend.Data, jsonSend.Data) {
 		t.Fatalf("send update data mismatch: got %x want %x", structuredSend.Data, jsonSend.Data)
 	}
-	if !bytes.Equal(structuredSend.Key, jsonSend.Key) {
-		t.Fatalf("send update key mismatch: got %x want %x", structuredSend.Key, jsonSend.Key)
-	}
 	assertJSONEqual(t, structuredSend.State, string(jsonSend.State))
 
 	inbound := []byte("compare structured and JSON decryption updates")
@@ -750,9 +738,6 @@ func TestStructuredAndJSONUpdatesMatchAcrossTheCGoBoundary(t *testing.T) {
 	}
 	if !bytes.Equal(structuredRecv.Data, jsonRecv.Data) {
 		t.Fatalf("receive update data mismatch: got %x want %x", structuredRecv.Data, jsonRecv.Data)
-	}
-	if !bytes.Equal(structuredRecv.Key, jsonRecv.Key) {
-		t.Fatalf("receive update key mismatch: got %x want %x", structuredRecv.Key, jsonRecv.Key)
 	}
 	assertJSONEqual(t, structuredRecv.State, string(jsonRecv.State))
 }

@@ -16,10 +16,6 @@ impl RegResponsePy {
 		&self._0.serialized
 	}
 
-	pub fn beacon_pk(&self) -> &[u8] {
-		&self._0.beacon_pk
-	}
-
 	pub fn key_id(&self) -> u64 {
 		self._0.kid
 	}
@@ -34,7 +30,6 @@ impl From<RegResponse> for RegResponsePy {
 #[pyclass(name = "EncryptState")]
 pub struct EncryptStatePy {
 	data: Vec<u8>,
-	key: Vec<u8>,
 	state: String,
 	kid: u64,
 	seq: u64,
@@ -44,10 +39,6 @@ pub struct EncryptStatePy {
 impl EncryptStatePy {
 	pub fn data(&self) -> &Vec<u8> {
 		&self.data
-	}
-
-	pub fn key(&self) -> &[u8] {
-		&self.key
 	}
 
 	/// Return the complete ratchet state as JSON.
@@ -71,7 +62,6 @@ impl TryFrom<SendState> for EncryptStatePy {
 		let state = serde_json::to_string(&value.state)?;
 		Ok(Self {
 			data: value.data,
-			key: value.state.send_state().as_slice().to_vec(),
 			state,
 			kid: value.kid,
 			seq: value.seq,
@@ -86,7 +76,6 @@ impl TryFrom<RecvState> for EncryptStatePy {
 		let state = serde_json::to_string(&value.state)?;
 		Ok(Self {
 			data: value.data,
-			key: value.state.recv_state().as_slice().to_vec(),
 			state,
 			kid: value.kid,
 			seq: value.seq,
