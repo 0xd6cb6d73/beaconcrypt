@@ -48,11 +48,15 @@ Beaconcrypt uses a commitment scheme based on [`CTX` by Chan and Rogaway](https:
 -----------------------------------------------------
 | ChaCha20-Poly1305 IETF Tag (T) - 16 bytes         |
 -----------------------------------------------------
+| Seq for K as little-endian (S) - 8 bytes          |
+-----------------------------------------------------
+| Principal ID as little-endian (I) - 8 bytes       |
+-----------------------------------------------------
 ```
 
 The commitment itself, which is 64 bytes, is then computed using the following, where `H` is the unkeyed BLAKE2b hash function with 512 bits of output:
 ```
-H(K, N, A, T)
+H(K, N, A, T, S, I)
 ```
 
 A canonicalization scheme would have to be used to encode the various elements being included within the `CTX` transcript if the fixed-size assumption were to become false.
