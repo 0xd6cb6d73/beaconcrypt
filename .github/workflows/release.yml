@@ -5,6 +5,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  CAPNP_VERSION: 1.5.0
 
 jobs:
   unix-build:
@@ -19,14 +20,23 @@ jobs:
     - uses: actions/checkout@v7
       with:
         submodules: recursive
-    - name: Install cap'n proto
+    - name: Restore cached cap'n proto
+      id: cache-capnproto
+      uses: actions/cache@v6
+      with:
+        path: ~/.local/capnproto
+        key: capnproto-build-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.CAPNP_VERSION }}
+    - name: Build cap'n proto
+      if: steps.cache-capnproto.outputs.cache-hit != 'true'
       run: |
-        curl -O https://capnproto.org/capnproto-c++-1.5.0.tar.gz
-        tar zxf capnproto-c++-1.5.0.tar.gz
-        cd capnproto-c++-1.5.0
-        ./configure
+        curl --fail --location --output "capnproto-c++-${CAPNP_VERSION}.tar.gz" "https://capnproto.org/capnproto-c++-${CAPNP_VERSION}.tar.gz"
+        tar zxf "capnproto-c++-${CAPNP_VERSION}.tar.gz"
+        cd "capnproto-c++-${CAPNP_VERSION}"
+        ./configure --prefix="$HOME/.local/capnproto"
         make -j4 check
-        sudo make install
+        make install
+    - name: Add cap'n proto to PATH
+      run: echo "$HOME/.local/capnproto/bin" >> "$GITHUB_PATH"
     - name: Build
       run: |
         rustup component add rust-src --toolchain nightly
