@@ -33,6 +33,8 @@ pub const SYM_RATCHET_INFO: &[u8; 41] = b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1
 pub const AEAD_KEY_LEN: usize = 32;
 /// crypto_aead::chacha20poly1305_ietf::NPUBBYTES
 pub const AEAD_NONCE_LEN: usize = 12;
+/// crypto_aead::chacha20poly1305_ietf::ABYTES
+pub const AEAD_TAG_LEN: usize = 16;
 pub const KDF_RATCHET_OUTPUT_LEN: usize = AEAD_KEY_LEN + KDF_STATE_SIZE + AEAD_NONCE_LEN;
 /// crypto_scalarmult::BYTES
 #[cfg(feature = "pqxdh")]
@@ -45,8 +47,7 @@ pub const ED25519_SEED_SIZE: usize = 32;
 /// Byte sequence used to test successful keychain derivation during registration. Used only if the server doesn't provide an initial message
 pub const REGISTRATION_WITNESS: &[u8; 1] = &[0xFF; 1];
 pub const COMMITMENT_SIZE: usize = 64;
-/// crypto_aead::chacha20poly1305_ietf::ABYTES
-pub const MESSAGE_OVERHEAD: usize = COMMITMENT_SIZE + 16;
+pub const MESSAGE_OVERHEAD: usize = COMMITMENT_SIZE + AEAD_TAG_LEN;
 
 #[repr(u8)]
 #[derive(PartialEq)]
@@ -914,7 +915,11 @@ fn build_commitment(
 	seq: u64,
 	kid: u64,
 ) -> Option<Vec<u8>> {
-	if tag.len() != crypto_aead::chacha20poly1305_ietf::ABYTES {
+	if tag.len() != AEAD_TAG_LEN
+		|| secret.key.as_bytes().len() != AEAD_KEY_LEN
+		|| secret.nonce.as_bytes().len() != AEAD_NONCE_LEN
+		|| ad.len() != AD_SIZE
+	{
 		return None;
 	}
 	let key = secret.key().as_bytes();
@@ -1195,7 +1200,7 @@ mod tests {
 	/// import hashlib
 	/// key = bytes([0x11]) * 32
 	/// nonce = bytes([0x22]) * 12
-	/// ad = b"beaconcrypt-test-associated-data"
+	/// ad = bytes([0x41]) * 153
 	/// tag = bytes([0x33]) * 16
 	/// seq = (0x44).to_bytes(8, "little")
 	/// kid = (0x55).to_bytes(8, "little")
@@ -1207,20 +1212,17 @@ mod tests {
 			key: [0x11; AEAD_KEY_LEN].into(),
 			nonce: [0x22; AEAD_NONCE_LEN].into(),
 		};
-		let associated_data = b"beaconcrypt-test-associated-data";
-		let tag = [0x33; crypto_aead::chacha20poly1305_ietf::ABYTES];
-		let expected = [
-			0x79, 0xe9, 0x43, 0x04, 0x98, 0xeb, 0x1e, 0x76, 0x9e, 0xc1, 0xd5, 0x20, 0x33, 0x87,
-			0x9d, 0x4a, 0xb3, 0x9c, 0xc7, 0xfe, 0xda, 0xe4, 0xaa, 0x12, 0x87, 0x62, 0x97, 0xcb,
-			0x36, 0xd3, 0x1b, 0x98, 0x81, 0x93, 0x3d, 0x34, 0x54, 0xca, 0xf6, 0x96, 0x08, 0xf4,
-			0xf8, 0xf0, 0x1e, 0x07, 0x44, 0xf6, 0xb9, 0xb5, 0x63, 0x0a, 0xb3, 0x03, 0xef, 0xea,
-			0x88, 0xf5, 0x25, 0x5b, 0x97, 0xac, 0x2a, 0x6a,
-		];
+		let associated_data = [0x41; AD_SIZE];
+		let tag = [0x33; AEAD_TAG_LEN];
+		let expected = decode_hex::<COMMITMENT_SIZE>(
+			"39a3222768c214f7ceb291c4ba7df117a9d537a5ce41a61c33aba27e5f356153\
+			 a4a1090295f03aae7e684e03710fd818217a7c8d1420a4b4a5f81d86893a435d",
+		);
 		let key_seq = 0x44u64;
 		let key_id = 0x55u64;
 
 		assert_eq!(
-			build_commitment(&secret, associated_data, &tag, key_seq, key_id).unwrap(),
+			build_commitment(&secret, &associated_data, &tag, key_seq, key_id).unwrap(),
 			expected
 		);
 	}
@@ -1231,10 +1233,11 @@ mod tests {
 			key: [0x51; AEAD_KEY_LEN].into(),
 			nonce: [0x52; AEAD_NONCE_LEN].into(),
 		};
+		let associated_data = [0x54; AD_SIZE];
 
 		for tag_len in 0..=32 {
-			let result = build_commitment(&secret, b"associated data", &vec![0x53; tag_len], 1, 2);
-			if tag_len == crypto_aead::chacha20poly1305_ietf::ABYTES {
+			let result = build_commitment(&secret, &associated_data, &vec![0x53; tag_len], 1, 2);
+			if tag_len == AEAD_TAG_LEN {
 				assert!(result.is_some());
 			} else {
 				assert!(result.is_none(), "accepted a {tag_len}-byte AEAD tag");
@@ -1243,15 +1246,40 @@ mod tests {
 	}
 
 	#[test]
+	fn commitment_rejects_non_beaconcrypt_associated_data_lengths() {
+		let secret = KeyMaterial {
+			key: [0x51; AEAD_KEY_LEN].into(),
+			nonce: [0x52; AEAD_NONCE_LEN].into(),
+		};
+		let tag = [0x53; AEAD_TAG_LEN];
+
+		for ad_len in [0, AD_SIZE - 1, AD_SIZE, AD_SIZE + 1] {
+			let result = build_commitment(&secret, &vec![0x54; ad_len], &tag, 1, 2);
+			if ad_len == AD_SIZE {
+				assert!(result.is_some());
+			} else {
+				assert!(
+					result.is_none(),
+					"accepted {ad_len} bytes of associated data"
+				);
+			}
+		}
+	}
+
+	#[test]
 	fn rfc8439_aead_and_commitment_known_answer() {
-		// The AEAD inputs and expected ciphertext/tag are from RFC 8439 section 2.8.2.
+		// The key, nonce, plaintext, and expected ciphertext are from RFC 8439 section
+		// 2.8.2. Its 12-byte associated data is zero-padded to beaconcrypt's AD_SIZE;
+		// this leaves the ciphertext unchanged but produces a beaconcrypt-specific tag.
 		// Independent reproductions and outer commitment calculations are in the Python
 		// and Go KAT generators (`[rfc8439-and-commitment]`).
 		let key = decode_hex::<AEAD_KEY_LEN>(
 			"808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f",
 		);
 		let nonce = decode_hex::<AEAD_NONCE_LEN>("070000004041424344454647");
-		let associated_data = decode_hex::<12>("50515253c0c1c2c3c4c5c6c7");
+		let rfc_associated_data = decode_hex::<12>("50515253c0c1c2c3c4c5c6c7");
+		let mut associated_data = [0; AD_SIZE];
+		associated_data[..rfc_associated_data.len()].copy_from_slice(&rfc_associated_data);
 		let plaintext = b"Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.";
 		let expected_ciphertext = decode_hex::<114>(
 			"d31a8d34648e60db7b86afbc53ef7ec2a4aded51296e08fea9e2b5a736ee62d6\
@@ -1259,10 +1287,10 @@ mod tests {
 			 92ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc\
 			 3ff4def08e4b7a9de576d26586cec64b6116",
 		);
-		let expected_tag = decode_hex::<16>("1ae10b594f09e26a7e902ecbd0600691");
+		let expected_tag = decode_hex::<AEAD_TAG_LEN>("88a5fc9f4d18b9c9d83fefd4f24e5fc4");
 		let expected_commitment = decode_hex::<COMMITMENT_SIZE>(
-			"cccff653b25cf3c21703c6648f4388867be568d607148b026045306e9cc21b37\
-			 acd3e91c883f0eb70adde401e33871ae8171f1fe81341938fb9d73afd76c91ba",
+			"1ea461abc0b5d491a23c7437f745548e9647a91c8ed34b29b171859a72e33dc5\
+			 82554e0c807220fc0433bedd1f3c4c7353d381683b15fb8d91749c7463cccc1d",
 		);
 		let aead_key: AeadKey = key.into();
 		let aead_nonce: AeadNonce = nonce.into();
@@ -1389,12 +1417,14 @@ mod tests {
 			"967712731b5091e4e42b5fa6241e3b02108fedc55c561d80af04c2095d3edbe7",
 		);
 		let nonce = decode_hex::<AEAD_NONCE_LEN>("000102030405060708090a0b");
-		let ad_one = decode_hex::<16>("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff");
-		let ad_two = decode_hex::<16>("3a09eec3daf672a00f13351df1986203");
+		let mut ad_one = [0; AD_SIZE];
+		for (index, byte) in ad_one.iter_mut().enumerate() {
+			*byte = index as u8;
+		}
+		let mut ad_two = ad_one;
+		ad_two[..16].copy_from_slice(&decode_hex::<16>("d62e8ca42f6f6e6eb114ca6035df7b24"));
 		let ciphertext = decode_hex::<16>("00112233445566778899aabbccddeeff");
-		let tag = decode_hex::<{ crypto_aead::chacha20poly1305_ietf::ABYTES }>(
-			"8867608090128f8c1a4711d553773215",
-		);
+		let tag = decode_hex::<AEAD_TAG_LEN>("a21c712bf7f8d516c2d0126087060814");
 		let expected_plaintext_one = decode_hex::<16>("89ea2a336d42c3373f1a954854c0e09c");
 		let expected_plaintext_two = decode_hex::<16>("3c6ab3eb035de373e2b5d4a81a3cd13f");
 		let aead_key_one: AeadKey = key_one.into();
@@ -1424,12 +1454,12 @@ mod tests {
 		let commitment_one = commitment_for_test(key_one, nonce, &ad_one, &tag, 1, 7);
 		let commitment_two = commitment_for_test(key_two, nonce, &ad_two, &tag, 1, 7);
 		let expected_commitment_one = decode_hex::<COMMITMENT_SIZE>(
-			"0573b9e328176e47de0251b211aa5347c72a61abf8e095bc7ac854982711f135\
-			 25c0741341ac59f7db41163fba77aadf8592df71b25a3b02099b6b4b00a3c403",
+			"9cda090561a1140c1e7fdee457c9057be213b87a65e895078564be7fa13360df\
+			 fb48bab92db64d3800fd90ba2fc4d8c174add55cbbf0b0bff98eb74b32c1e06e",
 		);
 		let expected_commitment_two = decode_hex::<COMMITMENT_SIZE>(
-			"322268a07252f76c4e894cab1e124db622ecf299f5050ed23768dd79b9e804ad\
-			 22c48e36ff3b0e3e1c6984ee81d96c9d2900672298c6350d8413dbb49b5dcdd1",
+			"f092a14b1da49bad4c64f3bacc67480d7dd367f5ba90fa3f79492aea29cd7707\
+			 49b0aefdc03fa3736dd11ee3c79038a4a4d10a64959042dd97007690a7506bb2",
 		);
 		assert_eq!(commitment_one, expected_commitment_one);
 		assert_eq!(commitment_two, expected_commitment_two);

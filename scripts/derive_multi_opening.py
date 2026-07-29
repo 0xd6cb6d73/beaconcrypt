@@ -23,6 +23,7 @@ POLY1305_P = (1 << 130) - 5
 UINT128_MODULUS = 1 << 128
 UINT32_MASK = (1 << 32) - 1
 POLY1305_R_MASK = 0x0FFFFFFC0FFFFFFC0FFFFFFC0FFFFFFF
+AD_SIZE = 153
 
 
 def rotate_left_32(value: int, shift: int) -> int:
@@ -97,33 +98,53 @@ def poly1305_block(block: bytes) -> int:
 def aead_tag(
     key: bytes, nonce: bytes, associated_data: bytes, ciphertext: bytes
 ) -> bytes:
-    """Compute the RFC 8439 tag for the fixture's two full data blocks."""
+    """Compute the RFC 8439 AEAD tag."""
 
-    assert len(associated_data) == 16
     assert len(ciphertext) == 16
     r, s = poly1305_parameters(key, nonce)
-    lengths = len(associated_data).to_bytes(8, "little") + len(ciphertext).to_bytes(
-        8, "little"
+    padded_data = (
+        associated_data
+        + bytes(-len(associated_data) % 16)
+        + ciphertext
+        + bytes(-len(ciphertext) % 16)
+        + len(associated_data).to_bytes(8, "little")
+        + len(ciphertext).to_bytes(8, "little")
     )
-    accumulator = (
-        poly1305_block(associated_data) * pow(r, 3, POLY1305_P)
-        + poly1305_block(ciphertext) * pow(r, 2, POLY1305_P)
-        + poly1305_block(lengths) * r
-    ) % POLY1305_P
+    accumulator = 0
+    for offset in range(0, len(padded_data), 16):
+        block = padded_data[offset : offset + 16]
+        accumulator = ((accumulator + poly1305_block(block)) * r) % POLY1305_P
     return ((accumulator + s) % UINT128_MODULUS).to_bytes(16, "little")
 
 
 def solve_associated_data(
-    key: bytes, nonce: bytes, ciphertext: bytes, desired_tag: bytes
+    key: bytes,
+    nonce: bytes,
+    ciphertext: bytes,
+    desired_tag: bytes,
+    associated_data_template: bytes,
 ) -> tuple[int, bytes] | None:
     """Solve the first Poly1305 block for a second valid AEAD opening."""
 
+    assert len(associated_data_template) == AD_SIZE
     r, s = poly1305_parameters(key, nonce)
-    lengths = (16).to_bytes(8, "little") + len(ciphertext).to_bytes(8, "little")
-    fixed_terms = (
-        poly1305_block(ciphertext) * pow(r, 2, POLY1305_P) + poly1305_block(lengths) * r
+    padded_data = (
+        associated_data_template
+        + bytes(-len(associated_data_template) % 16)
+        + ciphertext
+        + bytes(-len(ciphertext) % 16)
+        + len(associated_data_template).to_bytes(8, "little")
+        + len(ciphertext).to_bytes(8, "little")
     )
-    inverse_r_cubed = pow(pow(r, 3, POLY1305_P), -1, POLY1305_P)
+    blocks = [
+        padded_data[offset : offset + 16] for offset in range(0, len(padded_data), 16)
+    ]
+    fixed_terms = sum(
+        poly1305_block(block) * pow(r, len(blocks) - index, POLY1305_P)
+        for index, block in enumerate(blocks)
+        if index != 0
+    )
+    inverse_unknown_coefficient = pow(pow(r, len(blocks), POLY1305_P), -1, POLY1305_P)
     tag_value = int.from_bytes(desired_tag, "little")
 
     # The final 128-bit tag discards the high bits of accumulator + s.
@@ -135,14 +156,15 @@ def solve_associated_data(
         if target_accumulator >= POLY1305_P:
             continue
         associated_data_block = (
-            (target_accumulator - fixed_terms) * inverse_r_cubed
+            (target_accumulator - fixed_terms) * inverse_unknown_coefficient
         ) % POLY1305_P
         if UINT128_MODULUS <= associated_data_block < 2 * UINT128_MODULUS:
-            associated_data = (associated_data_block - UINT128_MODULUS).to_bytes(
+            associated_data = bytearray(associated_data_template)
+            associated_data[:16] = (associated_data_block - UINT128_MODULUS).to_bytes(
                 16, "little"
             )
-            if aead_tag(key, nonce, associated_data, ciphertext) == desired_tag:
-                return carry, associated_data
+            if aead_tag(key, nonce, bytes(associated_data), ciphertext) == desired_tag:
+                return carry, bytes(associated_data)
     return None
 
 
@@ -179,20 +201,22 @@ def print_integer(name: str, value: int) -> None:
 def main() -> None:
     key_one = bytes(range(32))
     nonce = bytes(range(12))
-    associated_data_one = bytes(range(0xF0, 0x100))
+    associated_data_one = bytes(range(AD_SIZE))
     ciphertext = bytes.fromhex("00112233445566778899aabbccddeeff")
     plaintext_one = chacha20_xor(ciphertext, key_one, nonce)
     tag = aead_tag(key_one, nonce, associated_data_one, ciphertext)
 
     # Deterministically enumerate unrelated second keys until the Poly1305
-    # equation has a solution that encodes as one full 16-byte AD block.
+    # equation has a solution that encodes as the first full AD block.
     attempt = 0
     while True:
         attempt += 1
         key_two = hashlib.sha256(
             b"beaconcrypt-ctx-fixture-" + attempt.to_bytes(4, "little")
         ).digest()
-        solution = solve_associated_data(key_two, nonce, ciphertext, tag)
+        solution = solve_associated_data(
+            key_two, nonce, ciphertext, tag, associated_data_one
+        )
         if solution is not None:
             carry, associated_data_two = solution
             break
@@ -204,7 +228,7 @@ def main() -> None:
     target_accumulator = (
         (int.from_bytes(tag, "little") - s_two) % UINT128_MODULUS
     ) + carry * UINT128_MODULUS
-    encoded_associated_data_two = poly1305_block(associated_data_two)
+    encoded_associated_data_two = poly1305_block(associated_data_two[:16])
     commitment_one = commitment(
         key_one, nonce, associated_data_one, tag, sequence=1, key_id=7
     )
@@ -215,11 +239,12 @@ def main() -> None:
 
     # Detect accidental drift from the checked-in Rust fixture.
     assert attempt == 1
-    assert carry == 0
-    assert associated_data_two.hex() == "3a09eec3daf672a00f13351df1986203"
+    assert carry == 2
+    assert associated_data_two[:16].hex() == "d62e8ca42f6f6e6eb114ca6035df7b24"
+    assert associated_data_two[16:] == associated_data_one[16:]
     assert plaintext_one.hex() == "89ea2a336d42c3373f1a954854c0e09c"
     assert plaintext_two.hex() == "3c6ab3eb035de373e2b5d4a81a3cd13f"
-    assert tag.hex() == "8867608090128f8c1a4711d553773215"
+    assert tag.hex() == "a21c712bf7f8d516c2d0126087060814"
 
     print("[chacha20poly1305-multi-opening-derivation]")
     print_value("attempt", attempt)

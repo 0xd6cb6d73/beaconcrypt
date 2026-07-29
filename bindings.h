@@ -24,6 +24,11 @@
  */
 #define beaconcrypt_AEAD_NONCE_LEN 12
 
+/**
+ * crypto_aead::chacha20poly1305_ietf::ABYTES
+ */
+#define beaconcrypt_AEAD_TAG_LEN 16
+
 #define beaconcrypt_KDF_RATCHET_OUTPUT_LEN ((beaconcrypt_AEAD_KEY_LEN + beaconcrypt_KDF_STATE_SIZE) + beaconcrypt_AEAD_NONCE_LEN)
 
 /**
@@ -37,10 +42,7 @@
 
 #define beaconcrypt_COMMITMENT_SIZE 64
 
-/**
- * crypto_aead::chacha20poly1305_ietf::ABYTES
- */
-#define beaconcrypt_MESSAGE_OVERHEAD (beaconcrypt_COMMITMENT_SIZE + 16)
+#define beaconcrypt_MESSAGE_OVERHEAD (beaconcrypt_COMMITMENT_SIZE + beaconcrypt_AEAD_TAG_LEN)
 
 typedef struct beaconcrypt_BeaconCryptPqxdh beaconcrypt_BeaconCryptPqxdh;
 

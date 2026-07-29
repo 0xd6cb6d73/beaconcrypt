@@ -28,7 +28,7 @@ The construction begins with deterministic, non-secret values:
 | --- | --- |
 | `K1` | `000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f` |
 | `N` | `000102030405060708090a0b` |
-| `A1` | `f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff` |
+| `A1` | The 153-byte sequence `00 01 ... 98` |
 | `C` | `00112233445566778899aabbccddeeff` |
 
 The nonce is shared across different keys, which does not violate
@@ -56,23 +56,25 @@ block `B`, define:
 m(B) = LE128(B) + 2^128
 ```
 
-Both associated data and ciphertext are exactly 16 bytes, so neither needs
-padding. The third block is the RFC 8439 length block:
+The 153-byte associated data is padded with seven zero bytes and encoded as ten
+Poly1305 blocks. The 16-byte ciphertext contributes one block, followed by the
+RFC 8439 length block:
 
 ```text
 L = LE64(len(A)) || LE64(len(C))
-  = LE64(16)     || LE64(16)
+  = LE64(153)    || LE64(16)
 ```
 
-The Poly1305 accumulator for these three blocks is therefore:
+Call these twelve blocks `B0 ... B11`, where `B0 ... B9` encode the padded
+associated data, `B10` is the ciphertext, and `B11` is `L`. The accumulator is:
 
 ```text
-acc = (m(A) * r^3 + m(C) * r^2 + m(L) * r) mod p
+acc = sum(m(Bi) * r^(12-i), i=0..11) mod p
 T   = LE128((acc + s) mod 2^128)
 ```
 
-This form makes the associated-data block a single unknown in a linear
-equation modulo `p`.
+The construction keeps `B1 ... B11` fixed and solves `B0`, leaving 137 of the
+153 associated-data bytes unchanged.
 
 ## Constructing the second opening
 
@@ -97,31 +99,30 @@ target_acc(carry) = base + carry * 2^128
 Only candidates below `p` are possible, so checking `carry` values `0..3`
 exhausts the accumulator representatives.
 
-For each candidate accumulator, solve for the encoded associated-data block:
+For each candidate accumulator, let `F` be the fixed contribution from blocks
+`B1 ... B11` and solve for the first associated-data block:
 
 ```text
-m(A2) =
-    (target_acc
-     - m(C) * r2^2
-     - m(L) * r2)
-    * inverse(r2^3, p)
+m(B0) =
+    (target_acc - F)
+    * inverse(r2^12, p)
     mod p
 ```
 
 A solution encodes one full 16-byte Poly1305 block exactly when:
 
 ```text
-2^128 <= m(A2) < 2^129
+2^128 <= m(B0) < 2^129
 ```
 
-In that case:
+In that case, the first 16 bytes of `A2` are:
 
 ```text
-A2 = LE128^-1(m(A2) - 2^128)
+A2[0..16] = LE128^-1(m(B0) - 2^128)
 ```
 
-The first candidate key (`attempt = 1`) and first accumulator representative
-(`carry = 0`) satisfy this condition. Finally:
+The first candidate key (`attempt = 1`) and third accumulator representative
+(`carry = 2`) satisfy this condition. Finally:
 
 ```text
 P2 = C XOR ChaCha20_Stream(K2, N, counter=1)
@@ -134,22 +135,22 @@ rather than their little-endian byte encoding, are:
 | --- | --- |
 | `r2` after clamping | `0x0dfd7a580bc3b19401df45ac0f2d360c` |
 | `s2` | `0xc9bc67ea96e7232f597298455a365448` |
-| `target_acc(0)` | `0x4b760f693e2a23eb331c7a4b262a1340` |
-| `m(A2)` | `0x1036298f11d35130fa072f6dac3ee093a` |
+| `target_acc(2)` | `0x24a4b9e9cc92bad92bd6360b1d13ac85a` |
+| `m(B0)` | `0x1247bdf3560ca14b16e6e6f2fa48c2ed6` |
 
 ## Derived fixture
 
 | Name | Value |
 | --- | --- |
 | `attempt` | `1` |
-| `carry` | `0` |
+| `carry` | `2` |
 | `K1` | `000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f` |
 | `K2` | `967712731b5091e4e42b5fa6241e3b02108fedc55c561d80af04c2095d3edbe7` |
 | `N` | `000102030405060708090a0b` |
-| `A1` | `f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff` |
-| `A2` | `3a09eec3daf672a00f13351df1986203` |
+| `A1` | The 153-byte sequence `00 01 ... 98` |
+| `A2` | `d62e8ca42f6f6e6eb114ca6035df7b24 || 10 11 ... 98` (153 bytes) |
 | `C` | `00112233445566778899aabbccddeeff` |
-| `T` | `8867608090128f8c1a4711d553773215` |
+| `T` | `a21c712bf7f8d516c2d0126087060814` |
 | `P1` | `89ea2a336d42c3373f1a954854c0e09c` |
 | `P2` | `3c6ab3eb035de373e2b5d4a81a3cd13f` |
 
@@ -173,11 +174,11 @@ CTX = BLAKE2b-512(
 This produces:
 
 ```text
-CTX1 = 0573b9e328176e47de0251b211aa5347c72a61abf8e095bc7ac854982711f135
-       25c0741341ac59f7db41163fba77aadf8592df71b25a3b02099b6b4b00a3c403
+CTX1 = 9cda090561a1140c1e7fdee457c9057be213b87a65e895078564be7fa13360df
+       fb48bab92db64d3800fd90ba2fc4d8c174add55cbbf0b0bff98eb74b32c1e06e
 
-CTX2 = 322268a07252f76c4e894cab1e124db622ecf299f5050ed23768dd79b9e804ad
-       22c48e36ff3b0e3e1c6984ee81d96c9d2900672298c6350d8413dbb49b5dcdd1
+CTX2 = f092a14b1da49bad4c64f3bacc67480d7dd367f5ba90fa3f79492aea29cd7707
+       49b0aefdc03fa3736dd11ee3c79038a4a4d10a64959042dd97007690a7506bb2
 ```
 
 This is the property under test: the base AEAD has two valid openings, while
