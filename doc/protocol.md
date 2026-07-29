@@ -36,6 +36,27 @@ The beacon receives the initial message and uses the `phase2` bundle to perform 
 # Message encryption
 Every time something is encrypted, it is wrapped in a Cap’n Proto message called a `CryptoFrame`. This embeds minor metadata that allows managing out-of order messages. Every `CryptoFrame` is encrypted under a distinct key, obtained from the principal's `send` KDF chain, which is then ratcheted forward. Nonces are also obtained from the KDF chain, because keys are only used once there is no possible reuse. Keys are deleted once they have been used, this is always immediate for keys on the `send` chains. Keys on the `receive` chains might need to be kept for longer in cases where multiple messages are recieved out of order, in which case the implementation needs to ratchet forward to the required sequence nmuber. All the intermediate keys need to be saved by the implementation, such that they can be used to decrypt the other messages when they are processed. This skipping must be constrained to some gap between the current known counter and the target, to avoid potential unbounded memory consumption. The encryption uses an AEAD scheme, so the plaintext is authenticated. The `CryptoFrame` metadata is bound to the message by the commitment described below: `seq` prevents replay and supports out-of-order delivery, while `keyId` identifies the sender and selects the corresponding receive ratchet.
 
+## Commitment
+Beaconcrypt uses a commitment scheme based on [`CTX` by Chan and Rogaway](https://eprint.iacr.org/2022/1260). This intends to both provide protection against key substitution attacks and protect metadata. However, because of this additional metadata being included in the `CTX` transcript, it might be susceptible to canonicalization attacks. Therefore, it is critical that all elements included in the `CTX` transcript be of fixed size, such that no confusion is possible. For the reference `beaconcrypt` implementation these are:
+```
+-----------------------------------------------------
+| ChaCha20-Poly1305 IETF Key (K) - 32 bytes         |
+-----------------------------------------------------
+| ChaCha20-Poly1305 IETF Nonce (N) - 12 bytes       |
+-----------------------------------------------------
+| Beaconcrypt PQXDH associated data (A) - 153 bytes |
+-----------------------------------------------------
+| ChaCha20-Poly1305 IETF Tag (T) - 16 bytes         |
+-----------------------------------------------------
+```
+
+The commitment itself, which is 64 bytes, is then computed using the following, where `H` is the unkeyed BLAKE2b hash function with 512 bits of output:
+```
+H(K, N, A, T)
+```
+
+A canonicalization scheme would have to be used to encode the various elements being included within the `CTX` transcript if the fixed-size assumption were to become false.
+
 # Protocol message
 ## CryptoFrame
 This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../src/schema/cryptoframe.capnp). It carries a key identifier (`seq`), a key identifier `keyId`, and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
