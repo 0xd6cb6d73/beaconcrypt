@@ -22,9 +22,9 @@ mod deser;
 #[path = "ser.rs"]
 mod ser;
 #[cfg(feature = "server")]
-pub(crate) use deser::deserialize_known_ids;
+pub(crate) use deser::deserialize_server_state;
 #[cfg(feature = "server")]
-pub(crate) use ser::serialize_known_ids;
+pub(crate) use ser::serialize_server_state;
 
 pub const KEX_KDF_OUT_LEN: usize = 32usize;
 pub const KDF_STATE_SIZE: usize = 32usize;
@@ -173,6 +173,9 @@ mod systems {
 	#[cfg(feature = "pqxdh")]
 	#[derive(PartialEq)]
 	pub struct X25519;
+	#[cfg(feature = "server")]
+	#[derive(PartialEq)]
+	pub struct Ed25519;
 	#[derive(PartialEq)]
 	pub struct HkdfSha512;
 	#[derive(PartialEq)]
@@ -186,6 +189,7 @@ mod systems {
 	#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 	pub enum Identifier {
 		Undefined = 0,
+		Ed25519 = 1,
 		HkdfSha512 = 6,
 		Chacha20Poly1305Ietf = 7,
 	}
@@ -195,6 +199,7 @@ mod systems {
 		fn from(value: Identifier) -> Self {
 			match value {
 				Identifier::Undefined => 0,
+				Identifier::Ed25519 => 1,
 				Identifier::HkdfSha512 => 6,
 				Identifier::Chacha20Poly1305Ietf => 7,
 			}
@@ -205,6 +210,7 @@ mod systems {
 	impl From<u8> for Identifier {
 		fn from(value: u8) -> Self {
 			match value {
+				1 => Self::Ed25519,
 				6 => Self::HkdfSha512,
 				7 => Self::Chacha20Poly1305Ietf,
 				_ => Self::Undefined,
@@ -215,6 +221,11 @@ mod systems {
 	#[cfg(feature = "server")]
 	pub trait Identified {
 		const IDENTIFIER: Identifier;
+	}
+
+	#[cfg(feature = "server")]
+	impl Identified for Ed25519 {
+		const IDENTIFIER: Identifier = Identifier::Ed25519;
 	}
 
 	#[cfg(feature = "server")]
@@ -243,6 +254,8 @@ pub mod roles {
 	pub struct SendNonce;
 	#[cfg(feature = "server")]
 	pub struct RecvNonce;
+	#[cfg(feature = "server")]
+	pub struct IdentityKey;
 
 	#[cfg(feature = "server")]
 	#[repr(u8)]
@@ -255,6 +268,7 @@ pub mod roles {
 		EncryptionRecvKey = 11,
 		SendNonce = 12,
 		RecvNonce = 13,
+		IdentityKey = 14,
 	}
 
 	#[cfg(feature = "server")]
@@ -268,6 +282,7 @@ pub mod roles {
 				Identifier::EncryptionRecvKey => 11,
 				Identifier::SendNonce => 12,
 				Identifier::RecvNonce => 13,
+				Identifier::IdentityKey => 14,
 			}
 		}
 	}
@@ -282,6 +297,7 @@ pub mod roles {
 				11 => Self::EncryptionRecvKey,
 				12 => Self::SendNonce,
 				13 => Self::RecvNonce,
+				14 => Self::IdentityKey,
 				_ => Self::Undefined,
 			}
 		}
@@ -320,6 +336,11 @@ pub mod roles {
 	#[cfg(feature = "server")]
 	impl Identified for RecvNonce {
 		const IDENTIFIER: Identifier = Identifier::RecvNonce;
+	}
+
+	#[cfg(feature = "server")]
+	impl Identified for IdentityKey {
+		const IDENTIFIER: Identifier = Identifier::IdentityKey;
 	}
 }
 

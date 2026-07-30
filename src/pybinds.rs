@@ -98,10 +98,10 @@ impl Server {
 	}
 
 	#[staticmethod]
-	fn from_state(kid: u64, id_seed: Option<&[u8]>, server_state: &str) -> PyResult<Self> {
-		<BeaconCryptPqxdh as ProviderServer>::try_from_state(kid, id_seed, server_state)
+	fn from_state(server_state: &str) -> PyResult<Self> {
+		<BeaconCryptPqxdh as ProviderServer>::try_from_state(server_state)
 			.map(|provider| Self { _0: provider })
-			.ok_or_else(|| PyValueError::new_err("invalid server identity seed or state"))
+			.ok_or_else(|| PyValueError::new_err("invalid server state"))
 	}
 
 	fn register_beacon(

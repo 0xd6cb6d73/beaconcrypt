@@ -13,9 +13,11 @@ import (
 )
 
 const (
+	ed25519SystemID   = 1
 	kdfStateSystemID  = 6
 	chainSendKeyRole  = 8
 	chainReceiveRole  = 9
+	identityKeyRole   = 14
 	ratchetStateBytes = 32
 )
 
@@ -678,12 +680,12 @@ func TestStructuredAndJSONUpdatesMatchAcrossTheCGoBoundary(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	structuredServer, err := NewServerFromState(0, seed, initialState)
+	structuredServer, err := NewServerFromState(initialState)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(structuredServer.Close)
-	jsonServer, err := NewServerFromState(0, seed, initialState)
+	jsonServer, err := NewServerFromState(initialState)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -903,7 +905,7 @@ func TestServerStateRoundTripContinuesSessionsAndKeyIDs(t *testing.T) {
 	}
 	server.Close()
 
-	restored, err := NewServerFromState(0, seed, state)
+	restored, err := NewServerFromState(state)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -987,20 +989,22 @@ func TestServerStateRoundTripPreservesCachedOutOfOrderReceiveKeys(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	var encoded map[string]struct {
-		Ratchet struct {
-			RecvPast map[string]json.RawMessage `json:"recv_past"`
-		} `json:"ratchet"`
+	var encoded struct {
+		KnownIDs map[string]struct {
+			Ratchet struct {
+				RecvPast map[string]json.RawMessage `json:"recv_past"`
+			} `json:"ratchet"`
+		} `json:"known_ids"`
 	}
 	if err := json.Unmarshal([]byte(state), &encoded); err != nil {
 		t.Fatal(err)
 	}
-	cached := encoded[strconv.FormatUint(registration.KeyID, 10)].Ratchet.RecvPast
+	cached := encoded.KnownIDs[strconv.FormatUint(registration.KeyID, 10)].Ratchet.RecvPast
 	if len(cached) != 2 || cached["1"] == nil || cached["2"] == nil {
 		t.Fatalf("cached receive keys mismatch: got keys %v want [1 2]", reflect.ValueOf(cached).MapKeys())
 	}
 
-	restored, err := NewServerFromState(0, seed, state)
+	restored, err := NewServerFromState(state)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1021,43 +1025,87 @@ func TestServerStateRoundTripPreservesCachedOutOfOrderReceiveKeys(t *testing.T) 
 	}
 }
 
-func TestServerFromEmptyStateAllowsNilSeed(t *testing.T) {
+func TestServerStateWithoutKnownIDsRestoresIdentityAndCounter(t *testing.T) {
 	const serverKID = 7
 
-	server, err := NewServerFromState(serverKID, nil, "{}")
+	server, err := NewServer(serverKID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(server.Close)
-	state, err := server.ExportState()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if state != "{}" {
-		t.Fatalf("empty state mismatch: got %q want %q", state, "{}")
-	}
-
 	serverPK, err := server.IdentityPK()
 	if err != nil {
 		t.Fatal(err)
 	}
-	beacon, err := NewBeacon(serverKID, serverPK)
+	state, err := server.ExportState()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var encoded struct {
+		IdentityKey    []json.RawMessage          `json:"identity_key"`
+		IdentityKeyKID uint64                     `json:"identity_key_kid"`
+		ServerKID      uint64                     `json:"server_kid"`
+		KnownIDs       map[string]json.RawMessage `json:"known_ids"`
+	}
+	if err := json.Unmarshal([]byte(state), &encoded); err != nil {
+		t.Fatal(err)
+	}
+	if len(encoded.IdentityKey) != 3 ||
+		encoded.IdentityKeyKID != serverKID ||
+		encoded.ServerKID != serverKID ||
+		len(encoded.KnownIDs) != 0 {
+		t.Fatalf("incomplete exported state: %+v", encoded)
+	}
+	var identitySystem uint8
+	var identityRole uint8
+	var identitySeed []byte
+	if err := json.Unmarshal(encoded.IdentityKey[0], &identitySystem); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(encoded.IdentityKey[1], &identityRole); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(encoded.IdentityKey[2], &identitySeed); err != nil {
+		t.Fatal(err)
+	}
+	if identitySystem != ed25519SystemID || identityRole != identityKeyRole || len(identitySeed) != 32 {
+		t.Fatalf(
+			"identity key type mismatch: got [%d,%d,%d bytes] want [%d,%d,32 bytes]",
+			identitySystem,
+			identityRole,
+			len(identitySeed),
+			ed25519SystemID,
+			identityKeyRole,
+		)
+	}
+
+	restored, err := NewServerFromState(state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(restored.Close)
+	restoredPK, err := restored.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(restoredPK, serverPK) {
+		t.Fatalf("restored server identity mismatch: got %x want %x", restoredPK, serverPK)
+	}
+
+	beacon, err := NewBeacon(serverKID, restoredPK)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(beacon.Close)
-	registration := registerBeacon(t, server, beacon)
+	registration := registerBeacon(t, restored, beacon)
 	if registration.KeyID != serverKID+1 {
 		t.Fatalf("first key ID mismatch: got %d want %d", registration.KeyID, serverKID+1)
 	}
 }
 
 func TestNewServerFromStateRejectsInvalidInput(t *testing.T) {
-	seed := bytes.Repeat([]byte{0x61}, 32)
-	if _, err := NewServerFromState(0, seed[:31], "{}"); !errors.Is(err, ErrSeedSize) {
-		t.Fatalf("invalid seed error mismatch: got %v want %v", err, ErrSeedSize)
-	}
-	if _, err := NewServerFromState(0, seed, ""); !errors.Is(err, ErrEmptyData) {
+	if _, err := NewServerFromState(""); !errors.Is(err, ErrEmptyData) {
 		t.Fatalf("empty state error mismatch: got %v want %v", err, ErrEmptyData)
 	}
 
@@ -1067,7 +1115,7 @@ func TestNewServerFromStateRejectsInvalidInput(t *testing.T) {
 		`{"1":{"pk":[],"ratchet":{}}}`,
 	}
 	for _, state := range invalidStates {
-		if server, err := NewServerFromState(0, seed, state); !errors.Is(err, ErrCrypto) {
+		if server, err := NewServerFromState(state); !errors.Is(err, ErrCrypto) {
 			if server != nil {
 				server.Close()
 			}
@@ -1095,28 +1143,59 @@ func TestNewServerFromStateRejectsTamperedExportedState(t *testing.T) {
 	}
 
 	wrongKeyType := mutateJSONObject(t, state, func(value map[string]any) {
-		value["1"].(map[string]any)["pk"].([]any)[0] = float64(2)
+		value["known_ids"].(map[string]any)["1"].(map[string]any)["pk"].([]any)[0] = float64(2)
 	})
 	shortKey := mutateJSONObject(t, state, func(value map[string]any) {
-		principal := value["1"].(map[string]any)
+		principal := value["known_ids"].(map[string]any)["1"].(map[string]any)
 		publicKey := principal["pk"].([]any)
 		principal["pk"] = publicKey[:len(publicKey)-1]
 	})
 	malformedRatchet := mutateJSONObject(t, state, func(value map[string]any) {
-		principal := value["1"].(map[string]any)
+		principal := value["known_ids"].(map[string]any)["1"].(map[string]any)
 		ratchet := principal["ratchet"].(map[string]any)
 		ratchet["send_key"].([]any)[0] = float64(0)
 	})
-	entry := state[1 : len(state)-1]
-	duplicateKID := "{" + entry + "," + entry + "}"
+	malformedIdentity := mutateJSONObject(t, state, func(value map[string]any) {
+		identityKey := value["identity_key"].([]any)
+		value["identity_key"] = identityKey[:len(identityKey)-1]
+	})
+	wrongIdentitySystem := mutateJSONObject(t, state, func(value map[string]any) {
+		value["identity_key"].([]any)[0] = float64(0)
+	})
+	wrongIdentityRole := mutateJSONObject(t, state, func(value map[string]any) {
+		value["identity_key"].([]any)[1] = float64(chainSendKeyRole)
+	})
+	invalidIdentityKID := mutateJSONObject(t, state, func(value map[string]any) {
+		value["identity_key_kid"] = value["server_kid"].(float64) + 1
+	})
+	regressedServerKID := mutateJSONObject(t, state, func(value map[string]any) {
+		value["server_kid"] = float64(0)
+	})
+	var envelope map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(state), &envelope); err != nil {
+		t.Fatal(err)
+	}
+	var knownIDs map[string]json.RawMessage
+	if err := json.Unmarshal(envelope["known_ids"], &knownIDs); err != nil {
+		t.Fatal(err)
+	}
+	principal := string(knownIDs["1"])
+	duplicateKID := `{"identity_key":` + string(envelope["identity_key"]) +
+		`,"identity_key_kid":0,"server_kid":1,"known_ids":{"1":` +
+		principal + `,"1":` + principal + `}}`
 
 	for _, malformed := range []string{
 		wrongKeyType,
 		shortKey,
 		malformedRatchet,
+		malformedIdentity,
+		wrongIdentitySystem,
+		wrongIdentityRole,
+		invalidIdentityKID,
+		regressedServerKID,
 		duplicateKID,
 	} {
-		restored, err := NewServerFromState(0, seed, malformed)
+		restored, err := NewServerFromState(malformed)
 		if restored != nil {
 			restored.Close()
 		}

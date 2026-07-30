@@ -59,22 +59,21 @@ pub trait ProviderServer {
 	/// and return the plaintext, `kid`, consumed key sequence, and complete ratchet state for `kid`
 	/// as a JSON string.
 	fn decrypt_and_update_json(&mut self, bytes: &[u8]) -> Option<String>;
-	/// Export the current ratchet state as JSON for all known principals
+	/// Export the complete server state as JSON
 	fn export_state(&self) -> Option<String>;
-	/// Restore a server from serialized state, returning `None` if the identity seed or state is invalid.
-	fn try_from_state(server_kid: u64, id_seed: Option<&[u8]>, server_state: &str) -> Option<Self>
+	/// Restore a server from serialized state, returning `None` if the state is invalid.
+	fn try_from_state(server_state: &str) -> Option<Self>
 	where
 		Self: Sized;
 	/// Restore a server from serialized state.
 	///
 	/// # Panics
 	///
-	/// Panics if the identity seed or serialized state is invalid.
-	fn from_state(server_kid: u64, id_seed: Option<&[u8]>, server_state: String) -> Self
+	/// Panics if the serialized state is invalid.
+	fn from_state(server_state: String) -> Self
 	where
 		Self: Sized,
 	{
-		Self::try_from_state(server_kid, id_seed, &server_state)
-			.expect("failed to restore server state")
+		Self::try_from_state(&server_state).expect("failed to restore server state")
 	}
 }

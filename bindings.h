@@ -79,10 +79,7 @@ struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_server_new_from_seed(uint64_t s
                                                                       const uint8_t *seed_ptr,
                                                                       uintptr_t seed_len);
 
-struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_server_new_from_state(uint64_t server_kid,
-                                                                       const uint8_t *seed_ptr,
-                                                                       uintptr_t seed_len,
-                                                                       const uint8_t *state_ptr,
+struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_server_new_from_state(const uint8_t *state_ptr,
                                                                        uintptr_t state_len);
 
 struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_beacon_new(uint64_t server_kid,

@@ -30,7 +30,7 @@ typedef struct {
 void beaconcrypt_free_buffer(beaconcrypt_buffer buffer);
 void *beaconcrypt_server_new(uint64_t server_kid);
 void *beaconcrypt_server_new_from_seed(uint64_t server_kid, const uint8_t *seed_ptr, uintptr_t seed_len);
-void *beaconcrypt_server_new_from_state(uint64_t server_kid, const uint8_t *seed_ptr, uintptr_t seed_len, const uint8_t *state_ptr, uintptr_t state_len);
+void *beaconcrypt_server_new_from_state(const uint8_t *state_ptr, uintptr_t state_len);
 void *beaconcrypt_beacon_new(uint64_t server_kid, const uint8_t *server_pk_ptr, uintptr_t server_pk_len);
 void beaconcrypt_free(void *handle);
 beaconcrypt_buffer beaconcrypt_identity_pk(const void *handle);
@@ -116,22 +116,14 @@ func NewServerFromSeed(serverKID uint64, seed []byte) (*Server, error) {
 	return server, nil
 }
 
-func NewServerFromState(serverKID uint64, seed []byte, state string) (*Server, error) {
-	if len(seed) != 0 && len(seed) != 32 {
-		return nil, ErrSeedSize
-	}
+func NewServerFromState(state string) (*Server, error) {
 	if len(state) == 0 {
 		return nil, ErrEmptyData
 	}
-	seedPtr, seedFree := cBytes(seed)
-	defer seedFree()
 	stateBytes := []byte(state)
 	statePtr, stateFree := cBytes(stateBytes)
 	defer stateFree()
 	handle := C.beaconcrypt_server_new_from_state(
-		C.uint64_t(serverKID),
-		seedPtr,
-		C.uintptr_t(len(seed)),
 		statePtr,
 		C.uintptr_t(len(stateBytes)),
 	)

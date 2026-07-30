@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 
 use crate::server::{RecvState, SendState};
-use crate::{BeaconCryptPqxdh, CryptoProvider, ED25519_SEED_SIZE, ProviderBeacon, ProviderServer};
+use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer};
 use std::mem;
 use std::slice;
 
@@ -110,31 +110,16 @@ pub extern "C" fn beaconcrypt_server_new_from_seed(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_new_from_state(
-	server_kid: u64,
-	seed_ptr: *const u8,
-	seed_len: usize,
 	state_ptr: *const u8,
 	state_len: usize,
 ) -> *mut BeaconCryptPqxdh {
-	let seed = match seed_len {
-		0 => None,
-		ED25519_SEED_SIZE => {
-			let Some(seed) = (unsafe { input(seed_ptr, seed_len) }) else {
-				return std::ptr::null_mut();
-			};
-			Some(seed)
-		}
-		_ => return std::ptr::null_mut(),
-	};
 	let Some(state) = (unsafe { input(state_ptr, state_len) }) else {
 		return std::ptr::null_mut();
 	};
 	let Ok(state) = std::str::from_utf8(state) else {
 		return std::ptr::null_mut();
 	};
-	let Some(provider) =
-		<BeaconCryptPqxdh as ProviderServer>::try_from_state(server_kid, seed, state)
-	else {
+	let Some(provider) = <BeaconCryptPqxdh as ProviderServer>::try_from_state(state) else {
 		return std::ptr::null_mut();
 	};
 

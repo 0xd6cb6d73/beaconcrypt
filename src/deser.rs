@@ -340,11 +340,38 @@ impl<'de> Deserialize<'de> for RemotePrincipal<crypto_sign::PublicKey> {
 struct DeserializedKnownIds(HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>);
 
 #[cfg(feature = "server")]
-pub(crate) fn deserialize_known_ids(
+#[derive(Deserialize)]
+#[serde(rename = "BeaconCryptPqxdh")]
+struct ServerStateData {
+	identity_key: TypedArray<{ crypto_sign::SEEDBYTES }, systems::Ed25519, roles::IdentityKey>,
+	identity_key_kid: u64,
+	server_kid: u64,
+	known_ids: DeserializedKnownIds,
+}
+
+#[cfg(feature = "server")]
+pub(crate) fn deserialize_server_state(
 	state: &str,
-) -> Option<HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>> {
-	let DeserializedKnownIds(known_ids) = serde_json::from_str(state).ok()?;
-	Some(known_ids)
+) -> Option<(
+	crypto_sign::KeyPair,
+	u64,
+	u64,
+	HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+)> {
+	let ServerStateData {
+		identity_key,
+		identity_key_kid,
+		server_kid,
+		known_ids: DeserializedKnownIds(known_ids),
+	} = serde_json::from_str(state).ok()?;
+
+	if identity_key_kid > server_kid || known_ids.keys().any(|kid| *kid > server_kid) {
+		return None;
+	}
+
+	let keypair = crypto_sign::KeyPair::from_seed(identity_key.buffer.0.as_slice()).ok()?;
+
+	Some((keypair, identity_key_kid, server_kid, known_ids))
 }
 
 #[cfg(feature = "server")]
@@ -690,6 +717,7 @@ mod tests {
 	#[test]
 	fn type_identifiers_follow_the_undefined_zero_convention() {
 		assert_eq!(u8::from(systems::Identifier::Undefined), 0);
+		assert_eq!(u8::from(systems::Identifier::Ed25519), 1);
 		assert_eq!(u8::from(systems::Identifier::HkdfSha512), 6);
 		assert_eq!(u8::from(systems::Identifier::Chacha20Poly1305Ietf), 7);
 		assert!(matches!(
@@ -709,6 +737,7 @@ mod tests {
 			(roles::Identifier::EncryptionRecvKey, 11),
 			(roles::Identifier::SendNonce, 12),
 			(roles::Identifier::RecvNonce, 13),
+			(roles::Identifier::IdentityKey, 14),
 		] {
 			assert_eq!(u8::from(identifier), encoded);
 			assert_eq!(roles::Identifier::from(encoded), identifier);

@@ -13,7 +13,8 @@ use crate::{beacon::ProviderBeacon, shared::encode_kem};
 use crate::{
 	server::{ProviderServer, RegResponse, RegistrationOutput},
 	shared::{
-		REGISTRATION_WITNESS, decode_kem, decode_sign, deserialize_known_ids, serialize_known_ids,
+		REGISTRATION_WITNESS, decode_kem, decode_sign, deserialize_server_state,
+		serialize_server_state,
 	},
 };
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
@@ -540,28 +541,23 @@ impl ProviderServer for BeaconCryptPqxdh {
 	}
 
 	fn export_state(&self) -> Option<String> {
-		serialize_known_ids(&self.known_ids)
+		serialize_server_state(
+			&self.identity_key,
+			self.identity_key_kid,
+			self.server_kid,
+			&self.known_ids,
+		)
 	}
 
-	fn try_from_state(server_kid: u64, id_seed: Option<&[u8]>, server_state: &str) -> Option<Self> {
+	fn try_from_state(server_state: &str) -> Option<Self> {
 		ensure_init().ok()?;
 
-		let id_keypair = if let Some(seed) = id_seed {
-			crypto_sign::KeyPair::from_seed(seed).ok()?
-		} else {
-			crypto_sign::KeyPair::generate().ok()?
-		};
-		let known_ids = deserialize_known_ids(server_state)?;
-		let next_remote_kid = known_ids
-			.keys()
-			.max()
-			.copied()
-			.map_or(server_kid, |known_kid| server_kid.max(known_kid));
+		let (id_keypair, identity_key_kid, server_kid, known_ids) =
+			deserialize_server_state(server_state)?;
 
 		Some(Self {
 			identity_key: id_keypair,
-			// this will be overwritten when the agent registers
-			identity_key_kid: server_kid,
+			identity_key_kid,
 			// the server doesn't use prekeys
 			prekey: None,
 			// only the beacon uses it, and it generated at registration time
@@ -570,7 +566,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 			pq_key: None,
 			associated_data: None,
 			is_beacon: false,
-			server_kid: next_remote_kid,
+			server_kid,
 			known_ids,
 		})
 	}

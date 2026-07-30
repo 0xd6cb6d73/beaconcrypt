@@ -67,8 +67,8 @@ def test_structured_and_json_updates_match_across_the_binding_boundary():
     initial_state = server.export_state()
     assert initial_state is not None
 
-    structured_server = BeaconCryptServer.from_state(0, seed, initial_state)
-    json_server = BeaconCryptServer.from_state(0, seed, initial_state)
+    structured_server = BeaconCryptServer.from_state(initial_state)
+    json_server = BeaconCryptServer.from_state(initial_state)
 
     outbound = b"compare structured and JSON encryption updates"
     structured_send = structured_server.encrypt_and_update(outbound, beacon_kid)
@@ -113,9 +113,14 @@ def test_seeded_export_restore_continues_sessions_and_next_kid():
 
     state = server.export_state()
     assert state is not None
-    assert str(beacon_kid) in json.loads(state)
+    encoded = json.loads(state)
+    assert encoded["identity_key"][:2] == [1, 14]
+    assert len(encoded["identity_key"][2]) == 32
+    assert encoded["identity_key_kid"] == 0
+    assert encoded["server_kid"] == beacon_kid
+    assert str(beacon_kid) in encoded["known_ids"]
 
-    restored = BeaconCryptServer.from_state(0, seed, state)
+    restored = BeaconCryptServer.from_state(state)
     assert restored.id_pk() == server_pk
 
     after_restore = restored.encrypt_to_beacon(b"after restore", beacon_kid)
@@ -147,36 +152,41 @@ def test_export_restore_preserves_cached_out_of_order_receive_keys():
     state = server.export_state()
     assert state is not None
     encoded = json.loads(state)
-    assert set(encoded["1"]["ratchet"]["recv_past"]) == {"1", "2"}
+    assert set(encoded["known_ids"]["1"]["ratchet"]["recv_past"]) == {"1", "2"}
 
-    restored = BeaconCryptServer.from_state(0, seed, state)
+    restored = BeaconCryptServer.from_state(state)
     assert restored.decrypt_beacon_message(ciphertexts[0]) == b"first"
     assert restored.decrypt_beacon_message(ciphertexts[1]) == b"second"
 
 
 def test_empty_state_restore_preserves_kid_floor():
     server = BeaconCryptServer(7, None)
+    server_pk = server.id_pk()
     state = server.export_state()
     assert state is not None
-    assert json.loads(state) == {}
+    encoded = json.loads(state)
+    assert encoded["identity_key_kid"] == 7
+    assert encoded["server_kid"] == 7
+    assert encoded["known_ids"] == {}
 
-    restored = BeaconCryptServer.from_state(7, None, state)
+    restored = BeaconCryptServer.from_state(state)
+    assert restored.id_pk() == server_pk
     beacon = BeaconCryptBeacon(7, restored.id_pk())
 
     assert register_beacon(restored, beacon) == 8
 
 
 @pytest.mark.parametrize(
-    ("seed", "state"),
+    "state",
     [
-        (b"short", "{}"),
-        (None, "not JSON"),
-        (None, '{"1": {"pk": [], "ratchet": {}}}'),
+        "{}",
+        "not JSON",
+        '{"1": {"pk": [], "ratchet": {}}}',
     ],
 )
-def test_restore_rejects_invalid_seed_or_state(seed: bytes | None, state: str):
-    with pytest.raises(ValueError, match="invalid server identity seed or state"):
-        BeaconCryptServer.from_state(0, seed, state)
+def test_restore_rejects_invalid_state(state: str):
+    with pytest.raises(ValueError, match="invalid server state"):
+        BeaconCryptServer.from_state(state)
 
 
 def test_restore_rejects_tampered_exported_state():
@@ -189,19 +199,39 @@ def test_restore_rejects_tampered_exported_state():
     encoded = json.loads(state)
 
     wrong_key_type = copy.deepcopy(encoded)
-    wrong_key_type["1"]["pk"][0] = 2
+    wrong_key_type["known_ids"]["1"]["pk"][0] = 2
     short_key = copy.deepcopy(encoded)
-    short_key["1"]["pk"].pop()
+    short_key["known_ids"]["1"]["pk"].pop()
     malformed_ratchet = copy.deepcopy(encoded)
-    malformed_ratchet["1"]["ratchet"]["send_key"][0] = 0
-    entry = state[1:-1]
-    duplicate_kid = f"{{{entry},{entry}}}"
+    malformed_ratchet["known_ids"]["1"]["ratchet"]["send_key"][0] = 0
+    malformed_identity = copy.deepcopy(encoded)
+    malformed_identity["identity_key"].pop()
+    wrong_identity_system = copy.deepcopy(encoded)
+    wrong_identity_system["identity_key"][0] = 0
+    wrong_identity_role = copy.deepcopy(encoded)
+    wrong_identity_role["identity_key"][1] = 8
+    invalid_identity_kid = copy.deepcopy(encoded)
+    invalid_identity_kid["identity_key_kid"] = encoded["server_kid"] + 1
+    regressed_server_kid = copy.deepcopy(encoded)
+    regressed_server_kid["server_kid"] = 0
+    identity_key = json.dumps(encoded["identity_key"], separators=(",", ":"))
+    principal = json.dumps(encoded["known_ids"]["1"], separators=(",", ":"))
+    duplicate_kid = (
+        f'{{"identity_key":{identity_key},"identity_key_kid":0,'
+        f'"server_kid":1,"known_ids":'
+        f'{{"1":{principal},"1":{principal}}}}}'
+    )
 
     for malformed in (
         json.dumps(wrong_key_type),
         json.dumps(short_key),
         json.dumps(malformed_ratchet),
+        json.dumps(malformed_identity),
+        json.dumps(wrong_identity_system),
+        json.dumps(wrong_identity_role),
+        json.dumps(invalid_identity_kid),
+        json.dumps(regressed_server_kid),
         duplicate_kid,
     ):
-        with pytest.raises(ValueError, match="invalid server identity seed or state"):
-            BeaconCryptServer.from_state(0, seed, malformed)
+        with pytest.raises(ValueError, match="invalid server state"):
+            BeaconCryptServer.from_state(malformed)

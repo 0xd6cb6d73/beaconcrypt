@@ -86,7 +86,7 @@ fn recreated_server_decrypts_beacon_response() {
 	let response = beacon
 		.encrypt_message(b"response", beacon.server_kid())
 		.unwrap();
-	let mut server: BeaconCryptPqxdh = ProviderServer::from_state(0, Some(&seed), state);
+	let mut server: BeaconCryptPqxdh = ProviderServer::from_state(state);
 	assert_eq!(
 		server.decrypt_message(&response).unwrap().plaintext,
 		b"response"
@@ -108,14 +108,22 @@ fn known_ids_round_trip_and_continue_each_session() {
 
 	let state = server.export_state().unwrap();
 	let json: Value = serde_json::from_str(&state).unwrap();
+	assert_eq!(json["identity_key"][0], json!(u8::from(SignType::Ed25519)));
+	assert_eq!(json["identity_key"][1], json!(14));
+	assert_eq!(
+		json["identity_key"][2].as_array().unwrap().len(),
+		crypto_sign::SEEDBYTES
+	);
+	assert_eq!(json["identity_key_kid"], json!(0));
+	assert_eq!(json["server_kid"], json!(2));
 	for kid in ["1", "2"] {
-		let encoded_pk = json[kid]["pk"].as_array().unwrap();
+		let encoded_pk = json["known_ids"][kid]["pk"].as_array().unwrap();
 		assert_eq!(encoded_pk.len(), crypto_sign::PUBLICKEYBYTES + 1);
 		assert_eq!(encoded_pk[0], json!(u8::from(SignType::Ed25519)));
-		assert!(json[kid]["ratchet"].is_object());
+		assert!(json["known_ids"][kid]["ratchet"].is_object());
 	}
 
-	let mut restored: BeaconCryptPqxdh = ProviderServer::from_state(0, Some(&seed), state);
+	let mut restored: BeaconCryptPqxdh = ProviderServer::from_state(state);
 	assert_eq!(restored.identity_pk(), &server_id);
 	assert_eq!(restored.server_kid(), 2);
 	assert_eq!(restored.pk_by_kid(1), server.pk_by_kid(1));
@@ -157,12 +165,14 @@ fn known_ids_round_trip_preserves_cached_out_of_order_receive_keys() {
 
 	let state = server.export_state().unwrap();
 	let encoded: Value = serde_json::from_str(&state).unwrap();
-	let cached = encoded["1"]["ratchet"]["recv_past"].as_object().unwrap();
+	let cached = encoded["known_ids"]["1"]["ratchet"]["recv_past"]
+		.as_object()
+		.unwrap();
 	assert_eq!(cached.len(), 2);
 	assert!(cached.contains_key("1"));
 	assert!(cached.contains_key("2"));
 
-	let mut restored: BeaconCryptPqxdh = ProviderServer::from_state(0, Some(&seed), state);
+	let mut restored: BeaconCryptPqxdh = ProviderServer::from_state(state);
 	assert_eq!(
 		restored.decrypt_message(&first).unwrap().plaintext,
 		b"first"
@@ -185,27 +195,57 @@ fn invalid_known_ids_state_is_rejected() {
 	let parsed: Value = serde_json::from_str(&state).unwrap();
 
 	let mut wrong_key_type = parsed.clone();
-	wrong_key_type["1"]["pk"][0] = json!(u8::from(SignType::MlDsa87));
+	wrong_key_type["known_ids"]["1"]["pk"][0] = json!(u8::from(SignType::MlDsa87));
 	let mut short_key = parsed.clone();
-	short_key["1"]["pk"].as_array_mut().unwrap().pop();
-	let mut malformed_ratchet = parsed;
-	malformed_ratchet["1"]["ratchet"]["send_key"][0] = json!(0);
+	short_key["known_ids"]["1"]["pk"]
+		.as_array_mut()
+		.unwrap()
+		.pop();
+	let mut malformed_ratchet = parsed.clone();
+	malformed_ratchet["known_ids"]["1"]["ratchet"]["send_key"][0] = json!(0);
+	let mut malformed_identity = parsed.clone();
+	malformed_identity["identity_key"]
+		.as_array_mut()
+		.unwrap()
+		.pop();
+	let mut wrong_identity_system = parsed.clone();
+	wrong_identity_system["identity_key"][0] = json!(0);
+	let mut wrong_identity_role = parsed.clone();
+	wrong_identity_role["identity_key"][1] = json!(8);
+	let mut invalid_identity_kid = parsed.clone();
+	invalid_identity_kid["identity_key_kid"] = json!(2);
+	let mut regressed_server_kid = parsed.clone();
+	regressed_server_kid["server_kid"] = json!(0);
 
-	for malformed in [wrong_key_type, short_key, malformed_ratchet] {
+	for malformed in [
+		wrong_key_type,
+		short_key,
+		malformed_ratchet,
+		malformed_identity,
+		wrong_identity_system,
+		wrong_identity_role,
+		invalid_identity_kid,
+		regressed_server_kid,
+	] {
 		let malformed = serde_json::to_string(&malformed).unwrap();
 		assert!(
 			std::panic::catch_unwind(|| {
-				let _: BeaconCryptPqxdh = ProviderServer::from_state(0, Some(&seed), malformed);
+				let _: BeaconCryptPqxdh = ProviderServer::from_state(malformed);
 			})
 			.is_err()
 		);
 	}
 
-	let entry = &state[1..state.len() - 1];
-	let duplicate_kid = format!("{{{entry},{entry}}}");
+	let identity_key = serde_json::to_string(&parsed["identity_key"]).unwrap();
+	let principal = serde_json::to_string(&parsed["known_ids"]["1"]).unwrap();
+	let duplicate_kid = format!(
+		"{{\"identity_key\":{identity_key},\"identity_key_kid\":0,\
+		 \"server_kid\":1,\"known_ids\":\
+		 {{\"1\":{principal},\"1\":{principal}}}}}"
+	);
 	assert!(
 		std::panic::catch_unwind(|| {
-			let _: BeaconCryptPqxdh = ProviderServer::from_state(0, Some(&seed), duplicate_kid);
+			let _: BeaconCryptPqxdh = ProviderServer::from_state(duplicate_kid);
 		})
 		.is_err()
 	);
@@ -222,19 +262,47 @@ fn invalid_known_ids_state_is_rejected() {
 #[test]
 fn empty_known_ids_state_round_trips_without_lowering_the_kid_counter() {
 	let server = BeaconCryptPqxdh::new(false, 7, None, None);
+	let identity = server.identity_pk().to_owned();
 	let state = server.export_state().unwrap();
-	assert_eq!(state, "{}");
+	let encoded: Value = serde_json::from_str(&state).unwrap();
+	assert_eq!(encoded["identity_key_kid"], json!(7));
+	assert_eq!(encoded["server_kid"], json!(7));
+	assert_eq!(encoded["known_ids"], json!({}));
 
-	let restored: BeaconCryptPqxdh = ProviderServer::from_state(7, None, state);
+	let restored: BeaconCryptPqxdh = ProviderServer::from_state(state);
+	assert_eq!(restored.identity_pk(), &identity);
+	assert_eq!(restored.identity_key_kid(), 7);
 	assert_eq!(restored.server_kid(), 7);
 	assert!(restored.pk_by_kid(1).is_none());
 }
 
 #[test]
-fn fallible_state_restore_rejects_invalid_seed_and_state() {
-	let short_seed = [0u8; ED25519_SEED_SIZE - 1];
-	assert!(
-		<BeaconCryptPqxdh as ProviderServer>::try_from_state(0, Some(&short_seed), "{}").is_none()
-	);
-	assert!(<BeaconCryptPqxdh as ProviderServer>::try_from_state(0, None, "not JSON").is_none());
+fn state_counter_survives_deleting_the_highest_known_id() {
+	let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+	let server_id = server.identity_pk().to_owned();
+	let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	test_register_pqxdh_beacon(&mut server, &mut b1);
+	test_register_pqxdh_beacon(&mut server, &mut b2);
+	server.delete_known_kid(2);
+
+	let state = server.export_state().unwrap();
+	let mut restored: BeaconCryptPqxdh = ProviderServer::from_state(state);
+	assert_eq!(restored.server_kid(), 2);
+
+	let mut b3 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	test_register_pqxdh_beacon(&mut restored, &mut b3);
+	assert_eq!(restored.server_kid(), 3);
+	assert!(restored.pk_by_kid(3).is_some());
+}
+
+#[test]
+fn fallible_state_restore_rejects_invalid_state() {
+	let server = BeaconCryptPqxdh::new(false, 0, None, None);
+	let mut state: Value = serde_json::from_str(&server.export_state().unwrap()).unwrap();
+	state.as_object_mut().unwrap().remove("identity_key_kid");
+
+	assert!(<BeaconCryptPqxdh as ProviderServer>::try_from_state(&state.to_string()).is_none());
+	assert!(<BeaconCryptPqxdh as ProviderServer>::try_from_state("not JSON").is_none());
+	assert!(<BeaconCryptPqxdh as ProviderServer>::try_from_state("{}").is_none());
 }

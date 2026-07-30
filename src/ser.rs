@@ -18,6 +18,8 @@ use serde::{
 };
 use std::collections::HashMap;
 use std::marker::PhantomData;
+#[cfg(feature = "server")]
+use zeroize::Zeroizing;
 
 struct ByteBuffer<'a>(&'a [u8]);
 
@@ -231,10 +233,54 @@ impl Serialize for RemotePrincipal<crypto_sign::PublicKey> {
 struct SerializableKnownIds<'a>(&'a HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>);
 
 #[cfg(feature = "server")]
-pub(crate) fn serialize_known_ids(
+struct SerializableServerState<'a> {
+	identity_key: &'a crypto_sign::KeyPair,
+	identity_key_kid: u64,
+	server_kid: u64,
+	known_ids: &'a HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+}
+
+#[cfg(feature = "server")]
+pub(crate) fn serialize_server_state(
+	identity_key: &crypto_sign::KeyPair,
+	identity_key_kid: u64,
+	server_kid: u64,
 	known_ids: &HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
 ) -> Option<String> {
-	serde_json::to_string(&SerializableKnownIds(known_ids)).ok()
+	serde_json::to_string(&SerializableServerState {
+		identity_key,
+		identity_key_kid,
+		server_kid,
+		known_ids,
+	})
+	.ok()
+}
+
+#[cfg(feature = "server")]
+impl Serialize for SerializableServerState<'_> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let identity_seed = Zeroizing::new(
+			crypto_sign::secret_key_to_seed(&self.identity_key.secret_key)
+				.map_err(|error| S::Error::custom(error.to_string()))?,
+		);
+		let identity_seed_buffer = identity_seed
+			.as_slice()
+			.try_into()
+			.expect("Ed25519 seed always contains SEEDBYTES bytes");
+		let typed_identity_seed =
+			TypedArray::<{ crypto_sign::SEEDBYTES }, systems::Ed25519, roles::IdentityKey>::new(
+				identity_seed_buffer,
+			);
+		let mut state = serializer.serialize_struct("BeaconCryptPqxdh", 4)?;
+		state.serialize_field("identity_key", &typed_identity_seed)?;
+		state.serialize_field("identity_key_kid", &self.identity_key_kid)?;
+		state.serialize_field("server_kid", &self.server_kid)?;
+		state.serialize_field("known_ids", &SerializableKnownIds(self.known_ids))?;
+		state.end()
+	}
 }
 
 #[cfg(feature = "server")]

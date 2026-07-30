@@ -2,10 +2,14 @@
 This document describes the way beaconcrypt exposes state persistence to the server. This breaks forward secrecy, but is required to be useful in a server context. Additionally, the [threat model](threat_model.md) specifies that we already assume that server compromise is game over.
 
 # Usage
-The server object exposes a `export_state` method, which produces the following JSON output:
+The server object exposes an `export_state` method, which produces the following JSON output:
 ```json
 {
-    "1": {
+    "identity_key": [1,14,[65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65]],
+    "identity_key_kid": 0,
+    "server_kid": 2,
+    "known_ids": {
+      "1": {
         "pk": [1,179,176,97,56,138,132,165,3,79,7,190,144,179,105,2,187,3,165,119,87,142,123,131,59,254,117,167,156,41,125,254,56],
         "ratchet": {
             "send_key": [6,8,[1,79,112,132,98,47,6,118,212,221,235,120,149,156,87,172,106,157,248,36,135,198,191,207,243,65,83,183,57,110,161,213]],
@@ -16,7 +20,7 @@ The server object exposes a `export_state` method, which produces the following 
             "recv_ctr": 1
         }
     },
-    "2": {
+      "2": {
         "pk": [1,198,247,65,172,172,76,66,155,64,140,90,73,162,40,247,225,134,162,239,15,149,105,64,89,167,171,159,125,28,56,207,166],
         "ratchet": {
             "send_key": [6,8,[62,234,153,109,200,24,60,67,197,43,127,175,32,40,158,53,61,233,196,100,226,72,64,51,164,91,186,161,85,15,211,144]],
@@ -26,11 +30,15 @@ The server object exposes a `export_state` method, which produces the following 
             "recv_past": {},
             "recv_ctr": 1
         }
+      }
     }
 }
 ```
 
-The way to read this is that the server knows about 2 beacons, with keyId 1 and 2. Every object then contains the beacon's public key as well as the full state of their associated ratchets. Note that the keys are strongly-typed arrays, which server code should not try to parse. I expect that this method would be rather slow, as it will extract and serialize the entirety of the beaconcrypt instance's crypto state. Therefore, the server has access to the following interface:
+`identity_key` contains the server's 32-byte Ed25519 seed as a strongly typed array. `identity_key_kid` is the server identity's key ID, `server_kid` is the next-remote-ID counter, and `known_ids` contains the known beacons' ratchet state. In this example the server knows about 2 beacons, with keyId 1 and 2. Every `known_ids` entry contains the beacon's public key as well as the full state of its associated ratchets. Together these fields allow `from_state` to restore the server from the serialized state alone.
+
+Note that the ratchet keys are strongly-typed arrays, which server code should not try to parse. I expect that this method would be rather slow, as it will extract and serialize the entirety of the beaconcrypt instance's crypto state. Therefore, the server has access to the following interface:
+
 ```rust
 /// Encrypt some bytes to `kid` and return the ciphertext, `kid`, consumed key sequence,
 /// and complete ratchet state for `kid`.
