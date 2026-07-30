@@ -97,6 +97,22 @@ cargo test
 See [the Wycheproof test documentation](doc/wycheproof.md) for the coverage
 matrix, result semantics and update procedure.
 
+### Rooterberg
+
+The test suite also runs pinned
+[Rooterberg](https://github.com/bleichenbacher-daniel/Rooterberg) vectors for
+X25519, Ed25519 signing and verification, ChaCha20-Poly1305-IETF,
+HKDF-SHA-512 and BLAKE2b-512. Rooterberg is included as a Git submodule and is
+initialized by the same command used for Wycheproof:
+
+```bash
+git submodule update --init --recursive
+cargo test
+```
+
+See [the Rooterberg test documentation](doc/rooterberg.md) for the coverage
+matrix, upstream format caveats and update procedure.
+
 ## Usage
 The reference implementation is a library that can currently be used either from rust, through C FFI, go and python bindings. The C interface is currently only tested through the go bindings. Note that 0-length messages are explicitly disallowed by the reference implementation, as my feeling is that such messages have no purpose except testing parser edge cases. The library also doesn't handle chnking of any kind and will try to process entire messages at once in memory. It is expected that the caller should handle chunking itself if that is required.
 

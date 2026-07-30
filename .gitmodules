@@ -1,3 +1,6 @@
 [submodule "wycheproof"]
 	path = wycheproof
 	url = https://github.com/C2SP/wycheproof.git
+[submodule "rooterberg"]
+	path = rooterberg
+	url = https://github.com/bleichenbacher-daniel/Rooterberg.git
