@@ -61,6 +61,43 @@ H(K, N, A, T, S, I)
 
 A canonicalization scheme would have to be used to encode the various elements being included within the `CTX` transcript if the fixed-size assumption were to become false.
 
+## Ratchet initialization
+Beaconcrypt uses a symmetric ratchet protocol for CKA. This provides forward, but not post-compromise, secrecy. There are two ratchets, one for encrypting messages to be sent (`send`), and one for decrypting received messages (`recv`). Both ratchets are initialized from a single 256 bit secret value derived from the `PQXDH` protocol run. Because of the `send`/`recv` division, the server and beacon have a slightly different initialization routine:
+```
+RM = KDF(DS, info)
+LHS = RM[0..31]
+RHS = RM[32..63]
+
+// beacon side
+RK = LHS
+SK = RHS
+// server side
+RK = RHS
+SK = LHS
+```
+Where:
+ - `KDF` is HKDF-SHA-512(IKM, INFO) with no salt and 64 bytes of output
+ - `DS` is the `PQXDH` derived secret
+ - `info` is the `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305` string as utf8 bytes
+ - `RK` is the initial state of the `recv` key chain
+ - `SK` is the initial state of the `send` key chain
+
+## Ratcheting
+The `send` and `recv` key chain are ratcheted foward on every encryption and decryption operation, respectively. The ratchet output is used to generate three things: the new state of the key chain, the message key, and the message nonce:
+```
+O = KDF(KCS, info)
+K = O[..31]
+S = [32..63]
+N = [64..75]
+```
+Where:
+ - `KDF` is HKDF-SHA-512(IKM, INFO) with no salt and 76 bytes of output
+ - `KCS` is current state of the chain being ratcheted
+ - `info` is the `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305` string as utf8 bytes
+ - `K` is the message key
+ - `S` is the new state of the ratchet
+ - `N` is the message nonce
+
 # Protocol message
 ## CryptoFrame
 This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../src/schema/cryptoframe.capnp). It carries a key identifier (`seq`), a key identifier `keyId`, and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
