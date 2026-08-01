@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+
+
 #define beaconcrypt_KEX_KDF_OUT_LEN 32
 
 #define beaconcrypt_KDF_STATE_SIZE 32
@@ -66,6 +68,8 @@ typedef struct beaconcrypt_EncryptState {
   uint64_t key_id;
   uint64_t seq;
 } beaconcrypt_EncryptState;
+
+
 
 #ifdef __cplusplus
 extern "C" {

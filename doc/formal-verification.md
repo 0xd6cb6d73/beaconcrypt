@@ -71,9 +71,15 @@ The first extraction slice may be smaller than this layout. In particular, a sin
 
 ## The extractable production core
 
-The current natural seams are the ratchet state and operations in [`src/shared.rs`](../src/shared.rs), the frame encryption/decryption logic in that file, and the PQXDH role transitions in [`src/pqxdh.rs`](../src/pqxdh.rs). These should move incrementally rather than by attempting to extract the whole crate.
+The initial production seams were the ratchet state and operations in
+[`src/shared.rs`](../src/shared.rs), the frame encryption/decryption logic in
+that file, and the PQXDH role transitions in
+[`src/pqxdh.rs`](../src/pqxdh.rs). Stages 1 through 4 moved their deterministic
+control decisions into the protocol core while leaving concrete cryptography
+and wire translation in those adapters. Further moves should remain incremental
+rather than attempting to extract the whole crate.
 
-The core should contain only deterministic protocol decisions:
+The core boundary is limited to deterministic protocol decisions:
 
 - role and session states;
 - key and nonce derivation requests;
@@ -95,17 +101,24 @@ This division does not make those adapters trusted without review. Instead, it g
 
 ### Represent state explicitly
 
-PQXDH should use role-specific typestates instead of an `is_beacon` flag plus optional fields. For example:
+PQXDH now uses role-specific core typestates instead of making protocol
+transitions depend on an `is_beacon` flag plus unrelated optional fields. The
+public boolean constructor remains for API compatibility, but it selects an
+internal role enum once; the transition code then matches the corresponding
+state. The core states include:
 
 ```rust
-pub struct BeaconFresh { /* long-term and prekey material */ }
-pub struct BeaconInitSent { /* material tied to exactly one InitKex */ }
-pub struct BeaconEstablished { /* session and ratchets */ }
+pub struct BeaconFresh { /* server key assignment */ }
+pub struct BeaconInitSent { /* identity tied to one InitKex */ }
+pub struct BeaconRegistrationCandidate { /* validated proposed session */ }
+pub struct BeaconEstablished { /* committed server and assigned IDs */ }
 pub struct BeaconAborted;
 
-pub struct ServerState { /* identity, peers, replay state */ }
-pub struct PendingServerRegistration { /* response inputs */ }
-pub struct EstablishedPeer { /* identity and ratchets */ }
+pub struct ServerState { /* last allocated key ID */ }
+pub struct ServerBinding { /* server identity key and key ID */ }
+pub struct PendingServerRegistration { /* validated response inputs */ }
+pub struct ServerRegistrationCandidate { /* previous and proposed state */ }
+pub struct EstablishedPeer { /* committed peer metadata */ }
 ```
 
 Transitions consume the old state and return the new state:
@@ -113,22 +126,43 @@ Transitions consume the old state and return the new state:
 ```rust
 pub fn beacon_start(
     state: BeaconFresh,
+    inputs: BeaconStartInputs,
     coins: BeaconCoins,
-) -> Result<(BeaconInitSent, InitKex), ProtocolError>;
+) -> BeaconStart;
+
+pub fn beacon_prepare_finish(
+    state: BeaconInitSent,
+    inputs: &BeaconFinishInputs,
+) -> Result<BeaconRegistrationCandidate, RegistrationError>;
+
+pub fn beacon_commit(
+    candidate: BeaconRegistrationCandidate,
+) -> BeaconEstablished;
 
 pub fn server_accept(
     state: ServerState,
-    init: InitKex,
+    init: VerifiedInitKex,
+    server_binding: ServerBinding,
     coins: ServerCoins,
-) -> Result<(ServerState, KexResponse), ProtocolError>;
+    secrets: &PqxdhSharedSecrets,
+) -> Result<(ServerState, PendingServerRegistration), RegistrationError>;
 
-pub fn beacon_finish(
-    state: BeaconInitSent,
-    response: KexResponse,
-) -> Result<(BeaconEstablished, Plaintext), ProtocolError>;
+pub fn server_prepare_commit(
+    state: ServerState,
+    pending: PendingServerRegistration,
+    current_server_binding: ServerBinding,
+) -> Result<ServerRegistrationCandidate, RegistrationError>;
+
+pub fn server_commit(
+    candidate: ServerRegistrationCandidate,
+) -> (ServerState, EstablishedPeer);
 ```
 
 Randomness is explicit input. This makes a transition deterministic and lets proofs quantify over the generated material without modelling the operating system RNG.
+
+Some small core control values are copyable logical descriptors. Single-use
+registration is enforced by the private production enum replacing `Fresh` with
+`InitSent`, rather than by claiming that the standalone descriptor is affine.
 
 Ratchet transitions should also be owned and total:
 
@@ -242,28 +276,36 @@ ProVerif establishes these results only in the stated symbolic model. It does no
 
 ## Known counterexamples and required protocol changes
 
-Three ignored tests in [`tests/protocol.rs`](../tests/protocol.rs#L1402-L1433) are executable counterexamples to properties that a proof might otherwise claim:
+Three regression tests in [`tests/protocol.rs`](../tests/protocol.rs) track
+executable counterexamples to properties that a proof might otherwise claim:
 
-1. `beacon_rejects_tampered_registration_key_id`: `KexResponse.keyId` is not authenticated.
-2. `beacon_generates_only_one_registration_bundle`: a beacon can generate more than one `InitKex` bundle.
-3. `server_rejects_replayed_registration_bundle`: the server accepts a replayed `InitKex` bundle.
+1. `beacon_rejects_tampered_registration_key_id`: `KexResponse.keyId` is not
+   authenticated and this test remains ignored for Stage 5.
+2. `beacon_generates_only_one_registration_bundle`: Stage 4 closes this
+   counterexample through the consuming `BeaconFresh` to `BeaconInitSent`
+   production transition, and the regression is now mandatory.
+3. `server_rejects_replayed_registration_bundle`: the server accepts a replayed
+   `InitKex` bundle and this test remains ignored for Stage 5.
 
-Consequently, authentication, injective agreement, and registration replay-resistance claims must remain disabled until the protocol and implementation change. The expected remedies are:
+Consequently, authentication, injective agreement, and registration
+replay-resistance claims must remain disabled until the two remaining protocol
+gaps change. Completing the original three-counterexample milestone requires:
 
 - bind the assigned key ID into authenticated handshake material;
-- make registration-bundle generation a consuming typestate transition;
 - track consumed registration material on the server;
-- allocate key IDs with checked increment and explicit collision rejection.
+- replace wrapping key-ID increment with checked allocation while retaining
+  explicit existing-peer collision rejection.
 
-Once fixed, turn all three ignored tests into passing regression tests before enabling the corresponding ProVerif queries.
+Once fixed, turn the two remaining ignored tests into passing regression tests
+before enabling the corresponding ProVerif queries.
 
 ## Staged rollout
 
 1. **Complete:** create the isolated core crate. Extract one total ratchet transition with hax and typecheck the generated F* without `--lax`. Keep this first slice intentionally small.
 2. **Complete:** move the symmetric-ratchet control state into the core. Prove counter, bounds, replay, retry, peer-isolation, and key-consumption properties.
 3. **Complete:** make the production API delegate to the core and run the existing unit, protocol, and known-answer tests through it.
-4. Move PQXDH into role-specific typestates with explicit randomness and atomic state commits.
-5. Fix the three known counterexamples and make their ignored tests mandatory.
+4. **Complete:** move PQXDH into role-specific typestates with explicit randomness and atomic state commits. This stage also makes `InitKex` generation single-use.
+5. Complete the three-counterexample milestone by fixing key-ID authentication, server registration replay, and collision-safe checked allocation, then make the two remaining ignored tests mandatory.
 6. Add the F* PQXDH agreement, transcript, associated-data, and initialization proofs.
 7. Add ProVerif processes, events, primitive equations, compromise scenarios, and queries.
 8. Pin rustc, hax, F*, Z3, and ProVerif and run extraction plus proofs in CI.
@@ -331,6 +373,47 @@ Authentication failure retains the same logical and concrete receive key, while 
 Persistence keeps the existing six-field `RatchetManager` format: `send_key`, `recv_key`, `send_past`, `send_ctr`, `recv_past`, and `recv_ctr`. The counters are serialized from the authoritative core state; no duplicate core representation is written. During import, the adapter sorts the concrete receive-key sequences and rebuilds the core exclusively through `start_restore`, `restore_receive_key`, and `finish_restore`. States with more than 50 outstanding receive keys are rejected rather than admitted outside the verified state space.
 
 The verified production trace for this stage is restricted to `BeaconCryptPqxdh` operations through the high-level `encrypt_message` and `decrypt_message` methods, starting from a fresh or successfully validated state without rollback. Direct calls to the low-level ratchet/key helpers are outside that trace. `SendKey` is a logical availability marker rather than an affine Rust type, so the one-use claim relies on the production adapter retaining one marker per concrete key and removing both together; cloning or restoring a state with a pending send key and then using both forks is excluded. Selection from the production peer map is also an adapter refinement obligation: the core proves the pointwise peer frame rule, while unique peer lookup and the unchanged-state behavior of non-selected map entries remain covered by implementation validation and protocol regression tests rather than extraction.
+
+### Step 4 implementation
+
+The detailed implementation record is in
+[`formal-verification-stage-4.md`](formal-verification-stage-4.md).
+
+The protocol core now owns deterministic PQXDH composition: disjoint encoded
+key tags, the exact padding and DH/KEM root input, ordered associated data,
+role-dependent ratchet directions, and explicit beacon and server registration
+states. Random key generation and primitive calls remain in the adapter, which
+passes their public outputs and shared-secret results to deterministic core
+transitions.
+
+The production provider stores an internal role enum. Beacon material advances
+through fresh, `InitKex` sent, established, or aborted states, so a registration
+bundle is emitted once and every finish failure is terminal. On success the
+beacon publishes its assigned identity, associated data, and staged ratchet only
+after authenticating the initial ciphertext.
+
+The server validates into a pending registration and builds its proposed peer
+on a fresh ratchet outside the live peer map. It encrypts the initial message
+and serializes the complete response before committing the core counter, public
+counter, and peer map. A failure discards the candidate and leaves exported
+server state unchanged. The pending production token is opaque and consumed by
+the response builder, which obtains response public material and associated
+data from the core candidate. It also records the accepting server's identity
+public key and identity key ID, and candidate preparation rejects use by a
+differently bound provider without changing live state.
+
+The Stage 4 correspondence claim covers high-level registration transitions;
+direct compatibility setters, peer-map mutation, low-level ratchet calls,
+rollback, and cloned live provider state remain explicit preconditions outside
+that trace.
+
+The pinned hax item list extracts these PQXDH transitions to
+`Beaconcrypt_protocol_core.Pqxdh.fst`, and the existing strict F* target
+checks that generated module and its generated safety obligations without
+`--lax`. No PQXDH semantic lemma module is part of Stage 4: agreement,
+transcript, associated-data, and initialization proofs remain Step 6 work.
+Key-ID authentication, server replay tracking, and checked collision-safe
+allocation remain Step 5 work.
 
 ## Toolchain findings and CI policy
 

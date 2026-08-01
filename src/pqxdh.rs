@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: 0BSD
 
+#[cfg(feature = "beacon")]
+use crate::beacon::ProviderBeacon;
 #[cfg(feature = "server")]
 use crate::server::{RecvState, SendState};
+#[cfg(feature = "beacon")]
+use crate::shared::decrypt_message_with_ratchet;
+#[cfg(feature = "server")]
+use crate::shared::encrypt_message_with_ratchet;
 use crate::shared::{
-	DhSecret, ED25519_SEED_SIZE, KEX_KDF_OUT_LEN, KemType, KexDerivedSecret, RatchetManager,
-	RemotePrincipal, SYM_RATCHET_INFO, SignType, SignaturePk, encode_sign,
+	DhSecret, ED25519_SEED_SIZE, KEX_KDF_OUT_LEN, KexDerivedSecret, RatchetManager,
+	RemotePrincipal, SYM_RATCHET_INFO, SignaturePk,
 };
 use crate::{CryptoProvider, phase1_capnp, phase2_capnp};
-#[cfg(feature = "beacon")]
-use crate::{beacon::ProviderBeacon, shared::encode_kem};
 #[cfg(feature = "server")]
 use crate::{
 	server::{ProviderServer, RegResponse, RegistrationOutput},
-	shared::{
-		REGISTRATION_WITNESS, decode_kem, decode_sign, deserialize_server_state,
-		serialize_server_state,
-	},
+	shared::{REGISTRATION_WITNESS, deserialize_server_state, serialize_server_state},
 };
+use beaconcrypt_protocol_core::pqxdh as verified_pqxdh;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{
 	crypto_kdf, crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init,
@@ -24,32 +26,65 @@ use libsodium_rs::{
 use std::collections::HashMap;
 #[cfg(feature = "server")]
 use std::marker::PhantomData;
-use std::mem::swap;
 use std::vec;
 use zeroize::Zeroize;
 
-// https://signal.org/docs/specifications/pqxdh/#pqxdh-parameters: `info` An ASCII string identifying the application with a minimum length of 8 bytes
-pub const PQXDH_INFO: &[u8; 46] = b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768";
-pub const AD_SIZE: usize =
-	PQXDH_INFO.len() + SYM_RATCHET_INFO.len() + ((crypto_sign::PUBLICKEYBYTES + 1) * 2);
+pub const PQXDH_INFO: &[u8; 46] = verified_pqxdh::PQXDH_INFO;
+pub const AD_SIZE: usize = verified_pqxdh::ASSOCIATED_DATA_SIZE;
+
+const _: () = assert!(crypto_sign::PUBLICKEYBYTES == verified_pqxdh::SIGN_PUBLIC_KEY_SIZE);
+const _: () = assert!(crypto_kx::PUBLICKEYBYTES == verified_pqxdh::X25519_PUBLIC_KEY_SIZE);
+const _: () =
+	assert!(crypto_kem::mlkem768::PUBLICKEYBYTES == verified_pqxdh::MLKEM768_PUBLIC_KEY_SIZE);
+const _: () =
+	assert!(crypto_kem::mlkem768::CIPHERTEXTBYTES == verified_pqxdh::MLKEM768_CIPHERTEXT_SIZE);
+const _: () =
+	assert!(crypto_kem::mlkem768::SHAREDSECRETBYTES == verified_pqxdh::SHARED_SECRET_SIZE);
 
 impl SignaturePk for crypto_sign::PublicKey {}
+
+#[cfg_attr(not(feature = "beacon"), allow(dead_code))]
+enum BeaconState {
+	Fresh {
+		control: verified_pqxdh::BeaconFresh,
+		prekey: crypto_kx::KeyPair,
+		pq_key: crypto_kem::mlkem768::KeyPair,
+	},
+	FreshWithCoins {
+		control: verified_pqxdh::BeaconFresh,
+		prekey: crypto_kx::KeyPair,
+		onetime_key: crypto_kx::KeyPair,
+		pq_key: crypto_kem::mlkem768::KeyPair,
+	},
+	InitSent {
+		control: verified_pqxdh::BeaconInitSent,
+		prekey: crypto_kx::KeyPair,
+		onetime_key: crypto_kx::KeyPair,
+		pq_key: crypto_kem::mlkem768::KeyPair,
+	},
+	Established {
+		control: verified_pqxdh::BeaconEstablished,
+		associated_data: [u8; AD_SIZE],
+	},
+	Aborted {
+		control: verified_pqxdh::BeaconAborted,
+	},
+}
+
+// Beacon registration deliberately keeps its secret-bearing key material
+// inline with the provider. Boxing only the large role would add a separate
+// allocation and make its memory lifecycle differ from the other live state.
+#[allow(clippy::large_enum_variant)]
+enum ProviderRole {
+	Beacon(BeaconState),
+	Server(verified_pqxdh::ServerState),
+}
 
 pub struct BeaconCryptPqxdh {
 	identity_key: crypto_sign::KeyPair,
 	identity_key_kid: u64,
-
-	prekey: Option<crypto_kx::KeyPair>,
-
-	onetime_key: Option<crypto_kx::KeyPair>,
-
-	pq_key: Option<crypto_kem::mlkem768::KeyPair>,
-
-	// only used by the beacon to cache the value, server computes it every time
-	associated_data: Option<[u8; AD_SIZE]>,
-	// unfortunately we can't use static generics so we have to store the role at runtime
-	is_beacon: bool,
-	// stores the server's `key_id` for the beacon. Stores the counter of remote `key_id`s for the server
+	role: ProviderRole,
+	// Stores the server key ID for a beacon and the last allocated remote ID for a server.
 	server_kid: u64,
 	known_ids: HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
 }
@@ -62,18 +97,11 @@ impl CryptoProvider for BeaconCryptPqxdh {
 
 	fn default() -> Self {
 		Self {
-			// our cryptographic identity, this is unique to the specific agent instance and uniquely identifies it to the server
 			identity_key: crypto_sign::KeyPair::from_seed(&[0u8; ED25519_SEED_SIZE]).unwrap(),
 			identity_key_kid: 0,
-
-			prekey: None,
-
-			onetime_key: None,
-
-			pq_key: None,
-
-			associated_data: None,
-			is_beacon: true,
+			role: ProviderRole::Beacon(BeaconState::Aborted {
+				control: verified_pqxdh::BeaconAborted::new(0),
+			}),
 			server_kid: 0,
 			known_ids: HashMap::new(),
 		}
@@ -95,18 +123,6 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		} else {
 			crypto_sign::KeyPair::generate().unwrap()
 		};
-		// the server doesn't use prekeys
-		let prekey = if is_beacon {
-			Some(crypto_kx::KeyPair::generate().unwrap())
-		} else {
-			None
-		};
-		// the server doesn't use its own ML-KEM keypair
-		let pqkey = if is_beacon {
-			Some(crypto_kem::mlkem768::KeyPair::generate().unwrap())
-		} else {
-			None
-		};
 		let known_ids = if let Some(pk) = server_id_pk {
 			if !is_beacon {
 				HashMap::new()
@@ -125,23 +141,27 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			HashMap::new()
 		};
 
+		let role = if is_beacon {
+			ProviderRole::Beacon(BeaconState::Fresh {
+				control: verified_pqxdh::BeaconFresh::new(server_kid),
+				prekey: crypto_kx::KeyPair::generate().unwrap(),
+				pq_key: crypto_kem::mlkem768::KeyPair::generate().unwrap(),
+			})
+		} else {
+			ProviderRole::Server(verified_pqxdh::ServerState::new(server_kid))
+		};
+
 		Self {
 			identity_key: id_keypair,
-			// this will be overwritten when the agent registers
 			identity_key_kid: server_kid,
-			prekey,
-			// only the beacon uses it, and it generated at registration time
-			onetime_key: None,
-			pq_key: pqkey,
-			associated_data: None,
-			is_beacon,
+			role,
 			server_kid,
 			known_ids,
 		}
 	}
 
 	fn is_beacon(&self) -> bool {
-		self.is_beacon
+		matches!(&self.role, ProviderRole::Beacon(_))
 	}
 
 	fn set_identity_kid(&mut self, key_id: u64) {
@@ -169,21 +189,32 @@ impl CryptoProvider for BeaconCryptPqxdh {
 	}
 
 	fn new_remote_kid(&mut self) -> u64 {
-		self.server_kid += 1;
+		if let ProviderRole::Server(control) = &mut self.role {
+			self.server_kid = self.server_kid.wrapping_add(1);
+			*control = verified_pqxdh::ServerState::new(self.server_kid);
+		}
 		self.server_kid
 	}
 
 	fn set_associated_data(&mut self, data: [u8; AD_SIZE]) {
-		self.associated_data = Some(data)
+		if let ProviderRole::Beacon(BeaconState::Established {
+			associated_data, ..
+		}) = &mut self.role
+		{
+			*associated_data = data;
+		}
 	}
 
 	fn associated_data(&self, kid: u64) -> Option<[u8; AD_SIZE]> {
-		if self.is_beacon {
-			// the beacon must have set its associated data at the end of registration
-			Some(self.associated_data?)
-		} else {
-			let k = self.pk_by_kid(kid)?;
-			Some(build_associated_data(self.identity_pk().clone(), k.clone()))
+		match &self.role {
+			ProviderRole::Beacon(BeaconState::Established {
+				associated_data, ..
+			}) => Some(*associated_data),
+			ProviderRole::Beacon(_) => None,
+			ProviderRole::Server(_) => {
+				let k = self.pk_by_kid(kid)?;
+				Some(build_associated_data(self.identity_pk().clone(), k.clone()))
+			}
 		}
 	}
 
@@ -196,7 +227,18 @@ impl CryptoProvider for BeaconCryptPqxdh {
 	}
 
 	fn server_kid(&self) -> u64 {
-		self.server_kid
+		match &self.role {
+			ProviderRole::Beacon(BeaconState::Fresh { control, .. }) => control.server_key_id(),
+			ProviderRole::Beacon(BeaconState::FreshWithCoins { control, .. }) => {
+				control.server_key_id()
+			}
+			ProviderRole::Beacon(BeaconState::InitSent { control, .. }) => control.server_key_id(),
+			ProviderRole::Beacon(BeaconState::Established { control, .. }) => {
+				control.server_key_id()
+			}
+			ProviderRole::Beacon(BeaconState::Aborted { control }) => control.server_key_id(),
+			ProviderRole::Server(_) => self.server_kid,
+		}
 	}
 
 	fn pk_by_kid(&self, kid: u64) -> Option<&crypto_sign::PublicKey> {
@@ -216,16 +258,20 @@ impl CryptoProvider for BeaconCryptPqxdh {
 	}
 
 	fn pq_pk(&self) -> Option<&crypto_kem::mlkem768::PublicKey> {
-		match &self.pq_key {
-			Some(key) => Some(&key.public_key),
-			None => None,
+		match &self.role {
+			ProviderRole::Beacon(BeaconState::Fresh { pq_key, .. })
+			| ProviderRole::Beacon(BeaconState::FreshWithCoins { pq_key, .. })
+			| ProviderRole::Beacon(BeaconState::InitSent { pq_key, .. }) => Some(&pq_key.public_key),
+			_ => None,
 		}
 	}
 
 	fn pq_sk(&self) -> Option<&crypto_kem::mlkem768::SecretKey> {
-		match &self.pq_key {
-			Some(key) => Some(&key.secret_key),
-			None => None,
+		match &self.role {
+			ProviderRole::Beacon(BeaconState::Fresh { pq_key, .. })
+			| ProviderRole::Beacon(BeaconState::FreshWithCoins { pq_key, .. })
+			| ProviderRole::Beacon(BeaconState::InitSent { pq_key, .. }) => Some(&pq_key.secret_key),
+			_ => None,
 		}
 	}
 
@@ -247,52 +293,135 @@ impl CryptoProvider for BeaconCryptPqxdh {
 }
 
 impl BeaconCryptPqxdh {
+	#[cfg(feature = "beacon")]
+	fn abort_registration(&mut self, control: verified_pqxdh::BeaconInitSent) {
+		let server_kid = control.server_key_id();
+		self.identity_key_kid = server_kid;
+		if let Some(remote) = self.known_ids.get_mut(&server_kid) {
+			remote.ratchet_mut().reset();
+		}
+		self.role = ProviderRole::Beacon(BeaconState::Aborted {
+			control: verified_pqxdh::beacon_abort_init(control),
+		});
+	}
+
 	pub fn get_prekey_pk(&self) -> Option<&crypto_kx::PublicKey> {
-		match &self.prekey {
-			Some(key) => Some(&key.public_key),
-			None => None,
+		match &self.role {
+			ProviderRole::Beacon(BeaconState::Fresh { prekey, .. })
+			| ProviderRole::Beacon(BeaconState::FreshWithCoins { prekey, .. })
+			| ProviderRole::Beacon(BeaconState::InitSent { prekey, .. }) => Some(&prekey.public_key),
+			_ => None,
 		}
 	}
 
 	pub fn get_prekey_sk(&self) -> Option<&crypto_kx::SecretKey> {
-		match &self.prekey {
-			Some(key) => Some(&key.secret_key),
-			None => None,
+		match &self.role {
+			ProviderRole::Beacon(BeaconState::Fresh { prekey, .. })
+			| ProviderRole::Beacon(BeaconState::FreshWithCoins { prekey, .. })
+			| ProviderRole::Beacon(BeaconState::InitSent { prekey, .. }) => Some(&prekey.secret_key),
+			_ => None,
 		}
 	}
 
 	pub fn get_onetime_pk(&self) -> Option<&crypto_kx::PublicKey> {
-		match &self.onetime_key {
-			Some(key) => Some(&key.public_key),
-			None => None,
+		match &self.role {
+			ProviderRole::Beacon(BeaconState::FreshWithCoins { onetime_key, .. })
+			| ProviderRole::Beacon(BeaconState::InitSent { onetime_key, .. }) => {
+				Some(&onetime_key.public_key)
+			}
+			_ => None,
 		}
 	}
 
 	pub fn get_onetime_sk(&self) -> Option<&crypto_kx::SecretKey> {
-		match &self.onetime_key {
-			Some(key) => Some(&key.secret_key),
-			None => None,
+		match &self.role {
+			ProviderRole::Beacon(BeaconState::FreshWithCoins { onetime_key, .. })
+			| ProviderRole::Beacon(BeaconState::InitSent { onetime_key, .. }) => {
+				Some(&onetime_key.secret_key)
+			}
+			_ => None,
 		}
 	}
 
+	/// Pre-generate the explicit one-time registration coins.
+	///
+	/// This compatibility helper preserves the former public API while keeping
+	/// the key in a dedicated fresh phase rather than an unrelated `Option`.
 	pub fn new_onetime_keypair(&mut self) -> Option<()> {
-		self.onetime_key = Some(crypto_kx::KeyPair::generate().ok()?);
-		Some(())
+		let onetime_key = crypto_kx::KeyPair::generate().ok()?;
+		if let ProviderRole::Beacon(BeaconState::FreshWithCoins {
+			onetime_key: current,
+			..
+		}) = &mut self.role
+		{
+			*current = onetime_key;
+			return Some(());
+		}
+		let control = match &self.role {
+			ProviderRole::Beacon(BeaconState::Fresh { control, .. }) => *control,
+			_ => return None,
+		};
+		let fallback = ProviderRole::Beacon(BeaconState::Aborted {
+			control: verified_pqxdh::beacon_abort_fresh(control),
+		});
+		let previous = std::mem::replace(&mut self.role, fallback);
+		match previous {
+			ProviderRole::Beacon(BeaconState::Fresh { prekey, pq_key, .. }) => {
+				self.role = ProviderRole::Beacon(BeaconState::FreshWithCoins {
+					control,
+					prekey,
+					onetime_key,
+					pq_key,
+				});
+				Some(())
+			}
+			other => {
+				self.role = other;
+				None
+			}
+		}
 	}
 
 	pub fn delete_onetime_keypair(&mut self) {
-		if let Some(onetime) = &mut self.onetime_key {
-			let mut keypair = crypto_kx::KeyPair::from_seed(&[0u8; ED25519_SEED_SIZE]).unwrap();
-			swap(onetime, &mut keypair);
-			self.onetime_key = None
-		}
+		let phase = std::mem::replace(
+			&mut self.role,
+			ProviderRole::Beacon(BeaconState::Aborted {
+				control: verified_pqxdh::BeaconAborted::new(self.server_kid),
+			}),
+		);
+		self.role = match phase {
+			ProviderRole::Beacon(BeaconState::FreshWithCoins {
+				control,
+				prekey,
+				pq_key,
+				..
+			}) => ProviderRole::Beacon(BeaconState::Fresh {
+				control,
+				prekey,
+				pq_key,
+			}),
+			ProviderRole::Beacon(BeaconState::InitSent { control, .. }) => {
+				ProviderRole::Beacon(BeaconState::Aborted {
+					control: verified_pqxdh::beacon_abort_init(control),
+				})
+			}
+			other => other,
+		};
 	}
 
 	pub fn delete_pq_keypair(&mut self) {
-		if let Some(pq_key) = &mut self.pq_key {
-			let mut keypair = crypto_kem::mlkem768::KeyPair::from_seed(&[0u8; 64]).unwrap();
-			swap(pq_key, &mut keypair);
-			self.pq_key = None;
+		let aborted = match &self.role {
+			ProviderRole::Beacon(BeaconState::Fresh { control, .. })
+			| ProviderRole::Beacon(BeaconState::FreshWithCoins { control, .. }) => {
+				Some(verified_pqxdh::beacon_abort_fresh(*control))
+			}
+			ProviderRole::Beacon(BeaconState::InitSent { control, .. }) => {
+				Some(verified_pqxdh::beacon_abort_init(*control))
+			}
+			_ => None,
+		};
+		if let Some(control) = aborted {
+			self.role = ProviderRole::Beacon(BeaconState::Aborted { control });
 		}
 	}
 }
@@ -300,142 +429,247 @@ impl BeaconCryptPqxdh {
 #[cfg(feature = "beacon")]
 impl ProviderBeacon for BeaconCryptPqxdh {
 	fn get_registration_bundle(&mut self) -> Option<Vec<u8>> {
-		use crate::shared::{SignType, encode_sign};
-
+		let mut generated_onetime =
+			if matches!(&self.role, ProviderRole::Beacon(BeaconState::Fresh { .. })) {
+				Some(crypto_kx::KeyPair::generate().ok()?)
+			} else {
+				None
+			};
+		let (control, prekey_public, pq_public, onetime_public) = match &self.role {
+			ProviderRole::Beacon(BeaconState::Fresh {
+				control,
+				prekey,
+				pq_key,
+			}) => (
+				*control,
+				prekey.public_key.as_bytes().try_into().ok()?,
+				*pq_key.public_key.as_bytes(),
+				generated_onetime
+					.as_ref()?
+					.public_key
+					.as_bytes()
+					.try_into()
+					.ok()?,
+			),
+			ProviderRole::Beacon(BeaconState::FreshWithCoins {
+				control,
+				prekey,
+				onetime_key,
+				pq_key,
+			}) => (
+				*control,
+				prekey.public_key.as_bytes().try_into().ok()?,
+				*pq_key.public_key.as_bytes(),
+				onetime_key.public_key.as_bytes().try_into().ok()?,
+			),
+			_ => return None,
+		};
+		let started = verified_pqxdh::beacon_start(
+			control,
+			verified_pqxdh::BeaconStartInputs {
+				identity_public_key: *self.identity_pk().as_bytes(),
+				prekey_public_key: prekey_public,
+				pq_public_key: pq_public,
+			},
+			verified_pqxdh::BeaconCoins {
+				one_time_public_key: onetime_public,
+			},
+		);
 		let mut msg = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
 		let mut bundle = msg.init_root();
-
-		let encoded_id = encode_sign(SignType::Ed25519, self.identity_pk().as_bytes()).ok()?;
-		bundle.set_identity_key(&encoded_id);
-
-		let encoded_prekey = encode_kem(KemType::X25519, self.get_prekey_pk()?.as_bytes()).ok()?;
-		let prekey_sig = crypto_sign::sign(&encoded_prekey, self.identity_sk()).ok()?;
+		bundle.set_identity_key(started.message.identity_key());
+		let prekey_sig = crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?;
 		bundle.set_pre_key(&prekey_sig);
-
-		self.new_onetime_keypair()?;
-		let encoded_onetime =
-			encode_kem(KemType::X25519, self.get_onetime_pk()?.as_bytes()).ok()?;
-		let onetime_sig = crypto_sign::sign(&encoded_onetime, self.identity_sk()).ok()?;
+		let onetime_sig =
+			crypto_sign::sign(started.message.one_time_key(), self.identity_sk()).ok()?;
 		bundle.set_one_time_key(&onetime_sig);
-
-		let encoded_pq = encode_kem(KemType::MlKem768, self.pq_pk()?.as_bytes()).ok()?;
-		let pq_sig = crypto_sign::sign(&encoded_pq, self.identity_sk()).ok()?;
+		let pq_sig = crypto_sign::sign(started.message.pq_key(), self.identity_sk()).ok()?;
 		bundle.set_pq_key(&pq_sig);
-
 		let mut buffer = vec![];
 		capnp::serialize::write_message(&mut buffer, msg.borrow_inner()).ok()?;
+
+		let fallback = ProviderRole::Beacon(BeaconState::Aborted {
+			control: verified_pqxdh::beacon_abort_fresh(control),
+		});
+		let previous = std::mem::replace(&mut self.role, fallback);
+		match previous {
+			ProviderRole::Beacon(BeaconState::Fresh { prekey, pq_key, .. }) => {
+				let Some(onetime_key) = generated_onetime.take() else {
+					self.role = ProviderRole::Beacon(BeaconState::Fresh {
+						control,
+						prekey,
+						pq_key,
+					});
+					return None;
+				};
+				self.role = ProviderRole::Beacon(BeaconState::InitSent {
+					control: started.state,
+					prekey,
+					onetime_key,
+					pq_key,
+				});
+			}
+			ProviderRole::Beacon(BeaconState::FreshWithCoins {
+				prekey,
+				onetime_key,
+				pq_key,
+				..
+			}) => {
+				self.role = ProviderRole::Beacon(BeaconState::InitSent {
+					control: started.state,
+					prekey,
+					onetime_key,
+					pq_key,
+				});
+			}
+			other => {
+				self.role = other;
+				return None;
+			}
+		}
 		Some(buffer)
 	}
 
 	/// Returns the server's intitial message or a single 0xFF byte if the server didn't provide one. A return value of `None` MUST be treated as a protocol failure
 	fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {
-		let reader = capnp::serialize_packed::read_message(bytes, ReaderOptions::new()).ok()?;
-		let typed_reader = TypedReader::<_, phase2_capnp::kex_response::Owned>::new(reader);
-		let response = typed_reader.get().ok()?;
+		let control = match &self.role {
+			ProviderRole::Beacon(BeaconState::InitSent { control, .. }) => *control,
+			_ => return None,
+		};
+		let server_kid = control.server_key_id();
+		let expected_server = self.server_id().cloned();
 
-		let kem_ciphertext =
-			crypto_kem::mlkem768::Ciphertext::from_bytes(response.get_kem_cipher_text().ok()?)
-				.ok()?;
-		let ephemeral =
-			crypto_kx::PublicKey::from_bytes(response.get_ephemeral_key().ok()?).ok()?;
-		let server_id =
-			crypto_sign::PublicKey::from_bytes(response.get_identity_key().ok()?).ok()?;
-		if server_id != self.server_id()?.clone() {
-			return None;
-		}
-		let server_kex_id = crypto_sign::ed25519_pk_to_curve25519(&server_id).ok()?;
-		let beacon_kex_id = crypto_sign::ed25519_sk_to_curve25519(self.identity_sk()).ok()?;
-		let shared_secret =
-			crypto_kem::mlkem768::decapsulate(&kem_ciphertext, self.pq_sk()?).ok()?;
-
-		let all_zeroes: DhSecret = [0u8; crypto_scalarmult::SCALARBYTES].into();
-		let dh1: DhSecret =
-			crypto_scalarmult::scalarmult(self.get_prekey_sk()?.as_bytes(), &server_kex_id)
+		let staged = (|| {
+			let expected_server = expected_server?;
+			let (prekey_secret, onetime_secret, pq_secret) = match &self.role {
+				ProviderRole::Beacon(BeaconState::InitSent {
+					prekey,
+					onetime_key,
+					pq_key,
+					..
+				}) => (
+					&prekey.secret_key,
+					&onetime_key.secret_key,
+					&pq_key.secret_key,
+				),
+				_ => return None,
+			};
+			let reader = capnp::serialize_packed::read_message(bytes, ReaderOptions::new()).ok()?;
+			let typed_reader = TypedReader::<_, phase2_capnp::kex_response::Owned>::new(reader);
+			let response = typed_reader.get().ok()?;
+			let kem_ciphertext =
+				crypto_kem::mlkem768::Ciphertext::from_bytes(response.get_kem_cipher_text().ok()?)
+					.ok()?;
+			let ephemeral =
+				crypto_kx::PublicKey::from_bytes(response.get_ephemeral_key().ok()?).ok()?;
+			let response_server =
+				crypto_sign::PublicKey::from_bytes(response.get_identity_key().ok()?).ok()?;
+			let server_kex_id = crypto_sign::ed25519_pk_to_curve25519(&response_server).ok()?;
+			let beacon_kex_id = crypto_sign::ed25519_sk_to_curve25519(self.identity_sk()).ok()?;
+			let kem_shared = crypto_kem::mlkem768::decapsulate(&kem_ciphertext, pq_secret).ok()?;
+			let dh1: DhSecret =
+				crypto_scalarmult::scalarmult(prekey_secret.as_bytes(), &server_kex_id)
+					.ok()?
+					.into();
+			let dh2: DhSecret = crypto_scalarmult::scalarmult(&beacon_kex_id, ephemeral.as_bytes())
 				.ok()?
 				.into();
-		let dh2: DhSecret = crypto_scalarmult::scalarmult(&beacon_kex_id, ephemeral.as_bytes())
-			.ok()?
-			.into();
-		let dh3: DhSecret =
-			crypto_scalarmult::scalarmult(self.get_prekey_sk()?.as_bytes(), ephemeral.as_bytes())
-				.ok()?
-				.into();
-		let dh4: DhSecret =
-			crypto_scalarmult::scalarmult(self.get_onetime_sk()?.as_bytes(), ephemeral.as_bytes())
-				.ok()?
-				.into();
-		if all_zeroes == dh1 || all_zeroes == dh2 || all_zeroes == dh3 || all_zeroes == dh4 {
-			return None;
-		}
-
-		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, shared_secret)?;
-		self.delete_onetime_keypair();
-		self.delete_pq_keypair();
-
-		self.set_identity_kid(response.get_key_id());
-		let id = self.identity_pk().clone();
-		self.set_associated_data(build_associated_data(server_id, id));
-		let mut info_str = vec![0u8; SYM_RATCHET_INFO.len()];
-		info_str.copy_from_slice(SYM_RATCHET_INFO);
-		let srv_key_id = self.server_kid();
-		self.init_ratchets(derived_secret.as_slice(), &info_str, true, srv_key_id);
-
-		match response.get_app_cipher_text() {
-			// https://signal.org/docs/specifications/pqxdh/#receiving-the-initial-message
-			Ok(ciphertext) => self.decrypt_message(ciphertext).map_or_else(
-				|| {
-					// deletes the derived keychains but not the entire `RemotePrincipal` as the server is currently special-cased.
-					// I think this matches the protocol's requirements: "If the initial ciphertext fails to decrypt, then Bob aborts the protocol and deletes SK".
-					self.reset_known_kid(self.server_kid());
-					self.set_identity_kid(self.server_kid());
-					self.associated_data = None;
-					None
-				},
-				// PQXDH protcol run is now complete and the beacon is successfully registered
-				|decrypted| Some(decrypted.plaintext),
-			),
-			Err(_) => {
-				self.reset_known_kid(self.server_kid());
-				self.set_identity_kid(self.server_kid());
-				self.associated_data = None;
-				None
+			let dh3: DhSecret =
+				crypto_scalarmult::scalarmult(prekey_secret.as_bytes(), ephemeral.as_bytes())
+					.ok()?
+					.into();
+			let dh4: DhSecret =
+				crypto_scalarmult::scalarmult(onetime_secret.as_bytes(), ephemeral.as_bytes())
+					.ok()?
+					.into();
+			let mut finish_inputs = verified_pqxdh::BeaconFinishInputs {
+				expected_server_identity: *expected_server.as_bytes(),
+				response_server_identity: *response_server.as_bytes(),
+				assigned_key_id: response.get_key_id(),
+				shared_secrets: shared_secrets(dh1, dh2, dh3, dh4, &kem_shared)?,
+			};
+			let prepared = verified_pqxdh::beacon_prepare_finish(control, &finish_inputs);
+			zeroize_shared_secrets(&mut finish_inputs.shared_secrets);
+			let mut candidate = prepared.ok()?;
+			let derived_secret = derive_root_key_input(candidate.root_key_input_mut())?;
+			let mut ratchet = RatchetManager::default();
+			if !ratchet.init_ratchets(
+				derived_secret.as_slice(),
+				SYM_RATCHET_INFO,
+				candidate.ratchet_initialization(),
+			) {
+				return None;
 			}
-		}
+			let associated_data = *candidate.associated_data();
+			let decrypted = decrypt_message_with_ratchet(
+				response.get_app_cipher_text().ok()?,
+				server_kid,
+				&associated_data,
+				&mut ratchet,
+			)?;
+			Some((candidate, associated_data, ratchet, decrypted.plaintext))
+		})();
+
+		let Some((candidate, associated_data, ratchet, plaintext)) = staged else {
+			self.abort_registration(control);
+			return None;
+		};
+
+		let Some(remote) = self.known_ids.get_mut(&server_kid) else {
+			self.abort_registration(control);
+			return None;
+		};
+		*remote.ratchet_mut() = ratchet;
+		self.identity_key_kid = candidate.assigned_key_id();
+		self.role = ProviderRole::Beacon(BeaconState::Established {
+			control: verified_pqxdh::beacon_commit(candidate),
+			associated_data,
+		});
+		Some(plaintext)
 	}
 }
 
 #[cfg(feature = "server")]
 impl ProviderServer for BeaconCryptPqxdh {
 	fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput> {
+		let control = match self.role {
+			ProviderRole::Server(control) => control,
+			ProviderRole::Beacon(_) => return None,
+		};
 		let reader = capnp::serialize::read_message(buffer, ReaderOptions::new()).ok()?;
 		let typed_reader = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(reader);
 		let registration = typed_reader.get().ok()?;
-
-		let decoded_beacon_id =
-			decode_sign(registration.get_identity_key().ok()?, SignType::Ed25519).ok()?;
-		let remote_id = crypto_sign::PublicKey::from_bytes(&decoded_beacon_id).ok()?;
+		let encoded_identity: [u8; verified_pqxdh::ENCODED_SIGN_PUBLIC_KEY_SIZE] =
+			registration.get_identity_key().ok()?.try_into().ok()?;
+		if encoded_identity[0] != verified_pqxdh::SIGN_TYPE_ED25519 {
+			return None;
+		}
+		let remote_id = crypto_sign::PublicKey::from_bytes(&encoded_identity[1..]).ok()?;
 		let pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id)?;
 		let prekey_verified = crypto_sign::verify(registration.get_pre_key().ok()?, &remote_id)?;
 		let onetime_verified =
 			crypto_sign::verify(registration.get_one_time_key().ok()?, &remote_id)?;
-
+		let init_kex = verified_pqxdh::InitKex::from_encoded(
+			encoded_identity,
+			prekey_verified.as_slice().try_into().ok()?,
+			onetime_verified.as_slice().try_into().ok()?,
+			pq_verified.as_slice().try_into().ok()?,
+		);
+		let verified_registration = verified_pqxdh::validate_init_kex(init_kex).ok()?;
 		let beacon_prekey =
-			crypto_kx::PublicKey::from_bytes(&decode_kem(&prekey_verified, KemType::X25519).ok()?)
+			crypto_kx::PublicKey::from_bytes(verified_registration.beacon_prekey_public_key())
 				.ok()?;
 		let beacon_onetime =
-			crypto_kx::PublicKey::from_bytes(&decode_kem(&onetime_verified, KemType::X25519).ok()?)
+			crypto_kx::PublicKey::from_bytes(verified_registration.beacon_one_time_public_key())
 				.ok()?;
 		let ephemeral = crypto_kx::KeyPair::generate().ok()?;
 		let pq_pub = crypto_kem::mlkem768::PublicKey::from_bytes(
-			&decode_kem(&pq_verified, KemType::MlKem768).ok()?,
+			verified_registration.beacon_pq_public_key(),
 		)
 		.ok()?;
 		let (kem_ciphertext, kem_shared) = crypto_kem::mlkem768::encapsulate(&pq_pub).ok()?;
-
 		let remote_id_kex = crypto_sign::ed25519_pk_to_curve25519(&remote_id).ok()?;
 		let id_kex_sk = crypto_sign::ed25519_sk_to_curve25519(self.identity_sk()).ok()?;
-
-		let all_zeroes: DhSecret = [0u8; crypto_scalarmult::SCALARBYTES].into();
 		let dh1: DhSecret = crypto_scalarmult::scalarmult(&id_kex_sk, beacon_prekey.as_bytes())
 			.ok()?
 			.into();
@@ -455,17 +689,28 @@ impl ProviderServer for BeaconCryptPqxdh {
 		)
 		.ok()?
 		.into();
-		if all_zeroes == dh1 || all_zeroes == dh2 || all_zeroes == dh3 || all_zeroes == dh4 {
-			return None;
-		}
-
-		let derived_secret = derive_root_key(dh1, dh2, dh3, dh4, kem_shared)?;
+		let mut secrets = shared_secrets(dh1, dh2, dh3, dh4, &kem_shared)?;
+		let accepted = verified_pqxdh::server_accept(
+			control,
+			verified_registration,
+			verified_pqxdh::ServerBinding {
+				identity_public_key: *self.identity_pk().as_bytes(),
+				identity_key_id: self.identity_key_kid,
+			},
+			verified_pqxdh::ServerCoins {
+				ephemeral_public_key: ephemeral.public_key.as_bytes().try_into().ok()?,
+				kem_ciphertext: *kem_ciphertext.as_bytes(),
+			},
+			&secrets,
+		);
+		zeroize_shared_secrets(&mut secrets);
+		let (unchanged, mut pending) = accepted.ok()?;
+		debug_assert_eq!(unchanged, control);
+		let derived_secret = derive_root_key_input(pending.root_key_input_mut())?;
 
 		Some(RegistrationOutput {
-			kem_ciphertext,
 			derived_secret,
-			ephemeral: ephemeral.public_key,
-			public_key: remote_id,
+			control: pending,
 		})
 	} // ephemeral and kem
 
@@ -474,34 +719,66 @@ impl ProviderServer for BeaconCryptPqxdh {
 		reg_out: RegistrationOutput,
 		data: Option<&[u8]>,
 	) -> Option<RegResponse> {
-		// create the session on our end
-		let mut info_str = vec![0u8; SYM_RATCHET_INFO.len()];
-		info_str.copy_from_slice(SYM_RATCHET_INFO);
-		let remote_kid = self.new_remote_kid();
-		self.add_known_kid(remote_kid, reg_out.public_key);
-		self.init_ratchets(
-			reg_out.derived_secret.inner().as_slice(),
-			&info_str,
-			false,
+		let control = match self.role {
+			ProviderRole::Server(control) => control,
+			ProviderRole::Beacon(_) => return None,
+		};
+		let RegistrationOutput {
+			derived_secret,
+			control: pending,
+		} = reg_out;
+		let candidate = verified_pqxdh::server_prepare_commit(
+			control,
+			pending,
+			verified_pqxdh::ServerBinding {
+				identity_public_key: *self.identity_pk().as_bytes(),
+				identity_key_id: self.identity_key_kid,
+			},
+		)
+		.ok()?;
+		let remote_kid = candidate.key_id();
+		let public_key =
+			crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?;
+		if self.known_ids.contains_key(&remote_kid) {
+			return None;
+		}
+		self.known_ids.try_reserve(1).ok()?;
+		let mut ratchet = RatchetManager::default();
+		if !ratchet.init_ratchets(
+			derived_secret.inner().as_slice(),
+			SYM_RATCHET_INFO,
+			candidate.ratchet_initialization(),
+		) {
+			return None;
+		}
+		let associated_data = *candidate.associated_data();
+		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
+		let encrypted = encrypt_message_with_ratchet(
+			plaintext,
 			remote_kid,
-		);
-
+			candidate.server_identity_key_id(),
+			&associated_data,
+			&mut ratchet,
+		)?;
 		let mut msg = TypedBuilder::<phase2_capnp::kex_response::Owned>::new_default();
 		let mut bundle = msg.init_root();
 		bundle.set_key_id(remote_kid);
-		bundle.set_ephemeral_key(reg_out.ephemeral.as_bytes());
-		bundle.set_identity_key(self.identity_pk().as_bytes());
-		bundle.set_kem_cipher_text(reg_out.kem_ciphertext.as_bytes());
-
-		let mut buffer = vec![];
-		let encrypted = if let Some(plaintext) = data {
-			self.encrypt_message(plaintext, remote_kid)?
-		} else {
-			self.encrypt_message(REGISTRATION_WITNESS, remote_kid)?
-		};
+		bundle.set_ephemeral_key(candidate.ephemeral_public_key());
+		bundle.set_identity_key(candidate.server_identity_public_key());
+		bundle.set_kem_cipher_text(candidate.kem_ciphertext());
 		bundle.set_app_cipher_text(&encrypted.ciphertext);
+		let mut buffer = vec![];
 		capnp::serialize_packed::write_message(&mut buffer, msg.borrow_inner()).ok()?;
-
+		let (next_control, established_peer) = verified_pqxdh::server_commit(candidate);
+		debug_assert_eq!(established_peer.key_id, remote_kid);
+		debug_assert_eq!(established_peer.associated_data, associated_data);
+		debug_assert_eq!(&established_peer.identity_public_key, public_key.as_bytes());
+		let old = self
+			.known_ids
+			.insert(remote_kid, RemotePrincipal::new(public_key, ratchet));
+		debug_assert!(old.is_none());
+		self.server_kid = next_control.last_key_id();
+		self.role = ProviderRole::Server(next_control);
 		Some(RegResponse {
 			serialized: buffer,
 			kid: remote_kid,
@@ -558,20 +835,51 @@ impl ProviderServer for BeaconCryptPqxdh {
 		Some(Self {
 			identity_key: id_keypair,
 			identity_key_kid,
-			// the server doesn't use prekeys
-			prekey: None,
-			// only the beacon uses it, and it generated at registration time
-			onetime_key: None,
-			// the server doesn't use its own ML-KEM keypair
-			pq_key: None,
-			associated_data: None,
-			is_beacon: false,
+			role: ProviderRole::Server(verified_pqxdh::ServerState::new(server_kid)),
 			server_kid,
 			known_ids,
 		})
 	}
 }
 
+fn shared_secrets(
+	dh1: DhSecret,
+	dh2: DhSecret,
+	dh3: DhSecret,
+	dh4: DhSecret,
+	kem_shared: &crypto_kem::mlkem768::SharedSecret,
+) -> Option<verified_pqxdh::PqxdhSharedSecrets> {
+	Some(verified_pqxdh::PqxdhSharedSecrets {
+		dh1: dh1.as_slice().try_into().ok()?,
+		dh2: dh2.as_slice().try_into().ok()?,
+		dh3: dh3.as_slice().try_into().ok()?,
+		dh4: dh4.as_slice().try_into().ok()?,
+		kem_shared_secret: *kem_shared.as_bytes(),
+	})
+}
+
+fn zeroize_shared_secrets(secrets: &mut verified_pqxdh::PqxdhSharedSecrets) {
+	secrets.dh1.zeroize();
+	secrets.dh2.zeroize();
+	secrets.dh3.zeroize();
+	secrets.dh4.zeroize();
+	secrets.kem_shared_secret.zeroize();
+}
+
+fn derive_root_key_input(input: &mut verified_pqxdh::RootKeyInput) -> Option<KexDerivedSecret> {
+	let derived = (|| {
+		let prk = crypto_kdf::hkdf::sha512::extract(None, input.as_bytes()).ok()?;
+		Some(
+			crypto_kdf::hkdf::sha512::expand(KEX_KDF_OUT_LEN, Some(PQXDH_INFO), &prk)
+				.ok()?
+				.into(),
+		)
+	})();
+	input.as_mut_bytes().zeroize();
+	derived
+}
+
+#[cfg(test)]
 pub fn derive_root_key(
 	dh1: DhSecret,
 	dh2: DhSecret,
@@ -579,41 +887,18 @@ pub fn derive_root_key(
 	dh4: DhSecret,
 	shared_secret: crypto_kem::mlkem768::SharedSecret,
 ) -> Option<KexDerivedSecret> {
-	// make sure to start inserting after sizeof(Ed25519) so the first bytes are filled with 0xFF as per the spec:
-	// https://signal.org/docs/specifications/pqxdh/#cryptographic-notation
-	let mut ikm = vec![0xFFu8; crypto_kx::PUBLICKEYBYTES];
-	ikm.extend_from_slice(dh1.as_slice());
-	ikm.extend_from_slice(dh2.as_slice());
-	ikm.extend_from_slice(dh3.as_slice());
-	ikm.extend_from_slice(dh4.as_slice());
-	ikm.extend_from_slice(shared_secret.as_bytes());
-
-	let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm).ok()?;
-	ikm.zeroize();
-	let derived: KexDerivedSecret =
-		crypto_kdf::hkdf::sha512::expand(KEX_KDF_OUT_LEN, Some(PQXDH_INFO), &prk)
-			.ok()?
-			.into();
-	Some(derived)
+	let mut secrets = shared_secrets(dh1, dh2, dh3, dh4, &shared_secret)?;
+	let input = verified_pqxdh::build_root_key_input(&secrets);
+	zeroize_shared_secrets(&mut secrets);
+	let mut input = input.ok()?;
+	derive_root_key_input(&mut input)
 }
 
 pub fn build_associated_data(
 	server_id: crypto_sign::PublicKey,
 	beacon_id: crypto_sign::PublicKey,
 ) -> [u8; AD_SIZE] {
-	// AD = EncodeEC(IKA) || EncodeEC(IKB) + what we choose, in this case both protocol strings
-	let mut buffer = vec![0u8; 0];
-	let mut encoded_server = encode_sign(SignType::Ed25519, server_id.as_bytes()).unwrap();
-	buffer.append(&mut encoded_server);
-	let mut encoded_beacon = encode_sign(SignType::Ed25519, beacon_id.as_bytes()).unwrap();
-	buffer.append(&mut encoded_beacon);
-	let mut kex_proto = [0u8; PQXDH_INFO.len()];
-	kex_proto.copy_from_slice(PQXDH_INFO);
-	buffer.extend_from_slice(&kex_proto);
-	let mut sym_proto = [0u8; SYM_RATCHET_INFO.len()];
-	sym_proto.copy_from_slice(SYM_RATCHET_INFO);
-	buffer.extend_from_slice(&sym_proto);
-	*buffer.as_array::<AD_SIZE>().unwrap()
+	verified_pqxdh::build_associated_data(*server_id.as_bytes(), *beacon_id.as_bytes())
 }
 
 #[cfg(all(test, feature = "beacon", feature = "server"))]
@@ -621,7 +906,10 @@ mod tests {
 	use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 	use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 
-	use super::{AD_SIZE, PQXDH_INFO, build_associated_data, derive_root_key};
+	use super::{
+		AD_SIZE, PQXDH_INFO, build_associated_data, derive_root_key, derive_root_key_input,
+		verified_pqxdh,
+	};
 	use crate::{
 		BeaconCryptPqxdh, KDF_STATE_SIZE, SignType,
 		beacon::ProviderBeacon,
@@ -747,7 +1035,7 @@ mod tests {
 	}
 
 	#[test]
-	fn beacon_deletes_one_time_and_pq_keys_after_registration() {
+	fn beacon_deletes_registration_keys_after_registration() {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let server_id = server.identity_pk().to_owned();
 
@@ -758,6 +1046,8 @@ mod tests {
 		assert!(b1.pq_pk().is_some());
 		assert!(b1.pq_sk().is_some());
 		let _ = test_register_beacon(&mut server, &mut b1);
+		assert!(b1.get_prekey_pk().is_none());
+		assert!(b1.get_prekey_sk().is_none());
 		assert!(b1.get_onetime_pk().is_none());
 		assert!(b1.get_onetime_sk().is_none());
 		assert!(b1.pq_pk().is_none());
@@ -774,6 +1064,58 @@ mod tests {
 		let _ = b1.get_registration_bundle();
 		assert!(b1.get_onetime_pk().is_some());
 		assert!(b1.get_onetime_sk().is_some());
+	}
+
+	#[test]
+	fn pre_generated_onetime_key_is_the_one_in_the_registration_bundle() {
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		beacon.new_onetime_keypair().unwrap();
+		let expected = beacon.get_onetime_pk().unwrap().as_bytes().to_vec();
+
+		let serialized = beacon.get_registration_bundle().unwrap();
+		let message =
+			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
+		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
+		let registration = typed.get().unwrap();
+		let signed = crypto_sign::verify(
+			registration.get_one_time_key().unwrap(),
+			beacon.identity_pk(),
+		)
+		.unwrap();
+
+		assert_eq!(decode_kem(&signed, KemType::X25519).unwrap(), expected);
+		assert_eq!(beacon.get_onetime_pk().unwrap().as_bytes(), expected);
+	}
+
+	#[test]
+	fn deleting_pre_generated_onetime_key_returns_to_fresh() {
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		beacon.new_onetime_keypair().unwrap();
+		assert!(beacon.get_onetime_pk().is_some());
+
+		beacon.delete_onetime_keypair();
+
+		assert!(beacon.get_onetime_pk().is_none());
+		assert!(beacon.get_registration_bundle().is_some());
+		assert!(beacon.get_registration_bundle().is_none());
+	}
+
+	#[test]
+	fn deleting_registration_material_after_init_is_terminal() {
+		let mut deletes_onetime = BeaconCryptPqxdh::new(true, 0, None, None);
+		assert!(deletes_onetime.get_registration_bundle().is_some());
+		deletes_onetime.delete_onetime_keypair();
+		assert!(deletes_onetime.get_prekey_pk().is_none());
+		assert!(deletes_onetime.get_onetime_pk().is_none());
+		assert!(deletes_onetime.pq_pk().is_none());
+		assert!(deletes_onetime.get_registration_bundle().is_none());
+
+		let mut deletes_pq = BeaconCryptPqxdh::new(true, 0, None, None);
+		deletes_pq.delete_pq_keypair();
+		assert!(deletes_pq.get_prekey_pk().is_none());
+		assert!(deletes_pq.get_onetime_pk().is_none());
+		assert!(deletes_pq.pq_pk().is_none());
+		assert!(deletes_pq.get_registration_bundle().is_none());
 	}
 
 	#[test]
@@ -1004,6 +1346,21 @@ mod tests {
 
 		assert_eq!(actual.as_slice(), expected.as_slice());
 		assert_eq!(actual.as_slice(), known_answer.as_slice());
+	}
+
+	#[test]
+	fn root_key_transcript_is_zeroized_after_the_opaque_kdf_call() {
+		let secrets = verified_pqxdh::PqxdhSharedSecrets {
+			dh1: [0x11; DH_OUT_LEN],
+			dh2: [0x22; DH_OUT_LEN],
+			dh3: [0x33; DH_OUT_LEN],
+			dh4: [0x44; DH_OUT_LEN],
+			kem_shared_secret: [0x55; crypto_kem::mlkem768::SHAREDSECRETBYTES],
+		};
+		let mut input = verified_pqxdh::build_root_key_input(&secrets).unwrap();
+
+		assert!(derive_root_key_input(&mut input).is_some());
+		assert_eq!(input.as_bytes(), &[0; verified_pqxdh::ROOT_KEY_INPUT_SIZE]);
 	}
 
 	#[test]

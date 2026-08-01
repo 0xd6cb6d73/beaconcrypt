@@ -8,11 +8,12 @@ runtime dependencies. See the repository's
 [formal verification plan](../../doc/formal-verification.md) for the intended
 boundary and proof inventory.
 
-The crate contains the complete control-plane state machine for the symmetric
-ratchet. It owns counters, receive-key availability, receive-window admission,
-one-use send capabilities, authentication completion, restoration validation,
-and pointwise peer selection. Cryptographic chain bytes and concrete message
-keys stay behind the adapter boundary.
+The crate contains the control-plane state machines for the symmetric ratchet
+and PQXDH registration. It owns ratchet counters, key availability and receive
+admission as well as deterministic PQXDH transcript construction,
+role-specific registration states, and commit/abort decisions. Cryptographic
+chain bytes, concrete message keys, private-key operations, and entropy stay
+behind the adapter boundary.
 
 The receive cache is a packed fixed array of at most 50 logical key sequences.
 Its operations are implemented directly rather than through an assumed `Vec`
@@ -45,6 +46,45 @@ pending send keys, and the production peer-map lookup remain explicit adapter
 preconditions; the core's `SendKey` represents logical availability but is not
 an affine Rust type.
 
+## PQXDH typestates and transactional adapter
+
+Stage 4 adds deterministic beacon and server registration transitions. The
+beacon advances through `BeaconFresh`, `BeaconInitSent`,
+`BeaconRegistrationCandidate`, and either `BeaconEstablished` or
+`BeaconAborted`. The server advances from `ServerState` through
+`PendingServerRegistration` and `ServerRegistrationCandidate` before producing
+an updated `ServerState` and `EstablishedPeer`.
+
+Random generation and primitive calls remain explicit adapter inputs. The core
+constructs and validates disjoint key tags, fixes the
+`Padding || DH1 || DH2 || DH3 || DH4 || SS` root input, orders associated data
+as server identity then beacon identity, and selects complementary beacon and
+server ratchet halves. The production adapter signs and parses Cap'n Proto,
+performs libsodium and ML-KEM operations, and applies the resulting plan.
+Secret-bearing transcript and candidate values are not `Copy`, `Clone`, or
+`Debug`; the adapter zeroizes its shared-secret copy and the concrete root
+transcript after use, while physical erasure remains outside the formal claim.
+
+The beacon emits one registration bundle and treats every finish failure as a
+terminal abort. It publishes the assigned identity, associated data, and
+derived ratchet only after the initial ciphertext authenticates. The server
+initializes a fresh peer ratchet, encrypts the initial message, and serializes
+the response off to the side; only then does it commit the key counter and peer
+map. A failed response leaves exported server state unchanged.
+
+The production pending-registration token is opaque and non-clonable, and the
+response public material is read from the core candidate. The token records the
+accepting server's identity public key and identity key ID; candidate
+preparation validates that binding, and staged encryption uses its bound sender
+ID. Replaying the same wire `InitKex` against the same server can still obtain a
+second token; rejecting that replay remains a Stage 5 obligation.
+
+See Step 4 of the
+[formal verification plan](../../doc/formal-verification.md) and the
+[Stage 4 implementation record](../../doc/formal-verification-stage-4.md).
+Key-ID authentication, server replay tracking, and checked collision-safe ID
+allocation remain Stage 5 work. PQXDH functional lemmas remain Stage 6 work.
+
 ## Strict hax/F* verification
 
 From this directory, run:
@@ -53,17 +93,20 @@ From this directory, run:
 make verify
 ```
 
-The target enters the pinned hax Nix shell, regenerates
-`proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst`, and fully
-checks that module, its dependencies, and the hand-maintained lemmas in
+The target enters the pinned hax Nix shell, regenerates the ratchet and PQXDH
+modules under `proofs/fstar/extraction`, and fully checks both generated
+modules, their dependencies, and the hand-maintained ratchet lemmas in
 `proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst`. It never passes
 `--lax`.
 
 The checked properties cover send and receive counter monotonicity and
 exhaustion, receive-gap and cache bounds, retry retention, exact key
 consumption and replay rejection, one-use send keys, and non-selected peer
-isolation. `make check-generated` additionally fails when a tracked extraction
-changes, which is suitable for a generated-diff CI check.
+isolation. The PQXDH module is extracted and its generated safety obligations
+are strictly verified in Stage 4, but it has no handwritten semantic property
+lemmas yet; those are deliberately scheduled for Stage 6.
+`make check-generated` additionally fails when a tracked extraction changes,
+which is suitable for a generated-diff CI check.
 
 The hax revision is
 `5b0ba8be6da3c313fdfed1c19dd0f0721a29f4b3` (hax 0.3.7). Its lock file pins

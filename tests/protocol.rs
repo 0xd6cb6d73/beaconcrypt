@@ -796,6 +796,32 @@ fn registration_can_omit_initial_message() {
 }
 
 #[test]
+fn failed_registration_response_does_not_commit_server_state() {
+	let (mut server, mut rejected_beacon) = new_pair();
+	let phase_1 = rejected_beacon.get_registration_bundle().unwrap();
+	let registration = server.get_shared_secret(&phase_1).unwrap();
+	let state_before = server.export_state().unwrap();
+	let counter_before = server.server_kid();
+	let expected_kid = counter_before + 1;
+
+	assert!(
+		server
+			.build_registration_response(registration, Some(&[]))
+			.is_none()
+	);
+	assert_eq!(server.export_state().unwrap(), state_before);
+	assert_eq!(server.server_kid(), counter_before);
+	assert!(server.pk_by_kid(expected_kid).is_none());
+
+	let server_id = server.identity_pk().to_owned();
+	let mut accepted_beacon =
+		BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let response = register_beacon(&mut server, &mut accepted_beacon, None);
+	assert_eq!(response.kid, expected_kid);
+	assert_eq!(server.server_kid(), expected_kid);
+}
+
+#[test]
 fn beacon_rejects_registration_response_from_wrong_server() {
 	let (mut expected_server, mut beacon) = new_pair();
 	let mut wrong_server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
@@ -808,6 +834,35 @@ fn beacon_rejects_registration_response_from_wrong_server() {
 		.unwrap();
 
 	assert!(beacon.finish_registration(&phase_2.serialized).is_none());
+}
+
+#[test]
+fn server_rejects_pending_registration_from_a_different_server() {
+	let (mut accepting_server, mut beacon) = new_pair();
+	let mut other_server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+	let accepting_state = accepting_server.export_state().unwrap();
+	let pending = accepting_server.get_shared_secret(&phase_1).unwrap();
+	let other_state = other_server.export_state().unwrap();
+
+	assert!(
+		other_server
+			.build_registration_response(pending, Some(b"wrong server"))
+			.is_none()
+	);
+	assert_eq!(other_server.export_state().unwrap(), other_state);
+	assert_eq!(other_server.server_kid(), SERVER_KID);
+	assert!(other_server.pk_by_kid(SERVER_KID + 1).is_none());
+	assert_eq!(accepting_server.export_state().unwrap(), accepting_state);
+
+	let pending = accepting_server.get_shared_secret(&phase_1).unwrap();
+	let response = accepting_server
+		.build_registration_response(pending, Some(b"right server"))
+		.unwrap();
+	assert_eq!(
+		beacon.finish_registration(&response.serialized).unwrap(),
+		b"right server"
+	);
 }
 
 #[test]
@@ -1358,7 +1413,7 @@ fn beacon_rejects_tampered_registration_kem_ciphertext() {
 }
 
 #[test]
-fn failed_initial_ciphertext_clears_registration_state() {
+fn failed_initial_ciphertext_is_terminal_and_clears_registration_state() {
 	let (mut beacon, response) = pending_registration(b"initial message");
 	let mut parts = parse_kex_response(&response);
 	parts.app_ciphertext = corrupt_aead_ciphertext(&parts.app_ciphertext);
@@ -1368,6 +1423,10 @@ fn failed_initial_ciphertext_clears_registration_state() {
 			.finish_registration(&serialize_kex_response(&parts))
 			.is_none()
 	);
+	assert!(beacon.finish_registration(&response).is_none());
+	assert!(beacon.get_registration_bundle().is_none());
+	assert!(beacon.get_prekey_pk().is_none());
+	assert!(beacon.get_prekey_sk().is_none());
 	assert!(beacon.get_onetime_pk().is_none());
 	assert!(beacon.get_onetime_sk().is_none());
 	assert!(beacon.pq_pk().is_none());
@@ -1377,6 +1436,8 @@ fn failed_initial_ciphertext_clears_registration_state() {
 	let ratchet = beacon.ratchet_manager(SERVER_KID).unwrap();
 	assert_eq!(ratchet.send_state().as_slice(), &[0; KDF_STATE_SIZE]);
 	assert_eq!(ratchet.recv_state().as_slice(), &[0; KDF_STATE_SIZE]);
+	assert!(ratchet.send_key(1).is_none());
+	assert!(ratchet.recv_key(1).is_none());
 }
 
 #[test]
@@ -1414,7 +1475,6 @@ fn beacon_rejects_tampered_registration_key_id() {
 }
 
 #[test]
-#[ignore = "known conformance bug: InitKex generation is not single-use"]
 fn beacon_generates_only_one_registration_bundle() {
 	let (_, mut beacon) = new_pair();
 	assert!(beacon.get_registration_bundle().is_some());
@@ -1436,12 +1496,7 @@ fn encrypted_message_cannot_be_relabelled_to_an_alias_key_id() {
 	let (mut server, mut beacon) = new_pair();
 	let phase_1 = beacon.get_registration_bundle().unwrap();
 	let registration = server.get_shared_secret(&phase_1).unwrap();
-	let duplicate_registration = RegistrationOutput {
-		kem_ciphertext: registration.kem_ciphertext.clone(),
-		derived_secret: registration.derived_secret.clone(),
-		ephemeral: registration.ephemeral.clone(),
-		public_key: registration.public_key.clone(),
-	};
+	let duplicate_registration = server.get_shared_secret(&phase_1).unwrap();
 	let first = server
 		.build_registration_response(duplicate_registration, None)
 		.unwrap();

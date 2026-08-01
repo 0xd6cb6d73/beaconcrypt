@@ -13,7 +13,22 @@ HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::ratchet::restore_receive_key \
 	+beaconcrypt_protocol_core::ratchet::finish_restore \
 	+beaconcrypt_protocol_core::ratchet::replace_ratchet_for_peer \
-	+beaconcrypt_protocol_core::ratchet::advance_send_for_peer
+	+beaconcrypt_protocol_core::ratchet::advance_send_for_peer \
+	+beaconcrypt_protocol_core::pqxdh::beacon_start \
+	+beaconcrypt_protocol_core::pqxdh::validate_init_kex \
+	+beaconcrypt_protocol_core::pqxdh::build_root_key_input \
+	+beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization \
+	+beaconcrypt_protocol_core::pqxdh::server_ratchet_initialization \
+	+beaconcrypt_protocol_core::pqxdh::beacon_prepare_finish \
+	+beaconcrypt_protocol_core::pqxdh::beacon_commit \
+	+beaconcrypt_protocol_core::pqxdh::beacon_abort_candidate \
+	+beaconcrypt_protocol_core::pqxdh::beacon_abort_init \
+	+beaconcrypt_protocol_core::pqxdh::beacon_abort_fresh \
+	+beaconcrypt_protocol_core::pqxdh::server_accept \
+	+beaconcrypt_protocol_core::pqxdh::server_prepare_commit \
+	+beaconcrypt_protocol_core::pqxdh::server_commit \
+	+beaconcrypt_protocol_core::pqxdh::server_abort_candidate \
+	+beaconcrypt_protocol_core::pqxdh::build_associated_data
 
 .PHONY: verify verify-in-shell extract-fstar check-fstar check-generated
 

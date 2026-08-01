@@ -484,7 +484,11 @@ mod tests {
 
 	fn populated_manager() -> RatchetManager {
 		let mut manager = RatchetManager::default();
-		manager.init_ratchets(&[0x42; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+		manager.init_ratchets(
+			&[0x42; KDF_STATE_SIZE],
+			SYM_RATCHET_INFO,
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
 
 		for _ in 0..3 {
 			manager.ratchet_send(SYM_RATCHET_INFO).unwrap();
@@ -813,7 +817,11 @@ mod tests {
 	#[test]
 	fn receive_cache_restoration_accepts_the_bound_and_rejects_overflow() {
 		let mut manager = RatchetManager::default();
-		manager.init_ratchets(&[0x73; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+		manager.init_ratchets(
+			&[0x73; KDF_STATE_SIZE],
+			SYM_RATCHET_INFO,
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
 		manager
 			.ratchet_recv_until(
 				SYM_RATCHET_INFO,

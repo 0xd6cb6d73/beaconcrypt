@@ -3,6 +3,7 @@
 #![no_std]
 #![forbid(unsafe_code)]
 
+pub mod pqxdh;
 pub mod ratchet;
 
 pub use ratchet::{

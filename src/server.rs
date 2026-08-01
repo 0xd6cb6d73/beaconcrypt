@@ -2,27 +2,15 @@
 
 use std::marker::PhantomData;
 
-#[cfg(feature = "pqxdh")]
-use libsodium_rs::{crypto_kem, crypto_kx, crypto_sign};
-
 use crate::shared::{KexDerivedSecret, RatchetManager, roles};
-
-#[cfg(feature = "pqxdh")]
-type KemCiphertext = crypto_kem::mlkem768::Ciphertext;
-#[cfg(feature = "pqxdh")]
-type SignVerificationKey = crypto_sign::PublicKey;
-#[cfg(feature = "pqxdh")]
-type EphemeralKexPubKey = crypto_kx::PublicKey;
 pub struct RegResponse {
 	pub serialized: Vec<u8>,
 	pub kid: u64,
 }
 
 pub struct RegistrationOutput {
-	pub kem_ciphertext: KemCiphertext,
-	pub derived_secret: KexDerivedSecret,
-	pub ephemeral: EphemeralKexPubKey,
-	pub public_key: SignVerificationKey,
+	pub(crate) derived_secret: KexDerivedSecret,
+	pub(crate) control: beaconcrypt_protocol_core::pqxdh::PendingServerRegistration,
 }
 
 pub struct StateUpdate<Role: roles::ChainKey> {
