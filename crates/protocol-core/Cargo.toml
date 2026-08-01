@@ -1,0 +1,12 @@
+[package]
+name = "beaconcrypt-protocol-core"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license-file = "../../LICENSE"
+publish = false
+description = "Extractable protocol state transitions for beaconcrypt"
+
+[lib]
+name = "beaconcrypt_protocol_core"
+path = "src/lib.rs"

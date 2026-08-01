@@ -1,0 +1,360 @@
+module Beaconcrypt_protocol_core.Ratchet
+#set-options "--fuel 0 --ifuel 1 --z3rlimit 15"
+open FStar.Mul
+open Core_models
+
+/// Maximum number of outstanding receive keys admitted by the ratchet.
+let v_RATCHET_MAX_GAP: u64 = mk_u64 50
+
+/// Physical capacity of the logical receive-key cache.
+let v_RECEIVE_CACHE_CAPACITY: usize = cast (v_RATCHET_MAX_GAP <: u64) <: usize
+
+/// Opaque fixed-capacity cache of logical receive-key sequence numbers.
+/// Its representation is public to the hax/F* proof boundary, while private
+/// fields prevent Rust callers from constructing states that bypass validation.
+type t_SequenceCache = {
+  f_entries:t_Array u64 (mk_usize 50);
+  f_len:u8
+}
+
+let impl_SequenceCache__empty (_: Prims.unit) : t_SequenceCache =
+  { f_entries = Rust_primitives.Hax.repeat (mk_u64 0) (mk_usize 50); f_len = mk_u8 0 }
+  <:
+  t_SequenceCache
+
+let impl_SequenceCache__append (self: t_SequenceCache) (sequence: u64)
+    : Core_models.Option.t_Option (t_SequenceCache & u8) =
+  if sequence =. mk_u64 0 || (cast (self.f_len <: u8) <: usize) >=. v_RECEIVE_CACHE_CAPACITY
+  then Core_models.Option.Option_None <: Core_models.Option.t_Option (t_SequenceCache & u8)
+  else
+    let slot:u8 = self.f_len in
+    let entries:t_Array u64 (mk_usize 50) = self.f_entries in
+    let entries:t_Array u64 (mk_usize 50) =
+      Rust_primitives.Hax.Monomorphized_update_at.update_at_usize entries
+        (cast (slot <: u8) <: usize)
+        sequence
+    in
+    Core_models.Option.Option_Some
+    (({ f_entries = entries; f_len = slot +! mk_u8 1 } <: t_SequenceCache), slot
+      <:
+      (t_SequenceCache & u8))
+    <:
+    Core_models.Option.t_Option (t_SequenceCache & u8)
+
+/// Pure protocol state for one peer's symmetric ratchet.
+/// Cryptographic chain state and concrete message-key bytes deliberately stay
+/// outside this type. Each cached sequence is a logical capability that the
+/// adapter must refine to exactly one concrete receive key.
+type t_RatchetState = {
+  f_send_sequence:u64;
+  f_receive_sequence:u64;
+  f_receive_cache:t_SequenceCache
+}
+
+/// Construct a state with counters but no outstanding receive keys.
+let impl_RatchetState__from_counters (send_sequence receive_sequence: u64) : t_RatchetState =
+  {
+    f_send_sequence = send_sequence;
+    f_receive_sequence = receive_sequence;
+    f_receive_cache = impl_SequenceCache__empty ()
+  }
+  <:
+  t_RatchetState
+
+/// One-use logical capability for the concrete send key derived by an adapter.
+type t_SendKey = {
+  f_sequence:u64;
+  f_available:bool
+}
+
+let impl_SendKey__unavailable (_: Prims.unit) : t_SendKey =
+  { f_sequence = mk_u64 0; f_available = false } <: t_SendKey
+
+/// Result of attempting to allocate the next sending sequence number.
+type t_SendAdvance = {
+  f_state:t_RatchetState;
+  f_sequence:Core_models.Option.t_Option u64;
+  f_key:t_SendKey
+}
+
+/// Advance the sending sequence once, unless its `u64` counter is exhausted.
+/// The returned key is a logical capability: the crypto adapter derives the
+/// concrete key for the same sequence and must finish it after its one use.
+let advance_send (state: t_RatchetState) : t_SendAdvance =
+  if state.f_send_sequence =. Core_models.Num.impl_u64__MAX
+  then
+    {
+      f_state = state;
+      f_sequence = Core_models.Option.Option_None <: Core_models.Option.t_Option u64;
+      f_key = impl_SendKey__unavailable ()
+    }
+    <:
+    t_SendAdvance
+  else
+    let next:u64 = state.f_send_sequence +! mk_u64 1 in
+    let key:t_SendKey = { f_sequence = next; f_available = true } <: t_SendKey in
+    {
+      f_state = { state with f_send_sequence = next } <: t_RatchetState;
+      f_sequence = Core_models.Option.Option_Some next <: Core_models.Option.t_Option u64;
+      f_key = key
+    }
+    <:
+    t_SendAdvance
+
+/// Result of consuming a logical send-key capability.
+type t_SendFinish = {
+  f_key:t_SendKey;
+  f_consumed:bool
+}
+
+/// Consume a send key exactly once.
+/// The high-level adapter performs this transition after both successful and
+/// failed encryption, matching beaconcrypt's existing one-use send-key policy.
+let finish_send (key: t_SendKey) : t_SendFinish =
+  if key.f_available
+  then
+    { f_key = { f_sequence = key.f_sequence; f_available = false } <: t_SendKey; f_consumed = true }
+    <:
+    t_SendFinish
+  else { f_key = key; f_consumed = false } <: t_SendFinish
+
+/// Admission plan for a receive sequence.
+/// `sequence == None` is a state-neutral rejection. A zero derivation count
+/// deliberately preserves the current low-level behavior for old, consumed,
+/// and zero sequences: a later key lookup decides whether the key exists.
+type t_ReceivePlan = {
+  f_sequence:Core_models.Option.t_Option u64;
+  f_derivations:u64
+}
+
+/// Decide whether `target` can be reached without exceeding the receive gap or
+/// the total outstanding-key capacity.
+let plan_receive_until (state: t_RatchetState) (target: u64) : t_ReceivePlan =
+  if target <=. state.f_receive_sequence
+  then
+    {
+      f_sequence = Core_models.Option.Option_Some target <: Core_models.Option.t_Option u64;
+      f_derivations = mk_u64 0
+    }
+    <:
+    t_ReceivePlan
+  else
+    let derivations:u64 = target -! state.f_receive_sequence in
+    let cached:u64 = cast (state.f_receive_cache.f_len <: u8) <: u64 in
+    if derivations >. v_RATCHET_MAX_GAP || cached >. (v_RATCHET_MAX_GAP -! derivations <: u64)
+    then
+      {
+        f_sequence = Core_models.Option.Option_None <: Core_models.Option.t_Option u64;
+        f_derivations = mk_u64 0
+      }
+      <:
+      t_ReceivePlan
+    else
+      {
+        f_sequence = Core_models.Option.Option_Some target <: Core_models.Option.t_Option u64;
+        f_derivations = derivations
+      }
+      <:
+      t_ReceivePlan
+
+/// Result of deriving one logical receive key.
+type t_ReceiveAdvance = {
+  f_state:t_RatchetState;
+  f_sequence:Core_models.Option.t_Option u64;
+  f_slot:Core_models.Option.t_Option u8
+}
+
+/// Advance the receive chain by exactly one key.
+/// An adapter calls this exactly `ReceivePlan::derivations` times and derives
+/// one concrete KDF output per successful step. Exhaustion and a full cache are
+/// state-neutral.
+let advance_receive (state: t_RatchetState) : t_ReceiveAdvance =
+  if state.f_receive_sequence =. Core_models.Num.impl_u64__MAX
+  then
+    {
+      f_state = state;
+      f_sequence = Core_models.Option.Option_None <: Core_models.Option.t_Option u64;
+      f_slot = Core_models.Option.Option_None <: Core_models.Option.t_Option u8
+    }
+    <:
+    t_ReceiveAdvance
+  else
+    let next:u64 = state.f_receive_sequence +! mk_u64 1 in
+    match
+      impl_SequenceCache__append state.f_receive_cache next
+      <:
+      Core_models.Option.t_Option (t_SequenceCache & u8)
+    with
+    | Core_models.Option.Option_Some (receive_cache, slot) ->
+      {
+        f_state
+        =
+        { state with f_receive_sequence = next; f_receive_cache = receive_cache } <: t_RatchetState;
+        f_sequence = Core_models.Option.Option_Some next <: Core_models.Option.t_Option u64;
+        f_slot = Core_models.Option.Option_Some slot <: Core_models.Option.t_Option u8
+      }
+      <:
+      t_ReceiveAdvance
+    | _ ->
+      {
+        f_state = state;
+        f_sequence = Core_models.Option.Option_None <: Core_models.Option.t_Option u64;
+        f_slot = Core_models.Option.Option_None <: Core_models.Option.t_Option u8
+      }
+      <:
+      t_ReceiveAdvance
+
+/// Outcome of authenticating a cached receive key.
+type t_ReceiveDisposition =
+  | ReceiveDisposition_Missing : t_ReceiveDisposition
+  | ReceiveDisposition_Retained : t_ReceiveDisposition
+  | ReceiveDisposition_Consumed : t_ReceiveDisposition
+
+/// Result of completing a receive attempt.
+type t_ReceiveFinish = {
+  f_state:t_RatchetState;
+  f_disposition:t_ReceiveDisposition
+}
+
+/// Complete authentication for a receive key identified by both slot and
+/// sequence.
+/// Requiring both values prevents a stale slot from consuming a different key.
+/// Removal uses a visible fixed-array swap, avoiding assumed collection models
+/// in the prover backend.
+let finish_receive (state: t_RatchetState) (target: u64) (slot: u8) (authenticated: bool)
+    : t_ReceiveFinish =
+  let len:u8 = state.f_receive_cache.f_len in
+  let len_index:usize = cast (len <: u8) <: usize in
+  let slot_index:usize = cast (slot <: u8) <: usize in
+  if
+    len_index >. v_RECEIVE_CACHE_CAPACITY || slot_index >=. len_index ||
+    (state.f_receive_cache.f_entries.[ slot_index ] <: u64) <>. target
+  then
+    { f_state = state; f_disposition = ReceiveDisposition_Missing <: t_ReceiveDisposition }
+    <:
+    t_ReceiveFinish
+  else
+    if ~.authenticated
+    then
+      { f_state = state; f_disposition = ReceiveDisposition_Retained <: t_ReceiveDisposition }
+      <:
+      t_ReceiveFinish
+    else
+      let last_slot:u8 = len -! mk_u8 1 in
+      let entries:t_Array u64 (mk_usize 50) = state.f_receive_cache.f_entries in
+      let entries:t_Array u64 (mk_usize 50) =
+        Rust_primitives.Hax.Monomorphized_update_at.update_at_usize entries
+          slot_index
+          (entries.[ cast (last_slot <: u8) <: usize ] <: u64)
+      in
+      let entries:t_Array u64 (mk_usize 50) =
+        Rust_primitives.Hax.Monomorphized_update_at.update_at_usize entries
+          (cast (last_slot <: u8) <: usize)
+          (mk_u64 0)
+      in
+      {
+        f_state
+        =
+        {
+          state with
+          f_receive_cache = { f_entries = entries; f_len = last_slot } <: t_SequenceCache
+        }
+        <:
+        t_RatchetState;
+        f_disposition = ReceiveDisposition_Consumed <: t_ReceiveDisposition
+      }
+      <:
+      t_ReceiveFinish
+
+/// Builder for restoring a ratchet from a sorted list of cached sequences.
+/// Keeping restoration as a typestate prevents callers from manufacturing an
+/// invalid `RatchetState`. The persistence adapter can sort its concrete map,
+/// append every key here, and then compare the resulting logical set.
+type t_RatchetRestore = {
+  f_state:t_RatchetState;
+  f_last_sequence:u64
+}
+
+let start_restore (send_sequence receive_sequence: u64) : t_RatchetRestore =
+  {
+    f_state = impl_RatchetState__from_counters send_sequence receive_sequence;
+    f_last_sequence = mk_u64 0
+  }
+  <:
+  t_RatchetRestore
+
+let restore_receive_key (restore: t_RatchetRestore) (sequence: u64)
+    : Core_models.Option.t_Option t_RatchetRestore =
+  if
+    sequence =. mk_u64 0 || sequence >. restore.f_state.f_receive_sequence ||
+    sequence <=. restore.f_last_sequence
+  then Core_models.Option.Option_None <: Core_models.Option.t_Option t_RatchetRestore
+  else
+    match
+      impl_SequenceCache__append restore.f_state.f_receive_cache sequence
+      <:
+      Core_models.Option.t_Option (t_SequenceCache & u8)
+    with
+    | Core_models.Option.Option_Some (receive_cache, _) ->
+      Core_models.Option.Option_Some
+      ({
+          f_state = { restore.f_state with f_receive_cache = receive_cache } <: t_RatchetState;
+          f_last_sequence = sequence
+        }
+        <:
+        t_RatchetRestore)
+      <:
+      Core_models.Option.t_Option t_RatchetRestore
+    | Core_models.Option.Option_None  ->
+      Core_models.Option.Option_None <: Core_models.Option.t_Option t_RatchetRestore
+
+let finish_restore (restore: t_RatchetRestore) : t_RatchetState = restore.f_state
+
+/// Ratchet state associated with one peer identifier.
+type t_PeerRatchetState = {
+  f_peer_id:u64;
+  f_ratchet:t_RatchetState
+}
+
+/// Commit the result of any pure ratchet transition only to the selected peer.
+/// Send and receive adapters use this pointwise operation after computing a
+/// replacement `RatchetState`. Applying it over a uniquely keyed peer map gives
+/// the common frame rule for every ratchet transition.
+let replace_ratchet_for_peer
+      (requested_peer: u64)
+      (peer: t_PeerRatchetState)
+      (replacement: t_RatchetState)
+    : t_PeerRatchetState =
+  if requested_peer <>. peer.f_peer_id
+  then peer
+  else { f_peer_id = peer.f_peer_id; f_ratchet = replacement } <: t_PeerRatchetState
+
+/// Result of applying a send transition pointwise to a peer.
+type t_PeerSendAdvance = {
+  f_peer:t_PeerRatchetState;
+  f_sequence:Core_models.Option.t_Option u64;
+  f_key:t_SendKey
+}
+
+/// Advance only the peer whose identifier matches `requested_peer`.
+/// Applying this function pointwise to a uniquely keyed peer map gives the
+/// frame rule: every non-selected peer is returned byte-for-byte unchanged.
+let advance_send_for_peer (requested_peer: u64) (peer: t_PeerRatchetState) : t_PeerSendAdvance =
+  if requested_peer <>. peer.f_peer_id
+  then
+    {
+      f_peer = peer;
+      f_sequence = Core_models.Option.Option_None <: Core_models.Option.t_Option u64;
+      f_key = impl_SendKey__unavailable ()
+    }
+    <:
+    t_PeerSendAdvance
+  else
+    let advanced:t_SendAdvance = advance_send peer.f_ratchet in
+    {
+      f_peer = replace_ratchet_for_peer requested_peer peer advanced.f_state;
+      f_sequence = advanced.f_sequence;
+      f_key = advanced.f_key
+    }
+    <:
+    t_PeerSendAdvance

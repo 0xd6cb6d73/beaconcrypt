@@ -12,6 +12,11 @@ exclude = [
 	"wycheproof/**",
 ]
 
+[workspace]
+resolver = "3"
+members = ["crates/protocol-core"]
+default-members = ["."]
+
 [lib]
 name = "beaconcrypt"
 crate-type = ["cdylib", "staticlib", "rlib"]
