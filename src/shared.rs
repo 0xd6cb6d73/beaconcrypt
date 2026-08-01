@@ -6,6 +6,7 @@ use crate::error::DecodingError;
 use crate::error::EncodingError;
 #[cfg(feature = "pqxdh")]
 use crate::pqxdh::AD_SIZE;
+use beaconcrypt_protocol_core::ratchet as verified_ratchet;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::utils::memcmp;
 use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
@@ -40,7 +41,10 @@ pub const KDF_RATCHET_OUTPUT_LEN: usize = AEAD_KEY_LEN + KDF_STATE_SIZE + AEAD_N
 #[cfg(feature = "pqxdh")]
 pub const DH_OUT_LEN: usize = 32;
 // the maximum amounts of out-of-order messages we tolerate
+// cbindgen requires a literal initializer for this public C constant. The
+// compile-time assertion keeps it tied to the authoritative core value.
 pub const RATCHET_MAX_GAP: u64 = 50;
+const _: () = assert!(RATCHET_MAX_GAP == verified_ratchet::RATCHET_MAX_GAP);
 #[cfg(feature = "pqxdh")]
 pub const ED25519_SEED_SIZE: usize = 32;
 #[cfg(feature = "server")]
@@ -541,10 +545,11 @@ pub struct RatchetManager {
 	/// current state of the KDF on the recv chain
 	recv_key: RecvChain,
 	send_past: HashMap<u64, KeyMaterial>,
-	send_ctr: u64,
+	/// One-use logical capabilities paired with every concrete pending send key.
+	send_capabilities: HashMap<u64, verified_ratchet::SendKey>,
 	recv_past: HashMap<u64, KeyMaterial>,
-	recv_ctr: u64,
-	// role: PhantomData,
+	/// Authoritative counters and logical receive-key ownership.
+	control: verified_ratchet::RatchetState,
 }
 
 impl RatchetManager {
@@ -553,9 +558,9 @@ impl RatchetManager {
 			send_key: SendChain::default(),
 			recv_key: RecvChain::default(),
 			send_past: HashMap::new(),
-			send_ctr: 0,
+			send_capabilities: HashMap::new(),
 			recv_past: HashMap::new(),
-			recv_ctr: 0,
+			control: verified_ratchet::RatchetState::default(),
 		}
 	}
 
@@ -565,49 +570,67 @@ impl RatchetManager {
 	}
 
 	pub fn ratchet_send(&mut self, info: &[u8]) -> Option<u64> {
-		let current = self.send_ctr.checked_add(1)?;
-		if self.send_past.contains_key(&current) {
+		debug_assert!(self.send_cache_matches_control());
+		let advanced = verified_ratchet::advance_send(self.control);
+		let current = advanced.sequence?;
+		if self.send_past.contains_key(&current) || self.send_capabilities.contains_key(&current) {
 			return None;
 		}
 		let keys = self.send_key.ratchet(info);
-		self.send_ctr = current;
-		self.send_past.insert(current, keys);
+		let old_keys = self.send_past.insert(current, keys);
+		let old_capability = self.send_capabilities.insert(current, advanced.key);
+		debug_assert!(old_keys.is_none());
+		debug_assert!(old_capability.is_none());
+		self.control = advanced.state;
+		debug_assert!(self.send_cache_matches_control());
 		Some(current)
 	}
 
 	pub fn send_key(&self, seq: u64) -> Option<&KeyMaterial> {
+		self.send_capabilities
+			.get(&seq)
+			.filter(|capability| capability.sequence() == Some(seq))?;
 		self.send_past.get(&seq)
 	}
 
 	pub fn recv_key(&self, seq: u64) -> Option<&KeyMaterial> {
+		self.receive_key_slot(seq)?;
 		self.recv_past.get(&seq)
 	}
 
 	pub fn ratchet_recv(&mut self, info: &[u8]) -> Option<u64> {
-		let current = self.recv_ctr.checked_add(1)?;
+		debug_assert!(self.receive_cache_matches_control());
+		let advanced = verified_ratchet::advance_receive(self.control);
+		let current = advanced.sequence?;
 		if self.recv_past.contains_key(&current) {
 			return None;
 		}
 		let keys = self.recv_key.ratchet(info);
-		self.recv_ctr = current;
-		self.recv_past.insert(current, keys);
+		let old_key = self.recv_past.insert(current, keys);
+		debug_assert!(old_key.is_none());
+		self.control = advanced.state;
+		debug_assert_eq!(
+			advanced
+				.slot
+				.and_then(|slot| self.control.receive_key_at(slot)),
+			Some(current)
+		);
+		debug_assert!(self.receive_cache_matches_control());
 		Some(current)
 	}
 
 	pub fn ratchet_recv_until(&mut self, info: &[u8], until: u64) -> Option<u64> {
-		if until <= self.recv_ctr {
-			Some(until)
-		} else {
-			let diff = until - self.recv_ctr;
-			if diff > RATCHET_MAX_GAP || self.recv_past.len() as u64 + diff > RATCHET_MAX_GAP {
-				return None;
-			}
-			for _ in 0..diff {
-				self.ratchet_recv(info)?;
-			}
-			assert_eq!(until, self.recv_ctr);
-			Some(self.recv_ctr)
+		debug_assert!(self.receive_cache_matches_control());
+		let plan = verified_ratchet::plan_receive_until(self.control, until);
+		let target = plan.sequence?;
+		for _ in 0..plan.derivations {
+			self.ratchet_recv(info)?;
 		}
+		if plan.derivations != 0 {
+			debug_assert_eq!(self.control.receive_sequence(), target);
+		}
+		debug_assert!(self.receive_cache_matches_control());
+		Some(target)
 	}
 
 	pub fn init_ratchets(&mut self, ikm: &[u8], info: &[u8], is_beacon: bool) {
@@ -625,21 +648,112 @@ impl RatchetManager {
 		combined.zeroize();
 	}
 
+	fn consume_send_key(&mut self, seq: u64) -> bool {
+		debug_assert!(self.send_cache_matches_control());
+		let Some(capability) = self.send_capabilities.remove(&seq) else {
+			return false;
+		};
+		if capability.sequence() != Some(seq) {
+			self.send_capabilities.insert(seq, capability);
+			return false;
+		}
+
+		let finished = verified_ratchet::finish_send(capability);
+		if !finished.consumed {
+			self.send_capabilities.insert(seq, finished.key);
+			return false;
+		}
+		let removed = self.send_past.remove(&seq);
+		debug_assert!(removed.is_some());
+		debug_assert!(self.send_cache_matches_control());
+		removed.is_some()
+	}
+
 	pub fn delete_send_key(&mut self, seq: u64) {
-		self.send_past.remove(&seq);
+		self.consume_send_key(seq);
+	}
+
+	fn complete_recv_key(
+		&mut self,
+		seq: u64,
+		authenticated: bool,
+	) -> verified_ratchet::ReceiveDisposition {
+		debug_assert!(self.receive_cache_matches_control());
+		let Some(slot) = self.receive_key_slot(seq) else {
+			return verified_ratchet::ReceiveDisposition::Missing;
+		};
+		let has_concrete_key = self.recv_past.contains_key(&seq);
+		debug_assert!(
+			has_concrete_key,
+			"logical receive key has no concrete refinement"
+		);
+		if !has_concrete_key {
+			return verified_ratchet::ReceiveDisposition::Missing;
+		}
+
+		let finished = verified_ratchet::finish_receive(self.control, seq, slot, authenticated);
+		if finished.disposition == verified_ratchet::ReceiveDisposition::Consumed {
+			let removed = self.recv_past.remove(&seq);
+			debug_assert!(removed.is_some());
+		}
+		self.control = finished.state;
+		debug_assert!(self.receive_cache_matches_control());
+		finished.disposition
 	}
 
 	pub fn delete_recv_key(&mut self, seq: u64) {
-		self.recv_past.remove(&seq);
+		self.complete_recv_key(seq, true);
 	}
 
 	pub fn reset(&mut self) {
 		self.send_key = SendChain::default();
 		self.recv_key = RecvChain::default();
 		self.send_past = HashMap::new();
-		self.send_ctr = 0;
+		self.send_capabilities = HashMap::new();
 		self.recv_past = HashMap::new();
-		self.recv_ctr = 0;
+		self.control = verified_ratchet::RatchetState::default();
+	}
+
+	#[cfg(any(feature = "server", test))]
+	fn send_sequence(&self) -> u64 {
+		self.control.send_sequence()
+	}
+
+	#[cfg(any(feature = "server", test))]
+	fn receive_sequence(&self) -> u64 {
+		self.control.receive_sequence()
+	}
+
+	fn receive_key_slot(&self, sequence: u64) -> Option<u8> {
+		(0..self.control.receive_cache_len())
+			.find(|&slot| self.control.receive_key_at(slot) == Some(sequence))
+	}
+
+	fn send_cache_matches_control(&self) -> bool {
+		self.send_past.len() == self.send_capabilities.len()
+			&& self.send_past.keys().all(|sequence| {
+				self.send_capabilities
+					.get(sequence)
+					.is_some_and(|capability| capability.sequence() == Some(*sequence))
+			})
+	}
+
+	fn receive_cache_matches_control(&self) -> bool {
+		self.recv_past.len() <= RATCHET_MAX_GAP as usize
+			&& self.recv_past.len() == self.control.receive_cache_len() as usize
+			&& (0..self.control.receive_cache_len()).all(|slot| {
+				self.control
+					.receive_key_at(slot)
+					.is_some_and(|sequence| self.recv_past.contains_key(&sequence))
+			})
+	}
+
+	#[cfg(feature = "server")]
+	fn restored_send_capability(sequence: u64) -> Option<verified_ratchet::SendKey> {
+		let previous = sequence.checked_sub(1)?;
+		let restored =
+			verified_ratchet::advance_send(verified_ratchet::RatchetState::new(previous));
+		(restored.sequence == Some(sequence)).then_some(restored.key)
 	}
 
 	pub fn send_state(&self) -> &KdfSendState {
@@ -763,18 +877,25 @@ pub trait CryptoProvider {
 								..ct_len - COMMITMENT_SIZE],
 							key_seq,
 							kid,
-						)?;
-						if !memcmp(&commitment, &ciphertext[ct_len - COMMITMENT_SIZE..]) {
+						);
+						let plaintext = match commitment {
+							Some(commitment)
+								if memcmp(&commitment, &ciphertext[ct_len - COMMITMENT_SIZE..]) =>
+							{
+								crypto_aead::chacha20poly1305_ietf::decrypt(
+									&ciphertext[..ct_len - COMMITMENT_SIZE],
+									Some(associated_data.as_slice()),
+									key.nonce(),
+									key.key(),
+								)
+								.ok()
+							}
+							_ => None,
+						};
+						if !self.complete_recv_key(key_seq, kid, plaintext.is_some()) {
 							return None;
 						}
-						let plaintext = crypto_aead::chacha20poly1305_ietf::decrypt(
-							&ciphertext[..ct_len - COMMITMENT_SIZE],
-							Some(associated_data.as_slice()),
-							key.nonce(),
-							key.key(),
-						)
-						.ok()?;
-						self.delete_recv_key(key_seq, kid);
+						let plaintext = plaintext?;
 						Some(Decrypted {
 							plaintext,
 							key_id: kid,
@@ -802,41 +923,38 @@ pub trait CryptoProvider {
 		}
 		let associated_data = self.associated_data(kid)?;
 		let key_seq = self.ratchet_send(SYM_RATCHET_INFO, kid)?;
-		let key = self.send_key(key_seq, kid)?;
-		let plaintext = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
-			bytes,
-			Some(associated_data.as_slice()),
-			key.nonce(),
-			key.key(),
-		);
-		match plaintext {
-			Ok((mut plaintext, mut tag)) => {
-				let self_kid = self.identity_key_kid();
-				let mut commitment =
-					build_commitment(key, &associated_data, tag.as_slice(), key_seq, self_kid)?;
-				plaintext.append(&mut tag);
-				plaintext.append(&mut commitment);
-				let mut t_builder =
-					TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-				let mut builder: cryptoframe_capnp::crypto_frame::Builder<'_> =
-					t_builder.init_root();
-				builder.set_cipher_text(&plaintext);
-				builder.set_seq(key_seq);
-				builder.set_key_id(self_kid);
-				let mut buffer = vec![];
-				capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).unwrap();
-				self.delete_send_key(key_seq, kid);
-				Some(Encrypted {
-					ciphertext: buffer,
-					key_id: kid,
-					seq: key_seq,
-				})
-			}
-			Err(_) => {
-				self.delete_send_key(key_seq, kid);
-				None
-			}
+		let encrypted = (|| {
+			let key = self.send_key(key_seq, kid)?;
+			let (mut plaintext, mut tag) = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
+				bytes,
+				Some(associated_data.as_slice()),
+				key.nonce(),
+				key.key(),
+			)
+			.ok()?;
+			let self_kid = self.identity_key_kid();
+			let mut commitment =
+				build_commitment(key, &associated_data, tag.as_slice(), key_seq, self_kid)?;
+			plaintext.append(&mut tag);
+			plaintext.append(&mut commitment);
+			let mut t_builder =
+				TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
+			let mut builder: cryptoframe_capnp::crypto_frame::Builder<'_> = t_builder.init_root();
+			builder.set_cipher_text(&plaintext);
+			builder.set_seq(key_seq);
+			builder.set_key_id(self_kid);
+			let mut buffer = vec![];
+			capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).ok()?;
+			Some(Encrypted {
+				ciphertext: buffer,
+				key_id: kid,
+				seq: key_seq,
+			})
+		})();
+		if !self.consume_send_key(key_seq, kid) {
+			return None;
 		}
+		encrypted
 	}
 
 	fn set_identity_kid(&mut self, key_id: u64);
@@ -896,10 +1014,26 @@ pub trait CryptoProvider {
 		}
 	}
 
+	fn consume_send_key(&mut self, seq: u64, kid: u64) -> bool {
+		self.ratchet_manager_mut(kid)
+			.is_some_and(|remote| remote.consume_send_key(seq))
+	}
+
 	fn delete_recv_key(&mut self, seq: u64, kid: u64) {
 		if let Some(remote) = self.ratchet_manager_mut(kid) {
 			remote.delete_recv_key(seq)
 		}
+	}
+
+	fn complete_recv_key(&mut self, seq: u64, kid: u64, authenticated: bool) -> bool {
+		let Some(remote) = self.ratchet_manager_mut(kid) else {
+			return false;
+		};
+		matches!(
+			(authenticated, remote.complete_recv_key(seq, authenticated)),
+			(true, verified_ratchet::ReceiveDisposition::Consumed)
+				| (false, verified_ratchet::ReceiveDisposition::Retained)
+		)
 	}
 
 	/// You must call `add_known_id` or `add_server_id` before this
@@ -1537,24 +1671,26 @@ mod tests {
 	fn ratchets_reject_counter_exhaustion_without_mutating_state() {
 		let mut send = RatchetManager::default();
 		send.init_ratchets(&[0xA1; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
-		send.send_ctr = u64::MAX - 1;
+		send.control = verified_ratchet::RatchetState::from_counters(u64::MAX - 1, 0);
 		assert_eq!(send.ratchet_send(SYM_RATCHET_INFO), Some(u64::MAX));
 		let send_state = send.send_state().as_slice().to_vec();
 		let send_cache_len = send.send_past.len();
 		assert_eq!(send.ratchet_send(SYM_RATCHET_INFO), None);
-		assert_eq!(send.send_ctr, u64::MAX);
+		assert_eq!(send.send_sequence(), u64::MAX);
 		assert_eq!(send.send_state().as_slice(), send_state);
 		assert_eq!(send.send_past.len(), send_cache_len);
+		assert!(send.send_cache_matches_control());
 		assert!(send.send_key(0).is_none());
 
 		let mut recv = RatchetManager::default();
 		recv.init_ratchets(&[0xA2; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
-		recv.recv_ctr = u64::MAX;
+		recv.control = verified_ratchet::RatchetState::from_counters(0, u64::MAX);
 		let recv_state = recv.recv_state().as_slice().to_vec();
 		assert_eq!(recv.ratchet_recv(SYM_RATCHET_INFO), None);
-		assert_eq!(recv.recv_ctr, u64::MAX);
+		assert_eq!(recv.receive_sequence(), u64::MAX);
 		assert_eq!(recv.recv_state().as_slice(), recv_state);
 		assert!(recv.recv_past.is_empty());
+		assert!(recv.receive_cache_matches_control());
 		assert!(recv.recv_key(0).is_none());
 	}
 
@@ -1563,14 +1699,15 @@ mod tests {
 		for distance in [RATCHET_MAX_GAP, RATCHET_MAX_GAP - 1] {
 			let mut ratchet = RatchetManager::default();
 			ratchet.init_ratchets(&[0xA3; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
-			ratchet.recv_ctr = u64::MAX - distance;
+			ratchet.control = verified_ratchet::RatchetState::from_counters(0, u64::MAX - distance);
 
 			assert_eq!(
 				ratchet.ratchet_recv_until(SYM_RATCHET_INFO, u64::MAX),
 				Some(u64::MAX)
 			);
-			assert_eq!(ratchet.recv_ctr, u64::MAX);
+			assert_eq!(ratchet.receive_sequence(), u64::MAX);
 			assert_eq!(ratchet.recv_past.len(), distance as usize);
+			assert!(ratchet.receive_cache_matches_control());
 			assert!(ratchet.recv_key(u64::MAX - distance + 1).is_some());
 			assert!(ratchet.recv_key(u64::MAX).is_some());
 
@@ -1625,9 +1762,69 @@ mod tests {
 			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, denied_target),
 			None,
 		);
-		assert_eq!(ratchet.recv_ctr, RATCHET_MAX_GAP);
+		assert_eq!(ratchet.receive_sequence(), RATCHET_MAX_GAP);
 		assert!(ratchet.recv_key(RATCHET_MAX_GAP + 1).is_none());
 		assert_eq!(ratchet.recv_past.len(), RATCHET_MAX_GAP as usize - 1);
+		assert!(ratchet.receive_cache_matches_control());
+	}
+
+	#[test]
+	fn production_adapter_keeps_logical_and_concrete_keys_in_lockstep() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(&[0xB1; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+
+		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
+		assert!(ratchet.receive_cache_matches_control());
+		assert_eq!(ratchet.control.receive_cache_len(), 4);
+
+		let before_retry = ratchet.control;
+		assert_eq!(
+			ratchet.complete_recv_key(2, false),
+			verified_ratchet::ReceiveDisposition::Retained
+		);
+		assert_eq!(ratchet.control, before_retry);
+		assert!(ratchet.recv_key(2).is_some());
+		assert!(ratchet.receive_cache_matches_control());
+
+		assert_eq!(
+			ratchet.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Consumed
+		);
+		assert!(ratchet.recv_key(2).is_none());
+		assert_eq!(ratchet.control.receive_cache_len(), 3);
+		assert!(ratchet.receive_cache_matches_control());
+
+		let after_consumption = ratchet.control;
+		assert_eq!(
+			ratchet.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Missing
+		);
+		assert_eq!(ratchet.control, after_consumption);
+		assert!(ratchet.receive_cache_matches_control());
+
+		let cloned = ratchet.clone();
+		assert_eq!(cloned.control, ratchet.control);
+		assert!(cloned.receive_cache_matches_control());
+
+		ratchet.reset();
+		assert_eq!(ratchet.control, verified_ratchet::RatchetState::default());
+		assert!(ratchet.receive_cache_matches_control());
+		assert!(ratchet.send_cache_matches_control());
+	}
+
+	#[test]
+	fn production_adapter_consumes_core_send_capabilities() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(&[0xB2; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+
+		let sequence = ratchet.ratchet_send(SYM_RATCHET_INFO).unwrap();
+		assert_eq!(sequence, 1);
+		assert!(ratchet.send_key(sequence).is_some());
+		assert!(ratchet.send_cache_matches_control());
+		assert!(ratchet.consume_send_key(sequence));
+		assert!(ratchet.send_key(sequence).is_none());
+		assert!(ratchet.send_cache_matches_control());
+		assert!(!ratchet.consume_send_key(sequence));
 	}
 
 	#[test]

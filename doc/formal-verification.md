@@ -261,7 +261,7 @@ Once fixed, turn all three ignored tests into passing regression tests before en
 
 1. **Complete:** create the isolated core crate. Extract one total ratchet transition with hax and typecheck the generated F* without `--lax`. Keep this first slice intentionally small.
 2. **Complete:** move the symmetric-ratchet control state into the core. Prove counter, bounds, replay, retry, peer-isolation, and key-consumption properties.
-3. Make the production API delegate to the core and run the existing unit, protocol, and known-answer tests through it.
+3. **Complete:** make the production API delegate to the core and run the existing unit, protocol, and known-answer tests through it.
 4. Move PQXDH into role-specific typestates with explicit randomness and atomic state commits.
 5. Fix the three known counterexamples and make their ignored tests mandatory.
 6. Add the F* PQXDH agreement, transcript, associated-data, and initialization proofs.
@@ -294,7 +294,7 @@ Run the complete check from the core crate:
 make verify
 ```
 
-The target enters hax's revision-pinned `ci-examples` Nix shell, regenerates the F* module, computes and checks its proof-library dependencies, and verifies the extracted module without `--lax`. `make check-generated` adds a tracked-output diff check for CI. This slice is toolchain scaffolding and is not yet used by the production ratchet; production delegation belongs to stage 3.
+The target enters hax's revision-pinned `ci-examples` Nix shell, regenerates the F* module, computes and checks its proof-library dependencies, and verifies the extracted module without `--lax`. `make check-generated` adds a tracked-output diff check for CI. At Step 1 this slice was toolchain scaffolding and was not yet used by the production ratchet; production delegation followed in Step 3.
 
 ### Step 2 implementation
 
@@ -313,7 +313,24 @@ The state machine includes:
 
 The fixed array is intentional. Several convenient dynamic-collection operations are assumptions in the current hax proof libraries; direct array append and validated swap removal keep the key-lifecycle semantics visible in generated F*. The strict lemma module proves the Step 2 property inventory against that generated code.
 
-The production `RatchetManager` remains unchanged in this stage. Step 3 must make the core state authoritative, maintain equality between the concrete `recv_past` map and the core's logical sequence set, and reconstruct the core through its checked restoration typestate. Imported states with more than 50 outstanding receive keys require an explicit compatibility decision because the current deserializer accepts them even though normal high-level traces do not create them.
+At the end of this stage, the production `RatchetManager` remained unchanged. Step 3 therefore had to make the core state authoritative, maintain equality between the concrete `recv_past` map and the core's logical sequence set, and reconstruct the core through its checked restoration typestate.
+
+### Step 3 implementation
+
+The detailed implementation record is in
+[`formal-verification-stage-3.md`](formal-verification-stage-3.md).
+
+The production crate now depends on `beaconcrypt-protocol-core`, and `RatchetManager` delegates its counter, receive-admission, key-lifecycle, and restoration decisions to the extracted state machine. The core `RatchetState` is authoritative: the adapter derives one concrete KDF output for each admitted core step and maintains the refinement invariant
+
+```text
+keys(recv_past) == logical_receive_sequences(core_state)
+```
+
+Authentication failure retains the same logical and concrete receive key, while successful authentication removes exactly that key from both representations. Each allocated logical send capability accompanies its concrete message key until the adapter consumes it with `finish_send`, including encryption-failure paths.
+
+Persistence keeps the existing six-field `RatchetManager` format: `send_key`, `recv_key`, `send_past`, `send_ctr`, `recv_past`, and `recv_ctr`. The counters are serialized from the authoritative core state; no duplicate core representation is written. During import, the adapter sorts the concrete receive-key sequences and rebuilds the core exclusively through `start_restore`, `restore_receive_key`, and `finish_restore`. States with more than 50 outstanding receive keys are rejected rather than admitted outside the verified state space.
+
+The verified production trace for this stage is restricted to `BeaconCryptPqxdh` operations through the high-level `encrypt_message` and `decrypt_message` methods, starting from a fresh or successfully validated state without rollback. Direct calls to the low-level ratchet/key helpers are outside that trace. `SendKey` is a logical availability marker rather than an affine Rust type, so the one-use claim relies on the production adapter retaining one marker per concrete key and removing both together; cloning or restoring a state with a pending send key and then using both forks is excluded. Selection from the production peer map is also an adapter refinement obligation: the core proves the pointwise peer frame rule, while unique peer lookup and the unchanged-state behavior of non-selected map entries remain covered by implementation validation and protocol regression tests rather than extraction.
 
 ## Toolchain findings and CI policy
 

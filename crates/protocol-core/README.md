@@ -8,7 +8,7 @@ runtime dependencies. See the repository's
 [formal verification plan](../../doc/formal-verification.md) for the intended
 boundary and proof inventory.
 
-Step 2 contains the complete control-plane state machine for the symmetric
+The crate contains the complete control-plane state machine for the symmetric
 ratchet. It owns counters, receive-key availability, receive-window admission,
 one-use send capabilities, authentication completion, restoration validation,
 and pointwise peer selection. Cryptographic chain bytes and concrete message
@@ -16,16 +16,34 @@ keys stay behind the adapter boundary.
 
 The receive cache is a packed fixed array of at most 50 logical key sequences.
 Its operations are implemented directly rather than through an assumed `Vec`
-model, so F* can see allocation and exact-key removal. A future production
-adapter must maintain this refinement invariant:
+model, so F* can see allocation and exact-key removal. The production adapter
+maintains this refinement invariant:
 
 ```text
 keys(concrete_receive_key_map) == logical_receive_sequences(core_state)
 ```
 
-The existing beaconcrypt API does not delegate to this crate yet. That
-persistence-sensitive integration is Step 3 of the
-[formal verification plan](../../doc/formal-verification.md).
+The existing beaconcrypt API now delegates its ratchet control decisions to
+this crate. For each admitted logical step, the adapter performs exactly one
+opaque KDF operation and associates the resulting concrete key with the same
+sequence. It removes concrete receive keys only when the core consumes their
+logical capability, retains both representations on authentication failure,
+and completes allocated send capabilities on both successful and failed
+encryption paths.
+
+The persistence adapter preserves the existing six-field wire format. It
+serializes counters from the authoritative core state and reconstructs the
+logical receive cache from sorted concrete-map keys through the checked
+restoration API. Imports with more than 50 outstanding receive keys are
+rejected. See Step 3 of the
+[formal verification plan](../../doc/formal-verification.md) and the
+[Stage 3 implementation record](../../doc/formal-verification-stage-3.md).
+
+The Stage 3 correspondence claim covers high-level encryption and decryption
+traces without state rollback. Direct low-level ratchet calls, forks containing
+pending send keys, and the production peer-map lookup remain explicit adapter
+preconditions; the core's `SendKey` represents logical availability but is not
+an affine Rust type.
 
 ## Strict hax/F* verification
 

@@ -194,9 +194,9 @@ impl Serialize for RatchetManager {
 		state.serialize_field("send_key", &self.send_key)?;
 		state.serialize_field("recv_key", &self.recv_key)?;
 		state.serialize_field("send_past", &send_past)?;
-		state.serialize_field("send_ctr", &self.send_ctr)?;
+		state.serialize_field("send_ctr", &self.send_sequence())?;
 		state.serialize_field("recv_past", &recv_past)?;
-		state.serialize_field("recv_ctr", &self.recv_ctr)?;
+		state.serialize_field("recv_ctr", &self.receive_sequence())?;
 		state.end()
 	}
 }
