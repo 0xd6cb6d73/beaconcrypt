@@ -56,7 +56,7 @@ beacon advances through `BeaconFresh`, `BeaconInitSent`,
 an updated `ServerState` and `EstablishedPeer`.
 
 Random generation and primitive calls remain explicit adapter inputs. The core
-constructs and validates disjoint key tags, fixes the
+constructs and validates disjoint key type/role encodings, fixes the
 `Padding || DH1 || DH2 || DH3 || DH4 || SS` root input, orders associated data
 as server identity then beacon identity, and selects complementary beacon and
 server ratchet halves. The production adapter signs and parses Cap'n Proto,
@@ -116,7 +116,26 @@ assigned-ID prefix, deterministic adapter KDFs, and non-rollback single-owner
 server state. See the
 [Stage 6 implementation record](../../doc/formal-verification-stage-6.md).
 
-## Strict hax/F* verification
+Stage 7 adds an active-attacker ProVerif model. Its review found that the
+prekey and one-time key previously shared the same signed X25519 tag, permitting
+valid signed fields to be exchanged or duplicated. They are now encoded as
+`[type, role, key]`, using low-domain type byte `0x04` and disjoint high-domain
+role bytes `0x80` (prekey) and `0x81` (one-time). The adapter signs the complete
+34-byte encoding, and core validation requires the field-specific role. This
+wire hardening is intentionally not interoperable with the former 33-byte
+signed X25519 payloads. The regenerated F* lemmas prove both exact layouts,
+round trips, domain disjointness, and cross-role rejection.
+
+The ProVerif baseline proves five secrecy queries and injective registration,
+replay, commit, and bounded record correspondences. Separate reachability
+queries exercise acceptance, replay rejection, abort-after-consumption,
+beacon commit, and record receive. The late-compromise model proves secrecy for
+deleted initial and advanced keys while deliberately finding attacks on a
+cached skipped key and on future traffic in both directions, recording the
+absence of post-compromise security. See the
+[Stage 7 implementation record](../../doc/formal-verification-stage-7.md).
+
+## Strict hax/F*/ProVerif verification
 
 From this directory, run:
 
@@ -124,15 +143,17 @@ From this directory, run:
 make verify
 ```
 
-The target enters the pinned hax Nix shell, regenerates the ratchet and PQXDH
-modules under `proofs/fstar/extraction`, and fully checks both generated
-modules, their dependencies, and both hand-maintained lemma modules in
-`proofs/fstar/`. It never passes `--lax`.
+The target enters the pinned hax Nix shell, regenerates the F* ratchet and
+PQXDH modules and the ProVerif extraction, checks both F* lemma modules without
+`--lax`, and runs the baseline, reachability, and compromise models. The result
+gate rejects timeouts, missing queries, unexpected classifications, and every
+unproved or inconclusive security query. `make verify-proverif` runs only the
+ProVerif extraction and checks in the same pinned shell.
 
 The checked properties cover send and receive counter monotonicity and
 exhaustion, receive-gap and cache bounds, retry retention, exact key
 consumption and replay rejection, one-use send keys, and non-selected peer
-isolation. The PQXDH properties cover exact tags and validation, the semantic
+isolation. The PQXDH properties cover exact type/role encodings and validation, the semantic
 registration ID, root and associated-data transcripts, conditional honest-role
 agreement, complementary ratchet initialization, authenticated key-ID
 correspondence, replay-status handling, and checked server transactions.
@@ -140,6 +161,8 @@ correspondence, replay-status handling, and checked server transactions.
 which is suitable for a generated-diff CI check.
 
 The hax revision is
-`5b0ba8be6da3c313fdfed1c19dd0f0721a29f4b3` (hax 0.3.7). Its lock file pins
-the coupled tools used here, including Rust nightly 2025-11-08 (rustc 1.93.0),
-F* v2025.10.06, and Z3 4.13.3.
+`5b0ba8be6da3c313fdfed1c19dd0f0721a29f4b3` (hax 0.3.7). The proof shell
+provides F* v2025.10.06 with its default Z3 4.13.3 and ProVerif 2.05. This
+extraction used rustc 1.97.1; the hax source declares Rust nightly 2025-11-08.
+Fully hermetic CI selection of rustc, hax, F*, Z3, and ProVerif remains Stage 8
+work.

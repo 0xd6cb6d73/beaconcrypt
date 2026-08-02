@@ -128,16 +128,18 @@ To read a `CryptoFrame`, the reader must:
 - Delete the `seq` key on their `recv` keychain if decryption was successful
 
 ## InitKex
-This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../src/schema/phase1.capnp). It must only be run once per beacon instance. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. When referring to encoded public keys, it is meant that the caller will prepend a byte indicating the type of the key before the public key buffer. The same is true when speaking of encoded KEM keys. The beacon builds this message as follows:
+This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../src/schema/phase1.capnp). It must only be run once per beacon instance. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. Ed25519 and ML-KEM-768 public keys are encoded as a one-byte type marker followed by the public-key buffer. The two X25519 fields additionally authenticate their semantic role and are encoded as `[type: u8, role: u8, key]`: `preKey` is `[0x04, 0x80, 32-byte key]` and `oneTimeKey` is `[0x04, 0x81, 32-byte key]`. Type markers occupy the low half of the byte domain and role markers the high half, so the domains are disjoint. The beacon builds this message as follows:
 - Set `identityKey` to the beacon's Ed25519 encoded identity public key
-- Set `preKey` to the beacon's X25519 encoded prekey public key signed under the beacon's identity key
-- Set `oneTimeKey` to the beacon's X25519 encoded onetime public key signed under the beacon's identity key
+- Set `preKey` to the complete type-and-prekey-role encoded X25519 public key signed under the beacon's identity key
+- Set `oneTimeKey` to the complete type-and-one-time-role encoded X25519 public key signed under the beacon's identity key
 - Set `pqKey` to the beacon's ML-KEM-768 encoded ML-KEM public key signed under the beacon's identity key
 
 Beaconcrypt assumes the use of the libsodium `sign` API for all signatures. In this scheme, the signature is prepended to the buffer, so there are no dedicated signature fields.
 
 The server must use this message as follows:
 - Verify that all keys except `identityKey` are signed under `identityKey`
+- Reject an X25519 field unless both its type marker and its field-specific role
+  marker match; exchanging or duplicating the two valid signed fields is invalid
 - Construct the 64-byte registration identifier as the decoded beacon identity
   public key followed by the decoded signed one-time X25519 public key
 - Reject the message if that exact identifier is already in the server's

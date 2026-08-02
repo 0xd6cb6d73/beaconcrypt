@@ -11,6 +11,13 @@ let v_KEM_TYPE_MLKEM768: u8 = mk_u8 3
 
 let v_KEM_TYPE_X25519: u8 = mk_u8 4
 
+/// Key-role markers occupy the high half of the byte domain, while all
+/// algorithm/type markers occupy the low half. This makes a type byte
+/// impossible to reinterpret as a role byte.
+let v_KEY_ROLE_PREKEY: u8 = mk_u8 128
+
+let v_KEY_ROLE_ONE_TIME: u8 = mk_u8 129
+
 let v_PQXDH_INFO: t_Array u8 (mk_usize 46) =
   let list =
     [
@@ -59,11 +66,13 @@ type t_BeaconCoins = { f_one_time_public_key:t_Array u8 (mk_usize 32) }
 
 /// The deterministic, unsigned payloads of an InitKex message.
 /// The adapter signs `prekey`, `one_time_key`, and `pq_key`, then places the
-/// resulting signed buffers and `identity_key` into Cap'n Proto.
+/// resulting signed buffers and `identity_key` into Cap'n Proto. The X25519
+/// payloads are `[type, role, key]`; validation assigns meaning from the
+/// authenticated role byte rather than from the wire field position alone.
 type t_InitKex = {
   f_identity_key:t_Array u8 (mk_usize 33);
-  f_prekey:t_Array u8 (mk_usize 33);
-  f_one_time_key:t_Array u8 (mk_usize 33);
+  f_prekey:t_Array u8 (mk_usize 34);
+  f_one_time_key:t_Array u8 (mk_usize 34);
   f_pq_key:t_Array u8 (mk_usize 1185)
 }
 
@@ -111,6 +120,13 @@ let impl_VerifiedInitKex__registration_id (self: t_VerifiedInitKex) : t_Registra
         t_Slice u8)
   in
   { f_bytes = bytes } <: t_RegistrationId
+
+/// Production abstraction used by the replay adapter and the ProVerif model.
+/// The backend replacement below is deliberately limited to the exact
+/// identity/one-time-key projection proved by the Stage 6 F* lemmas. It does
+/// not replace the Rust implementation on ordinary builds.
+let registration_id (registration: t_VerifiedInitKex) : t_RegistrationId =
+  impl_VerifiedInitKex__registration_id registration
 
 /// Adapter-supplied result of looking up a registration ID in the persistent
 /// consumed-registration set.
@@ -518,22 +534,25 @@ let server_prepare_commit
       <:
       Core_models.Result.t_Result t_ServerRegistrationCandidate t_RegistrationError
 
-let tag_x25519_key (key: t_Array u8 (mk_usize 32)) : t_Array u8 (mk_usize 33) =
-  let output:t_Array u8 (mk_usize 33) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 33) in
-  let output:t_Array u8 (mk_usize 33) =
+let tag_x25519_key (role: u8) (key: t_Array u8 (mk_usize 32)) : t_Array u8 (mk_usize 34) =
+  let output:t_Array u8 (mk_usize 34) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 34) in
+  let output:t_Array u8 (mk_usize 34) =
     Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
       (mk_usize 0)
       v_KEM_TYPE_X25519
   in
-  let output:t_Array u8 (mk_usize 33) =
+  let output:t_Array u8 (mk_usize 34) =
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output (mk_usize 1) role
+  in
+  let output:t_Array u8 (mk_usize 34) =
     Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
-      ({ Core_models.Ops.Range.f_start = mk_usize 1; Core_models.Ops.Range.f_end = mk_usize 33 }
+      ({ Core_models.Ops.Range.f_start = mk_usize 2; Core_models.Ops.Range.f_end = mk_usize 34 }
         <:
         Core_models.Ops.Range.t_Range usize)
       (Core_models.Slice.impl__copy_from_slice #u8
           (output.[ {
-                Core_models.Ops.Range.f_start = mk_usize 1;
-                Core_models.Ops.Range.f_end = mk_usize 33
+                Core_models.Ops.Range.f_start = mk_usize 2;
+                Core_models.Ops.Range.f_end = mk_usize 34
               }
               <:
               Core_models.Ops.Range.t_Range usize ]
@@ -589,8 +608,8 @@ let beacon_start (state: t_BeaconFresh) (inputs: t_BeaconStartInputs) (coins: t_
     =
     {
       f_identity_key = tag_sign_key inputs.f_identity_public_key;
-      f_prekey = tag_x25519_key inputs.f_prekey_public_key;
-      f_one_time_key = tag_x25519_key coins.f_one_time_public_key;
+      f_prekey = tag_x25519_key v_KEY_ROLE_PREKEY inputs.f_prekey_public_key;
+      f_one_time_key = tag_x25519_key v_KEY_ROLE_ONE_TIME coins.f_one_time_public_key;
       f_pq_key = tag_mlkem768_key inputs.f_pq_public_key
     }
     <:
@@ -619,9 +638,11 @@ let untag_sign_key (encoded: t_Array u8 (mk_usize 33))
     in
     Core_models.Option.Option_Some key <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
 
-let untag_x25519_key (encoded: t_Array u8 (mk_usize 33))
+let untag_x25519_key (encoded: t_Array u8 (mk_usize 34)) (expected_role: u8)
     : Core_models.Option.t_Option (t_Array u8 (mk_usize 32)) =
-  if (encoded.[ mk_usize 0 ] <: u8) <>. v_KEM_TYPE_X25519
+  if
+    (encoded.[ mk_usize 0 ] <: u8) <>. v_KEM_TYPE_X25519 ||
+    (encoded.[ mk_usize 1 ] <: u8) <>. expected_role
   then Core_models.Option.Option_None <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
   else
     let key:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
@@ -629,8 +650,8 @@ let untag_x25519_key (encoded: t_Array u8 (mk_usize 33))
       Core_models.Slice.impl__copy_from_slice #u8
         key
         (encoded.[ {
-              Core_models.Ops.Range.f_start = mk_usize 1;
-              Core_models.Ops.Range.f_end = mk_usize 33
+              Core_models.Ops.Range.f_start = mk_usize 2;
+              Core_models.Ops.Range.f_end = mk_usize 34
             }
             <:
             Core_models.Ops.Range.t_Range usize ]
@@ -660,7 +681,7 @@ let untag_mlkem768_key (encoded: t_Array u8 (mk_usize 1185))
     Core_models.Option.Option_Some key <: Core_models.Option.t_Option (t_Array u8 (mk_usize 1184))
 
 /// Re-establish typed, verified registration keys after signature checks in
-/// the adapter. Incorrect or non-disjoint algorithm tags are rejected here.
+/// the adapter. Incorrect type tags or X25519 field roles are rejected here.
 let validate_init_kex (message: t_InitKex)
     : Core_models.Result.t_Result t_VerifiedInitKex t_RegistrationError =
   match
@@ -668,11 +689,13 @@ let validate_init_kex (message: t_InitKex)
   with
   | Core_models.Option.Option_Some identity ->
     (match
-        untag_x25519_key message.f_prekey <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
+        untag_x25519_key message.f_prekey v_KEY_ROLE_PREKEY
+        <:
+        Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
       with
       | Core_models.Option.Option_Some prekey ->
         (match
-            untag_x25519_key message.f_one_time_key
+            untag_x25519_key message.f_one_time_key v_KEY_ROLE_ONE_TIME
             <:
             Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
           with
@@ -885,7 +908,7 @@ let server_accept
         (state,
           ({
               f_server_binding = server_binding;
-              f_registration_id = impl_VerifiedInitKex__registration_id registration;
+              f_registration_id = registration_id registration;
               f_beacon_identity_public_key = registration.f_beacon_identity_public_key;
               f_ephemeral_public_key = coins.f_ephemeral_public_key;
               f_kem_ciphertext = coins.f_kem_ciphertext;

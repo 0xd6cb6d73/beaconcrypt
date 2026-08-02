@@ -71,15 +71,25 @@ let honest_shared_secrets
   beacon.f_dh4 == server.f_dh4 /\
   beacon.f_kem_shared_secret == server.f_kem_shared_secret
 
-/// The algorithm tags are concrete and pairwise disjoint.
-let key_type_tags_are_disjoint (_:Prims.unit)
+/// Algorithm/type markers occupy the low byte domain and X25519 role markers
+/// occupy the high byte domain.  All concrete markers are disjoint.
+let key_type_and_role_markers_are_disjoint (_:Prims.unit)
   : Lemma
       (v_SIGN_TYPE_ED25519 == mk_u8 1 /\
        v_KEM_TYPE_MLKEM768 == mk_u8 3 /\
        v_KEM_TYPE_X25519 == mk_u8 4 /\
+       v_KEY_ROLE_PREKEY == mk_u8 128 /\
+       v_KEY_ROLE_ONE_TIME == mk_u8 129 /\
        v_SIGN_TYPE_ED25519 <> v_KEM_TYPE_MLKEM768 /\
        v_SIGN_TYPE_ED25519 <> v_KEM_TYPE_X25519 /\
-       v_KEM_TYPE_MLKEM768 <> v_KEM_TYPE_X25519)
+       v_KEM_TYPE_MLKEM768 <> v_KEM_TYPE_X25519 /\
+       v_SIGN_TYPE_ED25519 <> v_KEY_ROLE_PREKEY /\
+       v_SIGN_TYPE_ED25519 <> v_KEY_ROLE_ONE_TIME /\
+       v_KEM_TYPE_MLKEM768 <> v_KEY_ROLE_PREKEY /\
+       v_KEM_TYPE_MLKEM768 <> v_KEY_ROLE_ONE_TIME /\
+       v_KEM_TYPE_X25519 <> v_KEY_ROLE_PREKEY /\
+       v_KEM_TYPE_X25519 <> v_KEY_ROLE_ONE_TIME /\
+       v_KEY_ROLE_PREKEY <> v_KEY_ROLE_ONE_TIME)
   = ()
 
 /// Each tagged encoding consists of exactly one algorithm byte followed by
@@ -97,18 +107,28 @@ let sign_key_tag_is_exact (key:t_Array u8 (mk_usize 32))
   FStar.Seq.Base.lemma_index_slice initialized 0 1 0;
   FStar.Seq.Base.lemma_index_slice (tag_sign_key key) 0 1 0
 
-let x25519_key_tag_is_exact (key:t_Array u8 (mk_usize 32))
+let x25519_key_tag_is_exact
+    (role:u8)
+    (key:t_Array u8 (mk_usize 32))
   : Lemma
-      (Seq.index (tag_x25519_key key) 0 == v_KEM_TYPE_X25519 /\
-       Seq.slice (tag_x25519_key key) 1 33 == key)
+      (Seq.index (tag_x25519_key role key) 0 == v_KEM_TYPE_X25519 /\
+       Seq.index (tag_x25519_key role key) 1 == role /\
+       Seq.slice (tag_x25519_key role key) 2 34 == key)
   =
-  let initialized =
+  let type_tagged =
     Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
-      (Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 33))
+      (Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 34))
       (mk_usize 0)
       v_KEM_TYPE_X25519 in
-  FStar.Seq.Base.lemma_index_slice initialized 0 1 0;
-  FStar.Seq.Base.lemma_index_slice (tag_x25519_key key) 0 1 0
+  let initialized =
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
+      type_tagged
+      (mk_usize 1)
+      role in
+  FStar.Seq.Base.lemma_index_slice initialized 0 2 0;
+  FStar.Seq.Base.lemma_index_slice initialized 0 2 1;
+  FStar.Seq.Base.lemma_index_slice (tag_x25519_key role key) 0 2 0;
+  FStar.Seq.Base.lemma_index_slice (tag_x25519_key role key) 0 2 1
 
 let mlkem768_key_tag_is_exact (key:t_Array u8 (mk_usize 1184))
   : Lemma
@@ -130,11 +150,26 @@ let sign_key_tag_round_trip (key:t_Array u8 (mk_usize 32))
        Core_models.Option.Option_Some key)
   = sign_key_tag_is_exact key
 
-let x25519_key_tag_round_trip (key:t_Array u8 (mk_usize 32))
+let x25519_key_tag_round_trip
+    (role:u8)
+    (key:t_Array u8 (mk_usize 32))
   : Lemma
-      (untag_x25519_key (tag_x25519_key key) ==
+      (untag_x25519_key (tag_x25519_key role key) role ==
        Core_models.Option.Option_Some key)
-  = x25519_key_tag_is_exact key
+  = x25519_key_tag_is_exact role key
+
+/// A valid key signed for one X25519 field cannot validate in the other.
+let x25519_key_roles_are_enforced (key:t_Array u8 (mk_usize 32))
+  : Lemma
+      (untag_x25519_key
+         (tag_x25519_key v_KEY_ROLE_PREKEY key)
+         v_KEY_ROLE_ONE_TIME == Core_models.Option.Option_None /\
+       untag_x25519_key
+         (tag_x25519_key v_KEY_ROLE_ONE_TIME key)
+         v_KEY_ROLE_PREKEY == Core_models.Option.Option_None)
+  =
+  x25519_key_tag_is_exact v_KEY_ROLE_PREKEY key;
+  x25519_key_tag_is_exact v_KEY_ROLE_ONE_TIME key
 
 let mlkem768_key_tag_round_trip (key:t_Array u8 (mk_usize 1184))
   : Lemma
@@ -161,8 +196,10 @@ let beacon_start_validates
        | Core_models.Result.Result_Err _ -> False)
   =
   sign_key_tag_round_trip inputs.f_identity_public_key;
-  x25519_key_tag_round_trip inputs.f_prekey_public_key;
-  x25519_key_tag_round_trip coins.f_one_time_public_key;
+  x25519_key_tag_round_trip v_KEY_ROLE_PREKEY inputs.f_prekey_public_key;
+  x25519_key_tag_round_trip v_KEY_ROLE_ONE_TIME coins.f_one_time_public_key;
+  x25519_key_roles_are_enforced inputs.f_prekey_public_key;
+  x25519_key_roles_are_enforced coins.f_one_time_public_key;
   mlkem768_key_tag_round_trip inputs.f_pq_public_key
 
 /// The replay identifier is the exact, collision-free concatenation of the

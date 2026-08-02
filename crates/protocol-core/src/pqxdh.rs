@@ -21,8 +21,14 @@ pub const SIGN_TYPE_ED25519: u8 = 1;
 pub const KEM_TYPE_MLKEM768: u8 = 3;
 pub const KEM_TYPE_X25519: u8 = 4;
 
+/// Key-role markers occupy the high half of the byte domain, while all
+/// algorithm/type markers occupy the low half. This makes a type byte
+/// impossible to reinterpret as a role byte.
+pub const KEY_ROLE_PREKEY: u8 = 0x80;
+pub const KEY_ROLE_ONE_TIME: u8 = 0x81;
+
 pub const ENCODED_SIGN_PUBLIC_KEY_SIZE: usize = SIGN_PUBLIC_KEY_SIZE + 1;
-pub const ENCODED_X25519_PUBLIC_KEY_SIZE: usize = X25519_PUBLIC_KEY_SIZE + 1;
+pub const ENCODED_X25519_PUBLIC_KEY_SIZE: usize = X25519_PUBLIC_KEY_SIZE + 2;
 pub const ENCODED_MLKEM768_PUBLIC_KEY_SIZE: usize = MLKEM768_PUBLIC_KEY_SIZE + 1;
 
 // https://signal.org/docs/specifications/pqxdh/#pqxdh-parameters
@@ -46,6 +52,12 @@ const _: () = assert!(ROOT_KEY_INPUT_SIZE == 192);
 const _: () = assert!(ASSOCIATED_DATA_SIZE == 153);
 const _: () = assert!(REGISTRATION_KEY_ID_BINDING_SIZE == 8);
 const _: () = assert!(REGISTRATION_ID_SIZE == 64);
+const _: () = assert!(SIGN_TYPE_ED25519 < 0x80);
+const _: () = assert!(KEM_TYPE_MLKEM768 < 0x80);
+const _: () = assert!(KEM_TYPE_X25519 < 0x80);
+const _: () = assert!(KEY_ROLE_PREKEY >= 0x80);
+const _: () = assert!(KEY_ROLE_ONE_TIME >= 0x80);
+const _: () = assert!(KEY_ROLE_PREKEY != KEY_ROLE_ONE_TIME);
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RegistrationError {
@@ -75,7 +87,9 @@ pub struct BeaconCoins {
 /// The deterministic, unsigned payloads of an InitKex message.
 ///
 /// The adapter signs `prekey`, `one_time_key`, and `pq_key`, then places the
-/// resulting signed buffers and `identity_key` into Cap'n Proto.
+/// resulting signed buffers and `identity_key` into Cap'n Proto. The X25519
+/// payloads are `[type, role, key]`; validation assigns meaning from the
+/// authenticated role byte rather than from the wire field position alone.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct InitKex {
 	identity_key: [u8; ENCODED_SIGN_PUBLIC_KEY_SIZE],
@@ -152,6 +166,21 @@ impl VerifiedInitKex {
 		bytes[32..].copy_from_slice(&self.beacon_one_time_public_key);
 		RegistrationId { bytes }
 	}
+}
+
+/// Production abstraction used by the replay adapter and the ProVerif model.
+///
+/// The backend replacement below is deliberately limited to the exact
+/// identity/one-time-key projection proved by the Stage 6 F* lemmas. It does
+/// not replace the Rust implementation on ordinary builds.
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::proverif::replace(
+		"reduc forall identity: bitstring, prekey: bitstring, one_time: bitstring, pq: bitstring;\n  ${registration_id}(beaconcrypt_protocol_core__pqxdh__VerifiedInitKex(identity, prekey, one_time, pq)) = beaconcrypt_protocol_core__pqxdh__RegistrationId(registration_identifier(identity, one_time))."
+	)
+)]
+pub fn registration_id(registration: &VerifiedInitKex) -> RegistrationId {
+	registration.registration_id()
 }
 
 /// The signed beacon identity and one-time X25519 public key consumed by an
@@ -233,23 +262,23 @@ pub fn beacon_start(
 		},
 		message: InitKex {
 			identity_key: tag_sign_key(inputs.identity_public_key),
-			prekey: tag_x25519_key(inputs.prekey_public_key),
-			one_time_key: tag_x25519_key(coins.one_time_public_key),
+			prekey: tag_x25519_key(KEY_ROLE_PREKEY, inputs.prekey_public_key),
+			one_time_key: tag_x25519_key(KEY_ROLE_ONE_TIME, coins.one_time_public_key),
 			pq_key: tag_mlkem768_key(inputs.pq_public_key),
 		},
 	}
 }
 
 /// Re-establish typed, verified registration keys after signature checks in
-/// the adapter. Incorrect or non-disjoint algorithm tags are rejected here.
+/// the adapter. Incorrect type tags or X25519 field roles are rejected here.
 pub fn validate_init_kex(message: InitKex) -> Result<VerifiedInitKex, RegistrationError> {
 	let Some(identity) = untag_sign_key(message.identity_key) else {
 		return Err(RegistrationError::InvalidKeyEncoding);
 	};
-	let Some(prekey) = untag_x25519_key(message.prekey) else {
+	let Some(prekey) = untag_x25519_key(message.prekey, KEY_ROLE_PREKEY) else {
 		return Err(RegistrationError::InvalidKeyEncoding);
 	};
-	let Some(one_time) = untag_x25519_key(message.one_time_key) else {
+	let Some(one_time) = untag_x25519_key(message.one_time_key, KEY_ROLE_ONE_TIME) else {
 		return Err(RegistrationError::InvalidKeyEncoding);
 	};
 	let Some(pq) = untag_mlkem768_key(message.pq_key) else {
@@ -291,6 +320,12 @@ impl RootKeyInput {
 	}
 }
 
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::proverif::replace(
+		"reduc forall dh1: bitstring, dh2: bitstring, dh3: bitstring, dh4: bitstring, kem: bitstring;\n  ${build_root_key_input}(beaconcrypt_protocol_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem)) = beaconcrypt_protocol_core__pqxdh__RootKeyInput(pqxdh_root_input(dh1, dh2, dh3, dh4, kem))."
+	)
+)]
 pub fn build_root_key_input(
 	secrets: &PqxdhSharedSecrets,
 ) -> Result<RootKeyInput, RegistrationError> {
@@ -607,7 +642,7 @@ pub fn server_accept(
 		state,
 		PendingServerRegistration {
 			server_binding,
-			registration_id: registration.registration_id(),
+			registration_id: registration_id(&registration),
 			beacon_identity_public_key: registration.beacon_identity_public_key,
 			ephemeral_public_key: coins.ephemeral_public_key,
 			kem_ciphertext: coins.kem_ciphertext,
@@ -742,6 +777,12 @@ pub const fn server_abort_candidate(candidate: &ServerRegistrationCandidate) -> 
 
 /// Associated data is always encoded server identity first, beacon identity
 /// second, then the key-exchange and ratchet domain-separation strings.
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::proverif::replace(
+		"fun ${build_associated_data}(bitstring, bitstring): bitstring [data]."
+	)
+)]
 pub fn build_associated_data(
 	server_identity_public_key: [u8; SIGN_PUBLIC_KEY_SIZE],
 	beacon_identity_public_key: [u8; SIGN_PUBLIC_KEY_SIZE],
@@ -763,10 +804,14 @@ fn tag_sign_key(key: [u8; SIGN_PUBLIC_KEY_SIZE]) -> [u8; ENCODED_SIGN_PUBLIC_KEY
 	output
 }
 
-fn tag_x25519_key(key: [u8; X25519_PUBLIC_KEY_SIZE]) -> [u8; ENCODED_X25519_PUBLIC_KEY_SIZE] {
+fn tag_x25519_key(
+	role: u8,
+	key: [u8; X25519_PUBLIC_KEY_SIZE],
+) -> [u8; ENCODED_X25519_PUBLIC_KEY_SIZE] {
 	let mut output = [0; ENCODED_X25519_PUBLIC_KEY_SIZE];
 	output[0] = KEM_TYPE_X25519;
-	output[1..33].copy_from_slice(&key);
+	output[1] = role;
+	output[2..34].copy_from_slice(&key);
 	output
 }
 
@@ -790,12 +835,13 @@ fn untag_sign_key(
 
 fn untag_x25519_key(
 	encoded: [u8; ENCODED_X25519_PUBLIC_KEY_SIZE],
+	expected_role: u8,
 ) -> Option<[u8; X25519_PUBLIC_KEY_SIZE]> {
-	if encoded[0] != KEM_TYPE_X25519 {
+	if encoded[0] != KEM_TYPE_X25519 || encoded[1] != expected_role {
 		return None;
 	}
 	let mut key = [0; X25519_PUBLIC_KEY_SIZE];
-	key.copy_from_slice(&encoded[1..33]);
+	key.copy_from_slice(&encoded[2..34]);
 	Some(key)
 }
 
@@ -844,11 +890,13 @@ mod tests {
 	}
 
 	#[test]
-	fn beacon_start_is_deterministic_and_tags_disjoint_key_types() {
+	fn beacon_start_is_deterministic_and_tags_disjoint_key_types_and_roles() {
 		let message = init_message();
 		assert_eq!(message.identity_key()[0], SIGN_TYPE_ED25519);
 		assert_eq!(message.prekey()[0], KEM_TYPE_X25519);
+		assert_eq!(message.prekey()[1], KEY_ROLE_PREKEY);
 		assert_eq!(message.one_time_key()[0], KEM_TYPE_X25519);
+		assert_eq!(message.one_time_key()[1], KEY_ROLE_ONE_TIME);
 		assert_eq!(message.pq_key()[0], KEM_TYPE_MLKEM768);
 		assert_eq!(message, init_message());
 		let verified = validate_init_kex(message).unwrap();
@@ -882,8 +930,8 @@ mod tests {
 		);
 
 		assert_eq!(&started.message.identity_key()[1..], &identity_public_key);
-		assert_eq!(&started.message.prekey()[1..], &prekey_public_key);
-		assert_eq!(&started.message.one_time_key()[1..], &one_time_public_key);
+		assert_eq!(&started.message.prekey()[2..], &prekey_public_key);
+		assert_eq!(&started.message.one_time_key()[2..], &one_time_public_key);
 		assert_eq!(&started.message.pq_key()[1..], &pq_public_key);
 		let verified = validate_init_kex(started.message).unwrap();
 		assert_eq!(verified.beacon_identity_public_key(), &identity_public_key);
@@ -905,6 +953,32 @@ mod tests {
 		);
 		assert_eq!(
 			validate_init_kex(wrong),
+			Err(RegistrationError::InvalidKeyEncoding)
+		);
+	}
+
+	#[test]
+	fn swapped_or_duplicated_x25519_roles_are_rejected() {
+		let message = init_message();
+		let swapped = InitKex::from_encoded(
+			*message.identity_key(),
+			*message.one_time_key(),
+			*message.prekey(),
+			*message.pq_key(),
+		);
+		assert_eq!(
+			validate_init_kex(swapped),
+			Err(RegistrationError::InvalidKeyEncoding)
+		);
+
+		let duplicated = InitKex::from_encoded(
+			*message.identity_key(),
+			*message.prekey(),
+			*message.prekey(),
+			*message.pq_key(),
+		);
+		assert_eq!(
+			validate_init_kex(duplicated),
 			Err(RegistrationError::InvalidKeyEncoding)
 		);
 	}

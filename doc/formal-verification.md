@@ -74,7 +74,7 @@ The first extraction slice may be smaller than this layout. In particular, a sin
 The initial production seams were the ratchet state and operations in
 [`src/shared.rs`](../src/shared.rs), the frame encryption/decryption logic in
 that file, and the PQXDH role transitions in
-[`src/pqxdh.rs`](../src/pqxdh.rs). Stages 1 through 6 moved their deterministic
+[`src/pqxdh.rs`](../src/pqxdh.rs). Stages 1 through 7 moved their deterministic
 control decisions into the protocol core while leaving concrete cryptography
 and wire translation in those adapters. Further moves should remain incremental
 rather than attempting to extract the whole crate.
@@ -213,7 +213,7 @@ Opaque operations include:
 
 The extractable code must still expose:
 
-- algorithm and key-type tags;
+- algorithm/type markers and field-role markers;
 - the exact buffers signed or verified;
 - the order of all four DH contributions;
 - KDF domain-separation labels and input order;
@@ -247,7 +247,9 @@ PQXDH:
 
 - An honest beacon and server compute the same PQXDH root.
 - Both sides concatenate padding, DH1, DH2, DH3, DH4, and the KEM secret in the implemented order and use `PQXDH_INFO`.
-- The signed prekey, one-time key, and post-quantum key carry authenticated, disjoint type tags.
+- The signed X25519 prekey and one-time key encode authenticated, disjoint
+  `[type: u8, role: u8, key]` layouts, with type and role markers drawn from
+  disjoint byte domains; the post-quantum key carries its authenticated type.
 - Both roles construct identical, ordered associated data.
 - The response's assigned key ID is encoded as an exact little-endian `u64`
   inside the AEAD-authenticated initial payload, and only a candidate with a
@@ -307,7 +309,7 @@ executable counterexamples to properties that a proof might otherwise claim:
    a semantic registration identifier on the first successful server
    acceptance.
 
-All three regressions are now mandatory and passing. Stage 5 also completes the
+Those original three regressions are mandatory and passing. Stage 5 also completes the
 supporting allocation changes:
 
 - the replay key is the fixed 64-byte semantic tuple `(beacon identity,
@@ -318,11 +320,21 @@ supporting allocation changes:
 - checked increment rejects exhaustion at `u64::MAX`, while an explicit
   availability input rejects collision with the next peer-map ID.
 
+Stage 7's active-attacker model exposed a fourth counterexample: because the
+prekey and one-time key formerly signed the same `[X25519 type, key]` layout,
+an attacker could exchange or duplicate those two valid signed fields. The
+server would accept a ghost registration under a different semantic ID, while
+the beacon could not authenticate the response. The core now encodes prekeys
+as `[0x04, 0x80, key]` and one-time keys as `[0x04, 0x81, key]`; core and
+adapter regressions reject both substitution forms, and the regenerated F*
+lemmas prove the exact layouts and cross-role rejection.
+
 This closes the executable counterexamples. Stage 6 proves the core-side exact
 identifier, binding, status, allocation, and conditional role correspondence
 under explicit adapter preconditions. Truthful persistent-set refinement and
 the production single-use transition remain adapter and regression-test
-obligations; active-attacker ProVerif queries remain later work.
+obligations. Stage 7 adds the active-attacker correspondences under the
+explicit one-owner, non-rollback replay refinement described below.
 
 ## Staged rollout
 
@@ -332,7 +344,7 @@ obligations; active-attacker ProVerif queries remain later work.
 4. **Complete:** move PQXDH into role-specific typestates with explicit randomness and atomic state commits. This stage also makes `InitKex` generation single-use.
 5. **Complete:** close the three-counterexample milestone with authenticated key-ID binding, persistent server registration replay rejection, collision-safe checked allocation, and mandatory regressions.
 6. **Complete:** add the F* PQXDH agreement, transcript, associated-data, initialization, and assigned-ID correspondence proofs.
-7. Add ProVerif processes, events, primitive equations, compromise scenarios, and queries.
+7. **Complete:** add ProVerif processes, events, primitive equations, compromise scenarios, strict result gates, and active-attacker queries.
 8. Pin rustc, hax, F*, Z3, and ProVerif and run extraction plus proofs in CI.
 9. Maintain a reviewed inventory of every opaque Rust function, assumed primitive law, generated-code exception, and handwritten backend fragment.
 
@@ -405,7 +417,7 @@ The detailed implementation record is in
 [`formal-verification-stage-4.md`](formal-verification-stage-4.md).
 
 The protocol core now owns deterministic PQXDH composition: disjoint encoded
-key tags, the exact padding and DH/KEM root input, ordered associated data,
+key type/role markers, the exact padding and DH/KEM root input, ordered associated data,
 role-dependent ratchet directions, and explicit beacon and server registration
 states. Random key generation and primitive calls remain in the adapter, which
 passes their public outputs and shared-secret results to deterministic core
@@ -516,6 +528,70 @@ zeroization, and low-level compatibility mutation remain outside the theorem.
 The generated and handwritten modules contain no local `assume` or `admit`,
 and the target checks them without `--lax`.
 
+### Step 7 implementation
+
+The detailed implementation record is in
+[`formal-verification-stage-7.md`](formal-verification-stage-7.md).
+
+Stage 7 reviewed the complete Stage 6 commit `493a23f` before adding a trace
+model. The ProVerif backend now extracts the production `InitKex`, verified
+registration, registration-ID, root-input, assigned-ID-binding, and associated
+data boundary into
+[`proofs/pro-verif/extraction/lib.pvl`](../crates/protocol-core/proofs/pro-verif/extraction/lib.pvl).
+The three proof-visible production functions use narrowly scoped backend
+replacements whose constructor arguments are the exact layouts already checked
+by F*. Processes, events, the active network, primitive equations, and queries
+remain handwritten because hax 0.3.7 does not generate top-level ProVerif
+processes; every such fragment is inventoried in the Stage 7 record.
+
+Active-attacker analysis found that the two X25519 fields had identical signed
+encodings. Stage 7 therefore extends the production core, rather than assuming
+field position in the model: X25519 payloads are now 34 bytes with exact
+`[type, role, key]` layouts. Type markers occupy the low half of the `u8`
+domain, while the prekey and one-time roles are `0x80` and `0x81`. The server
+validates the expected role after signature verification. The Stage 6 F*
+extraction and handwritten lemmas were regenerated and extended to prove the
+new byte positions, round trips, marker-domain disjointness, and cross-role
+rejection. Production tests exchange and duplicate the real signed Cap'n Proto
+fields and require both inputs to fail.
+
+The symbolic environment contains replicated fresh honest beacons, an active
+public network, ideal signature/DH/KEM/KDF/AEAD/commitment primitives, a bounded
+bidirectional record prefix, and a one-owner non-rollback replay process. The
+replay owner returns `Fresh` exactly once and `Consumed` thereafter, including
+after the explicit abort path. It is keyed by the fresh honest beacon identity
+but records the publicly parsed transcript and semantic ID. Under the existing
+single-bundle-per-fresh-identity typestate this refines the production semantic
+ID set while ensuring that a future field-substitution regression falsifies the
+origin correspondence instead of being hidden by private proof data. If
+production ever permits multiple bundles under one beacon identity, the signed
+fields must additionally share an authenticated bundle nonce or ordered-bundle
+signature before extending this theorem.
+
+The baseline model reports all eleven security queries true: five application
+secrecy queries; injective acceptance/origin, acceptance/consumption,
+consumption/origin, abort/consumption, and beacon/server commit
+correspondences; and bounded record send/receive correspondence with exact
+session, direction, sequence, sender, receiver, and plaintext. Five separate
+reachability queries deliberately report false negations, demonstrating real
+traces for acceptance, replay rejection, abort after consumption, beacon
+commit, and record receive rather than vacuous correspondences.
+
+The synchronized late-compromise model records the intended qualification.
+The initial message and an already-consumed advanced receive message remain
+secret. A skipped receive key still present in the cache is exposed, and the
+live receive and send chains expose future traffic in both directions. Those
+last three false secrecy results are required negative results documenting
+cached-key exposure and the deliberate absence of post-compromise security.
+The bounded ProVerif record process proves authentication and sequence binding;
+general duplicate receive-key consumption remains the Stage 2 F* ratchet
+theorem because this trace prefix has one receive program point per sequence.
+
+`make verify` now regenerates and checks both backends in the revision-pinned
+hax shell. Its result parser rejects timeouts, missing or substituted queries,
+unexpected true/false classifications, and every unproved or inconclusive
+security query. `make check-generated` covers both generated directories.
+
 ## Toolchain findings and CI policy
 
 A direct extraction smoke test against the current root crate is not viable with the locally installed tools. The installed hax 0.3.7 toolchain uses a Rust 1.93 nightly, while [`Cargo.toml`](../Cargo.toml) declares Rust 1.96. Bypassing that version check exposes use of newer `slice_as_array` functionality and then reaches a hax frontend panic while processing generated Cap'n Proto code.
@@ -527,7 +603,9 @@ CI should pin all proof tools together and fail on:
 - extraction errors or unexpected generated diffs;
 - F* checking performed with `--lax`;
 - admitted or newly unproved obligations;
-- ProVerif queries reported as false, unproved, or inconclusive;
+- baseline ProVerif queries reported as false, unproved, or inconclusive, or
+  reachability/compromise queries that differ from their reviewed expected
+  classifications;
 - an unreviewed change to the opaque/assumption inventory.
 
 The proof artifact must state the exact versions of rustc, hax, F*, Z3, and ProVerif used to produce it.

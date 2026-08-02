@@ -7,6 +7,12 @@ license-file = "../../LICENSE"
 publish = false
 description = "Extractable protocol state transitions for beaconcrypt"
 
+[features]
+proverif = ["dep:hax-lib"]
+
+[dependencies]
+hax-lib = { version = "=0.3.7", optional = true }
+
 [lib]
 name = "beaconcrypt_protocol_core"
 path = "src/lib.rs"

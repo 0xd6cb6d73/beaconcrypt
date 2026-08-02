@@ -675,7 +675,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 			pq_verified.as_slice().try_into().ok()?,
 		);
 		let verified_registration = verified_pqxdh::validate_init_kex(init_kex).ok()?;
-		let registration_id = *verified_registration.registration_id().as_bytes();
+		let registration_id = *verified_pqxdh::registration_id(&verified_registration).as_bytes();
 		let registration_status = if self.consumed_registrations.contains(&registration_id) {
 			verified_pqxdh::RegistrationStatus::Consumed
 		} else {
@@ -1135,7 +1135,9 @@ mod tests {
 		)
 		.unwrap();
 
-		assert_eq!(decode_kem(&signed, KemType::X25519).unwrap(), expected);
+		assert_eq!(signed[0], u8::from(KemType::X25519));
+		assert_eq!(signed[1], verified_pqxdh::KEY_ROLE_ONE_TIME);
+		assert_eq!(&signed[2..], expected);
 		assert_eq!(beacon.get_onetime_pk().unwrap().as_bytes(), expected);
 	}
 
@@ -1222,10 +1224,8 @@ mod tests {
 		let prekey =
 			crypto_sign::verify(registration.get_pre_key().unwrap(), beacon.identity_pk()).unwrap();
 		assert_eq!(prekey[0], 4);
-		assert_eq!(
-			decode_kem(&prekey, KemType::X25519).unwrap(),
-			beacon.get_prekey_pk().unwrap().as_bytes()
-		);
+		assert_eq!(prekey[1], verified_pqxdh::KEY_ROLE_PREKEY);
+		assert_eq!(&prekey[2..], beacon.get_prekey_pk().unwrap().as_bytes());
 
 		let onetime = crypto_sign::verify(
 			registration.get_one_time_key().unwrap(),
@@ -1233,10 +1233,8 @@ mod tests {
 		)
 		.unwrap();
 		assert_eq!(onetime[0], 4);
-		assert_eq!(
-			decode_kem(&onetime, KemType::X25519).unwrap(),
-			beacon.get_onetime_pk().unwrap().as_bytes(),
-		);
+		assert_eq!(onetime[1], verified_pqxdh::KEY_ROLE_ONE_TIME);
+		assert_eq!(&onetime[2..], beacon.get_onetime_pk().unwrap().as_bytes());
 
 		let pq =
 			crypto_sign::verify(registration.get_pq_key().unwrap(), beacon.identity_pk()).unwrap();
@@ -1270,6 +1268,46 @@ mod tests {
 		capnp::serialize::write_message(&mut tampered_serialized, tampered.borrow_inner()).unwrap();
 
 		assert!(server.get_shared_secret(&tampered_serialized).is_none());
+	}
+
+	#[test]
+	fn server_rejects_swapped_or_duplicated_signed_x25519_roles() {
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let serialized = beacon.get_registration_bundle().unwrap();
+		let message =
+			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
+		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
+		let registration = typed.get().unwrap();
+		let identity = registration.get_identity_key().unwrap().to_vec();
+		let prekey = registration.get_pre_key().unwrap().to_vec();
+		let one_time = registration.get_one_time_key().unwrap().to_vec();
+		let pq = registration.get_pq_key().unwrap().to_vec();
+
+		for duplicate_prekey in [false, true] {
+			let mut tampered = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
+			let mut root = tampered.init_root();
+			root.set_identity_key(&identity);
+			root.set_pre_key(if duplicate_prekey { &prekey } else { &one_time });
+			root.set_one_time_key(&prekey);
+			root.set_pq_key(&pq);
+			let mut tampered_serialized = vec![];
+			capnp::serialize::write_message(&mut tampered_serialized, tampered.borrow_inner())
+				.unwrap();
+
+			let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+			assert!(
+				server.get_shared_secret(&tampered_serialized).is_none(),
+				"server accepted {} signed X25519 roles",
+				if duplicate_prekey {
+					"duplicated"
+				} else {
+					"swapped"
+				}
+			);
+		}
+
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+		assert!(server.get_shared_secret(&serialized).is_some());
 	}
 
 	#[test]

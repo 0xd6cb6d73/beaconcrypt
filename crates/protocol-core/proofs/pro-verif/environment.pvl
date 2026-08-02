@@ -1,0 +1,787 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* Wire adapters and event vocabulary                                     *)
+(**************************************************************************)
+
+fun signed_init_kex(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+): bitstring [data].
+
+fun registration_continue(
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationId
+): bitstring [data].
+fun registration_abort(
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationId
+): bitstring [data].
+
+fun registration_payload(
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationKeyIdBinding,
+  bitstring
+): bitstring [data].
+
+fun kex_response(
+  bitstring,
+  bitstring,
+  bitstring,
+  key_id,
+  bitstring
+): bitstring [data].
+
+fun session_label(
+  bitstring,
+  bitstring,
+  key_id,
+  beaconcrypt_protocol_core__pqxdh__t_RootKeyInput
+): bitstring [data].
+
+type replay_status.
+fun replay_fresh(): replay_status [data].
+fun replay_consumed(): replay_status [data].
+
+event BeaconInitiated(
+  bitstring,
+  bitstring,
+  beaconcrypt_protocol_core__pqxdh__t_InitKex,
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+  bitstring
+).
+event RegistrationConsumed(
+  bitstring,
+  bitstring,
+  beaconcrypt_protocol_core__pqxdh__t_InitKex,
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+  bitstring
+).
+event RegistrationReplayRejected(
+  bitstring,
+  bitstring,
+  beaconcrypt_protocol_core__pqxdh__t_InitKex,
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+  bitstring
+).
+event ServerAccepted(
+  bitstring,
+  bitstring,
+  beaconcrypt_protocol_core__pqxdh__t_InitKex,
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+  beaconcrypt_protocol_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring
+).
+event ServerResponseAborted(
+  bitstring,
+  bitstring,
+  beaconcrypt_protocol_core__pqxdh__t_InitKex,
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+  beaconcrypt_protocol_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring
+).
+event ServerCommitted(
+  bitstring,
+  bitstring,
+  beaconcrypt_protocol_core__pqxdh__t_InitKex,
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+  key_id,
+  beaconcrypt_protocol_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event BeaconCommitted(
+  bitstring,
+  bitstring,
+  beaconcrypt_protocol_core__pqxdh__t_InitKex,
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+  key_id,
+  beaconcrypt_protocol_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event MessageSent(
+  bitstring,
+  direction,
+  sequence,
+  key_id,
+  key_id,
+  bitstring
+).
+event MessageReceived(
+  bitstring,
+  direction,
+  sequence,
+  key_id,
+  key_id,
+  bitstring
+).
+event MessageKeyUnavailable(
+  bitstring,
+  role,
+  direction,
+  sequence,
+  bitstring
+).
+event MessageKeyCached(
+  bitstring,
+  role,
+  direction,
+  sequence,
+  bitstring
+).
+event StateCompromised(
+  bitstring,
+  role,
+  bitstring,
+  bitstring
+).
+
+table honest_origin(bitstring, bitstring).
+
+free SERVER_IDENTITY_SECRET: bitstring [private].
+free SERVER_KEY_ID: key_id.
+free INITIAL_SECRET: bitstring [private].
+free CACHED_SECRET: bitstring [private].
+free ADVANCE_SECRET: bitstring [private].
+free FUTURE_SECRET: bitstring [private].
+free BEACON_RECORD_SECRET: bitstring [private].
+
+free replay_requests: channel [private].
+free compromise_snapshots: channel [private].
+
+(**************************************************************************)
+(* Single-owner, non-rollback registration replay state                    *)
+(**************************************************************************)
+
+(* The current production typestate creates one bundle under each fresh
+   beacon identity.  Under that invariant, one owner per honest identity is
+   equivalent to the semantic-ID set for valid bundles.  Crucially, the owner
+   records the publicly parsed InitKex and ID from the first request rather
+   than matching private originals, so a field-substitution regression makes
+   the exact-origin correspondence fail instead of blocking invisibly. *)
+let RegistrationReplayGuard(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  origin: bitstring
+) =
+  in(
+    replay_requests,
+    (
+      =beacon_identity,
+      accepted_init: beaconcrypt_protocol_core__pqxdh__t_InitKex,
+      accepted_registration_id:
+        beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+      first_reply: channel
+    )
+  );
+  event RegistrationConsumed(
+    server_identity,
+    beacon_identity,
+    accepted_init,
+    accepted_registration_id,
+    origin
+  );
+  out(first_reply, replay_fresh());
+  !in(
+    replay_requests,
+    (
+      =beacon_identity,
+      replay_init: beaconcrypt_protocol_core__pqxdh__t_InitKex,
+      replay_registration_id:
+        beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+      replay_reply: channel
+    )
+  );
+   out(replay_reply, replay_consumed()).
+
+(**************************************************************************)
+(* One honest beacon registration and its bounded record prefix            *)
+(**************************************************************************)
+
+let HonestBeacon() =
+  new beacon_identity_secret: bitstring;
+  new beacon_prekey_secret: bitstring;
+  new beacon_one_time_secret: bitstring;
+  new beacon_pq_secret: bitstring;
+  let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let beacon_prekey = x25519_public(beacon_prekey_secret) in
+  let beacon_one_time = x25519_public(beacon_one_time_secret) in
+  let beacon_pq = mlkem_public(beacon_pq_secret) in
+  let core_init = beaconcrypt_protocol_core__pqxdh__InitKex(
+    tag_ed25519(beacon_identity),
+    tag_x25519_prekey(beacon_prekey),
+    tag_x25519_one_time(beacon_one_time),
+    tag_mlkem768(beacon_pq)
+  ) in
+  let verified_init = beaconcrypt_protocol_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq
+  ) in
+  let registration_id =
+    beaconcrypt_protocol_core__pqxdh__registration_id(verified_init)
+  in
+  new registration_session: bitstring;
+  event BeaconInitiated(
+    server_identity,
+    beacon_identity,
+    core_init,
+    registration_id,
+    registration_session
+  );
+  insert honest_origin(beacon_identity, registration_session);
+  (
+  RegistrationReplayGuard(
+    server_identity,
+    beacon_identity,
+    registration_session
+  )
+  |
+  out(
+    c,
+    signed_init_kex(
+      tag_ed25519(beacon_identity),
+      sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+      sign(tag_mlkem768(beacon_pq), beacon_identity_secret)
+    )
+  );
+  out(c, registration_continue(registration_id));
+  in(c, response: bitstring);
+  let kex_response(
+    response_server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    assigned_key_id,
+    initial_frame
+  ) = response in
+  if response_server_identity = server_identity then
+    let dh1 = x25519_beacon_dh(
+      beacon_prekey_secret,
+      x25519_public(SERVER_IDENTITY_SECRET)
+    ) in
+    let dh2 = x25519_beacon_dh(beacon_identity_secret, server_ephemeral) in
+    let dh3 = x25519_beacon_dh(beacon_prekey_secret, server_ephemeral) in
+    let dh4 = x25519_beacon_dh(beacon_one_time_secret, server_ephemeral) in
+    let kem_secret = mlkem_decapsulate(kem_ciphertext, beacon_pq_secret) in
+    let shared_secrets = beaconcrypt_protocol_core__pqxdh__PqxdhSharedSecrets(
+      dh1,
+      dh2,
+      dh3,
+      dh4,
+      kem_secret
+    ) in
+    let root_input =
+      beaconcrypt_protocol_core__pqxdh__build_root_key_input(shared_secrets)
+    in
+    let root = pqxdh_root(
+      beaconcrypt_protocol_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+    ) in
+    let associated_data =
+      beaconcrypt_protocol_core__pqxdh__build_associated_data(
+        server_identity,
+        beacon_identity
+      )
+    in
+    let session = session_label(
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root_input
+    ) in
+    let server_chain_1 = server_to_beacon_chain(root) in
+    let server_material_1 = ratchet_material(server_chain_1) in
+    let opened_initial = open_frame(
+      server_material_1,
+      associated_data,
+      first_sequence(),
+      SERVER_KEY_ID,
+      initial_frame
+    ) in
+    let expected_binding =
+      beaconcrypt_protocol_core__pqxdh__RegistrationKeyIdBinding(
+        key_id_encoding(assigned_key_id)
+      )
+    in
+    let registration_payload(=expected_binding, initial_plaintext) = opened_initial in
+    event MessageReceived(
+      session,
+      server_to_beacon(),
+      first_sequence(),
+      SERVER_KEY_ID,
+      assigned_key_id,
+      initial_plaintext
+    );
+    event MessageKeyUnavailable(
+      session,
+      beacon_role(),
+      server_to_beacon(),
+      first_sequence(),
+      server_material_1
+    );
+    event BeaconCommitted(
+      server_identity,
+      beacon_identity,
+      core_init,
+      registration_id,
+      assigned_key_id,
+      root_input,
+      root,
+      associated_data,
+      session,
+      registration_session
+    );
+
+    (* Receive sequence three first.  The bounded receive transition derives
+       and retains sequence two, then consumes only sequence three. *)
+    let server_chain_2 = ratchet_next(server_chain_1) in
+    let server_chain_3 = ratchet_next(server_chain_2) in
+    let server_material_2 = ratchet_material(server_chain_2) in
+    let server_material_3 = ratchet_material(server_chain_3) in
+    in(c, third_frame: bitstring);
+    let third_plaintext = open_frame(
+      server_material_3,
+      associated_data,
+      next_sequence(next_sequence(first_sequence())),
+      SERVER_KEY_ID,
+      third_frame
+    ) in
+    event MessageKeyCached(
+      session,
+      beacon_role(),
+      server_to_beacon(),
+      next_sequence(first_sequence()),
+      server_material_2
+    );
+    event MessageReceived(
+      session,
+      server_to_beacon(),
+      next_sequence(next_sequence(first_sequence())),
+      SERVER_KEY_ID,
+      assigned_key_id,
+      third_plaintext
+    );
+    event MessageKeyUnavailable(
+      session,
+      beacon_role(),
+      server_to_beacon(),
+      next_sequence(next_sequence(first_sequence())),
+      server_material_3
+    );
+
+    (* Capture and acknowledge the state at this exact cache-live point.  The
+       baseline sink keeps it private; the compromise process reveals it before
+       acknowledging, so later record events are ordered after compromise. *)
+    let beacon_send_chain_1 = beacon_to_server_chain(root) in
+    new compromise_ack: channel;
+    out(
+      compromise_snapshots,
+      (
+        session,
+        ratchet_next(server_chain_3),
+        server_material_2,
+        beacon_send_chain_1,
+        compromise_ack
+      )
+    );
+    in(compromise_ack, =session);
+
+    in(c, second_frame: bitstring);
+    let second_plaintext = open_frame(
+      server_material_2,
+      associated_data,
+      next_sequence(first_sequence()),
+      SERVER_KEY_ID,
+      second_frame
+    ) in
+    event MessageReceived(
+      session,
+      server_to_beacon(),
+      next_sequence(first_sequence()),
+      SERVER_KEY_ID,
+      assigned_key_id,
+      second_plaintext
+    );
+    event MessageKeyUnavailable(
+      session,
+      beacon_role(),
+      server_to_beacon(),
+      next_sequence(first_sequence()),
+      server_material_2
+    );
+
+    in(c, fourth_frame: bitstring);
+    let fourth_plaintext = open_frame(
+      ratchet_material(ratchet_next(server_chain_3)),
+      associated_data,
+      next_sequence(next_sequence(next_sequence(first_sequence()))),
+      SERVER_KEY_ID,
+      fourth_frame
+    ) in
+    event MessageReceived(
+      session,
+      server_to_beacon(),
+      next_sequence(next_sequence(next_sequence(first_sequence()))),
+      SERVER_KEY_ID,
+      assigned_key_id,
+      fourth_plaintext
+    );
+    event MessageKeyUnavailable(
+      session,
+      beacon_role(),
+      server_to_beacon(),
+      next_sequence(next_sequence(next_sequence(first_sequence()))),
+      ratchet_material(ratchet_next(server_chain_3))
+    );
+
+    let beacon_material_1 = ratchet_material(beacon_send_chain_1) in
+    let beacon_frame = seal_frame(
+      beacon_material_1,
+      associated_data,
+      first_sequence(),
+      assigned_key_id,
+      BEACON_RECORD_SECRET
+    ) in
+    event MessageSent(
+      session,
+      beacon_to_server(),
+      first_sequence(),
+      assigned_key_id,
+      SERVER_KEY_ID,
+      BEACON_RECORD_SECRET
+    );
+    event MessageKeyUnavailable(
+      session,
+      beacon_role(),
+      beacon_to_server(),
+      first_sequence(),
+      beacon_material_1
+    );
+    out(c, beacon_frame)
+  ).
+
+(**************************************************************************)
+(* Serialized, non-rollback server registration                            *)
+(**************************************************************************)
+
+let Server() =
+  in(c, incoming_init: bitstring);
+  let signed_init_kex(
+    encoded_identity,
+    signed_prekey,
+    signed_one_time,
+    signed_pq
+  ) = incoming_init in
+  let tag_ed25519(beacon_identity: bitstring) = encoded_identity in
+  let tag_x25519_prekey(beacon_prekey: bitstring) =
+    verify_signature(signed_prekey, beacon_identity)
+  in
+  let tag_x25519_one_time(beacon_one_time: bitstring) =
+    verify_signature(signed_one_time, beacon_identity)
+  in
+  let tag_mlkem768(beacon_pq: bitstring) =
+    verify_signature(signed_pq, beacon_identity)
+  in
+  let core_init = beaconcrypt_protocol_core__pqxdh__InitKex(
+    encoded_identity,
+    tag_x25519_prekey(beacon_prekey),
+    tag_x25519_one_time(beacon_one_time),
+    tag_mlkem768(beacon_pq)
+  ) in
+  let verified_init = beaconcrypt_protocol_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq
+  ) in
+  let registration_id =
+    beaconcrypt_protocol_core__pqxdh__registration_id(verified_init)
+  in
+  (* Agreement queries are conditional on the uncompromised beacon identity.
+     This lookup copies only a fresh origin marker into events; it does not
+     constrain any public key field or participate in replay state. *)
+  get honest_origin(=beacon_identity, registration_session: bitstring) in
+  new server_ephemeral_secret: bitstring;
+  new kem_coins: bitstring;
+  let server_ephemeral = x25519_public(server_ephemeral_secret) in
+  let kem_ciphertext = mlkem_ciphertext(beacon_pq, kem_coins) in
+  let kem_secret = mlkem_shared_secret(beacon_pq, kem_coins) in
+  let dh1 = x25519_server_dh(SERVER_IDENTITY_SECRET, beacon_prekey) in
+  let dh2 = x25519_server_dh(
+    server_ephemeral_secret,
+    x25519_public_from_ed(beacon_identity)
+  ) in
+  let dh3 = x25519_server_dh(server_ephemeral_secret, beacon_prekey) in
+  let dh4 = x25519_server_dh(server_ephemeral_secret, beacon_one_time) in
+  let shared_secrets = beaconcrypt_protocol_core__pqxdh__PqxdhSharedSecrets(
+    dh1,
+    dh2,
+    dh3,
+    dh4,
+    kem_secret
+  ) in
+  let root_input =
+    beaconcrypt_protocol_core__pqxdh__build_root_key_input(shared_secrets)
+  in
+  let root = pqxdh_root(
+    beaconcrypt_protocol_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+  ) in
+  let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
+
+  (* A private one-owner process performs the atomic Fresh -> Consumed
+     transition and answers Consumed forever after, including after abort. *)
+  new replay_reply: channel;
+  out(
+    replay_requests,
+    (beacon_identity, core_init, registration_id, replay_reply)
+  );
+  in(replay_reply, replay_result: replay_status);
+  if replay_result = replay_fresh() then
+  (
+    event ServerAccepted(
+      server_identity,
+      beacon_identity,
+      core_init,
+      registration_id,
+      root_input,
+      root,
+      registration_session
+    );
+
+    (* Replay state remains consumed even on this modeled response failure. *)
+    in(c, registration_control: bitstring);
+    if registration_control = registration_abort(registration_id) then
+      event ServerResponseAborted(
+        server_identity,
+        beacon_identity,
+        core_init,
+        registration_id,
+        root_input,
+        root,
+        registration_session
+      )
+    else
+      let registration_continue(=registration_id) = registration_control in
+      new assigned_key_id: key_id;
+      let associated_data =
+        beaconcrypt_protocol_core__pqxdh__build_associated_data(
+          server_identity,
+          beacon_identity
+        )
+      in
+      let session = session_label(
+        server_identity,
+        beacon_identity,
+        assigned_key_id,
+        root_input
+      ) in
+      let server_chain_1 = server_to_beacon_chain(root) in
+      let server_material_1 = ratchet_material(server_chain_1) in
+      let binding =
+        beaconcrypt_protocol_core__pqxdh__RegistrationKeyIdBinding(
+          key_id_encoding(assigned_key_id)
+        )
+      in
+      let initial_frame = seal_frame(
+        server_material_1,
+        associated_data,
+        first_sequence(),
+        SERVER_KEY_ID,
+        registration_payload(binding, INITIAL_SECRET)
+      ) in
+      event MessageSent(
+        session,
+        server_to_beacon(),
+        first_sequence(),
+        SERVER_KEY_ID,
+        assigned_key_id,
+        INITIAL_SECRET
+      );
+      event MessageKeyUnavailable(
+        session,
+        server_role(),
+        server_to_beacon(),
+        first_sequence(),
+        server_material_1
+      );
+      event ServerCommitted(
+        server_identity,
+        beacon_identity,
+        core_init,
+        registration_id,
+        assigned_key_id,
+        root_input,
+        root,
+        associated_data,
+        session,
+        registration_session
+      );
+      out(
+        c,
+        kex_response(
+          server_identity,
+          server_ephemeral,
+          kem_ciphertext,
+          assigned_key_id,
+          initial_frame
+        )
+      );
+
+      let server_chain_2 = ratchet_next(server_chain_1) in
+      let server_chain_3 = ratchet_next(server_chain_2) in
+      let server_chain_4 = ratchet_next(server_chain_3) in
+      let server_material_2 = ratchet_material(server_chain_2) in
+      let server_material_3 = ratchet_material(server_chain_3) in
+      let server_material_4 = ratchet_material(server_chain_4) in
+      let second_frame = seal_frame(
+        server_material_2,
+        associated_data,
+        next_sequence(first_sequence()),
+        SERVER_KEY_ID,
+        CACHED_SECRET
+      ) in
+      event MessageSent(
+        session,
+        server_to_beacon(),
+        next_sequence(first_sequence()),
+        SERVER_KEY_ID,
+        assigned_key_id,
+        CACHED_SECRET
+      );
+      event MessageKeyUnavailable(
+        session,
+        server_role(),
+        server_to_beacon(),
+        next_sequence(first_sequence()),
+        server_material_2
+      );
+      out(c, second_frame);
+
+      let third_frame = seal_frame(
+        server_material_3,
+        associated_data,
+        next_sequence(next_sequence(first_sequence())),
+        SERVER_KEY_ID,
+        ADVANCE_SECRET
+      ) in
+      event MessageSent(
+        session,
+        server_to_beacon(),
+        next_sequence(next_sequence(first_sequence())),
+        SERVER_KEY_ID,
+        assigned_key_id,
+        ADVANCE_SECRET
+      );
+      event MessageKeyUnavailable(
+        session,
+        server_role(),
+        server_to_beacon(),
+        next_sequence(next_sequence(first_sequence())),
+        server_material_3
+      );
+      out(c, third_frame);
+
+      let fourth_frame = seal_frame(
+        server_material_4,
+        associated_data,
+        next_sequence(next_sequence(next_sequence(first_sequence()))),
+        SERVER_KEY_ID,
+        FUTURE_SECRET
+      ) in
+      event MessageSent(
+        session,
+        server_to_beacon(),
+        next_sequence(next_sequence(next_sequence(first_sequence()))),
+        SERVER_KEY_ID,
+        assigned_key_id,
+        FUTURE_SECRET
+      );
+      event MessageKeyUnavailable(
+        session,
+        server_role(),
+        server_to_beacon(),
+        next_sequence(next_sequence(next_sequence(first_sequence()))),
+        server_material_4
+      );
+      out(c, fourth_frame);
+
+      in(c, beacon_frame: bitstring);
+      let beacon_material_1 = ratchet_material(beacon_to_server_chain(root)) in
+      let beacon_plaintext = open_frame(
+        beacon_material_1,
+        associated_data,
+        first_sequence(),
+        assigned_key_id,
+        beacon_frame
+      ) in
+      event MessageReceived(
+        session,
+        beacon_to_server(),
+        first_sequence(),
+        assigned_key_id,
+        SERVER_KEY_ID,
+        beacon_plaintext
+      );
+      event MessageKeyUnavailable(
+        session,
+        server_role(),
+        beacon_to_server(),
+        first_sequence(),
+        beacon_material_1
+      )
+  )
+  else
+    event RegistrationReplayRejected(
+      server_identity,
+      beacon_identity,
+      core_init,
+      registration_id,
+      registration_session
+    ).
+
+(**************************************************************************)
+(* Explicit late-state compromise                                         *)
+(**************************************************************************)
+
+let KeepBeaconStatePrivate() =
+  in(
+    compromise_snapshots,
+    (
+      session: bitstring,
+      live_receive_chain: bitstring,
+      cached_receive_material: bitstring,
+      live_send_chain: bitstring,
+      compromise_ack: channel
+    )
+  );
+  out(compromise_ack, session).
+
+let CompromiseBeaconState() =
+  in(
+    compromise_snapshots,
+    (
+      session: bitstring,
+      live_receive_chain: bitstring,
+      cached_receive_material: bitstring,
+      live_send_chain: bitstring,
+      compromise_ack: channel
+    )
+  );
+  event StateCompromised(
+    session,
+    beacon_role(),
+    live_receive_chain,
+    live_send_chain
+  );
+  out(c, live_receive_chain);
+  out(c, cached_receive_material);
+  out(c, live_send_chain);
+  out(compromise_ack, session).
