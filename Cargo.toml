@@ -12,6 +12,11 @@ exclude = [
 	"wycheproof/**",
 ]
 
+[workspace]
+resolver = "3"
+members = ["crates/protocol-core"]
+default-members = ["."]
+
 [lib]
 name = "beaconcrypt"
 crate-type = ["cdylib", "staticlib", "rlib"]
@@ -55,6 +60,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 [dependencies]
+beaconcrypt-protocol-core = { version = "0.1.0", path = "crates/protocol-core" }
 capnp = "0.26"
 libsodium-rs = "0.2"
 zeroize = "1.9"

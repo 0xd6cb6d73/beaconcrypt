@@ -1,0 +1,18 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* This exact query is run against both negative-control processes.
+   It must be true with CTX and false when the CTX validation is removed. *)
+query left_key: bitstring,
+      right_key: bitstring,
+      left_context: bitstring,
+      right_context: bitstring,
+      left_plaintext: bitstring,
+      right_plaintext: bitstring;
+  event(WeakAeadMultiOpened(
+    left_key,
+    right_key,
+    left_context,
+    right_context,
+    left_plaintext,
+    right_plaintext
+  )).

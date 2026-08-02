@@ -1,0 +1,16 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Deleted send/receive material remains forward-secret after a later live
+   beacon-state compromise. *)
+query attacker(INITIAL_SECRET).
+query attacker(ADVANCE_SECRET).
+
+(* These three are deliberate negative results in compromise.pv:
+   - a skipped receive key is still cached;
+   - the live receive chain derives a future server key;
+   - the live send chain derives the beacon's next key.
+   The result gate requires ProVerif to report all three as false secrecy
+   statements, documenting both the cache qualification and lack of PCS. *)
+query attacker(CACHED_SECRET).
+query attacker(FUTURE_SECRET).
+query attacker(BEACON_RECORD_SECRET).
