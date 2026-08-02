@@ -113,11 +113,15 @@ This is the most basic framing for an encrypted message within beaconcrypt. It i
 - Delete the current `send` key
 
 To read a `CryptoFrame`, the reader must:
+- Reject an empty, unparsable, or too-short frame before changing ratchet state
 - Use `keyId` to select the sender's identity, associated data, and receive ratchet
-- Check that the difference between `seq` and the current sequence number of the `recv` chain is acceptable
-  -  The reference implementation tolerates ratcheting up to 50 keys forward, this number was pulled out of a hat
-  - Abort processing if the difference is too large
-- Ratchet their `recv` keychain forward to `seq`
+- Check that a future `seq` is admissible under both receive limits
+  - The reference implementation permits a forward distance of at most 50
+  - The number of already cached receive keys plus that forward distance must also be at most 50
+  - Abort processing without changing state if either limit is exceeded
+- Ratchet their `recv` keychain forward to `seq`, caching every skipped key and the target key
+  - This admission and cache update occurs before commitment or AEAD authentication
+  - If either authentication step later fails, retain the advanced chain and every cached key, including the target key; do not roll back to the pre-frame state
 - Extract `CT`, `T` and `T*` from the `cipherText` field
 - Compute the commitment `T*'` using `Hash(Key, Nonce, Associated Data, T, seq, keyId)`
   - The hash function is unkeyed Blake2b with a 512bit output length

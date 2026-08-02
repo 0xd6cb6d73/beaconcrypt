@@ -192,7 +192,7 @@ pub fn receive(
 ) -> (RatchetState, Result<Plaintext, RatchetError>);
 ```
 
-Returning the receive state on both success and failure is intentional. The current implementation can advance the receive chain and cache intermediate keys before commitment or AEAD verification. An admissible, correctly sized forged future frame can therefore change state even when it is rejected. The implementation tests this behaviour in [`tests/protocol.rs`](../tests/protocol.rs#L173) (see `assert_invalid_future_frames_cannot_grow_receive_cache` and `invalid_future_frames_cannot_grow_receive_cache_beyond_gap`). The specification must describe the actual transition rather than assuming that every rejection is state-neutral.
+Returning the receive state on both success and failure is intentional. Production rejects empty, unparsable, wrong-sender, and too-short frames before receive admission, but a syntactically admitted and correctly sized future frame advances the receive chain and caches every intervening key before commitment or AEAD verification. Authentication failure therefore retains the post-admission state, including the selected target key, rather than rolling back to the state at the start of decryption. Repeating the same invalid target is state-neutral only relative to that retained state. Admitted forgeries can fill all 50 receive-cache slots; the next future receive is then rejected without a further transition, a successful delivery using one retained key frees a slot, and replay of that consumed target is rejected. The implementation tests these distinctions in [`tests/protocol.rs`](../tests/protocol.rs#L173), including exact boundary, retry, replay, short-payload, and refill behavior. The specification and proof must describe these actual transitions rather than treating every authentication rejection as state-neutral.
 
 For extraction, replace `HashMap` in the core with a bounded, packed sequence whose uniqueness and size are visible to the prover. Restoration can require sorted input even though successful receive uses swap-removal and does not preserve entry order. The adapter can use a different physical representation only if its refinement to the verified representation is established.
 
@@ -276,6 +276,9 @@ Symmetric ratchet and records:
 - A receive request beyond the permitted window is state-neutral.
 - Successful receive removes exactly the consumed message key, so replay is rejected.
 - Failed authentication retains the candidate key when retry is part of the intended semantics.
+- Planning and advancing an admitted future receive before authentication may change the counter and fill the cache; failure preserves that complete post-admission state rather than restoring the pre-attempt state.
+- Retrying an already retained invalid target performs no additional derivation, while a successful retry consumes only that target and creates capacity for a later admitted derivation.
+- Filling the fiftieth receive slot makes the next future plan state-neutral until a retained key is successfully consumed.
 - A transition for peer A leaves peer B's ratchet unchanged.
 - Successful send makes the consumed message key logically unavailable.
 - The commitment input is exactly `(key, nonce, associated data, AEAD tag, sequence, sender ID)` with unambiguous fixed-size encodings.
@@ -292,12 +295,17 @@ Persistence is a separate boundary. Either prove that imported state validation 
 - Unknown-key-share and cross-peer resistance.
 - Independence of concurrent sessions.
 - Forward secrecy following a later compromise of live chain state.
+- Secrecy of the failed-receive canaries while the retained receiver state remains private.
+- Explicit negative results after compromise of failed-receive state: disclosure of skipped and retained-target material, derivation of future material from the live chain, and attacker forgery with the compromised target key.
+- Reachability of retry, exact cache fill, state-neutral capacity rejection, successful later honest delivery, replay rejection, and admission after the successful receive frees one slot.
 
 Forward secrecy needs a precise statement. Send keys are deleted immediately, but skipped receive keys remain cached for out-of-order delivery. Compromise of a receiver can reveal cached skipped keys. The defensible theorem is secrecy of a message after its message key has become logically unavailable, not secrecy of every message whose sequence number is below the current counter.
 
 The symmetric ratchet never mixes fresh entropy into an established chain, so it deliberately provides no post-compromise security. This should be recorded as a negative result, not formulated as an expected theorem.
 
 ProVerif establishes these results only in the stated symbolic model. It does not establish computational security of the cryptographic primitives.
+
+The failed-receive ProVerif process is one exact finite capacity-50 witness, not an unbounded receive API. It starts after successful symbolic frame construction and models an attacker-selected frame that has passed the production parser, sender lookup/check, and minimum payload-length gate. Cap'n Proto parsing, serialized byte lengths, malformed/truncated inputs, and the claim that those earlier rejection paths are state-neutral are outside this ProVerif abstraction and remain production-review and regression-test obligations. The extracted F* lemmas provide the general numeric gap, capacity, post-failure retention, retry, consumption, and replay results for the pure control state; they do not supply cryptographic secrecy or frame provenance.
 
 ## Closed counterexamples
 
@@ -600,6 +608,12 @@ cached-key exposure and the deliberate absence of post-compromise security.
 The bounded ProVerif record process proves authentication and sequence binding;
 general duplicate receive-key consumption remains the Stage 2 F* ratchet
 theorem because this trace prefix has one receive program point per sequence.
+
+The dedicated failed-active-receive extension models the production order of operations with explicit symbolic receiver states. Its exact finite ProVerif trace is server-to-beacon: it admits a correctly shaped forged future frame, derives and retains the skipped and target materials on authentication failure, fills the cache to exactly 50 entries with another failed admitted frame, and rejects the next future frame without changing the full state. Repeating the first invalid target is neutral relative to the retained state. A later authentic ciphertext for that target consumes only its retained key, replay is rejected, and the newly available slot permits the previously capacity-rejected future target to be admitted and retained on failure. The extracted F* control lemmas are role/direction independent; the ProVerif secrecy and compromise composition is not a separate mirrored beacon-to-server trace.
+
+The private-state scenario proves secrecy of the named consumed-past, skipped, retained-target, and live-future application values and preserves the normal receive-to-honest-send correspondence. Its top level concurrently permits replicated attacker-owned beacon registrations and requires reachability of both their response commit and malicious canary, without activating the legitimate-state compromise channel or exposing the failed-receive canaries. The failed-receive record session still starts from an independently fresh symbolic root rather than composing PQXDH into that record trace, so relating the two state namespaces to production relies on the peer-selection and independent-root adapter refinements. The synchronized compromise scenario deliberately crosses the base threat model's no-legitimate-state-compromise boundary after failed admission and before the later retry. It reports exposure of the skipped and target material and the live future chain, and it deliberately falsifies honest-origin authentication because the compromised target key lets the attacker manufacture an authentic replacement frame. A separate reachability witness shows that later delivery of the honest target ciphertext remains possible when the attacker forwards it; availability or eventual delivery is not claimed.
+
+This ProVerif construction is an exact capacity-50 execution, whereas the F* lemmas quantify over every pure control state satisfying their preconditions and prove the general admission, advancement, retention, retry, capacity-release, and replay relationships. The ProVerif frame is already a symbolic `crypto_frame`: the model does not parse Cap'n Proto bytes or represent every serialized length. Production's pre-admission rejection of empty, unparsable, unknown/wrong-sender, and too-short frames remains an adapter/refinement claim supported by Rust tests, not a conclusion of the symbolic trace.
 
 `make verify` now regenerates and checks both backends in the revision-pinned
 hax shell. Its result parser rejects timeouts, missing or substituted queries,

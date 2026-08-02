@@ -314,6 +314,134 @@ let finish_receive_replay_is_rejected
        (finish_receive consumed target slot true).f_state == consumed)
   = ()
 
+/// A one-step admissible future receive advances before authentication.  If
+/// authentication then fails, the candidate key and the entire post-admission
+/// state are retained; the result is therefore not neutral relative to the
+/// state that existed before admission.
+let admitted_receive_failure_retains_advanced_state
+    (state:t_RatchetState {
+       valid_state state /\ cache_len state.f_receive_cache < 50 })
+    (target:u64 {
+       v target == v state.f_receive_sequence + 1 })
+  : Lemma
+      (let plan = plan_receive_until state target in
+       let advanced = advance_receive state in
+       match advanced.f_sequence, advanced.f_slot with
+       | Core_models.Option.Option_Some sequence,
+         Core_models.Option.Option_Some slot ->
+           let failed = finish_receive advanced.f_state sequence slot false in
+           plan.f_sequence == Core_models.Option.Option_Some target /\
+           plan.f_derivations == mk_u64 1 /\
+           sequence == target /\
+           failed.f_disposition == ReceiveDisposition_Retained /\
+           failed.f_state == advanced.f_state /\
+           cache_slot failed.f_state.f_receive_cache target slot /\
+           v failed.f_state.f_receive_sequence ==
+             v state.f_receive_sequence + 1 /\
+           cache_len failed.f_state.f_receive_cache ==
+             cache_len state.f_receive_cache + 1 /\
+           failed.f_state <> state
+       | _ -> False)
+  =
+  plan_future_receive_is_bounded state target;
+  advance_receive_success_shape state;
+  advance_receive_preserves_validity state;
+  let advanced = advance_receive state in
+  match advanced.f_sequence, advanced.f_slot with
+  | Core_models.Option.Option_Some sequence,
+    Core_models.Option.Option_Some slot ->
+      finish_receive_failure_retains_key advanced.f_state sequence slot
+  | _ -> ()
+
+/// A retained receive key can be retried successfully exactly once.  The retry
+/// consumes the target, and another use of the same sequence/slot pair is a
+/// state-neutral replay rejection.
+let failed_receive_retry_consumes_once
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+  : Lemma
+      (let failed = finish_receive state target slot false in
+       let retry_plan = plan_receive_until failed.f_state target in
+       let retried = finish_receive failed.f_state target slot true in
+       let replay = finish_receive retried.f_state target slot true in
+       failed.f_disposition == ReceiveDisposition_Retained /\
+       failed.f_state == state /\
+       cache_slot failed.f_state.f_receive_cache target slot /\
+       retry_plan.f_sequence == Core_models.Option.Option_Some target /\
+       retry_plan.f_derivations == mk_u64 0 /\
+       retried.f_disposition == ReceiveDisposition_Consumed /\
+       ~(cache_has retried.f_state.f_receive_cache target) /\
+       replay.f_disposition == ReceiveDisposition_Missing /\
+       replay.f_state == retried.f_state)
+  =
+  finish_receive_failure_retains_key state target slot;
+  plan_old_receive_is_zero_cost state target;
+  finish_receive_success_shape state target slot;
+  finish_receive_consumes_target state target slot;
+  finish_receive_replay_is_rejected state target slot
+
+/// Filling the final free cache slot through an admitted future receive and
+/// then failing authentication retains a full cache.  The immediately next
+/// future sequence is consequently rejected by planning without any further
+/// ratchet transition.
+let failed_receive_fills_cache_and_rejects_next_future
+    (state:t_RatchetState {
+       valid_state state /\ cache_len state.f_receive_cache == 49 })
+    (target:u64 {
+       v target == v state.f_receive_sequence + 1 })
+    (next_target:u64 {
+       v next_target == v target + 1 })
+  : Lemma
+      (let advanced = advance_receive state in
+       match advanced.f_sequence, advanced.f_slot with
+       | Core_models.Option.Option_Some sequence,
+         Core_models.Option.Option_Some slot ->
+           let failed = finish_receive advanced.f_state sequence slot false in
+           let next_plan = plan_receive_until failed.f_state next_target in
+           sequence == target /\
+           failed.f_disposition == ReceiveDisposition_Retained /\
+           failed.f_state == advanced.f_state /\
+           cache_slot failed.f_state.f_receive_cache target slot /\
+           cache_len failed.f_state.f_receive_cache == 50 /\
+           next_plan.f_sequence == Core_models.Option.Option_None /\
+           next_plan.f_derivations == mk_u64 0
+       | _ -> False)
+  =
+  admitted_receive_failure_retains_advanced_state state target;
+  advance_receive_preserves_validity state;
+  let advanced = advance_receive state in
+  match advanced.f_sequence, advanced.f_slot with
+  | Core_models.Option.Option_Some sequence,
+    Core_models.Option.Option_Some slot ->
+      finish_receive_failure_retains_key advanced.f_state sequence slot;
+      let failed = finish_receive advanced.f_state sequence slot false in
+      plan_receive_rejects_capacity_overflow failed.f_state next_target
+  | _ -> ()
+
+/// Consuming any present key from a full valid cache frees exactly one slot.
+/// The immediately next future sequence is therefore admitted with one
+/// derivation; this is the control-state justification for refilling the slot
+/// exercised by the finite ProVerif trace.
+let successful_receive_releases_capacity_for_next_future
+    (state:t_RatchetState {
+       valid_state state /\ cache_len state.f_receive_cache == 50 })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+    (next_target:u64 {
+       v next_target == v state.f_receive_sequence + 1 })
+  : Lemma
+      (let consumed = (finish_receive state target slot true).f_state in
+       cache_len consumed.f_receive_cache == 49 /\
+       consumed.f_receive_sequence == state.f_receive_sequence /\
+       (plan_receive_until consumed next_target).f_sequence ==
+         Core_models.Option.Option_Some next_target /\
+       (plan_receive_until consumed next_target).f_derivations == mk_u64 1)
+  =
+  finish_receive_success_shape state target slot;
+  let consumed = (finish_receive state target slot true).f_state in
+  plan_future_receive_is_bounded consumed next_target
+
 /// A successful, ordered restoration append preserves both the ratchet
 /// invariant and the builder's strictly-new upper bound.  Rejection returns no
 /// state and therefore cannot introduce an invalid one.

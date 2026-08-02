@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+process
+  out(c, ed_public(SERVER_IDENTITY_SECRET));
+  (
+    FailedReceiveScenario()
+    | CompromiseFailedReceiveState()
+    | !MaliciousBeacon()
+    | !MaliciousServer()
+  )

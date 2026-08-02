@@ -189,6 +189,34 @@ check-proverif: check-proverif-extraction
 			-lib $(PROVERIF_DIR)/compromise-queries.pvl \
 			$(PROVERIF_DIR)/compromise.pv | \
 		awk -v scenario=compromise -f '$(PROVERIF_CHECKER)'
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/failed-receive-queries.pvl \
+			$(PROVERIF_DIR)/failed-receive.pv | \
+		awk -v scenario=failed-receive -f '$(PROVERIF_CHECKER)'
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/failed-receive-reachability-queries.pvl \
+			$(PROVERIF_DIR)/failed-receive.pv | \
+		awk -v scenario=failed-receive-reachability \
+			-f '$(PROVERIF_CHECKER)'
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/failed-receive-compromise-queries.pvl \
+			$(PROVERIF_DIR)/failed-receive-compromise.pv | \
+		awk -v scenario=failed-receive-compromise \
+			-f '$(PROVERIF_CHECKER)'
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib \
+			$(PROVERIF_DIR)/failed-receive-compromise-reachability-queries.pvl \
+			$(PROVERIF_DIR)/failed-receive-compromise.pv | \
+		awk -v scenario=failed-receive-compromise-reachability \
+			-f '$(PROVERIF_CHECKER)'
 
 # Run this after committing generated output to ensure extraction is stable.
 check-generated: verify

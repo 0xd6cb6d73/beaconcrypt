@@ -47,7 +47,7 @@ declare -A expected_category_counts=(
 	[generated-fstar]=2
 	[generated-proverif]=1
 	[handwritten-fstar]=2
-	[handwritten-proverif]=8
+	[handwritten-proverif]=14
 	[inventory]=2
 	[validation]=1
 )
@@ -245,13 +245,13 @@ require_line_count 6 '^reduc ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive reduction"
 require_line_count 1 '^letfun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive helper"
-require_line_count 13 '^event ' proofs/pro-verif/environment.pvl \
+require_line_count 23 '^event ' proofs/pro-verif/environment.pvl \
 	"handwritten event"
 require_line_count 2 '^table ' proofs/pro-verif/environment.pvl \
 	"handwritten table"
-require_line_count 10 '^free ' proofs/pro-verif/environment.pvl \
+require_line_count 15 '^free ' proofs/pro-verif/environment.pvl \
 	"handwritten free name/channel"
-require_line_count 7 '^let [A-Z]' proofs/pro-verif/environment.pvl \
+require_line_count 11 '^let [A-Z]' proofs/pro-verif/environment.pvl \
 	"handwritten process"
 require_line_count 11 '^query ' proofs/pro-verif/queries.pvl \
 	"baseline query"
@@ -259,10 +259,69 @@ require_line_count 7 '^query ' proofs/pro-verif/reachability-queries.pvl \
 	"reachability query"
 require_line_count 5 '^query ' proofs/pro-verif/compromise-queries.pvl \
 	"compromise query"
+require_line_count 13 '^query ' proofs/pro-verif/failed-receive-queries.pvl \
+	"failed-receive query"
+require_line_count 11 '^query ' \
+	proofs/pro-verif/failed-receive-reachability-queries.pvl \
+	"failed-receive reachability query"
+require_line_count 7 '^query ' \
+	proofs/pro-verif/failed-receive-compromise-queries.pvl \
+	"failed-receive compromise query"
+require_line_count 2 '^query ' \
+	proofs/pro-verif/failed-receive-compromise-reachability-queries.pvl \
+	"failed-receive compromise reachability query"
 require_line_count 1 '^process$' proofs/pro-verif/baseline.pv \
 	"baseline top-level process"
 require_line_count 1 '^process$' proofs/pro-verif/compromise.pv \
 	"compromise top-level process"
+require_line_count 1 '^process$' proofs/pro-verif/failed-receive.pv \
+	"failed-receive top-level process"
+require_line_count 1 '^process$' \
+	proofs/pro-verif/failed-receive-compromise.pv \
+	"failed-receive compromise top-level process"
+
+# The symbolic cache-fill trace is intentionally the exact production bound:
+# 50 retained entries before rejection and 50 explicit disclosures on the
+# compromise branch.  These guards prevent a shorter witness from silently
+# replacing the reviewed capacity trace.
+require_line_count 50 \
+	'^[[:space:]]+let cache_[0-9]+ = failed_receive_cache_entry\(' \
+	proofs/pro-verif/environment.pvl \
+	"failed-receive cache-fill entry"
+require_line_count 49 \
+	'^[[:space:]]+let consumed_cache_[0-9]+ = failed_receive_cache_entry\(' \
+	proofs/pro-verif/environment.pvl \
+	"failed-receive post-consumption cache entry"
+for consumed_sequence in 2 {4..51}; do
+	require_line_count 1 \
+		"^[[:space:]]+let consumed_cache_${consumed_sequence} = failed_receive_cache_entry\\(" \
+		proofs/pro-verif/environment.pvl \
+		"failed-receive surviving cache sequence ${consumed_sequence}"
+done
+reject_matches "failed-receive consumed target remains cached" \
+	'let consumed_cache_[0-9]+\s*=\s*failed_receive_cache_entry\(\s*target_sequence,' \
+	proofs/pro-verif/environment.pvl
+require_line_count 50 '^[[:space:]]+let failed_receive_cache_entry\(' \
+	proofs/pro-verif/environment.pvl \
+	"failed-receive compromise cache destructure"
+require_line_count 50 '^[[:space:]]+out\(c, cached_material_[0-9]+\);' \
+	proofs/pro-verif/environment.pvl \
+	"failed-receive compromise cache disclosure"
+
+require_line_count 1 '^let admitted_receive_failure_retains_advanced_state' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"composed failed-receive advancement lemma"
+require_line_count 1 '^let failed_receive_retry_consumes_once' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"composed failed-receive retry lemma"
+require_line_count 1 \
+	'^let failed_receive_fills_cache_and_rejects_next_future' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"composed failed-receive capacity lemma"
+require_line_count 1 \
+	'^let successful_receive_releases_capacity_for_next_future' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"composed failed-receive capacity-release lemma"
 
 reject_matches "unreviewed generated F* exception" \
 	'\b(?:while_loop_return|to_le_bytes|assume|admit)\b' \

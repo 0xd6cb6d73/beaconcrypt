@@ -19,6 +19,7 @@ The short conclusion is:
   symbolic model of registration and a fixed record-exchange schedule. It also
   demonstrates the expected exposure of cached and future keys after one
   precisely timed beacon-state compromise.
+- A dedicated failed-active-receive model makes the pre-authentication ratchet/cache transition explicit, exercises the exact 50-slot boundary, and distinguishes private retained state from compromise of that state before a later honest delivery.
 - These results do **not** constitute an end-to-end proof of the complete Rust
   application, its adapters, the cryptographic libraries, persistence, or the
   deployed executable. The strongest production claims are conditional on the
@@ -179,6 +180,8 @@ report distinguishes proofs about the ratchet's counters and bookkeeping from
 proofs about the secret key bytes that production code associates with that
 bookkeeping.
 
+Production parses the frame, checks the sender and minimum protected-payload length, and then performs receive admission. Once a correctly shaped future frame is admitted, the receiver derives through the attacker-selected sequence and caches the intermediate and target keys before checking the commitment or AEAD. A failed open retains that complete post-admission state. The retry is state-neutral only relative to the retained state, not relative to the state before the first forged frame.
+
 ## Concrete properties proved by F*
 
 ### PQXDH registration and key establishment
@@ -271,14 +274,15 @@ The following properties are proved:
   other cached key, preserves the invariant, and a second use of the old
   target/slot is rejected as missing
   ([completion and replay lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L226-L315)).
+- The [composed failed-receive lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L317-L443) join planning, one-step advancement, and completion. `admitted_receive_failure_retains_advanced_state` proves that a target exactly one sequence ahead is derived before authentication and that failure retains a state whose counter and cache are each one larger. `failed_receive_retry_consumes_once` applies to any valid state containing the target: its failed retry is zero-cost, later success removes the target, and replay is neutral. `failed_receive_fills_cache_and_rejects_next_future` starts with 49 entries, retains the fiftieth on failure, and makes the next future plan return no target and zero derivations. `successful_receive_releases_capacity_for_next_future` proves the complementary transition: consuming a target from a full valid cache leaves 49 entries and makes the immediately next future sequence admissible with one derivation. These are universal pure-state results under their invariant and numeric preconditions, not facts inferred from one ProVerif trace; production's multi-step KDF loop remains an adapter refinement obtained by applying the proved one-step shape for every planned derivation.
 - Successful, ordered restoration preserves the invariant, and finishing a
   valid restoration returns a valid state
-  ([restore lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L317-L332)).
+  ([restore lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L445-L460)).
 - Pointwise replacement leaves a peer record with a different ID unchanged.
   Mismatched send advancement returns no sequence and an unavailable
   capability; for the selected peer, the peer ID, ratchet, and sequence match
   direct send advancement
-  ([peer lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L334-L372)).
+  ([peer lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L462-L500)).
 
 The last result is pointwise: it does not prove that a production whole-map
 lookup selects one unique entry or updates the complete map correctly.
@@ -412,6 +416,33 @@ intentional false secrecy result. These are consistency/non-vacuity witnesses,
 not failed security proofs. They do not separately establish reachability of
 every one of the five honest secret-bearing record sites.
 
+### Failed active receive state and compromise
+
+The dedicated [`failed-receive.pv`](../crates/protocol-core/proofs/pro-verif/failed-receive.pv) scenario addresses authentication failure after receive admission in the server-to-beacon direction. It gives the attacker public authentic ciphertexts and the ability to construct a syntactically admitted frame with an attacker-selected protected component. The receiver's ready, retained, full-cache, consumed, and refilled states are explicit symbolic terms, so a failed `open_frame` takes an `else` branch that publishes proof events and continues with the mutated state instead of silently blocking the process. F* proves the corresponding control transitions without a role/direction parameter, but ProVerif does not duplicate this cryptographic compromise trace in the beacon-to-server direction.
+
+The finite execution exercises these transitions in order:
+
+| Phase | Modeled state effect |
+| --- | --- |
+| Consumed past | An earlier honest record succeeds and its material is no longer in receiver state. |
+| First forged future receive | Admission derives through the selected future target and caches both skipped and target material before authentication; failed authentication retains that post-admission state. |
+| Exact cache fill | A farther correctly shaped forgery derives the remaining entries until all 50 slots are occupied; its failed authentication retains the full cache. |
+| Capacity rejection | The immediately following future target is rejected without another chain or cache transition because no slot remains. |
+| Retry and honest delivery | Repeating the first invalid target performs no further derivation; later forwarding the already published honest target ciphertext opens with the retained key and consumes only that entry. |
+| Replay and refill | Replaying the consumed honest frame is rejected, and the freed slot permits the formerly capacity-rejected future target to be admitted; its failed authentication retains the refilled state. |
+
+The private-state queries require all four named application values—consumed past, skipped, failed target, and live future—to remain secret. They also preserve the receive-to-send origin correspondence for every successful open in that scenario. The accompanying reachability queries prevent the failed transition, retry, cache-fill rejection, honest delivery, replay rejection, and post-release admission path from succeeding only vacuously; two further witnesses require an attacker-owned registration commit and attacker recovery of its routed canary.
+
+The repository threat model permits the attacker to register and fully control separate malicious beacons, but excludes access to a legitimate beacon's execution state. The private failed-receive top level runs those malicious registration processes concurrently: their canary is attacker-readable while all four failed-receive canaries remain secret. This is direct symbolic composition of the capabilities, but not an end-to-end handshake/record trace—the failed-receive session begins from its own fresh symbolic root. Interpreting the disjoint symbolic states as distinct production peers still depends on the reviewed peer-selection and independent-root adapter refinements. Registering a malicious beacon does not trigger the separate failed-receive compromise process.
+
+The separate [`failed-receive-compromise.pv`](../crates/protocol-core/proofs/pro-verif/failed-receive-compromise.pv) scenario synchronizes compromise after the forged future failure and before the target is consumed. The already consumed past value remains secret. The skipped and target values are deliberate negative secrecy results because their exact message material is retained in the cache; the live-future value is another deliberate negative result because its material is derivable from the revealed forward chain. In particular, the attacker has the legitimate target ciphertext on the public network and, after receiving the retained target material, can both recover its plaintext and manufacture a different frame that passes the ideal open rule. The honest receive-to-send correspondence is therefore deliberately false after compromise.
+
+Compromise does not make later honest delivery impossible. A separate reachability witness schedules the attacker to forward the original honest target ciphertext after compromise, and the receiver can still accept it using the retained key. This is possibility, not liveness: the active attacker may block delivery or use the compromised target key first, in which case its forged frame consumes the slot and the honest ciphertext will later be rejected.
+
+This ProVerif result is one exact, unrolled capacity-50 execution under ideal cryptography. It is not a quantification over every gap, cache arrangement, retry count, or interleaving. The general control-state statements come from the extracted F* ratchet lemmas, which quantify over states satisfying their invariant and relate planning, advancement, failed completion, successful consumption, capacity, and replay. Conversely, F* models logical capabilities rather than secret bytes and cannot establish the secrecy, compromise, or forgery conclusions of the symbolic trace.
+
+The ProVerif attacker starts at the post-parser admission boundary. A symbolic `crypto_frame` represents a frame whose constructor, sender, sequence, and protected component are available to the network attacker; it does not represent Cap'n Proto byte parsing or an arbitrary byte length. Therefore the model does not prove that frames which are empty, truncated, unparsable, from an unknown or wrong sender, or carry no more than the production overhead are rejected before ratcheting. Production ordering at [`decrypt_message_with_ratchet`](../src/shared.rs#L917-L971) and the boundary/truncation regressions in [`tests/protocol.rs`](../tests/protocol.rs#L421-L550) support those separate adapter claims.
+
 ### Precisely scoped late-compromise results
 
 For each replicated honest-beacon session that reaches the compromise point,
@@ -425,8 +456,8 @@ exactly:
 
 It does not reveal long-term identity, prekey, KEM, or server state. The model
 constructs the snapshot at the exact point shown in the
-[beacon process](../crates/protocol-core/proofs/pro-verif/environment.pvl#L394-L416),
-and the [compromise process](../crates/protocol-core/proofs/pro-verif/environment.pvl#L943-L963)
+[beacon process](../crates/protocol-core/proofs/pro-verif/environment.pvl#L516-L531),
+and the [compromise process](../crates/protocol-core/proofs/pro-verif/environment.pvl#L1065-L1085)
 reveals its three fields.
 
 The expected results are:
@@ -451,9 +482,11 @@ sequence 4 once its ciphertext is available, whether the ciphertext was
 recorded before compromise or sent afterward. This is not a theorem about one
 particular server-send timing.
 
-The events named `MessageKeyUnavailable`, `MessageKeyCached`, and
-`StateCompromised` document the process, but no query refers to them. The
-secrecy conclusions follow from which symbolic values the process retains or
+In the original late-compromise suite, the events named
+`MessageKeyUnavailable`, `MessageKeyCached`, and `StateCompromised` document
+the process but are not premises of its secrecy queries. (The separate
+failed-receive suite does query its target `MessageKeyCached` event.) The
+secrecy conclusions follow from which symbolic values each process retains or
 reveals, not from a universal theorem of the form “every unavailable key is
 forward-secret,” and not from proof of physical memory erasure.
 
@@ -474,6 +507,7 @@ sources gives these important qualifications:
 | “Every accepted, bounded input is panic-free.” | Strict F* checking covers safety obligations generated for the selected pure core functions. It is not whole-application panic freedom. |
 | “Initial and subsequent messages are secret; replay, unknown-key-share, cross-peer, and concurrent-session attacks are prevented.” | ProVerif proves five named messages and exact correspondences in replicated instances of one fixed five-record schedule. The event arguments support those separation interpretations within that schedule, not an arbitrary unbounded record API theorem. |
 | “Forward secrecy after later compromise.” | Two named past messages remain secret after one exact beacon-ratchet snapshot. Cached sequence 2 and future traffic are exposed. Persistence and other compromise times/targets are outside that result. |
+| “Authentication failure is state-neutral.” | This is false for a syntactically admitted future frame. F* proves that failed completion retains the already advanced state, and the dedicated ProVerif trace exercises advancement, exact cache fill, retry, later success, replay rejection, and one-slot refill. Only pre-admission rejection and a repeated failure relative to the retained state are neutral. |
 
 ### Cryptography and implementation components outside the proof
 
@@ -520,6 +554,7 @@ The corpus also does not prove:
   whole-map update from F*'s theorem about one selected map entry;
 - concrete HKDF call labels and buffer slicing, AEAD result provenance, or the
   logical-cache/concrete-key-map equality;
+- byte-level equivalence between ProVerif's admitted symbolic frame and production Cap'n Proto parsing, sender lookup/checks, overhead-length validation, commitment slicing, or malformed-input rejection;
 - equality between the numeric ID that the beacon stores for the server and the
   numeric identity-key ID in the server's own accepting binding; production
   expects both to name that server, but the composed F* theorem does not relate
@@ -542,9 +577,7 @@ There is no proof here for:
 
 - an arbitrary number of records or arbitrary out-of-order schedules within one
   session;
-- repeated duplicate receive calls in ProVerif, counter wrap/exhaustion in
-  ProVerif, or all possible receive gaps—the finite mechanics are handled only
-  in F*'s pure control model;
+- arbitrary retry counts, counter wrap/exhaustion in ProVerif, or all possible receive gaps and cache arrangements; ProVerif covers one exact capacity-50 failed-receive schedule, while the general finite control mechanics are handled by F*;
 - compromise at an arbitrary time, repeated compromise, server compromise,
   compromise of long-term identity/prekey/KEM secrets, key-compromise
   impersonation, or recovery after compromise;
@@ -671,9 +704,9 @@ The trace results additionally assume:
   concrete `u64` allocator;
 - the fixed sequence constructors model the particular record prefix being
   analyzed;
-- the only honest-party state compromise is the synchronized beacon snapshot
-  described above; attacker-owned beacon secrets are exposed from the start in
-  the baseline isolation scenario; and
+- the failed-receive process is one exact unrolled 50-slot schedule, and its symbolic forged frames represent inputs that have already passed the production parser, sender, and minimum-length gates;
+- an admitted failed open retains the derived concrete material represented by every logical skipped/target cache entry, while consuming a successful target removes that material and creates exactly one free slot;
+- the only honest-party state compromise is the synchronized beacon snapshot or failed-receive snapshot described above; each scenario has one synchronized snapshot, and every baseline or failed-receive top level that instantiates attacker-owned registration exposes those beacon secrets from the start; and
 - the handwritten event placement, wire constructors, processes, and three
   simplified function definitions faithfully represent the corresponding
   production behavior.
@@ -837,6 +870,17 @@ and outbound secrets are exposed.** No theorem says that every message whose
 key is marked unavailable is forward-secret. This is not arbitrary-time,
 server-side, persistence-aware, or physical-erasure forward secrecy.
 
+### 7. A failed admitted future frame mutates the selected receiver state
+
+1. Production parsing and sender selection must first choose the legitimate peer and reject malformed, short, or wrong-sender frames before ratchet admission.
+2. For the logical receiver state selected by the adapter, F* proves the admitted plan/one-step advancement relationship, that failed authentication retains the complete post-admission state, and that filling capacity blocks another future plan without mutation. F* does not prove the production peer-map selection itself.
+3. The adapter invariant must pair each derived logical entry with exactly one concrete key and retain those bytes on failure.
+4. The private ProVerif scenario then shows that an active network attacker without the legitimate receiver snapshot cannot derive the four named plaintexts even while concurrent attacker-owned registration processes commit a response and expose their own routed canary. The record trace uses a standalone fresh root, so peer/root separation remains an adapter obligation.
+5. In the compromise variant, explicitly revealing the legitimate receiver's retained state exposes the skipped and target keys and the live future chain; this both decrypts the public honest target ciphertext and enables a forged accepted frame.
+6. If the attacker forwards the honest ciphertext before spending the target key on a forgery, the retained key still accepts it, consumes only that slot, rejects replay, and permits one later derivation.
+
+The defensible statement is therefore: **in the combined private symbolic run, an attacker-controlled registered beacon has no path into the independently rooted failed-receive state, and a failed forged future frame does not by itself expose that state; under the production peer-selection and independent-root refinements, direct compromise of the legitimate retained state does expose every material still represented there and removes the honest-origin guarantee for those keys.** The exact cache-fill and delivery ordering is a finite ProVerif witness, while the state-transition relationships are general F* results under the adapter invariant. Neither proof supplies production peer-map isolation, parser correctness, an end-to-end registration-to-record state linkage, memory erasure, availability, or post-compromise recovery by itself.
+
 ## Verification and reproducibility
 
 The current proof entry point is:
@@ -851,32 +895,17 @@ checks generated and handwritten F*, checks the reviewed trust-boundary
 inventory, and runs all ProVerif scenarios. The reviewed tool bundle is recorded
 in the [Stage 8 document](formal-verification-stage-8.md#locked-proof-bundle).
 
-The historical Stage 3 through Stage 9 documents describe how this boundary was
-built. Older statements such as “semantic proofs remain future work,” older
-tool versions, hashes, and test counts describe their stage at that time. The
-current proof claims are the Stage 6 F* results, the current ProVerif model
-(which extends the Stage 7 baseline with attacker-owned registrations), and
-Stage 8 reproducibility controls. Stage 9 adds a mechanically checked
-[trust-boundary inventory](../crates/protocol-core/proofs/trusted-boundary.md)
-but changes no theorem, symbolic rule, security question, or production
-behavior. Stage 8 likewise explicitly changed no theorem, model, or expected
-query result ([Stage 8 scope](formal-verification-stage-8.md#result-and-scope)).
+The historical Stage 3 through Stage 9 documents describe how this boundary was built. Older statements such as “semantic proofs remain future work,” older tool versions, hashes, and test counts describe their stage at that time. The current proof claims are the Stage 6 F* results plus the composed failed-receive lemmas, the current ProVerif model (which extends the Stage 7 baseline with attacker-owned registrations and explicit failed-receive scenarios), and Stage 8 reproducibility controls. Stage 9 adds a mechanically checked [trust-boundary inventory](../crates/protocol-core/proofs/trusted-boundary.md); its historical snapshot changed no theorem, symbolic rule, security question, or production behavior, while the maintained inventory now records the later proof extensions. Stage 8 likewise explicitly changed no theorem, model, or expected query result ([Stage 8 scope](formal-verification-stage-8.md#result-and-scope)).
 
 The result gate requires exactly:
 
-- all 11 baseline queries to be true: five secrecy and six correspondence
-  results;
-- all seven negated reachability/non-vacuity queries to be false, including a
-  committed attacker-owned registration and attacker recovery of its routed
-  canary;
-  and
-- exactly two true and three false late-compromise secrecy results.
+- all 11 baseline queries to be true: five secrecy and six correspondence results;
+- all seven negated reachability/non-vacuity queries to be false, including a committed attacker-owned registration and attacker recovery of its routed canary;
+- exactly two true and three false original late-compromise secrecy results;
+- all 13 private failed-receive queries to be true (four secrecy and nine state/origin correspondences), with all eleven failed-receive reachability negations false (nine receive-state phases plus malicious-registration commit and malicious-canary recovery); and
+- in the seven-query failed-receive compromise run, consumed-past secrecy and both compromise-order correspondences to be true, skipped/target/future secrecy and honest-origin correspondence to be false, and both compromise and later-honest-delivery reachability negations to be false.
 
-During preparation of this report on 2 August 2026, the command completed
-successfully with both regenerated extraction artifacts unchanged. All F*
-verification conditions were discharged, all three ProVerif classifications
-matched the counts above, and the trust-boundary inventory matched its recorded
-baseline.
+During preparation of this report on 2 August 2026, the command completed successfully with both regenerated extraction artifacts unchanged. All F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the trust-boundary inventory matched its recorded baseline.
 
 The checker rejects missing or substituted queries, timeouts, unknown or
 inconclusive results, and any changed classification
@@ -920,6 +949,8 @@ For an audit or security statement that needs exact scope, use:
 > handwritten modeling, correct application recipient routing, high-level
 > non-rollback execution, and the stated replay-owner and compromise scope; the
 > complete application and primitive implementations are not formally verified.
+>
+> A dedicated exact capacity-50 trace models a forged future frame advancing and retaining receiver state before authentication, a neutral retry and full-cache rejection, later honest consumption, replay rejection, and admission after one slot is freed. The retained state preserves the named secrets while private; its explicit compromise exposes skipped, target, and future material, permits forgery, and leaves honest delivery reachable but not guaranteed. General control-state relationships come from F*, while byte-level parsing and arbitrary schedules are outside this finite ProVerif trace.
 
 Statements such as “the whole implementation is proven secure,” “all
 application messages are proven confidential,” “the cryptographic primitives

@@ -40,6 +40,12 @@ The reference implementation is large, ~6.5MB for the static lib. It goes down t
 
 The C interfaces are probably not thread safe.
 
+## Formal verification
+
+The proof suite includes an explicit failed-active-receive scenario. A correctly parsed, correctly sized future frame can be admitted before authentication, advance the receive chain, and retain every derived key when authentication fails. The finite server-to-beacon ProVerif trace fills the exact 50-key cache, confirms that the next future receive is rejected without another state change, retries the retained target, accepts its later honest ciphertext, rejects replay, and admits another future key after the successful receive frees a slot. General, direction-independent receive-gap, capacity, retry, and replay facts are proved separately over the extracted Rust control state in F*.
+
+This result is deliberately conditional. The private-state run concurrently allows attacker-owned beacon registration and confirms the attacker can read that beacon's routed canary, while the independently rooted legitimate failed-receive canaries remain secret. Compromise after the failed receive exposes the skipped and target key material plus the live future chain, permits attacker forgery, and still leaves a trace in which the later honest target ciphertext is delivered successfully; it does not guarantee that the attacker will allow that delivery. Cap'n Proto parsing, serialized byte lengths, end-to-end linkage of the standalone record root to registration, concrete cryptographic implementations, and arbitrary receive schedules remain outside the finite ProVerif trace. See [the formal-verification analysis](doc/formal-verification-analysis.md#failed-active-receive-state-and-compromise) for the exact claim and limitations.
+
 # TODOs
 Test the C interface
 
