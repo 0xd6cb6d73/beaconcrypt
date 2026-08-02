@@ -1,0 +1,165 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* Deliberately non-key-committing AEAD negative control                  *)
+(**************************************************************************)
+
+(* The same ciphertext and tag have successful openings under every opening label.
+   Applying the key, nonce, and context constructors to the distinct left and right labels therefore produces a deliberate multi-opening.
+   This is intentionally weaker than the production AEAD and isolates the guarantee supplied by the CTX commitment. *)
+fun weak_aead_left_opening(): bitstring [data].
+fun weak_aead_right_opening(): bitstring [data].
+fun weak_aead_key(bitstring, bitstring): bitstring.
+fun weak_aead_nonce(bitstring, bitstring): bitstring.
+fun weak_aead_context(bitstring, bitstring): bitstring.
+fun weak_aead_cipher(bitstring, bitstring, bitstring): bitstring.
+fun weak_aead_tag(bitstring): bitstring.
+
+fun weak_aead_open(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+): bitstring
+reduc forall ambiguity: bitstring,
+             left_plaintext: bitstring,
+             right_plaintext: bitstring;
+  weak_aead_open(
+    weak_aead_key(ambiguity, weak_aead_left_opening()),
+    weak_aead_nonce(ambiguity, weak_aead_left_opening()),
+    weak_aead_context(ambiguity, weak_aead_left_opening()),
+    weak_aead_cipher(ambiguity, left_plaintext, right_plaintext),
+    weak_aead_tag(ambiguity)
+  ) = left_plaintext
+otherwise forall ambiguity: bitstring,
+                 left_plaintext: bitstring,
+                 right_plaintext: bitstring;
+  weak_aead_open(
+    weak_aead_key(ambiguity, weak_aead_right_opening()),
+    weak_aead_nonce(ambiguity, weak_aead_right_opening()),
+    weak_aead_context(ambiguity, weak_aead_right_opening()),
+    weak_aead_cipher(ambiguity, left_plaintext, right_plaintext),
+    weak_aead_tag(ambiguity)
+  ) = right_plaintext.
+
+event WeakAeadMultiOpened(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+
+(* The commitment is constructed for the left opening.
+   Revalidating that exact wire commitment for the right opening must fail because ctx_commitment is binding in the key, nonce, and associated data. *)
+let WithCtxNegativeControl() =
+  new ambiguity: bitstring;
+  new left_plaintext: bitstring;
+  new right_plaintext: bitstring;
+  new sender_id: key_id;
+  let message_sequence = first_sequence() in
+  let left_opening = weak_aead_left_opening() in
+  let right_opening = weak_aead_right_opening() in
+  let left_key = weak_aead_key(ambiguity, left_opening) in
+  let right_key = weak_aead_key(ambiguity, right_opening) in
+  let left_nonce = weak_aead_nonce(ambiguity, left_opening) in
+  let right_nonce = weak_aead_nonce(ambiguity, right_opening) in
+  let left_context = weak_aead_context(ambiguity, left_opening) in
+  let right_context = weak_aead_context(ambiguity, right_opening) in
+  let ciphertext = weak_aead_cipher(
+    ambiguity,
+    left_plaintext,
+    right_plaintext
+  ) in
+  let tag = weak_aead_tag(ambiguity) in
+  let wire_commitment = ctx_commitment(
+    left_key,
+    left_nonce,
+    left_context,
+    tag,
+    message_sequence,
+    sender_id
+  ) in
+  if wire_commitment = ctx_commitment(
+    left_key,
+    left_nonce,
+    left_context,
+    tag,
+    message_sequence,
+    sender_id
+  ) then
+  let opened_left = weak_aead_open(
+    left_key,
+    left_nonce,
+    left_context,
+    ciphertext,
+    tag
+  ) in
+  if wire_commitment = ctx_commitment(
+    right_key,
+    right_nonce,
+    right_context,
+    tag,
+    message_sequence,
+    sender_id
+  ) then
+  let opened_right = weak_aead_open(
+    right_key,
+    right_nonce,
+    right_context,
+    ciphertext,
+    tag
+  ) in
+  event WeakAeadMultiOpened(
+    left_key,
+    right_key,
+    left_context,
+    right_context,
+    opened_left,
+    opened_right
+  ).
+
+(* This otherwise identical process deliberately removes both CTX checks.
+   It must reach WeakAeadMultiOpened, demonstrating that the AEAD equations alone permit the two distinct openings. *)
+let WithoutCtxNegativeControl() =
+  new ambiguity: bitstring;
+  new left_plaintext: bitstring;
+  new right_plaintext: bitstring;
+  let left_opening = weak_aead_left_opening() in
+  let right_opening = weak_aead_right_opening() in
+  let left_key = weak_aead_key(ambiguity, left_opening) in
+  let right_key = weak_aead_key(ambiguity, right_opening) in
+  let left_nonce = weak_aead_nonce(ambiguity, left_opening) in
+  let right_nonce = weak_aead_nonce(ambiguity, right_opening) in
+  let left_context = weak_aead_context(ambiguity, left_opening) in
+  let right_context = weak_aead_context(ambiguity, right_opening) in
+  let ciphertext = weak_aead_cipher(
+    ambiguity,
+    left_plaintext,
+    right_plaintext
+  ) in
+  let tag = weak_aead_tag(ambiguity) in
+  let opened_left = weak_aead_open(
+    left_key,
+    left_nonce,
+    left_context,
+    ciphertext,
+    tag
+  ) in
+  let opened_right = weak_aead_open(
+    right_key,
+    right_nonce,
+    right_context,
+    ciphertext,
+    tag
+  ) in
+  event WeakAeadMultiOpened(
+    left_key,
+    right_key,
+    left_context,
+    right_context,
+    opened_left,
+    opened_right
+  ).

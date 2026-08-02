@@ -5,6 +5,10 @@ use crate::cryptoframe_capnp;
 use crate::error::DecodingError;
 #[cfg(any(feature = "server", test))]
 use crate::error::EncodingError;
+use beaconcrypt_protocol_core::commitment::{
+	AEAD_KEY_SIZE as CORE_AEAD_KEY_LEN, AEAD_NONCE_SIZE as CORE_AEAD_NONCE_LEN,
+	AEAD_TAG_SIZE as CORE_AEAD_TAG_LEN, build_commitment_transcript,
+};
 use beaconcrypt_protocol_core::pqxdh::{
 	ASSOCIATED_DATA_SIZE as AD_SIZE, RATCHET_CHAIN_SIZE, RatchetInitialization,
 };
@@ -40,6 +44,9 @@ pub const AEAD_KEY_LEN: usize = 32;
 pub const AEAD_NONCE_LEN: usize = 12;
 /// crypto_aead::chacha20poly1305_ietf::ABYTES
 pub const AEAD_TAG_LEN: usize = 16;
+const _: () = assert!(AEAD_KEY_LEN == CORE_AEAD_KEY_LEN);
+const _: () = assert!(AEAD_NONCE_LEN == CORE_AEAD_NONCE_LEN);
+const _: () = assert!(AEAD_TAG_LEN == CORE_AEAD_TAG_LEN);
 pub const KDF_RATCHET_OUTPUT_LEN: usize = AEAD_KEY_LEN + KDF_STATE_SIZE + AEAD_NONCE_LEN;
 /// crypto_scalarmult::BYTES
 #[cfg(feature = "pqxdh")]
@@ -1099,7 +1106,7 @@ pub trait CryptoProvider {
 /// implementation of the Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>
 /// `CT, T = ENC(K, N, A, M)`
 ///
-/// `T* = H(K, N, A, T)`
+/// `T* = H(K, N, A, T, LE64(seq), LE64(kid))`
 ///
 /// the paper omits the original tag from the output. It is included here so we can keep using the libsodium interface
 ///
@@ -1127,15 +1134,16 @@ fn build_commitment(
 	}
 	let key = secret.key().as_bytes();
 	let nonce = secret.nonce().as_bytes();
-	let mut input = vec![];
-	input.extend_from_slice(key);
-	input.extend_from_slice(nonce);
-	input.extend_from_slice(ad);
-	input.extend_from_slice(tag);
-	input.extend_from_slice(&seq.to_le_bytes());
-	input.extend_from_slice(&kid.to_le_bytes());
-	let hash = crypto_generichash::generichash(input.as_slice(), None, COMMITMENT_SIZE).ok();
-	input.zeroize();
+	let mut input = build_commitment_transcript(
+		key.try_into().ok()?,
+		nonce,
+		ad.try_into().ok()?,
+		tag.try_into().ok()?,
+		seq,
+		kid,
+	);
+	let hash = crypto_generichash::generichash(input.as_bytes(), None, COMMITMENT_SIZE).ok();
+	input.as_mut_bytes().zeroize();
 	hash
 }
 

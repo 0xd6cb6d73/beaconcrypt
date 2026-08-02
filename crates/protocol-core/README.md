@@ -8,12 +8,9 @@ runtime dependencies. See the repository's
 [formal verification plan](../../doc/formal-verification.md) for the intended
 boundary and proof inventory.
 
-The crate contains the control-plane state machines for the symmetric ratchet
-and PQXDH registration. It owns ratchet counters, key availability and receive
-admission as well as deterministic PQXDH transcript construction,
-role-specific registration states, and commit/abort decisions. Cryptographic
-chain bytes, concrete message keys, private-key operations, and entropy stay
-behind the adapter boundary.
+The crate contains the control-plane state machines for the symmetric ratchet and PQXDH registration plus the fixed-width CTX commitment transcript builder.
+It owns ratchet counters, key availability and receive admission as well as deterministic PQXDH/commitment transcript construction, role-specific registration states, and commit/abort decisions.
+Cryptographic chain bytes, concrete message keys, hashing, private-key operations, and entropy stay behind the adapter boundary.
 
 The receive cache is a packed fixed array of at most 50 logical key sequences.
 Its operations are implemented directly rather than through an assumed `Vec`
@@ -137,6 +134,13 @@ post-compromise security. See the
 [Stage 7 implementation record](../../doc/formal-verification-stage-7.md) and
 [current proof analysis](../../doc/formal-verification-analysis.md).
 
+The production CTX transcript delegates to the core's fixed-size commitment builder.
+Hax extracts that helper, and the strict F* commitment lemmas prove the exact 229-byte order `key || nonce || associated data || tag || LE64(sequence) || LE64(sender ID)`, injectivity of both integer encodings and the complete input, and `ctx_distinct_openings_imply_hash_collision`.
+That theorem fixes one ciphertext, transmitted tag, and commitment and machine-checks an explicit collision witness for any two accepted explanations that differ in key, nonce, associated data, sequence, sender ID, or plaintext, while allowing the base AEAD to multi-open under unequal contexts.
+The conventional [computational lifting](../../doc/ctx-commitment.md) bounds misattribution advantage by BLAKE2b-512 collision advantage, but the probability and runtime theorem is not mechanized.
+A supplementary ProVerif differential control uses one deliberately multi-opening base-AEAD ciphertext/tag: the double-opening query is unreachable with CTX and deliberately reachable when only the CTX checks are removed.
+The real-world binding claim remains conditional on BLAKE2b collision resistance, correct libsodium and adapter behavior, and hax/compiler correspondence.
+
 Stage 9 adds the maintained trust-boundary inventory. It names every
 proof-relevant opaque production wrapper and primitive law, the ratchet and
 PQXDH adapter refinements, the pinned proof-library assumptions, all accepted
@@ -154,11 +158,7 @@ From this directory, run:
 make verify
 ```
 
-The target enters the repository's locked Nix proof shell, checks the exact
-rustc, Cargo, hax, F*, Z3, and ProVerif identities, regenerates the F* ratchet
-and PQXDH modules and the ProVerif extraction, checks both F* lemma modules
-without `--lax`, checks the complete reviewed trust-boundary inventory, and
-runs the baseline, reachability, and compromise models.
+The target enters the repository's locked Nix proof shell, checks the exact rustc, Cargo, hax, F*, Z3, and ProVerif identities, regenerates the F* commitment, ratchet, and PQXDH modules plus the ProVerif extraction, checks all three F* lemma modules without `--lax`, checks the complete reviewed trust-boundary inventory, and runs the CTX differential, baseline, reachability, failed-receive, and compromise models.
 A policy gate rejects `assume` or `admit` in repository-owned F* modules and
 lax/admitted-query checker flags. The result gate rejects timeouts, missing
 queries, unexpected classifications, and every unproved or inconclusive

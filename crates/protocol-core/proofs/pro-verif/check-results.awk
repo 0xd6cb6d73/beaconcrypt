@@ -45,6 +45,14 @@ in_summary && /^Query / {
       $0 !~ / is false\.$/) {
     reject(scenario " witness was not found: " $0)
   }
+
+  if (scenario == "aead-commitment" && $0 !~ / is true\.$/) {
+    reject("CTX did not prevent the weak-AEAD multi-opening: " $0)
+  }
+
+  if (scenario == "aead-no-commitment" && $0 !~ / is false\.$/) {
+    reject("no-CTX negative control did not witness a multi-opening: " $0)
+  }
 }
 
 END {
@@ -68,8 +76,17 @@ END {
   failed_compromise_arguments = "session_5,target_sequence_2,retained_state_2,full_state_2"
   failed_message_arguments = "session_5,message_direction,message_sequence_1,sender,receiver,plaintext_5"
   failed_malicious_commit_arguments = "server_identity_1,beacon_identity_2,init,registration_id_2,assigned_key_id_1,root_input_1,root_2,associated_data_8,session_5,plaintext_5"
+  weak_aead_arguments = "left_key_1,right_key_1,left_context_1,right_context_1,left_plaintext_1,right_plaintext_1"
 
-  if (scenario == "baseline") {
+  if (scenario == "aead-commitment" ||
+      scenario == "aead-no-commitment") {
+    if (query_count != 1) {
+      reject("expected 1 " scenario " query, saw " query_count)
+    }
+    expected_result = (scenario == "aead-commitment") ? "true" : "false"
+    wanted = "Query not event(WeakAeadMultiOpened(" weak_aead_arguments ")) is " expected_result "."
+    require_exact(wanted, scenario)
+  } else if (scenario == "baseline") {
     if (query_count != 11) {
       reject("expected 11 baseline queries, saw " query_count)
     }

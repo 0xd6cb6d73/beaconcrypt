@@ -42,12 +42,12 @@ done < "$manifest"
 declare -A expected_category_counts=(
 	[adapter-rust]=11
 	[adapter-schema]=3
-	[core-rust]=3
+	[core-rust]=4
 	[control]=11
-	[generated-fstar]=2
+	[generated-fstar]=3
 	[generated-proverif]=1
-	[handwritten-fstar]=2
-	[handwritten-proverif]=14
+	[handwritten-fstar]=3
+	[handwritten-proverif]=18
 	[inventory]=2
 	[validation]=1
 )
@@ -270,6 +270,15 @@ require_line_count 7 '^query ' \
 require_line_count 2 '^query ' \
 	proofs/pro-verif/failed-receive-compromise-reachability-queries.pvl \
 	"failed-receive compromise reachability query"
+require_line_count 1 '^query ' \
+	proofs/pro-verif/aead-commitment-negative-control-queries.pvl \
+	"AEAD commitment negative-control query"
+require_line_count 1 '^event ' \
+	proofs/pro-verif/aead-commitment-negative-control.pvl \
+	"AEAD commitment negative-control event"
+require_line_count 2 '^let [A-Z]' \
+	proofs/pro-verif/aead-commitment-negative-control.pvl \
+	"AEAD commitment negative-control process"
 require_line_count 1 '^process$' proofs/pro-verif/baseline.pv \
 	"baseline top-level process"
 require_line_count 1 '^process$' proofs/pro-verif/compromise.pv \
@@ -279,6 +288,10 @@ require_line_count 1 '^process$' proofs/pro-verif/failed-receive.pv \
 require_line_count 1 '^process$' \
 	proofs/pro-verif/failed-receive-compromise.pv \
 	"failed-receive compromise top-level process"
+require_line_count 1 '^process$' proofs/pro-verif/aead-commitment.pv \
+	"AEAD with-commitment top-level process"
+require_line_count 1 '^process$' proofs/pro-verif/aead-no-commitment.pv \
+	"AEAD no-commitment top-level process"
 
 # The symbolic cache-fill trace is intentionally the exact production bound:
 # 50 retained entries before rejection and 50 explicit disclosures on the
@@ -322,6 +335,25 @@ require_line_count 1 \
 	'^let successful_receive_releases_capacity_for_next_future' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"composed failed-receive capacity-release lemma"
+
+require_line_count 1 '^let commitment_transcript_is_exact' \
+	proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst \
+	"exact production commitment transcript lemma"
+require_line_count 1 '^let commitment_transcript_integer_fields_are_le64' \
+	proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst \
+	"production commitment integer-encoding lemma"
+require_line_count 1 '^let encode_u64_le_is_injective' \
+	proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst \
+	"injective production LE64 encoding lemma"
+require_line_count 1 '^let production_commitment_input_is_injective' \
+	proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst \
+	"injective six-field production commitment lemma"
+require_line_count 1 '^type t_HashCollisionWitness' \
+	proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst \
+	"CTX hash-collision witness type"
+require_line_count 1 '^let ctx_distinct_openings_imply_hash_collision' \
+	proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst \
+	"CTX distinct-opening collision extractor"
 
 reject_matches "unreviewed generated F* exception" \
 	'\b(?:while_loop_return|to_le_bytes|assume|admit)\b' \

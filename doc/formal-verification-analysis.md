@@ -12,22 +12,22 @@ F* and ProVerif files under
 
 The short conclusion is:
 
-- F* proves useful, universal facts about selected deterministic Rust functions:
-  exact PQXDH byte layouts and state transitions, ratchet bounds, logical key
-  consumption, replay behavior, and checked counter handling.
+- F* proves useful, universal facts about selected deterministic Rust functions: exact PQXDH byte layouts and state transitions, ratchet bounds, logical key consumption, replay behavior, checked counter handling, and the CTX transcript and pointwise collision-witness properties described below.
 - ProVerif proves secrecy and authentication properties for an active-attacker
   symbolic model of registration and a fixed record-exchange schedule. It also
   demonstrates the expected exposure of cached and future keys after one
   precisely timed beacon-state compromise.
 - A dedicated failed-active-receive model makes the pre-authentication ratchet/cache transition explicit, exercises the exact 50-slot boundary, and distinguishes private retained state from compromise of that state before a later honest delivery.
+- A separate ProVerif negative control deliberately gives one base-AEAD ciphertext and tag two valid openings under distinct keys, nonces, associated-data contexts, and plaintexts.
+  The identical multi-opening query is proved unreachable with CTX and is deliberately reachable when the CTX check is removed.
+- F* proves the exact 229-byte production commitment transcript layout, injectivity of both `u64` encodings and the complete six-field input, and that two distinct accepted explanations of one fixed payload yield an explicit collision witness for arbitrary pure hash and AEAD-open functions.
 - These results do **not** constitute an end-to-end proof of the complete Rust
   application, its adapters, the cryptographic libraries, persistence, or the
   deployed executable. The strongest production claims are conditional on the
   assumptions and implementation-to-model connections listed below.
-- The proof does **not** establish computational or post-quantum security. In
-  particular, the protocol still uses classical Ed25519 authentication and is
-  not safe against an active quantum attacker, as the project already records
-  in its [known gaps](rationale.md#known-gaps).
+- The proof does **not** establish general computational or post-quantum security of the primitive implementations.
+  The CTX result has a conventional computational lifting from its machine-checked pointwise collision witness, but the probability and runtime theorem is not mechanized and remains conditional on BLAKE2b-512 collision resistance and faithful production refinement.
+  The protocol still uses classical Ed25519 authentication and is not safe against an active quantum attacker, as the project already records in its [known gaps](rationale.md#known-gaps).
 
 In one sentence: important protocol-control logic and an idealized network
 model have been verified, but “beaconcrypt as a whole is formally proven
@@ -122,7 +122,7 @@ full application adapters, real crypto, wire formats, persistence, FFI
 ```
 
 The F* path is the stronger source connection. The build selects the exact
-ratchet and PQXDH Rust items in the
+commitment, ratchet, and PQXDH Rust items in the
 [`HAX_ITEMS` list](../crates/protocol-core/Makefile#L13-L45), regenerates their
 F* definitions, then checks the generated modules and handwritten lemmas
 with every proof obligation required—the checker is not allowed to accept a
@@ -183,6 +183,21 @@ bookkeeping.
 Production parses the frame, checks the sender and minimum protected-payload length, and then performs receive admission. Once a correctly shaped future frame is admitted, the receiver derives through the attacker-selected sequence and caches the intermediate and target keys before checking the commitment or AEAD. A failed open retains that complete post-admission state. The retry is state-neutral only relative to the retained state, not relative to the state before the first forged frame.
 
 ## Concrete properties proved by F*
+
+### Commitment transcript and collision witness
+
+The production BLAKE2b wrapper delegates byte construction to the selected `no_std` [`build_commitment_transcript`](../crates/protocol-core/src/commitment.rs) helper.
+The checked [`Commitment.Lemmas.fst`](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst) module proves that its 229 output bytes are exactly the 32-byte key, 12-byte nonce, 153-byte associated data, 16-byte AEAD tag, little-endian 64-bit sequence, and little-endian 64-bit sender ID in that order.
+It also proves `encode_u64_le_is_injective` and `production_commitment_input_is_injective`, so equality of two production transcript arrays implies equality of all six semantic inputs.
+
+The theorem `ctx_distinct_openings_imply_hash_collision` quantifies over arbitrary pure hash and AEAD-open functions and fixes one ciphertext core, transmitted tag, and outer commitment for both openings.
+If two accepted explanations differ in key, nonce, associated data, sequence, sender ID, or plaintext, it machine-checks an explicit witness consisting of two distinct 229-byte inputs with equal hash outputs.
+The theorem permits unequal-key and unequal-context multi-openings by the base AEAD rather than assuming those openings away.
+If all transcript inputs are equal, injectivity fixes their semantic fields and the same pure open function on the same ciphertext and tag fixes its result, so a different accepted plaintext is impossible.
+
+This proves the pure builder's source-level layout and pointwise collision implication after hax translation.
+The production wrapper's typed call connects its `key`, `nonce`, `ad`, `tag`, `seq`, and `kid` values to that helper.
+The libsodium BLAKE2b call, successful slice-to-array conversions, input provenance, hax/compiler correctness, zeroization, and correspondence to machine code remain outside F*.
 
 ### PQXDH registration and key establishment
 
@@ -340,6 +355,19 @@ annotations representing the threat model's recipient-specific task-routing
 assumption—not production log entries, ACLs, wire fields, or a proof that the C2
 application selects the correct recipient.
 
+### CTX commitment negative control
+
+The ordinary record model's [`open_frame`](../crates/protocol-core/proofs/pro-verif/crypto.pvl) rule already requires an exact key, nonce-derived material, associated data, sequence, sender ID, tag, and ciphertext term.
+Its record correspondence therefore establishes origin only under that ideal exact-opening rule; by itself it does not show what CTX adds to a non-key-committing AEAD.
+
+The dedicated [`aead-commitment-negative-control.pvl`](../crates/protocol-core/proofs/pro-verif/aead-commitment-negative-control.pvl) instead defines one ciphertext/tag term with two successful reductions to distinct fresh plaintexts under structurally distinct key, nonce, and associated-data terms.
+Both top-level scenarios run the exact same [`WeakAeadMultiOpened` query](../crates/protocol-core/proofs/pro-verif/aead-commitment-negative-control-queries.pvl): [`aead-commitment.pv`](../crates/protocol-core/proofs/pro-verif/aead-commitment.pv) must report the event unreachable because the one collision-free `ctx_commitment` term cannot validate both contexts, while [`aead-no-commitment.pv`](../crates/protocol-core/proofs/pro-verif/aead-no-commitment.pv) removes those checks and must produce a trace reaching the event.
+The result classifier requires those exact opposite classifications.
+
+This differential result supplements the F* pointwise theorem with an explicit ideal-hash CTX/no-CTX counterfactual and does not assume that the base AEAD is key committing.
+It remains a symbolic result for one explicit multi-opening theory, not a computational proof of BLAKE2b or an end-to-end theorem about compiled Rust.
+The [computational lifting](ctx-commitment.md) conventionally turns the F*-proved witness into an advantage bound under the separate collision-resistance assumption.
+
 ### Baseline secrecy
 
 The five baseline secrecy queries in
@@ -438,7 +466,7 @@ Compromise does not make later honest delivery impossible. A separate reachabili
 
 This ProVerif result is one exact, unrolled capacity-50 execution under ideal cryptography. It is not a quantification over every gap, cache arrangement, retry count, or interleaving. The general control-state statements come from the extracted F* ratchet lemmas, which quantify over states satisfying their invariant and relate planning, advancement, failed completion, successful consumption, capacity, and replay. Conversely, F* models logical capabilities rather than secret bytes and cannot establish the secrecy, compromise, or forgery conclusions of the symbolic trace.
 
-The ProVerif attacker starts at the post-parser admission boundary. A symbolic `crypto_frame` represents a frame whose constructor, sender, sequence, and protected component are available to the network attacker; it does not represent Cap'n Proto byte parsing or an arbitrary byte length. Therefore the model does not prove that frames which are empty, truncated, unparsable, from an unknown or wrong sender, or carry no more than the production overhead are rejected before ratcheting. Production ordering at [`decrypt_message_with_ratchet`](../src/shared.rs#L917-L971) and the boundary/truncation regressions in [`tests/protocol.rs`](../tests/protocol.rs#L421-L550) support those separate adapter claims.
+The ProVerif attacker starts at the post-parser admission boundary. A symbolic `crypto_frame` represents a frame whose constructor, sender, sequence, and protected component are available to the network attacker; it does not represent Cap'n Proto byte parsing or an arbitrary byte length. Therefore the model does not prove that frames which are empty, truncated, unparsable, from an unknown or wrong sender, or carry no more than the production overhead are rejected before ratcheting. Production ordering at [`decrypt_message_with_ratchet`](../src/shared.rs#L924-L979) and the boundary/truncation regressions in [`tests/protocol.rs`](../tests/protocol.rs#L421-L550) support those separate adapter claims.
 
 ### Precisely scoped late-compromise results
 
@@ -489,6 +517,12 @@ forward-secret,” and not from proof of physical memory erasure.
 
 ## What is not proven
 
+The modified CTX justification has three deliberately separated layers.
+F* machine-checks `ctx_distinct_openings_imply_hash_collision`, which constructs a pointwise collision witness from two distinct accepted explanations of one fixed production-format `C || T || U` payload for arbitrary pure hash and AEAD-open functions.
+The conventional computational lifting runs an adversary and returns that witness, giving the displayed advantage inequality under BLAKE2b-512 collision resistance, but the probability and runtime theorem itself is not mechanized.
+ProVerif supplies a supplementary explicit ideal-hash negative control in which the base AEAD deliberately multi-opens and removing CTX reverses the query result.
+None of these layers proves BLAKE2b, the libsodium call, production field provenance, hax/compiler correctness, or compiled machine code.
+
 ### Intended claims that require narrower wording
 
 The main [formal-verification plan](formal-verification.md#proof-inventory) mixes
@@ -497,7 +531,8 @@ sources gives these important qualifications:
 
 | Broadly worded inventory claim | What the current corpus actually supports |
 | --- | --- |
-| “The commitment input is exactly `(key, nonce, associated data, AEAD tag, sequence, sender ID)`.” | This order appears in the handwritten ideal ProVerif `seal_frame`/`open_frame` model ([source](../crates/protocol-core/proofs/pro-verif/crypto.pvl#L86-L195)). No commitment or record builder is selected for F* extraction, and no F* theorem checks the production `build_commitment` Rust function. Production layout is supported by tests, not by these formal proofs. |
+| “The commitment input is exactly `(key, nonce, associated data, AEAD tag, sequence, sender ID)`.” | Production delegates its hash input to the extracted fixed-size builder, and F* proves its exact six ranges plus both little-endian encodings ([Rust helper](../crates/protocol-core/src/commitment.rs), [lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst)). The caller's field provenance, BLAKE2b call, hax/compiler correctness, and machine code remain outside the theorem. |
+| “The modified CTX construction provides strong commitment.” | F* proves the pointwise collision witness for arbitrary pure hash and AEAD-open functions, including unequal-key and unequal-context base-AEAD openings; the conventional computational lifting bounds misattribution advantage by BLAKE2b-512 collision advantage. ProVerif separately confirms the intended ideal-hash CTX/no-CTX differential. The probability/runtime lifting is not mechanized, and BLAKE2b, libsodium, adapter provenance, compiler correspondence, and confidentiality/authenticity preservation remain assumptions or separate obligations. |
 | “Peer, counter, and ratchet publication commit atomically.” | F* proves the pure candidate's returned state and peer shape. Actual atomic mutation of the counter, peer map, ratchet, and persistent storage is an adapter obligation covered by implementation structure and regression tests, not the pure theorem. |
 | “Send keys are one use” and “replay is rejected.” | F* proves sequential logical-capability consumption. Global one-use and concrete replay rejection additionally require one authoritative state, no copying or rollback, and exact logical-to-concrete key refinement. |
 | “Counters start at one.” | F* proves that advancing any non-exhausted counter returns old plus one; a counter initialized to zero therefore first returns one. Selecting and preserving that initial production state is an adapter/initialization fact. |
@@ -521,8 +556,7 @@ The corpus does not prove:
   path; extraction checks generated safety conditions, but the beacon abort
   helpers and arbitrary malformed/finishing errors have no handwritten semantic
   theorem;
-- the modified CTX/BLAKE2b commitment construction's computational strong
-  commitment property, collision resistance, or production argument order;
+- BLAKE2b-512 collision resistance, a concrete numerical bound for that primitive, or a mechanized probability/runtime theorem for the modified CTX construction; F* machine-checks the pointwise collision witness and transcript injectivity, while the conventional [computational lifting](ctx-commitment.md), opaque hash implementation, production field provenance, and compiled caller retain their stated assumptions;
 - nonce uniqueness or the equality, uniqueness, secrecy, and deletion of actual
   message-key bytes;
 - entropy quality, fresh-key generation, operating-system RNG behavior, or
@@ -620,9 +654,9 @@ secrets cannot be recovered by inversion, and a frame opens only with exactly
 matching material, associated data, sequence, and sender ID. The model uses
 separate ideal constructors for the root, both directional chains, ratchet
 advance, material, key, and nonce. That is finer domain separation than the two
-concrete HKDF labels above. Real algorithms approximate these properties
-probabilistically; the proof supplies no computational reduction from the real
-algorithms to this ideal model.
+concrete HKDF labels above.
+Real algorithms approximate these properties probabilistically, and the proof supplies no general computational reduction from the real algorithms to this ideal model.
+The modified CTX claim instead uses its narrower direct lifting from the F*-proved collision witness and does not derive computational security from the ProVerif result.
 
 ### Adapter and execution assumptions
 
@@ -815,28 +849,20 @@ restored forks, or multi-bundle identities.
 
 ### 5. An accepted record has an authentic origin and cannot be replayed
 
-1. The ideal ProVerif `open_frame` succeeds only with exactly matching key
-   material, associated data, sequence, and sender ID.
-2. Its injective receive-to-send correspondence proves that every accepted
-   record in the fixed schedule has a unique send with the same session,
-   direction, sequence, peers, and plaintext.
-3. Separately, F* proves successful logical receive consumes exactly the target
-   key and that retrying that target is rejected.
-4. The adapter must map logical sequences one-to-one to concrete keys and
-   preserve one authoritative, non-rollback state.
-5. Production frame parsing, sealing, opening, commitment construction, and
-   sender lookup must match the handwritten frame model. In particular, the
-   concrete CTX commitment must receive the key, nonce, associated data, AEAD
-   tag, little-endian sequence, and little-endian sender ID in that exact order,
-   and the sequence, sender, and associated data must come from the intended
-   authenticated context.
+1. The ordinary ideal ProVerif `open_frame` succeeds only with exactly matching key material, associated data, sequence, and sender ID.
+   This assumption supports the record correspondence but does not itself demonstrate CTX's benefit.
+2. In a separate deliberately multi-opening base-AEAD theory, the identical double-open query is unreachable with CTX and reachable when CTX is removed.
+3. F* proves that any two distinct accepted explanations of one fixed ciphertext, tag, and commitment yield an explicit collision between distinct production transcript inputs for arbitrary pure hash and AEAD-open functions.
+4. Conventionally lifting that pointwise witness bounds real misattribution advantage by BLAKE2b-512 collision advantage, but the probability/runtime lifting and collision-resistance assumption are not mechanized.
+5. The ordinary model's injective receive-to-send correspondence proves that every accepted record in the fixed schedule has a unique send with the same session, direction, sequence, peers, and plaintext.
+6. Separately, F* proves successful logical receive consumes exactly the target key and that retrying that target is rejected.
+7. The adapter must map logical sequences one-to-one to concrete keys and preserve one authoritative, non-rollback state.
+8. Production frame parsing, sealing, opening, commitment hashing, and sender lookup must match the models.
+   The extracted builder and F* lemmas establish the exact key, nonce, associated data, AEAD tag, little-endian sequence, and little-endian sender-ID layout; the adapter must still supply those values from the intended authenticated context and hash the returned bytes.
 
-This supports concrete record integrity, peer/session binding, and replay
-rejection on the high-level path only under those frame and adapter assumptions.
-The production commitment layout is tested but not F*-proved. ProVerif supplies
-the active-attacker origin argument for its bounded schedule; F* supplies the
-general local consumption step; the adapter refinements connect those facts to
-concrete frames and keys.
+This supports concrete record integrity, peer/session binding, replay rejection, and conditional CTX misattribution resistance on the high-level path only under those primitive, frame, and adapter assumptions.
+The production commitment transcript helper and pointwise collision implication are F*-proved, while the probability/runtime lifting, caller, BLAKE2b, parsing, and field provenance remain computational, adapter, or primitive obligations.
+ProVerif supplies the active-attacker origin argument for its bounded schedule and the supplementary CTX/no-CTX control, F* supplies the pointwise collision witness and general local consumption step, and the adapter refinements connect those facts to concrete frames and keys.
 
 The sequence and key ID are authenticated/bound metadata, not secret metadata:
 they remain visible on the wire.
@@ -889,13 +915,14 @@ The historical Stage 3 through Stage 9 documents describe how this boundary was 
 
 The result gate requires exactly:
 
+- the shared weak-AEAD multi-opening query to be true (unreachable) with CTX and false (witnessed) without CTX;
 - all 11 baseline queries to be true: five secrecy and six correspondence results;
 - all seven negated reachability/non-vacuity queries to be false, including a committed attacker-owned registration and attacker recovery of its routed canary;
 - exactly two true and three false original late-compromise secrecy results;
 - all 13 private failed-receive queries to be true (four secrecy and nine state/origin correspondences), with all eleven failed-receive reachability negations false (nine receive-state phases plus malicious-registration commit and malicious-canary recovery); and
 - in the seven-query failed-receive compromise run, consumed-past secrecy and both compromise-order correspondences to be true, skipped/target/future secrecy and honest-origin correspondence to be false, and both compromise and later-honest-delivery reachability negations to be false.
 
-During preparation of this report on 2 August 2026, the command completed successfully with both regenerated extraction artifacts unchanged. All F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the trust-boundary inventory matched its recorded baseline.
+During preparation of this report on 2 August 2026, the command completed successfully with all three regenerated F* modules and the ProVerif extraction matching their tracked reviewed outputs. All F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the trust-boundary inventory matched its recorded baseline.
 
 The checker rejects missing or substituted queries, timeouts, unknown or
 inconclusive results, and any changed classification
@@ -941,9 +968,10 @@ For an audit or security statement that needs exact scope, use:
 > complete application and primitive implementations are not formally verified.
 >
 > A dedicated exact capacity-50 trace models a forged future frame advancing and retaining receiver state before authentication, a neutral retry and full-cache rejection, later honest consumption, replay rejection, and admission after one slot is freed. The retained state preserves the named secrets while private; its explicit compromise exposes skipped, target, and future material, permits forgery, and leaves honest delivery reachable but not guaranteed. General control-state relationships come from F*, while byte-level parsing and arbitrary schedules are outside this finite ProVerif trace.
+>
+> F* proves the exact fixed-width production transcript, its injectivity, and the pointwise theorem that two distinct accepted explanations of one fixed payload produce an explicit collision witness for arbitrary pure hash and AEAD-open functions.
+> The conventional computational lifting bounds misattribution advantage by BLAKE2b-512 collision advantage, but its probability and runtime theorem is not mechanized.
+> A supplementary differential ProVerif control gives the base AEAD two distinct valid openings: CTX makes the double-open event unreachable, and removing CTX makes the same query produce a witness.
+> The resulting real-world strong-commitment claim remains conditional on BLAKE2b collision resistance, correct libsodium behavior, production field provenance, and adapter/compiler correspondence.
 
-Statements such as “the whole implementation is proven secure,” “all
-application messages are proven confidential,” “the cryptographic primitives
-are verified,” “replay is impossible across replicas or rollback,” “the CTX
-implementation is formally proven,” or “beaconcrypt is post-quantum secure
-against active attackers” are not supported by the current proof corpus.
+Statements such as “the whole implementation is proven secure,” “all application messages are proven confidential,” “the cryptographic primitives are verified,” “replay is impossible across replicas or rollback,” “the complete CTX implementation and BLAKE2b security are formally proved end to end,” or “beaconcrypt is post-quantum secure against active attackers” are not supported by the current proof corpus.

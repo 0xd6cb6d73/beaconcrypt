@@ -11,6 +11,7 @@ EXPECTED_FSTAR := F* 2025.10.06~dev
 EXPECTED_Z3 := Z3 version 4.15.3 - 64 bit
 EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
 HAX_ITEMS := -** \
+	+beaconcrypt_protocol_core::commitment::build_commitment_transcript \
 	+beaconcrypt_protocol_core::ratchet::SequenceCache \
 	+beaconcrypt_protocol_core::ratchet::advance_send \
 	+beaconcrypt_protocol_core::ratchet::finish_send \
@@ -61,6 +62,10 @@ PROVERIF_COMMON_LIBS := \
 	-lib $(PROVERIF_DIR)/crypto.pvl \
 	-lib $(PROVERIF_EXTRACTION) \
 	-lib $(PROVERIF_DIR)/environment.pvl
+PROVERIF_AEAD_CONTROL_LIBS := \
+	-lib $(PROVERIF_DIR)/crypto.pvl \
+	-lib $(PROVERIF_DIR)/aead-commitment-negative-control.pvl \
+	-lib $(PROVERIF_DIR)/aead-commitment-negative-control-queries.pvl
 PROVERIF_CHECKER := $(PROVERIF_DIR)/check-results.awk
 PROVERIF_TIMEOUT ?= 240
 override PROVERIF := proverif
@@ -171,6 +176,16 @@ check-proverif-extraction:
 	done
 
 check-proverif: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_AEAD_CONTROL_LIBS) \
+			$(PROVERIF_DIR)/aead-commitment.pv | \
+		awk -v scenario=aead-commitment -f '$(PROVERIF_CHECKER)'
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_AEAD_CONTROL_LIBS) \
+			$(PROVERIF_DIR)/aead-no-commitment.pv | \
+		awk -v scenario=aead-no-commitment -f '$(PROVERIF_CHECKER)'
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_COMMON_LIBS) \

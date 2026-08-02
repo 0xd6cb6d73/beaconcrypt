@@ -236,7 +236,12 @@ Assume only laws needed by the protocol proof:
 - AEAD open/seal correctness for the same key, nonce, plaintext, and associated data;
 - KDF determinism and separation between distinct protocol labels.
 
-Do not assume general hash injectivity. The functional proof should establish that beaconcrypt supplies the intended fixed-size fields, in the intended order, to the BLAKE2b commitment. Security of that commitment remains an explicit primitive assumption.
+Do not assume general hash injectivity.
+The implemented proof extracts the production transcript helper, proves its exact 229-byte layout and both LE64 fields, proves both integer encodings and the complete six-field transcript injective, and machine-checks `ctx_distinct_openings_imply_hash_collision`.
+That theorem quantifies over arbitrary pure hash and AEAD-open functions and proves pointwise that two distinct accepted explanations of the same fixed ciphertext, transmitted tag, and commitment yield an explicit hash-collision witness.
+It deliberately allows unequal-key or unequal-context openings by the base AEAD.
+The displayed [computational advantage inequality](ctx-commitment.md) is the conventional probabilistic and runtime lifting of that theorem, not a mechanized probability theorem.
+BLAKE2b-512 collision resistance and correct production use of the proved helper remain explicit primitive and adapter assumptions.
 
 ### ProVerif model
 
@@ -283,6 +288,7 @@ Symmetric ratchet and records:
 - A transition for peer A leaves peer B's ratchet unchanged.
 - Successful send makes the consumed message key logically unavailable.
 - The commitment input is exactly `(key, nonce, associated data, AEAD tag, sequence, sender ID)` with unambiguous fixed-size encodings.
+- For arbitrary pure hash and AEAD-open functions, two distinct accepted explanations of one fixed commitment payload imply an explicit collision between distinct production transcript inputs.
 - Every accepted, bounded input follows a panic-free path.
 
 Persistence is a separate boundary. Either prove that imported state validation re-establishes every core invariant, or explicitly exclude unvalidated imported states from the theorem's initial-state set.
@@ -299,6 +305,7 @@ Persistence is a separate boundary. Either prove that imported state validation 
 - Secrecy of the failed-receive canaries while the retained receiver state remains private.
 - Explicit negative results after compromise of failed-receive state: disclosure of skipped and retained-target material, derivation of future material from the live chain, and attacker forgery with the compromised target key.
 - Reachability of retry, exact cache fill, state-neutral capacity rejection, successful later honest delivery, replay rejection, and admission after the successful receive frees one slot.
+- A differential negative control in which one deliberately non-key-committing base-AEAD ciphertext/tag has two distinct valid openings: the identical double-open query is unreachable with CTX and reachable when CTX is removed.
 
 Forward secrecy needs a precise statement. Send keys are deleted immediately, but skipped receive keys remain cached for out-of-order delivery. Compromise of a receiver can reveal cached skipped keys. The defensible theorem is secrecy of a message after its message key has become logically unavailable, not secrecy of every message whose sequence number is below the current counter.
 
@@ -362,6 +369,7 @@ explicit one-owner, non-rollback replay refinement described below.
 7. **Complete:** add ProVerif processes, events, primitive equations, compromise scenarios, strict result gates, and active-attacker queries.
 8. **Complete:** pin rustc, hax, F*, Z3, and ProVerif and run extraction plus proofs in CI.
 9. **Complete:** maintain a reviewed inventory of every opaque Rust function, assumed primitive law, adapter refinement, proof-library assumption, generated-code exception, and handwritten backend fragment, with a CI drift gate.
+10. **Complete:** extract and prove the production CTX transcript order and injectivity, machine-check the pointwise collision-witness theorem, add a deliberately multi-opening ProVerif negative control with an exact no-CTX failure witness, and document the conventional conditional computational lifting.
 
 Each stage should leave the existing crate buildable and tested. Extraction output should be reproducible and generated directories should never contain hand-maintained lemmas.
 
@@ -601,6 +609,13 @@ The private-state scenario proves secrecy of the named consumed-past, skipped, r
 
 This ProVerif construction is an exact capacity-50 execution, whereas the F* lemmas quantify over every pure control state satisfying their preconditions and prove the general admission, advancement, retention, retry, capacity-release, and replay relationships. The ProVerif frame is already a symbolic `crypto_frame`: the model does not parse Cap'n Proto bytes or represent every serialized length. Production's pre-admission rejection of empty, unparsable, unknown/wrong-sender, and too-short frames remains an adapter/refinement claim supported by Rust tests, not a conclusion of the symbolic trace.
 
+The later commitment extension separates facts that the original ideal frame rule conflated.
+The ordinary record correspondence still assumes exact symbolic opening.
+The extracted F* helper is proved to emit `key || nonce || associated data || tag || LE64(sequence) || LE64(sender ID)` exactly, both integer encodings and the complete transcript are proved injective, and `ctx_distinct_openings_imply_hash_collision` machine-checks the pointwise collision witness for arbitrary pure hash and AEAD-open functions.
+The same payload fixes ciphertext, tag, and commitment, while distinct accepted explanations may differ in key, nonce, associated data, sequence, sender ID, or plaintext and the base AEAD remains free to multi-open under unequal contexts.
+The conventional probability and runtime lifting bounds commitment advantage by BLAKE2b-512 collision advantage, but that lifting is not mechanized and BLAKE2b collision resistance remains assumed.
+A dedicated weak-AEAD ProVerif library supplements this theorem with one explicit ideal-hash counterfactual: CTX makes its double-opening event unreachable, while the same query produces a trace when the CTX checks are removed.
+
 `make verify` now regenerates and checks both backends in the revision-pinned
 hax shell. Its result parser rejects timeouts, missing or substituted queries,
 unexpected true/false classifications, and every unproved or inconclusive
@@ -695,9 +710,7 @@ CI pins all proof tools together and fails on:
 - extraction errors or unexpected generated diffs;
 - F* checking performed with `--lax`;
 - admitted or newly unproved obligations;
-- baseline ProVerif queries reported as false, unproved, or inconclusive, or
-  reachability/compromise queries that differ from their reviewed expected
-  classifications;
+- the CTX/no-CTX differential query, baseline ProVerif queries, or reachability/compromise queries differing from their exact reviewed classifications, or any query being unproved or inconclusive;
 - tracked or untracked generated output that differs from the reviewed
   artifacts;
 - any monitored opaque-function, primitive-law, adapter-refinement,
