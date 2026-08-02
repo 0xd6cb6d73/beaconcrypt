@@ -26,6 +26,8 @@ This threat model assumes that the adversary will not attempt to compromise the 
 
 *This is obviously unreasonable*, an active PQ attacker is highly likely state-sponsored, at least in the short to medium term. Such an attacker almost certainly does not mind RCEing your C2. However, I think this limitation is required to bound analysis to those aspects that beaconcrypt itself can address. The rest is up to C2 developpers.
 
+It is also assumed that the attacker does not modify the staged beacons at rest or in transit. That is, the attacker cannot replaced the compiled-in server public key with its own. Indeed, doing so allows the attacker to MitM the beacon's registration and completely breaks any security properties. This, too, is unreasonable, yet in my mind required. Indeed, I don't see how this issue can be resolved as even something like a key transparency log can be subverted by this kind of attacker. This is a massive assumption, and all but forces the hypothetical beaconcrypt user to host their C2 and staging infrastructure in a manner which only breaks TLS on-premises.
+
 # C2 protocol
 ## Principals
 Our protocol has two principals:
