@@ -313,33 +313,40 @@ have handwritten semantic theorems.
 
 All protocol traffic crosses an attacker-controlled network. Protected payloads
 are still symbolically encrypted, but the attacker may observe ciphertexts and
-may block, replay, reorder, modify, and synthesize network data. Honest beacons
-and server processes are replicated, so the model considers unbounded
-concurrent instances of its modeled session. Each instance nevertheless
-executes one fixed record schedule: four server-to-beacon records and one
-beacon-to-server record, with server sequence 3 received before sequence 2
-([beacon side](../crates/protocol-core/proofs/pro-verif/environment.pvl#L207-L468),
-[server side](../crates/protocol-core/proofs/pro-verif/environment.pvl#L573-L739)).
+may block, replay, reorder, modify, and synthesize network data. In the baseline
+isolation scenario, honest beacons, attacker-owned beacons, and server processes
+are replicated, so the model considers unbounded concurrent instances. Each
+honest instance nevertheless executes one fixed record schedule: four
+server-to-beacon records and one beacon-to-server record, with server sequence 3
+received before sequence 2
+([model](../crates/protocol-core/proofs/pro-verif/environment.pvl)). The separate
+late-compromise scenario retains the honest protocol processes and adds its
+snapshot-specific compromise process; it does not need the malicious-registration
+processes to establish those conditional compromise results.
 
-The modeled server path is limited to uncompromised identities created by the
-honest beacon process. It looks up the received identity in the private
-`honest_origin` table before it continues past registration parsing
-([gate](../crates/protocol-core/proofs/pro-verif/environment.pvl#L475-L512)).
-For an attacker-created identity the process stops at that lookup, so such an
-identity cannot exercise the rest of the modeled server path at all. The model
-therefore proves agreement for the honest-identity case; it does not analyze
-the server's behavior for malicious or compromised beacon identities.
+Each attacker-owned beacon creates a fresh identity, prekey, one-time key, and
+ML-KEM key, gives all four secrets to the network attacker, and publishes a
+valid self-signed registration. A separate server path performs the same public
+signature parsing, role validation, DH/KEM root construction, assigned-ID
+binding, and initial response sealing. It deliberately treats each malicious
+request as fresh, which gives the attacker at least as many sessions as the
+production replay set would, but does not prove replay behavior for malicious
+identities.
 
-The named events and private tables in this section are annotations inside the
-proof model. They are not production log entries, database tables, or data sent
-on the wire.
+The private `honest_origin` and `malicious_origin` tables select the proof events
+and application payload appropriate to each modeled recipient. They are proof
+annotations representing the threat model's recipient-specific task-routing
+assumption—not production log entries, ACLs, wire fields, or a proof that the C2
+application selects the correct recipient.
 
 ### Baseline secrecy
 
 The five baseline secrecy queries in
-[`queries.pvl`](../crates/protocol-core/proofs/pro-verif/queries.pvl#L3-L8)
-all succeed. The symbolic attacker cannot derive these named application
-values in the uncompromised model:
+[`queries.pvl`](../crates/protocol-core/proofs/pro-verif/queries.pvl#L7-L11)
+all succeed while attacker-owned beacons concurrently submit valid registrations
+and the server can commit their responses. The symbolic attacker cannot derive
+these named honest-session application values while honest state remains
+uncompromised:
 
 | Modeled value | Position in the fixed schedule |
 | --- | --- |
@@ -349,13 +356,20 @@ values in the uncompromised model:
 | `FUTURE_SECRET` | Server sequence 4 in the uncompromised baseline. |
 | `BEACON_RECORD_SECRET` | First beacon-to-server record. |
 
-This is symbolic confidentiality of five fixed message positions. It is not a
-computational indistinguishability result and is not a ProVerif proof for an
-arbitrary-length application stream.
+The malicious-registration response instead contains the distinct private
+`MALICIOUS_TASK_SECRET`, and a deliberate negative query confirms that the
+attacker can recover it using the beacon secrets it controls. Thus the malicious
+path is usable rather than blocked, while it does not receive any of the five
+honest canaries. This is symbolic confidentiality of five fixed honest message
+positions under correct application routing. It is not a computational
+indistinguishability result, an information-flow proof for arbitrary payloads,
+or a ProVerif proof for an arbitrary-length application stream.
 
 ### Authentication, agreement, and replay correspondences
 
-Six injective correspondences are proved in the baseline:
+Six injective correspondences are proved in the baseline. Their antecedent
+events occur only on the honest-origin path; compromised endpoints are not
+expected to satisfy honest-party authentication:
 
 In this table, `origin` is a private proof-model marker tying events to one
 specific honest registration bundle. It is not a field on the wire.
@@ -370,7 +384,7 @@ specific honest registration bundle. It is not a field on the wire.
 | `MessageReceived` | `MessageSent`: session, direction, sequence, sender, receiver, plaintext | Each accepted record in the fixed schedule has one matching honest send, with peer, direction, sequence, session, and content bound. |
 
 The exact queries are in
-[`queries.pvl`](../crates/protocol-core/proofs/pro-verif/queries.pvl#L10-L170).
+[`queries.pvl`](../crates/protocol-core/proofs/pro-verif/queries.pvl#L13-L174).
 The last correspondence is the basis for the modeled record-authentication,
 cross-direction, cross-peer, cross-session, replay, and “a party cannot be
 tricked about who shares the key” claims. Those are consequences of the event
@@ -383,16 +397,20 @@ production adapter invariant.
 
 An implication can be vacuously true if its later event can never occur. For
 example, “every accepted message was sent honestly” says nothing if the model
-can never accept any message. Five separate queries show that the model can
-reach server acceptance, registration replay rejection, abort after
-consumption, beacon commit, and a message receive
+can never accept any message. Seven separate queries provide non-vacuity
+controls
 ([queries](../crates/protocol-core/proofs/pro-verif/reachability-queries.pvl)).
+Five show that the model can reach honest server acceptance, registration
+replay rejection, abort after consumption, beacon commit, and a message receive.
+One reaches a committed attacker-owned registration response, and the last
+requires the attacker to derive the private canary sealed into that response.
 
 ProVerif prints each positive reachability request as a negated statement. The
 required result is therefore `false`: “the event never occurs” is false because
-a trace to the event exists. These are consistency/non-vacuity witnesses, not
-failed security proofs. They do not separately establish reachability of every
-one of the five secret-bearing record sites.
+a trace to the event exists. The malicious-canary query is likewise an
+intentional false secrecy result. These are consistency/non-vacuity witnesses,
+not failed security proofs. They do not separately establish reachability of
+every one of the five honest secret-bearing record sites.
 
 ### Precisely scoped late-compromise results
 
@@ -407,8 +425,8 @@ exactly:
 
 It does not reveal long-term identity, prekey, KEM, or server state. The model
 constructs the snapshot at the exact point shown in the
-[beacon process](../crates/protocol-core/proofs/pro-verif/environment.pvl#L343-L395),
-and the [compromise process](../crates/protocol-core/proofs/pro-verif/environment.pvl#L767-L787)
+[beacon process](../crates/protocol-core/proofs/pro-verif/environment.pvl#L394-L416),
+and the [compromise process](../crates/protocol-core/proofs/pro-verif/environment.pvl#L943-L963)
 reveals its three fields.
 
 The expected results are:
@@ -530,9 +548,11 @@ There is no proof here for:
 - compromise at an arbitrary time, repeated compromise, server compromise,
   compromise of long-term identity/prekey/KEM secrets, key-compromise
   impersonation, or recovery after compromise;
-- malicious or compromised beacon identities, cross-bundle splicing if one
-  identity may create multiple independently signed bundles, or application
-  task-routing/broadcast policy;
+- compromise of an identity classified as honest, cross-bundle splicing if one
+  honest identity may create multiple independently signed bundles, exact
+  replay behavior or post-registration record traffic for attacker-owned
+  identities, or correctness of the application's task-routing/broadcast
+  policy;
 - secrecy of metadata such as visible sequence and key-ID fields, anonymity,
   unlinkability, traffic analysis, or application headers outside beaconcrypt;
 - availability, liveness, eventual delivery, fairness, resource exhaustion, or
@@ -631,19 +651,29 @@ The trace results additionally assume:
 - honest beacons generate fresh identity, prekey, one-time, and KEM secrets;
 - the server generates fresh ephemeral X25519 and KEM encapsulation coins for
   each modeled registration;
-- beacon identity, prekey, one-time, and KEM secret values remain private; the
-  model publishes only their corresponding public values and signatures;
-- the five named application plaintexts start unknown to the attacker and enter
-  the protocol only at their designated modeled message sites;
+- honest-beacon identity, prekey, one-time, and KEM secret values remain
+  private; each attacker-owned beacon instead publishes all four freshly
+  generated secrets before registration;
+- the five named honest application plaintexts start unknown to the attacker,
+  enter the protocol only at their designated honest message sites, and are
+  routed only to their intended honest recipient;
+- `MALICIOUS_TASK_SECRET` starts private, enters only the attacker-owned
+  registration response, and is expected to become attacker-known;
 - one fresh honest beacon identity emits one registration bundle;
 - replay state is a private, atomic, single-owner, non-rollback process whose
-  first request returns `Fresh` and all later requests return `Consumed`;
+  first request returns `Fresh` and all later requests return `Consumed` for an
+  honest identity; the malicious path conservatively treats requests as fresh
+  and makes no malicious-replay claim;
+- the private origin tables perfectly classify modeled honest and
+  attacker-owned identities for proof events and task routing; production
+  authorization and recipient selection are not implemented by those tables;
 - fresh abstract key IDs model a collision-free, non-exhausted prefix of the
   concrete `u64` allocator;
 - the fixed sequence constructors model the particular record prefix being
   analyzed;
-- the only state compromise is the synchronized beacon snapshot described
-  above; and
+- the only honest-party state compromise is the synchronized beacon snapshot
+  described above; attacker-owned beacon secrets are exposed from the start in
+  the baseline isolation scenario; and
 - the handwritten event placement, wire constructors, processes, and three
   simplified function definitions faithfully represent the corresponding
   production behavior.
@@ -824,7 +854,8 @@ in the [Stage 8 document](formal-verification-stage-8.md#locked-proof-bundle).
 The historical Stage 3 through Stage 9 documents describe how this boundary was
 built. Older statements such as “semantic proofs remain future work,” older
 tool versions, hashes, and test counts describe their stage at that time. The
-current proof claims are the Stage 6 F* results, Stage 7 ProVerif results, and
+current proof claims are the Stage 6 F* results, the current ProVerif model
+(which extends the Stage 7 baseline with attacker-owned registrations), and
 Stage 8 reproducibility controls. Stage 9 adds a mechanically checked
 [trust-boundary inventory](../crates/protocol-core/proofs/trusted-boundary.md)
 but changes no theorem, symbolic rule, security question, or production
@@ -835,7 +866,9 @@ The result gate requires exactly:
 
 - all 11 baseline queries to be true: five secrecy and six correspondence
   results;
-- all five negated reachability queries to be false, meaning witnesses exist;
+- all seven negated reachability/non-vacuity queries to be false, including a
+  committed attacker-owned registration and attacker recovery of its routed
+  canary;
   and
 - exactly two true and three false late-compromise secrecy results.
 
@@ -877,13 +910,16 @@ For an audit or security statement that needs exact scope, use:
 > control functions for exact transcript construction, checked state
 > transitions, bounds, and logical key lifecycle. A complementary ProVerif
 > model proves fixed-trace secrecy and injective authentication properties
-> against an active symbolic network attacker, and precisely documents
-> two named deleted-key secrecy results at one snapshot, cached-key exposure,
-> and absence of post-compromise security. These guarantees are conditional on
-> ideal cryptographic assumptions, faithful adapters and handwritten modeling,
-> high-level non-rollback execution, and the stated replay-owner and compromise
-> scope; the complete application and primitive implementations are not
-> formally verified.
+> against an active symbolic network attacker. Replicated attacker-owned
+> beacons can submit valid self-signed registrations; the server can commit
+> their responses and the attacker can recover their routed canary without
+> exposing the five honest-session canaries. The model also
+> precisely documents two named deleted-key secrecy results at one snapshot,
+> cached-key exposure, and absence of post-compromise security. These guarantees
+> are conditional on ideal cryptographic assumptions, faithful adapters and
+> handwritten modeling, correct application recipient routing, high-level
+> non-rollback execution, and the stated replay-owner and compromise scope; the
+> complete application and primitive implementations are not formally verified.
 
 Statements such as “the whole implementation is proven secure,” “all
 application messages are proven confidential,” “the cryptographic primitives

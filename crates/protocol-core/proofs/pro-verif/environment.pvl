@@ -105,6 +105,18 @@ event BeaconCommitted(
   bitstring,
   bitstring
 ).
+event MaliciousRegistrationCommitted(
+  bitstring,
+  bitstring,
+  beaconcrypt_protocol_core__pqxdh__t_InitKex,
+  beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+  key_id,
+  beaconcrypt_protocol_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
 event MessageSent(
   bitstring,
   direction,
@@ -143,6 +155,7 @@ event StateCompromised(
 ).
 
 table honest_origin(bitstring, bitstring).
+table malicious_origin(bitstring, bitstring).
 
 free SERVER_IDENTITY_SECRET: bitstring [private].
 free SERVER_KEY_ID: key_id.
@@ -151,6 +164,7 @@ free CACHED_SECRET: bitstring [private].
 free ADVANCE_SECRET: bitstring [private].
 free FUTURE_SECRET: bitstring [private].
 free BEACON_RECORD_SECRET: bitstring [private].
+free MALICIOUS_TASK_SECRET: bitstring [private].
 
 free replay_requests: channel [private].
 free compromise_snapshots: channel [private].
@@ -469,6 +483,50 @@ let HonestBeacon() =
   ).
 
 (**************************************************************************)
+(* Attacker-owned beacon registration                                     *)
+(**************************************************************************)
+
+(* Every instance gives the active attacker all four freshly generated
+   beacon secrets before publishing a correctly signed registration.  The
+   server must therefore accept registrations whose complete beacon state is
+   attacker-controlled, while keeping honest-recipient task canaries isolated
+   by the application-routing branch below. *)
+let MaliciousBeacon() =
+  new beacon_identity_secret: bitstring;
+  new beacon_prekey_secret: bitstring;
+  new beacon_one_time_secret: bitstring;
+  new beacon_pq_secret: bitstring;
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let beacon_prekey = x25519_public(beacon_prekey_secret) in
+  let beacon_one_time = x25519_public(beacon_one_time_secret) in
+  let beacon_pq = mlkem_public(beacon_pq_secret) in
+  let verified_init = beaconcrypt_protocol_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq
+  ) in
+  let registration_id =
+    beaconcrypt_protocol_core__pqxdh__registration_id(verified_init)
+  in
+  new registration_session: bitstring;
+  insert malicious_origin(beacon_identity, registration_session);
+  out(c, beacon_identity_secret);
+  out(c, beacon_prekey_secret);
+  out(c, beacon_one_time_secret);
+  out(c, beacon_pq_secret);
+  out(
+    c,
+    signed_init_kex(
+      tag_ed25519(beacon_identity),
+      sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+      sign(tag_mlkem768(beacon_pq), beacon_identity_secret)
+    )
+  );
+  out(c, registration_continue(registration_id)).
+
+(**************************************************************************)
 (* Serialized, non-rollback server registration                            *)
 (**************************************************************************)
 
@@ -505,9 +563,8 @@ let Server() =
   let registration_id =
     beaconcrypt_protocol_core__pqxdh__registration_id(verified_init)
   in
-  (* Agreement queries are conditional on the uncompromised beacon identity.
-     This lookup copies only a fresh origin marker into events; it does not
-     constrain any public key field or participate in replay state. *)
+  (* Honest agreement and replay events are scoped to an uncompromised
+     identity.  Attacker-owned identities use MaliciousServer below. *)
   get honest_origin(=beacon_identity, registration_session: bitstring) in
   new server_ephemeral_secret: bitstring;
   new kem_coins: bitstring;
@@ -746,6 +803,125 @@ let Server() =
       registration_id,
       registration_session
     ).
+
+(**************************************************************************)
+(* Server path for attacker-owned registrations                           *)
+(**************************************************************************)
+
+(* This is the same public-wire validation and PQXDH response construction
+   as Server, but it carries no honest agreement events and routes only the
+   malicious-session canary.  Treating each request as fresh deliberately
+   over-approximates production replay handling for the isolation theorem. *)
+let MaliciousServer() =
+  in(c, incoming_init: bitstring);
+  let signed_init_kex(
+    encoded_identity,
+    signed_prekey,
+    signed_one_time,
+    signed_pq
+  ) = incoming_init in
+  let tag_ed25519(beacon_identity: bitstring) = encoded_identity in
+  let tag_x25519_prekey(beacon_prekey: bitstring) =
+    verify_signature(signed_prekey, beacon_identity)
+  in
+  let tag_x25519_one_time(beacon_one_time: bitstring) =
+    verify_signature(signed_one_time, beacon_identity)
+  in
+  let tag_mlkem768(beacon_pq: bitstring) =
+    verify_signature(signed_pq, beacon_identity)
+  in
+  let core_init = beaconcrypt_protocol_core__pqxdh__InitKex(
+    encoded_identity,
+    tag_x25519_prekey(beacon_prekey),
+    tag_x25519_one_time(beacon_one_time),
+    tag_mlkem768(beacon_pq)
+  ) in
+  let verified_init = beaconcrypt_protocol_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq
+  ) in
+  let registration_id =
+    beaconcrypt_protocol_core__pqxdh__registration_id(verified_init)
+  in
+  get malicious_origin(=beacon_identity, registration_session: bitstring) in
+  new server_ephemeral_secret: bitstring;
+  new kem_coins: bitstring;
+  let server_ephemeral = x25519_public(server_ephemeral_secret) in
+  let kem_ciphertext = mlkem_ciphertext(beacon_pq, kem_coins) in
+  let kem_secret = mlkem_shared_secret(beacon_pq, kem_coins) in
+  let dh1 = x25519_server_dh(SERVER_IDENTITY_SECRET, beacon_prekey) in
+  let dh2 = x25519_server_dh(
+    server_ephemeral_secret,
+    x25519_public_from_ed(beacon_identity)
+  ) in
+  let dh3 = x25519_server_dh(server_ephemeral_secret, beacon_prekey) in
+  let dh4 = x25519_server_dh(server_ephemeral_secret, beacon_one_time) in
+  let shared_secrets = beaconcrypt_protocol_core__pqxdh__PqxdhSharedSecrets(
+    dh1,
+    dh2,
+    dh3,
+    dh4,
+    kem_secret
+  ) in
+  let root_input =
+    beaconcrypt_protocol_core__pqxdh__build_root_key_input(shared_secrets)
+  in
+  let root = pqxdh_root(
+    beaconcrypt_protocol_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+  ) in
+  let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
+  in(c, registration_control: bitstring);
+  let registration_continue(=registration_id) = registration_control in
+  new assigned_key_id: key_id;
+  let associated_data =
+    beaconcrypt_protocol_core__pqxdh__build_associated_data(
+      server_identity,
+      beacon_identity
+    )
+  in
+  let session = session_label(
+    server_identity,
+    beacon_identity,
+    assigned_key_id,
+    root_input
+  ) in
+  let server_material_1 = ratchet_material(server_to_beacon_chain(root)) in
+  let binding =
+    beaconcrypt_protocol_core__pqxdh__RegistrationKeyIdBinding(
+      key_id_encoding(assigned_key_id)
+    )
+  in
+  let initial_frame = seal_frame(
+    server_material_1,
+    associated_data,
+    first_sequence(),
+    SERVER_KEY_ID,
+    registration_payload(binding, MALICIOUS_TASK_SECRET)
+  ) in
+  event MaliciousRegistrationCommitted(
+    server_identity,
+    beacon_identity,
+    core_init,
+    registration_id,
+    assigned_key_id,
+    root_input,
+    root,
+    associated_data,
+    session,
+    MALICIOUS_TASK_SECRET
+  );
+  out(
+    c,
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      assigned_key_id,
+      initial_frame
+    )
+  ).
 
 (**************************************************************************)
 (* Explicit late-state compromise                                         *)

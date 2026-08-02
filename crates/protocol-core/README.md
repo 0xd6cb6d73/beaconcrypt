@@ -126,14 +126,21 @@ wire hardening is intentionally not interoperable with the former 33-byte
 signed X25519 payloads. The regenerated F* lemmas prove both exact layouts,
 round trips, domain disjointness, and cross-role rejection.
 
-The ProVerif baseline proves five secrecy queries and injective registration,
-replay, commit, and bounded record correspondences. Separate reachability
-queries exercise acceptance, replay rejection, abort-after-consumption,
-beacon commit, and record receive. The late-compromise model proves secrecy for
-deleted initial and advanced keys while deliberately finding attacks on a
-cached skipped key and on future traffic in both directions, recording the
-absence of post-compromise security. See the
-[Stage 7 implementation record](../../doc/formal-verification-stage-7.md).
+The ProVerif baseline proves five honest-session secrecy queries and six
+injective registration, replay, commit, and bounded-record correspondences
+while replicated attacker-owned beacons disclose all of their keys and submit
+valid self-signed registrations. Seven separate reachability controls exercise
+the five original honest traces, server commitment of a valid malicious
+registration response, and attacker recovery of the task canary routed to that
+response. The
+latter path assumes the surrounding application routes honest taskings only to
+their intended recipients; its private origin tables are proof instrumentation,
+not a production ACL. The late-compromise model proves secrecy for deleted
+initial and advanced keys while deliberately finding attacks on a cached
+skipped key and on future traffic in both directions, recording the absence of
+post-compromise security. See the
+[Stage 7 implementation record](../../doc/formal-verification-stage-7.md) and
+[current proof analysis](../../doc/formal-verification-analysis.md).
 
 Stage 9 adds the maintained trust-boundary inventory. It names every
 proof-relevant opaque production wrapper and primitive law, the ratchet and

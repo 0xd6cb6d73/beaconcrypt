@@ -233,10 +233,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 2 \
+require_occurrence_count 3 \
 	'beaconcrypt_protocol_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 2 '_to_bitstring' \
+require_occurrence_count 3 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 require_line_count 31 '^fun ' proofs/pro-verif/crypto.pvl \
@@ -245,17 +245,17 @@ require_line_count 6 '^reduc ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive reduction"
 require_line_count 1 '^letfun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive helper"
-require_line_count 12 '^event ' proofs/pro-verif/environment.pvl \
+require_line_count 13 '^event ' proofs/pro-verif/environment.pvl \
 	"handwritten event"
-require_line_count 1 '^table ' proofs/pro-verif/environment.pvl \
+require_line_count 2 '^table ' proofs/pro-verif/environment.pvl \
 	"handwritten table"
-require_line_count 9 '^free ' proofs/pro-verif/environment.pvl \
+require_line_count 10 '^free ' proofs/pro-verif/environment.pvl \
 	"handwritten free name/channel"
-require_line_count 5 '^let [A-Z]' proofs/pro-verif/environment.pvl \
+require_line_count 7 '^let [A-Z]' proofs/pro-verif/environment.pvl \
 	"handwritten process"
 require_line_count 11 '^query ' proofs/pro-verif/queries.pvl \
 	"baseline query"
-require_line_count 5 '^query ' proofs/pro-verif/reachability-queries.pvl \
+require_line_count 7 '^query ' proofs/pro-verif/reachability-queries.pvl \
 	"reachability query"
 require_line_count 5 '^query ' proofs/pro-verif/compromise-queries.pvl \
 	"compromise query"

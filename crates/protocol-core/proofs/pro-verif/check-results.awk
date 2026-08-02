@@ -48,10 +48,11 @@ END {
     reject("missing verification summary")
   }
 
-  registration_arguments = "server_identity_2,beacon_identity_2,init,registration_id_2,origin_1"
-  accepted_arguments = "server_identity_2,beacon_identity_2,init,registration_id_2,root_input_2,root_2,origin_1"
-  commit_arguments = "server_identity_2,beacon_identity_2,init,registration_id_2,assigned_key_id_2,root_input_2,root_2,associated_data_2,session_3,origin_1"
-  message_arguments = "session_3,message_direction,message_sequence_5,sender,receiver,plaintext_5"
+  registration_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,origin_1"
+  accepted_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,root_input_3,root_3,origin_1"
+  commit_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,assigned_key_id_3,root_input_3,root_3,associated_data_3,session_4,origin_1"
+  message_arguments = "session_4,message_direction,message_sequence_6,sender,receiver,plaintext_6"
+  malicious_commit_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,assigned_key_id_3,root_input_3,root_3,associated_data_3,session_4,plaintext_6"
 
   if (scenario == "baseline") {
     if (query_count != 11) {
@@ -86,8 +87,8 @@ END {
       require_exact(expected_correspondence[correspondence_index], "baseline correspondence")
     }
   } else if (scenario == "reachability") {
-    if (query_count != 5) {
-      reject("expected 5 reachability queries, saw " query_count)
+    if (query_count != 7) {
+      reject("expected 7 reachability queries, saw " query_count)
     }
 
     required[1] = "Query not event(ServerAccepted(" accepted_arguments ")) is false."
@@ -95,7 +96,9 @@ END {
     required[3] = "Query not event(ServerResponseAborted(" accepted_arguments ")) is false."
     required[4] = "Query not event(BeaconCommitted(" commit_arguments ")) is false."
     required[5] = "Query not event(MessageReceived(" message_arguments ")) is false."
-    for (required_index = 1; required_index <= 5; required_index++) {
+    required[6] = "Query not event(MaliciousRegistrationCommitted(" malicious_commit_arguments ")) is false."
+    required[7] = "Query not attacker(MALICIOUS_TASK_SECRET[]) is false."
+    for (required_index = 1; required_index <= 7; required_index++) {
       require_exact(required[required_index], "reachability")
     }
   } else if (scenario == "compromise") {

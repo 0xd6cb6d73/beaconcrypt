@@ -87,3 +87,32 @@ query session: bitstring,
     receiver,
     plaintext
   )).
+
+(* A self-signed registration whose complete beacon state is attacker-known
+   reaches the normal response-commit point. *)
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_protocol_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
+      assigned_key_id: key_id,
+      root_input: beaconcrypt_protocol_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      associated_data: bitstring,
+      session: bitstring,
+      plaintext: bitstring;
+  event(MaliciousRegistrationCommitted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    assigned_key_id,
+    root_input,
+    root,
+    associated_data,
+    session,
+    plaintext
+  )).
+
+(* This deliberate negative secrecy result proves that the attacker-known
+   beacon can derive the task canary routed to the server's response. *)
+query attacker(MALICIOUS_TASK_SECRET).

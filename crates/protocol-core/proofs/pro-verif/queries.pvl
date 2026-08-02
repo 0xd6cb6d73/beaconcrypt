@@ -1,6 +1,9 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(* Baseline active-attacker secrecy. *)
+(* Baseline active-attacker secrecy for taskings routed to honest recipients.
+   baseline.pv also contains replicated attacker-owned registrations whose
+   complete beacon key state is public; those sessions receive only the
+   separately checked MALICIOUS_TASK_SECRET. *)
 query attacker(INITIAL_SECRET).
 query attacker(CACHED_SECRET).
 query attacker(ADVANCE_SECRET).
@@ -145,7 +148,8 @@ query server_identity: bitstring,
   )).
 
 (* Authentication, replay resistance, peer binding, direction separation,
-   and sequence binding for every accepted record in the bounded prefix. *)
+   and sequence binding for every honest-role accepted record in the bounded
+   prefix.  The malicious server path emits none of these honest events. *)
 query session: bitstring,
       message_direction: direction,
       message_sequence: sequence,

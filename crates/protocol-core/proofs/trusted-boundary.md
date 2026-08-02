@@ -125,6 +125,7 @@ conclusions obtained merely by typechecking the core extraction.
 | AR-14 | The claimed production trace starts through successfully initialized or validated high-level `BeaconCryptPqxdh` APIs. Cap'n Proto, serde, allocation, FFI/bindings, persistence media, zeroization mechanics, replicas, and direct compatibility setters are not silently promoted to verified components. |
 | AR-15 | Phase-2 `identityKey`, `ephemeralKey`, `kemCipherText`, `appCipherText`, and `keyId` encode respectively the candidate server identity, ephemeral X25519 public key, ML-KEM ciphertext, complete initial `CryptoFrame`, and proposed remote ID. The beacon parses those same fields, binds the first four into its DH/KEM/AD/decryption path, and accepts `keyId` only when the decrypted eight-byte little-endian prefix matches it. |
 | AR-16 | A production `CryptoFrame` encodes `seq = key_seq`, `keyId = sender_kid`, and `cipherText = AEAD ciphertext || 16-byte tag || 64-byte CTX commitment`; the local `Encrypted.key_id = target_kid` is not placed on the wire. Receive treats the parsed sender ID only as a lookup hint, rechecks it in the selected helper, admits the parsed sequence, recomputes the commitment over the exact fields, and authenticates before consuming the key. |
+| AR-17 | The five named honest-task canaries are routed only to their intended honest-beacon sessions. The private `honest_origin`/`malicious_origin` tables and split server processes classify proof-model recipients; they are not production authorization checks and do not prove the surrounding C2's task-selection policy. Attacker-owned sessions receive only `MALICIOUS_TASK_SECRET`, whose deliberate disclosure is a non-vacuity control. |
 
 ## Proof-library and tool assumptions
 
@@ -149,10 +150,10 @@ production behavior.
 | GE-01 | The two F* files contain hax-generated module options and expose record constructors/fields that are private in Rust. Lemmas may construct records internally, so isolated field-preservation lemmas do not prove Rust typestate unforgeability; the composed theorem calls the authentication transition explicitly. |
 | GE-02 | Generated F* calls the three val-only range-update contracts in LA-02; the handwritten key-ID proof calls the val-only shift lemma in LA-03. `while_loop_return`, the opaque `u64::to_le_bytes` model, a derived whole-`ServerBinding` equality assumption, local `assume`, and local `admit` are not accepted exceptions and are rejected by policy/fingerprint drift. |
 | GE-03 | `pro-verif/extraction/lib.pvl` contains hax's generated preamble and selected-type plumbing: the public channel `c`; `Option`, `Some`, `None`, and `Option_err`; the `empty` constant; bitstring, nat, and bool defaults; bitstring/nat errors; `nat_to_bitstring`; six selected nominal record types; twelve type converters; six arbitrary record default constants; and six record error helpers. There are nine error helpers total and eleven textual `construct_fail()` occurrences (declaration, reduction, and nine error paths). These are generated backend plumbing, not protocol constructors. |
-| GE-04 | Handwritten ProVerif never calls a generated `from_bitstring`, default, or error helper. The only generated converter it calls is `RootKeyInput_to_bitstring`, exactly twice, to feed the ideal root constructor; every other converter is unused by the handwritten model. The gate enforces this allowlist. |
+| GE-04 | Handwritten ProVerif never calls a generated `from_bitstring`, default, or error helper. The only generated converter it calls is `RootKeyInput_to_bitstring`, exactly three times, to feed the ideal root constructor in the honest beacon, honest server, and malicious-registration server paths; every other converter is unused by the handwritten model. The gate enforces this allowlist. |
 | GE-05 | Exactly three Rust `hax_lib::proverif::replace` fragments are permitted: `registration_id` projects identity plus one-time key; `build_root_key_input` preserves DH1, DH2, DH3, DH4, KEM order; and `build_associated_data` becomes a data constructor justified by the F* layout theorem. A fourth replacement fails the gate. |
-| GE-06 | The ProVerif `build_root_key_input` replacement models its successful constructor path and omits Rust's all-zero-DH error. Honest server/beacon processes invoke it after their ideal DH computations; F* separately proves exact zero-DH rejection. No ProVerif result is claimed for malformed core calls outside that process. |
-| GE-07 | The generated library's public constructors/accessors and arbitrary type converters are more permissive than Rust privacy. Honest processes construct private core values directly and never accept attacker-provided converter/default/error values. Agreement events carry values parsed from the public wire, not private shadow transcripts. |
+| GE-06 | The ProVerif `build_root_key_input` replacement models its successful constructor path and omits Rust's all-zero-DH error. Modeled server/beacon processes invoke it after their ideal DH computations; F* separately proves exact zero-DH rejection. No ProVerif result is claimed for malformed core calls outside those processes. |
+| GE-07 | The generated library's public constructors/accessors and arbitrary type converters are more permissive than Rust privacy. Modeled role processes construct private core values directly and never accept attacker-provided converter/default/error values. Agreement events carry values parsed from the public wire, not private shadow transcripts. |
 
 The structural baseline for the generated ProVerif file is six selected types,
 twelve converters, six record default constants, nineteen reductions total,
@@ -172,21 +173,27 @@ unchanged.
 | HB-01 | `proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst` | Logical cache view and strict counter, gap/capacity, retry, consumption, replay, restore, send-key, and peer-isolation lemmas. Checked proof, not an axiom file. |
 | HB-02 | `proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst` | Strict type/role layout, transcript, AD, ratchet split, key-ID, server transaction, and conditional honest-run lemmas. Checked proof, not an axiom file. |
 | HB-03 | `proofs/pro-verif/crypto.pvl` | Four abstract sorts, 31 constructors/functions, six primitive reductions, and one `seal_frame` helper. This is the trusted symbolic primitive theory described by PL-02--PL-11. |
-| HB-04 | `proofs/pro-verif/environment.pvl` | Wire constructors, twelve events, one table, nine free names/channels, and five processes: replay owner, honest beacon, server, private-state sink, and late compromise. Includes the bounded record prefix. |
+| HB-04 | `proofs/pro-verif/environment.pvl` | Wire constructors, thirteen events, two private origin tables, ten free names/channels, and seven processes: replay owner, honest beacon, attacker-owned beacon, honest server, malicious-registration server, private-state sink, and late compromise. Includes the bounded honest record prefix and an attacker-usable malicious registration response. |
 | HB-05 | `proofs/pro-verif/queries.pvl` | Five baseline secrecy queries and six injective correspondences; all eleven must be true. |
-| HB-06 | `proofs/pro-verif/reachability-queries.pvl` | Five non-vacuity queries whose negations must be false, demonstrating acceptance, replay rejection, abort, commit, and record receive traces. |
+| HB-06 | `proofs/pro-verif/reachability-queries.pvl` | Seven non-vacuity queries whose negations must be false: the original honest acceptance, replay rejection, abort, commit, and record-receive traces; malicious-registration response commit; and attacker derivation of the malicious-session canary. |
 | HB-07 | `proofs/pro-verif/compromise-queries.pvl` | Two required positive deleted-key secrecy results and three required negative cached/live-chain secrecy results. |
-| HB-08 | `proofs/pro-verif/baseline.pv` | Top-level replicated baseline process. |
-| HB-09 | `proofs/pro-verif/compromise.pv` | Top-level replicated synchronized late-compromise process. |
+| HB-08 | `proofs/pro-verif/baseline.pv` | Top-level replicated baseline process containing concurrent honest sessions and attacker-owned registrations. |
+| HB-09 | `proofs/pro-verif/compromise.pv` | Top-level replicated synchronized late-compromise process for the honest-session snapshot; malicious registrations are exercised by the baseline isolation scenario instead. |
 | HB-10 | Three `hax_lib::proverif::replace` attributes in `src/pqxdh.rs` | Embedded handwritten backend fragments described by GE-05 and GE-06. They are feature-gated and have no ordinary Rust runtime effect. |
-| HB-11 | `proofs/pro-verif/check-results.awk` | Trusted result-control logic: exact query inventory, scenario classification, rejection of timeout/inconclusive/missing/substituted results, and the required compromise split. |
+| HB-11 | `proofs/pro-verif/check-results.awk` | Trusted result-control logic: exactly eleven positive baseline results, seven negative reachability/non-vacuity results, and five compromise results; scenario classification; rejection of timeout/inconclusive/missing/substituted results; and the required compromise split. |
 | HB-12 | `Makefile` and `proofs/fstar/Makefile` | Deny-all extraction selectors, backend composition, strict checker flags, expected-result invocation, generated drift checks, and this inventory gate. |
 
 The ProVerif model intentionally has one receive program point per sequence in
 its bounded trace. General duplicate receive-key consumption is HB-01's F*
 theorem, not an implicit unbounded ProVerif result. The replay process is an
 explicit one-owner, non-rollback refinement for one bundle per fresh beacon
-identity, not a private validity oracle or a multi-replica theorem.
+identity, not a private validity oracle or a multi-replica theorem. Replicated
+attacker-owned beacons disclose all of their freshly generated secrets before
+registration, and the malicious server path accepts their valid self-signed
+bundles. That path conservatively treats every request as fresh: it strengthens
+the honest cross-recipient isolation test but proves neither replay behavior nor
+availability for malicious identities. The private origin tables implement the
+AR-17 proof classification and must not be interpreted as production ACLs.
 
 ## Maintaining the inventory
 

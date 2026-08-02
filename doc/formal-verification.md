@@ -536,6 +536,8 @@ and the target checks them without `--lax`.
 
 The detailed implementation record is in
 [`formal-verification-stage-7.md`](formal-verification-stage-7.md).
+That record is historical; the attacker-owned-registration extension described
+below is tracked by the current analysis and canonical trust-boundary inventory.
 
 Stage 7 reviewed the complete Stage 6 commit `493a23f` before adding a trace
 model. The ProVerif backend now extracts the production `InitKex`, verified
@@ -559,27 +561,35 @@ new byte positions, round trips, marker-domain disjointness, and cross-role
 rejection. Production tests exchange and duplicate the real signed Cap'n Proto
 fields and require both inputs to fail.
 
-The symbolic environment contains replicated fresh honest beacons, an active
-public network, ideal signature/DH/KEM/KDF/AEAD/commitment primitives, a bounded
-bidirectional record prefix, and a one-owner non-rollback replay process. The
+The symbolic environment contains replicated fresh honest beacons, replicated
+attacker-owned beacons that disclose all four private keys, an active public
+network, ideal signature/DH/KEM/KDF/AEAD/commitment primitives, a bounded
+honest-session record prefix, and a one-owner non-rollback replay process. The
 replay owner returns `Fresh` exactly once and `Consumed` thereafter, including
 after the explicit abort path. It is keyed by the fresh honest beacon identity
 but records the publicly parsed transcript and semantic ID. Under the existing
 single-bundle-per-fresh-identity typestate this refines the production semantic
 ID set while ensuring that a future field-substitution regression falsifies the
 origin correspondence instead of being hidden by private proof data. If
-production ever permits multiple bundles under one beacon identity, the signed
-fields must additionally share an authenticated bundle nonce or ordered-bundle
-signature before extending this theorem.
+production ever permits multiple bundles under one honest beacon identity, the
+signed fields must additionally share an authenticated bundle nonce or
+ordered-bundle signature before extending this theorem.
 
-The baseline model reports all eleven security queries true: five application
+The baseline model reports all eleven security queries true: five honest-task
 secrecy queries; injective acceptance/origin, acceptance/consumption,
 consumption/origin, abort/consumption, and beacon/server commit
 correspondences; and bounded record send/receive correspondence with exact
-session, direction, sequence, sender, receiver, and plaintext. Five separate
-reachability queries deliberately report false negations, demonstrating real
-traces for acceptance, replay rejection, abort after consumption, beacon
-commit, and record receive rather than vacuous correspondences.
+session, direction, sequence, sender, receiver, and plaintext. Seven separate
+non-vacuity queries deliberately report false negations. Five demonstrate the
+original honest acceptance, replay rejection, abort, beacon-commit, and
+record-receive traces. A sixth reaches a valid attacker-owned registration
+response, and the seventh finds the deliberate attack on its private task
+canary, proving that the malicious session is cryptographically usable rather
+than blocked by proof instrumentation. The honest and malicious server paths
+use private origin tables solely to model the threat model's recipient-specific
+task routing; those tables are not production authorization mechanisms. The
+malicious path treats every request as fresh, so no malicious-identity replay or
+availability result is claimed.
 
 The synchronized late-compromise model records the intended qualification.
 The initial message and an already-consumed advanced receive message remain
