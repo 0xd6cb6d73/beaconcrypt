@@ -57,7 +57,6 @@ verify-generated: $(addsuffix .checked,$(addprefix $(CACHE_DIR)/,$(ROOTS)))
 # that directory.  They are checked only after the extracted modules and share
 # the same strict flags and checked-module cache.
 verify-manual: verify-generated
-	$(FSTAR) --include . $(MANUAL_ROOTS) \
-		$(foreach root,$(MANUAL_ROOTS),--hint_file $(HINT_DIR)/$(notdir $(root)).hints)
+	$(FSTAR) --include . --hint_dir $(HINT_DIR) $(MANUAL_ROOTS)
 
 verify: verify-manual

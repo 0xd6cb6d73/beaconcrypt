@@ -34,6 +34,19 @@ pub const ROOT_KEY_INPUT_SIZE: usize =
 pub const ASSOCIATED_DATA_SIZE: usize =
 	(2 * ENCODED_SIGN_PUBLIC_KEY_SIZE) + PQXDH_INFO.len() + SYM_RATCHET_INFO.len();
 
+// The fixed ranges below are deliberately literal so hax exposes exact slice
+// boundaries to F*. Keep those proof-visible bounds tied to the public sizes.
+const _: () = assert!(SIGN_PUBLIC_KEY_SIZE == 32);
+const _: () = assert!(X25519_PUBLIC_KEY_SIZE == 32);
+const _: () = assert!(MLKEM768_PUBLIC_KEY_SIZE == 1_184);
+const _: () = assert!(DH_SECRET_SIZE == 32);
+const _: () = assert!(SHARED_SECRET_SIZE == 32);
+const _: () = assert!(RATCHET_CHAIN_SIZE == 32);
+const _: () = assert!(ROOT_KEY_INPUT_SIZE == 192);
+const _: () = assert!(ASSOCIATED_DATA_SIZE == 153);
+const _: () = assert!(REGISTRATION_KEY_ID_BINDING_SIZE == 8);
+const _: () = assert!(REGISTRATION_ID_SIZE == 64);
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RegistrationError {
 	IdentityMismatch,
@@ -135,12 +148,8 @@ impl VerifiedInitKex {
 	/// hash or collision-resistance assumption is needed.
 	pub fn registration_id(&self) -> RegistrationId {
 		let mut bytes = [0; REGISTRATION_ID_SIZE];
-		copy_registration_id(&mut bytes, 0, &self.beacon_identity_public_key);
-		copy_registration_id(
-			&mut bytes,
-			SIGN_PUBLIC_KEY_SIZE,
-			&self.beacon_one_time_public_key,
-		);
+		bytes[..32].copy_from_slice(&self.beacon_identity_public_key);
+		bytes[32..].copy_from_slice(&self.beacon_one_time_public_key);
 		RegistrationId { bytes }
 	}
 }
@@ -294,16 +303,11 @@ pub fn build_root_key_input(
 	}
 
 	let mut bytes = [0xff; ROOT_KEY_INPUT_SIZE];
-	let mut offset = PQXDH_PADDING_SIZE;
-	copy_32(&mut bytes, offset, &secrets.dh1);
-	offset += DH_SECRET_SIZE;
-	copy_32(&mut bytes, offset, &secrets.dh2);
-	offset += DH_SECRET_SIZE;
-	copy_32(&mut bytes, offset, &secrets.dh3);
-	offset += DH_SECRET_SIZE;
-	copy_32(&mut bytes, offset, &secrets.dh4);
-	offset += DH_SECRET_SIZE;
-	copy_32(&mut bytes, offset, &secrets.kem_shared_secret);
+	bytes[32..64].copy_from_slice(&secrets.dh1);
+	bytes[64..96].copy_from_slice(&secrets.dh2);
+	bytes[96..128].copy_from_slice(&secrets.dh3);
+	bytes[128..160].copy_from_slice(&secrets.dh4);
+	bytes[160..192].copy_from_slice(&secrets.kem_shared_secret);
 	Ok(RootKeyInput { bytes })
 }
 
@@ -430,7 +434,16 @@ impl RegistrationKeyIdBinding {
 
 pub const fn registration_key_id_binding(key_id: u64) -> RegistrationKeyIdBinding {
 	RegistrationKeyIdBinding {
-		bytes: key_id.to_le_bytes(),
+		bytes: [
+			key_id as u8,
+			(key_id >> 8) as u8,
+			(key_id >> 16) as u8,
+			(key_id >> 24) as u8,
+			(key_id >> 32) as u8,
+			(key_id >> 40) as u8,
+			(key_id >> 48) as u8,
+			(key_id >> 56) as u8,
+		],
 	}
 }
 
@@ -678,7 +691,9 @@ pub fn server_prepare_commit(
 	current_server_binding: ServerBinding,
 	key_id_availability: KeyIdAvailability,
 ) -> Result<ServerRegistrationCandidate, RegistrationError> {
-	if pending.server_binding != current_server_binding {
+	if pending.server_binding.identity_key_id != current_server_binding.identity_key_id
+		|| pending.server_binding.identity_public_key != current_server_binding.identity_public_key
+	{
 		return Err(RegistrationError::IdentityMismatch);
 	}
 	let key_id = server_next_key_id(state)?;
@@ -734,35 +749,31 @@ pub fn build_associated_data(
 	let encoded_server = tag_sign_key(server_identity_public_key);
 	let encoded_beacon = tag_sign_key(beacon_identity_public_key);
 	let mut output = [0; ASSOCIATED_DATA_SIZE];
-	let mut offset = 0;
-	copy_associated_data(&mut output, offset, &encoded_server);
-	offset += ENCODED_SIGN_PUBLIC_KEY_SIZE;
-	copy_associated_data(&mut output, offset, &encoded_beacon);
-	offset += ENCODED_SIGN_PUBLIC_KEY_SIZE;
-	copy_associated_data(&mut output, offset, PQXDH_INFO);
-	offset += PQXDH_INFO.len();
-	copy_associated_data(&mut output, offset, SYM_RATCHET_INFO);
+	output[..33].copy_from_slice(&encoded_server);
+	output[33..66].copy_from_slice(&encoded_beacon);
+	output[66..112].copy_from_slice(PQXDH_INFO);
+	output[112..].copy_from_slice(SYM_RATCHET_INFO);
 	output
 }
 
 fn tag_sign_key(key: [u8; SIGN_PUBLIC_KEY_SIZE]) -> [u8; ENCODED_SIGN_PUBLIC_KEY_SIZE] {
 	let mut output = [0; ENCODED_SIGN_PUBLIC_KEY_SIZE];
 	output[0] = SIGN_TYPE_ED25519;
-	copy_32_to_encoded(&mut output, &key);
+	output[1..33].copy_from_slice(&key);
 	output
 }
 
 fn tag_x25519_key(key: [u8; X25519_PUBLIC_KEY_SIZE]) -> [u8; ENCODED_X25519_PUBLIC_KEY_SIZE] {
 	let mut output = [0; ENCODED_X25519_PUBLIC_KEY_SIZE];
 	output[0] = KEM_TYPE_X25519;
-	copy_32_to_encoded(&mut output, &key);
+	output[1..33].copy_from_slice(&key);
 	output
 }
 
 fn tag_mlkem768_key(key: [u8; MLKEM768_PUBLIC_KEY_SIZE]) -> [u8; ENCODED_MLKEM768_PUBLIC_KEY_SIZE] {
 	let mut output = [0; ENCODED_MLKEM768_PUBLIC_KEY_SIZE];
 	output[0] = KEM_TYPE_MLKEM768;
-	copy_mlkem768_to_encoded(&mut output, &key);
+	output[1..1185].copy_from_slice(&key);
 	output
 }
 
@@ -773,7 +784,7 @@ fn untag_sign_key(
 		return None;
 	}
 	let mut key = [0; SIGN_PUBLIC_KEY_SIZE];
-	copy_32_from_encoded(&mut key, &encoded);
+	key.copy_from_slice(&encoded[1..33]);
 	Some(key)
 }
 
@@ -784,7 +795,7 @@ fn untag_x25519_key(
 		return None;
 	}
 	let mut key = [0; X25519_PUBLIC_KEY_SIZE];
-	copy_32_from_encoded(&mut key, &encoded);
+	key.copy_from_slice(&encoded[1..33]);
 	Some(key)
 }
 
@@ -795,115 +806,12 @@ fn untag_mlkem768_key(
 		return None;
 	}
 	let mut key = [0; MLKEM768_PUBLIC_KEY_SIZE];
-	copy_mlkem768_from_encoded(&mut key, &encoded);
+	key.copy_from_slice(&encoded[1..1185]);
 	Some(key)
 }
 
 fn is_all_zero(bytes: &[u8; DH_SECRET_SIZE]) -> bool {
 	*bytes == [0; DH_SECRET_SIZE]
-}
-
-fn copy_32(output: &mut [u8; ROOT_KEY_INPUT_SIZE], offset: usize, input: &[u8; 32]) {
-	let mut index = 0;
-	while index < 32 {
-		// hax does not infer a loop invariant from the `while` condition. Keep
-		// the indexing obligations explicit so the generated F* remains total.
-		if index >= 32 || offset > ROOT_KEY_INPUT_SIZE || index >= ROOT_KEY_INPUT_SIZE - offset {
-			return;
-		}
-		output[offset + index] = input[index];
-		index += 1;
-	}
-}
-
-fn copy_associated_data(output: &mut [u8; ASSOCIATED_DATA_SIZE], offset: usize, input: &[u8]) {
-	let mut index = 0;
-	while index < input.len() {
-		if index >= input.len()
-			|| offset > ASSOCIATED_DATA_SIZE
-			|| index >= ASSOCIATED_DATA_SIZE - offset
-		{
-			return;
-		}
-		output[offset + index] = input[index];
-		index += 1;
-	}
-}
-
-fn copy_registration_id(
-	output: &mut [u8; REGISTRATION_ID_SIZE],
-	offset: usize,
-	input: &[u8; SIGN_PUBLIC_KEY_SIZE],
-) {
-	let mut index = 0;
-	while index < SIGN_PUBLIC_KEY_SIZE {
-		// Keep both input and output indexing obligations explicit for hax/F*;
-		// hax does not infer the `while` condition as a loop invariant.
-		if index >= SIGN_PUBLIC_KEY_SIZE
-			|| offset > REGISTRATION_ID_SIZE
-			|| index >= REGISTRATION_ID_SIZE - offset
-		{
-			return;
-		}
-		output[offset + index] = input[index];
-		index += 1;
-	}
-}
-
-fn copy_32_to_encoded(
-	output: &mut [u8; ENCODED_SIGN_PUBLIC_KEY_SIZE],
-	input: &[u8; SIGN_PUBLIC_KEY_SIZE],
-) {
-	let mut index = 0;
-	while index < SIGN_PUBLIC_KEY_SIZE {
-		if index >= SIGN_PUBLIC_KEY_SIZE {
-			return;
-		}
-		output[1 + index] = input[index];
-		index += 1;
-	}
-}
-
-fn copy_mlkem768_to_encoded(
-	output: &mut [u8; ENCODED_MLKEM768_PUBLIC_KEY_SIZE],
-	input: &[u8; MLKEM768_PUBLIC_KEY_SIZE],
-) {
-	let mut index = 0;
-	while index < MLKEM768_PUBLIC_KEY_SIZE {
-		if index >= MLKEM768_PUBLIC_KEY_SIZE {
-			return;
-		}
-		output[1 + index] = input[index];
-		index += 1;
-	}
-}
-
-fn copy_32_from_encoded(
-	output: &mut [u8; SIGN_PUBLIC_KEY_SIZE],
-	input: &[u8; ENCODED_SIGN_PUBLIC_KEY_SIZE],
-) {
-	let mut index = 0;
-	while index < SIGN_PUBLIC_KEY_SIZE {
-		if index >= SIGN_PUBLIC_KEY_SIZE {
-			return;
-		}
-		output[index] = input[1 + index];
-		index += 1;
-	}
-}
-
-fn copy_mlkem768_from_encoded(
-	output: &mut [u8; MLKEM768_PUBLIC_KEY_SIZE],
-	input: &[u8; ENCODED_MLKEM768_PUBLIC_KEY_SIZE],
-) {
-	let mut index = 0;
-	while index < MLKEM768_PUBLIC_KEY_SIZE {
-		if index >= MLKEM768_PUBLIC_KEY_SIZE {
-			return;
-		}
-		output[index] = input[1 + index];
-		index += 1;
-	}
 }
 
 #[cfg(test)]
@@ -953,6 +861,35 @@ mod tests {
 			&registration_id.as_bytes()[SIGN_PUBLIC_KEY_SIZE..],
 			&[0x64; X25519_PUBLIC_KEY_SIZE]
 		);
+	}
+
+	#[test]
+	fn tagged_key_round_trip_preserves_nonuniform_byte_order() {
+		let identity_public_key = core::array::from_fn(|index| index as u8);
+		let prekey_public_key = core::array::from_fn(|index| (index as u8).wrapping_add(0x20));
+		let one_time_public_key = core::array::from_fn(|index| (index as u8).wrapping_add(0x40));
+		let pq_public_key = core::array::from_fn(|index| (index as u8).wrapping_mul(17));
+		let started = beacon_start(
+			BeaconFresh::new(7),
+			BeaconStartInputs {
+				identity_public_key,
+				prekey_public_key,
+				pq_public_key,
+			},
+			BeaconCoins {
+				one_time_public_key,
+			},
+		);
+
+		assert_eq!(&started.message.identity_key()[1..], &identity_public_key);
+		assert_eq!(&started.message.prekey()[1..], &prekey_public_key);
+		assert_eq!(&started.message.one_time_key()[1..], &one_time_public_key);
+		assert_eq!(&started.message.pq_key()[1..], &pq_public_key);
+		let verified = validate_init_kex(started.message).unwrap();
+		assert_eq!(verified.beacon_identity_public_key(), &identity_public_key);
+		assert_eq!(verified.beacon_prekey_public_key(), &prekey_public_key);
+		assert_eq!(verified.beacon_one_time_public_key(), &one_time_public_key);
+		assert_eq!(verified.beacon_pq_public_key(), &pq_public_key);
 	}
 
 	#[test]
@@ -1018,6 +955,16 @@ mod tests {
 		assert_eq!(BEACON_RATCHETS.send_offset(), 32);
 		assert_eq!(SERVER_RATCHETS.receive_offset(), 32);
 		assert_eq!(SERVER_RATCHETS.send_offset(), 0);
+	}
+
+	#[test]
+	fn registration_key_id_binding_is_exact_little_endian() {
+		for key_id in [0, 1, 0x0102_0304_0506_0708, u32::MAX as u64, u64::MAX] {
+			assert_eq!(
+				registration_key_id_binding(key_id).as_bytes(),
+				&key_id.to_le_bytes()
+			);
+		}
 	}
 
 	#[test]
@@ -1104,6 +1051,33 @@ mod tests {
 				ServerBinding {
 					identity_public_key: [0xb3; SIGN_PUBLIC_KEY_SIZE],
 					identity_key_id: 3,
+				},
+				KeyIdAvailability::Available,
+			),
+			Err(RegistrationError::IdentityMismatch)
+		));
+		let (_, mismatched_key_id_pending) = server_accept(
+			state,
+			verified,
+			RegistrationStatus::Fresh,
+			ServerBinding {
+				identity_public_key: [0xa3; SIGN_PUBLIC_KEY_SIZE],
+				identity_key_id: 3,
+			},
+			ServerCoins {
+				ephemeral_public_key: [0xa1; X25519_PUBLIC_KEY_SIZE],
+				kem_ciphertext: [0xa2; MLKEM768_CIPHERTEXT_SIZE],
+			},
+			&secrets,
+		)
+		.unwrap();
+		assert!(matches!(
+			server_prepare_commit(
+				state,
+				mismatched_key_id_pending,
+				ServerBinding {
+					identity_public_key: [0xa3; SIGN_PUBLIC_KEY_SIZE],
+					identity_key_id: 4,
 				},
 				KeyIdAvailability::Available,
 			),

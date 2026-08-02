@@ -31,6 +31,8 @@ pub(crate) use ser::serialize_server_state;
 
 pub const KEX_KDF_OUT_LEN: usize = 32usize;
 pub const KDF_STATE_SIZE: usize = 32usize;
+const _: () = assert!(KEX_KDF_OUT_LEN == RATCHET_CHAIN_SIZE);
+const _: () = assert!(KDF_STATE_SIZE == RATCHET_CHAIN_SIZE);
 pub const SYM_RATCHET_INFO: &[u8; 41] = beaconcrypt_protocol_core::pqxdh::SYM_RATCHET_INFO;
 /// crypto_aead::chacha20poly1305_ietf::KEYBYTES
 pub const AEAD_KEY_LEN: usize = 32;

@@ -104,7 +104,17 @@ available/occupied classification for the exact next ID, so neither the
 registration path nor the compatibility allocator can wrap or overwrite a
 peer. See the
 [Stage 5 implementation record](../../doc/formal-verification-stage-5.md).
-PQXDH functional lemmas remain Stage 6 work.
+
+Stage 6 makes every proof-relevant byte layout visible to F* and adds the
+handwritten PQXDH semantic lemmas. They prove exact tagged-key round trips,
+registration-ID and root-input construction, associated-data ordering,
+complementary role ratchet offsets, authenticated assigned-ID correspondence,
+and checked server commit/abort behavior. The post-validation composed result is
+conditional on pairwise X25519/ML-KEM agreement, authenticated role identities,
+truthful replay and availability classifications, AEAD provenance for the
+assigned-ID prefix, deterministic adapter KDFs, and non-rollback single-owner
+server state. See the
+[Stage 6 implementation record](../../doc/formal-verification-stage-6.md).
 
 ## Strict hax/F* verification
 
@@ -116,17 +126,16 @@ make verify
 
 The target enters the pinned hax Nix shell, regenerates the ratchet and PQXDH
 modules under `proofs/fstar/extraction`, and fully checks both generated
-modules, their dependencies, and the hand-maintained ratchet lemmas in
-`proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst`. It never passes
-`--lax`.
+modules, their dependencies, and both hand-maintained lemma modules in
+`proofs/fstar/`. It never passes `--lax`.
 
 The checked properties cover send and receive counter monotonicity and
 exhaustion, receive-gap and cache bounds, retry retention, exact key
 consumption and replay rejection, one-use send keys, and non-selected peer
-isolation. The PQXDH module, including the Stage 5 key-ID binding, replay
-classification, and checked allocation transitions, is extracted and its
-generated safety obligations are strictly verified, but it has no handwritten
-semantic property lemmas yet; those are deliberately scheduled for Stage 6.
+isolation. The PQXDH properties cover exact tags and validation, the semantic
+registration ID, root and associated-data transcripts, conditional honest-role
+agreement, complementary ratchet initialization, authenticated key-ID
+correspondence, replay-status handling, and checked server transactions.
 `make check-generated` additionally fails when a tracked extraction changes,
 which is suitable for a generated-diff CI check.
 

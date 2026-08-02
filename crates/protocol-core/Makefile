@@ -19,6 +19,8 @@ HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::pqxdh::build_root_key_input \
 	+beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization \
 	+beaconcrypt_protocol_core::pqxdh::server_ratchet_initialization \
+	+beaconcrypt_protocol_core::pqxdh::**::ratchet_initialization \
+	+beaconcrypt_protocol_core::pqxdh::**::key_id_binding \
 	+beaconcrypt_protocol_core::pqxdh::beacon_prepare_finish \
 	+beaconcrypt_protocol_core::pqxdh::registration_key_id_binding \
 	+beaconcrypt_protocol_core::pqxdh::authenticate_registration_key_id_binding \

@@ -74,7 +74,7 @@ The first extraction slice may be smaller than this layout. In particular, a sin
 The initial production seams were the ratchet state and operations in
 [`src/shared.rs`](../src/shared.rs), the frame encryption/decryption logic in
 that file, and the PQXDH role transitions in
-[`src/pqxdh.rs`](../src/pqxdh.rs). Stages 1 through 5 moved their deterministic
+[`src/pqxdh.rs`](../src/pqxdh.rs). Stages 1 through 6 moved their deterministic
 control decisions into the protocol core while leaving concrete cryptography
 and wire translation in those adapters. Further moves should remain incremental
 rather than attempting to extract the whole crate.
@@ -318,8 +318,11 @@ supporting allocation changes:
 - checked increment rejects exhaustion at `u64::MAX`, while an explicit
   availability input rejects collision with the next peer-map ID.
 
-This closes the executable counterexamples; it does not itself prove the later
-F* agreement lemmas or ProVerif correspondence queries.
+This closes the executable counterexamples. Stage 6 proves the core-side exact
+identifier, binding, status, allocation, and conditional role correspondence
+under explicit adapter preconditions. Truthful persistent-set refinement and
+the production single-use transition remain adapter and regression-test
+obligations; active-attacker ProVerif queries remain later work.
 
 ## Staged rollout
 
@@ -328,7 +331,7 @@ F* agreement lemmas or ProVerif correspondence queries.
 3. **Complete:** make the production API delegate to the core and run the existing unit, protocol, and known-answer tests through it.
 4. **Complete:** move PQXDH into role-specific typestates with explicit randomness and atomic state commits. This stage also makes `InitKex` generation single-use.
 5. **Complete:** close the three-counterexample milestone with authenticated key-ID binding, persistent server registration replay rejection, collision-safe checked allocation, and mandatory regressions.
-6. Add the F* PQXDH agreement, transcript, associated-data, and initialization proofs.
+6. **Complete:** add the F* PQXDH agreement, transcript, associated-data, initialization, and assigned-ID correspondence proofs.
 7. Add ProVerif processes, events, primitive equations, compromise scenarios, and queries.
 8. Pin rustc, hax, F*, Z3, and ProVerif and run extraction plus proofs in CI.
 9. Maintain a reviewed inventory of every opaque Rust function, assumed primitive law, generated-code exception, and handwritten backend fragment.
@@ -432,8 +435,8 @@ that trace.
 The pinned hax item list extracts these PQXDH transitions to
 `Beaconcrypt_protocol_core.Pqxdh.fst`, and the existing strict F* target
 checks that generated module and its generated safety obligations without
-`--lax`. No PQXDH semantic lemma module is part of Stage 4: agreement,
-transcript, associated-data, and initialization proofs remain Step 6 work.
+`--lax`. No PQXDH semantic lemma module was part of Stage 4; Stage 6 now adds
+the agreement, transcript, associated-data, and initialization proofs.
 
 ### Step 5 implementation
 
@@ -475,8 +478,43 @@ rejected because silently defaulting a missing history would reopen replay.
 
 The new public core transitions are included in the pinned extraction. The
 generated PQXDH module and its safety obligations typecheck strictly without
-`--lax`; semantic PQXDH agreement, transcript, associated-data, and
-initialization lemmas remain Step 6 work.
+`--lax`. Stage 6 now supplies the semantic PQXDH agreement, transcript,
+associated-data, initialization, and assigned-ID lemmas that were intentionally
+deferred here.
+
+### Step 6 implementation
+
+The detailed implementation record is in
+[`formal-verification-stage-6.md`](formal-verification-stage-6.md).
+
+The Stage 5 extraction was reviewed before adding semantic claims. Its fixed
+copy loops reached F* through a library operation without a useful
+postcondition, `u64::to_le_bytes` was opaque in the pinned model, and derived
+whole-`ServerBinding` equality introduced a local generated assumption. The
+core now uses specified fixed-range slice updates, constructs LE64 bytes from
+explicit shifts and narrowing casts, and compares the two server-binding fields
+directly. Compile-time assertions tie the literal proof ranges and production
+KDF slices to the public protocol-core sizes. Production-used candidate
+ratchet and binding accessors are also included in extraction.
+
+The strict handwritten PQXDH module proves exact tagged-key construction and
+validation, exact semantic registration IDs, the six-segment root transcript
+and zero-DH rejection, exact associated data, complementary role ratchets,
+authenticated assigned-ID correspondence, checked nonwrapping allocation,
+binding and collision rejection, and commit/abort state shape. A composed
+post-validation honest-run theorem relates both role transitions through their
+authenticated and committed core peer IDs. Concrete HKDF output, ratchet byte
+slicing, and atomic peer-map publication remain adapter obligations.
+
+Agreement is deliberately conditional. The adapter must establish pairwise
+X25519 and ML-KEM secret agreement, authenticate the same role identities,
+pass the assigned-ID bytes from a successful AEAD open, refine `Fresh` and
+`Available` from the persistent set and peer map, apply deterministic HKDF to
+the verified input and labels, and maintain non-rollback single-owner server
+state. Concrete primitives, wire translation, persistence, replicas,
+zeroization, and low-level compatibility mutation remain outside the theorem.
+The generated and handwritten modules contain no local `assume` or `admit`,
+and the target checks them without `--lax`.
 
 ## Toolchain findings and CI policy
 

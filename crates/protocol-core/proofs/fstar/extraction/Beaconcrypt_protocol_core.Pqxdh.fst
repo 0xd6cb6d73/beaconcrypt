@@ -3,29 +3,13 @@ module Beaconcrypt_protocol_core.Pqxdh
 open FStar.Mul
 open Core_models
 
-let v_SIGN_PUBLIC_KEY_SIZE: usize = mk_usize 32
-
-let v_X25519_PUBLIC_KEY_SIZE: usize = mk_usize 32
-
-let v_MLKEM768_PUBLIC_KEY_SIZE: usize = mk_usize 1184
-
-let v_SHARED_SECRET_SIZE: usize = mk_usize 32
-
-let v_DH_SECRET_SIZE: usize = mk_usize 32
-
-let v_PQXDH_PADDING_SIZE: usize = mk_usize 32
-
 let v_RATCHET_CHAIN_SIZE: usize = mk_usize 32
-
-let v_REGISTRATION_ID_SIZE: usize = v_SIGN_PUBLIC_KEY_SIZE +! v_X25519_PUBLIC_KEY_SIZE
 
 let v_SIGN_TYPE_ED25519: u8 = mk_u8 1
 
 let v_KEM_TYPE_MLKEM768: u8 = mk_u8 3
 
 let v_KEM_TYPE_X25519: u8 = mk_u8 4
-
-let v_ENCODED_SIGN_PUBLIC_KEY_SIZE: usize = v_SIGN_PUBLIC_KEY_SIZE +! mk_usize 1
 
 let v_PQXDH_INFO: t_Array u8 (mk_usize 46) =
   let list =
@@ -53,17 +37,6 @@ let v_SYM_RATCHET_INFO: t_Array u8 (mk_usize 41) =
   in
   FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 41);
   Rust_primitives.Hax.array_of_list 41 list
-
-let v_ROOT_KEY_INPUT_SIZE: usize =
-  (v_PQXDH_PADDING_SIZE +! (mk_usize 4 *! v_DH_SECRET_SIZE <: usize) <: usize) +!
-  v_SHARED_SECRET_SIZE
-
-let v_ASSOCIATED_DATA_SIZE: usize =
-  ((mk_usize 2 *! v_ENCODED_SIGN_PUBLIC_KEY_SIZE <: usize) +!
-    (Core_models.Slice.impl__len #u8 (v_PQXDH_INFO <: t_Slice u8) <: usize)
-    <:
-    usize) +!
-  (Core_models.Slice.impl__len #u8 (v_SYM_RATCHET_INFO <: t_Slice u8) <: usize)
 
 type t_RegistrationError =
   | RegistrationError_IdentityMismatch : t_RegistrationError
@@ -105,6 +78,39 @@ type t_VerifiedInitKex = {
 /// The signed beacon identity and one-time X25519 public key consumed by an
 /// accepted `InitKex`.
 type t_RegistrationId = { f_bytes:t_Array u8 (mk_usize 64) }
+
+/// Stable, authenticated identifier for this one-time registration.
+/// Exact equality is used by the adapter's consumed-registration set; no
+/// hash or collision-resistance assumption is needed.
+let impl_VerifiedInitKex__registration_id (self: t_VerifiedInitKex) : t_RegistrationId =
+  let bytes:t_Array u8 (mk_usize 64) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 64) in
+  let bytes:t_Array u8 (mk_usize 64) =
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_range_to bytes
+      ({ Core_models.Ops.Range.f_end = mk_usize 32 } <: Core_models.Ops.Range.t_RangeTo usize)
+      (Core_models.Slice.impl__copy_from_slice #u8
+          (bytes.[ { Core_models.Ops.Range.f_end = mk_usize 32 }
+              <:
+              Core_models.Ops.Range.t_RangeTo usize ]
+            <:
+            t_Slice u8)
+          (self.f_beacon_identity_public_key <: t_Slice u8)
+        <:
+        t_Slice u8)
+  in
+  let bytes:t_Array u8 (mk_usize 64) =
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_range_from bytes
+      ({ Core_models.Ops.Range.f_start = mk_usize 32 } <: Core_models.Ops.Range.t_RangeFrom usize)
+      (Core_models.Slice.impl__copy_from_slice #u8
+          (bytes.[ { Core_models.Ops.Range.f_start = mk_usize 32 }
+              <:
+              Core_models.Ops.Range.t_RangeFrom usize ]
+            <:
+            t_Slice u8)
+          (self.f_beacon_one_time_public_key <: t_Slice u8)
+        <:
+        t_Slice u8)
+  in
+  { f_bytes = bytes } <: t_RegistrationId
 
 /// Adapter-supplied result of looking up a registration ID in the persistent
 /// consumed-registration set.
@@ -190,6 +196,9 @@ type t_BeaconRegistrationCandidate = {
   f_associated_data:t_Array u8 (mk_usize 153)
 }
 
+let impl_BeaconRegistrationCandidate__ratchet_initialization (self: t_BeaconRegistrationCandidate)
+    : t_RatchetInitialization = v_BEACON_RATCHETS
+
 type t_BeaconFinishInputs = {
   f_expected_server_identity:t_Array u8 (mk_usize 32);
   f_response_server_identity:t_Array u8 (mk_usize 32);
@@ -203,7 +212,26 @@ type t_BeaconFinishInputs = {
 type t_RegistrationKeyIdBinding = { f_bytes:t_Array u8 (mk_usize 8) }
 
 let registration_key_id_binding (key_id: u64) : t_RegistrationKeyIdBinding =
-  { f_bytes = Core_models.Num.impl_u64__to_le_bytes key_id } <: t_RegistrationKeyIdBinding
+  {
+    f_bytes
+    =
+    let list =
+      [
+        cast (key_id <: u64) <: u8;
+        cast (key_id >>! mk_i32 8 <: u64) <: u8;
+        cast (key_id >>! mk_i32 16 <: u64) <: u8;
+        cast (key_id >>! mk_i32 24 <: u64) <: u8;
+        cast (key_id >>! mk_i32 32 <: u64) <: u8;
+        cast (key_id >>! mk_i32 40 <: u64) <: u8;
+        cast (key_id >>! mk_i32 48 <: u64) <: u8;
+        cast (key_id >>! mk_i32 56 <: u64) <: u8
+      ]
+    in
+    FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 8);
+    Rust_primitives.Hax.array_of_list 8 list
+  }
+  <:
+  t_RegistrationKeyIdBinding
 
 let impl_BeaconRegistrationCandidate__key_id_binding (self: t_BeaconRegistrationCandidate)
     : t_RegistrationKeyIdBinding = registration_key_id_binding self.f_assigned_key_id
@@ -272,13 +300,6 @@ type t_ServerBinding = {
   f_identity_key_id:u64
 }
 
-[@@ FStar.Tactics.Typeclasses.tcinstance]
-assume
-val impl_116': Core_models.Cmp.t_PartialEq t_ServerBinding t_ServerBinding
-
-unfold
-let impl_116 = impl_116'
-
 /// Registration material that has passed parsing, signatures, key tags, DH
 /// validation, and transcript construction but has not changed server state.
 type t_PendingServerRegistration = {
@@ -304,6 +325,12 @@ type t_ServerRegistrationCandidate = {
   f_kem_ciphertext:t_Array u8 (mk_usize 1088);
   f_associated_data:t_Array u8 (mk_usize 153)
 }
+
+let impl_ServerRegistrationCandidate__ratchet_initialization (self: t_ServerRegistrationCandidate)
+    : t_RatchetInitialization = v_SERVER_RATCHETS
+
+let impl_ServerRegistrationCandidate__key_id_binding (self: t_ServerRegistrationCandidate)
+    : t_RegistrationKeyIdBinding = registration_key_id_binding self.f_key_id
 
 type t_KeyIdAvailability =
   | KeyIdAvailability_Available : t_KeyIdAvailability
@@ -342,301 +369,6 @@ let server_commit (candidate: t_ServerRegistrationCandidate) : (t_ServerState & 
 let server_abort_candidate (candidate: t_ServerRegistrationCandidate) : t_ServerState =
   candidate.f_previous_state
 
-let is_all_zero (bytes: t_Array u8 (mk_usize 32)) : bool =
-  bytes =. (Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) <: t_Array u8 (mk_usize 32))
-
-let copy_32_ (output: t_Array u8 (mk_usize 192)) (offset: usize) (input: t_Array u8 (mk_usize 32))
-    : t_Array u8 (mk_usize 192) =
-  let index:usize = mk_usize 0 in
-  match
-    Rust_primitives.Hax.while_loop_return (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 192)) = temp_0_ in
-          true)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 192)) = temp_0_ in
-          index <. mk_usize 32 <: bool)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 192)) = temp_0_ in
-          Rust_primitives.Hax.Int.from_machine (mk_u32 0) <: Hax_lib.Int.t_Int)
-      (index, output <: (usize & t_Array u8 (mk_usize 192)))
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 192)) = temp_0_ in
-          if
-            (index >=. mk_usize 32 <: bool) || (offset >. v_ROOT_KEY_INPUT_SIZE <: bool) ||
-            (index >=. (v_ROOT_KEY_INPUT_SIZE -! offset <: usize) <: bool)
-          then
-            Core_models.Ops.Control_flow.ControlFlow_Break
-            (Core_models.Ops.Control_flow.ControlFlow_Break output
-              <:
-              Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 192))
-                (Prims.unit & (usize & t_Array u8 (mk_usize 192))))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 192))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 192))))
-              (usize & t_Array u8 (mk_usize 192))
-          else
-            let output:t_Array u8 (mk_usize 192) =
-              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
-                (offset +! index <: usize)
-                (input.[ index ] <: u8)
-            in
-            let index:usize = index +! mk_usize 1 in
-            Core_models.Ops.Control_flow.ControlFlow_Continue
-            (index, output <: (usize & t_Array u8 (mk_usize 192)))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 192))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 192))))
-              (usize & t_Array u8 (mk_usize 192)))
-    <:
-    Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 192))
-      (usize & t_Array u8 (mk_usize 192))
-  with
-  | Core_models.Ops.Control_flow.ControlFlow_Break ret -> ret
-  | Core_models.Ops.Control_flow.ControlFlow_Continue (index, output) -> output
-
-let build_root_key_input (secrets: t_PqxdhSharedSecrets)
-    : Core_models.Result.t_Result t_RootKeyInput t_RegistrationError =
-  if
-    is_all_zero secrets.f_dh1 || is_all_zero secrets.f_dh2 || is_all_zero secrets.f_dh3 ||
-    is_all_zero secrets.f_dh4
-  then
-    Core_models.Result.Result_Err (RegistrationError_InvalidDhOutput <: t_RegistrationError)
-    <:
-    Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
-  else
-    let bytes:t_Array u8 (mk_usize 192) = Rust_primitives.Hax.repeat (mk_u8 255) (mk_usize 192) in
-    let offset:usize = v_PQXDH_PADDING_SIZE in
-    let bytes:t_Array u8 (mk_usize 192) = copy_32_ bytes offset secrets.f_dh1 in
-    let offset:usize = offset +! v_DH_SECRET_SIZE in
-    let bytes:t_Array u8 (mk_usize 192) = copy_32_ bytes offset secrets.f_dh2 in
-    let offset:usize = offset +! v_DH_SECRET_SIZE in
-    let bytes:t_Array u8 (mk_usize 192) = copy_32_ bytes offset secrets.f_dh3 in
-    let offset:usize = offset +! v_DH_SECRET_SIZE in
-    let bytes:t_Array u8 (mk_usize 192) = copy_32_ bytes offset secrets.f_dh4 in
-    let offset:usize = offset +! v_DH_SECRET_SIZE in
-    let bytes:t_Array u8 (mk_usize 192) = copy_32_ bytes offset secrets.f_kem_shared_secret in
-    Core_models.Result.Result_Ok ({ f_bytes = bytes } <: t_RootKeyInput)
-    <:
-    Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
-
-let copy_associated_data (output: t_Array u8 (mk_usize 153)) (offset: usize) (input: t_Slice u8)
-    : t_Array u8 (mk_usize 153) =
-  let index:usize = mk_usize 0 in
-  match
-    Rust_primitives.Hax.while_loop_return (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 153)) = temp_0_ in
-          true)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 153)) = temp_0_ in
-          index <. (Core_models.Slice.impl__len #u8 input <: usize) <: bool)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 153)) = temp_0_ in
-          Rust_primitives.Hax.Int.from_machine (mk_u32 0) <: Hax_lib.Int.t_Int)
-      (index, output <: (usize & t_Array u8 (mk_usize 153)))
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 153)) = temp_0_ in
-          if
-            (index >=. (Core_models.Slice.impl__len #u8 input <: usize) <: bool) ||
-            (offset >. v_ASSOCIATED_DATA_SIZE <: bool) ||
-            (index >=. (v_ASSOCIATED_DATA_SIZE -! offset <: usize) <: bool)
-          then
-            Core_models.Ops.Control_flow.ControlFlow_Break
-            (Core_models.Ops.Control_flow.ControlFlow_Break output
-              <:
-              Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 153))
-                (Prims.unit & (usize & t_Array u8 (mk_usize 153))))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 153))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 153))))
-              (usize & t_Array u8 (mk_usize 153))
-          else
-            let output:t_Array u8 (mk_usize 153) =
-              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
-                (offset +! index <: usize)
-                (input.[ index ] <: u8)
-            in
-            let index:usize = index +! mk_usize 1 in
-            Core_models.Ops.Control_flow.ControlFlow_Continue
-            (index, output <: (usize & t_Array u8 (mk_usize 153)))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 153))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 153))))
-              (usize & t_Array u8 (mk_usize 153)))
-    <:
-    Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 153))
-      (usize & t_Array u8 (mk_usize 153))
-  with
-  | Core_models.Ops.Control_flow.ControlFlow_Break ret -> ret
-  | Core_models.Ops.Control_flow.ControlFlow_Continue (index, output) -> output
-
-let copy_registration_id
-      (output: t_Array u8 (mk_usize 64))
-      (offset: usize)
-      (input: t_Array u8 (mk_usize 32))
-    : t_Array u8 (mk_usize 64) =
-  let index:usize = mk_usize 0 in
-  match
-    Rust_primitives.Hax.while_loop_return (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 64)) = temp_0_ in
-          true)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 64)) = temp_0_ in
-          index <. v_SIGN_PUBLIC_KEY_SIZE <: bool)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 64)) = temp_0_ in
-          Rust_primitives.Hax.Int.from_machine (mk_u32 0) <: Hax_lib.Int.t_Int)
-      (index, output <: (usize & t_Array u8 (mk_usize 64)))
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 64)) = temp_0_ in
-          if
-            (index >=. v_SIGN_PUBLIC_KEY_SIZE <: bool) || (offset >. v_REGISTRATION_ID_SIZE <: bool) ||
-            (index >=. (v_REGISTRATION_ID_SIZE -! offset <: usize) <: bool)
-          then
-            Core_models.Ops.Control_flow.ControlFlow_Break
-            (Core_models.Ops.Control_flow.ControlFlow_Break output
-              <:
-              Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 64))
-                (Prims.unit & (usize & t_Array u8 (mk_usize 64))))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 64))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 64))))
-              (usize & t_Array u8 (mk_usize 64))
-          else
-            let output:t_Array u8 (mk_usize 64) =
-              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
-                (offset +! index <: usize)
-                (input.[ index ] <: u8)
-            in
-            let index:usize = index +! mk_usize 1 in
-            Core_models.Ops.Control_flow.ControlFlow_Continue
-            (index, output <: (usize & t_Array u8 (mk_usize 64)))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 64))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 64))))
-              (usize & t_Array u8 (mk_usize 64)))
-    <:
-    Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 64))
-      (usize & t_Array u8 (mk_usize 64))
-  with
-  | Core_models.Ops.Control_flow.ControlFlow_Break ret -> ret
-  | Core_models.Ops.Control_flow.ControlFlow_Continue (index, output) -> output
-
-/// Stable, authenticated identifier for this one-time registration.
-/// Exact equality is used by the adapter's consumed-registration set; no
-/// hash or collision-resistance assumption is needed.
-let impl_VerifiedInitKex__registration_id (self: t_VerifiedInitKex) : t_RegistrationId =
-  let bytes:t_Array u8 (mk_usize 64) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 64) in
-  let bytes:t_Array u8 (mk_usize 64) =
-    copy_registration_id bytes (mk_usize 0) self.f_beacon_identity_public_key
-  in
-  let bytes:t_Array u8 (mk_usize 64) =
-    copy_registration_id bytes v_SIGN_PUBLIC_KEY_SIZE self.f_beacon_one_time_public_key
-  in
-  { f_bytes = bytes } <: t_RegistrationId
-
-/// Accept a verified InitKex without committing any peer or counter state.
-let server_accept
-      (state: t_ServerState)
-      (registration: t_VerifiedInitKex)
-      (registration_status: t_RegistrationStatus)
-      (server_binding: t_ServerBinding)
-      (coins: t_ServerCoins)
-      (shared_secrets: t_PqxdhSharedSecrets)
-    : Core_models.Result.t_Result (t_ServerState & t_PendingServerRegistration) t_RegistrationError =
-  match
-    validate_registration_status registration_status
-    <:
-    Core_models.Result.t_Result Prims.unit t_RegistrationError
-  with
-  | Core_models.Result.Result_Ok _ ->
-    (match
-        build_root_key_input shared_secrets
-        <:
-        Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
-      with
-      | Core_models.Result.Result_Ok root_key_input ->
-        Core_models.Result.Result_Ok
-        (state,
-          ({
-              f_server_binding = server_binding;
-              f_registration_id = impl_VerifiedInitKex__registration_id registration;
-              f_beacon_identity_public_key = registration.f_beacon_identity_public_key;
-              f_ephemeral_public_key = coins.f_ephemeral_public_key;
-              f_kem_ciphertext = coins.f_kem_ciphertext;
-              f_root_key_input = root_key_input
-            }
-            <:
-            t_PendingServerRegistration)
-          <:
-          (t_ServerState & t_PendingServerRegistration))
-        <:
-        Core_models.Result.t_Result (t_ServerState & t_PendingServerRegistration)
-          t_RegistrationError
-      | Core_models.Result.Result_Err err ->
-        Core_models.Result.Result_Err err
-        <:
-        Core_models.Result.t_Result (t_ServerState & t_PendingServerRegistration)
-          t_RegistrationError)
-  | Core_models.Result.Result_Err err ->
-    Core_models.Result.Result_Err err
-    <:
-    Core_models.Result.t_Result (t_ServerState & t_PendingServerRegistration) t_RegistrationError
-
-let copy_32_to_encoded (output: t_Array u8 (mk_usize 33)) (input: t_Array u8 (mk_usize 32))
-    : t_Array u8 (mk_usize 33) =
-  let index:usize = mk_usize 0 in
-  match
-    Rust_primitives.Hax.while_loop_return (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 33)) = temp_0_ in
-          true)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 33)) = temp_0_ in
-          index <. v_SIGN_PUBLIC_KEY_SIZE <: bool)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 33)) = temp_0_ in
-          Rust_primitives.Hax.Int.from_machine (mk_u32 0) <: Hax_lib.Int.t_Int)
-      (index, output <: (usize & t_Array u8 (mk_usize 33)))
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 33)) = temp_0_ in
-          if index >=. v_SIGN_PUBLIC_KEY_SIZE <: bool
-          then
-            Core_models.Ops.Control_flow.ControlFlow_Break
-            (Core_models.Ops.Control_flow.ControlFlow_Break output
-              <:
-              Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 33))
-                (Prims.unit & (usize & t_Array u8 (mk_usize 33))))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 33))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 33))))
-              (usize & t_Array u8 (mk_usize 33))
-          else
-            let output:t_Array u8 (mk_usize 33) =
-              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
-                (mk_usize 1 +! index <: usize)
-                (input.[ index ] <: u8)
-            in
-            let index:usize = index +! mk_usize 1 in
-            Core_models.Ops.Control_flow.ControlFlow_Continue
-            (index, output <: (usize & t_Array u8 (mk_usize 33)))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 33))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 33))))
-              (usize & t_Array u8 (mk_usize 33)))
-    <:
-    Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 33))
-      (usize & t_Array u8 (mk_usize 33))
-  with
-  | Core_models.Ops.Control_flow.ControlFlow_Break ret -> ret
-  | Core_models.Ops.Control_flow.ControlFlow_Continue (index, output) -> output
-
 let tag_sign_key (key: t_Array u8 (mk_usize 32)) : t_Array u8 (mk_usize 33) =
   let output:t_Array u8 (mk_usize 33) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 33) in
   let output:t_Array u8 (mk_usize 33) =
@@ -644,7 +376,24 @@ let tag_sign_key (key: t_Array u8 (mk_usize 32)) : t_Array u8 (mk_usize 33) =
       (mk_usize 0)
       v_SIGN_TYPE_ED25519
   in
-  let output:t_Array u8 (mk_usize 33) = copy_32_to_encoded output key in
+  let output:t_Array u8 (mk_usize 33) =
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
+      ({ Core_models.Ops.Range.f_start = mk_usize 1; Core_models.Ops.Range.f_end = mk_usize 33 }
+        <:
+        Core_models.Ops.Range.t_Range usize)
+      (Core_models.Slice.impl__copy_from_slice #u8
+          (output.[ {
+                Core_models.Ops.Range.f_start = mk_usize 1;
+                Core_models.Ops.Range.f_end = mk_usize 33
+              }
+              <:
+              Core_models.Ops.Range.t_Range usize ]
+            <:
+            t_Slice u8)
+          (key <: t_Slice u8)
+        <:
+        t_Slice u8)
+  in
   output
 
 /// Associated data is always encoded server identity first, beacon identity
@@ -655,58 +404,69 @@ let build_associated_data
   let encoded_server:t_Array u8 (mk_usize 33) = tag_sign_key server_identity_public_key in
   let encoded_beacon:t_Array u8 (mk_usize 33) = tag_sign_key beacon_identity_public_key in
   let output:t_Array u8 (mk_usize 153) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 153) in
-  let offset:usize = mk_usize 0 in
   let output:t_Array u8 (mk_usize 153) =
-    copy_associated_data output offset (encoded_server <: t_Slice u8)
-  in
-  let offset:usize = offset +! v_ENCODED_SIGN_PUBLIC_KEY_SIZE in
-  let output:t_Array u8 (mk_usize 153) =
-    copy_associated_data output offset (encoded_beacon <: t_Slice u8)
-  in
-  let offset:usize = offset +! v_ENCODED_SIGN_PUBLIC_KEY_SIZE in
-  let output:t_Array u8 (mk_usize 153) =
-    copy_associated_data output offset (v_PQXDH_INFO <: t_Slice u8)
-  in
-  let offset:usize =
-    offset +! (Core_models.Slice.impl__len #u8 (v_PQXDH_INFO <: t_Slice u8) <: usize)
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_range_to output
+      ({ Core_models.Ops.Range.f_end = mk_usize 33 } <: Core_models.Ops.Range.t_RangeTo usize)
+      (Core_models.Slice.impl__copy_from_slice #u8
+          (output.[ { Core_models.Ops.Range.f_end = mk_usize 33 }
+              <:
+              Core_models.Ops.Range.t_RangeTo usize ]
+            <:
+            t_Slice u8)
+          (encoded_server <: t_Slice u8)
+        <:
+        t_Slice u8)
   in
   let output:t_Array u8 (mk_usize 153) =
-    copy_associated_data output offset (v_SYM_RATCHET_INFO <: t_Slice u8)
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
+      ({ Core_models.Ops.Range.f_start = mk_usize 33; Core_models.Ops.Range.f_end = mk_usize 66 }
+        <:
+        Core_models.Ops.Range.t_Range usize)
+      (Core_models.Slice.impl__copy_from_slice #u8
+          (output.[ {
+                Core_models.Ops.Range.f_start = mk_usize 33;
+                Core_models.Ops.Range.f_end = mk_usize 66
+              }
+              <:
+              Core_models.Ops.Range.t_Range usize ]
+            <:
+            t_Slice u8)
+          (encoded_beacon <: t_Slice u8)
+        <:
+        t_Slice u8)
+  in
+  let output:t_Array u8 (mk_usize 153) =
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
+      ({ Core_models.Ops.Range.f_start = mk_usize 66; Core_models.Ops.Range.f_end = mk_usize 112 }
+        <:
+        Core_models.Ops.Range.t_Range usize)
+      (Core_models.Slice.impl__copy_from_slice #u8
+          (output.[ {
+                Core_models.Ops.Range.f_start = mk_usize 66;
+                Core_models.Ops.Range.f_end = mk_usize 112
+              }
+              <:
+              Core_models.Ops.Range.t_Range usize ]
+            <:
+            t_Slice u8)
+          (v_PQXDH_INFO <: t_Slice u8)
+        <:
+        t_Slice u8)
+  in
+  let output:t_Array u8 (mk_usize 153) =
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_range_from output
+      ({ Core_models.Ops.Range.f_start = mk_usize 112 } <: Core_models.Ops.Range.t_RangeFrom usize)
+      (Core_models.Slice.impl__copy_from_slice #u8
+          (output.[ { Core_models.Ops.Range.f_start = mk_usize 112 }
+              <:
+              Core_models.Ops.Range.t_RangeFrom usize ]
+            <:
+            t_Slice u8)
+          (v_SYM_RATCHET_INFO <: t_Slice u8)
+        <:
+        t_Slice u8)
   in
   output
-
-let beacon_prepare_finish (state: t_BeaconInitSent) (inputs: t_BeaconFinishInputs)
-    : Core_models.Result.t_Result t_BeaconRegistrationCandidate t_RegistrationError =
-  if inputs.f_expected_server_identity <>. inputs.f_response_server_identity
-  then
-    Core_models.Result.Result_Err (RegistrationError_IdentityMismatch <: t_RegistrationError)
-    <:
-    Core_models.Result.t_Result t_BeaconRegistrationCandidate t_RegistrationError
-  else
-    match
-      build_root_key_input inputs.f_shared_secrets
-      <:
-      Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
-    with
-    | Core_models.Result.Result_Ok root_key_input ->
-      let associated_data:t_Array u8 (mk_usize 153) =
-        build_associated_data inputs.f_response_server_identity state.f_beacon_identity_public_key
-      in
-      Core_models.Result.Result_Ok
-      ({
-          f_server_key_id = state.f_server_key_id;
-          f_assigned_key_id = inputs.f_assigned_key_id;
-          f_root_key_input = root_key_input;
-          f_associated_data = associated_data
-        }
-        <:
-        t_BeaconRegistrationCandidate)
-      <:
-      Core_models.Result.t_Result t_BeaconRegistrationCandidate t_RegistrationError
-    | Core_models.Result.Result_Err err ->
-      Core_models.Result.Result_Err err
-      <:
-      Core_models.Result.t_Result t_BeaconRegistrationCandidate t_RegistrationError
 
 /// Prepare the next checked, explicitly unoccupied server key ID.
 let server_prepare_commit
@@ -715,7 +475,9 @@ let server_prepare_commit
       (current_server_binding: t_ServerBinding)
       (key_id_availability: t_KeyIdAvailability)
     : Core_models.Result.t_Result t_ServerRegistrationCandidate t_RegistrationError =
-  if pending.f_server_binding <>. current_server_binding
+  if
+    pending.f_server_binding.f_identity_key_id <>. current_server_binding.f_identity_key_id ||
+    pending.f_server_binding.f_identity_public_key <>. current_server_binding.f_identity_public_key
   then
     Core_models.Result.Result_Err (RegistrationError_IdentityMismatch <: t_RegistrationError)
     <:
@@ -763,59 +525,25 @@ let tag_x25519_key (key: t_Array u8 (mk_usize 32)) : t_Array u8 (mk_usize 33) =
       (mk_usize 0)
       v_KEM_TYPE_X25519
   in
-  let output:t_Array u8 (mk_usize 33) = copy_32_to_encoded output key in
-  output
-
-let copy_mlkem768_to_encoded
-      (output: t_Array u8 (mk_usize 1185))
-      (input: t_Array u8 (mk_usize 1184))
-    : t_Array u8 (mk_usize 1185) =
-  let index:usize = mk_usize 0 in
-  match
-    Rust_primitives.Hax.while_loop_return (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 1185)) = temp_0_ in
-          true)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 1185)) = temp_0_ in
-          index <. v_MLKEM768_PUBLIC_KEY_SIZE <: bool)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 1185)) = temp_0_ in
-          Rust_primitives.Hax.Int.from_machine (mk_u32 0) <: Hax_lib.Int.t_Int)
-      (index, output <: (usize & t_Array u8 (mk_usize 1185)))
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 1185)) = temp_0_ in
-          if index >=. v_MLKEM768_PUBLIC_KEY_SIZE <: bool
-          then
-            Core_models.Ops.Control_flow.ControlFlow_Break
-            (Core_models.Ops.Control_flow.ControlFlow_Break output
+  let output:t_Array u8 (mk_usize 33) =
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
+      ({ Core_models.Ops.Range.f_start = mk_usize 1; Core_models.Ops.Range.f_end = mk_usize 33 }
+        <:
+        Core_models.Ops.Range.t_Range usize)
+      (Core_models.Slice.impl__copy_from_slice #u8
+          (output.[ {
+                Core_models.Ops.Range.f_start = mk_usize 1;
+                Core_models.Ops.Range.f_end = mk_usize 33
+              }
               <:
-              Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 1185))
-                (Prims.unit & (usize & t_Array u8 (mk_usize 1185))))
+              Core_models.Ops.Range.t_Range usize ]
             <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 1185))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 1185))))
-              (usize & t_Array u8 (mk_usize 1185))
-          else
-            let output:t_Array u8 (mk_usize 1185) =
-              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
-                (mk_usize 1 +! index <: usize)
-                (input.[ index ] <: u8)
-            in
-            let index:usize = index +! mk_usize 1 in
-            Core_models.Ops.Control_flow.ControlFlow_Continue
-            (index, output <: (usize & t_Array u8 (mk_usize 1185)))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 1185))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 1185))))
-              (usize & t_Array u8 (mk_usize 1185)))
-    <:
-    Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 1185))
-      (usize & t_Array u8 (mk_usize 1185))
-  with
-  | Core_models.Ops.Control_flow.ControlFlow_Break ret -> ret
-  | Core_models.Ops.Control_flow.ControlFlow_Continue (index, output) -> output
+            t_Slice u8)
+          (key <: t_Slice u8)
+        <:
+        t_Slice u8)
+  in
+  output
 
 let tag_mlkem768_key (key: t_Array u8 (mk_usize 1184)) : t_Array u8 (mk_usize 1185) =
   let output:t_Array u8 (mk_usize 1185) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 1185) in
@@ -824,7 +552,24 @@ let tag_mlkem768_key (key: t_Array u8 (mk_usize 1184)) : t_Array u8 (mk_usize 11
       (mk_usize 0)
       v_KEM_TYPE_MLKEM768
   in
-  let output:t_Array u8 (mk_usize 1185) = copy_mlkem768_to_encoded output key in
+  let output:t_Array u8 (mk_usize 1185) =
+    Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
+      ({ Core_models.Ops.Range.f_start = mk_usize 1; Core_models.Ops.Range.f_end = mk_usize 1185 }
+        <:
+        Core_models.Ops.Range.t_Range usize)
+      (Core_models.Slice.impl__copy_from_slice #u8
+          (output.[ {
+                Core_models.Ops.Range.f_start = mk_usize 1;
+                Core_models.Ops.Range.f_end = mk_usize 1185
+              }
+              <:
+              Core_models.Ops.Range.t_Range usize ]
+            <:
+            t_Slice u8)
+          (key <: t_Slice u8)
+        <:
+        t_Slice u8)
+  in
   output
 
 /// Construct the exact tagged InitKex payloads from explicit generated
@@ -854,62 +599,24 @@ let beacon_start (state: t_BeaconFresh) (inputs: t_BeaconStartInputs) (coins: t_
   <:
   t_BeaconStart
 
-let copy_32_from_encoded (output: t_Array u8 (mk_usize 32)) (input: t_Array u8 (mk_usize 33))
-    : t_Array u8 (mk_usize 32) =
-  let index:usize = mk_usize 0 in
-  match
-    Rust_primitives.Hax.while_loop_return (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 32)) = temp_0_ in
-          true)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 32)) = temp_0_ in
-          index <. v_SIGN_PUBLIC_KEY_SIZE <: bool)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 32)) = temp_0_ in
-          Rust_primitives.Hax.Int.from_machine (mk_u32 0) <: Hax_lib.Int.t_Int)
-      (index, output <: (usize & t_Array u8 (mk_usize 32)))
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 32)) = temp_0_ in
-          if index >=. v_SIGN_PUBLIC_KEY_SIZE <: bool
-          then
-            Core_models.Ops.Control_flow.ControlFlow_Break
-            (Core_models.Ops.Control_flow.ControlFlow_Break output
-              <:
-              Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 32))
-                (Prims.unit & (usize & t_Array u8 (mk_usize 32))))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 32))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 32))))
-              (usize & t_Array u8 (mk_usize 32))
-          else
-            let output:t_Array u8 (mk_usize 32) =
-              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
-                index
-                (input.[ mk_usize 1 +! index <: usize ] <: u8)
-            in
-            let index:usize = index +! mk_usize 1 in
-            Core_models.Ops.Control_flow.ControlFlow_Continue
-            (index, output <: (usize & t_Array u8 (mk_usize 32)))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 32))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 32))))
-              (usize & t_Array u8 (mk_usize 32)))
-    <:
-    Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 32))
-      (usize & t_Array u8 (mk_usize 32))
-  with
-  | Core_models.Ops.Control_flow.ControlFlow_Break ret -> ret
-  | Core_models.Ops.Control_flow.ControlFlow_Continue (index, output) -> output
-
 let untag_sign_key (encoded: t_Array u8 (mk_usize 33))
     : Core_models.Option.t_Option (t_Array u8 (mk_usize 32)) =
   if (encoded.[ mk_usize 0 ] <: u8) <>. v_SIGN_TYPE_ED25519
   then Core_models.Option.Option_None <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
   else
     let key:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
-    let key:t_Array u8 (mk_usize 32) = copy_32_from_encoded key encoded in
+    let key:t_Array u8 (mk_usize 32) =
+      Core_models.Slice.impl__copy_from_slice #u8
+        key
+        (encoded.[ {
+              Core_models.Ops.Range.f_start = mk_usize 1;
+              Core_models.Ops.Range.f_end = mk_usize 33
+            }
+            <:
+            Core_models.Ops.Range.t_Range usize ]
+          <:
+          t_Slice u8)
+    in
     Core_models.Option.Option_Some key <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
 
 let untag_x25519_key (encoded: t_Array u8 (mk_usize 33))
@@ -918,59 +625,19 @@ let untag_x25519_key (encoded: t_Array u8 (mk_usize 33))
   then Core_models.Option.Option_None <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
   else
     let key:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
-    let key:t_Array u8 (mk_usize 32) = copy_32_from_encoded key encoded in
+    let key:t_Array u8 (mk_usize 32) =
+      Core_models.Slice.impl__copy_from_slice #u8
+        key
+        (encoded.[ {
+              Core_models.Ops.Range.f_start = mk_usize 1;
+              Core_models.Ops.Range.f_end = mk_usize 33
+            }
+            <:
+            Core_models.Ops.Range.t_Range usize ]
+          <:
+          t_Slice u8)
+    in
     Core_models.Option.Option_Some key <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
-
-let copy_mlkem768_from_encoded
-      (output: t_Array u8 (mk_usize 1184))
-      (input: t_Array u8 (mk_usize 1185))
-    : t_Array u8 (mk_usize 1184) =
-  let index:usize = mk_usize 0 in
-  match
-    Rust_primitives.Hax.while_loop_return (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 1184)) = temp_0_ in
-          true)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 1184)) = temp_0_ in
-          index <. v_MLKEM768_PUBLIC_KEY_SIZE <: bool)
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 1184)) = temp_0_ in
-          Rust_primitives.Hax.Int.from_machine (mk_u32 0) <: Hax_lib.Int.t_Int)
-      (index, output <: (usize & t_Array u8 (mk_usize 1184)))
-      (fun temp_0_ ->
-          let (index: usize), (output: t_Array u8 (mk_usize 1184)) = temp_0_ in
-          if index >=. v_MLKEM768_PUBLIC_KEY_SIZE <: bool
-          then
-            Core_models.Ops.Control_flow.ControlFlow_Break
-            (Core_models.Ops.Control_flow.ControlFlow_Break output
-              <:
-              Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 1184))
-                (Prims.unit & (usize & t_Array u8 (mk_usize 1184))))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 1184))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 1184))))
-              (usize & t_Array u8 (mk_usize 1184))
-          else
-            let output:t_Array u8 (mk_usize 1184) =
-              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
-                index
-                (input.[ mk_usize 1 +! index <: usize ] <: u8)
-            in
-            let index:usize = index +! mk_usize 1 in
-            Core_models.Ops.Control_flow.ControlFlow_Continue
-            (index, output <: (usize & t_Array u8 (mk_usize 1184)))
-            <:
-            Core_models.Ops.Control_flow.t_ControlFlow
-              (Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 1184))
-                  (Prims.unit & (usize & t_Array u8 (mk_usize 1184))))
-              (usize & t_Array u8 (mk_usize 1184)))
-    <:
-    Core_models.Ops.Control_flow.t_ControlFlow (t_Array u8 (mk_usize 1184))
-      (usize & t_Array u8 (mk_usize 1184))
-  with
-  | Core_models.Ops.Control_flow.ControlFlow_Break ret -> ret
-  | Core_models.Ops.Control_flow.ControlFlow_Continue (index, output) -> output
 
 let untag_mlkem768_key (encoded: t_Array u8 (mk_usize 1185))
     : Core_models.Option.t_Option (t_Array u8 (mk_usize 1184)) =
@@ -978,7 +645,18 @@ let untag_mlkem768_key (encoded: t_Array u8 (mk_usize 1185))
   then Core_models.Option.Option_None <: Core_models.Option.t_Option (t_Array u8 (mk_usize 1184))
   else
     let key:t_Array u8 (mk_usize 1184) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 1184) in
-    let key:t_Array u8 (mk_usize 1184) = copy_mlkem768_from_encoded key encoded in
+    let key:t_Array u8 (mk_usize 1184) =
+      Core_models.Slice.impl__copy_from_slice #u8
+        key
+        (encoded.[ {
+              Core_models.Ops.Range.f_start = mk_usize 1;
+              Core_models.Ops.Range.f_end = mk_usize 1185
+            }
+            <:
+            Core_models.Ops.Range.t_Range usize ]
+          <:
+          t_Slice u8)
+    in
     Core_models.Option.Option_Some key <: Core_models.Option.t_Option (t_Array u8 (mk_usize 1184))
 
 /// Re-establish typed, verified registration keys after signature checks in
@@ -1034,3 +712,198 @@ let validate_init_kex (message: t_InitKex)
     Core_models.Result.Result_Err (RegistrationError_InvalidKeyEncoding <: t_RegistrationError)
     <:
     Core_models.Result.t_Result t_VerifiedInitKex t_RegistrationError
+
+let is_all_zero (bytes: t_Array u8 (mk_usize 32)) : bool =
+  bytes =. (Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) <: t_Array u8 (mk_usize 32))
+
+let build_root_key_input (secrets: t_PqxdhSharedSecrets)
+    : Core_models.Result.t_Result t_RootKeyInput t_RegistrationError =
+  if
+    is_all_zero secrets.f_dh1 || is_all_zero secrets.f_dh2 || is_all_zero secrets.f_dh3 ||
+    is_all_zero secrets.f_dh4
+  then
+    Core_models.Result.Result_Err (RegistrationError_InvalidDhOutput <: t_RegistrationError)
+    <:
+    Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
+  else
+    let bytes:t_Array u8 (mk_usize 192) = Rust_primitives.Hax.repeat (mk_u8 255) (mk_usize 192) in
+    let bytes:t_Array u8 (mk_usize 192) =
+      Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
+        ({ Core_models.Ops.Range.f_start = mk_usize 32; Core_models.Ops.Range.f_end = mk_usize 64 }
+          <:
+          Core_models.Ops.Range.t_Range usize)
+        (Core_models.Slice.impl__copy_from_slice #u8
+            (bytes.[ {
+                  Core_models.Ops.Range.f_start = mk_usize 32;
+                  Core_models.Ops.Range.f_end = mk_usize 64
+                }
+                <:
+                Core_models.Ops.Range.t_Range usize ]
+              <:
+              t_Slice u8)
+            (secrets.f_dh1 <: t_Slice u8)
+          <:
+          t_Slice u8)
+    in
+    let bytes:t_Array u8 (mk_usize 192) =
+      Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
+        ({ Core_models.Ops.Range.f_start = mk_usize 64; Core_models.Ops.Range.f_end = mk_usize 96 }
+          <:
+          Core_models.Ops.Range.t_Range usize)
+        (Core_models.Slice.impl__copy_from_slice #u8
+            (bytes.[ {
+                  Core_models.Ops.Range.f_start = mk_usize 64;
+                  Core_models.Ops.Range.f_end = mk_usize 96
+                }
+                <:
+                Core_models.Ops.Range.t_Range usize ]
+              <:
+              t_Slice u8)
+            (secrets.f_dh2 <: t_Slice u8)
+          <:
+          t_Slice u8)
+    in
+    let bytes:t_Array u8 (mk_usize 192) =
+      Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
+        ({ Core_models.Ops.Range.f_start = mk_usize 96; Core_models.Ops.Range.f_end = mk_usize 128 }
+          <:
+          Core_models.Ops.Range.t_Range usize)
+        (Core_models.Slice.impl__copy_from_slice #u8
+            (bytes.[ {
+                  Core_models.Ops.Range.f_start = mk_usize 96;
+                  Core_models.Ops.Range.f_end = mk_usize 128
+                }
+                <:
+                Core_models.Ops.Range.t_Range usize ]
+              <:
+              t_Slice u8)
+            (secrets.f_dh3 <: t_Slice u8)
+          <:
+          t_Slice u8)
+    in
+    let bytes:t_Array u8 (mk_usize 192) =
+      Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
+        ({
+            Core_models.Ops.Range.f_start = mk_usize 128;
+            Core_models.Ops.Range.f_end = mk_usize 160
+          }
+          <:
+          Core_models.Ops.Range.t_Range usize)
+        (Core_models.Slice.impl__copy_from_slice #u8
+            (bytes.[ {
+                  Core_models.Ops.Range.f_start = mk_usize 128;
+                  Core_models.Ops.Range.f_end = mk_usize 160
+                }
+                <:
+                Core_models.Ops.Range.t_Range usize ]
+              <:
+              t_Slice u8)
+            (secrets.f_dh4 <: t_Slice u8)
+          <:
+          t_Slice u8)
+    in
+    let bytes:t_Array u8 (mk_usize 192) =
+      Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
+        ({
+            Core_models.Ops.Range.f_start = mk_usize 160;
+            Core_models.Ops.Range.f_end = mk_usize 192
+          }
+          <:
+          Core_models.Ops.Range.t_Range usize)
+        (Core_models.Slice.impl__copy_from_slice #u8
+            (bytes.[ {
+                  Core_models.Ops.Range.f_start = mk_usize 160;
+                  Core_models.Ops.Range.f_end = mk_usize 192
+                }
+                <:
+                Core_models.Ops.Range.t_Range usize ]
+              <:
+              t_Slice u8)
+            (secrets.f_kem_shared_secret <: t_Slice u8)
+          <:
+          t_Slice u8)
+    in
+    Core_models.Result.Result_Ok ({ f_bytes = bytes } <: t_RootKeyInput)
+    <:
+    Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
+
+let beacon_prepare_finish (state: t_BeaconInitSent) (inputs: t_BeaconFinishInputs)
+    : Core_models.Result.t_Result t_BeaconRegistrationCandidate t_RegistrationError =
+  if inputs.f_expected_server_identity <>. inputs.f_response_server_identity
+  then
+    Core_models.Result.Result_Err (RegistrationError_IdentityMismatch <: t_RegistrationError)
+    <:
+    Core_models.Result.t_Result t_BeaconRegistrationCandidate t_RegistrationError
+  else
+    match
+      build_root_key_input inputs.f_shared_secrets
+      <:
+      Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
+    with
+    | Core_models.Result.Result_Ok root_key_input ->
+      let associated_data:t_Array u8 (mk_usize 153) =
+        build_associated_data inputs.f_response_server_identity state.f_beacon_identity_public_key
+      in
+      Core_models.Result.Result_Ok
+      ({
+          f_server_key_id = state.f_server_key_id;
+          f_assigned_key_id = inputs.f_assigned_key_id;
+          f_root_key_input = root_key_input;
+          f_associated_data = associated_data
+        }
+        <:
+        t_BeaconRegistrationCandidate)
+      <:
+      Core_models.Result.t_Result t_BeaconRegistrationCandidate t_RegistrationError
+    | Core_models.Result.Result_Err err ->
+      Core_models.Result.Result_Err err
+      <:
+      Core_models.Result.t_Result t_BeaconRegistrationCandidate t_RegistrationError
+
+/// Accept a verified InitKex without committing any peer or counter state.
+let server_accept
+      (state: t_ServerState)
+      (registration: t_VerifiedInitKex)
+      (registration_status: t_RegistrationStatus)
+      (server_binding: t_ServerBinding)
+      (coins: t_ServerCoins)
+      (shared_secrets: t_PqxdhSharedSecrets)
+    : Core_models.Result.t_Result (t_ServerState & t_PendingServerRegistration) t_RegistrationError =
+  match
+    validate_registration_status registration_status
+    <:
+    Core_models.Result.t_Result Prims.unit t_RegistrationError
+  with
+  | Core_models.Result.Result_Ok _ ->
+    (match
+        build_root_key_input shared_secrets
+        <:
+        Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
+      with
+      | Core_models.Result.Result_Ok root_key_input ->
+        Core_models.Result.Result_Ok
+        (state,
+          ({
+              f_server_binding = server_binding;
+              f_registration_id = impl_VerifiedInitKex__registration_id registration;
+              f_beacon_identity_public_key = registration.f_beacon_identity_public_key;
+              f_ephemeral_public_key = coins.f_ephemeral_public_key;
+              f_kem_ciphertext = coins.f_kem_ciphertext;
+              f_root_key_input = root_key_input
+            }
+            <:
+            t_PendingServerRegistration)
+          <:
+          (t_ServerState & t_PendingServerRegistration))
+        <:
+        Core_models.Result.t_Result (t_ServerState & t_PendingServerRegistration)
+          t_RegistrationError
+      | Core_models.Result.Result_Err err ->
+        Core_models.Result.Result_Err err
+        <:
+        Core_models.Result.t_Result (t_ServerState & t_PendingServerRegistration)
+          t_RegistrationError)
+  | Core_models.Result.Result_Err err ->
+    Core_models.Result.Result_Err err
+    <:
+    Core_models.Result.t_Result (t_ServerState & t_PendingServerRegistration) t_RegistrationError
