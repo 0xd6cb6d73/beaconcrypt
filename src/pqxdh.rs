@@ -126,30 +126,34 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		} else {
 			crypto_sign::KeyPair::generate().unwrap()
 		};
-		let known_ids = if let Some(pk) = server_id_pk {
-			if !is_beacon {
-				HashMap::new()
-			} else {
-				let mut hm = HashMap::new();
-				hm.insert(
-					server_kid,
-					RemotePrincipal::new(
-						crypto_sign::PublicKey::from_bytes(pk).unwrap(),
-						RatchetManager::default(),
-					),
-				);
-				hm
-			}
+		let configured_server = if is_beacon {
+			server_id_pk.map(|pk| crypto_sign::PublicKey::from_bytes(pk).unwrap())
 		} else {
-			HashMap::new()
+			None
 		};
+		let mut known_ids = HashMap::new();
+		if let Some(server_identity) = &configured_server {
+			known_ids.insert(
+				server_kid,
+				RemotePrincipal::new(server_identity.clone(), RatchetManager::default()),
+			);
+		}
 
 		let role = if is_beacon {
-			ProviderRole::Beacon(BeaconState::Fresh {
-				control: verified_pqxdh::BeaconFresh::new(server_kid),
-				prekey: crypto_kx::KeyPair::generate().unwrap(),
-				pq_key: crypto_kem::mlkem768::KeyPair::generate().unwrap(),
-			})
+			if let Some(server_identity) = configured_server {
+				ProviderRole::Beacon(BeaconState::Fresh {
+					control: verified_pqxdh::BeaconFresh::new(verified_pqxdh::ServerBinding {
+						identity_public_key: *server_identity.as_bytes(),
+						identity_key_id: server_kid,
+					}),
+					prekey: crypto_kx::KeyPair::generate().unwrap(),
+					pq_key: crypto_kem::mlkem768::KeyPair::generate().unwrap(),
+				})
+			} else {
+				ProviderRole::Beacon(BeaconState::Aborted {
+					control: verified_pqxdh::BeaconAborted::new(server_kid),
+				})
+			}
 		} else {
 			ProviderRole::Server(verified_pqxdh::ServerState::new(server_kid))
 		};
@@ -545,11 +549,8 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 			ProviderRole::Beacon(BeaconState::InitSent { control, .. }) => *control,
 			_ => return None,
 		};
-		let server_kid = control.server_key_id();
-		let expected_server = self.server_id().cloned();
 
 		let staged = (|| {
-			let expected_server = expected_server?;
 			let (prekey_secret, onetime_secret, pq_secret) = match &self.role {
 				ProviderRole::Beacon(BeaconState::InitSent {
 					prekey,
@@ -592,7 +593,6 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 					.ok()?
 					.into();
 			let mut finish_inputs = verified_pqxdh::BeaconFinishInputs {
-				expected_server_identity: *expected_server.as_bytes(),
 				response_server_identity: *response_server.as_bytes(),
 				assigned_key_id: response.get_key_id(),
 				shared_secrets: shared_secrets(dh1, dh2, dh3, dh4, &kem_shared)?,
@@ -612,10 +612,11 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 			let associated_data = *candidate.associated_data();
 			let decrypted = decrypt_message_with_ratchet(
 				response.get_app_cipher_text().ok()?,
-				server_kid,
+				candidate.server_key_id(),
 				&associated_data,
 				&mut ratchet,
 			)?;
+			let authenticated_server_key_id = decrypted.key_id;
 			let mut authenticated_plaintext = decrypted.plaintext;
 			if authenticated_plaintext.len() <= verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE {
 				return None;
@@ -623,9 +624,12 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 			let plaintext =
 				authenticated_plaintext.split_off(verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE);
 			let binding = authenticated_plaintext.as_slice().try_into().ok()?;
-			let authenticated =
-				verified_pqxdh::authenticate_registration_key_id_binding(candidate, binding)
-					.ok()?;
+			let authenticated = verified_pqxdh::authenticate_registration_key_id_binding(
+				candidate,
+				authenticated_server_key_id,
+				binding,
+			)
+			.ok()?;
 			Some((authenticated, associated_data, ratchet, plaintext))
 		})();
 
@@ -634,6 +638,16 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 			return None;
 		};
 
+		let server_binding = authenticated.server_binding();
+		let server_kid = server_binding.identity_key_id;
+		if !self
+			.known_ids
+			.get(&server_kid)
+			.is_some_and(|remote| remote.pk().as_bytes() == &server_binding.identity_public_key)
+		{
+			self.abort_registration(control);
+			return None;
+		}
 		let Some(remote) = self.known_ids.get_mut(&server_kid) else {
 			self.abort_registration(control);
 			return None;
@@ -960,7 +974,7 @@ mod tests {
 
 	use super::{
 		AD_SIZE, PQXDH_INFO, build_associated_data, derive_root_key, derive_root_key_input,
-		verified_pqxdh,
+		verified_pqxdh, zeroize_shared_secrets,
 	};
 	use crate::{
 		BeaconCryptPqxdh, KDF_STATE_SIZE, SignType,
@@ -985,6 +999,10 @@ mod tests {
 			.build_registration_response(reg_out, Some(&message))
 			.unwrap();
 		beacon.finish_registration(&phase2.serialized).unwrap()
+	}
+
+	fn unregistered_test_beacon() -> BeaconCryptPqxdh {
+		BeaconCryptPqxdh::new(true, 0, Some(&[0; crypto_sign::PUBLICKEYBYTES]), None)
 	}
 
 	#[test]
@@ -1120,7 +1138,7 @@ mod tests {
 
 	#[test]
 	fn pre_generated_onetime_key_is_the_one_in_the_registration_bundle() {
-		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut beacon = unregistered_test_beacon();
 		beacon.new_onetime_keypair().unwrap();
 		let expected = beacon.get_onetime_pk().unwrap().as_bytes().to_vec();
 
@@ -1143,7 +1161,7 @@ mod tests {
 
 	#[test]
 	fn deleting_pre_generated_onetime_key_returns_to_fresh() {
-		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut beacon = unregistered_test_beacon();
 		beacon.new_onetime_keypair().unwrap();
 		assert!(beacon.get_onetime_pk().is_some());
 
@@ -1156,7 +1174,7 @@ mod tests {
 
 	#[test]
 	fn deleting_registration_material_after_init_is_terminal() {
-		let mut deletes_onetime = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut deletes_onetime = unregistered_test_beacon();
 		assert!(deletes_onetime.get_registration_bundle().is_some());
 		deletes_onetime.delete_onetime_keypair();
 		assert!(deletes_onetime.get_prekey_pk().is_none());
@@ -1164,12 +1182,20 @@ mod tests {
 		assert!(deletes_onetime.pq_pk().is_none());
 		assert!(deletes_onetime.get_registration_bundle().is_none());
 
-		let mut deletes_pq = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut deletes_pq = unregistered_test_beacon();
 		deletes_pq.delete_pq_keypair();
 		assert!(deletes_pq.get_prekey_pk().is_none());
 		assert!(deletes_pq.get_onetime_pk().is_none());
 		assert!(deletes_pq.pq_pk().is_none());
 		assert!(deletes_pq.get_registration_bundle().is_none());
+
+		let mut deletes_pq_after_init = unregistered_test_beacon();
+		assert!(deletes_pq_after_init.get_registration_bundle().is_some());
+		deletes_pq_after_init.delete_pq_keypair();
+		assert!(deletes_pq_after_init.get_prekey_pk().is_none());
+		assert!(deletes_pq_after_init.get_onetime_pk().is_none());
+		assert!(deletes_pq_after_init.pq_pk().is_none());
+		assert!(deletes_pq_after_init.get_registration_bundle().is_none());
 	}
 
 	#[test]
@@ -1194,6 +1220,76 @@ mod tests {
 	}
 
 	#[test]
+	fn provider_control_mutators_update_observable_state() {
+		let mut provider = BeaconCryptPqxdh::new(false, 41, None, None);
+		provider.set_identity_kid(17);
+		assert_eq!(provider.identity_key_kid(), 17);
+		assert_eq!(provider.new_remote_kid(), Some(42));
+		assert_eq!(provider.server_kid(), 42);
+
+		let peer = crypto_sign::KeyPair::generate().unwrap().public_key;
+		provider.add_known_kid(9, peer);
+		assert_eq!(provider.ratchet_send(SYM_RATCHET_INFO, 9), Some(1));
+		assert!(provider.send_key(1, 9).is_some());
+		provider.reset_known_kid(9);
+		assert!(provider.send_key(1, 9).is_none());
+		assert_eq!(provider.ratchet_send(SYM_RATCHET_INFO, 9), Some(1));
+
+		let server = crypto_sign::KeyPair::generate().unwrap().public_key;
+		provider.add_server_pk(server.clone());
+		assert_eq!(provider.pk_by_kid(42), Some(&server));
+	}
+
+	#[test]
+	fn provider_ratchet_delegations_preserve_one_use_semantics() {
+		let mut provider = BeaconCryptPqxdh::new(false, 0, None, None);
+		let peer = crypto_sign::KeyPair::generate().unwrap().public_key;
+		provider.add_known_kid(9, peer);
+
+		assert_eq!(provider.ratchet_send(SYM_RATCHET_INFO, 9), Some(1));
+		assert!(provider.send_key(1, 9).is_some());
+		assert!(!provider.consume_send_key(2, 9));
+		assert!(provider.consume_send_key(1, 9));
+		assert!(provider.send_key(1, 9).is_none());
+		assert!(!provider.consume_send_key(1, 9));
+
+		assert_eq!(provider.ratchet_send(SYM_RATCHET_INFO, 9), Some(2));
+		provider.delete_send_key(2, 9);
+		assert!(provider.send_key(2, 9).is_none());
+
+		assert_eq!(provider.ratchet_recv_until(SYM_RATCHET_INFO, 2, 9), Some(2));
+		assert!(provider.recv_key(1, 9).is_some());
+		assert!(provider.recv_key(2, 9).is_some());
+		assert!(provider.complete_recv_key(1, 9, false));
+		assert!(provider.recv_key(1, 9).is_some());
+		assert!(provider.complete_recv_key(1, 9, true));
+		assert!(provider.recv_key(1, 9).is_none());
+		assert!(!provider.complete_recv_key(1, 9, true));
+		provider.delete_recv_key(2, 9);
+		assert!(provider.recv_key(2, 9).is_none());
+
+		assert_eq!(provider.ratchet_send(SYM_RATCHET_INFO, 99), None);
+		assert_eq!(provider.ratchet_recv_until(SYM_RATCHET_INFO, 1, 99), None);
+		assert!(provider.send_key(1, 99).is_none());
+		assert!(provider.recv_key(1, 99).is_none());
+		assert!(!provider.consume_send_key(1, 99));
+		assert!(!provider.complete_recv_key(1, 99, true));
+	}
+
+	#[test]
+	fn established_beacon_associated_data_can_be_replaced() {
+		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+		let server_id = server.identity_pk().to_owned();
+		let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+		test_register_beacon(&mut server, &mut beacon);
+		let replacement = [0xA5; AD_SIZE];
+
+		beacon.set_associated_data(replacement);
+
+		assert_eq!(beacon.associated_data(0), Some(replacement));
+	}
+
+	#[test]
 	fn adding_an_existing_key_id_does_not_replace_its_identity() {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
 		let first = crypto_sign::KeyPair::generate().unwrap().public_key;
@@ -1207,7 +1303,7 @@ mod tests {
 
 	#[test]
 	fn registration_bundle_authenticates_each_declared_public_key() {
-		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut beacon = unregistered_test_beacon();
 		let serialized = beacon.get_registration_bundle().unwrap();
 		let message =
 			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
@@ -1248,7 +1344,7 @@ mod tests {
 	#[test]
 	fn server_rejects_a_registration_with_a_tampered_signed_key() {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
-		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut beacon = unregistered_test_beacon();
 		let serialized = beacon.get_registration_bundle().unwrap();
 		let message =
 			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
@@ -1272,7 +1368,7 @@ mod tests {
 
 	#[test]
 	fn server_rejects_swapped_or_duplicated_signed_x25519_roles() {
-		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut beacon = unregistered_test_beacon();
 		let serialized = beacon.get_registration_bundle().unwrap();
 		let message =
 			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
@@ -1313,7 +1409,7 @@ mod tests {
 	#[test]
 	fn server_rejects_tampering_of_each_signed_registration_key() {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
-		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut beacon = unregistered_test_beacon();
 		let serialized = beacon.get_registration_bundle().unwrap();
 		let message =
 			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
@@ -1358,7 +1454,7 @@ mod tests {
 	#[test]
 	fn server_rejects_signed_registration_keys_with_wrong_type_prefixes() {
 		let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
-		let mut beacon = BeaconCryptPqxdh::new(true, 0, None, None);
+		let mut beacon = unregistered_test_beacon();
 		let serialized = beacon.get_registration_bundle().unwrap();
 		let message =
 			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
@@ -1455,6 +1551,28 @@ mod tests {
 
 		assert!(derive_root_key_input(&mut input).is_some());
 		assert_eq!(input.as_bytes(), &[0; verified_pqxdh::ROOT_KEY_INPUT_SIZE]);
+	}
+
+	#[test]
+	fn shared_secret_components_are_zeroized_after_transcript_construction() {
+		let mut secrets = verified_pqxdh::PqxdhSharedSecrets {
+			dh1: [0x11; DH_OUT_LEN],
+			dh2: [0x22; DH_OUT_LEN],
+			dh3: [0x33; DH_OUT_LEN],
+			dh4: [0x44; DH_OUT_LEN],
+			kem_shared_secret: [0x55; crypto_kem::mlkem768::SHAREDSECRETBYTES],
+		};
+
+		zeroize_shared_secrets(&mut secrets);
+
+		assert_eq!(secrets.dh1, [0; DH_OUT_LEN]);
+		assert_eq!(secrets.dh2, [0; DH_OUT_LEN]);
+		assert_eq!(secrets.dh3, [0; DH_OUT_LEN]);
+		assert_eq!(secrets.dh4, [0; DH_OUT_LEN]);
+		assert_eq!(
+			secrets.kem_shared_secret,
+			[0; crypto_kem::mlkem768::SHAREDSECRETBYTES]
+		);
 	}
 
 	#[test]

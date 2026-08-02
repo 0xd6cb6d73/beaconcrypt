@@ -182,6 +182,7 @@ This message enables the beacon to obtain the elements it needs to derive the sh
   was supplied
 - Encrypt that prefixed payload using a `CryptoFrame` and set `appCipherText` to
   its value
+- Set the initial `CryptoFrame.keyId` sender field to the server binding's numeric identity-key ID
 - Delete the ephemeral key pair
 - After encryption and serialization succeed, atomically commit the key-ID
   counter, staged peer identity, and ratchets
@@ -206,7 +207,8 @@ Upon reception, the beacon must process this message as follows:
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
 - Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
 - Delete the derived secret
-- Decrypt the `appCipherText` as a `CryproFrame`, using its `recv` keychain
+- Decrypt the `appCipherText` as a `CryptoFrame`, using its `recv` keychain
+- Require the successfully opened initial `CryptoFrame.keyId` sender field to equal the numeric server identity-key ID pinned with the compiled-in public key
 - Split the authenticated plaintext into its eight-byte prefix and remaining
   application plaintext, and require the prefix to equal the little-endian
   encoding of `keyId`

@@ -65,12 +65,7 @@ Secret-bearing transcript and candidate values are not `Copy`, `Clone`, or
 `Debug`; the adapter zeroizes its shared-secret copy and the concrete root
 transcript after use, while physical erasure remains outside the formal claim.
 
-The beacon emits one registration bundle and treats every finish failure as a
-terminal abort. It publishes the assigned identity, associated data, and
-derived ratchet only after the initial ciphertext authenticates. The server
-initializes a fresh peer ratchet, encrypts the initial message, and serializes
-the response off to the side; only then does it commit the key counter and peer
-map. A failed response leaves those values and the staged ratchet unchanged.
+The beacon emits one registration bundle and treats every finish failure as a terminal abort. `BeaconFresh` stores the configured server public key and numeric identity-key ID as one `ServerBinding`; `beacon_start` preserves both fields in `BeaconInitSent`, and finish compares the response public key with that stored value instead of looking it up again in the mutable peer map. The candidate and established states retain the complete binding, the initial record is opened using its numeric ID, and the post-open transition checks the authenticated sender ID before commit. The beacon publishes the assigned identity, associated data, and derived ratchet only after those checks and confirms that its concrete peer-map entry still represents the pinned binding. The server initializes a fresh peer ratchet, encrypts the initial message, and serializes the response off to the side; only then does it commit the key counter and peer map. A failed response leaves those values and the staged ratchet unchanged.
 
 The production pending-registration token is opaque and non-clonable, and the
 response public material is read from the core candidate. The token records the

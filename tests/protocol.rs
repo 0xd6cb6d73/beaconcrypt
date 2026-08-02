@@ -838,6 +838,28 @@ fn beacon_rejects_registration_response_from_wrong_server() {
 }
 
 #[test]
+fn beacon_registration_keeps_its_initial_server_binding_when_the_peer_map_changes() {
+	let (mut expected_server, mut beacon) = new_pair();
+	let mut wrong_server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+	let wrong_identity = wrong_server.identity_pk().to_owned();
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+	assert!(expected_server.get_shared_secret(&phase_1).is_some());
+	let wrong_registration = wrong_server.get_shared_secret(&phase_1).unwrap();
+	let wrong_response = wrong_server
+		.build_registration_response(wrong_registration, Some(b"wrong server"))
+		.unwrap();
+
+	beacon.delete_known_kid(SERVER_KID);
+	beacon.add_known_kid(SERVER_KID, wrong_identity.clone());
+	assert_eq!(beacon.server_id(), Some(&wrong_identity));
+	assert!(
+		beacon
+			.finish_registration(&wrong_response.serialized)
+			.is_none()
+	);
+}
+
+#[test]
 fn server_rejects_pending_registration_from_a_different_server() {
 	let (mut accepting_server, mut beacon) = new_pair();
 	let mut other_server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);

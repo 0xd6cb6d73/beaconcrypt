@@ -373,15 +373,16 @@ struct ServerStateData {
 }
 
 #[cfg(feature = "server")]
-pub(crate) fn deserialize_server_state(
-	state: &str,
-) -> Option<(
+type DeserializedServerState = (
 	crypto_sign::KeyPair,
 	u64,
 	u64,
 	HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
 	HashSet<[u8; beaconcrypt_protocol_core::pqxdh::REGISTRATION_ID_SIZE]>,
-)> {
+);
+
+#[cfg(feature = "server")]
+pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServerState> {
 	let ServerStateData {
 		identity_key,
 		identity_key_kid,
@@ -496,6 +497,51 @@ mod tests {
 		}
 		for (seq, key) in &left.recv_past {
 			assert_key_material_eq(key, right.recv_past.get(seq).unwrap());
+		}
+	}
+
+	#[test]
+	fn byte_and_tuple_visitors_describe_and_enforce_their_input_shapes() {
+		assert!(
+			SecretBytesVisitor::<4>::copy_from_slice::<serde_json::Error>(&[1, 2, 3, 4]).is_ok()
+		);
+		let wrong_length =
+			SecretBytesVisitor::<4>::copy_from_slice::<serde_json::Error>(&[1, 2, 3])
+				.err()
+				.unwrap();
+		assert!(
+			wrong_length
+				.to_string()
+				.contains("expected a 4-byte buffer")
+		);
+
+		let bytes_error = serde_json::from_str::<SecretBytes<4>>("null")
+			.err()
+			.unwrap();
+		assert!(
+			bytes_error
+				.to_string()
+				.contains("a byte buffer containing exactly 4 bytes")
+		);
+
+		type TestTypedArray = TypedArray<4, systems::HkdfSha512, roles::ChainSendKey>;
+		let typed_error = serde_json::from_str::<TestTypedArray>("null")
+			.err()
+			.unwrap();
+		assert!(typed_error.to_string().contains(
+			"a typed array containing an algorithm identifier, role identifier, and byte buffer"
+		));
+
+		#[cfg(feature = "server")]
+		{
+			let known_ids_error = serde_json::from_str::<DeserializedKnownIds>("[]")
+				.err()
+				.unwrap();
+			assert!(
+				known_ids_error
+					.to_string()
+					.contains("a map from key IDs to remote principals")
+			);
 		}
 	}
 
@@ -820,7 +866,29 @@ mod tests {
 			.as_object_mut()
 			.unwrap()
 			.insert("0".into(), cached_key);
-		assert!(serde_json::from_value::<RatchetManager>(zero_sequence).is_err());
+		let zero_error = serde_json::from_value::<RatchetManager>(zero_sequence)
+			.err()
+			.unwrap();
+		assert!(
+			zero_error
+				.to_string()
+				.contains("send_past contains a sequence outside 1..=send_ctr")
+		);
+
+		let mut future_send = serialized.clone();
+		let cached_key = future_send["send_past"]["1"].clone();
+		future_send["send_past"]
+			.as_object_mut()
+			.unwrap()
+			.insert("4".into(), cached_key);
+		let future_send_error = serde_json::from_value::<RatchetManager>(future_send)
+			.err()
+			.unwrap();
+		assert!(
+			future_send_error
+				.to_string()
+				.contains("send_past contains a sequence outside 1..=send_ctr")
+		);
 
 		let mut future_sequence = serialized;
 		let cached_key = future_sequence["recv_past"]["2"].clone();

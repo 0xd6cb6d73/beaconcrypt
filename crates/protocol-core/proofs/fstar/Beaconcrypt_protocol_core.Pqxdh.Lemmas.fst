@@ -178,7 +178,8 @@ let mlkem768_key_tag_round_trip (key:t_Array u8 (mk_usize 1184))
   = mlkem768_key_tag_is_exact key
 
 /// A message emitted by `beacon_start` validates to exactly the public
-/// material from which it was constructed.
+/// material from which it was constructed and carries both fields of the
+/// configured server binding into the pending beacon state.
 let beacon_start_validates
     (state:t_BeaconFresh)
     (inputs:t_BeaconStartInputs)
@@ -191,7 +192,10 @@ let beacon_start_validates
            verified.f_beacon_prekey_public_key == inputs.f_prekey_public_key /\
            verified.f_beacon_one_time_public_key == coins.f_one_time_public_key /\
            verified.f_beacon_pq_public_key == inputs.f_pq_public_key /\
-           started.f_state.f_server_key_id == state.f_server_key_id /\
+           started.f_state.f_expected_server_binding.f_identity_public_key ==
+             state.f_expected_server_binding.f_identity_public_key /\
+           started.f_state.f_expected_server_binding.f_identity_key_id ==
+             state.f_expected_server_binding.f_identity_key_id /\
            started.f_state.f_beacon_identity_public_key == inputs.f_identity_public_key
        | Core_models.Result.Result_Err _ -> False)
   =
@@ -201,6 +205,20 @@ let beacon_start_validates
   x25519_key_roles_are_enforced inputs.f_prekey_public_key;
   x25519_key_roles_are_enforced coins.f_one_time_public_key;
   mlkem768_key_tag_round_trip inputs.f_pq_public_key
+
+/// The consuming Fresh-to-InitSent transition preserves the configured trust
+/// anchor as separate public-key and numeric-ID facts.
+let beacon_start_preserves_expected_server_binding
+    (state:t_BeaconFresh)
+    (inputs:t_BeaconStartInputs)
+    (coins:t_BeaconCoins)
+  : Lemma
+      (let started = beacon_start state inputs coins in
+       started.f_state.f_expected_server_binding.f_identity_public_key ==
+         state.f_expected_server_binding.f_identity_public_key /\
+       started.f_state.f_expected_server_binding.f_identity_key_id ==
+         state.f_expected_server_binding.f_identity_key_id)
+  = ()
 
 /// The replay identifier is the exact, collision-free concatenation of the
 /// authenticated identity and one-time public keys.
@@ -459,6 +477,51 @@ let honest_roles_build_the_same_associated_data
        build_associated_data server_server_identity server_beacon_identity)
   = ()
 
+/// A response public key that differs from the key stored in BeaconInitSent
+/// is rejected before root-input construction can yield a candidate.
+let beacon_response_identity_mismatch_is_rejected
+    (state:t_BeaconInitSent)
+    (inputs:t_BeaconFinishInputs {
+       inputs.f_response_server_identity <>
+         state.f_expected_server_binding.f_identity_public_key })
+  : Lemma
+      (beacon_prepare_finish state inputs ==
+       Core_models.Result.Result_Err RegistrationError_IdentityMismatch)
+  = ()
+
+/// A matching response either propagates root-input failure or constructs a
+/// candidate carrying both expected binding fields and AD derived from the
+/// stored server public key and the pending beacon identity.
+let beacon_successful_finish_preserves_binding_and_ad
+    (state:t_BeaconInitSent)
+    (inputs:t_BeaconFinishInputs {
+       inputs.f_response_server_identity ==
+         state.f_expected_server_binding.f_identity_public_key })
+  : Lemma
+      (match beacon_prepare_finish state inputs,
+             build_root_key_input inputs.f_shared_secrets with
+       | Core_models.Result.Result_Ok
+           (candidate:t_BeaconRegistrationCandidate),
+         Core_models.Result.Result_Ok (root:t_RootKeyInput) ->
+           candidate.f_server_binding.f_identity_public_key ==
+             state.f_expected_server_binding.f_identity_public_key /\
+           candidate.f_server_binding.f_identity_key_id ==
+             state.f_expected_server_binding.f_identity_key_id /\
+           candidate.f_assigned_key_id == inputs.f_assigned_key_id /\
+           candidate.f_root_key_input == root /\
+           candidate.f_associated_data ==
+             build_associated_data
+               candidate.f_server_binding.f_identity_public_key
+               state.f_beacon_identity_public_key /\
+           candidate.f_associated_data ==
+             build_associated_data
+               state.f_expected_server_binding.f_identity_public_key
+               state.f_beacon_identity_public_key
+       | Core_models.Result.Result_Err finish_error,
+         Core_models.Result.Result_Err root_error -> finish_error == root_error
+       | _ -> False)
+  = ()
+
 /// Both public utilities and the candidate methods select complementary,
 /// bounded halves of the 64-byte ratchet KDF output.
 let ratchet_initializations_are_complementary (_:Prims.unit)
@@ -528,9 +591,22 @@ let exact_key_id_binding_authenticates
     (candidate:t_BeaconRegistrationCandidate)
   : Lemma
       (authenticate_registration_key_id_binding candidate
+         candidate.f_server_binding.f_identity_key_id
          (impl_BeaconRegistrationCandidate__key_id_binding candidate).f_bytes ==
        Core_models.Result.Result_Ok
          ({ f_candidate = candidate } <: t_AuthenticatedBeaconRegistration))
+  = ()
+
+let mismatched_authenticated_server_key_id_is_rejected
+    (candidate:t_BeaconRegistrationCandidate)
+    (authenticated_server_key_id:u64 {
+       authenticated_server_key_id <>
+         candidate.f_server_binding.f_identity_key_id })
+    (authenticated_binding:t_Array u8 (mk_usize 8))
+  : Lemma
+      (authenticate_registration_key_id_binding candidate
+         authenticated_server_key_id authenticated_binding ==
+       Core_models.Result.Result_Err RegistrationError_IdentityMismatch)
   = ()
 
 let mismatched_key_id_binding_is_rejected
@@ -539,17 +615,20 @@ let mismatched_key_id_binding_is_rejected
        authenticated_binding <>
          (impl_BeaconRegistrationCandidate__key_id_binding candidate).f_bytes })
   : Lemma
-      (authenticate_registration_key_id_binding candidate authenticated_binding ==
+      (authenticate_registration_key_id_binding candidate
+         candidate.f_server_binding.f_identity_key_id authenticated_binding ==
        Core_models.Result.Result_Err RegistrationError_KeyIdMismatch)
   = ()
 
 /// Only the authenticated typestate can reach commit, and commit publishes
-/// exactly the candidate's server and assigned peer identifiers.
+/// both fields of the candidate's server binding and its assigned peer ID.
 let beacon_commit_preserves_authenticated_ids
     (authenticated:t_AuthenticatedBeaconRegistration)
   : Lemma
-      ((beacon_commit authenticated).f_server_key_id ==
-         authenticated.f_candidate.f_server_key_id /\
+      ((beacon_commit authenticated).f_server_binding.f_identity_public_key ==
+         authenticated.f_candidate.f_server_binding.f_identity_public_key /\
+       (beacon_commit authenticated).f_server_binding.f_identity_key_id ==
+         authenticated.f_candidate.f_server_binding.f_identity_key_id /\
        (beacon_commit authenticated).f_assigned_key_id ==
          authenticated.f_candidate.f_assigned_key_id)
   = ()
@@ -682,11 +761,67 @@ let server_abort_is_state_neutral (candidate:t_ServerRegistrationCandidate)
   : Lemma (server_abort_candidate candidate == candidate.f_previous_state)
   = ()
 
+/// Successful response-key checking followed by successful sender-ID and
+/// assigned-ID authentication derives agreement with the accepting server
+/// candidate; no equality between its binding fields and the stored beacon
+/// binding is assumed.  The derived agreement is retained by the
+/// authenticated typestate and established beacon state.
+let successful_beacon_acceptance_implies_server_binding_agreement
+    (state:t_BeaconInitSent)
+    (accepting_server_candidate:t_ServerRegistrationCandidate)
+    (secrets:t_PqxdhSharedSecrets)
+  : Lemma
+      (let inputs =
+         ({
+            f_response_server_identity =
+              accepting_server_candidate.f_server_identity_public_key;
+            f_assigned_key_id = accepting_server_candidate.f_key_id;
+            f_shared_secrets = secrets
+          }
+          <: t_BeaconFinishInputs) in
+       match beacon_prepare_finish state inputs with
+       | Core_models.Result.Result_Ok
+           (candidate:t_BeaconRegistrationCandidate) ->
+           (match
+              authenticate_registration_key_id_binding candidate
+                accepting_server_candidate.f_server_identity_key_id
+                (impl_ServerRegistrationCandidate__key_id_binding
+                   accepting_server_candidate).f_bytes
+            with
+            | Core_models.Result.Result_Ok
+                (authenticated:t_AuthenticatedBeaconRegistration) ->
+                let established = beacon_commit authenticated in
+                state.f_expected_server_binding.f_identity_public_key ==
+                  accepting_server_candidate.f_server_identity_public_key /\
+                state.f_expected_server_binding.f_identity_key_id ==
+                  accepting_server_candidate.f_server_identity_key_id /\
+                candidate.f_server_binding.f_identity_public_key ==
+                  accepting_server_candidate.f_server_identity_public_key /\
+                candidate.f_server_binding.f_identity_key_id ==
+                  accepting_server_candidate.f_server_identity_key_id /\
+                authenticated.f_candidate.f_server_binding.f_identity_public_key ==
+                  accepting_server_candidate.f_server_identity_public_key /\
+                authenticated.f_candidate.f_server_binding.f_identity_key_id ==
+                  accepting_server_candidate.f_server_identity_key_id /\
+                established.f_server_binding.f_identity_public_key ==
+                  accepting_server_candidate.f_server_identity_public_key /\
+                established.f_server_binding.f_identity_key_id ==
+                  accepting_server_candidate.f_server_identity_key_id /\
+                candidate.f_assigned_key_id == accepting_server_candidate.f_key_id /\
+                authenticated.f_candidate.f_assigned_key_id ==
+                  accepting_server_candidate.f_key_id /\
+                established.f_assigned_key_id == accepting_server_candidate.f_key_id
+            | Core_models.Result.Result_Err _ -> True)
+       | Core_models.Result.Result_Err _ -> True)
+  = ()
+
 /// End-to-end protocol-core correspondence for an honest successful run.  The
 /// primitive relation, authenticated identities, truthful Fresh/Available
-/// lookups, and non-exhausted local counter are explicit preconditions.  The
-/// server's binding is then authenticated by the beacon typestate before both
-/// roles commit, yielding the same published peer ID.
+/// lookups, non-exhausted local counter, and stored/accepting server-binding
+/// equality are explicit preconditions.  The transitions check the response
+/// public key and authenticated sender ID and preserve both binding fields
+/// through commit, yielding the same published peer ID.  The successful server
+/// candidate branch invokes the acceptance-implies-agreement result above.
 let conditional_honest_run_correspondence
     (beacon_state:t_BeaconInitSent)
     (server_state:t_ServerState {
@@ -694,7 +829,11 @@ let conditional_honest_run_correspondence
     (registration:t_VerifiedInitKex {
        registration.f_beacon_identity_public_key ==
          beacon_state.f_beacon_identity_public_key })
-    (server_binding:t_ServerBinding)
+    (server_binding:t_ServerBinding {
+       server_binding.f_identity_public_key ==
+         beacon_state.f_expected_server_binding.f_identity_public_key /\
+       server_binding.f_identity_key_id ==
+         beacon_state.f_expected_server_binding.f_identity_key_id })
     (coins:t_ServerCoins)
     (beacon_secrets:t_PqxdhSharedSecrets {
        valid_shared_secrets beacon_secrets })
@@ -705,7 +844,6 @@ let conditional_honest_run_correspondence
       (let next_id = server_state.f_last_key_id +! mk_u64 1 in
        let beacon_inputs =
          ({
-            f_expected_server_identity = server_binding.f_identity_public_key;
             f_response_server_identity = server_binding.f_identity_public_key;
             f_assigned_key_id = next_id;
             f_shared_secrets = beacon_secrets
@@ -723,6 +861,14 @@ let conditional_honest_run_correspondence
                      KeyIdAvailability_Available
                  with
                  | Core_models.Result.Result_Ok server_candidate ->
+                     beacon_candidate.f_server_binding.f_identity_public_key ==
+                       server_candidate.f_server_identity_public_key /\
+                     beacon_candidate.f_server_binding.f_identity_key_id ==
+                       server_candidate.f_server_identity_key_id /\
+                     server_candidate.f_server_identity_public_key ==
+                       beacon_state.f_expected_server_binding.f_identity_public_key /\
+                     server_candidate.f_server_identity_key_id ==
+                       beacon_state.f_expected_server_binding.f_identity_key_id /\
                      beacon_candidate.f_root_key_input == pending.f_root_key_input /\
                      beacon_candidate.f_associated_data ==
                        server_candidate.f_associated_data /\
@@ -742,6 +888,7 @@ let conditional_honest_run_correspondence
                      (match
                         authenticate_registration_key_id_binding
                           beacon_candidate
+                          server_candidate.f_server_identity_key_id
                           (impl_ServerRegistrationCandidate__key_id_binding
                              server_candidate).f_bytes
                       with
@@ -749,8 +896,14 @@ let conditional_honest_run_correspondence
                           let beacon_established = beacon_commit authenticated in
                           let committed_state, peer = server_commit server_candidate in
                           authenticated.f_candidate == beacon_candidate /\
-                          beacon_established.f_server_key_id ==
-                            beacon_candidate.f_server_key_id /\
+                          beacon_established.f_server_binding.f_identity_public_key ==
+                            server_candidate.f_server_identity_public_key /\
+                          beacon_established.f_server_binding.f_identity_key_id ==
+                            server_candidate.f_server_identity_key_id /\
+                          beacon_established.f_server_binding.f_identity_public_key ==
+                            beacon_state.f_expected_server_binding.f_identity_public_key /\
+                          beacon_established.f_server_binding.f_identity_key_id ==
+                            beacon_state.f_expected_server_binding.f_identity_key_id /\
                           beacon_established.f_assigned_key_id == peer.f_key_id /\
                           committed_state == server_candidate.f_next_state /\
                           peer.f_identity_public_key ==
@@ -760,4 +913,29 @@ let conditional_honest_run_correspondence
                  | Core_models.Result.Result_Err _ -> False)
             | Core_models.Result.Result_Err _ -> False)
        | Core_models.Result.Result_Err _ -> False)
-  = ()
+  =
+  let next_id = server_state.f_last_key_id +! mk_u64 1 in
+  let beacon_inputs =
+    ({
+       f_response_server_identity = server_binding.f_identity_public_key;
+       f_assigned_key_id = next_id;
+       f_shared_secrets = beacon_secrets
+     }
+     <: t_BeaconFinishInputs) in
+  match beacon_prepare_finish beacon_state beacon_inputs with
+  | Core_models.Result.Result_Ok _ ->
+      (match
+         server_accept server_state registration RegistrationStatus_Fresh
+           server_binding coins server_secrets
+       with
+       | Core_models.Result.Result_Ok (_, pending) ->
+           (match
+              server_prepare_commit server_state pending server_binding
+                KeyIdAvailability_Available
+            with
+            | Core_models.Result.Result_Ok server_candidate ->
+                successful_beacon_acceptance_implies_server_binding_agreement
+                  beacon_state server_candidate beacon_secrets
+            | Core_models.Result.Result_Err _ -> ())
+       | Core_models.Result.Result_Err _ -> ())
+  | Core_models.Result.Result_Err _ -> ()

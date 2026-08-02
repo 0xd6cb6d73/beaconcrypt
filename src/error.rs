@@ -83,4 +83,14 @@ mod tests {
 		assert_error::<CipherTextError>();
 		assert_error::<DecryptionError>();
 	}
+
+	#[test]
+	fn errors_have_stable_human_readable_messages() {
+		assert_eq!(KeyGenError.to_string(), "Key generation failure");
+		assert_eq!(EncodingError.to_string(), "Encoding failure");
+		assert_eq!(DecodingError.to_string(), "Decoding failure");
+		assert_eq!(SignatureError.to_string(), "Signature failure");
+		assert_eq!(CipherTextError.to_string(), "Ciphertext failure");
+		assert_eq!(DecryptionError.to_string(), "Decryption failure");
+	}
 }

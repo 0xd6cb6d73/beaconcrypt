@@ -1194,8 +1194,10 @@ mod tests {
 	fn sign_type_discriminants_round_trip() {
 		assert_eq!(u8::from(SignType::Undefined), 0);
 		assert_eq!(u8::from(SignType::Ed25519), 1);
+		assert_eq!(u8::from(SignType::MlDsa87), 2);
 		assert!(matches!(SignType::from(0), SignType::Undefined));
 		assert!(matches!(SignType::from(1), SignType::Ed25519));
+		assert!(matches!(SignType::from(2), SignType::MlDsa87));
 		assert!(matches!(SignType::from(u8::MAX), SignType::Undefined));
 	}
 
@@ -1204,9 +1206,11 @@ mod tests {
 		assert_eq!(u8::from(KemType::Undefined), 0);
 		assert_eq!(u8::from(KemType::MlKem768), 3);
 		assert_eq!(u8::from(KemType::X25519), 4);
+		assert_eq!(u8::from(KemType::MlKem1024), 5);
 		assert!(matches!(KemType::from(0), KemType::Undefined));
 		assert!(matches!(KemType::from(3), KemType::MlKem768));
 		assert!(matches!(KemType::from(4), KemType::X25519));
+		assert!(matches!(KemType::from(5), KemType::MlKem1024));
 		assert!(matches!(KemType::from(u8::MAX), KemType::Undefined));
 	}
 
@@ -1341,6 +1345,7 @@ mod tests {
 
 	#[test]
 	fn kdf_output_is_split_into_key_state_and_nonce() {
+		assert_eq!(KDF_RATCHET_OUTPUT_LEN, 76);
 		let mut bytes = [0u8; KDF_RATCHET_OUTPUT_LEN];
 		bytes[..AEAD_KEY_LEN].fill(0x11);
 		bytes[AEAD_KEY_LEN..AEAD_KEY_LEN + KDF_STATE_SIZE].fill(0x22);
@@ -1917,6 +1922,39 @@ mod tests {
 		assert!(ratchet.send_key(sequence).is_none());
 		assert!(ratchet.send_cache_matches_control());
 		assert!(!ratchet.consume_send_key(sequence));
+	}
+
+	#[test]
+	fn adapter_invariant_checks_reject_one_sided_key_caches() {
+		let mut send_inconsistent = RatchetManager::default();
+		let capability =
+			verified_ratchet::advance_send(verified_ratchet::RatchetState::default()).key;
+		send_inconsistent.send_capabilities.insert(1, capability);
+		assert!(!send_inconsistent.send_cache_matches_control());
+
+		let mut receive_inconsistent = RatchetManager::default();
+		receive_inconsistent.recv_past.insert(
+			1,
+			KeyMaterial {
+				key: [0xA1; AEAD_KEY_LEN].into(),
+				nonce: [0xA2; AEAD_NONCE_LEN].into(),
+			},
+		);
+		assert!(!receive_inconsistent.receive_cache_matches_control());
+	}
+
+	#[test]
+	fn encrypted_as_ref_exposes_the_serialized_ciphertext() {
+		let encrypted = Encrypted {
+			ciphertext: vec![0x11, 0x22, 0x33],
+			key_id: 7,
+			seq: 9,
+		};
+
+		assert_eq!(
+			<Encrypted as AsRef<[u8]>>::as_ref(&encrypted),
+			&[0x11, 0x22, 0x33]
+		);
 	}
 
 	#[test]

@@ -112,11 +112,11 @@ internal role enum once; the transition code then matches the corresponding
 state. The core states include:
 
 ```rust
-pub struct BeaconFresh { /* server key assignment */ }
-pub struct BeaconInitSent { /* identity tied to one InitKex */ }
-pub struct BeaconRegistrationCandidate { /* validated proposed session */ }
-pub struct AuthenticatedBeaconRegistration { /* authenticated assigned key ID */ }
-pub struct BeaconEstablished { /* committed server and assigned IDs */ }
+pub struct BeaconFresh { /* pinned expected ServerBinding */ }
+pub struct BeaconInitSent { /* pinned binding and identity tied to one InitKex */ }
+pub struct BeaconRegistrationCandidate { /* validated session retaining that binding */ }
+pub struct AuthenticatedBeaconRegistration { /* authenticated sender and assigned IDs */ }
+pub struct BeaconEstablished { /* committed binding and assigned ID */ }
 pub struct BeaconAborted;
 
 pub struct ServerState { /* last allocated key ID */ }
@@ -143,6 +143,7 @@ pub fn beacon_prepare_finish(
 
 pub fn authenticate_registration_key_id_binding(
     candidate: BeaconRegistrationCandidate,
+    authenticated_server_key_id: u64,
     authenticated_binding: [u8; 8],
 ) -> Result<AuthenticatedBeaconRegistration, RegistrationError>;
 
@@ -341,6 +342,8 @@ as `[0x04, 0x80, key]` and one-time keys as `[0x04, 0x81, key]`; core and
 adapter regressions reject both substitution forms, and the regenerated F*
 lemmas prove the exact layouts and cross-role rejection.
 
+The trust-anchor regression `beacon_registration_keeps_its_initial_server_binding_when_the_peer_map_changes` closes a later adapter counterexample: after `InitKex`, replacing the mutable peer-map entry with an attacker server using the same numeric ID used to change the identity that finish treated as expected. The proof-visible beacon state now owns the original public-key/ID pair, so the attacker response is rejected and the peer map is checked only as a concrete refinement before publication.
+
 This closes the executable counterexamples. Stage 6 proves the core-side exact
 identifier, binding, status, allocation, and conditional role correspondence
 under explicit adapter preconditions. Truthful persistent-set refinement and
@@ -435,11 +438,7 @@ states. Random key generation and primitive calls remain in the adapter, which
 passes their public outputs and shared-secret results to deterministic core
 transitions.
 
-The production provider stores an internal role enum. Beacon material advances
-through fresh, `InitKex` sent, established, or aborted states, so a registration
-bundle is emitted once and every finish failure is terminal. On success the
-beacon publishes its assigned identity, associated data, and staged ratchet only
-after authenticating the initial ciphertext.
+The production provider stores an internal role enum. Beacon material advances through fresh, `InitKex` sent, established, or aborted states, so a registration bundle is emitted once and every finish failure is terminal. The fresh state receives the configured server public key and numeric identity-key ID as one `ServerBinding`; every successful beacon transition preserves the pair, response preparation compares the received public key with the stored key, and post-open authentication compares the initial frame's sender ID with the stored numeric ID. On success the beacon publishes its assigned identity, associated data, and staged ratchet only after authenticating the initial ciphertext and confirming that the concrete peer-map entry still equals the pinned binding.
 
 The server validates into a pending registration and builds its proposed peer
 on a fresh ratchet outside the live peer map. It encrypts the initial message
@@ -521,22 +520,9 @@ directly. Compile-time assertions tie the literal proof ranges and production
 KDF slices to the public protocol-core sizes. Production-used candidate
 ratchet and binding accessors are also included in extraction.
 
-The strict handwritten PQXDH module proves exact tagged-key construction and
-validation, exact semantic registration IDs, the six-segment root transcript
-and zero-DH rejection, exact associated data, complementary role ratchets,
-authenticated assigned-ID correspondence, checked nonwrapping allocation,
-binding and collision rejection, and commit/abort state shape. A composed
-post-validation honest-run theorem relates both role transitions through their
-authenticated and committed core peer IDs. Concrete HKDF output, ratchet byte
-slicing, and atomic peer-map publication remain adapter obligations.
+The strict handwritten PQXDH module proves exact tagged-key construction and validation, exact semantic registration IDs, the six-segment root transcript and zero-DH rejection, exact associated data, complementary role ratchets, preservation of the expected server binding, response-key mismatch rejection, authenticated server-sender and assigned-ID checks, successful-acceptance agreement with both fields of the accepting server candidate, checked nonwrapping allocation, binding and collision rejection, and commit/abort state shape. A composed post-validation honest-run theorem relates both role transitions through their authenticated and committed core peer IDs. Concrete HKDF output, ratchet byte slicing, and atomic peer-map publication remain adapter obligations.
 
-Agreement is deliberately conditional. The adapter must establish pairwise
-X25519 and ML-KEM secret agreement, authenticate the same role identities,
-pass the assigned-ID bytes from a successful AEAD open, refine `Fresh` and
-`Available` from the persistent set and peer map, apply deterministic HKDF to
-the verified input and labels, and maintain non-rollback single-owner server
-state. Concrete primitives, wire translation, persistence, replicas,
-zeroization, and low-level compatibility mutation remain outside the theorem.
+Agreement is deliberately conditional. The adapter must establish pairwise X25519 and ML-KEM secret agreement, authenticate the same role identities, pass the authenticated sender ID and assigned-ID bytes from a successful AEAD open, refine `Fresh` and `Available` from the persistent set and peer map, apply deterministic HKDF to the verified input and labels, and maintain non-rollback single-owner server state. Concrete primitives, wire translation, persistence, replicas, zeroization, and low-level compatibility mutation remain outside the theorem.
 The generated and handwritten modules contain no local `assume` or `admit`,
 and the target checks them without `--lax`.
 

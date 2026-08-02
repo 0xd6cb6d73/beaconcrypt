@@ -4,6 +4,8 @@
 
 ## Status and scope
 
+This document records the original Stage 6 snapshot. The maintained core now stores the configured public key and numeric identity-key ID together in beacon state, proves their preservation, and proves that successful response-key and authenticated sender-ID acceptance derives agreement with both fields of the accepting server candidate; see [the current analysis](formal-verification-analysis.md#pqxdh-registration-and-key-establishment). The adapter-only equality described below is historical.
+
 Stage 6 adds the handwritten F* semantics for the extracted PQXDH protocol
 core. It proves exact key tagging and validation, registration-ID and root
 transcript construction, associated-data construction, conditional honest-role

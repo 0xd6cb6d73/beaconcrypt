@@ -438,8 +438,8 @@ pub fn advance_send_for_peer(requested_peer: u64, peer: PeerRatchetState) -> Pee
 mod tests {
 	use super::{
 		PeerRatchetState, RATCHET_MAX_GAP, RECEIVE_CACHE_CAPACITY, RatchetState,
-		ReceiveDisposition, advance_receive, advance_send, advance_send_for_peer, finish_receive,
-		finish_restore, finish_send, plan_receive_until, replace_ratchet_for_peer,
+		ReceiveDisposition, SequenceCache, advance_receive, advance_send, advance_send_for_peer,
+		finish_receive, finish_restore, finish_send, plan_receive_until, replace_ratchet_for_peer,
 		restore_receive_key, start_restore,
 	};
 
@@ -465,6 +465,7 @@ mod tests {
 		assert_eq!(advanced.state.send_sequence(), 8);
 		assert_eq!(advanced.sequence, Some(8));
 		assert_eq!(advanced.key.sequence(), Some(8));
+		assert!(advanced.key.is_available());
 	}
 
 	#[test]
@@ -540,6 +541,24 @@ mod tests {
 	}
 
 	#[test]
+	fn receive_cache_lookup_rejects_logical_and_physical_boundaries() {
+		let state = execute_receive_plan(RatchetState::default(), 3);
+		assert_eq!(state.receive_key_at(0), Some(1));
+		assert_eq!(state.receive_key_at(2), Some(3));
+		assert_eq!(state.receive_key_at(3), None);
+
+		let invalid = RatchetState {
+			send_sequence: 0,
+			receive_sequence: 0,
+			receive_cache: SequenceCache {
+				entries: [0; RECEIVE_CACHE_CAPACITY],
+				len: RECEIVE_CACHE_CAPACITY as u8 + 1,
+			},
+		};
+		assert_eq!(invalid.receive_key_at(RECEIVE_CACHE_CAPACITY as u8), None);
+	}
+
+	#[test]
 	fn receive_allocates_max_then_exhausts_without_mutation() {
 		let state = RatchetState::from_counters(0, u64::MAX - 1);
 		let last = advance_receive(state);
@@ -560,6 +579,15 @@ mod tests {
 		assert_eq!(failed.disposition, ReceiveDisposition::Retained);
 		assert_eq!(failed.state, state);
 		assert_eq!(failed.state.receive_key_at(slot), Some(4));
+	}
+
+	#[test]
+	fn receive_completion_rejects_a_slot_at_the_logical_boundary() {
+		let state = execute_receive_plan(RatchetState::default(), 4);
+		let result = finish_receive(state, 0, state.receive_cache_len(), true);
+
+		assert_eq!(result.disposition, ReceiveDisposition::Missing);
+		assert_eq!(result.state, state);
 	}
 
 	#[test]
