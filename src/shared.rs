@@ -1015,7 +1015,8 @@ pub trait CryptoProvider {
 
 	fn set_identity_kid(&mut self, key_id: u64);
 	fn identity_key_kid(&self) -> u64;
-	fn new_remote_kid(&mut self) -> u64;
+	/// Allocate the next remote key ID, or return `None` on exhaustion or collision.
+	fn new_remote_kid(&mut self) -> Option<u64>;
 	fn add_known_kid(&mut self, key_id: u64, pk: Self::SignaturePublicKey);
 	/// Delete a known identity from the state
 	fn delete_known_kid(&mut self, key_id: u64);

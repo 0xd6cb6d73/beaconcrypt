@@ -116,6 +116,29 @@ fn known_ids_round_trip_and_continue_each_session() {
 	);
 	assert_eq!(json["identity_key_kid"], json!(0));
 	assert_eq!(json["server_kid"], json!(2));
+	let consumed = json["consumed_registrations"].as_array().unwrap();
+	assert_eq!(consumed.len(), 2);
+	assert!(
+		consumed
+			.iter()
+			.all(|entry| entry.as_array().unwrap().len() == 64)
+	);
+	let consumed_bytes = consumed
+		.iter()
+		.map(|entry| {
+			entry
+				.as_array()
+				.unwrap()
+				.iter()
+				.map(|byte| byte.as_u64().unwrap() as u8)
+				.collect::<Vec<_>>()
+		})
+		.collect::<Vec<_>>();
+	assert!(
+		consumed_bytes
+			.windows(2)
+			.all(|pair| pair[0].as_slice() < pair[1].as_slice())
+	);
 	for kid in ["1", "2"] {
 		let encoded_pk = json["known_ids"][kid]["pk"].as_array().unwrap();
 		assert_eq!(encoded_pk.len(), crypto_sign::PUBLICKEYBYTES + 1);
@@ -216,6 +239,24 @@ fn invalid_known_ids_state_is_rejected() {
 	invalid_identity_kid["identity_key_kid"] = json!(2);
 	let mut regressed_server_kid = parsed.clone();
 	regressed_server_kid["server_kid"] = json!(0);
+	let mut short_registration_id = parsed.clone();
+	short_registration_id["consumed_registrations"][0]
+		.as_array_mut()
+		.unwrap()
+		.pop();
+	let mut duplicate_registration_id = parsed.clone();
+	let registration_id = duplicate_registration_id["consumed_registrations"][0].clone();
+	duplicate_registration_id["consumed_registrations"]
+		.as_array_mut()
+		.unwrap()
+		.push(registration_id);
+	let mut missing_registration_history = parsed.clone();
+	missing_registration_history
+		.as_object_mut()
+		.unwrap()
+		.remove("consumed_registrations");
+	let mut incomplete_registration_history = parsed.clone();
+	incomplete_registration_history["consumed_registrations"] = json!([]);
 
 	for malformed in [
 		wrong_key_type,
@@ -226,6 +267,10 @@ fn invalid_known_ids_state_is_rejected() {
 		wrong_identity_role,
 		invalid_identity_kid,
 		regressed_server_kid,
+		short_registration_id,
+		duplicate_registration_id,
+		missing_registration_history,
+		incomplete_registration_history,
 	] {
 		let malformed = serde_json::to_string(&malformed).unwrap();
 		assert!(
@@ -238,10 +283,12 @@ fn invalid_known_ids_state_is_rejected() {
 
 	let identity_key = serde_json::to_string(&parsed["identity_key"]).unwrap();
 	let principal = serde_json::to_string(&parsed["known_ids"]["1"]).unwrap();
+	let consumed_registrations = serde_json::to_string(&parsed["consumed_registrations"]).unwrap();
 	let duplicate_kid = format!(
 		"{{\"identity_key\":{identity_key},\"identity_key_kid\":0,\
 		 \"server_kid\":1,\"known_ids\":\
-		 {{\"1\":{principal},\"1\":{principal}}}}}"
+		 {{\"1\":{principal},\"1\":{principal}}},\
+		 \"consumed_registrations\":{consumed_registrations}}}"
 	);
 	assert!(
 		std::panic::catch_unwind(|| {
@@ -268,6 +315,7 @@ fn empty_known_ids_state_round_trips_without_lowering_the_kid_counter() {
 	assert_eq!(encoded["identity_key_kid"], json!(7));
 	assert_eq!(encoded["server_kid"], json!(7));
 	assert_eq!(encoded["known_ids"], json!({}));
+	assert_eq!(encoded["consumed_registrations"], json!([]));
 
 	let restored: BeaconCryptPqxdh = ProviderServer::from_state(state);
 	assert_eq!(restored.identity_pk(), &identity);

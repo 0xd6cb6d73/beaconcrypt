@@ -138,6 +138,10 @@ Beaconcrypt assumes the use of the libsodium `sign` API for all signatures. In t
 
 The server must use this message as follows:
 - Verify that all keys except `identityKey` are signed under `identityKey`
+- Construct the 64-byte registration identifier as the decoded beacon identity
+  public key followed by the decoded signed one-time X25519 public key
+- Reject the message if that exact identifier is already in the server's
+  consumed-registration set
 - Generate its ephemeral X25519 keypair
 - Encapsulate the PQ shared secret (`SS`) using `pqKey`
 - Convert the beacon's identity public key and the server's identity secret key to X25519 format using libsodium's `ed25519_pk_to_curve25519` and `ed25519_sk_to_curve25519` respectively (thereafter they will use the `_kex` suffix)
@@ -149,13 +153,17 @@ The server must use this message as follows:
 - Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
   - `Padding` is 32 `0xFF` bytes
 - Delete all Diffie Hellman output
+- Add the registration identifier to the consumed set before returning the
+  pending response material; this is permanent even if response construction
+  later fails
 - Return the KEM ciphertext, derived secret, ephemeral public key and beacon public key
 
 ## KexResponse
 This message enables the beacon to obtain the elements it needs to derive the shared secret. It is defined in [phase2.capnp](../src/schema/phase2.capnp) It is intrinsically linked to the corresponding `InitKex` which intiated the protocol run. It is expected that the server will create this message immediately after parsing a valid `InitKex`. It also potentially carries the first of the server's messages to the beacon. The server must contruct it as follows:
-- Create a new key ID to assign to the beacon
-- Register a new known cryptographic identity using the beacon's public key and newly created key ID
-  - At this point, the beacon is registered from the point of view of beaconcrypt
+- Create a new key ID to assign to the beacon using checked increment; abort if
+  the counter is exhausted or the exact next ID is already occupied
+- Stage a new known cryptographic identity using the beacon's public key and
+  newly created key ID without publishing it yet
 - Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
 - Delete the derived secret
 - Set the `keyId` field to the newly generate beacon's key ID
@@ -163,8 +171,14 @@ This message enables the beacon to obtain the elements it needs to derive the sh
 - Set the `identityKey` to the server's Ed25519 public key
 - Set the `kemCipherText` to the KEM ciphertext from the corresponding `InitKex`
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
-- Encrypt the first message if there is one, otherwise encrypt a single `0xFF` byte using a `CryptoFrame` and set `appCipherText` to its value
+- Encode the assigned beacon key ID as an eight-byte little-endian value and
+  prepend it to the first message, or to a single `0xFF` byte when no message
+  was supplied
+- Encrypt that prefixed payload using a `CryptoFrame` and set `appCipherText` to
+  its value
 - Delete the ephemeral key pair
+- After encryption and serialization succeed, atomically commit the key-ID
+  counter, staged peer identity, and ratchets
 - Return the serialized registration response and key ID to the caller
 
 Upon reception, the beacon must process this message as follows:
@@ -182,12 +196,24 @@ Upon reception, the beacon must process this message as follows:
 - Delete its one-time keypair.
 - Delete its PQ keypair
 - Delete all Diffie Hellman output
-- Save its own key ID using the `keyId` field
+- Treat `keyId` as the proposed assigned identity, without publishing it yet
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
 - Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
 - Delete the derived secret
 - Decrypt the `appCipherText` as a `CryproFrame`, using its `recv` keychain
+- Split the authenticated plaintext into its eight-byte prefix and remaining
+  application plaintext, and require the prefix to equal the little-endian
+  encoding of `keyId`
+- Commit the assigned identity and staged ratchets only after that check passes
+- Strip the prefix before returning the application plaintext
 - If decryption is successful, return the plaintext to the caller oherwise abort the protocol and delete the previously derived cryptographic state
 
 # Protocol details
 Once the session has been created, meaning a successful PQXDH run, the associated data (`AD`) is created. This is made up of the concatenation of the public keys of both parties, the key exchange protocol string and the ratchet protocol string. This associated data is used in every encryption for a given `(Server, Beacon)` tuple. It is then expected that beacons will read messages from the server from their transport protocol and hand them off to beaconcrypt immediately for decryption and deserialization. All encrypted buffers (`CryptoFrame`s) carry a sequence number `seq` and sender identity `keyId`. The commitment binds both fields to the ciphertext, so modifying either field causes decryption to fail.
+
+The `KexResponse.keyId` field has different semantics from the inner
+`CryptoFrame.keyId`: it assigns the receiving beacon's identity, whereas the
+inner field identifies the sending server. Its authenticated little-endian
+prefix therefore exists only inside the initial registration plaintext. It
+does not change the 153-byte long-lived associated data or the CTX commitment
+layout used for subsequent records.

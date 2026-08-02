@@ -16,7 +16,11 @@ use serde::{
 	Deserialize, Deserializer,
 	de::{self, Error as _, IgnoredAny, SeqAccess, Visitor},
 };
-use std::{collections::HashMap, fmt, marker::PhantomData};
+use std::{
+	collections::{HashMap, HashSet},
+	fmt,
+	marker::PhantomData,
+};
 use zeroize::{Zeroize, Zeroizing};
 
 struct SecretBytes<const N: usize>(Zeroizing<[u8; N]>);
@@ -365,6 +369,7 @@ struct ServerStateData {
 	identity_key_kid: u64,
 	server_kid: u64,
 	known_ids: DeserializedKnownIds,
+	consumed_registrations: Vec<Vec<u8>>,
 }
 
 #[cfg(feature = "server")]
@@ -375,21 +380,33 @@ pub(crate) fn deserialize_server_state(
 	u64,
 	u64,
 	HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+	HashSet<[u8; beaconcrypt_protocol_core::pqxdh::REGISTRATION_ID_SIZE]>,
 )> {
 	let ServerStateData {
 		identity_key,
 		identity_key_kid,
 		server_kid,
 		known_ids: DeserializedKnownIds(known_ids),
+		consumed_registrations,
 	} = serde_json::from_str(state).ok()?;
 
-	if identity_key_kid > server_kid || known_ids.keys().any(|kid| *kid > server_kid) {
+	if identity_key_kid > server_kid
+		|| known_ids.keys().any(|kid| *kid > server_kid)
+		|| consumed_registrations.len() < known_ids.len()
+	{
 		return None;
+	}
+	let mut consumed = HashSet::with_capacity(consumed_registrations.len());
+	for registration_id in consumed_registrations {
+		let registration_id = registration_id.as_slice().try_into().ok()?;
+		if !consumed.insert(registration_id) {
+			return None;
+		}
 	}
 
 	let keypair = crypto_sign::KeyPair::from_seed(identity_key.buffer.0.as_slice()).ok()?;
 
-	Some((keypair, identity_key_kid, server_kid, known_ids))
+	Some((keypair, identity_key_kid, server_kid, known_ids, consumed))
 }
 
 #[cfg(feature = "server")]

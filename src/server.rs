@@ -26,6 +26,11 @@ pub type SendState = StateUpdate<roles::ChainSendKey>;
 pub type RecvState = StateUpdate<roles::ChainRecvKey>;
 
 pub trait ProviderServer {
+	/// Validate an `InitKex` and return its one-use pending response token.
+	///
+	/// A successful call permanently consumes the registration identifier for
+	/// replay protection, even if the returned token is dropped or response
+	/// construction later fails.
 	fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput>;
 
 	fn build_registration_response(

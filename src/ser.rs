@@ -14,9 +14,9 @@ use libsodium_rs::crypto_sign;
 use serde::ser::Error as _;
 use serde::{
 	Serialize, Serializer,
-	ser::{SerializeMap, SerializeStruct, SerializeTuple},
+	ser::{SerializeMap, SerializeSeq, SerializeStruct, SerializeTuple},
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::marker::PhantomData;
 #[cfg(feature = "server")]
 use zeroize::Zeroizing;
@@ -233,11 +233,18 @@ impl Serialize for RemotePrincipal<crypto_sign::PublicKey> {
 struct SerializableKnownIds<'a>(&'a HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>);
 
 #[cfg(feature = "server")]
+struct SerializableConsumedRegistrations<'a>(
+	&'a HashSet<[u8; beaconcrypt_protocol_core::pqxdh::REGISTRATION_ID_SIZE]>,
+);
+
+#[cfg(feature = "server")]
 struct SerializableServerState<'a> {
 	identity_key: &'a crypto_sign::KeyPair,
 	identity_key_kid: u64,
 	server_kid: u64,
 	known_ids: &'a HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+	consumed_registrations:
+		&'a HashSet<[u8; beaconcrypt_protocol_core::pqxdh::REGISTRATION_ID_SIZE]>,
 }
 
 #[cfg(feature = "server")]
@@ -246,12 +253,14 @@ pub(crate) fn serialize_server_state(
 	identity_key_kid: u64,
 	server_kid: u64,
 	known_ids: &HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+	consumed_registrations: &HashSet<[u8; beaconcrypt_protocol_core::pqxdh::REGISTRATION_ID_SIZE]>,
 ) -> Option<String> {
 	serde_json::to_string(&SerializableServerState {
 		identity_key,
 		identity_key_kid,
 		server_kid,
 		known_ids,
+		consumed_registrations,
 	})
 	.ok()
 }
@@ -274,11 +283,15 @@ impl Serialize for SerializableServerState<'_> {
 			TypedArray::<{ crypto_sign::SEEDBYTES }, systems::Ed25519, roles::IdentityKey>::new(
 				identity_seed_buffer,
 			);
-		let mut state = serializer.serialize_struct("BeaconCryptPqxdh", 4)?;
+		let mut state = serializer.serialize_struct("BeaconCryptPqxdh", 5)?;
 		state.serialize_field("identity_key", &typed_identity_seed)?;
 		state.serialize_field("identity_key_kid", &self.identity_key_kid)?;
 		state.serialize_field("server_kid", &self.server_kid)?;
 		state.serialize_field("known_ids", &SerializableKnownIds(self.known_ids))?;
+		state.serialize_field(
+			"consumed_registrations",
+			&SerializableConsumedRegistrations(self.consumed_registrations),
+		)?;
 		state.end()
 	}
 }
@@ -297,6 +310,23 @@ impl Serialize for SerializableKnownIds<'_> {
 			map.serialize_entry(kid, principal)?;
 		}
 		map.end()
+	}
+}
+
+#[cfg(feature = "server")]
+impl Serialize for SerializableConsumedRegistrations<'_> {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		let mut entries: Vec<_> = self.0.iter().collect();
+		entries.sort_unstable();
+
+		let mut sequence = serializer.serialize_seq(Some(entries.len()))?;
+		for registration_id in entries {
+			sequence.serialize_element(&ByteBuffer(registration_id.as_slice()))?;
+		}
+		sequence.end()
 	}
 }
 

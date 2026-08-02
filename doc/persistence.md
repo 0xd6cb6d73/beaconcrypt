@@ -31,11 +31,25 @@ The server object exposes an `export_state` method, which produces the following
             "recv_ctr": 1
         }
       }
-    }
+    },
+    "consumed_registrations": [
+      [179,176,97,56,138,132,165,3,79,7,190,144,179,105,2,187,3,165,119,87,142,123,131,59,254,117,167,156,41,125,254,56,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10],
+      [198,247,65,172,172,76,66,155,64,140,90,73,162,40,247,225,134,162,239,15,149,105,64,89,167,171,159,125,28,56,207,166,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20]
+    ]
 }
 ```
 
-`identity_key` contains the server's 32-byte Ed25519 seed as a strongly typed array. `identity_key_kid` is the server identity's key ID, `server_kid` is the next-remote-ID counter, and `known_ids` contains the known beacons' ratchet state. In this example the server knows about 2 beacons, with keyId 1 and 2. Every `known_ids` entry contains the beacon's public key as well as the full state of its associated ratchets. Together these fields allow `from_state` to restore the server from the serialized state alone.
+`identity_key` contains the server's 32-byte Ed25519 seed as a strongly typed array. `identity_key_kid` is the server identity's key ID, `server_kid` is the last allocated remote-ID counter, and `known_ids` contains the known beacons' ratchet state. In this example the server knows about 2 beacons, with keyId 1 and 2. Every `known_ids` entry contains the beacon's public key as well as the full state of its associated ratchets.
+
+`consumed_registrations` is the persistent replay history. Each sorted 64-byte
+entry is the decoded beacon identity followed by the decoded signed one-time
+X25519 public key from one accepted `InitKex`. An identifier is retained even
+when response construction fails or its peer is later deleted. Restoration
+rejects a missing history, entries of the wrong length, duplicates, or fewer
+entries than committed peers. This field was added in Stage 5; pre-Stage-5
+snapshots are intentionally rejected rather than silently restoring without
+replay protection. Together these fields allow `from_state` to restore the
+server from the serialized state alone.
 
 Note that the ratchet keys are strongly-typed arrays, which server code should not try to parse. I expect that this method would be rather slow, as it will extract and serialize the entirety of the beaconcrypt instance's crypto state. Therefore, the server has access to the following interface:
 

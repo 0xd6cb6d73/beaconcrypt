@@ -23,7 +23,7 @@ use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{
 	crypto_kdf, crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init,
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 #[cfg(feature = "server")]
 use std::marker::PhantomData;
 use std::vec;
@@ -87,6 +87,8 @@ pub struct BeaconCryptPqxdh {
 	// Stores the server key ID for a beacon and the last allocated remote ID for a server.
 	server_kid: u64,
 	known_ids: HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+	#[cfg_attr(not(feature = "server"), allow(dead_code))]
+	consumed_registrations: HashSet<[u8; verified_pqxdh::REGISTRATION_ID_SIZE]>,
 }
 
 impl CryptoProvider for BeaconCryptPqxdh {
@@ -104,6 +106,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			}),
 			server_kid: 0,
 			known_ids: HashMap::new(),
+			consumed_registrations: HashSet::new(),
 		}
 	}
 	fn new(
@@ -157,6 +160,7 @@ impl CryptoProvider for BeaconCryptPqxdh {
 			role,
 			server_kid,
 			known_ids,
+			consumed_registrations: HashSet::new(),
 		}
 	}
 
@@ -188,12 +192,17 @@ impl CryptoProvider for BeaconCryptPqxdh {
 		}
 	}
 
-	fn new_remote_kid(&mut self) -> u64 {
-		if let ProviderRole::Server(control) = &mut self.role {
-			self.server_kid = self.server_kid.wrapping_add(1);
-			*control = verified_pqxdh::ServerState::new(self.server_kid);
+	fn new_remote_kid(&mut self) -> Option<u64> {
+		let ProviderRole::Server(control) = &mut self.role else {
+			return Some(self.server_kid);
+		};
+		let next = verified_pqxdh::server_next_key_id(*control).ok()?;
+		if self.known_ids.contains_key(&next) {
+			return None;
 		}
-		self.server_kid
+		self.server_kid = next;
+		*control = verified_pqxdh::ServerState::new(next);
+		Some(next)
 	}
 
 	fn set_associated_data(&mut self, data: [u8; AD_SIZE]) {
@@ -607,10 +616,20 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 				&associated_data,
 				&mut ratchet,
 			)?;
-			Some((candidate, associated_data, ratchet, decrypted.plaintext))
+			let mut authenticated_plaintext = decrypted.plaintext;
+			if authenticated_plaintext.len() <= verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE {
+				return None;
+			}
+			let plaintext =
+				authenticated_plaintext.split_off(verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE);
+			let binding = authenticated_plaintext.as_slice().try_into().ok()?;
+			let authenticated =
+				verified_pqxdh::authenticate_registration_key_id_binding(candidate, binding)
+					.ok()?;
+			Some((authenticated, associated_data, ratchet, plaintext))
 		})();
 
-		let Some((candidate, associated_data, ratchet, plaintext)) = staged else {
+		let Some((authenticated, associated_data, ratchet, plaintext)) = staged else {
 			self.abort_registration(control);
 			return None;
 		};
@@ -620,9 +639,9 @@ impl ProviderBeacon for BeaconCryptPqxdh {
 			return None;
 		};
 		*remote.ratchet_mut() = ratchet;
-		self.identity_key_kid = candidate.assigned_key_id();
+		self.identity_key_kid = authenticated.assigned_key_id();
 		self.role = ProviderRole::Beacon(BeaconState::Established {
-			control: verified_pqxdh::beacon_commit(candidate),
+			control: verified_pqxdh::beacon_commit(authenticated),
 			associated_data,
 		});
 		Some(plaintext)
@@ -656,6 +675,14 @@ impl ProviderServer for BeaconCryptPqxdh {
 			pq_verified.as_slice().try_into().ok()?,
 		);
 		let verified_registration = verified_pqxdh::validate_init_kex(init_kex).ok()?;
+		let registration_id = *verified_registration.registration_id().as_bytes();
+		let registration_status = if self.consumed_registrations.contains(&registration_id) {
+			verified_pqxdh::RegistrationStatus::Consumed
+		} else {
+			verified_pqxdh::RegistrationStatus::Fresh
+		};
+		verified_pqxdh::validate_registration_status(registration_status).ok()?;
+		self.consumed_registrations.try_reserve(1).ok()?;
 		let beacon_prekey =
 			crypto_kx::PublicKey::from_bytes(verified_registration.beacon_prekey_public_key())
 				.ok()?;
@@ -693,6 +720,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 		let accepted = verified_pqxdh::server_accept(
 			control,
 			verified_registration,
+			registration_status,
 			verified_pqxdh::ServerBinding {
 				identity_public_key: *self.identity_pk().as_bytes(),
 				identity_key_id: self.identity_key_kid,
@@ -706,7 +734,10 @@ impl ProviderServer for BeaconCryptPqxdh {
 		zeroize_shared_secrets(&mut secrets);
 		let (unchanged, mut pending) = accepted.ok()?;
 		debug_assert_eq!(unchanged, control);
+		debug_assert_eq!(pending.registration_id().as_bytes(), &registration_id);
 		let derived_secret = derive_root_key_input(pending.root_key_input_mut())?;
+		let inserted = self.consumed_registrations.insert(registration_id);
+		debug_assert!(inserted);
 
 		Some(RegistrationOutput {
 			derived_secret,
@@ -727,6 +758,12 @@ impl ProviderServer for BeaconCryptPqxdh {
 			derived_secret,
 			control: pending,
 		} = reg_out;
+		let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;
+		let key_id_availability = if self.known_ids.contains_key(&next_key_id) {
+			verified_pqxdh::KeyIdAvailability::Occupied
+		} else {
+			verified_pqxdh::KeyIdAvailability::Available
+		};
 		let candidate = verified_pqxdh::server_prepare_commit(
 			control,
 			pending,
@@ -734,14 +771,14 @@ impl ProviderServer for BeaconCryptPqxdh {
 				identity_public_key: *self.identity_pk().as_bytes(),
 				identity_key_id: self.identity_key_kid,
 			},
+			key_id_availability,
 		)
 		.ok()?;
 		let remote_kid = candidate.key_id();
+		debug_assert_eq!(remote_kid, next_key_id);
 		let public_key =
 			crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?;
-		if self.known_ids.contains_key(&remote_kid) {
-			return None;
-		}
+		debug_assert!(!self.known_ids.contains_key(&remote_kid));
 		self.known_ids.try_reserve(1).ok()?;
 		let mut ratchet = RatchetManager::default();
 		if !ratchet.init_ratchets(
@@ -753,13 +790,26 @@ impl ProviderServer for BeaconCryptPqxdh {
 		}
 		let associated_data = *candidate.associated_data();
 		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
+		if plaintext.is_empty() {
+			return None;
+		}
+		let authenticated_len =
+			verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE.checked_add(plaintext.len())?;
+		let mut authenticated_plaintext = Vec::new();
+		authenticated_plaintext
+			.try_reserve_exact(authenticated_len)
+			.ok()?;
+		authenticated_plaintext.extend_from_slice(candidate.key_id_binding().as_bytes());
+		authenticated_plaintext.extend_from_slice(plaintext);
 		let encrypted = encrypt_message_with_ratchet(
-			plaintext,
+			&authenticated_plaintext,
 			remote_kid,
 			candidate.server_identity_key_id(),
 			&associated_data,
 			&mut ratchet,
-		)?;
+		);
+		authenticated_plaintext.zeroize();
+		let encrypted = encrypted?;
 		let mut msg = TypedBuilder::<phase2_capnp::kex_response::Owned>::new_default();
 		let mut bundle = msg.init_root();
 		bundle.set_key_id(remote_kid);
@@ -823,13 +873,14 @@ impl ProviderServer for BeaconCryptPqxdh {
 			self.identity_key_kid,
 			self.server_kid,
 			&self.known_ids,
+			&self.consumed_registrations,
 		)
 	}
 
 	fn try_from_state(server_state: &str) -> Option<Self> {
 		ensure_init().ok()?;
 
-		let (id_keypair, identity_key_kid, server_kid, known_ids) =
+		let (id_keypair, identity_key_kid, server_kid, known_ids, consumed_registrations) =
 			deserialize_server_state(server_state)?;
 
 		Some(Self {
@@ -838,6 +889,7 @@ impl ProviderServer for BeaconCryptPqxdh {
 			role: ProviderRole::Server(verified_pqxdh::ServerState::new(server_kid)),
 			server_kid,
 			known_ids,
+			consumed_registrations,
 		})
 	}
 }
@@ -1261,6 +1313,8 @@ mod tests {
 				"server accepted tampered {field}"
 			);
 		}
+
+		assert!(server.get_shared_secret(&serialized).is_some());
 	}
 
 	#[test]
@@ -1312,6 +1366,8 @@ mod tests {
 				"server accepted a wrong type prefix in {field}"
 			);
 		}
+
+		assert!(server.get_shared_secret(&serialized).is_some());
 	}
 
 	#[test]

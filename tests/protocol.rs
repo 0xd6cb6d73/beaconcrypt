@@ -812,6 +812,7 @@ fn failed_registration_response_does_not_commit_server_state() {
 	assert_eq!(server.export_state().unwrap(), state_before);
 	assert_eq!(server.server_kid(), counter_before);
 	assert!(server.pk_by_kid(expected_kid).is_none());
+	assert!(server.get_shared_secret(&phase_1).is_none());
 
 	let server_id = server.identity_pk().to_owned();
 	let mut accepted_beacon =
@@ -841,9 +842,11 @@ fn server_rejects_pending_registration_from_a_different_server() {
 	let (mut accepting_server, mut beacon) = new_pair();
 	let mut other_server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
 	let phase_1 = beacon.get_registration_bundle().unwrap();
-	let accepting_state = accepting_server.export_state().unwrap();
+	let accepting_state_before = accepting_server.export_state().unwrap();
 	let pending = accepting_server.get_shared_secret(&phase_1).unwrap();
+	let accepting_state_after = accepting_server.export_state().unwrap();
 	let other_state = other_server.export_state().unwrap();
+	assert_ne!(accepting_state_after, accepting_state_before);
 
 	assert!(
 		other_server
@@ -853,16 +856,21 @@ fn server_rejects_pending_registration_from_a_different_server() {
 	assert_eq!(other_server.export_state().unwrap(), other_state);
 	assert_eq!(other_server.server_kid(), SERVER_KID);
 	assert!(other_server.pk_by_kid(SERVER_KID + 1).is_none());
-	assert_eq!(accepting_server.export_state().unwrap(), accepting_state);
-
-	let pending = accepting_server.get_shared_secret(&phase_1).unwrap();
-	let response = accepting_server
-		.build_registration_response(pending, Some(b"right server"))
-		.unwrap();
 	assert_eq!(
-		beacon.finish_registration(&response.serialized).unwrap(),
-		b"right server"
+		accepting_server.export_state().unwrap(),
+		accepting_state_after
 	);
+	assert!(accepting_server.get_shared_secret(&phase_1).is_none());
+
+	let accepting_identity = accepting_server.identity_pk().to_owned();
+	let mut fresh_beacon =
+		BeaconCryptPqxdh::new(true, SERVER_KID, Some(accepting_identity.as_bytes()), None);
+	let response = register_beacon(
+		&mut accepting_server,
+		&mut fresh_beacon,
+		Some(b"right server"),
+	);
+	assert_eq!(response.kid, SERVER_KID + 1);
 }
 
 #[test]
@@ -1461,7 +1469,6 @@ fn malformed_initial_ciphertext_is_rejected_without_panicking() {
 }
 
 #[test]
-#[ignore = "known specification bug: KexResponse.keyId is not authenticated"]
 fn beacon_rejects_tampered_registration_key_id() {
 	let (mut beacon, response) = pending_registration(b"initial message");
 	let mut parts = parse_kex_response(&response);
@@ -1482,7 +1489,6 @@ fn beacon_generates_only_one_registration_bundle() {
 }
 
 #[test]
-#[ignore = "known protocol gap: replayed InitKex messages are accepted"]
 fn server_rejects_replayed_registration_bundle() {
 	let (mut server, mut beacon) = new_pair();
 	let phase_1 = beacon.get_registration_bundle().unwrap();
@@ -1492,23 +1498,107 @@ fn server_rejects_replayed_registration_bundle() {
 }
 
 #[test]
-fn encrypted_message_cannot_be_relabelled_to_an_alias_key_id() {
+fn server_rejects_replayed_registration_bundle_after_restore() {
 	let (mut server, mut beacon) = new_pair();
 	let phase_1 = beacon.get_registration_bundle().unwrap();
-	let registration = server.get_shared_secret(&phase_1).unwrap();
-	let duplicate_registration = server.get_shared_secret(&phase_1).unwrap();
-	let first = server
-		.build_registration_response(duplicate_registration, None)
-		.unwrap();
-	let alias = server
-		.build_registration_response(registration, None)
-		.unwrap();
-	beacon.finish_registration(&first.serialized).unwrap();
+	let pending = server.get_shared_secret(&phase_1).unwrap();
+	drop(pending);
+
+	let state = server.export_state().unwrap();
+	let mut restored =
+		<BeaconCryptPqxdh as ProviderServer>::try_from_state(&state).expect("valid server state");
+
+	assert!(restored.get_shared_secret(&phase_1).is_none());
+}
+
+#[test]
+fn deleting_a_peer_does_not_make_its_registration_replayable() {
+	let (mut server, mut beacon) = new_pair();
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+	let pending = server.get_shared_secret(&phase_1).unwrap();
+	let response = server.build_registration_response(pending, None).unwrap();
+	beacon.finish_registration(&response.serialized).unwrap();
+
+	server.delete_known_kid(response.kid);
+	assert!(server.pk_by_kid(response.kid).is_none());
+	assert!(server.get_shared_secret(&phase_1).is_none());
+}
+
+#[test]
+fn replay_detection_uses_semantic_registration_material() {
+	let (mut server, mut beacon) = new_pair();
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+	let mut alternate_wire_encoding = phase_1.clone();
+	alternate_wire_encoding.extend_from_slice(&[0; 8]);
+
+	assert!(server.get_shared_secret(&alternate_wire_encoding).is_some());
+	assert!(server.get_shared_secret(&phase_1).is_none());
+}
+
+#[test]
+fn server_key_id_exhaustion_does_not_wrap_or_commit_a_peer() {
+	let server_identity_kid = u64::MAX - 1;
+	let mut server = BeaconCryptPqxdh::new(false, server_identity_kid, None, None);
+	let server_id = server.identity_pk().to_owned();
+	let mut last_beacon =
+		BeaconCryptPqxdh::new(true, server_identity_kid, Some(server_id.as_bytes()), None);
+
+	let last = register_beacon(&mut server, &mut last_beacon, None);
+	assert_eq!(last.kid, u64::MAX);
+	assert_eq!(server.server_kid(), u64::MAX);
+	assert!(server.new_remote_kid().is_none());
+
+	let mut rejected_beacon =
+		BeaconCryptPqxdh::new(true, server_identity_kid, Some(server_id.as_bytes()), None);
+	let phase_1 = rejected_beacon.get_registration_bundle().unwrap();
+	let pending = server.get_shared_secret(&phase_1).unwrap();
+	let state_before_response = server.export_state().unwrap();
+
+	assert!(server.build_registration_response(pending, None).is_none());
+	assert_eq!(server.export_state().unwrap(), state_before_response);
+	assert_eq!(server.server_kid(), u64::MAX);
+	assert!(server.pk_by_kid(0).is_none());
+
+	let restored = <BeaconCryptPqxdh as ProviderServer>::try_from_state(&state_before_response)
+		.expect("exhausted state remains valid");
+	assert_eq!(restored.server_kid(), u64::MAX);
+}
+
+#[test]
+fn server_rejects_an_occupied_next_key_id_without_advancing() {
+	let (mut server, mut beacon) = new_pair();
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+	let pending = server.get_shared_secret(&phase_1).unwrap();
+	let occupied_kid = SERVER_KID + 1;
+	server.add_known_kid(occupied_kid, beacon.identity_pk().clone());
+	let occupied_state = server.export_state().unwrap();
+
+	assert!(server.new_remote_kid().is_none());
+	assert!(server.build_registration_response(pending, None).is_none());
+	assert_eq!(server.export_state().unwrap(), occupied_state);
+	assert_eq!(server.server_kid(), SERVER_KID);
+
+	server.delete_known_kid(occupied_kid);
+	let server_id = server.identity_pk().to_owned();
+	let mut fresh_beacon =
+		BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let response = register_beacon(&mut server, &mut fresh_beacon, None);
+	assert_eq!(response.kid, occupied_kid);
+}
+
+#[test]
+fn encrypted_message_cannot_be_relabelled_to_an_alias_key_id() {
+	let (mut server, mut beacon) = new_pair();
+	let registration = register_beacon(&mut server, &mut beacon, None);
+	let alias_kid = registration.kid + 1;
+	let alias_ratchet = server.ratchet_manager(registration.kid).unwrap().clone();
+	server.add_known_kid(alias_kid, beacon.identity_pk().clone());
+	*server.ratchet_manager_mut(alias_kid).unwrap() = alias_ratchet;
 
 	let ciphertext = beacon
 		.encrypt_message(b"authenticated beacon message", SERVER_KID)
 		.unwrap();
-	let relabelled = rewrite_crypto_frame_key_id(&ciphertext, alias.kid);
+	let relabelled = rewrite_crypto_frame_key_id(&ciphertext, alias_kid);
 
 	assert!(server.decrypt_message(&relabelled).is_none());
 	assert_eq!(

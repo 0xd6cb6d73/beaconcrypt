@@ -74,7 +74,7 @@ The first extraction slice may be smaller than this layout. In particular, a sin
 The initial production seams were the ratchet state and operations in
 [`src/shared.rs`](../src/shared.rs), the frame encryption/decryption logic in
 that file, and the PQXDH role transitions in
-[`src/pqxdh.rs`](../src/pqxdh.rs). Stages 1 through 4 moved their deterministic
+[`src/pqxdh.rs`](../src/pqxdh.rs). Stages 1 through 5 moved their deterministic
 control decisions into the protocol core while leaving concrete cryptography
 and wire translation in those adapters. Further moves should remain incremental
 rather than attempting to extract the whole crate.
@@ -111,11 +111,13 @@ state. The core states include:
 pub struct BeaconFresh { /* server key assignment */ }
 pub struct BeaconInitSent { /* identity tied to one InitKex */ }
 pub struct BeaconRegistrationCandidate { /* validated proposed session */ }
+pub struct AuthenticatedBeaconRegistration { /* authenticated assigned key ID */ }
 pub struct BeaconEstablished { /* committed server and assigned IDs */ }
 pub struct BeaconAborted;
 
 pub struct ServerState { /* last allocated key ID */ }
 pub struct ServerBinding { /* server identity key and key ID */ }
+pub struct RegistrationId { /* beacon identity and one-time public key */ }
 pub struct PendingServerRegistration { /* validated response inputs */ }
 pub struct ServerRegistrationCandidate { /* previous and proposed state */ }
 pub struct EstablishedPeer { /* committed peer metadata */ }
@@ -135,13 +137,19 @@ pub fn beacon_prepare_finish(
     inputs: &BeaconFinishInputs,
 ) -> Result<BeaconRegistrationCandidate, RegistrationError>;
 
-pub fn beacon_commit(
+pub fn authenticate_registration_key_id_binding(
     candidate: BeaconRegistrationCandidate,
+    authenticated_binding: [u8; 8],
+) -> Result<AuthenticatedBeaconRegistration, RegistrationError>;
+
+pub fn beacon_commit(
+    authenticated: AuthenticatedBeaconRegistration,
 ) -> BeaconEstablished;
 
 pub fn server_accept(
     state: ServerState,
     init: VerifiedInitKex,
+    registration_status: RegistrationStatus,
     server_binding: ServerBinding,
     coins: ServerCoins,
     secrets: &PqxdhSharedSecrets,
@@ -151,6 +159,7 @@ pub fn server_prepare_commit(
     state: ServerState,
     pending: PendingServerRegistration,
     current_server_binding: ServerBinding,
+    key_id_availability: KeyIdAvailability,
 ) -> Result<ServerRegistrationCandidate, RegistrationError>;
 
 pub fn server_commit(
@@ -240,8 +249,18 @@ PQXDH:
 - Both sides concatenate padding, DH1, DH2, DH3, DH4, and the KEM secret in the implemented order and use `PQXDH_INFO`.
 - The signed prekey, one-time key, and post-quantum key carry authenticated, disjoint type tags.
 - Both roles construct identical, ordered associated data.
+- The response's assigned key ID is encoded as an exact little-endian `u64`
+  inside the AEAD-authenticated initial payload, and only a candidate with a
+  matching authenticated prefix can commit.
+- A server rejects a registration identifier that its adapter classifies as
+  consumed, where the identifier is the exact beacon identity and signed
+  one-time public key rather than raw wire bytes or a hash.
+- Server key-ID allocation cannot wrap and explicitly rejects an occupied next
+  identifier.
 - Beacon-send/server-receive and server-send/beacon-receive ratchets are initialized to matching states.
-- A successful registration commits all state atomically; failure leaves only an explicitly specified aborted or retryable state.
+- Peer, counter, and ratchet publication commit atomically. Successful server
+  acceptance consumes replay history earlier and monotonically, even if later
+  response construction fails.
 
 Symmetric ratchet and records:
 
@@ -274,30 +293,33 @@ The symmetric ratchet never mixes fresh entropy into an established chain, so it
 
 ProVerif establishes these results only in the stated symbolic model. It does not establish computational security of the cryptographic primitives.
 
-## Known counterexamples and required protocol changes
+## Closed counterexamples
 
 Three regression tests in [`tests/protocol.rs`](../tests/protocol.rs) track
 executable counterexamples to properties that a proof might otherwise claim:
 
-1. `beacon_rejects_tampered_registration_key_id`: `KexResponse.keyId` is not
-   authenticated and this test remains ignored for Stage 5.
+1. `beacon_rejects_tampered_registration_key_id`: Stage 5 authenticates the
+   assigned ID as the fixed-width prefix of the initial encrypted payload.
 2. `beacon_generates_only_one_registration_bundle`: Stage 4 closes this
    counterexample through the consuming `BeaconFresh` to `BeaconInitSent`
    production transition, and the regression is now mandatory.
-3. `server_rejects_replayed_registration_bundle`: the server accepts a replayed
-   `InitKex` bundle and this test remains ignored for Stage 5.
+3. `server_rejects_replayed_registration_bundle`: Stage 5 persistently consumes
+   a semantic registration identifier on the first successful server
+   acceptance.
 
-Consequently, authentication, injective agreement, and registration
-replay-resistance claims must remain disabled until the two remaining protocol
-gaps change. Completing the original three-counterexample milestone requires:
+All three regressions are now mandatory and passing. Stage 5 also completes the
+supporting allocation changes:
 
-- bind the assigned key ID into authenticated handshake material;
-- track consumed registration material on the server;
-- replace wrapping key-ID increment with checked allocation while retaining
-  explicit existing-peer collision rejection.
+- the replay key is the fixed 64-byte semantic tuple `(beacon identity,
+  one-time X25519 public key)`, so alternate encodings of the same `InitKex`
+  cannot bypass lookup and no hash-collision assumption is introduced;
+- consumed identifiers survive export and restore and are not removed with a
+  peer entry;
+- checked increment rejects exhaustion at `u64::MAX`, while an explicit
+  availability input rejects collision with the next peer-map ID.
 
-Once fixed, turn the two remaining ignored tests into passing regression tests
-before enabling the corresponding ProVerif queries.
+This closes the executable counterexamples; it does not itself prove the later
+F* agreement lemmas or ProVerif correspondence queries.
 
 ## Staged rollout
 
@@ -305,7 +327,7 @@ before enabling the corresponding ProVerif queries.
 2. **Complete:** move the symmetric-ratchet control state into the core. Prove counter, bounds, replay, retry, peer-isolation, and key-consumption properties.
 3. **Complete:** make the production API delegate to the core and run the existing unit, protocol, and known-answer tests through it.
 4. **Complete:** move PQXDH into role-specific typestates with explicit randomness and atomic state commits. This stage also makes `InitKex` generation single-use.
-5. Complete the three-counterexample milestone by fixing key-ID authentication, server registration replay, and collision-safe checked allocation, then make the two remaining ignored tests mandatory.
+5. **Complete:** close the three-counterexample milestone with authenticated key-ID binding, persistent server registration replay rejection, collision-safe checked allocation, and mandatory regressions.
 6. Add the F* PQXDH agreement, transcript, associated-data, and initialization proofs.
 7. Add ProVerif processes, events, primitive equations, compromise scenarios, and queries.
 8. Pin rustc, hax, F*, Z3, and ProVerif and run extraction plus proofs in CI.
@@ -412,8 +434,49 @@ The pinned hax item list extracts these PQXDH transitions to
 checks that generated module and its generated safety obligations without
 `--lax`. No PQXDH semantic lemma module is part of Stage 4: agreement,
 transcript, associated-data, and initialization proofs remain Step 6 work.
-Key-ID authentication, server replay tracking, and checked collision-safe
-allocation remain Step 5 work.
+
+### Step 5 implementation
+
+The detailed implementation record is in
+[`formal-verification-stage-5.md`](formal-verification-stage-5.md).
+
+The server now derives a canonical 64-byte registration identifier from the
+verified beacon identity and signed one-time public key. The production adapter
+looks it up in a persistent consumed set, passes an explicit fresh/consumed
+classification to the core, and inserts it before returning a successful
+pending token. This consumption is deliberately irreversible: dropping the
+token, failing response construction, deleting the peer, or exporting and
+restoring the server does not make the registration reusable. Persistence
+serializes the set in sorted order and rejects missing, malformed, duplicate,
+or structurally incomplete replay histories with fewer entries than committed
+peers.
+
+The server prefixes the initial application plaintext (or registration witness)
+with the core-provided little-endian assigned key ID before AEAD encryption. The
+beacon authenticates the ciphertext, separates the fixed eight-byte prefix,
+and must obtain `AuthenticatedBeaconRegistration` from the core before
+`beacon_commit` is callable. The prefix is stripped before the original
+application plaintext is returned. This keeps the established 153-byte
+associated-data and CTX commitment formats unchanged.
+
+Allocation now uses the core's checked `server_next_key_id`; exhaustion at
+`u64::MAX` is state-neutral, and `server_prepare_commit` requires an explicit
+availability classification for the exact proposed ID. The production adapter
+derives that classification from the peer map. The low-level compatibility
+allocator is fallible and delegates to the same checked rule, so no wrapping
+allocation path remains.
+
+Replay history is the one intentional exception to Stage 4's statement that
+server acceptance leaves exported state unchanged. Counter, peer, and ratchet
+publication remain transactional during response construction, but a valid
+accepted `InitKex` consumes its replay marker immediately. The history is
+currently unbounded and persistence snapshots created before Stage 5 are
+rejected because silently defaulting a missing history would reopen replay.
+
+The new public core transitions are included in the pinned extraction. The
+generated PQXDH module and its safety obligations typecheck strictly without
+`--lax`; semantic PQXDH agreement, transcript, associated-data, and
+initialization lemmas remain Step 6 work.
 
 ## Toolchain findings and CI policy
 

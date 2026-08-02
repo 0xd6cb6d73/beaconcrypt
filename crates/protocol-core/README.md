@@ -70,20 +70,41 @@ terminal abort. It publishes the assigned identity, associated data, and
 derived ratchet only after the initial ciphertext authenticates. The server
 initializes a fresh peer ratchet, encrypts the initial message, and serializes
 the response off to the side; only then does it commit the key counter and peer
-map. A failed response leaves exported server state unchanged.
+map. A failed response leaves those values and the staged ratchet unchanged.
 
 The production pending-registration token is opaque and non-clonable, and the
 response public material is read from the core candidate. The token records the
 accepting server's identity public key and identity key ID; candidate
 preparation validates that binding, and staged encryption uses its bound sender
-ID. Replaying the same wire `InitKex` against the same server can still obtain a
-second token; rejecting that replay remains a Stage 5 obligation.
+ID.
 
 See Step 4 of the
 [formal verification plan](../../doc/formal-verification.md) and the
 [Stage 4 implementation record](../../doc/formal-verification-stage-4.md).
-Key-ID authentication, server replay tracking, and checked collision-safe ID
-allocation remain Stage 5 work. PQXDH functional lemmas remain Stage 6 work.
+
+Stage 5 derives a canonical registration ID from the verified beacon identity
+and signed one-time public key. The adapter refines the core's fresh/consumed
+classification with a persistent set, consumes an ID before returning a
+pending token, and rejects replay even after a failed response, peer deletion,
+or export and restore. The set is serialized deterministically; malformed,
+duplicate, missing, and structurally incomplete histories with fewer entries
+than committed peers fail closed. This adds one earlier state transition to the
+transactional response flow: response failure leaves the counter, peer map, and
+ratchet state unchanged, while replay history remains consumed.
+
+The core encodes the assigned beacon ID as a fixed little-endian `u64` prefix
+for the AEAD-authenticated initial plaintext. The beacon must validate that
+prefix and obtain `AuthenticatedBeaconRegistration` before it can call
+`beacon_commit`; the adapter strips the prefix before returning application
+data. This leaves the established associated-data and CTX commitment layouts
+unchanged.
+
+Key allocation now rejects `u64::MAX` exhaustion and takes an explicit
+available/occupied classification for the exact next ID, so neither the
+registration path nor the compatibility allocator can wrap or overwrite a
+peer. See the
+[Stage 5 implementation record](../../doc/formal-verification-stage-5.md).
+PQXDH functional lemmas remain Stage 6 work.
 
 ## Strict hax/F* verification
 
@@ -102,9 +123,10 @@ modules, their dependencies, and the hand-maintained ratchet lemmas in
 The checked properties cover send and receive counter monotonicity and
 exhaustion, receive-gap and cache bounds, retry retention, exact key
 consumption and replay rejection, one-use send keys, and non-selected peer
-isolation. The PQXDH module is extracted and its generated safety obligations
-are strictly verified in Stage 4, but it has no handwritten semantic property
-lemmas yet; those are deliberately scheduled for Stage 6.
+isolation. The PQXDH module, including the Stage 5 key-ID binding, replay
+classification, and checked allocation transitions, is extracted and its
+generated safety obligations are strictly verified, but it has no handwritten
+semantic property lemmas yet; those are deliberately scheduled for Stage 6.
 `make check-generated` additionally fails when a tracked extraction changes,
 which is suitable for a generated-diff CI check.
 
