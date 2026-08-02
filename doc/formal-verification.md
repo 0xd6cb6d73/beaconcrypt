@@ -350,7 +350,7 @@ explicit one-owner, non-rollback replay refinement described below.
 6. **Complete:** add the F* PQXDH agreement, transcript, associated-data, initialization, and assigned-ID correspondence proofs.
 7. **Complete:** add ProVerif processes, events, primitive equations, compromise scenarios, strict result gates, and active-attacker queries.
 8. **Complete:** pin rustc, hax, F*, Z3, and ProVerif and run extraction plus proofs in CI.
-9. Maintain a reviewed inventory of every opaque Rust function, assumed primitive law, generated-code exception, and handwritten backend fragment.
+9. **Complete:** maintain a reviewed inventory of every opaque Rust function, assumed primitive law, adapter refinement, proof-library assumption, generated-code exception, and handwritten backend fragment, with a CI drift gate.
 
 Each stage should leave the existing crate buildable and tested. Extraction output should be reproducible and generated directories should never contain hand-maintained lemmas.
 
@@ -638,6 +638,42 @@ Re-extraction with the pinned Rust nightly is byte-identical to the Stage 7
 artifacts. No theorem, primitive equation, process, or expected ProVerif result
 changed in Stage 8.
 
+### Step 9 implementation
+
+The detailed implementation record is in
+[`formal-verification-stage-9.md`](formal-verification-stage-9.md), and the
+canonical maintained inventory is
+[`crates/protocol-core/proofs/trusted-boundary.md`](../crates/protocol-core/proofs/trusted-boundary.md).
+
+Stage 9 inventories the repository-owned production wrappers around entropy,
+Ed25519, Ed25519/X25519 conversion, X25519, ML-KEM, HKDF,
+ChaCha20-Poly1305, BLAKE2b, wire translation, persistence, allocation, and
+zeroization. It separately records the primitive laws used by the conditional
+F* results and ideal ProVerif theory, every concrete-to-logical adapter
+refinement, the pinned hax/F*/ProVerif trust surface, all generated-code
+exceptions, and every handwritten F* or ProVerif review unit.
+
+`make check-inventory` validates a category/path/SHA-256 manifest and derives
+the complete production Rust/schema, protocol-core Rust, generated-backend,
+and handwritten-backend file sets. It also enforces the three and only three
+ProVerif replacements; the generated type/default/converter/error baseline;
+the single permitted generated converter used by handwritten code; the
+handwritten primitive, event, process, and query counts; the absence of hax
+opaque annotations; and the absence of the previously rejected generated F*
+constructs.
+
+The inventory check runs after regeneration in both the complete and
+ProVerif-only locked-shell paths. The existing CI command therefore fails when
+a monitored production wrapper, extraction selector, handwritten proof/model,
+result classifier, generated artifact, tool control, or inventory policy
+changes without an explicit reviewed-baseline update. The hashes are
+deliberately conservative review tripwires; passing the mechanical gate does
+not itself prove that a human review was adequate.
+
+Stage 9 does not add a theorem, change a symbolic equation or query, or alter
+production behavior. All limitations and conditional refinements recorded in
+Stages 3 through 8 remain in force.
+
 ## Toolchain findings and CI policy
 
 A direct extraction smoke test against the current root crate is not viable with the locally installed tools. The installed hax 0.3.7 toolchain uses a Rust 1.93 nightly, while [`Cargo.toml`](../Cargo.toml) declares Rust 1.96. Bypassing that version check exposes use of newer `slice_as_array` functionality and then reaches a hax frontend panic while processing generated Cap'n Proto code.
@@ -653,11 +689,14 @@ CI pins all proof tools together and fails on:
   reachability/compromise queries that differ from their reviewed expected
   classifications;
 - tracked or untracked generated output that differs from the reviewed
-  artifacts.
+  artifacts;
+- any monitored opaque-function, primitive-law, adapter-refinement,
+  proof-library, generated-exception, or handwritten-fragment inventory drift
+  that lacks an explicit reviewed-baseline update.
 
 The proof artifact must state the exact versions of rustc, hax, F*, Z3, and ProVerif used to produce it.
-Stage 9 adds the maintained opaque-function, primitive-law, generated-exception,
-and handwritten-fragment inventory as a further review gate.
+The Stage 9 manifest also fingerprints the selectors and locked tool/CI
+controls that define that artifact.
 
 ## What a successful result means
 

@@ -135,6 +135,15 @@ cached skipped key and on future traffic in both directions, recording the
 absence of post-compromise security. See the
 [Stage 7 implementation record](../../doc/formal-verification-stage-7.md).
 
+Stage 9 adds the maintained trust-boundary inventory. It names every
+proof-relevant opaque production wrapper and primitive law, the ratchet and
+PQXDH adapter refinements, the pinned proof-library assumptions, all accepted
+generated-backend exceptions, and every handwritten proof/model/control
+fragment. A category/path/SHA-256 manifest and structural checks make an
+unreviewed boundary change fail CI. See the
+[canonical inventory](proofs/trusted-boundary.md) and
+[Stage 9 implementation record](../../doc/formal-verification-stage-9.md).
+
 ## Strict hax/F*/ProVerif verification
 
 From this directory, run:
@@ -146,12 +155,27 @@ make verify
 The target enters the repository's locked Nix proof shell, checks the exact
 rustc, Cargo, hax, F*, Z3, and ProVerif identities, regenerates the F* ratchet
 and PQXDH modules and the ProVerif extraction, checks both F* lemma modules
-without `--lax`, and runs the baseline, reachability, and compromise models.
+without `--lax`, checks the complete reviewed trust-boundary inventory, and
+runs the baseline, reachability, and compromise models.
 A policy gate rejects `assume` or `admit` in repository-owned F* modules and
 lax/admitted-query checker flags. The result gate rejects timeouts, missing
 queries, unexpected classifications, and every unproved or inconclusive
 security query. `make verify-proverif` runs only the ProVerif extraction and
 checks in the same locked shell.
+
+The inventory-only check does not require entering the proof shell:
+
+```sh
+make check-inventory
+```
+
+It checks exact monitored file membership and fingerprints, the three embedded
+ProVerif replacements, generated default/converter exceptions and their
+permitted use, handwritten theory/process/query counts, prohibited hax opaque
+annotations, and prohibited generated F* constructs. The full proof target
+separately enforces the handwritten F* assumption policy. Intentional boundary
+changes must update the prose inventory and only the affected manifest hashes
+after their production and proof diffs have been reviewed.
 
 The checked properties cover send and receive counter monotonicity and
 exhaustion, receive-gap and cache bounds, retry retention, exact key
@@ -161,9 +185,10 @@ registration ID, root and associated-data transcripts, conditional honest-role
 agreement, complementary ratchet initialization, authenticated key-ID
 correspondence, replay-status handling, and checked server transactions.
 `make check-generated` additionally fails when extraction changes a tracked
-artifact or creates an untracked artifact. The dedicated formal-verification
-workflow runs that complete target on every main-branch push, pull request
-targeting `main`, and merge-queue check.
+artifact or creates an untracked artifact, and it now inherits the inventory
+gate from `make verify`. The dedicated formal-verification workflow runs that
+complete target on every main-branch push, pull request targeting `main`, and
+merge-queue check.
 
 The checked-in `flake.lock` pins hax revision
 `5b0ba8be6da3c313fdfed1c19dd0f0721a29f4b3` (hax 0.3.7), its

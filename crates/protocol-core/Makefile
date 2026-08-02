@@ -66,7 +66,7 @@ PROVERIF_TIMEOUT ?= 240
 override PROVERIF := proverif
 
 .PHONY: verify verify-in-shell verify-proverif verify-proverif-in-shell \
-	check-toolchain check-fstar-policy \
+	check-toolchain check-fstar-policy check-inventory \
 	extract-fstar check-fstar extract-proverif check-proverif \
 	check-proverif-extraction check-generated
 
@@ -85,6 +85,7 @@ verify-in-shell:
 	$(MAKE) check-fstar
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+	$(MAKE) check-inventory
 
 verify-proverif:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -95,6 +96,14 @@ verify-proverif-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+	$(MAKE) check-inventory
+
+# Review tripwire for the complete production/proof trust boundary. Run after
+# extraction and proof checks so generated output is checked against the
+# reviewed baseline without preventing an intentional changed artifact from
+# first being analyzed.
+check-inventory:
+	bash proofs/check-inventory.sh
 
 # Fail before extraction if PATH or a flake edit selected a tool other than the
 # reviewed proof bundle. F* uses this same exposed z3-4.15.3 executable.
