@@ -72,6 +72,27 @@ uv run pytest tests
 
 The `-a` flag is required after rebuilding the Rust static library because Go's build cache does not detect changes to libraries linked through cgo. `-count=1` also prevents reuse of a cached successful test result.
 
+### Mutation testing
+
+Mutation testing uses [cargo-mutants](https://mutants.rs/) 27.1.0. Install the pinned version and run the complete workspace mutation suite from the repository root:
+
+```bash
+cargo install --locked cargo-mutants@27.1.0
+cargo mutants --workspace --jobs 2
+```
+
+The checked-in [configuration](.cargo/mutants.toml) runs the top-level integration and vector tests for mutations in both `beaconcrypt` and `beaconcrypt-protocol-core`. It excludes the feature-gated C and Python adapters because those are exercised by their language-specific test suites, and it documents narrowly scoped equivalent mutations that cannot occur through valid public state.
+
+A successful run exits with status zero and reports every viable mutant as caught. Detailed outcomes are written to `mutants.out/`; `missed.txt` and `timeout.txt` must both be empty. Mutants classified as unviable failed to compile and do not indicate a test gap.
+
+After adding tests for missed mutants, rerun only the previous misses and any newly discovered mutants with:
+
+```bash
+cargo mutants --workspace --jobs 2 --iterate
+```
+
+Do not use `--iterate` for the final verification pass; finish with the complete non-iterative command so stale results cannot hide a regression. Mutation testing covers the Rust implementation and complements, but does not replace, `make -C crates/protocol-core verify` or the Go and Python binding tests.
+
 ### Reproducing known-answer test vectors
 
 The fixed cryptographic values used by the Rust known-answer tests can be
