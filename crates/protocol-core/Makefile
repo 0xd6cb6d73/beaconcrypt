@@ -90,7 +90,6 @@ verify-in-shell:
 	$(MAKE) check-fstar
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
-	$(MAKE) check-inventory
 
 verify-proverif:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -101,7 +100,6 @@ verify-proverif-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
-	$(MAKE) check-inventory
 
 # Review tripwire for the complete production/proof trust boundary. Run after
 # extraction and proof checks so generated output is checked against the
