@@ -4,7 +4,7 @@
 # it one directory above the generated files prevents hand-maintained proof
 # infrastructure from being mistaken for hax output.
 
-FSTAR_BIN ?= fstar.exe
+override FSTAR_BIN := fstar.exe
 CACHE_DIR ?= .cache
 HINT_DIR ?= $(CACHE_DIR)/hints
 DEPEND_FILE := $(CACHE_DIR)/depend
@@ -28,15 +28,16 @@ FSTAR_INCLUDE_DIRS := \
 	$(HAX_PROOF_LIBS_HOME)/core \
 	$(HAX_LIBS_HOME)
 
-FSTAR_FLAGS := \
+override FSTAR_FLAGS := \
 	--cmi \
+	--z3version 4.15.3 \
 	--warn_error -331 \
 	--cache_checked_modules \
 	--cache_dir $(CACHE_DIR) \
 	--already_cached '+Prims+FStar+LowStar+C+Spec.Loops+TestLib' \
 	$(addprefix --include ,$(FSTAR_INCLUDE_DIRS))
 
-FSTAR := $(FSTAR_BIN) $(FSTAR_FLAGS)
+override FSTAR := $(FSTAR_BIN) $(FSTAR_FLAGS)
 
 .PHONY: verify verify-generated verify-manual
 

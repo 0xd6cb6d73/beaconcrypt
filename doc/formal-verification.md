@@ -345,7 +345,7 @@ explicit one-owner, non-rollback replay refinement described below.
 5. **Complete:** close the three-counterexample milestone with authenticated key-ID binding, persistent server registration replay rejection, collision-safe checked allocation, and mandatory regressions.
 6. **Complete:** add the F* PQXDH agreement, transcript, associated-data, initialization, and assigned-ID correspondence proofs.
 7. **Complete:** add ProVerif processes, events, primitive equations, compromise scenarios, strict result gates, and active-attacker queries.
-8. Pin rustc, hax, F*, Z3, and ProVerif and run extraction plus proofs in CI.
+8. **Complete:** pin rustc, hax, F*, Z3, and ProVerif and run extraction plus proofs in CI.
 9. Maintain a reviewed inventory of every opaque Rust function, assumed primitive law, generated-code exception, and handwritten backend fragment.
 
 Each stage should leave the existing crate buildable and tested. Extraction output should be reproducible and generated directories should never contain hand-maintained lemmas.
@@ -592,13 +592,55 @@ hax shell. Its result parser rejects timeouts, missing or substituted queries,
 unexpected true/false classifications, and every unproved or inconclusive
 security query. `make check-generated` covers both generated directories.
 
+### Step 8 implementation
+
+The detailed implementation record is in
+[`formal-verification-stage-8.md`](formal-verification-stage-8.md).
+
+The repository now owns [`flake.nix`](../flake.nix) and
+[`flake.lock`](../flake.lock). The flake extends hax's revision-pinned proof
+shell with the Rust nightly declared by that same hax revision and with the Z3
+package supplied by the locked F* input. This closes Stage 7's ambient-tool
+gap: its shell pinned hax, F*, and ProVerif but omitted rustc, so extraction
+used whichever compiler was already on `PATH`.
+
+Before either backend runs, `make check-toolchain` checks the exact rustc,
+Cargo, hax, F*, Z3, and ProVerif identities. Nix is invoked with
+`--no-update-lock-file`, and both cargo-hax calls use Cargo's `--locked` mode.
+After F* extraction, a separate policy gate rejects `assume` or `admit` in
+repository-owned F* modules and rejects lax or admitted-query checker flags.
+The reviewed bundle is rustc 1.93.0-nightly (`843f8ce2e`), Cargo
+1.93.0-nightly (`636800288`), hax 0.3.7 at revision `5b0ba8b`, F*
+`2025.10.06~dev` at revision `7b34738`, Z3 4.15.3, and ProVerif 2.05.
+The pinned nightly is scoped to the isolated proof shell; it does not lower or
+override the production crate's Rust 1.96 requirement.
+
+These are latest-compatible rather than merely copied upstream pins. The Stage
+8 audit exercised every later F* release available on 2026-08-02 and found
+each incompatible with hax's proof libraries, while the newest Z3 bundled by
+the selected F* release, 4.15.3, discharged the complete proof corpus. The
+detailed record contains the failure boundary and the rationale for each
+retained dependency.
+
+The dedicated `formal-verification.yml` GitHub Actions workflow installs Nix,
+uses the public hax/F*/Z3 caches read-only, and runs
+`make -C crates/protocol-core check-generated` on main-branch pushes, pull
+requests targeting `main`, merge-queue checks, and manual dispatch. The job has
+read-only repository permission and a 60-minute bound. It therefore
+regenerates both backends, runs every strict Stage 2/6 F* and Stage 7 ProVerif
+gate, and rejects tracked or untracked generated-artifact drift.
+
+Re-extraction with the pinned Rust nightly is byte-identical to the Stage 7
+artifacts. No theorem, primitive equation, process, or expected ProVerif result
+changed in Stage 8.
+
 ## Toolchain findings and CI policy
 
 A direct extraction smoke test against the current root crate is not viable with the locally installed tools. The installed hax 0.3.7 toolchain uses a Rust 1.93 nightly, while [`Cargo.toml`](../Cargo.toml) declares Rust 1.96. Bypassing that version check exposes use of newer `slice_as_array` functionality and then reaches a hax frontend panic while processing generated Cap'n Proto code.
 
 This supports the isolated-core approach: it avoids generated schemas and FFI-heavy dependencies, and it can remain within the Rust subset supported by the pinned hax release. It is not evidence that the application should lower its Rust requirement.
 
-CI should pin all proof tools together and fail on:
+CI pins all proof tools together and fails on:
 
 - extraction errors or unexpected generated diffs;
 - F* checking performed with `--lax`;
@@ -606,9 +648,12 @@ CI should pin all proof tools together and fail on:
 - baseline ProVerif queries reported as false, unproved, or inconclusive, or
   reachability/compromise queries that differ from their reviewed expected
   classifications;
-- an unreviewed change to the opaque/assumption inventory.
+- tracked or untracked generated output that differs from the reviewed
+  artifacts.
 
 The proof artifact must state the exact versions of rustc, hax, F*, Z3, and ProVerif used to produce it.
+Stage 9 adds the maintained opaque-function, primitive-law, generated-exception,
+and handwritten-fragment inventory as a further review gate.
 
 ## What a successful result means
 

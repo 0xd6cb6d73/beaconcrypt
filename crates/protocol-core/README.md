@@ -143,12 +143,15 @@ From this directory, run:
 make verify
 ```
 
-The target enters the pinned hax Nix shell, regenerates the F* ratchet and
-PQXDH modules and the ProVerif extraction, checks both F* lemma modules without
-`--lax`, and runs the baseline, reachability, and compromise models. The result
-gate rejects timeouts, missing queries, unexpected classifications, and every
-unproved or inconclusive security query. `make verify-proverif` runs only the
-ProVerif extraction and checks in the same pinned shell.
+The target enters the repository's locked Nix proof shell, checks the exact
+rustc, Cargo, hax, F*, Z3, and ProVerif identities, regenerates the F* ratchet
+and PQXDH modules and the ProVerif extraction, checks both F* lemma modules
+without `--lax`, and runs the baseline, reachability, and compromise models.
+A policy gate rejects `assume` or `admit` in repository-owned F* modules and
+lax/admitted-query checker flags. The result gate rejects timeouts, missing
+queries, unexpected classifications, and every unproved or inconclusive
+security query. `make verify-proverif` runs only the ProVerif extraction and
+checks in the same locked shell.
 
 The checked properties cover send and receive counter monotonicity and
 exhaustion, receive-gap and cache bounds, retry retention, exact key
@@ -157,12 +160,18 @@ isolation. The PQXDH properties cover exact type/role encodings and validation, 
 registration ID, root and associated-data transcripts, conditional honest-role
 agreement, complementary ratchet initialization, authenticated key-ID
 correspondence, replay-status handling, and checked server transactions.
-`make check-generated` additionally fails when a tracked extraction changes,
-which is suitable for a generated-diff CI check.
+`make check-generated` additionally fails when extraction changes a tracked
+artifact or creates an untracked artifact. The dedicated formal-verification
+workflow runs that complete target on every main-branch push, pull request
+targeting `main`, and merge-queue check.
 
-The hax revision is
-`5b0ba8be6da3c313fdfed1c19dd0f0721a29f4b3` (hax 0.3.7). The proof shell
-provides F* v2025.10.06 with its default Z3 4.13.3 and ProVerif 2.05. This
-extraction used rustc 1.97.1; the hax source declares Rust nightly 2025-11-08.
-Fully hermetic CI selection of rustc, hax, F*, Z3, and ProVerif remains Stage 8
-work.
+The checked-in `flake.lock` pins hax revision
+`5b0ba8be6da3c313fdfed1c19dd0f0721a29f4b3` (hax 0.3.7), its
+`nightly-2025-11-08` Rust toolchain (rustc 1.93.0-nightly, commit `843f8ce2e`),
+F* revision `7b347386330d0e5a331a220535b6f15288903234`
+(`2025.10.06~dev`), Z3 4.15.3, and ProVerif 2.05. Nix is invoked with
+`--no-update-lock-file`, and the version gate fails before extraction if a
+checked version banner differs. Z3 4.15.3 is the newest solver bundled by this
+F* release and was qualified against the complete corpus; later F* releases
+were tested and rejected by hax's proof libraries. See the
+[Stage 8 implementation record](../../doc/formal-verification-stage-8.md).

@@ -2,8 +2,14 @@
 
 SHELL := /bin/bash
 
-HAX_REV := 5b0ba8be6da3c313fdfed1c19dd0f0721a29f4b3
-HAX_SHELL := github:cryspen/hax/$(HAX_REV)\#ci-examples
+NIX ?= nix
+PROOF_SHELL := path:../..\#proofs
+EXPECTED_RUSTC := rustc 1.93.0-nightly (843f8ce2e 2025-11-07)
+EXPECTED_CARGO := cargo 1.93.0-nightly (636800288 2025-10-31)
+EXPECTED_HAX := 0.3.7
+EXPECTED_FSTAR := F* 2025.10.06~dev
+EXPECTED_Z3 := Z3 version 4.15.3 - 64 bit
+EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
 HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::ratchet::SequenceCache \
 	+beaconcrypt_protocol_core::ratchet::advance_send \
@@ -57,41 +63,85 @@ PROVERIF_COMMON_LIBS := \
 	-lib $(PROVERIF_DIR)/environment.pvl
 PROVERIF_CHECKER := $(PROVERIF_DIR)/check-results.awk
 PROVERIF_TIMEOUT ?= 240
-PROVERIF ?= proverif
+override PROVERIF := proverif
 
 .PHONY: verify verify-in-shell verify-proverif verify-proverif-in-shell \
+	check-toolchain check-fstar-policy \
 	extract-fstar check-fstar extract-proverif check-proverif \
 	check-proverif-extraction check-generated
 
-# Enter hax's pinned CI shell, regenerate both backends, and check every proof.
+# Enter the repository-locked proof shell, regenerate both backends, and check
+# every proof. --no-update-lock-file makes a stale or incomplete lock fail.
 verify:
-	nix --extra-experimental-features 'nix-command flakes' \
-		develop '$(HAX_SHELL)' -c $(MAKE) verify-in-shell
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-in-shell
 
-# This target is split out so CI and developers can reuse an existing pinned
-# shell without recursively starting Nix.
+# This target is split out so CI and developers can reuse the locked shell
+# without recursively starting Nix.
 verify-in-shell:
+	$(MAKE) check-toolchain
 	$(MAKE) extract-fstar
 	$(MAKE) check-fstar
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
 
 verify-proverif:
-	nix --extra-experimental-features 'nix-command flakes' \
-		develop '$(HAX_SHELL)' -c $(MAKE) verify-proverif-in-shell
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-in-shell
 
 verify-proverif-in-shell:
+	$(MAKE) check-toolchain
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
 
-extract-fstar:
-	cargo hax into -i '$(HAX_ITEMS)' fstar
+# Fail before extraction if PATH or a flake edit selected a tool other than the
+# reviewed proof bundle. F* uses this same exposed z3-4.15.3 executable.
+check-toolchain:
+	@set -euo pipefail; \
+		check_version() { \
+			local tool="$$1" expected="$$2" actual="$$3"; \
+			if [[ "$$actual" != "$$expected" ]]; then \
+				echo "unexpected $$tool version" >&2; \
+				echo "  expected: $$expected" >&2; \
+				echo "  actual:   $$actual" >&2; \
+				exit 1; \
+			fi; \
+			printf '%s: %s\n' "$$tool" "$$actual"; \
+		}; \
+		check_version rustc '$(EXPECTED_RUSTC)' "$$(rustc --version)"; \
+		check_version cargo '$(EXPECTED_CARGO)' "$$(cargo --version)"; \
+		check_version hax '$(EXPECTED_HAX)' \
+			"$$(cargo hax --version | awk -F= '$$1 == "version" { print $$2 }')"; \
+		check_version Fstar '$(EXPECTED_FSTAR)' \
+			"$$(fstar.exe --version | sed -n '1p')"; \
+		check_version Z3 '$(EXPECTED_Z3)' "$$(z3-4.15.3 -version)"; \
+		check_version ProVerif '$(EXPECTED_PROVERIF)' \
+			"$$(proverif -help 2>&1 | sed -n '1p')"
 
-check-fstar:
+extract-fstar:
+	cargo hax -C --locked ';' into -i '$(HAX_ITEMS)' fstar
+
+# F* accepts explicit assumptions and lax/admit flags, so strict typechecking
+# alone is not a sufficient policy gate for repository-owned proof modules.
+check-fstar-policy:
+	@if rg -n --pcre2 '\b(?:assume|admit)\b' proofs/fstar \
+		--glob '*.fst' --glob '*.fsti'; then \
+		echo 'unexpected assume/admit in repository-owned F* proof' >&2; \
+		exit 1; \
+	fi
+	@if rg -n -- '--(lax|admit_smt_queries|admit_except|use_hint_hashes)' \
+		proofs/fstar/Makefile; then \
+		echo 'unexpected lax/admit flag in the F* checker' >&2; \
+		exit 1; \
+	fi
+
+check-fstar: check-fstar-policy
 	$(MAKE) -C proofs/fstar/extraction -f ../Makefile verify
 
 extract-proverif:
-	cargo hax -C --features=proverif ';' into \
+	cargo hax -C --locked --features=proverif ';' into \
 		-i '$(HAX_PROVERIF_ITEMS)' \
 		--output-dir $(PROVERIF_DIR)/extraction pro-verif
 
@@ -134,3 +184,10 @@ check-proverif: check-proverif-extraction
 # Run this after committing generated output to ensure extraction is stable.
 check-generated: verify
 	git diff --exit-code -- proofs/fstar/extraction proofs/pro-verif/extraction
+	@untracked="$$(git ls-files --others --exclude-standard -- \
+		proofs/fstar/extraction proofs/pro-verif/extraction)"; \
+		if [[ -n "$$untracked" ]]; then \
+			echo 'untracked generated proof artifacts:' >&2; \
+			printf '%s\n' "$$untracked" >&2; \
+			exit 1; \
+		fi
