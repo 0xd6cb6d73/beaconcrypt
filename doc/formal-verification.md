@@ -8,6 +8,10 @@ The goal is to prove protocol-level properties of beaconcrypt from the Rust code
 
 This document complements the [protocol description](protocol.md) and [threat model](threat_model.md). It describes an extraction boundary, the responsibilities of each prover backend, the intended theorem inventory, and a staged path to a continuously checked proof.
 
+For a plain-language audit of the properties actually checked by the current
+proof corpus, their assumptions, and the limits of the resulting security
+claims, see [What beaconcrypt's formal verification proves](formal-verification-analysis.md).
+
 The central rule is that there must not be a hand-written proof model that can silently diverge from the implementation. A small, extractable Rust crate will own the protocol transitions, and the existing public API will call that crate. hax will extract that same code to the prover backends.
 
 ## Verification architecture
