@@ -34,14 +34,24 @@ bool transport::send(const std::span<const uint8_t> data) {
 In essence, this **only** handles crypto, you still get to do whatever you want on the transport side.
 
 ## Limitations
-In short: PQ algorithms take a lot more space than classical ones. This is unfortunately unavoidable. Therfore, the initial registration handshake will be somewhat large (~2.2kb for ML-KEM). However, this does not impact any follow on messages, for which the only overhead is the captn' proto framing.
+In short: PQ algorithms take a lot more space than classical ones.
+This is unfortunately unavoidable. Therfore, the initial registration handshake will be somewhat large.
+The ML-KEM public key and ciphertext combined take up ~2.2kb by themselves.
+This overhead will grow larger when hybrid signatures are implemented.
+Thankfully, this only affects the registration handshake.
+No subsequent messages are affected, as they only use symmetric cryptography.
+However, this does not impact any follow on messages, for which the only overhead is the captn' proto framing.
 
-The reference implementation is large, ~6.5MB for the static lib. It goes down to ~3.5MB if building the stdlib ourselves with a nightly toolchain. This is largely due to the fact that we need to bring a bunch of rust stuff with us. Unfortunately, most crypto libraries aren't really meant to run in 40KB images, so there's always going to be some floor there. It should however be easy to cut the rust-related stuff by implementing this protocol in C or C++, though you'll still have to pay for the libsodium + captn proto libraries.
+The reference implementation is large, ~6.5MB for the static lib. It goes down to ~2MB if building the stdlib ourselves with a nightly toolchain. This is largely due to the fact that we need to bring a bunch of rust stuff with us. Unfortunately, most crypto libraries aren't really meant to run in 40KB images, so there's always going to be some floor there. It should however be easy to cut the rust-related stuff by implementing this protocol in C or C++, though you'll still have to pay for the libsodium + captn proto libraries.
 
-The C interfaces are probably not thread safe.
+It is very likely that neither the rust nor C interfaces are thread-safe.
 
 # TODOs
-Test the C interface
+Test the C interface.
+
+See about adding proofs.
+
+Make the server interface thread-safe in rust.
 
 # Reference implementation
 I don't use rust a lot, so the code is probably fairly naive. It provides both a beacon and server implementation with C bindings through `cbindgen`. Ideally more bindings would be built on top of that so it can be used in the mythic server-side.
