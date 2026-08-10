@@ -271,16 +271,25 @@ impl<'de> Deserialize<'de> for RatchetManager {
 			.collect::<Option<HashMap<_, _>>>()
 			.ok_or_else(|| D::Error::custom("send_past contains an invalid sequence"))?;
 
-		let mut receive_sequences = data.recv_past.keys().copied().collect::<Vec<_>>();
-		receive_sequences.sort_unstable();
+		let mut receive_entries = data.recv_past.into_iter().collect::<Vec<_>>();
+		receive_entries.sort_unstable_by_key(|(sequence, _)| *sequence);
 		let mut restore = verified_ratchet::start_restore(data.send_ctr, data.recv_ctr);
-		for sequence in receive_sequences {
-			restore =
-				verified_ratchet::restore_receive_key(restore, sequence).ok_or_else(|| {
+		let mut recv_past = std::array::from_fn(|_| None);
+		for (sequence, directed) in receive_entries {
+			let step = verified_ratchet::restore_receive_key_with_slot(restore, sequence)
+				.ok_or_else(|| {
 					D::Error::custom(
 						"recv_past exceeds the verified cache capacity or contains an invalid sequence",
 					)
 				})?;
+			let slot = step.slot as usize;
+			if slot >= recv_past.len() || recv_past[slot].is_some() {
+				return Err(D::Error::custom(
+					"verified receive restoration returned an invalid concrete slot",
+				));
+			}
+			recv_past[slot] = Some(directed.material);
+			restore = step.restore;
 		}
 		let control = verified_ratchet::finish_restore(restore);
 
@@ -289,22 +298,6 @@ impl<'de> Deserialize<'de> for RatchetManager {
 			.into_iter()
 			.map(|(sequence, directed)| (sequence, directed.material))
 			.collect();
-		let mut receive_material = data.recv_past;
-		let mut recv_past = std::array::from_fn(|_| None);
-		for slot in 0..control.receive_cache_len() {
-			let sequence = control.receive_key_at(slot).ok_or_else(|| {
-				D::Error::custom("verified receive cache contains an invalid slot")
-			})?;
-			let directed = receive_material
-				.remove(&sequence)
-				.ok_or_else(|| D::Error::custom("verified receive slot has no concrete key"))?;
-			recv_past[slot as usize] = Some(directed.material);
-		}
-		if !receive_material.is_empty() {
-			return Err(D::Error::custom(
-				"recv_past contains keys outside the verified receive cache",
-			));
-		}
 		let manager = Self {
 			send_key: data.send_key,
 			recv_key: data.recv_key,
@@ -511,7 +504,7 @@ mod tests {
 		}
 		for slot in 0..left.control.receive_cache_len() {
 			let sequence = left.control.receive_key_at(slot).unwrap();
-			let right_slot = right.receive_key_slot(sequence).unwrap();
+			let right_slot = verified_ratchet::lookup_receive_key(right.control, sequence).unwrap();
 			assert_key_material_eq(
 				left.recv_past[slot as usize].as_ref().unwrap(),
 				right.recv_past[right_slot as usize].as_ref().unwrap(),

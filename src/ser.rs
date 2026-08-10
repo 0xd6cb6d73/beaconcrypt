@@ -190,6 +190,17 @@ impl Serialize for ReceiveKeyArrayRef<'_> {
 		S: Serializer,
 	{
 		let len = self.control.receive_cache_len();
+		let active_len = len as usize;
+		if active_len > self.keys.len() {
+			return Err(S::Error::custom(
+				"logical receive cache exceeds concrete slot capacity",
+			));
+		}
+		if self.keys[active_len..].iter().any(Option::is_some) {
+			return Err(S::Error::custom(
+				"inactive receive slot contains concrete key material",
+			));
+		}
 		let mut map = serializer.serialize_map(Some(len as usize))?;
 		for slot in 0..len {
 			let sequence = self.control.receive_key_at(slot).ok_or_else(|| {

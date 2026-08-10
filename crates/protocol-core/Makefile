@@ -17,8 +17,14 @@ HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::ratchet::finish_send \
 	+beaconcrypt_protocol_core::ratchet::plan_receive_until \
 	+beaconcrypt_protocol_core::ratchet::advance_receive \
+	+beaconcrypt_protocol_core::ratchet::lookup_receive_key \
+	+beaconcrypt_protocol_core::ratchet::ReceiveRemoval \
+	+beaconcrypt_protocol_core::ratchet::ReceiveFinishWithRemoval \
+	+beaconcrypt_protocol_core::ratchet::finish_receive_with_removal \
 	+beaconcrypt_protocol_core::ratchet::finish_receive \
 	+beaconcrypt_protocol_core::ratchet::start_restore \
+	+beaconcrypt_protocol_core::ratchet::ReceiveRestoreStep \
+	+beaconcrypt_protocol_core::ratchet::restore_receive_key_with_slot \
 	+beaconcrypt_protocol_core::ratchet::restore_receive_key \
 	+beaconcrypt_protocol_core::ratchet::finish_restore \
 	+beaconcrypt_protocol_core::ratchet::replace_ratchet_for_peer \

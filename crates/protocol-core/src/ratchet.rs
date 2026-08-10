@@ -290,6 +290,34 @@ pub struct ReceiveFinish {
 	pub disposition: ReceiveDisposition,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ReceiveRemoval {
+	pub target_slot: u8,
+	pub last_slot: u8,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ReceiveFinishWithRemoval {
+	pub state: RatchetState,
+	pub disposition: ReceiveDisposition,
+	pub removal: Option<ReceiveRemoval>,
+}
+
+/// Return the physical slot currently containing `sequence`.
+pub fn lookup_receive_key(state: RatchetState, sequence: u64) -> Option<u8> {
+	let mut slot = 0_u8;
+	while (slot as usize) < RECEIVE_CACHE_CAPACITY {
+		if slot >= state.receive_cache.len {
+			return None;
+		}
+		if state.receive_cache.entries[slot as usize] == sequence {
+			return Some(slot);
+		}
+		slot += 1;
+	}
+	None
+}
+
 /// Complete authentication for a receive key identified by both slot and
 /// sequence.
 ///
@@ -302,6 +330,19 @@ pub fn finish_receive(
 	slot: u8,
 	authenticated: bool,
 ) -> ReceiveFinish {
+	let finished = finish_receive_with_removal(state, target, slot, authenticated);
+	ReceiveFinish {
+		state: finished.state,
+		disposition: finished.disposition,
+	}
+}
+
+pub fn finish_receive_with_removal(
+	state: RatchetState,
+	target: u64,
+	slot: u8,
+	authenticated: bool,
+) -> ReceiveFinishWithRemoval {
 	let len = state.receive_cache.len;
 	let len_index = len as usize;
 	let slot_index = slot as usize;
@@ -309,16 +350,18 @@ pub fn finish_receive(
 		|| slot_index >= len_index
 		|| state.receive_cache.entries[slot_index] != target
 	{
-		return ReceiveFinish {
+		return ReceiveFinishWithRemoval {
 			state,
 			disposition: ReceiveDisposition::Missing,
+			removal: None,
 		};
 	}
 
 	if !authenticated {
-		return ReceiveFinish {
+		return ReceiveFinishWithRemoval {
 			state,
 			disposition: ReceiveDisposition::Retained,
+			removal: None,
 		};
 	}
 
@@ -326,7 +369,7 @@ pub fn finish_receive(
 	let mut entries = state.receive_cache.entries;
 	entries[slot_index] = entries[last_slot as usize];
 	entries[last_slot as usize] = 0;
-	ReceiveFinish {
+	ReceiveFinishWithRemoval {
 		state: RatchetState {
 			receive_cache: SequenceCache {
 				entries,
@@ -335,6 +378,10 @@ pub fn finish_receive(
 			..state
 		},
 		disposition: ReceiveDisposition::Consumed,
+		removal: Some(ReceiveRemoval {
+			target_slot: slot,
+			last_slot,
+		}),
 	}
 }
 
@@ -356,7 +403,16 @@ pub const fn start_restore(send_sequence: u64, receive_sequence: u64) -> Ratchet
 	}
 }
 
-pub fn restore_receive_key(restore: RatchetRestore, sequence: u64) -> Option<RatchetRestore> {
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ReceiveRestoreStep {
+	pub restore: RatchetRestore,
+	pub slot: u8,
+}
+
+pub fn restore_receive_key_with_slot(
+	restore: RatchetRestore,
+	sequence: u64,
+) -> Option<ReceiveRestoreStep> {
 	if sequence == 0
 		|| sequence > restore.state.receive_sequence
 		|| sequence <= restore.last_sequence
@@ -364,14 +420,21 @@ pub fn restore_receive_key(restore: RatchetRestore, sequence: u64) -> Option<Rat
 		return None;
 	}
 
-	let (receive_cache, _) = restore.state.receive_cache.append(sequence)?;
-	Some(RatchetRestore {
-		state: RatchetState {
-			receive_cache,
-			..restore.state
+	let (receive_cache, slot) = restore.state.receive_cache.append(sequence)?;
+	Some(ReceiveRestoreStep {
+		restore: RatchetRestore {
+			state: RatchetState {
+				receive_cache,
+				..restore.state
+			},
+			last_sequence: sequence,
 		},
-		last_sequence: sequence,
+		slot,
 	})
+}
+
+pub fn restore_receive_key(restore: RatchetRestore, sequence: u64) -> Option<RatchetRestore> {
+	restore_receive_key_with_slot(restore, sequence).map(|step| step.restore)
 }
 
 pub const fn finish_restore(restore: RatchetRestore) -> RatchetState {
@@ -439,8 +502,9 @@ mod tests {
 	use super::{
 		PeerRatchetState, RATCHET_MAX_GAP, RECEIVE_CACHE_CAPACITY, RatchetState,
 		ReceiveDisposition, SequenceCache, advance_receive, advance_send, advance_send_for_peer,
-		finish_receive, finish_restore, finish_send, plan_receive_until, replace_ratchet_for_peer,
-		restore_receive_key, start_restore,
+		finish_receive, finish_receive_with_removal, finish_restore, finish_send,
+		lookup_receive_key, plan_receive_until, replace_ratchet_for_peer, restore_receive_key,
+		restore_receive_key_with_slot, start_restore,
 	};
 
 	fn find_receive_key(state: &RatchetState, sequence: u64) -> Option<u8> {
@@ -559,6 +623,15 @@ mod tests {
 	}
 
 	#[test]
+	fn verified_receive_lookup_finds_only_active_sequences() {
+		let state = execute_receive_plan(RatchetState::default(), 4);
+		assert_eq!(lookup_receive_key(state, 1), Some(0));
+		assert_eq!(lookup_receive_key(state, 4), Some(3));
+		assert_eq!(lookup_receive_key(state, 0), None);
+		assert_eq!(lookup_receive_key(state, 5), None);
+	}
+
+	#[test]
 	fn receive_allocates_max_then_exhausts_without_mutation() {
 		let state = RatchetState::from_counters(0, u64::MAX - 1);
 		let last = advance_receive(state);
@@ -609,6 +682,21 @@ mod tests {
 	}
 
 	#[test]
+	fn detailed_receive_completion_reports_exact_swap_removal() {
+		let state = execute_receive_plan(RatchetState::default(), 4);
+		let retained = finish_receive_with_removal(state, 2, 1, false);
+		assert_eq!(retained.removal, None);
+		assert_eq!(retained.state, state);
+
+		let consumed = finish_receive_with_removal(state, 2, 1, true);
+		let removal = consumed.removal.unwrap();
+		assert_eq!(removal.target_slot, 1);
+		assert_eq!(removal.last_slot, 3);
+		assert_eq!(consumed.state.receive_key_at(1), Some(4));
+		assert_eq!(finish_receive(state, 2, 1, true).state, consumed.state);
+	}
+
+	#[test]
 	fn old_skipped_key_does_not_turn_capacity_into_a_sliding_window() {
 		let mut state = execute_receive_plan(RatchetState::default(), RATCHET_MAX_GAP);
 		for sequence in 2..=RATCHET_MAX_GAP {
@@ -644,6 +732,16 @@ mod tests {
 		assert_eq!(state.receive_key_at(0), Some(1));
 		assert_eq!(state.receive_key_at(1), Some(4));
 		assert_eq!(state.receive_key_at(2), Some(12));
+	}
+
+	#[test]
+	fn restore_reports_the_slot_used_by_the_logical_append() {
+		let first = restore_receive_key_with_slot(start_restore(0, 9), 2).unwrap();
+		assert_eq!(first.slot, 0);
+		let second = restore_receive_key_with_slot(first.restore, 7).unwrap();
+		assert_eq!(second.slot, 1);
+		assert_eq!(finish_restore(second.restore).receive_key_at(1), Some(7));
+		assert_eq!(restore_receive_key(first.restore, 7), Some(second.restore));
 	}
 
 	#[test]

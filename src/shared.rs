@@ -607,7 +607,7 @@ impl RatchetManager {
 	}
 
 	pub fn recv_key(&self, seq: u64) -> Option<&KeyMaterial> {
-		let slot = self.receive_key_slot(seq)?;
+		let slot = verified_ratchet::lookup_receive_key(self.control, seq)?;
 		self.recv_past.get(slot as usize)?.as_ref()
 	}
 
@@ -715,7 +715,7 @@ impl RatchetManager {
 		authenticated: bool,
 	) -> verified_ratchet::ReceiveDisposition {
 		debug_assert!(self.receive_cache_matches_control());
-		let Some(slot) = self.receive_key_slot(seq) else {
+		let Some(slot) = verified_ratchet::lookup_receive_key(self.control, seq) else {
 			return verified_ratchet::ReceiveDisposition::Missing;
 		};
 		let has_concrete_key = self.recv_past[slot as usize].is_some();
@@ -727,14 +727,26 @@ impl RatchetManager {
 			return verified_ratchet::ReceiveDisposition::Missing;
 		}
 
-		let finished = verified_ratchet::finish_receive(self.control, seq, slot, authenticated);
+		let finished =
+			verified_ratchet::finish_receive_with_removal(self.control, seq, slot, authenticated);
 		if finished.disposition == verified_ratchet::ReceiveDisposition::Consumed {
-			let last_slot = self.control.receive_cache_len() - 1;
-			let removed = self.recv_past[slot as usize].take();
-			if slot != last_slot {
-				self.recv_past[slot as usize] = self.recv_past[last_slot as usize].take();
+			let Some(removal) = finished.removal else {
+				return verified_ratchet::ReceiveDisposition::Missing;
+			};
+			let target_index = removal.target_slot as usize;
+			let last_index = removal.last_slot as usize;
+			if target_index >= self.recv_past.len()
+				|| last_index >= self.recv_past.len()
+				|| self.recv_past[target_index].is_none()
+				|| self.recv_past[last_index].is_none()
+			{
+				return verified_ratchet::ReceiveDisposition::Missing;
 			}
+			self.recv_past.swap(target_index, last_index);
+			let removed = self.recv_past[last_index].take();
 			debug_assert!(removed.is_some());
+		} else if finished.removal.is_some() || finished.state != self.control {
+			return verified_ratchet::ReceiveDisposition::Missing;
 		}
 		self.control = finished.state;
 		debug_assert!(self.receive_cache_matches_control());
@@ -762,11 +774,6 @@ impl RatchetManager {
 	#[cfg(any(feature = "server", test))]
 	fn receive_sequence(&self) -> u64 {
 		self.control.receive_sequence()
-	}
-
-	fn receive_key_slot(&self, sequence: u64) -> Option<u8> {
-		(0..self.control.receive_cache_len())
-			.find(|&slot| self.control.receive_key_at(slot) == Some(sequence))
 	}
 
 	fn send_cache_matches_control(&self) -> bool {
@@ -1967,6 +1974,7 @@ mod tests {
 			nonce: [0xA2; AEAD_NONCE_LEN].into(),
 		});
 		assert!(!receive_inconsistent.receive_cache_matches_control());
+		assert!(serde_json::to_string(&receive_inconsistent).is_err());
 	}
 
 	#[test]
