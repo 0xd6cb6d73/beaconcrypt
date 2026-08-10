@@ -42,19 +42,17 @@ Concrete cryptographic material stays in the production adapter:
 
 - `send_key` and `recv_key` hold the opaque HKDF chain bytes;
 - `send_past` holds concrete AEAD send keys and nonces;
-- `recv_past` holds concrete AEAD receive keys and nonces;
+- `recv_past` is a fixed array holding concrete AEAD receive keys and nonces in the physical slots assigned by the core;
 - `send_capabilities` pairs each pending concrete send key with the logical
   `SendKey` returned by the core.
 
 The principal receive refinement invariant is:
 
 ```text
-keys(recv_past) == logical_receive_sequences(control)
+recv_past[slot].is_some() == (slot < control.receive_cache_len())
 ```
 
-The adapter checks this invariant in debug builds after construction and every
-receive-cache mutation. It also checks that pending concrete send keys and
-logical send capabilities have equal sequence sets.
+The adapter checks this invariant in debug builds after construction and every receive-cache mutation. It also checks that pending concrete send keys and logical send capabilities have equal sequence sets.
 
 The public C constant for the receive gap retains a literal initializer because
 cbindgen cannot evaluate a cross-crate constant path. A compile-time assertion
@@ -94,20 +92,13 @@ A production receive now follows the verified planning and completion split:
    is advanced. A target outside the gap or total-cache bound is state-neutral.
 2. For each planned derivation, `advance_receive` adds one logical sequence and
    the adapter performs exactly one concrete HKDF step for that same sequence.
-3. The adapter requires both logical ownership and a concrete `recv_past` entry
-   before attempting commitment or AEAD verification.
+3. The adapter resolves the sequence through the core's verified array and requires a concrete key in that same physical `recv_past` slot before attempting commitment or AEAD verification.
 4. Commitment or AEAD failure calls `finish_receive(..., false)`. The core
    returns `Retained`, and both logical and concrete representations remain
    available for an exact retry.
-5. Successful AEAD verification calls `finish_receive(..., true)`. The core
-   removes the requested logical sequence, and the adapter removes exactly the
-   corresponding concrete key.
+5. Successful AEAD verification calls `finish_receive(..., true)`. The core swap-removes the requested logical sequence, and the adapter applies the identical physical-slot swap to the concrete array.
 
-Core receive slots are not treated as stable identifiers. Successful removal
-uses the core's swap-removal representation, so the adapter resolves the current
-slot by sequence for every completion. Replay of an already consumed sequence
-therefore finds neither a logical nor a concrete key and is rejected without
-changing state.
+Core receive slots are not treated as stable identifiers. Successful removal uses the core's swap-removal representation, and the adapter mirrors that swap in its parallel concrete array after resolving the current slot by sequence. Replay of an already consumed sequence therefore finds neither a logical nor a concrete key and is rejected without changing state.
 
 An admissible forged future frame can still advance the receive chain and cache
 keys before authentication fails. This matches the existing protocol semantics

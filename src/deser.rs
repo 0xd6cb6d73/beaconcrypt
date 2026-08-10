@@ -289,11 +289,22 @@ impl<'de> Deserialize<'de> for RatchetManager {
 			.into_iter()
 			.map(|(sequence, directed)| (sequence, directed.material))
 			.collect();
-		let recv_past = data
-			.recv_past
-			.into_iter()
-			.map(|(sequence, directed)| (sequence, directed.material))
-			.collect();
+		let mut receive_material = data.recv_past;
+		let mut recv_past = std::array::from_fn(|_| None);
+		for slot in 0..control.receive_cache_len() {
+			let sequence = control.receive_key_at(slot).ok_or_else(|| {
+				D::Error::custom("verified receive cache contains an invalid slot")
+			})?;
+			let directed = receive_material
+				.remove(&sequence)
+				.ok_or_else(|| D::Error::custom("verified receive slot has no concrete key"))?;
+			recv_past[slot as usize] = Some(directed.material);
+		}
+		if !receive_material.is_empty() {
+			return Err(D::Error::custom(
+				"recv_past contains keys outside the verified receive cache",
+			));
+		}
 		let manager = Self {
 			send_key: data.send_key,
 			recv_key: data.recv_key,
@@ -477,7 +488,10 @@ mod tests {
 		assert_eq!(left.send_sequence(), right.send_sequence());
 		assert_eq!(left.receive_sequence(), right.receive_sequence());
 		assert_eq!(left.send_past.len(), right.send_past.len());
-		assert_eq!(left.recv_past.len(), right.recv_past.len());
+		assert_eq!(
+			left.control.receive_cache_len(),
+			right.control.receive_cache_len()
+		);
 		assert!(left.send_cache_matches_control());
 		assert!(right.send_cache_matches_control());
 		assert!(left.receive_cache_matches_control());
@@ -495,8 +509,13 @@ mod tests {
 		for (seq, key) in &left.send_past {
 			assert_key_material_eq(key, right.send_past.get(seq).unwrap());
 		}
-		for (seq, key) in &left.recv_past {
-			assert_key_material_eq(key, right.recv_past.get(seq).unwrap());
+		for slot in 0..left.control.receive_cache_len() {
+			let sequence = left.control.receive_key_at(slot).unwrap();
+			let right_slot = right.receive_key_slot(sequence).unwrap();
+			assert_key_material_eq(
+				left.recv_past[slot as usize].as_ref().unwrap(),
+				right.recv_past[right_slot as usize].as_ref().unwrap(),
+			);
 		}
 	}
 

@@ -559,7 +559,8 @@ pub struct RatchetManager {
 	send_past: HashMap<u64, KeyMaterial>,
 	/// One-use logical capabilities paired with every concrete pending send key.
 	send_capabilities: HashMap<u64, verified_ratchet::SendKey>,
-	recv_past: HashMap<u64, KeyMaterial>,
+	/// Concrete receive keys indexed by the verified cache's physical slots.
+	recv_past: [Option<KeyMaterial>; verified_ratchet::RECEIVE_CACHE_CAPACITY],
 	/// Authoritative counters and logical receive-key ownership.
 	control: verified_ratchet::RatchetState,
 }
@@ -571,7 +572,7 @@ impl RatchetManager {
 			recv_key: RecvChain::default(),
 			send_past: HashMap::new(),
 			send_capabilities: HashMap::new(),
-			recv_past: HashMap::new(),
+			recv_past: std::array::from_fn(|_| None),
 			control: verified_ratchet::RatchetState::default(),
 		}
 	}
@@ -606,20 +607,20 @@ impl RatchetManager {
 	}
 
 	pub fn recv_key(&self, seq: u64) -> Option<&KeyMaterial> {
-		self.receive_key_slot(seq)?;
-		self.recv_past.get(&seq)
+		let slot = self.receive_key_slot(seq)?;
+		self.recv_past.get(slot as usize)?.as_ref()
 	}
 
 	pub fn ratchet_recv(&mut self, info: &[u8]) -> Option<u64> {
 		debug_assert!(self.receive_cache_matches_control());
 		let advanced = verified_ratchet::advance_receive(self.control);
 		let current = advanced.sequence?;
-		if self.recv_past.contains_key(&current) {
+		let slot = advanced.slot?;
+		if self.recv_past[slot as usize].is_some() {
 			return None;
 		}
 		let keys = self.recv_key.ratchet(info);
-		let old_key = self.recv_past.insert(current, keys);
-		debug_assert!(old_key.is_none());
+		self.recv_past[slot as usize] = Some(keys);
 		self.control = advanced.state;
 		debug_assert_eq!(
 			advanced
@@ -678,7 +679,7 @@ impl RatchetManager {
 
 		self.send_past.clear();
 		self.send_capabilities.clear();
-		self.recv_past.clear();
+		self.recv_past = std::array::from_fn(|_| None);
 		self.control = verified_ratchet::RatchetState::default();
 		true
 	}
@@ -717,7 +718,7 @@ impl RatchetManager {
 		let Some(slot) = self.receive_key_slot(seq) else {
 			return verified_ratchet::ReceiveDisposition::Missing;
 		};
-		let has_concrete_key = self.recv_past.contains_key(&seq);
+		let has_concrete_key = self.recv_past[slot as usize].is_some();
 		debug_assert!(
 			has_concrete_key,
 			"logical receive key has no concrete refinement"
@@ -728,7 +729,11 @@ impl RatchetManager {
 
 		let finished = verified_ratchet::finish_receive(self.control, seq, slot, authenticated);
 		if finished.disposition == verified_ratchet::ReceiveDisposition::Consumed {
-			let removed = self.recv_past.remove(&seq);
+			let last_slot = self.control.receive_cache_len() - 1;
+			let removed = self.recv_past[slot as usize].take();
+			if slot != last_slot {
+				self.recv_past[slot as usize] = self.recv_past[last_slot as usize].take();
+			}
 			debug_assert!(removed.is_some());
 		}
 		self.control = finished.state;
@@ -745,7 +750,7 @@ impl RatchetManager {
 		self.recv_key = RecvChain::default();
 		self.send_past = HashMap::new();
 		self.send_capabilities = HashMap::new();
-		self.recv_past = HashMap::new();
+		self.recv_past = std::array::from_fn(|_| None);
 		self.control = verified_ratchet::RatchetState::default();
 	}
 
@@ -774,13 +779,12 @@ impl RatchetManager {
 	}
 
 	fn receive_cache_matches_control(&self) -> bool {
-		self.recv_past.len() <= RATCHET_MAX_GAP as usize
-			&& self.recv_past.len() == self.control.receive_cache_len() as usize
-			&& (0..self.control.receive_cache_len()).all(|slot| {
-				self.control
-					.receive_key_at(slot)
-					.is_some_and(|sequence| self.recv_past.contains_key(&sequence))
-			})
+		let logical_len = self.control.receive_cache_len() as usize;
+		logical_len <= self.recv_past.len()
+			&& self.recv_past[..logical_len].iter().all(Option::is_some)
+			&& self.recv_past[logical_len..].iter().all(Option::is_none)
+			&& (0..self.control.receive_cache_len())
+				.all(|slot| self.control.receive_key_at(slot).is_some())
 	}
 
 	#[cfg(feature = "server")]
@@ -1770,7 +1774,7 @@ mod tests {
 		assert_eq!(recv.ratchet_recv(SYM_RATCHET_INFO), None);
 		assert_eq!(recv.receive_sequence(), u64::MAX);
 		assert_eq!(recv.recv_state().as_slice(), recv_state);
-		assert!(recv.recv_past.is_empty());
+		assert!(recv.recv_past.iter().all(Option::is_none));
 		assert!(recv.receive_cache_matches_control());
 		assert!(recv.recv_key(0).is_none());
 	}
@@ -1791,7 +1795,10 @@ mod tests {
 				Some(u64::MAX)
 			);
 			assert_eq!(ratchet.receive_sequence(), u64::MAX);
-			assert_eq!(ratchet.recv_past.len(), distance as usize);
+			assert_eq!(
+				ratchet.control.receive_cache_len() as usize,
+				distance as usize
+			);
 			assert!(ratchet.receive_cache_matches_control());
 			assert!(ratchet.recv_key(u64::MAX - distance + 1).is_some());
 			assert!(ratchet.recv_key(u64::MAX).is_some());
@@ -1799,7 +1806,10 @@ mod tests {
 			let state_at_exhaustion = ratchet.recv_state().as_slice().to_vec();
 			assert_eq!(ratchet.ratchet_recv(SYM_RATCHET_INFO), None);
 			assert_eq!(ratchet.recv_state().as_slice(), state_at_exhaustion);
-			assert_eq!(ratchet.recv_past.len(), distance as usize);
+			assert_eq!(
+				ratchet.control.receive_cache_len() as usize,
+				distance as usize
+			);
 		}
 	}
 
@@ -1852,7 +1862,10 @@ mod tests {
 			Some(RATCHET_MAX_GAP),
 		);
 		ratchet.delete_recv_key(RATCHET_MAX_GAP);
-		assert_eq!(ratchet.recv_past.len(), RATCHET_MAX_GAP as usize - 1);
+		assert_eq!(
+			ratchet.control.receive_cache_len() as usize,
+			RATCHET_MAX_GAP as usize - 1
+		);
 
 		let denied_target = RATCHET_MAX_GAP * 2;
 		assert_eq!(
@@ -1861,7 +1874,10 @@ mod tests {
 		);
 		assert_eq!(ratchet.receive_sequence(), RATCHET_MAX_GAP);
 		assert!(ratchet.recv_key(RATCHET_MAX_GAP + 1).is_none());
-		assert_eq!(ratchet.recv_past.len(), RATCHET_MAX_GAP as usize - 1);
+		assert_eq!(
+			ratchet.control.receive_cache_len() as usize,
+			RATCHET_MAX_GAP as usize - 1
+		);
 		assert!(ratchet.receive_cache_matches_control());
 	}
 
@@ -1877,6 +1893,7 @@ mod tests {
 		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
 		assert!(ratchet.receive_cache_matches_control());
 		assert_eq!(ratchet.control.receive_cache_len(), 4);
+		let last_key_before_swap = key_bytes(ratchet.recv_key(4).unwrap().key()).to_vec();
 
 		let before_retry = ratchet.control;
 		assert_eq!(
@@ -1892,6 +1909,10 @@ mod tests {
 			verified_ratchet::ReceiveDisposition::Consumed
 		);
 		assert!(ratchet.recv_key(2).is_none());
+		assert_eq!(
+			key_bytes(ratchet.recv_key(4).unwrap().key()),
+			last_key_before_swap
+		);
 		assert_eq!(ratchet.control.receive_cache_len(), 3);
 		assert!(ratchet.receive_cache_matches_control());
 
@@ -1941,13 +1962,10 @@ mod tests {
 		assert!(!send_inconsistent.send_cache_matches_control());
 
 		let mut receive_inconsistent = RatchetManager::default();
-		receive_inconsistent.recv_past.insert(
-			1,
-			KeyMaterial {
-				key: [0xA1; AEAD_KEY_LEN].into(),
-				nonce: [0xA2; AEAD_NONCE_LEN].into(),
-			},
-		);
+		receive_inconsistent.recv_past[0] = Some(KeyMaterial {
+			key: [0xA1; AEAD_KEY_LEN].into(),
+			nonce: [0xA2; AEAD_NONCE_LEN].into(),
+		});
 		assert!(!receive_inconsistent.receive_cache_matches_control());
 	}
 

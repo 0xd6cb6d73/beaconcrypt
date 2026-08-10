@@ -415,7 +415,7 @@ The state machine includes:
 
 The fixed array is intentional. Several convenient dynamic-collection operations are assumptions in the current hax proof libraries; direct array append and validated swap removal keep the key-lifecycle semantics visible in generated F*. The strict lemma module proves the Step 2 property inventory against that generated code.
 
-At the end of this stage, the production `RatchetManager` remained unchanged. Step 3 therefore had to make the core state authoritative, maintain equality between the concrete `recv_past` map and the core's logical sequence set, and reconstruct the core through its checked restoration typestate.
+At the end of this stage, the production `RatchetManager` remained unchanged. Step 3 therefore had to make the core state authoritative, maintain equality between the concrete receive-key representation and the core's logical sequence set, and reconstruct the core through its checked restoration typestate.
 
 ### Step 3 implementation
 
@@ -425,7 +425,7 @@ The detailed implementation record is in
 The production crate now depends on `beaconcrypt-protocol-core`, and `RatchetManager` delegates its counter, receive-admission, key-lifecycle, and restoration decisions to the extracted state machine. The core `RatchetState` is authoritative: the adapter derives one concrete KDF output for each admitted core step and maintains the refinement invariant
 
 ```text
-keys(recv_past) == logical_receive_sequences(core_state)
+recv_past[slot].is_some() == (slot < core_state.receive_cache_len())
 ```
 
 Authentication failure retains the same logical and concrete receive key, while successful authentication removes exactly that key from both representations. Each allocated logical send capability accompanies its concrete message key until the adapter consumes it with `finish_send`, including encryption-failure paths.

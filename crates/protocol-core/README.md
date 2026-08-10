@@ -12,13 +12,10 @@ The crate contains the control-plane state machines for the symmetric ratchet an
 It owns ratchet counters, key availability and receive admission as well as deterministic PQXDH/commitment transcript construction, role-specific registration states, and commit/abort decisions.
 Cryptographic chain bytes, concrete message keys, hashing, private-key operations, and entropy stay behind the adapter boundary.
 
-The receive cache is a packed fixed array of at most 50 logical key sequences.
-Its operations are implemented directly rather than through an assumed `Vec`
-model, so F* can see allocation and exact-key removal. The production adapter
-maintains this refinement invariant:
+The receive cache is a packed fixed array of at most 50 logical key sequences. Its operations are implemented directly rather than through an assumed `Vec` model, so F* can see allocation and exact-key removal. The production adapter stores concrete receive keys in a parallel fixed array indexed by the core's verified slots and maintains this refinement invariant:
 
 ```text
-keys(concrete_receive_key_map) == logical_receive_sequences(core_state)
+concrete_receive_keys[slot].is_some() == (slot < core_state.receive_cache_len())
 ```
 
 The existing beaconcrypt API now delegates its ratchet control decisions to
@@ -29,13 +26,7 @@ logical capability, retains both representations on authentication failure,
 and completes allocated send capabilities on both successful and failed
 encryption paths.
 
-The persistence adapter preserves the existing six-field wire format. It
-serializes counters from the authoritative core state and reconstructs the
-logical receive cache from sorted concrete-map keys through the checked
-restoration API. Imports with more than 50 outstanding receive keys are
-rejected. See Step 3 of the
-[formal verification plan](../../doc/formal-verification.md) and the
-[Stage 3 implementation record](../../doc/formal-verification-stage-3.md).
+The persistence adapter preserves the existing six-field wire format. It serializes each concrete receive-array slot under the corresponding logical sequence from the core state and reconstructs both packed arrays from sorted persisted map keys through the checked restoration API. Imports with more than 50 outstanding receive keys are rejected. See Step 3 of the [formal verification plan](../../doc/formal-verification.md) and the [Stage 3 implementation record](../../doc/formal-verification-stage-3.md).
 
 The Stage 3 correspondence claim covers high-level encryption and decryption
 traces without state rollback. Direct low-level ratchet calls, forks containing
