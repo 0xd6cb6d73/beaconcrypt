@@ -1,9 +1,6 @@
 use beaconcrypt::*;
 
-fn test_register_pqxdh_beacon(
-	server: &mut BeaconCryptPqxdh,
-	beacon: &mut BeaconCryptPqxdh,
-) -> Vec<u8> {
+fn test_register_pqxdh_beacon(server: &mut Server, beacon: &mut Beacon) -> Vec<u8> {
 	let message = [0xFFu8; 32];
 
 	let phase_1 = beacon.get_registration_bundle().unwrap();
@@ -16,10 +13,10 @@ fn test_register_pqxdh_beacon(
 
 #[test]
 fn beacon_can_catch_up() {
-	let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+	let mut server = Server::new(0, None);
 	let server_id = server.identity_pk().to_owned();
 
-	let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut b1 = Beacon::new(0, server_id.as_bytes());
 	let _ = test_register_pqxdh_beacon(&mut server, &mut b1);
 	assert!(server.pk_by_kid(1).is_some());
 

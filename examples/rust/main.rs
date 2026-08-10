@@ -2,9 +2,7 @@
 
 use std::{fs, path::Path};
 
-use beaconcrypt::{
-	BeaconCryptPqxdh, CryptoProvider, ED25519_SEED_SIZE, ProviderBeacon, ProviderServer,
-};
+use beaconcrypt::{Beacon, ED25519_SEED_SIZE, ProviderBeacon, ProviderServer, Server};
 
 const SERVER_KID: u64 = 0;
 const REGISTRATION_MESSAGE: &[u8] = b"registration ok";
@@ -24,15 +22,10 @@ fn deserialize_state_update(serialized: &str) -> StateUpdate {
 fn main() {
 	libsodium_rs::ensure_init().expect("failed to initialize libsodium");
 	let server_seed = libsodium_rs::random::bytes(ED25519_SEED_SIZE);
-	let mut server = BeaconCryptPqxdh::new(false, SERVER_KID, None, Some(&server_seed));
+	let mut server = Server::new(SERVER_KID, Some(&server_seed));
 
 	// It is assumed that the server's public key is compiled into beacons.
-	let mut beacon = BeaconCryptPqxdh::new(
-		true,
-		SERVER_KID,
-		Some(server.identity_pk().as_bytes()),
-		None,
-	);
+	let mut beacon = Beacon::new(SERVER_KID, server.identity_pk().as_bytes());
 	let transport = Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/rust/transport");
 
 	// The beacon is run and registers.
@@ -66,7 +59,7 @@ fn main() {
 	);
 
 	let b_ping = beacon
-		.encrypt_message(b"ping", SERVER_KID)
+		.encrypt_message(b"ping")
 		.expect("failed to encrypt ping");
 	fs::write(&transport, b_ping).expect("failed to write ping to transport");
 	let s_ping = fs::read(&transport).expect("failed to read ping from transport");
@@ -102,7 +95,7 @@ fn main() {
 
 	// Process the task and send the response.
 	let b_task_1 = beacon
-		.encrypt_message(b"task response", SERVER_KID)
+		.encrypt_message(b"task response")
 		.expect("failed to encrypt task response");
 	fs::write(&transport, b_task_1).expect("failed to write task response to transport");
 	let s_task_1 = fs::read(&transport).expect("failed to read task response from transport");

@@ -18,7 +18,7 @@ fn main() {
 	let crate_dir = ".";
 	//let deps_to_parse = "libsodium_rs";
 	//
-	cbindgen::Builder::new()
+	let bindings = cbindgen::Builder::new()
 		.with_crate(crate_dir)
 		.with_language(cbindgen::Language::C)
 		.with_cpp_compat(true)
@@ -32,6 +32,17 @@ fn main() {
 		.exclude_item("memset_explicit")
 		.exclude_item("SystemFunction036")
 		.generate()
-		.expect("Unable to generate bindings")
-		.write_to_file("bindings.h");
+		.expect("Unable to generate bindings");
+	bindings.write_to_file("bindings.h");
+	let header = std::fs::read_to_string("bindings.h").expect("read generated bindings");
+	let header = header
+		.replace(
+			"typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;\n\ntypedef struct beaconcrypt_Beacon beaconcrypt_Beacon;",
+			"typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;",
+		)
+		.replace(
+			"typedef struct beaconcrypt_Server beaconcrypt_Server;\n\ntypedef struct beaconcrypt_Server beaconcrypt_Server;",
+			"typedef struct beaconcrypt_Server beaconcrypt_Server;",
+		);
+	std::fs::write("bindings.h", header).expect("write generated bindings");
 }
