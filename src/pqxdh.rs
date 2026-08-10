@@ -41,7 +41,7 @@ const _: () =
 
 impl SignaturePk for crypto_sign::PublicKey {}
 
-#[cfg_attr(not(feature = "beacon"), allow(dead_code))]
+#[cfg(feature = "beacon")]
 enum BeaconState {
 	Fresh {
 		control: verified_pqxdh::BeaconFresh,
@@ -916,18 +916,178 @@ pub fn build_associated_data(
 
 #[cfg(all(test, feature = "beacon", feature = "server"))]
 mod tests {
-	use super::{Beacon, Server};
+	use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
+
+	use super::{
+		AD_SIZE, Beacon, PQXDH_INFO, Server, build_associated_data, derive_root_key_input,
+		verified_pqxdh, zeroize_shared_secrets,
+	};
+	use crate::{
+		DH_OUT_LEN, ED25519_SEED_SIZE, KDF_STATE_SIZE, ProviderBeacon, ProviderServer,
+		shared::{DhSecret, KexDerivedSecret, SYM_RATCHET_INFO},
+	};
+
+	fn register(server: &mut Server, beacon: &mut Beacon) {
+		let bundle = beacon.get_registration_bundle().unwrap();
+		let output = server.get_shared_secret(&bundle).unwrap();
+		let response = server.build_registration_response(output, None).unwrap();
+		beacon.finish_registration(&response.serialized).unwrap();
+	}
+
 	#[test]
-	fn fresh_roles_have_expected_identity_state() {
+	fn fresh_beacon_has_registration_material_and_server_binding() {
 		let server = Server::new(7, None);
 		let beacon = Beacon::new(7, server.identity_pk().as_bytes());
-		assert_eq!(server.server_kid(), 7);
 		assert_eq!(beacon.server_id(), server.identity_pk());
+		assert!(beacon.get_prekey_pk().is_some());
+		assert!(beacon.get_prekey_sk().is_some());
+		assert!(beacon.get_onetime_pk().is_none());
+		assert!(beacon.get_onetime_sk().is_none());
 		assert!(beacon.pq_pk().is_some());
+		assert!(beacon.pq_sk().is_some());
 	}
+
 	#[test]
-	fn server_allocates_remote_ids() {
+	fn fresh_server_has_identity_counter_and_no_remotes() {
+		let seed = [0x5a; ED25519_SEED_SIZE];
+		let expected = crypto_sign::KeyPair::from_seed(&seed).unwrap();
+		let server = Server::new(41, Some(&seed));
+		assert_eq!(server.identity_pk(), &expected.public_key);
+		assert_eq!(server.identity_sk(), &expected.secret_key);
+		assert_eq!(server.server_kid(), 41);
+		assert!(server.pk_by_kid(42).is_none());
+		assert!(server.ratchet_manager(42).is_none());
+	}
+
+	#[test]
+	fn server_mutators_update_only_server_owned_state() {
 		let mut server = Server::new(41, None);
+		server.set_identity_kid(17);
+		assert_eq!(server.identity_key_kid(), 17);
 		assert_eq!(server.new_remote_kid(), Some(42));
+		let peer = crypto_sign::KeyPair::generate().unwrap().public_key;
+		server.add_known_kid(9, peer.clone());
+		assert_eq!(server.pk_by_kid(9), Some(&peer));
+		assert_eq!(server.ratchet_send(SYM_RATCHET_INFO, 9), Some(1));
+		server.reset_known_kid(9);
+		assert!(server.send_key(1, 9).is_none());
+		server.delete_known_kid(9);
+		assert!(server.pk_by_kid(9).is_none());
+	}
+
+	#[test]
+	fn beacon_registration_material_follows_state_transitions() {
+		let server = Server::new(0, None);
+		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+		assert!(beacon.get_onetime_pk().is_none());
+		beacon.new_onetime_keypair().unwrap();
+		assert!(beacon.get_onetime_pk().is_some());
+		beacon.delete_onetime_keypair();
+		assert!(beacon.get_onetime_pk().is_none());
+		assert!(beacon.get_registration_bundle().is_some());
+		assert!(beacon.get_onetime_pk().is_some());
+		assert!(beacon.get_registration_bundle().is_none());
+	}
+
+	#[test]
+	fn established_beacon_replaces_singular_associated_data() {
+		let mut server = Server::new(0, None);
+		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+		register(&mut server, &mut beacon);
+		let replacement = [0xa5; AD_SIZE];
+		beacon.set_associated_data(replacement);
+		assert_eq!(beacon.associated_data(), Some(replacement));
+	}
+
+	#[test]
+	fn beacon_and_server_ratchets_advance_through_role_specific_accessors() {
+		let mut server = Server::new(0, None);
+		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+		register(&mut server, &mut beacon);
+		let beacon_kid = beacon.identity_key_kid();
+		assert_eq!(server.ratchet_send(SYM_RATCHET_INFO, beacon_kid), Some(2));
+		assert_eq!(
+			beacon.ratchet_manager_mut().ratchet_recv(SYM_RATCHET_INFO),
+			Some(2)
+		);
+		assert_eq!(
+			server
+				.ratchet_manager(beacon_kid)
+				.unwrap()
+				.send_state()
+				.as_slice(),
+			beacon.ratchet_manager().recv_state().as_slice()
+		);
+	}
+
+	#[test]
+	fn root_key_derivation_matches_the_pqxdh_transcript() {
+		let dh1 = DhSecret::from([0x11; DH_OUT_LEN]);
+		let dh2 = DhSecret::from([0x22; DH_OUT_LEN]);
+		let dh3 = DhSecret::from([0x33; DH_OUT_LEN]);
+		let dh4 = DhSecret::from([0x44; DH_OUT_LEN]);
+		let shared_bytes = [0x55; crypto_kem::mlkem768::SHAREDSECRETBYTES];
+		let secrets = verified_pqxdh::PqxdhSharedSecrets {
+			dh1: dh1.as_slice().try_into().unwrap(),
+			dh2: dh2.as_slice().try_into().unwrap(),
+			dh3: dh3.as_slice().try_into().unwrap(),
+			dh4: dh4.as_slice().try_into().unwrap(),
+			kem_shared_secret: shared_bytes,
+		};
+		let mut transcript = verified_pqxdh::build_root_key_input(&secrets).unwrap();
+		let actual = derive_root_key_input(&mut transcript).unwrap();
+		let mut ikm = vec![0xff; crypto_kx::PUBLICKEYBYTES];
+		ikm.extend_from_slice(dh1.as_slice());
+		ikm.extend_from_slice(dh2.as_slice());
+		ikm.extend_from_slice(dh3.as_slice());
+		ikm.extend_from_slice(dh4.as_slice());
+		ikm.extend_from_slice(&shared_bytes);
+		let prk = crypto_kdf::hkdf::sha512::extract(None, &ikm).unwrap();
+		let expected: KexDerivedSecret =
+			crypto_kdf::hkdf::sha512::expand(KDF_STATE_SIZE, Some(PQXDH_INFO), &prk)
+				.unwrap()
+				.into();
+		let known_answer = [
+			0xcb, 0xcf, 0x9d, 0x12, 0xdb, 0x13, 0x92, 0x7a, 0xc3, 0x3a, 0x04, 0x9c, 0xb6, 0x10,
+			0x94, 0x8b, 0xaf, 0x33, 0x9b, 0x5c, 0x8c, 0x78, 0x2a, 0x2e, 0xaf, 0x14, 0x3e, 0x12,
+			0x3b, 0xda, 0xa7, 0xe2,
+		];
+		assert_eq!(actual.as_slice(), expected.as_slice());
+		assert_eq!(actual.as_slice(), known_answer);
+	}
+
+	#[test]
+	fn root_key_transcript_and_shared_secrets_are_zeroized() {
+		let mut secrets = verified_pqxdh::PqxdhSharedSecrets {
+			dh1: [0x11; DH_OUT_LEN],
+			dh2: [0x22; DH_OUT_LEN],
+			dh3: [0x33; DH_OUT_LEN],
+			dh4: [0x44; DH_OUT_LEN],
+			kem_shared_secret: [0x55; crypto_kem::mlkem768::SHAREDSECRETBYTES],
+		};
+		let mut input = verified_pqxdh::build_root_key_input(&secrets).unwrap();
+		assert!(derive_root_key_input(&mut input).is_some());
+		assert_eq!(input.as_bytes(), &[0; verified_pqxdh::ROOT_KEY_INPUT_SIZE]);
+		zeroize_shared_secrets(&mut secrets);
+		assert_eq!(secrets.dh1, [0; DH_OUT_LEN]);
+		assert_eq!(
+			secrets.kem_shared_secret,
+			[0; crypto_kem::mlkem768::SHAREDSECRETBYTES]
+		);
+	}
+
+	#[test]
+	fn associated_data_has_a_stable_order_and_layout() {
+		let server = crypto_sign::KeyPair::from_seed(&[0x61; ED25519_SEED_SIZE]).unwrap();
+		let beacon = crypto_sign::KeyPair::from_seed(&[0x62; ED25519_SEED_SIZE]).unwrap();
+		let actual = build_associated_data(server.public_key.clone(), beacon.public_key.clone());
+		let mut expected = Vec::with_capacity(AD_SIZE);
+		expected.push(1);
+		expected.extend_from_slice(server.public_key.as_bytes());
+		expected.push(1);
+		expected.extend_from_slice(beacon.public_key.as_bytes());
+		expected.extend_from_slice(PQXDH_INFO);
+		expected.extend_from_slice(SYM_RATCHET_INFO);
+		assert_eq!(actual.as_slice(), expected);
 	}
 }

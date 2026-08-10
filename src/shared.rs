@@ -550,7 +550,7 @@ impl<Role: roles::ChainKey> Clone for Ratchet<Role> {
 type SendChain = Ratchet<roles::ChainSendKey>;
 type RecvChain = Ratchet<roles::ChainRecvKey>;
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct RatchetManager {
 	/// current state of the KDF on the send chain
 	send_key: SendChain,
@@ -565,6 +565,17 @@ pub struct RatchetManager {
 }
 
 impl RatchetManager {
+	pub fn default() -> Self {
+		Self {
+			send_key: SendChain::default(),
+			recv_key: RecvChain::default(),
+			send_past: HashMap::new(),
+			send_capabilities: HashMap::new(),
+			recv_past: HashMap::new(),
+			control: verified_ratchet::RatchetState::default(),
+		}
+	}
+
 	#[cfg(feature = "server")]
 	pub fn from_json(json: String) -> Self {
 		serde_json::from_str(&json).unwrap()

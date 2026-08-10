@@ -48,10 +48,6 @@
 
 typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
 
-typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
-
-typedef struct beaconcrypt_Server beaconcrypt_Server;
-
 typedef struct beaconcrypt_Server beaconcrypt_Server;
 
 typedef struct beaconcrypt_Buffer {

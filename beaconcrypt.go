@@ -38,6 +38,7 @@ beaconcrypt_Beacon *beaconcrypt_beacon_new(uint64_t server_kid, const uint8_t *s
 void beaconcrypt_server_free(beaconcrypt_Server *handle);
 void beaconcrypt_beacon_free(beaconcrypt_Beacon *handle);
 beaconcrypt_buffer beaconcrypt_server_identity_pk(const beaconcrypt_Server *handle);
+beaconcrypt_buffer beaconcrypt_beacon_identity_pk(const beaconcrypt_Beacon *handle);
 beaconcrypt_buffer beaconcrypt_generate_registration(beaconcrypt_Beacon *handle);
 beaconcrypt_registration_response beaconcrypt_register_beacon(beaconcrypt_Server *handle, const uint8_t *reg_ptr, uintptr_t reg_len, const uint8_t *msg_ptr, uintptr_t msg_len);
 beaconcrypt_buffer beaconcrypt_process_initial_message(beaconcrypt_Beacon *handle, const uint8_t *ptr, uintptr_t len);

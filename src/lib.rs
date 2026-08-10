@@ -67,7 +67,7 @@ pub use pqxdh::Server;
 pub use server::{ProviderServer, RecvState, RegResponse, RegistrationOutput, SendState};
 pub use shared::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, DH_OUT_LEN, Decrypted, ED25519_SEED_SIZE, Encrypted,
-	KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE, KEX_KDF_OUT_LEN, RatchetManager, SignType,
+	KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE, KEX_KDF_OUT_LEN, SignType,
 };
 
 capnp::generated_code!(pub mod phase1_capnp);
