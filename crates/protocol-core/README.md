@@ -2,37 +2,27 @@
 
 # beaconcrypt protocol core
 
-This `no_std` crate is the extraction boundary for beaconcrypt's protocol
-state machines. It intentionally has no cryptographic, serialization, FFI, or
-runtime dependencies. See the repository's
-[formal verification plan](../../doc/formal-verification.md) for the intended
-boundary and proof inventory.
+This `no_std` crate is the extraction boundary for beaconcrypt's protocol state machines. It intentionally has no cryptographic, serialization, FFI, or runtime dependencies. See the repository's [formal verification plan](../../doc/formal-verification.md) for the intended boundary and proof inventory.
 
 The crate contains the control-plane state machines for the symmetric ratchet and PQXDH registration plus the fixed-width CTX commitment transcript builder.
 It owns ratchet counters, key availability and receive admission as well as deterministic PQXDH/commitment transcript construction, role-specific registration states, and commit/abort decisions.
 Cryptographic chain bytes, concrete message keys, hashing, private-key operations, and entropy stay behind the adapter boundary.
 
-The receive cache is a packed fixed array of at most 50 logical key sequences. Its operations are implemented directly rather than through an assumed `Vec` model, so F* can see allocation and exact-key removal. The production adapter stores concrete receive keys in a parallel fixed array indexed by the core's verified slots and maintains this refinement invariant:
+The receive cache is a packed fixed array of at most 50 logical key sequences. Its operations are implemented directly rather than through an assumed `Vec` model, so F* can see allocation, lookup, and exact-key removal. The production adapter stores concrete receive keys in a parallel fixed array indexed by the core's verified slots and maintains this refinement invariant:
 
 ```text
 concrete_receive_keys[slot].is_some() == (slot < core_state.receive_cache_len())
 ```
 
-The existing beaconcrypt API now delegates its ratchet control decisions to
-this crate. For each admitted logical step, the adapter performs exactly one
-opaque KDF operation and associates the resulting concrete key with the same
-sequence. It removes concrete receive keys only when the core consumes their
-logical capability, retains both representations on authentication failure,
-and completes allocated send capabilities on both successful and failed
-encryption paths.
+The core now owns every receive sequence-to-slot decision used by production. `advance_receive` returns the append slot for a newly derived key, `lookup_receive_key` returns the current slot for an existing sequence, `finish_receive_with_removal` returns the exact target/last swap-removal plan, and `restore_receive_key_with_slot` returns the append slot used while rebuilding persisted state. The compatibility functions `finish_receive` and `restore_receive_key` are projections of the detailed operations, so there is only one implementation of each logical transition.
 
-The persistence adapter preserves the existing six-field wire format. It serializes each concrete receive-array slot under the corresponding logical sequence from the core state and reconstructs both packed arrays from sorted persisted map keys through the checked restoration API. Imports with more than 50 outstanding receive keys are rejected. See Step 3 of the [formal verification plan](../../doc/formal-verification.md) and the [Stage 3 implementation record](../../doc/formal-verification-stage-3.md).
+The F* lemmas characterize verified lookup in both directions, show that missing and retained finishes return no removal and preserve state, identify the exact old-last slot and moved logical entry on successful removal, prove compatibility-wrapper equivalence, and connect successful restoration to its returned append slot. These theorems prove the pure logical-array decisions; they do not prove that production stored the right secret bytes in those slots.
 
-The Stage 3 correspondence claim covers high-level encryption and decryption
-traces without state rollback. Direct low-level ratchet calls, forks containing
-pending send keys, and the production peer-map lookup remain explicit adapter
-preconditions; the core's `SendKey` represents logical availability but is not
-an affine Rust type.
+The existing beaconcrypt API delegates these ratchet control decisions to this crate. For each admitted logical step, the adapter performs exactly one opaque KDF operation and stores the resulting concrete key in the returned append slot. It obtains the current slot again by sequence before authentication completion, applies the exact returned swap/take plan only on successful authentication, retains both representations on failure, and completes allocated send capabilities on both successful and failed encryption paths.
+
+The persistence adapter preserves the existing six-field wire format. It serializes each active concrete receive-array slot under the corresponding logical sequence from the core state, rejects missing active material and populated inactive slots, and reconstructs both packed arrays from sorted persisted map entries by placing each concrete key in the slot returned by `restore_receive_key_with_slot`. Imports with more than 50 outstanding receive keys are rejected. See Step 3 of the [formal verification plan](../../doc/formal-verification.md) and the [Stage 3 implementation record](../../doc/formal-verification-stage-3.md).
+
+The Stage 3 correspondence claim covers high-level encryption and decryption traces without state rollback. Concrete HKDF behavior and output splitting, association of returned slots with the correct `KeyMaterial`, serde behavior, authentication-result provenance, crash atomicity, physical erasure, direct low-level ratchet calls, forks containing pending send keys, and the production peer-map lookup remain explicit adapter obligations or exclusions; the core's `SendKey` represents logical availability but is not an affine Rust type.
 
 ## PQXDH typestates and transactional adapter
 
@@ -170,18 +160,8 @@ separately enforces the handwritten F* assumption policy. Intentional boundary
 changes must update the prose inventory and only the affected manifest hashes
 after their production and proof diffs have been reviewed.
 
-The checked properties cover send and receive counter monotonicity and
-exhaustion, receive-gap and cache bounds, retry retention, exact key
-consumption and replay rejection, one-use send keys, and non-selected peer
-isolation. The PQXDH properties cover exact type/role encodings and validation, the semantic
-registration ID, root and associated-data transcripts, conditional honest-role
-agreement, complementary ratchet initialization, authenticated key-ID
-correspondence, replay-status handling, and checked server transactions.
-`make check-generated` additionally fails when extraction changes a tracked
-artifact or creates an untracked artifact, and it now inherits the inventory
-gate from `make verify`. The dedicated formal-verification workflow runs that
-complete target on every main-branch push, pull request targeting `main`, and
-merge-queue check.
+The checked ratchet properties cover send and receive counter monotonicity and exhaustion, receive-gap and cache bounds, lookup soundness and completeness, exact append-slot reporting, retry retention, explicit target/last removal shape, detailed/compatibility wrapper equivalence, restore-slot correspondence, exact key consumption and replay rejection, one-use send keys, and non-selected peer isolation. The PQXDH properties cover exact type/role encodings and validation, the semantic registration ID, root and associated-data transcripts, conditional honest-role agreement, complementary ratchet initialization, authenticated key-ID correspondence, replay-status handling, and checked server transactions.
+`make check-generated` reruns the complete proof suite and additionally fails when extraction changes a tracked artifact or creates an untracked artifact. The dedicated formal-verification workflow runs that target on every main-branch push, pull request targeting `main`, and merge-queue check. Run the separate `make check-inventory` tripwire after reviewing intentional production/proof boundary changes.
 
 The checked-in `flake.lock` pins hax revision
 `5b0ba8be6da3c313fdfed1c19dd0f0721a29f4b3` (hax 0.3.7), its

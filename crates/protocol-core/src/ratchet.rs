@@ -290,12 +290,16 @@ pub struct ReceiveFinish {
 	pub disposition: ReceiveDisposition,
 }
 
+/// Physical swap-removal indices selected by the logical receive transition.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ReceiveRemoval {
+	/// Slot containing the authenticated target before removal.
 	pub target_slot: u8,
+	/// Final active slot before removal.
 	pub last_slot: u8,
 }
 
+/// Logical completion result plus the exact concrete removal operation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ReceiveFinishWithRemoval {
 	pub state: RatchetState,
@@ -303,19 +307,34 @@ pub struct ReceiveFinishWithRemoval {
 	pub removal: Option<ReceiveRemoval>,
 }
 
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
+)]
+fn lookup_receive_key_from(
+	state: RatchetState,
+	sequence: u64,
+	slot: u8,
+	remaining: u8,
+) -> Option<u8> {
+	if remaining == 0 {
+		return None;
+	}
+	if (slot as usize) >= RECEIVE_CACHE_CAPACITY {
+		return None;
+	}
+	if slot >= state.receive_cache.len {
+		return None;
+	}
+	if state.receive_cache.entries[slot as usize] == sequence {
+		return Some(slot);
+	}
+	lookup_receive_key_from(state, sequence, slot + 1, remaining - 1)
+}
+
 /// Return the physical slot currently containing `sequence`.
 pub fn lookup_receive_key(state: RatchetState, sequence: u64) -> Option<u8> {
-	let mut slot = 0_u8;
-	while (slot as usize) < RECEIVE_CACHE_CAPACITY {
-		if slot >= state.receive_cache.len {
-			return None;
-		}
-		if state.receive_cache.entries[slot as usize] == sequence {
-			return Some(slot);
-		}
-		slot += 1;
-	}
-	None
+	lookup_receive_key_from(state, sequence, 0, RECEIVE_CACHE_CAPACITY as u8)
 }
 
 /// Complete authentication for a receive key identified by both slot and
@@ -337,6 +356,10 @@ pub fn finish_receive(
 	}
 }
 
+/// Complete a receive attempt and return the physical swap-removal plan.
+///
+/// Missing or retained keys return no plan and leave `state` unchanged. A
+/// consumed key returns the target slot and the old final active slot.
 pub fn finish_receive_with_removal(
 	state: RatchetState,
 	target: u64,
@@ -403,12 +426,14 @@ pub const fn start_restore(send_sequence: u64, receive_sequence: u64) -> Ratchet
 	}
 }
 
+/// One checked persistence-restoration append and its allocated slot.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ReceiveRestoreStep {
 	pub restore: RatchetRestore,
 	pub slot: u8,
 }
 
+/// Append one sorted receive sequence during restoration and return its slot.
 pub fn restore_receive_key_with_slot(
 	restore: RatchetRestore,
 	sequence: u64,
@@ -625,10 +650,25 @@ mod tests {
 	#[test]
 	fn verified_receive_lookup_finds_only_active_sequences() {
 		let state = execute_receive_plan(RatchetState::default(), 4);
-		assert_eq!(lookup_receive_key(state, 1), Some(0));
-		assert_eq!(lookup_receive_key(state, 4), Some(3));
+		for sequence in 1..=4 {
+			assert_eq!(
+				lookup_receive_key(state, sequence),
+				find_receive_key(&state, sequence)
+			);
+		}
 		assert_eq!(lookup_receive_key(state, 0), None);
 		assert_eq!(lookup_receive_key(state, 5), None);
+	}
+
+	#[test]
+	fn verified_receive_lookup_tracks_swap_removal_and_consumption() {
+		let state = execute_receive_plan(RatchetState::default(), 4);
+		let consumed = finish_receive_with_removal(state, 2, 1, true);
+
+		assert_eq!(lookup_receive_key(consumed.state, 2), None);
+		assert_eq!(lookup_receive_key(consumed.state, 4), Some(1));
+		assert_eq!(lookup_receive_key(consumed.state, 1), Some(0));
+		assert_eq!(lookup_receive_key(consumed.state, 3), Some(2));
 	}
 
 	#[test]
@@ -684,16 +724,57 @@ mod tests {
 	#[test]
 	fn detailed_receive_completion_reports_exact_swap_removal() {
 		let state = execute_receive_plan(RatchetState::default(), 4);
+		let missing = finish_receive_with_removal(state, 9, 1, true);
+		assert_eq!(missing.disposition, ReceiveDisposition::Missing);
+		assert_eq!(missing.removal, None);
+		assert_eq!(missing.state, state);
+		assert_eq!(
+			finish_receive(state, 9, 1, true),
+			super::ReceiveFinish {
+				state: missing.state,
+				disposition: missing.disposition,
+			}
+		);
+
 		let retained = finish_receive_with_removal(state, 2, 1, false);
+		assert_eq!(retained.disposition, ReceiveDisposition::Retained);
 		assert_eq!(retained.removal, None);
 		assert_eq!(retained.state, state);
+		assert_eq!(finish_receive(state, 2, 1, false).state, retained.state);
+		assert_eq!(
+			finish_receive(state, 2, 1, false).disposition,
+			retained.disposition
+		);
 
 		let consumed = finish_receive_with_removal(state, 2, 1, true);
+		assert_eq!(consumed.disposition, ReceiveDisposition::Consumed);
 		let removal = consumed.removal.unwrap();
 		assert_eq!(removal.target_slot, 1);
 		assert_eq!(removal.last_slot, 3);
 		assert_eq!(consumed.state.receive_key_at(1), Some(4));
 		assert_eq!(finish_receive(state, 2, 1, true).state, consumed.state);
+		assert_eq!(
+			finish_receive(state, 2, 1, true).disposition,
+			consumed.disposition
+		);
+	}
+
+	#[test]
+	fn detailed_receive_completion_reports_last_slot_removal() {
+		let state = execute_receive_plan(RatchetState::default(), 4);
+		let consumed = finish_receive_with_removal(state, 4, 3, true);
+		let removal = consumed.removal.unwrap();
+
+		assert_eq!(removal.target_slot, 3);
+		assert_eq!(removal.last_slot, 3);
+		assert_eq!(consumed.state.receive_cache_len(), 3);
+		assert_eq!(lookup_receive_key(consumed.state, 4), None);
+		for sequence in 1..=3 {
+			assert_eq!(
+				lookup_receive_key(consumed.state, sequence),
+				Some(sequence as u8 - 1)
+			);
+		}
 	}
 
 	#[test]
@@ -736,12 +817,27 @@ mod tests {
 
 	#[test]
 	fn restore_reports_the_slot_used_by_the_logical_append() {
-		let first = restore_receive_key_with_slot(start_restore(0, 9), 2).unwrap();
+		let initial = start_restore(0, 9);
+		let first = restore_receive_key_with_slot(initial, 2).unwrap();
 		assert_eq!(first.slot, 0);
 		let second = restore_receive_key_with_slot(first.restore, 7).unwrap();
 		assert_eq!(second.slot, 1);
-		assert_eq!(finish_restore(second.restore).receive_key_at(1), Some(7));
+		let third = restore_receive_key_with_slot(second.restore, 9).unwrap();
+		assert_eq!(third.slot, 2);
+		assert_eq!(finish_restore(third.restore).receive_key_at(2), Some(9));
+		assert_eq!(restore_receive_key(initial, 2), Some(first.restore));
 		assert_eq!(restore_receive_key(first.restore, 7), Some(second.restore));
+		assert_eq!(restore_receive_key(second.restore, 9), Some(third.restore));
+
+		for (restore, sequence) in [
+			(initial, 0),
+			(initial, 10),
+			(first.restore, 2),
+			(first.restore, 1),
+		] {
+			assert_eq!(restore_receive_key_with_slot(restore, sequence), None);
+			assert_eq!(restore_receive_key(restore, sequence), None);
+		}
 	}
 
 	#[test]

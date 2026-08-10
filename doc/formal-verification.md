@@ -195,7 +195,7 @@ pub fn receive(
 
 Returning the receive state on both success and failure is intentional. Production rejects empty, unparsable, wrong-sender, and too-short frames before receive admission, but a syntactically admitted and correctly sized future frame advances the receive chain and caches every intervening key before commitment or AEAD verification. Authentication failure therefore retains the post-admission state, including the selected target key, rather than rolling back to the state at the start of decryption. Repeating the same invalid target is state-neutral only relative to that retained state. Admitted forgeries can fill all 50 receive-cache slots; the next future receive is then rejected without a further transition, a successful delivery using one retained key frees a slot, and replay of that consumed target is rejected. The implementation tests these distinctions in [`tests/protocol.rs`](../tests/protocol.rs#L173), including exact boundary, retry, replay, short-payload, and refill behavior. The specification and proof must describe these actual transitions rather than treating every authentication rejection as state-neutral.
 
-For extraction, replace `HashMap` in the core with a bounded, packed sequence whose uniqueness and size are visible to the prover. Restoration can require sorted input even though successful receive uses swap-removal and does not preserve entry order. The adapter can use a different physical representation only if its refinement to the verified representation is established.
+For extraction, replace `HashMap` in the core with a bounded, packed sequence whose uniqueness and size are visible to the prover. Restoration can require sorted input even though successful receive uses swap-removal and does not preserve entry order. Production now uses a parallel fixed array: the core returns the append, current lookup, removal, and restoration slots, while the remaining refinement obligation is that the adapter associates the correct concrete key and nonce bytes with those proved logical positions.
 
 ### Keep the core on production paths
 
@@ -285,6 +285,10 @@ Symmetric ratchet and records:
 - Planning and advancing an admitted future receive before authentication may change the counter and fill the cache; failure preserves that complete post-admission state rather than restoring the pre-attempt state.
 - Retrying an already retained invalid target performs no additional derivation, while a successful retry consumes only that target and creates capacity for a later admitted derivation.
 - Filling the fiftieth receive slot makes the next future plan state-neutral until a retained key is successfully consumed.
+- Verified lookup returns the unique active slot for every cached receive sequence and returns `None` exactly when that sequence is absent.
+- Missing and retained detailed receive completions return no removal and preserve state, while successful completion returns the exact target and previous-last slots and moves the previous last logical entry into the target slot when those slots differ.
+- The compatibility finish and restoration functions are projections of the detailed functions, with identical logical state, disposition, and accept/reject behavior.
+- Successful restoration returns the old logical cache length as its concrete append slot and places the restored logical sequence in that same slot.
 - A transition for peer A leaves peer B's ratchet unchanged.
 - Successful send makes the consumed message key logically unavailable.
 - The commitment input is exactly `(key, nonce, associated data, AEAD tag, sequence, sender ID)` with unambiguous fixed-size encodings.
@@ -408,12 +412,13 @@ The state machine includes:
 - receive admission using both the 50-message forward-gap limit and the total outstanding-key capacity;
 - a fixed 50-slot receive cache with unique logical sequence ownership;
 - separate planning and one-step receive derivation, so an adapter performs exactly one opaque KDF call for each admitted step;
-- authentication completion that retains the exact key on failure and removes only the target on success;
+- verified sequence-to-current-slot lookup over the active packed prefix;
+- detailed authentication completion that retains the exact key on failure and returns the exact target/old-last swap-removal plan on success;
 - one-use send-key capabilities;
-- checked restoration from sorted, unique, bounded cached sequences;
+- checked restoration from sorted, unique, bounded cached sequences with the append slot returned for each restored entry;
 - pointwise peer transitions that return non-selected peers unchanged.
 
-The fixed array is intentional. Several convenient dynamic-collection operations are assumptions in the current hax proof libraries; direct array append and validated swap removal keep the key-lifecycle semantics visible in generated F*. The strict lemma module proves the Step 2 property inventory against that generated code.
+The fixed array is intentional. Several convenient dynamic-collection operations are assumptions in the current hax proof libraries; direct array append, bounded lookup, and validated swap-removal keep the key-lifecycle semantics visible in generated F*. The strict lemma module proves the Step 2 property inventory against that generated code, including lookup characterization, detailed/compatibility wrapper equivalence, exact successful removal shape, and restoration-slot correspondence.
 
 At the end of this stage, the production `RatchetManager` remained unchanged. Step 3 therefore had to make the core state authoritative, maintain equality between the concrete receive-key representation and the core's logical sequence set, and reconstruct the core through its checked restoration typestate.
 
@@ -422,17 +427,19 @@ At the end of this stage, the production `RatchetManager` remained unchanged. St
 The detailed implementation record is in
 [`formal-verification-stage-3.md`](formal-verification-stage-3.md).
 
-The production crate now depends on `beaconcrypt-protocol-core`, and `RatchetManager` delegates its counter, receive-admission, key-lifecycle, and restoration decisions to the extracted state machine. The core `RatchetState` is authoritative: the adapter derives one concrete KDF output for each admitted core step and maintains the refinement invariant
+The production crate now depends on `beaconcrypt-protocol-core`, and `RatchetManager` delegates its counter, receive-admission, key-lifecycle, sequence-to-slot lookup, removal planning, and restoration-slot decisions to the extracted state machine. The core `RatchetState` is authoritative: the adapter derives one concrete KDF output for each admitted core step, stores it in the returned append slot, and maintains the refinement invariant
 
 ```text
 recv_past[slot].is_some() == (slot < core_state.receive_cache_len())
 ```
 
-Authentication failure retains the same logical and concrete receive key, while successful authentication removes exactly that key from both representations. Each allocated logical send capability accompanies its concrete message key until the adapter consumes it with `finish_send`, including encryption-failure paths.
+For an existing sequence, production obtains the current physical slot only through `lookup_receive_key`; it does not maintain a second index or scan the logical cache itself. Authentication failure returns no removal and retains the same logical and concrete receive key. Successful authentication returns the exact target/old-last plan from `finish_receive_with_removal`, and production applies that swap/take before publishing the returned core state. Each allocated logical send capability accompanies its concrete message key until the adapter consumes it with `finish_send`, including encryption-failure paths.
 
-Persistence keeps the existing six-field `RatchetManager` format: `send_key`, `recv_key`, `send_past`, `send_ctr`, `recv_past`, and `recv_ctr`. The counters are serialized from the authoritative core state; no duplicate core representation is written. During import, the adapter sorts the concrete receive-key sequences and rebuilds the core exclusively through `start_restore`, `restore_receive_key`, and `finish_restore`. States with more than 50 outstanding receive keys are rejected rather than admitted outside the verified state space.
+Persistence keeps the existing six-field `RatchetManager` format: `send_key`, `recv_key`, `send_past`, `send_ctr`, `recv_past`, and `recv_ctr`. The counters are serialized from the authoritative core state; no duplicate core representation or physical slot number is written. Serialization maps active slots back to their logical sequences and rejects both missing active concrete material and populated inactive slots. During import, the adapter sorts sequence/material pairs and rebuilds the core exclusively through `start_restore`, `restore_receive_key_with_slot`, and `finish_restore`, placing each material value directly in its returned slot. States with more than 50 outstanding receive keys are rejected rather than admitted outside the verified state space.
 
-The verified production trace for this stage is restricted to `BeaconCryptPqxdh` operations through the high-level `encrypt_message` and `decrypt_message` methods, starting from a fresh or successfully validated state without rollback. Direct calls to the low-level ratchet/key helpers are outside that trace. `SendKey` is a logical availability marker rather than an affine Rust type, so the one-use claim relies on the production adapter retaining one marker per concrete key and removing both together; cloning or restoring a state with a pending send key and then using both forks is excluded. Selection from the production peer map is also an adapter refinement obligation: the core proves the pointwise peer frame rule, while unique peer lookup and the unchanged-state behavior of non-selected map entries remain covered by implementation validation and protocol regression tests rather than extraction.
+The strict F* lemmas prove that lookup returns a slot exactly when the unique active logical cache contains the sequence, that detailed completion has the same state and disposition as `finish_receive`, that missing and retained outcomes return no removal and preserve state, that successful completion reports the precise target and previous-last slots and mirrors the logical moved-entry shape, and that detailed restoration returns the append slot while projecting exactly to `restore_receive_key`. This mechanizes the control decisions that production formerly reconstructed, but it does not verify the concrete HKDF result, `KeyMaterial` association, Rust array mutation, serde implementation, authentication flag, compiler, crash atomicity, or physical erasure.
+
+The verified production trace for this stage is restricted to `BeaconCryptPqxdh` operations through the high-level `encrypt_message` and `decrypt_message` methods, starting from a fresh or successfully validated state without rollback. Direct calls to the low-level ratchet/key helpers are outside that trace. `SendKey` is a logical availability marker rather than an affine Rust type, so the one-use claim relies on the production adapter retaining one marker per concrete key and removing both together; cloning or restoring a state with a pending send key and then using both forks is excluded. Selection from the production peer map is also an adapter refinement obligation: the core proves the pointwise peer frame rule, while unique peer lookup and the unchanged-state behavior of non-selected map entries remain covered by implementation validation and protocol regression tests rather than extraction. The adapter must also perform exactly one correct HKDF step after each successful receive advance, store and move the corresponding key and nonce in the returned slots, pass truthful authentication results, and publish logical and concrete mutations in the documented order.
 
 ### Step 4 implementation
 

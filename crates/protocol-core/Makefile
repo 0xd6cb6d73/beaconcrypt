@@ -139,7 +139,8 @@ check-toolchain:
 			"$$(proverif -help 2>&1 | sed -n '1p')"
 
 extract-fstar:
-	cargo hax -C --locked ';' into -i '$(HAX_ITEMS)' fstar
+	# Enable hax-lib so the bounded recursive lookup carries its checked measure.
+	cargo hax -C --locked --features=proverif ';' into -i '$(HAX_ITEMS)' fstar
 
 # F* accepts explicit assumptions and lax/admit flags, so strict typechecking
 # alone is not a sufficient policy gate for repository-owned proof modules.

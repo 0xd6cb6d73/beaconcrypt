@@ -50,6 +50,98 @@ let cache_slot
   v slot < 50 /\
   cache_entry cache (v slot) == sequence
 
+/// Any successful bounded lookup names an active matching slot inside the part of the cache traversed by that lookup.
+let rec lookup_receive_key_from_sound
+    (state:t_RatchetState)
+    (sequence:u64)
+    (slot remaining:u8)
+  : Lemma
+      (ensures (match lookup_receive_key_from state sequence slot remaining with
+       | Core_models.Option.Option_Some found ->
+           v slot <= v found /\
+           v found < v slot + v remaining /\
+           cache_slot state.f_receive_cache sequence found
+       | Core_models.Option.Option_None -> True))
+      (decreases (v remaining))
+  =
+  if remaining = mk_u8 0 then ()
+  else if v slot >= 50 then ()
+  else if v slot >= cache_len state.f_receive_cache then ()
+  else if cache_entry state.f_receive_cache (v slot) = sequence then ()
+  else
+    lookup_receive_key_from_sound
+      state sequence (slot +! mk_u8 1) (remaining -! mk_u8 1)
+
+/// A bounded lookup that returns `None` excludes the requested sequence from every active slot in the traversed range.
+let rec lookup_receive_key_from_none_excludes_range
+    (state:t_RatchetState)
+    (sequence:u64)
+    (slot remaining:u8)
+  : Lemma
+      (ensures
+        (lookup_receive_key_from state sequence slot remaining ==
+           Core_models.Option.Option_None ==>
+         forall (i:nat{i < 50}).
+           v slot <= i /\
+           i < cache_len state.f_receive_cache /\
+           i < v slot + v remaining ==>
+             cache_entry state.f_receive_cache i <> sequence))
+      (decreases (v remaining))
+  =
+  if remaining = mk_u8 0 then ()
+  else if v slot >= 50 then ()
+  else if v slot >= cache_len state.f_receive_cache then ()
+  else if cache_entry state.f_receive_cache (v slot) = sequence then ()
+  else
+    lookup_receive_key_from_none_excludes_range
+      state sequence (slot +! mk_u8 1) (remaining -! mk_u8 1)
+
+/// Public lookup soundness: every returned slot is active and stores exactly the requested logical sequence.
+let lookup_receive_key_sound
+    (state:t_RatchetState { valid_state state })
+    (sequence:u64)
+  : Lemma
+      (match lookup_receive_key state sequence with
+       | Core_models.Option.Option_Some slot ->
+           cache_slot state.f_receive_cache sequence slot
+       | Core_models.Option.Option_None -> True)
+  = lookup_receive_key_from_sound state sequence (mk_u8 0) (mk_u8 50)
+
+/// Public lookup completeness in its negative form. `None` is authoritative: no active logical receive capability has the requested sequence.
+let lookup_receive_key_none_is_absent
+    (state:t_RatchetState { valid_state state })
+    (sequence:u64)
+  : Lemma
+      (lookup_receive_key state sequence == Core_models.Option.Option_None ==>
+       ~(cache_has state.f_receive_cache sequence))
+  = lookup_receive_key_from_none_excludes_range
+      state sequence (mk_u8 0) (mk_u8 50)
+
+/// Contrapositive completeness used by adapters and later correspondence proofs: every active logical sequence is found by public lookup.
+let lookup_receive_key_is_complete
+    (state:t_RatchetState { valid_state state })
+    (sequence:u64)
+  : Lemma
+      (cache_has state.f_receive_cache sequence ==>
+       lookup_receive_key state sequence <> Core_models.Option.Option_None)
+  = lookup_receive_key_none_is_absent state sequence
+
+/// Valid-cache uniqueness strengthens soundness to the exact unique active slot characterized by the lookup result.
+let lookup_receive_key_returns_unique_slot
+    (state:t_RatchetState { valid_state state })
+    (sequence:u64)
+  : Lemma
+      (match lookup_receive_key state sequence with
+       | Core_models.Option.Option_Some slot ->
+           cache_slot state.f_receive_cache sequence slot /\
+           (forall (other:u8).
+              cache_slot state.f_receive_cache sequence other ==> other == slot)
+       | Core_models.Option.Option_None ->
+           ~(cache_has state.f_receive_cache sequence))
+  =
+  lookup_receive_key_sound state sequence;
+  lookup_receive_key_none_is_absent state sequence
+
 /// Empty-cache constructors establish the receive invariant for arbitrary
 /// counter values.
 let from_counters_is_valid (send_sequence receive_sequence:u64)
@@ -314,6 +406,158 @@ let finish_receive_replay_is_rejected
        (finish_receive consumed target slot true).f_state == consumed)
   = ()
 
+/// The compatibility wrapper is exactly the state/disposition projection of the detailed operation for every input and outcome.
+let finish_receive_wrapper_matches_detailed
+    (state:t_RatchetState)
+    (target:u64)
+    (slot:u8)
+    (authenticated:bool)
+  : Lemma
+      ((finish_receive state target slot authenticated).f_state ==
+         (finish_receive_with_removal state target slot authenticated).f_state /\
+       (finish_receive state target slot authenticated).f_disposition ==
+         (finish_receive_with_removal state target slot authenticated).f_disposition)
+  = ()
+
+/// Every detailed `Missing` result is state-neutral and carries no removal plan.
+let finish_receive_with_removal_missing_result_is_neutral
+    (state:t_RatchetState)
+    (target:u64)
+    (slot:u8)
+    (authenticated:bool)
+  : Lemma
+      (let finished = finish_receive_with_removal state target slot authenticated in
+       finished.f_disposition == ReceiveDisposition_Missing ==>
+         finished.f_removal == Core_models.Option.Option_None /\
+         finished.f_state == state)
+  = ()
+
+/// Every detailed `Retained` result is state-neutral and carries no removal plan.
+let finish_receive_with_removal_retained_result_is_neutral
+    (state:t_RatchetState)
+    (target:u64)
+    (slot:u8)
+    (authenticated:bool)
+  : Lemma
+      (let finished = finish_receive_with_removal state target slot authenticated in
+       finished.f_disposition == ReceiveDisposition_Retained ==>
+         finished.f_removal == Core_models.Option.Option_None /\
+         finished.f_state == state)
+  = ()
+
+/// A wrong slot/sequence pair returns no removal plan and leaves the complete ratchet state unchanged.
+let finish_receive_with_removal_missing_is_neutral
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { ~(cache_slot state.f_receive_cache target slot) })
+    (authenticated:bool)
+  : Lemma
+      ((finish_receive_with_removal state target slot authenticated).f_disposition ==
+         ReceiveDisposition_Missing /\
+       (finish_receive_with_removal state target slot authenticated).f_state == state /\
+       (finish_receive_with_removal state target slot authenticated).f_removal ==
+         Core_models.Option.Option_None)
+  = ()
+
+/// Authentication failure for a matching candidate returns no removal plan, retains all state, and leaves that exact candidate in the same slot.
+let finish_receive_with_removal_failure_retains_key
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+  : Lemma
+      ((finish_receive_with_removal state target slot false).f_disposition ==
+         ReceiveDisposition_Retained /\
+       (finish_receive_with_removal state target slot false).f_state == state /\
+       (finish_receive_with_removal state target slot false).f_removal ==
+         Core_models.Option.Option_None /\
+       cache_slot
+         (finish_receive_with_removal state target slot false).f_state.f_receive_cache
+         target
+         slot)
+  = ()
+
+/// Successful detailed completion reports the exact old target/last slots, decrements the logical length once, and exposes the logical move mirrored by the concrete fixed array.
+let finish_receive_with_removal_success_shape
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+  : Lemma
+      (let finished = finish_receive_with_removal state target slot true in
+       finished.f_disposition == ReceiveDisposition_Consumed /\
+       (match finished.f_removal with
+        | Core_models.Option.Option_Some removal ->
+            removal.f_target_slot == slot /\
+            v removal.f_last_slot + 1 == cache_len state.f_receive_cache /\
+            cache_len finished.f_state.f_receive_cache + 1 ==
+              cache_len state.f_receive_cache /\
+            finished.f_state.f_send_sequence == state.f_send_sequence /\
+            finished.f_state.f_receive_sequence == state.f_receive_sequence /\
+            (removal.f_target_slot <> removal.f_last_slot ==>
+             cache_entry finished.f_state.f_receive_cache (v removal.f_target_slot) ==
+               cache_entry state.f_receive_cache (v removal.f_last_slot))
+        | Core_models.Option.Option_None -> False))
+  = ()
+
+/// The detailed transition preserves the same logical validity theorem as its compatibility projection.
+let finish_receive_with_removal_preserves_validity
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8)
+    (authenticated:bool)
+  : Lemma
+      (valid_state
+        (finish_receive_with_removal state target slot authenticated).f_state)
+  =
+  finish_receive_preserves_validity state target slot authenticated;
+  finish_receive_wrapper_matches_detailed state target slot authenticated
+
+/// Detailed successful completion removes the target capability itself.
+let finish_receive_with_removal_consumes_target
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+  : Lemma
+      (~(cache_has
+        (finish_receive_with_removal state target slot true).f_state.f_receive_cache
+        target))
+  =
+  finish_receive_consumes_target state target slot;
+  finish_receive_wrapper_matches_detailed state target slot true
+
+/// Every non-target capability survives detailed swap-removal.
+let finish_receive_with_removal_preserves_other_key
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+    (other:u64 {
+       other <> target /\ cache_has state.f_receive_cache other })
+  : Lemma
+      (cache_has
+        (finish_receive_with_removal state target slot true).f_state.f_receive_cache
+        other)
+  =
+  finish_receive_preserves_other_key state target slot other;
+  finish_receive_wrapper_matches_detailed state target slot true
+
+/// Preservation is exact: the surviving non-target sequence occupies one unique active slot in the detailed result.
+let finish_receive_with_removal_preserves_other_key_exactly_once
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+    (other:u64 {
+       other <> target /\ cache_has state.f_receive_cache other })
+  : Lemma
+      (let cache =
+         (finish_receive_with_removal state target slot true).f_state.f_receive_cache in
+       cache_has cache other /\
+       (forall (i:nat{i < 50}) (j:nat{j < 50}).
+          i < cache_len cache /\ j < cache_len cache /\
+          cache_entry cache i == other /\ cache_entry cache j == other ==>
+            i == j))
+  =
+  finish_receive_with_removal_preserves_other_key state target slot other;
+  finish_receive_with_removal_preserves_validity state target slot true
+
 /// A one-step admissible future receive advances before authentication.  If
 /// authentication then fails, the candidate key and the entire post-admission
 /// state are retained; the result is therefore not neutral relative to the
@@ -453,6 +697,46 @@ let restore_receive_key_preserves_validity
        | Core_models.Option.Option_Some restored -> valid_restore restored
        | Core_models.Option.Option_None -> True)
   = ()
+
+/// The compatibility restoration API accepts and rejects exactly the same inputs as the slot-returning operation and projects its restore state.
+let restore_receive_key_wrapper_matches_slot
+    (restore:t_RatchetRestore)
+    (sequence:u64)
+  : Lemma
+      (match restore_receive_key_with_slot restore sequence,
+             restore_receive_key restore sequence with
+       | Core_models.Option.Option_Some step,
+         Core_models.Option.Option_Some restored -> restored == step.f_restore
+       | Core_models.Option.Option_None,
+         Core_models.Option.Option_None -> True
+       | _ -> False)
+  = ()
+
+/// Every successful checked restoration returns the exact append slot, grows the cache once, and places the restored sequence in that returned slot.
+let restore_receive_key_with_slot_success_shape
+    (restore:t_RatchetRestore { valid_restore restore })
+    (sequence:u64)
+  : Lemma
+      (match restore_receive_key_with_slot restore sequence with
+       | Core_models.Option.Option_Some step ->
+           v step.f_slot == cache_len restore.f_state.f_receive_cache /\
+           cache_len step.f_restore.f_state.f_receive_cache ==
+             cache_len restore.f_state.f_receive_cache + 1 /\
+           cache_slot step.f_restore.f_state.f_receive_cache sequence step.f_slot
+       | Core_models.Option.Option_None -> True)
+  = ()
+
+/// The detailed restoration result preserves the builder invariant; rejected inputs return no state.
+let restore_receive_key_with_slot_preserves_validity
+    (restore:t_RatchetRestore { valid_restore restore })
+    (sequence:u64)
+  : Lemma
+      (match restore_receive_key_with_slot restore sequence with
+       | Core_models.Option.Option_Some step -> valid_restore step.f_restore
+       | Core_models.Option.Option_None -> True)
+  =
+  restore_receive_key_preserves_validity restore sequence;
+  restore_receive_key_wrapper_matches_slot restore sequence
 
 let finish_restore_is_valid
     (restore:t_RatchetRestore { valid_restore restore })

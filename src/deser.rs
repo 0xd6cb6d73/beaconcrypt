@@ -517,6 +517,14 @@ mod tests {
 		assert!(
 			SecretBytesVisitor::<4>::copy_from_slice::<serde_json::Error>(&[1, 2, 3, 4]).is_ok()
 		);
+		let borrowed = SecretBytesVisitor::<4>
+			.visit_bytes::<serde_json::Error>(&[1, 2, 3, 4])
+			.unwrap();
+		assert_eq!(borrowed.0.as_slice(), &[1, 2, 3, 4]);
+		let owned = SecretBytesVisitor::<4>
+			.visit_byte_buf::<serde_json::Error>(vec![4, 3, 2, 1])
+			.unwrap();
+		assert_eq!(owned.0.as_slice(), &[4, 3, 2, 1]);
 		let wrong_length =
 			SecretBytesVisitor::<4>::copy_from_slice::<serde_json::Error>(&[1, 2, 3])
 				.err()
@@ -612,6 +620,69 @@ mod tests {
 		let restored = serde_json::from_str(&serialized).unwrap();
 
 		assert_manager_eq(&manager, &restored);
+	}
+
+	#[test]
+	fn ratchet_manager_schema_remains_six_fields_and_sequence_keyed() {
+		let serialized = serde_json::to_value(populated_manager()).unwrap();
+		let object = serialized.as_object().unwrap();
+		let mut fields = object.keys().map(String::as_str).collect::<Vec<_>>();
+		fields.sort_unstable();
+		assert_eq!(
+			fields,
+			vec![
+				"recv_ctr",
+				"recv_key",
+				"recv_past",
+				"send_ctr",
+				"send_key",
+				"send_past",
+			]
+		);
+
+		let receive_map = object["recv_past"].as_object().unwrap();
+		let mut sequences = receive_map.keys().map(String::as_str).collect::<Vec<_>>();
+		sequences.sort_unstable();
+		assert_eq!(sequences, vec!["2", "4"]);
+	}
+
+	#[test]
+	fn post_swap_round_trip_preserves_receive_material_by_sequence() {
+		let mut manager = RatchetManager::default();
+		assert!(manager.init_ratchets(
+			&[0x74; KDF_STATE_SIZE],
+			SYM_RATCHET_INFO,
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		));
+		assert_eq!(manager.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
+		let target_slot = verified_ratchet::lookup_receive_key(manager.control, 2).unwrap();
+		let old_last_slot = verified_ratchet::lookup_receive_key(manager.control, 4).unwrap();
+		assert_ne!(target_slot, old_last_slot);
+		assert_eq!(
+			manager.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Consumed
+		);
+		assert_eq!(
+			verified_ratchet::lookup_receive_key(manager.control, 4),
+			Some(target_slot)
+		);
+
+		let serialized = serde_json::to_value(&manager).unwrap();
+		let receive_map = serialized["recv_past"].as_object().unwrap();
+		let mut sequences = receive_map.keys().map(String::as_str).collect::<Vec<_>>();
+		sequences.sort_unstable();
+		assert_eq!(sequences, vec!["1", "3", "4"]);
+		let restored: RatchetManager = serde_json::from_value(serialized).unwrap();
+
+		assert_manager_eq(&manager, &restored);
+		let restored_last_slot = verified_ratchet::lookup_receive_key(restored.control, 4).unwrap();
+		assert_ne!(restored_last_slot, target_slot);
+		for sequence in [1, 3, 4] {
+			assert_key_material_eq(
+				manager.recv_key(sequence).unwrap(),
+				restored.recv_key(sequence).unwrap(),
+			);
+		}
 	}
 
 	#[test]

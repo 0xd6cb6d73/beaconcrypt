@@ -12,7 +12,8 @@ F* and ProVerif files under
 
 The short conclusion is:
 
-- F* proves useful, universal facts about selected deterministic Rust functions: exact PQXDH byte layouts and state transitions, ratchet bounds, logical key consumption, replay behavior, checked counter handling, and the CTX transcript and pointwise collision-witness properties described below.
+- F* proves useful, universal facts about selected deterministic Rust functions: exact PQXDH byte layouts and state transitions, ratchet bounds, receive sequence-to-slot lookup, append/removal/restoration slot shape, logical key consumption, replay behavior, checked counter handling, and the CTX transcript and pointwise collision-witness properties described below.
+- The receive-slot theorems remove independent production decisions about where a logical sequence belongs, but concrete HKDF output, key/nonce association, Rust array mutation, serde, authentication-result provenance, and publication atomicity remain adapter obligations.
 - ProVerif proves secrecy and authentication properties for an active-attacker
   symbolic model of registration and a fixed record-exchange schedule. It also
   demonstrates the expected exposure of cached and future keys after one
@@ -240,88 +241,38 @@ proof; that is the separate ProVerif layer.
 
 ### Symmetric-ratchet control state
 
-The F* ratchet deliberately models sequence numbers and **logical key
-capabilities**, not the secret chain bytes, concrete message keys, or nonces. A
-logical capability is bookkeeping that says “the key for sequence 2 should be
-available”; it is not the key itself. For example, after sequence 3 arrives
-first, the model may contain capabilities for sequences 2 and 3. Successful
-authentication of sequence 3 consumes capability 3 while capability 2 remains
-for the delayed record. Production code separately has to derive, retain, and
-delete the matching secret bytes.
+The F* ratchet deliberately models sequence numbers and **logical key capabilities**, not the secret chain bytes, concrete message keys, or nonces. A logical capability is bookkeeping that says “the key for sequence 2 should be available”; it is not the key itself. The logical receive cache is a packed fixed array, and production stores opaque `KeyMaterial` in a parallel fixed array. For example, after sequence 3 arrives first, the model may contain capabilities for sequences 2 and 3. Successful authentication of sequence 3 consumes capability 3 while capability 2 remains for the delayed record. Production code separately has to derive, retain, move, and delete the matching secret bytes.
 
-The ratchet invariant says the active receive cache has at most 50 entries;
-every entry is nonzero, no greater than the receive counter, and unique
-([invariant](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L9-L32)).
+The ratchet invariant says the active receive cache has at most 50 entries; every active entry is nonzero, no greater than the receive counter, and unique ([ratchet lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst)). Uniqueness is what makes a successful sequence lookup identify one current physical slot even after an earlier swap-removal has moved entries.
 
 The following properties are proved:
 
-- Empty-cache constructors establish the invariant for arbitrary supplied
-  counters ([constructors](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L53-L61)).
-- A successful send allocation increments the counter by exactly one, returns a
-  capability for that same sequence, does not touch receive state, and cannot
-  wrap. Exhaustion at `u64::MAX` changes no state
-  ([send lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L63-L103)).
-- Sequentially finishing an available send capability marks the returned value
-  unavailable; finishing that returned value again fails without changing it
-  ([finish lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L105-L126)).
-- A successful future receive plan reports a derivation count equal to the
-  numeric gap; the plan itself derives nothing. Admission requires both a gap
-  of at most 50 and total outstanding capacity of at most 50. Larger gaps and
-  capacity overflow are rejected with a count of zero. The adapter is assumed
-  to perform exactly the reported number of core and concrete KDF advances
-  ([planning lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L128-L178)).
-  An old or current target requires zero new derivations, but that result does
-  not say its key is still present in the cache.
-- Each successful receive advancement increments once, appends the exact new
-  sequence, preserves the send counter and invariant, and reports the correct
-  cache slot. A full cache or exhausted counter is state-neutral
-  ([advancement lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L180-L224)).
-- A wrong sequence/slot pair consumes nothing. Given a valid state and matching
-  target/slot, authentication failure retains the entire logical state passed
-  to `finish_receive` for retry. For a future sequence, planning and admitted
-  advancement may already have moved the receive counter and cached bounded
-  intermediate keys; failure retains that advanced state and is not neutral
-  relative to the start of decryption. Those advances can consume cache/window
-  capacity. Authentication success removes exactly the target, retains every
-  other cached key, preserves the invariant, and a second use of the old
-  target/slot is rejected as missing
-  ([completion and replay lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L226-L315)).
-- The [composed failed-receive lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L317-L443) join planning, one-step advancement, and completion. `admitted_receive_failure_retains_advanced_state` proves that a target exactly one sequence ahead is derived before authentication and that failure retains a state whose counter and cache are each one larger. `failed_receive_retry_consumes_once` applies to any valid state containing the target: its failed retry is zero-cost, later success removes the target, and replay is neutral. `failed_receive_fills_cache_and_rejects_next_future` starts with 49 entries, retains the fiftieth on failure, and makes the next future plan return no target and zero derivations. `successful_receive_releases_capacity_for_next_future` proves the complementary transition: consuming a target from a full valid cache leaves 49 entries and makes the immediately next future sequence admissible with one derivation. These are universal pure-state results under their invariant and numeric preconditions, not facts inferred from one ProVerif trace; production's multi-step KDF loop remains an adapter refinement obtained by applying the proved one-step shape for every planned derivation.
-- Successful, ordered restoration preserves the invariant, and finishing a
-  valid restoration returns a valid state
-  ([restore lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L445-L460)).
-- Pointwise replacement leaves a peer record with a different ID unchanged.
-  Mismatched send advancement returns no sequence and an unavailable
-  capability; for the selected peer, the peer ID, ratchet, and sequence match
-  direct send advancement
-  ([peer lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst#L462-L500)).
+- Empty-cache constructors establish the invariant for arbitrary supplied counters.
+- A successful send allocation increments the counter by exactly one, returns a capability for that same sequence, does not touch receive state, and cannot wrap. Exhaustion at `u64::MAX` changes no state.
+- Sequentially finishing an available send capability marks the returned value unavailable; finishing that returned value again fails without changing it.
+- A successful future receive plan reports a derivation count equal to the numeric gap; the plan itself derives nothing. Admission requires both a gap of at most 50 and total outstanding capacity of at most 50. Larger gaps and capacity overflow are rejected with a count of zero. An old or current target requires zero new derivations, but that result does not say its key is still present in the cache.
+- Each successful receive advancement increments once, appends the exact new sequence, preserves the send counter and invariant, and reports the old cache length as the append slot. A full cache or exhausted counter is state-neutral.
+- `lookup_receive_key` is characterized in both directions for valid states. A `Some(slot)` result names an active slot holding the requested sequence, a `None` result means the sequence is absent from the active cache, and uniqueness makes the returned active slot the only matching slot. Production can therefore treat `None` as authoritative instead of reproducing the scan in adapter code.
+- `finish_receive_with_removal` is the sole detailed logical completion transition, and the compatibility `finish_receive` function is proved to return the same state and disposition. A wrong sequence/slot pair produces `Missing`, no removal, and unchanged state. Authentication failure produces `Retained`, no removal, and unchanged logical state. Authentication success produces `Consumed`, reduces the cache length by one, reports the target slot and the previous last slot, removes the target, preserves every other logical sequence exactly once, and moves the previous last entry into the target slot when the two slots differ.
+- For a future sequence, planning and admitted advancement may already have moved the receive counter and cached bounded intermediate keys before authentication. Failure retains that advanced state and is not neutral relative to the start of decryption, so those advances can consume cache/window capacity. The composed failed-receive lemmas prove one-step pre-authentication advancement, zero-cost retry, later single consumption, replay rejection, exact full-cache rejection, and capacity release after consumption for arbitrary valid logical states satisfying their numeric preconditions.
+- `restore_receive_key_with_slot` performs the checked ordered append and returns the old logical cache length as the slot containing the restored sequence. Successful restoration preserves validity, and the compatibility `restore_receive_key` function is proved to have the same accept/reject behavior and projected state. Finishing a valid restoration returns a valid state.
+- Pointwise replacement leaves a peer record with a different ID unchanged. Mismatched send advancement returns no sequence and an unavailable capability; for the selected peer, the peer ID, ratchet, and sequence match direct send advancement.
 
-The last result is pointwise: it does not prove that a production whole-map
-lookup selects one unique entry or updates the complete map correctly.
+The last result is pointwise: it does not prove that a production whole-map lookup selects one unique entry or updates the complete map correctly.
 
-These facts prove the control algorithm, not global ownership. In Rust,
-`RatchetState` and `SendKey` are copyable values. The “one-use” theorem threads
-the returned unavailable capability into the second call; it does not stop a
-caller from retaining a copy of the original available capability or forking
-old ratchet state. Concrete one-use and replay resistance therefore require one
-authoritative, non-rollback state and the adapter invariant
+These facts prove the control algorithm and its physical logical-array decisions, not the secret-byte refinement or global ownership. In Rust, `RatchetState` and `SendKey` are copyable values. The “one-use” theorem threads the returned unavailable capability into the second call; it does not stop a caller from retaining a copy of the original available capability or forking old ratchet state. Concrete one-use and replay resistance therefore require one authoritative, non-rollback state and the adapter invariant
 
 ```text
-concrete receive-key sequences == logical receive-cache sequences
+for n = control.receive_cache_len():
+    slot < n  => recv_past[slot] contains the concrete key and nonce for the logical sequence in slot
+    slot >= n => recv_past[slot] is empty
 ```
 
-The proof also accepts the `authenticated` flag as an input. The adapter must
-derive it from a sound commitment and AEAD check, perform exactly the planned
-KDF steps, associate each logical sequence with exactly one concrete key, and
-delete the matching concrete key when the core consumes it.
+The core-returned append, lookup, removal, and restoration slots eliminate independent adapter decisions about where a logical sequence belongs. The proof still cannot inspect `KeyMaterial`, so production must perform exactly one correct HKDF step after each successful logical advancement, store its output in the returned slot, use the current lookup result for the intended sequence, apply the exact returned swap/take before publishing the new logical state, and place persisted material in the returned restoration slot. Serialization and deserialization, authentication-result provenance, crash atomicity, physical erasure, and the compiled array operations remain outside F*.
 
-For the selected functions, strict checking also proves the array-bound and
-similar safety conditions that hax generates. This is not a proof that the
-entire application, all adapter error paths, allocation, FFI, or machine code is
-panic-free. Nor does extraction and typechecking give every selected function a
-complete behavioral specification: the beacon abort helpers, arbitrary
-malformed `InitKex` inputs, and all registration-finishing error paths do not
-have handwritten semantic theorems.
+The proof also accepts the `authenticated` flag as an input. The adapter must derive it from a sound commitment and AEAD check. `Retained` must cause no concrete slot mutation, while `Consumed` must drop only the concrete target identified by the verified plan.
+
+For the selected functions, strict checking also proves the array-bound and similar safety conditions that hax generates. This is not a proof that the entire application, all adapter error paths, allocation, FFI, or machine code is panic-free. Nor does extraction and typechecking give every selected function a complete behavioral specification: the beacon abort helpers, arbitrary malformed `InitKex` inputs, and all registration-finishing error paths do not have handwritten semantic theorems.
 
 ## Concrete properties proved by ProVerif
 
@@ -582,8 +533,7 @@ The corpus also does not prove:
   classifications;
 - atomic check-and-insert or check-and-reserve behavior in real sets and maps;
 - correctness and uniqueness of general production peer-map selection, or the whole-map update from F*'s theorem about one selected map entry; registration finish now checks that the selected concrete entry equals the binding retained by verified state, but the concrete map operation remains outside F*;
-- concrete HKDF call labels and buffer slicing, AEAD result provenance, or the
-  logical-cache/concrete-key-map equality;
+- concrete HKDF call labels and buffer slicing, AEAD result provenance, association of each returned logical slot with the correct concrete key and nonce bytes, exact execution of the returned concrete swap/take, or atomic publication of the logical and concrete results;
 - byte-level equivalence between ProVerif's admitted symbolic frame and production Cap'n Proto parsing, sender lookup/checks, overhead-length validation, commitment slicing, or malformed-input rejection;
 - behavior through direct low-level ratchet, key, peer-map, compatibility, or
   mutation helpers outside the documented high-level API trace;
@@ -670,13 +620,11 @@ The production connection assumes:
 - the adapter passes the exact F*-verified root input and labels to HKDF, uses
   the exact returned associated data, and applies the complementary ratchet
   offsets correctly;
-- each admitted logical ratchet step causes exactly one concrete KDF step and
-  each cached logical sequence corresponds to exactly one concrete key;
+- each admitted logical ratchet step causes exactly one concrete KDF step, its output is stored in the append slot returned by `advance_receive`, every existing sequence is accessed through the current slot returned by `lookup_receive_key`, and every active logical slot contains exactly its corresponding concrete key and nonce while every inactive slot is empty;
 - after one send key is allocated, the adapter finishes the logical capability
   and removes the concrete key after that one encryption attempt even if AEAD
   or serialization fails;
-- authentication success/failure is truthfully passed to `finish_receive`, and
-  concrete keys are retained or removed in step with logical capabilities;
+- authentication success/failure is truthfully passed to `finish_receive_with_removal`, retained or missing outcomes cause no concrete slot mutation, and a consumed outcome applies exactly the returned target/old-last swap/take before publishing the returned logical state;
 - authenticated sender/target lookup selects one unique peer-map entry and
   preserves all non-selected peers;
 - `Fresh` means the exact semantic ID is absent, successful acceptance inserts
@@ -690,9 +638,7 @@ The production connection assumes:
   decryption paths from fresh or successfully validated state;
 - pending capabilities and authoritative state are not cloned into independently
   usable forks;
-- restoration validates bounds and uniqueness, sorts imported receive
-  sequences, rejects malformed or oversized state, and rebuilds through the
-  proved restore steps; and
+- restoration validates bounds and uniqueness, sorts imported receive sequence/material pairs, rejects malformed or oversized state, places each material value in the slot returned by `restore_receive_key_with_slot`, and serialization rejects both missing active material and populated inactive slots; and
 - server state and replay history have one owner and are not rolled back.
 
 Compile-time size assertions, private Rust fields, consuming APIs, and
@@ -890,7 +836,7 @@ server-side, persistence-aware, or physical-erasure forward secrecy.
 
 1. Production parsing and sender selection must first choose the legitimate peer and reject malformed, short, or wrong-sender frames before ratchet admission.
 2. For the logical receiver state selected by the adapter, F* proves the admitted plan/one-step advancement relationship, that failed authentication retains the complete post-admission state, and that filling capacity blocks another future plan without mutation. F* does not prove the production peer-map selection itself.
-3. The adapter invariant must pair each derived logical entry with exactly one concrete key and retain those bytes on failure.
+3. F* proves the append, current lookup, successful target/old-last removal, and restoration slots for the logical cache. The remaining adapter invariant must place the corresponding concrete key and nonce bytes in those returned slots, apply the returned swap/take exactly, and retain every byte on failure.
 4. The private ProVerif scenario then shows that an active network attacker without the legitimate receiver snapshot cannot derive the four named plaintexts even while concurrent attacker-owned registration processes commit a response and expose their own routed canary. The record trace uses a standalone fresh root, so peer/root separation remains an adapter obligation.
 5. In the compromise variant, explicitly revealing the legitimate receiver's retained state exposes the skipped and target keys and the live future chain; this both decrypts the public honest target ciphertext and enables a forged accepted frame.
 6. If the attacker forwards the honest ciphertext before spending the target key on a forgery, the retained key still accepts it, consumes only that slot, rejects replay, and permits one later derivation.
@@ -905,11 +851,7 @@ The current proof entry point is:
 make -C crates/protocol-core verify
 ```
 
-It enters the locked Nix environment, checks exact tool identities, regenerates
-both proof backends, enforces the local no-`assume`/no-`admit` policy, strictly
-checks generated and handwritten F*, checks the reviewed trust-boundary
-inventory, and runs all ProVerif scenarios. The reviewed tool bundle is recorded
-in the [Stage 8 document](formal-verification-stage-8.md#locked-proof-bundle).
+It enters the locked Nix environment, checks exact tool identities, regenerates both proof backends, enforces the local no-`assume`/no-`admit` policy, strictly checks generated and handwritten F*, and runs all ProVerif scenarios. After intentional boundary diffs have been reviewed and their hashes refreshed, the separate `make -C crates/protocol-core check-inventory` command checks the trust-boundary inventory. The reviewed tool bundle is recorded in the [Stage 8 document](formal-verification-stage-8.md#locked-proof-bundle).
 
 The historical Stage 3 through Stage 9 documents describe how this boundary was built. Older statements such as “semantic proofs remain future work,” older tool versions, hashes, and test counts describe their stage at that time. The current proof claims are the Stage 6 F* results plus the composed failed-receive lemmas, the current ProVerif model (which extends the Stage 7 baseline with attacker-owned registrations and explicit failed-receive scenarios), and Stage 8 reproducibility controls. Stage 9 adds a mechanically checked [trust-boundary inventory](../crates/protocol-core/proofs/trusted-boundary.md); its historical snapshot changed no theorem, symbolic rule, security question, or production behavior, while the maintained inventory now records the later proof extensions. Stage 8 likewise explicitly changed no theorem, model, or expected query result ([Stage 8 scope](formal-verification-stage-8.md#result-and-scope)).
 
@@ -922,7 +864,7 @@ The result gate requires exactly:
 - all 13 private failed-receive queries to be true (four secrecy and nine state/origin correspondences), with all eleven failed-receive reachability negations false (nine receive-state phases plus malicious-registration commit and malicious-canary recovery); and
 - in the seven-query failed-receive compromise run, consumed-past secrecy and both compromise-order correspondences to be true, skipped/target/future secrecy and honest-origin correspondence to be false, and both compromise and later-honest-delivery reachability negations to be false.
 
-During preparation of this report on 2 August 2026, the command completed successfully with all three regenerated F* modules and the ProVerif extraction matching their tracked reviewed outputs. All F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the trust-boundary inventory matched its recorded baseline.
+During preparation of this updated report on 10 August 2026, the command completed successfully with all three regenerated F* modules and the ProVerif extraction matching their tracked reviewed outputs, including the receive lookup, detailed removal, and restoration-slot extensions. All F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the trust-boundary inventory matched its recorded baseline.
 
 The checker rejects missing or substituted queries, timeouts, unknown or
 inconclusive results, and any changed classification
@@ -934,13 +876,7 @@ For CI and reviewed generated artifacts, use:
 make -C crates/protocol-core check-generated
 ```
 
-That runs the same suite and rejects tracked or untracked extraction drift. The
-dedicated formal-verification workflow runs this command. These controls make
-the proof reproducible and prevent a query, monitored trust-boundary file, or
-generated file from silently disappearing or changing without an explicit
-baseline update. They do not prove that the handwritten model is faithful to
-production or that the reviewed assumptions hold; those conclusions still
-require substantive review beyond the mechanical Stage 9 gate.
+That runs the same suite and rejects tracked or untracked extraction drift. The dedicated formal-verification workflow runs this command. Run `make -C crates/protocol-core check-inventory` separately to check monitored trust-boundary membership and fingerprints. Together, those commands make the proof reproducible and prevent a query, monitored trust-boundary file, or generated file from silently disappearing or changing without an explicit baseline update. They do not prove that the handwritten model is faithful to production or that the reviewed assumptions hold; those conclusions still require substantive review beyond the mechanical Stage 9 gate.
 
 ## Safe summary wording
 
@@ -966,6 +902,7 @@ For an audit or security statement that needs exact scope, use:
 > handwritten modeling, correct application recipient routing, high-level
 > non-rollback execution, and the stated replay-owner and compromise scope; the
 > complete application and primitive implementations are not formally verified.
+> For the receive cache specifically, F* characterizes sequence lookup, exact successful swap-removal, compatibility wrappers, and restoration append slots; production still has to derive the correct secret material, store and move it in those returned slots, serialize it faithfully, and publish state without rollback or inconsistent partial updates.
 >
 > A dedicated exact capacity-50 trace models a forged future frame advancing and retaining receiver state before authentication, a neutral retry and full-cache rejection, later honest consumption, replay rejection, and admission after one slot is freed. The retained state preserves the named secrets while private; its explicit compromise exposes skipped, target, and future material, permits forgery, and leaves honest delivery reachable but not guaranteed. General control-state relationships come from F*, while byte-level parsing and arbitrary schedules are outside this finite ProVerif trace.
 >

@@ -216,13 +216,28 @@ type t_ReceiveFinish = {
   f_disposition:t_ReceiveDisposition
 }
 
-/// Complete authentication for a receive key identified by both slot and
-/// sequence.
-/// Requiring both values prevents a stale slot from consuming a different key.
-/// Removal uses a visible fixed-array swap, avoiding assumed collection models
-/// in the prover backend.
-let finish_receive (state: t_RatchetState) (target: u64) (slot: u8) (authenticated: bool)
-    : t_ReceiveFinish =
+/// Physical swap-removal indices selected by the logical receive transition.
+type t_ReceiveRemoval = {
+  f_target_slot:u8;
+  f_last_slot:u8
+}
+
+/// Logical completion result plus the exact concrete removal operation.
+type t_ReceiveFinishWithRemoval = {
+  f_state:t_RatchetState;
+  f_disposition:t_ReceiveDisposition;
+  f_removal:Core_models.Option.t_Option t_ReceiveRemoval
+}
+
+/// Complete a receive attempt and return the physical swap-removal plan.
+/// Missing or retained keys return no plan and leave `state` unchanged. A
+/// consumed key returns the target slot and the old final active slot.
+let finish_receive_with_removal
+      (state: t_RatchetState)
+      (target: u64)
+      (slot: u8)
+      (authenticated: bool)
+    : t_ReceiveFinishWithRemoval =
   let len:u8 = state.f_receive_cache.f_len in
   let len_index:usize = cast (len <: u8) <: usize in
   let slot_index:usize = cast (slot <: u8) <: usize in
@@ -230,15 +245,23 @@ let finish_receive (state: t_RatchetState) (target: u64) (slot: u8) (authenticat
     len_index >. v_RECEIVE_CACHE_CAPACITY || slot_index >=. len_index ||
     (state.f_receive_cache.f_entries.[ slot_index ] <: u64) <>. target
   then
-    { f_state = state; f_disposition = ReceiveDisposition_Missing <: t_ReceiveDisposition }
+    {
+      f_state = state;
+      f_disposition = ReceiveDisposition_Missing <: t_ReceiveDisposition;
+      f_removal = Core_models.Option.Option_None <: Core_models.Option.t_Option t_ReceiveRemoval
+    }
     <:
-    t_ReceiveFinish
+    t_ReceiveFinishWithRemoval
   else
     if ~.authenticated
     then
-      { f_state = state; f_disposition = ReceiveDisposition_Retained <: t_ReceiveDisposition }
+      {
+        f_state = state;
+        f_disposition = ReceiveDisposition_Retained <: t_ReceiveDisposition;
+        f_removal = Core_models.Option.Option_None <: Core_models.Option.t_Option t_ReceiveRemoval
+      }
       <:
-      t_ReceiveFinish
+      t_ReceiveFinishWithRemoval
     else
       let last_slot:u8 = len -! mk_u8 1 in
       let entries:t_Array u64 (mk_usize 50) = state.f_receive_cache.f_entries in
@@ -261,10 +284,28 @@ let finish_receive (state: t_RatchetState) (target: u64) (slot: u8) (authenticat
         }
         <:
         t_RatchetState;
-        f_disposition = ReceiveDisposition_Consumed <: t_ReceiveDisposition
+        f_disposition = ReceiveDisposition_Consumed <: t_ReceiveDisposition;
+        f_removal
+        =
+        Core_models.Option.Option_Some
+        ({ f_target_slot = slot; f_last_slot = last_slot } <: t_ReceiveRemoval)
+        <:
+        Core_models.Option.t_Option t_ReceiveRemoval
       }
       <:
-      t_ReceiveFinish
+      t_ReceiveFinishWithRemoval
+
+/// Complete authentication for a receive key identified by both slot and
+/// sequence.
+/// Requiring both values prevents a stale slot from consuming a different key.
+/// Removal uses a visible fixed-array swap, avoiding assumed collection models
+/// in the prover backend.
+let finish_receive (state: t_RatchetState) (target: u64) (slot: u8) (authenticated: bool)
+    : t_ReceiveFinish =
+  let finished:t_ReceiveFinishWithRemoval =
+    finish_receive_with_removal state target slot authenticated
+  in
+  { f_state = finished.f_state; f_disposition = finished.f_disposition } <: t_ReceiveFinish
 
 /// Builder for restoring a ratchet from a sorted list of cached sequences.
 /// Keeping restoration as a typestate prevents callers from manufacturing an
@@ -283,30 +324,56 @@ let start_restore (send_sequence receive_sequence: u64) : t_RatchetRestore =
   <:
   t_RatchetRestore
 
-let restore_receive_key (restore: t_RatchetRestore) (sequence: u64)
-    : Core_models.Option.t_Option t_RatchetRestore =
+/// One checked persistence-restoration append and its allocated slot.
+type t_ReceiveRestoreStep = {
+  f_restore:t_RatchetRestore;
+  f_slot:u8
+}
+
+/// Append one sorted receive sequence during restoration and return its slot.
+let restore_receive_key_with_slot (restore: t_RatchetRestore) (sequence: u64)
+    : Core_models.Option.t_Option t_ReceiveRestoreStep =
   if
     sequence =. mk_u64 0 || sequence >. restore.f_state.f_receive_sequence ||
     sequence <=. restore.f_last_sequence
-  then Core_models.Option.Option_None <: Core_models.Option.t_Option t_RatchetRestore
+  then Core_models.Option.Option_None <: Core_models.Option.t_Option t_ReceiveRestoreStep
   else
     match
       impl_SequenceCache__append restore.f_state.f_receive_cache sequence
       <:
       Core_models.Option.t_Option (t_SequenceCache & u8)
     with
-    | Core_models.Option.Option_Some (receive_cache, _) ->
+    | Core_models.Option.Option_Some (receive_cache, slot) ->
       Core_models.Option.Option_Some
       ({
-          f_state = { restore.f_state with f_receive_cache = receive_cache } <: t_RatchetState;
-          f_last_sequence = sequence
+          f_restore
+          =
+          {
+            f_state = { restore.f_state with f_receive_cache = receive_cache } <: t_RatchetState;
+            f_last_sequence = sequence
+          }
+          <:
+          t_RatchetRestore;
+          f_slot = slot
         }
         <:
-        t_RatchetRestore)
+        t_ReceiveRestoreStep)
       <:
-      Core_models.Option.t_Option t_RatchetRestore
+      Core_models.Option.t_Option t_ReceiveRestoreStep
     | Core_models.Option.Option_None  ->
-      Core_models.Option.Option_None <: Core_models.Option.t_Option t_RatchetRestore
+      Core_models.Option.Option_None <: Core_models.Option.t_Option t_ReceiveRestoreStep
+
+let restore_receive_key (restore: t_RatchetRestore) (sequence: u64)
+    : Core_models.Option.t_Option t_RatchetRestore =
+  Core_models.Option.impl__map #t_ReceiveRestoreStep
+    #t_RatchetRestore
+    #(t_ReceiveRestoreStep -> t_RatchetRestore)
+    (restore_receive_key_with_slot restore sequence
+      <:
+      Core_models.Option.t_Option t_ReceiveRestoreStep)
+    (fun step ->
+        let step:t_ReceiveRestoreStep = step in
+        step.f_restore)
 
 let finish_restore (restore: t_RatchetRestore) : t_RatchetState = restore.f_state
 
@@ -358,3 +425,27 @@ let advance_send_for_peer (requested_peer: u64) (peer: t_PeerRatchetState) : t_P
     }
     <:
     t_PeerSendAdvance
+
+let rec lookup_receive_key_from (state: t_RatchetState) (sequence: u64) (slot remaining: u8)
+    : Prims.Tot (Core_models.Option.t_Option u8)
+      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
+  if remaining =. mk_u8 0
+  then Core_models.Option.Option_None <: Core_models.Option.t_Option u8
+  else
+    if (cast (slot <: u8) <: usize) >=. v_RECEIVE_CACHE_CAPACITY
+    then Core_models.Option.Option_None <: Core_models.Option.t_Option u8
+    else
+      if slot >=. state.f_receive_cache.f_len
+      then Core_models.Option.Option_None <: Core_models.Option.t_Option u8
+      else
+        if (state.f_receive_cache.f_entries.[ cast (slot <: u8) <: usize ] <: u64) =. sequence
+        then Core_models.Option.Option_Some slot <: Core_models.Option.t_Option u8
+        else
+          lookup_receive_key_from state
+            sequence
+            (slot +! mk_u8 1 <: u8)
+            (remaining -! mk_u8 1 <: u8)
+
+/// Return the physical slot currently containing `sequence`.
+let lookup_receive_key (state: t_RatchetState) (sequence: u64) : Core_models.Option.t_Option u8 =
+  lookup_receive_key_from state sequence (mk_u8 0) (cast (v_RECEIVE_CACHE_CAPACITY <: usize) <: u8)
