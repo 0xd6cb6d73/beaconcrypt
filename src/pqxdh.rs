@@ -301,14 +301,14 @@ impl Beacon {
 }
 #[cfg(feature = "server")]
 impl Server {
-	pub fn new(k: u64, seed: Option<&[u8]>) -> Self {
+	pub fn new(server_kid: u64, id_seed: Option<&[u8]>) -> Self {
 		ensure_init().expect("Failed to initialize libsodium");
 		Self {
-			identity_key: seed
+			identity_key: id_seed
 				.map(|s| crypto_sign::KeyPair::from_seed(s).unwrap())
 				.unwrap_or_else(|| crypto_sign::KeyPair::generate().unwrap()),
-			identity_key_kid: k,
-			control: verified_pqxdh::ServerState::new(k),
+			identity_key_kid: server_kid,
+			control: verified_pqxdh::ServerState::new(server_kid),
 			known_ids: HashMap::new(),
 			consumed_registrations: HashSet::new(),
 		}
@@ -907,6 +907,7 @@ fn derive_root_key_input(input: &mut verified_pqxdh::RootKeyInput) -> Option<Kex
 	derived
 }
 
+#[cfg(feature = "server")]
 pub fn build_associated_data(
 	server_id: crypto_sign::PublicKey,
 	beacon_id: crypto_sign::PublicKey,

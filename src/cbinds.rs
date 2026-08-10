@@ -353,9 +353,6 @@ pub extern "C" fn beaconcrypt_encrypt_to_server(
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	if handle.is_null() {
-		return empty_buffer();
-	}
 	let Some(data) = (unsafe { input(ptr, len) }) else {
 		return empty_buffer();
 	};

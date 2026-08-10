@@ -861,6 +861,7 @@ impl AsRef<[u8]> for Encrypted {
 	}
 }
 
+#[cfg(feature = "server")]
 pub(crate) fn encrypted_frame_sender(data: &[u8]) -> Option<u64> {
 	let reader = capnp::serialize::read_message(data, ReaderOptions::new()).ok()?;
 	let typed_reader = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
