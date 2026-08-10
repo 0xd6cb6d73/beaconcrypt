@@ -550,7 +550,7 @@ impl<Role: roles::ChainKey> Clone for Ratchet<Role> {
 type SendChain = Ratchet<roles::ChainSendKey>;
 type RecvChain = Ratchet<roles::ChainRecvKey>;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct RatchetManager {
 	/// current state of the KDF on the send chain
 	send_key: SendChain,
@@ -565,17 +565,6 @@ pub struct RatchetManager {
 }
 
 impl RatchetManager {
-	pub fn default() -> Self {
-		Self {
-			send_key: SendChain::default(),
-			recv_key: RecvChain::default(),
-			send_past: HashMap::new(),
-			send_capabilities: HashMap::new(),
-			recv_past: HashMap::new(),
-			control: verified_ratchet::RatchetState::default(),
-		}
-	}
-
 	#[cfg(feature = "server")]
 	pub fn from_json(json: String) -> Self {
 		serde_json::from_str(&json).unwrap()
@@ -683,7 +672,7 @@ impl RatchetManager {
 		true
 	}
 
-	fn consume_send_key(&mut self, seq: u64) -> bool {
+	pub(crate) fn consume_send_key(&mut self, seq: u64) -> bool {
 		debug_assert!(self.send_cache_matches_control());
 		let Some(capability) = self.send_capabilities.remove(&seq) else {
 			return false;
@@ -708,7 +697,7 @@ impl RatchetManager {
 		self.consume_send_key(seq);
 	}
 
-	fn complete_recv_key(
+	pub(crate) fn complete_recv_key(
 		&mut self,
 		seq: u64,
 		authenticated: bool,
@@ -976,131 +965,6 @@ pub(crate) fn decrypt_message_with_ratchet(
 		key_id: kid,
 		seq: key_seq,
 	})
-}
-
-pub trait CryptoProvider {
-	type SignaturePublicKey;
-	type SignatureSecretKey;
-	type KemPublicKey;
-	type KemSecretKey;
-
-	fn default() -> Self;
-	fn new(
-		is_beacon: bool,
-		server_kid: u64,
-		server_id_pk: Option<&[u8]>,
-		id_seed: Option<&[u8]>,
-	) -> Self;
-	fn set_associated_data(&mut self, data: [u8; AD_SIZE]);
-	fn associated_data(&self, kid: u64) -> Option<[u8; AD_SIZE]>;
-	fn is_beacon(&self) -> bool;
-	/// ## Arguments
-	/// * `data`   - A serialized `CryptoFrame` to be decrypted
-	///
-	/// ## Returns
-	/// * `None` if some error happens, or decryption or commitment verification fails
-	/// * [`Decrypted`] containing the plaintext and consumed key metadata
-	fn decrypt_message(&mut self, data: &[u8]) -> Option<Decrypted> {
-		let kid = encrypted_frame_sender(data)?;
-		let associated_data = self.associated_data(kid)?;
-		let ratchet = self.ratchet_manager_mut(kid)?;
-		decrypt_message_with_ratchet(data, kid, &associated_data, ratchet)
-	}
-
-	/// ## Arguments
-	/// * `data`   - Some arbitrary byte buffer to be encrypted
-	/// * `kid` - The identifier for the remote to encrypt to
-	///
-	/// ## Returns
-	/// * `None` if some other error happens.
-	/// * [`Encrypted`] containing a serialized `cryptoframe_capnp::crypto_frame` and consumed key
-	///   metadata
-	fn encrypt_message(&mut self, bytes: &[u8], kid: u64) -> Option<Encrypted> {
-		let associated_data = self.associated_data(kid)?;
-		let sender_kid = self.identity_key_kid();
-		let ratchet = self.ratchet_manager_mut(kid)?;
-		encrypt_message_with_ratchet(bytes, kid, sender_kid, &associated_data, ratchet)
-	}
-
-	fn set_identity_kid(&mut self, key_id: u64);
-	fn identity_key_kid(&self) -> u64;
-	/// Allocate the next remote key ID, or return `None` on exhaustion or collision.
-	fn new_remote_kid(&mut self) -> Option<u64>;
-	fn add_known_kid(&mut self, key_id: u64, pk: Self::SignaturePublicKey);
-	/// Delete a known identity from the state
-	fn delete_known_kid(&mut self, key_id: u64);
-	/// Reset an identity's ratchet state
-	fn reset_known_kid(&mut self, key_id: u64);
-	fn server_id(&self) -> Option<&Self::SignaturePublicKey>;
-	fn server_kid(&self) -> u64;
-	fn add_server_pk(&mut self, pk: Self::SignaturePublicKey) {
-		self.add_known_kid(self.server_kid(), pk)
-	}
-	fn pk_by_kid(&self, kid: u64) -> Option<&Self::SignaturePublicKey>;
-	fn identity_pk(&self) -> &Self::SignaturePublicKey;
-	fn identity_sk(&self) -> &Self::SignatureSecretKey;
-	fn pq_pk(&self) -> Option<&Self::KemPublicKey>;
-	fn pq_sk(&self) -> Option<&Self::KemSecretKey>;
-	fn ratchet_manager(&self, kid: u64) -> Option<&RatchetManager>;
-	fn ratchet_manager_mut(&mut self, kid: u64) -> Option<&mut RatchetManager>;
-	/// ## Arguments
-	/// * `info` - The info buffer to use for the ratchet step(s)
-	/// * `until` - The message sequence number to ratchet to
-	/// * `kid` - The identity to ratchet for
-	///
-	/// ## Returns
-	/// * `None` if signature verification fails or some other error happens.
-	/// * `Vec<u8>` containing the authenticated buffer with the signature stripped
-	fn ratchet_recv_until(&mut self, info: &[u8], until: u64, kid: u64) -> Option<u64> {
-		let remote = self.ratchet_manager_mut(kid)?;
-		remote.ratchet_recv_until(info, until)
-	}
-
-	fn ratchet_send(&mut self, info: &[u8], kid: u64) -> Option<u64> {
-		let remote = self.ratchet_manager_mut(kid)?;
-		remote.ratchet_send(info)
-	}
-	fn send_key(&self, seq: u64, kid: u64) -> Option<&KeyMaterial> {
-		match self.ratchet_manager(kid) {
-			Some(remote) => remote.send_key(seq),
-			None => None,
-		}
-	}
-
-	fn recv_key(&self, seq: u64, kid: u64) -> Option<&KeyMaterial> {
-		match self.ratchet_manager(kid) {
-			Some(remote) => remote.recv_key(seq),
-			None => None,
-		}
-	}
-
-	fn delete_send_key(&mut self, seq: u64, kid: u64) {
-		if let Some(remote) = self.ratchet_manager_mut(kid) {
-			remote.delete_send_key(seq)
-		}
-	}
-
-	fn consume_send_key(&mut self, seq: u64, kid: u64) -> bool {
-		self.ratchet_manager_mut(kid)
-			.is_some_and(|remote| remote.consume_send_key(seq))
-	}
-
-	fn delete_recv_key(&mut self, seq: u64, kid: u64) {
-		if let Some(remote) = self.ratchet_manager_mut(kid) {
-			remote.delete_recv_key(seq)
-		}
-	}
-
-	fn complete_recv_key(&mut self, seq: u64, kid: u64, authenticated: bool) -> bool {
-		let Some(remote) = self.ratchet_manager_mut(kid) else {
-			return false;
-		};
-		matches!(
-			(authenticated, remote.complete_recv_key(seq, authenticated)),
-			(true, verified_ratchet::ReceiveDisposition::Consumed)
-				| (false, verified_ratchet::ReceiveDisposition::Retained)
-		)
-	}
 }
 
 /// implementation of the Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>

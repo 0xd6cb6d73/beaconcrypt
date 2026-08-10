@@ -2,24 +2,63 @@ use beaconcrypt::*;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
+trait TestEndpoint {
+	fn encrypt_for_test(&mut self, data: &[u8], kid: u64) -> Option<Encrypted>;
+	fn decrypt_for_test(&mut self, data: &[u8]) -> Option<Decrypted>;
+	fn ratchet_for_test(&self, kid: u64) -> Option<&RatchetManager>;
+	fn ratchet_mut_for_test(&mut self, kid: u64) -> Option<&mut RatchetManager>;
+}
+impl TestEndpoint for Server {
+	fn encrypt_for_test(&mut self, d: &[u8], k: u64) -> Option<Encrypted> {
+		self.encrypt_message(d, k)
+	}
+	fn decrypt_for_test(&mut self, d: &[u8]) -> Option<Decrypted> {
+		self.decrypt_message(d)
+	}
+	fn ratchet_for_test(&self, k: u64) -> Option<&RatchetManager> {
+		self.ratchet_manager(k)
+	}
+	fn ratchet_mut_for_test(&mut self, k: u64) -> Option<&mut RatchetManager> {
+		self.ratchet_manager_mut(k)
+	}
+}
+impl TestEndpoint for Beacon {
+	fn encrypt_for_test(&mut self, d: &[u8], k: u64) -> Option<Encrypted> {
+		assert_eq!(k, self.server_kid());
+		self.encrypt_message(d)
+	}
+	fn decrypt_for_test(&mut self, d: &[u8]) -> Option<Decrypted> {
+		self.decrypt_message(d)
+	}
+	fn ratchet_for_test(&self, k: u64) -> Option<&RatchetManager> {
+		assert_eq!(k, self.server_kid());
+		Some(self.ratchet_manager())
+	}
+	fn ratchet_mut_for_test(&mut self, k: u64) -> Option<&mut RatchetManager> {
+		assert_eq!(k, self.server_kid());
+		Some(self.ratchet_manager_mut())
+	}
+}
+
 const SERVER_KID: u64 = 0;
 const TAG_SIZE: usize = 16;
 const COMMITMENT_SIZE: usize = 64;
 const CRYPTO_PAYLOAD_OVERHEAD: usize = TAG_SIZE + COMMITMENT_SIZE;
 const RECEIVE_GAP_LIMIT: u64 = 50;
 
-fn new_pair() -> (BeaconCryptPqxdh, BeaconCryptPqxdh) {
-	let server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+fn new_pair() -> (Server, Beacon) {
+	let server = Server::new(SERVER_KID, None);
 	let server_id = server.identity_pk().to_owned();
-	let beacon = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let beacon = Beacon::new(SERVER_KID, server_id.as_bytes());
 	(server, beacon)
 }
 
 fn register_beacon(
-	server: &mut BeaconCryptPqxdh,
-	beacon: &mut BeaconCryptPqxdh,
+	server: &mut Server,
+	beacon: &mut Beacon,
 	initial_message: Option<&[u8]>,
 ) -> RegResponse {
+	let configured_server = beacon.server_id().clone();
 	let phase_1 = beacon.get_registration_bundle().unwrap();
 	let reg_out = server.get_shared_secret(&phase_1).unwrap();
 	let phase_2 = server
@@ -27,6 +66,7 @@ fn register_beacon(
 		.unwrap();
 	assert_eq!(server.pk_by_kid(phase_2.kid), Some(beacon.identity_pk()));
 	let plaintext = beacon.finish_registration(&phase_2.serialized).unwrap();
+	assert_eq!(beacon.server_id(), &configured_server);
 	// `build_registration_response` insert a single 0xFF byte if no initial message is provided to satisfy the upstream specification's requirement
 	// this allows the beacon to check that keychain derivation is correct
 	assert_eq!(plaintext, initial_message.unwrap_or(&[0xFFu8; 1]));
@@ -98,17 +138,17 @@ fn corrupt_crypto_frame_commitment(serialized: &[u8]) -> Vec<u8> {
 	serialize_crypto_frame(seq, key_id, &ciphertext)
 }
 
-fn receive_state(crypto: &BeaconCryptPqxdh, kid: u64) -> Vec<u8> {
+fn receive_state(crypto: &impl TestEndpoint, kid: u64) -> Vec<u8> {
 	crypto
-		.ratchet_manager(kid)
+		.ratchet_for_test(kid)
 		.unwrap()
 		.recv_state()
 		.as_slice()
 		.to_vec()
 }
 
-fn cached_receive_key_count(crypto: &BeaconCryptPqxdh, kid: u64, start: u64, end: u64) -> usize {
-	let ratchet = crypto.ratchet_manager(kid).unwrap();
+fn cached_receive_key_count(crypto: &impl TestEndpoint, kid: u64, start: u64, end: u64) -> usize {
+	let ratchet = crypto.ratchet_for_test(kid).unwrap();
 	(start..=end)
 		.filter(|seq| ratchet.recv_key(*seq).is_some())
 		.count()
@@ -118,9 +158,9 @@ fn assert_server_frame_tampering_is_rejected(mut tamper: impl FnMut(&mut Vec<u8>
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let plaintext = b"message whose authenticated fields will be tampered with";
-	let valid = server.encrypt_message(plaintext, response.kid).unwrap();
+	let valid = server.encrypt_for_test(plaintext, response.kid).unwrap();
 	let donor = server
-		.encrypt_message(
+		.encrypt_for_test(
 			b"a second message supplies independently generated fields",
 			response.kid,
 		)
@@ -133,56 +173,56 @@ fn assert_server_frame_tampering_is_rejected(mut tamper: impl FnMut(&mut Vec<u8>
 	tamper(&mut ciphertext, &donor_ciphertext);
 	let tampered = serialize_crypto_frame(seq, key_id, &ciphertext);
 
-	assert!(beacon.decrypt_message(&tampered).is_none());
+	assert!(beacon.decrypt_for_test(&tampered).is_none());
 	assert_eq!(
-		beacon.decrypt_message(&valid).unwrap().plaintext,
+		beacon.decrypt_for_test(&valid).unwrap().plaintext,
 		plaintext,
 		"rejecting a tampered frame must not consume its receive key"
 	);
 }
 
 fn assert_sequence_relabelling_is_rejected(
-	sender: &mut BeaconCryptPqxdh,
-	receiver: &mut BeaconCryptPqxdh,
+	sender: &mut impl TestEndpoint,
+	receiver: &mut impl TestEndpoint,
 	sender_target_kid: u64,
 ) {
 	let first_plaintext = b"first sequence-bound message";
 	let second_plaintext = b"second sequence-bound message";
 	let first = sender
-		.encrypt_message(first_plaintext, sender_target_kid)
+		.encrypt_for_test(first_plaintext, sender_target_kid)
 		.unwrap();
 	let second = sender
-		.encrypt_message(second_plaintext, sender_target_kid)
+		.encrypt_for_test(second_plaintext, sender_target_kid)
 		.unwrap();
 	let first_seq = crypto_frame_seq(&first);
 	let second_seq = crypto_frame_seq(&second);
 	assert_eq!(second_seq, first_seq + 1);
 
 	let relabelled = rewrite_crypto_frame_seq(&first, second_seq);
-	assert!(receiver.decrypt_message(&relabelled).is_none());
+	assert!(receiver.decrypt_for_test(&relabelled).is_none());
 	assert_eq!(
-		receiver.decrypt_message(&first).unwrap().plaintext,
+		receiver.decrypt_for_test(&first).unwrap().plaintext,
 		first_plaintext
 	);
 	assert_eq!(
-		receiver.decrypt_message(&second).unwrap().plaintext,
+		receiver.decrypt_for_test(&second).unwrap().plaintext,
 		second_plaintext
 	);
 }
 
 fn assert_invalid_future_frames_cannot_grow_receive_cache(
-	sender: &mut BeaconCryptPqxdh,
-	receiver: &mut BeaconCryptPqxdh,
+	sender: &mut impl TestEndpoint,
+	receiver: &mut impl TestEndpoint,
 	sender_target_kid: u64,
 	receiver_remote_kid: u64,
 ) {
 	let first_plaintext = b"first message remains usable after forged future frames";
 	let second_plaintext = b"second message remains usable after forged future frames";
 	let first = sender
-		.encrypt_message(first_plaintext, sender_target_kid)
+		.encrypt_for_test(first_plaintext, sender_target_kid)
 		.unwrap();
 	let second = sender
-		.encrypt_message(second_plaintext, sender_target_kid)
+		.encrypt_for_test(second_plaintext, sender_target_kid)
 		.unwrap();
 	let first_seq = crypto_frame_seq(&first);
 	assert_eq!(crypto_frame_seq(&second), first_seq + 1);
@@ -193,7 +233,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	for rejected_seq in [0, current_seq + RECEIVE_GAP_LIMIT + 1, u64::MAX] {
 		let forged = rewrite_crypto_frame_seq(&corrupted, rejected_seq);
 		assert!(
-			receiver.decrypt_message(&forged).is_none(),
+			receiver.decrypt_for_test(&forged).is_none(),
 			"forged sequence {rejected_seq} was accepted"
 		);
 		assert_eq!(
@@ -203,7 +243,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 		);
 		assert!(
 			receiver
-				.ratchet_manager(receiver_remote_kid)
+				.ratchet_for_test(receiver_remote_kid)
 				.unwrap()
 				.recv_key(first_seq)
 				.is_none()
@@ -214,7 +254,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	for forged_seq in first_seq..=last_cached_seq {
 		let forged = rewrite_crypto_frame_seq(&corrupted, forged_seq);
 		assert!(
-			receiver.decrypt_message(&forged).is_none(),
+			receiver.decrypt_for_test(&forged).is_none(),
 			"invalid frame at sequence {forged_seq} was accepted"
 		);
 		assert_eq!(
@@ -238,7 +278,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	] {
 		let forged = rewrite_crypto_frame_seq(&corrupted, rejected_seq);
 		assert!(
-			receiver.decrypt_message(&forged).is_none(),
+			receiver.decrypt_for_test(&forged).is_none(),
 			"forged sequence {rejected_seq} was accepted after cache saturation"
 		);
 		assert_eq!(
@@ -252,7 +292,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 		);
 		assert!(
 			receiver
-				.ratchet_manager(receiver_remote_kid)
+				.ratchet_for_test(receiver_remote_kid)
 				.unwrap()
 				.recv_key(rejected_seq)
 				.is_none()
@@ -260,11 +300,11 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	}
 
 	assert_eq!(
-		receiver.decrypt_message(&first).unwrap().plaintext,
+		receiver.decrypt_for_test(&first).unwrap().plaintext,
 		first_plaintext
 	);
 	assert_eq!(
-		receiver.decrypt_message(&second).unwrap().plaintext,
+		receiver.decrypt_for_test(&second).unwrap().plaintext,
 		second_plaintext
 	);
 	assert_eq!(
@@ -279,7 +319,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	let recovered_boundary_seq = last_cached_seq + 2;
 	let recovered_boundary = rewrite_crypto_frame_seq(&corrupted, recovered_boundary_seq);
 	assert!(
-		receiver.decrypt_message(&recovered_boundary).is_none(),
+		receiver.decrypt_for_test(&recovered_boundary).is_none(),
 		"invalid frame at the recovered cache boundary was accepted"
 	);
 	let recovered_state = receive_state(receiver, receiver_remote_kid);
@@ -301,7 +341,9 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	let over_recovered_boundary_seq = recovered_boundary_seq + 1;
 	let over_recovered_boundary = rewrite_crypto_frame_seq(&corrupted, over_recovered_boundary_seq);
 	assert!(
-		receiver.decrypt_message(&over_recovered_boundary).is_none(),
+		receiver
+			.decrypt_for_test(&over_recovered_boundary)
+			.is_none(),
 		"invalid frame beyond the recovered cache boundary was accepted"
 	);
 	assert_eq!(
@@ -321,7 +363,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	);
 	assert!(
 		receiver
-			.ratchet_manager(receiver_remote_kid)
+			.ratchet_for_test(receiver_remote_kid)
 			.unwrap()
 			.recv_key(over_recovered_boundary_seq)
 			.is_none()
@@ -329,13 +371,13 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 }
 
 fn assert_every_inner_payload_bit_is_authenticated(
-	sender: &mut BeaconCryptPqxdh,
-	receiver: &mut BeaconCryptPqxdh,
+	sender: &mut impl TestEndpoint,
+	receiver: &mut impl TestEndpoint,
 	sender_target_kid: u64,
 ) {
 	let plaintext = b"every ciphertext, tag, and commitment bit is authenticated";
 	let valid = sender
-		.encrypt_message(plaintext, sender_target_kid)
+		.encrypt_for_test(plaintext, sender_target_kid)
 		.unwrap();
 	let seq = crypto_frame_seq(&valid);
 	let key_id = crypto_frame_key_id(&valid);
@@ -348,31 +390,31 @@ fn assert_every_inner_payload_bit_is_authenticated(
 			mutated_payload[byte] ^= 1 << bit;
 			let mutated = serialize_crypto_frame(seq, key_id, &mutated_payload);
 			assert!(
-				receiver.decrypt_message(&mutated).is_none(),
+				receiver.decrypt_for_test(&mutated).is_none(),
 				"accepted mutation at payload byte {byte}, bit {bit}"
 			);
 		}
 	}
 
 	assert_eq!(
-		receiver.decrypt_message(&valid).unwrap().plaintext,
+		receiver.decrypt_for_test(&valid).unwrap().plaintext,
 		plaintext,
 		"failed mutations must not consume the authentic frame's receive key"
 	);
 }
 
 fn assert_valid_frame_components_cannot_be_spliced(
-	sender: &mut BeaconCryptPqxdh,
-	receiver: &mut BeaconCryptPqxdh,
+	sender: &mut impl TestEndpoint,
+	receiver: &mut impl TestEndpoint,
 	sender_target_kid: u64,
 ) {
 	let plaintext_one = [0x11; 32];
 	let plaintext_two = [0x22; 32];
 	let first = sender
-		.encrypt_message(&plaintext_one, sender_target_kid)
+		.encrypt_for_test(&plaintext_one, sender_target_kid)
 		.unwrap();
 	let second = sender
-		.encrypt_message(&plaintext_two, sender_target_kid)
+		.encrypt_for_test(&plaintext_two, sender_target_kid)
 		.unwrap();
 	let first_seq = crypto_frame_seq(&first);
 	let second_seq = crypto_frame_seq(&second);
@@ -403,24 +445,24 @@ fn assert_valid_frame_components_cannot_be_spliced(
 	] {
 		let spliced = serialize_crypto_frame(first_seq, key_id, &payload);
 		assert!(
-			receiver.decrypt_message(&spliced).is_none(),
+			receiver.decrypt_for_test(&spliced).is_none(),
 			"accepted a frame with a spliced {name}"
 		);
 	}
 
 	assert_eq!(
-		receiver.decrypt_message(&first).unwrap().plaintext,
+		receiver.decrypt_for_test(&first).unwrap().plaintext,
 		plaintext_one
 	);
 	assert_eq!(
-		receiver.decrypt_message(&second).unwrap().plaintext,
+		receiver.decrypt_for_test(&second).unwrap().plaintext,
 		plaintext_two
 	);
 }
 
 fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
-	sender: &mut BeaconCryptPqxdh,
-	receiver: &mut BeaconCryptPqxdh,
+	sender: &mut impl TestEndpoint,
+	receiver: &mut impl TestEndpoint,
 	sender_target_kid: u64,
 	receiver_remote_kid: u64,
 ) {
@@ -428,7 +470,7 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 		.map(|index| {
 			let plaintext = format!("receive-window-message-{index}").into_bytes();
 			let frame = sender
-				.encrypt_message(&plaintext, sender_target_kid)
+				.encrypt_for_test(&plaintext, sender_target_kid)
 				.unwrap();
 			(plaintext, frame)
 		})
@@ -441,7 +483,7 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 	let initial_state = receive_state(receiver, receiver_remote_kid);
 	for len in 0..=CRYPTO_PAYLOAD_OVERHEAD {
 		let malformed = serialize_crypto_frame(boundary_seq, sender_kid, &vec![0xA5; len]);
-		let result = catch_unwind(AssertUnwindSafe(|| receiver.decrypt_message(&malformed)));
+		let result = catch_unwind(AssertUnwindSafe(|| receiver.decrypt_for_test(&malformed)));
 		assert!(
 			matches!(result, Ok(None)),
 			"future frame with {len} payload bytes was not rejected cleanly"
@@ -460,7 +502,7 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 
 	let boundary = &frames.last().unwrap().1;
 	let corrupted_commitment = corrupt_crypto_frame_commitment(boundary);
-	assert!(receiver.decrypt_message(&corrupted_commitment).is_none());
+	assert!(receiver.decrypt_for_test(&corrupted_commitment).is_none());
 	let boundary_state = receive_state(receiver, receiver_remote_kid);
 	assert_ne!(boundary_state, initial_state);
 	assert_eq!(
@@ -470,7 +512,7 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 
 	for attempt in 0..3 {
 		assert!(
-			receiver.decrypt_message(&corrupted_commitment).is_none(),
+			receiver.decrypt_for_test(&corrupted_commitment).is_none(),
 			"repeated invalid boundary frame was accepted on attempt {attempt}"
 		);
 		assert_eq!(
@@ -485,7 +527,7 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 	}
 
 	let corrupted_ciphertext = corrupt_aead_ciphertext(boundary);
-	assert!(receiver.decrypt_message(&corrupted_ciphertext).is_none());
+	assert!(receiver.decrypt_for_test(&corrupted_ciphertext).is_none());
 	assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
 	assert_eq!(
 		cached_receive_key_count(receiver, receiver_remote_kid, first_seq, boundary_seq),
@@ -494,28 +536,28 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 
 	let boundary_plaintext = &frames.last().unwrap().0;
 	assert_eq!(
-		receiver.decrypt_message(boundary).unwrap().plaintext,
+		receiver.decrypt_for_test(boundary).unwrap().plaintext,
 		boundary_plaintext.as_slice()
 	);
 	assert!(
 		receiver
-			.ratchet_manager(receiver_remote_kid)
+			.ratchet_for_test(receiver_remote_kid)
 			.unwrap()
 			.recv_key(boundary_seq)
 			.is_none()
 	);
-	assert!(receiver.decrypt_message(boundary).is_none());
+	assert!(receiver.decrypt_for_test(boundary).is_none());
 	assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
 
 	for index in (0..frames.len() - 1).rev() {
 		let (plaintext, frame) = &frames[index];
 		assert_eq!(
-			receiver.decrypt_message(frame).unwrap().plaintext,
+			receiver.decrypt_for_test(frame).unwrap().plaintext,
 			plaintext.as_slice(),
 			"failed to decrypt cached frame at index {index}"
 		);
 		assert!(
-			receiver.decrypt_message(frame).is_none(),
+			receiver.decrypt_for_test(frame).is_none(),
 			"replayed cached frame at index {index} was accepted"
 		);
 		assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
@@ -528,21 +570,21 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 }
 
 fn assert_truncated_frames_reject_cleanly(
-	sender: &mut BeaconCryptPqxdh,
-	receiver: &mut BeaconCryptPqxdh,
+	sender: &mut impl TestEndpoint,
+	receiver: &mut impl TestEndpoint,
 	sender_target_kid: u64,
 	receiver_remote_kid: u64,
 ) {
 	let plaintext = b"authentic frame remains usable after every truncated prefix";
 	let valid = sender
-		.encrypt_message(plaintext, sender_target_kid)
+		.encrypt_for_test(plaintext, sender_target_kid)
 		.unwrap();
 	let corrupted = corrupt_crypto_frame_commitment(&valid);
 	let initial_state = receive_state(receiver, receiver_remote_kid);
 
 	for cut in 0..corrupted.len() {
 		let result = catch_unwind(AssertUnwindSafe(|| {
-			receiver.decrypt_message(&corrupted[..cut])
+			receiver.decrypt_for_test(&corrupted[..cut])
 		}));
 		assert!(
 			matches!(result, Ok(None)),
@@ -556,14 +598,14 @@ fn assert_truncated_frames_reject_cleanly(
 		"a strict serialized prefix advanced the receive ratchet"
 	);
 	assert_eq!(
-		receiver.decrypt_message(&valid).unwrap().plaintext,
+		receiver.decrypt_for_test(&valid).unwrap().plaintext,
 		plaintext
 	);
 }
 
 fn assert_message_size_boundaries_round_trip(
-	sender: &mut BeaconCryptPqxdh,
-	receiver: &mut BeaconCryptPqxdh,
+	sender: &mut impl TestEndpoint,
+	receiver: &mut impl TestEndpoint,
 	sender_target_kid: u64,
 ) {
 	for len in [1, 15, 16, 17, 63, 64, 65, 255, 256, 4096] {
@@ -571,14 +613,14 @@ fn assert_message_size_boundaries_round_trip(
 			.map(|index| (index % (u8::MAX as usize + 1)) as u8)
 			.collect::<Vec<_>>();
 		let frame = sender
-			.encrypt_message(&plaintext, sender_target_kid)
+			.encrypt_for_test(&plaintext, sender_target_kid)
 			.unwrap();
 		assert_eq!(
 			crypto_frame_ciphertext(&frame).len(),
 			plaintext.len() + CRYPTO_PAYLOAD_OVERHEAD
 		);
 		assert_eq!(
-			receiver.decrypt_message(&frame).unwrap().plaintext,
+			receiver.decrypt_for_test(&frame).unwrap().plaintext,
 			plaintext,
 			"failed round trip for a {len}-byte plaintext"
 		);
@@ -620,7 +662,7 @@ fn serialize_kex_response(parts: &KexResponseParts) -> Vec<u8> {
 	serialized
 }
 
-fn pending_registration(initial_message: &[u8]) -> (BeaconCryptPqxdh, Vec<u8>) {
+fn pending_registration(initial_message: &[u8]) -> (Beacon, Vec<u8>) {
 	let (mut server, mut beacon) = new_pair();
 	let phase_1 = beacon.get_registration_bundle().unwrap();
 	let reg_out = server.get_shared_secret(&phase_1).unwrap();
@@ -648,114 +690,114 @@ fn rewrite_crypto_frame_key_id(serialized: &[u8], key_id: u64) -> Vec<u8> {
 
 #[test]
 fn server_uses_per_beacon_associated_data() {
-	let mut server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+	let mut server = Server::new(SERVER_KID, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut b1 = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
-	let mut b2 = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let mut b1 = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut b2 = Beacon::new(SERVER_KID, server_id.as_bytes());
 
 	let b1_response = register_beacon(&mut server, &mut b1, Some(b"initial message for b1"));
 	let b2_response = register_beacon(&mut server, &mut b2, Some(b"initial message for b2"));
 
 	let to_b1 = server
-		.encrypt_message(b"server to b1", b1_response.kid)
+		.encrypt_for_test(b"server to b1", b1_response.kid)
 		.unwrap();
 	let to_b2 = server
-		.encrypt_message(b"server to b2", b2_response.kid)
+		.encrypt_for_test(b"server to b2", b2_response.kid)
 		.unwrap();
 	assert_eq!(
-		b1.decrypt_message(&to_b1).unwrap().plaintext,
+		b1.decrypt_for_test(&to_b1).unwrap().plaintext,
 		b"server to b1"
 	);
 	assert_eq!(
-		b2.decrypt_message(&to_b2).unwrap().plaintext,
+		b2.decrypt_for_test(&to_b2).unwrap().plaintext,
 		b"server to b2"
 	);
 
-	let from_b1 = b1.encrypt_message(b"b1 to server", SERVER_KID).unwrap();
-	let from_b2 = b2.encrypt_message(b"b2 to server", SERVER_KID).unwrap();
+	let from_b1 = b1.encrypt_for_test(b"b1 to server", SERVER_KID).unwrap();
+	let from_b2 = b2.encrypt_for_test(b"b2 to server", SERVER_KID).unwrap();
 	assert_eq!(
-		server.decrypt_message(&from_b1).unwrap().plaintext,
+		server.decrypt_for_test(&from_b1).unwrap().plaintext,
 		b"b1 to server"
 	);
 	assert_eq!(
-		server.decrypt_message(&from_b2).unwrap().plaintext,
+		server.decrypt_for_test(&from_b2).unwrap().plaintext,
 		b"b2 to server"
 	);
 }
 
 #[test]
 fn server_can_encrypt_to_beacon_a_after_registering_beacon_b() {
-	let mut server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+	let mut server = Server::new(SERVER_KID, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut beacon_a = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
-	let mut beacon_b = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let mut beacon_a = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut beacon_b = Beacon::new(SERVER_KID, server_id.as_bytes());
 
 	let beacon_a_response = register_beacon(&mut server, &mut beacon_a, None);
 	register_beacon(&mut server, &mut beacon_b, None);
 
 	let message = b"server to beacon A after registering beacon B";
 	let ciphertext = server
-		.encrypt_message(message, beacon_a_response.kid)
+		.encrypt_for_test(message, beacon_a_response.kid)
 		.unwrap();
 
 	assert_eq!(
-		beacon_a.decrypt_message(&ciphertext).unwrap().plaintext,
+		beacon_a.decrypt_for_test(&ciphertext).unwrap().plaintext,
 		message
 	);
 }
 
 #[test]
 fn server_can_decrypt_from_beacon_a_after_registering_beacon_b() {
-	let mut server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+	let mut server = Server::new(SERVER_KID, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut beacon_a = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
-	let mut beacon_b = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let mut beacon_a = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut beacon_b = Beacon::new(SERVER_KID, server_id.as_bytes());
 
 	let _beacon_a_response = register_beacon(&mut server, &mut beacon_a, None);
 	register_beacon(&mut server, &mut beacon_b, None);
 
 	let message = b"beacon A to server after registering beacon B";
-	let ciphertext = beacon_a.encrypt_message(message, SERVER_KID).unwrap();
+	let ciphertext = beacon_a.encrypt_for_test(message, SERVER_KID).unwrap();
 
 	assert_eq!(
-		server.decrypt_message(&ciphertext).unwrap().plaintext,
+		server.decrypt_for_test(&ciphertext).unwrap().plaintext,
 		message
 	);
 }
 
 #[test]
 fn server_can_decrypt_from_beacon_a_after_encrypting_to_beacon_b() {
-	let mut server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+	let mut server = Server::new(SERVER_KID, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut beacon_a = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
-	let mut beacon_b = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let mut beacon_a = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut beacon_b = Beacon::new(SERVER_KID, server_id.as_bytes());
 
 	let _beacon_a_response = register_beacon(&mut server, &mut beacon_a, None);
 	let beacon_b_response = register_beacon(&mut server, &mut beacon_b, None);
 
 	let to_beacon_b = server
-		.encrypt_message(b"server to beacon B", beacon_b_response.kid)
+		.encrypt_for_test(b"server to beacon B", beacon_b_response.kid)
 		.unwrap();
 	assert_eq!(
-		beacon_b.decrypt_message(&to_beacon_b).unwrap().plaintext,
+		beacon_b.decrypt_for_test(&to_beacon_b).unwrap().plaintext,
 		b"server to beacon B"
 	);
 
 	let from_beacon_a = beacon_a
-		.encrypt_message(b"beacon A to server", SERVER_KID)
+		.encrypt_for_test(b"beacon A to server", SERVER_KID)
 		.unwrap();
 	assert_eq!(
-		server.decrypt_message(&from_beacon_a).unwrap().plaintext,
+		server.decrypt_for_test(&from_beacon_a).unwrap().plaintext,
 		b"beacon A to server"
 	);
 }
 
 #[test]
 fn interleaved_registrations_use_the_correct_associated_data() {
-	let mut server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+	let mut server = Server::new(SERVER_KID, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut b1 = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
-	let mut b2 = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let mut b1 = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut b2 = Beacon::new(SERVER_KID, server_id.as_bytes());
 
 	let b1_phase_1 = b1.get_registration_bundle().unwrap();
 	let b2_phase_1 = b2.get_registration_bundle().unwrap();
@@ -815,8 +857,7 @@ fn failed_registration_response_does_not_commit_server_state() {
 	assert!(server.get_shared_secret(&phase_1).is_none());
 
 	let server_id = server.identity_pk().to_owned();
-	let mut accepted_beacon =
-		BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let mut accepted_beacon = Beacon::new(SERVER_KID, server_id.as_bytes());
 	let response = register_beacon(&mut server, &mut accepted_beacon, None);
 	assert_eq!(response.kid, expected_kid);
 	assert_eq!(server.server_kid(), expected_kid);
@@ -825,7 +866,7 @@ fn failed_registration_response_does_not_commit_server_state() {
 #[test]
 fn beacon_rejects_registration_response_from_wrong_server() {
 	let (mut expected_server, mut beacon) = new_pair();
-	let mut wrong_server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+	let mut wrong_server = Server::new(SERVER_KID, None);
 
 	let phase_1 = beacon.get_registration_bundle().unwrap();
 	assert!(expected_server.get_shared_secret(&phase_1).is_some());
@@ -838,31 +879,9 @@ fn beacon_rejects_registration_response_from_wrong_server() {
 }
 
 #[test]
-fn beacon_registration_keeps_its_initial_server_binding_when_the_peer_map_changes() {
-	let (mut expected_server, mut beacon) = new_pair();
-	let mut wrong_server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
-	let wrong_identity = wrong_server.identity_pk().to_owned();
-	let phase_1 = beacon.get_registration_bundle().unwrap();
-	assert!(expected_server.get_shared_secret(&phase_1).is_some());
-	let wrong_registration = wrong_server.get_shared_secret(&phase_1).unwrap();
-	let wrong_response = wrong_server
-		.build_registration_response(wrong_registration, Some(b"wrong server"))
-		.unwrap();
-
-	beacon.delete_known_kid(SERVER_KID);
-	beacon.add_known_kid(SERVER_KID, wrong_identity.clone());
-	assert_eq!(beacon.server_id(), Some(&wrong_identity));
-	assert!(
-		beacon
-			.finish_registration(&wrong_response.serialized)
-			.is_none()
-	);
-}
-
-#[test]
 fn server_rejects_pending_registration_from_a_different_server() {
 	let (mut accepting_server, mut beacon) = new_pair();
-	let mut other_server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+	let mut other_server = Server::new(SERVER_KID, None);
 	let phase_1 = beacon.get_registration_bundle().unwrap();
 	let accepting_state_before = accepting_server.export_state().unwrap();
 	let pending = accepting_server.get_shared_secret(&phase_1).unwrap();
@@ -885,8 +904,7 @@ fn server_rejects_pending_registration_from_a_different_server() {
 	assert!(accepting_server.get_shared_secret(&phase_1).is_none());
 
 	let accepting_identity = accepting_server.identity_pk().to_owned();
-	let mut fresh_beacon =
-		BeaconCryptPqxdh::new(true, SERVER_KID, Some(accepting_identity.as_bytes()), None);
+	let mut fresh_beacon = Beacon::new(SERVER_KID, accepting_identity.as_bytes());
 	let response = register_beacon(
 		&mut accepting_server,
 		&mut fresh_beacon,
@@ -902,9 +920,9 @@ fn beacon_can_encrypt_to_server() {
 	let message = b"beacon to server";
 
 	let ciphertext = beacon
-		.encrypt_message(message.as_slice(), SERVER_KID)
+		.encrypt_for_test(message.as_slice(), SERVER_KID)
 		.unwrap();
-	let decrypted = server.decrypt_message(&ciphertext).unwrap();
+	let decrypted = server.decrypt_for_test(&ciphertext).unwrap();
 
 	assert_eq!(decrypted.key_id, response.kid);
 	assert_eq!(decrypted.plaintext, message);
@@ -917,9 +935,9 @@ fn beacon_frame_identifies_its_sender() {
 	let message = b"authenticated beacon to server";
 
 	let ciphertext = beacon
-		.encrypt_message(message.as_slice(), SERVER_KID)
+		.encrypt_for_test(message.as_slice(), SERVER_KID)
 		.unwrap();
-	let decrypted = server.decrypt_message(&ciphertext).unwrap();
+	let decrypted = server.decrypt_for_test(&ciphertext).unwrap();
 
 	assert_eq!(decrypted.key_id, response.kid);
 	assert_eq!(decrypted.plaintext, message);
@@ -931,8 +949,8 @@ fn server_frame_identifies_its_sender() {
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let message = b"authenticated server to beacon";
 
-	let ciphertext = server.encrypt_message(message, response.kid).unwrap();
-	let decrypted = beacon.decrypt_message(&ciphertext).unwrap();
+	let ciphertext = server.encrypt_for_test(message, response.kid).unwrap();
+	let decrypted = beacon.decrypt_for_test(&ciphertext).unwrap();
 
 	assert_eq!(decrypted.key_id, SERVER_KID);
 	assert_eq!(decrypted.plaintext, message);
@@ -944,12 +962,12 @@ fn authenticated_beacon_frame_rejects_tampering() {
 	register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
 
 	let mut ciphertext = beacon
-		.encrypt_message(b"beacon to server", SERVER_KID)
+		.encrypt_for_test(b"beacon to server", SERVER_KID)
 		.unwrap();
 	let last = ciphertext.len() - 1;
 	ciphertext[last] ^= 0x01;
 
-	assert!(server.decrypt_message(&ciphertext).is_none());
+	assert!(server.decrypt_for_test(&ciphertext).is_none());
 }
 
 #[test]
@@ -958,12 +976,12 @@ fn authenticated_server_frame_rejects_tampering() {
 	let response = register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
 
 	let mut ciphertext = server
-		.encrypt_message(b"server to beacon", response.kid)
+		.encrypt_for_test(b"server to beacon", response.kid)
 		.unwrap();
 	let last = ciphertext.len() - 1;
 	ciphertext[last] ^= 0x01;
 
-	assert!(beacon.decrypt_message(&ciphertext).is_none());
+	assert!(beacon.decrypt_for_test(&ciphertext).is_none());
 }
 
 #[test]
@@ -972,39 +990,39 @@ fn decrypt_rejects_wrong_direction() {
 	let response = register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
 
 	let server_to_beacon = server
-		.encrypt_message(b"server to beacon", response.kid)
+		.encrypt_for_test(b"server to beacon", response.kid)
 		.unwrap();
-	assert!(server.decrypt_message(&server_to_beacon).is_none());
+	assert!(server.decrypt_for_test(&server_to_beacon).is_none());
 
 	let beacon_to_server = beacon
-		.encrypt_message(b"beacon to server", SERVER_KID)
+		.encrypt_for_test(b"beacon to server", SERVER_KID)
 		.unwrap();
-	assert!(beacon.decrypt_message(&beacon_to_server).is_none());
+	assert!(beacon.decrypt_for_test(&beacon_to_server).is_none());
 }
 
 #[test]
 fn beacon_cannot_decrypt_message_for_different_beacon() {
-	let mut server = BeaconCryptPqxdh::new(false, SERVER_KID, None, None);
+	let mut server = Server::new(SERVER_KID, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut b1 = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
-	let mut b2 = BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let mut b1 = Beacon::new(SERVER_KID, server_id.as_bytes());
+	let mut b2 = Beacon::new(SERVER_KID, server_id.as_bytes());
 	let b1_response = register_beacon(&mut server, &mut b1, Some(&[0xFF; 32]));
 	let b2_response = register_beacon(&mut server, &mut b2, Some(&[0xFF; 32]));
 
 	let for_b1 = server
-		.encrypt_message(b"for b1 only", b1_response.kid)
+		.encrypt_for_test(b"for b1 only", b1_response.kid)
 		.unwrap();
 	let for_b2 = server
-		.encrypt_message(b"for b2 only", b2_response.kid)
+		.encrypt_for_test(b"for b2 only", b2_response.kid)
 		.unwrap();
 
-	assert!(b2.decrypt_message(&for_b1).is_none());
+	assert!(b2.decrypt_for_test(&for_b1).is_none());
 	assert_eq!(
-		b2.decrypt_message(&for_b2).unwrap().plaintext,
+		b2.decrypt_for_test(&for_b2).unwrap().plaintext,
 		b"for b2 only"
 	);
 	assert_eq!(
-		b1.decrypt_message(&for_b1).unwrap().plaintext,
+		b1.decrypt_for_test(&for_b1).unwrap().plaintext,
 		b"for b1 only"
 	);
 }
@@ -1015,11 +1033,11 @@ fn ciphertext_cannot_be_replayed() {
 	let response = register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
 	let message = b"one shot";
 
-	let ciphertext = server.encrypt_message(message, response.kid).unwrap();
-	let first = beacon.decrypt_message(&ciphertext).unwrap();
+	let ciphertext = server.encrypt_for_test(message, response.kid).unwrap();
+	let first = beacon.decrypt_for_test(&ciphertext).unwrap();
 
 	assert_eq!(first.plaintext, message);
-	assert!(beacon.decrypt_message(&ciphertext).is_none());
+	assert!(beacon.decrypt_for_test(&ciphertext).is_none());
 }
 
 #[test]
@@ -1028,12 +1046,12 @@ fn beacon_can_retry_decryption_after_corrupted_aead_message() {
 	let response = register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
 	let message = b"server to beacon";
 
-	let ciphertext = server.encrypt_message(message, response.kid).unwrap();
+	let ciphertext = server.encrypt_for_test(message, response.kid).unwrap();
 	let corrupted = corrupt_aead_ciphertext(&ciphertext);
 
-	assert!(beacon.decrypt_message(&corrupted).is_none());
+	assert!(beacon.decrypt_for_test(&corrupted).is_none());
 	assert_eq!(
-		beacon.decrypt_message(&ciphertext).unwrap().plaintext,
+		beacon.decrypt_for_test(&ciphertext).unwrap().plaintext,
 		message
 	);
 }
@@ -1044,12 +1062,12 @@ fn server_can_retry_decryption_after_corrupted_aead_message() {
 	let _response = register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
 	let message = b"beacon to server";
 
-	let ciphertext = beacon.encrypt_message(message, SERVER_KID).unwrap();
+	let ciphertext = beacon.encrypt_for_test(message, SERVER_KID).unwrap();
 	let corrupted = corrupt_aead_ciphertext(&ciphertext);
 
-	assert!(server.decrypt_message(&corrupted).is_none());
+	assert!(server.decrypt_for_test(&corrupted).is_none());
 	assert_eq!(
-		server.decrypt_message(&ciphertext).unwrap().plaintext,
+		server.decrypt_for_test(&ciphertext).unwrap().plaintext,
 		message
 	);
 }
@@ -1060,7 +1078,7 @@ fn encrypt_and_update_returns_the_advanced_send_state() {
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let message = b"server to beacon with structured updated state";
 	let (send_state_before, recv_state_before) = {
-		let ratchet = server.ratchet_manager(response.kid).unwrap();
+		let ratchet = server.ratchet_for_test(response.kid).unwrap();
 		(
 			ratchet.send_state().as_slice().to_vec(),
 			ratchet.recv_state().as_slice().to_vec(),
@@ -1068,7 +1086,7 @@ fn encrypt_and_update_returns_the_advanced_send_state() {
 	};
 
 	let update: SendState = server.encrypt_and_update(message, response.kid).unwrap();
-	let ratchet = server.ratchet_manager(response.kid).unwrap();
+	let ratchet = server.ratchet_for_test(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
 	assert_eq!(update.seq, crypto_frame_seq(&update.data));
@@ -1078,7 +1096,7 @@ fn encrypt_and_update_returns_the_advanced_send_state() {
 	);
 	assert_ne!(update.state.send_state().as_slice(), send_state_before);
 	assert_eq!(ratchet.recv_state().as_slice(), recv_state_before);
-	let decrypted = beacon.decrypt_message(&update.data).unwrap();
+	let decrypted = beacon.decrypt_for_test(&update.data).unwrap();
 	assert_eq!(decrypted.key_id, SERVER_KID);
 	assert_eq!(decrypted.plaintext, message);
 }
@@ -1088,9 +1106,9 @@ fn decrypt_and_update_returns_the_advanced_receive_state() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let message = b"beacon to server with structured updated state";
-	let ciphertext = beacon.encrypt_message(message, SERVER_KID).unwrap();
+	let ciphertext = beacon.encrypt_for_test(message, SERVER_KID).unwrap();
 	let (send_state_before, recv_state_before) = {
-		let ratchet = server.ratchet_manager(response.kid).unwrap();
+		let ratchet = server.ratchet_for_test(response.kid).unwrap();
 		(
 			ratchet.send_state().as_slice().to_vec(),
 			ratchet.recv_state().as_slice().to_vec(),
@@ -1098,7 +1116,7 @@ fn decrypt_and_update_returns_the_advanced_receive_state() {
 	};
 
 	let update: RecvState = server.decrypt_and_update(&ciphertext).unwrap();
-	let ratchet = server.ratchet_manager(response.kid).unwrap();
+	let ratchet = server.ratchet_for_test(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
 	assert_eq!(update.seq, ciphertext.seq);
@@ -1128,7 +1146,7 @@ fn encrypt_and_update_json_returns_the_advanced_send_state() {
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let message = b"server to beacon with updated state";
 	let (send_state_before, recv_state_before) = {
-		let ratchet = server.ratchet_manager(response.kid).unwrap();
+		let ratchet = server.ratchet_for_test(response.kid).unwrap();
 		(
 			ratchet.send_state().as_slice().to_vec(),
 			ratchet.recv_state().as_slice().to_vec(),
@@ -1140,7 +1158,7 @@ fn encrypt_and_update_json_returns_the_advanced_send_state() {
 		.unwrap();
 	let update: SendState =
 		serde_json::from_str(&serialized).expect("send update should be valid JSON");
-	let ratchet = server.ratchet_manager(response.kid).unwrap();
+	let ratchet = server.ratchet_for_test(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
 	assert_eq!(update.seq, crypto_frame_seq(&update.data));
@@ -1150,7 +1168,7 @@ fn encrypt_and_update_json_returns_the_advanced_send_state() {
 	);
 	assert_ne!(update.state.send_state().as_slice(), send_state_before);
 	assert_eq!(ratchet.recv_state().as_slice(), recv_state_before);
-	let decrypted = beacon.decrypt_message(&update.data).unwrap();
+	let decrypted = beacon.decrypt_for_test(&update.data).unwrap();
 	assert_eq!(decrypted.key_id, SERVER_KID);
 	assert_eq!(decrypted.plaintext, message);
 }
@@ -1160,9 +1178,9 @@ fn decrypt_and_update_json_returns_the_advanced_receive_state() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let message = b"beacon to server with updated state";
-	let ciphertext = beacon.encrypt_message(message, SERVER_KID).unwrap();
+	let ciphertext = beacon.encrypt_for_test(message, SERVER_KID).unwrap();
 	let (send_state_before, recv_state_before) = {
-		let ratchet = server.ratchet_manager(response.kid).unwrap();
+		let ratchet = server.ratchet_for_test(response.kid).unwrap();
 		(
 			ratchet.send_state().as_slice().to_vec(),
 			ratchet.recv_state().as_slice().to_vec(),
@@ -1172,7 +1190,7 @@ fn decrypt_and_update_json_returns_the_advanced_receive_state() {
 	let serialized = server.decrypt_and_update_json(&ciphertext).unwrap();
 	let update: RecvState =
 		serde_json::from_str(&serialized).expect("receive update should be valid JSON");
-	let ratchet = server.ratchet_manager(response.kid).unwrap();
+	let ratchet = server.ratchet_for_test(response.kid).unwrap();
 
 	assert_eq!(update.kid, response.kid);
 	assert_eq!(update.seq, ciphertext.seq);
@@ -1202,13 +1220,13 @@ fn malformed_crypto_frame_ciphertext_lengths_are_rejected_without_panicking() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let valid = server
-		.encrypt_message(b"valid after malformed frames", response.kid)
+		.encrypt_for_test(b"valid after malformed frames", response.kid)
 		.unwrap();
 	let seq = crypto_frame_seq(&valid);
 
 	for len in [0, 1, 15, 16, 63, 64, 79, 80] {
 		let malformed = serialize_crypto_frame(seq, SERVER_KID, &vec![0xA5; len]);
-		let result = catch_unwind(AssertUnwindSafe(|| beacon.decrypt_message(&malformed)));
+		let result = catch_unwind(AssertUnwindSafe(|| beacon.decrypt_for_test(&malformed)));
 		assert!(
 			matches!(result, Ok(None)),
 			"ciphertext length {len} was not rejected cleanly"
@@ -1216,7 +1234,7 @@ fn malformed_crypto_frame_ciphertext_lengths_are_rejected_without_panicking() {
 	}
 
 	assert_eq!(
-		beacon.decrypt_message(&valid).unwrap().plaintext,
+		beacon.decrypt_for_test(&valid).unwrap().plaintext,
 		b"valid after malformed frames"
 	);
 }
@@ -1226,23 +1244,23 @@ fn empty_plaintext_is_rejected_without_advancing_send_ratchets() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
 	let server_state = server
-		.ratchet_manager(response.kid)
+		.ratchet_for_test(response.kid)
 		.unwrap()
 		.send_state()
 		.as_slice()
 		.to_vec();
 	let beacon_state = beacon
-		.ratchet_manager(SERVER_KID)
+		.ratchet_for_test(SERVER_KID)
 		.unwrap()
 		.send_state()
 		.as_slice()
 		.to_vec();
 
-	assert!(server.encrypt_message(b"", response.kid).is_none());
-	assert!(beacon.encrypt_message(b"", SERVER_KID).is_none());
+	assert!(server.encrypt_for_test(b"", response.kid).is_none());
+	assert!(beacon.encrypt_for_test(b"", SERVER_KID).is_none());
 	assert_eq!(
 		server
-			.ratchet_manager(response.kid)
+			.ratchet_for_test(response.kid)
 			.unwrap()
 			.send_state()
 			.as_slice(),
@@ -1250,21 +1268,21 @@ fn empty_plaintext_is_rejected_without_advancing_send_ratchets() {
 	);
 	assert_eq!(
 		beacon
-			.ratchet_manager(SERVER_KID)
+			.ratchet_for_test(SERVER_KID)
 			.unwrap()
 			.send_state()
 			.as_slice(),
 		beacon_state
 	);
 
-	let to_beacon = server.encrypt_message(b"non-empty", response.kid).unwrap();
-	let to_server = beacon.encrypt_message(b"non-empty", SERVER_KID).unwrap();
+	let to_beacon = server.encrypt_for_test(b"non-empty", response.kid).unwrap();
+	let to_server = beacon.encrypt_for_test(b"non-empty", SERVER_KID).unwrap();
 	assert_eq!(
-		beacon.decrypt_message(&to_beacon).unwrap().plaintext,
+		beacon.decrypt_for_test(&to_beacon).unwrap().plaintext,
 		b"non-empty"
 	);
 	assert_eq!(
-		server.decrypt_message(&to_server).unwrap().plaintext,
+		server.decrypt_for_test(&to_server).unwrap().plaintext,
 		b"non-empty"
 	);
 }
@@ -1280,7 +1298,7 @@ fn crypto_frame_sequence_is_bound_in_both_directions() {
 	assert_sequence_relabelling_is_rejected(&mut beacon, &mut server, SERVER_KID);
 	assert!(
 		server
-			.ratchet_manager(response.kid)
+			.ratchet_for_test(response.kid)
 			.unwrap()
 			.recv_key(1)
 			.is_none()
@@ -1461,9 +1479,9 @@ fn failed_initial_ciphertext_is_terminal_and_clears_registration_state() {
 	assert!(beacon.get_onetime_sk().is_none());
 	assert!(beacon.pq_pk().is_none());
 	assert!(beacon.pq_sk().is_none());
-	assert!(beacon.associated_data(SERVER_KID).is_none());
+	assert!(beacon.associated_data().is_none());
 
-	let ratchet = beacon.ratchet_manager(SERVER_KID).unwrap();
+	let ratchet = beacon.ratchet_for_test(SERVER_KID).unwrap();
 	assert_eq!(ratchet.send_state().as_slice(), &[0; KDF_STATE_SIZE]);
 	assert_eq!(ratchet.recv_state().as_slice(), &[0; KDF_STATE_SIZE]);
 	assert!(ratchet.send_key(1).is_none());
@@ -1486,7 +1504,7 @@ fn malformed_initial_ciphertext_is_rejected_without_panicking() {
 		assert!(matches!(result, Ok(None)));
 		assert!(beacon.get_onetime_sk().is_none());
 		assert!(beacon.pq_sk().is_none());
-		assert!(beacon.associated_data(SERVER_KID).is_none());
+		assert!(beacon.associated_data().is_none());
 	}
 }
 
@@ -1528,7 +1546,7 @@ fn server_rejects_replayed_registration_bundle_after_restore() {
 
 	let state = server.export_state().unwrap();
 	let mut restored =
-		<BeaconCryptPqxdh as ProviderServer>::try_from_state(&state).expect("valid server state");
+		<Server as ProviderServer>::try_from_state(&state).expect("valid server state");
 
 	assert!(restored.get_shared_secret(&phase_1).is_none());
 }
@@ -1560,18 +1578,16 @@ fn replay_detection_uses_semantic_registration_material() {
 #[test]
 fn server_key_id_exhaustion_does_not_wrap_or_commit_a_peer() {
 	let server_identity_kid = u64::MAX - 1;
-	let mut server = BeaconCryptPqxdh::new(false, server_identity_kid, None, None);
+	let mut server = Server::new(server_identity_kid, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut last_beacon =
-		BeaconCryptPqxdh::new(true, server_identity_kid, Some(server_id.as_bytes()), None);
+	let mut last_beacon = Beacon::new(server_identity_kid, server_id.as_bytes());
 
 	let last = register_beacon(&mut server, &mut last_beacon, None);
 	assert_eq!(last.kid, u64::MAX);
 	assert_eq!(server.server_kid(), u64::MAX);
 	assert!(server.new_remote_kid().is_none());
 
-	let mut rejected_beacon =
-		BeaconCryptPqxdh::new(true, server_identity_kid, Some(server_id.as_bytes()), None);
+	let mut rejected_beacon = Beacon::new(server_identity_kid, server_id.as_bytes());
 	let phase_1 = rejected_beacon.get_registration_bundle().unwrap();
 	let pending = server.get_shared_secret(&phase_1).unwrap();
 	let state_before_response = server.export_state().unwrap();
@@ -1581,7 +1597,7 @@ fn server_key_id_exhaustion_does_not_wrap_or_commit_a_peer() {
 	assert_eq!(server.server_kid(), u64::MAX);
 	assert!(server.pk_by_kid(0).is_none());
 
-	let restored = <BeaconCryptPqxdh as ProviderServer>::try_from_state(&state_before_response)
+	let restored = <Server as ProviderServer>::try_from_state(&state_before_response)
 		.expect("exhausted state remains valid");
 	assert_eq!(restored.server_kid(), u64::MAX);
 }
@@ -1602,8 +1618,7 @@ fn server_rejects_an_occupied_next_key_id_without_advancing() {
 
 	server.delete_known_kid(occupied_kid);
 	let server_id = server.identity_pk().to_owned();
-	let mut fresh_beacon =
-		BeaconCryptPqxdh::new(true, SERVER_KID, Some(server_id.as_bytes()), None);
+	let mut fresh_beacon = Beacon::new(SERVER_KID, server_id.as_bytes());
 	let response = register_beacon(&mut server, &mut fresh_beacon, None);
 	assert_eq!(response.kid, occupied_kid);
 }
@@ -1613,18 +1628,18 @@ fn encrypted_message_cannot_be_relabelled_to_an_alias_key_id() {
 	let (mut server, mut beacon) = new_pair();
 	let registration = register_beacon(&mut server, &mut beacon, None);
 	let alias_kid = registration.kid + 1;
-	let alias_ratchet = server.ratchet_manager(registration.kid).unwrap().clone();
+	let alias_ratchet = server.ratchet_for_test(registration.kid).unwrap().clone();
 	server.add_known_kid(alias_kid, beacon.identity_pk().clone());
-	*server.ratchet_manager_mut(alias_kid).unwrap() = alias_ratchet;
+	*server.ratchet_mut_for_test(alias_kid).unwrap() = alias_ratchet;
 
 	let ciphertext = beacon
-		.encrypt_message(b"authenticated beacon message", SERVER_KID)
+		.encrypt_for_test(b"authenticated beacon message", SERVER_KID)
 		.unwrap();
 	let relabelled = rewrite_crypto_frame_key_id(&ciphertext, alias_kid);
 
-	assert!(server.decrypt_message(&relabelled).is_none());
+	assert!(server.decrypt_for_test(&relabelled).is_none());
 	assert_eq!(
-		server.decrypt_message(&ciphertext).unwrap().plaintext,
+		server.decrypt_for_test(&ciphertext).unwrap().plaintext,
 		b"authenticated beacon message"
 	);
 }
