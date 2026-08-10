@@ -2,10 +2,7 @@ use beaconcrypt::*;
 use libsodium_rs::crypto_sign;
 use serde_json::{Value, json};
 
-fn test_register_pqxdh_beacon(
-	server: &mut BeaconCryptPqxdh,
-	beacon: &mut BeaconCryptPqxdh,
-) -> Vec<u8> {
+fn test_register_pqxdh_beacon(server: &mut Server, beacon: &mut Beacon) -> Vec<u8> {
 	let message = [0xFFu8; 32];
 
 	let phase_1 = beacon.get_registration_bundle().unwrap();
@@ -17,8 +14,8 @@ fn test_register_pqxdh_beacon(
 }
 
 fn assert_exchange(
-	server: &mut BeaconCryptPqxdh,
-	beacon: &mut BeaconCryptPqxdh,
+	server: &mut Server,
+	beacon: &mut Beacon,
 	kid: u64,
 	server_message: &[u8],
 	beacon_message: &[u8],
@@ -29,9 +26,7 @@ fn assert_exchange(
 		server_message
 	);
 
-	let encrypted = beacon
-		.encrypt_message(beacon_message, beacon.server_kid())
-		.unwrap();
+	let encrypted = beacon.encrypt_message(beacon_message).unwrap();
 	assert_eq!(
 		server.decrypt_message(&encrypted).unwrap().plaintext,
 		beacon_message
@@ -42,7 +37,7 @@ fn assert_exchange(
 fn server_from_seed() {
 	let empty = [0u8; ED25519_SEED_SIZE];
 	let seeded = crypto_sign::KeyPair::from_seed(&empty).unwrap();
-	let server = BeaconCryptPqxdh::new(false, 0, None, Some(&empty));
+	let server = Server::new(0, Some(&empty));
 	assert_eq!(
 		seeded.secret_key.as_bytes(),
 		server.identity_sk().as_bytes()
@@ -55,12 +50,12 @@ fn server_from_seed() {
 
 #[test]
 fn server_can_register_multiple() {
-	let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+	let mut server = Server::new(0, None);
 	let server_id = server.identity_pk().to_owned();
 
-	let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut b1 = Beacon::new(0, server_id.as_bytes());
 	let b1_reg = test_register_pqxdh_beacon(&mut server, &mut b1);
-	let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut b2 = Beacon::new(0, server_id.as_bytes());
 	let b2_reg = test_register_pqxdh_beacon(&mut server, &mut b2);
 
 	assert_eq!(b1_reg, b2_reg);
@@ -69,9 +64,9 @@ fn server_can_register_multiple() {
 #[test]
 fn recreated_server_decrypts_beacon_response() {
 	let seed = [0x41; ED25519_SEED_SIZE];
-	let mut server = BeaconCryptPqxdh::new(false, 0, None, Some(&seed));
+	let mut server = Server::new(0, Some(&seed));
 	let server_id = server.identity_pk().to_owned();
-	let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut beacon = Beacon::new(0, server_id.as_bytes());
 
 	test_register_pqxdh_beacon(&mut server, &mut beacon);
 	let request = server.encrypt_message(b"request", 1).unwrap();
@@ -83,10 +78,8 @@ fn recreated_server_decrypts_beacon_response() {
 	let state = server.export_state().unwrap();
 	drop(server);
 
-	let response = beacon
-		.encrypt_message(b"response", beacon.server_kid())
-		.unwrap();
-	let mut server: BeaconCryptPqxdh = ProviderServer::from_state(state);
+	let response = beacon.encrypt_message(b"response").unwrap();
+	let mut server: Server = ProviderServer::from_state(state);
 	assert_eq!(
 		server.decrypt_message(&response).unwrap().plaintext,
 		b"response"
@@ -96,10 +89,10 @@ fn recreated_server_decrypts_beacon_response() {
 #[test]
 fn known_ids_round_trip_and_continue_each_session() {
 	let seed = [0x51; ED25519_SEED_SIZE];
-	let mut server = BeaconCryptPqxdh::new(false, 0, None, Some(&seed));
+	let mut server = Server::new(0, Some(&seed));
 	let server_id = server.identity_pk().to_owned();
-	let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
-	let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut b1 = Beacon::new(0, server_id.as_bytes());
+	let mut b2 = Beacon::new(0, server_id.as_bytes());
 
 	test_register_pqxdh_beacon(&mut server, &mut b1);
 	test_register_pqxdh_beacon(&mut server, &mut b2);
@@ -146,7 +139,7 @@ fn known_ids_round_trip_and_continue_each_session() {
 		assert!(json["known_ids"][kid]["ratchet"].is_object());
 	}
 
-	let mut restored: BeaconCryptPqxdh = ProviderServer::from_state(state);
+	let mut restored: Server = ProviderServer::from_state(state);
 	assert_eq!(restored.identity_pk(), &server_id);
 	assert_eq!(restored.server_kid(), 2);
 	assert_eq!(restored.pk_by_kid(1), server.pk_by_kid(1));
@@ -167,7 +160,7 @@ fn known_ids_round_trip_and_continue_each_session() {
 		b"beacon two restored",
 	);
 
-	let mut b3 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut b3 = Beacon::new(0, server_id.as_bytes());
 	test_register_pqxdh_beacon(&mut restored, &mut b3);
 	assert_eq!(restored.server_kid(), 3);
 	assert!(restored.pk_by_kid(3).is_some());
@@ -176,14 +169,14 @@ fn known_ids_round_trip_and_continue_each_session() {
 #[test]
 fn known_ids_round_trip_preserves_cached_out_of_order_receive_keys() {
 	let seed = [0x71; ED25519_SEED_SIZE];
-	let mut server = BeaconCryptPqxdh::new(false, 0, None, Some(&seed));
+	let mut server = Server::new(0, Some(&seed));
 	let server_id = server.identity_pk().to_owned();
-	let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut beacon = Beacon::new(0, server_id.as_bytes());
 	test_register_pqxdh_beacon(&mut server, &mut beacon);
 
-	let first = beacon.encrypt_message(b"first", 0).unwrap();
-	let second = beacon.encrypt_message(b"second", 0).unwrap();
-	let third = beacon.encrypt_message(b"third", 0).unwrap();
+	let first = beacon.encrypt_message(b"first").unwrap();
+	let second = beacon.encrypt_message(b"second").unwrap();
+	let third = beacon.encrypt_message(b"third").unwrap();
 	assert_eq!(server.decrypt_message(&third).unwrap().plaintext, b"third");
 
 	let state = server.export_state().unwrap();
@@ -195,7 +188,7 @@ fn known_ids_round_trip_preserves_cached_out_of_order_receive_keys() {
 	assert!(cached.contains_key("1"));
 	assert!(cached.contains_key("2"));
 
-	let mut restored: BeaconCryptPqxdh = ProviderServer::from_state(state);
+	let mut restored: Server = ProviderServer::from_state(state);
 	assert_eq!(
 		restored.decrypt_message(&first).unwrap().plaintext,
 		b"first"
@@ -209,9 +202,9 @@ fn known_ids_round_trip_preserves_cached_out_of_order_receive_keys() {
 #[test]
 fn invalid_known_ids_state_is_rejected() {
 	let seed = [0x61; ED25519_SEED_SIZE];
-	let mut server = BeaconCryptPqxdh::new(false, 0, None, Some(&seed));
+	let mut server = Server::new(0, Some(&seed));
 	let server_id = server.identity_pk().to_owned();
-	let mut beacon = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut beacon = Beacon::new(0, server_id.as_bytes());
 	test_register_pqxdh_beacon(&mut server, &mut beacon);
 
 	let state = server.export_state().unwrap();
@@ -275,7 +268,7 @@ fn invalid_known_ids_state_is_rejected() {
 		let malformed = serde_json::to_string(&malformed).unwrap();
 		assert!(
 			std::panic::catch_unwind(|| {
-				let _: BeaconCryptPqxdh = ProviderServer::from_state(malformed);
+				let _: Server = ProviderServer::from_state(malformed);
 			})
 			.is_err()
 		);
@@ -292,7 +285,7 @@ fn invalid_known_ids_state_is_rejected() {
 	);
 	assert!(
 		std::panic::catch_unwind(|| {
-			let _: BeaconCryptPqxdh = ProviderServer::from_state(duplicate_kid);
+			let _: Server = ProviderServer::from_state(duplicate_kid);
 		})
 		.is_err()
 	);
@@ -308,7 +301,7 @@ fn invalid_known_ids_state_is_rejected() {
 
 #[test]
 fn empty_known_ids_state_round_trips_without_lowering_the_kid_counter() {
-	let server = BeaconCryptPqxdh::new(false, 7, None, None);
+	let server = Server::new(7, None);
 	let identity = server.identity_pk().to_owned();
 	let state = server.export_state().unwrap();
 	let encoded: Value = serde_json::from_str(&state).unwrap();
@@ -317,7 +310,7 @@ fn empty_known_ids_state_round_trips_without_lowering_the_kid_counter() {
 	assert_eq!(encoded["known_ids"], json!({}));
 	assert_eq!(encoded["consumed_registrations"], json!([]));
 
-	let restored: BeaconCryptPqxdh = ProviderServer::from_state(state);
+	let restored: Server = ProviderServer::from_state(state);
 	assert_eq!(restored.identity_pk(), &identity);
 	assert_eq!(restored.identity_key_kid(), 7);
 	assert_eq!(restored.server_kid(), 7);
@@ -326,19 +319,19 @@ fn empty_known_ids_state_round_trips_without_lowering_the_kid_counter() {
 
 #[test]
 fn state_counter_survives_deleting_the_highest_known_id() {
-	let mut server = BeaconCryptPqxdh::new(false, 0, None, None);
+	let mut server = Server::new(0, None);
 	let server_id = server.identity_pk().to_owned();
-	let mut b1 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
-	let mut b2 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut b1 = Beacon::new(0, server_id.as_bytes());
+	let mut b2 = Beacon::new(0, server_id.as_bytes());
 	test_register_pqxdh_beacon(&mut server, &mut b1);
 	test_register_pqxdh_beacon(&mut server, &mut b2);
 	server.delete_known_kid(2);
 
 	let state = server.export_state().unwrap();
-	let mut restored: BeaconCryptPqxdh = ProviderServer::from_state(state);
+	let mut restored: Server = ProviderServer::from_state(state);
 	assert_eq!(restored.server_kid(), 2);
 
-	let mut b3 = BeaconCryptPqxdh::new(true, 0, Some(server_id.as_bytes()), None);
+	let mut b3 = Beacon::new(0, server_id.as_bytes());
 	test_register_pqxdh_beacon(&mut restored, &mut b3);
 	assert_eq!(restored.server_kid(), 3);
 	assert!(restored.pk_by_kid(3).is_some());
@@ -346,11 +339,11 @@ fn state_counter_survives_deleting_the_highest_known_id() {
 
 #[test]
 fn fallible_state_restore_rejects_invalid_state() {
-	let server = BeaconCryptPqxdh::new(false, 0, None, None);
+	let server = Server::new(0, None);
 	let mut state: Value = serde_json::from_str(&server.export_state().unwrap()).unwrap();
 	state.as_object_mut().unwrap().remove("identity_key_kid");
 
-	assert!(<BeaconCryptPqxdh as ProviderServer>::try_from_state(&state.to_string()).is_none());
-	assert!(<BeaconCryptPqxdh as ProviderServer>::try_from_state("not JSON").is_none());
-	assert!(<BeaconCryptPqxdh as ProviderServer>::try_from_state("{}").is_none());
+	assert!(<Server as ProviderServer>::try_from_state(&state.to_string()).is_none());
+	assert!(<Server as ProviderServer>::try_from_state("not JSON").is_none());
+	assert!(<Server as ProviderServer>::try_from_state("{}").is_none());
 }

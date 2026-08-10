@@ -143,7 +143,7 @@ matrix, upstream format caveats and update procedure.
 ## Usage
 The reference implementation is a library that can currently be used either from rust, through C FFI, go and python bindings. The C interface is currently only tested through the go bindings. Note that 0-length messages are explicitly disallowed by the reference implementation, as my feeling is that such messages have no purpose except testing parser edge cases. The library also doesn't handle chnking of any kind and will try to process entire messages at once in memory. It is expected that the caller should handle chunking itself if that is required.
 
-From Rust, usage is mostly just instantiating `CryptoProvider` objects. See the [example](examples/rust/main.rs) for usage.
+From Rust, usage is mostly just constructing role-specific `Server` and `Beacon` objects. See the [example](examples/rust/main.rs) for usage.
 
 From python, you can just use the wheels published to pypi, see the [example](examples/python/main.py) for usage.
 

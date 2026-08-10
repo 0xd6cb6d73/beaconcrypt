@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 
 use crate::server::{RecvState, SendState};
-use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer};
+use crate::{Beacon, ProviderBeacon, ProviderServer, Server};
 use std::mem;
 use std::slice;
 
@@ -90,10 +90,8 @@ pub extern "C" fn beaconcrypt_free_buffer(buffer: Buffer) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn beaconcrypt_server_new(server_kid: u64) -> *mut BeaconCryptPqxdh {
-	Box::into_raw(Box::new(BeaconCryptPqxdh::new(
-		false, server_kid, None, None,
-	)))
+pub extern "C" fn beaconcrypt_server_new(server_kid: u64) -> *mut Server {
+	Box::into_raw(Box::new(Server::new(server_kid, None)))
 }
 
 #[unsafe(no_mangle)]
@@ -101,25 +99,23 @@ pub extern "C" fn beaconcrypt_server_new_from_seed(
 	server_kid: u64,
 	seed_ptr: *const u8,
 	seed_len: usize,
-) -> *mut BeaconCryptPqxdh {
+) -> *mut Server {
 	let seed = unsafe { input(seed_ptr, seed_len) };
-	Box::into_raw(Box::new(BeaconCryptPqxdh::new(
-		false, server_kid, None, seed,
-	)))
+	Box::into_raw(Box::new(Server::new(server_kid, seed)))
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_new_from_state(
 	state_ptr: *const u8,
 	state_len: usize,
-) -> *mut BeaconCryptPqxdh {
+) -> *mut Server {
 	let Some(state) = (unsafe { input(state_ptr, state_len) }) else {
 		return std::ptr::null_mut();
 	};
 	let Ok(state) = std::str::from_utf8(state) else {
 		return std::ptr::null_mut();
 	};
-	let Some(provider) = <BeaconCryptPqxdh as ProviderServer>::try_from_state(state) else {
+	let Some(provider) = <Server as ProviderServer>::try_from_state(state) else {
 		return std::ptr::null_mut();
 	};
 
@@ -131,22 +127,36 @@ pub extern "C" fn beaconcrypt_beacon_new(
 	server_kid: u64,
 	server_pk_ptr: *const u8,
 	server_pk_len: usize,
-) -> *mut BeaconCryptPqxdh {
-	let server_pk = unsafe { input(server_pk_ptr, server_pk_len) };
-	Box::into_raw(Box::new(BeaconCryptPqxdh::new(
-		true, server_kid, server_pk, None,
-	)))
+) -> *mut Beacon {
+	let Some(server_pk) = (unsafe { input(server_pk_ptr, server_pk_len) }) else {
+		return std::ptr::null_mut();
+	};
+	Box::into_raw(Box::new(Beacon::new(server_kid, server_pk)))
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn beaconcrypt_free(handle: *mut BeaconCryptPqxdh) {
+pub extern "C" fn beaconcrypt_server_free(handle: *mut Server) {
+	if !handle.is_null() {
+		unsafe { drop(Box::from_raw(handle)) };
+	}
+}
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_beacon_free(handle: *mut Beacon) {
 	if !handle.is_null() {
 		unsafe { drop(Box::from_raw(handle)) };
 	}
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn beaconcrypt_identity_pk(handle: *const BeaconCryptPqxdh) -> Buffer {
+pub extern "C" fn beaconcrypt_server_identity_pk(handle: *const Server) -> Buffer {
+	if handle.is_null() {
+		return empty_buffer();
+	}
+	let provider = unsafe { &*handle };
+	into_buffer(provider.identity_pk().as_ref().to_vec())
+}
+#[unsafe(no_mangle)]
+pub extern "C" fn beaconcrypt_beacon_identity_pk(handle: *const Beacon) -> Buffer {
 	if handle.is_null() {
 		return empty_buffer();
 	}
@@ -155,7 +165,7 @@ pub extern "C" fn beaconcrypt_identity_pk(handle: *const BeaconCryptPqxdh) -> Bu
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn beaconcrypt_generate_registration(handle: *mut BeaconCryptPqxdh) -> Buffer {
+pub extern "C" fn beaconcrypt_generate_registration(handle: *mut Beacon) -> Buffer {
 	if handle.is_null() {
 		return empty_buffer();
 	}
@@ -168,7 +178,7 @@ pub extern "C" fn beaconcrypt_generate_registration(handle: *mut BeaconCryptPqxd
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_register_beacon(
-	handle: *mut BeaconCryptPqxdh,
+	handle: *mut Server,
 	reg_ptr: *const u8,
 	reg_len: usize,
 	msg_ptr: *const u8,
@@ -208,7 +218,7 @@ pub extern "C" fn beaconcrypt_register_beacon(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_process_initial_message(
-	handle: *mut BeaconCryptPqxdh,
+	handle: *mut Beacon,
 	ptr: *const u8,
 	len: usize,
 ) -> Buffer {
@@ -227,7 +237,7 @@ pub extern "C" fn beaconcrypt_process_initial_message(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_encrypt_to_beacon(
-	handle: *mut BeaconCryptPqxdh,
+	handle: *mut Server,
 	key_id: u64,
 	ptr: *const u8,
 	len: usize,
@@ -237,7 +247,7 @@ pub extern "C" fn beaconcrypt_encrypt_to_beacon(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_decrypt_beacon_message(
-	handle: *mut BeaconCryptPqxdh,
+	handle: *mut Server,
 	ptr: *const u8,
 	len: usize,
 ) -> Buffer {
@@ -246,7 +256,7 @@ pub extern "C" fn beaconcrypt_decrypt_beacon_message(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_encrypt_and_update(
-	handle: *mut BeaconCryptPqxdh,
+	handle: *mut Server,
 	key_id: u64,
 	ptr: *const u8,
 	len: usize,
@@ -266,7 +276,7 @@ pub extern "C" fn beaconcrypt_encrypt_and_update(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_encrypt_and_update_json(
-	handle: *mut BeaconCryptPqxdh,
+	handle: *mut Server,
 	key_id: u64,
 	ptr: *const u8,
 	len: usize,
@@ -286,7 +296,7 @@ pub extern "C" fn beaconcrypt_encrypt_and_update_json(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_decrypt_and_update(
-	handle: *mut BeaconCryptPqxdh,
+	handle: *mut Server,
 	ptr: *const u8,
 	len: usize,
 ) -> EncryptState {
@@ -305,7 +315,7 @@ pub extern "C" fn beaconcrypt_decrypt_and_update(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_decrypt_and_update_json(
-	handle: *mut BeaconCryptPqxdh,
+	handle: *mut Server,
 	ptr: *const u8,
 	len: usize,
 ) -> Buffer {
@@ -323,7 +333,7 @@ pub extern "C" fn beaconcrypt_decrypt_and_update_json(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn beaconcrypt_export_state(handle: *const BeaconCryptPqxdh) -> Buffer {
+pub extern "C" fn beaconcrypt_export_state(handle: *const Server) -> Buffer {
 	if handle.is_null() {
 		return empty_buffer();
 	}
@@ -336,27 +346,46 @@ pub extern "C" fn beaconcrypt_export_state(handle: *const BeaconCryptPqxdh) -> B
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_encrypt_to_server(
-	handle: *mut BeaconCryptPqxdh,
+	handle: *mut Beacon,
 	ptr: *const u8,
 	len: usize,
 ) -> Buffer {
 	if handle.is_null() {
 		return empty_buffer();
 	}
-	let provider = unsafe { &*handle };
-	encrypt(handle, ptr, len, provider.server_kid())
+	if handle.is_null() {
+		return empty_buffer();
+	}
+	let Some(data) = (unsafe { input(ptr, len) }) else {
+		return empty_buffer();
+	};
+	let provider = unsafe { &mut *handle };
+	provider
+		.encrypt_message(data)
+		.map(|e| into_buffer(e.ciphertext))
+		.unwrap_or_else(empty_buffer)
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_decrypt_server_message(
-	handle: *mut BeaconCryptPqxdh,
+	handle: *mut Beacon,
 	ptr: *const u8,
 	len: usize,
 ) -> Buffer {
-	decrypt(handle, ptr, len)
+	if handle.is_null() {
+		return empty_buffer();
+	}
+	let Some(data) = (unsafe { input(ptr, len) }) else {
+		return empty_buffer();
+	};
+	let provider = unsafe { &mut *handle };
+	provider
+		.decrypt_message(data)
+		.map(|d| into_buffer(d.plaintext))
+		.unwrap_or_else(empty_buffer)
 }
 
-fn encrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize, key_id: u64) -> Buffer {
+fn encrypt(handle: *mut Server, ptr: *const u8, len: usize, key_id: u64) -> Buffer {
 	if handle.is_null() {
 		return empty_buffer();
 	}
@@ -370,7 +399,7 @@ fn encrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize, key_id: u6
 		.unwrap_or_else(empty_buffer)
 }
 
-fn decrypt(handle: *mut BeaconCryptPqxdh, ptr: *const u8, len: usize) -> Buffer {
+fn decrypt(handle: *mut Server, ptr: *const u8, len: usize) -> Buffer {
 	if handle.is_null() {
 		return empty_buffer();
 	}

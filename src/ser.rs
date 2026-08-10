@@ -339,8 +339,10 @@ mod tests {
 	#[test]
 	fn state_updates_include_the_complete_ratchet_state() {
 		let send_bytes = [0x21; KDF_STATE_SIZE];
-		let mut send_state = RatchetManager::default();
-		send_state.send_key = Ratchet::<roles::ChainSendKey>::from(send_bytes);
+		let send_state = RatchetManager {
+			send_key: Ratchet::<roles::ChainSendKey>::from(send_bytes),
+			..Default::default()
+		};
 		let send_update = SendState {
 			kid: 7,
 			seq: 11,
@@ -350,8 +352,10 @@ mod tests {
 		};
 
 		let recv_bytes = [0x41; KDF_STATE_SIZE];
-		let mut recv_state = RatchetManager::default();
-		recv_state.recv_key = Ratchet::<roles::ChainRecvKey>::from(recv_bytes);
+		let recv_state = RatchetManager {
+			recv_key: Ratchet::<roles::ChainRecvKey>::from(recv_bytes),
+			..Default::default()
+		};
 		let recv_update = RecvState {
 			kid: 9,
 			seq: 13,
