@@ -600,9 +600,11 @@ impl ProviderBeacon for Beacon {
 
 		let server_binding = authenticated.server_binding();
 		let server_kid = server_binding.identity_key_id;
-		if self.server_kid() != server_kid
-			|| self.server.pk().as_bytes() != &server_binding.identity_public_key
-		{
+		if self.server_kid() != server_kid {
+			self.abort_registration(control);
+			return None;
+		}
+		if self.server.pk().as_bytes() != &server_binding.identity_public_key {
 			self.abort_registration(control);
 			return None;
 		}
@@ -924,6 +926,7 @@ mod tests {
 	fn fresh_beacon_has_registration_material_and_server_binding() {
 		let server = Server::new(7, None);
 		let beacon = Beacon::new(7, server.identity_pk().as_bytes());
+		assert_eq!(beacon.identity_key_kid(), 7);
 		assert_eq!(beacon.server_id(), server.identity_pk());
 		assert!(beacon.get_prekey_pk().is_some());
 		assert!(beacon.get_prekey_sk().is_some());
@@ -968,11 +971,58 @@ mod tests {
 		assert!(beacon.get_onetime_pk().is_none());
 		beacon.new_onetime_keypair().unwrap();
 		assert!(beacon.get_onetime_pk().is_some());
+		assert!(beacon.get_onetime_sk().is_some());
 		beacon.delete_onetime_keypair();
 		assert!(beacon.get_onetime_pk().is_none());
+		assert!(beacon.get_onetime_sk().is_none());
 		assert!(beacon.get_registration_bundle().is_some());
 		assert!(beacon.get_onetime_pk().is_some());
+		assert!(beacon.get_onetime_sk().is_some());
 		assert!(beacon.get_registration_bundle().is_none());
+	}
+
+	#[test]
+	fn pregenerated_registration_coins_advance_to_init_sent() {
+		let server = Server::new(0, None);
+		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+		beacon.new_onetime_keypair().unwrap();
+		assert!(beacon.get_onetime_pk().is_some());
+		assert!(beacon.get_onetime_sk().is_some());
+
+		assert!(beacon.get_registration_bundle().is_some());
+		assert!(beacon.get_onetime_pk().is_some());
+		assert!(beacon.get_onetime_sk().is_some());
+		assert!(beacon.get_registration_bundle().is_none());
+	}
+
+	#[test]
+	fn deleting_pq_keypair_aborts_every_registration_material_phase() {
+		fn assert_aborted(beacon: &mut Beacon) {
+			assert!(beacon.get_prekey_pk().is_none());
+			assert!(beacon.get_prekey_sk().is_none());
+			assert!(beacon.get_onetime_pk().is_none());
+			assert!(beacon.get_onetime_sk().is_none());
+			assert!(beacon.pq_pk().is_none());
+			assert!(beacon.pq_sk().is_none());
+			assert!(beacon.get_registration_bundle().is_none());
+		}
+
+		let server = Server::new(0, None);
+		let server_identity = server.identity_pk().as_bytes();
+
+		let mut fresh = Beacon::new(0, server_identity);
+		fresh.delete_pq_keypair();
+		assert_aborted(&mut fresh);
+
+		let mut fresh_with_coins = Beacon::new(0, server_identity);
+		fresh_with_coins.new_onetime_keypair().unwrap();
+		fresh_with_coins.delete_pq_keypair();
+		assert_aborted(&mut fresh_with_coins);
+
+		let mut init_sent = Beacon::new(0, server_identity);
+		assert!(init_sent.get_registration_bundle().is_some());
+		init_sent.delete_pq_keypair();
+		assert_aborted(&mut init_sent);
 	}
 
 	#[test]
