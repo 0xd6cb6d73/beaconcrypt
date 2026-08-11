@@ -1229,11 +1229,9 @@ mod tests {
 
 		let peer = crypto_sign::KeyPair::generate().unwrap().public_key;
 		provider.add_known_kid(9, peer);
-		assert_eq!(provider.ratchet_send(SYM_RATCHET_INFO, 9), Some(1));
-		assert!(provider.send_key(1, 9).is_some());
+		assert_eq!(provider.encrypt_message(b"before reset", 9).unwrap().seq, 1);
 		provider.reset_known_kid(9);
-		assert!(provider.send_key(1, 9).is_none());
-		assert_eq!(provider.ratchet_send(SYM_RATCHET_INFO, 9), Some(1));
+		assert_eq!(provider.encrypt_message(b"after reset", 9).unwrap().seq, 1);
 
 		let server = crypto_sign::KeyPair::generate().unwrap().public_key;
 		provider.add_server_pk(server.clone());
@@ -1241,21 +1239,10 @@ mod tests {
 	}
 
 	#[test]
-	fn provider_ratchet_delegations_preserve_one_use_semantics() {
+	fn provider_receive_ratchet_delegations_preserve_one_use_semantics() {
 		let mut provider = BeaconCryptPqxdh::new(false, 0, None, None);
 		let peer = crypto_sign::KeyPair::generate().unwrap().public_key;
 		provider.add_known_kid(9, peer);
-
-		assert_eq!(provider.ratchet_send(SYM_RATCHET_INFO, 9), Some(1));
-		assert!(provider.send_key(1, 9).is_some());
-		assert!(!provider.consume_send_key(2, 9));
-		assert!(provider.consume_send_key(1, 9));
-		assert!(provider.send_key(1, 9).is_none());
-		assert!(!provider.consume_send_key(1, 9));
-
-		assert_eq!(provider.ratchet_send(SYM_RATCHET_INFO, 9), Some(2));
-		provider.delete_send_key(2, 9);
-		assert!(provider.send_key(2, 9).is_none());
 
 		assert_eq!(provider.ratchet_recv_until(SYM_RATCHET_INFO, 2, 9), Some(2));
 		assert!(provider.recv_key(1, 9).is_some());
@@ -1268,11 +1255,9 @@ mod tests {
 		provider.delete_recv_key(2, 9);
 		assert!(provider.recv_key(2, 9).is_none());
 
-		assert_eq!(provider.ratchet_send(SYM_RATCHET_INFO, 99), None);
+		assert!(provider.encrypt_message(b"unknown peer", 99).is_none());
 		assert_eq!(provider.ratchet_recv_until(SYM_RATCHET_INFO, 1, 99), None);
-		assert!(provider.send_key(1, 99).is_none());
 		assert!(provider.recv_key(1, 99).is_none());
-		assert!(!provider.consume_send_key(1, 99));
 		assert!(!provider.complete_recv_key(1, 99, true));
 	}
 

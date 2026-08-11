@@ -2,8 +2,10 @@
 
 use super::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KdfState, KeyMaterial, Ratchet, RatchetManager,
-	roles, systems, verified_ratchet,
+	roles, systems,
 };
+#[cfg(test)]
+use super::{RatchetKernel, RecvChain, SendChain};
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, encode_sign};
 #[cfg(feature = "server")]
@@ -145,21 +147,21 @@ where
 	}
 }
 
-struct DirectionalKeyMapRef<'a, KeyRole, NonceRole> {
-	keys: &'a HashMap<u64, KeyMaterial>,
+struct DirectionalReceiveKeySlotsRef<'a, KeyRole, NonceRole> {
+	ratchet: &'a RatchetManager,
 	_roles: PhantomData<(KeyRole, NonceRole)>,
 }
 
-impl<'a, KeyRole, NonceRole> DirectionalKeyMapRef<'a, KeyRole, NonceRole> {
-	fn new(keys: &'a HashMap<u64, KeyMaterial>) -> Self {
+impl<'a, KeyRole, NonceRole> DirectionalReceiveKeySlotsRef<'a, KeyRole, NonceRole> {
+	fn new(ratchet: &'a RatchetManager) -> Self {
 		Self {
-			keys,
+			ratchet,
 			_roles: PhantomData,
 		}
 	}
 }
 
-impl<KeyRole, NonceRole> Serialize for DirectionalKeyMapRef<'_, KeyRole, NonceRole>
+impl<KeyRole, NonceRole> Serialize for DirectionalReceiveKeySlotsRef<'_, KeyRole, NonceRole>
 where
 	KeyRole: roles::Identified,
 	NonceRole: roles::Identified,
@@ -168,41 +170,15 @@ where
 	where
 		S: Serializer,
 	{
-		let mut map = serializer.serialize_map(Some(self.keys.len()))?;
-		for (sequence, material) in self.keys {
-			map.serialize_entry(
-				sequence,
-				&DirectionalKeyMaterialRef::<KeyRole, NonceRole>::new(material),
-			)?;
-		}
-		map.end()
-	}
-}
-
-struct ReceiveKeyArrayRef<'a> {
-	keys: &'a [Option<KeyMaterial>; verified_ratchet::RECEIVE_CACHE_CAPACITY],
-	control: &'a verified_ratchet::RatchetState,
-}
-
-impl Serialize for ReceiveKeyArrayRef<'_> {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: Serializer,
-	{
-		let len = self.control.receive_cache_len();
+		let len = self.ratchet.receive_cache_len();
 		let mut map = serializer.serialize_map(Some(len as usize))?;
 		for slot in 0..len {
-			let sequence = self.control.receive_key_at(slot).ok_or_else(|| {
-				S::Error::custom("verified receive cache contains an invalid slot")
+			let (sequence, material) = self.ratchet.receive_entry_at(slot).ok_or_else(|| {
+				S::Error::custom("refined receive cache contains an invalid entry")
 			})?;
-			let material = self.keys[slot as usize]
-				.as_ref()
-				.ok_or_else(|| S::Error::custom("verified receive slot has no concrete key"))?;
 			map.serialize_entry(
 				&sequence,
-				&DirectionalKeyMaterialRef::<roles::EncryptionRecvKey, roles::RecvNonce>::new(
-					material,
-				),
+				&DirectionalKeyMaterialRef::<KeyRole, NonceRole>::new(material),
 			)?;
 		}
 		map.end()
@@ -214,17 +190,11 @@ impl Serialize for RatchetManager {
 	where
 		S: Serializer,
 	{
-		let send_past = DirectionalKeyMapRef::<roles::EncryptionSendKey, roles::SendNonce>::new(
-			&self.send_past,
-		);
-		let recv_past = ReceiveKeyArrayRef {
-			keys: &self.recv_past,
-			control: &self.control,
-		};
-		let mut state = serializer.serialize_struct("RatchetManager", 6)?;
-		state.serialize_field("send_key", &self.send_key)?;
-		state.serialize_field("recv_key", &self.recv_key)?;
-		state.serialize_field("send_past", &send_past)?;
+		let recv_past =
+			DirectionalReceiveKeySlotsRef::<roles::EncryptionRecvKey, roles::RecvNonce>::new(self);
+		let mut state = serializer.serialize_struct("RatchetManager", 5)?;
+		state.serialize_field("send_key", self.refined.send_chain())?;
+		state.serialize_field("recv_key", self.refined.receive_chain())?;
 		state.serialize_field("send_ctr", &self.send_sequence())?;
 		state.serialize_field("recv_past", &recv_past)?;
 		state.serialize_field("recv_ctr", &self.receive_sequence())?;
@@ -371,7 +341,10 @@ mod tests {
 	fn state_updates_include_the_complete_ratchet_state() {
 		let send_bytes = [0x21; KDF_STATE_SIZE];
 		let mut send_state = RatchetManager::default();
-		send_state.send_key = Ratchet::<roles::ChainSendKey>::from(send_bytes);
+		send_state.refined = RatchetKernel::new(
+			Ratchet::<roles::ChainSendKey>::from(send_bytes),
+			RecvChain::default(),
+		);
 		let send_update = SendState {
 			kid: 7,
 			seq: 11,
@@ -382,7 +355,10 @@ mod tests {
 
 		let recv_bytes = [0x41; KDF_STATE_SIZE];
 		let mut recv_state = RatchetManager::default();
-		recv_state.recv_key = Ratchet::<roles::ChainRecvKey>::from(recv_bytes);
+		recv_state.refined = RatchetKernel::new(
+			SendChain::default(),
+			Ratchet::<roles::ChainRecvKey>::from(recv_bytes),
+		);
 		let recv_update = RecvState {
 			kid: 9,
 			seq: 13,

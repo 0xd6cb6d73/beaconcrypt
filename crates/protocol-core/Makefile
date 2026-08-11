@@ -13,12 +13,41 @@ EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Bl
 HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::commitment::build_commitment_transcript \
 	+beaconcrypt_protocol_core::ratchet::SequenceCache \
+	+beaconcrypt_protocol_core::ratchet::RatchetStep \
+	+beaconcrypt_protocol_core::ratchet::RefinedRatchet \
+	+beaconcrypt_protocol_core::ratchet::RefinedSendKey \
+	+beaconcrypt_protocol_core::ratchet::RefinedRatchetRestore \
+	+beaconcrypt_protocol_core::ratchet::**::new \
+	+beaconcrypt_protocol_core::ratchet::**::from_counters \
+	+beaconcrypt_protocol_core::ratchet::**::send_sequence \
+	+beaconcrypt_protocol_core::ratchet::**::receive_sequence \
+	+beaconcrypt_protocol_core::ratchet::**::receive_cache_len \
+	+beaconcrypt_protocol_core::ratchet::**::send_chain \
+	+beaconcrypt_protocol_core::ratchet::**::receive_chain \
+	+beaconcrypt_protocol_core::ratchet::**::receive_entry_at \
+	+beaconcrypt_protocol_core::ratchet::**::sequence \
+	+beaconcrypt_protocol_core::ratchet::**::material \
+	+beaconcrypt_protocol_core::ratchet::refined_advance_send \
+	+beaconcrypt_protocol_core::ratchet::refined_finish_send \
+	+beaconcrypt_protocol_core::ratchet::refined_advance_receive \
+	+beaconcrypt_protocol_core::ratchet::refined_advance_receive_until \
+	+beaconcrypt_protocol_core::ratchet::refined_receive_key \
+	+beaconcrypt_protocol_core::ratchet::refined_finish_receive \
+	+beaconcrypt_protocol_core::ratchet::start_refined_restore \
+	+beaconcrypt_protocol_core::ratchet::refined_restore_receive_key \
+	+beaconcrypt_protocol_core::ratchet::finish_refined_restore \
 	+beaconcrypt_protocol_core::ratchet::advance_send \
 	+beaconcrypt_protocol_core::ratchet::finish_send \
 	+beaconcrypt_protocol_core::ratchet::plan_receive_until \
 	+beaconcrypt_protocol_core::ratchet::advance_receive \
+	+beaconcrypt_protocol_core::ratchet::lookup_receive_key \
+	+beaconcrypt_protocol_core::ratchet::ReceiveRemoval \
+	+beaconcrypt_protocol_core::ratchet::ReceiveFinishWithRemoval \
+	+beaconcrypt_protocol_core::ratchet::finish_receive_with_removal \
 	+beaconcrypt_protocol_core::ratchet::finish_receive \
 	+beaconcrypt_protocol_core::ratchet::start_restore \
+	+beaconcrypt_protocol_core::ratchet::ReceiveRestoreStep \
+	+beaconcrypt_protocol_core::ratchet::restore_receive_key_with_slot \
 	+beaconcrypt_protocol_core::ratchet::restore_receive_key \
 	+beaconcrypt_protocol_core::ratchet::finish_restore \
 	+beaconcrypt_protocol_core::ratchet::replace_ratchet_for_peer \
@@ -133,7 +162,8 @@ check-toolchain:
 			"$$(proverif -help 2>&1 | sed -n '1p')"
 
 extract-fstar:
-	cargo hax -C --locked ';' into -i '$(HAX_ITEMS)' fstar
+	# Enable hax-lib so the bounded recursive lookup carries its checked measure.
+	cargo hax -C --locked --features=proverif ';' into -i '$(HAX_ITEMS)' fstar
 
 # F* accepts explicit assumptions and lax/admit flags, so strict typechecking
 # alone is not a sufficient policy gate for repository-owned proof modules.
