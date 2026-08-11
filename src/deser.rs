@@ -2,7 +2,7 @@
 
 use super::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager, RecvChain,
-	SendChain, roles, systems,
+	SendChain, roles, systems, verified_ratchet,
 };
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, decode_sign};
@@ -16,7 +16,11 @@ use serde::{
 	Deserialize, Deserializer,
 	de::{self, Error as _, IgnoredAny, SeqAccess, Visitor},
 };
-use std::{collections::HashMap, fmt, marker::PhantomData};
+use std::{
+	collections::{HashMap, HashSet},
+	fmt,
+	marker::PhantomData,
+};
 use zeroize::{Zeroize, Zeroizing};
 
 struct SecretBytes<const N: usize>(Zeroizing<[u8; N]>);
@@ -231,11 +235,10 @@ where
 }
 
 #[derive(Deserialize)]
-#[serde(rename = "RatchetManager")]
+#[serde(rename = "RatchetManager", deny_unknown_fields)]
 struct RatchetManagerData {
 	send_key: SendChain,
 	recv_key: RecvChain,
-	send_past: HashMap<u64, DirectionalKeyMaterial<roles::EncryptionSendKey, roles::SendNonce>>,
 	send_ctr: u64,
 	recv_past: HashMap<u64, DirectionalKeyMaterial<roles::EncryptionRecvKey, roles::RecvNonce>>,
 	recv_ctr: u64,
@@ -247,42 +250,29 @@ impl<'de> Deserialize<'de> for RatchetManager {
 		D: Deserializer<'de>,
 	{
 		let data = RatchetManagerData::deserialize(deserializer)?;
-		if data
-			.send_past
-			.keys()
-			.any(|seq| *seq == 0 || *seq > data.send_ctr)
-		{
-			return Err(D::Error::custom(
-				"send_past contains a sequence outside 1..=send_ctr",
-			));
+		let mut receive_entries = data.recv_past.into_iter().collect::<Vec<_>>();
+		receive_entries.sort_unstable_by_key(|(sequence, _)| *sequence);
+		let mut restore = verified_ratchet::start_refined_restore(
+			data.send_ctr,
+			data.recv_ctr,
+			data.send_key,
+			data.recv_key,
+		);
+		for (sequence, directed) in receive_entries {
+			if !verified_ratchet::refined_restore_receive_key(
+				&mut restore,
+				sequence,
+				directed.material,
+			) {
+				return Err(D::Error::custom(
+					"recv_past exceeds the refined cache capacity or contains an invalid sequence",
+				));
+			}
 		}
-		if data
-			.recv_past
-			.keys()
-			.any(|seq| *seq == 0 || *seq > data.recv_ctr)
-		{
-			return Err(D::Error::custom(
-				"recv_past contains a sequence outside 1..=recv_ctr",
-			));
-		}
-		let send_past = data
-			.send_past
-			.into_iter()
-			.map(|(sequence, directed)| (sequence, directed.material))
-			.collect();
-		let recv_past = data
-			.recv_past
-			.into_iter()
-			.map(|(sequence, directed)| (sequence, directed.material))
-			.collect();
-		Ok(Self {
-			send_key: data.send_key,
-			recv_key: data.recv_key,
-			send_past,
-			send_ctr: data.send_ctr,
-			recv_past,
-			recv_ctr: data.recv_ctr,
-		})
+		let manager = Self {
+			refined: verified_ratchet::finish_refined_restore(restore),
+		};
+		Ok(manager)
 	}
 }
 
@@ -347,31 +337,45 @@ struct ServerStateData {
 	identity_key_kid: u64,
 	server_kid: u64,
 	known_ids: DeserializedKnownIds,
+	consumed_registrations: Vec<Vec<u8>>,
 }
 
 #[cfg(feature = "server")]
-pub(crate) fn deserialize_server_state(
-	state: &str,
-) -> Option<(
+type DeserializedServerState = (
 	crypto_sign::KeyPair,
 	u64,
 	u64,
 	HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
-)> {
+	HashSet<[u8; beaconcrypt_protocol_core::pqxdh::REGISTRATION_ID_SIZE]>,
+);
+
+#[cfg(feature = "server")]
+pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServerState> {
 	let ServerStateData {
 		identity_key,
 		identity_key_kid,
 		server_kid,
 		known_ids: DeserializedKnownIds(known_ids),
+		consumed_registrations,
 	} = serde_json::from_str(state).ok()?;
 
-	if identity_key_kid > server_kid || known_ids.keys().any(|kid| *kid > server_kid) {
+	if identity_key_kid > server_kid
+		|| known_ids.keys().any(|kid| *kid > server_kid)
+		|| consumed_registrations.len() < known_ids.len()
+	{
 		return None;
+	}
+	let mut consumed = HashSet::with_capacity(consumed_registrations.len());
+	for registration_id in consumed_registrations {
+		let registration_id = registration_id.as_slice().try_into().ok()?;
+		if !consumed.insert(registration_id) {
+			return None;
+		}
 	}
 
 	let keypair = crypto_sign::KeyPair::from_seed(identity_key.buffer.0.as_slice()).ok()?;
 
-	Some((keypair, identity_key_kid, server_kid, known_ids))
+	Some((keypair, identity_key_kid, server_kid, known_ids, consumed))
 }
 
 #[cfg(feature = "server")]
@@ -414,7 +418,7 @@ impl<'de> Deserialize<'de> for DeserializedKnownIds {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::shared::{KDF_STATE_SIZE, SYM_RATCHET_INFO};
+	use crate::shared::{AD_SIZE, KDF_STATE_SIZE, encrypt_message_with_ratchet};
 	use serde::Serialize;
 	use serde_json::{Value, json};
 
@@ -429,37 +433,108 @@ mod tests {
 		assert_eq!(left.nonce.as_bytes(), right.nonce.as_bytes());
 	}
 
-	fn assert_manager_eq(left: &RatchetManager, right: &RatchetManager) {
-		assert_eq!(
-			left.send_key.state.as_slice(),
-			right.send_key.state.as_slice()
-		);
-		assert_eq!(
-			left.recv_key.state.as_slice(),
-			right.recv_key.state.as_slice()
-		);
-		assert_eq!(left.send_ctr, right.send_ctr);
-		assert_eq!(left.recv_ctr, right.recv_ctr);
-		assert_eq!(left.send_past.len(), right.send_past.len());
-		assert_eq!(left.recv_past.len(), right.recv_past.len());
+	fn receive_slot(manager: &RatchetManager, sequence: u64) -> Option<u8> {
+		(0..manager.receive_cache_len()).find(|slot| {
+			manager
+				.receive_entry_at(*slot)
+				.is_some_and(|entry| entry.0 == sequence)
+		})
+	}
 
-		for (seq, key) in &left.send_past {
-			assert_key_material_eq(key, right.send_past.get(seq).unwrap());
+	fn assert_manager_eq(left: &RatchetManager, right: &RatchetManager) {
+		assert_eq!(left.send_state().as_slice(), right.send_state().as_slice());
+		assert_eq!(left.recv_state().as_slice(), right.recv_state().as_slice());
+		assert_eq!(left.send_sequence(), right.send_sequence());
+		assert_eq!(left.receive_sequence(), right.receive_sequence());
+		assert_eq!(left.receive_cache_len(), right.receive_cache_len());
+		let mut left_logical = (0..left.receive_cache_len())
+			.map(|slot| left.receive_entry_at(slot).unwrap().0)
+			.collect::<Vec<_>>();
+		let mut right_logical = (0..right.receive_cache_len())
+			.map(|slot| right.receive_entry_at(slot).unwrap().0)
+			.collect::<Vec<_>>();
+		left_logical.sort_unstable();
+		right_logical.sort_unstable();
+		assert_eq!(left_logical, right_logical);
+
+		for slot in 0..left.receive_cache_len() {
+			let (sequence, material) = left.receive_entry_at(slot).unwrap();
+			assert_key_material_eq(material, right.recv_key(sequence).unwrap());
 		}
-		for (seq, key) in &left.recv_past {
-			assert_key_material_eq(key, right.recv_past.get(seq).unwrap());
+	}
+
+	#[test]
+	fn byte_and_tuple_visitors_describe_and_enforce_their_input_shapes() {
+		assert!(
+			SecretBytesVisitor::<4>::copy_from_slice::<serde_json::Error>(&[1, 2, 3, 4]).is_ok()
+		);
+		let borrowed = SecretBytesVisitor::<4>
+			.visit_bytes::<serde_json::Error>(&[1, 2, 3, 4])
+			.unwrap();
+		assert_eq!(borrowed.0.as_slice(), &[1, 2, 3, 4]);
+		let owned = SecretBytesVisitor::<4>
+			.visit_byte_buf::<serde_json::Error>(vec![4, 3, 2, 1])
+			.unwrap();
+		assert_eq!(owned.0.as_slice(), &[4, 3, 2, 1]);
+		let wrong_length =
+			SecretBytesVisitor::<4>::copy_from_slice::<serde_json::Error>(&[1, 2, 3])
+				.err()
+				.unwrap();
+		assert!(
+			wrong_length
+				.to_string()
+				.contains("expected a 4-byte buffer")
+		);
+
+		let bytes_error = serde_json::from_str::<SecretBytes<4>>("null")
+			.err()
+			.unwrap();
+		assert!(
+			bytes_error
+				.to_string()
+				.contains("a byte buffer containing exactly 4 bytes")
+		);
+
+		type TestTypedArray = TypedArray<4, systems::HkdfSha512, roles::ChainSendKey>;
+		let typed_error = serde_json::from_str::<TestTypedArray>("null")
+			.err()
+			.unwrap();
+		assert!(typed_error.to_string().contains(
+			"a typed array containing an algorithm identifier, role identifier, and byte buffer"
+		));
+
+		#[cfg(feature = "server")]
+		{
+			let known_ids_error = serde_json::from_str::<DeserializedKnownIds>("[]")
+				.err()
+				.unwrap();
+			assert!(
+				known_ids_error
+					.to_string()
+					.contains("a map from key IDs to remote principals")
+			);
 		}
 	}
 
 	fn populated_manager() -> RatchetManager {
+		libsodium_rs::ensure_init().unwrap();
 		let mut manager = RatchetManager::default();
-		manager.init_ratchets(&[0x42; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+		manager.init_ratchets(
+			&[0x42; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
 
-		for _ in 0..3 {
-			manager.ratchet_send(SYM_RATCHET_INFO).unwrap();
+		for message in [
+			b"first".as_slice(),
+			b"second".as_slice(),
+			b"third".as_slice(),
+		] {
+			assert!(
+				encrypt_message_with_ratchet(message, 1, 0, &[0x24; AD_SIZE], &mut manager)
+					.is_some()
+			);
 		}
-		manager.delete_send_key(2);
-		manager.ratchet_recv_until(SYM_RATCHET_INFO, 4).unwrap();
+		manager.ratchet_recv_until(4).unwrap();
 		manager.delete_recv_key(1);
 		manager.delete_recv_key(3);
 		manager
@@ -505,6 +580,58 @@ mod tests {
 	}
 
 	#[test]
+	fn ratchet_manager_schema_is_five_fields_and_receive_cache_is_sequence_keyed() {
+		let serialized = serde_json::to_value(populated_manager()).unwrap();
+		let object = serialized.as_object().unwrap();
+		let mut fields = object.keys().map(String::as_str).collect::<Vec<_>>();
+		fields.sort_unstable();
+		assert_eq!(
+			fields,
+			vec!["recv_ctr", "recv_key", "recv_past", "send_ctr", "send_key"]
+		);
+
+		let receive_map = object["recv_past"].as_object().unwrap();
+		let mut sequences = receive_map.keys().map(String::as_str).collect::<Vec<_>>();
+		sequences.sort_unstable();
+		assert_eq!(sequences, vec!["2", "4"]);
+	}
+
+	#[test]
+	fn post_swap_round_trip_preserves_receive_material_by_sequence() {
+		let mut manager = RatchetManager::default();
+		manager.init_ratchets(
+			&[0x74; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		assert_eq!(manager.ratchet_recv_until(4), Some(4));
+		let target_slot = receive_slot(&manager, 2).unwrap();
+		let old_last_slot = receive_slot(&manager, 4).unwrap();
+		assert_ne!(target_slot, old_last_slot);
+		assert_eq!(
+			manager.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Consumed
+		);
+		assert_eq!(receive_slot(&manager, 4), Some(target_slot));
+
+		let serialized = serde_json::to_value(&manager).unwrap();
+		let receive_map = serialized["recv_past"].as_object().unwrap();
+		let mut sequences = receive_map.keys().map(String::as_str).collect::<Vec<_>>();
+		sequences.sort_unstable();
+		assert_eq!(sequences, vec!["1", "3", "4"]);
+		let restored: RatchetManager = serde_json::from_value(serialized).unwrap();
+
+		assert_manager_eq(&manager, &restored);
+		let restored_last_slot = receive_slot(&restored, 4).unwrap();
+		assert_ne!(restored_last_slot, target_slot);
+		for sequence in [1, 3, 4] {
+			assert_key_material_eq(
+				manager.recv_key(sequence).unwrap(),
+				restored.recv_key(sequence).unwrap(),
+			);
+		}
+	}
+
+	#[test]
 	fn populated_ratchet_manager_round_trips_and_continues() {
 		let mut manager = populated_manager();
 		let serialized = serde_json::to_string(&manager).unwrap();
@@ -512,15 +639,19 @@ mod tests {
 
 		assert_manager_eq(&manager, &restored);
 
-		let next_send = manager.ratchet_send(SYM_RATCHET_INFO).unwrap();
-		assert_eq!(restored.ratchet_send(SYM_RATCHET_INFO), Some(next_send));
-		assert_key_material_eq(
-			manager.send_key(next_send).unwrap(),
-			restored.send_key(next_send).unwrap(),
-		);
+		let original_send =
+			encrypt_message_with_ratchet(b"continued send", 1, 0, &[0x25; AD_SIZE], &mut manager)
+				.unwrap();
+		let restored_send =
+			encrypt_message_with_ratchet(b"continued send", 1, 0, &[0x25; AD_SIZE], &mut restored)
+				.unwrap();
+		assert_eq!(original_send.seq, 4);
+		assert_eq!(restored_send.seq, original_send.seq);
+		assert_eq!(restored_send.ciphertext, original_send.ciphertext);
+		assert_manager_eq(&manager, &restored);
 
-		let next_recv = manager.ratchet_recv(SYM_RATCHET_INFO).unwrap();
-		assert_eq!(restored.ratchet_recv(SYM_RATCHET_INFO), Some(next_recv));
+		let next_recv = manager.ratchet_recv().unwrap();
+		assert_eq!(restored.ratchet_recv(), Some(next_recv));
 		assert_key_material_eq(
 			manager.recv_key(next_recv).unwrap(),
 			restored.recv_key(next_recv).unwrap(),
@@ -544,22 +675,10 @@ mod tests {
 				KDF_STATE_SIZE,
 			),
 			(
-				&serialized["send_past"]["1"]["key"],
-				systems::Identifier::Chacha20Poly1305Ietf,
-				roles::Identifier::EncryptionSendKey,
-				AEAD_KEY_LEN,
-			),
-			(
 				&serialized["recv_past"]["2"]["key"],
 				systems::Identifier::Chacha20Poly1305Ietf,
 				roles::Identifier::EncryptionRecvKey,
 				AEAD_KEY_LEN,
-			),
-			(
-				&serialized["send_past"]["1"]["nonce"],
-				systems::Identifier::Chacha20Poly1305Ietf,
-				roles::Identifier::SendNonce,
-				AEAD_NONCE_LEN,
 			),
 			(
 				&serialized["recv_past"]["2"]["nonce"],
@@ -585,7 +704,6 @@ mod tests {
 		for (path, invalid_len) in [
 			(&["send_key"][..], KDF_STATE_SIZE - 1),
 			(&["recv_key"][..], KDF_STATE_SIZE + 1),
-			(&["send_past", "1", "key"][..], AEAD_KEY_LEN - 1),
 			(&["recv_past", "2", "nonce"][..], AEAD_NONCE_LEN + 1),
 		] {
 			let mut malformed = serialized.clone();
@@ -612,12 +730,6 @@ mod tests {
 				&["recv_key"][..],
 				1,
 				u8::from(roles::Identifier::ChainSendKey),
-			),
-			(&["send_past", "1", "key"][..], 0, 0),
-			(
-				&["send_past", "1", "key"][..],
-				1,
-				u8::from(roles::Identifier::EncryptionRecvKey),
 			),
 			(
 				&["recv_past", "2", "nonce"][..],
@@ -650,22 +762,8 @@ mod tests {
 		let substitutions = [
 			(&["send_key"][..], &["recv_key"][..]),
 			(&["recv_key"][..], &["send_key"][..]),
-			(
-				&["send_past", "1", "key"][..],
-				&["recv_past", "2", "key"][..],
-			),
-			(
-				&["recv_past", "2", "key"][..],
-				&["send_past", "1", "key"][..],
-			),
-			(
-				&["send_past", "1", "nonce"][..],
-				&["recv_past", "2", "nonce"][..],
-			),
-			(
-				&["recv_past", "2", "nonce"][..],
-				&["send_past", "1", "nonce"][..],
-			),
+			(&["send_key"][..], &["recv_past", "2", "key"][..]),
+			(&["recv_past", "2", "key"][..], &["send_key"][..]),
 		];
 
 		for (destination, source) in substitutions {
@@ -715,6 +813,16 @@ mod tests {
 	}
 
 	#[test]
+	fn legacy_send_past_field_is_rejected() {
+		let mut legacy = serde_json::to_value(RatchetManager::default()).unwrap();
+		legacy["send_past"] = json!({});
+		let error = serde_json::from_value::<RatchetManager>(legacy)
+			.err()
+			.unwrap();
+		assert!(error.to_string().contains("unknown field `send_past`"));
+	}
+
+	#[test]
 	fn type_identifiers_follow_the_undefined_zero_convention() {
 		assert_eq!(u8::from(systems::Identifier::Undefined), 0);
 		assert_eq!(u8::from(systems::Identifier::Ed25519), 1);
@@ -753,23 +861,48 @@ mod tests {
 	}
 
 	#[test]
-	fn impossible_cached_key_sequences_are_rejected() {
-		let serialized = serde_json::to_value(populated_manager()).unwrap();
-
-		let mut zero_sequence = serialized.clone();
-		let cached_key = zero_sequence["send_past"]["1"].clone();
-		zero_sequence["send_past"]
-			.as_object_mut()
-			.unwrap()
-			.insert("0".into(), cached_key);
-		assert!(serde_json::from_value::<RatchetManager>(zero_sequence).is_err());
-
-		let mut future_sequence = serialized;
+	fn impossible_cached_receive_sequence_is_rejected() {
+		let mut future_sequence = serde_json::to_value(populated_manager()).unwrap();
 		let cached_key = future_sequence["recv_past"]["2"].clone();
 		future_sequence["recv_past"]
 			.as_object_mut()
 			.unwrap()
 			.insert("5".into(), cached_key);
 		assert!(serde_json::from_value::<RatchetManager>(future_sequence).is_err());
+	}
+
+	#[test]
+	fn receive_cache_restoration_accepts_the_bound_and_rejects_overflow() {
+		let mut manager = RatchetManager::default();
+		manager.init_ratchets(
+			&[0x73; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		manager
+			.ratchet_recv_until(verified_ratchet::RECEIVE_CACHE_CAPACITY as u64)
+			.unwrap();
+		let mut at_capacity = serde_json::to_value(manager).unwrap();
+
+		let restored: RatchetManager = serde_json::from_value(at_capacity.clone()).unwrap();
+		assert_eq!(
+			restored.receive_cache_len() as usize,
+			verified_ratchet::RECEIVE_CACHE_CAPACITY
+		);
+		for slot in 0..restored.receive_cache_len() {
+			assert!(restored.receive_entry_at(slot).is_some());
+		}
+		for sequence in 1..=verified_ratchet::RECEIVE_CACHE_CAPACITY as u64 {
+			assert!(restored.recv_key(sequence).is_some());
+		}
+
+		let overflow_sequence = verified_ratchet::RECEIVE_CACHE_CAPACITY as u64 + 1;
+		let template =
+			at_capacity["recv_past"][verified_ratchet::RECEIVE_CACHE_CAPACITY.to_string()].clone();
+		at_capacity["recv_past"]
+			.as_object_mut()
+			.unwrap()
+			.insert(overflow_sequence.to_string(), template);
+		at_capacity["recv_ctr"] = json!(overflow_sequence);
+		assert!(serde_json::from_value::<RatchetManager>(at_capacity).is_err());
 	}
 }

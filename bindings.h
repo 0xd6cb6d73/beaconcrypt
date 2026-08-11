@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+
+
 #define beaconcrypt_KEX_KDF_OUT_LEN 32
 
 #define beaconcrypt_KDF_STATE_SIZE 32
@@ -44,7 +46,9 @@
 
 #define beaconcrypt_MESSAGE_OVERHEAD (beaconcrypt_COMMITMENT_SIZE + beaconcrypt_AEAD_TAG_LEN)
 
-typedef struct beaconcrypt_BeaconCryptPqxdh beaconcrypt_BeaconCryptPqxdh;
+typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
+
+typedef struct beaconcrypt_Server beaconcrypt_Server;
 
 typedef struct beaconcrypt_Buffer {
   uint8_t *ptr;
@@ -67,75 +71,81 @@ typedef struct beaconcrypt_EncryptState {
   uint64_t seq;
 } beaconcrypt_EncryptState;
 
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
 void beaconcrypt_free_buffer(struct beaconcrypt_Buffer buffer);
 
-struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_server_new(uint64_t server_kid);
+struct beaconcrypt_Server *beaconcrypt_server_new(uint64_t server_kid);
 
-struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_server_new_from_seed(uint64_t server_kid,
-                                                                      const uint8_t *seed_ptr,
-                                                                      uintptr_t seed_len);
+struct beaconcrypt_Server *beaconcrypt_server_new_from_seed(uint64_t server_kid,
+                                                            const uint8_t *seed_ptr,
+                                                            uintptr_t seed_len);
 
-struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_server_new_from_state(const uint8_t *state_ptr,
-                                                                       uintptr_t state_len);
+struct beaconcrypt_Server *beaconcrypt_server_new_from_state(const uint8_t *state_ptr,
+                                                             uintptr_t state_len);
 
-struct beaconcrypt_BeaconCryptPqxdh *beaconcrypt_beacon_new(uint64_t server_kid,
-                                                            const uint8_t *server_pk_ptr,
-                                                            uintptr_t server_pk_len);
+struct beaconcrypt_Beacon *beaconcrypt_beacon_new(uint64_t server_kid,
+                                                  const uint8_t *server_pk_ptr,
+                                                  uintptr_t server_pk_len);
 
-void beaconcrypt_free(struct beaconcrypt_BeaconCryptPqxdh *handle);
+void beaconcrypt_server_free(struct beaconcrypt_Server *handle);
 
-struct beaconcrypt_Buffer beaconcrypt_identity_pk(const struct beaconcrypt_BeaconCryptPqxdh *handle);
+void beaconcrypt_beacon_free(struct beaconcrypt_Beacon *handle);
 
-struct beaconcrypt_Buffer beaconcrypt_generate_registration(struct beaconcrypt_BeaconCryptPqxdh *handle);
+struct beaconcrypt_Buffer beaconcrypt_server_identity_pk(const struct beaconcrypt_Server *handle);
 
-struct beaconcrypt_RegistrationResponse beaconcrypt_register_beacon(struct beaconcrypt_BeaconCryptPqxdh *handle,
+struct beaconcrypt_Buffer beaconcrypt_beacon_identity_pk(const struct beaconcrypt_Beacon *handle);
+
+struct beaconcrypt_Buffer beaconcrypt_generate_registration(struct beaconcrypt_Beacon *handle);
+
+struct beaconcrypt_RegistrationResponse beaconcrypt_register_beacon(struct beaconcrypt_Server *handle,
                                                                     const uint8_t *reg_ptr,
                                                                     uintptr_t reg_len,
                                                                     const uint8_t *msg_ptr,
                                                                     uintptr_t msg_len);
 
-struct beaconcrypt_Buffer beaconcrypt_process_initial_message(struct beaconcrypt_BeaconCryptPqxdh *handle,
+struct beaconcrypt_Buffer beaconcrypt_process_initial_message(struct beaconcrypt_Beacon *handle,
                                                               const uint8_t *ptr,
                                                               uintptr_t len);
 
-struct beaconcrypt_Buffer beaconcrypt_encrypt_to_beacon(struct beaconcrypt_BeaconCryptPqxdh *handle,
+struct beaconcrypt_Buffer beaconcrypt_encrypt_to_beacon(struct beaconcrypt_Server *handle,
                                                         uint64_t key_id,
                                                         const uint8_t *ptr,
                                                         uintptr_t len);
 
-struct beaconcrypt_Buffer beaconcrypt_decrypt_beacon_message(struct beaconcrypt_BeaconCryptPqxdh *handle,
+struct beaconcrypt_Buffer beaconcrypt_decrypt_beacon_message(struct beaconcrypt_Server *handle,
                                                              const uint8_t *ptr,
                                                              uintptr_t len);
 
-struct beaconcrypt_EncryptState beaconcrypt_encrypt_and_update(struct beaconcrypt_BeaconCryptPqxdh *handle,
+struct beaconcrypt_EncryptState beaconcrypt_encrypt_and_update(struct beaconcrypt_Server *handle,
                                                                uint64_t key_id,
                                                                const uint8_t *ptr,
                                                                uintptr_t len);
 
-struct beaconcrypt_Buffer beaconcrypt_encrypt_and_update_json(struct beaconcrypt_BeaconCryptPqxdh *handle,
+struct beaconcrypt_Buffer beaconcrypt_encrypt_and_update_json(struct beaconcrypt_Server *handle,
                                                               uint64_t key_id,
                                                               const uint8_t *ptr,
                                                               uintptr_t len);
 
-struct beaconcrypt_EncryptState beaconcrypt_decrypt_and_update(struct beaconcrypt_BeaconCryptPqxdh *handle,
+struct beaconcrypt_EncryptState beaconcrypt_decrypt_and_update(struct beaconcrypt_Server *handle,
                                                                const uint8_t *ptr,
                                                                uintptr_t len);
 
-struct beaconcrypt_Buffer beaconcrypt_decrypt_and_update_json(struct beaconcrypt_BeaconCryptPqxdh *handle,
+struct beaconcrypt_Buffer beaconcrypt_decrypt_and_update_json(struct beaconcrypt_Server *handle,
                                                               const uint8_t *ptr,
                                                               uintptr_t len);
 
-struct beaconcrypt_Buffer beaconcrypt_export_state(const struct beaconcrypt_BeaconCryptPqxdh *handle);
+struct beaconcrypt_Buffer beaconcrypt_export_state(const struct beaconcrypt_Server *handle);
 
-struct beaconcrypt_Buffer beaconcrypt_encrypt_to_server(struct beaconcrypt_BeaconCryptPqxdh *handle,
+struct beaconcrypt_Buffer beaconcrypt_encrypt_to_server(struct beaconcrypt_Beacon *handle,
                                                         const uint8_t *ptr,
                                                         uintptr_t len);
 
-struct beaconcrypt_Buffer beaconcrypt_decrypt_server_message(struct beaconcrypt_BeaconCryptPqxdh *handle,
+struct beaconcrypt_Buffer beaconcrypt_decrypt_server_message(struct beaconcrypt_Beacon *handle,
                                                              const uint8_t *ptr,
                                                              uintptr_t len);
 

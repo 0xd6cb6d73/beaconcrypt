@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: 0BSD
 
 use crate::server::{RecvState, SendState};
-use crate::{BeaconCryptPqxdh, CryptoProvider, ProviderBeacon, ProviderServer, RegResponse};
+use crate::{
+	Beacon as PqxdhBeacon, ProviderBeacon, ProviderServer, RegResponse, Server as PqxdhServer,
+};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -85,7 +87,7 @@ impl TryFrom<RecvState> for EncryptStatePy {
 
 #[pyclass(name = "BeaconCryptServer")]
 pub struct Server {
-	_0: BeaconCryptPqxdh,
+	_0: PqxdhServer,
 }
 
 #[pymethods]
@@ -93,13 +95,13 @@ impl Server {
 	#[new]
 	fn new(kid: u64, id_seed: Option<&[u8]>) -> Self {
 		Self {
-			_0: BeaconCryptPqxdh::new(false, kid, None, id_seed),
+			_0: PqxdhServer::new(kid, id_seed),
 		}
 	}
 
 	#[staticmethod]
 	fn from_state(server_state: &str) -> PyResult<Self> {
-		<BeaconCryptPqxdh as ProviderServer>::try_from_state(server_state)
+		<PqxdhServer as ProviderServer>::try_from_state(server_state)
 			.map(|provider| Self { _0: provider })
 			.ok_or_else(|| PyValueError::new_err("invalid server state"))
 	}
@@ -161,14 +163,14 @@ impl Server {
 
 #[pyclass(name = "BeaconCryptBeacon")]
 pub struct Beacon {
-	_0: BeaconCryptPqxdh,
+	_0: PqxdhBeacon,
 }
 #[pymethods]
 impl Beacon {
 	#[new]
 	fn new(server_kid: u64, server_id_pk: &[u8]) -> Self {
 		Self {
-			_0: BeaconCryptPqxdh::new(true, server_kid, Some(server_id_pk), None),
+			_0: PqxdhBeacon::new(server_kid, server_id_pk),
 		}
 	}
 
@@ -190,9 +192,8 @@ impl Beacon {
 	}
 
 	fn encrypt_message_to_server(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
-		let srv_seq = self._0.server_kid();
 		self._0
-			.encrypt_message(&data, srv_seq)
+			.encrypt_message(&data)
 			.map(|encrypted| encrypted.ciphertext)
 	}
 }

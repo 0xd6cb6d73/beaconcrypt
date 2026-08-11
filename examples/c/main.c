@@ -128,8 +128,8 @@ static int run(void) {
   uint8_t *transport = NULL;
   size_t transport_len = 0;
 
-  beaconcrypt_BeaconCryptPqxdh *server = NULL;
-  beaconcrypt_BeaconCryptPqxdh *beacon = NULL;
+  beaconcrypt_Server *server = NULL;
+  beaconcrypt_Beacon *beacon = NULL;
   beaconcrypt_Buffer server_pk = {0};
   beaconcrypt_Buffer b_reg_1 = {0};
   beaconcrypt_RegistrationResponse s_reg_resp = {0};
@@ -154,7 +154,7 @@ static int run(void) {
   }
 
   /* It is assumed that the server's public key is compiled into beacons. */
-  server_pk = beaconcrypt_identity_pk(server);
+  server_pk = beaconcrypt_server_identity_pk(server);
   if (buffer_is_empty(server_pk)) {
     fprintf(stderr, "error: failed to get server public key\n");
     goto cleanup;
@@ -314,10 +314,10 @@ cleanup:
   free_buffer(&b_task_1);
   free_encrypt_state(&task_1);
   if (beacon != NULL) {
-    beaconcrypt_free(beacon);
+    beaconcrypt_beacon_free(beacon);
   }
   if (server != NULL) {
-    beaconcrypt_free(server);
+    beaconcrypt_server_free(server);
   }
   remove(TRANSPORT_PATH);
   return result;

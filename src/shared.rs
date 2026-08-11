@@ -3,14 +3,21 @@
 use crate::cryptoframe_capnp;
 #[cfg(feature = "server")]
 use crate::error::DecodingError;
+#[cfg(any(feature = "server", test))]
 use crate::error::EncodingError;
-#[cfg(feature = "pqxdh")]
-use crate::pqxdh::AD_SIZE;
+use beaconcrypt_protocol_core::commitment::{
+	AEAD_KEY_SIZE as CORE_AEAD_KEY_LEN, AEAD_NONCE_SIZE as CORE_AEAD_NONCE_LEN,
+	AEAD_TAG_SIZE as CORE_AEAD_TAG_LEN, build_commitment_transcript,
+};
+use beaconcrypt_protocol_core::pqxdh::{
+	ASSOCIATED_DATA_SIZE as AD_SIZE, INITIAL_RATCHET_KDF_OUTPUT_SIZE, RATCHET_CHAIN_SIZE,
+	RatchetInitialization, derive_initial_ratchet_chains,
+};
+use beaconcrypt_protocol_core::ratchet as verified_ratchet;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::utils::memcmp;
 use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
 use std::any::TypeId;
-use std::collections::HashMap;
 use std::marker::{PhantomData, PhantomPinned};
 use std::vec;
 use zeroize::{Zeroize, Zeroizing};
@@ -28,19 +35,28 @@ pub(crate) use ser::serialize_server_state;
 
 pub const KEX_KDF_OUT_LEN: usize = 32usize;
 pub const KDF_STATE_SIZE: usize = 32usize;
-pub const SYM_RATCHET_INFO: &[u8; 41] = b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
+const _: () = assert!(KEX_KDF_OUT_LEN == RATCHET_CHAIN_SIZE);
+const _: () = assert!(KDF_STATE_SIZE == RATCHET_CHAIN_SIZE);
+const SYM_RATCHET_INFO: &[u8; 41] = beaconcrypt_protocol_core::pqxdh::SYM_RATCHET_INFO;
 /// crypto_aead::chacha20poly1305_ietf::KEYBYTES
 pub const AEAD_KEY_LEN: usize = 32;
 /// crypto_aead::chacha20poly1305_ietf::NPUBBYTES
 pub const AEAD_NONCE_LEN: usize = 12;
 /// crypto_aead::chacha20poly1305_ietf::ABYTES
 pub const AEAD_TAG_LEN: usize = 16;
+const _: () = assert!(AEAD_KEY_LEN == CORE_AEAD_KEY_LEN);
+const _: () = assert!(AEAD_NONCE_LEN == CORE_AEAD_NONCE_LEN);
+const _: () = assert!(AEAD_TAG_LEN == CORE_AEAD_TAG_LEN);
 pub const KDF_RATCHET_OUTPUT_LEN: usize = AEAD_KEY_LEN + KDF_STATE_SIZE + AEAD_NONCE_LEN;
+const _: () = assert!(KDF_RATCHET_OUTPUT_LEN == verified_ratchet::RATCHET_KDF_OUTPUT_SIZE);
 /// crypto_scalarmult::BYTES
 #[cfg(feature = "pqxdh")]
 pub const DH_OUT_LEN: usize = 32;
 // the maximum amounts of out-of-order messages we tolerate
+// cbindgen requires a literal initializer for this public C constant. The
+// compile-time assertion keeps it tied to the authoritative core value.
 pub const RATCHET_MAX_GAP: u64 = 50;
+const _: () = assert!(RATCHET_MAX_GAP == verified_ratchet::RATCHET_MAX_GAP);
 #[cfg(feature = "pqxdh")]
 pub const ED25519_SEED_SIZE: usize = 32;
 #[cfg(feature = "server")]
@@ -108,6 +124,7 @@ impl From<u8> for KemType {
 	}
 }
 
+#[cfg(any(feature = "server", test))]
 pub fn encode_sign(sign_type: SignType, pk_bytes: &[u8]) -> Result<Vec<u8>, EncodingError> {
 	match sign_type {
 		SignType::Undefined => Err(EncodingError),
@@ -138,7 +155,7 @@ pub fn decode_sign(encoded_pk: &[u8], expected: SignType) -> Result<Vec<u8>, Dec
 	}
 }
 
-#[cfg(feature = "beacon")]
+#[cfg(test)]
 pub fn encode_kem(kem_type: KemType, pk_bytes: &[u8]) -> Result<Vec<u8>, EncodingError> {
 	match kem_type {
 		KemType::Undefined => Err(EncodingError),
@@ -150,7 +167,7 @@ pub fn encode_kem(kem_type: KemType, pk_bytes: &[u8]) -> Result<Vec<u8>, Encodin
 	}
 }
 
-#[cfg(feature = "server")]
+#[cfg(test)]
 pub fn decode_kem(encoded_pk: &[u8], expected: KemType) -> Result<Vec<u8>, DecodingError> {
 	if encoded_pk.len() < 33 {
 		return Err(DecodingError);
@@ -247,11 +264,7 @@ pub mod roles {
 	pub struct ChainRecvKey;
 	impl ChainKey for ChainRecvKey {}
 	#[cfg(feature = "server")]
-	pub struct EncryptionSendKey;
-	#[cfg(feature = "server")]
 	pub struct EncryptionRecvKey;
-	#[cfg(feature = "server")]
-	pub struct SendNonce;
 	#[cfg(feature = "server")]
 	pub struct RecvNonce;
 	#[cfg(feature = "server")]
@@ -319,18 +332,8 @@ pub mod roles {
 	}
 
 	#[cfg(feature = "server")]
-	impl Identified for EncryptionSendKey {
-		const IDENTIFIER: Identifier = Identifier::EncryptionSendKey;
-	}
-
-	#[cfg(feature = "server")]
 	impl Identified for EncryptionRecvKey {
 		const IDENTIFIER: Identifier = Identifier::EncryptionRecvKey;
-	}
-
-	#[cfg(feature = "server")]
-	impl Identified for SendNonce {
-		const IDENTIFIER: Identifier = Identifier::SendNonce;
 	}
 
 	#[cfg(feature = "server")]
@@ -409,6 +412,10 @@ impl<const S: usize, System, Role> SecretArr<S, System, Role> {
 		self.data.as_slice()
 	}
 
+	pub fn as_array(&self) -> &[u8; S] {
+		&self.data
+	}
+
 	pub fn copy_from_slice(&mut self, src: &[u8]) {
 		self.data.copy_from_slice(src);
 	}
@@ -457,36 +464,6 @@ impl KeyMaterial {
 pub type AeadKey = crypto_aead::chacha20poly1305_ietf::Key;
 pub type AeadNonce = crypto_aead::chacha20poly1305_ietf::Nonce;
 
-#[derive(Clone)]
-struct KdfOutput<Role: roles::ChainKey> {
-	aead_key: AeadKey,
-	kdf_state: KdfState<Role>,
-	aead_nonce: AeadNonce,
-}
-
-impl<Role: roles::ChainKey> From<[u8; KDF_RATCHET_OUTPUT_LEN]> for KdfOutput<Role> {
-	fn from(mut value: [u8; KDF_RATCHET_OUTPUT_LEN]) -> Self {
-		let mut key = [0u8; AEAD_KEY_LEN];
-		key.copy_from_slice(&value[0..AEAD_KEY_LEN]);
-		let mut iter: usize = AEAD_KEY_LEN;
-		let mut state = [0u8; KDF_STATE_SIZE];
-		state.copy_from_slice(&value[AEAD_KEY_LEN..AEAD_KEY_LEN + KDF_STATE_SIZE]);
-		iter += KDF_STATE_SIZE;
-		let mut nonce = [0u8; AEAD_NONCE_LEN];
-		nonce.copy_from_slice(&value[iter..iter + AEAD_NONCE_LEN]);
-		value.zeroize();
-		Self {
-			aead_key: key.into(),
-			kdf_state: state.into(),
-			aead_nonce: nonce.into(),
-		}
-	}
-}
-
-pub trait Ratchetable {
-	fn ratchet(&mut self, info: &[u8]) -> KeyMaterial;
-}
-
 pub struct Ratchet<Role: roles::ChainKey> {
 	state: KdfState<Role>,
 }
@@ -499,20 +476,55 @@ impl<Role: roles::ChainKey> From<[u8; KDF_STATE_SIZE]> for Ratchet<Role> {
 	}
 }
 
-impl<Role: roles::ChainKey> Ratchetable for Ratchet<Role> {
-	fn ratchet(&mut self, info: &[u8]) -> KeyMaterial {
-		let prk = crypto_kdf::hkdf::sha512::extract(None, self.state.as_slice()).unwrap();
-		let out: KdfOutput<Role> =
-			(*crypto_kdf::hkdf::sha512::expand(KDF_RATCHET_OUTPUT_LEN, Some(info), &prk)
-				.unwrap()
-				.as_array::<KDF_RATCHET_OUTPUT_LEN>()
-				.unwrap())
-			.into();
-		self.state = out.kdf_state;
-		KeyMaterial {
-			key: out.aead_key,
-			nonce: out.aead_nonce,
+impl<Role: roles::ChainKey> From<verified_ratchet::RatchetChain> for Ratchet<Role> {
+	fn from(value: verified_ratchet::RatchetChain) -> Self {
+		value.into_bytes().into()
+	}
+}
+
+impl From<verified_ratchet::RatchetMaterial> for KeyMaterial {
+	fn from(value: verified_ratchet::RatchetMaterial) -> Self {
+		let (key, nonce) = value.into_parts();
+		Self {
+			key: key.into_bytes().into(),
+			nonce: nonce.into_bytes().into(),
 		}
+	}
+}
+
+/// The sole opaque symmetric-ratchet primitive implementation.
+/// Its label is deliberately private and cannot be selected by a production caller.
+fn symmetric_ratchet_hkdf<const OUTPUT_SIZE: usize>(
+	old_chain: &[u8; KDF_STATE_SIZE],
+) -> [u8; OUTPUT_SIZE] {
+	let prk = crypto_kdf::hkdf::sha512::extract(None, old_chain)
+		.expect("HKDF-SHA-512 extract accepts every fixed-width ratchet chain");
+	let expanded = Zeroizing::new(
+		crypto_kdf::hkdf::sha512::expand(OUTPUT_SIZE, Some(SYM_RATCHET_INFO), &prk)
+			.expect("the fixed ratchet output sizes are below the HKDF-SHA-512 limit"),
+	);
+	let mut output = [0u8; OUTPUT_SIZE];
+	output.copy_from_slice(&expanded);
+	output
+}
+
+fn ratchet_hkdf(
+	old_chain: &[u8; KDF_STATE_SIZE],
+) -> [u8; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE] {
+	symmetric_ratchet_hkdf(old_chain)
+}
+
+fn initial_ratchet_hkdf(root: &[u8; KDF_STATE_SIZE]) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE] {
+	symmetric_ratchet_hkdf(root)
+}
+
+fn ratchet_step<Role: roles::ChainKey>(
+	ratchet: &Ratchet<Role>,
+) -> verified_ratchet::RatchetStep<Ratchet<Role>, KeyMaterial> {
+	let stepped = verified_ratchet::derive_ratchet_step(ratchet.state.as_array(), ratchet_hkdf);
+	verified_ratchet::RatchetStep {
+		chain: stepped.chain.into(),
+		material: stepped.material.into(),
 	}
 }
 impl<Role: roles::ChainKey> Default for Ratchet<Role> {
@@ -533,29 +545,18 @@ impl<Role: roles::ChainKey> Clone for Ratchet<Role> {
 
 type SendChain = Ratchet<roles::ChainSendKey>;
 type RecvChain = Ratchet<roles::ChainRecvKey>;
+type RatchetKernel = verified_ratchet::RefinedRatchet<SendChain, RecvChain, KeyMaterial>;
 
 #[derive(Clone)]
 pub struct RatchetManager {
-	/// current state of the KDF on the send chain
-	send_key: SendChain,
-	/// current state of the KDF on the recv chain
-	recv_key: RecvChain,
-	send_past: HashMap<u64, KeyMaterial>,
-	send_ctr: u64,
-	recv_past: HashMap<u64, KeyMaterial>,
-	recv_ctr: u64,
-	// role: PhantomData,
+	/// Shared refined kernel owning counters, both KDF chains, and concrete receive slots.
+	refined: RatchetKernel,
 }
 
 impl RatchetManager {
 	pub fn default() -> Self {
 		Self {
-			send_key: SendChain::default(),
-			recv_key: RecvChain::default(),
-			send_past: HashMap::new(),
-			send_ctr: 0,
-			recv_past: HashMap::new(),
-			recv_ctr: 0,
+			refined: RatchetKernel::new(SendChain::default(), RecvChain::default()),
 		}
 	}
 
@@ -564,91 +565,131 @@ impl RatchetManager {
 		serde_json::from_str(&json).unwrap()
 	}
 
-	pub fn ratchet_send(&mut self, info: &[u8]) -> Option<u64> {
-		let current = self.send_ctr.checked_add(1)?;
-		if self.send_past.contains_key(&current) {
-			return None;
+	#[cfg(test)]
+	pub(crate) fn recv_key(&self, seq: u64) -> Option<&KeyMaterial> {
+		(0..self.refined.receive_cache_len()).find_map(|slot| {
+			let (sequence, material) = self.refined.receive_entry_at(slot)?;
+			(sequence == seq).then_some(material)
+		})
+	}
+
+	#[cfg(test)]
+	pub(crate) fn ratchet_recv(&mut self) -> Option<u64> {
+		let target = self.refined.receive_sequence().checked_add(1)?;
+		self.ratchet_recv_until(target)
+	}
+
+	#[cfg(test)]
+	pub(crate) fn ratchet_recv_until(&mut self, until: u64) -> Option<u64> {
+		let context = TestReceiveAttempt::new(false);
+		let _ = verified_ratchet::refined_open_and_finish(
+			&mut self.refined,
+			until,
+			ratchet_step::<roles::ChainRecvKey>,
+			&context,
+			test_receive_attempt,
+		);
+		context.seen.get()
+	}
+
+	pub(crate) fn init_ratchets(
+		&mut self,
+		root: &[u8; KDF_STATE_SIZE],
+		initialization: RatchetInitialization,
+	) {
+		let chains = derive_initial_ratchet_chains(root, initialization, initial_ratchet_hkdf);
+		let (send_chain, receive_chain) = chains.into_parts();
+		self.refined = RatchetKernel::new(send_chain.into(), receive_chain.into());
+	}
+
+	#[cfg(test)]
+	pub(crate) fn complete_recv_key(
+		&mut self,
+		seq: u64,
+		authenticated: bool,
+	) -> verified_ratchet::ReceiveDisposition {
+		if self.recv_key(seq).is_none() {
+			return verified_ratchet::ReceiveDisposition::Missing;
 		}
-		let keys = self.send_key.ratchet(info);
-		self.send_ctr = current;
-		self.send_past.insert(current, keys);
-		Some(current)
-	}
-
-	pub fn send_key(&self, seq: u64) -> Option<&KeyMaterial> {
-		self.send_past.get(&seq)
-	}
-
-	pub fn recv_key(&self, seq: u64) -> Option<&KeyMaterial> {
-		self.recv_past.get(&seq)
-	}
-
-	pub fn ratchet_recv(&mut self, info: &[u8]) -> Option<u64> {
-		let current = self.recv_ctr.checked_add(1)?;
-		if self.recv_past.contains_key(&current) {
-			return None;
-		}
-		let keys = self.recv_key.ratchet(info);
-		self.recv_ctr = current;
-		self.recv_past.insert(current, keys);
-		Some(current)
-	}
-
-	pub fn ratchet_recv_until(&mut self, info: &[u8], until: u64) -> Option<u64> {
-		if until <= self.recv_ctr {
-			Some(until)
+		let context = TestReceiveAttempt::new(authenticated);
+		let opened = verified_ratchet::refined_open_and_finish(
+			&mut self.refined,
+			seq,
+			ratchet_step::<roles::ChainRecvKey>,
+			&context,
+			test_receive_attempt,
+		);
+		if authenticated && opened.is_some() {
+			verified_ratchet::ReceiveDisposition::Consumed
+		} else if !authenticated && context.seen.get() == Some(seq) {
+			verified_ratchet::ReceiveDisposition::Retained
 		} else {
-			let diff = until - self.recv_ctr;
-			if diff > RATCHET_MAX_GAP || self.recv_past.len() as u64 + diff > RATCHET_MAX_GAP {
-				return None;
-			}
-			for _ in 0..diff {
-				self.ratchet_recv(info)?;
-			}
-			assert_eq!(until, self.recv_ctr);
-			Some(self.recv_ctr)
+			verified_ratchet::ReceiveDisposition::Missing
 		}
 	}
 
-	pub fn init_ratchets(&mut self, ikm: &[u8], info: &[u8], is_beacon: bool) {
-		let first_start = if is_beacon { 0 } else { KDF_STATE_SIZE };
-		let second_start = if is_beacon { KDF_STATE_SIZE } else { 0 };
-		let prk = crypto_kdf::hkdf::sha512::extract(None, ikm).unwrap();
-		let mut combined =
-			crypto_kdf::hkdf::sha512::expand(KDF_STATE_SIZE * 2, Some(info), &prk).unwrap();
-		self.recv_key
-			.state
-			.copy_from_slice(&combined[first_start..first_start + KDF_STATE_SIZE]);
-		self.send_key
-			.state
-			.copy_from_slice(&combined[second_start..second_start + KDF_STATE_SIZE]);
-		combined.zeroize();
-	}
-
-	pub fn delete_send_key(&mut self, seq: u64) {
-		self.send_past.remove(&seq);
-	}
-
-	pub fn delete_recv_key(&mut self, seq: u64) {
-		self.recv_past.remove(&seq);
+	#[cfg(test)]
+	pub(crate) fn delete_recv_key(&mut self, seq: u64) {
+		self.complete_recv_key(seq, true);
 	}
 
 	pub fn reset(&mut self) {
-		self.send_key = SendChain::default();
-		self.recv_key = RecvChain::default();
-		self.send_past = HashMap::new();
-		self.send_ctr = 0;
-		self.recv_past = HashMap::new();
-		self.recv_ctr = 0;
+		self.refined = RatchetKernel::new(SendChain::default(), RecvChain::default());
+	}
+
+	#[cfg(any(feature = "server", test))]
+	fn send_sequence(&self) -> u64 {
+		self.refined.send_sequence()
+	}
+
+	#[cfg(any(feature = "server", test))]
+	fn receive_sequence(&self) -> u64 {
+		self.refined.receive_sequence()
+	}
+
+	/// Number of retained receive attempts, without exposing their material.
+	pub fn receive_cache_len(&self) -> u8 {
+		self.refined.receive_cache_len()
+	}
+
+	#[cfg(any(feature = "server", test))]
+	fn receive_entry_at(&self, slot: u8) -> Option<(u64, &KeyMaterial)> {
+		self.refined.receive_entry_at(slot)
 	}
 
 	pub fn send_state(&self) -> &KdfSendState {
-		&self.send_key.state
+		&self.refined.send_chain().state
 	}
 
 	pub fn recv_state(&self) -> &KdfRecvState {
-		&self.recv_key.state
+		&self.refined.receive_chain().state
 	}
+}
+
+#[cfg(test)]
+struct TestReceiveAttempt {
+	seen: core::cell::Cell<Option<u64>>,
+	authenticated: bool,
+}
+
+#[cfg(test)]
+impl TestReceiveAttempt {
+	fn new(authenticated: bool) -> Self {
+		Self {
+			seen: core::cell::Cell::new(None),
+			authenticated,
+		}
+	}
+}
+
+#[cfg(test)]
+fn test_receive_attempt(
+	_material: &KeyMaterial,
+	sequence: u64,
+	context: &TestReceiveAttempt,
+) -> Option<()> {
+	context.seen.set(Some(sequence));
+	context.authenticated.then_some(())
 }
 
 pub trait SignaturePk {}
@@ -712,213 +753,167 @@ impl AsRef<[u8]> for Encrypted {
 	}
 }
 
-pub trait CryptoProvider {
-	type SignaturePublicKey;
-	type SignatureSecretKey;
-	type KemPublicKey;
-	type KemSecretKey;
+#[cfg(feature = "server")]
+pub(crate) fn encrypted_frame_sender(data: &[u8]) -> Option<u64> {
+	let reader = capnp::serialize::read_message(data, ReaderOptions::new()).ok()?;
+	let typed_reader = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
+	Some(typed_reader.get().ok()?.get_key_id())
+}
 
-	fn default() -> Self;
-	fn new(
-		is_beacon: bool,
-		server_kid: u64,
-		server_id_pk: Option<&[u8]>,
-		id_seed: Option<&[u8]>,
-	) -> Self;
-	fn set_associated_data(&mut self, data: [u8; AD_SIZE]);
-	fn associated_data(&self, kid: u64) -> Option<[u8; AD_SIZE]>;
-	fn is_beacon(&self) -> bool;
-	/// ## Arguments
-	/// * `data`   - A serialized `CryptoFrame` to be decrypted
-	///
-	/// ## Returns
-	/// * `None` if some error happens, or decryption or commitment verification fails
-	/// * [`Decrypted`] containing the plaintext and consumed key metadata
-	fn decrypt_message(&mut self, data: &[u8]) -> Option<Decrypted> {
-		if data.is_empty() {
-			return None;
-		}
-		match capnp::serialize::read_message(data, ReaderOptions::new()) {
-			Ok(reader) => {
-				let typed_reader =
-					TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
-				match typed_reader.get() {
-					Ok(frame) => {
-						let kid = frame.get_key_id();
-						let associated_data = self.associated_data(kid)?;
-						let ciphertext = frame.get_cipher_text().ok()?;
-						let ct_len = ciphertext.len();
-						if ct_len <= MESSAGE_OVERHEAD {
-							return None;
-						}
-						let key_seq =
-							self.ratchet_recv_until(SYM_RATCHET_INFO, frame.get_seq(), kid)?;
-						let key = self.recv_key(key_seq, kid)?;
-						let commitment = build_commitment(
-							key,
-							associated_data.as_slice(),
-							&ciphertext[ct_len
-								- COMMITMENT_SIZE
-								- crypto_aead::chacha20poly1305_ietf::ABYTES
-								..ct_len - COMMITMENT_SIZE],
-							key_seq,
-							kid,
-						)?;
-						if !memcmp(&commitment, &ciphertext[ct_len - COMMITMENT_SIZE..]) {
-							return None;
-						}
-						let plaintext = crypto_aead::chacha20poly1305_ietf::decrypt(
-							&ciphertext[..ct_len - COMMITMENT_SIZE],
-							Some(associated_data.as_slice()),
-							key.nonce(),
-							key.key(),
-						)
-						.ok()?;
-						self.delete_recv_key(key_seq, kid);
-						Some(Decrypted {
-							plaintext,
-							key_id: kid,
-							seq: key_seq,
-						})
-					}
-					Err(_) => None,
-				}
-			}
-			Err(_) => None,
-		}
-	}
+struct SealFrameContext<'a> {
+	bytes: &'a [u8],
+	target_kid: u64,
+	sender_kid: u64,
+	associated_data: &'a [u8; AD_SIZE],
+}
 
-	/// ## Arguments
-	/// * `data`   - Some arbitrary byte buffer to be encrypted
-	/// * `kid` - The identifier for the remote to encrypt to
-	///
-	/// ## Returns
-	/// * `None` if some other error happens.
-	/// * [`Encrypted`] containing a serialized `cryptoframe_capnp::crypto_frame` and consumed key
-	///   metadata
-	fn encrypt_message(&mut self, bytes: &[u8], kid: u64) -> Option<Encrypted> {
-		if bytes.is_empty() {
-			return None;
-		}
-		let associated_data = self.associated_data(kid)?;
-		let key_seq = self.ratchet_send(SYM_RATCHET_INFO, kid)?;
-		let key = self.send_key(key_seq, kid)?;
-		let plaintext = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
-			bytes,
-			Some(associated_data.as_slice()),
-			key.nonce(),
-			key.key(),
-		);
-		match plaintext {
-			Ok((mut plaintext, mut tag)) => {
-				let self_kid = self.identity_key_kid();
-				let mut commitment =
-					build_commitment(key, &associated_data, tag.as_slice(), key_seq, self_kid)?;
-				plaintext.append(&mut tag);
-				plaintext.append(&mut commitment);
-				let mut t_builder =
-					TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-				let mut builder: cryptoframe_capnp::crypto_frame::Builder<'_> =
-					t_builder.init_root();
-				builder.set_cipher_text(&plaintext);
-				builder.set_seq(key_seq);
-				builder.set_key_id(self_kid);
-				let mut buffer = vec![];
-				capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).unwrap();
-				self.delete_send_key(key_seq, kid);
-				Some(Encrypted {
-					ciphertext: buffer,
-					key_id: kid,
-					seq: key_seq,
-				})
-			}
-			Err(_) => {
-				self.delete_send_key(key_seq, kid);
-				None
-			}
-		}
-	}
+fn seal_frame(
+	key: &KeyMaterial,
+	key_seq: u64,
+	context: &SealFrameContext<'_>,
+) -> Option<Encrypted> {
+	let (mut plaintext, mut tag) = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
+		context.bytes,
+		Some(context.associated_data.as_slice()),
+		key.nonce(),
+		key.key(),
+	)
+	.ok()?;
+	let mut commitment = build_commitment(
+		key,
+		context.associated_data.as_slice(),
+		tag.as_slice(),
+		key_seq,
+		context.sender_kid,
+	)?;
+	plaintext.append(&mut tag);
+	plaintext.append(&mut commitment);
+	let mut t_builder = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
+	let mut builder: cryptoframe_capnp::crypto_frame::Builder<'_> = t_builder.init_root();
+	builder.set_cipher_text(&plaintext);
+	builder.set_seq(key_seq);
+	builder.set_key_id(context.sender_kid);
+	let mut buffer = vec![];
+	capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).ok()?;
+	Some(Encrypted {
+		ciphertext: buffer,
+		key_id: context.target_kid,
+		seq: key_seq,
+	})
+}
 
-	fn set_identity_kid(&mut self, key_id: u64);
-	fn identity_key_kid(&self) -> u64;
-	fn new_remote_kid(&mut self) -> u64;
-	fn add_known_kid(&mut self, key_id: u64, pk: Self::SignaturePublicKey);
-	/// Delete a known identity from the state
-	fn delete_known_kid(&mut self, key_id: u64);
-	/// Reset an identity's ratchet state
-	fn reset_known_kid(&mut self, key_id: u64);
-	fn server_id(&self) -> Option<&Self::SignaturePublicKey>;
-	fn server_kid(&self) -> u64;
-	fn add_server_pk(&mut self, pk: Self::SignaturePublicKey) {
-		self.add_known_kid(self.server_kid(), pk)
+/// Encrypt one frame against a staged or committed peer ratchet.
+///
+/// This is shared by the regular high-level provider path and the transactional
+/// server-registration path. The extracted kernel advances the send chain,
+/// lends the exact allocated sequence/material pair to `seal_frame`, and
+/// consumes that pair before returning.
+pub(crate) fn encrypt_message_with_ratchet(
+	bytes: &[u8],
+	target_kid: u64,
+	sender_kid: u64,
+	associated_data: &[u8; AD_SIZE],
+	ratchet: &mut RatchetManager,
+) -> Option<Encrypted> {
+	if bytes.is_empty() {
+		return None;
 	}
-	fn pk_by_kid(&self, kid: u64) -> Option<&Self::SignaturePublicKey>;
-	fn identity_pk(&self) -> &Self::SignaturePublicKey;
-	fn identity_sk(&self) -> &Self::SignatureSecretKey;
-	fn pq_pk(&self) -> Option<&Self::KemPublicKey>;
-	fn pq_sk(&self) -> Option<&Self::KemSecretKey>;
-	fn ratchet_manager(&self, kid: u64) -> Option<&RatchetManager>;
-	fn ratchet_manager_mut(&mut self, kid: u64) -> Option<&mut RatchetManager>;
-	/// ## Arguments
-	/// * `info` - The info buffer to use for the ratchet step(s)
-	/// * `until` - The message sequence number to ratchet to
-	/// * `kid` - The identity to ratchet for
-	///
-	/// ## Returns
-	/// * `None` if signature verification fails or some other error happens.
-	/// * `Vec<u8>` containing the authenticated buffer with the signature stripped
-	fn ratchet_recv_until(&mut self, info: &[u8], until: u64, kid: u64) -> Option<u64> {
-		let remote = self.ratchet_manager_mut(kid)?;
-		remote.ratchet_recv_until(info, until)
-	}
+	let context = SealFrameContext {
+		bytes,
+		target_kid,
+		sender_kid,
+		associated_data,
+	};
+	verified_ratchet::refined_seal_next(
+		&mut ratchet.refined,
+		ratchet_step::<roles::ChainSendKey>,
+		&context,
+		seal_frame,
+	)
+}
 
-	fn ratchet_send(&mut self, info: &[u8], kid: u64) -> Option<u64> {
-		let remote = self.ratchet_manager_mut(kid)?;
-		remote.ratchet_send(info)
-	}
-	fn send_key(&self, seq: u64, kid: u64) -> Option<&KeyMaterial> {
-		match self.ratchet_manager(kid) {
-			Some(remote) => remote.send_key(seq),
-			None => None,
-		}
-	}
+struct OpenFrameContext<'a> {
+	ciphertext: &'a [u8],
+	associated_data: &'a [u8; AD_SIZE],
+	sender_kid: u64,
+}
 
-	fn recv_key(&self, seq: u64, kid: u64) -> Option<&KeyMaterial> {
-		match self.ratchet_manager(kid) {
-			Some(remote) => remote.recv_key(seq),
-			None => None,
-		}
+fn open_frame(key: &KeyMaterial, key_seq: u64, context: &OpenFrameContext<'_>) -> Option<Vec<u8>> {
+	let ct_len = context.ciphertext.len();
+	if ct_len <= MESSAGE_OVERHEAD {
+		return None;
 	}
+	let commitment = build_commitment(
+		key,
+		context.associated_data.as_slice(),
+		&context.ciphertext[ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE],
+		key_seq,
+		context.sender_kid,
+	)?;
+	if !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {
+		return None;
+	}
+	crypto_aead::chacha20poly1305_ietf::decrypt(
+		&context.ciphertext[..ct_len - COMMITMENT_SIZE],
+		Some(context.associated_data.as_slice()),
+		key.nonce(),
+		key.key(),
+	)
+	.ok()
+}
 
-	fn delete_send_key(&mut self, seq: u64, kid: u64) {
-		if let Some(remote) = self.ratchet_manager_mut(kid) {
-			remote.delete_send_key(seq)
-		}
+/// Decrypt one frame against a staged or committed peer ratchet.
+///
+/// Authentication failure retains the exact logical and concrete receive key;
+/// successful authentication consumes both through the shared refined kernel.
+/// Production supplies one opaque AEAD callback and never receives material or
+/// reports an independent authentication Boolean.
+pub(crate) fn decrypt_message_with_ratchet(
+	data: &[u8],
+	expected_sender_kid: u64,
+	associated_data: &[u8; AD_SIZE],
+	ratchet: &mut RatchetManager,
+) -> Option<Decrypted> {
+	if data.is_empty() {
+		return None;
 	}
-
-	fn delete_recv_key(&mut self, seq: u64, kid: u64) {
-		if let Some(remote) = self.ratchet_manager_mut(kid) {
-			remote.delete_recv_key(seq)
-		}
+	let reader = capnp::serialize::read_message(data, ReaderOptions::new()).ok()?;
+	let typed_reader = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
+	let frame = typed_reader.get().ok()?;
+	let kid = frame.get_key_id();
+	if kid != expected_sender_kid {
+		return None;
 	}
-
-	/// You must call `add_known_id` or `add_server_id` before this
-	fn init_ratchets(&mut self, ikm: &[u8], info: &[u8], is_beacon: bool, kid: u64) -> bool {
-		match self.ratchet_manager_mut(kid) {
-			Some(remote) => {
-				remote.init_ratchets(ikm, info, is_beacon);
-				true
-			}
-			None => false,
-		}
+	let ciphertext = frame.get_cipher_text().ok()?;
+	let ct_len = ciphertext.len();
+	if ct_len <= MESSAGE_OVERHEAD {
+		return None;
 	}
+	let context = OpenFrameContext {
+		ciphertext,
+		associated_data,
+		sender_kid: kid,
+	};
+	let key_seq = frame.get_seq();
+	let plaintext = verified_ratchet::refined_open_and_finish(
+		&mut ratchet.refined,
+		key_seq,
+		ratchet_step::<roles::ChainRecvKey>,
+		&context,
+		open_frame,
+	)?;
+	Some(Decrypted {
+		plaintext,
+		key_id: kid,
+		seq: key_seq,
+	})
 }
 
 /// Implementation of the Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>
 ///
 /// `CT, T = ENC(K, N, A, M)`
 ///
-/// `T* = H(K, N, A, T)`
+/// `T* = H(K, N, A, T, LE64(seq), LE64(kid))`
 ///
 /// The paper omits the original tag from the output. It is included here so we can keep using the libsodium interface:
 ///
@@ -938,24 +933,13 @@ fn build_commitment(
 	seq: u64,
 	kid: u64,
 ) -> Option<Vec<u8>> {
-	if tag.len() != AEAD_TAG_LEN
-		|| secret.key.as_bytes().len() != AEAD_KEY_LEN
-		|| secret.nonce.as_bytes().len() != AEAD_NONCE_LEN
-		|| ad.len() != AD_SIZE
-	{
-		return None;
-	}
 	let key = secret.key().as_bytes();
 	let nonce = secret.nonce().as_bytes();
-	let mut input = vec![];
-	input.extend_from_slice(key);
-	input.extend_from_slice(nonce);
-	input.extend_from_slice(ad);
-	input.extend_from_slice(tag);
-	input.extend_from_slice(&seq.to_le_bytes());
-	input.extend_from_slice(&kid.to_le_bytes());
-	let hash = crypto_generichash::generichash(input.as_slice(), None, COMMITMENT_SIZE).ok();
-	input.zeroize();
+	let ad = ad.try_into().ok()?;
+	let tag = tag.try_into().ok()?;
+	let mut input = build_commitment_transcript(key.try_into().ok()?, nonce, ad, tag, seq, kid);
+	let hash = crypto_generichash::generichash(input.as_bytes(), None, COMMITMENT_SIZE).ok();
+	input.as_mut_bytes().zeroize();
 	hash
 }
 
@@ -974,6 +958,60 @@ mod tests {
 	fn assert_key_material_eq(left: &KeyMaterial, right: &KeyMaterial) {
 		assert_eq!(key_bytes(left.key()), key_bytes(right.key()));
 		assert_eq!(nonce_bytes(left.nonce()), nonce_bytes(right.nonce()));
+	}
+
+	fn receive_slot_snapshot(ratchet: &RatchetManager) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
+		(0..verified_ratchet::RECEIVE_CACHE_CAPACITY as u8)
+			.map(|slot| {
+				ratchet.receive_entry_at(slot).map(|(_, material)| {
+					(
+						key_bytes(material.key()).to_vec(),
+						nonce_bytes(material.nonce()).to_vec(),
+					)
+				})
+			})
+			.collect()
+	}
+
+	fn receive_slot(ratchet: &RatchetManager, sequence: u64) -> Option<u8> {
+		(0..ratchet.receive_cache_len()).find(|slot| {
+			ratchet
+				.receive_entry_at(*slot)
+				.is_some_and(|entry| entry.0 == sequence)
+		})
+	}
+
+	fn logical_snapshot(ratchet: &RatchetManager) -> (u64, u64, Vec<u64>) {
+		(
+			ratchet.send_sequence(),
+			ratchet.receive_sequence(),
+			(0..ratchet.receive_cache_len())
+				.map(|slot| ratchet.receive_entry_at(slot).unwrap().0)
+				.collect(),
+		)
+	}
+
+	fn set_counters(ratchet: &mut RatchetManager, send_sequence: u64, receive_sequence: u64) {
+		let send_chain = ratchet.refined.send_chain().clone();
+		let receive_chain = ratchet.refined.receive_chain().clone();
+		ratchet.refined = RatchetKernel::from_counters(
+			send_sequence,
+			receive_sequence,
+			send_chain,
+			receive_chain,
+		);
+	}
+
+	fn assert_receive_slots_aligned(ratchet: &RatchetManager) {
+		let active_len = ratchet.receive_cache_len();
+		for slot in 0..active_len {
+			let (sequence, material) = ratchet.receive_entry_at(slot).unwrap();
+			assert_eq!(receive_slot(ratchet, sequence), Some(slot));
+			assert_key_material_eq(ratchet.recv_key(sequence).unwrap(), material);
+		}
+		for slot in active_len..verified_ratchet::RECEIVE_CACHE_CAPACITY as u8 {
+			assert!(ratchet.receive_entry_at(slot).is_none());
+		}
 	}
 
 	fn commitment_for_test(
@@ -1014,8 +1052,10 @@ mod tests {
 	fn sign_type_discriminants_round_trip() {
 		assert_eq!(u8::from(SignType::Undefined), 0);
 		assert_eq!(u8::from(SignType::Ed25519), 1);
+		assert_eq!(u8::from(SignType::MlDsa87), 2);
 		assert!(matches!(SignType::from(0), SignType::Undefined));
 		assert!(matches!(SignType::from(1), SignType::Ed25519));
+		assert!(matches!(SignType::from(2), SignType::MlDsa87));
 		assert!(matches!(SignType::from(u8::MAX), SignType::Undefined));
 	}
 
@@ -1024,9 +1064,11 @@ mod tests {
 		assert_eq!(u8::from(KemType::Undefined), 0);
 		assert_eq!(u8::from(KemType::MlKem768), 3);
 		assert_eq!(u8::from(KemType::X25519), 4);
+		assert_eq!(u8::from(KemType::MlKem1024), 5);
 		assert!(matches!(KemType::from(0), KemType::Undefined));
 		assert!(matches!(KemType::from(3), KemType::MlKem768));
 		assert!(matches!(KemType::from(4), KemType::X25519));
+		assert!(matches!(KemType::from(5), KemType::MlKem1024));
 		assert!(matches!(KemType::from(u8::MAX), KemType::Undefined));
 	}
 
@@ -1119,6 +1161,15 @@ mod tests {
 		assert_eq!(exact.clone().as_slice(), exact.as_slice());
 	}
 
+	#[cfg(feature = "server")]
+	#[test]
+	fn secret_array_copy_and_inner_access_preserve_bytes() {
+		let mut secret = KdfSendState::default();
+		secret.copy_from_slice(&[0xA5; KDF_STATE_SIZE]);
+
+		assert_eq!(secret.inner().as_slice(), &[0xA5; KDF_STATE_SIZE]);
+	}
+
 	#[test]
 	fn secret_arrays_with_identical_contents_are_equal() {
 		let left = KdfSendState::from([0x11; KDF_STATE_SIZE]);
@@ -1161,55 +1212,56 @@ mod tests {
 
 	#[test]
 	fn kdf_output_is_split_into_key_state_and_nonce() {
+		assert_eq!(KDF_RATCHET_OUTPUT_LEN, 76);
 		let mut bytes = [0u8; KDF_RATCHET_OUTPUT_LEN];
 		bytes[..AEAD_KEY_LEN].fill(0x11);
 		bytes[AEAD_KEY_LEN..AEAD_KEY_LEN + KDF_STATE_SIZE].fill(0x22);
 		bytes[AEAD_KEY_LEN + KDF_STATE_SIZE..].fill(0x33);
 
-		let output = KdfOutput::<roles::ChainSendKey>::from(bytes);
+		let output = verified_ratchet::split_ratchet_kdf_output(&bytes);
 
-		assert_eq!(key_bytes(&output.aead_key), &[0x11; AEAD_KEY_LEN]);
-		assert_eq!(output.kdf_state.as_slice(), &[0x22; KDF_STATE_SIZE]);
-		assert_eq!(nonce_bytes(&output.aead_nonce), &[0x33; AEAD_NONCE_LEN]);
+		assert_eq!(output.key().as_bytes(), &[0x11; AEAD_KEY_LEN]);
+		assert_eq!(output.next_chain().as_bytes(), &[0x22; KDF_STATE_SIZE]);
+		assert_eq!(output.nonce().as_bytes(), &[0x33; AEAD_NONCE_LEN]);
 	}
 
 	#[test]
 	fn ratchet_matches_hkdf_sha512_known_answer_over_two_steps() {
 		// Reproduced independently by `python scripts/generate_kat_vectors.py` and
 		// `go run scripts/generate_kat_vectors.go` (`[ratchet]`).
-		let mut ratchet = SendChain::from([0x24; KDF_STATE_SIZE]);
+		let ratchet = SendChain::from([0x24; KDF_STATE_SIZE]);
 
-		let first = ratchet.ratchet(SYM_RATCHET_INFO);
+		let first = ratchet_step(&ratchet);
 		assert_eq!(
-			key_bytes(first.key()),
+			key_bytes(first.material.key()),
 			decode_hex::<AEAD_KEY_LEN>(
 				"f57007f1b1c7a62a7d6cdfa5df07538c43d83656906764d607e627401906e42a"
 			)
 		);
 		assert_eq!(
-			nonce_bytes(first.nonce()),
+			nonce_bytes(first.material.nonce()),
 			decode_hex::<AEAD_NONCE_LEN>("43483e81091a393409afbf53")
 		);
 		assert_eq!(
-			ratchet.state.as_slice(),
+			first.chain.state.as_slice(),
 			decode_hex::<KDF_STATE_SIZE>(
 				"5936897d8bd06b7daf70bd0d64b2f607a055fd843ddb779051cb975bbb02b1d3"
 			)
 		);
 
-		let second = ratchet.ratchet(SYM_RATCHET_INFO);
+		let second = ratchet_step(&first.chain);
 		assert_eq!(
-			key_bytes(second.key()),
+			key_bytes(second.material.key()),
 			decode_hex::<AEAD_KEY_LEN>(
 				"f30ee97ccdc39577bb1320268d7fc10d55c53649e879e98a9670d58b9a1539d0"
 			)
 		);
 		assert_eq!(
-			nonce_bytes(second.nonce()),
+			nonce_bytes(second.material.nonce()),
 			decode_hex::<AEAD_NONCE_LEN>("d497a96123dfcbe5700b5cc0")
 		);
 		assert_eq!(
-			ratchet.state.as_slice(),
+			second.chain.state.as_slice(),
 			decode_hex::<KDF_STATE_SIZE>(
 				"d11e3c43fa3bbfec95a41973521d7e1b4aacddfc96591fe40fa30e9581b5e4e2"
 			)
@@ -1495,141 +1547,512 @@ mod tests {
 	#[test]
 	fn opposite_ratchet_roles_derive_matching_keys() {
 		let ikm = [0x42; KDF_STATE_SIZE];
+		let associated_data = [0x43; AD_SIZE];
 		let mut beacon = RatchetManager::default();
 		let mut server = RatchetManager::default();
-		beacon.init_ratchets(&ikm, SYM_RATCHET_INFO, true);
-		server.init_ratchets(&ikm, SYM_RATCHET_INFO, false);
-
-		let beacon_send = beacon.ratchet_send(SYM_RATCHET_INFO).unwrap();
-		let server_recv = server.ratchet_recv(SYM_RATCHET_INFO).unwrap();
-		assert_eq!(beacon_send, server_recv);
-		assert_key_material_eq(
-			beacon.send_key(beacon_send).unwrap(),
-			server.recv_key(server_recv).unwrap(),
+		beacon.init_ratchets(
+			&ikm,
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		server.init_ratchets(
+			&ikm,
+			beaconcrypt_protocol_core::pqxdh::server_ratchet_initialization(),
 		);
 
-		let server_send = server.ratchet_send(SYM_RATCHET_INFO).unwrap();
-		let beacon_recv = beacon.ratchet_recv(SYM_RATCHET_INFO).unwrap();
-		assert_eq!(server_send, beacon_recv);
-		assert_key_material_eq(
-			server.send_key(server_send).unwrap(),
-			beacon.recv_key(beacon_recv).unwrap(),
-		);
+		let beacon_frame =
+			encrypt_message_with_ratchet(b"from beacon", 7, 9, &associated_data, &mut beacon)
+				.unwrap();
+		assert_eq!(beacon_frame.seq, 1);
+		let opened_at_server = decrypt_message_with_ratchet(
+			&beacon_frame.ciphertext,
+			9,
+			&associated_data,
+			&mut server,
+		)
+		.unwrap();
+		assert_eq!(opened_at_server.plaintext, b"from beacon");
+
+		let server_frame =
+			encrypt_message_with_ratchet(b"from server", 9, 7, &associated_data, &mut server)
+				.unwrap();
+		assert_eq!(server_frame.seq, 1);
+		let opened_at_beacon = decrypt_message_with_ratchet(
+			&server_frame.ciphertext,
+			7,
+			&associated_data,
+			&mut beacon,
+		)
+		.unwrap();
+		assert_eq!(opened_at_beacon.plaintext, b"from server");
 	}
 
 	#[test]
-	fn ratchet_generates_distinct_keys_and_deletes_used_keys() {
+	fn high_level_sends_advance_without_staging_keys() {
 		let mut ratchet = RatchetManager::default();
-		ratchet.init_ratchets(&[0x24; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
-
-		let first = ratchet.ratchet_send(SYM_RATCHET_INFO).unwrap();
-		let second = ratchet.ratchet_send(SYM_RATCHET_INFO).unwrap();
-		assert_eq!((first, second), (1, 2));
-		assert_ne!(
-			key_bytes(ratchet.send_key(first).unwrap().key()),
-			key_bytes(ratchet.send_key(second).unwrap().key()),
+		ratchet.init_ratchets(
+			&[0x24; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 		);
 
-		ratchet.delete_send_key(first);
-		assert!(ratchet.send_key(first).is_none());
-		assert!(ratchet.send_key(second).is_some());
+		let initial_state = ratchet.send_state().as_slice().to_vec();
+		let associated_data = [0x25; AD_SIZE];
+		let first =
+			encrypt_message_with_ratchet(b"first", 7, 9, &associated_data, &mut ratchet).unwrap();
+		let first_state = ratchet.send_state().as_slice().to_vec();
+		let second =
+			encrypt_message_with_ratchet(b"second", 7, 9, &associated_data, &mut ratchet).unwrap();
+
+		assert_eq!((first.seq, second.seq), (1, 2));
+		assert_ne!(first.ciphertext, second.ciphertext);
+		assert_ne!(first_state, initial_state);
+		assert_ne!(ratchet.send_state().as_slice(), first_state);
+		assert_eq!(ratchet.send_sequence(), 2);
 	}
 
 	#[test]
 	fn ratchets_reject_counter_exhaustion_without_mutating_state() {
 		let mut send = RatchetManager::default();
-		send.init_ratchets(&[0xA1; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
-		send.send_ctr = u64::MAX - 1;
-		assert_eq!(send.ratchet_send(SYM_RATCHET_INFO), Some(u64::MAX));
+		send.init_ratchets(
+			&[0xA1; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		set_counters(&mut send, u64::MAX - 1, 0);
+		let associated_data = [0xA0; AD_SIZE];
+		let last =
+			encrypt_message_with_ratchet(b"last", 7, 9, &associated_data, &mut send).unwrap();
+		assert_eq!(last.seq, u64::MAX);
+		let logical = logical_snapshot(&send);
 		let send_state = send.send_state().as_slice().to_vec();
-		let send_cache_len = send.send_past.len();
-		assert_eq!(send.ratchet_send(SYM_RATCHET_INFO), None);
-		assert_eq!(send.send_ctr, u64::MAX);
+		assert!(
+			encrypt_message_with_ratchet(b"exhausted", 7, 9, &associated_data, &mut send).is_none()
+		);
+		assert_eq!(logical_snapshot(&send), logical);
+		assert_eq!(send.send_sequence(), u64::MAX);
 		assert_eq!(send.send_state().as_slice(), send_state);
-		assert_eq!(send.send_past.len(), send_cache_len);
-		assert!(send.send_key(0).is_none());
 
 		let mut recv = RatchetManager::default();
-		recv.init_ratchets(&[0xA2; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
-		recv.recv_ctr = u64::MAX;
+		recv.init_ratchets(
+			&[0xA2; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		set_counters(&mut recv, 0, u64::MAX);
 		let recv_state = recv.recv_state().as_slice().to_vec();
-		assert_eq!(recv.ratchet_recv(SYM_RATCHET_INFO), None);
-		assert_eq!(recv.recv_ctr, u64::MAX);
+		assert_eq!(recv.ratchet_recv(), None);
+		assert_eq!(recv.receive_sequence(), u64::MAX);
 		assert_eq!(recv.recv_state().as_slice(), recv_state);
-		assert!(recv.recv_past.is_empty());
+		assert_eq!(recv.receive_cache_len(), 0);
+		assert_receive_slots_aligned(&recv);
 		assert!(recv.recv_key(0).is_none());
+	}
+
+	#[test]
+	fn refined_receive_ratchet_exposes_only_paired_active_entries() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xA4; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		assert_eq!(ratchet.ratchet_recv_until(2), Some(2));
+		assert_receive_slots_aligned(&ratchet);
+		assert!(ratchet.receive_entry_at(2).is_none());
+		assert!(serde_json::to_string(&ratchet).is_ok());
 	}
 
 	#[test]
 	fn receive_ratchet_handles_exact_gap_near_counter_exhaustion() {
 		for distance in [RATCHET_MAX_GAP, RATCHET_MAX_GAP - 1] {
 			let mut ratchet = RatchetManager::default();
-			ratchet.init_ratchets(&[0xA3; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
-			ratchet.recv_ctr = u64::MAX - distance;
-
-			assert_eq!(
-				ratchet.ratchet_recv_until(SYM_RATCHET_INFO, u64::MAX),
-				Some(u64::MAX)
+			ratchet.init_ratchets(
+				&[0xA3; KDF_STATE_SIZE],
+				beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 			);
-			assert_eq!(ratchet.recv_ctr, u64::MAX);
-			assert_eq!(ratchet.recv_past.len(), distance as usize);
+			set_counters(&mut ratchet, 0, u64::MAX - distance);
+
+			assert_eq!(ratchet.ratchet_recv_until(u64::MAX), Some(u64::MAX));
+			assert_eq!(ratchet.receive_sequence(), u64::MAX);
+			assert_eq!(ratchet.receive_cache_len() as usize, distance as usize);
+			assert_receive_slots_aligned(&ratchet);
 			assert!(ratchet.recv_key(u64::MAX - distance + 1).is_some());
 			assert!(ratchet.recv_key(u64::MAX).is_some());
 
+			let logical_at_exhaustion = logical_snapshot(&ratchet);
 			let state_at_exhaustion = ratchet.recv_state().as_slice().to_vec();
-			assert_eq!(ratchet.ratchet_recv(SYM_RATCHET_INFO), None);
+			let slots_at_exhaustion = receive_slot_snapshot(&ratchet);
+			assert_eq!(ratchet.ratchet_recv(), None);
+			assert_eq!(logical_snapshot(&ratchet), logical_at_exhaustion);
 			assert_eq!(ratchet.recv_state().as_slice(), state_at_exhaustion);
-			assert_eq!(ratchet.recv_past.len(), distance as usize);
+			assert_eq!(receive_slot_snapshot(&ratchet), slots_at_exhaustion);
+			assert_receive_slots_aligned(&ratchet);
 		}
 	}
 
 	#[test]
 	fn receive_ratchet_caches_skipped_keys_within_the_gap() {
 		let mut ratchet = RatchetManager::default();
-		ratchet.init_ratchets(&[0x18; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+		ratchet.init_ratchets(
+			&[0x18; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
 
 		assert_eq!(
-			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, RATCHET_MAX_GAP),
+			ratchet.ratchet_recv_until(RATCHET_MAX_GAP),
 			Some(RATCHET_MAX_GAP),
 		);
 		assert!(ratchet.recv_key(1).is_some());
 		assert!(ratchet.recv_key(RATCHET_MAX_GAP).is_some());
-		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 1), Some(1),);
+		assert_eq!(ratchet.ratchet_recv_until(1), Some(1),);
 	}
 
 	#[test]
 	fn receive_ratchet_rejects_a_gap_over_the_limit_without_advancing() {
 		let mut ratchet = RatchetManager::default();
-		ratchet.init_ratchets(&[0x81; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
-
-		assert_eq!(
-			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, RATCHET_MAX_GAP + 1),
-			None,
+		ratchet.init_ratchets(
+			&[0x81; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 		);
+
+		assert_eq!(ratchet.ratchet_recv_until(RATCHET_MAX_GAP + 1), None,);
 		assert!(ratchet.recv_key(RATCHET_MAX_GAP + 1).is_none());
-		assert_eq!(ratchet.ratchet_recv(SYM_RATCHET_INFO), Some(1));
+		assert_eq!(ratchet.ratchet_recv(), Some(1));
 	}
 
 	#[test]
 	fn receive_ratchet_bounds_total_cached_skipped_keys() {
 		let mut ratchet = RatchetManager::default();
-		ratchet.init_ratchets(&[0x91; KDF_STATE_SIZE], SYM_RATCHET_INFO, true);
+		ratchet.init_ratchets(
+			&[0x91; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
 
 		assert_eq!(
-			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, RATCHET_MAX_GAP),
+			ratchet.ratchet_recv_until(RATCHET_MAX_GAP),
 			Some(RATCHET_MAX_GAP),
 		);
 		ratchet.delete_recv_key(RATCHET_MAX_GAP);
-		assert_eq!(ratchet.recv_past.len(), RATCHET_MAX_GAP as usize - 1);
+		assert_eq!(
+			ratchet.receive_cache_len() as usize,
+			RATCHET_MAX_GAP as usize - 1
+		);
 
 		let denied_target = RATCHET_MAX_GAP * 2;
-		assert_eq!(
-			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, denied_target),
-			None,
-		);
-		assert_eq!(ratchet.recv_ctr, RATCHET_MAX_GAP);
+		assert_eq!(ratchet.ratchet_recv_until(denied_target), None,);
+		assert_eq!(ratchet.receive_sequence(), RATCHET_MAX_GAP);
 		assert!(ratchet.recv_key(RATCHET_MAX_GAP + 1).is_none());
-		assert_eq!(ratchet.recv_past.len(), RATCHET_MAX_GAP as usize - 1);
+		assert_eq!(
+			ratchet.receive_cache_len() as usize,
+			RATCHET_MAX_GAP as usize - 1
+		);
+		assert_receive_slots_aligned(&ratchet);
+	}
+
+	#[test]
+	fn refined_kernel_keeps_logical_and_concrete_keys_in_lockstep() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xB1; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+
+		assert_eq!(ratchet.ratchet_recv_until(4), Some(4));
+		assert_receive_slots_aligned(&ratchet);
+		assert_eq!(ratchet.receive_cache_len(), 4);
+		let last_key_before_swap = key_bytes(ratchet.recv_key(4).unwrap().key()).to_vec();
+
+		let before_retry = logical_snapshot(&ratchet);
+		assert_eq!(
+			ratchet.complete_recv_key(2, false),
+			verified_ratchet::ReceiveDisposition::Retained
+		);
+		assert_eq!(logical_snapshot(&ratchet), before_retry);
+		assert!(ratchet.recv_key(2).is_some());
+		assert_receive_slots_aligned(&ratchet);
+
+		assert_eq!(
+			ratchet.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Consumed
+		);
+		assert!(ratchet.recv_key(2).is_none());
+		assert_eq!(
+			key_bytes(ratchet.recv_key(4).unwrap().key()),
+			last_key_before_swap
+		);
+		assert_eq!(ratchet.receive_cache_len(), 3);
+		assert_receive_slots_aligned(&ratchet);
+
+		let after_consumption = logical_snapshot(&ratchet);
+		assert_eq!(
+			ratchet.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Missing
+		);
+		assert_eq!(logical_snapshot(&ratchet), after_consumption);
+		assert_receive_slots_aligned(&ratchet);
+
+		let cloned = ratchet.clone();
+		assert_eq!(logical_snapshot(&cloned), logical_snapshot(&ratchet));
+		assert_receive_slots_aligned(&cloned);
+
+		ratchet.reset();
+		assert_eq!(logical_snapshot(&ratchet), (0, 0, Vec::new()));
+		assert_receive_slots_aligned(&ratchet);
+
+		assert_eq!(ratchet.ratchet_recv_until(2), Some(2));
+		assert_eq!(ratchet.receive_cache_len(), 2);
+		ratchet.init_ratchets(
+			&[0xBB; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		assert_eq!(logical_snapshot(&ratchet), (0, 0, Vec::new()));
+		assert_receive_slots_aligned(&ratchet);
+	}
+
+	#[test]
+	fn receive_allocation_populates_every_verified_slot() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xB3; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+
+		assert_eq!(ratchet.ratchet_recv_until(4), Some(4));
+		assert_eq!(ratchet.receive_cache_len(), 4);
+		assert_receive_slots_aligned(&ratchet);
+		for sequence in 1..=4 {
+			let slot = receive_slot(&ratchet, sequence).unwrap();
+			assert_eq!(ratchet.receive_entry_at(slot).unwrap().0, sequence);
+		}
+	}
+
+	#[test]
+	fn non_last_receive_removal_preserves_key_nonce_and_exact_slot() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xB4; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		assert_eq!(ratchet.ratchet_recv_until(4), Some(4));
+
+		let target_slot = receive_slot(&ratchet, 2).unwrap();
+		let last_slot = receive_slot(&ratchet, 4).unwrap();
+		let last_material = ratchet.recv_key(4).unwrap().clone();
+		assert_ne!(target_slot, last_slot);
+
+		assert_eq!(
+			ratchet.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Consumed
+		);
+		assert_eq!(receive_slot(&ratchet, 2), None);
+		assert_eq!(receive_slot(&ratchet, 4), Some(target_slot));
+		assert_key_material_eq(
+			ratchet.receive_entry_at(target_slot).unwrap().1,
+			&last_material,
+		);
+		assert!(ratchet.receive_entry_at(last_slot).is_none());
+		assert_receive_slots_aligned(&ratchet);
+	}
+
+	#[test]
+	fn last_receive_slot_removal_preserves_the_active_prefix() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xB5; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		assert_eq!(ratchet.ratchet_recv_until(4), Some(4));
+
+		let last_slot = receive_slot(&ratchet, 4).unwrap();
+		let prefix = (1..=3)
+			.map(|sequence| {
+				(
+					sequence,
+					receive_slot(&ratchet, sequence).unwrap(),
+					ratchet.recv_key(sequence).unwrap().clone(),
+				)
+			})
+			.collect::<Vec<_>>();
+
+		assert_eq!(
+			ratchet.complete_recv_key(4, true),
+			verified_ratchet::ReceiveDisposition::Consumed
+		);
+		assert_eq!(receive_slot(&ratchet, 4), None);
+		assert!(ratchet.receive_entry_at(last_slot).is_none());
+		for (sequence, slot, material) in prefix {
+			assert_eq!(receive_slot(&ratchet, sequence), Some(slot));
+			assert_key_material_eq(ratchet.recv_key(sequence).unwrap(), &material);
+		}
+		assert_receive_slots_aligned(&ratchet);
+	}
+
+	#[test]
+	fn failed_receive_retry_is_concretely_and_kdf_neutral() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xB6; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		assert_eq!(ratchet.ratchet_recv_until(4), Some(4));
+
+		let admitted_logical = logical_snapshot(&ratchet);
+		let admitted_chain = ratchet.recv_state().as_slice().to_vec();
+		let admitted_slots = receive_slot_snapshot(&ratchet);
+		for _ in 0..2 {
+			assert_eq!(
+				ratchet.complete_recv_key(4, false),
+				verified_ratchet::ReceiveDisposition::Retained
+			);
+			assert_eq!(logical_snapshot(&ratchet), admitted_logical);
+			assert_eq!(ratchet.recv_state().as_slice(), admitted_chain);
+			assert_eq!(receive_slot_snapshot(&ratchet), admitted_slots);
+			assert_eq!(ratchet.ratchet_recv_until(4), Some(4));
+			assert_eq!(logical_snapshot(&ratchet), admitted_logical);
+			assert_eq!(ratchet.recv_state().as_slice(), admitted_chain);
+			assert_eq!(receive_slot_snapshot(&ratchet), admitted_slots);
+		}
+		assert_receive_slots_aligned(&ratchet);
+	}
+
+	#[test]
+	fn receive_replay_is_concretely_and_kdf_neutral() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xB7; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		assert_eq!(ratchet.ratchet_recv_until(4), Some(4));
+		assert_eq!(
+			ratchet.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Consumed
+		);
+
+		let consumed_logical = logical_snapshot(&ratchet);
+		let consumed_chain = ratchet.recv_state().as_slice().to_vec();
+		let consumed_slots = receive_slot_snapshot(&ratchet);
+		assert_eq!(receive_slot(&ratchet, 2), None);
+		assert!(ratchet.recv_key(2).is_none());
+		assert_eq!(
+			ratchet.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Missing
+		);
+		assert_eq!(logical_snapshot(&ratchet), consumed_logical);
+		assert_eq!(ratchet.recv_state().as_slice(), consumed_chain);
+		assert_eq!(receive_slot_snapshot(&ratchet), consumed_slots);
+		assert_receive_slots_aligned(&ratchet);
+	}
+
+	#[test]
+	fn full_receive_cache_releases_and_refills_the_verified_last_slot() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xB8; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		let capacity = verified_ratchet::RECEIVE_CACHE_CAPACITY as u64;
+		assert_eq!(ratchet.ratchet_recv_until(capacity), Some(capacity));
+		assert_receive_slots_aligned(&ratchet);
+
+		let full_logical = logical_snapshot(&ratchet);
+		let full_chain = ratchet.recv_state().as_slice().to_vec();
+		let full_slots = receive_slot_snapshot(&ratchet);
+		assert_eq!(ratchet.ratchet_recv_until(capacity + 1), None);
+		assert_eq!(logical_snapshot(&ratchet), full_logical);
+		assert_eq!(ratchet.recv_state().as_slice(), full_chain);
+		assert_eq!(receive_slot_snapshot(&ratchet), full_slots);
+
+		let target_slot = receive_slot(&ratchet, 2).unwrap();
+		let old_last_slot = receive_slot(&ratchet, capacity).unwrap();
+		let old_last_material = ratchet.recv_key(capacity).unwrap().clone();
+		assert_ne!(target_slot, old_last_slot);
+		assert_eq!(
+			ratchet.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Consumed
+		);
+		assert_eq!(ratchet.receive_cache_len(), capacity as u8 - 1);
+		assert_eq!(receive_slot(&ratchet, capacity), Some(target_slot));
+		assert_key_material_eq(ratchet.recv_key(capacity).unwrap(), &old_last_material);
+		assert!(ratchet.receive_entry_at(old_last_slot).is_none());
+
+		let next_sequence = capacity + 1;
+		assert_eq!(
+			ratchet.ratchet_recv_until(next_sequence),
+			Some(next_sequence)
+		);
+		assert_eq!(receive_slot(&ratchet, next_sequence), Some(old_last_slot));
+		assert!(ratchet.receive_entry_at(old_last_slot).is_some());
+		assert_receive_slots_aligned(&ratchet);
+	}
+
+	#[test]
+	fn cloned_receive_cache_remains_independent_after_non_last_removal() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xB9; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		assert_eq!(ratchet.ratchet_recv_until(4), Some(4));
+
+		let cloned = ratchet.clone();
+		let cloned_logical = logical_snapshot(&cloned);
+		let cloned_chain = cloned.recv_state().as_slice().to_vec();
+		let cloned_slots = receive_slot_snapshot(&cloned);
+		assert_eq!(
+			ratchet.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Consumed
+		);
+
+		assert_eq!(logical_snapshot(&cloned), cloned_logical);
+		assert_eq!(cloned.recv_state().as_slice(), cloned_chain);
+		assert_eq!(receive_slot_snapshot(&cloned), cloned_slots);
+		assert_eq!(receive_slot(&cloned, 2), Some(1));
+		assert_eq!(receive_slot(&cloned, 4), Some(3));
+		assert_eq!(receive_slot(&ratchet, 2), None);
+		assert_eq!(receive_slot(&ratchet, 4), Some(1));
+		assert_receive_slots_aligned(&cloned);
+		assert_receive_slots_aligned(&ratchet);
+	}
+
+	#[test]
+	fn production_send_advances_the_refined_kernel_once() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xB2; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+
+		let encrypted =
+			encrypt_message_with_ratchet(b"one use", 7, 9, &[0xB3; AD_SIZE], &mut ratchet).unwrap();
+		assert_eq!(encrypted.seq, 1);
+		assert_eq!(ratchet.send_sequence(), 1);
+	}
+
+	#[test]
+	fn refined_receive_state_serializes_only_paired_entries() {
+		let mut ratchet = RatchetManager::default();
+		ratchet.init_ratchets(
+			&[0xBA; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		assert_eq!(ratchet.ratchet_recv_until(2), Some(2));
+		assert_receive_slots_aligned(&ratchet);
+
+		let serialized = serde_json::to_value(&ratchet).unwrap();
+		let recv_past = serialized["recv_past"].as_object().unwrap();
+		assert_eq!(recv_past.len(), 2);
+		assert!(recv_past.contains_key("1"));
+		assert!(recv_past.contains_key("2"));
+	}
+
+	#[test]
+	fn encrypted_as_ref_exposes_the_serialized_ciphertext() {
+		let encrypted = Encrypted {
+			ciphertext: vec![0x11, 0x22, 0x33],
+			key_id: 7,
+			seq: 9,
+		};
+
+		assert_eq!(
+			<Encrypted as AsRef<[u8]>>::as_ref(&encrypted),
+			&[0x11, 0x22, 0x33]
+		);
 	}
 
 	#[test]
@@ -1640,11 +2063,8 @@ mod tests {
 		let mut principal =
 			RemotePrincipal::new(TestPublicKey([1, 2, 3, 4]), RatchetManager::default());
 		assert_eq!(principal.pk().0, [1, 2, 3, 4]);
-		assert!(principal.ratchet().send_key(1).is_none());
-		assert_eq!(
-			principal.ratchet_mut().ratchet_send(SYM_RATCHET_INFO),
-			Some(1),
-		);
-		assert!(principal.ratchet().send_key(1).is_some());
+		assert!(principal.ratchet().recv_key(1).is_none());
+		assert_eq!(principal.ratchet_mut().ratchet_recv(), Some(1),);
+		assert!(principal.ratchet().recv_key(1).is_some());
 	}
 }

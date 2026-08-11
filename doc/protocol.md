@@ -9,7 +9,13 @@ It is assumed that the server's identity public key is compiled with beacon.
 ## Motivation for dropping certain properties
 The signal protocol, which is to say `PQXDH` + `triple ratchet`, is proven to provide two important properties: Forward Security (`FS`), and Post-Compromise Security (`PCS`). The former means that an attacker cannot learn how to decrypt previous messages by compromising a participant in beaconcrypt at a given point in time. The latter means that an attacker cannot learn how to decrypt future messages by compromising a participant in beaconcrypt at a given point in time. In the context of a C2 protocol, `PCS` seems unnecessary. Indeed, if an attacker can access the current cryptographic state of the application, one of two things has happened. First, they have compromised our beacon. At this point, the attacker can either run whatever they want themselves, or through our beacon and we have failed at preventing the attacker from injecting arbitrary commands. However, the attacker cannot read past messages because of `FS`, so the confidentiality of data that was previously exfiltrated is preserved provided they cannot just access it themselves. In the second case, the attacker has compromised the C2 server. This is game over with any C2 server I'm aware of, as at this point the attacker has access to all the data that was exfiltrated and can task any beacon the server knows about. It is this analysis that leads to `PCS` being dropped from the requirements for this protocol, while `FS` remains desirable. Another point is that `triple ratchet`, the PQ Continuous Key Agreement (`CKA`) mechanism used by signal is quite complicated and requires a lot of state management, which just smells like logic bugs to me.
 
-Additionally, the signal protocol also provides something called `message commitment`. Authenticated encryption with associated data (AEAD) has the property that two plaintexts encrypted under two different keys can generate the same ciphertext and authentication tag. This may allow an attacker to exploit a confused deputy to get one principal to obtain a different message than other participants. This attack is often called `invisible salamanders`. Beaconcrypt provides strong commitment, that is to say it commits to the key, nonce, associated data, sender id, encryption key sequence number and message through the use of [Chan and Rogaway's `CTX` scheme](https://eprint.iacr.org/2022/1260). The `CTX` scheme is slightly modified, in that beaconcrypt still transmits the original AEAD tag alonside the `CTX` tag. This is done to remain compatible with the public libsodium interface.
+Additionally, the signal protocol also provides something called `message commitment`.
+Authenticated encryption with associated data (AEAD) has the property that two plaintexts encrypted under two different keys can generate the same ciphertext and authentication tag.
+This may allow an attacker to exploit a confused deputy to get one principal to obtain a different message than other participants.
+This attack is often called `invisible salamanders`.
+Conditional on BLAKE2b-512 collision resistance and exact production use of the fixed-width transcript, beaconcrypt's complete protected payload provides strong commitment to the key, nonce, associated data, sender ID, encryption-key sequence number, and accepted plaintext through a modification of [Chan and Rogaway's `CTX` scheme](https://eprint.iacr.org/2022/1260).
+F* machine-checks that two distinct accepted explanations of one fixed `C || T || U` payload produce an explicit collision for an arbitrary pure hash function, while a supplementary ProVerif differential control permits a multi-opening base AEAD and makes the same double-open query unreachable with CTX and reachable without CTX.
+Beaconcrypt still transmits the original AEAD tag alongside the outer tag so that it can use the public libsodium interface; the [commitment proof and computational lifting](ctx-commitment.md) explain why retaining that tag does not weaken binding and state the claim's limits.
 
 The deterministic ChaCha20-Poly1305 multi-opening fixture used to test this property, including its Poly1305 derivation and independent verification procedure, is documented in [multi-opening-fixture.md](multi-opening-fixture.md).
 
@@ -37,7 +43,10 @@ The beacon receives the initial message and uses the `phase2` bundle to perform 
 Every time something is encrypted, it is wrapped in a Cap’n Proto message called a `CryptoFrame`. This embeds minor metadata that allows managing out-of order messages. Every `CryptoFrame` is encrypted under a distinct key, obtained from the principal's `send` KDF chain, which is then ratcheted forward. Nonces are also obtained from the KDF chain, because keys are only used once there is no possible reuse. Keys are deleted once they have been used, this is always immediate for keys on the `send` chains. Keys on the `receive` chains might need to be kept for longer in cases where multiple messages are recieved out of order, in which case the implementation needs to ratchet forward to the required sequence nmuber. All the intermediate keys need to be saved by the implementation, such that they can be used to decrypt the other messages when they are processed. This skipping must be constrained to some gap between the current known counter and the target, to avoid potential unbounded memory consumption. The encryption uses an AEAD scheme, so the plaintext is authenticated. The `CryptoFrame` metadata is bound to the message by the commitment described below: `seq` prevents replay and supports out-of-order delivery, while `keyId` identifies the sender and selects the corresponding receive ratchet.
 
 ## Commitment
-Beaconcrypt uses a commitment scheme based on [`CTX` by Chan and Rogaway](https://eprint.iacr.org/2022/1260). This intends to both provide protection against key substitution attacks and protect metadata. However, because of this additional metadata being included in the `CTX` transcript, it might be susceptible to canonicalization attacks. Therefore, it is critical that all elements included in the `CTX` transcript be of fixed size, such that no confusion is possible. For the reference `beaconcrypt` implementation these are:
+Beaconcrypt uses a commitment scheme based on [`CTX` by Chan and Rogaway](https://eprint.iacr.org/2022/1260).
+It is intended to prevent key substitution and bind metadata against substitution; it does not hide the sequence or sender ID that remain visible on the wire.
+Because this additional metadata is included in the `CTX` transcript, the encoding must prevent canonicalization ambiguity.
+It is therefore critical that every element in the transcript have a fixed size for the reference `beaconcrypt` implementation:
 ```
 -----------------------------------------------------
 | ChaCha20-Poly1305 IETF Key (K) - 32 bytes         |
@@ -60,6 +69,12 @@ H(K, N, A, T, S, I)
 ```
 
 A canonicalization scheme would have to be used to encode the various elements being included within the `CTX` transcript if the fixed-size assumption were to become false.
+
+The commitment claim applies to the complete protected payload `CT || T || T*`, not to `T*` in isolation.
+The F* theorem `ctx_distinct_openings_imply_hash_collision` fixes the same `CT`, `T`, and `T*` for both openings and machine-checks that any semantic difference in key, nonce, associated data, sequence, sender ID, or accepted plaintext produces an explicit collision witness for the supplied pure hash function.
+The conventional computational lifting therefore bounds misattribution advantage by BLAKE2b-512 collision advantage, but its probability and runtime inequality is not mechanized.
+The ProVerif negative control independently demonstrates the ideal-hash CTX benefit with a deliberately multi-opening base AEAD; it is supplementary symbolic evidence rather than a proof of BLAKE2b.
+The exact game, proof connection, advantage bound, and assumptions are given in [ctx-commitment.md](ctx-commitment.md), and the [concrete negative-control fixture](multi-opening-fixture.md) supplies one real `CT || T` value with two distinct valid base-AEAD openings.
 
 ## Ratchet initialization
 Beaconcrypt uses a symmetric ratchet protocol for CKA. This provides forward, but not post-compromise, secrecy. There are two ratchets, one for encrypting messages to be sent (`send`), and one for decrypting received messages (`recv`). Both ratchets are initialized from a single 256 bit secret value derived from the `PQXDH` protocol run. Because of the `send`/`recv` division, the server and beacon have a slightly different initialization routine:
@@ -113,11 +128,15 @@ This is the most basic framing for an encrypted message within beaconcrypt. It i
 - Delete the current `send` key
 
 To read a `CryptoFrame`, the reader must:
+- Reject an empty, unparsable, or too-short frame before changing ratchet state
 - Use `keyId` to select the sender's identity, associated data, and receive ratchet
-- Check that the difference between `seq` and the current sequence number of the `recv` chain is acceptable
-  -  The reference implementation tolerates ratcheting up to 50 keys forward, this number was pulled out of a hat
-  - Abort processing if the difference is too large
-- Ratchet their `recv` keychain forward to `seq`
+- Check that a future `seq` is admissible under both receive limits
+  - The reference implementation permits a forward distance of at most 50
+  - The number of already cached receive keys plus that forward distance must also be at most 50
+  - Abort processing without changing state if either limit is exceeded
+- Ratchet their `recv` keychain forward to `seq`, caching every skipped key and the target key
+  - This admission and cache update occurs before commitment or AEAD authentication
+  - If either authentication step later fails, retain the advanced chain and every cached key, including the target key; do not roll back to the pre-frame state
 - Extract `CT`, `T` and `T*` from the `cipherText` field
 - Compute the commitment `T*'` using `Hash(Key, Nonce, Associated Data, T, seq, keyId)`
   - The hash function is unkeyed Blake2b with a 512bit output length
@@ -128,16 +147,22 @@ To read a `CryptoFrame`, the reader must:
 - Delete the `seq` key on their `recv` keychain if decryption was successful
 
 ## InitKex
-This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../src/schema/phase1.capnp). It must only be run once per beacon instance. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. When referring to encoded public keys, it is meant that the caller will prepend a byte indicating the type of the key before the public key buffer. The same is true when speaking of encoded KEM keys. The beacon builds this message as follows:
+This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../src/schema/phase1.capnp). It must only be run once per beacon instance. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. Ed25519 and ML-KEM-768 public keys are encoded as a one-byte type marker followed by the public-key buffer. The two X25519 fields additionally authenticate their semantic role and are encoded as `[type: u8, role: u8, key]`: `preKey` is `[0x04, 0x80, 32-byte key]` and `oneTimeKey` is `[0x04, 0x81, 32-byte key]`. Type markers occupy the low half of the byte domain and role markers the high half, so the domains are disjoint. The beacon builds this message as follows:
 - Set `identityKey` to the beacon's Ed25519 encoded identity public key
-- Set `preKey` to the beacon's X25519 encoded prekey public key signed under the beacon's identity key
-- Set `oneTimeKey` to the beacon's X25519 encoded onetime public key signed under the beacon's identity key
+- Set `preKey` to the complete type-and-prekey-role encoded X25519 public key signed under the beacon's identity key
+- Set `oneTimeKey` to the complete type-and-one-time-role encoded X25519 public key signed under the beacon's identity key
 - Set `pqKey` to the beacon's ML-KEM-768 encoded ML-KEM public key signed under the beacon's identity key
 
 Beaconcrypt assumes the use of the libsodium `sign` API for all signatures. In this scheme, the signature is prepended to the buffer, so there are no dedicated signature fields.
 
 The server must use this message as follows:
 - Verify that all keys except `identityKey` are signed under `identityKey`
+- Reject an X25519 field unless both its type marker and its field-specific role
+  marker match; exchanging or duplicating the two valid signed fields is invalid
+- Construct the 64-byte registration identifier as the decoded beacon identity
+  public key followed by the decoded signed one-time X25519 public key
+- Reject the message if that exact identifier is already in the server's
+  consumed-registration set
 - Generate its ephemeral X25519 keypair
 - Encapsulate the PQ shared secret (`SS`) using `pqKey`
 - Convert the beacon's identity public key and the server's identity secret key to X25519 format using libsodium's `ed25519_pk_to_curve25519` and `ed25519_sk_to_curve25519` respectively (thereafter they will use the `_kex` suffix)
@@ -149,13 +174,17 @@ The server must use this message as follows:
 - Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
   - `Padding` is 32 `0xFF` bytes
 - Delete all Diffie Hellman output
+- Add the registration identifier to the consumed set before returning the
+  pending response material; this is permanent even if response construction
+  later fails
 - Return the KEM ciphertext, derived secret, ephemeral public key and beacon public key
 
 ## KexResponse
 This message enables the beacon to obtain the elements it needs to derive the shared secret. It is defined in [phase2.capnp](../src/schema/phase2.capnp) It is intrinsically linked to the corresponding `InitKex` which intiated the protocol run. It is expected that the server will create this message immediately after parsing a valid `InitKex`. It also potentially carries the first of the server's messages to the beacon. The server must contruct it as follows:
-- Create a new key ID to assign to the beacon
-- Register a new known cryptographic identity using the beacon's public key and newly created key ID
-  - At this point, the beacon is registered from the point of view of beaconcrypt
+- Create a new key ID to assign to the beacon using checked increment; abort if
+  the counter is exhausted or the exact next ID is already occupied
+- Stage a new known cryptographic identity using the beacon's public key and
+  newly created key ID without publishing it yet
 - Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
 - Delete the derived secret
 - Set the `keyId` field to the newly generate beacon's key ID
@@ -163,8 +192,15 @@ This message enables the beacon to obtain the elements it needs to derive the sh
 - Set the `identityKey` to the server's Ed25519 public key
 - Set the `kemCipherText` to the KEM ciphertext from the corresponding `InitKex`
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
-- Encrypt the first message if there is one, otherwise encrypt a single `0xFF` byte using a `CryptoFrame` and set `appCipherText` to its value
+- Encode the assigned beacon key ID as an eight-byte little-endian value and
+  prepend it to the first message, or to a single `0xFF` byte when no message
+  was supplied
+- Encrypt that prefixed payload using a `CryptoFrame` and set `appCipherText` to
+  its value
+- Set the initial `CryptoFrame.keyId` sender field to the server binding's numeric identity-key ID
 - Delete the ephemeral key pair
+- After encryption and serialization succeed, atomically commit the key-ID
+  counter, staged peer identity, and ratchets
 - Return the serialized registration response and key ID to the caller
 
 Upon reception, the beacon must process this message as follows:
@@ -182,12 +218,25 @@ Upon reception, the beacon must process this message as follows:
 - Delete its one-time keypair.
 - Delete its PQ keypair
 - Delete all Diffie Hellman output
-- Save its own key ID using the `keyId` field
+- Treat `keyId` as the proposed assigned identity, without publishing it yet
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
 - Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
 - Delete the derived secret
-- Decrypt the `appCipherText` as a `CryproFrame`, using its `recv` keychain
+- Decrypt the `appCipherText` as a `CryptoFrame`, using its `recv` keychain
+- Require the successfully opened initial `CryptoFrame.keyId` sender field to equal the numeric server identity-key ID pinned with the compiled-in public key
+- Split the authenticated plaintext into its eight-byte prefix and remaining
+  application plaintext, and require the prefix to equal the little-endian
+  encoding of `keyId`
+- Commit the assigned identity and staged ratchets only after that check passes
+- Strip the prefix before returning the application plaintext
 - If decryption is successful, return the plaintext to the caller oherwise abort the protocol and delete the previously derived cryptographic state
 
 # Protocol details
 Once the session has been created, meaning a successful PQXDH run, the associated data (`AD`) is created. This is made up of the concatenation of the public keys of both parties, the key exchange protocol string and the ratchet protocol string. This associated data is used in every encryption for a given `(Server, Beacon)` tuple. It is then expected that beacons will read messages from the server from their transport protocol and hand them off to beaconcrypt immediately for decryption and deserialization. All encrypted buffers (`CryptoFrame`s) carry a sequence number `seq` and sender identity `keyId`. The commitment binds both fields to the ciphertext, so modifying either field causes decryption to fail.
+
+The `KexResponse.keyId` field has different semantics from the inner
+`CryptoFrame.keyId`: it assigns the receiving beacon's identity, whereas the
+inner field identifies the sending server. Its authenticated little-endian
+prefix therefore exists only inside the initial registration plaintext. It
+does not change the 153-byte long-lived associated data or the CTX commitment
+layout used for subsequent records.

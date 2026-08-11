@@ -119,6 +119,8 @@ def test_seeded_export_restore_continues_sessions_and_next_kid():
     assert encoded["identity_key_kid"] == 0
     assert encoded["server_kid"] == beacon_kid
     assert str(beacon_kid) in encoded["known_ids"]
+    assert len(encoded["consumed_registrations"]) == 1
+    assert len(encoded["consumed_registrations"][0]) == 64
 
     restored = BeaconCryptServer.from_state(state)
     assert restored.id_pk() == server_pk
@@ -168,6 +170,7 @@ def test_empty_state_restore_preserves_kid_floor():
     assert encoded["identity_key_kid"] == 7
     assert encoded["server_kid"] == 7
     assert encoded["known_ids"] == {}
+    assert encoded["consumed_registrations"] == []
 
     restored = BeaconCryptServer.from_state(state)
     assert restored.id_pk() == server_pk
@@ -214,12 +217,26 @@ def test_restore_rejects_tampered_exported_state():
     invalid_identity_kid["identity_key_kid"] = encoded["server_kid"] + 1
     regressed_server_kid = copy.deepcopy(encoded)
     regressed_server_kid["server_kid"] = 0
+    short_registration_id = copy.deepcopy(encoded)
+    short_registration_id["consumed_registrations"][0].pop()
+    duplicate_registration_id = copy.deepcopy(encoded)
+    duplicate_registration_id["consumed_registrations"].append(
+        duplicate_registration_id["consumed_registrations"][0]
+    )
+    missing_registration_history = copy.deepcopy(encoded)
+    del missing_registration_history["consumed_registrations"]
+    incomplete_registration_history = copy.deepcopy(encoded)
+    incomplete_registration_history["consumed_registrations"] = []
     identity_key = json.dumps(encoded["identity_key"], separators=(",", ":"))
     principal = json.dumps(encoded["known_ids"]["1"], separators=(",", ":"))
+    consumed_registrations = json.dumps(
+        encoded["consumed_registrations"], separators=(",", ":")
+    )
     duplicate_kid = (
         f'{{"identity_key":{identity_key},"identity_key_kid":0,'
         f'"server_kid":1,"known_ids":'
-        f'{{"1":{principal},"1":{principal}}}}}'
+        f'{{"1":{principal},"1":{principal}}},'
+        f'"consumed_registrations":{consumed_registrations}}}'
     )
 
     for malformed in (
@@ -231,6 +248,10 @@ def test_restore_rejects_tampered_exported_state():
         json.dumps(wrong_identity_role),
         json.dumps(invalid_identity_kid),
         json.dumps(regressed_server_kid),
+        json.dumps(short_registration_id),
+        json.dumps(duplicate_registration_id),
+        json.dumps(missing_registration_history),
+        json.dumps(incomplete_registration_history),
         duplicate_kid,
     ):
         with pytest.raises(ValueError, match="invalid server state"):
