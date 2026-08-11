@@ -6,6 +6,8 @@
 **Base:** `proof`
 **Purpose of this guide:** finish PR #2 so it implements the intended mechanized receive-slot refinement, without undoing the useful fixed-array work already present or changing unrelated protocol behavior.
 
+> Historical scope notice: this guide records the constraints of the receive-slot-only PR #2 work. Its requirements to preserve send-key staging and the former six-field `RatchetManager` schema were superseded by the later send transaction refactor, which removed the low-level send-staging API and `send_past`; current persistence uses the five fields documented in [persistence.md](persistence.md) and [formal-verification-stage-3.md](formal-verification-stage-3.md).
+
 ---
 
 ## 1. Goal

@@ -260,7 +260,7 @@ The following properties are proved:
 
 The last result is pointwise: it does not prove that a production whole-map lookup selects one unique entry or updates the complete map correctly.
 
-These facts prove the control algorithm and its physical logical-array decisions, not the secret-byte refinement or global ownership. In Rust, `RatchetState` and `SendKey` are copyable values. The “one-use” theorem threads the returned unavailable capability into the second call; it does not stop a caller from retaining a copy of the original available capability or forking old ratchet state. Concrete one-use and replay resistance therefore require one authoritative, non-rollback state and the adapter invariant
+These facts prove the control algorithm and its physical logical-array decisions, not the secret-byte refinement or global ownership. In Rust, `RatchetState` and `SendKey` are copyable values. The “one-use” theorem threads the unavailable capability returned by `finish_send` into the second call; it does not stop a caller from retaining a copy of the original available capability or forking pre-send ratchet state. Production does not store either a pending capability or its concrete send key in `RatchetManager`; a private stack-local transaction keeps the pair together, does not persist the capability or reuse a copy, leaves no reusable copy after the call, invokes `finish_send` after one encryption attempt on every recoverable path, and then drops the local values. That control flow and the use of one authoritative, non-rollback state remain adapter obligations rather than consequences of F* affinity. Receive replay resistance additionally relies on the adapter invariant
 
 ```text
 for n = control.receive_cache_len():
@@ -268,7 +268,7 @@ for n = control.receive_cache_len():
     slot >= n => recv_slots[slot] is empty
 ```
 
-The core-returned append, lookup, removal, and restoration slots eliminate independent adapter decisions about where a logical sequence belongs. The proof still cannot inspect `KeyMaterial`, so production must perform exactly one correct HKDF step after each successful logical advancement, store its output in the returned slot, use the current lookup result for the intended sequence, apply the exact returned swap/take before publishing the new logical state, and place persisted material in the returned restoration slot. Serialization and deserialization, authentication-result provenance, crash atomicity, physical erasure, and the compiled array operations remain outside F*.
+The core-returned append, lookup, removal, and restoration slots eliminate independent adapter decisions about where a logical receive sequence belongs. The proof still cannot inspect `KeyMaterial`, so production must derive the stack-local concrete send material for the sequence named by `advance_send`, use it only for that attempt, and pair its disposal with `finish_send`. On receive, production must perform exactly one correct HKDF step after each successful logical advancement, store its output in the returned slot, use the current lookup result for the intended sequence, apply the exact returned swap/take before publishing the new logical state, and place persisted material in the returned restoration slot. Serialization and deserialization, authentication-result provenance, crash atomicity, physical erasure, and the compiled adapter operations remain outside F*.
 
 The proof also accepts the `authenticated` flag as an input. The adapter must derive it from a sound commitment and AEAD check. `Retained` must cause no concrete slot mutation, while `Consumed` must drop only the concrete target identified by the verified plan.
 
@@ -485,7 +485,7 @@ sources gives these important qualifications:
 | “The commitment input is exactly `(key, nonce, associated data, AEAD tag, sequence, sender ID)`.” | Production delegates its hash input to the extracted fixed-size builder, and F* proves its exact six ranges plus both little-endian encodings ([Rust helper](../crates/protocol-core/src/commitment.rs), [lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst)). The caller's field provenance, BLAKE2b call, hax/compiler correctness, and machine code remain outside the theorem. |
 | “The modified CTX construction provides strong commitment.” | F* proves the pointwise collision witness for arbitrary pure hash and AEAD-open functions, including unequal-key and unequal-context base-AEAD openings; the conventional computational lifting bounds misattribution advantage by BLAKE2b-512 collision advantage. ProVerif separately confirms the intended ideal-hash CTX/no-CTX differential. The probability/runtime lifting is not mechanized, and BLAKE2b, libsodium, adapter provenance, compiler correspondence, and confidentiality/authenticity preservation remain assumptions or separate obligations. |
 | “Peer, counter, and ratchet publication commit atomically.” | F* proves the pure candidate's returned state and peer shape. Actual atomic mutation of the counter, peer map, ratchet, and persistent storage is an adapter obligation covered by implementation structure and regression tests, not the pure theorem. |
-| “Send keys are one use” and “replay is rejected.” | F* proves sequential logical-capability consumption. Global one-use and concrete replay rejection additionally require one authoritative state, no copying or rollback, and exact logical-to-concrete key refinement. |
+| “Send keys are one use” and “replay is rejected.” | F* proves sequential logical-capability consumption. Global one-use and concrete replay rejection additionally require one authoritative state, no retained or reused capability copy, no rollback, and exact logical-to-concrete key refinement. |
 | “Counters start at one.” | F* proves that advancing any non-exhausted counter returns old plus one; a counter initialized to zero therefore first returns one. Selecting and preserving that initial production state is an adapter/initialization fact. |
 | “Every accepted, bounded input is panic-free.” | Strict F* checking covers safety obligations generated for the selected pure core functions. It is not whole-application panic freedom. |
 | “Initial and subsequent messages are secret; replay, unknown-key-share, cross-peer, and concurrent-session attacks are prevented.” | ProVerif proves five named messages and exact correspondences in replicated instances of one fixed five-record schedule. The event arguments support those separation interpretations within that schedule, not an arbitrary unbounded record API theorem. |
@@ -535,13 +535,9 @@ The corpus also does not prove:
 - correctness and uniqueness of general production peer-map selection, or the whole-map update from F*'s theorem about one selected map entry; registration finish now checks that the selected concrete entry equals the binding retained by verified state, but the concrete map operation remains outside F*;
 - concrete HKDF call labels and buffer slicing, AEAD result provenance, association of each returned logical slot with the correct concrete key and nonce bytes, exact execution of the returned concrete swap/take, or atomic publication of the logical and concrete results;
 - byte-level equivalence between ProVerif's admitted symbolic frame and production Cap'n Proto parsing, sender lookup/checks, overhead-length validation, commitment slicing, or malformed-input rejection;
-- behavior through direct low-level ratchet, key, peer-map, compatibility, or
-  mutation helpers outside the documented high-level API trace;
-- security after cloning a pending capability, forking provider state, or
-  rolling counters and replay history backward; or
-- physical deletion of old keys. Exported server persistence contains live
-  ratchet state and cached keys and is explicitly documented as breaking
-  server-side forward secrecy ([persistence overview](persistence.md#overview)).
+- behavior through direct low-level receive-ratchet, receive-key, peer-map, compatibility, or mutation helpers outside the documented high-level API trace;
+- security after retaining or reusing a copy of an available send capability, forking pre-send provider state, or rolling counters and replay history backward; or
+- physical deletion of old keys. Exported server persistence contains live ratchet state and cached receive keys and is explicitly documented as breaking server-side forward secrecy ([persistence overview](persistence.md#overview)).
 
 The persistent consumed-registration history is also unbounded. A party able
 to submit many cryptographically valid registrations can grow memory and stored
@@ -621,9 +617,7 @@ The production connection assumes:
   the exact returned associated data, and applies the complementary ratchet
   offsets correctly;
 - each admitted logical ratchet step causes exactly one concrete KDF step, its output is stored in the append slot returned by `advance_receive`, every existing sequence is accessed through the current slot returned by `lookup_receive_key`, and every active logical slot contains exactly its corresponding concrete key and nonce while every inactive slot is empty;
-- after one send key is allocated, the adapter finishes the logical capability
-  and removes the concrete key after that one encryption attempt even if AEAD
-  or serialization fails;
+- after one send key is allocated, the adapter keeps the logical capability and concrete key only in one private stack-local transaction, passes the capability to `finish_send`, and drops the concrete key after that one encryption attempt even if AEAD or serialization fails;
 - authentication success/failure is truthfully passed to `finish_receive_with_removal`, retained or missing outcomes cause no concrete slot mutation, and a consumed outcome applies exactly the returned target/old-last swap/take before publishing the returned logical state;
 - authenticated sender/target lookup selects one unique peer-map entry and
   preserves all non-selected peers;
@@ -636,9 +630,8 @@ The production connection assumes:
   does not reuse the bundle after advancing or aborting;
 - production follows the documented high-level registration, encryption, and
   decryption paths from fresh or successfully validated state;
-- pending capabilities and authoritative state are not cloned into independently
-  usable forks;
-- restoration validates bounds and uniqueness, sorts imported receive sequence/material pairs, rejects malformed or oversized state, places each material value in the slot returned by `restore_receive_key_with_slot`, and serialization rejects both missing active material and populated inactive slots; and
+- pre-send ratchet state is not cloned into independently usable forks, and the stack-local operation does not persist or reuse an available send-capability copy and leaves no reusable copy after the call;
+- restoration requires the exact five-field ratchet schema, rejects legacy objects containing `send_past`, validates bounds and uniqueness, sorts imported receive sequence/material pairs, rejects malformed or oversized state, places each material value in the slot returned by `restore_receive_key_with_slot`, and serialization rejects both missing active material and populated inactive slots; and
 - server state and replay history have one owner and are not rolled back.
 
 Compile-time size assertions, private Rust fields, consuming APIs, and

@@ -216,14 +216,7 @@ The adapter performs the remaining work on local values:
 4. serialize the complete `KexResponse`;
 5. call `server_commit` and only then update the key counter and peer map.
 
-Failure before the last step drops the staged peer and candidate. The candidate
-owns only proposed state, so the live state does not need a rollback mutation.
-The core's explicit abort transition returns the recorded previous state and is
-covered directly by core tests. The live counter, peer-map entries, and
-serialized server state remain unchanged, so the next successful registration
-receives the still-unconsumed ID. The staged encryption helper uses the same
-Stage 3 logical/concrete send-key completion path as normal application
-encryption, including consumption on a post-allocation failure.
+Failure before the last step drops the staged peer and candidate. The candidate owns only proposed state, so the live state does not need a rollback mutation. The core's explicit abort transition returns the recorded previous state and is covered directly by core tests. The live counter, peer-map entries, and serialized server state remain unchanged, so the next successful registration receives the still-unconsumed ID. The staged encryption helper uses the same Stage 3 stack-local logical/concrete send transaction as normal application encryption, including `finish_send` and concrete-key disposal on a recoverable post-allocation failure.
 
 Capacity reservation occurs before any live mutation. Once the response has
 serialized, the remaining core transition and assignments have no recoverable

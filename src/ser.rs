@@ -145,40 +145,6 @@ where
 	}
 }
 
-struct DirectionalKeyMapRef<'a, KeyRole, NonceRole> {
-	keys: &'a HashMap<u64, KeyMaterial>,
-	_roles: PhantomData<(KeyRole, NonceRole)>,
-}
-
-impl<'a, KeyRole, NonceRole> DirectionalKeyMapRef<'a, KeyRole, NonceRole> {
-	fn new(keys: &'a HashMap<u64, KeyMaterial>) -> Self {
-		Self {
-			keys,
-			_roles: PhantomData,
-		}
-	}
-}
-
-impl<KeyRole, NonceRole> Serialize for DirectionalKeyMapRef<'_, KeyRole, NonceRole>
-where
-	KeyRole: roles::Identified,
-	NonceRole: roles::Identified,
-{
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: Serializer,
-	{
-		let mut map = serializer.serialize_map(Some(self.keys.len()))?;
-		for (sequence, material) in self.keys {
-			map.serialize_entry(
-				sequence,
-				&DirectionalKeyMaterialRef::<KeyRole, NonceRole>::new(material),
-			)?;
-		}
-		map.end()
-	}
-}
-
 struct DirectionalReceiveKeySlotsRef<'a, KeyRole, NonceRole> {
 	slots: &'a ReceiveKeySlots,
 	control: &'a verified_ratchet::RatchetState,
@@ -238,18 +204,14 @@ impl Serialize for RatchetManager {
 	where
 		S: Serializer,
 	{
-		let send_past = DirectionalKeyMapRef::<roles::EncryptionSendKey, roles::SendNonce>::new(
-			&self.send_past,
-		);
 		let recv_past =
 			DirectionalReceiveKeySlotsRef::<roles::EncryptionRecvKey, roles::RecvNonce>::new(
 				&self.recv_slots,
 				&self.control,
 			);
-		let mut state = serializer.serialize_struct("RatchetManager", 6)?;
+		let mut state = serializer.serialize_struct("RatchetManager", 5)?;
 		state.serialize_field("send_key", &self.send_key)?;
 		state.serialize_field("recv_key", &self.recv_key)?;
-		state.serialize_field("send_past", &send_past)?;
 		state.serialize_field("send_ctr", &self.send_sequence())?;
 		state.serialize_field("recv_past", &recv_past)?;
 		state.serialize_field("recv_ctr", &self.receive_sequence())?;

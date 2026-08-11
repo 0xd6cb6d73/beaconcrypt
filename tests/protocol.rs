@@ -1466,7 +1466,6 @@ fn failed_initial_ciphertext_is_terminal_and_clears_registration_state() {
 	let ratchet = beacon.ratchet_manager(SERVER_KID).unwrap();
 	assert_eq!(ratchet.send_state().as_slice(), &[0; KDF_STATE_SIZE]);
 	assert_eq!(ratchet.recv_state().as_slice(), &[0; KDF_STATE_SIZE]);
-	assert!(ratchet.send_key(1).is_none());
 	assert!(ratchet.recv_key(1).is_none());
 }
 

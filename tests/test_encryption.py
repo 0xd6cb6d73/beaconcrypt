@@ -179,7 +179,6 @@ def test_server_encrypt_and_update_returns_ratchet_state():
     assert set(state) == {
         "send_key",
         "recv_key",
-        "send_past",
         "send_ctr",
         "recv_past",
         "recv_ctr",
@@ -205,7 +204,6 @@ def test_server_decrypt_and_update_returns_ratchet_state():
     assert set(state) == {
         "send_key",
         "recv_key",
-        "send_past",
         "send_ctr",
         "recv_past",
         "recv_ctr",
