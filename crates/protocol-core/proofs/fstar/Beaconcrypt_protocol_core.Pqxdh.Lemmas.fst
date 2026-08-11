@@ -4,6 +4,7 @@ module Beaconcrypt_protocol_core.Pqxdh.Lemmas
 open Rust_primitives.Integers
 open Rust_primitives.Arrays
 open Beaconcrypt_protocol_core.Pqxdh
+open Beaconcrypt_protocol_core.Ratchet
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 600"
 
@@ -534,6 +535,26 @@ let ratchet_initializations_are_complementary (_:Prims.unit)
          (server_ratchet_initialization ()).f_receive_offset /\
        (beacon_ratchet_initialization ()).f_receive_offset ==
          (server_ratchet_initialization ()).f_send_offset)
+  = ()
+
+/// The extracted initial adapter applies the opaque primitive to the exact root, splits both fixed halves, and selects complementary role directions.
+let initial_ratchet_chains_use_exact_root_and_directions
+    (root:t_Array u8 (mk_usize 32))
+    (kdf:t_Array u8 (mk_usize 32) -> t_Array u8 (mk_usize 64))
+  : Lemma
+      (let output = kdf root in
+       let beacon = derive_initial_ratchet_chains
+         root (beacon_ratchet_initialization ()) kdf in
+       let server = derive_initial_ratchet_chains
+         root (server_ratchet_initialization ()) kdf in
+       (forall (i:nat{i < 32}).
+          Seq.index beacon.f_receive_chain.f_bytes i ==
+            Seq.index output i) /\
+       (forall (i:nat{i < 32}).
+          Seq.index beacon.f_send_chain.f_bytes i ==
+            Seq.index output (i + 32)) /\
+       beacon.f_send_chain.f_bytes == server.f_receive_chain.f_bytes /\
+       beacon.f_receive_chain.f_bytes == server.f_send_chain.f_bytes)
   = ()
 
 let candidate_ratchet_initializations_are_complementary

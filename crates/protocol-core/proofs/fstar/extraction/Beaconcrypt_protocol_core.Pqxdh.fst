@@ -210,6 +210,71 @@ let beacon_ratchet_initialization (_: Prims.unit) : t_RatchetInitialization = v_
 /// PQXDH code obtains the same plan from a server candidate typestate.
 let server_ratchet_initialization (_: Prims.unit) : t_RatchetInitialization = v_SERVER_RATCHETS
 
+/// Role-ordered fixed-width initial send and receive chains.
+type t_InitialRatchetChains = {
+  f_send_chain:Beaconcrypt_protocol_core.Ratchet.t_RatchetChain;
+  f_receive_chain:Beaconcrypt_protocol_core.Ratchet.t_RatchetChain
+}
+
+/// Split an opaque 64-byte initial expansion into role-ordered fixed-width chains.
+let split_initial_ratchet_kdf_output
+      (output: t_Array u8 (mk_usize 64))
+      (initialization: t_RatchetInitialization)
+    : t_InitialRatchetChains =
+  let left:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
+  let left:t_Array u8 (mk_usize 32) =
+    Core_models.Slice.impl__copy_from_slice #u8
+      left
+      (output.[ {
+            Core_models.Ops.Range.f_start = mk_usize 0;
+            Core_models.Ops.Range.f_end = mk_usize 32
+          }
+          <:
+          Core_models.Ops.Range.t_Range usize ]
+        <:
+        t_Slice u8)
+  in
+  let right:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
+  let right:t_Array u8 (mk_usize 32) =
+    Core_models.Slice.impl__copy_from_slice #u8
+      right
+      (output.[ {
+            Core_models.Ops.Range.f_start = mk_usize 32;
+            Core_models.Ops.Range.f_end = mk_usize 64
+          }
+          <:
+          Core_models.Ops.Range.t_Range usize ]
+        <:
+        t_Slice u8)
+  in
+  if initialization.f_send_offset =. mk_u8 0
+  then
+    {
+      f_send_chain = Beaconcrypt_protocol_core.Ratchet.impl_RatchetChain__from_bytes left;
+      f_receive_chain = Beaconcrypt_protocol_core.Ratchet.impl_RatchetChain__from_bytes right
+    }
+    <:
+    t_InitialRatchetChains
+  else
+    {
+      f_send_chain = Beaconcrypt_protocol_core.Ratchet.impl_RatchetChain__from_bytes right;
+      f_receive_chain = Beaconcrypt_protocol_core.Ratchet.impl_RatchetChain__from_bytes left
+    }
+    <:
+    t_InitialRatchetChains
+
+/// Apply the sole opaque initial-chain primitive to the exact session root and order its output.
+/// The primitive's complete production-facing type is `32-byte root -> 64-byte output`.
+/// Label selection and HKDF details are private to that domain-specific primitive.
+/// Input selection, output size, role ordering, partitioning, and fixed-width construction are owned here.
+let derive_initial_ratchet_chains
+      (root: t_Array u8 (mk_usize 32))
+      (initialization: t_RatchetInitialization)
+      (kdf: (t_Array u8 (mk_usize 32) -> t_Array u8 (mk_usize 64)))
+    : t_InitialRatchetChains =
+  let output:t_Array u8 (mk_usize 64) = kdf root in
+  split_initial_ratchet_kdf_output output initialization
+
 /// Candidate beacon session. Its root, AD, identity assignment, and ratchet
 /// direction have been validated, but its initial ciphertext has not yet
 /// authenticated. It must be consumed by [`beacon_commit`] or

@@ -14,6 +14,9 @@ pub const SHARED_SECRET_SIZE: usize = 32;
 pub const DH_SECRET_SIZE: usize = 32;
 pub const PQXDH_PADDING_SIZE: usize = 32;
 pub const RATCHET_CHAIN_SIZE: usize = 32;
+/// Number of bytes returned when the session root is expanded into both directional chains.
+pub const INITIAL_RATCHET_KDF_OUTPUT_SIZE: usize = RATCHET_CHAIN_SIZE * 2;
+const _: () = assert!(INITIAL_RATCHET_KDF_OUTPUT_SIZE == 64);
 pub const REGISTRATION_KEY_ID_BINDING_SIZE: usize = 8;
 pub const REGISTRATION_ID_SIZE: usize = SIGN_PUBLIC_KEY_SIZE + X25519_PUBLIC_KEY_SIZE;
 
@@ -404,6 +407,62 @@ pub const fn beacon_ratchet_initialization() -> RatchetInitialization {
 /// PQXDH code obtains the same plan from a server candidate typestate.
 pub const fn server_ratchet_initialization() -> RatchetInitialization {
 	SERVER_RATCHETS
+}
+
+/// Role-ordered fixed-width initial send and receive chains.
+pub struct InitialRatchetChains {
+	send_chain: crate::ratchet::RatchetChain,
+	receive_chain: crate::ratchet::RatchetChain,
+}
+
+impl InitialRatchetChains {
+	pub const fn send_chain(&self) -> &crate::ratchet::RatchetChain {
+		&self.send_chain
+	}
+
+	pub const fn receive_chain(&self) -> &crate::ratchet::RatchetChain {
+		&self.receive_chain
+	}
+
+	pub const fn into_parts(self) -> (crate::ratchet::RatchetChain, crate::ratchet::RatchetChain) {
+		(self.send_chain, self.receive_chain)
+	}
+}
+
+/// Split an opaque 64-byte initial expansion into role-ordered fixed-width chains.
+pub fn split_initial_ratchet_kdf_output(
+	output: &[u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE],
+	initialization: RatchetInitialization,
+) -> InitialRatchetChains {
+	let mut left = [0u8; RATCHET_CHAIN_SIZE];
+	left.copy_from_slice(&output[0..32]);
+	let mut right = [0u8; RATCHET_CHAIN_SIZE];
+	right.copy_from_slice(&output[32..64]);
+	if initialization.send_offset == 0 {
+		InitialRatchetChains {
+			send_chain: crate::ratchet::RatchetChain::from_bytes(left),
+			receive_chain: crate::ratchet::RatchetChain::from_bytes(right),
+		}
+	} else {
+		InitialRatchetChains {
+			send_chain: crate::ratchet::RatchetChain::from_bytes(right),
+			receive_chain: crate::ratchet::RatchetChain::from_bytes(left),
+		}
+	}
+}
+
+/// Apply the sole opaque initial-chain primitive to the exact session root and order its output.
+///
+/// The primitive's complete production-facing type is `32-byte root -> 64-byte output`.
+/// Label selection and HKDF details are private to that domain-specific primitive.
+/// Input selection, output size, role ordering, partitioning, and fixed-width construction are owned here.
+pub fn derive_initial_ratchet_chains(
+	root: &[u8; RATCHET_CHAIN_SIZE],
+	initialization: RatchetInitialization,
+	kdf: fn(&[u8; RATCHET_CHAIN_SIZE]) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE],
+) -> InitialRatchetChains {
+	let output = kdf(root);
+	split_initial_ratchet_kdf_output(&output, initialization)
 }
 
 /// Candidate beacon session. Its root, AD, identity assignment, and ratchet
@@ -1066,6 +1125,38 @@ mod tests {
 		assert_eq!(BEACON_RATCHETS.send_offset(), 32);
 		assert_eq!(SERVER_RATCHETS.receive_offset(), 32);
 		assert_eq!(SERVER_RATCHETS.send_offset(), 0);
+	}
+
+	fn test_initial_ratchet_kdf(
+		root: &[u8; RATCHET_CHAIN_SIZE],
+	) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE] {
+		let mut output = [0u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE];
+		output[0..32].copy_from_slice(root);
+		for index in 0..RATCHET_CHAIN_SIZE {
+			output[32 + index] = root[index] ^ 0xff;
+		}
+		output
+	}
+
+	#[test]
+	fn initial_ratchet_boundary_passes_the_exact_root_and_orders_fixed_chains() {
+		let root = core::array::from_fn::<_, RATCHET_CHAIN_SIZE, _>(|index| index as u8);
+		let right = core::array::from_fn::<_, RATCHET_CHAIN_SIZE, _>(|index| root[index] ^ 0xff);
+		let beacon = derive_initial_ratchet_chains(
+			&root,
+			beacon_ratchet_initialization(),
+			test_initial_ratchet_kdf,
+		);
+		let server = derive_initial_ratchet_chains(
+			&root,
+			server_ratchet_initialization(),
+			test_initial_ratchet_kdf,
+		);
+
+		assert_eq!(beacon.receive_chain().as_bytes(), &root);
+		assert_eq!(beacon.send_chain().as_bytes(), &right);
+		assert_eq!(server.receive_chain().as_bytes(), &right);
+		assert_eq!(server.send_chain().as_bytes(), &root);
 	}
 
 	#[test]

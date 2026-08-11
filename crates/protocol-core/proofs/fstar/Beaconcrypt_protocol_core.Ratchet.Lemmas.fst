@@ -13,15 +13,33 @@ let ratchet_kdf_output_split_is_exact
     (output:t_Array u8 (mk_usize 76))
   : Lemma
       (let split = split_ratchet_kdf_output output in
-       Seq.length split.f_key == 32 /\
-       Seq.length split.f_next_chain == 32 /\
-       Seq.length split.f_nonce == 12 /\
+       Seq.length split.f_key.f_bytes == 32 /\
+       Seq.length split.f_next_chain.f_bytes == 32 /\
+       Seq.length split.f_nonce.f_bytes == 12 /\
        (forall (i:nat{i < 32}).
-          Seq.index split.f_key i == Seq.index output i) /\
+          Seq.index split.f_key.f_bytes i == Seq.index output i) /\
        (forall (i:nat{i < 32}).
-          Seq.index split.f_next_chain i == Seq.index output (i + 32)) /\
+          Seq.index split.f_next_chain.f_bytes i == Seq.index output (i + 32)) /\
        (forall (i:nat{i < 12}).
-          Seq.index split.f_nonce i == Seq.index output (i + 64)))
+          Seq.index split.f_nonce.f_bytes i == Seq.index output (i + 64)))
+  = ()
+
+/// The extracted concrete adapter applies the opaque primitive to the exact old chain and returns fixed-width fields with the proved partition.
+let ratchet_step_uses_exact_chain_and_partition
+    (old_chain:t_Array u8 (mk_usize 32))
+    (kdf:t_Array u8 (mk_usize 32) -> t_Array u8 (mk_usize 76))
+  : Lemma
+      (let output = kdf old_chain in
+       let stepped = derive_ratchet_step old_chain kdf in
+       (forall (i:nat{i < 32}).
+          Seq.index stepped.f_material.f_key.f_bytes i ==
+            Seq.index output i) /\
+       (forall (i:nat{i < 32}).
+          Seq.index stepped.f_chain.f_bytes i ==
+            Seq.index output (i + 32)) /\
+       (forall (i:nat{i < 12}).
+          Seq.index stepped.f_material.f_nonce.f_bytes i ==
+            Seq.index output (i + 64)))
   = ()
 
 /// Fixed-width integer values are determined by their mathematical view.
@@ -1603,11 +1621,9 @@ let refined_receive_step_matches
     (old_state next_state:
       t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
     (sequence:u64)
-    (info:t_Slice u8)
-    (step:v_ReceiveChain -> t_Slice u8 ->
-      t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
   : prop =
-  let stepped = step old_state.f_receive_chain info in
+  let stepped = step old_state.f_receive_chain  in
   valid_refined old_state /\
   valid_refined next_state /\
   next_state.f_send_chain == old_state.f_send_chain /\
@@ -1633,9 +1649,7 @@ let rec refined_receive_steps_are_ordered
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (old_state final_state:
       t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-    (info:t_Slice u8)
-    (step:v_ReceiveChain -> t_Slice u8 ->
-      t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
     (remaining:u8)
   : Tot prop (decreases (v remaining)) =
   valid_refined old_state /\
@@ -1653,9 +1667,9 @@ let rec refined_receive_steps_are_ordered
          v_SendChain v_ReceiveChain v_Material)
        (sequence:u64).
        refined_receive_step_matches
-         old_state next_state sequence info step /\
+         old_state next_state sequence  step /\
        refined_receive_steps_are_ordered
-         next_state final_state info step next_remaining)
+         next_state final_state  step next_remaining)
 
 /// The restoration builder maintains the same packed correspondence plus the sorted logical builder invariant.
 let valid_refined_restore
@@ -1675,7 +1689,7 @@ let refined_from_counters_is_valid
     (receive_chain:v_ReceiveChain)
   : Lemma
       (valid_refined
-        (impl_5__from_counters #v_SendChain #v_ReceiveChain #v_Material
+        (impl_9__from_counters #v_SendChain #v_ReceiveChain #v_Material
           send_sequence receive_sequence send_chain receive_chain))
   = from_counters_is_valid send_sequence receive_sequence;
     empty_material_slots_are_none #v_Material
@@ -1686,7 +1700,7 @@ let refined_new_is_valid
     (receive_chain:v_ReceiveChain)
   : Lemma
       (valid_refined
-        (impl_5__new #v_SendChain #v_ReceiveChain #v_Material
+        (impl_9__new #v_SendChain #v_ReceiveChain #v_Material
           send_chain receive_chain))
   = refined_from_counters_is_valid #v_SendChain #v_ReceiveChain #v_Material
       (mk_u64 0) (mk_u64 0) send_chain receive_chain
@@ -1695,10 +1709,9 @@ let refined_new_is_valid
 let refined_advance_send_rejection_is_neutral
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-    (info:t_Slice u8)
-    (step:v_SendChain -> t_Slice u8 -> t_RatchetStep v_SendChain v_Material)
+    (step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
   : Lemma
-      (let state', result = refined_advance_send state info step in
+      (let state', result = refined_advance_send state  step in
        result == Core_models.Option.Option_None ==> state' == state)
   = ()
 
@@ -1706,13 +1719,12 @@ let refined_advance_send_rejection_is_neutral
 let refined_advance_send_success_uses_step
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-    (info:t_Slice u8)
-    (step:v_SendChain -> t_Slice u8 -> t_RatchetStep v_SendChain v_Material)
+    (step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
   : Lemma
-      (let state', result = refined_advance_send state info step in
+      (let state', result = refined_advance_send state  step in
        match result with
        | Core_models.Option.Option_Some key ->
-           let stepped = step state.f_send_chain info in
+           let stepped = step state.f_send_chain  in
            state'.f_send_chain == stepped.f_chain /\
            state'.f_control.f_receive_sequence ==
              state.f_control.f_receive_sequence /\
@@ -1721,7 +1733,7 @@ let refined_advance_send_success_uses_step
            state'.f_receive_chain == state.f_receive_chain /\
            state'.f_receive_slots == state.f_receive_slots /\
            key.f_material == stepped.f_material /\
-           impl_6__sequence key ==
+           impl_10__sequence key ==
              Core_models.Option.Option_Some state'.f_control.f_send_sequence /\
            v state'.f_control.f_send_sequence ==
              v state.f_control.f_send_sequence + 1 /\
@@ -1736,26 +1748,23 @@ let refined_advance_send_preserves_validity
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
        valid_refined state })
-    (info:t_Slice u8)
-    (step:v_SendChain -> t_Slice u8 -> t_RatchetStep v_SendChain v_Material)
+    (step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
   : Lemma
-      (let state', _ = refined_advance_send state info step in
+      (let state', _ = refined_advance_send state  step in
        valid_refined state')
   = advance_send_preserves_receive_state state.f_control;
-    refined_advance_send_success_uses_step state info step
+    refined_advance_send_success_uses_step state  step
 
 /// Receive rejection is state-neutral and cannot depend on the opaque callback because validation precedes its application.
 let refined_advance_receive_rejection_is_step_independent
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-    (info:t_Slice u8)
-    (step1 step2:v_ReceiveChain -> t_Slice u8 ->
-      t_RatchetStep v_ReceiveChain v_Material)
+    (step1 step2:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
   : Lemma
-      (let state1, result1 = refined_advance_receive state info step1 in
+      (let state1, result1 = refined_advance_receive state  step1 in
        result1 == Core_models.Option.Option_None ==>
          state1 == state /\
-         refined_advance_receive state info step2 ==
+         refined_advance_receive state  step2 ==
            (state, Core_models.Option.Option_None))
   = ()
 
@@ -1763,13 +1772,12 @@ let refined_advance_receive_rejection_is_step_independent
 let refined_advance_receive_success_uses_step
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material { valid_refined state })
-    (info:t_Slice u8)
-    (step:v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
   : Lemma
-      (let state', result = refined_advance_receive state info step in
+      (let state', result = refined_advance_receive state  step in
        match result with
        | Core_models.Option.Option_Some sequence ->
-           let stepped = step state.f_receive_chain info in
+           let stepped = step state.f_receive_chain  in
            valid_refined state' /\
            state'.f_send_chain == state.f_send_chain /\
            state'.f_receive_chain == stepped.f_chain /\
@@ -1793,33 +1801,30 @@ let refined_advance_receive_success_uses_step
 let refined_advance_receive_preserves_validity
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material { valid_refined state })
-    (info:t_Slice u8)
-    (step:v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
   : Lemma
-      (let state', _ = refined_advance_receive state info step in
+      (let state', _ = refined_advance_receive state  step in
        valid_refined state')
-  = refined_advance_receive_success_uses_step state info step
+  = refined_advance_receive_success_uses_step state  step
 
 /// A successful one-step result realizes the central chain/material association relation.
 let refined_advance_receive_success_matches
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
        valid_refined state })
-    (info:t_Slice u8)
-    (step:v_ReceiveChain -> t_Slice u8 ->
-      t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
   : Lemma
       (let next_state, result =
-         refined_advance_receive state info step in
+         refined_advance_receive state  step in
        match result with
        | Core_models.Option.Option_Some sequence ->
            refined_receive_step_matches
-             state next_state sequence info step
+             state next_state sequence  step
        | Core_models.Option.Option_None -> next_state == state)
   =
   advance_receive_success_shape state.f_control;
-  refined_advance_receive_preserves_validity state info step;
-  refined_advance_receive_success_uses_step state info step
+  refined_advance_receive_preserves_validity state  step;
+  refined_advance_receive_success_uses_step state  step
 
 /// Every slot in a bounded inactive suffix is empty in a valid refined state, so whole-plan preflight cannot reject an admitted plan.
 let rec refined_receive_slots_are_empty_for_valid
@@ -1861,16 +1866,14 @@ let refined_advance_receive_with_space_succeeds
        state.f_control.f_receive_sequence <>
          Core_models.Num.impl_u64__MAX /\
        cache_len state.f_control.f_receive_cache < 50 })
-    (info:t_Slice u8)
-    (step:v_ReceiveChain -> t_Slice u8 ->
-      t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
   : Lemma
       (let next_state, result =
-         refined_advance_receive state info step in
+         refined_advance_receive state  step in
        match result with
        | Core_models.Option.Option_Some sequence ->
            refined_receive_step_matches
-             state next_state sequence info step
+             state next_state sequence  step
        | Core_models.Option.Option_None -> False)
   =
   let slot:u8 = state.f_control.f_receive_cache.f_len in
@@ -1886,16 +1889,14 @@ let refined_advance_receive_with_space_succeeds
        ()
    | Core_models.Option.Option_None -> ());
   advance_receive_success_shape state.f_control;
-  refined_advance_receive_success_matches state info step
+  refined_advance_receive_success_matches state  step
 
 /// The bounded commit recursion executes every planned transition: exact callback order, exact counter/cache growth, and pointwise preservation of the old packed prefix.
 let rec refined_execute_receive_steps_is_exact
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
        valid_refined state })
-    (info:t_Slice u8)
-    (step:v_ReceiveChain -> t_Slice u8 ->
-      t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
     (remaining:u8 {
        cache_len state.f_control.f_receive_cache + v remaining <= 50 /\
        v state.f_control.f_receive_sequence + v remaining <=
@@ -1903,9 +1904,9 @@ let rec refined_execute_receive_steps_is_exact
   : Lemma
       (ensures
         (let final_state =
-           refined_execute_receive_steps state info step remaining in
+           refined_execute_receive_steps state  step remaining in
          refined_receive_steps_are_ordered
-           state final_state info step remaining /\
+           state final_state  step remaining /\
          v final_state.f_control.f_receive_sequence ==
            v state.f_control.f_receive_sequence + v remaining /\
          cache_len final_state.f_control.f_receive_cache ==
@@ -1921,23 +1922,23 @@ let rec refined_execute_receive_steps_is_exact
       (state.f_control.f_receive_sequence <>
         Core_models.Num.impl_u64__MAX);
     assert (cache_len state.f_control.f_receive_cache < 50);
-    refined_advance_receive_with_space_succeeds state info step;
-    let next_state, result = refined_advance_receive state info step in
+    refined_advance_receive_with_space_succeeds state  step;
+    let next_state, result = refined_advance_receive state  step in
     match result with
     | Core_models.Option.Option_None -> ()
     | Core_models.Option.Option_Some sequence ->
         assert (valid_refined next_state);
         assert
           (refined_receive_step_matches
-            state next_state sequence info step);
+            state next_state sequence  step);
         refined_execute_receive_steps_is_exact
-          next_state info step next_remaining;
+          next_state  step next_remaining;
         let final_state =
           refined_execute_receive_steps
-            next_state info step next_remaining in
+            next_state  step next_remaining in
         assert
           (refined_receive_steps_are_ordered
-            next_state final_state info step next_remaining);
+            next_state final_state  step next_remaining);
         packed_prefix_unchanged_transitive
           state.f_control.f_receive_cache
           next_state.f_control.f_receive_cache
@@ -1953,9 +1954,9 @@ let rec refined_execute_receive_steps_is_exact
                middle == next_state /\
                derived_sequence == sequence /\
                refined_receive_step_matches
-                 state middle derived_sequence info step /\
+                 state middle derived_sequence  step /\
                refined_receive_steps_are_ordered
-                 middle final_state info step next_remaining);
+                 middle final_state  step next_remaining);
         ()
 
 /// Once planning and concrete-slot preflight are admitted, the generated
@@ -1964,10 +1965,8 @@ let rec refined_execute_receive_steps_is_exact
 let refined_advance_receive_until_accepted_computes
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-    (info:t_Slice u8)
     (requested reached:u64)
-    (step:v_ReceiveChain -> t_Slice u8 ->
-      t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
     (remaining:u8)
   : Lemma
       (requires
@@ -1980,8 +1979,8 @@ let refined_advance_receive_until_accepted_computes
            (impl_RatchetState__receive_cache_len state.f_control)
            remaining == true))
       (ensures
-        (refined_advance_receive_until state info requested step ==
-          (refined_execute_receive_steps state info step remaining,
+        (refined_advance_receive_until state  requested step ==
+          (refined_execute_receive_steps state  step remaining,
            Core_models.Option.Option_Some reached)))
   = ()
 
@@ -1990,15 +1989,13 @@ let refined_advance_receive_until_executes_plan
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
        valid_refined state })
-    (info:t_Slice u8)
     (target:u64)
-    (step:v_ReceiveChain -> t_Slice u8 ->
-      t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
   : Lemma
       (let plan = plan_receive_until state.f_control target in
        let remaining = cast plan.f_derivations <: u8 in
        let final_state, result =
-         refined_advance_receive_until state info target step in
+         refined_advance_receive_until state  target step in
        valid_refined final_state /\
        (match plan.f_sequence, result with
        | Core_models.Option.Option_None,
@@ -2008,7 +2005,7 @@ let refined_advance_receive_until_executes_plan
            planned_target == target /\
            reached == target /\
            refined_receive_steps_are_ordered
-             state final_state info step remaining /\
+             state final_state  step remaining /\
            v final_state.f_control.f_receive_sequence ==
              v state.f_control.f_receive_sequence + v plan.f_derivations /\
            cache_len final_state.f_control.f_receive_cache ==
@@ -2026,7 +2023,7 @@ let refined_advance_receive_until_executes_plan
   match plan.f_sequence with
   | Core_models.Option.Option_None ->
       assert
-        (refined_advance_receive_until state info target step ==
+        (refined_advance_receive_until state  target step ==
           (state, Core_models.Option.Option_None));
       ()
   | Core_models.Option.Option_Some planned_target ->
@@ -2054,14 +2051,14 @@ let refined_advance_receive_until_executes_plan
            (impl_RatchetState__receive_cache_len state.f_control ==
              first_slot);
          refined_execute_receive_steps_is_exact
-           state info step remaining;
+           state  step remaining;
          let final_state =
-           refined_execute_receive_steps state info step remaining in
+           refined_execute_receive_steps state  step remaining in
          assert (v remaining == v plan.f_derivations);
          assert (valid_refined final_state);
          assert
            (refined_receive_steps_are_ordered
-             state final_state info step remaining);
+             state final_state  step remaining);
          assert
            (v final_state.f_control.f_receive_sequence ==
              v state.f_control.f_receive_sequence + v remaining);
@@ -2076,9 +2073,9 @@ let refined_advance_receive_until_executes_plan
          assert
            (final_state.f_control.f_receive_sequence == target);
          refined_advance_receive_until_accepted_computes
-           state info target planned_target step remaining;
+           state  target planned_target step remaining;
          assert
-           (refined_advance_receive_until state info target step ==
+           (refined_advance_receive_until state  target step ==
              (final_state,
               Core_models.Option.Option_Some planned_target));
          ())
@@ -2095,14 +2092,14 @@ let refined_advance_receive_until_executes_plan
            (impl_RatchetState__receive_cache_len state.f_control ==
              first_slot);
          refined_execute_receive_steps_is_exact
-           state info step remaining;
+           state  step remaining;
          assert
-           (refined_execute_receive_steps state info step remaining ==
+           (refined_execute_receive_steps state  step remaining ==
              state);
          refined_advance_receive_until_accepted_computes
-           state info target planned_target step remaining;
+           state  target planned_target step remaining;
          assert
-           (refined_advance_receive_until state info target step ==
+           (refined_advance_receive_until state  target step ==
              (state,
               Core_models.Option.Option_Some planned_target));
          ())
@@ -2112,50 +2109,45 @@ let refined_advance_receive_until_rejection_is_neutral
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
        valid_refined state })
-    (info:t_Slice u8)
     (target:u64)
-    (step:v_ReceiveChain -> t_Slice u8 ->
-      t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
   : Lemma
       (let final_state, result =
-         refined_advance_receive_until state info target step in
+         refined_advance_receive_until state  target step in
        result == Core_models.Option.Option_None ==>
          final_state == state /\
          (plan_receive_until state.f_control target).f_sequence ==
            Core_models.Option.Option_None)
-  = refined_advance_receive_until_executes_plan state info target step
+  = refined_advance_receive_until_executes_plan state  target step
 
 /// A successful whole-plan result contains the exact plan-length callback trace and preserves every old sequence/material association.
 let refined_advance_receive_until_is_ordered
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
        valid_refined state })
-    (info:t_Slice u8)
     (target:u64)
-    (step:v_ReceiveChain -> t_Slice u8 ->
-      t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
   : Lemma
       (let plan = plan_receive_until state.f_control target in
        let remaining = cast plan.f_derivations <: u8 in
        let final_state, result =
-         refined_advance_receive_until state info target step in
+         refined_advance_receive_until state  target step in
        match result with
        | Core_models.Option.Option_Some reached ->
            reached == target /\
            refined_receive_steps_are_ordered
-             state final_state info step remaining
+             state final_state  step remaining
        | Core_models.Option.Option_None -> final_state == state)
-  = refined_advance_receive_until_executes_plan state info target step
+  = refined_advance_receive_until_executes_plan state  target step
 
 /// A zero-cost receive-until lookup invokes no step and leaves every refined field unchanged.
 let refined_advance_receive_until_old_is_neutral
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-    (info:t_Slice u8)
     (target:u64 { v target <= v state.f_control.f_receive_sequence })
-    (step:v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
   : Lemma
-      (refined_advance_receive_until state info target step ==
+      (refined_advance_receive_until state  target step ==
         (state, Core_models.Option.Option_Some target))
   = plan_old_receive_is_zero_cost state.f_control target
 
@@ -2169,7 +2161,7 @@ let refined_receive_entry_is_associated
        v slot < 50 /\
        v slot < cache_len state.f_control.f_receive_cache })
   : Lemma
-      (match impl_5__receive_entry_at state slot with
+      (match impl_9__receive_entry_at state slot with
        | Core_models.Option.Option_Some (sequence, material) ->
            refined_slot state sequence material slot
        | Core_models.Option.Option_None -> False)
@@ -2188,7 +2180,7 @@ let refined_receive_entry_mismatched_tag_is_rejected
          Core_models.Option.Option_Some cached /\
        cached.f_sequence <> sequence })
   : Lemma
-      (impl_5__receive_entry_at state slot ==
+      (impl_9__receive_entry_at state slot ==
         Core_models.Option.Option_None)
   = ()
 

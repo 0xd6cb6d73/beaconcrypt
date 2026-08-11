@@ -5,8 +5,7 @@ use crate::beacon::ProviderBeacon;
 #[cfg(feature = "server")]
 use crate::server::{RecvState, SendState};
 use crate::shared::{
-	DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret, RatchetManager, RemotePrincipal, SYM_RATCHET_INFO,
-	SignaturePk,
+	DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret, RatchetManager, RemotePrincipal, SignaturePk,
 };
 use crate::shared::{decrypt_message_with_ratchet, encrypt_message_with_ratchet};
 use crate::{phase1_capnp, phase2_capnp};
@@ -374,8 +373,8 @@ impl Server {
 		let ad = self.associated_data(k)?;
 		decrypt_message_with_ratchet(b, k, &ad, self.ratchet_manager_mut(k)?)
 	}
-	pub fn ratchet_recv_until(&mut self, i: &[u8], u: u64, k: u64) -> Option<u64> {
-		self.ratchet_manager_mut(k)?.ratchet_recv_until(i, u)
+	pub fn ratchet_recv_until(&mut self, u: u64, k: u64) -> Option<u64> {
+		self.ratchet_manager_mut(k)?.ratchet_recv_until(u)
 	}
 	pub fn recv_key(&self, s: u64, k: u64) -> Option<&crate::shared::KeyMaterial> {
 		self.ratchet_manager(k)?.recv_key(s)
@@ -562,13 +561,10 @@ impl ProviderBeacon for Beacon {
 			let mut candidate = prepared.ok()?;
 			let derived_secret = derive_root_key_input(candidate.root_key_input_mut())?;
 			let mut ratchet = RatchetManager::default();
-			if !ratchet.init_ratchets(
-				derived_secret.as_slice(),
-				SYM_RATCHET_INFO,
+			ratchet.init_ratchets(
+				derived_secret.as_array(),
 				candidate.ratchet_initialization(),
-			) {
-				return None;
-			}
+			);
 			let associated_data = *candidate.associated_data();
 			let decrypted = decrypt_message_with_ratchet(
 				response.get_app_cipher_text().ok()?,
@@ -746,13 +742,10 @@ impl ProviderServer for Server {
 		debug_assert!(!self.known_ids.contains_key(&remote_kid));
 		self.known_ids.try_reserve(1).ok()?;
 		let mut ratchet = RatchetManager::default();
-		if !ratchet.init_ratchets(
-			derived_secret.inner().as_slice(),
-			SYM_RATCHET_INFO,
+		ratchet.init_ratchets(
+			derived_secret.as_array(),
 			candidate.ratchet_initialization(),
-		) {
-			return None;
-		}
+		);
 		let associated_data = *candidate.associated_data();
 		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
 		if plaintext.is_empty() {
@@ -914,7 +907,7 @@ mod tests {
 	use crate::{
 		DH_OUT_LEN, ED25519_SEED_SIZE, KDF_STATE_SIZE, ProviderBeacon, ProviderServer, SignType,
 		phase1_capnp,
-		shared::{DhSecret, KemType, KexDerivedSecret, SYM_RATCHET_INFO, decode_kem, decode_sign},
+		shared::{DhSecret, KemType, KexDerivedSecret, decode_kem, decode_sign},
 	};
 
 	fn register(server: &mut Server, beacon: &mut Beacon) {
@@ -1077,7 +1070,7 @@ mod tests {
 		let peer = crypto_sign::KeyPair::generate().unwrap().public_key;
 		server.add_known_kid(9, peer);
 
-		assert_eq!(server.ratchet_recv_until(SYM_RATCHET_INFO, 2, 9), Some(2));
+		assert_eq!(server.ratchet_recv_until(2, 9), Some(2));
 		assert!(server.recv_key(1, 9).is_some());
 		assert!(server.recv_key(2, 9).is_some());
 		assert!(server.complete_recv_key(1, 9, false));
@@ -1089,7 +1082,7 @@ mod tests {
 		assert!(server.recv_key(2, 9).is_none());
 
 		assert!(server.encrypt_message(b"unknown peer", 99).is_none());
-		assert_eq!(server.ratchet_recv_until(SYM_RATCHET_INFO, 1, 99), None);
+		assert_eq!(server.ratchet_recv_until(1, 99), None);
 		assert!(server.recv_key(1, 99).is_none());
 		assert!(!server.complete_recv_key(1, 99, true));
 	}
@@ -1376,7 +1369,7 @@ mod tests {
 		expected.push(1);
 		expected.extend_from_slice(beacon.public_key.as_bytes());
 		expected.extend_from_slice(PQXDH_INFO);
-		expected.extend_from_slice(SYM_RATCHET_INFO);
+		expected.extend_from_slice(verified_pqxdh::SYM_RATCHET_INFO);
 		assert_eq!(actual.as_slice(), expected);
 	}
 }

@@ -13,8 +13,13 @@ EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Bl
 HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::commitment::build_commitment_transcript \
 	+beaconcrypt_protocol_core::ratchet::SequenceCache \
+	+beaconcrypt_protocol_core::ratchet::RatchetChain \
+	+beaconcrypt_protocol_core::ratchet::RatchetKey \
+	+beaconcrypt_protocol_core::ratchet::RatchetNonce \
+	+beaconcrypt_protocol_core::ratchet::RatchetMaterial \
 	+beaconcrypt_protocol_core::ratchet::RatchetKdfOutput \
 	+beaconcrypt_protocol_core::ratchet::split_ratchet_kdf_output \
+	+beaconcrypt_protocol_core::ratchet::derive_ratchet_step \
 	+beaconcrypt_protocol_core::ratchet::RatchetStep \
 	+beaconcrypt_protocol_core::ratchet::CachedReceiveKey \
 	+beaconcrypt_protocol_core::ratchet::RefinedRatchet \
@@ -33,6 +38,10 @@ HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::ratchet::**::key \
 	+beaconcrypt_protocol_core::ratchet::**::next_chain \
 	+beaconcrypt_protocol_core::ratchet::**::nonce \
+	+beaconcrypt_protocol_core::ratchet::**::as_bytes \
+	+beaconcrypt_protocol_core::ratchet::**::into_bytes \
+	+beaconcrypt_protocol_core::ratchet::**::into_parts \
+	+beaconcrypt_protocol_core::ratchet::**::into_step \
 	+beaconcrypt_protocol_core::ratchet::refined_advance_send \
 	+beaconcrypt_protocol_core::ratchet::refined_finish_send \
 	+beaconcrypt_protocol_core::ratchet::refined_advance_receive \
@@ -63,6 +72,9 @@ HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::pqxdh::build_root_key_input \
 	+beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization \
 	+beaconcrypt_protocol_core::pqxdh::server_ratchet_initialization \
+	+beaconcrypt_protocol_core::pqxdh::InitialRatchetChains \
+	+beaconcrypt_protocol_core::pqxdh::split_initial_ratchet_kdf_output \
+	+beaconcrypt_protocol_core::pqxdh::derive_initial_ratchet_chains \
 	+beaconcrypt_protocol_core::pqxdh::**::ratchet_initialization \
 	+beaconcrypt_protocol_core::pqxdh::**::key_id_binding \
 	+beaconcrypt_protocol_core::pqxdh::beacon_prepare_finish \

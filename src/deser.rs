@@ -418,7 +418,7 @@ impl<'de> Deserialize<'de> for DeserializedKnownIds {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::shared::{AD_SIZE, KDF_STATE_SIZE, SYM_RATCHET_INFO, encrypt_message_with_ratchet};
+	use crate::shared::{AD_SIZE, KDF_STATE_SIZE, encrypt_message_with_ratchet};
 	use serde::Serialize;
 	use serde_json::{Value, json};
 
@@ -521,7 +521,6 @@ mod tests {
 		let mut manager = RatchetManager::default();
 		manager.init_ratchets(
 			&[0x42; KDF_STATE_SIZE],
-			SYM_RATCHET_INFO,
 			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 		);
 
@@ -535,7 +534,7 @@ mod tests {
 					.is_some()
 			);
 		}
-		manager.ratchet_recv_until(SYM_RATCHET_INFO, 4).unwrap();
+		manager.ratchet_recv_until(4).unwrap();
 		manager.delete_recv_key(1);
 		manager.delete_recv_key(3);
 		manager
@@ -600,12 +599,11 @@ mod tests {
 	#[test]
 	fn post_swap_round_trip_preserves_receive_material_by_sequence() {
 		let mut manager = RatchetManager::default();
-		assert!(manager.init_ratchets(
+		manager.init_ratchets(
 			&[0x74; KDF_STATE_SIZE],
-			SYM_RATCHET_INFO,
 			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
-		));
-		assert_eq!(manager.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
+		);
+		assert_eq!(manager.ratchet_recv_until(4), Some(4));
 		let target_slot = receive_slot(&manager, 2).unwrap();
 		let old_last_slot = receive_slot(&manager, 4).unwrap();
 		assert_ne!(target_slot, old_last_slot);
@@ -652,8 +650,8 @@ mod tests {
 		assert_eq!(restored_send.ciphertext, original_send.ciphertext);
 		assert_manager_eq(&manager, &restored);
 
-		let next_recv = manager.ratchet_recv(SYM_RATCHET_INFO).unwrap();
-		assert_eq!(restored.ratchet_recv(SYM_RATCHET_INFO), Some(next_recv));
+		let next_recv = manager.ratchet_recv().unwrap();
+		assert_eq!(restored.ratchet_recv(), Some(next_recv));
 		assert_key_material_eq(
 			manager.recv_key(next_recv).unwrap(),
 			restored.recv_key(next_recv).unwrap(),
@@ -878,14 +876,10 @@ mod tests {
 		let mut manager = RatchetManager::default();
 		manager.init_ratchets(
 			&[0x73; KDF_STATE_SIZE],
-			SYM_RATCHET_INFO,
 			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 		);
 		manager
-			.ratchet_recv_until(
-				SYM_RATCHET_INFO,
-				verified_ratchet::RECEIVE_CACHE_CAPACITY as u64,
-			)
+			.ratchet_recv_until(verified_ratchet::RECEIVE_CACHE_CAPACITY as u64)
 			.unwrap();
 		let mut at_capacity = serde_json::to_value(manager).unwrap();
 

@@ -13,39 +13,132 @@ pub const RATCHET_KDF_OUTPUT_SIZE: usize = crate::commitment::AEAD_KEY_SIZE
 
 const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 76);
 
-/// Proof-visible borrowed partition of one symmetric-ratchet HKDF expansion.
-///
-/// The primitive call remains in the production adapter. This type and
-/// [`split_ratchet_kdf_output`] own the exact key, next-chain, and nonce
-/// offsets used to interpret its fixed-size output without copying the secret
-/// buffer out of its adapter-owned zeroizing container.
-pub struct RatchetKdfOutput<'a> {
-	key: &'a [u8],
-	next_chain: &'a [u8],
-	nonce: &'a [u8],
+/// Fixed-width symmetric-ratchet chain bytes owned by the extracted boundary.
+pub struct RatchetChain {
+	bytes: [u8; crate::pqxdh::RATCHET_CHAIN_SIZE],
 }
 
-impl<'a> RatchetKdfOutput<'a> {
-	pub const fn key(&self) -> &'a [u8] {
-		self.key
+impl RatchetChain {
+	pub const fn from_bytes(bytes: [u8; crate::pqxdh::RATCHET_CHAIN_SIZE]) -> Self {
+		Self { bytes }
 	}
 
-	pub const fn next_chain(&self) -> &'a [u8] {
-		self.next_chain
+	pub const fn as_bytes(&self) -> &[u8; crate::pqxdh::RATCHET_CHAIN_SIZE] {
+		&self.bytes
 	}
 
-	pub const fn nonce(&self) -> &'a [u8] {
-		self.nonce
+	pub const fn into_bytes(self) -> [u8; crate::pqxdh::RATCHET_CHAIN_SIZE] {
+		self.bytes
 	}
 }
 
-/// Split `key || next_chain || nonce` at the production ratchet's exact byte offsets.
-pub fn split_ratchet_kdf_output(output: &[u8; RATCHET_KDF_OUTPUT_SIZE]) -> RatchetKdfOutput<'_> {
+/// Fixed-width symmetric-ratchet message-key bytes owned by the extracted boundary.
+pub struct RatchetKey {
+	bytes: [u8; crate::commitment::AEAD_KEY_SIZE],
+}
+
+impl RatchetKey {
+	pub const fn as_bytes(&self) -> &[u8; crate::commitment::AEAD_KEY_SIZE] {
+		&self.bytes
+	}
+
+	pub const fn into_bytes(self) -> [u8; crate::commitment::AEAD_KEY_SIZE] {
+		self.bytes
+	}
+}
+
+/// Fixed-width symmetric-ratchet AEAD nonce bytes owned by the extracted boundary.
+pub struct RatchetNonce {
+	bytes: [u8; crate::commitment::AEAD_NONCE_SIZE],
+}
+
+impl RatchetNonce {
+	pub const fn as_bytes(&self) -> &[u8; crate::commitment::AEAD_NONCE_SIZE] {
+		&self.bytes
+	}
+
+	pub const fn into_bytes(self) -> [u8; crate::commitment::AEAD_NONCE_SIZE] {
+		self.bytes
+	}
+}
+
+/// Fixed-width key and nonce produced by one symmetric-ratchet step.
+pub struct RatchetMaterial {
+	key: RatchetKey,
+	nonce: RatchetNonce,
+}
+
+impl RatchetMaterial {
+	pub const fn key(&self) -> &RatchetKey {
+		&self.key
+	}
+
+	pub const fn nonce(&self) -> &RatchetNonce {
+		&self.nonce
+	}
+
+	pub const fn into_parts(self) -> (RatchetKey, RatchetNonce) {
+		(self.key, self.nonce)
+	}
+}
+
+/// Proof-visible owned partition of one symmetric-ratchet HKDF expansion.
+pub struct RatchetKdfOutput {
+	key: RatchetKey,
+	next_chain: RatchetChain,
+	nonce: RatchetNonce,
+}
+
+impl RatchetKdfOutput {
+	pub const fn key(&self) -> &RatchetKey {
+		&self.key
+	}
+
+	pub const fn next_chain(&self) -> &RatchetChain {
+		&self.next_chain
+	}
+
+	pub const fn nonce(&self) -> &RatchetNonce {
+		&self.nonce
+	}
+
+	pub const fn into_step(self) -> RatchetStep<RatchetChain, RatchetMaterial> {
+		RatchetStep {
+			chain: self.next_chain,
+			material: RatchetMaterial {
+				key: self.key,
+				nonce: self.nonce,
+			},
+		}
+	}
+}
+
+/// Split `key || next_chain || nonce` into fixed-width values at the protocol's exact offsets.
+pub fn split_ratchet_kdf_output(output: &[u8; RATCHET_KDF_OUTPUT_SIZE]) -> RatchetKdfOutput {
+	let mut key = [0u8; crate::commitment::AEAD_KEY_SIZE];
+	key.copy_from_slice(&output[0..32]);
+	let mut next_chain = [0u8; crate::pqxdh::RATCHET_CHAIN_SIZE];
+	next_chain.copy_from_slice(&output[32..64]);
+	let mut nonce = [0u8; crate::commitment::AEAD_NONCE_SIZE];
+	nonce.copy_from_slice(&output[64..76]);
 	RatchetKdfOutput {
-		key: &output[0..32],
-		next_chain: &output[32..64],
-		nonce: &output[64..76],
+		key: RatchetKey { bytes: key },
+		next_chain: RatchetChain { bytes: next_chain },
+		nonce: RatchetNonce { bytes: nonce },
 	}
+}
+
+/// Apply the sole opaque ratchet primitive to the exact old chain and interpret its fixed output.
+///
+/// The primitive's complete production-facing type is `old 32-byte chain -> 76-byte output`.
+/// Label selection and HKDF details are private to that domain-specific primitive.
+/// Input selection, output size, partitioning, and fixed-width construction are owned here.
+pub fn derive_ratchet_step(
+	old_chain: &[u8; crate::pqxdh::RATCHET_CHAIN_SIZE],
+	kdf: fn(&[u8; crate::pqxdh::RATCHET_CHAIN_SIZE]) -> [u8; RATCHET_KDF_OUTPUT_SIZE],
+) -> RatchetStep<RatchetChain, RatchetMaterial> {
+	let output = kdf(old_chain);
+	split_ratchet_kdf_output(&output).into_step()
 }
 
 /// Opaque fixed-capacity cache of logical receive-key sequence numbers.
@@ -511,9 +604,9 @@ pub const fn finish_restore(restore: RatchetRestore) -> RatchetState {
 
 /// One opaque ratchet-step result.
 ///
-/// The shared kernel treats both fields parametrically. Production supplies the
-/// HKDF call, delegates its byte partition to [`split_ratchet_kdf_output`], and
-/// wraps those checked parts in its chain and material types.
+/// The shared kernel treats both fields parametrically.
+/// The concrete extracted adapter [`derive_ratchet_step`] constructs them from one fixed-output opaque KDF call.
+/// Logical tests may construct arbitrary values through this type.
 pub struct RatchetStep<Chain, Material> {
 	pub chain: Chain,
 	pub material: Material,
@@ -641,8 +734,7 @@ impl<Material> RefinedSendKey<Material> {
 /// logical capability for the allocated sequence.
 pub fn refined_advance_send<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
-	info: &[u8],
-	step: fn(&SendChain, &[u8]) -> RatchetStep<SendChain, Material>,
+	step: fn(&SendChain) -> RatchetStep<SendChain, Material>,
 ) -> Option<RefinedSendKey<Material>> {
 	let advanced = advance_send(state.control);
 	let sequence = advanced.sequence?;
@@ -650,7 +742,7 @@ pub fn refined_advance_send<SendChain, ReceiveChain, Material>(
 		return None;
 	}
 
-	let stepped = step(&state.send_chain, info);
+	let stepped = step(&state.send_chain);
 	state.send_chain = stepped.chain;
 	state.control = advanced.state;
 	Some(RefinedSendKey {
@@ -671,8 +763,7 @@ pub fn refined_finish_send<Material>(key: RefinedSendKey<Material>) -> bool {
 /// Rejection therefore leaves the concrete chain and slots untouched.
 pub fn refined_advance_receive<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
-	info: &[u8],
-	step: fn(&ReceiveChain, &[u8]) -> RatchetStep<ReceiveChain, Material>,
+	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
 ) -> Option<u64> {
 	let advanced = advance_receive(state.control);
 	let sequence = advanced.sequence?;
@@ -685,7 +776,7 @@ pub fn refined_advance_receive<SendChain, ReceiveChain, Material>(
 		return None;
 	}
 
-	let stepped = step(&state.receive_chain, info);
+	let stepped = step(&state.receive_chain);
 	state.receive_chain = stepped.chain;
 	state.receive_slots[slot_index] = Some(CachedReceiveKey {
 		sequence,
@@ -726,15 +817,14 @@ fn refined_receive_slots_are_empty<SendChain, ReceiveChain, Material>(
 /// This helper exposes no fallible intermediate result.
 fn refined_execute_receive_steps<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
-	info: &[u8],
-	step: fn(&ReceiveChain, &[u8]) -> RatchetStep<ReceiveChain, Material>,
+	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
 	remaining: u8,
 ) {
 	if remaining == 0 {
 		return;
 	}
-	let _ = refined_advance_receive(state, info, step);
-	refined_execute_receive_steps(state, info, step, remaining - 1)
+	let _ = refined_advance_receive(state, step);
+	refined_execute_receive_steps(state, step, remaining - 1)
 }
 
 /// Plan and execute every receive step needed for `target` inside the kernel.
@@ -745,9 +835,8 @@ fn refined_execute_receive_steps<SendChain, ReceiveChain, Material>(
 /// It cannot publish only a prefix of the planned refinement.
 pub fn refined_advance_receive_until<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
-	info: &[u8],
 	target: u64,
-	step: fn(&ReceiveChain, &[u8]) -> RatchetStep<ReceiveChain, Material>,
+	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
 ) -> Option<u64> {
 	let plan = plan_receive_until(state.control, target);
 	let target = plan.sequence?;
@@ -759,7 +848,7 @@ pub fn refined_advance_receive_until<SendChain, ReceiveChain, Material>(
 	if !refined_receive_slots_are_empty(state, first_slot, remaining) {
 		return None;
 	}
-	refined_execute_receive_steps(state, info, step, remaining);
+	refined_execute_receive_steps(state, step, remaining);
 	Some(target)
 }
 
@@ -961,34 +1050,38 @@ mod tests {
 		CachedReceiveKey, PeerRatchetState, RATCHET_KDF_OUTPUT_SIZE, RATCHET_MAX_GAP,
 		RECEIVE_CACHE_CAPACITY, RatchetState, RatchetStep, ReceiveDisposition, RefinedRatchet,
 		RefinedSendKey, SendKey, SequenceCache, advance_receive, advance_send,
-		advance_send_for_peer, empty_material_slots, finish_receive, finish_receive_with_removal,
-		finish_refined_restore, finish_restore, finish_send, lookup_receive_key,
-		plan_receive_until, refined_advance_receive, refined_advance_receive_until,
-		refined_advance_send, refined_finish_receive, refined_finish_send, refined_receive_key,
-		refined_restore_receive_key, replace_ratchet_for_peer, restore_receive_key,
-		restore_receive_key_with_slot, split_ratchet_kdf_output, start_refined_restore,
-		start_restore,
+		advance_send_for_peer, derive_ratchet_step, empty_material_slots, finish_receive,
+		finish_receive_with_removal, finish_refined_restore, finish_restore, finish_send,
+		lookup_receive_key, plan_receive_until, refined_advance_receive,
+		refined_advance_receive_until, refined_advance_send, refined_finish_receive,
+		refined_finish_send, refined_receive_key, refined_restore_receive_key,
+		replace_ratchet_for_peer, restore_receive_key, restore_receive_key_with_slot,
+		split_ratchet_kdf_output, start_refined_restore, start_restore,
 	};
 
 	#[derive(Debug, Eq, PartialEq)]
 	struct TestMaterial {
 		generation: u64,
-		info_len: usize,
 	}
 
-	fn test_step(chain: &u64, info: &[u8]) -> RatchetStep<u64, TestMaterial> {
+	fn test_step(chain: &u64) -> RatchetStep<u64, TestMaterial> {
 		let next = chain + 1;
 		RatchetStep {
 			chain: next,
-			material: TestMaterial {
-				generation: next,
-				info_len: info.len(),
-			},
+			material: TestMaterial { generation: next },
 		}
 	}
 
-	fn rejected_test_step(_chain: &u64, _info: &[u8]) -> RatchetStep<u64, TestMaterial> {
+	fn rejected_test_step(_chain: &u64) -> RatchetStep<u64, TestMaterial> {
 		panic!("rejected receive transaction invoked its KDF callback")
+	}
+
+	fn test_ratchet_kdf(old_chain: &[u8; 32]) -> [u8; RATCHET_KDF_OUTPUT_SIZE] {
+		let mut output = [0u8; RATCHET_KDF_OUTPUT_SIZE];
+		output[0..32].copy_from_slice(old_chain);
+		output[32..64].copy_from_slice(old_chain);
+		output[64..76].copy_from_slice(&old_chain[0..12]);
+		output
 	}
 
 	fn execute_receive_plan(mut state: RatchetState, target: u64) -> RatchetState {
@@ -1007,9 +1100,19 @@ mod tests {
 		let output = core::array::from_fn::<_, RATCHET_KDF_OUTPUT_SIZE, _>(|index| index as u8);
 		let split = split_ratchet_kdf_output(&output);
 
-		assert_eq!(split.key(), &output[0..32]);
-		assert_eq!(split.next_chain(), &output[32..64]);
-		assert_eq!(split.nonce(), &output[64..76]);
+		assert_eq!(split.key().as_bytes(), &output[0..32]);
+		assert_eq!(split.next_chain().as_bytes(), &output[32..64]);
+		assert_eq!(split.nonce().as_bytes(), &output[64..76]);
+	}
+
+	#[test]
+	fn concrete_ratchet_step_passes_the_exact_old_chain_to_the_opaque_kdf() {
+		let old_chain = core::array::from_fn::<_, 32, _>(|index| index as u8);
+		let stepped = derive_ratchet_step(&old_chain, test_ratchet_kdf);
+
+		assert_eq!(stepped.chain.as_bytes(), &old_chain);
+		assert_eq!(stepped.material.key().as_bytes(), &old_chain);
+		assert_eq!(stepped.material.nonce().as_bytes(), &old_chain[0..12]);
 	}
 
 	#[test]
@@ -1055,11 +1158,10 @@ mod tests {
 	#[test]
 	fn refined_send_pairs_one_step_with_the_allocated_sequence() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::from_counters(7, 0, 10, 20);
-		let key = refined_advance_send(&mut state, b"send", test_step).unwrap();
+		let key = refined_advance_send(&mut state, test_step).unwrap();
 
 		assert_eq!(key.sequence(), Some(8));
 		assert_eq!(key.material().generation, 11);
-		assert_eq!(key.material().info_len, 4);
 		assert_eq!(*state.send_chain(), 11);
 		assert_eq!(*state.receive_chain(), 20);
 		assert_eq!(state.send_sequence(), 8);
@@ -1071,10 +1173,7 @@ mod tests {
 	fn refined_send_finish_rejects_an_unavailable_logical_key() {
 		let key = RefinedSendKey {
 			logical: SendKey::unavailable(),
-			material: TestMaterial {
-				generation: 0,
-				info_len: 0,
-			},
+			material: TestMaterial { generation: 0 },
 		};
 
 		assert!(!refined_finish_send(key));
@@ -1085,7 +1184,7 @@ mod tests {
 		let mut state =
 			RefinedRatchet::<u64, u64, TestMaterial>::from_counters(u64::MAX, 4, 10, 20);
 
-		assert!(refined_advance_send(&mut state, b"send", test_step).is_none());
+		assert!(refined_advance_send(&mut state, test_step).is_none());
 		assert_eq!(state.send_sequence(), u64::MAX);
 		assert_eq!(state.receive_sequence(), 4);
 		assert_eq!(*state.send_chain(), 10);
@@ -1245,7 +1344,7 @@ mod tests {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 
 		assert_eq!(
-			refined_advance_receive_until(&mut state, b"recv", 4, test_step),
+			refined_advance_receive_until(&mut state, 4, test_step),
 			Some(4)
 		);
 		assert_eq!(state.send_sequence(), 0);
@@ -1257,7 +1356,6 @@ mod tests {
 			let (sequence, material) = state.receive_entry_at(slot).unwrap();
 			assert_eq!(sequence, slot as u64 + 1);
 			assert_eq!(material.generation, 21 + slot as u64);
-			assert_eq!(material.info_len, 4);
 			assert_eq!(refined_receive_key(&state, sequence), Some(material));
 		}
 		assert!(state.receive_entry_at(4).is_none());
@@ -1270,7 +1368,7 @@ mod tests {
 			let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 
 			assert_eq!(
-				refined_advance_receive_until(&mut state, b"recv", distance, test_step,),
+				refined_advance_receive_until(&mut state, distance, test_step,),
 				Some(distance)
 			);
 			assert_eq!(state.receive_sequence(), distance);
@@ -1289,12 +1387,7 @@ mod tests {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 
 		assert_eq!(
-			refined_advance_receive_until(
-				&mut state,
-				b"recv",
-				RATCHET_MAX_GAP + 1,
-				rejected_test_step,
-			),
+			refined_advance_receive_until(&mut state, RATCHET_MAX_GAP + 1, rejected_test_step,),
 			None
 		);
 		assert_eq!(state.receive_sequence(), 0);
@@ -1303,7 +1396,7 @@ mod tests {
 		assert!(state.receive_entry_at(0).is_none());
 
 		assert_eq!(
-			refined_advance_receive_until(&mut state, b"recv", 3, test_step),
+			refined_advance_receive_until(&mut state, 3, test_step),
 			Some(3)
 		);
 		assert_eq!(*state.receive_chain(), 23);
@@ -1314,14 +1407,11 @@ mod tests {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 		state.receive_slots[1] = Some(CachedReceiveKey {
 			sequence: 99,
-			material: TestMaterial {
-				generation: 99,
-				info_len: 0,
-			},
+			material: TestMaterial { generation: 99 },
 		});
 
 		assert_eq!(
-			refined_advance_receive_until(&mut state, b"recv", 2, rejected_test_step),
+			refined_advance_receive_until(&mut state, 2, rejected_test_step),
 			None
 		);
 		assert_eq!(state.control, RatchetState::default());
@@ -1338,14 +1428,11 @@ mod tests {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 		state.receive_slots[0] = Some(CachedReceiveKey {
 			sequence: 99,
-			material: TestMaterial {
-				generation: 99,
-				info_len: 0,
-			},
+			material: TestMaterial { generation: 99 },
 		});
 
 		assert_eq!(
-			refined_advance_receive(&mut state, b"recv", rejected_test_step),
+			refined_advance_receive(&mut state, rejected_test_step),
 			None
 		);
 		assert_eq!(state.control, RatchetState::default());
@@ -1379,10 +1466,7 @@ mod tests {
 		};
 		missing_last.receive_slots[0] = Some(CachedReceiveKey {
 			sequence: 1,
-			material: TestMaterial {
-				generation: 21,
-				info_len: 4,
-			},
+			material: TestMaterial { generation: 21 },
 		});
 		assert_eq!(
 			refined_finish_receive(&mut missing_last, 1, true),
@@ -1403,7 +1487,7 @@ mod tests {
 	fn refined_receive_rejects_a_mismatched_target_tag_without_mutation() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 		assert_eq!(
-			refined_advance_receive_until(&mut state, b"recv", 2, test_step),
+			refined_advance_receive_until(&mut state, 2, test_step),
 			Some(2)
 		);
 		state.receive_slots[0].as_mut().unwrap().sequence = 2;
@@ -1434,7 +1518,7 @@ mod tests {
 	fn refined_receive_rejects_a_mismatched_last_tag_before_swap() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 		assert_eq!(
-			refined_advance_receive_until(&mut state, b"recv", 3, test_step),
+			refined_advance_receive_until(&mut state, 3, test_step),
 			Some(3)
 		);
 		state.receive_slots[2].as_mut().unwrap().sequence = 99;
@@ -1463,7 +1547,7 @@ mod tests {
 	fn refined_receive_failure_retains_and_success_swaps_material() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 		assert_eq!(
-			refined_advance_receive_until(&mut state, b"recv", 4, test_step),
+			refined_advance_receive_until(&mut state, 4, test_step),
 			Some(4)
 		);
 
@@ -1496,10 +1580,7 @@ mod tests {
 	fn refined_receive_one_step_uses_the_next_empty_slot() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 
-		assert_eq!(
-			refined_advance_receive(&mut state, b"recv", test_step),
-			Some(1)
-		);
+		assert_eq!(refined_advance_receive(&mut state, test_step), Some(1));
 		assert_eq!(state.receive_entry_at(0).unwrap().0, 1);
 		assert_eq!(state.receive_entry_at(0).unwrap().1.generation, 21);
 		assert!(state.receive_entry_at(1).is_none());
@@ -1639,26 +1720,17 @@ mod tests {
 		assert!(refined_restore_receive_key(
 			&mut restore,
 			2,
-			TestMaterial {
-				generation: 22,
-				info_len: 4,
-			}
+			TestMaterial { generation: 22 }
 		));
 		assert!(!refined_restore_receive_key(
 			&mut restore,
 			2,
-			TestMaterial {
-				generation: 999,
-				info_len: 0,
-			}
+			TestMaterial { generation: 999 }
 		));
 		assert!(refined_restore_receive_key(
 			&mut restore,
 			7,
-			TestMaterial {
-				generation: 27,
-				info_len: 4,
-			}
+			TestMaterial { generation: 27 }
 		));
 
 		let state = finish_refined_restore(restore);
@@ -1678,19 +1750,13 @@ mod tests {
 		let mut restore = start_refined_restore::<u64, u64, TestMaterial>(9, 12, 100, 200);
 		restore.receive_slots[0] = Some(CachedReceiveKey {
 			sequence: 99,
-			material: TestMaterial {
-				generation: 99,
-				info_len: 0,
-			},
+			material: TestMaterial { generation: 99 },
 		});
 
 		assert!(!refined_restore_receive_key(
 			&mut restore,
 			2,
-			TestMaterial {
-				generation: 22,
-				info_len: 4,
-			}
+			TestMaterial { generation: 22 }
 		));
 		assert_eq!(restore.logical, start_restore(9, 12));
 		assert_eq!(

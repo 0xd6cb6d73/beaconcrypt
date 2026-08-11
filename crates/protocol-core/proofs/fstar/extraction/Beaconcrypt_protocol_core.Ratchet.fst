@@ -9,50 +9,102 @@ let v_RATCHET_MAX_GAP: u64 = mk_u64 50
 /// Physical capacity of the logical receive-key cache.
 let v_RECEIVE_CACHE_CAPACITY: usize = cast (v_RATCHET_MAX_GAP <: u64) <: usize
 
-/// Proof-visible borrowed partition of one symmetric-ratchet HKDF expansion.
-/// The primitive call remains in the production adapter. This type and
-/// [`split_ratchet_kdf_output`] own the exact key, next-chain, and nonce
-/// offsets used to interpret its fixed-size output without copying the secret
-/// buffer out of its adapter-owned zeroizing container.
-type t_RatchetKdfOutput = {
-  f_key:t_Slice u8;
-  f_next_chain:t_Slice u8;
-  f_nonce:t_Slice u8
+/// Fixed-width symmetric-ratchet chain bytes owned by the extracted boundary.
+type t_RatchetChain = { f_bytes:t_Array u8 (mk_usize 32) }
+
+let impl_RatchetChain__from_bytes (bytes: t_Array u8 (mk_usize 32)) : t_RatchetChain =
+  { f_bytes = bytes } <: t_RatchetChain
+
+let impl_RatchetChain__as_bytes (self: t_RatchetChain) : t_Array u8 (mk_usize 32) = self.f_bytes
+
+let impl_RatchetChain__into_bytes (self: t_RatchetChain) : t_Array u8 (mk_usize 32) = self.f_bytes
+
+/// Fixed-width symmetric-ratchet message-key bytes owned by the extracted boundary.
+type t_RatchetKey = { f_bytes:t_Array u8 (mk_usize 32) }
+
+let impl_RatchetKey__as_bytes (self: t_RatchetKey) : t_Array u8 (mk_usize 32) = self.f_bytes
+
+let impl_RatchetKey__into_bytes (self: t_RatchetKey) : t_Array u8 (mk_usize 32) = self.f_bytes
+
+/// Fixed-width symmetric-ratchet AEAD nonce bytes owned by the extracted boundary.
+type t_RatchetNonce = { f_bytes:t_Array u8 (mk_usize 12) }
+
+let impl_RatchetNonce__as_bytes (self: t_RatchetNonce) : t_Array u8 (mk_usize 12) = self.f_bytes
+
+let impl_RatchetNonce__into_bytes (self: t_RatchetNonce) : t_Array u8 (mk_usize 12) = self.f_bytes
+
+/// Fixed-width key and nonce produced by one symmetric-ratchet step.
+type t_RatchetMaterial = {
+  f_key:t_RatchetKey;
+  f_nonce:t_RatchetNonce
 }
 
-let impl__key (self: t_RatchetKdfOutput) : t_Slice u8 = self.f_key
+let impl_RatchetMaterial__key (self: t_RatchetMaterial) : t_RatchetKey = self.f_key
 
-let impl__next_chain (self: t_RatchetKdfOutput) : t_Slice u8 = self.f_next_chain
+let impl_RatchetMaterial__nonce (self: t_RatchetMaterial) : t_RatchetNonce = self.f_nonce
 
-let impl__nonce (self: t_RatchetKdfOutput) : t_Slice u8 = self.f_nonce
+let impl_RatchetMaterial__into_parts (self: t_RatchetMaterial) : (t_RatchetKey & t_RatchetNonce) =
+  self.f_key, self.f_nonce <: (t_RatchetKey & t_RatchetNonce)
 
-/// Split `key || next_chain || nonce` at the production ratchet's exact byte offsets.
+/// Proof-visible owned partition of one symmetric-ratchet HKDF expansion.
+type t_RatchetKdfOutput = {
+  f_key:t_RatchetKey;
+  f_next_chain:t_RatchetChain;
+  f_nonce:t_RatchetNonce
+}
+
+let impl_RatchetKdfOutput__key (self: t_RatchetKdfOutput) : t_RatchetKey = self.f_key
+
+let impl_RatchetKdfOutput__next_chain (self: t_RatchetKdfOutput) : t_RatchetChain =
+  self.f_next_chain
+
+let impl_RatchetKdfOutput__nonce (self: t_RatchetKdfOutput) : t_RatchetNonce = self.f_nonce
+
+/// Split `key || next_chain || nonce` into fixed-width values at the protocol's exact offsets.
 let split_ratchet_kdf_output (output: t_Array u8 (mk_usize 76)) : t_RatchetKdfOutput =
+  let key:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
+  let key:t_Array u8 (mk_usize 32) =
+    Core_models.Slice.impl__copy_from_slice #u8
+      key
+      (output.[ {
+            Core_models.Ops.Range.f_start = mk_usize 0;
+            Core_models.Ops.Range.f_end = mk_usize 32
+          }
+          <:
+          Core_models.Ops.Range.t_Range usize ]
+        <:
+        t_Slice u8)
+  in
+  let next_chain:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
+  let next_chain:t_Array u8 (mk_usize 32) =
+    Core_models.Slice.impl__copy_from_slice #u8
+      next_chain
+      (output.[ {
+            Core_models.Ops.Range.f_start = mk_usize 32;
+            Core_models.Ops.Range.f_end = mk_usize 64
+          }
+          <:
+          Core_models.Ops.Range.t_Range usize ]
+        <:
+        t_Slice u8)
+  in
+  let nonce:t_Array u8 (mk_usize 12) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 12) in
+  let nonce:t_Array u8 (mk_usize 12) =
+    Core_models.Slice.impl__copy_from_slice #u8
+      nonce
+      (output.[ {
+            Core_models.Ops.Range.f_start = mk_usize 64;
+            Core_models.Ops.Range.f_end = mk_usize 76
+          }
+          <:
+          Core_models.Ops.Range.t_Range usize ]
+        <:
+        t_Slice u8)
+  in
   {
-    f_key
-    =
-    output.[ {
-        Core_models.Ops.Range.f_start = mk_usize 0;
-        Core_models.Ops.Range.f_end = mk_usize 32
-      }
-      <:
-      Core_models.Ops.Range.t_Range usize ];
-    f_next_chain
-    =
-    output.[ {
-        Core_models.Ops.Range.f_start = mk_usize 32;
-        Core_models.Ops.Range.f_end = mk_usize 64
-      }
-      <:
-      Core_models.Ops.Range.t_Range usize ];
-    f_nonce
-    =
-    output.[ {
-        Core_models.Ops.Range.f_start = mk_usize 64;
-        Core_models.Ops.Range.f_end = mk_usize 76
-      }
-      <:
-      Core_models.Ops.Range.t_Range usize ]
+    f_key = { f_bytes = key } <: t_RatchetKey;
+    f_next_chain = { f_bytes = next_chain } <: t_RatchetChain;
+    f_nonce = { f_bytes = nonce } <: t_RatchetNonce
   }
   <:
   t_RatchetKdfOutput
@@ -455,13 +507,33 @@ let restore_receive_key (restore: t_RatchetRestore) (sequence: u64)
 let finish_restore (restore: t_RatchetRestore) : t_RatchetState = restore.f_state
 
 /// One opaque ratchet-step result.
-/// The shared kernel treats both fields parametrically. Production supplies the
-/// HKDF call, delegates its byte partition to [`split_ratchet_kdf_output`], and
-/// wraps those checked parts in its chain and material types.
+/// The shared kernel treats both fields parametrically.
+/// The concrete extracted adapter [`derive_ratchet_step`] constructs them from one fixed-output opaque KDF call.
+/// Logical tests may construct arbitrary values through this type.
 type t_RatchetStep (v_Chain: Type0) (v_Material: Type0) = {
   f_chain:v_Chain;
   f_material:v_Material
 }
+
+let impl_RatchetKdfOutput__into_step (self: t_RatchetKdfOutput)
+    : t_RatchetStep t_RatchetChain t_RatchetMaterial =
+  {
+    f_chain = self.f_next_chain;
+    f_material = { f_key = self.f_key; f_nonce = self.f_nonce } <: t_RatchetMaterial
+  }
+  <:
+  t_RatchetStep t_RatchetChain t_RatchetMaterial
+
+/// Apply the sole opaque ratchet primitive to the exact old chain and interpret its fixed output.
+/// The primitive's complete production-facing type is `old 32-byte chain -> 76-byte output`.
+/// Label selection and HKDF details are private to that domain-specific primitive.
+/// Input selection, output size, partitioning, and fixed-width construction are owned here.
+let derive_ratchet_step
+      (old_chain: t_Array u8 (mk_usize 32))
+      (kdf: (t_Array u8 (mk_usize 32) -> t_Array u8 (mk_usize 76)))
+    : t_RatchetStep t_RatchetChain t_RatchetMaterial =
+  let output:t_Array u8 (mk_usize 76) = kdf old_chain in
+  impl_RatchetKdfOutput__into_step (split_ratchet_kdf_output output <: t_RatchetKdfOutput)
 
 /// Concrete receive material sealed together with the logical sequence that
 /// caused the kernel to store it.
@@ -547,7 +619,7 @@ type t_RefinedRatchet (v_SendChain: Type0) (v_ReceiveChain: Type0) (v_Material: 
 
 /// Construct a refined ratchet with arbitrary counters and no cached receive
 /// material. This is also useful for checked exhaustion fixtures.
-let impl_5__from_counters
+let impl_9__from_counters
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (send_sequence receive_sequence: u64)
       (send_chain: v_SendChain)
@@ -563,12 +635,12 @@ let impl_5__from_counters
   t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
 
 /// Construct a fresh refined ratchet with empty counters and receive slots.
-let impl_5__new
+let impl_9__new
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (send_chain: v_SendChain)
       (receive_chain: v_ReceiveChain)
     : t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
-  impl_5__from_counters #v_SendChain
+  impl_9__from_counters #v_SendChain
     #v_ReceiveChain
     #v_Material
     (mk_u64 0)
@@ -576,34 +648,34 @@ let impl_5__new
     send_chain
     receive_chain
 
-let impl_5__send_sequence
+let impl_9__send_sequence
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (self: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
     : u64 = impl_RatchetState__send_sequence self.f_control
 
-let impl_5__receive_sequence
+let impl_9__receive_sequence
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (self: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
     : u64 = impl_RatchetState__receive_sequence self.f_control
 
-let impl_5__receive_cache_len
+let impl_9__receive_cache_len
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (self: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
     : u8 = impl_RatchetState__receive_cache_len self.f_control
 
-let impl_5__send_chain
+let impl_9__send_chain
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (self: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
     : v_SendChain = self.f_send_chain
 
-let impl_5__receive_chain
+let impl_9__receive_chain
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (self: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
     : v_ReceiveChain = self.f_receive_chain
 
 /// Return the logical sequence and concrete material paired in one active
 /// physical slot.
-let impl_5__receive_entry_at
+let impl_9__receive_entry_at
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (self: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
       (slot: u8)
@@ -645,10 +717,10 @@ type t_RefinedSendKey (v_Material: Type0) = {
   f_material:v_Material
 }
 
-let impl_6__sequence (#v_Material: Type0) (self: t_RefinedSendKey v_Material)
+let impl_10__sequence (#v_Material: Type0) (self: t_RefinedSendKey v_Material)
     : Core_models.Option.t_Option u64 = impl_SendKey__sequence self.f_logical
 
-let impl_6__material (#v_Material: Type0) (self: t_RefinedSendKey v_Material) : v_Material =
+let impl_10__material (#v_Material: Type0) (self: t_RefinedSendKey v_Material) : v_Material =
   self.f_material
 
 /// Advance the send control state and concrete chain with the same opaque step.
@@ -658,8 +730,7 @@ let impl_6__material (#v_Material: Type0) (self: t_RefinedSendKey v_Material) : 
 let refined_advance_send
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-      (info: t_Slice u8)
-      (step: (v_SendChain -> t_Slice u8 -> t_RatchetStep v_SendChain v_Material))
+      (step: (v_SendChain -> t_RatchetStep v_SendChain v_Material))
     : (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
       Core_models.Option.t_Option (t_RefinedSendKey v_Material)) =
   let advanced:t_SendAdvance = advance_send state.f_control in
@@ -676,7 +747,7 @@ let refined_advance_send
       (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
         Core_models.Option.t_Option (t_RefinedSendKey v_Material))
     else
-      let stepped:t_RatchetStep v_SendChain v_Material = step state.f_send_chain info in
+      let stepped:t_RatchetStep v_SendChain v_Material = step state.f_send_chain in
       let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
         { state with f_send_chain = stepped.f_chain }
         <:
@@ -717,8 +788,7 @@ let refined_finish_send (#v_Material: Type0) (key: t_RefinedSendKey v_Material) 
 let refined_advance_receive
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-      (info: t_Slice u8)
-      (step: (v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material))
+      (step: (v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material))
     : (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option u64) =
   let advanced:t_ReceiveAdvance = advance_receive state.f_control in
   match advanced.f_sequence <: Core_models.Option.t_Option u64 with
@@ -741,7 +811,7 @@ let refined_advance_receive
           <:
           (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option u64)
         else
-          let stepped:t_RatchetStep v_ReceiveChain v_Material = step state.f_receive_chain info in
+          let stepped:t_RatchetStep v_ReceiveChain v_Material = step state.f_receive_chain in
           let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
             { state with f_receive_chain = stepped.f_chain }
             <:
@@ -967,8 +1037,7 @@ let rec refined_receive_slots_are_empty
 let rec refined_execute_receive_steps
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-      (info: t_Slice u8)
-      (step: (v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material))
+      (step: (v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material))
       (remaining: u8)
     : Prims.Tot (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
       (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
@@ -978,7 +1047,7 @@ let rec refined_execute_receive_steps
     let
     (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
     (out: Core_models.Option.t_Option u64) =
-      refined_advance_receive #v_SendChain #v_ReceiveChain #v_Material state info step
+      refined_advance_receive #v_SendChain #v_ReceiveChain #v_Material state step
     in
     let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
     let _:Core_models.Option.t_Option u64 = out in
@@ -986,7 +1055,6 @@ let rec refined_execute_receive_steps
       #v_ReceiveChain
       #v_Material
       state
-      info
       step
       (remaining -! mk_u8 1 <: u8)
 
@@ -1002,9 +1070,8 @@ let lookup_receive_key (state: t_RatchetState) (sequence: u64) : Core_models.Opt
 let refined_advance_receive_until
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-      (info: t_Slice u8)
       (target: u64)
-      (step: (v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material))
+      (step: (v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material))
     : (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option u64) =
   let plan:t_ReceivePlan = plan_receive_until state.f_control target in
   match plan.f_sequence <: Core_models.Option.t_Option u64 with
@@ -1036,7 +1103,6 @@ let refined_advance_receive_until
             #v_ReceiveChain
             #v_Material
             state
-            info
             step
             remaining
         in
