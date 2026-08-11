@@ -7,6 +7,33 @@ open Beaconcrypt_protocol_core.Ratchet
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 60"
 
+/// The extracted splitter assigns every HKDF byte to exactly the production
+/// key, next-chain, or nonce field, with no adapter-owned offset arithmetic.
+let ratchet_kdf_output_split_is_exact
+    (output:t_Array u8 (mk_usize 76))
+  : Lemma
+      (let split = split_ratchet_kdf_output output in
+       Seq.length split.f_key == 32 /\
+       Seq.length split.f_next_chain == 32 /\
+       Seq.length split.f_nonce == 12 /\
+       (forall (i:nat{i < 32}).
+          Seq.index split.f_key i == Seq.index output i) /\
+       (forall (i:nat{i < 32}).
+          Seq.index split.f_next_chain i == Seq.index output (i + 32)) /\
+       (forall (i:nat{i < 12}).
+          Seq.index split.f_nonce i == Seq.index output (i + 64)))
+  = ()
+
+/// Fixed-width integer values are determined by their mathematical view.
+let u64_value_extensionality
+    (left right:u64)
+  : Lemma
+      (requires (v left == v right))
+      (ensures (left == right))
+  = match left, right with
+    | Rust_primitives.Integers.MkInt _,
+      Rust_primitives.Integers.MkInt _ -> ()
+
 /// Logical view of the active part of the fixed receive-key cache.  The Rust
 /// array has length 50 by construction; validity additionally constrains the
 /// logical length and the values stored before it.
@@ -791,31 +818,39 @@ let finish_restore_is_valid
   : Lemma (valid_state (finish_restore restore))
   = ()
 
-/// Logical view of one material slot in the refined fixed array.
+/// Logical view of one sealed receive-key slot in the refined fixed array.
 let refined_slot_value
     (#v_Material:Type0)
-    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
     (i:nat{i < 50})
-  : Core_models.Option.t_Option v_Material =
+  : Core_models.Option.t_Option (t_CachedReceiveKey v_Material) =
   Seq.index slots i
 
 let refined_slot_value_is_index
     (#v_Material:Type0)
-    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
     (i:nat{i < 50})
   : Lemma
       (refined_slot_value slots i == Seq.index slots i)
   = ()
 
-/// The material array is packed exactly like the logical sequence cache.
+/// Every active slot carries the exact logical sequence beside its material,
+/// and every inactive slot is empty.
 let material_slots_match
     (#v_Material:Type0)
     (cache:t_SequenceCache)
-    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
   : prop =
   forall (i:nat{i < 50}).
     match refined_slot_value slots i with
-    | Core_models.Option.Option_Some _ -> i < cache_len cache
+    | Core_models.Option.Option_Some cached ->
+        i < cache_len cache /\ cached.f_sequence == cache_entry cache i
     | Core_models.Option.Option_None -> cache_len cache <= i
 
 /// Proof-only structural representation of a generic list containing exactly `n` empty material slots.
@@ -823,14 +858,15 @@ let rec none_material_list
     (#v_Material:Type0)
     (n:nat)
   : Tot
-      (xs:list (Core_models.Option.t_Option v_Material) {
+      (xs:list
+        (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) {
          List.Tot.length xs == n })
       (decreases n)
   =
   if n = 0 then []
   else
     (Core_models.Option.Option_None <:
-       Core_models.Option.t_Option v_Material) ::
+       Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) ::
       none_material_list #v_Material (n - 1)
 
 let rec none_material_list_index
@@ -1493,14 +1529,18 @@ let refined_slot
   : prop =
   cache_slot state.f_control.f_receive_cache sequence slot /\
   refined_slot_value state.f_receive_slots (v slot) ==
-    Core_models.Option.Option_Some material
+    Core_models.Option.Option_Some
+      ({ f_sequence = sequence; f_material = material } <:
+        t_CachedReceiveKey v_Material)
 
 /// A packed append preserves every earlier sequence/material association pointwise.
 let packed_prefix_unchanged
     (#v_Material:Type0)
     (old_cache new_cache:t_SequenceCache)
     (old_slots new_slots:
-      t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+      t_Array
+        (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+        (mk_usize 50))
   : prop =
   forall (i:nat{i < 50}).
     i < cache_len old_cache ==>
@@ -1510,7 +1550,9 @@ let packed_prefix_unchanged
 let packed_prefix_unchanged_refl
     (#v_Material:Type0)
     (cache:t_SequenceCache)
-    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
   : Lemma (packed_prefix_unchanged cache cache slots slots)
   =
   let pointwise (i:nat{i < 50})
@@ -1526,7 +1568,9 @@ let packed_prefix_unchanged_transitive
     (#v_Material:Type0)
     (cache0 cache1 cache2:t_SequenceCache)
     (slots0 slots1 slots2:
-      t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+      t_Array
+        (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+        (mk_usize 50))
   : Lemma
       (requires
         (packed_prefix_unchanged cache0 cache1 slots0 slots1 /\
@@ -1631,7 +1675,7 @@ let refined_from_counters_is_valid
     (receive_chain:v_ReceiveChain)
   : Lemma
       (valid_refined
-        (impl_4__from_counters #v_SendChain #v_ReceiveChain #v_Material
+        (impl_5__from_counters #v_SendChain #v_ReceiveChain #v_Material
           send_sequence receive_sequence send_chain receive_chain))
   = from_counters_is_valid send_sequence receive_sequence;
     empty_material_slots_are_none #v_Material
@@ -1642,7 +1686,7 @@ let refined_new_is_valid
     (receive_chain:v_ReceiveChain)
   : Lemma
       (valid_refined
-        (impl_4__new #v_SendChain #v_ReceiveChain #v_Material
+        (impl_5__new #v_SendChain #v_ReceiveChain #v_Material
           send_chain receive_chain))
   = refined_from_counters_is_valid #v_SendChain #v_ReceiveChain #v_Material
       (mk_u64 0) (mk_u64 0) send_chain receive_chain
@@ -1677,7 +1721,7 @@ let refined_advance_send_success_uses_step
            state'.f_receive_chain == state.f_receive_chain /\
            state'.f_receive_slots == state.f_receive_slots /\
            key.f_material == stepped.f_material /\
-           impl_5__sequence key ==
+           impl_6__sequence key ==
              Core_models.Option.Option_Some state'.f_control.f_send_sequence /\
            v state'.f_control.f_send_sequence ==
              v state.f_control.f_send_sequence + 1 /\
@@ -1914,6 +1958,33 @@ let rec refined_execute_receive_steps_is_exact
                  middle final_state info step next_remaining);
         ()
 
+/// Once planning and concrete-slot preflight are admitted, the generated
+/// transaction is definitionally the full bounded execution and its planned
+/// target; there is no intermediate failure branch.
+let refined_advance_receive_until_accepted_computes
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (info:t_Slice u8)
+    (requested reached:u64)
+    (step:v_ReceiveChain -> t_Slice u8 ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (remaining:u8)
+  : Lemma
+      (requires
+        (let plan = plan_receive_until state.f_control requested in
+         plan.f_sequence == Core_models.Option.Option_Some reached /\
+         not (plan.f_derivations >. v_RATCHET_MAX_GAP) /\
+         remaining == (cast plan.f_derivations <: u8) /\
+         refined_receive_slots_are_empty
+           state
+           (impl_RatchetState__receive_cache_len state.f_control)
+           remaining == true))
+      (ensures
+        (refined_advance_receive_until state info requested step ==
+          (refined_execute_receive_steps state info step remaining,
+           Core_models.Option.Option_Some reached)))
+  = ()
+
 /// The complete transaction exactly realizes every admitted plan. Planning or preflight rejection is neutral; success returns the requested target with the full ordered refinement as one result.
 let refined_advance_receive_until_executes_plan
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
@@ -1953,7 +2024,11 @@ let refined_advance_receive_until_executes_plan
   plan_receive_shape state.f_control target;
   assert (v plan.f_derivations <= 50);
   match plan.f_sequence with
-  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_None ->
+      assert
+        (refined_advance_receive_until state info target step ==
+          (state, Core_models.Option.Option_None));
+      ()
   | Core_models.Option.Option_Some planned_target ->
       assert (planned_target == target);
       assert (plan.f_derivations <=. v_RATCHET_MAX_GAP);
@@ -1971,20 +2046,66 @@ let refined_advance_receive_until_executes_plan
              v target);
          refined_receive_slots_are_empty_for_valid
            state first_slot remaining;
+         assert
+           (refined_receive_slots_are_empty
+             state first_slot remaining == true);
+         assert (not (plan.f_derivations >. v_RATCHET_MAX_GAP));
+         assert
+           (impl_RatchetState__receive_cache_len state.f_control ==
+             first_slot);
          refined_execute_receive_steps_is_exact
            state info step remaining;
          let final_state =
            refined_execute_receive_steps state info step remaining in
-         Rust_primitives.Integers.mk_int_v_lemma
-           final_state.f_control.f_receive_sequence;
-         Rust_primitives.Integers.mk_int_v_lemma target;
-         assert (final_state.f_control.f_receive_sequence == target))
+         assert (v remaining == v plan.f_derivations);
+         assert (valid_refined final_state);
+         assert
+           (refined_receive_steps_are_ordered
+             state final_state info step remaining);
+         assert
+           (v final_state.f_control.f_receive_sequence ==
+             v state.f_control.f_receive_sequence + v remaining);
+         assert
+           (cache_len final_state.f_control.f_receive_cache ==
+             cache_len state.f_control.f_receive_cache + v remaining);
+         let final_sequence =
+           final_state.f_control.f_receive_sequence in
+         assert (v final_sequence == v target);
+         u64_value_extensionality final_sequence target;
+         assert (final_sequence == target);
+         assert
+           (final_state.f_control.f_receive_sequence == target);
+         refined_advance_receive_until_accepted_computes
+           state info target planned_target step remaining;
+         assert
+           (refined_advance_receive_until state info target step ==
+             (final_state,
+              Core_models.Option.Option_Some planned_target));
+         ())
       else
         (assert (plan.f_derivations == mk_u64 0);
+         assert (remaining == mk_u8 0);
          refined_receive_slots_are_empty_for_valid
            state first_slot remaining;
+         assert
+           (refined_receive_slots_are_empty
+             state first_slot remaining == true);
+         assert (not (plan.f_derivations >. v_RATCHET_MAX_GAP));
+         assert
+           (impl_RatchetState__receive_cache_len state.f_control ==
+             first_slot);
          refined_execute_receive_steps_is_exact
-           state info step remaining)
+           state info step remaining;
+         assert
+           (refined_execute_receive_steps state info step remaining ==
+             state);
+         refined_advance_receive_until_accepted_computes
+           state info target planned_target step remaining;
+         assert
+           (refined_advance_receive_until state info target step ==
+             (state,
+              Core_models.Option.Option_Some planned_target));
+         ())
 
 /// Rejected whole-plan execution is unconditionally neutral for every valid refined state; no committed prefix can accompany `None`.
 let refined_advance_receive_until_rejection_is_neutral
@@ -2038,6 +2159,57 @@ let refined_advance_receive_until_old_is_neutral
         (state, Core_models.Option.Option_Some target))
   = plan_old_receive_is_zero_cost state.f_control target
 
+/// Serialization's active-slot accessor exposes only a sealed pair whose tag
+/// is the logical sequence stored at that same physical slot.
+let refined_receive_entry_is_associated
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined state })
+    (slot:u8 {
+       v slot < 50 /\
+       v slot < cache_len state.f_control.f_receive_cache })
+  : Lemma
+      (match impl_5__receive_entry_at state slot with
+       | Core_models.Option.Option_Some (sequence, material) ->
+           refined_slot state sequence material slot
+       | Core_models.Option.Option_None -> False)
+  = ()
+
+/// The active-slot accessor detects an internal tag/control disagreement.
+let refined_receive_entry_mismatched_tag_is_rejected
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (slot:u8{v slot < 50})
+    (sequence:u64)
+    (cached:t_CachedReceiveKey v_Material {
+       impl_RatchetState__receive_key_at state.f_control slot ==
+         Core_models.Option.Option_Some sequence /\
+       refined_slot_value state.f_receive_slots (v slot) ==
+         Core_models.Option.Option_Some cached /\
+       cached.f_sequence <> sequence })
+  : Lemma
+      (impl_5__receive_entry_at state slot ==
+        Core_models.Option.Option_None)
+  = ()
+
+/// A physically populated lookup slot whose sealed tag disagrees with the
+/// requested logical sequence is rejected rather than exposing its material.
+let refined_receive_key_mismatched_tag_is_rejected
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (sequence:u64)
+    (slot:u8{v slot < 50})
+    (cached:t_CachedReceiveKey v_Material {
+       lookup_receive_key state.f_control sequence ==
+         Core_models.Option.Option_Some slot /\
+       refined_slot_value state.f_receive_slots (v slot) ==
+         Core_models.Option.Option_Some cached /\
+       cached.f_sequence <> sequence })
+  : Lemma
+      (refined_receive_key state sequence ==
+        Core_models.Option.Option_None)
+  = ()
+
 /// Concrete lookup returns material only from the unique logical slot for the requested sequence.
 let refined_receive_key_is_associated
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
@@ -2074,7 +2246,9 @@ let refined_receive_key_is_associated
           assert
             (v active_slot < cache_len state.f_control.f_receive_cache);
           ()
-      | Core_models.Option.Option_Some material ->
+      | Core_models.Option.Option_Some cached ->
+          assert (cached.f_sequence == sequence);
+          let material = cached.f_material in
           assert
             (refined_receive_key state sequence ==
               Core_models.Option.Option_Some material);
@@ -2097,50 +2271,108 @@ let refined_finish_receive_neutral_outcomes_preserve_full_state
          state' == state)
   = ()
 
-/// Logical view of the concrete material-array swap-removal performed by refined completion.
-let material_slots_after_swap_remove
-    (#v_Material:Type0)
-    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+/// A matching logical lookup paired with a differently tagged target token is
+/// rejected before logical or concrete state can change.
+let refined_finish_receive_mismatched_target_is_neutral
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (sequence:u64)
+    (authenticated:bool)
+    (slot:u8{v slot < 50})
+    (cached:t_CachedReceiveKey v_Material {
+       lookup_receive_key state.f_control sequence ==
+         Core_models.Option.Option_Some slot /\
+       refined_slot_value state.f_receive_slots (v slot) ==
+         Core_models.Option.Option_Some cached /\
+       cached.f_sequence <> sequence })
+  : Lemma
+      (refined_finish_receive state sequence authenticated ==
+        (state, ReceiveDisposition_Missing))
+  = ()
+
+/// On a logically consumed path, a stale tag in the old-last concrete token
+/// is detected before the swap and leaves the complete refined state intact.
+let refined_finish_receive_mismatched_last_is_neutral
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (sequence last_sequence:u64)
     (target_slot:u8{v target_slot < 50})
     (last_slot:u8{v last_slot < 50})
-    (last_material:v_Material)
-  : t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50) =
+    (target_cached last_cached:t_CachedReceiveKey v_Material)
+    (removal:t_ReceiveRemoval {
+       lookup_receive_key state.f_control sequence ==
+         Core_models.Option.Option_Some target_slot /\
+       refined_slot_value state.f_receive_slots (v target_slot) ==
+         Core_models.Option.Option_Some target_cached /\
+       target_cached.f_sequence == sequence /\
+       (finish_receive_with_removal
+         state.f_control sequence target_slot true).f_disposition ==
+           ReceiveDisposition_Consumed /\
+       (finish_receive_with_removal
+         state.f_control sequence target_slot true).f_removal ==
+           Core_models.Option.Option_Some removal /\
+       removal.f_target_slot == target_slot /\
+       removal.f_last_slot == last_slot /\
+       impl_RatchetState__receive_key_at state.f_control last_slot ==
+         Core_models.Option.Option_Some last_sequence /\
+       refined_slot_value state.f_receive_slots (v last_slot) ==
+         Core_models.Option.Option_Some last_cached /\
+       last_cached.f_sequence <> last_sequence })
+  : Lemma
+      (refined_finish_receive state sequence true ==
+        (state, ReceiveDisposition_Missing))
+  = ()
+
+/// Logical view of the concrete sealed-token swap-removal performed by refined completion.
+let material_slots_after_swap_remove
+    (#v_Material:Type0)
+    (slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (target_slot:u8{v target_slot < 50})
+    (last_slot:u8{v last_slot < 50})
+    (last_cached:t_CachedReceiveKey v_Material)
+  : t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50) =
   let cleared =
     Seq.upd slots (v last_slot)
       (Core_models.Option.Option_None <:
-        Core_models.Option.t_Option v_Material) in
+        Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) in
   if target_slot = last_slot then cleared
   else
     Seq.upd cleared (v target_slot)
-      (Core_models.Option.Option_Some last_material <:
-        Core_models.Option.t_Option v_Material)
+      (Core_models.Option.Option_Some last_cached <:
+        Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
 
 /// Concrete swap-removal clears the old last slot, moves its exact material when needed, and preserves every other slot pointwise.
 let material_slots_after_swap_remove_is_exact
     (#v_Material:Type0)
-    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
     (target_slot:u8{v target_slot < 50})
     (last_slot:u8{v last_slot < 50})
-    (last_material:v_Material)
+    (last_cached:t_CachedReceiveKey v_Material)
   : Lemma
       (let slots' =
          material_slots_after_swap_remove
-           slots target_slot last_slot last_material in
+           slots target_slot last_slot last_cached in
        refined_slot_value slots' (v last_slot) ==
          Core_models.Option.Option_None /\
        (target_slot <> last_slot ==>
          refined_slot_value slots' (v target_slot) ==
-           Core_models.Option.Option_Some last_material) /\
+           Core_models.Option.Option_Some last_cached) /\
        (forall (i:nat{i < 50}).
           i <> v target_slot /\ i <> v last_slot ==>
             refined_slot_value slots' i == refined_slot_value slots i))
   =
   let none =
     (Core_models.Option.Option_None <:
-      Core_models.Option.t_Option v_Material) in
+      Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) in
   let moved =
-    (Core_models.Option.Option_Some last_material <:
-      Core_models.Option.t_Option v_Material) in
+    (Core_models.Option.Option_Some last_cached <:
+      Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) in
   let cleared = Seq.upd slots (v last_slot) none in
   FStar.Seq.Base.lemma_index_upd1 slots (v last_slot) none;
   if target_slot = last_slot then
@@ -2175,19 +2407,21 @@ let material_slots_after_swap_remove_is_exact
 /// The generated Option.take/update_at expression is definitionally the logical swap-removal view.
 let generated_material_swap_remove_matches_view
     (#v_Material:Type0)
-    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
     (target_slot:u8{v target_slot < 50})
     (last_slot:u8{v last_slot < 50})
-    (last_material:v_Material)
+    (last_cached:t_CachedReceiveKey v_Material)
   : Lemma
       (requires
         (Seq.index slots (v last_slot) ==
-          Core_models.Option.Option_Some last_material))
+          Core_models.Option.Option_Some last_cached))
       (ensures
         (let target_index = cast (target_slot <: u8) <: usize in
          let last_index = cast (last_slot <: u8) <: usize in
          let tmp0, moved =
-           Core_models.Option.impl__take #v_Material
+           Core_models.Option.impl__take #(t_CachedReceiveKey v_Material)
              (Seq.index slots (v last_slot)) in
          let cleared =
            Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
@@ -2199,7 +2433,7 @@ let generated_material_swap_remove_matches_view
                cleared target_index moved in
          actual ==
            material_slots_after_swap_remove
-             slots target_slot last_slot last_material))
+             slots target_slot last_slot last_cached))
   = if target_slot = last_slot then () else ()
 
 /// On the admitted consumed path, the whole generated refined completion computes the swap-removal view.
@@ -2209,7 +2443,7 @@ let refined_finish_receive_success_computes_swap
     (sequence:u64)
     (target_slot:u8{v target_slot < 50})
     (last_slot:u8{v last_slot < 50})
-    (target_material last_material:v_Material)
+    (target_cached last_cached:t_CachedReceiveKey v_Material)
     (removal:t_ReceiveRemoval)
   : Lemma
       (requires
@@ -2224,83 +2458,129 @@ let refined_finish_receive_success_computes_swap
          removal.f_target_slot == target_slot /\
          removal.f_last_slot == last_slot /\
          Seq.index state.f_receive_slots (v target_slot) ==
-           Core_models.Option.Option_Some target_material /\
+           Core_models.Option.Option_Some target_cached /\
+         target_cached.f_sequence == sequence /\
          Seq.index state.f_receive_slots (v last_slot) ==
-           Core_models.Option.Option_Some last_material))
+           Core_models.Option.Option_Some last_cached /\
+         impl_RatchetState__receive_key_at state.f_control last_slot ==
+           Core_models.Option.Option_Some last_cached.f_sequence))
       (ensures
         (let finished =
            finish_receive_with_removal
              state.f_control sequence target_slot true in
          let slots' =
            material_slots_after_swap_remove
-             state.f_receive_slots target_slot last_slot last_material in
+             state.f_receive_slots target_slot last_slot last_cached in
          let with_slots = { state with f_receive_slots = slots' } in
          let expected = { with_slots with f_control = finished.f_state } in
          refined_finish_receive state sequence true ==
            (expected, ReceiveDisposition_Consumed)))
   =
   generated_material_swap_remove_matches_view
-    state.f_receive_slots target_slot last_slot last_material;
+    state.f_receive_slots target_slot last_slot last_cached;
   if target_slot = last_slot then () else ()
 
-/// Mirroring a logical swap-removal in the material array preserves packed occupancy.
+/// Logical swap-removal preserves every surviving physical entry except the
+/// target slot, which receives the old last entry.
+let finish_receive_with_removal_preserves_other_physical_slot
+    (state:t_RatchetState { valid_state state })
+    (sequence:u64)
+    (target_slot:u8 { cache_slot state.f_receive_cache sequence target_slot })
+  : Lemma
+      (let finished =
+         finish_receive_with_removal state sequence target_slot true in
+       forall (i:nat{i < 50}).
+         i < cache_len finished.f_state.f_receive_cache /\
+         i <> v target_slot ==>
+           cache_entry finished.f_state.f_receive_cache i ==
+             cache_entry state.f_receive_cache i)
+  =
+  let finished =
+    finish_receive_with_removal state sequence target_slot true in
+  finish_receive_with_removal_success_shape state sequence target_slot;
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        (i < cache_len finished.f_state.f_receive_cache /\
+         i <> v target_slot ==>
+           cache_entry finished.f_state.f_receive_cache i ==
+             cache_entry state.f_receive_cache i)
+    = ()
+  in
+  FStar.Classical.forall_intro pointwise
+
+/// Mirroring a logical swap-removal with the whole sealed token preserves both
+/// occupancy and the token/control sequence equality.
 let material_slots_after_swap_remove_matches
     (#v_Material:Type0)
     (old_cache new_cache:t_SequenceCache)
-    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
     (target_slot:u8{v target_slot < 50})
     (last_slot:u8{v last_slot < 50})
-    (last_material:v_Material)
+    (last_cached:t_CachedReceiveKey v_Material)
   : Lemma
       (requires
         (material_slots_match old_cache slots /\
          v target_slot < cache_len old_cache /\
          v last_slot + 1 == cache_len old_cache /\
-         cache_len new_cache + 1 == cache_len old_cache))
+         cache_len new_cache + 1 == cache_len old_cache /\
+         last_cached.f_sequence == cache_entry old_cache (v last_slot) /\
+         (target_slot <> last_slot ==>
+           cache_entry new_cache (v target_slot) ==
+             last_cached.f_sequence) /\
+         (forall (i:nat{i < 50}).
+            i < cache_len new_cache /\ i <> v target_slot ==>
+              cache_entry new_cache i == cache_entry old_cache i)))
       (ensures
         (material_slots_match new_cache
           (material_slots_after_swap_remove
-            slots target_slot last_slot last_material)))
+            slots target_slot last_slot last_cached)))
   =
   let slots' =
     material_slots_after_swap_remove
-      slots target_slot last_slot last_material in
+      slots target_slot last_slot last_cached in
   material_slots_after_swap_remove_is_exact
-    slots target_slot last_slot last_material;
+    slots target_slot last_slot last_cached;
   let pointwise (i:nat{i < 50})
     : Lemma
         (match refined_slot_value slots' i with
-         | Core_models.Option.Option_Some _ -> i < cache_len new_cache
+         | Core_models.Option.Option_Some cached ->
+             i < cache_len new_cache /\
+             cached.f_sequence == cache_entry new_cache i
          | Core_models.Option.Option_None -> cache_len new_cache <= i)
     =
     if i = v last_slot then ()
-    else if i = v target_slot then ()
+    else if i = v target_slot then
+      if target_slot = last_slot then () else ()
     else
       assert
         (refined_slot_value slots' i == refined_slot_value slots i);
       match refined_slot_value slots i with
-      | Core_models.Option.Option_Some _ -> ()
+      | Core_models.Option.Option_Some cached -> ()
       | Core_models.Option.Option_None -> ()
   in
   FStar.Classical.forall_intro pointwise
 
-/// Successful completion moves the complete old-last material into a non-last target, clears the old last slot, and publishes the matching logical removal atomically.
+/// Successful completion moves the complete old-last tagged token into a
+/// non-last target, clears the old last slot, and publishes the matching
+/// logical removal atomically.
 let refined_finish_receive_success_is_exact_swap_removal
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material { valid_refined state })
     (sequence:u64)
     (target_slot:u8{v target_slot < 50})
     (last_slot:u8{v last_slot < 50})
-    (target_material last_material:v_Material)
+    (target_cached last_cached:t_CachedReceiveKey v_Material)
   : Lemma
       (requires
         (lookup_receive_key state.f_control sequence ==
            Core_models.Option.Option_Some target_slot /\
          v last_slot + 1 == cache_len state.f_control.f_receive_cache /\
          refined_slot_value state.f_receive_slots (v target_slot) ==
-           Core_models.Option.Option_Some target_material /\
+           Core_models.Option.Option_Some target_cached /\
          refined_slot_value state.f_receive_slots (v last_slot) ==
-           Core_models.Option.Option_Some last_material))
+           Core_models.Option.Option_Some last_cached))
       (ensures
       (let state', disposition = refined_finish_receive state sequence true in
        disposition == ReceiveDisposition_Consumed /\
@@ -2314,7 +2594,7 @@ let refined_finish_receive_success_is_exact_swap_removal
          Core_models.Option.Option_None /\
        (target_slot <> last_slot ==>
          refined_slot_value state'.f_receive_slots (v target_slot) ==
-           Core_models.Option.Option_Some last_material) /\
+           Core_models.Option.Option_Some last_cached) /\
        (forall (i:nat{i < 50}).
           i <> v target_slot /\ i <> v last_slot ==>
             refined_slot_value state'.f_receive_slots i ==
@@ -2323,12 +2603,35 @@ let refined_finish_receive_success_is_exact_swap_removal
   lookup_receive_key_returns_unique_slot state.f_control sequence;
   assert
     (cache_slot state.f_control.f_receive_cache sequence target_slot);
+  assert
+    (material_slots_match
+      state.f_control.f_receive_cache state.f_receive_slots);
+  assert
+    (target_cached.f_sequence ==
+      cache_entry state.f_control.f_receive_cache (v target_slot));
+  assert (target_cached.f_sequence == sequence);
+  assert
+    (last_cached.f_sequence ==
+      cache_entry state.f_control.f_receive_cache (v last_slot));
+  assert (last_slot <. state.f_control.f_receive_cache.f_len);
+  assert
+    ((cast (last_slot <: u8) <: usize) <.
+      v_RECEIVE_CACHE_CAPACITY);
+  assert
+    (impl_RatchetState__receive_key_at state.f_control last_slot ==
+      Core_models.Option.Option_Some
+        (cache_entry state.f_control.f_receive_cache (v last_slot)));
+  assert
+    (impl_RatchetState__receive_key_at state.f_control last_slot ==
+      Core_models.Option.Option_Some last_cached.f_sequence);
   let finished =
     finish_receive_with_removal state.f_control sequence target_slot true in
   finish_receive_with_removal_success_shape
     state.f_control sequence target_slot;
   finish_receive_with_removal_preserves_validity
     state.f_control sequence target_slot true;
+  finish_receive_with_removal_preserves_other_physical_slot
+    state.f_control sequence target_slot;
   match finished.f_removal with
   | Core_models.Option.Option_None -> ()
   | Core_models.Option.Option_Some removal ->
@@ -2339,16 +2642,16 @@ let refined_finish_receive_success_is_exact_swap_removal
       assert (removal.f_last_slot == last_slot);
       let slots' =
         material_slots_after_swap_remove
-          state.f_receive_slots target_slot last_slot last_material in
+          state.f_receive_slots target_slot last_slot last_cached in
       material_slots_after_swap_remove_is_exact
-        state.f_receive_slots target_slot last_slot last_material;
+        state.f_receive_slots target_slot last_slot last_cached;
       material_slots_after_swap_remove_matches
         state.f_control.f_receive_cache
         finished.f_state.f_receive_cache
         state.f_receive_slots
         target_slot
         last_slot
-        last_material;
+        last_cached;
       let with_slots = { state with f_receive_slots = slots' } in
       let expected = { with_slots with f_control = finished.f_state } in
       assert (finished.f_disposition == ReceiveDisposition_Consumed);
@@ -2360,8 +2663,8 @@ let refined_finish_receive_success_is_exact_swap_removal
         sequence
         target_slot
         last_slot
-        target_material
-        last_material
+        target_cached
+        last_cached
         removal;
       assert
         (refined_finish_receive state sequence true ==
@@ -2388,10 +2691,10 @@ let refined_finish_receive_preserves_validity
         let last_slot = state.f_control.f_receive_cache.f_len -! mk_u8 1 in
         match refined_slot_value state.f_receive_slots (v target_slot),
               refined_slot_value state.f_receive_slots (v last_slot) with
-        | Core_models.Option.Option_Some target_material,
-          Core_models.Option.Option_Some last_material ->
+        | Core_models.Option.Option_Some target_cached,
+          Core_models.Option.Option_Some last_cached ->
             refined_finish_receive_success_is_exact_swap_removal
-              state sequence target_slot last_slot target_material last_material
+              state sequence target_slot last_slot target_cached last_cached
         | _ -> ()
       else ()
 
@@ -2434,7 +2737,9 @@ let refined_restore_receive_key_is_atomic
             cache_slot
               restore'.f_logical.f_state.f_receive_cache sequence slot /\
             refined_slot_value restore'.f_receive_slots (v slot) ==
-              Core_models.Option.Option_Some material)
+              Core_models.Option.Option_Some
+                ({ f_sequence = sequence; f_material = material } <:
+                  t_CachedReceiveKey v_Material))
        else restore' == restore)
   = restore_receive_key_with_slot_success_shape restore.f_logical sequence;
     restore_receive_key_with_slot_preserves_validity restore.f_logical sequence

@@ -47,6 +47,7 @@ const _: () = assert!(AEAD_KEY_LEN == CORE_AEAD_KEY_LEN);
 const _: () = assert!(AEAD_NONCE_LEN == CORE_AEAD_NONCE_LEN);
 const _: () = assert!(AEAD_TAG_LEN == CORE_AEAD_TAG_LEN);
 pub const KDF_RATCHET_OUTPUT_LEN: usize = AEAD_KEY_LEN + KDF_STATE_SIZE + AEAD_NONCE_LEN;
+const _: () = assert!(KDF_RATCHET_OUTPUT_LEN == verified_ratchet::RATCHET_KDF_OUTPUT_SIZE);
 /// crypto_scalarmult::BYTES
 #[cfg(feature = "pqxdh")]
 pub const DH_OUT_LEN: usize = 32;
@@ -458,32 +459,6 @@ impl KeyMaterial {
 pub type AeadKey = crypto_aead::chacha20poly1305_ietf::Key;
 pub type AeadNonce = crypto_aead::chacha20poly1305_ietf::Nonce;
 
-#[derive(Clone)]
-struct KdfOutput<Role: roles::ChainKey> {
-	aead_key: AeadKey,
-	kdf_state: KdfState<Role>,
-	aead_nonce: AeadNonce,
-}
-
-impl<Role: roles::ChainKey> From<[u8; KDF_RATCHET_OUTPUT_LEN]> for KdfOutput<Role> {
-	fn from(mut value: [u8; KDF_RATCHET_OUTPUT_LEN]) -> Self {
-		let mut key = [0u8; AEAD_KEY_LEN];
-		key.copy_from_slice(&value[0..AEAD_KEY_LEN]);
-		let mut iter: usize = AEAD_KEY_LEN;
-		let mut state = [0u8; KDF_STATE_SIZE];
-		state.copy_from_slice(&value[AEAD_KEY_LEN..AEAD_KEY_LEN + KDF_STATE_SIZE]);
-		iter += KDF_STATE_SIZE;
-		let mut nonce = [0u8; AEAD_NONCE_LEN];
-		nonce.copy_from_slice(&value[iter..iter + AEAD_NONCE_LEN]);
-		value.zeroize();
-		Self {
-			aead_key: key.into(),
-			kdf_state: state.into(),
-			aead_nonce: nonce.into(),
-		}
-	}
-}
-
 pub struct Ratchet<Role: roles::ChainKey> {
 	state: KdfState<Role>,
 }
@@ -504,14 +479,16 @@ fn ratchet_step<Role: roles::ChainKey>(
 	let expanded = Zeroizing::new(
 		crypto_kdf::hkdf::sha512::expand(KDF_RATCHET_OUTPUT_LEN, Some(info), &prk).unwrap(),
 	);
-	let out: KdfOutput<Role> = (*expanded.as_array::<KDF_RATCHET_OUTPUT_LEN>().unwrap()).into();
+	let out = verified_ratchet::split_ratchet_kdf_output(
+		expanded.as_array::<KDF_RATCHET_OUTPUT_LEN>().unwrap(),
+	);
+	let mut next = Ratchet::<Role>::default();
+	next.state.copy_from_slice(out.next_chain());
 	verified_ratchet::RatchetStep {
-		chain: Ratchet {
-			state: out.kdf_state,
-		},
+		chain: next,
 		material: KeyMaterial {
-			key: out.aead_key,
-			nonce: out.aead_nonce,
+			key: out.key().try_into().unwrap(),
+			nonce: out.nonce().try_into().unwrap(),
 		},
 	}
 }
@@ -1140,11 +1117,11 @@ mod tests {
 		bytes[AEAD_KEY_LEN..AEAD_KEY_LEN + KDF_STATE_SIZE].fill(0x22);
 		bytes[AEAD_KEY_LEN + KDF_STATE_SIZE..].fill(0x33);
 
-		let output = KdfOutput::<roles::ChainSendKey>::from(bytes);
+		let output = verified_ratchet::split_ratchet_kdf_output(&bytes);
 
-		assert_eq!(key_bytes(&output.aead_key), &[0x11; AEAD_KEY_LEN]);
-		assert_eq!(output.kdf_state.as_slice(), &[0x22; KDF_STATE_SIZE]);
-		assert_eq!(nonce_bytes(&output.aead_nonce), &[0x33; AEAD_NONCE_LEN]);
+		assert_eq!(output.key(), &[0x11; AEAD_KEY_LEN]);
+		assert_eq!(output.next_chain(), &[0x22; KDF_STATE_SIZE]);
+		assert_eq!(output.nonce(), &[0x33; AEAD_NONCE_LEN]);
 	}
 
 	#[test]

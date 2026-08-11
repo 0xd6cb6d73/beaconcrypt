@@ -338,7 +338,14 @@ require_line_count 1 \
 
 require_line_count 1 '^let valid_refined$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
-	"refined logical/material invariant"
+	"refined logical/sealed cached sequence-material invariant"
+require_line_count 1 \
+	'cached\.f_sequence == cache_entry cache i$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"sealed cached-key sequence provenance invariant"
+require_line_count 1 '^let ratchet_kdf_output_split_is_exact$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"exact production ratchet KDF-output split theorem"
 require_line_count 1 '^let refined_from_counters_is_valid$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"refined constructor invariant lemma"
@@ -373,19 +380,34 @@ require_line_count 1 \
 require_line_count 1 '^let refined_advance_receive_until_is_ordered$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"refined composed callback-ordering lemma"
+require_line_count 1 '^let refined_receive_entry_is_associated$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined active-slot accessor association lemma"
+require_line_count 1 '^let refined_receive_entry_mismatched_tag_is_rejected$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined active-slot accessor mismatch-rejection lemma"
+require_line_count 1 '^let refined_receive_key_mismatched_tag_is_rejected$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined cached-sequence lookup mismatch-rejection lemma"
+require_line_count 1 '^let refined_finish_receive_mismatched_target_is_neutral$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined cached-target mismatch-neutrality lemma"
+require_line_count 1 '^let refined_finish_receive_mismatched_last_is_neutral$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined cached-last mismatch-neutrality lemma"
 require_line_count 1 \
 	'^let refined_finish_receive_success_is_exact_swap_removal$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
-	"refined exact material swap-removal lemma"
+	"refined exact sealed cached sequence-material swap-removal lemma"
 require_line_count 1 '^let refined_restore_receive_key_is_atomic$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
-	"refined paired-restoration lemma"
+	"refined sealed sequence-material restoration lemma"
 require_line_count 1 '^let finish_refined_restore_is_valid$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"refined restoration-finish lemma"
 require_line_count 2 'Core_models\.Option\.impl__take' \
 	proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst \
-	"transparent refined material removal"
+	"transparent refined sealed-cache removal"
 reject_matches "unconstrained memory replacement in refined ratchet" \
 	'Core_models\.Mem\.replace' \
 	proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst

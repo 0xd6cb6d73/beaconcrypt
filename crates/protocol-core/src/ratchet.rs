@@ -6,6 +6,48 @@ pub const RATCHET_MAX_GAP: u64 = 50;
 /// Physical capacity of the logical receive-key cache.
 pub const RECEIVE_CACHE_CAPACITY: usize = RATCHET_MAX_GAP as usize;
 
+/// Number of bytes returned by one production symmetric-ratchet HKDF expansion.
+pub const RATCHET_KDF_OUTPUT_SIZE: usize = crate::commitment::AEAD_KEY_SIZE
+	+ crate::pqxdh::RATCHET_CHAIN_SIZE
+	+ crate::commitment::AEAD_NONCE_SIZE;
+
+const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 76);
+
+/// Proof-visible borrowed partition of one symmetric-ratchet HKDF expansion.
+///
+/// The primitive call remains in the production adapter. This type and
+/// [`split_ratchet_kdf_output`] own the exact key, next-chain, and nonce
+/// offsets used to interpret its fixed-size output without copying the secret
+/// buffer out of its adapter-owned zeroizing container.
+pub struct RatchetKdfOutput<'a> {
+	key: &'a [u8],
+	next_chain: &'a [u8],
+	nonce: &'a [u8],
+}
+
+impl<'a> RatchetKdfOutput<'a> {
+	pub const fn key(&self) -> &'a [u8] {
+		self.key
+	}
+
+	pub const fn next_chain(&self) -> &'a [u8] {
+		self.next_chain
+	}
+
+	pub const fn nonce(&self) -> &'a [u8] {
+		self.nonce
+	}
+}
+
+/// Split `key || next_chain || nonce` at the production ratchet's exact byte offsets.
+pub fn split_ratchet_kdf_output(output: &[u8; RATCHET_KDF_OUTPUT_SIZE]) -> RatchetKdfOutput<'_> {
+	RatchetKdfOutput {
+		key: &output[0..32],
+		next_chain: &output[32..64],
+		nonce: &output[64..76],
+	}
+}
+
 /// Opaque fixed-capacity cache of logical receive-key sequence numbers.
 ///
 /// Its representation is public to the hax/F* proof boundary, while private
@@ -470,13 +512,26 @@ pub const fn finish_restore(restore: RatchetRestore) -> RatchetState {
 /// One opaque ratchet-step result.
 ///
 /// The shared kernel treats both fields parametrically. Production supplies the
-/// HKDF implementation that computes them from the previous chain state.
+/// HKDF call, delegates its byte partition to [`split_ratchet_kdf_output`], and
+/// wraps those checked parts in its chain and material types.
 pub struct RatchetStep<Chain, Material> {
 	pub chain: Chain,
 	pub material: Material,
 }
 
-fn empty_material_slots<Material>() -> [Option<Material>; RECEIVE_CACHE_CAPACITY] {
+/// Concrete receive material sealed together with the logical sequence that
+/// caused the kernel to store it.
+///
+/// Private fields prevent adapters from manufacturing or retagging cached
+/// material independently of the checked receive and restoration transitions.
+#[derive(Clone)]
+pub struct CachedReceiveKey<Material> {
+	sequence: u64,
+	material: Material,
+}
+
+fn empty_material_slots<Material>() -> [Option<CachedReceiveKey<Material>>; RECEIVE_CACHE_CAPACITY]
+{
 	// Pinned hax cannot extract `array::from_fn` or an inline-const repeat. This
 	// literal keeps `Material` non-`Copy` and extracts as transparent `None`s.
 	[
@@ -491,14 +546,15 @@ fn empty_material_slots<Material>() -> [Option<Material>; RECEIVE_CACHE_CAPACITY
 /// material governed by that control state.
 ///
 /// The concrete types remain generic so hax/F* can prove the bookkeeping for
-/// arbitrary opaque HKDF inputs and outputs. Private fields ensure Rust callers
-/// can only construct and mutate the correspondence through this kernel.
+/// arbitrary opaque HKDF inputs and outputs. Each concrete receive value is
+/// sealed with its sequence, and private fields ensure Rust callers can only
+/// construct and mutate that correspondence through this kernel.
 #[derive(Clone)]
 pub struct RefinedRatchet<SendChain, ReceiveChain, Material> {
 	control: RatchetState,
 	send_chain: SendChain,
 	receive_chain: ReceiveChain,
-	receive_slots: [Option<Material>; RECEIVE_CACHE_CAPACITY],
+	receive_slots: [Option<CachedReceiveKey<Material>>; RECEIVE_CACHE_CAPACITY],
 }
 
 impl<SendChain, ReceiveChain, Material> RefinedRatchet<SendChain, ReceiveChain, Material> {
@@ -551,8 +607,11 @@ impl<SendChain, ReceiveChain, Material> RefinedRatchet<SendChain, ReceiveChain, 
 		if slot_index >= RECEIVE_CACHE_CAPACITY {
 			return None;
 		}
-		let material = self.receive_slots[slot_index].as_ref()?;
-		Some((sequence, material))
+		let cached = self.receive_slots[slot_index].as_ref()?;
+		if cached.sequence != sequence {
+			return None;
+		}
+		Some((cached.sequence, &cached.material))
 	}
 }
 
@@ -628,7 +687,10 @@ pub fn refined_advance_receive<SendChain, ReceiveChain, Material>(
 
 	let stepped = step(&state.receive_chain, info);
 	state.receive_chain = stepped.chain;
-	state.receive_slots[slot_index] = Some(stepped.material);
+	state.receive_slots[slot_index] = Some(CachedReceiveKey {
+		sequence,
+		material: stepped.material,
+	});
 	state.control = advanced.state;
 	Some(sequence)
 }
@@ -711,7 +773,11 @@ pub fn refined_receive_key<SendChain, ReceiveChain, Material>(
 	if slot_index >= RECEIVE_CACHE_CAPACITY {
 		return None;
 	}
-	state.receive_slots[slot_index].as_ref()
+	let cached = state.receive_slots[slot_index].as_ref()?;
+	if cached.sequence != sequence {
+		return None;
+	}
+	Some(&cached.material)
 }
 
 /// Complete a receive attempt and mutate logical and concrete slots together.
@@ -728,7 +794,14 @@ pub fn refined_finish_receive<SendChain, ReceiveChain, Material>(
 		return ReceiveDisposition::Missing;
 	};
 	let slot_index = slot as usize;
-	if slot_index >= RECEIVE_CACHE_CAPACITY || state.receive_slots[slot_index].is_none() {
+	if slot_index >= RECEIVE_CACHE_CAPACITY {
+		return ReceiveDisposition::Missing;
+	}
+	let target_matches = match state.receive_slots[slot_index].as_ref() {
+		Some(cached) => cached.sequence == sequence,
+		None => false,
+	};
+	if !target_matches {
 		return ReceiveDisposition::Missing;
 	}
 
@@ -745,9 +818,21 @@ pub fn refined_finish_receive<SendChain, ReceiveChain, Material>(
 			if removal.target_slot != slot
 				|| target_index >= RECEIVE_CACHE_CAPACITY
 				|| last_index >= RECEIVE_CACHE_CAPACITY
-				|| state.receive_slots[target_index].is_none()
-				|| state.receive_slots[last_index].is_none()
 			{
+				return ReceiveDisposition::Missing;
+			}
+			let Some(last_sequence) = state.control.receive_key_at(removal.last_slot) else {
+				return ReceiveDisposition::Missing;
+			};
+			let target_matches = match state.receive_slots[target_index].as_ref() {
+				Some(cached) => cached.sequence == sequence,
+				None => false,
+			};
+			let last_matches = match state.receive_slots[last_index].as_ref() {
+				Some(cached) => cached.sequence == last_sequence,
+				None => false,
+			};
+			if !target_matches || !last_matches {
 				return ReceiveDisposition::Missing;
 			}
 
@@ -769,7 +854,7 @@ pub struct RefinedRatchetRestore<SendChain, ReceiveChain, Material> {
 	logical: RatchetRestore,
 	send_chain: SendChain,
 	receive_chain: ReceiveChain,
-	receive_slots: [Option<Material>; RECEIVE_CACHE_CAPACITY],
+	receive_slots: [Option<CachedReceiveKey<Material>>; RECEIVE_CACHE_CAPACITY],
 }
 
 pub fn start_refined_restore<SendChain, ReceiveChain, Material>(
@@ -799,7 +884,7 @@ pub fn refined_restore_receive_key<SendChain, ReceiveChain, Material>(
 	if slot_index >= RECEIVE_CACHE_CAPACITY || restore.receive_slots[slot_index].is_some() {
 		return false;
 	}
-	restore.receive_slots[slot_index] = Some(material);
+	restore.receive_slots[slot_index] = Some(CachedReceiveKey { sequence, material });
 	restore.logical = step.restore;
 	true
 }
@@ -873,15 +958,16 @@ pub fn advance_send_for_peer(requested_peer: u64, peer: PeerRatchetState) -> Pee
 #[cfg(test)]
 mod tests {
 	use super::{
-		PeerRatchetState, RATCHET_MAX_GAP, RECEIVE_CACHE_CAPACITY, RatchetState, RatchetStep,
-		ReceiveDisposition, RefinedRatchet, RefinedSendKey, SendKey, SequenceCache,
-		advance_receive, advance_send, advance_send_for_peer, empty_material_slots, finish_receive,
-		finish_receive_with_removal, finish_refined_restore, finish_restore, finish_send,
-		lookup_receive_key, plan_receive_until, refined_advance_receive,
-		refined_advance_receive_until, refined_advance_send, refined_finish_receive,
-		refined_finish_send, refined_receive_key, refined_restore_receive_key,
-		replace_ratchet_for_peer, restore_receive_key, restore_receive_key_with_slot,
-		start_refined_restore, start_restore,
+		CachedReceiveKey, PeerRatchetState, RATCHET_KDF_OUTPUT_SIZE, RATCHET_MAX_GAP,
+		RECEIVE_CACHE_CAPACITY, RatchetState, RatchetStep, ReceiveDisposition, RefinedRatchet,
+		RefinedSendKey, SendKey, SequenceCache, advance_receive, advance_send,
+		advance_send_for_peer, empty_material_slots, finish_receive, finish_receive_with_removal,
+		finish_refined_restore, finish_restore, finish_send, lookup_receive_key,
+		plan_receive_until, refined_advance_receive, refined_advance_receive_until,
+		refined_advance_send, refined_finish_receive, refined_finish_send, refined_receive_key,
+		refined_restore_receive_key, replace_ratchet_for_peer, restore_receive_key,
+		restore_receive_key_with_slot, split_ratchet_kdf_output, start_refined_restore,
+		start_restore,
 	};
 
 	#[derive(Debug, Eq, PartialEq)]
@@ -914,6 +1000,16 @@ mod tests {
 			state = advanced.state;
 		}
 		state
+	}
+
+	#[test]
+	fn ratchet_kdf_output_split_uses_every_exact_byte_range() {
+		let output = core::array::from_fn::<_, RATCHET_KDF_OUTPUT_SIZE, _>(|index| index as u8);
+		let split = split_ratchet_kdf_output(&output);
+
+		assert_eq!(split.key(), &output[0..32]);
+		assert_eq!(split.next_chain(), &output[32..64]);
+		assert_eq!(split.nonce(), &output[64..76]);
 	}
 
 	#[test]
@@ -1216,9 +1312,12 @@ mod tests {
 	#[test]
 	fn refined_receive_transaction_rejects_a_later_occupied_slot_before_stepping() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
-		state.receive_slots[1] = Some(TestMaterial {
-			generation: 99,
-			info_len: 0,
+		state.receive_slots[1] = Some(CachedReceiveKey {
+			sequence: 99,
+			material: TestMaterial {
+				generation: 99,
+				info_len: 0,
+			},
 		});
 
 		assert_eq!(
@@ -1228,15 +1327,21 @@ mod tests {
 		assert_eq!(state.control, RatchetState::default());
 		assert_eq!(*state.receive_chain(), 20);
 		assert!(state.receive_slots[0].is_none());
-		assert_eq!(state.receive_slots[1].as_ref().unwrap().generation, 99);
+		assert_eq!(
+			state.receive_slots[1].as_ref().unwrap().material.generation,
+			99
+		);
 	}
 
 	#[test]
 	fn refined_receive_rejects_an_occupied_append_slot() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
-		state.receive_slots[0] = Some(TestMaterial {
-			generation: 99,
-			info_len: 0,
+		state.receive_slots[0] = Some(CachedReceiveKey {
+			sequence: 99,
+			material: TestMaterial {
+				generation: 99,
+				info_len: 0,
+			},
 		});
 
 		assert_eq!(
@@ -1245,7 +1350,10 @@ mod tests {
 		);
 		assert_eq!(state.control, RatchetState::default());
 		assert_eq!(*state.receive_chain(), 20);
-		assert_eq!(state.receive_slots[0].as_ref().unwrap().generation, 99);
+		assert_eq!(
+			state.receive_slots[0].as_ref().unwrap().material.generation,
+			99
+		);
 	}
 
 	#[test]
@@ -1269,9 +1377,12 @@ mod tests {
 			receive_chain: 20,
 			receive_slots: empty_material_slots(),
 		};
-		missing_last.receive_slots[0] = Some(TestMaterial {
-			generation: 21,
-			info_len: 4,
+		missing_last.receive_slots[0] = Some(CachedReceiveKey {
+			sequence: 1,
+			material: TestMaterial {
+				generation: 21,
+				info_len: 4,
+			},
 		});
 		assert_eq!(
 			refined_finish_receive(&mut missing_last, 1, true),
@@ -1279,8 +1390,72 @@ mod tests {
 		);
 		assert_eq!(missing_last.control, control);
 		assert_eq!(
-			missing_last.receive_slots[0].as_ref().unwrap().generation,
+			missing_last.receive_slots[0]
+				.as_ref()
+				.unwrap()
+				.material
+				.generation,
 			21
+		);
+	}
+
+	#[test]
+	fn refined_receive_rejects_a_mismatched_target_tag_without_mutation() {
+		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
+		assert_eq!(
+			refined_advance_receive_until(&mut state, b"recv", 2, test_step),
+			Some(2)
+		);
+		state.receive_slots[0].as_mut().unwrap().sequence = 2;
+		let control = state.control;
+		let receive_chain = state.receive_chain;
+		let generation = state.receive_slots[0].as_ref().unwrap().material.generation;
+
+		assert!(state.receive_entry_at(0).is_none());
+		assert!(refined_receive_key(&state, 1).is_none());
+		assert_eq!(
+			refined_finish_receive(&mut state, 1, false),
+			ReceiveDisposition::Missing
+		);
+		assert_eq!(
+			refined_finish_receive(&mut state, 1, true),
+			ReceiveDisposition::Missing
+		);
+		assert_eq!(state.control, control);
+		assert_eq!(state.receive_chain, receive_chain);
+		assert_eq!(state.receive_slots[0].as_ref().unwrap().sequence, 2);
+		assert_eq!(
+			state.receive_slots[0].as_ref().unwrap().material.generation,
+			generation
+		);
+	}
+
+	#[test]
+	fn refined_receive_rejects_a_mismatched_last_tag_before_swap() {
+		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
+		assert_eq!(
+			refined_advance_receive_until(&mut state, b"recv", 3, test_step),
+			Some(3)
+		);
+		state.receive_slots[2].as_mut().unwrap().sequence = 99;
+		let control = state.control;
+		let target_generation = state.receive_slots[0].as_ref().unwrap().material.generation;
+		let last_generation = state.receive_slots[2].as_ref().unwrap().material.generation;
+
+		assert_eq!(refined_receive_key(&state, 1).unwrap().generation, 21);
+		assert_eq!(
+			refined_finish_receive(&mut state, 1, true),
+			ReceiveDisposition::Missing
+		);
+		assert_eq!(state.control, control);
+		assert_eq!(
+			state.receive_slots[0].as_ref().unwrap().material.generation,
+			target_generation
+		);
+		assert_eq!(state.receive_slots[2].as_ref().unwrap().sequence, 99);
+		assert_eq!(
+			state.receive_slots[2].as_ref().unwrap().material.generation,
+			last_generation
 		);
 	}
 
@@ -1501,9 +1676,12 @@ mod tests {
 	#[test]
 	fn refined_restore_rejects_an_occupied_append_slot() {
 		let mut restore = start_refined_restore::<u64, u64, TestMaterial>(9, 12, 100, 200);
-		restore.receive_slots[0] = Some(TestMaterial {
-			generation: 99,
-			info_len: 0,
+		restore.receive_slots[0] = Some(CachedReceiveKey {
+			sequence: 99,
+			material: TestMaterial {
+				generation: 99,
+				info_len: 0,
+			},
 		});
 
 		assert!(!refined_restore_receive_key(
@@ -1515,7 +1693,14 @@ mod tests {
 			}
 		));
 		assert_eq!(restore.logical, start_restore(9, 12));
-		assert_eq!(restore.receive_slots[0].as_ref().unwrap().generation, 99);
+		assert_eq!(
+			restore.receive_slots[0]
+				.as_ref()
+				.unwrap()
+				.material
+				.generation,
+			99
+		);
 	}
 
 	#[test]
