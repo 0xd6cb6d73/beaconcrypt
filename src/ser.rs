@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: 0BSD
 
-use super::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KdfState, KeyMaterial, Ratchet, RatchetManager,
-	roles, systems,
-};
-#[cfg(test)]
-use super::{RatchetKernel, RecvChain, SendChain};
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, encode_sign};
+use crate::ratchet::{
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KdfState, KeyMaterial, Ratchet, RatchetManager,
+};
+#[cfg(test)]
+use crate::ratchet::{RatchetKernel, RecvChain, SendChain};
 #[cfg(feature = "server")]
 use crate::server::StateUpdate;
+use crate::shared::{roles, systems};
 #[cfg(feature = "server")]
 use libsodium_rs::crypto_sign;
 #[cfg(feature = "server")]

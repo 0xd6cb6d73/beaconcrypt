@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: 0BSD
 
-use super::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager, RecvChain,
-	SendChain, roles, systems, verified_ratchet,
-};
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, decode_sign};
+use crate::ratchet::{
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager, RecvChain,
+	SendChain,
+};
 #[cfg(feature = "server")]
 use crate::server::StateUpdate;
+use crate::shared::{roles, systems};
+use beaconcrypt_protocol_core::ratchet as verified_ratchet;
 #[cfg(feature = "server")]
 use libsodium_rs::crypto_sign;
 #[cfg(feature = "server")]
@@ -418,7 +420,8 @@ impl<'de> Deserialize<'de> for DeserializedKnownIds {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::shared::{AD_SIZE, KDF_STATE_SIZE, encrypt_message_with_ratchet};
+	use crate::pqxdh::AD_SIZE;
+	use crate::ratchet::{KDF_STATE_SIZE, encrypt_message_with_ratchet};
 	use serde::Serialize;
 	use serde_json::{Value, json};
 

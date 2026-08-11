@@ -5,6 +5,7 @@ mod beacon;
 mod error;
 #[cfg(feature = "pqxdh")]
 mod pqxdh;
+mod ratchet;
 #[cfg(feature = "server")]
 mod server;
 mod shared;
@@ -63,12 +64,10 @@ pub use error::{
 pub use pqxdh::Beacon;
 #[cfg(all(feature = "pqxdh", feature = "server"))]
 pub use pqxdh::Server;
+pub use ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE};
 #[cfg(feature = "server")]
 pub use server::{ProviderServer, RecvState, RegResponse, RegistrationOutput, SendState};
-pub use shared::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, DH_OUT_LEN, Decrypted, ED25519_SEED_SIZE, Encrypted,
-	KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE, KEX_KDF_OUT_LEN, SignType,
-};
+pub use shared::{DH_OUT_LEN, Decrypted, ED25519_SEED_SIZE, Encrypted, KEX_KDF_OUT_LEN, SignType};
 
 capnp::generated_code!(pub mod phase1_capnp);
 capnp::generated_code!(pub mod phase2_capnp);

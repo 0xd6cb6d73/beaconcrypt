@@ -2,12 +2,12 @@
 
 #[cfg(feature = "beacon")]
 use crate::beacon::ProviderBeacon;
+#[cfg(test)]
+use crate::ratchet::KeyMaterial;
+use crate::ratchet::{RatchetManager, decrypt_message_with_ratchet, encrypt_message_with_ratchet};
 #[cfg(feature = "server")]
 use crate::server::{RecvState, SendState};
-use crate::shared::{
-	DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret, RatchetManager, RemotePrincipal, SignaturePk,
-};
-use crate::shared::{decrypt_message_with_ratchet, encrypt_message_with_ratchet};
+use crate::shared::{DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret, RemotePrincipal, SignaturePk};
 use crate::{phase1_capnp, phase2_capnp};
 #[cfg(feature = "server")]
 use crate::{
@@ -369,7 +369,7 @@ impl Server {
 		encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)
 	}
 	pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> {
-		let k = crate::shared::encrypted_frame_sender(b)?;
+		let k = crate::ratchet::encrypted_frame_sender(b)?;
 		let ad = self.associated_data(k)?;
 		decrypt_message_with_ratchet(b, k, &ad, self.ratchet_manager_mut(k)?)
 	}
@@ -378,7 +378,7 @@ impl Server {
 		self.ratchet_manager_mut(k)?.ratchet_recv_until(u)
 	}
 	#[cfg(test)]
-	fn recv_key(&self, s: u64, k: u64) -> Option<&crate::shared::KeyMaterial> {
+	fn recv_key(&self, s: u64, k: u64) -> Option<&KeyMaterial> {
 		self.ratchet_manager(k)?.recv_key(s)
 	}
 	#[cfg(test)]

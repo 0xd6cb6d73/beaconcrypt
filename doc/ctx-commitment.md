@@ -14,8 +14,8 @@ R = C || T || U
 ```
 
 The transcript `X` is exactly 229 bytes: 32 bytes of key, 12 bytes of nonce, 153 bytes of associated data, 16 bytes of AEAD tag, and two eight-byte integers.
-The fixed-width builder is [`build_commitment_transcript`](../crates/protocol-core/src/commitment.rs#L55-L75), and the production wrapper checks input lengths and passes those bytes to unkeyed 64-byte `generichash` in [`build_commitment`](../src/shared.rs#L1121-L1148).
-The seal and open paths place and parse `C || T || U` in [`encrypt_message_with_ratchet`](../src/shared.rs#L875-L917) and [`decrypt_message_with_ratchet`](../src/shared.rs#L924-L979).
+The fixed-width builder is [`build_commitment_transcript`](../crates/protocol-core/src/commitment.rs#L55-L75), and the production wrapper checks input lengths and passes those bytes to unkeyed 64-byte `generichash` in [`build_commitment`](../src/ratchet.rs#L466-L481).
+The seal and open paths place and parse `C || T || U` in [`encrypt_message_with_ratchet`](../src/ratchet.rs#L350-L372) and [`decrypt_message_with_ratchet`](../src/ratchet.rs#L410-L449).
 The checked F* [`Commitment.Lemmas`](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst) module proves the exact per-byte layout, proves `encode_u64_le_is_injective`, and proves `production_commitment_input_is_injective`, so equality of two extracted production transcripts implies equality of all six semantic fields `(K, N, A, T, S, I)`.
 
 This is a modification of Chan and Rogaway's [CTX transform](https://eprint.iacr.org/2022/1260.pdf).

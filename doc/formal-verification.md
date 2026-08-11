@@ -75,13 +75,9 @@ The first extraction slice may be smaller than this layout. In particular, a sin
 
 ## The extractable production core
 
-The initial production seams were the ratchet state and operations in
-[`src/shared.rs`](../src/shared.rs), the frame encryption/decryption logic in
-that file, and the PQXDH role transitions in
-[`src/pqxdh.rs`](../src/pqxdh.rs). Stages 1 through 7 moved their deterministic
-control decisions into the protocol core while leaving concrete cryptography
-and wire translation in those adapters. Further moves should remain incremental
-rather than attempting to extract the whole crate.
+The initial production seams were the ratchet state and frame encryption/decryption operations now in [`src/ratchet.rs`](../src/ratchet.rs), and the PQXDH role transitions in [`src/pqxdh.rs`](../src/pqxdh.rs).
+Stages 1 through 7 moved their deterministic control decisions into the protocol core while leaving concrete cryptography and wire translation in those adapters.
+Further moves should remain incremental rather than attempting to extract the whole crate.
 
 The core boundary is limited to deterministic protocol decisions:
 
@@ -197,7 +193,7 @@ For extraction, replace `HashMap` with a bounded, packed sequence whose uniquene
 
 After each extraction-sized move, the public `Beacon` and `Server` APIs must delegate to the new core. Existing known-answer and protocol tests must continue to exercise those paths. A proof-only reimplementation is out of scope because its correspondence to production code would become a new, unproved assumption.
 
-The low-level ratchet methods currently exposed from [`src/shared.rs`](../src/shared.rs) can bypass invariants expected at the higher-level protocol API. Either narrow their visibility or state theorem preconditions so that verified traces are explicitly limited to calls through the high-level API.
+The low-level ratchet methods currently exposed from [`src/ratchet.rs`](../src/ratchet.rs) can bypass invariants expected at the higher-level protocol API. Either narrow their visibility or state theorem preconditions so that verified traces are explicitly limited to calls through the high-level API.
 
 ## Primitive abstraction boundary
 

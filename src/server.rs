@@ -2,7 +2,8 @@
 
 use std::marker::PhantomData;
 
-use crate::shared::{KexDerivedSecret, RatchetManager, roles};
+use crate::ratchet::RatchetManager;
+use crate::shared::{KexDerivedSecret, roles};
 pub struct RegResponse {
 	pub serialized: Vec<u8>,
 	pub kid: u64,

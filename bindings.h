@@ -12,8 +12,6 @@
 
 
 
-#define beaconcrypt_KEX_KDF_OUT_LEN 32
-
 #define beaconcrypt_KDF_STATE_SIZE 32
 
 /**
@@ -33,18 +31,20 @@
 
 #define beaconcrypt_KDF_RATCHET_OUTPUT_LEN ((beaconcrypt_AEAD_KEY_LEN + beaconcrypt_KDF_STATE_SIZE) + beaconcrypt_AEAD_NONCE_LEN)
 
+#define beaconcrypt_RATCHET_MAX_GAP 50
+
+#define beaconcrypt_COMMITMENT_SIZE 64
+
+#define beaconcrypt_MESSAGE_OVERHEAD (beaconcrypt_COMMITMENT_SIZE + beaconcrypt_AEAD_TAG_LEN)
+
+#define beaconcrypt_KEX_KDF_OUT_LEN 32
+
 /**
  * crypto_scalarmult::BYTES
  */
 #define beaconcrypt_DH_OUT_LEN 32
 
-#define beaconcrypt_RATCHET_MAX_GAP 50
-
 #define beaconcrypt_ED25519_SEED_SIZE 32
-
-#define beaconcrypt_COMMITMENT_SIZE 64
-
-#define beaconcrypt_MESSAGE_OVERHEAD (beaconcrypt_COMMITMENT_SIZE + beaconcrypt_AEAD_TAG_LEN)
 
 typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
 
