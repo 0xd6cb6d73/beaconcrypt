@@ -219,6 +219,8 @@ fn invalid_known_ids_state_is_rejected() {
 		.pop();
 	let mut malformed_ratchet = parsed.clone();
 	malformed_ratchet["known_ids"]["1"]["ratchet"]["send_key"][0] = json!(0);
+	let mut legacy_send_past = parsed.clone();
+	legacy_send_past["known_ids"]["1"]["ratchet"]["send_past"] = json!({});
 	let mut malformed_identity = parsed.clone();
 	malformed_identity["identity_key"]
 		.as_array_mut()
@@ -255,6 +257,7 @@ fn invalid_known_ids_state_is_rejected() {
 		wrong_key_type,
 		short_key,
 		malformed_ratchet,
+		legacy_send_past,
 		malformed_identity,
 		wrong_identity_system,
 		wrong_identity_role,

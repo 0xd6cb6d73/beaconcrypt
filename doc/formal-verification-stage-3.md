@@ -4,211 +4,144 @@
 
 ## Status and scope
 
-Stage 3 connects the symmetric-ratchet state machine introduced in Stages 1
-and 2 to the production `BeaconCryptPqxdh` path. The implementation was based
-on commit `78482e8498ea77b11fd5a565559746319a35f3f3`, which contained the
-standalone protocol core, its hax extraction, and the F* lemmas, but left the
-production `RatchetManager` unchanged.
+Stage 3 connected the symmetric-ratchet state machine introduced in Stages 1 and 2 to the production `BeaconCryptPqxdh` path. A subsequent refinement replaces the remaining production-owned parallel chains and receive slots with the extracted generic `RefinedRatchet<SendChain, RecvChain, KeyMaterial>`. Production now compiles and calls that same kernel, whose private state owns control, both typed chain values, and the fixed concrete-material slots.
 
-This stage covers the production adapter for symmetric-ratchet control state,
-key lifecycle, authentication completion, and persistence restoration. It does
-not move PQXDH into the core; that remains Stage 4.
+This record covers the production adapter for symmetric-ratchet control state, key lifecycle, authentication completion, material-slot correspondence, and persistence restoration. HKDF remains the one opaque ratchet step supplied by production. PQXDH remains covered by Stage 4 and later stages.
 
 ## Implementation map
 
 | File | Responsibility |
 | --- | --- |
 | `Cargo.toml` and `Cargo.lock` | Make `beaconcrypt-protocol-core` a production dependency. |
-| `src/shared.rs` | Store authoritative core state and adapt concrete KDF, AEAD, send, receive, and reset operations to core transitions. |
-| `src/ser.rs` | Preserve the persistence format while serializing counters from core state. |
-| `src/deser.rs` | Validate persisted state and rebuild the core through its checked restoration typestate. |
-| `crates/protocol-core` | Provide the extracted transition API and the already checked F* model and lemmas. |
+| `src/shared.rs` | Specialize `RefinedRatchet` to the production chain and material types, provide the sole opaque HKDF step callback, and route high-level send and receive operations through the shared kernel. |
+| `src/ser.rs` | Emit the five-field ratchet persistence format from the kernel's counters, chains, and paired active-entry accessor. |
+| `src/deser.rs` | Require the five-field ratchet schema and supply each sorted `(sequence, material)` pair atomically to the checked refined restoration builder. |
+| `crates/protocol-core` | Own logical control, typed opaque chains, fixed material slots, receive-until recursion, lookup, removal, restoration, and the consuming refined send token in one extractable kernel. |
 
-No generated F* file was hand-edited in this stage.
+The older logical ratchet APIs and their lemmas remain for proof compatibility, but production uses the refined API.
 
 ## Production state representation
 
-`RatchetManager` no longer stores independent `send_ctr` and `recv_ctr`
-fields. It contains one `beaconcrypt_protocol_core::RatchetState`, named
-`control`, which is authoritative for:
+`RatchetManager` contains one private `RefinedRatchet<SendChain, RecvChain, KeyMaterial>`. The refined kernel is authoritative for:
 
 - the next send sequence;
 - the highest derived receive sequence;
 - receive-window admission;
-- logical ownership of cached receive keys;
-- receive-key retention and consumption.
+- both typed chain values;
+- structural association of each cached sequence with its material; and
+- receive-key retention, swap-removal, and consumption.
 
-Concrete cryptographic material stays in the production adapter:
+The kernel's chain and material type parameters are opaque to the extracted control logic. Production supplies one pure-shaped callback with the signature `fn(&Chain, &[u8]) -> RatchetStep<Chain, Material>`; the concrete callback performs one HKDF ratchet step and returns the next typed chain together with its message material.
 
-- `send_key` and `recv_key` hold the opaque HKDF chain bytes;
-- `send_past` holds concrete AEAD send keys and nonces;
-- `recv_past` holds concrete AEAD receive keys and nonces;
-- `send_capabilities` pairs each pending concrete send key with the logical
-  `SendKey` returned by the core.
+The refined fields are private. There is no production-owned `recv_slots` array and no adapter-maintained positional invariant. Internally, every active logical sequence is paired with one populated slot in `[Option<Material>; 50]`, and every inactive slot is empty. The only serialization view is a paired `(sequence, &material)` accessor for active entries.
 
-The principal receive refinement invariant is:
-
-```text
-keys(recv_past) == logical_receive_sequences(control)
-```
-
-The adapter checks this invariant in debug builds after construction and every
-receive-cache mutation. It also checks that pending concrete send keys and
-logical send capabilities have equal sequence sets.
-
-The public C constant for the receive gap retains a literal initializer because
-cbindgen cannot evaluate a cross-crate constant path. A compile-time assertion
-requires that literal to equal `beaconcrypt_protocol_core::RATCHET_MAX_GAP`, so
-the C binding cannot silently diverge from the verified value.
+The public C constant for the receive gap retains a literal initializer because cbindgen cannot evaluate a cross-crate constant path. A compile-time assertion requires that literal to equal `beaconcrypt_protocol_core::RATCHET_MAX_GAP`, so the C binding cannot silently diverge from the verified value.
 
 ## Send transition
 
-A production send now follows this sequence:
+A production send follows this sequence:
 
-1. `advance_send(control)` decides whether a sequence can be allocated. Counter
-   exhaustion returns `None` without changing either core or concrete state.
-2. For an admitted sequence, the adapter performs exactly one opaque HKDF step
-   and stores the resulting concrete key and nonce under that sequence.
-3. The logical `SendKey` returned by the core is stored under the same sequence.
-4. The high-level encryption path uses the concrete key to perform AEAD,
-   construct the commitment, and serialize the frame.
-5. After the attempt, `finish_send` consumes the logical capability and the
-   adapter removes the concrete key. This happens for successful encryption and
-   every recoverable failure after allocation, including frame-serialization
-   failure.
+1. `refined_advance_send(&mut kernel, info, step)` checks exhaustion before calling the opaque step callback.
+2. On admission, the kernel calls the callback once, updates the send chain and counter together, and returns `RefinedSendKey<Material>` with the allocated sequence paired with its concrete material.
+3. The high-level encryption path borrows that token's material to perform AEAD, construct the commitment, and serialize the frame.
+4. Every recoverable post-allocation outcome consumes the token with `refined_finish_send`, so neither a pending capability nor message material is stored in `RatchetManager`.
 
-The resulting production state exposes neither the concrete key nor its logical
-capability after a completed high-level send.
-
-Persisted legacy states can contain pending `send_past` entries even though the
-normal high-level API removes them before returning. During restoration the
-adapter validates each sequence against `send_ctr` and reconstructs the matching
-logical capability through the core send transition. This preserves the existing
-wire format and low-level continuation behavior.
+The refined send token is not `Clone` or `Copy`, so the production Rust API prevents callers from forging or copying its sequence/material pairing. The high-level helper's control flow passes every allocated token to consuming finish on each recoverable path; panic behavior is not a type-level guarantee. Cloning the whole ratchet remains conditionally possible when its type parameters are cloneable, so single-owner and non-rollback use remain explicit assumptions.
 
 ## Receive transition
 
-A production receive now follows the verified planning and completion split:
+A production receive follows the shared refined transition sequence:
 
-1. `plan_receive_until(control, target)` decides admission before any KDF state
-   is advanced. A target outside the gap or total-cache bound is state-neutral.
-2. For each planned derivation, `advance_receive` adds one logical sequence and
-   the adapter performs exactly one concrete HKDF step for that same sequence.
-3. The adapter requires both logical ownership and a concrete `recv_past` entry
-   before attempting commitment or AEAD verification.
-4. Commitment or AEAD failure calls `finish_receive(..., false)`. The core
-   returns `Retained`, and both logical and concrete representations remain
-   available for an exact retry.
-5. Successful AEAD verification calls `finish_receive(..., true)`. The core
-   removes the requested logical sequence, and the adapter removes exactly the
-   corresponding concrete key.
+1. `refined_advance_receive_until(&mut kernel, info, target, step)` decides gap and capacity admission before any callback and owns the bounded recursion over every admitted intermediate sequence.
+2. For each admitted step, the kernel invokes the opaque callback exactly once and publishes its returned next chain and material into the same newly allocated logical slot.
+3. `refined_receive_key(&kernel, sequence)` performs the kernel-owned sequence lookup and returns a reference to the associated material; production maintains no secondary index or physical slot view.
+4. Commitment or AEAD failure is passed to `refined_finish_receive(&mut kernel, sequence, false)`, which retains the exact sequence/material pair without moving a slot.
+5. Successful authentication is passed to `refined_finish_receive(&mut kernel, sequence, true)`, which performs the logical removal and concrete swap/take internally before returning `Consumed`.
 
-Core receive slots are not treated as stable identifiers. Successful removal
-uses the core's swap-removal representation, so the adapter resolves the current
-slot by sequence for every completion. Replay of an already consumed sequence
-therefore finds neither a logical nor a concrete key and is rejected without
-changing state.
+Receive slots remain an internal packed representation rather than stable identifiers. Successful removal may move the former last sequence/material pair into the consumed pair's old slot; every later operation resolves by sequence through the kernel. Replay of an already consumed sequence therefore finds neither the logical entry nor its material and is rejected without changing state.
 
-An admissible forged future frame can still advance the receive chain and cache
-keys before authentication fails. This matches the existing protocol semantics
-described in the verification plan. Capacity and forward-gap rejection remain
-state-neutral, while an admitted authentication failure retains the derived
-candidate keys for retry.
+An admissible forged future frame can still advance the receive chain and cache keys before authentication fails. This matches the existing protocol semantics described in the verification plan. Capacity and forward-gap rejection remain state-neutral, while an admitted authentication failure retains the derived candidate keys for retry.
 
-## Persistence and compatibility
+## Persistence and compatibility break
 
-The serialized `RatchetManager` remains a six-field object:
+The serialized `RatchetManager` is a five-field object:
 
 ```text
-send_key, recv_key, send_past, send_ctr, recv_past, recv_ctr
+send_key, recv_key, send_ctr, recv_past, recv_ctr
 ```
 
-No duplicate serialization of the core representation was added. `send_ctr`
-and `recv_ctr` are emitted from the authoritative core getters.
+No send-message key or logical send capability is persisted. No duplicate serialization of the core representation was added: `send_ctr` and `recv_ctr` are emitted from the authoritative core getters, and physical receive slots are never persisted.
+
+Serialization reads each active `(sequence, material)` pair through `receive_entry_at`; fields are private, so safe production code cannot construct logical/material divergence. The existing sequence-keyed `recv_past` map remains a wire representation rather than a second live cache.
 
 Deserialization performs the following checked reconstruction:
 
-1. validate every pending send sequence against `1..=send_ctr`;
-2. collect and numerically sort all `recv_past` sequences;
-3. call `start_restore(send_ctr, recv_ctr)`;
-4. call `restore_receive_key` once for every sorted receive sequence;
-5. reject the import if any append fails;
-6. call `finish_restore` and pair the resulting core state with the concrete
-   maps.
+1. require the exact five-field ratchet schema, so every legacy object containing `send_past` is rejected rather than migrated or silently accepted;
+2. collect and numerically sort all sequence/material entries from the persisted `recv_past` map;
+3. call `start_refined_restore(send_ctr, recv_ctr, send_chain, receive_chain)`;
+4. call `refined_restore_receive_key(&mut builder, sequence, material)` once for every sorted pair, so logical append and material placement are one operation; and
+5. call `finish_refined_restore(builder)` to obtain the complete kernel.
 
-This rejects zero sequences, receive sequences above `recv_ctr`, and receive
-caches larger than 50 entries. Collecting through a map establishes uniqueness,
-and numeric sorting supplies the restoration builder with strictly increasing
-input. The decision to reject more than 50 imported receive keys is intentional:
-such states are outside the verified core state space, and normal high-level
-traces cannot create them. The JSON syntax is unchanged, but previously
-accepted oversized snapshots are no longer compatible.
+This rejects zero receive sequences, receive sequences above `recv_ctr`, and receive caches larger than 50 entries. Collecting through a map establishes uniqueness, and numeric sorting supplies the restoration builder with strictly increasing input. The decision to reject more than 50 imported receive keys is intentional: such states are outside the verified core state space, and normal high-level traces cannot create them. Removing `send_past` is also an intentional persistence and API break; snapshots using the former six-field schema must not be restored by this version.
 
-Because the core uses packed swap-removal while restoration uses sorted input,
-physical cache-slot order is not a persistence invariant. Round-trip tests
-compare counters and logical sequence sets rather than slot layout.
+Because the kernel uses packed swap-removal while restoration uses sorted input, physical cache-slot order is not a persistence invariant. Round-trip tests compare remaining key and nonce bytes by sequence rather than requiring identical internal slot layout.
 
 ## Proof correspondence boundary
 
-The Stage 3 correspondence claim applies to high-level
-`BeaconCryptPqxdh::encrypt_message` and `decrypt_message` traces that start from
-a fresh or successfully validated state and do not roll state back.
+The Stage 3 correspondence claim applies to high-level `BeaconCryptPqxdh::encrypt_message` and `decrypt_message` traces that start from a fresh or successfully validated state and do not roll state back.
+
+The strict F* theorem surface is parametric in the typed chains, material, and step callback. It connects admitted logical advancement with the callback output placed in the corresponding material slot, characterizes sequence lookup, proves failure retention and successful internal swap-removal preserve structural association, and proves that checked restoration appends each sequence/material pair together. The refined send lifecycle keeps the allocated sequence and callback-produced material in one consuming token. The older logical theorems remain available as compatibility results.
+
+These theorems mechanize association, slot mutation, callback ordering, restoration, and normal-return publication inside the extracted kernel. Because the callback is arbitrary in the proof, they do not establish that production's callback implements the intended HKDF labels, output split, or cryptographic relation between old chain, next chain, key, and nonce.
 
 The following remain explicit adapter preconditions or exclusions:
 
-- direct calls to low-level ratchet, key lookup, or deletion helpers;
-- cloning or restoring a state with a pending send key and then using multiple
-  forks;
-- rollback of persisted chain state;
+- concrete HKDF semantics and correct output splitting;
+- provenance of the authentication boolean from the intended commitment and AEAD checks;
+- serde translation and rejection behavior outside the refined builder;
+- hax extraction, Rust compilation, and correspondence of the checked kernel to the deployed executable;
+- rollback, cloned state forks, and crash atomicity across surrounding high-level persistence;
+- zeroization and physical erasure of chain and material bytes;
 - the production peer-map lookup and uniqueness refinement;
-- correctness, secrecy, and erasure behavior of HKDF, AEAD, hash, allocation,
-  serialization, and zeroization implementations.
+- correctness of the concrete AEAD, hash, allocation, and entropy primitives; and
+- direct calls to older low-level compatibility APIs outside the high-level production trace.
 
-`SendKey` is a logical availability value, not an affine Rust type. The
-high-level one-use statement follows from the adapter keeping one capability per
-concrete key and removing both after the operation; it is not a claim that Rust
-prevents arbitrary callers from copying state. Similarly, the core proves a
-pointwise peer frame rule, while the production map-selection refinement remains
-an adapter obligation tested by multi-peer protocol regressions.
+`RefinedSendKey<Material>` closes the former adapter assumption that a copyable logical `SendKey` remains paired with the right concrete material: its fields are private, it is not clonable, and finish consumes it. This does not prevent cloning or restoring the complete ratchet before allocation when its concrete types permit cloning. The high-level claim therefore still assumes one authoritative non-rollback owner. Similarly, the core proves a pointwise peer frame rule, while production map selection remains an adapter obligation tested by multi-peer protocol regressions.
 
 ## Regression coverage added
 
 Stage 3 adds or strengthens tests for:
 
-- equality of the concrete receive-key set and the core logical set after
-  derivation, retry retention, successful swap-removal, replay, clone, and
-  reset;
-- pairing and consumption of concrete send keys with logical send
-  capabilities;
-- reconstruction and later consumption of persisted pending send keys;
-- persistence round trips where logical sets are equal but core slot order
-  differs;
+- paired sequence/material lookup after multi-key derivation;
+- exact non-last and last-slot internal removal behavior, including preservation of both key and nonce bytes for a moved sequence;
+- unchanged logical state, receive-chain bytes, sequence/material association, and concrete material after failed authentication and zero-cost retry;
+- replay neutrality, full-capacity rejection, non-last release and refill, clone independence, and reset;
+- consuming refined send tokens, sequential advancement, direction matching, and exhaustion neutrality;
+- the exact five-field persistence schema and rejection of legacy objects containing `send_past`;
+- persistence round trips that compare remaining receive key and nonce bytes by sequence even when core slot order differs;
+- refined restoration rejection for invalid, duplicate, unordered, and over-capacity sequence/material input;
 - acceptance of an exactly 50-key receive cache and rejection of 51 keys;
 - continued use of the existing protocol, server-state, Rooterberg, and
   Wycheproof tests through the production adapter.
 
-## Validation performed
+## Validation gates
 
-The implementation was checked with:
+The completed receive-slot refinement is checked with:
 
 ```sh
 cargo fmt --all -- --check
-cargo test --workspace --all-targets --locked
+cargo test --locked -p beaconcrypt-protocol-core
+cargo test --locked
 cargo check --locked --no-default-features --features pqxdh,server --lib
 cargo check --locked --no-default-features --features pqxdh,beacon --lib
 cargo clippy --workspace --all-targets --all-features --locked -- \
   -D warnings -A clippy::type-complexity
+make -C crates/protocol-core verify
+make -C crates/protocol-core check-inventory
 make -C crates/protocol-core check-generated
 ```
 
-The workspace test run completed with 141 passing tests. Three registration
-tests remain ignored because they are the known Stage 5 protocol
-counterexamples, not Stage 3 failures. Hax regenerated byte-identical F* output,
-and strict F* checking discharged the extracted ratchet module and its manual
-lemmas without `--lax`.
-
-The `clippy::type-complexity` allowance applies to a pre-existing deserialization
-function outside the Stage 3 changes.
+The hax-generated ratchet module intentionally changes because the generic refined state and transitions are now selected. Strict F* checking discharges the corresponding handwritten lemmas without `--lax`, `assume`, or `admit`; `check-generated` and `check-inventory` then ensure the reviewed generated artifacts and trust-boundary fingerprints match those checked sources. The `clippy::type-complexity` allowance applies to a pre-existing deserialization function outside the Stage 3 changes.
 
 ## Remaining rollout work
 

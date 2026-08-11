@@ -336,6 +336,47 @@ require_line_count 1 \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"composed failed-receive capacity-release lemma"
 
+require_line_count 1 '^let valid_refined$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined logical/material invariant"
+require_line_count 1 '^let refined_from_counters_is_valid$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined constructor invariant lemma"
+require_line_count 1 '^let refined_advance_send_preserves_validity$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined send invariant-preservation lemma"
+require_line_count 1 '^let refined_advance_receive_success_uses_step$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined one-step callback association lemma"
+require_line_count 1 '^let refined_receive_step_matches$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined pure callback-result step relation"
+require_line_count 1 '^let rec refined_receive_steps_are_ordered$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined recursive callback-result trace"
+require_line_count 1 '^let rec refined_advance_receive_steps_is_ordered$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined completed-executor ordering lemma"
+require_line_count 1 '^let refined_advance_receive_until_is_ordered$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined composed callback-ordering lemma"
+require_line_count 1 \
+	'^let refined_finish_receive_success_is_exact_swap_removal$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined exact material swap-removal lemma"
+require_line_count 1 '^let refined_restore_receive_key_is_atomic$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined paired-restoration lemma"
+require_line_count 1 '^let finish_refined_restore_is_valid$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined restoration-finish lemma"
+require_line_count 2 'Core_models\.Option\.impl__take' \
+	proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst \
+	"transparent refined material removal"
+reject_matches "unconstrained memory replacement in refined ratchet" \
+	'Core_models\.Mem\.replace' \
+	proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst
+
 require_line_count 1 '^let commitment_transcript_is_exact' \
 	proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst \
 	"exact production commitment transcript lemma"

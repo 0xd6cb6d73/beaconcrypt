@@ -377,23 +377,8 @@ impl Server {
 	pub fn ratchet_recv_until(&mut self, i: &[u8], u: u64, k: u64) -> Option<u64> {
 		self.ratchet_manager_mut(k)?.ratchet_recv_until(i, u)
 	}
-	pub fn ratchet_send(&mut self, i: &[u8], k: u64) -> Option<u64> {
-		self.ratchet_manager_mut(k)?.ratchet_send(i)
-	}
-	pub fn send_key(&self, s: u64, k: u64) -> Option<&crate::shared::KeyMaterial> {
-		self.ratchet_manager(k)?.send_key(s)
-	}
 	pub fn recv_key(&self, s: u64, k: u64) -> Option<&crate::shared::KeyMaterial> {
 		self.ratchet_manager(k)?.recv_key(s)
-	}
-	pub fn delete_send_key(&mut self, s: u64, k: u64) {
-		if let Some(r) = self.ratchet_manager_mut(k) {
-			r.delete_send_key(s)
-		}
-	}
-	pub fn consume_send_key(&mut self, s: u64, k: u64) -> bool {
-		self.ratchet_manager_mut(k)
-			.is_some_and(|r| r.consume_send_key(s))
 	}
 	pub fn delete_recv_key(&mut self, s: u64, k: u64) {
 		if let Some(r) = self.ratchet_manager_mut(k) {
@@ -969,9 +954,9 @@ mod tests {
 		let peer = crypto_sign::KeyPair::generate().unwrap().public_key;
 		server.add_known_kid(9, peer.clone());
 		assert_eq!(server.pk_by_kid(9), Some(&peer));
-		assert_eq!(server.ratchet_send(SYM_RATCHET_INFO, 9), Some(1));
+		assert_eq!(server.encrypt_message(b"before reset", 9).unwrap().seq, 1);
 		server.reset_known_kid(9);
-		assert!(server.send_key(1, 9).is_none());
+		assert_eq!(server.encrypt_message(b"after reset", 9).unwrap().seq, 1);
 		server.delete_known_kid(9);
 		assert!(server.pk_by_kid(9).is_none());
 	}
@@ -991,6 +976,29 @@ mod tests {
 	}
 
 	#[test]
+	fn server_receive_ratchet_delegations_preserve_one_use_semantics() {
+		let mut server = Server::new(0, None);
+		let peer = crypto_sign::KeyPair::generate().unwrap().public_key;
+		server.add_known_kid(9, peer);
+
+		assert_eq!(server.ratchet_recv_until(SYM_RATCHET_INFO, 2, 9), Some(2));
+		assert!(server.recv_key(1, 9).is_some());
+		assert!(server.recv_key(2, 9).is_some());
+		assert!(server.complete_recv_key(1, 9, false));
+		assert!(server.recv_key(1, 9).is_some());
+		assert!(server.complete_recv_key(1, 9, true));
+		assert!(server.recv_key(1, 9).is_none());
+		assert!(!server.complete_recv_key(1, 9, true));
+		server.delete_recv_key(2, 9);
+		assert!(server.recv_key(2, 9).is_none());
+
+		assert!(server.encrypt_message(b"unknown peer", 99).is_none());
+		assert_eq!(server.ratchet_recv_until(SYM_RATCHET_INFO, 1, 99), None);
+		assert!(server.recv_key(1, 99).is_none());
+		assert!(!server.complete_recv_key(1, 99, true));
+	}
+
+	#[test]
 	fn established_beacon_replaces_singular_associated_data() {
 		let mut server = Server::new(0, None);
 		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
@@ -1006,10 +1014,11 @@ mod tests {
 		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
 		register(&mut server, &mut beacon);
 		let beacon_kid = beacon.identity_key_kid();
-		assert_eq!(server.ratchet_send(SYM_RATCHET_INFO, beacon_kid), Some(2));
+		let encrypted = server.encrypt_message(b"ratchet", beacon_kid).unwrap();
+		assert_eq!(encrypted.seq, 2);
 		assert_eq!(
-			beacon.ratchet_manager_mut().ratchet_recv(SYM_RATCHET_INFO),
-			Some(2)
+			beacon.decrypt_message(&encrypted).unwrap().plaintext,
+			b"ratchet"
 		);
 		assert_eq!(
 			server

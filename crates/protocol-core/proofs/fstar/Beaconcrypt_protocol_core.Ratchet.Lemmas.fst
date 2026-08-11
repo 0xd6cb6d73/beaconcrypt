@@ -2,6 +2,7 @@
 module Beaconcrypt_protocol_core.Ratchet.Lemmas
 
 open Rust_primitives.Integers
+open Rust_primitives.Arrays
 open Beaconcrypt_protocol_core.Ratchet
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 60"
@@ -49,6 +50,98 @@ let cache_slot
   v slot < cache_len cache /\
   v slot < 50 /\
   cache_entry cache (v slot) == sequence
+
+/// Any successful bounded lookup names an active matching slot inside the part of the cache traversed by that lookup.
+let rec lookup_receive_key_from_sound
+    (state:t_RatchetState)
+    (sequence:u64)
+    (slot remaining:u8)
+  : Lemma
+      (ensures (match lookup_receive_key_from state sequence slot remaining with
+       | Core_models.Option.Option_Some found ->
+           v slot <= v found /\
+           v found < v slot + v remaining /\
+           cache_slot state.f_receive_cache sequence found
+       | Core_models.Option.Option_None -> True))
+      (decreases (v remaining))
+  =
+  if remaining = mk_u8 0 then ()
+  else if v slot >= 50 then ()
+  else if v slot >= cache_len state.f_receive_cache then ()
+  else if cache_entry state.f_receive_cache (v slot) = sequence then ()
+  else
+    lookup_receive_key_from_sound
+      state sequence (slot +! mk_u8 1) (remaining -! mk_u8 1)
+
+/// A bounded lookup that returns `None` excludes the requested sequence from every active slot in the traversed range.
+let rec lookup_receive_key_from_none_excludes_range
+    (state:t_RatchetState)
+    (sequence:u64)
+    (slot remaining:u8)
+  : Lemma
+      (ensures
+        (lookup_receive_key_from state sequence slot remaining ==
+           Core_models.Option.Option_None ==>
+         forall (i:nat{i < 50}).
+           v slot <= i /\
+           i < cache_len state.f_receive_cache /\
+           i < v slot + v remaining ==>
+             cache_entry state.f_receive_cache i <> sequence))
+      (decreases (v remaining))
+  =
+  if remaining = mk_u8 0 then ()
+  else if v slot >= 50 then ()
+  else if v slot >= cache_len state.f_receive_cache then ()
+  else if cache_entry state.f_receive_cache (v slot) = sequence then ()
+  else
+    lookup_receive_key_from_none_excludes_range
+      state sequence (slot +! mk_u8 1) (remaining -! mk_u8 1)
+
+/// Public lookup soundness: every returned slot is active and stores exactly the requested logical sequence.
+let lookup_receive_key_sound
+    (state:t_RatchetState { valid_state state })
+    (sequence:u64)
+  : Lemma
+      (match lookup_receive_key state sequence with
+       | Core_models.Option.Option_Some slot ->
+           cache_slot state.f_receive_cache sequence slot
+       | Core_models.Option.Option_None -> True)
+  = lookup_receive_key_from_sound state sequence (mk_u8 0) (mk_u8 50)
+
+/// Public lookup completeness in its negative form. `None` is authoritative: no active logical receive capability has the requested sequence.
+let lookup_receive_key_none_is_absent
+    (state:t_RatchetState { valid_state state })
+    (sequence:u64)
+  : Lemma
+      (lookup_receive_key state sequence == Core_models.Option.Option_None ==>
+       ~(cache_has state.f_receive_cache sequence))
+  = lookup_receive_key_from_none_excludes_range
+      state sequence (mk_u8 0) (mk_u8 50)
+
+/// Contrapositive completeness used by adapters and later correspondence proofs: every active logical sequence is found by public lookup.
+let lookup_receive_key_is_complete
+    (state:t_RatchetState { valid_state state })
+    (sequence:u64)
+  : Lemma
+      (cache_has state.f_receive_cache sequence ==>
+       lookup_receive_key state sequence <> Core_models.Option.Option_None)
+  = lookup_receive_key_none_is_absent state sequence
+
+/// Valid-cache uniqueness strengthens soundness to the exact unique active slot characterized by the lookup result.
+let lookup_receive_key_returns_unique_slot
+    (state:t_RatchetState { valid_state state })
+    (sequence:u64)
+  : Lemma
+      (match lookup_receive_key state sequence with
+       | Core_models.Option.Option_Some slot ->
+           cache_slot state.f_receive_cache sequence slot /\
+           (forall (other:u8).
+              cache_slot state.f_receive_cache sequence other ==> other == slot)
+       | Core_models.Option.Option_None ->
+           ~(cache_has state.f_receive_cache sequence))
+  =
+  lookup_receive_key_sound state sequence;
+  lookup_receive_key_none_is_absent state sequence
 
 /// Empty-cache constructors establish the receive invariant for arbitrary
 /// counter values.
@@ -154,6 +247,53 @@ let plan_future_receive_is_bounded
        | Core_models.Option.Option_None ->
            (plan_receive_until state target).f_derivations == mk_u64 0)
   = ()
+
+/// Every receive plan exposes a derivation count that fits the u8 executor bound.
+let plan_receive_derivations_are_bounded
+    (state:t_RatchetState)
+    (target:u64)
+  : Lemma
+      (v (plan_receive_until state target).f_derivations <= 50)
+  =
+  let plan = plan_receive_until state target in
+  if v target > v state.f_receive_sequence then
+    let future_target:(x:u64 { v x > v state.f_receive_sequence }) = target in
+    plan_future_receive_is_bounded state future_target;
+    match plan.f_sequence with
+    | Core_models.Option.Option_Some _ -> ()
+    | Core_models.Option.Option_None -> ()
+  else
+    let old_target:(x:u64 { v x <= v state.f_receive_sequence }) = target in
+    plan_old_receive_is_zero_cost state old_target
+
+/// A receive plan fixes its returned target and characterizes the zero-versus-positive derivation count independently of concrete chain types.
+let plan_receive_shape
+    (state:t_RatchetState)
+    (target:u64)
+  : Lemma
+      (let plan = plan_receive_until state target in
+       v plan.f_derivations <= 50 /\
+       (match plan.f_sequence with
+        | Core_models.Option.Option_Some planned_target ->
+            planned_target == target /\
+            (v target > v state.f_receive_sequence ==>
+              v plan.f_derivations > 0) /\
+            (v target <= v state.f_receive_sequence ==>
+              plan.f_derivations == mk_u64 0)
+        | Core_models.Option.Option_None ->
+            plan.f_derivations == mk_u64 0))
+  =
+  let plan = plan_receive_until state target in
+  plan_receive_derivations_are_bounded state target;
+  if v target > v state.f_receive_sequence then
+    let future_target:(x:u64 { v x > v state.f_receive_sequence }) = target in
+    plan_future_receive_is_bounded state future_target;
+    match plan.f_sequence with
+    | Core_models.Option.Option_Some _ -> ()
+    | Core_models.Option.Option_None -> ()
+  else
+    let old_target:(x:u64 { v x <= v state.f_receive_sequence }) = target in
+    plan_old_receive_is_zero_cost state old_target
 
 let plan_receive_rejects_large_gap
     (state:t_RatchetState)
@@ -314,6 +454,158 @@ let finish_receive_replay_is_rejected
        (finish_receive consumed target slot true).f_state == consumed)
   = ()
 
+/// The compatibility wrapper is exactly the state/disposition projection of the detailed operation for every input and outcome.
+let finish_receive_wrapper_matches_detailed
+    (state:t_RatchetState)
+    (target:u64)
+    (slot:u8)
+    (authenticated:bool)
+  : Lemma
+      ((finish_receive state target slot authenticated).f_state ==
+         (finish_receive_with_removal state target slot authenticated).f_state /\
+       (finish_receive state target slot authenticated).f_disposition ==
+         (finish_receive_with_removal state target slot authenticated).f_disposition)
+  = ()
+
+/// Every detailed `Missing` result is state-neutral and carries no removal plan.
+let finish_receive_with_removal_missing_result_is_neutral
+    (state:t_RatchetState)
+    (target:u64)
+    (slot:u8)
+    (authenticated:bool)
+  : Lemma
+      (let finished = finish_receive_with_removal state target slot authenticated in
+       finished.f_disposition == ReceiveDisposition_Missing ==>
+         finished.f_removal == Core_models.Option.Option_None /\
+         finished.f_state == state)
+  = ()
+
+/// Every detailed `Retained` result is state-neutral and carries no removal plan.
+let finish_receive_with_removal_retained_result_is_neutral
+    (state:t_RatchetState)
+    (target:u64)
+    (slot:u8)
+    (authenticated:bool)
+  : Lemma
+      (let finished = finish_receive_with_removal state target slot authenticated in
+       finished.f_disposition == ReceiveDisposition_Retained ==>
+         finished.f_removal == Core_models.Option.Option_None /\
+         finished.f_state == state)
+  = ()
+
+/// A wrong slot/sequence pair returns no removal plan and leaves the complete ratchet state unchanged.
+let finish_receive_with_removal_missing_is_neutral
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { ~(cache_slot state.f_receive_cache target slot) })
+    (authenticated:bool)
+  : Lemma
+      ((finish_receive_with_removal state target slot authenticated).f_disposition ==
+         ReceiveDisposition_Missing /\
+       (finish_receive_with_removal state target slot authenticated).f_state == state /\
+       (finish_receive_with_removal state target slot authenticated).f_removal ==
+         Core_models.Option.Option_None)
+  = ()
+
+/// Authentication failure for a matching candidate returns no removal plan, retains all state, and leaves that exact candidate in the same slot.
+let finish_receive_with_removal_failure_retains_key
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+  : Lemma
+      ((finish_receive_with_removal state target slot false).f_disposition ==
+         ReceiveDisposition_Retained /\
+       (finish_receive_with_removal state target slot false).f_state == state /\
+       (finish_receive_with_removal state target slot false).f_removal ==
+         Core_models.Option.Option_None /\
+       cache_slot
+         (finish_receive_with_removal state target slot false).f_state.f_receive_cache
+         target
+         slot)
+  = ()
+
+/// Successful detailed completion reports the exact old target/last slots, decrements the logical length once, and exposes the logical move mirrored by the concrete fixed array.
+let finish_receive_with_removal_success_shape
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+  : Lemma
+      (let finished = finish_receive_with_removal state target slot true in
+       finished.f_disposition == ReceiveDisposition_Consumed /\
+       (match finished.f_removal with
+        | Core_models.Option.Option_Some removal ->
+            removal.f_target_slot == slot /\
+            v removal.f_last_slot + 1 == cache_len state.f_receive_cache /\
+            cache_len finished.f_state.f_receive_cache + 1 ==
+              cache_len state.f_receive_cache /\
+            finished.f_state.f_send_sequence == state.f_send_sequence /\
+            finished.f_state.f_receive_sequence == state.f_receive_sequence /\
+            (removal.f_target_slot <> removal.f_last_slot ==>
+             cache_entry finished.f_state.f_receive_cache (v removal.f_target_slot) ==
+               cache_entry state.f_receive_cache (v removal.f_last_slot))
+        | Core_models.Option.Option_None -> False))
+  = ()
+
+/// The detailed transition preserves the same logical validity theorem as its compatibility projection.
+let finish_receive_with_removal_preserves_validity
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8)
+    (authenticated:bool)
+  : Lemma
+      (valid_state
+        (finish_receive_with_removal state target slot authenticated).f_state)
+  =
+  finish_receive_preserves_validity state target slot authenticated;
+  finish_receive_wrapper_matches_detailed state target slot authenticated
+
+/// Detailed successful completion removes the target capability itself.
+let finish_receive_with_removal_consumes_target
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+  : Lemma
+      (~(cache_has
+        (finish_receive_with_removal state target slot true).f_state.f_receive_cache
+        target))
+  =
+  finish_receive_consumes_target state target slot;
+  finish_receive_wrapper_matches_detailed state target slot true
+
+/// Every non-target capability survives detailed swap-removal.
+let finish_receive_with_removal_preserves_other_key
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+    (other:u64 {
+       other <> target /\ cache_has state.f_receive_cache other })
+  : Lemma
+      (cache_has
+        (finish_receive_with_removal state target slot true).f_state.f_receive_cache
+        other)
+  =
+  finish_receive_preserves_other_key state target slot other;
+  finish_receive_wrapper_matches_detailed state target slot true
+
+/// Preservation is exact: the surviving non-target sequence occupies one unique active slot in the detailed result.
+let finish_receive_with_removal_preserves_other_key_exactly_once
+    (state:t_RatchetState { valid_state state })
+    (target:u64)
+    (slot:u8 { cache_slot state.f_receive_cache target slot })
+    (other:u64 {
+       other <> target /\ cache_has state.f_receive_cache other })
+  : Lemma
+      (let cache =
+         (finish_receive_with_removal state target slot true).f_state.f_receive_cache in
+       cache_has cache other /\
+       (forall (i:nat{i < 50}) (j:nat{j < 50}).
+          i < cache_len cache /\ j < cache_len cache /\
+          cache_entry cache i == other /\ cache_entry cache j == other ==>
+            i == j))
+  =
+  finish_receive_with_removal_preserves_other_key state target slot other;
+  finish_receive_with_removal_preserves_validity state target slot true
+
 /// A one-step admissible future receive advances before authentication.  If
 /// authentication then fails, the candidate key and the entire post-admission
 /// state are retained; the result is therefore not neutral relative to the
@@ -454,10 +746,1705 @@ let restore_receive_key_preserves_validity
        | Core_models.Option.Option_None -> True)
   = ()
 
+/// The compatibility restoration API accepts and rejects exactly the same inputs as the slot-returning operation and projects its restore state.
+let restore_receive_key_wrapper_matches_slot
+    (restore:t_RatchetRestore)
+    (sequence:u64)
+  : Lemma
+      (match restore_receive_key_with_slot restore sequence,
+             restore_receive_key restore sequence with
+       | Core_models.Option.Option_Some step,
+         Core_models.Option.Option_Some restored -> restored == step.f_restore
+       | Core_models.Option.Option_None,
+         Core_models.Option.Option_None -> True
+       | _ -> False)
+  = ()
+
+/// Every successful checked restoration returns the exact append slot, grows the cache once, and places the restored sequence in that returned slot.
+let restore_receive_key_with_slot_success_shape
+    (restore:t_RatchetRestore { valid_restore restore })
+    (sequence:u64)
+  : Lemma
+      (match restore_receive_key_with_slot restore sequence with
+       | Core_models.Option.Option_Some step ->
+           v step.f_slot == cache_len restore.f_state.f_receive_cache /\
+           cache_len step.f_restore.f_state.f_receive_cache ==
+             cache_len restore.f_state.f_receive_cache + 1 /\
+           cache_slot step.f_restore.f_state.f_receive_cache sequence step.f_slot
+       | Core_models.Option.Option_None -> True)
+  = ()
+
+/// The detailed restoration result preserves the builder invariant; rejected inputs return no state.
+let restore_receive_key_with_slot_preserves_validity
+    (restore:t_RatchetRestore { valid_restore restore })
+    (sequence:u64)
+  : Lemma
+      (match restore_receive_key_with_slot restore sequence with
+       | Core_models.Option.Option_Some step -> valid_restore step.f_restore
+       | Core_models.Option.Option_None -> True)
+  =
+  restore_receive_key_preserves_validity restore sequence;
+  restore_receive_key_wrapper_matches_slot restore sequence
+
 let finish_restore_is_valid
     (restore:t_RatchetRestore { valid_restore restore })
   : Lemma (valid_state (finish_restore restore))
   = ()
+
+/// Logical view of one material slot in the refined fixed array.
+let refined_slot_value
+    (#v_Material:Type0)
+    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (i:nat{i < 50})
+  : Core_models.Option.t_Option v_Material =
+  Seq.index slots i
+
+let refined_slot_value_is_index
+    (#v_Material:Type0)
+    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (i:nat{i < 50})
+  : Lemma
+      (refined_slot_value slots i == Seq.index slots i)
+  = ()
+
+/// The material array is packed exactly like the logical sequence cache.
+let material_slots_match
+    (#v_Material:Type0)
+    (cache:t_SequenceCache)
+    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+  : prop =
+  forall (i:nat{i < 50}).
+    match refined_slot_value slots i with
+    | Core_models.Option.Option_Some _ -> i < cache_len cache
+    | Core_models.Option.Option_None -> cache_len cache <= i
+
+/// Proof-only structural representation of a generic list containing exactly `n` empty material slots.
+let rec none_material_list
+    (#v_Material:Type0)
+    (n:nat)
+  : Tot
+      (xs:list (Core_models.Option.t_Option v_Material) {
+         List.Tot.length xs == n })
+      (decreases n)
+  =
+  if n = 0 then []
+  else
+    (Core_models.Option.Option_None <:
+       Core_models.Option.t_Option v_Material) ::
+      none_material_list #v_Material (n - 1)
+
+let rec none_material_list_index
+    (#v_Material:Type0)
+    (n:nat)
+    (i:nat{i < n})
+  : Lemma
+      (ensures
+        (List.Tot.index (none_material_list #v_Material n) i ==
+          Core_models.Option.Option_None))
+      (decreases n)
+  =
+  if n = 0 then ()
+  else if i = 0 then ()
+  else none_material_list_index #v_Material (n - 1) (i - 1)
+
+/// Each concrete position in the fixed source-level empty array is None.
+let empty_material_slot_is_none
+    (#v_Material:Type0)
+    (i:nat{i < 50})
+  : Lemma
+      (refined_slot_value (empty_material_slots #v_Material ()) i ==
+        Core_models.Option.Option_None)
+  =
+  let xs = none_material_list #v_Material 50 in
+  let slots = empty_material_slots #v_Material () in
+  FStar.Pervasives.assert_norm (slots == Seq.seq_of_list xs);
+  FStar.Seq.Base.lemma_eq_refl slots (Seq.seq_of_list xs);
+  if i = 0 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (0 < Seq.length slots);
+     assert (0 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 0 == Seq.index (Seq.seq_of_list xs) 0);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 0;
+     none_material_list_index #v_Material 50 0;
+     refined_slot_value_is_index slots 0;
+     assert
+       (refined_slot_value slots 0 == Core_models.Option.Option_None);
+     ())
+  else if i = 1 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (1 < Seq.length slots);
+     assert (1 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 1 == Seq.index (Seq.seq_of_list xs) 1);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 1;
+     none_material_list_index #v_Material 50 1;
+     refined_slot_value_is_index slots 1;
+     assert
+       (refined_slot_value slots 1 == Core_models.Option.Option_None);
+     ())
+  else if i = 2 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (2 < Seq.length slots);
+     assert (2 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 2 == Seq.index (Seq.seq_of_list xs) 2);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 2;
+     none_material_list_index #v_Material 50 2;
+     refined_slot_value_is_index slots 2;
+     assert
+       (refined_slot_value slots 2 == Core_models.Option.Option_None);
+     ())
+  else if i = 3 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (3 < Seq.length slots);
+     assert (3 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 3 == Seq.index (Seq.seq_of_list xs) 3);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 3;
+     none_material_list_index #v_Material 50 3;
+     refined_slot_value_is_index slots 3;
+     assert
+       (refined_slot_value slots 3 == Core_models.Option.Option_None);
+     ())
+  else if i = 4 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (4 < Seq.length slots);
+     assert (4 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 4 == Seq.index (Seq.seq_of_list xs) 4);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 4;
+     none_material_list_index #v_Material 50 4;
+     refined_slot_value_is_index slots 4;
+     assert
+       (refined_slot_value slots 4 == Core_models.Option.Option_None);
+     ())
+  else if i = 5 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (5 < Seq.length slots);
+     assert (5 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 5 == Seq.index (Seq.seq_of_list xs) 5);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 5;
+     none_material_list_index #v_Material 50 5;
+     refined_slot_value_is_index slots 5;
+     assert
+       (refined_slot_value slots 5 == Core_models.Option.Option_None);
+     ())
+  else if i = 6 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (6 < Seq.length slots);
+     assert (6 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 6 == Seq.index (Seq.seq_of_list xs) 6);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 6;
+     none_material_list_index #v_Material 50 6;
+     refined_slot_value_is_index slots 6;
+     assert
+       (refined_slot_value slots 6 == Core_models.Option.Option_None);
+     ())
+  else if i = 7 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (7 < Seq.length slots);
+     assert (7 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 7 == Seq.index (Seq.seq_of_list xs) 7);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 7;
+     none_material_list_index #v_Material 50 7;
+     refined_slot_value_is_index slots 7;
+     assert
+       (refined_slot_value slots 7 == Core_models.Option.Option_None);
+     ())
+  else if i = 8 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (8 < Seq.length slots);
+     assert (8 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 8 == Seq.index (Seq.seq_of_list xs) 8);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 8;
+     none_material_list_index #v_Material 50 8;
+     refined_slot_value_is_index slots 8;
+     assert
+       (refined_slot_value slots 8 == Core_models.Option.Option_None);
+     ())
+  else if i = 9 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (9 < Seq.length slots);
+     assert (9 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 9 == Seq.index (Seq.seq_of_list xs) 9);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 9;
+     none_material_list_index #v_Material 50 9;
+     refined_slot_value_is_index slots 9;
+     assert
+       (refined_slot_value slots 9 == Core_models.Option.Option_None);
+     ())
+  else if i = 10 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (10 < Seq.length slots);
+     assert (10 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 10 == Seq.index (Seq.seq_of_list xs) 10);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 10;
+     none_material_list_index #v_Material 50 10;
+     refined_slot_value_is_index slots 10;
+     assert
+       (refined_slot_value slots 10 == Core_models.Option.Option_None);
+     ())
+  else if i = 11 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (11 < Seq.length slots);
+     assert (11 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 11 == Seq.index (Seq.seq_of_list xs) 11);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 11;
+     none_material_list_index #v_Material 50 11;
+     refined_slot_value_is_index slots 11;
+     assert
+       (refined_slot_value slots 11 == Core_models.Option.Option_None);
+     ())
+  else if i = 12 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (12 < Seq.length slots);
+     assert (12 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 12 == Seq.index (Seq.seq_of_list xs) 12);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 12;
+     none_material_list_index #v_Material 50 12;
+     refined_slot_value_is_index slots 12;
+     assert
+       (refined_slot_value slots 12 == Core_models.Option.Option_None);
+     ())
+  else if i = 13 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (13 < Seq.length slots);
+     assert (13 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 13 == Seq.index (Seq.seq_of_list xs) 13);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 13;
+     none_material_list_index #v_Material 50 13;
+     refined_slot_value_is_index slots 13;
+     assert
+       (refined_slot_value slots 13 == Core_models.Option.Option_None);
+     ())
+  else if i = 14 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (14 < Seq.length slots);
+     assert (14 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 14 == Seq.index (Seq.seq_of_list xs) 14);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 14;
+     none_material_list_index #v_Material 50 14;
+     refined_slot_value_is_index slots 14;
+     assert
+       (refined_slot_value slots 14 == Core_models.Option.Option_None);
+     ())
+  else if i = 15 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (15 < Seq.length slots);
+     assert (15 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 15 == Seq.index (Seq.seq_of_list xs) 15);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 15;
+     none_material_list_index #v_Material 50 15;
+     refined_slot_value_is_index slots 15;
+     assert
+       (refined_slot_value slots 15 == Core_models.Option.Option_None);
+     ())
+  else if i = 16 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (16 < Seq.length slots);
+     assert (16 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 16 == Seq.index (Seq.seq_of_list xs) 16);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 16;
+     none_material_list_index #v_Material 50 16;
+     refined_slot_value_is_index slots 16;
+     assert
+       (refined_slot_value slots 16 == Core_models.Option.Option_None);
+     ())
+  else if i = 17 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (17 < Seq.length slots);
+     assert (17 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 17 == Seq.index (Seq.seq_of_list xs) 17);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 17;
+     none_material_list_index #v_Material 50 17;
+     refined_slot_value_is_index slots 17;
+     assert
+       (refined_slot_value slots 17 == Core_models.Option.Option_None);
+     ())
+  else if i = 18 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (18 < Seq.length slots);
+     assert (18 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 18 == Seq.index (Seq.seq_of_list xs) 18);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 18;
+     none_material_list_index #v_Material 50 18;
+     refined_slot_value_is_index slots 18;
+     assert
+       (refined_slot_value slots 18 == Core_models.Option.Option_None);
+     ())
+  else if i = 19 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (19 < Seq.length slots);
+     assert (19 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 19 == Seq.index (Seq.seq_of_list xs) 19);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 19;
+     none_material_list_index #v_Material 50 19;
+     refined_slot_value_is_index slots 19;
+     assert
+       (refined_slot_value slots 19 == Core_models.Option.Option_None);
+     ())
+  else if i = 20 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (20 < Seq.length slots);
+     assert (20 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 20 == Seq.index (Seq.seq_of_list xs) 20);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 20;
+     none_material_list_index #v_Material 50 20;
+     refined_slot_value_is_index slots 20;
+     assert
+       (refined_slot_value slots 20 == Core_models.Option.Option_None);
+     ())
+  else if i = 21 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (21 < Seq.length slots);
+     assert (21 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 21 == Seq.index (Seq.seq_of_list xs) 21);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 21;
+     none_material_list_index #v_Material 50 21;
+     refined_slot_value_is_index slots 21;
+     assert
+       (refined_slot_value slots 21 == Core_models.Option.Option_None);
+     ())
+  else if i = 22 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (22 < Seq.length slots);
+     assert (22 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 22 == Seq.index (Seq.seq_of_list xs) 22);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 22;
+     none_material_list_index #v_Material 50 22;
+     refined_slot_value_is_index slots 22;
+     assert
+       (refined_slot_value slots 22 == Core_models.Option.Option_None);
+     ())
+  else if i = 23 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (23 < Seq.length slots);
+     assert (23 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 23 == Seq.index (Seq.seq_of_list xs) 23);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 23;
+     none_material_list_index #v_Material 50 23;
+     refined_slot_value_is_index slots 23;
+     assert
+       (refined_slot_value slots 23 == Core_models.Option.Option_None);
+     ())
+  else if i = 24 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (24 < Seq.length slots);
+     assert (24 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 24 == Seq.index (Seq.seq_of_list xs) 24);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 24;
+     none_material_list_index #v_Material 50 24;
+     refined_slot_value_is_index slots 24;
+     assert
+       (refined_slot_value slots 24 == Core_models.Option.Option_None);
+     ())
+  else if i = 25 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (25 < Seq.length slots);
+     assert (25 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 25 == Seq.index (Seq.seq_of_list xs) 25);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 25;
+     none_material_list_index #v_Material 50 25;
+     refined_slot_value_is_index slots 25;
+     assert
+       (refined_slot_value slots 25 == Core_models.Option.Option_None);
+     ())
+  else if i = 26 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (26 < Seq.length slots);
+     assert (26 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 26 == Seq.index (Seq.seq_of_list xs) 26);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 26;
+     none_material_list_index #v_Material 50 26;
+     refined_slot_value_is_index slots 26;
+     assert
+       (refined_slot_value slots 26 == Core_models.Option.Option_None);
+     ())
+  else if i = 27 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (27 < Seq.length slots);
+     assert (27 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 27 == Seq.index (Seq.seq_of_list xs) 27);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 27;
+     none_material_list_index #v_Material 50 27;
+     refined_slot_value_is_index slots 27;
+     assert
+       (refined_slot_value slots 27 == Core_models.Option.Option_None);
+     ())
+  else if i = 28 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (28 < Seq.length slots);
+     assert (28 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 28 == Seq.index (Seq.seq_of_list xs) 28);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 28;
+     none_material_list_index #v_Material 50 28;
+     refined_slot_value_is_index slots 28;
+     assert
+       (refined_slot_value slots 28 == Core_models.Option.Option_None);
+     ())
+  else if i = 29 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (29 < Seq.length slots);
+     assert (29 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 29 == Seq.index (Seq.seq_of_list xs) 29);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 29;
+     none_material_list_index #v_Material 50 29;
+     refined_slot_value_is_index slots 29;
+     assert
+       (refined_slot_value slots 29 == Core_models.Option.Option_None);
+     ())
+  else if i = 30 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (30 < Seq.length slots);
+     assert (30 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 30 == Seq.index (Seq.seq_of_list xs) 30);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 30;
+     none_material_list_index #v_Material 50 30;
+     refined_slot_value_is_index slots 30;
+     assert
+       (refined_slot_value slots 30 == Core_models.Option.Option_None);
+     ())
+  else if i = 31 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (31 < Seq.length slots);
+     assert (31 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 31 == Seq.index (Seq.seq_of_list xs) 31);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 31;
+     none_material_list_index #v_Material 50 31;
+     refined_slot_value_is_index slots 31;
+     assert
+       (refined_slot_value slots 31 == Core_models.Option.Option_None);
+     ())
+  else if i = 32 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (32 < Seq.length slots);
+     assert (32 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 32 == Seq.index (Seq.seq_of_list xs) 32);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 32;
+     none_material_list_index #v_Material 50 32;
+     refined_slot_value_is_index slots 32;
+     assert
+       (refined_slot_value slots 32 == Core_models.Option.Option_None);
+     ())
+  else if i = 33 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (33 < Seq.length slots);
+     assert (33 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 33 == Seq.index (Seq.seq_of_list xs) 33);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 33;
+     none_material_list_index #v_Material 50 33;
+     refined_slot_value_is_index slots 33;
+     assert
+       (refined_slot_value slots 33 == Core_models.Option.Option_None);
+     ())
+  else if i = 34 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (34 < Seq.length slots);
+     assert (34 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 34 == Seq.index (Seq.seq_of_list xs) 34);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 34;
+     none_material_list_index #v_Material 50 34;
+     refined_slot_value_is_index slots 34;
+     assert
+       (refined_slot_value slots 34 == Core_models.Option.Option_None);
+     ())
+  else if i = 35 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (35 < Seq.length slots);
+     assert (35 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 35 == Seq.index (Seq.seq_of_list xs) 35);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 35;
+     none_material_list_index #v_Material 50 35;
+     refined_slot_value_is_index slots 35;
+     assert
+       (refined_slot_value slots 35 == Core_models.Option.Option_None);
+     ())
+  else if i = 36 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (36 < Seq.length slots);
+     assert (36 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 36 == Seq.index (Seq.seq_of_list xs) 36);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 36;
+     none_material_list_index #v_Material 50 36;
+     refined_slot_value_is_index slots 36;
+     assert
+       (refined_slot_value slots 36 == Core_models.Option.Option_None);
+     ())
+  else if i = 37 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (37 < Seq.length slots);
+     assert (37 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 37 == Seq.index (Seq.seq_of_list xs) 37);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 37;
+     none_material_list_index #v_Material 50 37;
+     refined_slot_value_is_index slots 37;
+     assert
+       (refined_slot_value slots 37 == Core_models.Option.Option_None);
+     ())
+  else if i = 38 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (38 < Seq.length slots);
+     assert (38 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 38 == Seq.index (Seq.seq_of_list xs) 38);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 38;
+     none_material_list_index #v_Material 50 38;
+     refined_slot_value_is_index slots 38;
+     assert
+       (refined_slot_value slots 38 == Core_models.Option.Option_None);
+     ())
+  else if i = 39 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (39 < Seq.length slots);
+     assert (39 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 39 == Seq.index (Seq.seq_of_list xs) 39);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 39;
+     none_material_list_index #v_Material 50 39;
+     refined_slot_value_is_index slots 39;
+     assert
+       (refined_slot_value slots 39 == Core_models.Option.Option_None);
+     ())
+  else if i = 40 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (40 < Seq.length slots);
+     assert (40 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 40 == Seq.index (Seq.seq_of_list xs) 40);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 40;
+     none_material_list_index #v_Material 50 40;
+     refined_slot_value_is_index slots 40;
+     assert
+       (refined_slot_value slots 40 == Core_models.Option.Option_None);
+     ())
+  else if i = 41 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (41 < Seq.length slots);
+     assert (41 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 41 == Seq.index (Seq.seq_of_list xs) 41);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 41;
+     none_material_list_index #v_Material 50 41;
+     refined_slot_value_is_index slots 41;
+     assert
+       (refined_slot_value slots 41 == Core_models.Option.Option_None);
+     ())
+  else if i = 42 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (42 < Seq.length slots);
+     assert (42 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 42 == Seq.index (Seq.seq_of_list xs) 42);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 42;
+     none_material_list_index #v_Material 50 42;
+     refined_slot_value_is_index slots 42;
+     assert
+       (refined_slot_value slots 42 == Core_models.Option.Option_None);
+     ())
+  else if i = 43 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (43 < Seq.length slots);
+     assert (43 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 43 == Seq.index (Seq.seq_of_list xs) 43);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 43;
+     none_material_list_index #v_Material 50 43;
+     refined_slot_value_is_index slots 43;
+     assert
+       (refined_slot_value slots 43 == Core_models.Option.Option_None);
+     ())
+  else if i = 44 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (44 < Seq.length slots);
+     assert (44 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 44 == Seq.index (Seq.seq_of_list xs) 44);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 44;
+     none_material_list_index #v_Material 50 44;
+     refined_slot_value_is_index slots 44;
+     assert
+       (refined_slot_value slots 44 == Core_models.Option.Option_None);
+     ())
+  else if i = 45 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (45 < Seq.length slots);
+     assert (45 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 45 == Seq.index (Seq.seq_of_list xs) 45);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 45;
+     none_material_list_index #v_Material 50 45;
+     refined_slot_value_is_index slots 45;
+     assert
+       (refined_slot_value slots 45 == Core_models.Option.Option_None);
+     ())
+  else if i = 46 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (46 < Seq.length slots);
+     assert (46 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 46 == Seq.index (Seq.seq_of_list xs) 46);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 46;
+     none_material_list_index #v_Material 50 46;
+     refined_slot_value_is_index slots 46;
+     assert
+       (refined_slot_value slots 46 == Core_models.Option.Option_None);
+     ())
+  else if i = 47 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (47 < Seq.length slots);
+     assert (47 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 47 == Seq.index (Seq.seq_of_list xs) 47);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 47;
+     none_material_list_index #v_Material 50 47;
+     refined_slot_value_is_index slots 47;
+     assert
+       (refined_slot_value slots 47 == Core_models.Option.Option_None);
+     ())
+  else if i = 48 then
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (48 < Seq.length slots);
+     assert (48 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 48 == Seq.index (Seq.seq_of_list xs) 48);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 48;
+     none_material_list_index #v_Material 50 48;
+     refined_slot_value_is_index slots 48;
+     assert
+       (refined_slot_value slots 48 == Core_models.Option.Option_None);
+     ())
+  else
+    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+     assert (49 < Seq.length slots);
+     assert (49 < Seq.length (Seq.seq_of_list xs));
+     assert
+       (Seq.index slots 49 == Seq.index (Seq.seq_of_list xs) 49);
+     FStar.Seq.Properties.lemma_seq_of_list_index xs 49;
+     none_material_list_index #v_Material 50 49;
+     refined_slot_value_is_index slots 49;
+     assert
+       (refined_slot_value slots 49 == Core_models.Option.Option_None);
+     ())
+
+/// The explicit source-level empty array establishes the material occupancy invariant.
+let empty_material_slots_are_none
+    (#v_Material:Type0)
+  : Lemma
+      (forall (i:nat{i < 50}).
+         refined_slot_value (empty_material_slots #v_Material ()) i ==
+           Core_models.Option.Option_None)
+  =
+  FStar.Classical.forall_intro
+    #(i:nat{i < 50})
+    #(fun i ->
+        refined_slot_value (empty_material_slots #v_Material ()) i ==
+          Core_models.Option.Option_None)
+    (empty_material_slot_is_none #v_Material)
+
+/// The refined invariant connects the verified control cache to the concrete fixed material slots.
+let valid_refined
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+  : prop =
+  valid_state state.f_control /\
+  material_slots_match state.f_control.f_receive_cache state.f_receive_slots
+
+/// A sequence and its concrete material occupy the same unique active slot.
+let refined_slot
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (sequence:u64)
+    (material:v_Material)
+    (slot:u8{v slot < 50})
+  : prop =
+  cache_slot state.f_control.f_receive_cache sequence slot /\
+  refined_slot_value state.f_receive_slots (v slot) ==
+    Core_models.Option.Option_Some material
+
+/// A packed append preserves every earlier sequence/material association pointwise.
+let packed_prefix_unchanged
+    (#v_Material:Type0)
+    (old_cache new_cache:t_SequenceCache)
+    (old_slots new_slots:
+      t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+  : prop =
+  forall (i:nat{i < 50}).
+    i < cache_len old_cache ==>
+      cache_entry new_cache i == cache_entry old_cache i /\
+      refined_slot_value new_slots i == refined_slot_value old_slots i
+
+let packed_prefix_unchanged_refl
+    (#v_Material:Type0)
+    (cache:t_SequenceCache)
+    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+  : Lemma (packed_prefix_unchanged cache cache slots slots)
+  =
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        (i < cache_len cache ==>
+          cache_entry cache i == cache_entry cache i /\
+          refined_slot_value slots i == refined_slot_value slots i)
+    = ()
+  in
+  FStar.Classical.forall_intro pointwise
+
+let packed_prefix_unchanged_transitive
+    (#v_Material:Type0)
+    (cache0 cache1 cache2:t_SequenceCache)
+    (slots0 slots1 slots2:
+      t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+  : Lemma
+      (requires
+        (packed_prefix_unchanged cache0 cache1 slots0 slots1 /\
+         packed_prefix_unchanged cache1 cache2 slots1 slots2 /\
+         cache_len cache0 <= cache_len cache1))
+      (ensures
+        (packed_prefix_unchanged cache0 cache2 slots0 slots2))
+  =
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        (i < cache_len cache0 ==>
+          cache_entry cache2 i == cache_entry cache0 i /\
+          refined_slot_value slots2 i == refined_slot_value slots0 i)
+    =
+    if i < cache_len cache0 then
+      (assert (i < cache_len cache1);
+       assert
+         (cache_entry cache1 i == cache_entry cache0 i /\
+          refined_slot_value slots1 i == refined_slot_value slots0 i);
+       assert
+         (cache_entry cache2 i == cache_entry cache1 i /\
+          refined_slot_value slots2 i == refined_slot_value slots1 i))
+    else ()
+  in
+  FStar.Classical.forall_intro pointwise
+
+/// One admitted receive step consumes the prior chain and associates the exact pure callback result with the appended sequence.
+let refined_receive_step_matches
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (old_state next_state:
+      t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (sequence:u64)
+    (info:t_Slice u8)
+    (step:v_ReceiveChain -> t_Slice u8 ->
+      t_RatchetStep v_ReceiveChain v_Material)
+  : prop =
+  let stepped = step old_state.f_receive_chain info in
+  valid_refined old_state /\
+  valid_refined next_state /\
+  next_state.f_send_chain == old_state.f_send_chain /\
+  next_state.f_control.f_send_sequence ==
+    old_state.f_control.f_send_sequence /\
+  next_state.f_receive_chain == stepped.f_chain /\
+  sequence == next_state.f_control.f_receive_sequence /\
+  v next_state.f_control.f_receive_sequence ==
+    v old_state.f_control.f_receive_sequence + 1 /\
+  cache_len next_state.f_control.f_receive_cache ==
+    cache_len old_state.f_control.f_receive_cache + 1 /\
+  packed_prefix_unchanged
+    old_state.f_control.f_receive_cache
+    next_state.f_control.f_receive_cache
+    old_state.f_receive_slots
+    next_state.f_receive_slots /\
+  (exists (slot:u8{v slot < 50}).
+     v slot == cache_len old_state.f_control.f_receive_cache /\
+     refined_slot next_state sequence stepped.f_material slot)
+
+/// Pure callback-result trace for exactly `remaining` successful receive transitions.
+let rec refined_receive_steps_are_ordered
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (old_state final_state:
+      t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (info:t_Slice u8)
+    (step:v_ReceiveChain -> t_Slice u8 ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (remaining:u8)
+  : Tot prop (decreases (v remaining)) =
+  valid_refined old_state /\
+  valid_refined final_state /\
+  packed_prefix_unchanged
+    old_state.f_control.f_receive_cache
+    final_state.f_control.f_receive_cache
+    old_state.f_receive_slots
+    final_state.f_receive_slots /\
+  (if remaining = mk_u8 0 then final_state == old_state
+   else
+     let next_remaining = remaining -! mk_u8 1 in
+     exists
+       (next_state:t_RefinedRatchet
+         v_SendChain v_ReceiveChain v_Material)
+       (sequence:u64).
+       refined_receive_step_matches
+         old_state next_state sequence info step /\
+       refined_receive_steps_are_ordered
+         next_state final_state info step next_remaining)
+
+/// The restoration builder maintains the same packed correspondence plus the sorted logical builder invariant.
+let valid_refined_restore
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (restore:t_RefinedRatchetRestore v_SendChain v_ReceiveChain v_Material)
+  : prop =
+  valid_restore restore.f_logical /\
+  material_slots_match
+    restore.f_logical.f_state.f_receive_cache
+    restore.f_receive_slots
+
+/// Fresh refined constructors establish the complete logical/material invariant for arbitrary chain values.
+let refined_from_counters_is_valid
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (send_sequence receive_sequence:u64)
+    (send_chain:v_SendChain)
+    (receive_chain:v_ReceiveChain)
+  : Lemma
+      (valid_refined
+        (impl_4__from_counters #v_SendChain #v_ReceiveChain #v_Material
+          send_sequence receive_sequence send_chain receive_chain))
+  = from_counters_is_valid send_sequence receive_sequence;
+    empty_material_slots_are_none #v_Material
+
+let refined_new_is_valid
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (send_chain:v_SendChain)
+    (receive_chain:v_ReceiveChain)
+  : Lemma
+      (valid_refined
+        (impl_4__new #v_SendChain #v_ReceiveChain #v_Material
+          send_chain receive_chain))
+  = refined_from_counters_is_valid #v_SendChain #v_ReceiveChain #v_Material
+      (mk_u64 0) (mk_u64 0) send_chain receive_chain
+
+/// Send exhaustion and every other rejected allocation preserve the complete refined state and are independent of the opaque step result.
+let refined_advance_send_rejection_is_neutral
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (info:t_Slice u8)
+    (step:v_SendChain -> t_Slice u8 -> t_RatchetStep v_SendChain v_Material)
+  : Lemma
+      (let state', result = refined_advance_send state info step in
+       result == Core_models.Option.Option_None ==> state' == state)
+  = ()
+
+/// A successful send publishes the counter and exact next chain returned by one opaque step and returns that same step's material in the one-use token.
+let refined_advance_send_success_uses_step
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (info:t_Slice u8)
+    (step:v_SendChain -> t_Slice u8 -> t_RatchetStep v_SendChain v_Material)
+  : Lemma
+      (let state', result = refined_advance_send state info step in
+       match result with
+       | Core_models.Option.Option_Some key ->
+           let stepped = step state.f_send_chain info in
+           state'.f_send_chain == stepped.f_chain /\
+           state'.f_control.f_receive_sequence ==
+             state.f_control.f_receive_sequence /\
+           state'.f_control.f_receive_cache ==
+             state.f_control.f_receive_cache /\
+           state'.f_receive_chain == state.f_receive_chain /\
+           state'.f_receive_slots == state.f_receive_slots /\
+           key.f_material == stepped.f_material /\
+           impl_5__sequence key ==
+             Core_models.Option.Option_Some state'.f_control.f_send_sequence /\
+           v state'.f_control.f_send_sequence ==
+             v state.f_control.f_send_sequence + 1 /\
+           refined_finish_send key
+       | Core_models.Option.Option_None -> state' == state)
+  = advance_send_is_monotonic state.f_control;
+    advance_send_preserves_receive_state state.f_control;
+    advance_send_key_matches_sequence state.f_control
+
+/// Send advancement preserves the complete logical/material invariant, including across exhaustion.
+let refined_advance_send_preserves_validity
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined state })
+    (info:t_Slice u8)
+    (step:v_SendChain -> t_Slice u8 -> t_RatchetStep v_SendChain v_Material)
+  : Lemma
+      (let state', _ = refined_advance_send state info step in
+       valid_refined state')
+  = advance_send_preserves_receive_state state.f_control;
+    refined_advance_send_success_uses_step state info step
+
+/// Receive rejection is state-neutral and cannot depend on the opaque callback because validation precedes its application.
+let refined_advance_receive_rejection_is_step_independent
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (info:t_Slice u8)
+    (step1 step2:v_ReceiveChain -> t_Slice u8 ->
+      t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (let state1, result1 = refined_advance_receive state info step1 in
+       result1 == Core_models.Option.Option_None ==>
+         state1 == state /\
+         refined_advance_receive state info step2 ==
+           (state, Core_models.Option.Option_None))
+  = ()
+
+/// A successful receive step associates the returned sequence with the exact material and next chain produced by the callback in the old append slot.
+let refined_advance_receive_success_uses_step
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material { valid_refined state })
+    (info:t_Slice u8)
+    (step:v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (let state', result = refined_advance_receive state info step in
+       match result with
+       | Core_models.Option.Option_Some sequence ->
+           let stepped = step state.f_receive_chain info in
+           valid_refined state' /\
+           state'.f_send_chain == state.f_send_chain /\
+           state'.f_receive_chain == stepped.f_chain /\
+           v state'.f_control.f_receive_sequence ==
+             v state.f_control.f_receive_sequence + 1 /\
+           cache_len state'.f_control.f_receive_cache ==
+             cache_len state.f_control.f_receive_cache + 1 /\
+           packed_prefix_unchanged
+             state.f_control.f_receive_cache
+             state'.f_control.f_receive_cache
+             state.f_receive_slots
+             state'.f_receive_slots /\
+           (exists (slot:u8{v slot < 50}).
+              v slot == cache_len state.f_control.f_receive_cache /\
+              refined_slot state' sequence stepped.f_material slot)
+       | Core_models.Option.Option_None -> state' == state)
+  = advance_receive_success_shape state.f_control;
+    advance_receive_preserves_validity state.f_control
+
+/// Every one-step refined receive transition preserves the complete packed invariant.
+let refined_advance_receive_preserves_validity
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material { valid_refined state })
+    (info:t_Slice u8)
+    (step:v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (let state', _ = refined_advance_receive state info step in
+       valid_refined state')
+  = refined_advance_receive_success_uses_step state info step
+
+/// A successful one-step result realizes the central chain/material association relation.
+let refined_advance_receive_success_matches
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined state })
+    (info:t_Slice u8)
+    (step:v_ReceiveChain -> t_Slice u8 ->
+      t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (let next_state, result =
+         refined_advance_receive state info step in
+       match result with
+       | Core_models.Option.Option_Some sequence ->
+           refined_receive_step_matches
+             state next_state sequence info step
+       | Core_models.Option.Option_None -> next_state == state)
+  =
+  advance_receive_success_shape state.f_control;
+  refined_advance_receive_preserves_validity state info step;
+  refined_advance_receive_success_uses_step state info step
+
+/// The recursive receive executor preserves the invariant at every callback boundary and after every rejection.
+let rec refined_advance_receive_steps_preserves_validity
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material { valid_refined state })
+    (info:t_Slice u8)
+    (step:v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material)
+    (remaining:u8)
+  : Lemma
+      (ensures
+        (let state', _ = refined_advance_receive_steps state info step remaining in
+         valid_refined state'))
+      (decreases (v remaining))
+  =
+  if remaining = mk_u8 0 then ()
+  else
+    let next_remaining = remaining -! mk_u8 1 in
+    refined_advance_receive_preserves_validity state info step;
+    let state', result = refined_advance_receive state info step in
+    if Core_models.Option.impl__is_none #u64 result then ()
+    else
+      match result with
+      | Core_models.Option.Option_None -> ()
+      | Core_models.Option.Option_Some _ ->
+          refined_advance_receive_steps_preserves_validity
+            state' info step next_remaining
+
+/// Whenever the recursive executor completes, its result has an exact ordered pure callback-result trace of the requested length.
+let rec refined_advance_receive_steps_is_ordered
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined state })
+    (info:t_Slice u8)
+    (step:v_ReceiveChain -> t_Slice u8 ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (remaining:u8)
+  : Lemma
+      (ensures
+        (let final_state, completed =
+           refined_advance_receive_steps state info step remaining in
+         completed ==>
+           refined_receive_steps_are_ordered
+             state final_state info step remaining))
+      (decreases (v remaining))
+  =
+  if remaining = mk_u8 0 then
+    packed_prefix_unchanged_refl
+      state.f_control.f_receive_cache state.f_receive_slots
+  else
+    let next_remaining = remaining -! mk_u8 1 in
+    refined_advance_receive_success_matches state info step;
+    let next_state, result = refined_advance_receive state info step in
+    if Core_models.Option.impl__is_none #u64 result then ()
+    else
+      match result with
+      | Core_models.Option.Option_None -> ()
+      | Core_models.Option.Option_Some sequence ->
+          assert (valid_refined next_state);
+          assert
+            (refined_receive_step_matches
+              state next_state sequence info step);
+          refined_advance_receive_steps_is_ordered
+            next_state info step next_remaining;
+          let final_state, completed =
+            refined_advance_receive_steps
+              next_state info step next_remaining in
+          if completed then
+            (assert
+               (refined_receive_steps_are_ordered
+                 next_state final_state info step next_remaining);
+             assert
+               (cache_len state.f_control.f_receive_cache <=
+                 cache_len next_state.f_control.f_receive_cache);
+             packed_prefix_unchanged_transitive
+               state.f_control.f_receive_cache
+               next_state.f_control.f_receive_cache
+               final_state.f_control.f_receive_cache
+               state.f_receive_slots
+               next_state.f_receive_slots
+               final_state.f_receive_slots;
+             assert
+               (exists
+                  (middle:t_RefinedRatchet
+                    v_SendChain v_ReceiveChain v_Material)
+                  (derived_sequence:u64).
+                    middle == next_state /\
+                    derived_sequence == sequence /\
+                    refined_receive_step_matches
+                      state middle derived_sequence info step /\
+                    refined_receive_steps_are_ordered
+                      middle final_state info step next_remaining);
+             ())
+          else ()
+
+/// Receive-until preserves the refined invariant and any successful future plan reaches the requested counter inside the same kernel call.
+let refined_advance_receive_until_preserves_validity
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material { valid_refined state })
+    (info:t_Slice u8)
+    (target:u64)
+    (step:v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (let plan = plan_receive_until state.f_control target in
+       let remaining = cast plan.f_derivations <: u8 in
+       let stepped_state, completed =
+         refined_advance_receive_steps state info step remaining in
+       let final_state, result =
+         refined_advance_receive_until state info target step in
+       valid_refined final_state /\
+       (match result with
+        | Core_models.Option.Option_Some reached ->
+            reached == target /\
+            completed == true /\
+            final_state == stepped_state /\
+            (v target > v state.f_control.f_receive_sequence ==>
+              final_state.f_control.f_receive_sequence == target)
+        | Core_models.Option.Option_None -> True))
+  =
+  let plan = plan_receive_until state.f_control target in
+  plan_receive_shape state.f_control target;
+  assert (v plan.f_derivations <= 50);
+  match plan.f_sequence with
+  | Core_models.Option.Option_None ->
+      assert
+        (plan.f_sequence == Core_models.Option.Option_None);
+      assert
+        (refined_advance_receive_until state info target step ==
+          (state, Core_models.Option.Option_None));
+      ()
+  | Core_models.Option.Option_Some planned_target ->
+      assert
+        (plan.f_sequence ==
+          Core_models.Option.Option_Some planned_target);
+      assert (planned_target == target);
+      assert
+        (v target > v state.f_control.f_receive_sequence ==>
+          v plan.f_derivations > 0);
+      assert
+        (v target <= v state.f_control.f_receive_sequence ==>
+          plan.f_derivations == mk_u64 0);
+      if plan.f_derivations >. v_RATCHET_MAX_GAP then
+        (assert
+           ((plan.f_derivations >. v_RATCHET_MAX_GAP) == true);
+         assert
+           (refined_advance_receive_until state info target step ==
+             (state, Core_models.Option.Option_None));
+         ())
+      else
+        (assert
+          ((plan.f_derivations >. v_RATCHET_MAX_GAP) == false);
+        let remaining = cast plan.f_derivations <: u8 in
+        refined_advance_receive_steps_preserves_validity
+          state info step remaining;
+        let stepped_state, completed =
+          refined_advance_receive_steps state info step remaining in
+        assert (valid_refined stepped_state);
+        if ~.completed then
+          (assert ((~.completed) == true);
+           assert (completed == false);
+           assert
+             (refined_advance_receive_until state info target step ==
+               (stepped_state, Core_models.Option.Option_None));
+           ())
+        else
+          (assert ((~.completed) == false);
+           assert (completed == true);
+           let has_derivations =
+             plan.f_derivations <>. mk_u64 0 in
+           let sequence_mismatch =
+             (impl_RatchetState__receive_sequence
+               stepped_state.f_control <: u64) <>. target in
+           let inconsistent = has_derivations && sequence_mismatch in
+           if inconsistent then
+             (assert (inconsistent == true);
+              assert (has_derivations == true);
+              assert (sequence_mismatch == true);
+              assert
+                (refined_advance_receive_until state info target step ==
+                  (stepped_state, Core_models.Option.Option_None));
+              ())
+           else
+             (assert (inconsistent == false);
+              (if v target > v state.f_control.f_receive_sequence then
+                 (assert (plan.f_derivations <> mk_u64 0);
+                  assert (has_derivations == true);
+                  assert (sequence_mismatch == false);
+                  assert
+                    (stepped_state.f_control.f_receive_sequence == target))
+               else ());
+              assert
+                (refined_advance_receive_until state info target step ==
+                  (stepped_state,
+                    Core_models.Option.Option_Some target));
+              ())))
+
+/// A successful receive-until result is backed by the ordered pure callback-result trace selected by the plan's exact derivation count.
+let refined_advance_receive_until_is_ordered
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined state })
+    (info:t_Slice u8)
+    (target:u64)
+    (step:v_ReceiveChain -> t_Slice u8 ->
+      t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (let plan = plan_receive_until state.f_control target in
+       let remaining = cast plan.f_derivations <: u8 in
+       let final_state, result =
+         refined_advance_receive_until state info target step in
+       match result with
+       | Core_models.Option.Option_Some reached ->
+           reached == target /\
+           refined_receive_steps_are_ordered
+             state final_state info step remaining
+       | Core_models.Option.Option_None -> valid_refined final_state)
+  =
+  let plan = plan_receive_until state.f_control target in
+  plan_receive_derivations_are_bounded state.f_control target;
+  assert (v plan.f_derivations <= 50);
+  let remaining = cast plan.f_derivations <: u8 in
+  refined_advance_receive_steps_preserves_validity
+    state info step remaining;
+  refined_advance_receive_steps_is_ordered
+    state info step remaining;
+  refined_advance_receive_until_preserves_validity
+    state info target step;
+  let stepped_state, completed =
+    refined_advance_receive_steps state info step remaining in
+  let final_state, result =
+    refined_advance_receive_until state info target step in
+  match result with
+  | Core_models.Option.Option_None ->
+      assert (valid_refined final_state);
+      ()
+  | Core_models.Option.Option_Some reached ->
+      assert
+        (refined_receive_steps_are_ordered
+          state stepped_state info step remaining);
+      assert
+        (refined_receive_steps_are_ordered
+          state final_state info step remaining);
+      ()
+
+/// A zero-cost receive-until lookup invokes no step and leaves every refined field unchanged.
+let refined_advance_receive_until_old_is_neutral
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (info:t_Slice u8)
+    (target:u64 { v target <= v state.f_control.f_receive_sequence })
+    (step:v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (refined_advance_receive_until state info target step ==
+        (state, Core_models.Option.Option_Some target))
+  = plan_old_receive_is_zero_cost state.f_control target
+
+/// Concrete lookup returns material only from the unique logical slot for the requested sequence.
+let refined_receive_key_is_associated
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material { valid_refined state })
+    (sequence:u64)
+  : Lemma
+      (match refined_receive_key state sequence with
+       | Core_models.Option.Option_Some material ->
+           exists (slot:u8{v slot < 50}). refined_slot state sequence material slot
+       | Core_models.Option.Option_None ->
+           ~(exists (material:v_Material) (slot:u8{v slot < 50}).
+               refined_slot state sequence material slot))
+  =
+  lookup_receive_key_returns_unique_slot state.f_control sequence;
+  let logical = lookup_receive_key state.f_control sequence in
+  match logical with
+  | Core_models.Option.Option_None ->
+      assert (~(cache_has state.f_control.f_receive_cache sequence));
+      assert
+        (refined_receive_key state sequence ==
+          Core_models.Option.Option_None);
+      assert
+        (~(exists (material:v_Material) (slot:u8{v slot < 50}).
+            refined_slot state sequence material slot));
+      ()
+  | Core_models.Option.Option_Some slot ->
+      assert
+        (cache_slot state.f_control.f_receive_cache sequence slot);
+      let active_slot:(x:u8 { v x < 50 }) = slot in
+      match refined_slot_value state.f_receive_slots (v active_slot) with
+      | Core_models.Option.Option_None ->
+          assert
+            (cache_len state.f_control.f_receive_cache <= v active_slot);
+          assert
+            (v active_slot < cache_len state.f_control.f_receive_cache);
+          ()
+      | Core_models.Option.Option_Some material ->
+          assert
+            (refined_receive_key state sequence ==
+              Core_models.Option.Option_Some material);
+          assert (refined_slot state sequence material active_slot);
+          assert
+            (exists (witness:u8{v witness < 50}).
+               refined_slot state sequence material witness);
+          ()
+
+/// Missing and failed-authentication completion preserve every control, chain, and material field.
+let refined_finish_receive_neutral_outcomes_preserve_full_state
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (sequence:u64)
+    (authenticated:bool)
+  : Lemma
+      (let state', disposition = refined_finish_receive state sequence authenticated in
+       disposition == ReceiveDisposition_Missing \/
+       disposition == ReceiveDisposition_Retained ==>
+         state' == state)
+  = ()
+
+/// Logical view of the concrete material-array swap-removal performed by refined completion.
+let material_slots_after_swap_remove
+    (#v_Material:Type0)
+    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (target_slot:u8{v target_slot < 50})
+    (last_slot:u8{v last_slot < 50})
+    (last_material:v_Material)
+  : t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50) =
+  let cleared =
+    Seq.upd slots (v last_slot)
+      (Core_models.Option.Option_None <:
+        Core_models.Option.t_Option v_Material) in
+  if target_slot = last_slot then cleared
+  else
+    Seq.upd cleared (v target_slot)
+      (Core_models.Option.Option_Some last_material <:
+        Core_models.Option.t_Option v_Material)
+
+/// Concrete swap-removal clears the old last slot, moves its exact material when needed, and preserves every other slot pointwise.
+let material_slots_after_swap_remove_is_exact
+    (#v_Material:Type0)
+    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (target_slot:u8{v target_slot < 50})
+    (last_slot:u8{v last_slot < 50})
+    (last_material:v_Material)
+  : Lemma
+      (let slots' =
+         material_slots_after_swap_remove
+           slots target_slot last_slot last_material in
+       refined_slot_value slots' (v last_slot) ==
+         Core_models.Option.Option_None /\
+       (target_slot <> last_slot ==>
+         refined_slot_value slots' (v target_slot) ==
+           Core_models.Option.Option_Some last_material) /\
+       (forall (i:nat{i < 50}).
+          i <> v target_slot /\ i <> v last_slot ==>
+            refined_slot_value slots' i == refined_slot_value slots i))
+  =
+  let none =
+    (Core_models.Option.Option_None <:
+      Core_models.Option.t_Option v_Material) in
+  let moved =
+    (Core_models.Option.Option_Some last_material <:
+      Core_models.Option.t_Option v_Material) in
+  let cleared = Seq.upd slots (v last_slot) none in
+  FStar.Seq.Base.lemma_index_upd1 slots (v last_slot) none;
+  if target_slot = last_slot then
+    let unchanged (i:nat{i < 50})
+      : Lemma
+          (i <> v target_slot /\ i <> v last_slot ==>
+            refined_slot_value cleared i == refined_slot_value slots i)
+      = if i <> v last_slot then
+          FStar.Seq.Base.lemma_index_upd2 slots (v last_slot) none i
+        else ()
+    in
+    FStar.Classical.forall_intro unchanged
+  else
+    let slots' = Seq.upd cleared (v target_slot) moved in
+    FStar.Seq.Base.lemma_index_upd1 cleared (v target_slot) moved;
+    FStar.Seq.Base.lemma_index_upd2
+      cleared (v target_slot) moved (v last_slot);
+    let unchanged (i:nat{i < 50})
+      : Lemma
+          (i <> v target_slot /\ i <> v last_slot ==>
+            refined_slot_value slots' i == refined_slot_value slots i)
+      = if i <> v target_slot then
+          if i <> v last_slot then
+            (FStar.Seq.Base.lemma_index_upd2 slots (v last_slot) none i;
+             FStar.Seq.Base.lemma_index_upd2
+               cleared (v target_slot) moved i)
+          else ()
+        else ()
+    in
+    FStar.Classical.forall_intro unchanged
+
+/// The generated Option.take/update_at expression is definitionally the logical swap-removal view.
+let generated_material_swap_remove_matches_view
+    (#v_Material:Type0)
+    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (target_slot:u8{v target_slot < 50})
+    (last_slot:u8{v last_slot < 50})
+    (last_material:v_Material)
+  : Lemma
+      (requires
+        (Seq.index slots (v last_slot) ==
+          Core_models.Option.Option_Some last_material))
+      (ensures
+        (let target_index = cast (target_slot <: u8) <: usize in
+         let last_index = cast (last_slot <: u8) <: usize in
+         let tmp0, moved =
+           Core_models.Option.impl__take #v_Material
+             (Seq.index slots (v last_slot)) in
+         let cleared =
+           Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
+             slots last_index tmp0 in
+         let actual =
+           if target_index =. last_index then cleared
+           else
+             Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
+               cleared target_index moved in
+         actual ==
+           material_slots_after_swap_remove
+             slots target_slot last_slot last_material))
+  = if target_slot = last_slot then () else ()
+
+/// On the admitted consumed path, the whole generated refined completion computes the swap-removal view.
+let refined_finish_receive_success_computes_swap
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (sequence:u64)
+    (target_slot:u8{v target_slot < 50})
+    (last_slot:u8{v last_slot < 50})
+    (target_material last_material:v_Material)
+    (removal:t_ReceiveRemoval)
+  : Lemma
+      (requires
+        (lookup_receive_key state.f_control sequence ==
+           Core_models.Option.Option_Some target_slot /\
+         (finish_receive_with_removal
+           state.f_control sequence target_slot true).f_disposition ==
+             ReceiveDisposition_Consumed /\
+         (finish_receive_with_removal
+           state.f_control sequence target_slot true).f_removal ==
+             Core_models.Option.Option_Some removal /\
+         removal.f_target_slot == target_slot /\
+         removal.f_last_slot == last_slot /\
+         Seq.index state.f_receive_slots (v target_slot) ==
+           Core_models.Option.Option_Some target_material /\
+         Seq.index state.f_receive_slots (v last_slot) ==
+           Core_models.Option.Option_Some last_material))
+      (ensures
+        (let finished =
+           finish_receive_with_removal
+             state.f_control sequence target_slot true in
+         let slots' =
+           material_slots_after_swap_remove
+             state.f_receive_slots target_slot last_slot last_material in
+         let with_slots = { state with f_receive_slots = slots' } in
+         let expected = { with_slots with f_control = finished.f_state } in
+         refined_finish_receive state sequence true ==
+           (expected, ReceiveDisposition_Consumed)))
+  =
+  generated_material_swap_remove_matches_view
+    state.f_receive_slots target_slot last_slot last_material;
+  if target_slot = last_slot then () else ()
+
+/// Mirroring a logical swap-removal in the material array preserves packed occupancy.
+let material_slots_after_swap_remove_matches
+    (#v_Material:Type0)
+    (old_cache new_cache:t_SequenceCache)
+    (slots:t_Array (Core_models.Option.t_Option v_Material) (mk_usize 50))
+    (target_slot:u8{v target_slot < 50})
+    (last_slot:u8{v last_slot < 50})
+    (last_material:v_Material)
+  : Lemma
+      (requires
+        (material_slots_match old_cache slots /\
+         v target_slot < cache_len old_cache /\
+         v last_slot + 1 == cache_len old_cache /\
+         cache_len new_cache + 1 == cache_len old_cache))
+      (ensures
+        (material_slots_match new_cache
+          (material_slots_after_swap_remove
+            slots target_slot last_slot last_material)))
+  =
+  let slots' =
+    material_slots_after_swap_remove
+      slots target_slot last_slot last_material in
+  material_slots_after_swap_remove_is_exact
+    slots target_slot last_slot last_material;
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        (match refined_slot_value slots' i with
+         | Core_models.Option.Option_Some _ -> i < cache_len new_cache
+         | Core_models.Option.Option_None -> cache_len new_cache <= i)
+    =
+    if i = v last_slot then ()
+    else if i = v target_slot then ()
+    else
+      assert
+        (refined_slot_value slots' i == refined_slot_value slots i);
+      match refined_slot_value slots i with
+      | Core_models.Option.Option_Some _ -> ()
+      | Core_models.Option.Option_None -> ()
+  in
+  FStar.Classical.forall_intro pointwise
+
+/// Successful completion moves the complete old-last material into a non-last target, clears the old last slot, and publishes the matching logical removal atomically.
+let refined_finish_receive_success_is_exact_swap_removal
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material { valid_refined state })
+    (sequence:u64)
+    (target_slot:u8{v target_slot < 50})
+    (last_slot:u8{v last_slot < 50})
+    (target_material last_material:v_Material)
+  : Lemma
+      (requires
+        (lookup_receive_key state.f_control sequence ==
+           Core_models.Option.Option_Some target_slot /\
+         v last_slot + 1 == cache_len state.f_control.f_receive_cache /\
+         refined_slot_value state.f_receive_slots (v target_slot) ==
+           Core_models.Option.Option_Some target_material /\
+         refined_slot_value state.f_receive_slots (v last_slot) ==
+           Core_models.Option.Option_Some last_material))
+      (ensures
+      (let state', disposition = refined_finish_receive state sequence true in
+       disposition == ReceiveDisposition_Consumed /\
+       valid_refined state' /\
+       state'.f_send_chain == state.f_send_chain /\
+       state'.f_receive_chain == state.f_receive_chain /\
+       state'.f_control ==
+         (finish_receive_with_removal
+           state.f_control sequence target_slot true).f_state /\
+       refined_slot_value state'.f_receive_slots (v last_slot) ==
+         Core_models.Option.Option_None /\
+       (target_slot <> last_slot ==>
+         refined_slot_value state'.f_receive_slots (v target_slot) ==
+           Core_models.Option.Option_Some last_material) /\
+       (forall (i:nat{i < 50}).
+          i <> v target_slot /\ i <> v last_slot ==>
+            refined_slot_value state'.f_receive_slots i ==
+              refined_slot_value state.f_receive_slots i)))
+  =
+  lookup_receive_key_returns_unique_slot state.f_control sequence;
+  assert
+    (cache_slot state.f_control.f_receive_cache sequence target_slot);
+  let finished =
+    finish_receive_with_removal state.f_control sequence target_slot true in
+  finish_receive_with_removal_success_shape
+    state.f_control sequence target_slot;
+  finish_receive_with_removal_preserves_validity
+    state.f_control sequence target_slot true;
+  match finished.f_removal with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some removal ->
+      assert (removal.f_target_slot == target_slot);
+      assert
+        (v removal.f_last_slot + 1 ==
+          cache_len state.f_control.f_receive_cache);
+      assert (removal.f_last_slot == last_slot);
+      let slots' =
+        material_slots_after_swap_remove
+          state.f_receive_slots target_slot last_slot last_material in
+      material_slots_after_swap_remove_is_exact
+        state.f_receive_slots target_slot last_slot last_material;
+      material_slots_after_swap_remove_matches
+        state.f_control.f_receive_cache
+        finished.f_state.f_receive_cache
+        state.f_receive_slots
+        target_slot
+        last_slot
+        last_material;
+      let with_slots = { state with f_receive_slots = slots' } in
+      let expected = { with_slots with f_control = finished.f_state } in
+      assert (finished.f_disposition == ReceiveDisposition_Consumed);
+      assert
+        (finished.f_removal ==
+          Core_models.Option.Option_Some removal);
+      refined_finish_receive_success_computes_swap
+        state
+        sequence
+        target_slot
+        last_slot
+        target_material
+        last_material
+        removal;
+      assert
+        (refined_finish_receive state sequence true ==
+          (expected, ReceiveDisposition_Consumed));
+      assert (valid_refined expected);
+      ()
+
+/// Every refined completion outcome preserves the logical/material invariant.
+let refined_finish_receive_preserves_validity
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material { valid_refined state })
+    (sequence:u64)
+    (authenticated:bool)
+  : Lemma
+      (let state', _ = refined_finish_receive state sequence authenticated in
+       valid_refined state')
+  =
+  let slot = lookup_receive_key state.f_control sequence in
+  match slot with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some target_slot ->
+      lookup_receive_key_sound state.f_control sequence;
+      if authenticated then
+        let last_slot = state.f_control.f_receive_cache.f_len -! mk_u8 1 in
+        match refined_slot_value state.f_receive_slots (v target_slot),
+              refined_slot_value state.f_receive_slots (v last_slot) with
+        | Core_models.Option.Option_Some target_material,
+          Core_models.Option.Option_Some last_material ->
+            refined_finish_receive_success_is_exact_swap_removal
+              state sequence target_slot last_slot target_material last_material
+        | _ -> ()
+      else ()
+
+/// The empty refined restoration builder starts valid for arbitrary counters and chain values.
+let start_refined_restore_is_valid
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (send_sequence receive_sequence:u64)
+    (send_chain:v_SendChain)
+    (receive_chain:v_ReceiveChain)
+  : Lemma
+      (valid_refined_restore
+        (start_refined_restore #v_SendChain #v_ReceiveChain #v_Material
+          send_sequence receive_sequence send_chain receive_chain))
+  = start_restore_is_valid send_sequence receive_sequence;
+    empty_material_slots_are_none #v_Material
+
+/// Refined restoration either rejects without changing the builder or appends the supplied sequence and exact material together while preserving all invariants.
+let refined_restore_receive_key_is_atomic
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (restore:t_RefinedRatchetRestore v_SendChain v_ReceiveChain v_Material {
+       valid_refined_restore restore })
+    (sequence:u64)
+    (material:v_Material)
+  : Lemma
+      (let restore', accepted =
+         refined_restore_receive_key restore sequence material in
+       if accepted then
+         valid_refined_restore restore' /\
+         restore'.f_send_chain == restore.f_send_chain /\
+         restore'.f_receive_chain == restore.f_receive_chain /\
+         cache_len restore'.f_logical.f_state.f_receive_cache ==
+           cache_len restore.f_logical.f_state.f_receive_cache + 1 /\
+         packed_prefix_unchanged
+           restore.f_logical.f_state.f_receive_cache
+           restore'.f_logical.f_state.f_receive_cache
+           restore.f_receive_slots
+           restore'.f_receive_slots /\
+         (exists (slot:u8{v slot < 50}).
+            v slot == cache_len restore.f_logical.f_state.f_receive_cache /\
+            cache_slot
+              restore'.f_logical.f_state.f_receive_cache sequence slot /\
+            refined_slot_value restore'.f_receive_slots (v slot) ==
+              Core_models.Option.Option_Some material)
+       else restore' == restore)
+  = restore_receive_key_with_slot_success_shape restore.f_logical sequence;
+    restore_receive_key_with_slot_preserves_validity restore.f_logical sequence
+
+/// Finishing a valid refined restoration publishes its logical state, chains, and material slots as one valid refined value.
+let finish_refined_restore_is_valid
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (restore:t_RefinedRatchetRestore v_SendChain v_ReceiveChain v_Material {
+       valid_refined_restore restore })
+  : Lemma
+      (let state = finish_refined_restore restore in
+       valid_refined state /\
+       state.f_control == finish_restore restore.f_logical /\
+       state.f_send_chain == restore.f_send_chain /\
+       state.f_receive_chain == restore.f_receive_chain /\
+       state.f_receive_slots == restore.f_receive_slots)
+  = finish_restore_is_valid restore.f_logical
 
 /// A mismatching peer identifier is a pointwise frame rule: every component is
 /// returned unchanged for any send or receive replacement.
