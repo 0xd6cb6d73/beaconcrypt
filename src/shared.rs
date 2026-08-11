@@ -966,23 +966,11 @@ fn build_commitment(
 	seq: u64,
 	kid: u64,
 ) -> Option<Vec<u8>> {
-	if tag.len() != AEAD_TAG_LEN
-		|| secret.key.as_bytes().len() != AEAD_KEY_LEN
-		|| secret.nonce.as_bytes().len() != AEAD_NONCE_LEN
-		|| ad.len() != AD_SIZE
-	{
-		return None;
-	}
 	let key = secret.key().as_bytes();
 	let nonce = secret.nonce().as_bytes();
-	let mut input = build_commitment_transcript(
-		key.try_into().ok()?,
-		nonce,
-		ad.try_into().ok()?,
-		tag.try_into().ok()?,
-		seq,
-		kid,
-	);
+	let ad = ad.try_into().ok()?;
+	let tag = tag.try_into().ok()?;
+	let mut input = build_commitment_transcript(key.try_into().ok()?, nonce, ad, tag, seq, kid);
 	let hash = crypto_generichash::generichash(input.as_bytes(), None, COMMITMENT_SIZE).ok();
 	input.as_mut_bytes().zeroize();
 	hash

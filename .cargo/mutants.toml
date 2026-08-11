@@ -14,11 +14,16 @@ exclude_globs = [
 	"src/pybinds.rs",
 ]
 
-# These mutations differ only for states that the public constructors and persistence validation
-# cannot create: one-sided ratchet caches, out-of-range private ratchet offsets, or incorrectly
-# sized fixed-array key material. Keep the full mutant name so source changes force re-evaluation.
+# These mutations differ only for states that the public constructors and persistence validation cannot create: out-of-range private ratchet offsets, inconsistent results from pure core transitions, or out-of-range private cache indices.
+# The recursive lookup's remaining counter is also redundant at runtime with its independently advancing, capacity-checked slot, but is retained as the extraction backend's explicit termination measure.
+# Keep the full mutant name so source changes force re-evaluation.
 exclude_re = [
-	"^src/shared\\.rs:581:44: replace \\|\\| with && in RatchetManager::ratchet_send$",
-	"^src/shared\\.rs:658:4: replace \\|\\| with && in RatchetManager::init_ratchets$",
-	"^src/shared\\.rs:1123:3: replace \\|\\| with && in build_commitment$",
+	"^src/shared\\.rs:594:4: replace \\|\\| with && in RatchetManager::init_ratchets$",
+	"^crates/protocol-core/src/ratchet\\.rs:333:63: replace - with \\+ in lookup_receive_key_from$",
+	"^crates/protocol-core/src/ratchet\\.rs:333:63: replace - with / in lookup_receive_key_from$",
+	"^crates/protocol-core/src/ratchet\\.rs:590:47: replace \\|\\| with && in refined_advance_send$",
+	"^crates/protocol-core/src/ratchet\\.rs:623:3: replace \\|\\| with && in refined_advance_receive$",
+	"^crates/protocol-core/src/ratchet\\.rs:720:5: replace \\|\\| with && in refined_finish_receive$",
+	"^crates/protocol-core/src/ratchet\\.rs:721:5: replace \\|\\| with && in refined_finish_receive$",
+	"^crates/protocol-core/src/ratchet\\.rs:722:5: replace \\|\\| with && in refined_finish_receive$",
 ]

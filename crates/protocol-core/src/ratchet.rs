@@ -850,13 +850,14 @@ mod tests {
 
 	use super::{
 		PeerRatchetState, RATCHET_MAX_GAP, RECEIVE_CACHE_CAPACITY, RatchetState, RatchetStep,
-		ReceiveDisposition, RefinedRatchet, SequenceCache, advance_receive, advance_send,
-		advance_send_for_peer, finish_receive, finish_receive_with_removal, finish_refined_restore,
-		finish_restore, finish_send, lookup_receive_key, plan_receive_until,
-		refined_advance_receive, refined_advance_receive_until, refined_advance_send,
-		refined_finish_receive, refined_finish_send, refined_receive_key,
-		refined_restore_receive_key, replace_ratchet_for_peer, restore_receive_key,
-		restore_receive_key_with_slot, start_refined_restore, start_restore,
+		ReceiveDisposition, RefinedRatchet, RefinedSendKey, SendKey, SequenceCache,
+		advance_receive, advance_send, advance_send_for_peer, empty_material_slots, finish_receive,
+		finish_receive_with_removal, finish_refined_restore, finish_restore, finish_send,
+		lookup_receive_key, plan_receive_until, refined_advance_receive,
+		refined_advance_receive_until, refined_advance_send, refined_finish_receive,
+		refined_finish_send, refined_receive_key, refined_restore_receive_key,
+		replace_ratchet_for_peer, restore_receive_key, restore_receive_key_with_slot,
+		start_refined_restore, start_restore,
 	};
 
 	static TEST_STEP_CALLS: AtomicUsize = AtomicUsize::new(0);
@@ -947,6 +948,19 @@ mod tests {
 		assert_eq!(state.send_sequence(), 8);
 		assert_eq!(state.receive_sequence(), 0);
 		assert!(refined_finish_send(key));
+	}
+
+	#[test]
+	fn refined_send_finish_rejects_an_unavailable_logical_key() {
+		let key = RefinedSendKey {
+			logical: SendKey::unavailable(),
+			material: TestMaterial {
+				generation: 0,
+				info_len: 0,
+			},
+		};
+
+		assert!(!refined_finish_send(key));
 	}
 
 	#[test]
@@ -1161,6 +1175,61 @@ mod tests {
 	}
 
 	#[test]
+	fn refined_receive_rejects_an_occupied_append_slot() {
+		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
+		state.receive_slots[0] = Some(TestMaterial {
+			generation: 99,
+			info_len: 0,
+		});
+		TEST_STEP_CALLS.store(0, Ordering::SeqCst);
+
+		assert_eq!(
+			refined_advance_receive(&mut state, b"recv", counting_test_step),
+			None
+		);
+		assert_eq!(TEST_STEP_CALLS.load(Ordering::SeqCst), 0);
+		assert_eq!(state.control, RatchetState::default());
+		assert_eq!(*state.receive_chain(), 20);
+		assert_eq!(state.receive_slots[0].as_ref().unwrap().generation, 99);
+	}
+
+	#[test]
+	fn refined_receive_completion_rejects_missing_material() {
+		let control = execute_receive_plan(RatchetState::default(), 2);
+		let mut missing_target = RefinedRatchet::<u64, u64, TestMaterial> {
+			control,
+			send_chain: 10,
+			receive_chain: 20,
+			receive_slots: empty_material_slots(),
+		};
+		assert_eq!(
+			refined_finish_receive(&mut missing_target, 1, false),
+			ReceiveDisposition::Missing
+		);
+		assert_eq!(missing_target.control, control);
+
+		let mut missing_last = RefinedRatchet::<u64, u64, TestMaterial> {
+			control,
+			send_chain: 10,
+			receive_chain: 20,
+			receive_slots: empty_material_slots(),
+		};
+		missing_last.receive_slots[0] = Some(TestMaterial {
+			generation: 21,
+			info_len: 4,
+		});
+		assert_eq!(
+			refined_finish_receive(&mut missing_last, 1, true),
+			ReceiveDisposition::Missing
+		);
+		assert_eq!(missing_last.control, control);
+		assert_eq!(
+			missing_last.receive_slots[0].as_ref().unwrap().generation,
+			21
+		);
+	}
+
+	#[test]
 	fn refined_receive_failure_retains_and_success_swaps_material() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 		assert_eq!(
@@ -1372,6 +1441,26 @@ mod tests {
 		assert_eq!(state.receive_entry_at(0).unwrap().1.generation, 22);
 		assert_eq!(state.receive_entry_at(1).unwrap().0, 7);
 		assert_eq!(state.receive_entry_at(1).unwrap().1.generation, 27);
+	}
+
+	#[test]
+	fn refined_restore_rejects_an_occupied_append_slot() {
+		let mut restore = start_refined_restore::<u64, u64, TestMaterial>(9, 12, 100, 200);
+		restore.receive_slots[0] = Some(TestMaterial {
+			generation: 99,
+			info_len: 0,
+		});
+
+		assert!(!refined_restore_receive_key(
+			&mut restore,
+			2,
+			TestMaterial {
+				generation: 22,
+				info_len: 4,
+			}
+		));
+		assert_eq!(restore.logical, start_restore(9, 12));
+		assert_eq!(restore.receive_slots[0].as_ref().unwrap().generation, 99);
 	}
 
 	#[test]

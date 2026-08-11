@@ -10,7 +10,7 @@ adapter-rust	2e4cad3489becafcaa9b126621e2c738dbffc41b4df86f1eb445f88181185539	..
 adapter-rust	6e9e9a13d7461050d8ad7e3f360207f38f4e95c7c82f0ae239a051281ed561e6	../../src/pybinds.rs
 adapter-rust	e0a6bd247183395f94cea9edd1f95187d5269053ca8d0e150a864ed04204c6aa	../../src/ser.rs
 adapter-rust	4a10514a4a639e70e7eb75375782cbc1ec34b85a806acdda5e1a2c13d73d524b	../../src/server.rs
-adapter-rust	2544a8f9cc0f067f7c07ba03bf3e799bcc8d169dca48912f274b609468005900	../../src/shared.rs
+adapter-rust	dedad33aa5be3c4a0ce53507d9037082d4acaaa22f0a668c647f679fbadb5ade	../../src/shared.rs
 adapter-schema	10a647acf745758be62da81b3da465277200b3952381b3cebede9756439737fd	../../src/schema/cryptoframe.capnp
 adapter-schema	e9c9168a9dc8b34eab69fdd46fe84d868e063f0da9fb89fd21b5aaa7a7d726fa	../../src/schema/phase1.capnp
 adapter-schema	8fcf4d6902f8dc6f30533ac6fa1d849176a40714de2cd827ea31bdcc2215450c	../../src/schema/phase2.capnp
@@ -28,7 +28,7 @@ control	24ec967617d2a7aeddc68df21e83925453f42931f37d781be943717c83e6c1f4	proofs/
 core-rust	a5c243a020aabf9a4026b120cda0c8dca702c8a6bec452c4badc7835d6a02862	src/commitment.rs
 core-rust	d7831f1506fd5f7ec3652b878789327762d3f7f866c4b11ff2f1ca6c8b71ad64	src/lib.rs
 core-rust	ea933550cffb214232813d0772d31b15bfef222f2027c3075db4209fd13cbb48	src/pqxdh.rs
-core-rust	984479e27c8f00650bd5f63b570486ce0c589ab3a403a8e6344659ae7f5f4c47	src/ratchet.rs
+core-rust	50cc6de67a94295637bbd8fa19ca352c29f3269a993309d0bf2342a75b3c1a5c	src/ratchet.rs
 generated-fstar	89e2e6459f6a740818db166c2101b268a6126b3c126c4b5163914d7b7f7b11ef	proofs/fstar/extraction/Beaconcrypt_protocol_core.Commitment.fst
 generated-fstar	c42f9680b28d991d00a87f79fe18473c10285ef0f451fceb6af943a7be567efd	proofs/fstar/extraction/Beaconcrypt_protocol_core.Pqxdh.fst
 generated-fstar	350d7cdeccda7de7938d879c170864440004761f8fa9f0ca75366aeecd766253	proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst
