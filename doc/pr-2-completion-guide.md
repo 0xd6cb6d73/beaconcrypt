@@ -6,15 +6,15 @@
 **Base:** `proof`
 **Purpose of this guide:** finish PR #2 so it implements the intended mechanized receive-slot refinement, without undoing the useful fixed-array work already present or changing unrelated protocol behavior.
 
-> Historical scope notice: this guide records the constraints of the receive-slot-only PR #2 work. Its requirements to preserve send-key staging and the former six-field `RatchetManager` schema were superseded by the later send transaction refactor, which removed the low-level send-staging API and `send_past`; current persistence uses the five fields documented in [persistence.md](persistence.md) and [formal-verification-stage-3.md](formal-verification-stage-3.md).
+> Historical scope notice: this guide records the constraints of the receive-slot-only PR #2 work. Its parallel production receive array, returned-slot/removal-plan boundary, send-key staging, and former six-field `RatchetManager` schema were superseded by the extracted `RefinedRatchet` follow-up. The current kernel owns typed chains and fixed concrete-material slots, production supplies only the opaque HKDF step, and persistence uses the five fields documented in [persistence.md](persistence.md) and [formal-verification-stage-3.md](formal-verification-stage-3.md).
 
 ---
 
 ## 1. Goal
 
-PR #2 has already completed the first structural step: the production receive-key cache is a fixed 50-slot array parallel to the verified logical receive cache. The remaining work is to move the **sequence-to-slot lookup**, **swap-removal plan**, and **restoration slot assignment** into `protocol-core`, extract those decisions through hax, prove them in F\*, and make production consume those verified decisions directly.
+PR #2 completed the first structural step: the production receive-key cache became a fixed 50-slot array parallel to the verified logical receive cache. Its remaining goal was to move the **sequence-to-slot lookup**, **swap-removal plan**, and **restoration slot assignment** into `protocol-core`, extract those decisions through hax, prove them in F\*, and make production consume those verified decisions directly.
 
-The completed architecture should be:
+PR #2's target architecture was:
 
 ```text
                      protocol-core / F*
@@ -33,6 +33,8 @@ restore_receive_key_with_slot ──────────────► rest
 ```
 
 Production remains responsible for opaque cryptographic work: one concrete HKDF ratchet step per successful logical advancement, storing/moving/dropping `KeyMaterial`, serde mechanics, and the surrounding high-level receive trace. It must no longer independently decide which logical sequence corresponds to which physical receive slot.
+
+The current follow-up goes further: `RefinedRatchet<SendChain, RecvChain, KeyMaterial>` owns logical control, both opaque typed chains, and `[Option<KeyMaterial>; 50]` in the extracted kernel. Production compiles and calls this same kernel with HKDF as the sole opaque step callback; lookup returns paired material, successful finish performs swap-removal internally, and refined restoration accepts `(sequence, material)` atomically.
 
 ---
 
@@ -998,47 +1000,46 @@ Exactly 50 persisted receive keys remain valid; a 51st is rejected through check
 
 # 7. Documentation updates after implementation
 
-Do not merely update prose to describe the intended design. Update it to describe the code and proofs that actually exist after the above work.
+This section's original parallel-array documentation instructions are superseded. Current documentation must describe the code and proofs that exist after the refined-kernel follow-up.
 
 ### `crates/protocol-core/README.md`
 
 State that:
 
-- concrete receive storage is a parallel fixed array;
-- sequence-to-slot lookup is an extracted core operation;
-- core completion returns the physical swap-removal plan;
-- restore returns the allocated slot;
-- the adapter still performs opaque cryptographic operations.
+- `RefinedRatchet<SendChain, RecvChain, Material>` owns logical control, both typed chain values, and the fixed material slots;
+- the step callback `fn(&Chain, &[u8]) -> RatchetStep<Chain, Material>` is the sole opaque HKDF operation;
+- the kernel owns admission, callback ordering, sequence/material lookup, retry retention, successful swap-removal, and paired restoration;
+- `RefinedSendKey<Material>` keeps the send sequence and material together until consuming finish; and
+- the older logical APIs remain only as proof-compatibility surfaces.
 
 ### `doc/formal-verification-stage-3.md`
 
-Use the positional invariant:
+Describe the structural invariant:
 
 ```text
-for n = control.receive_cache_len():
-    i < n  => concrete receive slot i is populated
-    i >= n => concrete receive slot i is empty
+active logical entry i <=> refined material slot i is populated
 ```
 
 and describe live receive flow as:
 
 ```text
-plan_receive_until
-    -> advance_receive / returned slot
-    -> one concrete KDF step / store in returned slot
-    -> lookup_receive_key
+refined_advance_receive_until
+    -> admission before callback
+    -> one opaque step per admitted sequence
+    -> atomic next-chain/material publication
+    -> refined_receive_key by sequence
     -> authentication
-    -> finish_receive_with_removal
-    -> exact concrete swap/take if consumed
+    -> refined_finish_receive
+    -> internal retention or swap-removal
 ```
 
-Describe persistence as slot-aware checked restoration.
+Describe persistence as paired checked restoration through `start_refined_restore`, `refined_restore_receive_key`, and `finish_refined_restore`.
 
 ### `crates/protocol-core/proofs/trusted-boundary.md`
 
-Update at least OR-12, OR-14, AR-01, AR-02, AR-04, AR-06, HB-01 as specified in Section 5.7.
+Record the refined kernel, callback boundary, paired restoration, consuming send token, and the generated/handwritten proof surface in the maintained inventory.
 
-Preserve the statement that the adapter refinements are not automatically conclusions of the F\* core proofs. The new design reduces those obligations; it does not verify HKDF, serde, Rust compilation, crash atomicity, or physical key erasure.
+Preserve the remaining limitations. The parametric proof does not establish concrete HKDF semantics or output splitting, authentication-result provenance, serde correctness, hax/Rust/compiler correspondence, rollback resistance, crash atomicity outside the kernel call, zeroization, or physical key erasure.
 
 ---
 
@@ -1386,25 +1387,24 @@ The PR description should report these commands/results, not only a generic `car
 
 # 12. Final expected trust boundary
 
-After completion, the receive-side correspondence should be narrow enough to describe as:
+PR #2 ended with the core returning physical decisions for a production-owned parallel array. The refined-kernel follow-up narrows the current receive-side correspondence to:
 
 ```text
-protocol-core proves:
-    logical admission
-    logical append slot
-    sequence -> current slot lookup
-    retention vs consumption
-    exact target/last swap-removal plan
-    restore append slot
+extracted RefinedRatchet owns and preserves:
+    logical control + opaque typed send/receive chains
+    fixed sequence/material slots
+    admission before the opaque step callback
+    one callback output paired with each admitted sequence
+    lookup, retry retention, and internal swap-removal
+    atomic sequence/material restoration
+    consuming send sequence/material tokens
 
-production adapter performs:
-    one opaque HKDF ratchet step per successful logical advance
-    store KDF output at returned append slot
-    index concrete material at verified lookup slot
-    perform exact returned swap/take on successful authentication
-    place persisted material at returned restore slot
+production supplies and remains responsible for:
+    concrete HKDF callback semantics and output splitting
+    authentication-result provenance
+    serde translation and surrounding persistence atomicity
+    primitive behavior, compiler correspondence, and zeroization
+    non-rollback ownership and peer-map selection
 ```
 
-This is the intended improvement over PR #2's current state, where the concrete storage is already parallel but production still independently scans for sequence slots and reconstructs swap/removal and restore correspondence.
-
-The implementation is complete when the **index is the refinement relation and all protocol-relevant index decisions come from extracted, checked core logic**.
+The index is no longer an adapter refinement relation. Sequence/material association, swap-removal, restoration, and mutation ordering are preserved structurally inside the same extracted kernel production executes; only the cryptographic and surrounding-system meanings of its opaque inputs remain assumptions.

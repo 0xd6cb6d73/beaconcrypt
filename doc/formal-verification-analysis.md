@@ -12,8 +12,8 @@ F* and ProVerif files under
 
 The short conclusion is:
 
-- F* proves useful, universal facts about selected deterministic Rust functions: exact PQXDH byte layouts and state transitions, ratchet bounds, receive sequence-to-slot lookup, append/removal/restoration slot shape, logical key consumption, replay behavior, checked counter handling, and the CTX transcript and pointwise collision-witness properties described below.
-- The receive-slot theorems remove independent production decisions about where a logical sequence belongs, but concrete HKDF output, key/nonce association, Rust array mutation, serde, authentication-result provenance, and publication atomicity remain adapter obligations.
+- F* proves useful, universal facts about selected deterministic Rust functions: exact PQXDH byte layouts and state transitions; ratchet bounds and checked counters; association between logical receive sequences and opaque material in one fixed slot array; exact lookup, retention, swap-removal, and restoration behavior; and the CTX transcript and pointwise collision-witness properties described below.
+- The extracted `RefinedRatchet` owns logical control state, both parametric chain values, and the fixed concrete-material slots, so normal-return slot association and mutation ordering no longer depend on a parallel production adapter. HKDF meaning, authentication-result provenance, serde, crash/concurrency atomicity, rollback prevention, external copies, and compiler correspondence remain assumptions.
 - ProVerif proves secrecy and authentication properties for an active-attacker
   symbolic model of registration and a fixed record-exchange schedule. It also
   demonstrates the expected exposure of cached and future keys after one
@@ -241,7 +241,7 @@ proof; that is the separate ProVerif layer.
 
 ### Symmetric-ratchet control state
 
-The F* ratchet deliberately models sequence numbers and **logical key capabilities**, not the secret chain bytes, concrete message keys, or nonces. A logical capability is bookkeeping that says “the key for sequence 2 should be available”; it is not the key itself. The logical receive cache is a packed fixed array, and production stores opaque `KeyMaterial` in a parallel fixed array. For example, after sequence 3 arrives first, the model may contain capabilities for sequences 2 and 3. Successful authentication of sequence 3 consumes capability 3 while capability 2 remains for the delayed record. Production code separately has to derive, retain, move, and delete the matching secret bytes.
+The extracted ratchet has a logical control layer and a generic refined layer. The logical `SequenceCache` says which receive sequences are available, while `RefinedRatchet<SendChain, ReceiveChain, Material>` owns that control value, both live chain values, and a fixed 50-element `Option<Material>` array. F* treats chain and material values parametrically—it does not inspect secret bytes or assert that they came from HKDF—but proves that the exact material returned by an admitted step occupies the same unique slot as its sequence. For example, after sequence 3 arrives first, sequences 2 and 3 and their opaque materials are cached together; successful authentication of sequence 3 removes its pair while the sequence-2 pair remains for delayed delivery.
 
 The ratchet invariant says the active receive cache has at most 50 entries; every active entry is nonzero, no greater than the receive counter, and unique ([ratchet lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst)). Uniqueness is what makes a successful sequence lookup identify one current physical slot even after an earlier swap-removal has moved entries.
 
@@ -256,21 +256,19 @@ The following properties are proved:
 - `finish_receive_with_removal` is the sole detailed logical completion transition, and the compatibility `finish_receive` function is proved to return the same state and disposition. A wrong sequence/slot pair produces `Missing`, no removal, and unchanged state. Authentication failure produces `Retained`, no removal, and unchanged logical state. Authentication success produces `Consumed`, reduces the cache length by one, reports the target slot and the previous last slot, removes the target, preserves every other logical sequence exactly once, and moves the previous last entry into the target slot when the two slots differ.
 - For a future sequence, planning and admitted advancement may already have moved the receive counter and cached bounded intermediate keys before authentication. Failure retains that advanced state and is not neutral relative to the start of decryption, so those advances can consume cache/window capacity. The composed failed-receive lemmas prove one-step pre-authentication advancement, zero-cost retry, later single consumption, replay rejection, exact full-cache rejection, and capacity release after consumption for arbitrary valid logical states satisfying their numeric preconditions.
 - `restore_receive_key_with_slot` performs the checked ordered append and returns the old logical cache length as the slot containing the restored sequence. Successful restoration preserves validity, and the compatibility `restore_receive_key` function is proved to have the same accept/reject behavior and projected state. Finishing a valid restoration returns a valid state.
+- Refined constructors establish the combined logical/material invariant with arbitrary chain types. Refined send advancement relates the published counter, next send chain, and token material to the opaque step result; rejection is state-neutral. Refined receive advancement relates the published receive counter, next receive chain, sequence, and append-slot material to the opaque step result while preserving the combined invariant.
+- Refined rejection is callback-independent, and the extracted definitions place callback application only inside admitted branches. The F* callback is a pure function, so production callback side effects, panics, and concrete invocation traces remain outside this statement.
+- `refined_receive_key` returns material only through the current unique logical slot. Missing and failed-authentication completion preserve every control, chain, and material field. Successful completion moves the complete old-last sequence/material pair into a non-last target, clears the old last slot, and publishes the matching logical removal in the same returned refined value.
+- `refined_restore_receive_key` either rejects without changing its complete builder or appends the supplied sequence and opaque material together at the next packed slot. `finish_refined_restore` publishes the same control, chains, and slots as one valid refined state.
 - Pointwise replacement leaves a peer record with a different ID unchanged. Mismatched send advancement returns no sequence and an unavailable capability; for the selected peer, the peer ID, ratchet, and sequence match direct send advancement.
 
 The last result is pointwise: it does not prove that a production whole-map lookup selects one unique entry or updates the complete map correctly.
 
-These facts prove the control algorithm and its physical logical-array decisions, not the secret-byte refinement or global ownership. In Rust, `RatchetState` and `SendKey` are copyable values. The “one-use” theorem threads the unavailable capability returned by `finish_send` into the second call; it does not stop a caller from retaining a copy of the original available capability or forking pre-send ratchet state. Production does not store either a pending capability or its concrete send key in `RatchetManager`; a private stack-local transaction keeps the pair together, does not persist the capability or reuse a copy, leaves no reusable copy after the call, invokes `finish_send` after one encryption attempt on every recoverable path, and then drops the local values. That control flow and the use of one authoritative, non-rollback state remain adapter obligations rather than consequences of F* affinity. Receive replay resistance additionally relies on the adapter invariant
+These facts remove the former production invariant between a copyable `RatchetState` and an independently mutated `recv_slots` array. `RatchetManager` now stores one `RefinedRatchet`; receive advancement, lookup, completion, and restoration call that same extracted kernel, which owns the logical and opaque-material mutations and returns their joint normal state. There is no production-selected append slot or adapter-performed swap/take to assume correct.
 
-```text
-for n = control.receive_cache_len():
-    slot < n  => recv_slots[slot] contains the concrete key and nonce for the logical sequence in slot
-    slot >= n => recv_slots[slot] is empty
-```
+The proof still cannot inspect `KeyMaterial` or give a cryptographic meaning to the callback. Production must implement the callback as the intended HKDF-SHA-512 step over the supplied old chain and `SYM_RATCHET_INFO`, split its output into the returned next chain, key, and nonce, and avoid relevant side effects or panics. F* proves callback-independent rejection and exact association with the pure callback result; concrete callback invocation traces and compiler behavior remain external.
 
-The core-returned append, lookup, removal, and restoration slots eliminate independent adapter decisions about where a logical receive sequence belongs. The proof still cannot inspect `KeyMaterial`, so production must derive the stack-local concrete send material for the sequence named by `advance_send`, use it only for that attempt, and pair its disposal with `finish_send`. On receive, production must perform exactly one correct HKDF step after each successful logical advancement, store its output in the returned slot, use the current lookup result for the intended sequence, apply the exact returned swap/take before publishing the new logical state, and place persisted material in the returned restoration slot. Serialization and deserialization, authentication-result provenance, crash atomicity, physical erasure, and the compiled adapter operations remain outside F*.
-
-The proof also accepts the `authenticated` flag as an input. The adapter must derive it from a sound commitment and AEAD check. `Retained` must cause no concrete slot mutation, while `Consumed` must drop only the concrete target identified by the verified plan.
+The refined Rust send API returns a non-`Copy`, non-`Clone` token containing the associated material, but F* does not prove Rust ownership or global non-forking. Production borrows that token for one stack-local encryption attempt, consumes it with `refined_finish_send` on every recoverable post-allocation path, does not persist an independent copy, and retains one authoritative non-rollback provider state. The proof also accepts `authenticated` as an input, so production must derive it from the intended commitment and AEAD checks. Serialization and deserialization, persisted-pair provenance, authentication-result provenance, crash/concurrency atomicity, rollback prevention, external copies, physical erasure, and compiled behavior remain outside F*.
 
 For the selected functions, strict checking also proves the array-bound and similar safety conditions that hax generates. This is not a proof that the entire application, all adapter error paths, allocation, FFI, or machine code is panic-free. Nor does extraction and typechecking give every selected function a complete behavioral specification: the beacon abort helpers, arbitrary malformed `InitKex` inputs, and all registration-finishing error paths do not have handwritten semantic theorems.
 
@@ -370,8 +368,7 @@ cross-direction, cross-peer, cross-session, replay, and “a party cannot be
 tricked about who shares the key” claims. Those are consequences of the event
 arguments being equal, not separate general-purpose theorems. The modeled
 schedule attempts each receive only once at each fixed sequence; general
-duplicate receive-key consumption is instead the F* ratchet theorem plus the
-production adapter invariant.
+duplicate receive-key consumption is instead the F* refined-ratchet theorem plus the production assumptions of truthful authentication, one authoritative state, no retained external copy, and no rollback.
 
 ### Reachability checks
 
@@ -415,9 +412,9 @@ The separate [`failed-receive-compromise.pv`](../crates/protocol-core/proofs/pro
 
 Compromise does not make later honest delivery impossible. A separate reachability witness schedules the attacker to forward the original honest target ciphertext after compromise, and the receiver can still accept it using the retained key. This is possibility, not liveness: the active attacker may block delivery or use the compromised target key first, in which case its forged frame consumes the slot and the honest ciphertext will later be rejected.
 
-This ProVerif result is one exact, unrolled capacity-50 execution under ideal cryptography. It is not a quantification over every gap, cache arrangement, retry count, or interleaving. The general control-state statements come from the extracted F* ratchet lemmas, which quantify over states satisfying their invariant and relate planning, advancement, failed completion, successful consumption, capacity, and replay. Conversely, F* models logical capabilities rather than secret bytes and cannot establish the secrecy, compromise, or forgery conclusions of the symbolic trace.
+This ProVerif result is one exact, unrolled capacity-50 execution under ideal cryptography. It is not a quantification over every gap, cache arrangement, retry count, or interleaving. The general state statements come from the extracted F* refined-ratchet lemmas, which quantify over states satisfying their logical/material invariant and relate planning, ordered opaque step results, advancement, full-state retention, successful sequence/material consumption, capacity, and replay. F* treats the chain and material types parametrically and cannot establish the cryptographic secrecy, compromise, or forgery conclusions of the symbolic trace.
 
-The ProVerif attacker starts at the post-parser admission boundary. A symbolic `crypto_frame` represents a frame whose constructor, sender, sequence, and protected component are available to the network attacker; it does not represent Cap'n Proto byte parsing or an arbitrary byte length. Therefore the model does not prove that frames which are empty, truncated, unparsable, from an unknown or wrong sender, or carry no more than the production overhead are rejected before ratcheting. Production ordering at [`decrypt_message_with_ratchet`](../src/shared.rs#L924-L979) and the boundary/truncation regressions in [`tests/protocol.rs`](../tests/protocol.rs#L421-L550) support those separate adapter claims.
+The ProVerif attacker starts at the post-parser admission boundary. A symbolic `crypto_frame` represents a frame whose constructor, sender, sequence, and protected component are available to the network attacker; it does not represent Cap'n Proto byte parsing or an arbitrary byte length. Therefore the model does not prove that frames which are empty, truncated, unparsable, from an unknown or wrong sender, or carry no more than the production overhead are rejected before ratcheting. Production ordering at [`decrypt_message_with_ratchet`](../src/shared.rs#L787-L842) and the boundary/truncation regressions in [`tests/protocol.rs`](../tests/protocol.rs#L421-L550) support those separate adapter claims.
 
 ### Precisely scoped late-compromise results
 
@@ -484,8 +481,8 @@ sources gives these important qualifications:
 | --- | --- |
 | “The commitment input is exactly `(key, nonce, associated data, AEAD tag, sequence, sender ID)`.” | Production delegates its hash input to the extracted fixed-size builder, and F* proves its exact six ranges plus both little-endian encodings ([Rust helper](../crates/protocol-core/src/commitment.rs), [lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst)). The caller's field provenance, BLAKE2b call, hax/compiler correctness, and machine code remain outside the theorem. |
 | “The modified CTX construction provides strong commitment.” | F* proves the pointwise collision witness for arbitrary pure hash and AEAD-open functions, including unequal-key and unequal-context base-AEAD openings; the conventional computational lifting bounds misattribution advantage by BLAKE2b-512 collision advantage. ProVerif separately confirms the intended ideal-hash CTX/no-CTX differential. The probability/runtime lifting is not mechanized, and BLAKE2b, libsodium, adapter provenance, compiler correspondence, and confidentiality/authenticity preservation remain assumptions or separate obligations. |
-| “Peer, counter, and ratchet publication commit atomically.” | F* proves the pure candidate's returned state and peer shape. Actual atomic mutation of the counter, peer map, ratchet, and persistent storage is an adapter obligation covered by implementation structure and regression tests, not the pure theorem. |
-| “Send keys are one use” and “replay is rejected.” | F* proves sequential logical-capability consumption. Global one-use and concrete replay rejection additionally require one authoritative state, no retained or reused capability copy, no rollback, and exact logical-to-concrete key refinement. |
+| “Peer, counter, and ratchet publication commit atomically.” | F* proves the refined ratchet's normal-return transition over its counter, live chain, and fixed material slots, and separately proves the pure peer candidate's returned shape. Crash/concurrency atomicity, the surrounding peer-map mutation, persistent storage, and rollback prevention remain production obligations. |
+| “Send keys are one use” and “replay is rejected.” | F* proves that the refined send step pairs the callback material and logical capability in one non-copyable token, and that successful refined receive removes the concrete material paired with exactly the target sequence before replay lookup fails. The high-level claim still requires truthful authentication, one authoritative state, no retained material copy or provider fork, correct token use, correct HKDF callback behavior, and no rollback. |
 | “Counters start at one.” | F* proves that advancing any non-exhausted counter returns old plus one; a counter initialized to zero therefore first returns one. Selecting and preserving that initial production state is an adapter/initialization fact. |
 | “Every accepted, bounded input is panic-free.” | Strict F* checking covers safety obligations generated for the selected pure core functions. It is not whole-application panic freedom. |
 | “Initial and subsequent messages are secret; replay, unknown-key-share, cross-peer, and concurrent-session attacks are prevented.” | ProVerif proves five named messages and exact correspondences in replicated instances of one fixed five-record schedule. The event arguments support those separation interpretations within that schedule, not an arbitrary unbounded record API theorem. |
@@ -508,8 +505,7 @@ The corpus does not prove:
   helpers and arbitrary malformed/finishing errors have no handwritten semantic
   theorem;
 - BLAKE2b-512 collision resistance, a concrete numerical bound for that primitive, or a mechanized probability/runtime theorem for the modified CTX construction; F* machine-checks the pointwise collision witness and transcript injectivity, while the conventional [computational lifting](ctx-commitment.md), opaque hash implementation, production field provenance, and compiled caller retain their stated assumptions;
-- nonce uniqueness or the equality, uniqueness, secrecy, and deletion of actual
-  message-key bytes;
+- nonce uniqueness or the cryptographic correctness, secrecy, and physical deletion of actual message-key bytes; F* treats the step callback's chain and material outputs parametrically while proving where those exact returned values are stored, moved, retained, and removed;
 - entropy quality, fresh-key generation, operating-system RNG behavior, or
   physical erasure/zeroization;
 - Cap'n Proto parsing or serialization, serde, allocation, networking, bindings,
@@ -533,7 +529,7 @@ The corpus also does not prove:
   classifications;
 - atomic check-and-insert or check-and-reserve behavior in real sets and maps;
 - correctness and uniqueness of general production peer-map selection, or the whole-map update from F*'s theorem about one selected map entry; registration finish now checks that the selected concrete entry equals the binding retained by verified state, but the concrete map operation remains outside F*;
-- concrete HKDF call labels and buffer slicing, AEAD result provenance, association of each returned logical slot with the correct concrete key and nonce bytes, exact execution of the returned concrete swap/take, or atomic publication of the logical and concrete results;
+- concrete HKDF call labels, HKDF implementation behavior and output slicing, AEAD result provenance, callback panic behavior, crash/concurrency atomicity, compiler correspondence, retained copies outside the authoritative refined state, or rollback; the extracted kernel now proves normal-return association and ordering for the exact chain and material values returned by its opaque callback;
 - byte-level equivalence between ProVerif's admitted symbolic frame and production Cap'n Proto parsing, sender lookup/checks, overhead-length validation, commitment slicing, or malformed-input rejection;
 - behavior through direct low-level receive-ratchet, receive-key, peer-map, compatibility, or mutation helpers outside the documented high-level API trace;
 - security after retaining or reusing a copy of an available send capability, forking pre-send provider state, or rolling counters and replay history backward; or
@@ -606,7 +602,7 @@ The modified CTX claim instead uses its narrower direct lifting from the F*-prov
 
 ### Adapter and execution assumptions
 
-The production connection assumes:
+The extracted `RefinedRatchet` owns the logical control value, both live chains, and the fixed concrete-material slots. Its F* invariant proves that every active logical sequence is paired with the material returned for that step in the same unique slot, every inactive slot is empty, receive lookup uses that pairing, missing and retained completion preserve the complete state, successful completion performs the exact material swap-removal with its logical update, and restoration appends each supplied sequence/material pair atomically. The production connection still assumes:
 
 - Cap'n Proto registration fields translate exactly to the core's typed and
   role-tagged values, and signature verification authenticates those exact
@@ -616,9 +612,9 @@ The production connection assumes:
 - the adapter passes the exact F*-verified root input and labels to HKDF, uses
   the exact returned associated data, and applies the complementary ratchet
   offsets correctly;
-- each admitted logical ratchet step causes exactly one concrete KDF step, its output is stored in the append slot returned by `advance_receive`, every existing sequence is accessed through the current slot returned by `lookup_receive_key`, and every active logical slot contains exactly its corresponding concrete key and nonce while every inactive slot is empty;
-- after one send key is allocated, the adapter keeps the logical capability and concrete key only in one private stack-local transaction, passes the capability to `finish_send`, and drops the concrete key after that one encryption attempt even if AEAD or serialization fails;
-- authentication success/failure is truthfully passed to `finish_receive_with_removal`, retained or missing outcomes cause no concrete slot mutation, and a consumed outcome applies exactly the returned target/old-last swap/take before publishing the returned logical state;
+- the production ratchet-step callback passes the intended old chain and `SYM_RATCHET_INFO` to HKDF-SHA-512, splits the exact output into the returned next chain, key, and nonce, and has no relevant stateful effect beyond returning those values; F* proves callback-independent rejection and exact normal-return association, while the extracted definition gates each pure callback application after admission and publishes its returned value with the matching counter and slot;
+- after `refined_advance_send` returns one token, the adapter borrows its material for exactly one encryption attempt, consumes it through `refined_finish_send` even if AEAD or serialization fails, does not persist or fork the token, and leaves no reusable copy after the call;
+- authentication success/failure is truthfully passed to `refined_finish_receive`, and no concrete key, chain, or authoritative refined state is independently mutated around that kernel call;
 - authenticated sender/target lookup selects one unique peer-map entry and
   preserves all non-selected peers;
 - `Fresh` means the exact semantic ID is absent, successful acceptance inserts
@@ -631,12 +627,10 @@ The production connection assumes:
 - production follows the documented high-level registration, encryption, and
   decryption paths from fresh or successfully validated state;
 - pre-send ratchet state is not cloned into independently usable forks, and the stack-local operation does not persist or reuse an available send-capability copy and leaves no reusable copy after the call;
-- restoration requires the exact five-field ratchet schema, rejects legacy objects containing `send_past`, validates bounds and uniqueness, sorts imported receive sequence/material pairs, rejects malformed or oversized state, places each material value in the slot returned by `restore_receive_key_with_slot`, and serialization rejects both missing active material and populated inactive slots; and
+- restoration requires the exact five-field ratchet schema, rejects legacy objects containing `send_past`, validates bounds and uniqueness, sorts the exact imported receive sequence/material pairs, rejects malformed or oversized state, passes each pair to `refined_restore_receive_key`, and serializes sequence/material pairs from the authoritative refined entries; and
 - server state and replay history have one owner and are not rolled back.
 
-Compile-time size assertions, private Rust fields, consuming APIs, and
-regression tests support these assumptions. They are not substitutes for a
-machine-checked refinement proof of the adapter.
+The extracted shared kernel now supplies the machine-checked in-memory ratchet refinement that the former parallel adapter lacked. Compile-time size assertions, private Rust fields, consuming APIs, and regression tests support the remaining primitive, parser, authentication, peer-map, persistence, compiler, crash/concurrency, and non-rollback assumptions but do not discharge them.
 
 ### ProVerif protocol-model assumptions
 
@@ -794,8 +788,8 @@ restored forks, or multi-bundle identities.
 3. F* proves that any two distinct accepted explanations of one fixed ciphertext, tag, and commitment yield an explicit collision between distinct production transcript inputs for arbitrary pure hash and AEAD-open functions.
 4. Conventionally lifting that pointwise witness bounds real misattribution advantage by BLAKE2b-512 collision advantage, but the probability/runtime lifting and collision-resistance assumption are not mechanized.
 5. The ordinary model's injective receive-to-send correspondence proves that every accepted record in the fixed schedule has a unique send with the same session, direction, sequence, peers, and plaintext.
-6. Separately, F* proves successful logical receive consumes exactly the target key and that retrying that target is rejected.
-7. The adapter must map logical sequences one-to-one to concrete keys and preserve one authoritative, non-rollback state.
+6. Separately, F* proves that successful refined receive removes exactly the target sequence and its paired callback material, moves the old-last sequence/material pair together when necessary, and rejects a retry without changing the complete refined state.
+7. Production must instantiate the opaque callback with the intended HKDF computation and preserve one authoritative, non-rollback refined state without retaining independent material copies.
 8. Production frame parsing, sealing, opening, commitment hashing, and sender lookup must match the models.
    The extracted builder and F* lemmas establish the exact key, nonce, associated data, AEAD tag, little-endian sequence, and little-endian sender-ID layout; the adapter must still supply those values from the intended authenticated context and hash the returned bytes.
 
@@ -808,9 +802,7 @@ they remain visible on the wire.
 
 ### 6. Deleted-key forward secrecy and lack of recovery
 
-1. F* proves when a logical receive capability is consumed; the adapter must
-   remove the corresponding concrete material and avoid rollback or retained
-   copies.
+1. F* proves that refined receive consumption removes the concrete material paired with the target sequence from the authoritative fixed slots; production must still avoid rollback and retained copies outside that state.
 2. The ProVerif compromise process reveals only the live chain and cached key at
    one exact later point.
 3. Ideal one-way ratchet constructors prevent deriving old, removed material
@@ -828,13 +820,13 @@ server-side, persistence-aware, or physical-erasure forward secrecy.
 ### 7. A failed admitted future frame mutates the selected receiver state
 
 1. Production parsing and sender selection must first choose the legitimate peer and reject malformed, short, or wrong-sender frames before ratchet admission.
-2. For the logical receiver state selected by the adapter, F* proves the admitted plan/one-step advancement relationship, that failed authentication retains the complete post-admission state, and that filling capacity blocks another future plan without mutation. F* does not prove the production peer-map selection itself.
-3. F* proves the append, current lookup, successful target/old-last removal, and restoration slots for the logical cache. The remaining adapter invariant must place the corresponding concrete key and nonce bytes in those returned slots, apply the returned swap/take exactly, and retain every byte on failure.
+2. For the refined receiver state selected by production, F* proves callback-independent, state-neutral rejection and associates a successful pure callback result's next chain and material with the advanced counter and append slot. The extracted definition gates callback application after admission, executes receive-until inside the kernel, retains the complete post-admission refined state after failed authentication, and rejects a future plan when capacity is full. F* does not prove production callback side effects or invocation traces, peer-map selection, or the cryptographic meaning of callback outputs.
+3. F* proves current lookup through the paired logical/material slot, full-state neutrality for missing and retained outcomes, exact target/old-last sequence-and-material swap-removal on success, and atomic checked restoration of each supplied pair. HKDF behavior, authentication-result provenance, serde correctness, compiler correspondence, retained external copies, crash/concurrency atomicity, and rollback remain outside those theorems.
 4. The private ProVerif scenario then shows that an active network attacker without the legitimate receiver snapshot cannot derive the four named plaintexts even while concurrent attacker-owned registration processes commit a response and expose their own routed canary. The record trace uses a standalone fresh root, so peer/root separation remains an adapter obligation.
 5. In the compromise variant, explicitly revealing the legitimate receiver's retained state exposes the skipped and target keys and the live future chain; this both decrypts the public honest target ciphertext and enables a forged accepted frame.
 6. If the attacker forwards the honest ciphertext before spending the target key on a forgery, the retained key still accepts it, consumes only that slot, rejects replay, and permits one later derivation.
 
-The defensible statement is therefore: **in the combined private symbolic run, an attacker-controlled registered beacon has no path into the independently rooted failed-receive state, and a failed forged future frame does not by itself expose that state; under the production peer-selection and independent-root refinements, direct compromise of the legitimate retained state does expose every material still represented there and removes the honest-origin guarantee for those keys.** The exact cache-fill and delivery ordering is a finite ProVerif witness, while the state-transition relationships are general F* results under the adapter invariant. Neither proof supplies production peer-map isolation, parser correctness, an end-to-end registration-to-record state linkage, memory erasure, availability, or post-compromise recovery by itself.
+The defensible statement is therefore: **in the combined private symbolic run, an attacker-controlled registered beacon has no path into the independently rooted failed-receive state, and a failed forged future frame does not by itself expose that state; under the production peer-selection and independent-root refinements, direct compromise of the legitimate retained state does expose every material still represented there and removes the honest-origin guarantee for those keys.** The exact cache-fill and delivery ordering is a finite ProVerif witness, while the sequence/material transition relationships are general F* results for valid refined states. Neither proof supplies production peer-map isolation, parser correctness, an end-to-end registration-to-record state linkage, memory erasure, availability, or post-compromise recovery by itself.
 
 ## Verification and reproducibility
 
@@ -857,7 +849,7 @@ The result gate requires exactly:
 - all 13 private failed-receive queries to be true (four secrecy and nine state/origin correspondences), with all eleven failed-receive reachability negations false (nine receive-state phases plus malicious-registration commit and malicious-canary recovery); and
 - in the seven-query failed-receive compromise run, consumed-past secrecy and both compromise-order correspondences to be true, skipped/target/future secrecy and honest-origin correspondence to be false, and both compromise and later-honest-delivery reachability negations to be false.
 
-During final receive-slot conformance verification on 11 August 2026, `cargo test --locked -p beaconcrypt-protocol-core`, `cargo test --locked`, `make -C crates/protocol-core verify`, `make -C crates/protocol-core check-inventory`, and `make -C crates/protocol-core check-generated` completed successfully against the repository state represented by this report. All three generated F* modules and the ProVerif extraction matched their tracked reviewed outputs, all F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the refreshed trust-boundary inventory matched the reviewed adapter, core, and proof inputs.
+During final receive-slot conformance verification on 11 August 2026, `cargo test --locked -p beaconcrypt-protocol-core`, `cargo test --locked`, `make -C crates/protocol-core verify`, and `make -C crates/protocol-core check-inventory` completed successfully against the repository state represented by this report. Repeating extraction after the reviewed generated update produced no additional generated diff. All F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the refreshed trust-boundary inventory matched the reviewed adapter, core, and proof inputs.
 
 The checker rejects missing or substituted queries, timeouts, unknown or
 inconclusive results, and any changed classification
@@ -895,7 +887,7 @@ For an audit or security statement that needs exact scope, use:
 > handwritten modeling, correct application recipient routing, high-level
 > non-rollback execution, and the stated replay-owner and compromise scope; the
 > complete application and primitive implementations are not formally verified.
-> For the receive cache specifically, F* characterizes sequence lookup, exact successful swap-removal, compatibility wrappers, and restoration append slots; production still has to derive the correct secret material, store and move it in those returned slots, serialize it faithfully, and publish state without rollback or inconsistent partial updates.
+> For the receive cache specifically, the extracted `RefinedRatchet` owns the logical cache and fixed concrete-material slots. F* proves packed sequence/material association for arbitrary opaque step outputs, callback-independent rejection, kernel-controlled receive-until stepping, full-state retention on missing or failed authentication, exact sequence-and-material swap-removal on success, and atomic restoration of each supplied pair. Production still has to implement the callback with the intended HKDF label and split, supply truthful authentication and persisted pairs, serialize faithfully, preserve one authoritative non-rollback state, and rely on correct hax/compiler translation; crash/concurrency atomicity and physical erasure are not proved.
 >
 > A dedicated exact capacity-50 trace models a forged future frame advancing and retaining receiver state before authentication, a neutral retry and full-cache rejection, later honest consumption, replay rejection, and admission after one slot is freed. The retained state preserves the named secrets while private; its explicit compromise exposes skipped, target, and future material, permits forgery, and leaves honest delivery reachable but not guaranteed. General control-state relationships come from F*, while byte-level parsing and arbitrary schedules are outside this finite ProVerif trace.
 >

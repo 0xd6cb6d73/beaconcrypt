@@ -484,10 +484,6 @@ impl<Role: roles::ChainKey> From<[u8; KDF_RATCHET_OUTPUT_LEN]> for KdfOutput<Rol
 	}
 }
 
-pub trait Ratchetable {
-	fn ratchet(&mut self, info: &[u8]) -> KeyMaterial;
-}
-
 pub struct Ratchet<Role: roles::ChainKey> {
 	state: KdfState<Role>,
 }
@@ -500,20 +496,23 @@ impl<Role: roles::ChainKey> From<[u8; KDF_STATE_SIZE]> for Ratchet<Role> {
 	}
 }
 
-impl<Role: roles::ChainKey> Ratchetable for Ratchet<Role> {
-	fn ratchet(&mut self, info: &[u8]) -> KeyMaterial {
-		let prk = crypto_kdf::hkdf::sha512::extract(None, self.state.as_slice()).unwrap();
-		let out: KdfOutput<Role> =
-			(*crypto_kdf::hkdf::sha512::expand(KDF_RATCHET_OUTPUT_LEN, Some(info), &prk)
-				.unwrap()
-				.as_array::<KDF_RATCHET_OUTPUT_LEN>()
-				.unwrap())
-			.into();
-		self.state = out.kdf_state;
-		KeyMaterial {
+fn ratchet_step<Role: roles::ChainKey>(
+	ratchet: &Ratchet<Role>,
+	info: &[u8],
+) -> verified_ratchet::RatchetStep<Ratchet<Role>, KeyMaterial> {
+	let prk = crypto_kdf::hkdf::sha512::extract(None, ratchet.state.as_slice()).unwrap();
+	let expanded = Zeroizing::new(
+		crypto_kdf::hkdf::sha512::expand(KDF_RATCHET_OUTPUT_LEN, Some(info), &prk).unwrap(),
+	);
+	let out: KdfOutput<Role> = (*expanded.as_array::<KDF_RATCHET_OUTPUT_LEN>().unwrap()).into();
+	verified_ratchet::RatchetStep {
+		chain: Ratchet {
+			state: out.kdf_state,
+		},
+		material: KeyMaterial {
 			key: out.aead_key,
 			nonce: out.aead_nonce,
-		}
+		},
 	}
 }
 impl<Role: roles::ChainKey> Default for Ratchet<Role> {
@@ -534,31 +533,18 @@ impl<Role: roles::ChainKey> Clone for Ratchet<Role> {
 
 type SendChain = Ratchet<roles::ChainSendKey>;
 type RecvChain = Ratchet<roles::ChainRecvKey>;
-type ReceiveKeySlots = [Option<KeyMaterial>; verified_ratchet::RECEIVE_CACHE_CAPACITY];
-
-fn empty_receive_key_slots() -> ReceiveKeySlots {
-	std::array::from_fn(|_| None)
-}
+type RatchetKernel = verified_ratchet::RefinedRatchet<SendChain, RecvChain, KeyMaterial>;
 
 #[derive(Clone)]
 pub struct RatchetManager {
-	/// current state of the KDF on the send chain
-	send_key: SendChain,
-	/// current state of the KDF on the recv chain
-	recv_key: RecvChain,
-	/// Concrete receive keys indexed by the verified cache's physical slots.
-	recv_slots: ReceiveKeySlots,
-	/// Authoritative counters and logical receive-key ownership.
-	control: verified_ratchet::RatchetState,
+	/// Shared refined kernel owning counters, both KDF chains, and concrete receive slots.
+	refined: RatchetKernel,
 }
 
 impl RatchetManager {
 	pub fn default() -> Self {
 		Self {
-			send_key: SendChain::default(),
-			recv_key: RecvChain::default(),
-			recv_slots: empty_receive_key_slots(),
-			control: verified_ratchet::RatchetState::default(),
+			refined: RatchetKernel::new(SendChain::default(), RecvChain::default()),
 		}
 	}
 
@@ -568,40 +554,24 @@ impl RatchetManager {
 	}
 
 	pub fn recv_key(&self, seq: u64) -> Option<&KeyMaterial> {
-		let slot = verified_ratchet::lookup_receive_key(self.control, seq)?;
-		self.recv_slots.get(slot as usize)?.as_ref()
+		verified_ratchet::refined_receive_key(&self.refined, seq)
 	}
 
 	pub fn ratchet_recv(&mut self, info: &[u8]) -> Option<u64> {
-		let advanced = verified_ratchet::advance_receive(self.control);
-		let current = advanced.sequence?;
-		let slot = advanced.slot?;
-		let slot_index = slot as usize;
-		if advanced.state.receive_key_at(slot) != Some(current)
-			|| slot_index >= self.recv_slots.len()
-			|| self.recv_slots[slot_index].is_some()
-		{
-			return None;
-		}
-		let keys = self.recv_key.ratchet(info);
-		self.recv_slots[slot_index] = Some(keys);
-		self.control = advanced.state;
-		debug_assert!(self.receive_slots_match_control());
-		Some(current)
+		verified_ratchet::refined_advance_receive(
+			&mut self.refined,
+			info,
+			ratchet_step::<roles::ChainRecvKey>,
+		)
 	}
 
 	pub fn ratchet_recv_until(&mut self, info: &[u8], until: u64) -> Option<u64> {
-		debug_assert!(self.receive_slots_match_control());
-		let plan = verified_ratchet::plan_receive_until(self.control, until);
-		let target = plan.sequence?;
-		for _ in 0..plan.derivations {
-			self.ratchet_recv(info)?;
-		}
-		if plan.derivations != 0 {
-			debug_assert_eq!(self.control.receive_sequence(), target);
-		}
-		debug_assert!(self.receive_slots_match_control());
-		Some(target)
+		verified_ratchet::refined_advance_receive_until(
+			&mut self.refined,
+			info,
+			until,
+			ratchet_step::<roles::ChainRecvKey>,
+		)
 	}
 
 	pub(crate) fn init_ratchets(
@@ -627,16 +597,17 @@ impl RatchetManager {
 			return false;
 		}
 
-		self.recv_key
+		let mut recv_key = RecvChain::default();
+		recv_key
 			.state
 			.copy_from_slice(&combined[recv_start..recv_start + RATCHET_CHAIN_SIZE]);
-		self.send_key
+		let mut send_key = SendChain::default();
+		send_key
 			.state
 			.copy_from_slice(&combined[send_start..send_start + RATCHET_CHAIN_SIZE]);
 		combined.zeroize();
 
-		self.recv_slots = empty_receive_key_slots();
-		self.control = verified_ratchet::RatchetState::default();
+		self.refined = RatchetKernel::new(send_key, recv_key);
 		true
 	}
 
@@ -645,62 +616,7 @@ impl RatchetManager {
 		seq: u64,
 		authenticated: bool,
 	) -> verified_ratchet::ReceiveDisposition {
-		debug_assert!(self.receive_slots_match_control());
-		let Some(slot) = verified_ratchet::lookup_receive_key(self.control, seq) else {
-			return verified_ratchet::ReceiveDisposition::Missing;
-		};
-		let has_concrete_key = self
-			.recv_slots
-			.get(slot as usize)
-			.is_some_and(Option::is_some);
-		debug_assert!(
-			has_concrete_key,
-			"logical receive key has no concrete refinement"
-		);
-		if !has_concrete_key {
-			return verified_ratchet::ReceiveDisposition::Missing;
-		}
-
-		let Some(old_last_slot) = self.control.receive_cache_len().checked_sub(1) else {
-			return verified_ratchet::ReceiveDisposition::Missing;
-		};
-		let finished =
-			verified_ratchet::finish_receive_with_removal(self.control, seq, slot, authenticated);
-		match finished.disposition {
-			verified_ratchet::ReceiveDisposition::Missing => {
-				verified_ratchet::ReceiveDisposition::Missing
-			}
-			verified_ratchet::ReceiveDisposition::Retained => {
-				if finished.removal.is_some() || finished.state != self.control {
-					return verified_ratchet::ReceiveDisposition::Missing;
-				}
-				debug_assert!(self.receive_slots_match_control());
-				verified_ratchet::ReceiveDisposition::Retained
-			}
-			verified_ratchet::ReceiveDisposition::Consumed => {
-				let Some(removal) = finished.removal else {
-					return verified_ratchet::ReceiveDisposition::Missing;
-				};
-				if removal.target_slot != slot || removal.last_slot != old_last_slot {
-					return verified_ratchet::ReceiveDisposition::Missing;
-				}
-				let target_index = removal.target_slot as usize;
-				let last_index = removal.last_slot as usize;
-				if target_index >= self.recv_slots.len()
-					|| last_index >= self.recv_slots.len()
-					|| self.recv_slots[target_index].is_none()
-					|| self.recv_slots[last_index].is_none()
-				{
-					return verified_ratchet::ReceiveDisposition::Missing;
-				}
-				self.recv_slots.swap(target_index, last_index);
-				let removed = self.recv_slots[last_index].take();
-				debug_assert!(removed.is_some());
-				self.control = finished.state;
-				debug_assert!(self.receive_slots_match_control());
-				verified_ratchet::ReceiveDisposition::Consumed
-			}
-		}
+		verified_ratchet::refined_finish_receive(&mut self.refined, seq, authenticated)
 	}
 
 	pub fn delete_recv_key(&mut self, seq: u64) {
@@ -708,37 +624,35 @@ impl RatchetManager {
 	}
 
 	pub fn reset(&mut self) {
-		self.send_key = SendChain::default();
-		self.recv_key = RecvChain::default();
-		self.recv_slots = empty_receive_key_slots();
-		self.control = verified_ratchet::RatchetState::default();
+		self.refined = RatchetKernel::new(SendChain::default(), RecvChain::default());
 	}
 
 	#[cfg(any(feature = "server", test))]
 	fn send_sequence(&self) -> u64 {
-		self.control.send_sequence()
+		self.refined.send_sequence()
 	}
 
 	#[cfg(any(feature = "server", test))]
 	fn receive_sequence(&self) -> u64 {
-		self.control.receive_sequence()
+		self.refined.receive_sequence()
 	}
 
-	fn receive_slots_match_control(&self) -> bool {
-		let logical_len = self.control.receive_cache_len() as usize;
-		logical_len <= self.recv_slots.len()
-			&& self.recv_slots[..logical_len].iter().all(Option::is_some)
-			&& self.recv_slots[logical_len..].iter().all(Option::is_none)
-			&& (0..self.control.receive_cache_len())
-				.all(|slot| self.control.receive_key_at(slot).is_some())
+	#[cfg(any(feature = "server", test))]
+	fn receive_cache_len(&self) -> u8 {
+		self.refined.receive_cache_len()
+	}
+
+	#[cfg(any(feature = "server", test))]
+	fn receive_entry_at(&self, slot: u8) -> Option<(u64, &KeyMaterial)> {
+		self.refined.receive_entry_at(slot)
 	}
 
 	pub fn send_state(&self) -> &KdfSendState {
-		&self.send_key.state
+		&self.refined.send_chain().state
 	}
 
 	pub fn recv_state(&self) -> &KdfRecvState {
-		&self.recv_key.state
+		&self.refined.receive_chain().state
 	}
 }
 
@@ -824,18 +738,17 @@ pub(crate) fn encrypt_message_with_ratchet(
 	if bytes.is_empty() {
 		return None;
 	}
-	let verified_ratchet::SendAdvance {
-		state: advanced_state,
-		sequence,
-		key: capability,
-	} = verified_ratchet::advance_send(ratchet.control);
-	let key_seq = sequence?;
-	if capability.sequence() != Some(key_seq) || advanced_state.send_sequence() != key_seq {
+	let send_key = verified_ratchet::refined_advance_send(
+		&mut ratchet.refined,
+		SYM_RATCHET_INFO,
+		ratchet_step::<roles::ChainSendKey>,
+	)?;
+	let Some(key_seq) = send_key.sequence() else {
+		verified_ratchet::refined_finish_send(send_key);
 		return None;
-	}
-	let key = ratchet.send_key.ratchet(SYM_RATCHET_INFO);
-	ratchet.control = advanced_state;
+	};
 	let encrypted = (|| {
+		let key = send_key.material();
 		let (mut plaintext, mut tag) = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
 			bytes,
 			Some(associated_data.as_slice()),
@@ -844,7 +757,7 @@ pub(crate) fn encrypt_message_with_ratchet(
 		)
 		.ok()?;
 		let mut commitment =
-			build_commitment(&key, associated_data, tag.as_slice(), key_seq, sender_kid)?;
+			build_commitment(key, associated_data, tag.as_slice(), key_seq, sender_kid)?;
 		plaintext.append(&mut tag);
 		plaintext.append(&mut commitment);
 		let mut t_builder = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
@@ -860,8 +773,7 @@ pub(crate) fn encrypt_message_with_ratchet(
 			seq: key_seq,
 		})
 	})();
-	let finished = verified_ratchet::finish_send(capability);
-	if !finished.consumed || finished.key.is_available() {
+	if !verified_ratchet::refined_finish_send(send_key) {
 		return None;
 	}
 	encrypted
@@ -870,8 +782,8 @@ pub(crate) fn encrypt_message_with_ratchet(
 /// Decrypt one frame against a staged or committed peer ratchet.
 ///
 /// Authentication failure retains the exact logical and concrete receive key;
-/// successful authentication consumes both, preserving the Stage-3 adapter
-/// refinement while registration is staged off to the side.
+/// successful authentication consumes both through the shared refined kernel
+/// while registration is staged off to the side.
 pub(crate) fn decrypt_message_with_ratchet(
 	data: &[u8],
 	expected_sender_kid: u64,
@@ -1094,11 +1006,9 @@ mod tests {
 	}
 
 	fn receive_slot_snapshot(ratchet: &RatchetManager) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
-		ratchet
-			.recv_slots
-			.iter()
-			.map(|material| {
-				material.as_ref().map(|material| {
+		(0..verified_ratchet::RECEIVE_CACHE_CAPACITY as u8)
+			.map(|slot| {
+				ratchet.receive_entry_at(slot).map(|(_, material)| {
 					(
 						key_bytes(material.key()).to_vec(),
 						nonce_bytes(material.nonce()).to_vec(),
@@ -1108,22 +1018,45 @@ mod tests {
 			.collect()
 	}
 
+	fn receive_slot(ratchet: &RatchetManager, sequence: u64) -> Option<u8> {
+		(0..ratchet.receive_cache_len()).find(|slot| {
+			ratchet
+				.receive_entry_at(*slot)
+				.is_some_and(|entry| entry.0 == sequence)
+		})
+	}
+
+	fn logical_snapshot(ratchet: &RatchetManager) -> (u64, u64, Vec<u64>) {
+		(
+			ratchet.send_sequence(),
+			ratchet.receive_sequence(),
+			(0..ratchet.receive_cache_len())
+				.map(|slot| ratchet.receive_entry_at(slot).unwrap().0)
+				.collect(),
+		)
+	}
+
+	fn set_counters(ratchet: &mut RatchetManager, send_sequence: u64, receive_sequence: u64) {
+		let send_chain = ratchet.refined.send_chain().clone();
+		let receive_chain = ratchet.refined.receive_chain().clone();
+		ratchet.refined = RatchetKernel::from_counters(
+			send_sequence,
+			receive_sequence,
+			send_chain,
+			receive_chain,
+		);
+	}
+
 	fn assert_receive_slots_aligned(ratchet: &RatchetManager) {
-		let active_len = ratchet.control.receive_cache_len() as usize;
-		assert_eq!(ratchet.recv_slots.iter().flatten().count(), active_len);
-		assert!(ratchet.recv_slots[active_len..].iter().all(Option::is_none));
-		for slot in 0..ratchet.control.receive_cache_len() {
-			let sequence = ratchet.control.receive_key_at(slot).unwrap();
-			assert_eq!(
-				verified_ratchet::lookup_receive_key(ratchet.control, sequence),
-				Some(slot)
-			);
-			assert_key_material_eq(
-				ratchet.recv_key(sequence).unwrap(),
-				ratchet.recv_slots[slot as usize].as_ref().unwrap(),
-			);
+		let active_len = ratchet.receive_cache_len();
+		for slot in 0..active_len {
+			let (sequence, material) = ratchet.receive_entry_at(slot).unwrap();
+			assert_eq!(receive_slot(ratchet, sequence), Some(slot));
+			assert_key_material_eq(ratchet.recv_key(sequence).unwrap(), material);
 		}
-		assert!(ratchet.receive_slots_match_control());
+		for slot in active_len..verified_ratchet::RECEIVE_CACHE_CAPACITY as u8 {
+			assert!(ratchet.receive_entry_at(slot).is_none());
+		}
 	}
 
 	fn commitment_for_test(
@@ -1332,39 +1265,39 @@ mod tests {
 	fn ratchet_matches_hkdf_sha512_known_answer_over_two_steps() {
 		// Reproduced independently by `python scripts/generate_kat_vectors.py` and
 		// `go run scripts/generate_kat_vectors.go` (`[ratchet]`).
-		let mut ratchet = SendChain::from([0x24; KDF_STATE_SIZE]);
+		let ratchet = SendChain::from([0x24; KDF_STATE_SIZE]);
 
-		let first = ratchet.ratchet(SYM_RATCHET_INFO);
+		let first = ratchet_step(&ratchet, SYM_RATCHET_INFO);
 		assert_eq!(
-			key_bytes(first.key()),
+			key_bytes(first.material.key()),
 			decode_hex::<AEAD_KEY_LEN>(
 				"f57007f1b1c7a62a7d6cdfa5df07538c43d83656906764d607e627401906e42a"
 			)
 		);
 		assert_eq!(
-			nonce_bytes(first.nonce()),
+			nonce_bytes(first.material.nonce()),
 			decode_hex::<AEAD_NONCE_LEN>("43483e81091a393409afbf53")
 		);
 		assert_eq!(
-			ratchet.state.as_slice(),
+			first.chain.state.as_slice(),
 			decode_hex::<KDF_STATE_SIZE>(
 				"5936897d8bd06b7daf70bd0d64b2f607a055fd843ddb779051cb975bbb02b1d3"
 			)
 		);
 
-		let second = ratchet.ratchet(SYM_RATCHET_INFO);
+		let second = ratchet_step(&first.chain, SYM_RATCHET_INFO);
 		assert_eq!(
-			key_bytes(second.key()),
+			key_bytes(second.material.key()),
 			decode_hex::<AEAD_KEY_LEN>(
 				"f30ee97ccdc39577bb1320268d7fc10d55c53649e879e98a9670d58b9a1539d0"
 			)
 		);
 		assert_eq!(
-			nonce_bytes(second.nonce()),
+			nonce_bytes(second.material.nonce()),
 			decode_hex::<AEAD_NONCE_LEN>("d497a96123dfcbe5700b5cc0")
 		);
 		assert_eq!(
-			ratchet.state.as_slice(),
+			second.chain.state.as_slice(),
 			decode_hex::<KDF_STATE_SIZE>(
 				"d11e3c43fa3bbfec95a41973521d7e1b4aacddfc96591fe40fa30e9581b5e4e2"
 			)
@@ -1723,17 +1656,17 @@ mod tests {
 			SYM_RATCHET_INFO,
 			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 		);
-		send.control = verified_ratchet::RatchetState::from_counters(u64::MAX - 1, 0);
+		set_counters(&mut send, u64::MAX - 1, 0);
 		let associated_data = [0xA0; AD_SIZE];
 		let last =
 			encrypt_message_with_ratchet(b"last", 7, 9, &associated_data, &mut send).unwrap();
 		assert_eq!(last.seq, u64::MAX);
-		let control = send.control;
+		let logical = logical_snapshot(&send);
 		let send_state = send.send_state().as_slice().to_vec();
 		assert!(
 			encrypt_message_with_ratchet(b"exhausted", 7, 9, &associated_data, &mut send).is_none()
 		);
-		assert_eq!(send.control, control);
+		assert_eq!(logical_snapshot(&send), logical);
 		assert_eq!(send.send_sequence(), u64::MAX);
 		assert_eq!(send.send_state().as_slice(), send_state);
 
@@ -1743,18 +1676,18 @@ mod tests {
 			SYM_RATCHET_INFO,
 			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 		);
-		recv.control = verified_ratchet::RatchetState::from_counters(0, u64::MAX);
+		set_counters(&mut recv, 0, u64::MAX);
 		let recv_state = recv.recv_state().as_slice().to_vec();
 		assert_eq!(recv.ratchet_recv(SYM_RATCHET_INFO), None);
 		assert_eq!(recv.receive_sequence(), u64::MAX);
 		assert_eq!(recv.recv_state().as_slice(), recv_state);
-		assert!(recv.recv_slots.iter().all(Option::is_none));
-		assert!(recv.receive_slots_match_control());
+		assert_eq!(recv.receive_cache_len(), 0);
+		assert_receive_slots_aligned(&recv);
 		assert!(recv.recv_key(0).is_none());
 	}
 
 	#[test]
-	fn receive_ratchet_rejects_an_occupied_append_slot_before_advancing_the_kdf() {
+	fn refined_receive_ratchet_exposes_only_paired_active_entries() {
 		let mut ratchet = RatchetManager::default();
 		assert!(ratchet.init_ratchets(
 			&[0xA4; KDF_STATE_SIZE],
@@ -1762,23 +1695,9 @@ mod tests {
 			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 		));
 		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 2), Some(2));
-
-		let append_slot = ratchet.control.receive_cache_len() as usize;
-		assert!(append_slot < ratchet.recv_slots.len());
-		assert!(ratchet.recv_slots[append_slot].is_none());
-		ratchet.recv_slots[append_slot] = Some(KeyMaterial {
-			key: [0xA5; AEAD_KEY_LEN].into(),
-			nonce: [0xA6; AEAD_NONCE_LEN].into(),
-		});
-		assert!(!ratchet.receive_slots_match_control());
-
-		let control_before = ratchet.control;
-		let chain_before = ratchet.recv_state().as_slice().to_vec();
-		let slots_before = receive_slot_snapshot(&ratchet);
-		assert_eq!(ratchet.ratchet_recv(SYM_RATCHET_INFO), None);
-		assert_eq!(ratchet.control, control_before);
-		assert_eq!(ratchet.recv_state().as_slice(), chain_before);
-		assert_eq!(receive_slot_snapshot(&ratchet), slots_before);
+		assert_receive_slots_aligned(&ratchet);
+		assert!(ratchet.receive_entry_at(2).is_none());
+		assert!(serde_json::to_string(&ratchet).is_ok());
 	}
 
 	#[test]
@@ -1790,26 +1709,23 @@ mod tests {
 				SYM_RATCHET_INFO,
 				beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 			);
-			ratchet.control = verified_ratchet::RatchetState::from_counters(0, u64::MAX - distance);
+			set_counters(&mut ratchet, 0, u64::MAX - distance);
 
 			assert_eq!(
 				ratchet.ratchet_recv_until(SYM_RATCHET_INFO, u64::MAX),
 				Some(u64::MAX)
 			);
 			assert_eq!(ratchet.receive_sequence(), u64::MAX);
-			assert_eq!(
-				ratchet.control.receive_cache_len() as usize,
-				distance as usize
-			);
-			assert!(ratchet.receive_slots_match_control());
+			assert_eq!(ratchet.receive_cache_len() as usize, distance as usize);
+			assert_receive_slots_aligned(&ratchet);
 			assert!(ratchet.recv_key(u64::MAX - distance + 1).is_some());
 			assert!(ratchet.recv_key(u64::MAX).is_some());
 
-			let control_at_exhaustion = ratchet.control;
+			let logical_at_exhaustion = logical_snapshot(&ratchet);
 			let state_at_exhaustion = ratchet.recv_state().as_slice().to_vec();
 			let slots_at_exhaustion = receive_slot_snapshot(&ratchet);
 			assert_eq!(ratchet.ratchet_recv(SYM_RATCHET_INFO), None);
-			assert_eq!(ratchet.control, control_at_exhaustion);
+			assert_eq!(logical_snapshot(&ratchet), logical_at_exhaustion);
 			assert_eq!(ratchet.recv_state().as_slice(), state_at_exhaustion);
 			assert_eq!(receive_slot_snapshot(&ratchet), slots_at_exhaustion);
 			assert_receive_slots_aligned(&ratchet);
@@ -1866,7 +1782,7 @@ mod tests {
 		);
 		ratchet.delete_recv_key(RATCHET_MAX_GAP);
 		assert_eq!(
-			ratchet.control.receive_cache_len() as usize,
+			ratchet.receive_cache_len() as usize,
 			RATCHET_MAX_GAP as usize - 1
 		);
 
@@ -1878,14 +1794,14 @@ mod tests {
 		assert_eq!(ratchet.receive_sequence(), RATCHET_MAX_GAP);
 		assert!(ratchet.recv_key(RATCHET_MAX_GAP + 1).is_none());
 		assert_eq!(
-			ratchet.control.receive_cache_len() as usize,
+			ratchet.receive_cache_len() as usize,
 			RATCHET_MAX_GAP as usize - 1
 		);
-		assert!(ratchet.receive_slots_match_control());
+		assert_receive_slots_aligned(&ratchet);
 	}
 
 	#[test]
-	fn production_adapter_keeps_logical_and_concrete_keys_in_lockstep() {
+	fn refined_kernel_keeps_logical_and_concrete_keys_in_lockstep() {
 		let mut ratchet = RatchetManager::default();
 		ratchet.init_ratchets(
 			&[0xB1; KDF_STATE_SIZE],
@@ -1894,18 +1810,18 @@ mod tests {
 		);
 
 		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
-		assert!(ratchet.receive_slots_match_control());
-		assert_eq!(ratchet.control.receive_cache_len(), 4);
+		assert_receive_slots_aligned(&ratchet);
+		assert_eq!(ratchet.receive_cache_len(), 4);
 		let last_key_before_swap = key_bytes(ratchet.recv_key(4).unwrap().key()).to_vec();
 
-		let before_retry = ratchet.control;
+		let before_retry = logical_snapshot(&ratchet);
 		assert_eq!(
 			ratchet.complete_recv_key(2, false),
 			verified_ratchet::ReceiveDisposition::Retained
 		);
-		assert_eq!(ratchet.control, before_retry);
+		assert_eq!(logical_snapshot(&ratchet), before_retry);
 		assert!(ratchet.recv_key(2).is_some());
-		assert!(ratchet.receive_slots_match_control());
+		assert_receive_slots_aligned(&ratchet);
 
 		assert_eq!(
 			ratchet.complete_recv_key(2, true),
@@ -1916,36 +1832,34 @@ mod tests {
 			key_bytes(ratchet.recv_key(4).unwrap().key()),
 			last_key_before_swap
 		);
-		assert_eq!(ratchet.control.receive_cache_len(), 3);
-		assert!(ratchet.receive_slots_match_control());
+		assert_eq!(ratchet.receive_cache_len(), 3);
+		assert_receive_slots_aligned(&ratchet);
 
-		let after_consumption = ratchet.control;
+		let after_consumption = logical_snapshot(&ratchet);
 		assert_eq!(
 			ratchet.complete_recv_key(2, true),
 			verified_ratchet::ReceiveDisposition::Missing
 		);
-		assert_eq!(ratchet.control, after_consumption);
-		assert!(ratchet.receive_slots_match_control());
+		assert_eq!(logical_snapshot(&ratchet), after_consumption);
+		assert_receive_slots_aligned(&ratchet);
 
 		let cloned = ratchet.clone();
-		assert_eq!(cloned.control, ratchet.control);
-		assert!(cloned.receive_slots_match_control());
+		assert_eq!(logical_snapshot(&cloned), logical_snapshot(&ratchet));
+		assert_receive_slots_aligned(&cloned);
 
 		ratchet.reset();
-		assert_eq!(ratchet.control, verified_ratchet::RatchetState::default());
-		assert!(ratchet.recv_slots.iter().all(Option::is_none));
-		assert!(ratchet.receive_slots_match_control());
+		assert_eq!(logical_snapshot(&ratchet), (0, 0, Vec::new()));
+		assert_receive_slots_aligned(&ratchet);
 
 		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 2), Some(2));
-		assert!(ratchet.recv_slots.iter().any(Option::is_some));
+		assert_eq!(ratchet.receive_cache_len(), 2);
 		assert!(ratchet.init_ratchets(
 			&[0xBB; KDF_STATE_SIZE],
 			SYM_RATCHET_INFO,
 			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 		));
-		assert_eq!(ratchet.control, verified_ratchet::RatchetState::default());
-		assert!(ratchet.recv_slots.iter().all(Option::is_none));
-		assert!(ratchet.receive_slots_match_control());
+		assert_eq!(logical_snapshot(&ratchet), (0, 0, Vec::new()));
+		assert_receive_slots_aligned(&ratchet);
 	}
 
 	#[test]
@@ -1958,11 +1872,11 @@ mod tests {
 		));
 
 		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
-		assert_eq!(ratchet.control.receive_cache_len(), 4);
+		assert_eq!(ratchet.receive_cache_len(), 4);
 		assert_receive_slots_aligned(&ratchet);
 		for sequence in 1..=4 {
-			let slot = verified_ratchet::lookup_receive_key(ratchet.control, sequence).unwrap();
-			assert!(ratchet.recv_slots[slot as usize].is_some());
+			let slot = receive_slot(&ratchet, sequence).unwrap();
+			assert_eq!(ratchet.receive_entry_at(slot).unwrap().0, sequence);
 		}
 	}
 
@@ -1976,8 +1890,8 @@ mod tests {
 		));
 		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
 
-		let target_slot = verified_ratchet::lookup_receive_key(ratchet.control, 2).unwrap();
-		let last_slot = verified_ratchet::lookup_receive_key(ratchet.control, 4).unwrap();
+		let target_slot = receive_slot(&ratchet, 2).unwrap();
+		let last_slot = receive_slot(&ratchet, 4).unwrap();
 		let last_material = ratchet.recv_key(4).unwrap().clone();
 		assert_ne!(target_slot, last_slot);
 
@@ -1985,19 +1899,13 @@ mod tests {
 			ratchet.complete_recv_key(2, true),
 			verified_ratchet::ReceiveDisposition::Consumed
 		);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(ratchet.control, 2),
-			None
-		);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(ratchet.control, 4),
-			Some(target_slot)
-		);
+		assert_eq!(receive_slot(&ratchet, 2), None);
+		assert_eq!(receive_slot(&ratchet, 4), Some(target_slot));
 		assert_key_material_eq(
-			ratchet.recv_slots[target_slot as usize].as_ref().unwrap(),
+			ratchet.receive_entry_at(target_slot).unwrap().1,
 			&last_material,
 		);
-		assert!(ratchet.recv_slots[last_slot as usize].is_none());
+		assert!(ratchet.receive_entry_at(last_slot).is_none());
 		assert_receive_slots_aligned(&ratchet);
 	}
 
@@ -2011,12 +1919,12 @@ mod tests {
 		));
 		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
 
-		let last_slot = verified_ratchet::lookup_receive_key(ratchet.control, 4).unwrap();
+		let last_slot = receive_slot(&ratchet, 4).unwrap();
 		let prefix = (1..=3)
 			.map(|sequence| {
 				(
 					sequence,
-					verified_ratchet::lookup_receive_key(ratchet.control, sequence).unwrap(),
+					receive_slot(&ratchet, sequence).unwrap(),
 					ratchet.recv_key(sequence).unwrap().clone(),
 				)
 			})
@@ -2026,16 +1934,10 @@ mod tests {
 			ratchet.complete_recv_key(4, true),
 			verified_ratchet::ReceiveDisposition::Consumed
 		);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(ratchet.control, 4),
-			None
-		);
-		assert!(ratchet.recv_slots[last_slot as usize].is_none());
+		assert_eq!(receive_slot(&ratchet, 4), None);
+		assert!(ratchet.receive_entry_at(last_slot).is_none());
 		for (sequence, slot, material) in prefix {
-			assert_eq!(
-				verified_ratchet::lookup_receive_key(ratchet.control, sequence),
-				Some(slot)
-			);
+			assert_eq!(receive_slot(&ratchet, sequence), Some(slot));
 			assert_key_material_eq(ratchet.recv_key(sequence).unwrap(), &material);
 		}
 		assert_receive_slots_aligned(&ratchet);
@@ -2051,7 +1953,7 @@ mod tests {
 		));
 		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
 
-		let admitted_control = ratchet.control;
+		let admitted_logical = logical_snapshot(&ratchet);
 		let admitted_chain = ratchet.recv_state().as_slice().to_vec();
 		let admitted_slots = receive_slot_snapshot(&ratchet);
 		for _ in 0..2 {
@@ -2059,11 +1961,11 @@ mod tests {
 				ratchet.complete_recv_key(4, false),
 				verified_ratchet::ReceiveDisposition::Retained
 			);
-			assert_eq!(ratchet.control, admitted_control);
+			assert_eq!(logical_snapshot(&ratchet), admitted_logical);
 			assert_eq!(ratchet.recv_state().as_slice(), admitted_chain);
 			assert_eq!(receive_slot_snapshot(&ratchet), admitted_slots);
 			assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
-			assert_eq!(ratchet.control, admitted_control);
+			assert_eq!(logical_snapshot(&ratchet), admitted_logical);
 			assert_eq!(ratchet.recv_state().as_slice(), admitted_chain);
 			assert_eq!(receive_slot_snapshot(&ratchet), admitted_slots);
 		}
@@ -2084,19 +1986,16 @@ mod tests {
 			verified_ratchet::ReceiveDisposition::Consumed
 		);
 
-		let consumed_control = ratchet.control;
+		let consumed_logical = logical_snapshot(&ratchet);
 		let consumed_chain = ratchet.recv_state().as_slice().to_vec();
 		let consumed_slots = receive_slot_snapshot(&ratchet);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(ratchet.control, 2),
-			None
-		);
+		assert_eq!(receive_slot(&ratchet, 2), None);
 		assert!(ratchet.recv_key(2).is_none());
 		assert_eq!(
 			ratchet.complete_recv_key(2, true),
 			verified_ratchet::ReceiveDisposition::Missing
 		);
-		assert_eq!(ratchet.control, consumed_control);
+		assert_eq!(logical_snapshot(&ratchet), consumed_logical);
 		assert_eq!(ratchet.recv_state().as_slice(), consumed_chain);
 		assert_eq!(receive_slot_snapshot(&ratchet), consumed_slots);
 		assert_receive_slots_aligned(&ratchet);
@@ -2117,47 +2016,37 @@ mod tests {
 		);
 		assert_receive_slots_aligned(&ratchet);
 
-		let full_control = ratchet.control;
+		let full_logical = logical_snapshot(&ratchet);
 		let full_chain = ratchet.recv_state().as_slice().to_vec();
 		let full_slots = receive_slot_snapshot(&ratchet);
 		assert_eq!(
 			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, capacity + 1),
 			None
 		);
-		assert_eq!(ratchet.control, full_control);
+		assert_eq!(logical_snapshot(&ratchet), full_logical);
 		assert_eq!(ratchet.recv_state().as_slice(), full_chain);
 		assert_eq!(receive_slot_snapshot(&ratchet), full_slots);
 
-		let target_slot = verified_ratchet::lookup_receive_key(ratchet.control, 2).unwrap();
-		let old_last_slot =
-			verified_ratchet::lookup_receive_key(ratchet.control, capacity).unwrap();
+		let target_slot = receive_slot(&ratchet, 2).unwrap();
+		let old_last_slot = receive_slot(&ratchet, capacity).unwrap();
 		let old_last_material = ratchet.recv_key(capacity).unwrap().clone();
 		assert_ne!(target_slot, old_last_slot);
 		assert_eq!(
 			ratchet.complete_recv_key(2, true),
 			verified_ratchet::ReceiveDisposition::Consumed
 		);
-		assert_eq!(
-			ratchet.recv_slots.iter().flatten().count(),
-			capacity as usize - 1
-		);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(ratchet.control, capacity),
-			Some(target_slot)
-		);
+		assert_eq!(ratchet.receive_cache_len(), capacity as u8 - 1);
+		assert_eq!(receive_slot(&ratchet, capacity), Some(target_slot));
 		assert_key_material_eq(ratchet.recv_key(capacity).unwrap(), &old_last_material);
-		assert!(ratchet.recv_slots[old_last_slot as usize].is_none());
+		assert!(ratchet.receive_entry_at(old_last_slot).is_none());
 
 		let next_sequence = capacity + 1;
 		assert_eq!(
 			ratchet.ratchet_recv_until(SYM_RATCHET_INFO, next_sequence),
 			Some(next_sequence)
 		);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(ratchet.control, next_sequence),
-			Some(old_last_slot)
-		);
-		assert!(ratchet.recv_slots[old_last_slot as usize].is_some());
+		assert_eq!(receive_slot(&ratchet, next_sequence), Some(old_last_slot));
+		assert!(ratchet.receive_entry_at(old_last_slot).is_some());
 		assert_receive_slots_aligned(&ratchet);
 	}
 
@@ -2172,7 +2061,7 @@ mod tests {
 		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
 
 		let cloned = ratchet.clone();
-		let cloned_control = cloned.control;
+		let cloned_logical = logical_snapshot(&cloned);
 		let cloned_chain = cloned.recv_state().as_slice().to_vec();
 		let cloned_slots = receive_slot_snapshot(&cloned);
 		assert_eq!(
@@ -2180,31 +2069,19 @@ mod tests {
 			verified_ratchet::ReceiveDisposition::Consumed
 		);
 
-		assert_eq!(cloned.control, cloned_control);
+		assert_eq!(logical_snapshot(&cloned), cloned_logical);
 		assert_eq!(cloned.recv_state().as_slice(), cloned_chain);
 		assert_eq!(receive_slot_snapshot(&cloned), cloned_slots);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(cloned.control, 2),
-			Some(1)
-		);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(cloned.control, 4),
-			Some(3)
-		);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(ratchet.control, 2),
-			None
-		);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(ratchet.control, 4),
-			Some(1)
-		);
+		assert_eq!(receive_slot(&cloned, 2), Some(1));
+		assert_eq!(receive_slot(&cloned, 4), Some(3));
+		assert_eq!(receive_slot(&ratchet, 2), None);
+		assert_eq!(receive_slot(&ratchet, 4), Some(1));
 		assert_receive_slots_aligned(&cloned);
 		assert_receive_slots_aligned(&ratchet);
 	}
 
 	#[test]
-	fn production_adapter_finishes_stack_local_send_capabilities() {
+	fn production_send_advances_the_refined_kernel_once() {
 		let mut ratchet = RatchetManager::default();
 		ratchet.init_ratchets(
 			&[0xB2; KDF_STATE_SIZE],
@@ -2219,43 +2096,21 @@ mod tests {
 	}
 
 	#[test]
-	fn adapter_invariant_checks_reject_inactive_receive_material() {
-		let mut receive_inconsistent = RatchetManager::default();
-		receive_inconsistent.recv_slots[0] = Some(KeyMaterial {
-			key: [0xA1; AEAD_KEY_LEN].into(),
-			nonce: [0xA2; AEAD_NONCE_LEN].into(),
-		});
-		assert!(!receive_inconsistent.receive_slots_match_control());
-		let inactive_error = serde_json::to_string(&receive_inconsistent).err().unwrap();
-		assert!(
-			inactive_error
-				.to_string()
-				.contains("inactive receive slot contains concrete key material")
-		);
-	}
-
-	#[test]
-	fn serialization_rejects_missing_active_receive_material() {
-		let mut active_inconsistent = RatchetManager::default();
-		assert!(active_inconsistent.init_ratchets(
+	fn refined_receive_state_serializes_only_paired_entries() {
+		let mut ratchet = RatchetManager::default();
+		assert!(ratchet.init_ratchets(
 			&[0xBA; KDF_STATE_SIZE],
 			SYM_RATCHET_INFO,
 			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 		));
-		assert_eq!(
-			active_inconsistent.ratchet_recv_until(SYM_RATCHET_INFO, 2),
-			Some(2)
-		);
-		let active_slot =
-			verified_ratchet::lookup_receive_key(active_inconsistent.control, 2).unwrap();
-		active_inconsistent.recv_slots[active_slot as usize] = None;
-		assert!(!active_inconsistent.receive_slots_match_control());
-		let active_error = serde_json::to_string(&active_inconsistent).err().unwrap();
-		assert!(
-			active_error
-				.to_string()
-				.contains("verified receive slot has no concrete key")
-		);
+		assert_eq!(ratchet.ratchet_recv_until(SYM_RATCHET_INFO, 2), Some(2));
+		assert_receive_slots_aligned(&ratchet);
+
+		let serialized = serde_json::to_value(&ratchet).unwrap();
+		let recv_past = serialized["recv_past"].as_object().unwrap();
+		assert_eq!(recv_past.len(), 2);
+		assert!(recv_past.contains_key("1"));
+		assert!(recv_past.contains_key("2"));
 	}
 
 	#[test]

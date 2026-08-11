@@ -2,7 +2,7 @@
 
 use super::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager, RecvChain,
-	SendChain, empty_receive_key_slots, roles, systems, verified_ratchet,
+	SendChain, roles, systems, verified_ratchet,
 };
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, decode_sign};
@@ -252,33 +252,26 @@ impl<'de> Deserialize<'de> for RatchetManager {
 		let data = RatchetManagerData::deserialize(deserializer)?;
 		let mut receive_entries = data.recv_past.into_iter().collect::<Vec<_>>();
 		receive_entries.sort_unstable_by_key(|(sequence, _)| *sequence);
-		let mut restore = verified_ratchet::start_restore(data.send_ctr, data.recv_ctr);
-		let mut recv_slots = empty_receive_key_slots();
+		let mut restore = verified_ratchet::start_refined_restore(
+			data.send_ctr,
+			data.recv_ctr,
+			data.send_key,
+			data.recv_key,
+		);
 		for (sequence, directed) in receive_entries {
-			let step = verified_ratchet::restore_receive_key_with_slot(restore, sequence)
-				.ok_or_else(|| {
-					D::Error::custom(
-						"recv_past exceeds the verified cache capacity or contains an invalid sequence",
-					)
-				})?;
-			let slot = step.slot as usize;
-			if slot >= recv_slots.len() || recv_slots[slot].is_some() {
+			if !verified_ratchet::refined_restore_receive_key(
+				&mut restore,
+				sequence,
+				directed.material,
+			) {
 				return Err(D::Error::custom(
-					"verified receive restoration returned an invalid concrete slot",
+					"recv_past exceeds the refined cache capacity or contains an invalid sequence",
 				));
 			}
-			recv_slots[slot] = Some(directed.material);
-			restore = step.restore;
 		}
-		let control = verified_ratchet::finish_restore(restore);
-
 		let manager = Self {
-			send_key: data.send_key,
-			recv_key: data.recv_key,
-			recv_slots,
-			control,
+			refined: verified_ratchet::finish_refined_restore(restore),
 		};
-		debug_assert!(manager.receive_slots_match_control());
 		Ok(manager)
 	}
 }
@@ -440,40 +433,33 @@ mod tests {
 		assert_eq!(left.nonce.as_bytes(), right.nonce.as_bytes());
 	}
 
+	fn receive_slot(manager: &RatchetManager, sequence: u64) -> Option<u8> {
+		(0..manager.receive_cache_len()).find(|slot| {
+			manager
+				.receive_entry_at(*slot)
+				.is_some_and(|entry| entry.0 == sequence)
+		})
+	}
+
 	fn assert_manager_eq(left: &RatchetManager, right: &RatchetManager) {
-		assert_eq!(
-			left.send_key.state.as_slice(),
-			right.send_key.state.as_slice()
-		);
-		assert_eq!(
-			left.recv_key.state.as_slice(),
-			right.recv_key.state.as_slice()
-		);
+		assert_eq!(left.send_state().as_slice(), right.send_state().as_slice());
+		assert_eq!(left.recv_state().as_slice(), right.recv_state().as_slice());
 		assert_eq!(left.send_sequence(), right.send_sequence());
 		assert_eq!(left.receive_sequence(), right.receive_sequence());
-		assert_eq!(
-			left.control.receive_cache_len(),
-			right.control.receive_cache_len()
-		);
-		assert!(left.receive_slots_match_control());
-		assert!(right.receive_slots_match_control());
-		let mut left_logical = (0..left.control.receive_cache_len())
-			.map(|slot| left.control.receive_key_at(slot).unwrap())
+		assert_eq!(left.receive_cache_len(), right.receive_cache_len());
+		let mut left_logical = (0..left.receive_cache_len())
+			.map(|slot| left.receive_entry_at(slot).unwrap().0)
 			.collect::<Vec<_>>();
-		let mut right_logical = (0..right.control.receive_cache_len())
-			.map(|slot| right.control.receive_key_at(slot).unwrap())
+		let mut right_logical = (0..right.receive_cache_len())
+			.map(|slot| right.receive_entry_at(slot).unwrap().0)
 			.collect::<Vec<_>>();
 		left_logical.sort_unstable();
 		right_logical.sort_unstable();
 		assert_eq!(left_logical, right_logical);
 
-		for slot in 0..left.control.receive_cache_len() {
-			let sequence = left.control.receive_key_at(slot).unwrap();
-			let right_slot = verified_ratchet::lookup_receive_key(right.control, sequence).unwrap();
-			assert_key_material_eq(
-				left.recv_slots[slot as usize].as_ref().unwrap(),
-				right.recv_slots[right_slot as usize].as_ref().unwrap(),
-			);
+		for slot in 0..left.receive_cache_len() {
+			let (sequence, material) = left.receive_entry_at(slot).unwrap();
+			assert_key_material_eq(material, right.recv_key(sequence).unwrap());
 		}
 	}
 
@@ -620,17 +606,14 @@ mod tests {
 			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
 		));
 		assert_eq!(manager.ratchet_recv_until(SYM_RATCHET_INFO, 4), Some(4));
-		let target_slot = verified_ratchet::lookup_receive_key(manager.control, 2).unwrap();
-		let old_last_slot = verified_ratchet::lookup_receive_key(manager.control, 4).unwrap();
+		let target_slot = receive_slot(&manager, 2).unwrap();
+		let old_last_slot = receive_slot(&manager, 4).unwrap();
 		assert_ne!(target_slot, old_last_slot);
 		assert_eq!(
 			manager.complete_recv_key(2, true),
 			verified_ratchet::ReceiveDisposition::Consumed
 		);
-		assert_eq!(
-			verified_ratchet::lookup_receive_key(manager.control, 4),
-			Some(target_slot)
-		);
+		assert_eq!(receive_slot(&manager, 4), Some(target_slot));
 
 		let serialized = serde_json::to_value(&manager).unwrap();
 		let receive_map = serialized["recv_past"].as_object().unwrap();
@@ -640,7 +623,7 @@ mod tests {
 		let restored: RatchetManager = serde_json::from_value(serialized).unwrap();
 
 		assert_manager_eq(&manager, &restored);
-		let restored_last_slot = verified_ratchet::lookup_receive_key(restored.control, 4).unwrap();
+		let restored_last_slot = receive_slot(&restored, 4).unwrap();
 		assert_ne!(restored_last_slot, target_slot);
 		for sequence in [1, 3, 4] {
 			assert_key_material_eq(
@@ -908,10 +891,12 @@ mod tests {
 
 		let restored: RatchetManager = serde_json::from_value(at_capacity.clone()).unwrap();
 		assert_eq!(
-			restored.control.receive_cache_len() as usize,
+			restored.receive_cache_len() as usize,
 			verified_ratchet::RECEIVE_CACHE_CAPACITY
 		);
-		assert!(restored.receive_slots_match_control());
+		for slot in 0..restored.receive_cache_len() {
+			assert!(restored.receive_entry_at(slot).is_some());
+		}
 		for sequence in 1..=verified_ratchet::RECEIVE_CACHE_CAPACITY as u64 {
 			assert!(restored.recv_key(sequence).is_some());
 		}
