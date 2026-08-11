@@ -2,7 +2,7 @@
 
 use super::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KdfState, KeyMaterial, Ratchet, RatchetManager,
-	roles, systems, verified_ratchet,
+	ReceiveKeySlots, roles, systems, verified_ratchet,
 };
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, encode_sign};
@@ -179,24 +179,39 @@ where
 	}
 }
 
-struct ReceiveKeyArrayRef<'a> {
-	keys: &'a [Option<KeyMaterial>; verified_ratchet::RECEIVE_CACHE_CAPACITY],
+struct DirectionalReceiveKeySlotsRef<'a, KeyRole, NonceRole> {
+	slots: &'a ReceiveKeySlots,
 	control: &'a verified_ratchet::RatchetState,
+	_roles: PhantomData<(KeyRole, NonceRole)>,
 }
 
-impl Serialize for ReceiveKeyArrayRef<'_> {
+impl<'a, KeyRole, NonceRole> DirectionalReceiveKeySlotsRef<'a, KeyRole, NonceRole> {
+	fn new(slots: &'a ReceiveKeySlots, control: &'a verified_ratchet::RatchetState) -> Self {
+		Self {
+			slots,
+			control,
+			_roles: PhantomData,
+		}
+	}
+}
+
+impl<KeyRole, NonceRole> Serialize for DirectionalReceiveKeySlotsRef<'_, KeyRole, NonceRole>
+where
+	KeyRole: roles::Identified,
+	NonceRole: roles::Identified,
+{
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,
 	{
 		let len = self.control.receive_cache_len();
 		let active_len = len as usize;
-		if active_len > self.keys.len() {
+		if active_len > self.slots.len() {
 			return Err(S::Error::custom(
 				"logical receive cache exceeds concrete slot capacity",
 			));
 		}
-		if self.keys[active_len..].iter().any(Option::is_some) {
+		if self.slots[active_len..].iter().any(Option::is_some) {
 			return Err(S::Error::custom(
 				"inactive receive slot contains concrete key material",
 			));
@@ -206,14 +221,12 @@ impl Serialize for ReceiveKeyArrayRef<'_> {
 			let sequence = self.control.receive_key_at(slot).ok_or_else(|| {
 				S::Error::custom("verified receive cache contains an invalid slot")
 			})?;
-			let material = self.keys[slot as usize]
+			let material = self.slots[slot as usize]
 				.as_ref()
 				.ok_or_else(|| S::Error::custom("verified receive slot has no concrete key"))?;
 			map.serialize_entry(
 				&sequence,
-				&DirectionalKeyMaterialRef::<roles::EncryptionRecvKey, roles::RecvNonce>::new(
-					material,
-				),
+				&DirectionalKeyMaterialRef::<KeyRole, NonceRole>::new(material),
 			)?;
 		}
 		map.end()
@@ -228,10 +241,11 @@ impl Serialize for RatchetManager {
 		let send_past = DirectionalKeyMapRef::<roles::EncryptionSendKey, roles::SendNonce>::new(
 			&self.send_past,
 		);
-		let recv_past = ReceiveKeyArrayRef {
-			keys: &self.recv_past,
-			control: &self.control,
-		};
+		let recv_past =
+			DirectionalReceiveKeySlotsRef::<roles::EncryptionRecvKey, roles::RecvNonce>::new(
+				&self.recv_slots,
+				&self.control,
+			);
 		let mut state = serializer.serialize_struct("RatchetManager", 6)?;
 		state.serialize_field("send_key", &self.send_key)?;
 		state.serialize_field("recv_key", &self.recv_key)?;

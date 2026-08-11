@@ -532,10 +532,6 @@ mod tests {
 		restore_receive_key_with_slot, start_restore,
 	};
 
-	fn find_receive_key(state: &RatchetState, sequence: u64) -> Option<u8> {
-		(0..state.receive_cache_len()).find(|&slot| state.receive_key_at(slot) == Some(sequence))
-	}
-
 	fn execute_receive_plan(mut state: RatchetState, target: u64) -> RatchetState {
 		let plan = plan_receive_until(state, target);
 		assert_eq!(plan.sequence, Some(target));
@@ -620,7 +616,7 @@ mod tests {
 		assert_eq!(rejected.state, state);
 		assert_eq!(rejected.sequence, None);
 
-		let slot = find_receive_key(&state, RATCHET_MAX_GAP).unwrap();
+		let slot = lookup_receive_key(state, RATCHET_MAX_GAP).unwrap();
 		state = finish_receive(state, RATCHET_MAX_GAP, slot, true).state;
 		assert_eq!(state.receive_cache_len(), RATCHET_MAX_GAP as u8 - 1);
 		assert_eq!(
@@ -630,20 +626,33 @@ mod tests {
 	}
 
 	#[test]
-	fn receive_cache_lookup_rejects_logical_and_physical_boundaries() {
+	fn receive_key_at_rejects_logical_boundary() {
 		let state = execute_receive_plan(RatchetState::default(), 3);
 		assert_eq!(state.receive_key_at(0), Some(1));
 		assert_eq!(state.receive_key_at(2), Some(3));
 		assert_eq!(state.receive_key_at(3), None);
+	}
 
+	#[test]
+	fn verified_receive_lookup_is_total_when_logical_length_exceeds_capacity() {
+		let entries = core::array::from_fn(|slot| slot as u64 + 1);
 		let invalid = RatchetState {
 			send_sequence: 0,
-			receive_sequence: 0,
+			receive_sequence: RECEIVE_CACHE_CAPACITY as u64 + 1,
 			receive_cache: SequenceCache {
-				entries: [0; RECEIVE_CACHE_CAPACITY],
+				entries,
 				len: RECEIVE_CACHE_CAPACITY as u8 + 1,
 			},
 		};
+
+		assert_eq!(
+			lookup_receive_key(invalid, RECEIVE_CACHE_CAPACITY as u64),
+			Some(RECEIVE_CACHE_CAPACITY as u8 - 1)
+		);
+		assert_eq!(
+			lookup_receive_key(invalid, RECEIVE_CACHE_CAPACITY as u64 + 1),
+			None
+		);
 		assert_eq!(invalid.receive_key_at(RECEIVE_CACHE_CAPACITY as u8), None);
 	}
 
@@ -653,7 +662,7 @@ mod tests {
 		for sequence in 1..=4 {
 			assert_eq!(
 				lookup_receive_key(state, sequence),
-				find_receive_key(&state, sequence)
+				Some(sequence as u8 - 1)
 			);
 		}
 		assert_eq!(lookup_receive_key(state, 0), None);
@@ -686,7 +695,7 @@ mod tests {
 	#[test]
 	fn authentication_failure_retains_the_exact_key_for_retry() {
 		let state = execute_receive_plan(RatchetState::default(), 4);
-		let slot = find_receive_key(&state, 4).unwrap();
+		let slot = lookup_receive_key(state, 4).unwrap();
 		let failed = finish_receive(state, 4, slot, false);
 
 		assert_eq!(failed.disposition, ReceiveDisposition::Retained);
@@ -706,15 +715,15 @@ mod tests {
 	#[test]
 	fn successful_receive_consumes_only_target_and_replay_is_rejected() {
 		let state = execute_receive_plan(RatchetState::default(), 4);
-		let target_slot = find_receive_key(&state, 3).unwrap();
+		let target_slot = lookup_receive_key(state, 3).unwrap();
 		let consumed = finish_receive(state, 3, target_slot, true);
 
 		assert_eq!(consumed.disposition, ReceiveDisposition::Consumed);
 		assert_eq!(consumed.state.receive_cache_len(), 3);
-		assert_eq!(find_receive_key(&consumed.state, 3), None);
-		assert!(find_receive_key(&consumed.state, 1).is_some());
-		assert!(find_receive_key(&consumed.state, 2).is_some());
-		assert!(find_receive_key(&consumed.state, 4).is_some());
+		assert_eq!(lookup_receive_key(consumed.state, 3), None);
+		assert!(lookup_receive_key(consumed.state, 1).is_some());
+		assert!(lookup_receive_key(consumed.state, 2).is_some());
+		assert!(lookup_receive_key(consumed.state, 4).is_some());
 
 		let replay = finish_receive(consumed.state, 3, target_slot, true);
 		assert_eq!(replay.disposition, ReceiveDisposition::Missing);
@@ -781,19 +790,19 @@ mod tests {
 	fn old_skipped_key_does_not_turn_capacity_into_a_sliding_window() {
 		let mut state = execute_receive_plan(RatchetState::default(), RATCHET_MAX_GAP);
 		for sequence in 2..=RATCHET_MAX_GAP {
-			let slot = find_receive_key(&state, sequence).unwrap();
+			let slot = lookup_receive_key(state, sequence).unwrap();
 			state = finish_receive(state, sequence, slot, true).state;
 		}
 
 		for target in RATCHET_MAX_GAP + 1..=200 {
 			state = execute_receive_plan(state, target);
-			let slot = find_receive_key(&state, target).unwrap();
+			let slot = lookup_receive_key(state, target).unwrap();
 			state = finish_receive(state, target, slot, true).state;
 		}
 
 		assert_eq!(state.receive_sequence(), 200);
 		assert_eq!(state.receive_cache_len(), 1);
-		assert!(find_receive_key(&state, 1).is_some());
+		assert!(lookup_receive_key(state, 1).is_some());
 	}
 
 	#[test]

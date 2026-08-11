@@ -139,7 +139,7 @@ From this directory, run:
 make verify
 ```
 
-The target enters the repository's locked Nix proof shell, checks the exact rustc, Cargo, hax, F*, Z3, and ProVerif identities, regenerates the F* commitment, ratchet, and PQXDH modules plus the ProVerif extraction, checks all three F* lemma modules without `--lax`, checks the complete reviewed trust-boundary inventory, and runs the CTX differential, baseline, reachability, failed-receive, and compromise models.
+The target enters the repository's locked Nix proof shell, checks the exact rustc, Cargo, hax, F*, Z3, and ProVerif identities, regenerates the F* commitment, ratchet, and PQXDH modules plus the ProVerif extraction, checks all three F* lemma modules without `--lax`, and runs the CTX differential, baseline, reachability, failed-receive, and compromise models.
 A policy gate rejects `assume` or `admit` in repository-owned F* modules and
 lax/admitted-query checker flags. The result gate rejects timeouts, missing
 queries, unexpected classifications, and every unproved or inconclusive

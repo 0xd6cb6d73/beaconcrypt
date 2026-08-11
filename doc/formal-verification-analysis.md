@@ -264,8 +264,8 @@ These facts prove the control algorithm and its physical logical-array decisions
 
 ```text
 for n = control.receive_cache_len():
-    slot < n  => recv_past[slot] contains the concrete key and nonce for the logical sequence in slot
-    slot >= n => recv_past[slot] is empty
+    slot < n  => recv_slots[slot] contains the concrete key and nonce for the logical sequence in slot
+    slot >= n => recv_slots[slot] is empty
 ```
 
 The core-returned append, lookup, removal, and restoration slots eliminate independent adapter decisions about where a logical sequence belongs. The proof still cannot inspect `KeyMaterial`, so production must perform exactly one correct HKDF step after each successful logical advancement, store its output in the returned slot, use the current lookup result for the intended sequence, apply the exact returned swap/take before publishing the new logical state, and place persisted material in the returned restoration slot. Serialization and deserialization, authentication-result provenance, crash atomicity, physical erasure, and the compiled array operations remain outside F*.
@@ -864,7 +864,7 @@ The result gate requires exactly:
 - all 13 private failed-receive queries to be true (four secrecy and nine state/origin correspondences), with all eleven failed-receive reachability negations false (nine receive-state phases plus malicious-registration commit and malicious-canary recovery); and
 - in the seven-query failed-receive compromise run, consumed-past secrecy and both compromise-order correspondences to be true, skipped/target/future secrecy and honest-origin correspondence to be false, and both compromise and later-honest-delivery reachability negations to be false.
 
-During preparation of this updated report on 10 August 2026, the command completed successfully with all three regenerated F* modules and the ProVerif extraction matching their tracked reviewed outputs, including the receive lookup, detailed removal, and restoration-slot extensions. All F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the trust-boundary inventory matched its recorded baseline.
+During final receive-slot conformance verification on 11 August 2026, `cargo test --locked -p beaconcrypt-protocol-core`, `cargo test --locked`, `make -C crates/protocol-core verify`, `make -C crates/protocol-core check-inventory`, and `make -C crates/protocol-core check-generated` completed successfully against the repository state represented by this report. All three generated F* modules and the ProVerif extraction matched their tracked reviewed outputs, all F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the refreshed trust-boundary inventory matched the reviewed adapter, core, and proof inputs.
 
 The checker rejects missing or substituted queries, timeouts, unknown or
 inconclusive results, and any changed classification

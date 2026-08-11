@@ -34,13 +34,13 @@ Concrete cryptographic material stays in the production adapter:
 
 - `send_key` and `recv_key` hold the opaque HKDF chain bytes;
 - `send_past` holds concrete AEAD send keys and nonces;
-- `recv_past` is a fixed array holding concrete AEAD receive keys and nonces in the physical slots assigned by the core;
+- `recv_slots` is a fixed array holding concrete AEAD receive keys and nonces in the physical slots assigned by the core;
 - `send_capabilities` pairs each pending concrete send key with the logical `SendKey` returned by the core.
 
 The principal receive refinement invariant is:
 
 ```text
-recv_past[slot].is_some() == (slot < control.receive_cache_len())
+recv_slots[slot].is_some() == (slot < control.receive_cache_len())
 ```
 
 The adapter checks this invariant in debug builds after construction and every receive-cache mutation. It also checks that pending concrete send keys and logical send capabilities have equal sequence sets.

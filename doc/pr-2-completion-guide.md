@@ -26,7 +26,7 @@ finish_receive_with_removal ────────────────► 
 restore_receive_key_with_slot ──────────────► restore slot
                                                    │
                                                    ▼
-                 production recv_past/recv_slots array
+                     production recv_slots array
                      [Option<KeyMaterial>; 50]
 ```
 
@@ -43,7 +43,9 @@ The following work in PR #2 is directionally correct and should be retained.
 The production receive cache is now:
 
 ```rust
-recv_past: [Option<KeyMaterial>; verified_ratchet::RECEIVE_CACHE_CAPACITY]
+type ReceiveKeySlots = [Option<KeyMaterial>; verified_ratchet::RECEIVE_CACHE_CAPACITY];
+
+recv_slots: ReceiveKeySlots
 ```
 
 instead of:
@@ -54,7 +56,7 @@ HashMap<u64, KeyMaterial>
 
 Keep the fixed-capacity array representation.
 
-The private field name `recv_past` is an acceptable implementation deviation from the earlier proposed name `recv_slots`. Renaming it is **not required** for correctness or proof relevance. Do not create churn solely to rename this private field. In this guide, `recv_past` means the fixed array currently in PR #2.
+Use `empty_receive_key_slots()` for construction, initialization, reset, and persistence restoration. The `recv_slots` name distinguishes the private physical array from the externally persisted `recv_past` sequence map.
 
 ### 2.2 Allocation into `ReceiveAdvance::slot`
 
@@ -73,8 +75,8 @@ PR #2 keeps active concrete keys packed in the prefix of the array and mirrors t
 ```text
 for n = control.receive_cache_len():
 
-slot < n   => recv_past[slot].is_some()
-slot >= n  => recv_past[slot].is_none()
+slot < n   => recv_slots[slot].is_some()
+slot >= n  => recv_slots[slot].is_none()
 ```
 
 The missing work is to make the slot decisions themselves verified, not to replace this representation.
@@ -302,8 +304,8 @@ let finished = verified_ratchet::finish_receive_with_removal(
 On `Consumed`, require `finished.removal == Some(...)` and apply exactly that operation:
 
 ```rust
-self.recv_past.swap(target_index, last_index);
-let removed = self.recv_past[last_index].take();
+self.recv_slots.swap(target_index, last_index);
+let removed = self.recv_slots[last_index].take();
 ```
 
 Then publish:
@@ -436,7 +438,7 @@ Use a structure equivalent to:
 let mut entries = data.recv_past.into_iter().collect::<Vec<_>>();
 entries.sort_unstable_by_key(|(sequence, _)| *sequence);
 
-let mut recv_past = std::array::from_fn(|_| None);
+let mut recv_slots = empty_receive_key_slots();
 let mut restore = verified_ratchet::start_restore(data.send_ctr, data.recv_ctr);
 
 for (sequence, directed) in entries {
@@ -449,13 +451,13 @@ for (sequence, directed) in entries {
     ))?;
 
     let slot = step.slot as usize;
-    if slot >= recv_past.len() || recv_past[slot].is_some() {
+    if slot >= recv_slots.len() || recv_slots[slot].is_some() {
         return Err(D::Error::custom(
             "verified receive restoration returned an invalid concrete slot",
         ));
     }
 
-    recv_past[slot] = Some(directed.material);
+    recv_slots[slot] = Some(directed.material);
     restore = step.restore;
 }
 
@@ -483,13 +485,13 @@ Before serializing map entries:
 ```rust
 let len = self.control.receive_cache_len() as usize;
 
-if len > self.keys.len() {
+if len > self.slots.len() {
     return Err(S::Error::custom(
         "logical receive cache exceeds concrete slot capacity",
     ));
 }
 
-if self.keys[len..].iter().any(Option::is_some) {
+if self.slots[len..].iter().any(Option::is_some) {
     return Err(S::Error::custom(
         "inactive receive slot contains concrete key material",
     ));
@@ -782,7 +784,7 @@ Add the inactive-tail check described in Section 3.6 and a regression test.
 
 ### Current PR
 
-Several former `recv_past.len()` assertions were converted to `control.receive_cache_len()` because the new array always has physical length 50.
+Several former map-length assertions were converted to `control.receive_cache_len()` because the new receive-slot array always has physical length 50.
 
 ### Required correction
 
@@ -790,10 +792,10 @@ When the purpose of a test is concrete/logical correspondence, assert concrete o
 
 ```rust
 assert_eq!(
-    ratchet.recv_past.iter().flatten().count(),
+    ratchet.recv_slots.iter().flatten().count(),
     expected,
 );
-assert!(ratchet.receive_cache_matches_control());
+assert!(ratchet.receive_slots_match_control());
 ```
 
 Do not use logical length alone as evidence that concrete key storage is correct.
@@ -832,11 +834,9 @@ Do not claim these properties in documentation before they are implemented and c
 
 ---
 
-## 5.8 Acceptable: private field remains named `recv_past`
+## 5.8 Required: distinguish private slots from the persisted map
 
-The earlier plan used `recv_slots` as the private field name. PR #2 retains `recv_past` while changing its type to a fixed array.
-
-This is not proof-relevant. Leave it alone unless a rename materially improves readability while touching the same code. Do not delay the proof work for a naming cleanup.
+Use the `ReceiveKeySlots` alias, `empty_receive_key_slots()` constructor, `recv_slots` private field, and `receive_slots_match_control()` invariant helper. The `recv_past` name remains reserved for the compatible external sequence-keyed persistence field.
 
 ---
 
@@ -845,8 +845,8 @@ This is not proof-relevant. Leave it alone unless a rename materially improves r
 PR #2 currently does:
 
 ```rust
-let removed = recv_past[target].take();
-recv_past[target] = recv_past[last].take();
+let removed = recv_slots[target].take();
+recv_slots[target] = recv_slots[last].take();
 ```
 
 For the current packed layout, this is extensionally equivalent to `swap(target, last); take(last)`.
@@ -854,8 +854,8 @@ For the current packed layout, this is extensionally equivalent to `swap(target,
 Once `ReceiveRemoval` is added, prefer the latter form because it visibly mirrors the returned target/last operation:
 
 ```rust
-recv_past.swap(target, last);
-let removed = recv_past[last].take();
+recv_slots.swap(target, last);
+let removed = recv_slots[last].take();
 ```
 
 This is a clarity/correspondence requirement, not a cryptographic change.
@@ -941,7 +941,7 @@ After successful consumption:
 Fill all 50 slots and assert:
 
 ```rust
-recv_past.iter().flatten().count() == RECEIVE_CACHE_CAPACITY
+recv_slots.iter().flatten().count() == RECEIVE_CACHE_CAPACITY
 ```
 
 Then:

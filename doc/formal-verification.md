@@ -430,7 +430,7 @@ The detailed implementation record is in
 The production crate now depends on `beaconcrypt-protocol-core`, and `RatchetManager` delegates its counter, receive-admission, key-lifecycle, sequence-to-slot lookup, removal planning, and restoration-slot decisions to the extracted state machine. The core `RatchetState` is authoritative: the adapter derives one concrete KDF output for each admitted core step, stores it in the returned append slot, and maintains the refinement invariant
 
 ```text
-recv_past[slot].is_some() == (slot < core_state.receive_cache_len())
+recv_slots[slot].is_some() == (slot < core_state.receive_cache_len())
 ```
 
 For an existing sequence, production obtains the current physical slot only through `lookup_receive_key`; it does not maintain a second index or scan the logical cache itself. Authentication failure returns no removal and retains the same logical and concrete receive key. Successful authentication returns the exact target/old-last plan from `finish_receive_with_removal`, and production applies that swap/take before publishing the returned core state. Each allocated logical send capability accompanies its concrete message key until the adapter consumes it with `finish_send`, including encryption-failure paths.

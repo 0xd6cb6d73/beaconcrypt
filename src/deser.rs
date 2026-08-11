@@ -2,7 +2,7 @@
 
 use super::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager, RecvChain,
-	SendChain, roles, systems, verified_ratchet,
+	SendChain, empty_receive_key_slots, roles, systems, verified_ratchet,
 };
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, decode_sign};
@@ -274,7 +274,7 @@ impl<'de> Deserialize<'de> for RatchetManager {
 		let mut receive_entries = data.recv_past.into_iter().collect::<Vec<_>>();
 		receive_entries.sort_unstable_by_key(|(sequence, _)| *sequence);
 		let mut restore = verified_ratchet::start_restore(data.send_ctr, data.recv_ctr);
-		let mut recv_past = std::array::from_fn(|_| None);
+		let mut recv_slots = empty_receive_key_slots();
 		for (sequence, directed) in receive_entries {
 			let step = verified_ratchet::restore_receive_key_with_slot(restore, sequence)
 				.ok_or_else(|| {
@@ -283,12 +283,12 @@ impl<'de> Deserialize<'de> for RatchetManager {
 					)
 				})?;
 			let slot = step.slot as usize;
-			if slot >= recv_past.len() || recv_past[slot].is_some() {
+			if slot >= recv_slots.len() || recv_slots[slot].is_some() {
 				return Err(D::Error::custom(
 					"verified receive restoration returned an invalid concrete slot",
 				));
 			}
-			recv_past[slot] = Some(directed.material);
+			recv_slots[slot] = Some(directed.material);
 			restore = step.restore;
 		}
 		let control = verified_ratchet::finish_restore(restore);
@@ -303,11 +303,11 @@ impl<'de> Deserialize<'de> for RatchetManager {
 			recv_key: data.recv_key,
 			send_past,
 			send_capabilities,
-			recv_past,
+			recv_slots,
 			control,
 		};
 		debug_assert!(manager.send_cache_matches_control());
-		debug_assert!(manager.receive_cache_matches_control());
+		debug_assert!(manager.receive_slots_match_control());
 		Ok(manager)
 	}
 }
@@ -487,8 +487,8 @@ mod tests {
 		);
 		assert!(left.send_cache_matches_control());
 		assert!(right.send_cache_matches_control());
-		assert!(left.receive_cache_matches_control());
-		assert!(right.receive_cache_matches_control());
+		assert!(left.receive_slots_match_control());
+		assert!(right.receive_slots_match_control());
 		let mut left_logical = (0..left.control.receive_cache_len())
 			.map(|slot| left.control.receive_key_at(slot).unwrap())
 			.collect::<Vec<_>>();
@@ -506,8 +506,8 @@ mod tests {
 			let sequence = left.control.receive_key_at(slot).unwrap();
 			let right_slot = verified_ratchet::lookup_receive_key(right.control, sequence).unwrap();
 			assert_key_material_eq(
-				left.recv_past[slot as usize].as_ref().unwrap(),
-				right.recv_past[right_slot as usize].as_ref().unwrap(),
+				left.recv_slots[slot as usize].as_ref().unwrap(),
+				right.recv_slots[right_slot as usize].as_ref().unwrap(),
 			);
 		}
 	}
@@ -1003,7 +1003,7 @@ mod tests {
 			restored.control.receive_cache_len() as usize,
 			verified_ratchet::RECEIVE_CACHE_CAPACITY
 		);
-		assert!(restored.receive_cache_matches_control());
+		assert!(restored.receive_slots_match_control());
 		for sequence in 1..=verified_ratchet::RECEIVE_CACHE_CAPACITY as u64 {
 			assert!(restored.recv_key(sequence).is_some());
 		}
