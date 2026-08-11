@@ -1537,6 +1537,120 @@ let valid_refined
   valid_state state.f_control /\
   material_slots_match state.f_control.f_receive_cache state.f_receive_slots
 
+/// Canonical result of applying one fixed abstract ratchet step `count` times from an initial directional chain. Unlike the adjacent-state step lemmas, this proof-only function fixes both the origin and callback for the complete lifetime of a state.
+let rec chain_after
+    (#v_Chain #v_Material:Type0)
+    (initial:v_Chain)
+    (step:v_Chain -> t_RatchetStep v_Chain v_Material)
+    (count:nat)
+  : Tot v_Chain (decreases count) =
+  if count = 0 then initial
+  else
+    (step
+      (chain_after #v_Chain #v_Material
+        initial step (count - 1))).f_chain
+
+/// Canonical material allocated at a logical sequence. Sequence zero is a control sentinel and is excluded by `cached_materials_are_derived`.
+let material_at
+    (#v_Chain #v_Material:Type0)
+    (initial:v_Chain)
+    (step:v_Chain -> t_RatchetStep v_Chain v_Material)
+    (sequence:nat)
+  : v_Material =
+  if sequence = 0 then (step initial).f_material
+  else
+    (step
+      (chain_after #v_Chain #v_Material
+        initial step (sequence - 1))).f_material
+
+/// Every physically present cached record has material produced by the fixed receive derivation at the sequence sealed into that record.
+let cached_materials_are_derived
+    (#v_ReceiveChain #v_Material:Type0)
+    (initial_receive:v_ReceiveChain)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+  : prop =
+  forall (i:nat{i < 50}).
+    match refined_slot_value slots i with
+    | Core_models.Option.Option_Some cached ->
+        v cached.f_sequence > 0 /\
+        cached.f_material ==
+          material_at #v_ReceiveChain #v_Material
+            initial_receive receive_step (v cached.f_sequence)
+    | Core_models.Option.Option_None -> True
+
+/// Derivational reachability from fixed initial directional chains under fixed abstract KDF steps. It strengthens `valid_refined`: both live counters name exact KDF iteration counts, and every cached tag names its exact iteration's material rather than merely agreeing with the logical cache.
+let reachable
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+  : prop =
+  valid_refined state /\
+  state.f_send_chain ==
+    chain_after #v_SendChain #v_Material
+      initial_send send_step (v state.f_control.f_send_sequence) /\
+  state.f_receive_chain ==
+    chain_after #v_ReceiveChain #v_Material
+      initial_receive receive_step (v state.f_control.f_receive_sequence) /\
+  cached_materials_are_derived #v_ReceiveChain #v_Material
+    initial_receive receive_step state.f_receive_slots
+
+let chain_after_successor
+    (#v_Chain #v_Material:Type0)
+    (initial:v_Chain)
+    (step:v_Chain -> t_RatchetStep v_Chain v_Material)
+    (count:nat)
+  : Lemma
+      (chain_after #v_Chain #v_Material initial step (count + 1) ==
+        (step
+          (chain_after #v_Chain #v_Material
+            initial step count)).f_chain)
+  = ()
+
+let material_at_successor
+    (#v_Chain #v_Material:Type0)
+    (initial:v_Chain)
+    (step:v_Chain -> t_RatchetStep v_Chain v_Material)
+    (count:nat)
+  : Lemma
+      (material_at #v_Chain #v_Material initial step (count + 1) ==
+        (step
+          (chain_after #v_Chain #v_Material
+            initial step count)).f_material)
+  = ()
+
+let empty_material_slots_are_derived
+    (#v_ReceiveChain #v_Material:Type0)
+    (initial_receive:v_ReceiveChain)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (cached_materials_are_derived #v_ReceiveChain #v_Material
+        initial_receive receive_step (empty_material_slots #v_Material ()))
+  =
+  empty_material_slots_are_none #v_Material;
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        (match
+           refined_slot_value (empty_material_slots #v_Material ()) i
+         with
+         | Core_models.Option.Option_Some cached ->
+             v cached.f_sequence > 0 /\
+             cached.f_material ==
+               material_at #v_ReceiveChain #v_Material
+                 initial_receive receive_step (v cached.f_sequence)
+         | Core_models.Option.Option_None -> True)
+    = ()
+  in
+  FStar.Classical.forall_intro pointwise
+
 /// A sequence and its concrete material occupy the same unique active slot.
 let refined_slot
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
@@ -1615,6 +1729,63 @@ let packed_prefix_unchanged_transitive
   in
   FStar.Classical.forall_intro pointwise
 
+/// Appending one canonically derived tagged record to a derived packed prefix preserves derivational provenance for the complete slot array.
+let cached_materials_after_append_are_derived
+    (#v_ReceiveChain #v_Material:Type0)
+    (initial_receive:v_ReceiveChain)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (old_cache new_cache:t_SequenceCache)
+    (old_slots new_slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (sequence:u64 { v sequence > 0 })
+    (material:v_Material {
+       material == material_at #v_ReceiveChain #v_Material
+         initial_receive receive_step (v sequence) })
+    (slot:nat { slot < 50 /\ slot == cache_len old_cache })
+  : Lemma
+      (requires
+        (cached_materials_are_derived #v_ReceiveChain #v_Material
+           initial_receive receive_step old_slots /\
+         cache_len new_cache == cache_len old_cache + 1 /\
+         packed_prefix_unchanged old_cache new_cache old_slots new_slots /\
+         material_slots_match new_cache new_slots /\
+         refined_slot_value new_slots slot ==
+           Core_models.Option.Option_Some
+             ({ f_sequence = sequence; f_material = material } <:
+               t_CachedReceiveKey v_Material)))
+      (ensures
+        (cached_materials_are_derived #v_ReceiveChain #v_Material
+          initial_receive receive_step new_slots))
+  =
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        (match refined_slot_value new_slots i with
+         | Core_models.Option.Option_Some cached ->
+             v cached.f_sequence > 0 /\
+             cached.f_material ==
+               material_at #v_ReceiveChain #v_Material
+                 initial_receive receive_step (v cached.f_sequence)
+         | Core_models.Option.Option_None -> True)
+    =
+    if i < cache_len old_cache then
+      (assert
+        (refined_slot_value new_slots i ==
+          refined_slot_value old_slots i);
+       match refined_slot_value old_slots i with
+       | Core_models.Option.Option_Some cached -> ()
+       | Core_models.Option.Option_None -> ())
+    else
+      match refined_slot_value new_slots i with
+      | Core_models.Option.Option_None -> ()
+      | Core_models.Option.Option_Some cached ->
+          assert (i < cache_len new_cache);
+          assert (i == slot);
+          ()
+  in
+  FStar.Classical.forall_intro pointwise
+
 /// One admitted receive step consumes the prior chain and associates the exact pure callback result with the appended sequence.
 let refined_receive_step_matches
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
@@ -1681,6 +1852,29 @@ let valid_refined_restore
     restore.f_logical.f_state.f_receive_cache
     restore.f_receive_slots
 
+/// Conditional restoration invariant: authenticated snapshot provenance must establish the canonical live chains initially and the canonical material premise for every append.
+let reachable_restore
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (restore:t_RefinedRatchetRestore
+      v_SendChain v_ReceiveChain v_Material)
+  : prop =
+  valid_refined_restore restore /\
+  restore.f_send_chain ==
+    chain_after #v_SendChain #v_Material
+      initial_send send_step
+      (v restore.f_logical.f_state.f_send_sequence) /\
+  restore.f_receive_chain ==
+    chain_after #v_ReceiveChain #v_Material
+      initial_receive receive_step
+      (v restore.f_logical.f_state.f_receive_sequence) /\
+  cached_materials_are_derived #v_ReceiveChain #v_Material
+    initial_receive receive_step restore.f_receive_slots
+
 /// Fresh refined constructors establish the complete logical/material invariant for arbitrary chain values.
 let refined_from_counters_is_valid
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
@@ -1704,6 +1898,55 @@ let refined_new_is_valid
           send_chain receive_chain))
   = refined_from_counters_is_valid #v_SendChain #v_ReceiveChain #v_Material
       (mk_u64 0) (mk_u64 0) send_chain receive_chain
+
+/// The arbitrary-counter constructor establishes reachability only when both supplied live chains are already the canonical derivations named by those counters.
+let refined_from_counters_is_reachable
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (send_sequence receive_sequence:u64)
+    (send_chain:v_SendChain)
+    (receive_chain:v_ReceiveChain)
+  : Lemma
+      (requires
+        (send_chain ==
+           chain_after #v_SendChain #v_Material
+             initial_send send_step (v send_sequence) /\
+         receive_chain ==
+           chain_after #v_ReceiveChain #v_Material
+             initial_receive receive_step (v receive_sequence)))
+      (ensures
+        (reachable #v_SendChain #v_ReceiveChain #v_Material
+          initial_send initial_receive send_step receive_step
+          (impl_9__from_counters #v_SendChain #v_ReceiveChain #v_Material
+            send_sequence receive_sequence send_chain receive_chain)))
+  =
+  refined_from_counters_is_valid #v_SendChain #v_ReceiveChain #v_Material
+    send_sequence receive_sequence send_chain receive_chain;
+  empty_material_slots_are_derived #v_ReceiveChain #v_Material
+    initial_receive receive_step
+
+/// Fresh initialization is unconditionally reachable from the two supplied directional chains under any fixed pair of pure abstract steps.
+let refined_new_is_reachable
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (reachable #v_SendChain #v_ReceiveChain #v_Material
+        initial_send initial_receive send_step receive_step
+        (impl_9__new #v_SendChain #v_ReceiveChain #v_Material
+          initial_send initial_receive))
+  =
+  refined_from_counters_is_reachable
+    #v_SendChain #v_ReceiveChain #v_Material
+    initial_send initial_receive send_step receive_step
+    (mk_u64 0) (mk_u64 0) initial_send initial_receive
 
 /// Send exhaustion and every other rejected allocation preserve the complete refined state and are independent of the opaque step result.
 let refined_advance_send_rejection_is_neutral
@@ -1755,6 +1998,40 @@ let refined_advance_send_preserves_validity
   = advance_send_preserves_receive_state state.f_control;
     refined_advance_send_success_uses_step state  step
 
+/// Send advancement preserves reachability under the same fixed step and returns the canonical material for the newly published send counter.
+let refined_advance_send_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state })
+  : Lemma
+      (let state', result = refined_advance_send state send_step in
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state' /\
+       (match result with
+        | Core_models.Option.Option_Some key ->
+            key.f_material ==
+              material_at #v_SendChain #v_Material
+                initial_send send_step
+                (v state'.f_control.f_send_sequence)
+        | Core_models.Option.Option_None -> state' == state))
+  =
+  refined_advance_send_preserves_validity state send_step;
+  refined_advance_send_success_uses_step state send_step;
+  let state', result = refined_advance_send state send_step in
+  match result with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some key ->
+      chain_after_successor #v_SendChain #v_Material
+        initial_send send_step (v state.f_control.f_send_sequence);
+      material_at_successor #v_SendChain #v_Material
+        initial_send send_step (v state.f_control.f_send_sequence)
+
 /// The public seal operation passes the exact material produced from the old send chain, the allocated sequence, and the caller's context to one opaque callback, then returns that callback's result after consuming the private token.
 let refined_seal_next_uses_exact_step_material
     (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Output:Type0)
@@ -1793,6 +2070,28 @@ let refined_seal_next_preserves_validity
          refined_seal_next state step context seal in
        valid_refined sealed_state)
   = refined_advance_send_preserves_validity state step
+
+/// Public sealing preserves derivational reachability on both callback success and callback failure because the private token is consumed after the same canonical send step.
+let refined_seal_next_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Output:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state })
+    (context:v_Context)
+    (seal:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Output)
+  : Lemma
+      (let sealed_state, _ =
+         refined_seal_next state send_step context seal in
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step sealed_state)
+  = refined_advance_send_preserves_reachability
+      initial_send initial_receive send_step receive_step state
 
 /// Receive rejection is state-neutral and cannot depend on the opaque callback because validation precedes its application.
 let refined_advance_receive_rejection_is_step_independent
@@ -1864,6 +2163,55 @@ let refined_advance_receive_success_matches
   advance_receive_success_shape state.f_control;
   refined_advance_receive_preserves_validity state  step;
   refined_advance_receive_success_uses_step state  step
+
+/// One receive advancement under the fixed receive step preserves both live-chain iteration and canonical material provenance for the appended cache entry.
+let refined_advance_receive_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state })
+  : Lemma
+      (let state', _ = refined_advance_receive state receive_step in
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state')
+  =
+  refined_advance_receive_preserves_validity state receive_step;
+  refined_advance_receive_success_uses_step state receive_step;
+  let state', result = refined_advance_receive state receive_step in
+  match result with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some sequence ->
+      let stepped = receive_step state.f_receive_chain in
+      chain_after_successor #v_ReceiveChain #v_Material
+        initial_receive receive_step
+        (v state.f_control.f_receive_sequence);
+      material_at_successor #v_ReceiveChain #v_Material
+        initial_receive receive_step
+        (v state.f_control.f_receive_sequence);
+      assert (v sequence > 0);
+      assert
+        (stepped.f_material ==
+          material_at #v_ReceiveChain #v_Material
+            initial_receive receive_step (v sequence));
+      let slot:(i:nat{i < 50}) =
+        cache_len state.f_control.f_receive_cache in
+      assert
+        (refined_slot_value state'.f_receive_slots slot ==
+          Core_models.Option.Option_Some
+            ({ f_sequence = sequence; f_material = stepped.f_material } <:
+              t_CachedReceiveKey v_Material));
+      cached_materials_after_append_are_derived
+        #v_ReceiveChain #v_Material
+        initial_receive receive_step
+        state.f_control.f_receive_cache
+        state'.f_control.f_receive_cache
+        state.f_receive_slots state'.f_receive_slots
+        sequence stepped.f_material slot
 
 /// Every slot in a bounded inactive suffix is empty in a valid refined state, so whole-plan preflight cannot reject an admitted plan.
 let rec refined_receive_slots_are_empty_for_valid
@@ -1997,6 +2345,74 @@ let rec refined_execute_receive_steps_is_exact
                refined_receive_steps_are_ordered
                  middle final_state  step next_remaining);
         ()
+
+/// Any bounded executor suffix preserves reachability because each internal transition uses the same fixed receive step.
+let rec refined_execute_receive_steps_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state })
+    (remaining:u8)
+  : Lemma
+      (ensures
+        (reachable #v_SendChain #v_ReceiveChain #v_Material
+          initial_send initial_receive send_step receive_step
+          (refined_execute_receive_steps state receive_step remaining)))
+      (decreases (v remaining))
+  =
+  if remaining = mk_u8 0 then ()
+  else
+    let next_remaining = remaining -! mk_u8 1 in
+    refined_advance_receive_preserves_reachability
+      initial_send initial_receive send_step receive_step state;
+    let next_state, _ = refined_advance_receive state receive_step in
+    assert
+      (reachable #v_SendChain #v_ReceiveChain #v_Material
+        initial_send initial_receive send_step receive_step next_state);
+    refined_execute_receive_steps_preserves_reachability
+      initial_send initial_receive send_step receive_step
+      next_state next_remaining
+
+/// Receive-until planning, preflight, and bounded execution preserve reachability for both admitted plans and every state-neutral rejection.
+let refined_advance_receive_until_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state })
+    (target:u64)
+  : Lemma
+      (let state', _ =
+         refined_advance_receive_until state target receive_step in
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state')
+  =
+  let plan = plan_receive_until state.f_control target in
+  match plan.f_sequence with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some _ ->
+      if plan.f_derivations >. v_RATCHET_MAX_GAP then ()
+      else
+        let remaining:u8 = cast plan.f_derivations <: u8 in
+        let first_slot =
+          impl_RatchetState__receive_cache_len state.f_control in
+        if not
+          (refined_receive_slots_are_empty
+            state first_slot remaining)
+        then ()
+        else
+          refined_execute_receive_steps_preserves_reachability
+            initial_send initial_receive send_step receive_step
+            state remaining
 
 /// Once planning and concrete-slot preflight are admitted, the generated
 /// transaction is definitionally the full bounded execution and its planned
@@ -2289,6 +2705,36 @@ let refined_receive_key_is_associated
                refined_slot state sequence material witness);
           ()
 
+/// Lookup from a reachable state can expose only the canonical receive material derived for the requested sequence.
+let refined_receive_key_is_derived
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state })
+    (sequence:u64)
+  : Lemma
+      (match refined_receive_key state sequence with
+       | Core_models.Option.Option_Some material ->
+           v sequence > 0 /\
+           material ==
+             material_at #v_ReceiveChain #v_Material
+               initial_receive receive_step (v sequence)
+       | Core_models.Option.Option_None -> True)
+  =
+  refined_receive_key_is_associated state sequence;
+  match refined_receive_key state sequence with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some material ->
+      assert
+        (exists (slot:u8{v slot < 50}).
+          refined_slot state sequence material slot);
+      ()
+
 /// Missing and failed-authentication completion preserve every control, chain, and material field.
 let refined_finish_receive_neutral_outcomes_preserve_full_state
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
@@ -2434,6 +2880,67 @@ let material_slots_after_swap_remove_is_exact
         else ()
     in
     FStar.Classical.forall_intro unchanged
+
+/// Moving the complete old-last record and clearing its former slot preserves canonical material provenance for every surviving physical cache entry.
+let cached_materials_after_swap_remove_are_derived
+    (#v_ReceiveChain #v_Material:Type0)
+    (initial_receive:v_ReceiveChain)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (target_slot:u8{v target_slot < 50})
+    (last_slot:u8{v last_slot < 50})
+    (last_cached:t_CachedReceiveKey v_Material {
+       refined_slot_value slots (v last_slot) ==
+         Core_models.Option.Option_Some last_cached })
+  : Lemma
+      (requires
+        (cached_materials_are_derived #v_ReceiveChain #v_Material
+          initial_receive receive_step slots))
+      (ensures
+        (cached_materials_are_derived #v_ReceiveChain #v_Material
+          initial_receive receive_step
+          (material_slots_after_swap_remove
+            slots target_slot last_slot last_cached)))
+  =
+  let slots' = material_slots_after_swap_remove
+    slots target_slot last_slot last_cached in
+  material_slots_after_swap_remove_is_exact
+    slots target_slot last_slot last_cached;
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        (match refined_slot_value slots' i with
+         | Core_models.Option.Option_Some cached ->
+             v cached.f_sequence > 0 /\
+             cached.f_material ==
+               material_at #v_ReceiveChain #v_Material
+                 initial_receive receive_step (v cached.f_sequence)
+         | Core_models.Option.Option_None -> True)
+    =
+    if i = v last_slot then ()
+    else if i = v target_slot then
+      if target_slot = last_slot then ()
+      else
+        (assert
+          (refined_slot_value slots' i ==
+            Core_models.Option.Option_Some last_cached);
+         assert
+          (v last_cached.f_sequence > 0 /\
+           last_cached.f_material ==
+             material_at #v_ReceiveChain #v_Material
+               initial_receive receive_step
+               (v last_cached.f_sequence));
+         ())
+    else
+      (assert
+        (refined_slot_value slots' i == refined_slot_value slots i);
+       match refined_slot_value slots i with
+       | Core_models.Option.Option_Some cached -> ()
+       | Core_models.Option.Option_None -> ())
+  in
+  FStar.Classical.forall_intro pointwise
 
 /// The generated Option.take/update_at expression is definitionally the logical swap-removal view.
 let generated_material_swap_remove_matches_view
@@ -2729,6 +3236,50 @@ let refined_finish_receive_preserves_validity
         | _ -> ()
       else ()
 
+/// Missing and retained completion are identity transitions, while consumption moves a whole canonically derived record; therefore every completion outcome preserves reachability.
+let refined_finish_receive_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state })
+    (sequence:u64)
+    (authenticated:bool)
+  : Lemma
+      (let state', _ =
+         refined_finish_receive state sequence authenticated in
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state')
+  =
+  refined_finish_receive_preserves_validity state sequence authenticated;
+  refined_finish_receive_neutral_outcomes_preserve_full_state
+    state sequence authenticated;
+  let slot = lookup_receive_key state.f_control sequence in
+  match slot with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some target_slot ->
+      lookup_receive_key_sound state.f_control sequence;
+      if authenticated then
+        let last_slot = state.f_control.f_receive_cache.f_len -! mk_u8 1 in
+        match refined_slot_value state.f_receive_slots (v target_slot),
+              refined_slot_value state.f_receive_slots (v last_slot) with
+        | Core_models.Option.Option_Some target_cached,
+          Core_models.Option.Option_Some last_cached ->
+            refined_finish_receive_success_is_exact_swap_removal
+              state sequence target_slot last_slot target_cached last_cached;
+            finish_receive_with_removal_success_shape
+              state.f_control sequence target_slot;
+            cached_materials_after_swap_remove_are_derived
+              #v_ReceiveChain #v_Material
+              initial_receive receive_step state.f_receive_slots
+              target_slot last_slot last_cached
+        | _ -> ()
+      else ()
+
 /// If the opaque open callback returns `None` for the exact material and sequence selected after admission, the public operation returns that complete admitted state unchanged.
 let refined_open_none_retains_selected_material
     (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
@@ -2811,6 +3362,48 @@ let refined_open_and_finish_preserves_validity
               refined_finish_receive_preserves_validity
                 admitted sequence true
 
+/// The public open transaction preserves reachability across admission rejection, failed-open retention, and authenticated consumption.
+let refined_open_and_finish_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step state })
+    (target:u64)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (let final_state, _ =
+         refined_open_and_finish
+           state target receive_step context open_callback in
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step final_state)
+  =
+  refined_advance_receive_until_preserves_reachability
+    initial_send initial_receive send_step receive_step state target;
+  let admitted, reached =
+    refined_advance_receive_until state target receive_step in
+  assert
+    (reachable #v_SendChain #v_ReceiveChain #v_Material
+      initial_send initial_receive send_step receive_step admitted);
+  match reached with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some sequence ->
+      match refined_receive_key admitted sequence with
+      | Core_models.Option.Option_None -> ()
+      | Core_models.Option.Option_Some material ->
+          match open_callback material sequence context with
+          | Core_models.Option.Option_None -> ()
+          | Core_models.Option.Option_Some _ ->
+              refined_finish_receive_preserves_reachability
+                initial_send initial_receive send_step receive_step
+                admitted sequence true
+
 /// The empty refined restoration builder starts valid for arbitrary counters and chain values.
 let start_refined_restore_is_valid
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
@@ -2823,6 +3416,36 @@ let start_refined_restore_is_valid
           send_sequence receive_sequence send_chain receive_chain))
   = start_restore_is_valid send_sequence receive_sequence;
     empty_material_slots_are_none #v_Material
+
+/// Starting restoration establishes the conditional reachability builder only when authenticated snapshot provenance supplies live chains matching the fixed initial chains and counters.
+let start_refined_restore_is_reachable
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (send_sequence receive_sequence:u64)
+    (send_chain:v_SendChain)
+    (receive_chain:v_ReceiveChain)
+  : Lemma
+      (requires
+        (send_chain ==
+           chain_after #v_SendChain #v_Material
+             initial_send send_step (v send_sequence) /\
+         receive_chain ==
+           chain_after #v_ReceiveChain #v_Material
+             initial_receive receive_step (v receive_sequence)))
+      (ensures
+        (reachable_restore #v_SendChain #v_ReceiveChain #v_Material
+          initial_send initial_receive send_step receive_step
+          (start_refined_restore #v_SendChain #v_ReceiveChain #v_Material
+            send_sequence receive_sequence send_chain receive_chain)))
+  =
+  start_refined_restore_is_valid #v_SendChain #v_ReceiveChain #v_Material
+    send_sequence receive_sequence send_chain receive_chain;
+  empty_material_slots_are_derived #v_ReceiveChain #v_Material
+    initial_receive receive_step
 
 /// Refined restoration either rejects without changing the builder or appends the supplied sequence and exact material together while preserving all invariants.
 let refined_restore_receive_key_is_atomic
@@ -2857,6 +3480,48 @@ let refined_restore_receive_key_is_atomic
   = restore_receive_key_with_slot_success_shape restore.f_logical sequence;
     restore_receive_key_with_slot_preserves_validity restore.f_logical sequence
 
+/// Restoration append preserves conditional reachability only when the authenticated snapshot supplies the canonical material for the appended sequence.
+let refined_restore_receive_key_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (restore:t_RefinedRatchetRestore
+      v_SendChain v_ReceiveChain v_Material {
+       reachable_restore #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step restore })
+    (sequence:u64 { v sequence > 0 })
+    (material:v_Material {
+       material == material_at #v_ReceiveChain #v_Material
+         initial_receive receive_step (v sequence) })
+  : Lemma
+      (let restore', _ =
+         refined_restore_receive_key restore sequence material in
+       reachable_restore #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step restore')
+  =
+  refined_restore_receive_key_is_atomic restore sequence material;
+  let restore', accepted =
+    refined_restore_receive_key restore sequence material in
+  if accepted then
+    let slot:(i:nat{i < 50}) =
+      cache_len restore.f_logical.f_state.f_receive_cache in
+    assert
+      (refined_slot_value restore'.f_receive_slots slot ==
+        Core_models.Option.Option_Some
+          ({ f_sequence = sequence; f_material = material } <:
+            t_CachedReceiveKey v_Material));
+    cached_materials_after_append_are_derived
+      #v_ReceiveChain #v_Material
+      initial_receive receive_step
+      restore.f_logical.f_state.f_receive_cache
+      restore'.f_logical.f_state.f_receive_cache
+      restore.f_receive_slots restore'.f_receive_slots
+      sequence material slot
+  else ()
+
 /// Finishing a valid refined restoration publishes its logical state, chains, and material slots as one valid refined value.
 let finish_refined_restore_is_valid
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
@@ -2870,6 +3535,24 @@ let finish_refined_restore_is_valid
        state.f_receive_chain == restore.f_receive_chain /\
        state.f_receive_slots == restore.f_receive_slots)
   = finish_restore_is_valid restore.f_logical
+
+/// Finishing a conditionally reachable restoration publishes a reachable state without weakening any chain or cached-material derivation clause.
+let finish_refined_restore_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (restore:t_RefinedRatchetRestore
+      v_SendChain v_ReceiveChain v_Material {
+       reachable_restore #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step restore })
+  : Lemma
+      (reachable #v_SendChain #v_ReceiveChain #v_Material
+        initial_send initial_receive send_step receive_step
+        (finish_refined_restore restore))
+  = finish_refined_restore_is_valid restore
 
 /// A mismatching peer identifier is a pointwise frame rule: every component is
 /// returned unchanged for any send or receive replacement.

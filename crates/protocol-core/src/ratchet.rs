@@ -1131,6 +1131,45 @@ mod tests {
 		}
 	}
 
+	fn test_derivation(mut chain: u64, iterations: u64) -> (u64, Option<TestMaterial>) {
+		let mut material = None;
+		for _ in 0..iterations {
+			let stepped = test_step(&chain);
+			chain = stepped.chain;
+			material = Some(stepped.material);
+		}
+		(chain, material)
+	}
+
+	fn test_is_reachable(
+		initial_send_chain: u64,
+		initial_receive_chain: u64,
+		state: &RefinedRatchet<u64, u64, TestMaterial>,
+	) -> bool {
+		let (expected_send_chain, _) = test_derivation(initial_send_chain, state.send_sequence());
+		let (expected_receive_chain, _) =
+			test_derivation(initial_receive_chain, state.receive_sequence());
+		if state.send_chain() != &expected_send_chain
+			|| state.receive_chain() != &expected_receive_chain
+		{
+			return false;
+		}
+
+		for slot in 0..state.receive_cache_len() {
+			let Some((sequence, material)) = state.receive_entry_at(slot) else {
+				return false;
+			};
+			let (_, Some(expected_material)) = test_derivation(initial_receive_chain, sequence)
+			else {
+				return false;
+			};
+			if material != &expected_material {
+				return false;
+			}
+		}
+		true
+	}
+
 	fn rejected_test_step(_chain: &u64) -> RatchetStep<u64, TestMaterial> {
 		panic!("rejected receive transaction invoked its KDF callback")
 	}
@@ -1736,6 +1775,74 @@ mod tests {
 	}
 
 	#[test]
+	fn refined_transitions_preserve_derivational_reachability() {
+		let initial_send_chain = 10;
+		let initial_receive_chain = 20;
+		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(
+			initial_send_chain,
+			initial_receive_chain,
+		);
+		assert!(test_is_reachable(
+			initial_send_chain,
+			initial_receive_chain,
+			&state
+		));
+
+		let send = TestAeadContext::new(70, true);
+		assert_eq!(
+			refined_seal_next(&mut state, test_step, &send, test_aead),
+			Some((1, 11, 70))
+		);
+		assert!(test_is_reachable(
+			initial_send_chain,
+			initial_receive_chain,
+			&state
+		));
+
+		let failed_open = TestAeadContext::new(71, false);
+		assert_eq!(
+			refined_open_and_finish(&mut state, 4, test_step, &failed_open, test_aead),
+			None
+		);
+		assert_eq!(failed_open.seen_sequence.get(), Some(4));
+		assert_eq!(failed_open.seen_generation.get(), Some(24));
+		assert_eq!(refined_receive_key(&state, 4).unwrap().generation, 24);
+		assert!(test_is_reachable(
+			initial_send_chain,
+			initial_receive_chain,
+			&state
+		));
+
+		let consume = TestAeadContext::new(72, true);
+		assert_eq!(
+			refined_open_and_finish(&mut state, 2, rejected_test_step, &consume, test_aead),
+			Some((2, 22, 72))
+		);
+		assert!(refined_receive_key(&state, 2).is_none());
+		let (moved_sequence, moved_material) = state.receive_entry_at(1).unwrap();
+		assert_eq!(moved_sequence, 4);
+		assert_eq!(moved_material.generation, 24);
+		assert!(test_is_reachable(
+			initial_send_chain,
+			initial_receive_chain,
+			&state
+		));
+
+		assert_eq!(
+			refined_advance_receive_until(&mut state, 6, test_step),
+			Some(6)
+		);
+		assert_eq!(state.receive_sequence(), 6);
+		assert_eq!(refined_receive_key(&state, 5).unwrap().generation, 25);
+		assert_eq!(refined_receive_key(&state, 6).unwrap().generation, 26);
+		assert!(test_is_reachable(
+			initial_send_chain,
+			initial_receive_chain,
+			&state
+		));
+	}
+
+	#[test]
 	fn refined_receive_one_step_uses_the_next_empty_slot() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 
@@ -1902,6 +2009,90 @@ mod tests {
 		assert_eq!(state.receive_entry_at(0).unwrap().1.generation, 22);
 		assert_eq!(state.receive_entry_at(1).unwrap().0, 7);
 		assert_eq!(state.receive_entry_at(1).unwrap().1.generation, 27);
+	}
+
+	#[test]
+	fn refined_restore_preserves_reachability_only_for_authenticated_snapshot_material() {
+		let initial_send_chain = 10;
+		let initial_receive_chain = 20;
+		let mut source = RefinedRatchet::<u64, u64, TestMaterial>::new(
+			initial_send_chain,
+			initial_receive_chain,
+		);
+		let send = TestAeadContext::new(80, true);
+		assert!(refined_seal_next(&mut source, test_step, &send, test_aead).is_some());
+		assert!(refined_seal_next(&mut source, test_step, &send, test_aead).is_some());
+		assert_eq!(
+			refined_advance_receive_until(&mut source, 5, test_step),
+			Some(5)
+		);
+		assert_eq!(
+			refined_finish_receive(&mut source, 2, true),
+			ReceiveDisposition::Consumed
+		);
+		assert!(test_is_reachable(
+			initial_send_chain,
+			initial_receive_chain,
+			&source
+		));
+
+		let mut correct = start_refined_restore(
+			source.send_sequence(),
+			source.receive_sequence(),
+			*source.send_chain(),
+			*source.receive_chain(),
+		);
+		for sequence in 1..=source.receive_sequence() {
+			if let Some(material) = refined_receive_key(&source, sequence) {
+				assert!(refined_restore_receive_key(
+					&mut correct,
+					sequence,
+					TestMaterial {
+						generation: material.generation,
+					}
+				));
+			}
+		}
+		let correct = finish_refined_restore(correct);
+		assert!(test_is_reachable(
+			initial_send_chain,
+			initial_receive_chain,
+			&correct
+		));
+
+		let mut arbitrary = start_refined_restore(
+			source.send_sequence(),
+			source.receive_sequence(),
+			*source.send_chain(),
+			*source.receive_chain(),
+		);
+		for sequence in 1..=source.receive_sequence() {
+			if let Some(material) = refined_receive_key(&source, sequence) {
+				let generation = if sequence == 3 {
+					material.generation + 1_000
+				} else {
+					material.generation
+				};
+				assert!(refined_restore_receive_key(
+					&mut arbitrary,
+					sequence,
+					TestMaterial { generation }
+				));
+			}
+		}
+		let arbitrary = finish_refined_restore(arbitrary);
+
+		// Restoration is the explicit trust-boundary exception.
+		// The builder validates structure and tags. Authenticated persistence must vouch for derivations.
+		assert_eq!(
+			refined_receive_key(&arbitrary, 3).unwrap().generation,
+			1_023
+		);
+		assert!(!test_is_reachable(
+			initial_send_chain,
+			initial_receive_chain,
+			&arbitrary
+		));
 	}
 
 	#[test]

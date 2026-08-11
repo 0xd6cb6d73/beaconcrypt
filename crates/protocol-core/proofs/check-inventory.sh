@@ -339,6 +339,43 @@ require_line_count 1 \
 require_line_count 1 '^let valid_refined$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"refined logical/sealed cached sequence-material invariant"
+for declaration in \
+	reachable \
+	reachable_restore \
+	refined_from_counters_is_reachable \
+	refined_new_is_reachable \
+	refined_advance_send_preserves_reachability \
+	refined_seal_next_preserves_reachability \
+	refined_advance_receive_preserves_reachability \
+	refined_advance_receive_until_preserves_reachability \
+	refined_receive_key_is_derived \
+	refined_finish_receive_preserves_reachability \
+	refined_open_and_finish_preserves_reachability \
+	start_refined_restore_is_reachable \
+	refined_restore_receive_key_preserves_reachability \
+	finish_refined_restore_preserves_reachability; do
+	require_line_count 1 "^let ${declaration}\$" \
+		proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+		"derivational reachability declaration ${declaration}"
+done
+require_line_count 1 '^let cached_materials_are_derived$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"canonical cached-material derivation predicate"
+require_line_count 1 '^let rec chain_after$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"canonical fixed-step chain iterator"
+require_line_count 1 '^let material_at$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"canonical sequence material function"
+require_line_count 1 '^  state\.f_send_chain ==$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"reachable send-chain/counter equality"
+require_line_count 1 '^  state\.f_receive_chain ==$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"reachable receive-chain/counter equality"
+require_line_count 1 '^        cached\.f_material ==$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"canonical cached-material derivation equality"
 require_line_count 1 \
 	'cached\.f_sequence == cache_entry cache i$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
