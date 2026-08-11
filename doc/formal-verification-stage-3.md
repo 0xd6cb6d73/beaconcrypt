@@ -4,7 +4,7 @@
 
 ## Status and scope
 
-Stage 3 connected the symmetric-ratchet state machine introduced in Stages 1 and 2 to the production `BeaconCryptPqxdh` path. A subsequent refinement replaces the remaining production-owned parallel chains and receive slots with the extracted generic `RefinedRatchet<SendChain, RecvChain, KeyMaterial>`. Production now compiles and calls that same kernel, whose private state owns control, both typed chain values, and the fixed concrete-material slots.
+Stage 3 connected the symmetric-ratchet state machine introduced in Stages 1 and 2 to the production messaging path. A subsequent refinement replaces the remaining production-owned parallel chains and receive slots with the extracted generic `RefinedRatchet<SendChain, RecvChain, KeyMaterial>`. Production now compiles and calls that same kernel through the role-specific `Beacon` and `Server` APIs, and its private state owns control, both typed chain values, and the fixed concrete-material slots.
 
 This record covers the production adapter for symmetric-ratchet control state, key lifecycle, authentication completion, material-slot correspondence, and persistence restoration. HKDF remains the one opaque ratchet step supplied by production. PQXDH remains covered by Stage 4 and later stages.
 
@@ -88,7 +88,7 @@ Because the kernel uses packed swap-removal while restoration uses sorted input,
 
 ## Proof correspondence boundary
 
-The Stage 3 correspondence claim applies to high-level `BeaconCryptPqxdh::encrypt_message` and `decrypt_message` traces that start from a fresh or successfully validated state and do not roll state back.
+The Stage 3 correspondence claim applies to high-level `Beacon::{encrypt_message,decrypt_message}` and `Server::{encrypt_message,decrypt_message}` traces that start from fresh or successfully validated role state and do not roll state back.
 
 The strict F* theorem surface is parametric in the typed chains, material, and step callback. It connects admitted logical advancement with the callback output placed in the corresponding material slot, characterizes sequence lookup, proves failure retention and successful internal swap-removal preserve structural association, and proves that checked restoration appends each sequence/material pair together. The refined send lifecycle keeps the allocated sequence and callback-produced material in one consuming token. The older logical theorems remain available as compatibility results.
 
@@ -102,7 +102,7 @@ The following remain explicit adapter preconditions or exclusions:
 - hax extraction, Rust compilation, and correspondence of the checked kernel to the deployed executable;
 - rollback, cloned state forks, and crash atomicity across surrounding high-level persistence;
 - zeroization and physical erasure of chain and material bytes;
-- the production peer-map lookup and uniqueness refinement;
+- the production Server peer-map lookup and uniqueness refinement plus the Beacon's sole-server selection refinement;
 - correctness of the concrete AEAD, hash, allocation, and entropy primitives; and
 - direct calls to older low-level compatibility APIs outside the high-level production trace.
 

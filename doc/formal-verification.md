@@ -105,11 +105,7 @@ This division does not make those adapters trusted without review. Instead, it g
 
 ### Represent state explicitly
 
-PQXDH now uses role-specific core typestates instead of making protocol
-transitions depend on an `is_beacon` flag plus unrelated optional fields. The
-public boolean constructor remains for API compatibility, but it selects an
-internal role enum once; the transition code then matches the corresponding
-state. The core states include:
+PQXDH now uses role-specific core typestates instead of making protocol transitions depend on an `is_beacon` flag plus unrelated optional fields. Production likewise exposes separate `Beacon` and `Server` Rust types, each of which owns only its role-specific adapter state; no public boolean constructor or internal provider-role enum remains. The core states include:
 
 ```rust
 pub struct BeaconFresh { /* pinned expected ServerBinding */ }
@@ -199,7 +195,7 @@ For extraction, replace `HashMap` with a bounded, packed sequence whose uniquene
 
 ### Keep the core on production paths
 
-After each extraction-sized move, the existing `BeaconCryptPqxdh` API must delegate to the new core. Existing known-answer and protocol tests must continue to exercise that path. A proof-only reimplementation is out of scope because its correspondence to production code would become a new, unproved assumption.
+After each extraction-sized move, the public `Beacon` and `Server` APIs must delegate to the new core. Existing known-answer and protocol tests must continue to exercise those paths. A proof-only reimplementation is out of scope because its correspondence to production code would become a new, unproved assumption.
 
 The low-level ratchet methods currently exposed from [`src/shared.rs`](../src/shared.rs) can bypass invariants expected at the higher-level protocol API. Either narrow their visibility or state theorem preconditions so that verified traces are explicitly limited to calls through the high-level API.
 
@@ -353,7 +349,7 @@ as `[0x04, 0x80, key]` and one-time keys as `[0x04, 0x81, key]`; core and
 adapter regressions reject both substitution forms, and the regenerated F*
 lemmas prove the exact layouts and cross-role rejection.
 
-The trust-anchor regression `beacon_registration_keeps_its_initial_server_binding_when_the_peer_map_changes` closes a later adapter counterexample: after `InitKex`, replacing the mutable peer-map entry with an attacker server using the same numeric ID used to change the identity that finish treated as expected. The proof-visible beacon state now owns the original public-key/ID pair, so the attacker response is rejected and the peer map is checked only as a concrete refinement before publication.
+An earlier trust-anchor counterexample relied on replacing a beacon's mutable peer-map entry after `InitKex`, thereby changing the identity that finish treated as expected. The split `Beacon` no longer has such a map: it owns one constructor-provided server principal while proof-visible state retains the original public-key/ID pair. `finish_registration` checks the response identity and authenticated sender against that binding, then rechecks the sole concrete principal before publication; `beacon_rejects_registration_response_from_wrong_server` covers the remaining wrong-server response case.
 
 This closes the executable counterexamples. Stage 6 proves the core-side exact
 identifier, binding, status, allocation, and conditional role correspondence
@@ -434,7 +430,7 @@ Persistence keeps the five-field `RatchetManager` format: `send_key`, `recv_key`
 
 The strict F* lemmas are parametric in the chain types, material type, and callback. They prove structural sequence/material association, admission-before-step and callback ordering, lookup, failed-authentication retention, successful internal swap-removal, paired restoration, and the refined send-token lifecycle for normal returned transitions. The older logical APIs and lemmas remain as compatibility surfaces, but production calls the refined kernel.
 
-The verified production trace remains restricted to high-level `BeaconCryptPqxdh::encrypt_message` and `decrypt_message` operations starting from a fresh or successfully validated state without rollback. The callback is arbitrary in the theorem, so concrete HKDF semantics and output splitting remain assumptions, as do authentication-result provenance, serde translation, hax/Rust/compiler correspondence, crash atomicity outside the kernel call, zeroization and physical erasure, concrete AEAD/hash behavior, production peer-map selection, and one authoritative non-rollback owner. The non-clonable refined send token removes the former adapter assumption that a copyable logical capability stays paired with the correct material, but conditional cloning or persistence rollback of the complete ratchet can still fork state.
+The verified production trace remains restricted to high-level `Beacon::{encrypt_message,decrypt_message}` and `Server::{encrypt_message,decrypt_message}` operations starting from fresh or successfully validated role state without rollback. The callback is arbitrary in the theorem, so concrete HKDF semantics and output splitting remain assumptions, as do authentication-result provenance, serde translation, hax/Rust/compiler correspondence, crash atomicity outside the kernel call, zeroization and physical erasure, concrete AEAD/hash behavior, role-specific principal or peer selection, and one authoritative non-rollback owner. The non-clonable refined send token removes the former adapter assumption that a copyable logical capability stays paired with the correct material, but conditional cloning or persistence rollback of the complete ratchet can still fork state.
 
 ### Step 4 implementation
 
@@ -448,7 +444,7 @@ states. Random key generation and primitive calls remain in the adapter, which
 passes their public outputs and shared-secret results to deterministic core
 transitions.
 
-The production provider stores an internal role enum. Beacon material advances through fresh, `InitKex` sent, established, or aborted states, so a registration bundle is emitted once and every finish failure is terminal. The fresh state receives the configured server public key and numeric identity-key ID as one `ServerBinding`; every successful beacon transition preserves the pair, response preparation compares the received public key with the stored key, and post-open authentication compares the initial frame's sender ID with the stored numeric ID. On success the beacon publishes its assigned identity, associated data, and staged ratchet only after authenticating the initial ciphertext and confirming that the concrete peer-map entry still equals the pinned binding.
+Production exposes separate `Beacon` and `Server` types. `Beacon` stores `BeaconState` directly together with one constructor-bound server principal; its material advances through fresh, `InitKex` sent, established, or aborted states, so a registration bundle is emitted once and every finish failure is terminal. The fresh state receives the configured server public key and numeric identity-key ID as one `ServerBinding`; every successful beacon transition preserves the pair, response preparation compares the received public key with the stored key, and post-open authentication compares the initial frame's sender ID with the stored numeric ID. On success the Beacon publishes its assigned identity, associated data, and staged ratchet only after authenticating the initial ciphertext and confirming that its sole concrete server principal still equals the pinned binding.
 
 The server validates into a pending registration and builds its proposed peer
 on a fresh ratchet outside the live peer map. It encrypts the initial message
@@ -458,12 +454,9 @@ server state unchanged. The pending production token is opaque and consumed by
 the response builder, which obtains response public material and associated
 data from the core candidate. It also records the accepting server's identity
 public key and identity key ID, and candidate preparation rejects use by a
-differently bound provider without changing live state.
+differently bound `Server` without changing live state.
 
-The Stage 4 correspondence claim covers high-level registration transitions;
-direct compatibility setters, peer-map mutation, low-level ratchet calls,
-rollback, and cloned live provider state remain explicit preconditions outside
-that trace.
+The Stage 4 correspondence claim covers high-level registration transitions on `Beacon` and `Server`; direct compatibility setters, Server peer-map mutation, low-level ratchet calls, rollback, and independently forked live role state remain explicit preconditions outside that trace.
 
 The pinned hax item list extracts these PQXDH transitions to
 `Beaconcrypt_protocol_core.Pqxdh.fst`, and the existing strict F* target
