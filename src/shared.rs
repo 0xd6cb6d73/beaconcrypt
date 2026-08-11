@@ -565,23 +565,31 @@ impl RatchetManager {
 		serde_json::from_str(&json).unwrap()
 	}
 
-	pub fn recv_key(&self, seq: u64) -> Option<&KeyMaterial> {
-		verified_ratchet::refined_receive_key(&self.refined, seq)
+	#[cfg(test)]
+	pub(crate) fn recv_key(&self, seq: u64) -> Option<&KeyMaterial> {
+		(0..self.refined.receive_cache_len()).find_map(|slot| {
+			let (sequence, material) = self.refined.receive_entry_at(slot)?;
+			(sequence == seq).then_some(material)
+		})
 	}
 
-	pub fn ratchet_recv(&mut self) -> Option<u64> {
-		verified_ratchet::refined_advance_receive(
-			&mut self.refined,
-			ratchet_step::<roles::ChainRecvKey>,
-		)
+	#[cfg(test)]
+	pub(crate) fn ratchet_recv(&mut self) -> Option<u64> {
+		let target = self.refined.receive_sequence().checked_add(1)?;
+		self.ratchet_recv_until(target)
 	}
 
-	pub fn ratchet_recv_until(&mut self, until: u64) -> Option<u64> {
-		verified_ratchet::refined_advance_receive_until(
+	#[cfg(test)]
+	pub(crate) fn ratchet_recv_until(&mut self, until: u64) -> Option<u64> {
+		let context = TestReceiveAttempt::new(false);
+		let _ = verified_ratchet::refined_open_and_finish(
 			&mut self.refined,
 			until,
 			ratchet_step::<roles::ChainRecvKey>,
-		)
+			&context,
+			test_receive_attempt,
+		);
+		context.seen.get()
 	}
 
 	pub(crate) fn init_ratchets(
@@ -594,15 +602,34 @@ impl RatchetManager {
 		self.refined = RatchetKernel::new(send_chain.into(), receive_chain.into());
 	}
 
+	#[cfg(test)]
 	pub(crate) fn complete_recv_key(
 		&mut self,
 		seq: u64,
 		authenticated: bool,
 	) -> verified_ratchet::ReceiveDisposition {
-		verified_ratchet::refined_finish_receive(&mut self.refined, seq, authenticated)
+		if self.recv_key(seq).is_none() {
+			return verified_ratchet::ReceiveDisposition::Missing;
+		}
+		let context = TestReceiveAttempt::new(authenticated);
+		let opened = verified_ratchet::refined_open_and_finish(
+			&mut self.refined,
+			seq,
+			ratchet_step::<roles::ChainRecvKey>,
+			&context,
+			test_receive_attempt,
+		);
+		if authenticated && opened.is_some() {
+			verified_ratchet::ReceiveDisposition::Consumed
+		} else if !authenticated && context.seen.get() == Some(seq) {
+			verified_ratchet::ReceiveDisposition::Retained
+		} else {
+			verified_ratchet::ReceiveDisposition::Missing
+		}
 	}
 
-	pub fn delete_recv_key(&mut self, seq: u64) {
+	#[cfg(test)]
+	pub(crate) fn delete_recv_key(&mut self, seq: u64) {
 		self.complete_recv_key(seq, true);
 	}
 
@@ -620,8 +647,8 @@ impl RatchetManager {
 		self.refined.receive_sequence()
 	}
 
-	#[cfg(any(feature = "server", test))]
-	fn receive_cache_len(&self) -> u8 {
+	/// Number of retained receive attempts, without exposing their material.
+	pub fn receive_cache_len(&self) -> u8 {
 		self.refined.receive_cache_len()
 	}
 
@@ -637,6 +664,32 @@ impl RatchetManager {
 	pub fn recv_state(&self) -> &KdfRecvState {
 		&self.refined.receive_chain().state
 	}
+}
+
+#[cfg(test)]
+struct TestReceiveAttempt {
+	seen: core::cell::Cell<Option<u64>>,
+	authenticated: bool,
+}
+
+#[cfg(test)]
+impl TestReceiveAttempt {
+	fn new(authenticated: bool) -> Self {
+		Self {
+			seen: core::cell::Cell::new(None),
+			authenticated,
+		}
+	}
+}
+
+#[cfg(test)]
+fn test_receive_attempt(
+	_material: &KeyMaterial,
+	sequence: u64,
+	context: &TestReceiveAttempt,
+) -> Option<()> {
+	context.seen.set(Some(sequence));
+	context.authenticated.then_some(())
 }
 
 pub trait SignaturePk {}
@@ -707,11 +760,54 @@ pub(crate) fn encrypted_frame_sender(data: &[u8]) -> Option<u64> {
 	Some(typed_reader.get().ok()?.get_key_id())
 }
 
+struct SealFrameContext<'a> {
+	bytes: &'a [u8],
+	target_kid: u64,
+	sender_kid: u64,
+	associated_data: &'a [u8; AD_SIZE],
+}
+
+fn seal_frame(
+	key: &KeyMaterial,
+	key_seq: u64,
+	context: &SealFrameContext<'_>,
+) -> Option<Encrypted> {
+	let (mut plaintext, mut tag) = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
+		context.bytes,
+		Some(context.associated_data.as_slice()),
+		key.nonce(),
+		key.key(),
+	)
+	.ok()?;
+	let mut commitment = build_commitment(
+		key,
+		context.associated_data.as_slice(),
+		tag.as_slice(),
+		key_seq,
+		context.sender_kid,
+	)?;
+	plaintext.append(&mut tag);
+	plaintext.append(&mut commitment);
+	let mut t_builder = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
+	let mut builder: cryptoframe_capnp::crypto_frame::Builder<'_> = t_builder.init_root();
+	builder.set_cipher_text(&plaintext);
+	builder.set_seq(key_seq);
+	builder.set_key_id(context.sender_kid);
+	let mut buffer = vec![];
+	capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).ok()?;
+	Some(Encrypted {
+		ciphertext: buffer,
+		key_id: context.target_kid,
+		seq: key_seq,
+	})
+}
+
 /// Encrypt one frame against a staged or committed peer ratchet.
 ///
 /// This is shared by the regular high-level provider path and the transactional
-/// server-registration path. The Stage-3 send capability and concrete key stay
-/// local to this operation and are consumed on every post-allocation outcome.
+/// server-registration path. The extracted kernel advances the send chain,
+/// lends the exact allocated sequence/material pair to `seal_frame`, and
+/// consumes that pair before returning.
 pub(crate) fn encrypt_message_with_ratchet(
 	bytes: &[u8],
 	target_kid: u64,
@@ -722,51 +818,56 @@ pub(crate) fn encrypt_message_with_ratchet(
 	if bytes.is_empty() {
 		return None;
 	}
-	let send_key = verified_ratchet::refined_advance_send(
+	let context = SealFrameContext {
+		bytes,
+		target_kid,
+		sender_kid,
+		associated_data,
+	};
+	verified_ratchet::refined_seal_next(
 		&mut ratchet.refined,
 		ratchet_step::<roles::ChainSendKey>,
-	)?;
-	let Some(key_seq) = send_key.sequence() else {
-		verified_ratchet::refined_finish_send(send_key);
-		return None;
-	};
-	let encrypted = (|| {
-		let key = send_key.material();
-		let (mut plaintext, mut tag) = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
-			bytes,
-			Some(associated_data.as_slice()),
-			key.nonce(),
-			key.key(),
-		)
-		.ok()?;
-		let mut commitment =
-			build_commitment(key, associated_data, tag.as_slice(), key_seq, sender_kid)?;
-		plaintext.append(&mut tag);
-		plaintext.append(&mut commitment);
-		let mut t_builder = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-		let mut builder: cryptoframe_capnp::crypto_frame::Builder<'_> = t_builder.init_root();
-		builder.set_cipher_text(&plaintext);
-		builder.set_seq(key_seq);
-		builder.set_key_id(sender_kid);
-		let mut buffer = vec![];
-		capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).ok()?;
-		Some(Encrypted {
-			ciphertext: buffer,
-			key_id: target_kid,
-			seq: key_seq,
-		})
-	})();
-	if !verified_ratchet::refined_finish_send(send_key) {
+		&context,
+		seal_frame,
+	)
+}
+
+struct OpenFrameContext<'a> {
+	ciphertext: &'a [u8],
+	associated_data: &'a [u8; AD_SIZE],
+	sender_kid: u64,
+}
+
+fn open_frame(key: &KeyMaterial, key_seq: u64, context: &OpenFrameContext<'_>) -> Option<Vec<u8>> {
+	let ct_len = context.ciphertext.len();
+	if ct_len <= MESSAGE_OVERHEAD {
 		return None;
 	}
-	encrypted
+	let commitment = build_commitment(
+		key,
+		context.associated_data.as_slice(),
+		&context.ciphertext[ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE],
+		key_seq,
+		context.sender_kid,
+	)?;
+	if !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {
+		return None;
+	}
+	crypto_aead::chacha20poly1305_ietf::decrypt(
+		&context.ciphertext[..ct_len - COMMITMENT_SIZE],
+		Some(context.associated_data.as_slice()),
+		key.nonce(),
+		key.key(),
+	)
+	.ok()
 }
 
 /// Decrypt one frame against a staged or committed peer ratchet.
 ///
 /// Authentication failure retains the exact logical and concrete receive key;
-/// successful authentication consumes both through the shared refined kernel
-/// while registration is staged off to the side.
+/// successful authentication consumes both through the shared refined kernel.
+/// Production supplies one opaque AEAD callback and never receives material or
+/// reports an independent authentication Boolean.
 pub(crate) fn decrypt_message_with_ratchet(
 	data: &[u8],
 	expected_sender_kid: u64,
@@ -788,37 +889,21 @@ pub(crate) fn decrypt_message_with_ratchet(
 	if ct_len <= MESSAGE_OVERHEAD {
 		return None;
 	}
-	let key_seq = ratchet.ratchet_recv_until(frame.get_seq())?;
-	let key = ratchet.recv_key(key_seq)?;
-	let commitment = build_commitment(
-		key,
-		associated_data.as_slice(),
-		&ciphertext[ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE],
-		key_seq,
-		kid,
-	);
-	let plaintext = match commitment {
-		Some(commitment) if memcmp(&commitment, &ciphertext[ct_len - COMMITMENT_SIZE..]) => {
-			crypto_aead::chacha20poly1305_ietf::decrypt(
-				&ciphertext[..ct_len - COMMITMENT_SIZE],
-				Some(associated_data.as_slice()),
-				key.nonce(),
-				key.key(),
-			)
-			.ok()
-		}
-		_ => None,
+	let context = OpenFrameContext {
+		ciphertext,
+		associated_data,
+		sender_kid: kid,
 	};
-	let disposition = ratchet.complete_recv_key(key_seq, plaintext.is_some());
-	if !matches!(
-		(plaintext.is_some(), disposition),
-		(true, verified_ratchet::ReceiveDisposition::Consumed)
-			| (false, verified_ratchet::ReceiveDisposition::Retained)
-	) {
-		return None;
-	}
+	let key_seq = frame.get_seq();
+	let plaintext = verified_ratchet::refined_open_and_finish(
+		&mut ratchet.refined,
+		key_seq,
+		ratchet_step::<roles::ChainRecvKey>,
+		&context,
+		open_frame,
+	)?;
 	Some(Decrypted {
-		plaintext: plaintext?,
+		plaintext,
 		key_id: kid,
 		seq: key_seq,
 	})
@@ -1072,6 +1157,15 @@ mod tests {
 		assert_eq!(too_short.as_slice(), &[0; KDF_STATE_SIZE]);
 		assert_eq!(too_long.as_slice(), &[0; KDF_STATE_SIZE]);
 		assert_eq!(exact.clone().as_slice(), exact.as_slice());
+	}
+
+	#[cfg(feature = "server")]
+	#[test]
+	fn secret_array_copy_and_inner_access_preserve_bytes() {
+		let mut secret = KdfSendState::default();
+		secret.copy_from_slice(&[0xA5; KDF_STATE_SIZE]);
+
+		assert_eq!(secret.inner().as_slice(), &[0xA5; KDF_STATE_SIZE]);
 	}
 
 	#[test]

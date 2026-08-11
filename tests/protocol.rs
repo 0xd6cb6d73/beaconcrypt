@@ -6,7 +6,7 @@ trait TestEndpoint {
 	fn encrypt_for_test(&mut self, data: &[u8], kid: u64) -> Option<Encrypted>;
 	fn decrypt_for_test(&mut self, data: &[u8]) -> Option<Decrypted>;
 	fn receive_state_for_test(&self, kid: u64) -> Vec<u8>;
-	fn has_recv_key_for_test(&self, kid: u64, seq: u64) -> bool;
+	fn receive_cache_len_for_test(&self, kid: u64) -> usize;
 }
 impl TestEndpoint for Server {
 	fn encrypt_for_test(&mut self, d: &[u8], k: u64) -> Option<Encrypted> {
@@ -22,8 +22,8 @@ impl TestEndpoint for Server {
 			.as_slice()
 			.to_vec()
 	}
-	fn has_recv_key_for_test(&self, k: u64, seq: u64) -> bool {
-		self.ratchet_manager(k).unwrap().recv_key(seq).is_some()
+	fn receive_cache_len_for_test(&self, k: u64) -> usize {
+		self.ratchet_manager(k).unwrap().receive_cache_len() as usize
 	}
 }
 impl TestEndpoint for Beacon {
@@ -38,9 +38,9 @@ impl TestEndpoint for Beacon {
 		assert_eq!(k, self.server_kid());
 		self.ratchet_manager().recv_state().as_slice().to_vec()
 	}
-	fn has_recv_key_for_test(&self, k: u64, seq: u64) -> bool {
+	fn receive_cache_len_for_test(&self, k: u64) -> usize {
 		assert_eq!(k, self.server_kid());
-		self.ratchet_manager().recv_key(seq).is_some()
+		self.ratchet_manager().receive_cache_len() as usize
 	}
 }
 
@@ -147,10 +147,8 @@ fn receive_state(crypto: &impl TestEndpoint, kid: u64) -> Vec<u8> {
 	crypto.receive_state_for_test(kid)
 }
 
-fn cached_receive_key_count(crypto: &impl TestEndpoint, kid: u64, start: u64, end: u64) -> usize {
-	(start..=end)
-		.filter(|seq| crypto.has_recv_key_for_test(kid, *seq))
-		.count()
+fn cached_receive_key_count(crypto: &impl TestEndpoint, kid: u64, _start: u64, _end: u64) -> usize {
+	crypto.receive_cache_len_for_test(kid)
 }
 
 fn assert_server_frame_tampering_is_rejected(mut tamper: impl FnMut(&mut Vec<u8>, &[u8])) {
@@ -240,7 +238,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 			initial_state,
 			"out-of-range sequence {rejected_seq} advanced the receive state"
 		);
-		assert!(!receiver.has_recv_key_for_test(receiver_remote_kid, first_seq));
+		assert_eq!(receiver.receive_cache_len_for_test(receiver_remote_kid), 0);
 	}
 
 	let last_cached_seq = current_seq + RECEIVE_GAP_LIMIT;
@@ -283,7 +281,6 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 			cached_receive_key_count(receiver, receiver_remote_kid, first_seq, last_cached_seq),
 			RECEIVE_GAP_LIMIT as usize
 		);
-		assert!(!receiver.has_recv_key_for_test(receiver_remote_kid, rejected_seq));
 	}
 
 	assert_eq!(
@@ -348,7 +345,6 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 		RECEIVE_GAP_LIMIT as usize,
 		"frame beyond the recovered boundary grew the receive cache"
 	);
-	assert!(!receiver.has_recv_key_for_test(receiver_remote_kid, over_recovered_boundary_seq));
 }
 
 fn assert_every_inner_payload_bit_is_authenticated(
@@ -520,7 +516,10 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 		receiver.decrypt_for_test(boundary).unwrap().plaintext,
 		boundary_plaintext.as_slice()
 	);
-	assert!(!receiver.has_recv_key_for_test(receiver_remote_kid, boundary_seq));
+	assert_eq!(
+		receiver.receive_cache_len_for_test(receiver_remote_kid),
+		RECEIVE_GAP_LIMIT as usize - 1
+	);
 	assert!(receiver.decrypt_for_test(boundary).is_none());
 	assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
 
@@ -1262,12 +1261,12 @@ fn crypto_frame_sequence_is_bound_in_both_directions() {
 	let (mut server, mut beacon) = new_pair();
 	let response = register_beacon(&mut server, &mut beacon, None);
 	assert_sequence_relabelling_is_rejected(&mut beacon, &mut server, SERVER_KID);
-	assert!(
+	assert_eq!(
 		server
 			.ratchet_manager(response.kid)
 			.unwrap()
-			.recv_key(1)
-			.is_none()
+			.receive_cache_len(),
+		0
 	);
 }
 
@@ -1450,7 +1449,7 @@ fn failed_initial_ciphertext_is_terminal_and_clears_registration_state() {
 	let ratchet = beacon.ratchet_manager();
 	assert_eq!(ratchet.send_state().as_slice(), &[0; KDF_STATE_SIZE]);
 	assert_eq!(ratchet.recv_state().as_slice(), &[0; KDF_STATE_SIZE]);
-	assert!(ratchet.recv_key(1).is_none());
+	assert_eq!(ratchet.receive_cache_len(), 0);
 }
 
 #[test]

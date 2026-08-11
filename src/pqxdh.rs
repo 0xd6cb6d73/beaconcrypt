@@ -373,18 +373,22 @@ impl Server {
 		let ad = self.associated_data(k)?;
 		decrypt_message_with_ratchet(b, k, &ad, self.ratchet_manager_mut(k)?)
 	}
-	pub fn ratchet_recv_until(&mut self, u: u64, k: u64) -> Option<u64> {
+	#[cfg(test)]
+	fn ratchet_recv_until(&mut self, u: u64, k: u64) -> Option<u64> {
 		self.ratchet_manager_mut(k)?.ratchet_recv_until(u)
 	}
-	pub fn recv_key(&self, s: u64, k: u64) -> Option<&crate::shared::KeyMaterial> {
+	#[cfg(test)]
+	fn recv_key(&self, s: u64, k: u64) -> Option<&crate::shared::KeyMaterial> {
 		self.ratchet_manager(k)?.recv_key(s)
 	}
-	pub fn delete_recv_key(&mut self, s: u64, k: u64) {
+	#[cfg(test)]
+	fn delete_recv_key(&mut self, s: u64, k: u64) {
 		if let Some(r) = self.ratchet_manager_mut(k) {
 			r.delete_recv_key(s)
 		}
 	}
-	pub fn complete_recv_key(&mut self, s: u64, k: u64, a: bool) -> bool {
+	#[cfg(test)]
+	fn complete_recv_key(&mut self, s: u64, k: u64, a: bool) -> bool {
 		self.ratchet_manager_mut(k).is_some_and(|r| {
 			matches!(
 				(a, r.complete_recv_key(s, a)),

@@ -1755,6 +1755,45 @@ let refined_advance_send_preserves_validity
   = advance_send_preserves_receive_state state.f_control;
     refined_advance_send_success_uses_step state  step
 
+/// The public seal operation passes the exact material produced from the old send chain, the allocated sequence, and the caller's context to one opaque callback, then returns that callback's result after consuming the private token.
+let refined_seal_next_uses_exact_step_material
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Output:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       state.f_control.f_send_sequence <>
+         Core_models.Num.impl_u64__MAX })
+    (step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (context:v_Context)
+    (seal:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Output)
+  : Lemma
+      (let stepped = step state.f_send_chain in
+       let sealed_state, output =
+         refined_seal_next state step context seal in
+       sealed_state.f_send_chain == stepped.f_chain /\
+       sealed_state.f_receive_chain == state.f_receive_chain /\
+       sealed_state.f_receive_slots == state.f_receive_slots /\
+       v sealed_state.f_control.f_send_sequence ==
+         v state.f_control.f_send_sequence + 1 /\
+       output ==
+         seal stepped.f_material
+           sealed_state.f_control.f_send_sequence context)
+  = refined_advance_send_success_uses_step state step
+
+/// The public seal operation preserves the complete refined invariant on both callback success and callback failure.
+let refined_seal_next_preserves_validity
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Output:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined state })
+    (step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (context:v_Context)
+    (seal:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Output)
+  : Lemma
+      (let sealed_state, _ =
+         refined_seal_next state step context seal in
+       valid_refined sealed_state)
+  = refined_advance_send_preserves_validity state step
+
 /// Receive rejection is state-neutral and cannot depend on the opaque callback because validation precedes its application.
 let refined_advance_receive_rejection_is_step_independent
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
@@ -2689,6 +2728,88 @@ let refined_finish_receive_preserves_validity
               state sequence target_slot last_slot target_cached last_cached
         | _ -> ()
       else ()
+
+/// If the opaque open callback returns `None` for the exact material and sequence selected after admission, the public operation returns that complete admitted state unchanged.
+let refined_open_none_retains_selected_material
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (state admitted:t_RefinedRatchet
+      v_SendChain v_ReceiveChain v_Material)
+    (target sequence:u64)
+    (material:v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (requires
+        (refined_advance_receive_until state target step ==
+           (admitted, Core_models.Option.Option_Some sequence) /\
+         refined_receive_key admitted sequence ==
+           Core_models.Option.Option_Some material /\
+         open_callback material sequence context ==
+           Core_models.Option.Option_None))
+      (ensures
+        (refined_open_and_finish state target step context open_callback ==
+          (admitted, Core_models.Option.Option_None)))
+  = ()
+
+/// If the opaque open callback returns `Some` for the exact selected material, sequence, and context, the public operation returns that plaintext only with the state produced by consuming that same sequence.
+let refined_open_some_consumes_selected_material
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (state admitted consumed:t_RefinedRatchet
+      v_SendChain v_ReceiveChain v_Material)
+    (target sequence:u64)
+    (material:v_Material)
+    (plaintext:v_Plaintext)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (requires
+        (refined_advance_receive_until state target step ==
+           (admitted, Core_models.Option.Option_Some sequence) /\
+         refined_receive_key admitted sequence ==
+           Core_models.Option.Option_Some material /\
+         open_callback material sequence context ==
+           Core_models.Option.Option_Some plaintext /\
+         refined_finish_receive admitted sequence true ==
+           (consumed, ReceiveDisposition_Consumed)))
+      (ensures
+        (refined_open_and_finish state target step context open_callback ==
+          (consumed, Core_models.Option.Option_Some plaintext)))
+  = ()
+
+/// The public open operation preserves the complete refined invariant across admission rejection, callback failure retention, and callback success consumption.
+let refined_open_and_finish_preserves_validity
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined state })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (let final_state, _ =
+         refined_open_and_finish state target step context open_callback in
+       valid_refined final_state)
+  =
+  refined_advance_receive_until_executes_plan state target step;
+  let admitted, reached =
+    refined_advance_receive_until state target step in
+  assert (valid_refined admitted);
+  match reached with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some sequence ->
+      match refined_receive_key admitted sequence with
+      | Core_models.Option.Option_None -> ()
+      | Core_models.Option.Option_Some material ->
+          match open_callback material sequence context with
+          | Core_models.Option.Option_None -> ()
+          | Core_models.Option.Option_Some _ ->
+              refined_finish_receive_preserves_validity
+                admitted sequence true
 
 /// The empty refined restoration builder starts valid for arbitrary counters and chain values.
 let start_refined_restore_is_valid

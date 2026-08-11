@@ -709,9 +709,10 @@ let impl_9__receive_entry_at
   | Core_models.Option.Option_None  ->
     Core_models.Option.Option_None <: Core_models.Option.t_Option (u64 & v_Material)
 
-/// A stack-local concrete send key paired with its logical one-use capability.
-/// This token is deliberately neither `Copy` nor `Clone`. Borrow its material
-/// for one encryption attempt, then consume it with `refined_finish_send`.
+/// A kernel-private concrete send key paired with its logical one-use capability.
+/// This token is deliberately neither `Copy` nor `Clone`, and it never crosses
+/// the public kernel boundary. [`refined_seal_next`] lends its material to the
+/// opaque sealing callback and consumes the complete token before returning.
 type t_RefinedSendKey (v_Material: Type0) = {
   f_logical:t_SendKey;
   f_material:v_Material
@@ -781,6 +782,56 @@ let refined_advance_send
 let refined_finish_send (#v_Material: Type0) (key: t_RefinedSendKey v_Material) : bool =
   let finished:t_SendFinish = finish_send key.f_logical in
   finished.f_consumed && ~.(impl_SendKey__is_available finished.f_key <: bool)
+
+/// Advance the send ratchet and seal with the exact material allocated for the
+/// resulting sequence.
+/// The opaque callback is the only code outside the kernel that can observe
+/// the sequence/material pair. The pair is borrowed only for that call and is
+/// consumed before this operation returns, regardless of whether sealing
+/// succeeds.
+let refined_seal_next
+      (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Output: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (step: (v_SendChain -> t_RatchetStep v_SendChain v_Material))
+      (context: v_Context)
+      (seal: (v_Material -> u64 -> v_Context -> Core_models.Option.t_Option v_Output))
+    : (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option v_Output
+    ) =
+  let
+  (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
+  (out: Core_models.Option.t_Option (t_RefinedSendKey v_Material)) =
+    refined_advance_send #v_SendChain #v_ReceiveChain #v_Material state step
+  in
+  let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
+  match out <: Core_models.Option.t_Option (t_RefinedSendKey v_Material) with
+  | Core_models.Option.Option_Some key ->
+    (match impl_10__sequence #v_Material key <: Core_models.Option.t_Option u64 with
+      | Core_models.Option.Option_Some sequence ->
+        let output:Core_models.Option.t_Option v_Output =
+          seal (impl_10__material #v_Material key) sequence context
+        in
+        if ~.(refined_finish_send #v_Material key <: bool)
+        then
+          state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Output)
+          <:
+          (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+            Core_models.Option.t_Option v_Output)
+        else
+          let hax_temp_output:Core_models.Option.t_Option v_Output = output in
+          state, hax_temp_output
+          <:
+          (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+            Core_models.Option.t_Option v_Output)
+      | _ ->
+        let _:bool = refined_finish_send #v_Material key in
+        state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Output)
+        <:
+        (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+          Core_models.Option.t_Option v_Output))
+  | Core_models.Option.Option_None  ->
+    state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Output)
+    <:
+    (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option v_Output)
 
 /// Derive and cache exactly one receive key through the shared refined kernel.
 /// Logical admission and slot validation happen before the sole opaque step.
@@ -1335,3 +1386,77 @@ let refined_finish_receive
     state, (ReceiveDisposition_Missing <: t_ReceiveDisposition)
     <:
     (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & t_ReceiveDisposition)
+
+/// Select the exact sequence-tagged receive material, try to authenticate and
+/// open the supplied frame context, and finish that same attempt atomically.
+/// Returning `Some` from the opaque callback consumes the selected material.
+/// Returning `None` retains it for retry. Neither raw material nor an
+/// independently supplied authentication Boolean crosses this public API.
+let refined_open_and_finish
+      (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (target: u64)
+      (step: (v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material))
+      (context: v_Context)
+      (v_open: (v_Material -> u64 -> v_Context -> Core_models.Option.t_Option v_Plaintext))
+    : (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+      Core_models.Option.t_Option v_Plaintext) =
+  let
+  (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
+  (out: Core_models.Option.t_Option u64) =
+    refined_advance_receive_until #v_SendChain #v_ReceiveChain #v_Material state target step
+  in
+  let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
+  match out <: Core_models.Option.t_Option u64 with
+  | Core_models.Option.Option_Some sequence ->
+    (match
+        refined_receive_key #v_SendChain #v_ReceiveChain #v_Material state sequence
+        <:
+        Core_models.Option.t_Option v_Material
+      with
+      | Core_models.Option.Option_Some material ->
+        let opened:Core_models.Option.t_Option v_Plaintext = v_open material sequence context in
+        let
+        (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
+        (hax_temp_output: Core_models.Option.t_Option v_Plaintext) =
+          match opened <: Core_models.Option.t_Option v_Plaintext with
+          | Core_models.Option.Option_None  ->
+            state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
+            <:
+            (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+              Core_models.Option.t_Option v_Plaintext)
+          | Core_models.Option.Option_Some plaintext ->
+            let
+            (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
+            (out: t_ReceiveDisposition) =
+              refined_finish_receive #v_SendChain #v_ReceiveChain #v_Material state sequence true
+            in
+            let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
+            match out <: t_ReceiveDisposition with
+            | ReceiveDisposition_Consumed  ->
+              state,
+              (Core_models.Option.Option_Some plaintext <: Core_models.Option.t_Option v_Plaintext)
+              <:
+              (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+                Core_models.Option.t_Option v_Plaintext)
+            | ReceiveDisposition_Missing
+            | ReceiveDisposition_Retained  ->
+              state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
+              <:
+              (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+                Core_models.Option.t_Option v_Plaintext)
+        in
+        state, hax_temp_output
+        <:
+        (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+          Core_models.Option.t_Option v_Plaintext)
+      | Core_models.Option.Option_None  ->
+        state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
+        <:
+        (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+          Core_models.Option.t_Option v_Plaintext))
+  | Core_models.Option.Option_None  ->
+    state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
+    <:
+    (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+      Core_models.Option.t_Option v_Plaintext)

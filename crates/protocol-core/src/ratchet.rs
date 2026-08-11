@@ -278,7 +278,7 @@ pub struct SendAdvance {
 /// The returned key is a low-level logical capability. [`refined_advance_send`]
 /// pairs it with the concrete material returned by the opaque step for the same
 /// sequence and requires that pair to be finished after its one use.
-pub fn advance_send(state: RatchetState) -> SendAdvance {
+pub(crate) fn advance_send(state: RatchetState) -> SendAdvance {
 	if state.send_sequence == u64::MAX {
 		SendAdvance {
 			state,
@@ -313,7 +313,7 @@ pub struct SendFinish {
 ///
 /// The refined kernel performs this transition after both successful and failed
 /// encryption, matching beaconcrypt's existing one-use send-key policy.
-pub fn finish_send(key: SendKey) -> SendFinish {
+pub(crate) fn finish_send(key: SendKey) -> SendFinish {
 	if key.available {
 		SendFinish {
 			key: SendKey {
@@ -343,7 +343,7 @@ pub struct ReceivePlan {
 
 /// Decide whether `target` can be reached without exceeding the receive gap or
 /// the total outstanding-key capacity.
-pub fn plan_receive_until(state: RatchetState, target: u64) -> ReceivePlan {
+pub(crate) fn plan_receive_until(state: RatchetState, target: u64) -> ReceivePlan {
 	if target <= state.receive_sequence {
 		return ReceivePlan {
 			sequence: Some(target),
@@ -379,7 +379,7 @@ pub struct ReceiveAdvance {
 /// The refined executor calls this exactly `ReceivePlan::derivations` times and
 /// binds one opaque step output to each successful logical advance. Exhaustion
 /// and a full cache are state-neutral.
-pub fn advance_receive(state: RatchetState) -> ReceiveAdvance {
+pub(crate) fn advance_receive(state: RatchetState) -> ReceiveAdvance {
 	if state.receive_sequence == u64::MAX {
 		return ReceiveAdvance {
 			state,
@@ -469,7 +469,7 @@ fn lookup_receive_key_from(
 }
 
 /// Return the physical slot currently containing `sequence`.
-pub fn lookup_receive_key(state: RatchetState, sequence: u64) -> Option<u8> {
+pub(crate) fn lookup_receive_key(state: RatchetState, sequence: u64) -> Option<u8> {
 	lookup_receive_key_from(state, sequence, 0, RECEIVE_CACHE_CAPACITY as u8)
 }
 
@@ -479,7 +479,8 @@ pub fn lookup_receive_key(state: RatchetState, sequence: u64) -> Option<u8> {
 /// Requiring both values prevents a stale slot from consuming a different key.
 /// Removal uses a visible fixed-array swap, avoiding assumed collection models
 /// in the prover backend.
-pub fn finish_receive(
+#[allow(dead_code)]
+pub(crate) fn finish_receive(
 	state: RatchetState,
 	target: u64,
 	slot: u8,
@@ -496,7 +497,7 @@ pub fn finish_receive(
 ///
 /// Missing or retained keys return no plan and leave `state` unchanged. A
 /// consumed key returns the target slot and the old final active slot.
-pub fn finish_receive_with_removal(
+pub(crate) fn finish_receive_with_removal(
 	state: RatchetState,
 	target: u64,
 	slot: u8,
@@ -708,11 +709,12 @@ impl<SendChain, ReceiveChain, Material> RefinedRatchet<SendChain, ReceiveChain, 
 	}
 }
 
-/// A stack-local concrete send key paired with its logical one-use capability.
+/// A kernel-private concrete send key paired with its logical one-use capability.
 ///
-/// This token is deliberately neither `Copy` nor `Clone`. Borrow its material
-/// for one encryption attempt, then consume it with `refined_finish_send`.
-pub struct RefinedSendKey<Material> {
+/// This token is deliberately neither `Copy` nor `Clone`, and it never crosses
+/// the public kernel boundary. [`refined_seal_next`] lends its material to the
+/// opaque sealing callback and consumes the complete token before returning.
+pub(crate) struct RefinedSendKey<Material> {
 	logical: SendKey,
 	material: Material,
 }
@@ -732,7 +734,7 @@ impl<Material> RefinedSendKey<Material> {
 /// Exhaustion is neutral and does not invoke `step`. Success publishes the new
 /// chain and counter together and returns the exact step material beside the
 /// logical capability for the allocated sequence.
-pub fn refined_advance_send<SendChain, ReceiveChain, Material>(
+pub(crate) fn refined_advance_send<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	step: fn(&SendChain) -> RatchetStep<SendChain, Material>,
 ) -> Option<RefinedSendKey<Material>> {
@@ -752,16 +754,41 @@ pub fn refined_advance_send<SendChain, ReceiveChain, Material>(
 }
 
 /// Consume a concrete/logical send token after its single permitted use.
-pub fn refined_finish_send<Material>(key: RefinedSendKey<Material>) -> bool {
+pub(crate) fn refined_finish_send<Material>(key: RefinedSendKey<Material>) -> bool {
 	let finished = finish_send(key.logical);
 	finished.consumed && !finished.key.is_available()
+}
+
+/// Advance the send ratchet and seal with the exact material allocated for the
+/// resulting sequence.
+///
+/// The opaque callback is the only code outside the kernel that can observe
+/// the sequence/material pair. The pair is borrowed only for that call and is
+/// consumed before this operation returns, regardless of whether sealing
+/// succeeds.
+pub fn refined_seal_next<SendChain, ReceiveChain, Material, Context, Output>(
+	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
+	step: fn(&SendChain) -> RatchetStep<SendChain, Material>,
+	context: &Context,
+	seal: fn(&Material, u64, &Context) -> Option<Output>,
+) -> Option<Output> {
+	let key = refined_advance_send(state, step)?;
+	let Some(sequence) = key.sequence() else {
+		let _ = refined_finish_send(key);
+		return None;
+	};
+	let output = seal(key.material(), sequence, context);
+	if !refined_finish_send(key) {
+		return None;
+	}
+	output
 }
 
 /// Derive and cache exactly one receive key through the shared refined kernel.
 ///
 /// Logical admission and slot validation happen before the sole opaque step.
 /// Rejection therefore leaves the concrete chain and slots untouched.
-pub fn refined_advance_receive<SendChain, ReceiveChain, Material>(
+pub(crate) fn refined_advance_receive<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
 ) -> Option<u64> {
@@ -833,7 +860,7 @@ fn refined_execute_receive_steps<SendChain, ReceiveChain, Material>(
 /// Rejection is therefore neutral.
 /// An accepted transaction has no intermediate failure branch.
 /// It cannot publish only a prefix of the planned refinement.
-pub fn refined_advance_receive_until<SendChain, ReceiveChain, Material>(
+pub(crate) fn refined_advance_receive_until<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	target: u64,
 	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
@@ -853,7 +880,7 @@ pub fn refined_advance_receive_until<SendChain, ReceiveChain, Material>(
 }
 
 /// Look up concrete receive material only through the verified logical cache.
-pub fn refined_receive_key<SendChain, ReceiveChain, Material>(
+pub(crate) fn refined_receive_key<SendChain, ReceiveChain, Material>(
 	state: &RefinedRatchet<SendChain, ReceiveChain, Material>,
 	sequence: u64,
 ) -> Option<&Material> {
@@ -874,7 +901,7 @@ pub fn refined_receive_key<SendChain, ReceiveChain, Material>(
 /// Missing and retained outcomes are neutral. Successful authentication applies
 /// the core-selected target/last swap-removal internally before publishing the
 /// returned control state.
-pub fn refined_finish_receive<SendChain, ReceiveChain, Material>(
+pub(crate) fn refined_finish_receive<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	sequence: u64,
 	authenticated: bool,
@@ -934,6 +961,33 @@ pub fn refined_finish_receive<SendChain, ReceiveChain, Material>(
 			state.control = finished.state;
 			ReceiveDisposition::Consumed
 		}
+	}
+}
+
+/// Select the exact sequence-tagged receive material, try to authenticate and
+/// open the supplied frame context, and finish that same attempt atomically.
+///
+/// Returning `Some` from the opaque callback consumes the selected material.
+/// Returning `None` retains it for retry. Neither raw material nor an
+/// independently supplied authentication Boolean crosses this public API.
+pub fn refined_open_and_finish<SendChain, ReceiveChain, Material, Context, Plaintext>(
+	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
+	target: u64,
+	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
+	context: &Context,
+	open: fn(&Material, u64, &Context) -> Option<Plaintext>,
+) -> Option<Plaintext> {
+	let sequence = refined_advance_receive_until(state, target, step)?;
+	let opened = {
+		let material = refined_receive_key(state, sequence)?;
+		open(material, sequence, context)
+	};
+	match opened {
+		None => None,
+		Some(plaintext) => match refined_finish_receive(state, sequence, true) {
+			ReceiveDisposition::Consumed => Some(plaintext),
+			ReceiveDisposition::Missing | ReceiveDisposition::Retained => None,
+		},
 	}
 }
 
@@ -1027,7 +1081,11 @@ pub struct PeerSendAdvance {
 ///
 /// Applying this function pointwise to a uniquely keyed peer map gives the
 /// frame rule: every non-selected peer is returned byte-for-byte unchanged.
-pub fn advance_send_for_peer(requested_peer: u64, peer: PeerRatchetState) -> PeerSendAdvance {
+#[allow(dead_code)]
+pub(crate) fn advance_send_for_peer(
+	requested_peer: u64,
+	peer: PeerRatchetState,
+) -> PeerSendAdvance {
 	if requested_peer != peer.peer_id {
 		PeerSendAdvance {
 			peer,
@@ -1054,9 +1112,10 @@ mod tests {
 		finish_receive_with_removal, finish_refined_restore, finish_restore, finish_send,
 		lookup_receive_key, plan_receive_until, refined_advance_receive,
 		refined_advance_receive_until, refined_advance_send, refined_finish_receive,
-		refined_finish_send, refined_receive_key, refined_restore_receive_key,
-		replace_ratchet_for_peer, restore_receive_key, restore_receive_key_with_slot,
-		split_ratchet_kdf_output, start_refined_restore, start_restore,
+		refined_finish_send, refined_open_and_finish, refined_receive_key,
+		refined_restore_receive_key, refined_seal_next, replace_ratchet_for_peer,
+		restore_receive_key, restore_receive_key_with_slot, split_ratchet_kdf_output,
+		start_refined_restore, start_restore,
 	};
 
 	#[derive(Debug, Eq, PartialEq)]
@@ -1074,6 +1133,36 @@ mod tests {
 
 	fn rejected_test_step(_chain: &u64) -> RatchetStep<u64, TestMaterial> {
 		panic!("rejected receive transaction invoked its KDF callback")
+	}
+
+	struct TestAeadContext {
+		marker: u64,
+		authenticated: bool,
+		seen_sequence: core::cell::Cell<Option<u64>>,
+		seen_generation: core::cell::Cell<Option<u64>>,
+	}
+
+	impl TestAeadContext {
+		fn new(marker: u64, authenticated: bool) -> Self {
+			Self {
+				marker,
+				authenticated,
+				seen_sequence: core::cell::Cell::new(None),
+				seen_generation: core::cell::Cell::new(None),
+			}
+		}
+	}
+
+	fn test_aead(
+		material: &TestMaterial,
+		sequence: u64,
+		context: &TestAeadContext,
+	) -> Option<(u64, u64, u64)> {
+		context.seen_sequence.set(Some(sequence));
+		context.seen_generation.set(Some(material.generation));
+		context
+			.authenticated
+			.then_some((sequence, material.generation, context.marker))
 	}
 
 	fn test_ratchet_kdf(old_chain: &[u8; 32]) -> [u8; RATCHET_KDF_OUTPUT_SIZE] {
@@ -1167,6 +1256,36 @@ mod tests {
 		assert_eq!(state.send_sequence(), 8);
 		assert_eq!(state.receive_sequence(), 0);
 		assert!(refined_finish_send(key));
+	}
+
+	#[test]
+	fn refined_seal_next_keeps_sequence_and_material_inside_callback() {
+		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::from_counters(7, 0, 10, 20);
+		let context = TestAeadContext::new(99, true);
+
+		assert_eq!(
+			refined_seal_next(&mut state, test_step, &context, test_aead),
+			Some((8, 11, 99))
+		);
+		assert_eq!(context.seen_sequence.get(), Some(8));
+		assert_eq!(context.seen_generation.get(), Some(11));
+		assert_eq!(state.send_sequence(), 8);
+		assert_eq!(*state.send_chain(), 11);
+	}
+
+	#[test]
+	fn refined_seal_next_consumes_failed_attempt_material() {
+		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
+		let context = TestAeadContext::new(99, false);
+
+		assert_eq!(
+			refined_seal_next(&mut state, test_step, &context, test_aead),
+			None
+		);
+		assert_eq!(context.seen_sequence.get(), Some(1));
+		assert_eq!(context.seen_generation.get(), Some(11));
+		assert_eq!(state.send_sequence(), 1);
+		assert_eq!(*state.send_chain(), 11);
 	}
 
 	#[test]
@@ -1574,6 +1693,46 @@ mod tests {
 			ReceiveDisposition::Missing
 		);
 		assert_eq!(*state.receive_chain(), 24);
+	}
+
+	#[test]
+	fn refined_open_success_consumes_the_callback_material() {
+		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
+		let context = TestAeadContext::new(77, true);
+
+		assert_eq!(
+			refined_open_and_finish(&mut state, 3, test_step, &context, test_aead),
+			Some((3, 23, 77))
+		);
+		assert_eq!(context.seen_sequence.get(), Some(3));
+		assert_eq!(context.seen_generation.get(), Some(23));
+		assert!(refined_receive_key(&state, 3).is_none());
+		assert_eq!(refined_receive_key(&state, 1).unwrap().generation, 21);
+		assert_eq!(refined_receive_key(&state, 2).unwrap().generation, 22);
+		assert_eq!(state.receive_cache_len(), 2);
+	}
+
+	#[test]
+	fn refined_open_failure_retains_exact_material_for_zero_step_retry() {
+		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
+		let failed = TestAeadContext::new(77, false);
+
+		assert_eq!(
+			refined_open_and_finish(&mut state, 3, test_step, &failed, test_aead),
+			None
+		);
+		assert_eq!(failed.seen_sequence.get(), Some(3));
+		assert_eq!(failed.seen_generation.get(), Some(23));
+		assert_eq!(refined_receive_key(&state, 3).unwrap().generation, 23);
+		assert_eq!(*state.receive_chain(), 23);
+
+		let retry = TestAeadContext::new(88, true);
+		assert_eq!(
+			refined_open_and_finish(&mut state, 3, rejected_test_step, &retry, test_aead),
+			Some((3, 23, 88))
+		);
+		assert_eq!(*state.receive_chain(), 23);
+		assert!(refined_receive_key(&state, 3).is_none());
 	}
 
 	#[test]

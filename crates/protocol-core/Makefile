@@ -44,10 +44,12 @@ HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::ratchet::**::into_step \
 	+beaconcrypt_protocol_core::ratchet::refined_advance_send \
 	+beaconcrypt_protocol_core::ratchet::refined_finish_send \
+	+beaconcrypt_protocol_core::ratchet::refined_seal_next \
 	+beaconcrypt_protocol_core::ratchet::refined_advance_receive \
 	+beaconcrypt_protocol_core::ratchet::refined_advance_receive_until \
 	+beaconcrypt_protocol_core::ratchet::refined_receive_key \
 	+beaconcrypt_protocol_core::ratchet::refined_finish_receive \
+	+beaconcrypt_protocol_core::ratchet::refined_open_and_finish \
 	+beaconcrypt_protocol_core::ratchet::start_refined_restore \
 	+beaconcrypt_protocol_core::ratchet::refined_restore_receive_key \
 	+beaconcrypt_protocol_core::ratchet::finish_refined_restore \
