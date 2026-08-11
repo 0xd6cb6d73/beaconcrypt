@@ -4,7 +4,7 @@
 
 ## Status and scope
 
-Stage 3 connected the symmetric-ratchet state machine introduced in Stages 1 and 2 to the production messaging path. A subsequent refinement replaces the remaining production-owned parallel chains and receive slots with the extracted generic `RefinedRatchet<SendChain, RecvChain, KeyMaterial>`. Production now compiles and calls that same kernel through the role-specific `Beacon` and `Server` APIs, and its private state owns control, both typed chain values, and the fixed concrete-material slots.
+Stage 3 connected the symmetric-ratchet state machine introduced in Stages 1 and 2 to the production messaging path. A subsequent refinement replaces the remaining production-owned parallel chains and receive slots with the extracted generic `RefinedRatchet<SendChain, RecvChain, KeyMaterial>`. Production now compiles and calls that same kernel through the role-specific `Beacon` and `Server` APIs, and its private state owns control, both typed chain values, and the fixed concrete-material slots. The later whole-plan refinement makes `refined_advance_receive_until` preflight every planned destination before an abstract KDF call and execute an admitted plan without a reported intermediate failure branch.
 
 This record covers the production adapter for symmetric-ratchet control state, key lifecycle, authentication completion, material-slot correspondence, and persistence restoration. HKDF remains the one opaque ratchet step supplied by production. PQXDH remains covered by Stage 4 and later stages.
 
@@ -16,7 +16,7 @@ This record covers the production adapter for symmetric-ratchet control state, k
 | `src/shared.rs` | Specialize `RefinedRatchet` to the production chain and material types, provide the sole opaque HKDF step callback, and route high-level send and receive operations through the shared kernel. |
 | `src/ser.rs` | Emit the five-field ratchet persistence format from the kernel's counters, chains, and paired active-entry accessor. |
 | `src/deser.rs` | Require the five-field ratchet schema and supply each sorted `(sequence, material)` pair atomically to the checked refined restoration builder. |
-| `crates/protocol-core` | Own logical control, typed opaque chains, fixed material slots, receive-until recursion, lookup, removal, restoration, and the consuming refined send token in one extractable kernel. |
+| `crates/protocol-core` | Own logical control, typed opaque chains, fixed material slots, whole-plan receive preflight and execution, lookup, removal, restoration, and the consuming refined send token in one extractable kernel. |
 
 The older logical ratchet APIs and their lemmas remain for proof compatibility, but production uses the refined API.
 
@@ -52,15 +52,17 @@ The refined send token is not `Clone` or `Copy`, so the production Rust API prev
 
 A production receive follows the shared refined transition sequence:
 
-1. `refined_advance_receive_until(&mut kernel, info, target, step)` decides gap and capacity admission before any callback and owns the bounded recursion over every admitted intermediate sequence.
-2. For each admitted step, the kernel invokes the opaque callback exactly once and publishes its returned next chain and material into the same newly allocated logical slot.
-3. `refined_receive_key(&kernel, sequence)` performs the kernel-owned sequence lookup and returns a reference to the associated material; production maintains no secondary index or physical slot view.
-4. Commitment or AEAD failure is passed to `refined_finish_receive(&mut kernel, sequence, false)`, which retains the exact sequence/material pair without moving a slot.
-5. Successful authentication is passed to `refined_finish_receive(&mut kernel, sequence, true)`, which performs the logical removal and concrete swap/take internally before returning `Consumed`.
+1. `RatchetManager::ratchet_recv_until` delegates directly to `refined_advance_receive_until(&mut kernel, info, target, step)` rather than interpreting the receive plan in production.
+2. The extracted operation decides gap and capacity admission and preflights every fixed-array destination selected by the complete plan before invoking the abstract KDF callback.
+3. Every reported rejection occurs at that preflight boundary, invokes no callback, preserves the complete control, chains, and material array, and therefore cannot publish only a prefix of the requested refinement.
+4. For a valid admitted future plan, the kernel invokes the callback exactly once for each planned sequence in chain order, appends the consecutive sequences to the consecutive slots beginning at the old cache length, stores each returned material in its corresponding slot, preserves every old sequence/material association, and reaches the target receive counter.
+5. An old or current target performs zero receive steps and leaves the complete refined state unchanged; `refined_receive_key(&kernel, sequence)` then decides whether that sequence remains available and returns its associated material without a production secondary index or physical slot view.
+6. Commitment or AEAD failure is passed to `refined_finish_receive(&mut kernel, sequence, false)`, which retains the exact post-admission sequence/material state without moving a slot.
+7. Successful authentication is passed to `refined_finish_receive(&mut kernel, sequence, true)`, which performs the logical removal and concrete swap/take internally before returning `Consumed`.
 
 Receive slots remain an internal packed representation rather than stable identifiers. Successful removal may move the former last sequence/material pair into the consumed pair's old slot; every later operation resolves by sequence through the kernel. Replay of an already consumed sequence therefore finds neither the logical entry nor its material and is rejected without changing state.
 
-An admissible forged future frame can still advance the receive chain and cache keys before authentication fails. This matches the existing protocol semantics described in the verification plan. Capacity and forward-gap rejection remain state-neutral, while an admitted authentication failure retains the derived candidate keys for retry.
+An admissible forged future frame can still advance the receive chain and cache keys before authentication fails. This matches the existing protocol semantics described in the verification plan. Admission or destination-preflight rejection is callback-free and state-neutral, while an admitted authentication failure occurs after the successful whole-plan transaction and retains the derived candidate keys for retry. The proof covers reported return paths; callback panics and process crashes remain outside its atomicity claim.
 
 ## Persistence and compatibility break
 
@@ -90,9 +92,9 @@ Because the kernel uses packed swap-removal while restoration uses sorted input,
 
 The Stage 3 correspondence claim applies to high-level `Beacon::{encrypt_message,decrypt_message}` and `Server::{encrypt_message,decrypt_message}` traces that start from fresh or successfully validated role state and do not roll state back.
 
-The strict F* theorem surface is parametric in the typed chains, material, and step callback. It connects admitted logical advancement with the callback output placed in the corresponding material slot, characterizes sequence lookup, proves failure retention and successful internal swap-removal preserve structural association, and proves that checked restoration appends each sequence/material pair together. The refined send lifecycle keeps the allocated sequence and callback-produced material in one consuming token. The older logical theorems remain available as compatibility results.
+The strict F* theorem surface is parametric in the typed chains, material, and step callback. It proves that whole-plan receive preflight precedes callback application, every reported rejection is callback-free and preserves the complete state, every valid admitted future plan executes exactly its bounded consecutive sequence and slot trace with the corresponding callback-produced materials and reaches the target counter while preserving old associations, and an old or current target performs zero steps before lookup. It also proves failure retention and successful internal swap-removal preserve structural association and that checked restoration appends each sequence/material pair together. The refined send lifecycle keeps the allocated sequence and callback-produced material in one consuming token. The older logical theorems remain available as compatibility results.
 
-These theorems mechanize association, slot mutation, callback ordering, restoration, and normal-return publication inside the extracted kernel. Because the callback is arbitrary in the proof, they do not establish that production's callback implements the intended HKDF labels, output split, or cryptographic relation between old chain, next chain, key, and nonce.
+These theorems mechanize whole-plan destination preflight, reported-rejection neutrality, association, slot mutation, callback ordering, restoration, and normal-return publication inside the extracted kernel. Because the callback is arbitrary and pure in the proof, they do not establish that production's callback implements the intended HKDF labels, output split, or cryptographic relation between old chain, next chain, key, and nonce, and they do not cover callback panics or crash atomicity.
 
 The following remain explicit adapter preconditions or exclusions:
 
@@ -100,7 +102,7 @@ The following remain explicit adapter preconditions or exclusions:
 - provenance of the authentication boolean from the intended commitment and AEAD checks;
 - serde translation and rejection behavior outside the refined builder;
 - hax extraction, Rust compilation, and correspondence of the checked kernel to the deployed executable;
-- rollback, cloned state forks, and crash atomicity across surrounding high-level persistence;
+- rollback, cloned state forks, callback panics, and crash atomicity across surrounding high-level persistence;
 - zeroization and physical erasure of chain and material bytes;
 - the production Server peer-map lookup and uniqueness refinement plus the Beacon's sole-server selection refinement;
 - correctness of the concrete AEAD, hash, allocation, and entropy primitives; and
@@ -113,6 +115,7 @@ The following remain explicit adapter preconditions or exclusions:
 Stage 3 adds or strengthens tests for:
 
 - paired sequence/material lookup after multi-key derivation;
+- whole-plan rejection when a later planned destination is already occupied, including zero callback calls and preservation of every earlier destination;
 - exact non-last and last-slot internal removal behavior, including preservation of both key and nonce bytes for a moved sequence;
 - unchanged logical state, receive-chain bytes, sequence/material association, and concrete material after failed authentication and zero-cost retry;
 - replay neutrality, full-capacity rejection, non-last release and refill, clone independence, and reset;

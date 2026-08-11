@@ -637,24 +637,50 @@ pub fn refined_advance_receive<SendChain, ReceiveChain, Material>(
 	feature = "proverif",
 	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
 )]
-fn refined_advance_receive_steps<SendChain, ReceiveChain, Material>(
-	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
-	info: &[u8],
-	step: fn(&ReceiveChain, &[u8]) -> RatchetStep<ReceiveChain, Material>,
+fn refined_receive_slots_are_empty<SendChain, ReceiveChain, Material>(
+	state: &RefinedRatchet<SendChain, ReceiveChain, Material>,
+	first_slot: u8,
 	remaining: u8,
 ) -> bool {
 	if remaining == 0 {
 		return true;
 	}
-	if refined_advance_receive(state, info, step).is_none() {
+	let slot_index = first_slot as usize;
+	if slot_index >= RECEIVE_CACHE_CAPACITY || state.receive_slots[slot_index].is_some() {
 		return false;
 	}
-	refined_advance_receive_steps(state, info, step, remaining - 1)
+	refined_receive_slots_are_empty(state, first_slot + 1, remaining - 1)
+}
+
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
+)]
+/// Commit an already-preflighted suffix of receive steps.
+///
+/// Admission bounds the counter and cache.
+/// Preflight proves every append destination vacant.
+/// Each internal one-step result is successful.
+/// This helper exposes no fallible intermediate result.
+fn refined_execute_receive_steps<SendChain, ReceiveChain, Material>(
+	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
+	info: &[u8],
+	step: fn(&ReceiveChain, &[u8]) -> RatchetStep<ReceiveChain, Material>,
+	remaining: u8,
+) {
+	if remaining == 0 {
+		return;
+	}
+	let _ = refined_advance_receive(state, info, step);
+	refined_execute_receive_steps(state, info, step, remaining - 1)
 }
 
 /// Plan and execute every receive step needed for `target` inside the kernel.
 ///
-/// The callback count and mutation order are no longer selected by the caller.
+/// Every destination slot is checked before the first callback.
+/// Rejection is therefore neutral.
+/// An accepted transaction has no intermediate failure branch.
+/// It cannot publish only a prefix of the planned refinement.
 pub fn refined_advance_receive_until<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	info: &[u8],
@@ -666,12 +692,12 @@ pub fn refined_advance_receive_until<SendChain, ReceiveChain, Material>(
 	if plan.derivations > RATCHET_MAX_GAP {
 		return None;
 	}
-	if !refined_advance_receive_steps(state, info, step, plan.derivations as u8) {
+	let remaining = plan.derivations as u8;
+	let first_slot = state.control.receive_cache_len();
+	if !refined_receive_slots_are_empty(state, first_slot, remaining) {
 		return None;
 	}
-	if plan.derivations != 0 && state.control.receive_sequence() != target {
-		return None;
-	}
+	refined_execute_receive_steps(state, info, step, remaining);
 	Some(target)
 }
 
@@ -846,8 +872,6 @@ pub fn advance_send_for_peer(requested_peer: u64, peer: PeerRatchetState) -> Pee
 
 #[cfg(test)]
 mod tests {
-	use core::sync::atomic::{AtomicUsize, Ordering};
-
 	use super::{
 		PeerRatchetState, RATCHET_MAX_GAP, RECEIVE_CACHE_CAPACITY, RatchetState, RatchetStep,
 		ReceiveDisposition, RefinedRatchet, RefinedSendKey, SendKey, SequenceCache,
@@ -859,8 +883,6 @@ mod tests {
 		replace_ratchet_for_peer, restore_receive_key, restore_receive_key_with_slot,
 		start_refined_restore, start_restore,
 	};
-
-	static TEST_STEP_CALLS: AtomicUsize = AtomicUsize::new(0);
 
 	#[derive(Debug, Eq, PartialEq)]
 	struct TestMaterial {
@@ -879,9 +901,8 @@ mod tests {
 		}
 	}
 
-	fn counting_test_step(chain: &u64, info: &[u8]) -> RatchetStep<u64, TestMaterial> {
-		TEST_STEP_CALLS.fetch_add(1, Ordering::SeqCst);
-		test_step(chain, info)
+	fn rejected_test_step(_chain: &u64, _info: &[u8]) -> RatchetStep<u64, TestMaterial> {
+		panic!("rejected receive transaction invoked its KDF callback")
 	}
 
 	fn execute_receive_plan(mut state: RatchetState, target: u64) -> RatchetState {
@@ -1148,30 +1169,66 @@ mod tests {
 	}
 
 	#[test]
+	fn refined_receive_transaction_executes_every_admitted_distance_exactly() {
+		for distance in 0..=RATCHET_MAX_GAP {
+			let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
+
+			assert_eq!(
+				refined_advance_receive_until(&mut state, b"recv", distance, test_step,),
+				Some(distance)
+			);
+			assert_eq!(state.receive_sequence(), distance);
+			assert_eq!(state.receive_cache_len(), distance as u8);
+			assert_eq!(*state.receive_chain(), 20 + distance);
+			for slot in 0..distance as u8 {
+				let (sequence, material) = state.receive_entry_at(slot).unwrap();
+				assert_eq!(sequence, slot as u64 + 1);
+				assert_eq!(material.generation, 21 + slot as u64);
+			}
+		}
+	}
+
+	#[test]
 	fn refined_receive_rejection_does_not_step_or_populate_slots() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
-		TEST_STEP_CALLS.store(0, Ordering::SeqCst);
 
 		assert_eq!(
 			refined_advance_receive_until(
 				&mut state,
 				b"recv",
 				RATCHET_MAX_GAP + 1,
-				counting_test_step,
+				rejected_test_step,
 			),
 			None
 		);
-		assert_eq!(TEST_STEP_CALLS.load(Ordering::SeqCst), 0);
 		assert_eq!(state.receive_sequence(), 0);
 		assert_eq!(state.receive_cache_len(), 0);
 		assert_eq!(*state.receive_chain(), 20);
 		assert!(state.receive_entry_at(0).is_none());
 
 		assert_eq!(
-			refined_advance_receive_until(&mut state, b"recv", 3, counting_test_step),
+			refined_advance_receive_until(&mut state, b"recv", 3, test_step),
 			Some(3)
 		);
-		assert_eq!(TEST_STEP_CALLS.load(Ordering::SeqCst), 3);
+		assert_eq!(*state.receive_chain(), 23);
+	}
+
+	#[test]
+	fn refined_receive_transaction_rejects_a_later_occupied_slot_before_stepping() {
+		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
+		state.receive_slots[1] = Some(TestMaterial {
+			generation: 99,
+			info_len: 0,
+		});
+
+		assert_eq!(
+			refined_advance_receive_until(&mut state, b"recv", 2, rejected_test_step),
+			None
+		);
+		assert_eq!(state.control, RatchetState::default());
+		assert_eq!(*state.receive_chain(), 20);
+		assert!(state.receive_slots[0].is_none());
+		assert_eq!(state.receive_slots[1].as_ref().unwrap().generation, 99);
 	}
 
 	#[test]
@@ -1181,13 +1238,11 @@ mod tests {
 			generation: 99,
 			info_len: 0,
 		});
-		TEST_STEP_CALLS.store(0, Ordering::SeqCst);
 
 		assert_eq!(
-			refined_advance_receive(&mut state, b"recv", counting_test_step),
+			refined_advance_receive(&mut state, b"recv", rejected_test_step),
 			None
 		);
-		assert_eq!(TEST_STEP_CALLS.load(Ordering::SeqCst), 0);
 		assert_eq!(state.control, RatchetState::default());
 		assert_eq!(*state.receive_chain(), 20);
 		assert_eq!(state.receive_slots[0].as_ref().unwrap().generation, 99);

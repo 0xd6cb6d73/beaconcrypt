@@ -354,9 +354,22 @@ require_line_count 1 '^let refined_receive_step_matches$' \
 require_line_count 1 '^let rec refined_receive_steps_are_ordered$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"refined recursive callback-result trace"
-require_line_count 1 '^let rec refined_advance_receive_steps_is_ordered$' \
+require_line_count 1 '^let rec refined_receive_slots_are_empty_for_valid$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
-	"refined completed-executor ordering lemma"
+	"refined whole-plan preflight lemma"
+require_line_count 1 '^let refined_advance_receive_with_space_succeeds$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined bounded one-step totality lemma"
+require_line_count 1 '^let rec refined_execute_receive_steps_is_exact$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined whole-plan exact execution lemma"
+require_line_count 1 '^let refined_advance_receive_until_executes_plan$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined admitted-plan transaction lemma"
+require_line_count 1 \
+	'^let refined_advance_receive_until_rejection_is_neutral$' \
+	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+	"refined whole-plan neutral-rejection lemma"
 require_line_count 1 '^let refined_advance_receive_until_is_ordered$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"refined composed callback-ordering lemma"

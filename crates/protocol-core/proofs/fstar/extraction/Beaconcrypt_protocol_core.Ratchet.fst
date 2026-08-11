@@ -857,16 +857,44 @@ let rec lookup_receive_key_from (state: t_RatchetState) (sequence: u64) (slot re
             (slot +! mk_u8 1 <: u8)
             (remaining -! mk_u8 1 <: u8)
 
-let rec refined_advance_receive_steps
+let rec refined_receive_slots_are_empty
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (first_slot remaining: u8)
+    : Prims.Tot bool
+      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
+  if remaining =. mk_u8 0
+  then true
+  else
+    let slot_index:usize = cast (first_slot <: u8) <: usize in
+    if
+      slot_index >=. v_RECEIVE_CACHE_CAPACITY ||
+      Core_models.Option.impl__is_some #v_Material
+        (state.f_receive_slots.[ slot_index ] <: Core_models.Option.t_Option v_Material)
+    then false
+    else
+      refined_receive_slots_are_empty #v_SendChain
+        #v_ReceiveChain
+        #v_Material
+        state
+        (first_slot +! mk_u8 1 <: u8)
+        (remaining -! mk_u8 1 <: u8)
+
+/// Commit an already-preflighted suffix of receive steps.
+/// Admission bounds the counter and cache.
+/// Preflight proves every append destination vacant.
+/// Each internal one-step result is successful.
+/// This helper exposes no fallible intermediate result.
+let rec refined_execute_receive_steps
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
       (info: t_Slice u8)
       (step: (v_ReceiveChain -> t_Slice u8 -> t_RatchetStep v_ReceiveChain v_Material))
       (remaining: u8)
-    : Prims.Tot (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & bool)
+    : Prims.Tot (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
       (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
   if remaining =. mk_u8 0
-  then state, true <: (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & bool)
+  then state
   else
     let
     (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
@@ -874,28 +902,24 @@ let rec refined_advance_receive_steps
       refined_advance_receive #v_SendChain #v_ReceiveChain #v_Material state info step
     in
     let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
-    if Core_models.Option.impl__is_none #u64 out
-    then state, false <: (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & bool)
-    else
-      let (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material), (out: bool) =
-        refined_advance_receive_steps #v_SendChain
-          #v_ReceiveChain
-          #v_Material
-          state
-          info
-          step
-          (remaining -! mk_u8 1 <: u8)
-      in
-      let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
-      let hax_temp_output:bool = out in
-      state, hax_temp_output <: (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & bool)
+    let _:Core_models.Option.t_Option u64 = out in
+    refined_execute_receive_steps #v_SendChain
+      #v_ReceiveChain
+      #v_Material
+      state
+      info
+      step
+      (remaining -! mk_u8 1 <: u8)
 
 /// Return the physical slot currently containing `sequence`.
 let lookup_receive_key (state: t_RatchetState) (sequence: u64) : Core_models.Option.t_Option u8 =
   lookup_receive_key_from state sequence (mk_u8 0) (cast (v_RECEIVE_CACHE_CAPACITY <: usize) <: u8)
 
 /// Plan and execute every receive step needed for `target` inside the kernel.
-/// The callback count and mutation order are no longer selected by the caller.
+/// Every destination slot is checked before the first callback.
+/// Rejection is therefore neutral.
+/// An accepted transaction has no intermediate failure branch.
+/// It cannot publish only a prefix of the planned refinement.
 let refined_advance_receive_until
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
@@ -912,36 +936,37 @@ let refined_advance_receive_until
       <:
       (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option u64)
     else
-      let (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material), (out: bool) =
-        refined_advance_receive_steps #v_SendChain
-          #v_ReceiveChain
-          #v_Material
-          state
-          info
-          step
-          (cast (plan.f_derivations <: u64) <: u8)
-      in
-      let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
-      if ~.out
+      let remaining:u8 = cast (plan.f_derivations <: u64) <: u8 in
+      let first_slot:u8 = impl_RatchetState__receive_cache_len state.f_control in
+      if
+        ~.(refined_receive_slots_are_empty #v_SendChain
+            #v_ReceiveChain
+            #v_Material
+            state
+            first_slot
+            remaining
+          <:
+          bool)
       then
         state, (Core_models.Option.Option_None <: Core_models.Option.t_Option u64)
         <:
         (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option u64)
       else
-        if
-          plan.f_derivations <>. mk_u64 0 &&
-          (impl_RatchetState__receive_sequence state.f_control <: u64) <>. target
-        then
-          state, (Core_models.Option.Option_None <: Core_models.Option.t_Option u64)
-          <:
-          (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option u64)
-        else
-          let hax_temp_output:Core_models.Option.t_Option u64 =
-            Core_models.Option.Option_Some target <: Core_models.Option.t_Option u64
-          in
-          state, hax_temp_output
-          <:
-          (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option u64)
+        let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+          refined_execute_receive_steps #v_SendChain
+            #v_ReceiveChain
+            #v_Material
+            state
+            info
+            step
+            remaining
+        in
+        let hax_temp_output:Core_models.Option.t_Option u64 =
+          Core_models.Option.Option_Some target <: Core_models.Option.t_Option u64
+        in
+        state, hax_temp_output
+        <:
+        (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option u64)
   | Core_models.Option.Option_None  ->
     state, (Core_models.Option.Option_None <: Core_models.Option.t_Option u64)
     <:
