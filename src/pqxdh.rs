@@ -4,7 +4,10 @@
 use crate::beacon::ProviderBeacon;
 #[cfg(test)]
 use crate::ratchet::KeyMaterial;
-use crate::ratchet::{RatchetManager, decrypt_message_with_ratchet, encrypt_message_with_ratchet};
+use crate::ratchet::{
+	RatchetManager, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
+	initial_ratchet_hkdf, ratchet_hkdf,
+};
 #[cfg(feature = "server")]
 use crate::server::{RecvState, SendState};
 use crate::shared::{DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret, RemotePrincipal, SignaturePk};
@@ -564,11 +567,11 @@ impl ProviderBeacon for Beacon {
 			zeroize_shared_secrets(&mut finish_inputs.shared_secrets);
 			let mut candidate = prepared.ok()?;
 			let derived_secret = derive_root_key_input(candidate.root_key_input_mut())?;
-			let mut ratchet = RatchetManager::default();
-			ratchet.init_ratchets(
+			let mut ratchet = RatchetManager::from_kernel(candidate.derive_ratchet_kernel(
 				derived_secret.as_array(),
-				candidate.ratchet_initialization(),
-			);
+				initial_ratchet_hkdf,
+				ratchet_hkdf,
+			));
 			let associated_data = *candidate.associated_data();
 			let decrypted = decrypt_message_with_ratchet(
 				response.get_app_cipher_text().ok()?,
@@ -745,11 +748,11 @@ impl ProviderServer for Server {
 			crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?;
 		debug_assert!(!self.known_ids.contains_key(&remote_kid));
 		self.known_ids.try_reserve(1).ok()?;
-		let mut ratchet = RatchetManager::default();
-		ratchet.init_ratchets(
+		let mut ratchet = RatchetManager::from_kernel(candidate.derive_ratchet_kernel(
 			derived_secret.as_array(),
-			candidate.ratchet_initialization(),
-		);
+			initial_ratchet_hkdf,
+			ratchet_hkdf,
+		));
 		let associated_data = *candidate.associated_data();
 		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
 		if plaintext.is_empty() {

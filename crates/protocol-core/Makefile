@@ -17,14 +17,19 @@ HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::ratchet::RatchetKey \
 	+beaconcrypt_protocol_core::ratchet::RatchetNonce \
 	+beaconcrypt_protocol_core::ratchet::RatchetMaterial \
+	+beaconcrypt_protocol_core::ratchet::SymmetricRatchetKdfRequest \
 	+beaconcrypt_protocol_core::ratchet::RatchetKdfOutput \
 	+beaconcrypt_protocol_core::ratchet::split_ratchet_kdf_output \
 	+beaconcrypt_protocol_core::ratchet::derive_ratchet_step \
+	+beaconcrypt_protocol_core::ratchet::ConcreteRatchetChain \
+	+beaconcrypt_protocol_core::ratchet::concrete_ratchet_step \
 	+beaconcrypt_protocol_core::ratchet::RatchetStep \
 	+beaconcrypt_protocol_core::ratchet::CachedReceiveKey \
 	+beaconcrypt_protocol_core::ratchet::RefinedRatchet \
+	+beaconcrypt_protocol_core::ratchet::ConcreteRatchetKernel \
 	+beaconcrypt_protocol_core::ratchet::RefinedSendKey \
 	+beaconcrypt_protocol_core::ratchet::RefinedRatchetRestore \
+	+beaconcrypt_protocol_core::ratchet::ConcreteRatchetRestore \
 	+beaconcrypt_protocol_core::ratchet::**::new \
 	+beaconcrypt_protocol_core::ratchet::**::from_counters \
 	+beaconcrypt_protocol_core::ratchet::**::send_sequence \
@@ -50,9 +55,14 @@ HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::ratchet::refined_receive_key \
 	+beaconcrypt_protocol_core::ratchet::refined_finish_receive \
 	+beaconcrypt_protocol_core::ratchet::refined_open_and_finish \
+	+beaconcrypt_protocol_core::ratchet::concrete_seal_next \
+	+beaconcrypt_protocol_core::ratchet::concrete_open_and_finish \
 	+beaconcrypt_protocol_core::ratchet::start_refined_restore \
 	+beaconcrypt_protocol_core::ratchet::refined_restore_receive_key \
 	+beaconcrypt_protocol_core::ratchet::finish_refined_restore \
+	+beaconcrypt_protocol_core::ratchet::start_concrete_restore \
+	+beaconcrypt_protocol_core::ratchet::concrete_restore_receive_key \
+	+beaconcrypt_protocol_core::ratchet::finish_concrete_restore \
 	+beaconcrypt_protocol_core::ratchet::advance_send \
 	+beaconcrypt_protocol_core::ratchet::finish_send \
 	+beaconcrypt_protocol_core::ratchet::plan_receive_until \
@@ -77,6 +87,10 @@ HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::pqxdh::InitialRatchetChains \
 	+beaconcrypt_protocol_core::pqxdh::split_initial_ratchet_kdf_output \
 	+beaconcrypt_protocol_core::pqxdh::derive_initial_ratchet_chains \
+	+beaconcrypt_protocol_core::pqxdh::derive_initial_ratchet_kernel \
+	+beaconcrypt_protocol_core::pqxdh::derive_beacon_ratchet_kernel \
+	+beaconcrypt_protocol_core::pqxdh::derive_server_ratchet_kernel \
+	+beaconcrypt_protocol_core::pqxdh::**::derive_ratchet_kernel \
 	+beaconcrypt_protocol_core::pqxdh::**::ratchet_initialization \
 	+beaconcrypt_protocol_core::pqxdh::**::key_id_binding \
 	+beaconcrypt_protocol_core::pqxdh::beacon_prepare_finish \

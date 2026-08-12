@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: 0BSD
 
 use crate::cryptoframe_capnp;
-use crate::shared::{Decrypted, Encrypted, SecretArr, roles, systems};
+use crate::shared::{Decrypted, Encrypted};
+#[cfg(test)]
+use crate::shared::{SecretArr, roles, systems};
 use beaconcrypt_protocol_core::commitment::{
 	AEAD_KEY_SIZE as CORE_AEAD_KEY_LEN, AEAD_NONCE_SIZE as CORE_AEAD_NONCE_LEN,
 	AEAD_TAG_SIZE as CORE_AEAD_TAG_LEN, build_commitment_transcript,
 };
 use beaconcrypt_protocol_core::pqxdh::{
 	ASSOCIATED_DATA_SIZE as AD_SIZE, INITIAL_RATCHET_KDF_OUTPUT_SIZE, RATCHET_CHAIN_SIZE,
-	RatchetInitialization, derive_initial_ratchet_chains,
 };
+#[cfg(test)]
+use beaconcrypt_protocol_core::pqxdh::{RatchetInitialization, derive_initial_ratchet_kernel};
 use beaconcrypt_protocol_core::ratchet as verified_ratchet;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::utils::memcmp;
@@ -19,7 +22,6 @@ use zeroize::{Zeroize, Zeroizing};
 
 pub const KDF_STATE_SIZE: usize = 32usize;
 const _: () = assert!(KDF_STATE_SIZE == RATCHET_CHAIN_SIZE);
-const SYM_RATCHET_INFO: &[u8; 41] = beaconcrypt_protocol_core::pqxdh::SYM_RATCHET_INFO;
 /// crypto_aead::chacha20poly1305_ietf::KEYBYTES
 pub const AEAD_KEY_LEN: usize = 32;
 /// crypto_aead::chacha20poly1305_ietf::NPUBBYTES
@@ -40,66 +42,27 @@ pub const COMMITMENT_SIZE: usize = 64;
 pub const MESSAGE_OVERHEAD: usize = COMMITMENT_SIZE + AEAD_TAG_LEN;
 
 /// Expected to be bound by [roles::ChainKey] but the compiler doesn't enforce it
+#[cfg(test)]
 pub type KdfState<Role> = SecretArr<KDF_STATE_SIZE, systems::HkdfSha512, Role>;
+#[cfg(test)]
 pub type KdfSendState = KdfState<roles::ChainSendKey>;
+#[cfg(test)]
 pub type KdfRecvState = KdfState<roles::ChainRecvKey>;
-
-#[derive(Clone)]
-pub struct KeyMaterial {
-	pub(crate) key: AeadKey,
-	pub(crate) nonce: AeadNonce,
-}
-
-impl KeyMaterial {
-	pub(crate) fn key(&self) -> &AeadKey {
-		&self.key
-	}
-
-	pub(crate) fn nonce(&self) -> &AeadNonce {
-		&self.nonce
-	}
-}
 
 pub type AeadKey = crypto_aead::chacha20poly1305_ietf::Key;
 pub type AeadNonce = crypto_aead::chacha20poly1305_ietf::Nonce;
 
-pub struct Ratchet<Role: roles::ChainKey> {
-	pub(crate) state: KdfState<Role>,
-}
-
-impl<Role: roles::ChainKey> From<[u8; KDF_STATE_SIZE]> for Ratchet<Role> {
-	fn from(value: [u8; KDF_STATE_SIZE]) -> Self {
-		Self {
-			state: value.into(),
-		}
-	}
-}
-
-impl<Role: roles::ChainKey> From<verified_ratchet::RatchetChain> for Ratchet<Role> {
-	fn from(value: verified_ratchet::RatchetChain) -> Self {
-		value.into_bytes().into()
-	}
-}
-
-impl From<verified_ratchet::RatchetMaterial> for KeyMaterial {
-	fn from(value: verified_ratchet::RatchetMaterial) -> Self {
-		let (key, nonce) = value.into_parts();
-		Self {
-			key: key.into_bytes().into(),
-			nonce: nonce.into_bytes().into(),
-		}
-	}
-}
-
-/// The sole opaque symmetric-ratchet primitive implementation.
-/// Its label is deliberately private and cannot be selected by a production caller.
+/// Execute a core-owned symmetric-ratchet request with HKDF-SHA-512.
+///
+/// The core fixes both the input and domain label before this executor runs.
+/// Production only applies the requested primitive and returns its fixed-width output.
 fn symmetric_ratchet_hkdf<const OUTPUT_SIZE: usize>(
-	old_chain: &[u8; KDF_STATE_SIZE],
+	request: &verified_ratchet::SymmetricRatchetKdfRequest,
 ) -> [u8; OUTPUT_SIZE] {
-	let prk = crypto_kdf::hkdf::sha512::extract(None, old_chain)
+	let prk = crypto_kdf::hkdf::sha512::extract(None, request.input())
 		.expect("HKDF-SHA-512 extract accepts every fixed-width ratchet chain");
 	let expanded = Zeroizing::new(
-		crypto_kdf::hkdf::sha512::expand(OUTPUT_SIZE, Some(SYM_RATCHET_INFO), &prk)
+		crypto_kdf::hkdf::sha512::expand(OUTPUT_SIZE, Some(request.info()), &prk)
 			.expect("the fixed ratchet output sizes are below the HKDF-SHA-512 limit"),
 	);
 	let mut output = [0u8; OUTPUT_SIZE];
@@ -107,45 +70,31 @@ fn symmetric_ratchet_hkdf<const OUTPUT_SIZE: usize>(
 	output
 }
 
-fn ratchet_hkdf(
-	old_chain: &[u8; KDF_STATE_SIZE],
+pub(crate) fn ratchet_hkdf(
+	request: &verified_ratchet::SymmetricRatchetKdfRequest,
 ) -> [u8; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE] {
-	symmetric_ratchet_hkdf(old_chain)
+	symmetric_ratchet_hkdf(request)
 }
 
-fn initial_ratchet_hkdf(root: &[u8; KDF_STATE_SIZE]) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE] {
-	symmetric_ratchet_hkdf(root)
+pub(crate) fn initial_ratchet_hkdf(
+	request: &verified_ratchet::SymmetricRatchetKdfRequest,
+) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE] {
+	symmetric_ratchet_hkdf(request)
 }
 
-pub(crate) fn ratchet_step<Role: roles::ChainKey>(
-	ratchet: &Ratchet<Role>,
-) -> verified_ratchet::RatchetStep<Ratchet<Role>, KeyMaterial> {
-	let stepped = verified_ratchet::derive_ratchet_step(ratchet.state.as_array(), ratchet_hkdf);
-	verified_ratchet::RatchetStep {
-		chain: stepped.chain.into(),
-		material: stepped.material.into(),
-	}
-}
+#[cfg(any(feature = "server", test))]
+pub(crate) type KeyMaterial = verified_ratchet::RatchetMaterial;
+#[cfg(test)]
+pub(crate) type SendChain = verified_ratchet::RatchetChain;
+pub(crate) type RatchetKernel = verified_ratchet::ConcreteRatchetKernel;
 
-impl<Role: roles::ChainKey> Default for Ratchet<Role> {
-	fn default() -> Self {
-		Self {
-			state: [0u8; KDF_STATE_SIZE].into(),
-		}
-	}
+fn empty_ratchet_kernel() -> RatchetKernel {
+	RatchetKernel::new(
+		verified_ratchet::RatchetChain::from_bytes([0; KDF_STATE_SIZE]),
+		verified_ratchet::RatchetChain::from_bytes([0; KDF_STATE_SIZE]),
+		ratchet_hkdf,
+	)
 }
-
-impl<Role: roles::ChainKey> Clone for Ratchet<Role> {
-	fn clone(&self) -> Self {
-		Self {
-			state: self.state.clone(),
-		}
-	}
-}
-
-pub(crate) type SendChain = Ratchet<roles::ChainSendKey>;
-pub(crate) type RecvChain = Ratchet<roles::ChainRecvKey>;
-pub(crate) type RatchetKernel = verified_ratchet::RefinedRatchet<SendChain, RecvChain, KeyMaterial>;
 
 #[derive(Clone)]
 pub struct RatchetManager {
@@ -156,8 +105,12 @@ pub struct RatchetManager {
 impl RatchetManager {
 	pub fn default() -> Self {
 		Self {
-			refined: RatchetKernel::new(SendChain::default(), RecvChain::default()),
+			refined: empty_ratchet_kernel(),
 		}
+	}
+
+	pub(crate) const fn from_kernel(refined: RatchetKernel) -> Self {
+		Self { refined }
 	}
 
 	#[cfg(feature = "server")]
@@ -182,24 +135,23 @@ impl RatchetManager {
 	#[cfg(test)]
 	pub(crate) fn ratchet_recv_until(&mut self, until: u64) -> Option<u64> {
 		let context = TestReceiveAttempt::new(false);
-		let _ = verified_ratchet::refined_open_and_finish(
+		let _ = verified_ratchet::concrete_open_and_finish(
 			&mut self.refined,
 			until,
-			ratchet_step::<roles::ChainRecvKey>,
 			&context,
 			test_receive_attempt,
 		);
 		context.seen.get()
 	}
 
+	#[cfg(test)]
 	pub(crate) fn init_ratchets(
 		&mut self,
 		root: &[u8; KDF_STATE_SIZE],
 		initialization: RatchetInitialization,
 	) {
-		let chains = derive_initial_ratchet_chains(root, initialization, initial_ratchet_hkdf);
-		let (send_chain, receive_chain) = chains.into_parts();
-		self.refined = RatchetKernel::new(send_chain.into(), receive_chain.into());
+		self.refined =
+			derive_initial_ratchet_kernel(root, initialization, initial_ratchet_hkdf, ratchet_hkdf);
 	}
 
 	#[cfg(test)]
@@ -212,10 +164,9 @@ impl RatchetManager {
 			return verified_ratchet::ReceiveDisposition::Missing;
 		}
 		let context = TestReceiveAttempt::new(authenticated);
-		let opened = verified_ratchet::refined_open_and_finish(
+		let opened = verified_ratchet::concrete_open_and_finish(
 			&mut self.refined,
 			seq,
-			ratchet_step::<roles::ChainRecvKey>,
 			&context,
 			test_receive_attempt,
 		);
@@ -234,7 +185,7 @@ impl RatchetManager {
 	}
 
 	pub fn reset(&mut self) {
-		self.refined = RatchetKernel::new(SendChain::default(), RecvChain::default());
+		self.refined = empty_ratchet_kernel();
 	}
 
 	#[cfg(any(feature = "server", test))]
@@ -257,12 +208,12 @@ impl RatchetManager {
 		self.refined.receive_entry_at(slot)
 	}
 
-	pub fn send_state(&self) -> &KdfSendState {
-		&self.refined.send_chain().state
+	pub fn send_state(&self) -> &[u8; KDF_STATE_SIZE] {
+		self.refined.send_chain().as_bytes()
 	}
 
-	pub fn recv_state(&self) -> &KdfRecvState {
-		&self.refined.receive_chain().state
+	pub fn recv_state(&self) -> &[u8; KDF_STATE_SIZE] {
+		self.refined.receive_chain().as_bytes()
 	}
 }
 
@@ -284,7 +235,7 @@ impl TestReceiveAttempt {
 
 #[cfg(test)]
 fn test_receive_attempt(
-	_material: &KeyMaterial,
+	_material: &verified_ratchet::RatchetMaterial,
 	sequence: u64,
 	context: &TestReceiveAttempt,
 ) -> Option<()> {
@@ -307,19 +258,21 @@ struct SealFrameContext<'a> {
 }
 
 fn seal_frame(
-	key: &KeyMaterial,
+	material: &verified_ratchet::RatchetMaterial,
 	key_seq: u64,
 	context: &SealFrameContext<'_>,
 ) -> Option<Encrypted> {
+	let key: AeadKey = (*material.key().as_bytes()).into();
+	let nonce: AeadNonce = (*material.nonce().as_bytes()).into();
 	let (mut plaintext, mut tag) = crypto_aead::chacha20poly1305_ietf::encrypt_detached(
 		context.bytes,
 		Some(context.associated_data.as_slice()),
-		key.nonce(),
-		key.key(),
+		&nonce,
+		&key,
 	)
 	.ok()?;
 	let mut commitment = build_commitment(
-		key,
+		material,
 		context.associated_data.as_slice(),
 		tag.as_slice(),
 		key_seq,
@@ -363,12 +316,7 @@ pub(crate) fn encrypt_message_with_ratchet(
 		sender_kid,
 		associated_data,
 	};
-	verified_ratchet::refined_seal_next(
-		&mut ratchet.refined,
-		ratchet_step::<roles::ChainSendKey>,
-		&context,
-		seal_frame,
-	)
+	verified_ratchet::concrete_seal_next(&mut ratchet.refined, &context, seal_frame)
 }
 
 struct OpenFrameContext<'a> {
@@ -377,13 +325,17 @@ struct OpenFrameContext<'a> {
 	sender_kid: u64,
 }
 
-fn open_frame(key: &KeyMaterial, key_seq: u64, context: &OpenFrameContext<'_>) -> Option<Vec<u8>> {
+fn open_frame(
+	material: &verified_ratchet::RatchetMaterial,
+	key_seq: u64,
+	context: &OpenFrameContext<'_>,
+) -> Option<Vec<u8>> {
 	let ct_len = context.ciphertext.len();
 	if ct_len <= MESSAGE_OVERHEAD {
 		return None;
 	}
 	let commitment = build_commitment(
-		key,
+		material,
 		context.associated_data.as_slice(),
 		&context.ciphertext[ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE],
 		key_seq,
@@ -392,11 +344,13 @@ fn open_frame(key: &KeyMaterial, key_seq: u64, context: &OpenFrameContext<'_>) -
 	if !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {
 		return None;
 	}
+	let key: AeadKey = (*material.key().as_bytes()).into();
+	let nonce: AeadNonce = (*material.nonce().as_bytes()).into();
 	crypto_aead::chacha20poly1305_ietf::decrypt(
 		&context.ciphertext[..ct_len - COMMITMENT_SIZE],
 		Some(context.associated_data.as_slice()),
-		key.nonce(),
-		key.key(),
+		&nonce,
+		&key,
 	)
 	.ok()
 }
@@ -434,10 +388,9 @@ pub(crate) fn decrypt_message_with_ratchet(
 		sender_kid: kid,
 	};
 	let key_seq = frame.get_seq();
-	let plaintext = verified_ratchet::refined_open_and_finish(
+	let plaintext = verified_ratchet::concrete_open_and_finish(
 		&mut ratchet.refined,
 		key_seq,
-		ratchet_step::<roles::ChainRecvKey>,
 		&context,
 		open_frame,
 	)?;
@@ -464,17 +417,17 @@ pub(crate) fn decrypt_message_with_ratchet(
 /// * key `seq`
 /// * sender key identifier `kid`
 pub(crate) fn build_commitment(
-	secret: &KeyMaterial,
+	material: &verified_ratchet::RatchetMaterial,
 	ad: &[u8],
 	tag: &[u8],
 	seq: u64,
 	kid: u64,
 ) -> Option<Vec<u8>> {
-	let key = secret.key().as_bytes();
-	let nonce = secret.nonce().as_bytes();
+	let key = material.key().as_bytes();
+	let nonce = material.nonce().as_bytes();
 	let ad = ad.try_into().ok()?;
 	let tag = tag.try_into().ok()?;
-	let mut input = build_commitment_transcript(key.try_into().ok()?, nonce, ad, tag, seq, kid);
+	let mut input = build_commitment_transcript(key, nonce, ad, tag, seq, kid);
 	let hash = crypto_generichash::generichash(input.as_bytes(), None, COMMITMENT_SIZE).ok();
 	input.as_mut_bytes().zeroize();
 	hash

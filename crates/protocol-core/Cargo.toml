@@ -12,6 +12,7 @@ proverif = ["dep:hax-lib"]
 
 [dependencies]
 hax-lib = { version = "=0.3.7", optional = true }
+zeroize = { version = "1.9", default-features = false, features = ["zeroize_derive"] }
 
 [lib]
 name = "beaconcrypt_protocol_core"

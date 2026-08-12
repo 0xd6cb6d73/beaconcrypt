@@ -40,7 +40,7 @@ while IFS=$'\t' read -r category expected path extra ||
 done < "$manifest"
 
 declare -A expected_category_counts=(
-	[adapter-rust]=11
+	[adapter-rust]=12
 	[adapter-schema]=3
 	[core-rust]=4
 	[control]=11
@@ -194,6 +194,20 @@ reject_matches() {
 
 reject_matches "new hax opaque annotation requires inventory review" \
 	'hax_lib\s*::\s*(?:opaque|opaque_type)\b' src
+require_occurrence_count 3 \
+	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)' \
+	"reviewed F* noeq insertion" src
+require_occurrence_count 3 \
+	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(' \
+	"complete F* before-annotation allowlist" src
+for concrete_type in ConcreteRatchetChain ConcreteRatchetKernel ConcreteRatchetRestore; do
+	require_occurrence_count 1 \
+		'#\[cfg_attr\(feature\s*=\s*"proverif",\s*hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)\)\]\s*(?:pub\s+)?struct\s+'"${concrete_type}"'\b' \
+		"reviewed noeq target ${concrete_type}" src/ratchet.rs
+done
+require_line_count 3 '^noeq$' \
+	proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst \
+	"generated function-record noeq directive"
 
 replacement_pattern='hax_lib\s*::\s*proverif\s*::\s*replace\s*\('
 require_occurrence_count 3 "$replacement_pattern" \
@@ -383,6 +397,31 @@ require_line_count 1 \
 require_line_count 1 '^let ratchet_kdf_output_split_is_exact$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"exact production ratchet KDF-output split theorem"
+for declaration in \
+	symmetric_ratchet_kdf_request_is_exact \
+	concrete_ratchet_step_preserves_executor \
+	concrete_reachable \
+	concrete_kernel_new_is_reachable \
+	concrete_seal_next_preserves_reachability \
+	concrete_open_and_finish_preserves_reachability; do
+	require_line_count 1 "^let ${declaration}\$" \
+		proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+		"concrete ratchet specialization declaration ${declaration}"
+done
+for declaration in \
+	authenticated_registration_derives_common_fixed_root \
+	authenticated_registrations_establish_concrete_session \
+	initial_ratchet_chains_use_exact_root_and_directions \
+	concrete_session \
+	concrete_initial_kernels_are_complementary \
+	concrete_initial_kernels_are_reachable \
+	concrete_directional_materials_agree \
+	beacon_seal_server_open_preserves_concrete_session \
+	server_seal_beacon_open_preserves_concrete_session; do
+	require_line_count 1 "^let ${declaration}\$" \
+		proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst \
+		"composed concrete PQXDH-ratchet declaration ${declaration}"
+done
 require_line_count 1 '^let refined_from_counters_is_valid$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"refined constructor invariant lemma"

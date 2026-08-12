@@ -13,7 +13,7 @@ pub const MLKEM768_CIPHERTEXT_SIZE: usize = 1_088;
 pub const SHARED_SECRET_SIZE: usize = 32;
 pub const DH_SECRET_SIZE: usize = 32;
 pub const PQXDH_PADDING_SIZE: usize = 32;
-pub const RATCHET_CHAIN_SIZE: usize = 32;
+pub const RATCHET_CHAIN_SIZE: usize = crate::ratchet::RATCHET_CHAIN_SIZE;
 /// Number of bytes returned when the session root is expanded into both directional chains.
 pub const INITIAL_RATCHET_KDF_OUTPUT_SIZE: usize = RATCHET_CHAIN_SIZE * 2;
 const _: () = assert!(INITIAL_RATCHET_KDF_OUTPUT_SIZE == 64);
@@ -36,7 +36,8 @@ pub const ENCODED_MLKEM768_PUBLIC_KEY_SIZE: usize = MLKEM768_PUBLIC_KEY_SIZE + 1
 
 // https://signal.org/docs/specifications/pqxdh/#pqxdh-parameters
 pub const PQXDH_INFO: &[u8; 46] = b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768";
-pub const SYM_RATCHET_INFO: &[u8; 41] = b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
+pub const SYM_RATCHET_INFO_SIZE: usize = crate::ratchet::SYM_RATCHET_INFO_SIZE;
+pub const SYM_RATCHET_INFO: &[u8; SYM_RATCHET_INFO_SIZE] = crate::ratchet::SYM_RATCHET_INFO;
 
 pub const ROOT_KEY_INPUT_SIZE: usize =
 	PQXDH_PADDING_SIZE + (4 * DH_SECRET_SIZE) + SHARED_SECRET_SIZE;
@@ -415,6 +416,11 @@ pub struct InitialRatchetChains {
 	receive_chain: crate::ratchet::RatchetChain,
 }
 
+/// Fixed-output executor for expanding one authenticated session root into
+/// the two initial directional chain values.
+pub type InitialRatchetKdfExecutor =
+	fn(&crate::ratchet::SymmetricRatchetKdfRequest) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE];
+
 impl InitialRatchetChains {
 	pub const fn send_chain(&self) -> &crate::ratchet::RatchetChain {
 		&self.send_chain
@@ -424,7 +430,7 @@ impl InitialRatchetChains {
 		&self.receive_chain
 	}
 
-	pub const fn into_parts(self) -> (crate::ratchet::RatchetChain, crate::ratchet::RatchetChain) {
+	pub fn into_parts(self) -> (crate::ratchet::RatchetChain, crate::ratchet::RatchetChain) {
 		(self.send_chain, self.receive_chain)
 	}
 }
@@ -459,10 +465,42 @@ pub fn split_initial_ratchet_kdf_output(
 pub fn derive_initial_ratchet_chains(
 	root: &[u8; RATCHET_CHAIN_SIZE],
 	initialization: RatchetInitialization,
-	kdf: fn(&[u8; RATCHET_CHAIN_SIZE]) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE],
+	kdf: InitialRatchetKdfExecutor,
 ) -> InitialRatchetChains {
-	let output = kdf(root);
+	let request = crate::ratchet::SymmetricRatchetKdfRequest::new(*root);
+	let output = kdf(&request);
 	split_initial_ratchet_kdf_output(&output, initialization)
+}
+
+/// Construct a concrete kernel directly from one root, one fixed role plan,
+/// and the executors for initial and subsequent core-owned KDF requests.
+pub fn derive_initial_ratchet_kernel(
+	root: &[u8; RATCHET_CHAIN_SIZE],
+	initialization: RatchetInitialization,
+	initial_kdf: InitialRatchetKdfExecutor,
+	ratchet_kdf: crate::ratchet::RatchetKdfExecutor,
+) -> crate::ratchet::ConcreteRatchetKernel {
+	let chains = derive_initial_ratchet_chains(root, initialization, initial_kdf);
+	let (send_chain, receive_chain) = chains.into_parts();
+	crate::ratchet::ConcreteRatchetKernel::new(send_chain, receive_chain, ratchet_kdf)
+}
+
+/// Construct the beacon role's complementary concrete kernel.
+pub fn derive_beacon_ratchet_kernel(
+	root: &[u8; RATCHET_CHAIN_SIZE],
+	initial_kdf: InitialRatchetKdfExecutor,
+	ratchet_kdf: crate::ratchet::RatchetKdfExecutor,
+) -> crate::ratchet::ConcreteRatchetKernel {
+	derive_initial_ratchet_kernel(root, BEACON_RATCHETS, initial_kdf, ratchet_kdf)
+}
+
+/// Construct the server role's complementary concrete kernel.
+pub fn derive_server_ratchet_kernel(
+	root: &[u8; RATCHET_CHAIN_SIZE],
+	initial_kdf: InitialRatchetKdfExecutor,
+	ratchet_kdf: crate::ratchet::RatchetKdfExecutor,
+) -> crate::ratchet::ConcreteRatchetKernel {
+	derive_initial_ratchet_kernel(root, SERVER_RATCHETS, initial_kdf, ratchet_kdf)
 }
 
 /// Candidate beacon session. Its root, AD, identity assignment, and ratchet
@@ -507,6 +545,17 @@ impl BeaconRegistrationCandidate {
 
 	pub const fn key_id_binding(&self) -> RegistrationKeyIdBinding {
 		registration_key_id_binding(self.assigned_key_id)
+	}
+
+	/// Bind the authenticated candidate's beacon direction directly to a
+	/// concrete core ratchet kernel.
+	pub fn derive_ratchet_kernel(
+		&self,
+		root: &[u8; RATCHET_CHAIN_SIZE],
+		initial_kdf: InitialRatchetKdfExecutor,
+		ratchet_kdf: crate::ratchet::RatchetKdfExecutor,
+	) -> crate::ratchet::ConcreteRatchetKernel {
+		derive_beacon_ratchet_kernel(root, initial_kdf, ratchet_kdf)
 	}
 }
 
@@ -788,6 +837,17 @@ impl ServerRegistrationCandidate {
 
 	pub const fn key_id_binding(&self) -> RegistrationKeyIdBinding {
 		registration_key_id_binding(self.key_id)
+	}
+
+	/// Bind the accepted server candidate's direction directly to a concrete
+	/// core ratchet kernel.
+	pub fn derive_ratchet_kernel(
+		&self,
+		root: &[u8; RATCHET_CHAIN_SIZE],
+		initial_kdf: InitialRatchetKdfExecutor,
+		ratchet_kdf: crate::ratchet::RatchetKdfExecutor,
+	) -> crate::ratchet::ConcreteRatchetKernel {
+		derive_server_ratchet_kernel(root, initial_kdf, ratchet_kdf)
 	}
 }
 
@@ -1128,14 +1188,55 @@ mod tests {
 	}
 
 	fn test_initial_ratchet_kdf(
-		root: &[u8; RATCHET_CHAIN_SIZE],
+		request: &crate::ratchet::SymmetricRatchetKdfRequest,
 	) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE] {
+		assert_eq!(request.info(), SYM_RATCHET_INFO);
+		let root = request.input();
 		let mut output = [0u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE];
 		output[0..32].copy_from_slice(root);
 		for index in 0..RATCHET_CHAIN_SIZE {
 			output[32 + index] = root[index] ^ 0xff;
 		}
 		output
+	}
+
+	fn test_ratchet_kdf(
+		request: &crate::ratchet::SymmetricRatchetKdfRequest,
+	) -> [u8; crate::ratchet::RATCHET_KDF_OUTPUT_SIZE] {
+		assert_eq!(request.info(), SYM_RATCHET_INFO);
+		let input = request.input();
+		let mut output = [0u8; crate::ratchet::RATCHET_KDF_OUTPUT_SIZE];
+		for index in 0..RATCHET_CHAIN_SIZE {
+			output[index] = input[index] ^ 0x5a;
+			output[32 + index] = input[index].wrapping_add(1);
+		}
+		output[64..76].copy_from_slice(&input[0..12]);
+		output
+	}
+
+	type CapturedMaterial = (u64, [u8; 32], [u8; 12]);
+
+	fn capture_material(
+		material: &crate::ratchet::RatchetMaterial,
+		sequence: u64,
+		_context: &(),
+	) -> Option<CapturedMaterial> {
+		Some((
+			sequence,
+			*material.key().as_bytes(),
+			*material.nonce().as_bytes(),
+		))
+	}
+
+	fn open_matching_material(
+		material: &crate::ratchet::RatchetMaterial,
+		sequence: u64,
+		expected: &CapturedMaterial,
+	) -> Option<()> {
+		(sequence == expected.0
+			&& material.key().as_bytes() == &expected.1
+			&& material.nonce().as_bytes() == &expected.2)
+			.then_some(())
 	}
 
 	#[test]
@@ -1157,6 +1258,52 @@ mod tests {
 		assert_eq!(beacon.send_chain().as_bytes(), &right);
 		assert_eq!(server.receive_chain().as_bytes(), &right);
 		assert_eq!(server.send_chain().as_bytes(), &root);
+	}
+
+	#[test]
+	fn concrete_role_kernels_share_material_through_public_seal_and_open() {
+		let root = core::array::from_fn::<_, RATCHET_CHAIN_SIZE, _>(|index| index as u8);
+		let mut beacon =
+			derive_beacon_ratchet_kernel(&root, test_initial_ratchet_kdf, test_ratchet_kdf);
+		let mut server =
+			derive_server_ratchet_kernel(&root, test_initial_ratchet_kdf, test_ratchet_kdf);
+
+		assert_eq!(
+			beacon.send_chain().as_bytes(),
+			server.receive_chain().as_bytes()
+		);
+		assert_eq!(
+			server.send_chain().as_bytes(),
+			beacon.receive_chain().as_bytes()
+		);
+
+		for sequence in 1..=4 {
+			let sent = crate::ratchet::concrete_seal_next(&mut beacon, &(), capture_material)
+				.expect("beacon send should allocate concrete material");
+			assert_eq!(sent.0, sequence);
+			assert_eq!(
+				crate::ratchet::concrete_open_and_finish(
+					&mut server,
+					sequence,
+					&sent,
+					open_matching_material,
+				),
+				Some(())
+			);
+
+			let reply = crate::ratchet::concrete_seal_next(&mut server, &(), capture_material)
+				.expect("server send should allocate concrete material");
+			assert_eq!(reply.0, sequence);
+			assert_eq!(
+				crate::ratchet::concrete_open_and_finish(
+					&mut beacon,
+					sequence,
+					&reply,
+					open_matching_material,
+				),
+				Some(())
+			);
+		}
 	}
 
 	#[test]

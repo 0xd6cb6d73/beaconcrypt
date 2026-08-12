@@ -1,74 +1,109 @@
 // SPDX-License-Identifier: 0BSD
 
+use zeroize::{Zeroize, ZeroizeOnDrop};
+
 /// Maximum number of outstanding receive keys admitted by the ratchet.
 pub const RATCHET_MAX_GAP: u64 = 50;
 
 /// Physical capacity of the logical receive-key cache.
 pub const RECEIVE_CACHE_CAPACITY: usize = RATCHET_MAX_GAP as usize;
 
+/// Fixed width of every symmetric-ratchet root and chain value.
+pub const RATCHET_CHAIN_SIZE: usize = 32;
+
+/// Fixed HKDF domain label for initial and subsequent symmetric-ratchet derivations.
+pub const SYM_RATCHET_INFO_SIZE: usize = 41;
+pub const SYM_RATCHET_INFO: &[u8; SYM_RATCHET_INFO_SIZE] =
+	b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
+
 /// Number of bytes returned by one production symmetric-ratchet HKDF expansion.
-pub const RATCHET_KDF_OUTPUT_SIZE: usize = crate::commitment::AEAD_KEY_SIZE
-	+ crate::pqxdh::RATCHET_CHAIN_SIZE
-	+ crate::commitment::AEAD_NONCE_SIZE;
+pub const RATCHET_KDF_OUTPUT_SIZE: usize =
+	crate::commitment::AEAD_KEY_SIZE + RATCHET_CHAIN_SIZE + crate::commitment::AEAD_NONCE_SIZE;
 
 const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 76);
 
 /// Fixed-width symmetric-ratchet chain bytes owned by the extracted boundary.
+#[derive(Clone, Zeroize, ZeroizeOnDrop)]
 pub struct RatchetChain {
-	bytes: [u8; crate::pqxdh::RATCHET_CHAIN_SIZE],
+	bytes: [u8; RATCHET_CHAIN_SIZE],
 }
 
 impl RatchetChain {
-	pub const fn from_bytes(bytes: [u8; crate::pqxdh::RATCHET_CHAIN_SIZE]) -> Self {
+	pub const fn from_bytes(bytes: [u8; RATCHET_CHAIN_SIZE]) -> Self {
 		Self { bytes }
 	}
 
-	pub const fn as_bytes(&self) -> &[u8; crate::pqxdh::RATCHET_CHAIN_SIZE] {
+	pub const fn as_bytes(&self) -> &[u8; RATCHET_CHAIN_SIZE] {
 		&self.bytes
 	}
 
-	pub const fn into_bytes(self) -> [u8; crate::pqxdh::RATCHET_CHAIN_SIZE] {
+	pub fn into_bytes(self) -> [u8; RATCHET_CHAIN_SIZE] {
 		self.bytes
 	}
 }
 
 /// Fixed-width symmetric-ratchet message-key bytes owned by the extracted boundary.
+#[derive(Clone, Zeroize, ZeroizeOnDrop)]
 pub struct RatchetKey {
 	bytes: [u8; crate::commitment::AEAD_KEY_SIZE],
 }
 
 impl RatchetKey {
+	pub const fn from_bytes(bytes: [u8; crate::commitment::AEAD_KEY_SIZE]) -> Self {
+		Self { bytes }
+	}
+
 	pub const fn as_bytes(&self) -> &[u8; crate::commitment::AEAD_KEY_SIZE] {
 		&self.bytes
 	}
 
-	pub const fn into_bytes(self) -> [u8; crate::commitment::AEAD_KEY_SIZE] {
+	pub fn into_bytes(self) -> [u8; crate::commitment::AEAD_KEY_SIZE] {
 		self.bytes
 	}
 }
 
 /// Fixed-width symmetric-ratchet AEAD nonce bytes owned by the extracted boundary.
+#[derive(Clone, Zeroize, ZeroizeOnDrop)]
 pub struct RatchetNonce {
 	bytes: [u8; crate::commitment::AEAD_NONCE_SIZE],
 }
 
 impl RatchetNonce {
+	pub const fn from_bytes(bytes: [u8; crate::commitment::AEAD_NONCE_SIZE]) -> Self {
+		Self { bytes }
+	}
+
 	pub const fn as_bytes(&self) -> &[u8; crate::commitment::AEAD_NONCE_SIZE] {
 		&self.bytes
 	}
 
-	pub const fn into_bytes(self) -> [u8; crate::commitment::AEAD_NONCE_SIZE] {
+	pub fn into_bytes(self) -> [u8; crate::commitment::AEAD_NONCE_SIZE] {
 		self.bytes
 	}
 }
 
 /// Fixed-width key and nonce produced by one symmetric-ratchet step.
+#[derive(Clone, Zeroize, ZeroizeOnDrop)]
 pub struct RatchetMaterial {
 	key: RatchetKey,
 	nonce: RatchetNonce,
 }
 
 impl RatchetMaterial {
+	pub const fn from_parts(key: RatchetKey, nonce: RatchetNonce) -> Self {
+		Self { key, nonce }
+	}
+
+	pub const fn from_bytes(
+		key: [u8; crate::commitment::AEAD_KEY_SIZE],
+		nonce: [u8; crate::commitment::AEAD_NONCE_SIZE],
+	) -> Self {
+		Self {
+			key: RatchetKey::from_bytes(key),
+			nonce: RatchetNonce::from_bytes(nonce),
+		}
+	}
+
 	pub const fn key(&self) -> &RatchetKey {
 		&self.key
 	}
@@ -77,10 +112,40 @@ impl RatchetMaterial {
 		&self.nonce
 	}
 
-	pub const fn into_parts(self) -> (RatchetKey, RatchetNonce) {
-		(self.key, self.nonce)
+	pub fn into_parts(self) -> (RatchetKey, RatchetNonce) {
+		(self.key.clone(), self.nonce.clone())
 	}
 }
+
+/// Core-owned invocation of the symmetric-ratchet KDF domain.
+///
+/// Both fields are private so an executor can read but cannot alter the exact
+/// input or protocol label selected by the core transition that created it.
+#[derive(Clone, Zeroize, ZeroizeOnDrop)]
+pub struct SymmetricRatchetKdfRequest {
+	input: [u8; RATCHET_CHAIN_SIZE],
+	info: [u8; SYM_RATCHET_INFO_SIZE],
+}
+
+impl SymmetricRatchetKdfRequest {
+	pub(crate) const fn new(input: [u8; RATCHET_CHAIN_SIZE]) -> Self {
+		Self {
+			input,
+			info: *SYM_RATCHET_INFO,
+		}
+	}
+
+	pub const fn input(&self) -> &[u8; RATCHET_CHAIN_SIZE] {
+		&self.input
+	}
+
+	pub const fn info(&self) -> &[u8; SYM_RATCHET_INFO_SIZE] {
+		&self.info
+	}
+}
+
+/// The only primitive capability retained by a concrete ratchet kernel.
+pub type RatchetKdfExecutor = fn(&SymmetricRatchetKdfRequest) -> [u8; RATCHET_KDF_OUTPUT_SIZE];
 
 /// Proof-visible owned partition of one symmetric-ratchet HKDF expansion.
 pub struct RatchetKdfOutput {
@@ -102,7 +167,7 @@ impl RatchetKdfOutput {
 		&self.nonce
 	}
 
-	pub const fn into_step(self) -> RatchetStep<RatchetChain, RatchetMaterial> {
+	pub fn into_step(self) -> RatchetStep<RatchetChain, RatchetMaterial> {
 		RatchetStep {
 			chain: self.next_chain,
 			material: RatchetMaterial {
@@ -117,7 +182,7 @@ impl RatchetKdfOutput {
 pub fn split_ratchet_kdf_output(output: &[u8; RATCHET_KDF_OUTPUT_SIZE]) -> RatchetKdfOutput {
 	let mut key = [0u8; crate::commitment::AEAD_KEY_SIZE];
 	key.copy_from_slice(&output[0..32]);
-	let mut next_chain = [0u8; crate::pqxdh::RATCHET_CHAIN_SIZE];
+	let mut next_chain = [0u8; RATCHET_CHAIN_SIZE];
 	next_chain.copy_from_slice(&output[32..64]);
 	let mut nonce = [0u8; crate::commitment::AEAD_NONCE_SIZE];
 	nonce.copy_from_slice(&output[64..76]);
@@ -134,11 +199,37 @@ pub fn split_ratchet_kdf_output(output: &[u8; RATCHET_KDF_OUTPUT_SIZE]) -> Ratch
 /// Label selection and HKDF details are private to that domain-specific primitive.
 /// Input selection, output size, partitioning, and fixed-width construction are owned here.
 pub fn derive_ratchet_step(
-	old_chain: &[u8; crate::pqxdh::RATCHET_CHAIN_SIZE],
-	kdf: fn(&[u8; crate::pqxdh::RATCHET_CHAIN_SIZE]) -> [u8; RATCHET_KDF_OUTPUT_SIZE],
+	old_chain: &RatchetChain,
+	kdf: RatchetKdfExecutor,
 ) -> RatchetStep<RatchetChain, RatchetMaterial> {
-	let output = kdf(old_chain);
+	let request = SymmetricRatchetKdfRequest::new(*old_chain.as_bytes());
+	let output = kdf(&request);
 	split_ratchet_kdf_output(&output).into_step()
+}
+
+/// A concrete chain binds its fixed-width bytes to the sole KDF executor that
+/// is carried through every later step. The fields stay private so callers
+/// cannot replace the executor while retaining the same logical kernel.
+#[derive(Clone)]
+#[cfg_attr(feature = "proverif", hax_lib::fstar::before("noeq"))]
+struct ConcreteRatchetChain {
+	chain: RatchetChain,
+	kdf: RatchetKdfExecutor,
+}
+
+/// Apply the executor bound into `old_chain` to a core-constructed request and
+/// carry that same executor into the returned next chain.
+fn concrete_ratchet_step(
+	old_chain: &ConcreteRatchetChain,
+) -> RatchetStep<ConcreteRatchetChain, RatchetMaterial> {
+	let stepped = derive_ratchet_step(&old_chain.chain, old_chain.kdf);
+	RatchetStep {
+		chain: ConcreteRatchetChain {
+			chain: stepped.chain,
+			kdf: old_chain.kdf,
+		},
+		material: stepped.material,
+	}
 }
 
 /// Opaque fixed-capacity cache of logical receive-key sequence numbers.
@@ -991,6 +1082,101 @@ pub fn refined_open_and_finish<SendChain, ReceiveChain, Material, Context, Plain
 	}
 }
 
+/// Production-specialized ratchet kernel.
+///
+/// Both directional chains carry the same private KDF executor, and every
+/// public transition below selects [`concrete_ratchet_step`] internally. This
+/// removes the generic step callback from the production-facing lifecycle.
+#[derive(Clone)]
+#[cfg_attr(feature = "proverif", hax_lib::fstar::before("noeq"))]
+pub struct ConcreteRatchetKernel {
+	refined: RefinedRatchet<ConcreteRatchetChain, ConcreteRatchetChain, RatchetMaterial>,
+}
+
+impl ConcreteRatchetKernel {
+	/// Construct a fresh concrete kernel and bind one KDF executor for its lifetime.
+	pub fn new(
+		send_chain: RatchetChain,
+		receive_chain: RatchetChain,
+		kdf: RatchetKdfExecutor,
+	) -> Self {
+		Self::from_counters(0, 0, send_chain, receive_chain, kdf)
+	}
+
+	/// Construct a concrete kernel at checked persistence counters.
+	pub fn from_counters(
+		send_sequence: u64,
+		receive_sequence: u64,
+		send_chain: RatchetChain,
+		receive_chain: RatchetChain,
+		kdf: RatchetKdfExecutor,
+	) -> Self {
+		Self {
+			refined: RefinedRatchet::from_counters(
+				send_sequence,
+				receive_sequence,
+				ConcreteRatchetChain {
+					chain: send_chain,
+					kdf,
+				},
+				ConcreteRatchetChain {
+					chain: receive_chain,
+					kdf,
+				},
+			),
+		}
+	}
+
+	pub const fn send_sequence(&self) -> u64 {
+		self.refined.send_sequence()
+	}
+
+	pub const fn receive_sequence(&self) -> u64 {
+		self.refined.receive_sequence()
+	}
+
+	pub const fn receive_cache_len(&self) -> u8 {
+		self.refined.receive_cache_len()
+	}
+
+	pub const fn send_chain(&self) -> &RatchetChain {
+		&self.refined.send_chain.chain
+	}
+
+	pub const fn receive_chain(&self) -> &RatchetChain {
+		&self.refined.receive_chain.chain
+	}
+
+	pub fn receive_entry_at(&self, slot: u8) -> Option<(u64, &RatchetMaterial)> {
+		self.refined.receive_entry_at(slot)
+	}
+}
+
+/// Advance and seal with the core-fixed concrete step and KDF request.
+pub fn concrete_seal_next<Context, Output>(
+	state: &mut ConcreteRatchetKernel,
+	context: &Context,
+	seal: fn(&RatchetMaterial, u64, &Context) -> Option<Output>,
+) -> Option<Output> {
+	refined_seal_next(&mut state.refined, concrete_ratchet_step, context, seal)
+}
+
+/// Admit, select, open, and finish with the core-fixed concrete step and KDF request.
+pub fn concrete_open_and_finish<Context, Plaintext>(
+	state: &mut ConcreteRatchetKernel,
+	target: u64,
+	context: &Context,
+	open: fn(&RatchetMaterial, u64, &Context) -> Option<Plaintext>,
+) -> Option<Plaintext> {
+	refined_open_and_finish(
+		&mut state.refined,
+		target,
+		concrete_ratchet_step,
+		context,
+		open,
+	)
+}
+
 /// Checked restoration builder for a complete refined ratchet.
 #[derive(Clone)]
 pub struct RefinedRatchetRestore<SendChain, ReceiveChain, Material> {
@@ -1040,6 +1226,51 @@ pub fn finish_refined_restore<SendChain, ReceiveChain, Material>(
 		send_chain: restore.send_chain,
 		receive_chain: restore.receive_chain,
 		receive_slots: restore.receive_slots,
+	}
+}
+
+/// Checked restoration builder that binds one concrete KDF executor to both
+/// directional chains before any restored material can be published.
+#[derive(Clone)]
+#[cfg_attr(feature = "proverif", hax_lib::fstar::before("noeq"))]
+pub struct ConcreteRatchetRestore {
+	refined: RefinedRatchetRestore<ConcreteRatchetChain, ConcreteRatchetChain, RatchetMaterial>,
+}
+
+pub fn start_concrete_restore(
+	send_sequence: u64,
+	receive_sequence: u64,
+	send_chain: RatchetChain,
+	receive_chain: RatchetChain,
+	kdf: RatchetKdfExecutor,
+) -> ConcreteRatchetRestore {
+	ConcreteRatchetRestore {
+		refined: start_refined_restore(
+			send_sequence,
+			receive_sequence,
+			ConcreteRatchetChain {
+				chain: send_chain,
+				kdf,
+			},
+			ConcreteRatchetChain {
+				chain: receive_chain,
+				kdf,
+			},
+		),
+	}
+}
+
+pub fn concrete_restore_receive_key(
+	restore: &mut ConcreteRatchetRestore,
+	sequence: u64,
+	material: RatchetMaterial,
+) -> bool {
+	refined_restore_receive_key(&mut restore.refined, sequence, material)
+}
+
+pub fn finish_concrete_restore(restore: ConcreteRatchetRestore) -> ConcreteRatchetKernel {
+	ConcreteRatchetKernel {
+		refined: finish_refined_restore(restore.refined),
 	}
 }
 
@@ -1106,16 +1337,16 @@ pub(crate) fn advance_send_for_peer(
 mod tests {
 	use super::{
 		CachedReceiveKey, PeerRatchetState, RATCHET_KDF_OUTPUT_SIZE, RATCHET_MAX_GAP,
-		RECEIVE_CACHE_CAPACITY, RatchetState, RatchetStep, ReceiveDisposition, RefinedRatchet,
-		RefinedSendKey, SendKey, SequenceCache, advance_receive, advance_send,
-		advance_send_for_peer, derive_ratchet_step, empty_material_slots, finish_receive,
-		finish_receive_with_removal, finish_refined_restore, finish_restore, finish_send,
-		lookup_receive_key, plan_receive_until, refined_advance_receive,
-		refined_advance_receive_until, refined_advance_send, refined_finish_receive,
-		refined_finish_send, refined_open_and_finish, refined_receive_key,
-		refined_restore_receive_key, refined_seal_next, replace_ratchet_for_peer,
-		restore_receive_key, restore_receive_key_with_slot, split_ratchet_kdf_output,
-		start_refined_restore, start_restore,
+		RECEIVE_CACHE_CAPACITY, RatchetChain, RatchetState, RatchetStep, ReceiveDisposition,
+		RefinedRatchet, RefinedSendKey, SYM_RATCHET_INFO, SendKey, SequenceCache,
+		SymmetricRatchetKdfRequest, advance_receive, advance_send, advance_send_for_peer,
+		derive_ratchet_step, empty_material_slots, finish_receive, finish_receive_with_removal,
+		finish_refined_restore, finish_restore, finish_send, lookup_receive_key,
+		plan_receive_until, refined_advance_receive, refined_advance_receive_until,
+		refined_advance_send, refined_finish_receive, refined_finish_send, refined_open_and_finish,
+		refined_receive_key, refined_restore_receive_key, refined_seal_next,
+		replace_ratchet_for_peer, restore_receive_key, restore_receive_key_with_slot,
+		split_ratchet_kdf_output, start_refined_restore, start_restore,
 	};
 
 	#[derive(Debug, Eq, PartialEq)]
@@ -1204,7 +1435,9 @@ mod tests {
 			.then_some((sequence, material.generation, context.marker))
 	}
 
-	fn test_ratchet_kdf(old_chain: &[u8; 32]) -> [u8; RATCHET_KDF_OUTPUT_SIZE] {
+	fn test_ratchet_kdf(request: &SymmetricRatchetKdfRequest) -> [u8; RATCHET_KDF_OUTPUT_SIZE] {
+		assert_eq!(request.info(), SYM_RATCHET_INFO);
+		let old_chain = request.input();
 		let mut output = [0u8; RATCHET_KDF_OUTPUT_SIZE];
 		output[0..32].copy_from_slice(old_chain);
 		output[32..64].copy_from_slice(old_chain);
@@ -1236,7 +1469,7 @@ mod tests {
 	#[test]
 	fn concrete_ratchet_step_passes_the_exact_old_chain_to_the_opaque_kdf() {
 		let old_chain = core::array::from_fn::<_, 32, _>(|index| index as u8);
-		let stepped = derive_ratchet_step(&old_chain, test_ratchet_kdf);
+		let stepped = derive_ratchet_step(&RatchetChain::from_bytes(old_chain), test_ratchet_kdf);
 
 		assert_eq!(stepped.chain.as_bytes(), &old_chain);
 		assert_eq!(stepped.material.key().as_bytes(), &old_chain);

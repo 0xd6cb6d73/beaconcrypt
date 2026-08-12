@@ -24,13 +24,25 @@ let ratchet_kdf_output_split_is_exact
           Seq.index split.f_nonce.f_bytes i == Seq.index output (i + 64)))
   = ()
 
-/// The extracted concrete adapter applies the opaque primitive to the exact old chain and returns fixed-width fields with the proved partition.
-let ratchet_step_uses_exact_chain_and_partition
-    (old_chain:t_Array u8 (mk_usize 32))
-    (kdf:t_Array u8 (mk_usize 32) -> t_Array u8 (mk_usize 76))
+/// Every symmetric-ratchet primitive invocation is a core-owned request containing the exact supplied input and the fixed protocol domain-separation label.
+let symmetric_ratchet_kdf_request_is_exact
+    (input:t_Array u8 (mk_usize 32))
   : Lemma
-      (let output = kdf old_chain in
+      (let request = impl_SymmetricRatchetKdfRequest__new input in
+       request.f_input == input /\
+       request.f_info == v_SYM_RATCHET_INFO)
+  = ()
+
+/// The extracted concrete adapter applies the opaque primitive to a core-owned request for the exact old chain and fixed label, then returns fixed-width fields with the proved partition.
+let ratchet_step_uses_exact_chain_and_partition
+    (old_chain:t_RatchetChain)
+    (kdf:t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76))
+  : Lemma
+      (let request = impl_SymmetricRatchetKdfRequest__new old_chain.f_bytes in
+       let output = kdf request in
        let stepped = derive_ratchet_step old_chain kdf in
+       request.f_input == old_chain.f_bytes /\
+       request.f_info == v_SYM_RATCHET_INFO /\
        (forall (i:nat{i < 32}).
           Seq.index stepped.f_material.f_key.f_bytes i ==
             Seq.index output i) /\
@@ -40,6 +52,29 @@ let ratchet_step_uses_exact_chain_and_partition
        (forall (i:nat{i < 12}).
           Seq.index stepped.f_material.f_nonce.f_bytes i ==
             Seq.index output (i + 64)))
+  = symmetric_ratchet_kdf_request_is_exact old_chain.f_bytes
+
+/// The production-specialized step applies the executor sealed into the old chain and carries that identical executor into the next chain.
+let concrete_ratchet_step_preserves_executor
+    (old_chain:t_ConcreteRatchetChain)
+  : Lemma
+      ((concrete_ratchet_step old_chain).f_chain.f_kdf == old_chain.f_kdf)
+  = ()
+
+let ratchet_chain_bytes_extensionality
+    (left right:t_RatchetChain)
+  : Lemma
+      (requires (left.f_bytes == right.f_bytes))
+      (ensures (left == right))
+  = ()
+
+let concrete_ratchet_chain_extensionality
+    (left right:t_ConcreteRatchetChain)
+  : Lemma
+      (requires
+        (left.f_chain == right.f_chain /\
+         left.f_kdf == right.f_kdf))
+      (ensures (left == right))
   = ()
 
 /// Fixed-width integer values are determined by their mathematical view.
@@ -1602,6 +1637,15 @@ let reachable
   cached_materials_are_derived #v_ReceiveChain #v_Material
     initial_receive receive_step state.f_receive_slots
 
+/// Concrete reachability specializes the generic lifetime invariant to the extracted chain and material types and the sole core-selected step.
+let concrete_reachable
+    (initial_send initial_receive:t_ConcreteRatchetChain)
+    (state:t_ConcreteRatchetKernel)
+  : prop =
+  reachable #t_ConcreteRatchetChain #t_ConcreteRatchetChain
+    #t_RatchetMaterial initial_send initial_receive
+    concrete_ratchet_step concrete_ratchet_step state.f_refined
+
 let chain_after_successor
     (#v_Chain #v_Material:Type0)
     (initial:v_Chain)
@@ -1883,7 +1927,7 @@ let refined_from_counters_is_valid
     (receive_chain:v_ReceiveChain)
   : Lemma
       (valid_refined
-        (impl_9__from_counters #v_SendChain #v_ReceiveChain #v_Material
+        (impl_10__from_counters #v_SendChain #v_ReceiveChain #v_Material
           send_sequence receive_sequence send_chain receive_chain))
   = from_counters_is_valid send_sequence receive_sequence;
     empty_material_slots_are_none #v_Material
@@ -1894,7 +1938,7 @@ let refined_new_is_valid
     (receive_chain:v_ReceiveChain)
   : Lemma
       (valid_refined
-        (impl_9__new #v_SendChain #v_ReceiveChain #v_Material
+        (impl_10__new #v_SendChain #v_ReceiveChain #v_Material
           send_chain receive_chain))
   = refined_from_counters_is_valid #v_SendChain #v_ReceiveChain #v_Material
       (mk_u64 0) (mk_u64 0) send_chain receive_chain
@@ -1921,7 +1965,7 @@ let refined_from_counters_is_reachable
       (ensures
         (reachable #v_SendChain #v_ReceiveChain #v_Material
           initial_send initial_receive send_step receive_step
-          (impl_9__from_counters #v_SendChain #v_ReceiveChain #v_Material
+          (impl_10__from_counters #v_SendChain #v_ReceiveChain #v_Material
             send_sequence receive_sequence send_chain receive_chain)))
   =
   refined_from_counters_is_valid #v_SendChain #v_ReceiveChain #v_Material
@@ -1940,13 +1984,31 @@ let refined_new_is_reachable
   : Lemma
       (reachable #v_SendChain #v_ReceiveChain #v_Material
         initial_send initial_receive send_step receive_step
-        (impl_9__new #v_SendChain #v_ReceiveChain #v_Material
+        (impl_10__new #v_SendChain #v_ReceiveChain #v_Material
           initial_send initial_receive))
   =
   refined_from_counters_is_reachable
     #v_SendChain #v_ReceiveChain #v_Material
     initial_send initial_receive send_step receive_step
     (mk_u64 0) (mk_u64 0) initial_send initial_receive
+
+/// A fresh production-specialized kernel is reachable from its exact supplied chains under the executor sealed into both directions.
+let concrete_kernel_new_is_reachable
+    (send_chain receive_chain:t_RatchetChain)
+    (kdf:t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76))
+  : Lemma
+      (let initial_send =
+         ({ f_chain = send_chain; f_kdf = kdf } <: t_ConcreteRatchetChain) in
+       let initial_receive =
+         ({ f_chain = receive_chain; f_kdf = kdf } <: t_ConcreteRatchetChain) in
+       concrete_reachable initial_send initial_receive
+         (impl_ConcreteRatchetKernel__new send_chain receive_chain kdf))
+  =
+  refined_new_is_reachable
+    #t_ConcreteRatchetChain #t_ConcreteRatchetChain #t_RatchetMaterial
+    ({ f_chain = send_chain; f_kdf = kdf } <: t_ConcreteRatchetChain)
+    ({ f_chain = receive_chain; f_kdf = kdf } <: t_ConcreteRatchetChain)
+    concrete_ratchet_step concrete_ratchet_step
 
 /// Send exhaustion and every other rejected allocation preserve the complete refined state and are independent of the opaque step result.
 let refined_advance_send_rejection_is_neutral
@@ -1976,7 +2038,7 @@ let refined_advance_send_success_uses_step
            state'.f_receive_chain == state.f_receive_chain /\
            state'.f_receive_slots == state.f_receive_slots /\
            key.f_material == stepped.f_material /\
-           impl_10__sequence key ==
+           impl_11__sequence key ==
              Core_models.Option.Option_Some state'.f_control.f_send_sequence /\
            v state'.f_control.f_send_sequence ==
              v state.f_control.f_send_sequence + 1 /\
@@ -2092,6 +2154,24 @@ let refined_seal_next_preserves_reachability
          initial_send initial_receive send_step receive_step sealed_state)
   = refined_advance_send_preserves_reachability
       initial_send initial_receive send_step receive_step state
+
+/// The production-facing seal wrapper preserves concrete reachability while selecting the core-fixed step internally.
+let concrete_seal_next_preserves_reachability
+    (#v_Context #v_Output:Type0)
+    (initial_send initial_receive:t_ConcreteRatchetChain)
+    (state:t_ConcreteRatchetKernel {
+       concrete_reachable initial_send initial_receive state })
+    (context:v_Context)
+    (seal:t_RatchetMaterial -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Output)
+  : Lemma
+      (let sealed_state, _ = concrete_seal_next state context seal in
+       concrete_reachable initial_send initial_receive sealed_state)
+  =
+  refined_seal_next_preserves_reachability
+    #t_ConcreteRatchetChain #t_ConcreteRatchetChain #t_RatchetMaterial
+    #v_Context #v_Output initial_send initial_receive
+    concrete_ratchet_step concrete_ratchet_step state.f_refined context seal
 
 /// Receive rejection is state-neutral and cannot depend on the opaque callback because validation precedes its application.
 let refined_advance_receive_rejection_is_step_independent
@@ -2616,7 +2696,7 @@ let refined_receive_entry_is_associated
        v slot < 50 /\
        v slot < cache_len state.f_control.f_receive_cache })
   : Lemma
-      (match impl_9__receive_entry_at state slot with
+      (match impl_10__receive_entry_at state slot with
        | Core_models.Option.Option_Some (sequence, material) ->
            refined_slot state sequence material slot
        | Core_models.Option.Option_None -> False)
@@ -2635,7 +2715,7 @@ let refined_receive_entry_mismatched_tag_is_rejected
          Core_models.Option.Option_Some cached /\
        cached.f_sequence <> sequence })
   : Lemma
-      (impl_9__receive_entry_at state slot ==
+      (impl_10__receive_entry_at state slot ==
         Core_models.Option.Option_None)
   = ()
 
@@ -3403,6 +3483,27 @@ let refined_open_and_finish_preserves_reachability
               refined_finish_receive_preserves_reachability
                 initial_send initial_receive send_step receive_step
                 admitted sequence true
+
+/// The production-facing open wrapper preserves concrete reachability across rejection, retention, and authenticated consumption while selecting the core-fixed step internally.
+let concrete_open_and_finish_preserves_reachability
+    (#v_Context #v_Plaintext:Type0)
+    (initial_send initial_receive:t_ConcreteRatchetChain)
+    (state:t_ConcreteRatchetKernel {
+       concrete_reachable initial_send initial_receive state })
+    (target:u64)
+    (context:v_Context)
+    (open_callback:t_RatchetMaterial -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (let final_state, _ =
+         concrete_open_and_finish state target context open_callback in
+       concrete_reachable initial_send initial_receive final_state)
+  =
+  refined_open_and_finish_preserves_reachability
+    #t_ConcreteRatchetChain #t_ConcreteRatchetChain #t_RatchetMaterial
+    #v_Context #v_Plaintext initial_send initial_receive
+    concrete_ratchet_step concrete_ratchet_step state.f_refined target
+    context open_callback
 
 /// The empty refined restoration builder starts valid for arbitrary counters and chain values.
 let start_refined_restore_is_valid

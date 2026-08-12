@@ -3,8 +3,7 @@
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, decode_sign};
 use crate::ratchet::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, Ratchet, RatchetManager, RecvChain,
-	SendChain,
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager, ratchet_hkdf,
 };
 #[cfg(feature = "server")]
 use crate::server::StateUpdate;
@@ -171,32 +170,24 @@ where
 	}
 }
 
-impl<'de> Deserialize<'de> for Ratchet<roles::ChainSendKey> {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		let typed =
-			TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, roles::ChainSendKey>::deserialize(
-				deserializer,
-			)?;
-		Ok(Self {
-			state: (*typed.buffer.0).into(),
-		})
-	}
+struct DirectionalRatchetChain<Role> {
+	chain: verified_ratchet::RatchetChain,
+	_role: PhantomData<Role>,
 }
 
-impl<'de> Deserialize<'de> for Ratchet<roles::ChainRecvKey> {
+impl<'de, Role> Deserialize<'de> for DirectionalRatchetChain<Role>
+where
+	Role: roles::ChainKey + roles::Identified,
+{
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
 		D: Deserializer<'de>,
 	{
 		let typed =
-			TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, roles::ChainRecvKey>::deserialize(
-				deserializer,
-			)?;
+			TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, Role>::deserialize(deserializer)?;
 		Ok(Self {
-			state: (*typed.buffer.0).into(),
+			chain: verified_ratchet::RatchetChain::from_bytes(*typed.buffer.0),
+			_role: PhantomData,
 		})
 	}
 }
@@ -227,10 +218,7 @@ where
 			TypedArray<AEAD_NONCE_LEN, systems::Chacha20Poly1305Ietf, NonceRole>,
 		>::deserialize(deserializer)?;
 		Ok(Self {
-			material: KeyMaterial {
-				key: (*data.key.buffer.0).into(),
-				nonce: (*data.nonce.buffer.0).into(),
-			},
+			material: KeyMaterial::from_bytes(*data.key.buffer.0, *data.nonce.buffer.0),
 			_roles: PhantomData,
 		})
 	}
@@ -239,8 +227,8 @@ where
 #[derive(Deserialize)]
 #[serde(rename = "RatchetManager", deny_unknown_fields)]
 struct RatchetManagerData {
-	send_key: SendChain,
-	recv_key: RecvChain,
+	send_key: DirectionalRatchetChain<roles::ChainSendKey>,
+	recv_key: DirectionalRatchetChain<roles::ChainRecvKey>,
 	send_ctr: u64,
 	recv_past: HashMap<u64, DirectionalKeyMaterial<roles::EncryptionRecvKey, roles::RecvNonce>>,
 	recv_ctr: u64,
@@ -254,14 +242,15 @@ impl<'de> Deserialize<'de> for RatchetManager {
 		let data = RatchetManagerData::deserialize(deserializer)?;
 		let mut receive_entries = data.recv_past.into_iter().collect::<Vec<_>>();
 		receive_entries.sort_unstable_by_key(|(sequence, _)| *sequence);
-		let mut restore = verified_ratchet::start_refined_restore(
+		let mut restore = verified_ratchet::start_concrete_restore(
 			data.send_ctr,
 			data.recv_ctr,
-			data.send_key,
-			data.recv_key,
+			data.send_key.chain,
+			data.recv_key.chain,
+			ratchet_hkdf,
 		);
 		for (sequence, directed) in receive_entries {
-			if !verified_ratchet::refined_restore_receive_key(
+			if !verified_ratchet::concrete_restore_receive_key(
 				&mut restore,
 				sequence,
 				directed.material,
@@ -272,7 +261,7 @@ impl<'de> Deserialize<'de> for RatchetManager {
 			}
 		}
 		let manager = Self {
-			refined: verified_ratchet::finish_refined_restore(restore),
+			refined: verified_ratchet::finish_concrete_restore(restore),
 		};
 		Ok(manager)
 	}
@@ -432,8 +421,8 @@ mod tests {
 	}
 
 	fn assert_key_material_eq(left: &KeyMaterial, right: &KeyMaterial) {
-		assert_eq!(left.key.as_bytes(), right.key.as_bytes());
-		assert_eq!(left.nonce.as_bytes(), right.nonce.as_bytes());
+		assert_eq!(left.key().as_bytes(), right.key().as_bytes());
+		assert_eq!(left.nonce().as_bytes(), right.nonce().as_bytes());
 	}
 
 	fn receive_slot(manager: &RatchetManager, sequence: u64) -> Option<u8> {

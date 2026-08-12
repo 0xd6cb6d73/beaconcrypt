@@ -2,11 +2,9 @@
 
 #[cfg(feature = "server")]
 use super::{RemotePrincipal, SignType, encode_sign};
-use crate::ratchet::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KdfState, KeyMaterial, Ratchet, RatchetManager,
-};
+use crate::ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager};
 #[cfg(test)]
-use crate::ratchet::{RatchetKernel, RecvChain, SendChain};
+use crate::ratchet::{RatchetKernel, ratchet_hkdf};
 #[cfg(feature = "server")]
 use crate::server::StateUpdate;
 use crate::shared::{roles, systems};
@@ -66,28 +64,27 @@ where
 	}
 }
 
-struct KdfStateRef<'a, Role: roles::ChainKey>(&'a KdfState<Role>);
+struct DirectionalRatchetChainRef<'a, Role> {
+	chain: &'a beaconcrypt_protocol_core::ratchet::RatchetChain,
+	_role: PhantomData<Role>,
+}
 
-impl<Role: roles::ChainKey + roles::Identified> Serialize for KdfStateRef<'_, Role> {
-	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-	where
-		S: Serializer,
-	{
-		let buffer = self
-			.0
-			.as_slice()
-			.try_into()
-			.expect("KDF state always contains KDF_STATE_SIZE bytes");
-		TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, Role>::new(buffer).serialize(serializer)
+impl<'a, Role> DirectionalRatchetChainRef<'a, Role> {
+	fn new(chain: &'a beaconcrypt_protocol_core::ratchet::RatchetChain) -> Self {
+		Self {
+			chain,
+			_role: PhantomData,
+		}
 	}
 }
 
-impl<Role: roles::ChainKey + roles::Identified> Serialize for Ratchet<Role> {
+impl<Role: roles::ChainKey + roles::Identified> Serialize for DirectionalRatchetChainRef<'_, Role> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,
 	{
-		KdfStateRef(&self.state).serialize(serializer)
+		TypedArray::<KDF_STATE_SIZE, systems::HkdfSha512, Role>::new(self.chain.as_bytes())
+			.serialize(serializer)
 	}
 }
 
@@ -129,16 +126,11 @@ where
 	where
 		S: Serializer,
 	{
-		let key_buffer = self
-			.material
-			.key
-			.as_bytes()
-			.try_into()
-			.expect("AeadKey always contains AEAD_KEY_LEN bytes");
-		let key =
-			TypedArray::<AEAD_KEY_LEN, systems::Chacha20Poly1305Ietf, KeyRole>::new(key_buffer);
+		let key = TypedArray::<AEAD_KEY_LEN, systems::Chacha20Poly1305Ietf, KeyRole>::new(
+			self.material.key().as_bytes(),
+		);
 		let nonce = TypedArray::<AEAD_NONCE_LEN, systems::Chacha20Poly1305Ietf, NonceRole>::new(
-			self.material.nonce.as_bytes(),
+			self.material.nonce().as_bytes(),
 		);
 		let mut state = serializer.serialize_struct("KeyMaterial", 2)?;
 		state.serialize_field("key", &key)?;
@@ -192,9 +184,13 @@ impl Serialize for RatchetManager {
 	{
 		let recv_past =
 			DirectionalReceiveKeySlotsRef::<roles::EncryptionRecvKey, roles::RecvNonce>::new(self);
+		let send_chain =
+			DirectionalRatchetChainRef::<roles::ChainSendKey>::new(self.refined.send_chain());
+		let receive_chain =
+			DirectionalRatchetChainRef::<roles::ChainRecvKey>::new(self.refined.receive_chain());
 		let mut state = serializer.serialize_struct("RatchetManager", 5)?;
-		state.serialize_field("send_key", self.refined.send_chain())?;
-		state.serialize_field("recv_key", self.refined.receive_chain())?;
+		state.serialize_field("send_key", &send_chain)?;
+		state.serialize_field("recv_key", &receive_chain)?;
 		state.serialize_field("send_ctr", &self.send_sequence())?;
 		state.serialize_field("recv_past", &recv_past)?;
 		state.serialize_field("recv_ctr", &self.receive_sequence())?;
@@ -342,8 +338,9 @@ mod tests {
 		let send_bytes = [0x21; KDF_STATE_SIZE];
 		let mut send_state = RatchetManager::default();
 		send_state.refined = RatchetKernel::new(
-			Ratchet::<roles::ChainSendKey>::from(send_bytes),
-			RecvChain::default(),
+			beaconcrypt_protocol_core::ratchet::RatchetChain::from_bytes(send_bytes),
+			beaconcrypt_protocol_core::ratchet::RatchetChain::from_bytes([0; KDF_STATE_SIZE]),
+			ratchet_hkdf,
 		);
 		let send_update = SendState {
 			kid: 7,
@@ -356,8 +353,9 @@ mod tests {
 		let recv_bytes = [0x41; KDF_STATE_SIZE];
 		let mut recv_state = RatchetManager::default();
 		recv_state.refined = RatchetKernel::new(
-			SendChain::default(),
-			Ratchet::<roles::ChainRecvKey>::from(recv_bytes),
+			beaconcrypt_protocol_core::ratchet::RatchetChain::from_bytes([0; KDF_STATE_SIZE]),
+			beaconcrypt_protocol_core::ratchet::RatchetChain::from_bytes(recv_bytes),
+			ratchet_hkdf,
 		);
 		let recv_update = RecvState {
 			kid: 9,

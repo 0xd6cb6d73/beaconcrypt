@@ -8,12 +8,16 @@ pub mod pqxdh;
 pub mod ratchet;
 
 pub use ratchet::{
-	CachedReceiveKey, PeerRatchetState, PeerSendAdvance, RATCHET_KDF_OUTPUT_SIZE, RATCHET_MAX_GAP,
-	RECEIVE_CACHE_CAPACITY, RatchetChain, RatchetKdfOutput, RatchetKey, RatchetMaterial,
-	RatchetNonce, RatchetRestore, RatchetState, RatchetStep, ReceiveAdvance, ReceiveDisposition,
-	ReceiveFinish, ReceiveFinishWithRemoval, ReceivePlan, ReceiveRemoval, ReceiveRestoreStep,
-	RefinedRatchet, RefinedRatchetRestore, SendAdvance, SendFinish, SendKey, derive_ratchet_step,
-	finish_refined_restore, finish_restore, refined_open_and_finish, refined_restore_receive_key,
-	refined_seal_next, replace_ratchet_for_peer, restore_receive_key,
-	restore_receive_key_with_slot, split_ratchet_kdf_output, start_refined_restore, start_restore,
+	CachedReceiveKey, ConcreteRatchetKernel, ConcreteRatchetRestore, PeerRatchetState,
+	PeerSendAdvance, RATCHET_CHAIN_SIZE, RATCHET_KDF_OUTPUT_SIZE, RATCHET_MAX_GAP,
+	RECEIVE_CACHE_CAPACITY, RatchetChain, RatchetKdfExecutor, RatchetKdfOutput, RatchetKey,
+	RatchetMaterial, RatchetNonce, RatchetRestore, RatchetState, RatchetStep, ReceiveAdvance,
+	ReceiveDisposition, ReceiveFinish, ReceiveFinishWithRemoval, ReceivePlan, ReceiveRemoval,
+	ReceiveRestoreStep, RefinedRatchet, RefinedRatchetRestore, SYM_RATCHET_INFO,
+	SYM_RATCHET_INFO_SIZE, SendAdvance, SendFinish, SendKey, SymmetricRatchetKdfRequest,
+	concrete_open_and_finish, concrete_restore_receive_key, concrete_seal_next,
+	derive_ratchet_step, finish_concrete_restore, finish_refined_restore, finish_restore,
+	refined_open_and_finish, refined_restore_receive_key, refined_seal_next,
+	replace_ratchet_for_peer, restore_receive_key, restore_receive_key_with_slot,
+	split_ratchet_kdf_output, start_concrete_restore, start_refined_restore, start_restore,
 };

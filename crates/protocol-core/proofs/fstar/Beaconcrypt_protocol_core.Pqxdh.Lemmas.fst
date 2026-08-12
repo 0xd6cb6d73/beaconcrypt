@@ -5,6 +5,7 @@ open Rust_primitives.Integers
 open Rust_primitives.Arrays
 open Beaconcrypt_protocol_core.Pqxdh
 open Beaconcrypt_protocol_core.Ratchet
+open Beaconcrypt_protocol_core.Ratchet.Lemmas
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 600"
 
@@ -353,6 +354,28 @@ let honest_roles_build_the_same_root
        | _ -> False)
   = ()
 
+/// Equal verified root-input transcripts remain equal under one fixed pure 32-byte root derivation. This bridge does not claim or model concrete HKDF semantics.
+let equal_root_inputs_derive_same_fixed_root
+    (beacon_root:t_RootKeyInput)
+    (server_root:t_RootKeyInput { server_root == beacon_root })
+    (derive_root:t_RootKeyInput -> t_Array u8 (mk_usize 32))
+  : Lemma
+      (derive_root beacon_root == derive_root server_root)
+  = ()
+
+/// An authenticated beacon candidate and the corresponding pending server registration derive one common 32-byte root under the same fixed pure derivation when their verified root-input transcripts agree.
+let authenticated_registration_derives_common_fixed_root
+    (authenticated:t_AuthenticatedBeaconRegistration)
+    (pending:t_PendingServerRegistration {
+       authenticated.f_candidate.f_root_key_input == pending.f_root_key_input })
+    (derive_root:t_RootKeyInput -> t_Array u8 (mk_usize 32))
+  : Lemma
+      (derive_root authenticated.f_candidate.f_root_key_input ==
+       derive_root pending.f_root_key_input)
+  = equal_root_inputs_derive_same_fixed_root
+      authenticated.f_candidate.f_root_key_input pending.f_root_key_input
+      derive_root
+
 let v_AD_RANGE_1:Core_models.Ops.Range.t_RangeTo usize =
   { Core_models.Ops.Range.f_end = mk_usize 33 }
 
@@ -537,16 +560,19 @@ let ratchet_initializations_are_complementary (_:Prims.unit)
          (server_ratchet_initialization ()).f_send_offset)
   = ()
 
-/// The extracted initial adapter applies the opaque primitive to the exact root, splits both fixed halves, and selects complementary role directions.
+/// The extracted initial adapter applies the opaque primitive to a core-owned request for the exact root and fixed label, splits both fixed halves, and selects complementary role directions.
 let initial_ratchet_chains_use_exact_root_and_directions
     (root:t_Array u8 (mk_usize 32))
-    (kdf:t_Array u8 (mk_usize 32) -> t_Array u8 (mk_usize 64))
+    (kdf:t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 64))
   : Lemma
-      (let output = kdf root in
+      (let request = impl_SymmetricRatchetKdfRequest__new root in
+       let output = kdf request in
        let beacon = derive_initial_ratchet_chains
          root (beacon_ratchet_initialization ()) kdf in
        let server = derive_initial_ratchet_chains
          root (server_ratchet_initialization ()) kdf in
+       request.f_input == root /\
+       request.f_info == v_SYM_RATCHET_INFO /\
        (forall (i:nat{i < 32}).
           Seq.index beacon.f_receive_chain.f_bytes i ==
             Seq.index output i) /\
@@ -556,6 +582,217 @@ let initial_ratchet_chains_use_exact_root_and_directions
        beacon.f_send_chain.f_bytes == server.f_receive_chain.f_bytes /\
        beacon.f_receive_chain.f_bytes == server.f_send_chain.f_bytes)
   = ()
+
+/// Pair both production-specialized role kernels with the exact complementary origins derived from one agreed 32-byte root and one fixed pair of pure KDF executors.
+let concrete_session
+    (agreed_root:t_Array u8 (mk_usize 32))
+    (initial_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 64))
+    (ratchet_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 76))
+    (beacon server:t_ConcreteRatchetKernel)
+  : prop =
+  let beacon_initial =
+    derive_beacon_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+  let server_initial =
+    derive_server_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+  concrete_reachable
+    beacon_initial.f_refined.f_send_chain
+    beacon_initial.f_refined.f_receive_chain beacon /\
+  concrete_reachable
+    server_initial.f_refined.f_send_chain
+    server_initial.f_refined.f_receive_chain server
+
+/// The two role-specific initial-kernel constructors bind the same lifetime executor to complementary concrete directional chains.
+let concrete_initial_kernels_are_complementary
+    (agreed_root:t_Array u8 (mk_usize 32))
+    (initial_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 64))
+    (ratchet_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 76))
+  : Lemma
+      (let beacon =
+         derive_beacon_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+       let server =
+         derive_server_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+       beacon.f_refined.f_send_chain == server.f_refined.f_receive_chain /\
+       beacon.f_refined.f_receive_chain == server.f_refined.f_send_chain)
+  =
+  initial_ratchet_chains_use_exact_root_and_directions
+    agreed_root initial_kdf;
+  let beacon =
+    derive_beacon_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+  let server =
+    derive_server_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+  ratchet_chain_bytes_extensionality
+    beacon.f_refined.f_send_chain.f_chain
+    server.f_refined.f_receive_chain.f_chain;
+  ratchet_chain_bytes_extensionality
+    beacon.f_refined.f_receive_chain.f_chain
+    server.f_refined.f_send_chain.f_chain;
+  concrete_ratchet_chain_extensionality
+    beacon.f_refined.f_send_chain server.f_refined.f_receive_chain;
+  concrete_ratchet_chain_extensionality
+    beacon.f_refined.f_receive_chain server.f_refined.f_send_chain
+
+/// Fresh complementary concrete kernels are reachable under the same core-fixed step for their complete lifetimes.
+let concrete_initial_kernels_are_reachable
+    (agreed_root:t_Array u8 (mk_usize 32))
+    (initial_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 64))
+    (ratchet_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 76))
+  : Lemma
+      (concrete_session agreed_root initial_kdf ratchet_kdf
+        (derive_beacon_ratchet_kernel
+          agreed_root initial_kdf ratchet_kdf)
+        (derive_server_ratchet_kernel
+          agreed_root initial_kdf ratchet_kdf))
+  =
+  let beacon_chains = derive_initial_ratchet_chains
+    agreed_root (beacon_ratchet_initialization ()) initial_kdf in
+  let server_chains = derive_initial_ratchet_chains
+    agreed_root (server_ratchet_initialization ()) initial_kdf in
+  concrete_kernel_new_is_reachable
+    beacon_chains.f_send_chain beacon_chains.f_receive_chain ratchet_kdf;
+  concrete_kernel_new_is_reachable
+    server_chains.f_send_chain server_chains.f_receive_chain ratchet_kdf
+
+/// At every logical sequence, beacon-send material equals server-receive material, while server-send material equals beacon-receive material.
+let concrete_directional_materials_agree
+    (agreed_root:t_Array u8 (mk_usize 32))
+    (initial_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 64))
+    (ratchet_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 76))
+    (sequence:nat)
+  : Lemma
+      (let beacon =
+         derive_beacon_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+       let server =
+         derive_server_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+       material_at #t_ConcreteRatchetChain #t_RatchetMaterial
+         beacon.f_refined.f_send_chain concrete_ratchet_step sequence ==
+       material_at #t_ConcreteRatchetChain #t_RatchetMaterial
+         server.f_refined.f_receive_chain concrete_ratchet_step sequence /\
+       material_at #t_ConcreteRatchetChain #t_RatchetMaterial
+         server.f_refined.f_send_chain concrete_ratchet_step sequence ==
+       material_at #t_ConcreteRatchetChain #t_RatchetMaterial
+         beacon.f_refined.f_receive_chain concrete_ratchet_step sequence)
+  = concrete_initial_kernels_are_complementary
+      agreed_root initial_kdf ratchet_kdf
+
+/// Authentication-linked root agreement composes with the role-bound constructors: the fresh kernels form one concrete session and their opposing directional materials agree at every arbitrary sequence.
+let authenticated_registrations_establish_concrete_session
+    (authenticated:t_AuthenticatedBeaconRegistration)
+    (pending:t_PendingServerRegistration {
+       authenticated.f_candidate.f_root_key_input == pending.f_root_key_input })
+    (derive_root:t_RootKeyInput -> t_Array u8 (mk_usize 32))
+    (initial_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 64))
+    (ratchet_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 76))
+    (sequence:nat)
+  : Lemma
+      (let common_root =
+         derive_root authenticated.f_candidate.f_root_key_input in
+       let pending_root = derive_root pending.f_root_key_input in
+       let beacon =
+         impl_BeaconRegistrationCandidate__derive_ratchet_kernel
+           authenticated.f_candidate common_root initial_kdf ratchet_kdf in
+       let server =
+         derive_server_ratchet_kernel pending_root initial_kdf ratchet_kdf in
+       common_root == pending_root /\
+       concrete_session common_root initial_kdf ratchet_kdf beacon server /\
+       material_at #t_ConcreteRatchetChain #t_RatchetMaterial
+         beacon.f_refined.f_send_chain concrete_ratchet_step sequence ==
+       material_at #t_ConcreteRatchetChain #t_RatchetMaterial
+         server.f_refined.f_receive_chain concrete_ratchet_step sequence /\
+       material_at #t_ConcreteRatchetChain #t_RatchetMaterial
+         server.f_refined.f_send_chain concrete_ratchet_step sequence ==
+       material_at #t_ConcreteRatchetChain #t_RatchetMaterial
+         beacon.f_refined.f_receive_chain concrete_ratchet_step sequence)
+  =
+  authenticated_registration_derives_common_fixed_root
+    authenticated pending derive_root;
+  let common_root =
+    derive_root authenticated.f_candidate.f_root_key_input in
+  concrete_initial_kernels_are_reachable
+    common_root initial_kdf ratchet_kdf;
+  concrete_directional_materials_agree
+    common_root initial_kdf ratchet_kdf sequence
+
+/// A beacon seal followed by any server open attempt preserves the paired concrete-session invariant on every callback outcome.
+let beacon_seal_server_open_preserves_concrete_session
+    (#v_SealContext #v_Ciphertext #v_OpenContext #v_Plaintext:Type0)
+    (agreed_root:t_Array u8 (mk_usize 32))
+    (initial_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 64))
+    (ratchet_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 76))
+    (beacon:t_ConcreteRatchetKernel)
+    (server:t_ConcreteRatchetKernel {
+       concrete_session agreed_root initial_kdf ratchet_kdf beacon server })
+    (target:u64)
+    (seal_context:v_SealContext)
+    (seal:t_RatchetMaterial -> u64 -> v_SealContext ->
+      Core_models.Option.t_Option v_Ciphertext)
+    (open_context:v_OpenContext)
+    (open_callback:t_RatchetMaterial -> u64 -> v_OpenContext ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (let beacon', _ = concrete_seal_next beacon seal_context seal in
+       let server', _ =
+         concrete_open_and_finish server target open_context open_callback in
+       concrete_session agreed_root initial_kdf ratchet_kdf beacon' server')
+  =
+  let beacon_initial =
+    derive_beacon_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+  let server_initial =
+    derive_server_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+  concrete_seal_next_preserves_reachability
+    beacon_initial.f_refined.f_send_chain
+    beacon_initial.f_refined.f_receive_chain beacon seal_context seal;
+  concrete_open_and_finish_preserves_reachability
+    server_initial.f_refined.f_send_chain
+    server_initial.f_refined.f_receive_chain server target
+    open_context open_callback
+
+/// A server seal followed by any beacon open attempt preserves the paired concrete-session invariant on every callback outcome.
+let server_seal_beacon_open_preserves_concrete_session
+    (#v_SealContext #v_Ciphertext #v_OpenContext #v_Plaintext:Type0)
+    (agreed_root:t_Array u8 (mk_usize 32))
+    (initial_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 64))
+    (ratchet_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 76))
+    (beacon:t_ConcreteRatchetKernel)
+    (server:t_ConcreteRatchetKernel {
+       concrete_session agreed_root initial_kdf ratchet_kdf beacon server })
+    (target:u64)
+    (seal_context:v_SealContext)
+    (seal:t_RatchetMaterial -> u64 -> v_SealContext ->
+      Core_models.Option.t_Option v_Ciphertext)
+    (open_context:v_OpenContext)
+    (open_callback:t_RatchetMaterial -> u64 -> v_OpenContext ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (let server', _ = concrete_seal_next server seal_context seal in
+       let beacon', _ =
+         concrete_open_and_finish beacon target open_context open_callback in
+       concrete_session agreed_root initial_kdf ratchet_kdf beacon' server')
+  =
+  let beacon_initial =
+    derive_beacon_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+  let server_initial =
+    derive_server_ratchet_kernel agreed_root initial_kdf ratchet_kdf in
+  concrete_seal_next_preserves_reachability
+    server_initial.f_refined.f_send_chain
+    server_initial.f_refined.f_receive_chain server seal_context seal;
+  concrete_open_and_finish_preserves_reachability
+    beacon_initial.f_refined.f_send_chain
+    beacon_initial.f_refined.f_receive_chain beacon target
+    open_context open_callback
 
 let candidate_ratchet_initializations_are_complementary
     (beacon:t_BeaconRegistrationCandidate)

@@ -18,7 +18,7 @@ use crate::ratchet::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, AEAD_TAG_LEN, AeadKey, AeadNonce, COMMITMENT_SIZE,
 	KDF_RATCHET_OUTPUT_LEN, KdfRecvState, KdfSendState, KeyMaterial, MESSAGE_OVERHEAD,
 	RATCHET_MAX_GAP, RatchetKernel, SendChain, build_commitment, decrypt_message_with_ratchet,
-	encrypt_message_with_ratchet, ratchet_step,
+	encrypt_message_with_ratchet, ratchet_hkdf,
 };
 #[cfg(test)]
 use beaconcrypt_protocol_core::pqxdh::ASSOCIATED_DATA_SIZE as AD_SIZE;
@@ -400,11 +400,12 @@ impl<const S: usize, System, Role> SecretArr<S, System, Role> {
 		&self.data
 	}
 
+	#[cfg(test)]
 	pub fn copy_from_slice(&mut self, src: &[u8]) {
 		self.data.copy_from_slice(src);
 	}
 
-	#[cfg(feature = "server")]
+	#[cfg(test)]
 	pub fn inner(&self) -> &Zeroizing<[u8; S]> {
 		&self.data
 	}
@@ -490,12 +491,12 @@ impl AsRef<[u8]> for Encrypted {
 mod tests {
 	use super::*;
 
-	fn key_bytes(key: &AeadKey) -> &[u8] {
-		key.as_ref()
+	fn key_bytes(key: &verified_ratchet::RatchetKey) -> &[u8] {
+		key.as_bytes()
 	}
 
-	fn nonce_bytes(nonce: &AeadNonce) -> &[u8] {
-		nonce.as_ref()
+	fn nonce_bytes(nonce: &verified_ratchet::RatchetNonce) -> &[u8] {
+		nonce.as_bytes()
 	}
 
 	fn assert_key_material_eq(left: &KeyMaterial, right: &KeyMaterial) {
@@ -542,6 +543,7 @@ mod tests {
 			receive_sequence,
 			send_chain,
 			receive_chain,
+			ratchet_hkdf,
 		);
 	}
 
@@ -565,10 +567,7 @@ mod tests {
 		seq: u64,
 		kid: u64,
 	) -> Vec<u8> {
-		let secret = KeyMaterial {
-			key: key.into(),
-			nonce: nonce.into(),
-		};
+		let secret = KeyMaterial::from_bytes(key, nonce);
 		build_commitment(&secret, ad, tag, seq, kid).unwrap()
 	}
 
@@ -772,9 +771,9 @@ mod tests {
 	fn ratchet_matches_hkdf_sha512_known_answer_over_two_steps() {
 		// Reproduced independently by `python scripts/generate_kat_vectors.py` and
 		// `go run scripts/generate_kat_vectors.go` (`[ratchet]`).
-		let ratchet = SendChain::from([0x24; KDF_STATE_SIZE]);
+		let ratchet = SendChain::from_bytes([0x24; KDF_STATE_SIZE]);
 
-		let first = ratchet_step(&ratchet);
+		let first = verified_ratchet::derive_ratchet_step(&ratchet, ratchet_hkdf);
 		assert_eq!(
 			key_bytes(first.material.key()),
 			decode_hex::<AEAD_KEY_LEN>(
@@ -786,13 +785,13 @@ mod tests {
 			decode_hex::<AEAD_NONCE_LEN>("43483e81091a393409afbf53")
 		);
 		assert_eq!(
-			first.chain.state.as_slice(),
+			*first.chain.as_bytes(),
 			decode_hex::<KDF_STATE_SIZE>(
 				"5936897d8bd06b7daf70bd0d64b2f607a055fd843ddb779051cb975bbb02b1d3"
 			)
 		);
 
-		let second = ratchet_step(&first.chain);
+		let second = verified_ratchet::derive_ratchet_step(&first.chain, ratchet_hkdf);
 		assert_eq!(
 			key_bytes(second.material.key()),
 			decode_hex::<AEAD_KEY_LEN>(
@@ -804,7 +803,7 @@ mod tests {
 			decode_hex::<AEAD_NONCE_LEN>("d497a96123dfcbe5700b5cc0")
 		);
 		assert_eq!(
-			second.chain.state.as_slice(),
+			*second.chain.as_bytes(),
 			decode_hex::<KDF_STATE_SIZE>(
 				"d11e3c43fa3bbfec95a41973521d7e1b4aacddfc96591fe40fa30e9581b5e4e2"
 			)
@@ -826,10 +825,7 @@ mod tests {
 	/// ```
 	#[test]
 	fn commitment_matches_blake2b_known_answer() {
-		let secret = KeyMaterial {
-			key: [0x11; AEAD_KEY_LEN].into(),
-			nonce: [0x22; AEAD_NONCE_LEN].into(),
-		};
+		let secret = KeyMaterial::from_bytes([0x11; AEAD_KEY_LEN], [0x22; AEAD_NONCE_LEN]);
 		let associated_data = [0x41; AD_SIZE];
 		let tag = [0x33; AEAD_TAG_LEN];
 		let expected = decode_hex::<COMMITMENT_SIZE>(
@@ -847,10 +843,7 @@ mod tests {
 
 	#[test]
 	fn commitment_rejects_non_chacha_tag_lengths() {
-		let secret = KeyMaterial {
-			key: [0x51; AEAD_KEY_LEN].into(),
-			nonce: [0x52; AEAD_NONCE_LEN].into(),
-		};
+		let secret = KeyMaterial::from_bytes([0x51; AEAD_KEY_LEN], [0x52; AEAD_NONCE_LEN]);
 		let associated_data = [0x54; AD_SIZE];
 
 		for tag_len in 0..=32 {
@@ -865,10 +858,7 @@ mod tests {
 
 	#[test]
 	fn commitment_rejects_non_beaconcrypt_associated_data_lengths() {
-		let secret = KeyMaterial {
-			key: [0x51; AEAD_KEY_LEN].into(),
-			nonce: [0x52; AEAD_NONCE_LEN].into(),
-		};
+		let secret = KeyMaterial::from_bytes([0x51; AEAD_KEY_LEN], [0x52; AEAD_NONCE_LEN]);
 		let tag = [0x53; AEAD_TAG_LEN];
 
 		for ad_len in [0, AD_SIZE - 1, AD_SIZE, AD_SIZE + 1] {

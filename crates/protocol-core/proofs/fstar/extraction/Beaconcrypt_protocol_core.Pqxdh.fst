@@ -3,7 +3,7 @@ module Beaconcrypt_protocol_core.Pqxdh
 open FStar.Mul
 open Core_models
 
-let v_RATCHET_CHAIN_SIZE: usize = mk_usize 32
+let v_RATCHET_CHAIN_SIZE: usize = Beaconcrypt_protocol_core.Ratchet.v_RATCHET_CHAIN_SIZE
 
 let v_SIGN_TYPE_ED25519: u8 = mk_u8 1
 
@@ -33,17 +33,7 @@ let v_PQXDH_INFO: t_Array u8 (mk_usize 46) =
   Rust_primitives.Hax.array_of_list 46 list
 
 let v_SYM_RATCHET_INFO: t_Array u8 (mk_usize 41) =
-  let list =
-    [
-      mk_u8 83; mk_u8 121; mk_u8 109; mk_u8 82; mk_u8 97; mk_u8 116; mk_u8 99; mk_u8 104; mk_u8 101;
-      mk_u8 116; mk_u8 95; mk_u8 72; mk_u8 75; mk_u8 68; mk_u8 70; mk_u8 95; mk_u8 83; mk_u8 72;
-      mk_u8 65; mk_u8 45; mk_u8 53; mk_u8 49; mk_u8 50; mk_u8 95; mk_u8 67; mk_u8 72; mk_u8 65;
-      mk_u8 67; mk_u8 72; mk_u8 65; mk_u8 50; mk_u8 48; mk_u8 95; mk_u8 80; mk_u8 79; mk_u8 76;
-      mk_u8 89; mk_u8 49; mk_u8 51; mk_u8 48; mk_u8 53
-    ]
-  in
-  FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 41);
-  Rust_primitives.Hax.array_of_list 41 list
+  Beaconcrypt_protocol_core.Ratchet.v_SYM_RATCHET_INFO
 
 type t_RegistrationError =
   | RegistrationError_IdentityMismatch : t_RegistrationError
@@ -216,6 +206,14 @@ type t_InitialRatchetChains = {
   f_receive_chain:Beaconcrypt_protocol_core.Ratchet.t_RatchetChain
 }
 
+let impl_InitialRatchetChains__into_parts (self: t_InitialRatchetChains)
+    : (Beaconcrypt_protocol_core.Ratchet.t_RatchetChain &
+      Beaconcrypt_protocol_core.Ratchet.t_RatchetChain) =
+  self.f_send_chain, self.f_receive_chain
+  <:
+  (Beaconcrypt_protocol_core.Ratchet.t_RatchetChain &
+    Beaconcrypt_protocol_core.Ratchet.t_RatchetChain)
+
 /// Split an opaque 64-byte initial expansion into role-ordered fixed-width chains.
 let split_initial_ratchet_kdf_output
       (output: t_Array u8 (mk_usize 64))
@@ -270,10 +268,63 @@ let split_initial_ratchet_kdf_output
 let derive_initial_ratchet_chains
       (root: t_Array u8 (mk_usize 32))
       (initialization: t_RatchetInitialization)
-      (kdf: (t_Array u8 (mk_usize 32) -> t_Array u8 (mk_usize 64)))
+      (kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 64)))
     : t_InitialRatchetChains =
-  let output:t_Array u8 (mk_usize 64) = kdf root in
+  let request:Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest =
+    Beaconcrypt_protocol_core.Ratchet.impl_SymmetricRatchetKdfRequest__new root
+  in
+  let output:t_Array u8 (mk_usize 64) = kdf request in
   split_initial_ratchet_kdf_output output initialization
+
+/// Construct a concrete kernel directly from one root, one fixed role plan,
+/// and the executors for initial and subsequent core-owned KDF requests.
+let derive_initial_ratchet_kernel
+      (root: t_Array u8 (mk_usize 32))
+      (initialization: t_RatchetInitialization)
+      (initial_kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 64)))
+      (ratchet_kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 76)))
+    : Beaconcrypt_protocol_core.Ratchet.t_ConcreteRatchetKernel =
+  let chains:t_InitialRatchetChains =
+    derive_initial_ratchet_chains root initialization initial_kdf
+  in
+  let
+  (send_chain: Beaconcrypt_protocol_core.Ratchet.t_RatchetChain),
+  (receive_chain: Beaconcrypt_protocol_core.Ratchet.t_RatchetChain) =
+    impl_InitialRatchetChains__into_parts chains
+  in
+  Beaconcrypt_protocol_core.Ratchet.impl_ConcreteRatchetKernel__new send_chain
+    receive_chain
+    ratchet_kdf
+
+/// Construct the beacon role's complementary concrete kernel.
+let derive_beacon_ratchet_kernel
+      (root: t_Array u8 (mk_usize 32))
+      (initial_kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 64)))
+      (ratchet_kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 76)))
+    : Beaconcrypt_protocol_core.Ratchet.t_ConcreteRatchetKernel =
+  derive_initial_ratchet_kernel root v_BEACON_RATCHETS initial_kdf ratchet_kdf
+
+/// Construct the server role's complementary concrete kernel.
+let derive_server_ratchet_kernel
+      (root: t_Array u8 (mk_usize 32))
+      (initial_kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 64)))
+      (ratchet_kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 76)))
+    : Beaconcrypt_protocol_core.Ratchet.t_ConcreteRatchetKernel =
+  derive_initial_ratchet_kernel root v_SERVER_RATCHETS initial_kdf ratchet_kdf
 
 /// Candidate beacon session. Its root, AD, identity assignment, and ratchet
 /// direction have been validated, but its initial ciphertext has not yet
@@ -288,6 +339,20 @@ type t_BeaconRegistrationCandidate = {
 
 let impl_BeaconRegistrationCandidate__ratchet_initialization (self: t_BeaconRegistrationCandidate)
     : t_RatchetInitialization = v_BEACON_RATCHETS
+
+/// Bind the authenticated candidate's beacon direction directly to a
+/// concrete core ratchet kernel.
+let impl_BeaconRegistrationCandidate__derive_ratchet_kernel
+      (self: t_BeaconRegistrationCandidate)
+      (root: t_Array u8 (mk_usize 32))
+      (initial_kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 64)))
+      (ratchet_kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 76)))
+    : Beaconcrypt_protocol_core.Ratchet.t_ConcreteRatchetKernel =
+  derive_beacon_ratchet_kernel root initial_kdf ratchet_kdf
 
 type t_BeaconFinishInputs = {
   f_response_server_identity:t_Array u8 (mk_usize 32);
@@ -418,6 +483,20 @@ let impl_ServerRegistrationCandidate__ratchet_initialization (self: t_ServerRegi
 
 let impl_ServerRegistrationCandidate__key_id_binding (self: t_ServerRegistrationCandidate)
     : t_RegistrationKeyIdBinding = registration_key_id_binding self.f_key_id
+
+/// Bind the accepted server candidate's direction directly to a concrete
+/// core ratchet kernel.
+let impl_ServerRegistrationCandidate__derive_ratchet_kernel
+      (self: t_ServerRegistrationCandidate)
+      (root: t_Array u8 (mk_usize 32))
+      (initial_kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 64)))
+      (ratchet_kdf:
+          (Beaconcrypt_protocol_core.Ratchet.t_SymmetricRatchetKdfRequest
+              -> t_Array u8 (mk_usize 76)))
+    : Beaconcrypt_protocol_core.Ratchet.t_ConcreteRatchetKernel =
+  derive_server_ratchet_kernel root initial_kdf ratchet_kdf
 
 type t_KeyIdAvailability =
   | KeyIdAvailability_Available : t_KeyIdAvailability
