@@ -55,16 +55,16 @@ pub unsafe extern "system" fn SystemFunction036(
 	u8::from(status >= 0)
 }
 
+#[cfg(all(feature = "pqxdh", feature = "beacon"))]
+pub use beacon::Beacon;
 #[cfg(feature = "beacon")]
 pub use beacon::ProviderBeacon;
 pub use error::{
 	CipherTextError, DecodingError, DecryptionError, EncodingError, KeyGenError, SignatureError,
 };
-#[cfg(all(feature = "pqxdh", feature = "beacon"))]
-pub use pqxdh::Beacon;
-#[cfg(all(feature = "pqxdh", feature = "server"))]
-pub use pqxdh::Server;
 pub use ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE};
+#[cfg(all(feature = "pqxdh", feature = "server"))]
+pub use server::Server;
 #[cfg(feature = "server")]
 pub use server::{ProviderServer, RecvState, RegResponse, RegistrationOutput, SendState};
 pub use shared::{DH_OUT_LEN, Decrypted, ED25519_SEED_SIZE, Encrypted, KEX_KDF_OUT_LEN, SignType};
