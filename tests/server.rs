@@ -523,3 +523,52 @@ fn a_peer_becomes_operational_only_after_pqxdh_establishment() {
 		b"established"
 	);
 }
+
+#[test]
+fn persistent_structured_updates_return_committed_outputs() {
+	let store = MemoryStore::default();
+	let mut server = PersistentServer::create_with_lineage(
+		9,
+		Some(&[0x63; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x4B; 32]),
+	)
+	.unwrap();
+	let mut beacon = Beacon::new(9, server.identity_pk().as_bytes());
+	let kid = test_register_persistent(&mut server, &mut beacon);
+
+	let send = server
+		.encrypt_and_update(b"binary send", kid)
+		.unwrap()
+		.unwrap();
+	assert_eq!(send.kid, kid);
+	assert_eq!(
+		beacon.decrypt_message(&send.data).unwrap().plaintext,
+		b"binary send"
+	);
+
+	let encrypted = beacon.encrypt_message(b"binary receive").unwrap();
+	let receive = server.decrypt_and_update(&encrypted).unwrap().unwrap();
+	assert_eq!(receive.kid, kid);
+	assert_eq!(receive.data, b"binary receive");
+
+	let send_json = server
+		.encrypt_and_update_json(b"JSON send", kid)
+		.unwrap()
+		.unwrap();
+	let send: serde_json::Value = serde_json::from_str(&send_json).unwrap();
+	let ciphertext: Vec<u8> = serde_json::from_value(send["data"].clone()).unwrap();
+	assert_eq!(
+		beacon.decrypt_message(&ciphertext).unwrap().plaintext,
+		b"JSON send"
+	);
+
+	let encrypted = beacon.encrypt_message(b"JSON receive").unwrap();
+	let receive_json = server.decrypt_and_update_json(&encrypted).unwrap().unwrap();
+	let receive: serde_json::Value = serde_json::from_str(&receive_json).unwrap();
+	assert_eq!(receive["kid"], kid);
+	let plaintext: Vec<u8> = serde_json::from_value(receive["data"].clone()).unwrap();
+	assert_eq!(plaintext, b"JSON receive");
+
+	assert_eq!(store.trusted_head(), Some(server.head()));
+}

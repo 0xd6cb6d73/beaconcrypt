@@ -556,6 +556,43 @@ mod tests {
 		);
 	}
 
+	#[cfg(feature = "server")]
+	fn serialized_server_value(server_kid: u64) -> Value {
+		let server = crate::Server::new(
+			server_kid,
+			Some(&[0x31; libsodium_rs::crypto_sign::SEEDBYTES]),
+		);
+		serde_json::from_str(&server.serialize_state().unwrap()).unwrap()
+	}
+
+	#[cfg(feature = "server")]
+	#[test]
+	fn server_state_enforces_each_key_id_bound_independently() {
+		let mut state = serialized_server_value(7);
+		state["identity_key_kid"] = json!(8);
+		assert!(deserialize_server_state(&state.to_string()).is_none());
+
+		state["identity_key_kid"] = json!(6);
+		assert!(deserialize_server_state(&state.to_string()).is_some());
+
+		let mut server = crate::Server::new(7, Some(&[0x32; libsodium_rs::crypto_sign::SEEDBYTES]));
+		let remote = crypto_sign::KeyPair::from_seed(&[0x33; crypto_sign::SEEDBYTES]).unwrap();
+		server.add_known_kid(8, remote.public_key);
+		let mut state: Value = serde_json::from_str(&server.serialize_state().unwrap()).unwrap();
+		state["consumed_registrations"] = json!(vec![vec![0; 64]]);
+		assert!(deserialize_server_state(&state.to_string()).is_none());
+	}
+
+	#[cfg(feature = "server")]
+	#[test]
+	fn server_state_requires_a_consumed_registration_for_every_peer() {
+		let mut server = crate::Server::new(7, Some(&[0x34; libsodium_rs::crypto_sign::SEEDBYTES]));
+		let remote = crypto_sign::KeyPair::from_seed(&[0x35; crypto_sign::SEEDBYTES]).unwrap();
+		server.add_known_kid(7, remote.public_key);
+		let state = server.serialize_state().unwrap();
+		assert!(deserialize_server_state(&state).is_none());
+	}
+
 	#[test]
 	fn ratchet_manager_implements_serde_traits() {
 		assert_serde_traits::<RatchetManager>();

@@ -581,6 +581,86 @@ mod tests {
 		}
 	}
 
+	fn deterministic_persistent_server() -> PersistentServer<MemoryStore> {
+		PersistentServer::create_with_lineage(
+			7,
+			Some(&[0x71; libsodium_rs::crypto_sign::SEEDBYTES]),
+			MemoryStore::default(),
+			SnapshotLineage::from_bytes([0x72; LINEAGE_SIZE]),
+		)
+		.unwrap()
+	}
+
+	#[test]
+	fn snapshot_head_rejects_short_envelopes_and_accepts_an_empty_payload() {
+		for length in 0..HEADER_SIZE {
+			assert!(matches!(
+				ServerSnapshot::from_bytes(vec![0; length]).head(),
+				Err(PersistenceError::InvalidSnapshot)
+			));
+		}
+
+		let persistent = deterministic_persistent_server();
+		let PersistentServer { store, .. } = persistent;
+		let mut bytes = store.snapshot.unwrap();
+		bytes.truncate(HEADER_SIZE);
+		bytes[HEADER_SIZE - 8..HEADER_SIZE].copy_from_slice(&0u64.to_le_bytes());
+		assert!(ServerSnapshot::from_bytes(bytes).head().is_ok());
+	}
+
+	#[test]
+	fn snapshot_head_contains_a_real_content_digest() {
+		let persistent = deterministic_persistent_server();
+		assert_ne!(persistent.head().digest(), [0; DIGEST_SIZE]);
+		assert_ne!(persistent.head().digest(), [1; DIGEST_SIZE]);
+	}
+
+	#[test]
+	fn fresh_persistent_server_reports_its_configuration() {
+		let persistent = deterministic_persistent_server();
+		assert!(!persistent.is_poisoned());
+		assert_eq!(persistent.server_kid(), 7);
+	}
+
+	#[test]
+	fn persistence_errors_have_stable_messages() {
+		let cases = [
+			(PersistenceError::MissingSnapshot, "snapshot store is empty"),
+			(PersistenceError::InvalidSnapshot, "invalid server snapshot"),
+			(
+				PersistenceError::NonCanonicalSnapshot,
+				"non-canonical server snapshot payload",
+			),
+			(
+				PersistenceError::StaleGeneration,
+				"snapshot generation compare-and-swap failed",
+			),
+			(
+				PersistenceError::GenerationExhausted,
+				"snapshot generation exhausted",
+			),
+			(
+				PersistenceError::Encoding,
+				"server snapshot encoding failed",
+			),
+			(
+				PersistenceError::Initialization,
+				"failed to initialize snapshot dependencies",
+			),
+			(
+				PersistenceError::Digest,
+				"failed to compute snapshot identity digest",
+			),
+			(
+				PersistenceError::Poisoned,
+				"persistent server is poisoned after a failed commit",
+			),
+		];
+		for (error, expected) in cases {
+			assert_eq!(error.to_string(), expected);
+		}
+	}
+
 	#[test]
 	fn changed_state_is_committed_even_when_the_operation_returns_none() {
 		let mut persistent = PersistentServer::create_with_lineage(

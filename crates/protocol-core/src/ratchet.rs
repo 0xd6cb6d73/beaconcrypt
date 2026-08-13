@@ -1327,17 +1327,29 @@ pub(crate) fn advance_send_for_peer(
 mod tests {
 	use super::{
 		CachedReceiveKey, PeerRatchetState, RATCHET_KDF_OUTPUT_SIZE, RATCHET_MAX_GAP,
-		RECEIVE_CACHE_CAPACITY, RatchetChain, RatchetState, RatchetStep, ReceiveDisposition,
-		RefinedRatchet, RefinedSendKey, SYM_RATCHET_INFO, SendKey, SequenceCache,
-		SymmetricRatchetKdfRequest, advance_receive, advance_send, advance_send_for_peer,
-		derive_ratchet_step, empty_material_slots, finish_receive, finish_receive_with_removal,
-		finish_refined_restore, finish_restore, finish_send, lookup_receive_key,
-		plan_receive_until, refined_advance_receive, refined_advance_receive_until,
-		refined_advance_send, refined_finish_receive, refined_finish_send, refined_open_and_finish,
-		refined_receive_key, refined_restore_receive_key, refined_seal_next,
-		replace_ratchet_for_peer, restore_receive_key, restore_receive_key_with_slot,
-		split_ratchet_kdf_output, start_refined_restore, start_restore,
+		RECEIVE_CACHE_CAPACITY, RatchetChain, RatchetKey, RatchetNonce, RatchetState, RatchetStep,
+		ReceiveDisposition, RefinedRatchet, RefinedSendKey, SYM_RATCHET_INFO, SendKey,
+		SequenceCache, SymmetricRatchetKdfRequest, advance_receive, advance_send,
+		advance_send_for_peer, derive_ratchet_step, empty_material_slots, finish_receive,
+		finish_receive_with_removal, finish_refined_restore, finish_restore, finish_send,
+		lookup_receive_key, plan_receive_until, refined_advance_receive,
+		refined_advance_receive_until, refined_advance_send, refined_finish_receive,
+		refined_finish_send, refined_open_and_finish, refined_receive_key,
+		refined_restore_receive_key, refined_seal_next, replace_ratchet_for_peer,
+		restore_receive_key, restore_receive_key_with_slot, split_ratchet_kdf_output,
+		start_refined_restore, start_restore,
 	};
+
+	#[test]
+	fn owned_ratchet_bytes_round_trip_through_wrappers() {
+		let chain = [0x23; super::RATCHET_CHAIN_SIZE];
+		let key = [0x45; crate::commitment::AEAD_KEY_SIZE];
+		let nonce = [0x67; crate::commitment::AEAD_NONCE_SIZE];
+
+		assert_eq!(RatchetChain::from_bytes(chain).into_bytes(), chain);
+		assert_eq!(RatchetKey::from_bytes(key).into_bytes(), key);
+		assert_eq!(RatchetNonce::from_bytes(nonce).into_bytes(), nonce);
+	}
 
 	#[derive(Debug, Eq, PartialEq)]
 	struct TestMaterial {
