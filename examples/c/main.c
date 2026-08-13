@@ -16,6 +16,7 @@
 
 #define SERVER_KID 0
 #define TRANSPORT_PATH "transport"
+#define STATE_PATH "server-state.bin"
 
 static const uint8_t REGISTRATION_MESSAGE[] = "registration ok";
 
@@ -65,8 +66,8 @@ static int fill_random(uint8_t *buffer, size_t len) {
 #endif
 }
 
-static int write_transport(const uint8_t *data, size_t len) {
-  FILE *file = fopen(TRANSPORT_PATH, "wb");
+static int write_file(const char *path, const uint8_t *data, size_t len) {
+  FILE *file = fopen(path, "wb");
   if (file == NULL) {
     return -1;
   }
@@ -75,11 +76,11 @@ static int write_transport(const uint8_t *data, size_t len) {
   return written == len && close_result == 0 ? 0 : -1;
 }
 
-static int read_transport(uint8_t **out, size_t *out_len) {
+static int read_file(const char *path, uint8_t **out, size_t *out_len) {
   *out = NULL;
   *out_len = 0;
 
-  FILE *file = fopen(TRANSPORT_PATH, "rb");
+  FILE *file = fopen(path, "rb");
   if (file == NULL) {
     return -1;
   }
@@ -109,6 +110,27 @@ static int read_transport(uint8_t **out, size_t *out_len) {
   *out = buffer;
   *out_len = (size_t)file_len;
   return 0;
+}
+
+static int write_transport(const uint8_t *data, size_t len) {
+  return write_file(TRANSPORT_PATH, data, len);
+}
+
+static int read_transport(uint8_t **out, size_t *out_len) {
+  return read_file(TRANSPORT_PATH, out, out_len);
+}
+
+static int save_server(const beaconcrypt_Server *server) {
+  /* Checkpoints are plaintext secret material. Save immediately after every
+   * state-changing call and before using its output. A production store must
+   * also reject stale rollback and coordinate concurrent owners. */
+  beaconcrypt_Buffer state = beaconcrypt_server_export_state(server);
+  if (buffer_is_empty(state)) {
+    return -1;
+  }
+  int result = write_file(STATE_PATH, state.ptr, state.len);
+  free_buffer(&state);
+  return result;
 }
 
 static void print_text(const char *label, beaconcrypt_Buffer buffer) {
@@ -150,6 +172,10 @@ static int run(void) {
                                             sizeof(server_seed));
   if (server == NULL) {
     fprintf(stderr, "error: failed to create server\n");
+    goto cleanup;
+  }
+  if (save_server(server) != 0) {
+    fprintf(stderr, "error: failed to save initial server state\n");
     goto cleanup;
   }
 
@@ -196,6 +222,10 @@ static int run(void) {
     fprintf(stderr, "error: failed to register beacon\n");
     goto cleanup;
   }
+  if (save_server(server) != 0) {
+    fprintf(stderr, "error: failed to save registered server state\n");
+    goto cleanup;
+  }
 
   /* Ship the response back over your transport. */
   if (write_transport(s_reg_resp.response.ptr, s_reg_resp.response.len) != 0) {
@@ -220,6 +250,24 @@ static int run(void) {
   print_text("Beacon got initial message", first_message);
   free_buffer(&first_message);
 
+  /* Simulate a restart. These bytes are trusted as the authoritative current
+   * checkpoint; they do not authenticate themselves or prevent stale rollback. */
+  beaconcrypt_server_free(server);
+  server = NULL;
+  if (read_file(STATE_PATH, &transport, &transport_len) != 0) {
+    fprintf(stderr, "error: failed to read server state\n");
+    goto cleanup;
+  }
+  server = beaconcrypt_server_new_from_state(transport, transport_len);
+  free(transport);
+  transport = NULL;
+  transport_len = 0;
+  if (server == NULL || save_server(server) != 0) {
+    fprintf(stderr, "error: failed to restore server state\n");
+    goto cleanup;
+  }
+  printf("Restored server state from %s\n", STATE_PATH);
+
   b_ping = beaconcrypt_encrypt_to_server(beacon, (const uint8_t *)"ping", 4);
   if (buffer_is_empty(b_ping) || write_transport(b_ping.ptr, b_ping.len) != 0) {
     fprintf(stderr, "error: failed to send ping\n");
@@ -240,6 +288,10 @@ static int run(void) {
     fprintf(stderr, "error: failed to decrypt ping\n");
     goto cleanup;
   }
+  if (save_server(server) != 0) {
+    fprintf(stderr, "error: failed to save state after ping\n");
+    goto cleanup;
+  }
   print_text("Server got ping", ping.data);
   print_state(&ping);
   free_encrypt_state(&ping);
@@ -249,6 +301,10 @@ static int run(void) {
       server, s_reg_resp.key_id, (const uint8_t *)"task contents", 13);
   if (buffer_is_empty(s_task_0.data)) {
     fprintf(stderr, "error: failed to send first task\n");
+    goto cleanup;
+  }
+  if (save_server(server) != 0) {
+    fprintf(stderr, "error: failed to save state after task encryption\n");
     goto cleanup;
   }
   print_state(&s_task_0);
@@ -296,6 +352,10 @@ static int run(void) {
     fprintf(stderr, "error: failed to decrypt task response\n");
     goto cleanup;
   }
+  if (save_server(server) != 0) {
+    fprintf(stderr, "error: failed to save state after task response\n");
+    goto cleanup;
+  }
   print_text("Server got response to first task", task_1.data);
   print_state(&task_1);
 
@@ -320,6 +380,7 @@ cleanup:
     beaconcrypt_server_free(server);
   }
   remove(TRANSPORT_PATH);
+  remove(STATE_PATH);
   return result;
 }
 

@@ -1,24 +1,21 @@
 // SPDX-License-Identifier: 0BSD
 
 #[cfg(feature = "server")]
-use super::{RemotePrincipal, SignType, decode_sign};
+use super::{EstablishedRemote, SignType, decode_sign};
 use crate::ratchet::{
 	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager, ratchet_hkdf,
 };
-#[cfg(feature = "server")]
-use crate::server::StateUpdate;
 use crate::shared::{roles, systems};
 use beaconcrypt_protocol_core::ratchet as verified_ratchet;
 #[cfg(feature = "server")]
 use libsodium_rs::crypto_sign;
-#[cfg(feature = "server")]
 use serde::de::MapAccess;
 use serde::{
 	Deserialize, Deserializer,
 	de::{self, Error as _, IgnoredAny, SeqAccess, Visitor},
 };
 use std::{
-	collections::{HashMap, HashSet},
+	collections::{HashMap, HashSet, hash_map::Entry},
 	fmt,
 	marker::PhantomData,
 };
@@ -192,8 +189,75 @@ where
 	}
 }
 
+struct CanonicalU64(u64);
+
+impl<'de> Deserialize<'de> for CanonicalU64 {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
+		let encoded = String::deserialize(deserializer)?;
+		let value = encoded.parse::<u64>().map_err(|_| {
+			D::Error::custom(format!("invalid unsigned integer map key `{encoded}`"))
+		})?;
+		if encoded != value.to_string() {
+			return Err(D::Error::custom(format!(
+				"non-canonical unsigned integer map key `{encoded}`; expected `{value}`"
+			)));
+		}
+		Ok(Self(value))
+	}
+}
+
+struct DuplicateRejectingU64Map<V>(HashMap<u64, V>);
+
+struct DuplicateRejectingU64MapVisitor<V>(PhantomData<V>);
+
+impl<'de, V> Visitor<'de> for DuplicateRejectingU64MapVisitor<V>
+where
+	V: Deserialize<'de>,
+{
+	type Value = DuplicateRejectingU64Map<V>;
+
+	fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+		formatter.write_str("a map with unique canonical unsigned integer keys")
+	}
+
+	fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+	where
+		A: MapAccess<'de>,
+	{
+		let mut values = HashMap::with_capacity(map.size_hint().unwrap_or(0));
+		while let Some(CanonicalU64(key)) = map.next_key()? {
+			match values.entry(key) {
+				Entry::Occupied(_) => {
+					return Err(A::Error::custom(format!(
+						"duplicate unsigned integer map key {key}"
+					)));
+				}
+				Entry::Vacant(entry) => {
+					entry.insert(map.next_value()?);
+				}
+			}
+		}
+		Ok(DuplicateRejectingU64Map(values))
+	}
+}
+
+impl<'de, V> Deserialize<'de> for DuplicateRejectingU64Map<V>
+where
+	V: Deserialize<'de>,
+{
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
+		deserializer.deserialize_map(DuplicateRejectingU64MapVisitor(PhantomData))
+	}
+}
+
 #[derive(Deserialize)]
-#[serde(rename = "KeyMaterial")]
+#[serde(rename = "KeyMaterial", deny_unknown_fields)]
 struct KeyMaterialData<Key, Nonce> {
 	key: Key,
 	nonce: Nonce,
@@ -230,7 +294,9 @@ struct RatchetManagerData {
 	send_key: DirectionalRatchetChain<roles::ChainSendKey>,
 	recv_key: DirectionalRatchetChain<roles::ChainRecvKey>,
 	send_ctr: u64,
-	recv_past: HashMap<u64, DirectionalKeyMaterial<roles::EncryptionRecvKey, roles::RecvNonce>>,
+	recv_past: DuplicateRejectingU64Map<
+		DirectionalKeyMaterial<roles::EncryptionRecvKey, roles::RecvNonce>,
+	>,
 	recv_ctr: u64,
 }
 
@@ -240,7 +306,7 @@ impl<'de> Deserialize<'de> for RatchetManager {
 		D: Deserializer<'de>,
 	{
 		let data = RatchetManagerData::deserialize(deserializer)?;
-		let mut receive_entries = data.recv_past.into_iter().collect::<Vec<_>>();
+		let mut receive_entries = data.recv_past.0.into_iter().collect::<Vec<_>>();
 		receive_entries.sort_unstable_by_key(|(sequence, _)| *sequence);
 		let mut restore = verified_ratchet::start_concrete_restore(
 			data.send_ctr,
@@ -269,41 +335,14 @@ impl<'de> Deserialize<'de> for RatchetManager {
 
 #[cfg(feature = "server")]
 #[derive(Deserialize)]
-#[serde(rename = "StateUpdate")]
-struct StateUpdateData {
-	kid: u64,
-	seq: u64,
-	state: RatchetManager,
-	data: Vec<u8>,
-}
-
-#[cfg(feature = "server")]
-impl<'de, Role: roles::ChainKey> Deserialize<'de> for StateUpdate<Role> {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		let data = StateUpdateData::deserialize(deserializer)?;
-		Ok(Self {
-			kid: data.kid,
-			seq: data.seq,
-			state: data.state,
-			data: data.data,
-			_role: PhantomData,
-		})
-	}
-}
-
-#[cfg(feature = "server")]
-#[derive(Deserialize)]
-#[serde(rename = "RemotePrincipal")]
+#[serde(rename = "RemotePrincipal", deny_unknown_fields)]
 struct RemotePrincipalData {
 	pk: Vec<u8>,
 	ratchet: RatchetManager,
 }
 
 #[cfg(feature = "server")]
-impl<'de> Deserialize<'de> for RemotePrincipal<crypto_sign::PublicKey> {
+impl<'de> Deserialize<'de> for EstablishedRemote<crypto_sign::PublicKey> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
 		D: Deserializer<'de>,
@@ -318,16 +357,13 @@ impl<'de> Deserialize<'de> for RemotePrincipal<crypto_sign::PublicKey> {
 }
 
 #[cfg(feature = "server")]
-struct DeserializedKnownIds(HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>);
-
-#[cfg(feature = "server")]
 #[derive(Deserialize)]
-#[serde(rename = "BeaconCryptPqxdh")]
+#[serde(rename = "BeaconCryptPqxdh", deny_unknown_fields)]
 struct ServerStateData {
 	identity_key: TypedArray<{ crypto_sign::SEEDBYTES }, systems::Ed25519, roles::IdentityKey>,
 	identity_key_kid: u64,
 	server_kid: u64,
-	known_ids: DeserializedKnownIds,
+	known_ids: DuplicateRejectingU64Map<EstablishedRemote<crypto_sign::PublicKey>>,
 	consumed_registrations: Vec<Vec<u8>>,
 }
 
@@ -336,7 +372,7 @@ type DeserializedServerState = (
 	crypto_sign::KeyPair,
 	u64,
 	u64,
-	HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+	HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>,
 	HashSet<[u8; beaconcrypt_protocol_core::pqxdh::REGISTRATION_ID_SIZE]>,
 );
 
@@ -346,7 +382,7 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 		identity_key,
 		identity_key_kid,
 		server_kid,
-		known_ids: DeserializedKnownIds(known_ids),
+		known_ids: DuplicateRejectingU64Map(known_ids),
 		consumed_registrations,
 	} = serde_json::from_str(state).ok()?;
 
@@ -368,44 +404,6 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 
 	Some((keypair, identity_key_kid, server_kid, known_ids, consumed))
 }
-
-#[cfg(feature = "server")]
-struct KnownIdsVisitor;
-
-#[cfg(feature = "server")]
-impl<'de> Visitor<'de> for KnownIdsVisitor {
-	type Value = DeserializedKnownIds;
-
-	fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-		formatter.write_str("a map from key IDs to remote principals")
-	}
-
-	fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
-	where
-		A: MapAccess<'de>,
-	{
-		let mut known_ids = HashMap::with_capacity(map.size_hint().unwrap_or(0));
-		while let Some(kid) = map.next_key()? {
-			if known_ids.contains_key(&kid) {
-				return Err(A::Error::custom(format!("duplicate key ID {kid}")));
-			}
-			let principal = map.next_value()?;
-			known_ids.insert(kid, principal);
-		}
-		Ok(DeserializedKnownIds(known_ids))
-	}
-}
-
-#[cfg(feature = "server")]
-impl<'de> Deserialize<'de> for DeserializedKnownIds {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: Deserializer<'de>,
-	{
-		deserializer.deserialize_map(KnownIdsVisitor)
-	}
-}
-
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -497,13 +495,15 @@ mod tests {
 
 		#[cfg(feature = "server")]
 		{
+			type DeserializedKnownIds =
+				DuplicateRejectingU64Map<EstablishedRemote<crypto_sign::PublicKey>>;
 			let known_ids_error = serde_json::from_str::<DeserializedKnownIds>("[]")
 				.err()
 				.unwrap();
 			assert!(
 				known_ids_error
 					.to_string()
-					.contains("a map from key IDs to remote principals")
+					.contains("a map with unique canonical unsigned integer keys")
 			);
 		}
 	}
@@ -532,34 +532,33 @@ mod tests {
 		manager
 	}
 
+	fn ratchet_json_with_recv_past(manager: &RatchetManager, recv_past: &str) -> String {
+		let serialized = serde_json::to_value(manager).unwrap();
+		format!(
+			"{{\"send_key\":{},\"recv_key\":{},\"send_ctr\":{},\"recv_past\":{{{recv_past}}},\"recv_ctr\":{}}}",
+			serialized["send_key"],
+			serialized["recv_key"],
+			serialized["send_ctr"],
+			serialized["recv_ctr"],
+		)
+	}
+
+	fn assert_unknown_field_rejected<T>()
+	where
+		T: for<'de> Deserialize<'de>,
+	{
+		let error = serde_json::from_str::<T>(r#"{"unexpected":null}"#)
+			.err()
+			.unwrap();
+		assert!(
+			error.to_string().contains("unknown field `unexpected`"),
+			"unexpected error: {error}"
+		);
+	}
+
 	#[test]
 	fn ratchet_manager_implements_serde_traits() {
 		assert_serde_traits::<RatchetManager>();
-	}
-
-	#[cfg(feature = "server")]
-	#[test]
-	fn state_updates_round_trip_the_complete_ratchet_state() {
-		use crate::server::{RecvState, SendState};
-
-		assert_serde_traits::<SendState>();
-		assert_serde_traits::<RecvState>();
-
-		let state = populated_manager();
-		let update = SendState {
-			kid: 7,
-			seq: 3,
-			state: state.clone(),
-			data: vec![0x31, 0x32],
-			_role: PhantomData,
-		};
-		let serialized = serde_json::to_string(&update).unwrap();
-		let restored: SendState = serde_json::from_str(&serialized).unwrap();
-
-		assert_eq!(restored.kid, update.kid);
-		assert_eq!(restored.seq, update.seq);
-		assert_eq!(restored.data, update.data);
-		assert_manager_eq(&restored.state, &state);
 	}
 
 	#[test]
@@ -605,14 +604,24 @@ mod tests {
 		);
 		assert_eq!(receive_slot(&manager, 4), Some(target_slot));
 
-		let serialized = serde_json::to_value(&manager).unwrap();
+		let serialized_text = serde_json::to_string(&manager).unwrap();
+		let recv_past = serialized_text.split_once("\"recv_past\":{").unwrap().1;
+		let positions = [1, 3, 4].map(|sequence| {
+			recv_past
+				.find(&format!("\"{sequence}\":"))
+				.unwrap_or_else(|| panic!("missing receive sequence {sequence}"))
+		});
+		assert!(positions.windows(2).all(|pair| pair[0] < pair[1]));
+
+		let serialized: Value = serde_json::from_str(&serialized_text).unwrap();
 		let receive_map = serialized["recv_past"].as_object().unwrap();
 		let mut sequences = receive_map.keys().map(String::as_str).collect::<Vec<_>>();
 		sequences.sort_unstable();
 		assert_eq!(sequences, vec!["1", "3", "4"]);
-		let restored: RatchetManager = serde_json::from_value(serialized).unwrap();
+		let restored: RatchetManager = serde_json::from_str(&serialized_text).unwrap();
 
 		assert_manager_eq(&manager, &restored);
+		assert_eq!(serde_json::to_string(&restored).unwrap(), serialized_text);
 		let restored_last_slot = receive_slot(&restored, 4).unwrap();
 		assert_ne!(restored_last_slot, target_slot);
 		for sequence in [1, 3, 4] {
@@ -802,6 +811,87 @@ mod tests {
 		let serialized = serde_json::to_string(&RatchetManager::default()).unwrap();
 		let duplicate = serialized.replacen("\"send_ctr\":0", "\"send_ctr\":0,\"send_ctr\":1", 1);
 		assert!(serde_json::from_str::<RatchetManager>(&duplicate).is_err());
+	}
+
+	#[test]
+	fn duplicate_receive_keys_are_rejected_before_hash_map_insertion() {
+		let manager = populated_manager();
+		let serialized = serde_json::to_value(&manager).unwrap();
+		let material = serde_json::to_string(&serialized["recv_past"]["2"]).unwrap();
+
+		for recv_past in [
+			format!(r#""2":{material},"2":{material}"#),
+			format!(r#""2":{material},"\u0032":{material}"#),
+		] {
+			let duplicate = ratchet_json_with_recv_past(&manager, &recv_past);
+			let error = serde_json::from_str::<RatchetManager>(&duplicate)
+				.err()
+				.unwrap();
+			assert!(
+				error
+					.to_string()
+					.contains("duplicate unsigned integer map key 2"),
+				"unexpected error: {error}"
+			);
+		}
+	}
+
+	#[test]
+	fn noncanonical_unsigned_integer_map_keys_are_rejected() {
+		let manager = populated_manager();
+		let serialized = serde_json::to_value(&manager).unwrap();
+		let material = serde_json::to_string(&serialized["recv_past"]["2"]).unwrap();
+		let noncanonical = ratchet_json_with_recv_past(&manager, &format!(r#""02":{material}"#));
+		let error = serde_json::from_str::<RatchetManager>(&noncanonical)
+			.err()
+			.unwrap();
+
+		assert!(
+			error
+				.to_string()
+				.contains("non-canonical unsigned integer map key `02`; expected `2`"),
+			"unexpected error: {error}"
+		);
+	}
+
+	#[test]
+	fn every_persistence_object_rejects_unknown_fields() {
+		type ReceiveKeyMaterialData = KeyMaterialData<
+			TypedArray<AEAD_KEY_LEN, systems::Chacha20Poly1305Ietf, roles::EncryptionRecvKey>,
+			TypedArray<AEAD_NONCE_LEN, systems::Chacha20Poly1305Ietf, roles::RecvNonce>,
+		>;
+
+		assert_unknown_field_rejected::<ReceiveKeyMaterialData>();
+		assert_unknown_field_rejected::<RatchetManagerData>();
+		assert_unknown_field_rejected::<RemotePrincipalData>();
+		assert_unknown_field_rejected::<ServerStateData>();
+	}
+
+	#[test]
+	fn cached_receive_entries_serialize_in_numeric_order() {
+		let mut manager = RatchetManager::default();
+		manager.init_ratchets(
+			&[0x75; KDF_STATE_SIZE],
+			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
+		);
+		assert_eq!(manager.ratchet_recv_until(10), Some(10));
+		assert_eq!(
+			manager.complete_recv_key(2, true),
+			verified_ratchet::ReceiveDisposition::Consumed
+		);
+
+		let serialized = serde_json::to_string(&manager).unwrap();
+		let recv_past = serialized.split_once("\"recv_past\":{").unwrap().1;
+		let sequences = [1, 3, 4, 5, 6, 7, 8, 9, 10];
+		let positions = sequences.map(|sequence| {
+			recv_past
+				.find(&format!("\"{sequence}\":"))
+				.unwrap_or_else(|| panic!("missing receive sequence {sequence}"))
+		});
+		assert!(positions.windows(2).all(|pair| pair[0] < pair[1]));
+
+		let restored: RatchetManager = serde_json::from_str(&serialized).unwrap();
+		assert_eq!(serde_json::to_string(&restored).unwrap(), serialized);
 	}
 
 	#[test]

@@ -9,11 +9,11 @@ use crate::pqxdh::{
 #[cfg(test)]
 use crate::ratchet::KeyMaterial;
 use crate::ratchet::{
-	RatchetManager, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
+	RatchetManager, RatchetStatus, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
 	initial_ratchet_hkdf, ratchet_hkdf,
 };
 use crate::shared::{
-	DhSecret, KexDerivedSecret, REGISTRATION_WITNESS, RemotePrincipal, deserialize_server_state,
+	DhSecret, EstablishedRemote, KexDerivedSecret, REGISTRATION_WITNESS, deserialize_server_state,
 	roles, serialize_server_state,
 };
 use crate::{phase1_capnp, phase2_capnp};
@@ -21,13 +21,13 @@ use beaconcrypt_protocol_core::pqxdh as verified_pqxdh;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
 use std::vec;
-use zeroize::Zeroize;
+use zeroize::{Zeroize, Zeroizing};
 
 pub struct Server {
 	identity_key: crypto_sign::KeyPair,
 	identity_key_kid: u64,
 	control: verified_pqxdh::ServerState,
-	known_ids: HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+	known_ids: HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>,
 	consumed_registrations: HashSet<[u8; verified_pqxdh::REGISTRATION_ID_SIZE]>,
 }
 
@@ -41,11 +41,31 @@ pub struct RegistrationOutput {
 	pub(crate) control: beaconcrypt_protocol_core::pqxdh::PendingServerRegistration,
 }
 
+/// An inert, serialization-only view of ratchet state.
+///
+/// This value has no operational methods and cannot be deserialized into a live ratchet.
+pub struct RatchetSnapshot {
+	json: Zeroizing<String>,
+}
+
+impl RatchetSnapshot {
+	pub(crate) fn capture(ratchet: &RatchetManager) -> Option<Self> {
+		Some(Self {
+			json: Zeroizing::new(serde_json::to_string(ratchet).ok()?),
+		})
+	}
+
+	pub fn as_str(&self) -> &str {
+		self.json.as_str()
+	}
+}
+
 pub struct StateUpdate<Role: roles::ChainKey> {
 	pub kid: u64,
 	/// The sequence number of the key consumed by this operation.
 	pub seq: u64,
-	pub state: RatchetManager,
+	/// Inert serialized state for observation or transport; this cannot be made operational.
+	pub state: RatchetSnapshot,
 	pub data: Vec<u8>,
 	pub(crate) _role: PhantomData<Role>,
 }
@@ -68,35 +88,22 @@ pub trait ProviderServer {
 	) -> Option<RegResponse>;
 
 	/// Encrypt some bytes to `kid` and return the ciphertext, `kid`, consumed key sequence,
-	/// and complete ratchet state for `kid`.
+	/// and an inert serialized view of the ratchet for `kid`.
+	///
+	/// This update is not an activatable persistence snapshot. Use [`crate::PersistentServer`] when
+	/// results must be committed durably before release.
 	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState>;
-	/// Encrypt some bytes to `kid` and return the ciphertext, `kid`, consumed key sequence,
-	/// and complete ratchet state for `kid` as a JSON string.
+	/// Return the same inert update encoded as JSON.
 	fn encrypt_and_update_json(&mut self, bytes: &[u8], kid: u64) -> Option<String>;
 	/// Decrypt a message using the recv keychain associated with the sender ID in the encrypted frame
-	/// and return the plaintext, `kid`, consumed key sequence, and complete ratchet state for `kid`.
+	/// and return the plaintext, `kid`, consumed key sequence, and an inert serialized view of the
+	/// ratchet for `kid`.
+	///
+	/// This update is not an activatable persistence snapshot. Use [`crate::PersistentServer`] when
+	/// results must be committed durably before release.
 	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<RecvState>;
-	/// Decrypt a message using the recv keychain associated with the sender ID in the encrypted frame
-	/// and return the plaintext, `kid`, consumed key sequence, and complete ratchet state for `kid`
-	/// as a JSON string.
+	/// Return the same inert update encoded as JSON.
 	fn decrypt_and_update_json(&mut self, bytes: &[u8]) -> Option<String>;
-	/// Export the complete server state as JSON
-	fn export_state(&self) -> Option<String>;
-	/// Restore a server from serialized state, returning `None` if the state is invalid.
-	fn try_from_state(server_state: &str) -> Option<Self>
-	where
-		Self: Sized;
-	/// Restore a server from serialized state.
-	///
-	/// # Panics
-	///
-	/// Panics if the serialized state is invalid.
-	fn from_state(server_state: String) -> Self
-	where
-		Self: Sized,
-	{
-		Self::try_from_state(&server_state).expect("failed to restore server state")
-	}
 }
 
 impl Server {
@@ -112,7 +119,8 @@ impl Server {
 			consumed_registrations: HashSet::new(),
 		}
 	}
-	pub fn set_identity_kid(&mut self, k: u64) {
+	#[cfg(test)]
+	pub(crate) fn set_identity_kid(&mut self, k: u64) {
 		self.identity_key_kid = k
 	}
 	pub fn identity_key_kid(&self) -> u64 {
@@ -127,20 +135,18 @@ impl Server {
 	pub fn server_kid(&self) -> u64 {
 		self.control.last_key_id()
 	}
-	pub fn add_known_kid(&mut self, k: u64, pk: crypto_sign::PublicKey) {
+	#[cfg(test)]
+	pub(crate) fn add_known_kid(&mut self, k: u64, pk: crypto_sign::PublicKey) {
 		self.known_ids
 			.entry(k)
-			.or_insert(RemotePrincipal::new(pk, RatchetManager::default()));
+			.or_insert(EstablishedRemote::new(pk, RatchetManager::default()));
 	}
-	pub fn delete_known_kid(&mut self, k: u64) {
+	#[cfg(test)]
+	pub(crate) fn delete_known_kid(&mut self, k: u64) {
 		self.known_ids.remove(&k);
 	}
-	pub fn reset_known_kid(&mut self, k: u64) {
-		if let Some(r) = self.ratchet_manager_mut(k) {
-			r.reset()
-		}
-	}
-	pub fn new_remote_kid(&mut self) -> Option<u64> {
+	#[cfg(test)]
+	pub(crate) fn new_remote_kid(&mut self) -> Option<u64> {
 		let n = verified_pqxdh::server_next_key_id(self.control).ok()?;
 		if self.known_ids.contains_key(&n) {
 			return None;
@@ -149,15 +155,20 @@ impl Server {
 		Some(n)
 	}
 	pub fn pk_by_kid(&self, k: u64) -> Option<&crypto_sign::PublicKey> {
-		self.known_ids.get(&k).map(RemotePrincipal::pk)
+		self.known_ids.get(&k).map(EstablishedRemote::pk)
 	}
-	pub fn ratchet_manager(&self, k: u64) -> Option<&RatchetManager> {
-		self.known_ids.get(&k).map(RemotePrincipal::ratchet)
+	pub fn ratchet_status(&self, k: u64) -> Option<RatchetStatus> {
+		Some(self.ratchet_manager(k)?.status())
 	}
-	pub fn ratchet_manager_mut(&mut self, k: u64) -> Option<&mut RatchetManager> {
-		self.known_ids.get_mut(&k).map(RemotePrincipal::ratchet_mut)
+	pub(crate) fn ratchet_manager(&self, k: u64) -> Option<&RatchetManager> {
+		self.known_ids.get(&k).map(EstablishedRemote::ratchet)
 	}
-	pub fn associated_data(&self, k: u64) -> Option<[u8; AD_SIZE]> {
+	pub(crate) fn ratchet_manager_mut(&mut self, k: u64) -> Option<&mut RatchetManager> {
+		self.known_ids
+			.get_mut(&k)
+			.map(EstablishedRemote::ratchet_mut)
+	}
+	pub(crate) fn associated_data(&self, k: u64) -> Option<[u8; AD_SIZE]> {
 		Some(build_associated_data(
 			self.identity_pk().clone(),
 			self.pk_by_kid(k)?.clone(),
@@ -172,6 +183,29 @@ impl Server {
 		let k = crate::ratchet::encrypted_frame_sender(b)?;
 		let ad = self.associated_data(k)?;
 		decrypt_message_with_ratchet(b, k, &ad, self.ratchet_manager_mut(k)?)
+	}
+
+	pub(crate) fn serialize_state(&self) -> Option<String> {
+		serialize_server_state(
+			&self.identity_key,
+			self.identity_key_kid,
+			self.control.last_key_id(),
+			&self.known_ids,
+			&self.consumed_registrations,
+		)
+	}
+
+	pub(crate) fn deserialize_state(server_state: &str) -> Option<Self> {
+		ensure_init().ok()?;
+		let (id_keypair, identity_key_kid, server_kid, known_ids, consumed_registrations) =
+			deserialize_server_state(server_state)?;
+		Some(Self {
+			identity_key: id_keypair,
+			identity_key_kid,
+			control: verified_pqxdh::ServerState::new(server_kid),
+			known_ids,
+			consumed_registrations,
+		})
 	}
 	#[cfg(test)]
 	pub(crate) fn ratchet_recv_until(&mut self, u: u64, k: u64) -> Option<u64> {
@@ -371,7 +405,7 @@ impl ProviderServer for Server {
 		debug_assert_eq!(&established_peer.identity_public_key, public_key.as_bytes());
 		let old = self
 			.known_ids
-			.insert(remote_kid, RemotePrincipal::new(public_key, ratchet));
+			.insert(remote_kid, EstablishedRemote::new(public_key, ratchet));
 		debug_assert!(old.is_none());
 		self.control = next_control;
 		Some(RegResponse {
@@ -382,11 +416,11 @@ impl ProviderServer for Server {
 
 	fn encrypt_and_update(&mut self, bytes: &[u8], kid: u64) -> Option<SendState> {
 		let encrypted = self.encrypt_message(bytes, kid)?;
-		let ratchet = self.ratchet_manager_mut(kid)?;
+		let state = RatchetSnapshot::capture(self.ratchet_manager(kid)?)?;
 		Some(SendState {
 			kid,
 			seq: encrypted.seq,
-			state: ratchet.clone(),
+			state,
 			data: encrypted.ciphertext,
 			_role: PhantomData,
 		})
@@ -398,11 +432,11 @@ impl ProviderServer for Server {
 
 	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<RecvState> {
 		let decrypted = self.decrypt_message(bytes)?;
-		let ratchet = self.ratchet_manager_mut(decrypted.key_id)?;
+		let state = RatchetSnapshot::capture(self.ratchet_manager(decrypted.key_id)?)?;
 		Some(RecvState {
 			kid: decrypted.key_id,
 			seq: decrypted.seq,
-			state: ratchet.clone(),
+			state,
 			data: decrypted.plaintext,
 			_role: PhantomData,
 		})
@@ -410,30 +444,5 @@ impl ProviderServer for Server {
 
 	fn decrypt_and_update_json(&mut self, bytes: &[u8]) -> Option<String> {
 		serde_json::to_string(&self.decrypt_and_update(bytes)?).ok()
-	}
-
-	fn export_state(&self) -> Option<String> {
-		serialize_server_state(
-			&self.identity_key,
-			self.identity_key_kid,
-			self.control.last_key_id(),
-			&self.known_ids,
-			&self.consumed_registrations,
-		)
-	}
-
-	fn try_from_state(server_state: &str) -> Option<Self> {
-		ensure_init().ok()?;
-
-		let (id_keypair, identity_key_kid, server_kid, known_ids, consumed_registrations) =
-			deserialize_server_state(server_state)?;
-
-		Some(Self {
-			identity_key: id_keypair,
-			identity_key_kid,
-			control: verified_pqxdh::ServerState::new(server_kid),
-			known_ids,
-			consumed_registrations,
-		})
 	}
 }

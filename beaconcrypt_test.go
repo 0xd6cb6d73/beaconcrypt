@@ -6,25 +6,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"reflect"
-	"strconv"
 	"sync"
 	"testing"
 )
 
 const (
-	ed25519SystemID   = 1
 	kdfStateSystemID  = 6
 	chainSendKeyRole  = 8
 	chainReceiveRole  = 9
-	identityKeyRole   = 14
 	ratchetStateBytes = 32
 )
 
 type jsonStateUpdate struct {
 	KID       uint64
 	Seq       uint64
-	State     json.RawMessage
+	State     string
 	KeySystem uint8
 	KeyRole   uint8
 	Key       []byte
@@ -35,15 +31,15 @@ func decodeJSONStateUpdate(t *testing.T, serialized string, keyField string) jso
 	t.Helper()
 
 	var encoded struct {
-		KID   uint64          `json:"kid"`
-		Seq   uint64          `json:"seq"`
-		State json.RawMessage `json:"state"`
-		Data  []byte          `json:"data"`
+		KID   uint64 `json:"kid"`
+		Seq   uint64 `json:"seq"`
+		State string `json:"state"`
+		Data  []byte `json:"data"`
 	}
 	if err := json.Unmarshal([]byte(serialized), &encoded); err != nil {
 		t.Fatalf("state update is not valid JSON: %v", err)
 	}
-	system, role, keyBytes := decodeJSONRatchetKey(t, encoded.State, keyField)
+	system, role, keyBytes := decodeJSONRatchetKey(t, json.RawMessage(encoded.State), keyField)
 	return jsonStateUpdate{
 		KID:       encoded.KID,
 		Seq:       encoded.Seq,
@@ -90,36 +86,6 @@ func decodeJSONRatchetKey(t *testing.T, state json.RawMessage, keyField string) 
 		t.Fatalf("invalid state key payload: %v", err)
 	}
 	return system, role, keyBytes
-}
-
-func assertJSONEqual(t *testing.T, left, right string) {
-	t.Helper()
-
-	var leftValue, rightValue any
-	if err := json.Unmarshal([]byte(left), &leftValue); err != nil {
-		t.Fatalf("left value is not valid JSON: %v", err)
-	}
-	if err := json.Unmarshal([]byte(right), &rightValue); err != nil {
-		t.Fatalf("right value is not valid JSON: %v", err)
-	}
-	if !reflect.DeepEqual(leftValue, rightValue) {
-		t.Fatalf("JSON values differ:\nleft:  %s\nright: %s", left, right)
-	}
-}
-
-func mutateJSONObject(t *testing.T, serialized string, mutate func(map[string]any)) string {
-	t.Helper()
-
-	var value map[string]any
-	if err := json.Unmarshal([]byte(serialized), &value); err != nil {
-		t.Fatal(err)
-	}
-	mutate(value)
-	mutated, err := json.Marshal(value)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return string(mutated)
 }
 
 func registerBeacon(t *testing.T, server *Server, beacon *Beacon) *RegistrationResponse {
@@ -256,6 +222,61 @@ func TestServerFromSeedUsesStableIdentity(t *testing.T) {
 	}
 	if !bytes.Equal(pkA, expectedPK) {
 		t.Fatalf("unexpected seeded server public key: got %x want %x", pkA, expectedPK)
+	}
+}
+
+func TestServerCheckpointExportsRestoresAndContinues(t *testing.T) {
+	server := newServer(t)
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	beacon := newBeacon(t, serverPK)
+	response := registerBeacon(t, server, beacon)
+
+	checkpoint, err := server.ExportState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.HasPrefix(checkpoint, []byte("beaconcrypt-snap")) {
+		t.Fatal("checkpoint is missing the snapshot envelope")
+	}
+	server.Close()
+
+	restored, err := NewServerFromState(checkpoint)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(restored.Close)
+	inbound, err := beacon.EncryptToServer([]byte("after Go restore"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	plaintext, err := restored.DecryptBeaconMessage(inbound)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(plaintext, []byte("after Go restore")) {
+		t.Fatalf("restored plaintext mismatch: got %q", plaintext)
+	}
+
+	outbound, err := restored.EncryptToBeacon(response.KeyID, []byte("restored reply"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	reply, err := beacon.DecryptServerMessage(outbound)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(reply, []byte("restored reply")) {
+		t.Fatalf("restored reply mismatch: got %q", reply)
+	}
+	advanced, err := restored.ExportState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(advanced, checkpoint) {
+		t.Fatal("restored checkpoint generation did not advance")
 	}
 }
 
@@ -578,7 +599,7 @@ func TestBeaconEncryptsToServer(t *testing.T) {
 	}
 }
 
-func TestServerEncryptAndUpdateReturnsRatchetState(t *testing.T) {
+func TestServerEncryptAndUpdateReturnsSerializedRatchetSnapshot(t *testing.T) {
 	server := newServer(t)
 	serverPK, err := server.IdentityPK()
 	if err != nil {
@@ -586,7 +607,7 @@ func TestServerEncryptAndUpdateReturnsRatchetState(t *testing.T) {
 	}
 	beacon := newBeacon(t, serverPK)
 	registration := registerBeacon(t, server, beacon)
-	message := []byte("server to beacon with updated state")
+	message := []byte("server to beacon with snapshot")
 
 	update, err := server.EncryptAndUpdate(registration.KeyID, message)
 	if err != nil {
@@ -620,7 +641,7 @@ func TestServerEncryptAndUpdateReturnsRatchetState(t *testing.T) {
 	}
 }
 
-func TestServerDecryptAndUpdateReturnsRatchetState(t *testing.T) {
+func TestServerDecryptAndUpdateReturnsSerializedRatchetSnapshot(t *testing.T) {
 	server := newServer(t)
 	serverPK, err := server.IdentityPK()
 	if err != nil {
@@ -628,7 +649,7 @@ func TestServerDecryptAndUpdateReturnsRatchetState(t *testing.T) {
 	}
 	beacon := newBeacon(t, serverPK)
 	registration := registerBeacon(t, server, beacon)
-	message := []byte("beacon to server with updated state")
+	message := []byte("beacon to server with snapshot")
 
 	ciphertext, err := beacon.EncryptToServer(message)
 	if err != nil {
@@ -662,89 +683,7 @@ func TestServerDecryptAndUpdateReturnsRatchetState(t *testing.T) {
 	}
 }
 
-func TestStructuredAndJSONUpdatesMatchAcrossTheCGoBoundary(t *testing.T) {
-	seed := bytes.Repeat([]byte{0x31}, 32)
-	server, err := NewServerFromSeed(0, seed)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(server.Close)
-	serverPK, err := server.IdentityPK()
-	if err != nil {
-		t.Fatal(err)
-	}
-	beacon := newBeacon(t, serverPK)
-	registration := registerBeacon(t, server, beacon)
-	initialState, err := server.ExportState()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	structuredServer, err := NewServerFromState(initialState)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(structuredServer.Close)
-	jsonServer, err := NewServerFromState(initialState)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(jsonServer.Close)
-
-	outbound := []byte("compare structured and JSON encryption updates")
-	structuredSend, err := structuredServer.EncryptAndUpdate(registration.KeyID, outbound)
-	if err != nil {
-		t.Fatal(err)
-	}
-	serializedSend, err := jsonServer.EncryptAndUpdateJSON(registration.KeyID, outbound)
-	if err != nil {
-		t.Fatal(err)
-	}
-	jsonSend := decodeJSONStateUpdate(t, serializedSend, "send_key")
-	if structuredSend.KeyID != jsonSend.KID || structuredSend.Seq != jsonSend.Seq {
-		t.Fatalf(
-			"send update metadata mismatch: structured [%d,%d] JSON [%d,%d]",
-			structuredSend.KeyID,
-			structuredSend.Seq,
-			jsonSend.KID,
-			jsonSend.Seq,
-		)
-	}
-	if !bytes.Equal(structuredSend.Data, jsonSend.Data) {
-		t.Fatalf("send update data mismatch: got %x want %x", structuredSend.Data, jsonSend.Data)
-	}
-	assertJSONEqual(t, structuredSend.State, string(jsonSend.State))
-
-	inbound := []byte("compare structured and JSON decryption updates")
-	ciphertext, err := beacon.EncryptToServer(inbound)
-	if err != nil {
-		t.Fatal(err)
-	}
-	structuredRecv, err := structuredServer.DecryptAndUpdate(ciphertext)
-	if err != nil {
-		t.Fatal(err)
-	}
-	serializedRecv, err := jsonServer.DecryptAndUpdateJSON(ciphertext)
-	if err != nil {
-		t.Fatal(err)
-	}
-	jsonRecv := decodeJSONStateUpdate(t, serializedRecv, "recv_key")
-	if structuredRecv.KeyID != jsonRecv.KID || structuredRecv.Seq != jsonRecv.Seq {
-		t.Fatalf(
-			"receive update metadata mismatch: structured [%d,%d] JSON [%d,%d]",
-			structuredRecv.KeyID,
-			structuredRecv.Seq,
-			jsonRecv.KID,
-			jsonRecv.Seq,
-		)
-	}
-	if !bytes.Equal(structuredRecv.Data, jsonRecv.Data) {
-		t.Fatalf("receive update data mismatch: got %x want %x", structuredRecv.Data, jsonRecv.Data)
-	}
-	assertJSONEqual(t, structuredRecv.State, string(jsonRecv.State))
-}
-
-func TestServerEncryptAndUpdateJSONReturnsDirectionalRatchetState(t *testing.T) {
+func TestServerEncryptAndUpdateJSONReturnsDirectionalRatchetSnapshot(t *testing.T) {
 	server := newServer(t)
 	serverPK, err := server.IdentityPK()
 	if err != nil {
@@ -752,7 +691,7 @@ func TestServerEncryptAndUpdateJSONReturnsDirectionalRatchetState(t *testing.T) 
 	}
 	beacon := newBeacon(t, serverPK)
 	registration := registerBeacon(t, server, beacon)
-	message := []byte("server to beacon with JSON state")
+	message := []byte("server to beacon with JSON snapshot")
 
 	serialized, err := server.EncryptAndUpdateJSON(registration.KeyID, message)
 	if err != nil {
@@ -786,7 +725,7 @@ func TestServerEncryptAndUpdateJSONReturnsDirectionalRatchetState(t *testing.T) 
 	}
 }
 
-func TestServerDecryptAndUpdateJSONReturnsDirectionalRatchetState(t *testing.T) {
+func TestServerDecryptAndUpdateJSONReturnsDirectionalRatchetSnapshot(t *testing.T) {
 	server := newServer(t)
 	serverPK, err := server.IdentityPK()
 	if err != nil {
@@ -794,7 +733,7 @@ func TestServerDecryptAndUpdateJSONReturnsDirectionalRatchetState(t *testing.T) 
 	}
 	beacon := newBeacon(t, serverPK)
 	registration := registerBeacon(t, server, beacon)
-	message := []byte("beacon to server with JSON state")
+	message := []byte("beacon to server with JSON snapshot")
 
 	ciphertext, err := beacon.EncryptToServer(message)
 	if err != nil {
@@ -850,358 +789,6 @@ func TestServerJSONUpdateFailures(t *testing.T) {
 	}
 	if _, err := server.DecryptAndUpdateJSON([]byte("frame")); !errors.Is(err, ErrClosed) {
 		t.Fatalf("closed decrypt error mismatch: got %v want %v", err, ErrClosed)
-	}
-	if _, err := server.ExportState(); !errors.Is(err, ErrClosed) {
-		t.Fatalf("closed export error mismatch: got %v want %v", err, ErrClosed)
-	}
-}
-
-func TestServerStateRoundTripContinuesSessionsAndKeyIDs(t *testing.T) {
-	seed := bytes.Repeat([]byte{0x51}, 32)
-	server, err := NewServerFromSeed(0, seed)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(server.Close)
-	serverPK, err := server.IdentityPK()
-	if err != nil {
-		t.Fatal(err)
-	}
-	beaconA := newBeacon(t, serverPK)
-	registrationA := registerBeacon(t, server, beaconA)
-
-	beforeRestoreToBeacon := []byte("server message before restore")
-	ciphertext, err := server.EncryptToBeacon(registrationA.KeyID, beforeRestoreToBeacon)
-	if err != nil {
-		t.Fatal(err)
-	}
-	plaintext, err := beaconA.DecryptServerMessage(ciphertext)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(plaintext, beforeRestoreToBeacon) {
-		t.Fatalf("pre-restore server message mismatch: got %q want %q", plaintext, beforeRestoreToBeacon)
-	}
-
-	beforeRestoreToServer := []byte("beacon message before restore")
-	ciphertext, err = beaconA.EncryptToServer(beforeRestoreToServer)
-	if err != nil {
-		t.Fatal(err)
-	}
-	plaintext, err = server.DecryptBeaconMessage(ciphertext)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(plaintext, beforeRestoreToServer) {
-		t.Fatalf("pre-restore beacon message mismatch: got %q want %q", plaintext, beforeRestoreToServer)
-	}
-
-	state, err := server.ExportState()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !json.Valid([]byte(state)) {
-		t.Fatalf("exported state is not valid JSON: %q", state)
-	}
-	server.Close()
-
-	restored, err := NewServerFromState(state)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(restored.Close)
-	restoredPK, err := restored.IdentityPK()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(restoredPK, serverPK) {
-		t.Fatalf("restored server identity mismatch: got %x want %x", restoredPK, serverPK)
-	}
-
-	afterRestoreToBeacon := []byte("server message after restore")
-	ciphertext, err = restored.EncryptToBeacon(registrationA.KeyID, afterRestoreToBeacon)
-	if err != nil {
-		t.Fatal(err)
-	}
-	plaintext, err = beaconA.DecryptServerMessage(ciphertext)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(plaintext, afterRestoreToBeacon) {
-		t.Fatalf("restored server message mismatch: got %q want %q", plaintext, afterRestoreToBeacon)
-	}
-
-	afterRestoreToServer := []byte("beacon message after restore")
-	ciphertext, err = beaconA.EncryptToServer(afterRestoreToServer)
-	if err != nil {
-		t.Fatal(err)
-	}
-	plaintext, err = restored.DecryptBeaconMessage(ciphertext)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(plaintext, afterRestoreToServer) {
-		t.Fatalf("restored beacon message mismatch: got %q want %q", plaintext, afterRestoreToServer)
-	}
-
-	beaconB := newBeacon(t, restoredPK)
-	registrationB := registerBeacon(t, restored, beaconB)
-	if registrationB.KeyID != registrationA.KeyID+1 {
-		t.Fatalf(
-			"restored next key ID mismatch: got %d want %d",
-			registrationB.KeyID,
-			registrationA.KeyID+1,
-		)
-	}
-}
-
-func TestServerStateRoundTripPreservesCachedOutOfOrderReceiveKeys(t *testing.T) {
-	seed := bytes.Repeat([]byte{0x71}, 32)
-	server, err := NewServerFromSeed(0, seed)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(server.Close)
-	serverPK, err := server.IdentityPK()
-	if err != nil {
-		t.Fatal(err)
-	}
-	beacon := newBeacon(t, serverPK)
-	registration := registerBeacon(t, server, beacon)
-
-	messages := [][]byte{[]byte("first"), []byte("second"), []byte("third")}
-	ciphertexts := make([][]byte, len(messages))
-	for index, message := range messages {
-		ciphertexts[index], err = beacon.EncryptToServer(message)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	plaintext, err := server.DecryptBeaconMessage(ciphertexts[2])
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(plaintext, messages[2]) {
-		t.Fatalf("out-of-order plaintext mismatch: got %q want %q", plaintext, messages[2])
-	}
-
-	state, err := server.ExportState()
-	if err != nil {
-		t.Fatal(err)
-	}
-	var encoded struct {
-		KnownIDs map[string]struct {
-			Ratchet struct {
-				RecvPast map[string]json.RawMessage `json:"recv_past"`
-			} `json:"ratchet"`
-		} `json:"known_ids"`
-	}
-	if err := json.Unmarshal([]byte(state), &encoded); err != nil {
-		t.Fatal(err)
-	}
-	cached := encoded.KnownIDs[strconv.FormatUint(registration.KeyID, 10)].Ratchet.RecvPast
-	if len(cached) != 2 || cached["1"] == nil || cached["2"] == nil {
-		t.Fatalf("cached receive keys mismatch: got keys %v want [1 2]", reflect.ValueOf(cached).MapKeys())
-	}
-
-	restored, err := NewServerFromState(state)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(restored.Close)
-	for index := 0; index < 2; index++ {
-		plaintext, err = restored.DecryptBeaconMessage(ciphertexts[index])
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !bytes.Equal(plaintext, messages[index]) {
-			t.Fatalf(
-				"restored cached plaintext %d mismatch: got %q want %q",
-				index,
-				plaintext,
-				messages[index],
-			)
-		}
-	}
-}
-
-func TestServerStateWithoutKnownIDsRestoresIdentityAndCounter(t *testing.T) {
-	const serverKID = 7
-
-	server, err := NewServer(serverKID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(server.Close)
-	serverPK, err := server.IdentityPK()
-	if err != nil {
-		t.Fatal(err)
-	}
-	state, err := server.ExportState()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var encoded struct {
-		IdentityKey    []json.RawMessage          `json:"identity_key"`
-		IdentityKeyKID uint64                     `json:"identity_key_kid"`
-		ServerKID      uint64                     `json:"server_kid"`
-		KnownIDs       map[string]json.RawMessage `json:"known_ids"`
-	}
-	if err := json.Unmarshal([]byte(state), &encoded); err != nil {
-		t.Fatal(err)
-	}
-	if len(encoded.IdentityKey) != 3 ||
-		encoded.IdentityKeyKID != serverKID ||
-		encoded.ServerKID != serverKID ||
-		len(encoded.KnownIDs) != 0 {
-		t.Fatalf("incomplete exported state: %+v", encoded)
-	}
-	var identitySystem uint8
-	var identityRole uint8
-	var identitySeed []byte
-	if err := json.Unmarshal(encoded.IdentityKey[0], &identitySystem); err != nil {
-		t.Fatal(err)
-	}
-	if err := json.Unmarshal(encoded.IdentityKey[1], &identityRole); err != nil {
-		t.Fatal(err)
-	}
-	if err := json.Unmarshal(encoded.IdentityKey[2], &identitySeed); err != nil {
-		t.Fatal(err)
-	}
-	if identitySystem != ed25519SystemID || identityRole != identityKeyRole || len(identitySeed) != 32 {
-		t.Fatalf(
-			"identity key type mismatch: got [%d,%d,%d bytes] want [%d,%d,32 bytes]",
-			identitySystem,
-			identityRole,
-			len(identitySeed),
-			ed25519SystemID,
-			identityKeyRole,
-		)
-	}
-
-	restored, err := NewServerFromState(state)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(restored.Close)
-	restoredPK, err := restored.IdentityPK()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(restoredPK, serverPK) {
-		t.Fatalf("restored server identity mismatch: got %x want %x", restoredPK, serverPK)
-	}
-
-	beacon, err := NewBeacon(serverKID, restoredPK)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(beacon.Close)
-	registration := registerBeacon(t, restored, beacon)
-	if registration.KeyID != serverKID+1 {
-		t.Fatalf("first key ID mismatch: got %d want %d", registration.KeyID, serverKID+1)
-	}
-}
-
-func TestNewServerFromStateRejectsInvalidInput(t *testing.T) {
-	if _, err := NewServerFromState(""); !errors.Is(err, ErrEmptyData) {
-		t.Fatalf("empty state error mismatch: got %v want %v", err, ErrEmptyData)
-	}
-
-	invalidStates := []string{
-		"not JSON",
-		string([]byte{0xff}),
-		`{"1":{"pk":[],"ratchet":{}}}`,
-	}
-	for _, state := range invalidStates {
-		if server, err := NewServerFromState(state); !errors.Is(err, ErrCrypto) {
-			if server != nil {
-				server.Close()
-			}
-			t.Fatalf("invalid state %q error mismatch: got %v want %v", state, err, ErrCrypto)
-		}
-	}
-}
-
-func TestNewServerFromStateRejectsTamperedExportedState(t *testing.T) {
-	seed := bytes.Repeat([]byte{0x61}, 32)
-	server, err := NewServerFromSeed(0, seed)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(server.Close)
-	serverPK, err := server.IdentityPK()
-	if err != nil {
-		t.Fatal(err)
-	}
-	beacon := newBeacon(t, serverPK)
-	registerBeacon(t, server, beacon)
-	state, err := server.ExportState()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	wrongKeyType := mutateJSONObject(t, state, func(value map[string]any) {
-		value["known_ids"].(map[string]any)["1"].(map[string]any)["pk"].([]any)[0] = float64(2)
-	})
-	shortKey := mutateJSONObject(t, state, func(value map[string]any) {
-		principal := value["known_ids"].(map[string]any)["1"].(map[string]any)
-		publicKey := principal["pk"].([]any)
-		principal["pk"] = publicKey[:len(publicKey)-1]
-	})
-	malformedRatchet := mutateJSONObject(t, state, func(value map[string]any) {
-		principal := value["known_ids"].(map[string]any)["1"].(map[string]any)
-		ratchet := principal["ratchet"].(map[string]any)
-		ratchet["send_key"].([]any)[0] = float64(0)
-	})
-	malformedIdentity := mutateJSONObject(t, state, func(value map[string]any) {
-		identityKey := value["identity_key"].([]any)
-		value["identity_key"] = identityKey[:len(identityKey)-1]
-	})
-	wrongIdentitySystem := mutateJSONObject(t, state, func(value map[string]any) {
-		value["identity_key"].([]any)[0] = float64(0)
-	})
-	wrongIdentityRole := mutateJSONObject(t, state, func(value map[string]any) {
-		value["identity_key"].([]any)[1] = float64(chainSendKeyRole)
-	})
-	invalidIdentityKID := mutateJSONObject(t, state, func(value map[string]any) {
-		value["identity_key_kid"] = value["server_kid"].(float64) + 1
-	})
-	regressedServerKID := mutateJSONObject(t, state, func(value map[string]any) {
-		value["server_kid"] = float64(0)
-	})
-	var envelope map[string]json.RawMessage
-	if err := json.Unmarshal([]byte(state), &envelope); err != nil {
-		t.Fatal(err)
-	}
-	var knownIDs map[string]json.RawMessage
-	if err := json.Unmarshal(envelope["known_ids"], &knownIDs); err != nil {
-		t.Fatal(err)
-	}
-	principal := string(knownIDs["1"])
-	duplicateKID := `{"identity_key":` + string(envelope["identity_key"]) +
-		`,"identity_key_kid":0,"server_kid":1,"known_ids":{"1":` +
-		principal + `,"1":` + principal + `}}`
-
-	for _, malformed := range []string{
-		wrongKeyType,
-		shortKey,
-		malformedRatchet,
-		malformedIdentity,
-		wrongIdentitySystem,
-		wrongIdentityRole,
-		invalidIdentityKID,
-		regressedServerKID,
-		duplicateKID,
-	} {
-		restored, err := NewServerFromState(malformed)
-		if restored != nil {
-			restored.Close()
-		}
-		if !errors.Is(err, ErrCrypto) {
-			t.Fatalf("tampered state was not rejected: state %q error %v", malformed, err)
-		}
 	}
 }
 

@@ -2,6 +2,8 @@
 
 # Formal verification Stage 4 implementation
 
+This document records the historical Stage 4 adapter. The maintained runtime no longer keeps an all-zero operational ratchet in fresh or aborted beacon state: only `BeaconState::Established` owns one, and the server map stores `EstablishedRemote` values produced by PQXDH commit or fresh restoration from the trusted store. Manual insertion, reset, associated-data mutation, and mutable ratchet access are now test-only or crate-private. This is establishment-gated runtime enforcement, not a new generic compile-time F* typestate theorem.
+
 ## Status and scope
 
 Stage 4 moves PQXDH composition and registration control into role-specific

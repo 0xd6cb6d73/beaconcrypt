@@ -34,6 +34,7 @@ void beaconcrypt_free_buffer(beaconcrypt_buffer buffer);
 beaconcrypt_Server *beaconcrypt_server_new(uint64_t server_kid);
 beaconcrypt_Server *beaconcrypt_server_new_from_seed(uint64_t server_kid, const uint8_t *seed_ptr, uintptr_t seed_len);
 beaconcrypt_Server *beaconcrypt_server_new_from_state(const uint8_t *state_ptr, uintptr_t state_len);
+beaconcrypt_buffer beaconcrypt_server_export_state(const beaconcrypt_Server *handle);
 beaconcrypt_Beacon *beaconcrypt_beacon_new(uint64_t server_kid, const uint8_t *server_pk_ptr, uintptr_t server_pk_len);
 void beaconcrypt_server_free(beaconcrypt_Server *handle);
 void beaconcrypt_beacon_free(beaconcrypt_Beacon *handle);
@@ -48,7 +49,6 @@ beaconcrypt_encrypt_state beaconcrypt_encrypt_and_update(beaconcrypt_Server *han
 beaconcrypt_buffer beaconcrypt_encrypt_and_update_json(beaconcrypt_Server *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_encrypt_state beaconcrypt_decrypt_and_update(beaconcrypt_Server *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_decrypt_and_update_json(beaconcrypt_Server *handle, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_export_state(const beaconcrypt_Server *handle);
 beaconcrypt_buffer beaconcrypt_encrypt_to_server(beaconcrypt_Beacon *handle, const uint8_t *ptr, uintptr_t len);
 beaconcrypt_buffer beaconcrypt_decrypt_server_message(beaconcrypt_Beacon *handle, const uint8_t *ptr, uintptr_t len);
 */
@@ -96,7 +96,8 @@ type RegistrationResponse struct {
 
 type EncryptState struct {
 	Data []byte
-	// State is the complete ratchet state serialized as JSON.
+	// State is inert plaintext ratchet JSON for observation only.
+	// It is secret-bearing, unauthenticated, and not restorable.
 	State string
 	KeyID uint64
 	Seq   uint64
@@ -125,22 +126,36 @@ func NewServerFromSeed(serverKID uint64, seed []byte) (*Server, error) {
 	return server, nil
 }
 
-func NewServerFromState(state string) (*Server, error) {
+// NewServerFromState restores trusted plaintext checkpoint bytes.
+//
+// The caller must reject stale or untrusted checkpoints. The bytes do not
+// authenticate themselves and cannot detect rollback to an older export.
+// Restoration advances the generation, so call ExportState and save the
+// returned server immediately before using it.
+func NewServerFromState(state []byte) (*Server, error) {
 	if len(state) == 0 {
 		return nil, ErrEmptyData
 	}
-	stateBytes := []byte(state)
-	statePtr, stateFree := cBytes(stateBytes)
-	defer stateFree()
-	handle := C.beaconcrypt_server_new_from_state(
-		statePtr,
-		C.uintptr_t(len(stateBytes)),
-	)
+	ptr, free := cBytes(state)
+	defer free()
+	handle := C.beaconcrypt_server_new_from_state(ptr, C.uintptr_t(len(state)))
 	if handle == nil {
 		return nil, ErrCrypto
 	}
-	server := &Server{native: newServerNativeHandle(handle)}
-	return server, nil
+	return &Server{native: newServerNativeHandle(handle)}, nil
+}
+
+// ExportState returns the current plaintext server checkpoint.
+//
+// Save it immediately after every state-changing call and before using that
+// call's output. A standalone exported checkpoint does not prevent rollback.
+func (s *Server) ExportState() ([]byte, error) {
+	if s == nil {
+		return nil, ErrClosed
+	}
+	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) ([]byte, error) {
+		return copyBuffer(C.beaconcrypt_server_export_state(handle))
+	})
 }
 
 func NewBeacon(serverKID uint64, serverPK []byte) (*Beacon, error) {
@@ -294,19 +309,6 @@ func (s *Server) DecryptAndUpdateJSON(ciphertext []byte) (string, error) {
 		data, err := callUnary(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
 			return C.beaconcrypt_decrypt_and_update_json(handle, ptr, len)
 		})
-		if err != nil {
-			return "", err
-		}
-		return string(data), nil
-	})
-}
-
-func (s *Server) ExportState() (string, error) {
-	if s == nil {
-		return "", ErrClosed
-	}
-	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) (string, error) {
-		data, err := copyBuffer(C.beaconcrypt_export_state(handle))
 		if err != nil {
 			return "", err
 		}

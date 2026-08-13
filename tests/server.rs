@@ -1,36 +1,165 @@
 use beaconcrypt::*;
+use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::crypto_sign;
-use serde_json::{Value, json};
+use std::sync::{Arc, Barrier, Mutex};
+use std::thread;
+
+const SNAPSHOT_HEADER_SIZE: usize = 16 + 2 + 1 + 1 + 32 + 8 + 32 + 8;
+const SNAPSHOT_PARENT_DIGEST_OFFSET: usize = 16 + 2 + 1 + 1 + 32 + 8;
+const SNAPSHOT_PAYLOAD_LENGTH_OFFSET: usize = SNAPSHOT_HEADER_SIZE - 8;
+
+#[derive(Default)]
+struct MemoryStoreState {
+	snapshot: Option<Vec<u8>>,
+	trusted_head: Option<SnapshotHead>,
+	cas_attempts: usize,
+	fail_next_cas: bool,
+}
+
+#[derive(Clone, Default)]
+struct MemoryStore {
+	state: Arc<Mutex<MemoryStoreState>>,
+	load_override: Option<Arc<Vec<u8>>>,
+	load_barrier: Option<Arc<Barrier>>,
+}
+
+impl MemoryStore {
+	fn from_snapshot(bytes: Vec<u8>) -> Self {
+		let head = ServerSnapshot::from_bytes(bytes.clone()).head().unwrap();
+		Self {
+			state: Arc::new(Mutex::new(MemoryStoreState {
+				snapshot: Some(bytes),
+				trusted_head: Some(head),
+				cas_attempts: 0,
+				fail_next_cas: false,
+			})),
+			load_override: None,
+			load_barrier: None,
+		}
+	}
+
+	fn with_load_override(mut self, bytes: Vec<u8>) -> Self {
+		self.load_override = Some(Arc::new(bytes));
+		self
+	}
+
+	fn with_load_barrier(mut self, barrier: Arc<Barrier>) -> Self {
+		self.load_barrier = Some(barrier);
+		self
+	}
+
+	fn snapshot_bytes(&self) -> Vec<u8> {
+		self.state.lock().unwrap().snapshot.clone().unwrap()
+	}
+
+	fn trusted_head(&self) -> Option<SnapshotHead> {
+		self.state.lock().unwrap().trusted_head
+	}
+
+	fn cas_attempts(&self) -> usize {
+		self.state.lock().unwrap().cas_attempts
+	}
+
+	fn fail_next_cas(&self) {
+		self.state.lock().unwrap().fail_next_cas = true;
+	}
+}
+
+impl SnapshotStore for MemoryStore {
+	fn load(&self) -> Option<ServerSnapshot> {
+		let bytes = self
+			.load_override
+			.as_deref()
+			.map(|bytes| bytes.as_slice().to_vec())
+			.or_else(|| self.state.lock().unwrap().snapshot.clone());
+		if let Some(barrier) = &self.load_barrier {
+			barrier.wait();
+		}
+		bytes.map(ServerSnapshot::from_bytes)
+	}
+
+	fn compare_and_swap(
+		&mut self,
+		expected: Option<&SnapshotHead>,
+		replacement: &ServerSnapshot,
+	) -> bool {
+		let replacement_head = match replacement.head() {
+			Ok(head) => head,
+			Err(_) => return false,
+		};
+		let mut state = self.state.lock().unwrap();
+		state.cas_attempts += 1;
+		if std::mem::take(&mut state.fail_next_cas) || state.trusted_head.as_ref() != expected {
+			return false;
+		}
+		match expected {
+			Some(previous)
+				if replacement_head.lineage() != previous.lineage()
+					|| previous.generation().checked_add(1)
+						!= Some(replacement_head.generation()) =>
+			{
+				return false;
+			}
+			None if replacement_head.generation() != 0 => return false,
+			_ => {}
+		}
+		state.snapshot = Some(replacement.as_bytes().to_vec());
+		state.trusted_head = Some(replacement_head);
+		true
+	}
+}
 
 fn test_register_pqxdh_beacon(server: &mut Server, beacon: &mut Beacon) -> Vec<u8> {
 	let message = [0xFFu8; 32];
-
 	let phase_1 = beacon.get_registration_bundle().unwrap();
-	let reg_out = server.get_shared_secret(&phase_1).unwrap();
-	let phase2 = server
-		.build_registration_response(reg_out, Some(&message))
+	let registration = server.get_shared_secret(&phase_1).unwrap();
+	let response = server
+		.build_registration_response(registration, Some(&message))
 		.unwrap();
-	beacon.finish_registration(&phase2.serialized).unwrap()
+	beacon.finish_registration(&response.serialized).unwrap()
 }
 
-fn assert_exchange(
-	server: &mut Server,
+fn test_register_persistent(
+	server: &mut PersistentServer<MemoryStore>,
 	beacon: &mut Beacon,
-	kid: u64,
-	server_message: &[u8],
-	beacon_message: &[u8],
-) {
-	let encrypted = server.encrypt_message(server_message, kid).unwrap();
+) -> u64 {
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+	let registration = server.get_shared_secret(&phase_1).unwrap().unwrap();
+	let response = server
+		.build_registration_response(registration, Some(b"registration"))
+		.unwrap()
+		.unwrap();
 	assert_eq!(
-		beacon.decrypt_message(&encrypted).unwrap().plaintext,
-		server_message
+		beacon.finish_registration(&response.serialized).unwrap(),
+		b"registration"
 	);
+	response.kid
+}
 
-	let encrypted = beacon.encrypt_message(beacon_message).unwrap();
-	assert_eq!(
-		server.decrypt_message(&encrypted).unwrap().plaintext,
-		beacon_message
-	);
+fn snapshot_with_payload(snapshot: &[u8], payload: &[u8]) -> Vec<u8> {
+	assert!(snapshot.len() >= SNAPSHOT_HEADER_SIZE);
+	let mut bytes = snapshot[..SNAPSHOT_HEADER_SIZE].to_vec();
+	bytes[SNAPSHOT_PAYLOAD_LENGTH_OFFSET..SNAPSHOT_HEADER_SIZE]
+		.copy_from_slice(&(payload.len() as u64).to_le_bytes());
+	bytes.extend_from_slice(payload);
+	bytes
+}
+
+fn corrupt_crypto_frame_ciphertext(serialized: &[u8]) -> Vec<u8> {
+	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
+	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
+	let frame = typed.get().unwrap();
+	let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+	ciphertext[0] ^= 1;
+
+	let mut message = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
+	let mut corrupted = message.init_root();
+	corrupted.set_seq(frame.get_seq());
+	corrupted.set_key_id(frame.get_key_id());
+	corrupted.set_cipher_text(&ciphertext);
+	let mut serialized = Vec::new();
+	capnp::serialize::write_message(&mut serialized, message.borrow_inner()).unwrap();
+	serialized
 }
 
 #[test]
@@ -52,301 +181,345 @@ fn server_from_seed() {
 fn server_can_register_multiple() {
 	let mut server = Server::new(0, None);
 	let server_id = server.identity_pk().to_owned();
-
-	let mut b1 = Beacon::new(0, server_id.as_bytes());
-	let b1_reg = test_register_pqxdh_beacon(&mut server, &mut b1);
-	let mut b2 = Beacon::new(0, server_id.as_bytes());
-	let b2_reg = test_register_pqxdh_beacon(&mut server, &mut b2);
-
-	assert_eq!(b1_reg, b2_reg);
+	let mut first = Beacon::new(0, server_id.as_bytes());
+	let first_message = test_register_pqxdh_beacon(&mut server, &mut first);
+	let mut second = Beacon::new(0, server_id.as_bytes());
+	let second_message = test_register_pqxdh_beacon(&mut server, &mut second);
+	assert_eq!(first_message, second_message);
 }
 
 #[test]
-fn recreated_server_decrypts_beacon_response() {
-	let seed = [0x41; ED25519_SEED_SIZE];
-	let mut server = Server::new(0, Some(&seed));
-	let server_id = server.identity_pk().to_owned();
-	let mut beacon = Beacon::new(0, server_id.as_bytes());
+fn snapshots_are_plain_canonical_v2_envelopes_without_a_trailing_tag() {
+	let store = MemoryStore::default();
+	let server = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x31; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x42; 32]),
+	)
+	.unwrap();
+	let original_head = server.head();
+	let original_identity = server.identity_pk().clone();
+	let bytes = store.snapshot_bytes();
+	assert_eq!(u16::from_le_bytes(bytes[16..18].try_into().unwrap()), 2);
+	let payload_len = u64::from_le_bytes(
+		bytes[SNAPSHOT_PAYLOAD_LENGTH_OFFSET..SNAPSHOT_HEADER_SIZE]
+			.try_into()
+			.unwrap(),
+	) as usize;
+	assert_eq!(bytes.len(), SNAPSHOT_HEADER_SIZE + payload_len);
+	let payload = std::str::from_utf8(&bytes[SNAPSHOT_HEADER_SIZE..]).unwrap();
+	let payload_json: serde_json::Value = serde_json::from_str(payload).unwrap();
+	assert!(payload_json.get("identity_key").is_some());
+	assert!(payload_json.get("known_ids").is_some());
+	assert!(payload_json.get("consumed_registrations").is_some());
+	let mut legacy_v1 = bytes.clone();
+	legacy_v1[16..18].copy_from_slice(&1u16.to_le_bytes());
+	assert!(matches!(
+		ServerSnapshot::from_bytes(legacy_v1).head(),
+		Err(PersistenceError::InvalidSnapshot)
+	));
+	assert_eq!(store.cas_attempts(), 1);
+	assert_eq!(store.trusted_head(), Some(original_head));
 
-	test_register_pqxdh_beacon(&mut server, &mut beacon);
-	let request = server.encrypt_message(b"request", 1).unwrap();
+	let restored = PersistentServer::restore(store.clone()).unwrap();
+	assert_eq!(restored.identity_pk(), &original_identity);
+	assert_eq!(restored.head().lineage(), original_head.lineage());
+	assert_eq!(restored.head().generation(), 1);
+	let activated = store.snapshot_bytes();
 	assert_eq!(
-		beacon.decrypt_message(&request).unwrap().plaintext,
-		b"request"
-	);
-
-	let state = server.export_state().unwrap();
-	drop(server);
-
-	let response = beacon.encrypt_message(b"response").unwrap();
-	let mut server: Server = ProviderServer::from_state(state);
-	assert_eq!(
-		server.decrypt_message(&response).unwrap().plaintext,
-		b"response"
+		&activated[SNAPSHOT_PARENT_DIGEST_OFFSET..SNAPSHOT_PARENT_DIGEST_OFFSET + 32],
+		original_head.digest().as_slice()
 	);
 }
 
 #[test]
-fn known_ids_round_trip_and_continue_each_session() {
-	let seed = [0x51; ED25519_SEED_SIZE];
-	let mut server = Server::new(0, Some(&seed));
-	let server_id = server.identity_pk().to_owned();
-	let mut b1 = Beacon::new(0, server_id.as_bytes());
-	let mut b2 = Beacon::new(0, server_id.as_bytes());
+fn trusted_snapshots_must_use_the_canonical_payload_encoding() {
+	let store = MemoryStore::default();
+	let _server = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x37; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x43; 32]),
+	)
+	.unwrap();
+	let canonical = store.snapshot_bytes();
+	let payload_len = u64::from_le_bytes(
+		canonical[SNAPSHOT_PAYLOAD_LENGTH_OFFSET..SNAPSHOT_HEADER_SIZE]
+			.try_into()
+			.unwrap(),
+	) as usize;
+	let payload = &canonical[SNAPSHOT_HEADER_SIZE..SNAPSHOT_HEADER_SIZE + payload_len];
 
-	test_register_pqxdh_beacon(&mut server, &mut b1);
-	test_register_pqxdh_beacon(&mut server, &mut b2);
-	assert_exchange(&mut server, &mut b1, 1, b"server one", b"beacon one");
-	assert_exchange(&mut server, &mut b2, 2, b"server two", b"beacon two");
+	let mut noncanonical_payload = payload.to_vec();
+	noncanonical_payload.push(b' ');
+	let noncanonical = snapshot_with_payload(&canonical, &noncanonical_payload);
+	assert!(matches!(
+		PersistentServer::restore(MemoryStore::from_snapshot(noncanonical)),
+		Err(PersistenceError::NonCanonicalSnapshot)
+	));
 
-	let state = server.export_state().unwrap();
-	let json: Value = serde_json::from_str(&state).unwrap();
-	assert_eq!(json["identity_key"][0], json!(u8::from(SignType::Ed25519)));
-	assert_eq!(json["identity_key"][1], json!(14));
-	assert_eq!(
-		json["identity_key"][2].as_array().unwrap().len(),
-		crypto_sign::SEEDBYTES
-	);
-	assert_eq!(json["identity_key_kid"], json!(0));
-	assert_eq!(json["server_kid"], json!(2));
-	let consumed = json["consumed_registrations"].as_array().unwrap();
-	assert_eq!(consumed.len(), 2);
-	assert!(
-		consumed
-			.iter()
-			.all(|entry| entry.as_array().unwrap().len() == 64)
-	);
-	let consumed_bytes = consumed
-		.iter()
-		.map(|entry| {
-			entry
-				.as_array()
-				.unwrap()
-				.iter()
-				.map(|byte| byte.as_u64().unwrap() as u8)
-				.collect::<Vec<_>>()
-		})
-		.collect::<Vec<_>>();
-	assert!(
-		consumed_bytes
-			.windows(2)
-			.all(|pair| pair[0].as_slice() < pair[1].as_slice())
-	);
-	for kid in ["1", "2"] {
-		let encoded_pk = json["known_ids"][kid]["pk"].as_array().unwrap();
-		assert_eq!(encoded_pk.len(), crypto_sign::PUBLICKEYBYTES + 1);
-		assert_eq!(encoded_pk[0], json!(u8::from(SignType::Ed25519)));
-		assert!(json["known_ids"][kid]["ratchet"].is_object());
-	}
-
-	let mut restored: Server = ProviderServer::from_state(state);
-	assert_eq!(restored.identity_pk(), &server_id);
-	assert_eq!(restored.server_kid(), 2);
-	assert_eq!(restored.pk_by_kid(1), server.pk_by_kid(1));
-	assert_eq!(restored.pk_by_kid(2), server.pk_by_kid(2));
-
-	assert_exchange(
-		&mut restored,
-		&mut b1,
-		1,
-		b"server one restored",
-		b"beacon one restored",
-	);
-	assert_exchange(
-		&mut restored,
-		&mut b2,
-		2,
-		b"server two restored",
-		b"beacon two restored",
-	);
-
-	let mut b3 = Beacon::new(0, server_id.as_bytes());
-	test_register_pqxdh_beacon(&mut restored, &mut b3);
-	assert_eq!(restored.server_kid(), 3);
-	assert!(restored.pk_by_kid(3).is_some());
+	let mut malformed_payload = payload.to_vec();
+	malformed_payload[0] = b'[';
+	let malformed = snapshot_with_payload(&canonical, &malformed_payload);
+	assert!(matches!(
+		PersistentServer::restore(MemoryStore::from_snapshot(malformed)),
+		Err(PersistenceError::InvalidSnapshot)
+	));
 }
 
 #[test]
-fn known_ids_round_trip_preserves_cached_out_of_order_receive_keys() {
-	let seed = [0x71; ED25519_SEED_SIZE];
-	let mut server = Server::new(0, Some(&seed));
-	let server_id = server.identity_pk().to_owned();
-	let mut beacon = Beacon::new(0, server_id.as_bytes());
-	test_register_pqxdh_beacon(&mut server, &mut beacon);
-
+fn persistent_restore_preserves_cached_receive_keys_and_continues_the_session() {
+	let store = MemoryStore::default();
+	let mut server = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x3D; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x48; 32]),
+	)
+	.unwrap();
+	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let kid = test_register_persistent(&mut server, &mut beacon);
 	let first = beacon.encrypt_message(b"first").unwrap();
 	let second = beacon.encrypt_message(b"second").unwrap();
 	let third = beacon.encrypt_message(b"third").unwrap();
-	assert_eq!(server.decrypt_message(&third).unwrap().plaintext, b"third");
-
-	let state = server.export_state().unwrap();
-	let encoded: Value = serde_json::from_str(&state).unwrap();
-	let cached = encoded["known_ids"]["1"]["ratchet"]["recv_past"]
-		.as_object()
-		.unwrap();
-	assert_eq!(cached.len(), 2);
-	assert!(cached.contains_key("1"));
-	assert!(cached.contains_key("2"));
-
-	let mut restored: Server = ProviderServer::from_state(state);
 	assert_eq!(
-		restored.decrypt_message(&first).unwrap().plaintext,
+		server.decrypt_message(&third).unwrap().unwrap().plaintext,
+		b"third"
+	);
+	assert_eq!(server.ratchet_status(kid).unwrap().receive_cache_len(), 2);
+	drop(server);
+
+	let mut restored = PersistentServer::restore(store).unwrap();
+	assert_eq!(
+		restored.decrypt_message(&first).unwrap().unwrap().plaintext,
 		b"first"
 	);
 	assert_eq!(
-		restored.decrypt_message(&second).unwrap().plaintext,
+		restored
+			.decrypt_message(&second)
+			.unwrap()
+			.unwrap()
+			.plaintext,
+		b"second"
+	);
+	let reply = restored
+		.encrypt_message(b"after restore", kid)
+		.unwrap()
+		.unwrap();
+	assert_eq!(
+		beacon.decrypt_message(&reply).unwrap().plaintext,
+		b"after restore"
+	);
+}
+
+#[test]
+fn failed_future_receive_advancement_is_committed_and_restored() {
+	let store = MemoryStore::default();
+	let mut server = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x3F; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x4A; 32]),
+	)
+	.unwrap();
+	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let kid = test_register_persistent(&mut server, &mut beacon);
+	let first = beacon.encrypt_message(b"first").unwrap();
+	let second = beacon.encrypt_message(b"second").unwrap();
+	let third = beacon.encrypt_message(b"third").unwrap();
+	assert_eq!(third.seq, 3);
+	let corrupted_third = corrupt_crypto_frame_ciphertext(&third);
+	let before_failure = server.head();
+	assert_eq!(server.ratchet_status(kid).unwrap().receive_sequence(), 0);
+
+	assert!(server.decrypt_message(&corrupted_third).unwrap().is_none());
+	assert_eq!(server.head().generation(), before_failure.generation() + 1);
+	let retained = server.ratchet_status(kid).unwrap();
+	assert_eq!(retained.receive_sequence(), third.seq);
+	assert_eq!(retained.receive_cache_len(), 3);
+	drop(server);
+
+	let mut restored = PersistentServer::restore(store).unwrap();
+	let restored_status = restored.ratchet_status(kid).unwrap();
+	assert_eq!(restored_status.receive_sequence(), third.seq);
+	assert_eq!(restored_status.receive_cache_len(), 3);
+	assert_eq!(
+		restored.decrypt_message(&third).unwrap().unwrap().plaintext,
+		b"third"
+	);
+	assert_eq!(restored.ratchet_status(kid).unwrap().receive_cache_len(), 2);
+	assert_eq!(
+		restored.decrypt_message(&first).unwrap().unwrap().plaintext,
+		b"first"
+	);
+	assert_eq!(
+		restored
+			.decrypt_message(&second)
+			.unwrap()
+			.unwrap()
+			.plaintext,
 		b"second"
 	);
 }
 
 #[test]
-fn invalid_known_ids_state_is_rejected() {
-	let seed = [0x61; ED25519_SEED_SIZE];
-	let mut server = Server::new(0, Some(&seed));
-	let server_id = server.identity_pk().to_owned();
-	let mut beacon = Beacon::new(0, server_id.as_bytes());
-	test_register_pqxdh_beacon(&mut server, &mut beacon);
+fn trusted_head_rejects_a_stale_snapshot() {
+	let store = MemoryStore::default();
+	let original = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x41; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x44; 32]),
+	)
+	.unwrap();
+	let stale_bytes = store.snapshot_bytes();
+	let stale_head = original.head();
 
-	let state = server.export_state().unwrap();
-	let parsed: Value = serde_json::from_str(&state).unwrap();
+	let activated = PersistentServer::restore(store.clone()).unwrap();
+	assert_eq!(activated.head().generation(), stale_head.generation() + 1);
+	let trusted_head = activated.head();
+	let stale_view = store.clone().with_load_override(stale_bytes);
+	assert!(matches!(
+		PersistentServer::restore(stale_view),
+		Err(PersistenceError::StaleGeneration)
+	));
+	assert_eq!(store.trusted_head(), Some(trusted_head));
+}
 
-	let mut wrong_key_type = parsed.clone();
-	wrong_key_type["known_ids"]["1"]["pk"][0] = json!(u8::from(SignType::MlDsa87));
-	let mut short_key = parsed.clone();
-	short_key["known_ids"]["1"]["pk"]
-		.as_array_mut()
-		.unwrap()
-		.pop();
-	let mut malformed_ratchet = parsed.clone();
-	malformed_ratchet["known_ids"]["1"]["ratchet"]["send_key"][0] = json!(0);
-	let mut legacy_send_past = parsed.clone();
-	legacy_send_past["known_ids"]["1"]["ratchet"]["send_past"] = json!({});
-	let mut malformed_identity = parsed.clone();
-	malformed_identity["identity_key"]
-		.as_array_mut()
-		.unwrap()
-		.pop();
-	let mut wrong_identity_system = parsed.clone();
-	wrong_identity_system["identity_key"][0] = json!(0);
-	let mut wrong_identity_role = parsed.clone();
-	wrong_identity_role["identity_key"][1] = json!(8);
-	let mut invalid_identity_kid = parsed.clone();
-	invalid_identity_kid["identity_key_kid"] = json!(2);
-	let mut regressed_server_kid = parsed.clone();
-	regressed_server_kid["server_kid"] = json!(0);
-	let mut short_registration_id = parsed.clone();
-	short_registration_id["consumed_registrations"][0]
-		.as_array_mut()
-		.unwrap()
-		.pop();
-	let mut duplicate_registration_id = parsed.clone();
-	let registration_id = duplicate_registration_id["consumed_registrations"][0].clone();
-	duplicate_registration_id["consumed_registrations"]
-		.as_array_mut()
-		.unwrap()
-		.push(registration_id);
-	let mut missing_registration_history = parsed.clone();
-	missing_registration_history
-		.as_object_mut()
-		.unwrap()
-		.remove("consumed_registrations");
-	let mut incomplete_registration_history = parsed.clone();
-	incomplete_registration_history["consumed_registrations"] = json!([]);
+#[test]
+fn only_one_racing_restorer_can_activate_a_snapshot_head() {
+	let store = MemoryStore::default();
+	let original = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x47; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x45; 32]),
+	)
+	.unwrap();
+	let barrier = Arc::new(Barrier::new(2));
+	let first_store = store.clone().with_load_barrier(barrier.clone());
+	let second_store = store.clone().with_load_barrier(barrier);
+	let first =
+		thread::spawn(move || PersistentServer::restore(first_store).map(|server| server.head()));
+	let second =
+		thread::spawn(move || PersistentServer::restore(second_store).map(|server| server.head()));
+	let outcomes = [first.join().unwrap(), second.join().unwrap()];
 
-	for malformed in [
-		wrong_key_type,
-		short_key,
-		malformed_ratchet,
-		legacy_send_past,
-		malformed_identity,
-		wrong_identity_system,
-		wrong_identity_role,
-		invalid_identity_kid,
-		regressed_server_kid,
-		short_registration_id,
-		duplicate_registration_id,
-		missing_registration_history,
-		incomplete_registration_history,
-	] {
-		let malformed = serde_json::to_string(&malformed).unwrap();
-		assert!(
-			std::panic::catch_unwind(|| {
-				let _: Server = ProviderServer::from_state(malformed);
-			})
-			.is_err()
-		);
-	}
-
-	let identity_key = serde_json::to_string(&parsed["identity_key"]).unwrap();
-	let principal = serde_json::to_string(&parsed["known_ids"]["1"]).unwrap();
-	let consumed_registrations = serde_json::to_string(&parsed["consumed_registrations"]).unwrap();
-	let duplicate_kid = format!(
-		"{{\"identity_key\":{identity_key},\"identity_key_kid\":0,\
-		 \"server_kid\":1,\"known_ids\":\
-		 {{\"1\":{principal},\"1\":{principal}}},\
-		 \"consumed_registrations\":{consumed_registrations}}}"
+	assert_eq!(outcomes.iter().filter(|outcome| outcome.is_ok()).count(), 1);
+	assert_eq!(
+		outcomes
+			.iter()
+			.filter(|outcome| matches!(outcome, Err(PersistenceError::StaleGeneration)))
+			.count(),
+		1
 	);
+	assert_eq!(
+		store.trusted_head().unwrap().generation(),
+		original.head().generation() + 1
+	);
+}
+
+#[test]
+fn cas_failure_withholds_the_result_and_poisons_the_live_instance() {
+	let store = MemoryStore::default();
+	let mut server = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x51; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x46; 32]),
+	)
+	.unwrap();
+	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let kid = test_register_persistent(&mut server, &mut beacon);
+	let committed_head = server.head();
+	let expected_sequence = server.ratchet_status(kid).unwrap().send_sequence() + 1;
+
+	store.fail_next_cas();
+	assert!(matches!(
+		server.encrypt_message(b"must not escape before durability", kid),
+		Err(PersistenceError::StaleGeneration)
+	));
+	assert!(server.is_poisoned());
+	assert_eq!(server.head(), committed_head);
+	assert_eq!(store.trusted_head(), Some(committed_head));
+	assert!(matches!(
+		server.encrypt_message(b"poisoned", kid),
+		Err(PersistenceError::Poisoned)
+	));
+
+	let mut recovered = PersistentServer::restore(store.clone()).unwrap();
+	let released = recovered
+		.encrypt_message(b"must not escape before durability", kid)
+		.unwrap()
+		.unwrap();
+	assert_eq!(released.seq, expected_sequence);
+	assert_eq!(
+		beacon.decrypt_message(&released).unwrap().plaintext,
+		b"must not escape before durability"
+	);
+}
+
+#[test]
+fn failed_registration_response_keeps_consumption_committed() {
+	let store = MemoryStore::default();
+	let mut server = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x59; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x49; 32]),
+	)
+	.unwrap();
+	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let phase_1 = beacon.get_registration_bundle().unwrap();
+	let registration = server.get_shared_secret(&phase_1).unwrap().unwrap();
+	let consumption_head = server.head();
 	assert!(
-		std::panic::catch_unwind(|| {
-			let _: Server = ProviderServer::from_state(duplicate_kid);
-		})
-		.is_err()
+		server
+			.build_registration_response(registration, Some(&[]))
+			.unwrap()
+			.is_none()
+	);
+	assert_eq!(
+		server.head().generation(),
+		consumption_head.generation() + 1
+	);
+	drop(server);
+
+	let mut restored = PersistentServer::restore(store).unwrap();
+	assert!(restored.get_shared_secret(&phase_1).unwrap().is_none());
+}
+
+#[test]
+fn a_peer_becomes_operational_only_after_pqxdh_establishment() {
+	let store = MemoryStore::default();
+	let mut server = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x61; ED25519_SEED_SIZE]),
+		store,
+		SnapshotLineage::from_bytes([0x47; 32]),
+	)
+	.unwrap();
+	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+
+	assert!(server.pk_by_kid(1).is_none());
+	assert!(server.ratchet_status(1).is_none());
+	assert!(
+		server
+			.encrypt_message(b"no all-zero ratchet", 1)
+			.unwrap()
+			.is_none()
 	);
 
-	assert_exchange(
-		&mut server,
-		&mut beacon,
-		1,
-		b"server remains live",
-		b"beacon remains live",
+	let kid = test_register_persistent(&mut server, &mut beacon);
+	assert_eq!(server.pk_by_kid(kid), Some(beacon.identity_pk()));
+	assert!(server.ratchet_status(kid).is_some());
+	let encrypted = server
+		.encrypt_message(b"established", kid)
+		.unwrap()
+		.unwrap();
+	assert_eq!(
+		beacon.decrypt_message(&encrypted).unwrap().plaintext,
+		b"established"
 	);
-}
-
-#[test]
-fn empty_known_ids_state_round_trips_without_lowering_the_kid_counter() {
-	let server = Server::new(7, None);
-	let identity = server.identity_pk().to_owned();
-	let state = server.export_state().unwrap();
-	let encoded: Value = serde_json::from_str(&state).unwrap();
-	assert_eq!(encoded["identity_key_kid"], json!(7));
-	assert_eq!(encoded["server_kid"], json!(7));
-	assert_eq!(encoded["known_ids"], json!({}));
-	assert_eq!(encoded["consumed_registrations"], json!([]));
-
-	let restored: Server = ProviderServer::from_state(state);
-	assert_eq!(restored.identity_pk(), &identity);
-	assert_eq!(restored.identity_key_kid(), 7);
-	assert_eq!(restored.server_kid(), 7);
-	assert!(restored.pk_by_kid(1).is_none());
-}
-
-#[test]
-fn state_counter_survives_deleting_the_highest_known_id() {
-	let mut server = Server::new(0, None);
-	let server_id = server.identity_pk().to_owned();
-	let mut b1 = Beacon::new(0, server_id.as_bytes());
-	let mut b2 = Beacon::new(0, server_id.as_bytes());
-	test_register_pqxdh_beacon(&mut server, &mut b1);
-	test_register_pqxdh_beacon(&mut server, &mut b2);
-	server.delete_known_kid(2);
-
-	let state = server.export_state().unwrap();
-	let mut restored: Server = ProviderServer::from_state(state);
-	assert_eq!(restored.server_kid(), 2);
-
-	let mut b3 = Beacon::new(0, server_id.as_bytes());
-	test_register_pqxdh_beacon(&mut restored, &mut b3);
-	assert_eq!(restored.server_kid(), 3);
-	assert!(restored.pk_by_kid(3).is_some());
-}
-
-#[test]
-fn fallible_state_restore_rejects_invalid_state() {
-	let server = Server::new(0, None);
-	let mut state: Value = serde_json::from_str(&server.export_state().unwrap()).unwrap();
-	state.as_object_mut().unwrap().remove("identity_key_kid");
-
-	assert!(<Server as ProviderServer>::try_from_state(&state.to_string()).is_none());
-	assert!(<Server as ProviderServer>::try_from_state("not JSON").is_none());
-	assert!(<Server as ProviderServer>::try_from_state("{}").is_none());
 }

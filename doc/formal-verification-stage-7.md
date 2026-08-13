@@ -2,6 +2,8 @@
 
 # Formal verification Stage 7 implementation
 
+This document records the historical Stage 7 symbolic model. Its replay owner still assumes one serialized non-rollback owner and does not model the maintained `PersistentServer`, canonical codec, trusted payload integrity/provenance, external generation/head CAS store, or affine establishment gate. Snapshots have no cryptographic authentication or encryption. Those production controls help discharge the model premise only when their external contracts hold; ProVerif does not prove them or turn the model into a multi-replica theorem.
+
 ## Status and scope
 
 Stage 7 adds an active-attacker ProVerif model for PQXDH registration and a

@@ -2,6 +2,8 @@
 
 # Formal verification Stage 5 implementation
 
+This document records the historical Stage 5 persistence boundary. The maintained high-level runtime makes operational ratchet state affine, exposes only inert update snapshots, and uses `PersistentServer` with a trusted `SnapshotStore` for restart and multi-owner safety. The store must supply payload integrity and provenance plus linearizable, durable, rollback-resistant generation/head CAS; snapshots have no cryptographic authentication or encryption. Neither the Stage 5 proof nor current F* verifies the codec, store, crash durability, or deployment discipline.
+
 ## Status and scope
 
 Stage 5 closes the three executable counterexamples identified by the formal

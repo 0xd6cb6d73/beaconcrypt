@@ -284,7 +284,8 @@ let finish_send_consumes_available
        (finish_send key).f_key.f_sequence == key.f_sequence)
   = ()
 
-/// An unavailable capability cannot be consumed a second time.
+/// An unavailable capability value cannot be consumed a second time.
+/// This is token-local: it does not prove that an available predecessor was not copied, that only one live state lineage exists, or that persistence cannot roll back.
 let finish_send_rejects_reuse
     (key:t_SendKey { not key.f_available })
   : Lemma
@@ -292,6 +293,8 @@ let finish_send_rejects_reuse
        (finish_send key).f_key == key)
   = ()
 
+/// Reapplying finish to this returned unavailable value is rejected.
+/// Like the preceding lemma, this is not a trace-level ownership or no-rollback theorem.
 let finish_send_is_one_use (key:t_SendKey)
   : Lemma
       (not (finish_send (finish_send key).f_key).f_consumed /\
@@ -1896,7 +1899,7 @@ let valid_refined_restore
     restore.f_logical.f_state.f_receive_cache
     restore.f_receive_slots
 
-/// Conditional restoration invariant: authenticated snapshot provenance must establish the canonical live chains initially and the canonical material premise for every append.
+/// Conditional restoration invariant: trusted persistence provenance must establish the canonical live chains initially and the canonical material premise for every append.
 let reachable_restore
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (initial_send:v_SendChain)
@@ -3518,7 +3521,7 @@ let start_refined_restore_is_valid
   = start_restore_is_valid send_sequence receive_sequence;
     empty_material_slots_are_none #v_Material
 
-/// Starting restoration establishes the conditional reachability builder only when authenticated snapshot provenance supplies live chains matching the fixed initial chains and counters.
+/// Starting restoration establishes the conditional reachability builder only when trusted persistence provenance supplies live chains matching the fixed initial chains and counters.
 let start_refined_restore_is_reachable
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (initial_send:v_SendChain)
@@ -3581,7 +3584,7 @@ let refined_restore_receive_key_is_atomic
   = restore_receive_key_with_slot_success_shape restore.f_logical sequence;
     restore_receive_key_with_slot_preserves_validity restore.f_logical sequence
 
-/// Restoration append preserves conditional reachability only when the authenticated snapshot supplies the canonical material for the appended sequence.
+/// Restoration append preserves conditional reachability only when trusted persistence provenance supplies the canonical material for the appended sequence.
 let refined_restore_receive_key_preserves_reachability
     (#v_SendChain #v_ReceiveChain #v_Material:Type0)
     (initial_send:v_SendChain)

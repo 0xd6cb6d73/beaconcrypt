@@ -40,7 +40,7 @@ while IFS=$'\t' read -r category expected path extra ||
 done < "$manifest"
 
 declare -A expected_category_counts=(
-	[adapter-rust]=12
+	[adapter-rust]=13
 	[adapter-schema]=3
 	[core-rust]=4
 	[control]=11

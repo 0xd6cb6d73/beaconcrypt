@@ -115,7 +115,7 @@ mod tests {
 	}
 
 	#[test]
-	fn server_mutators_update_only_server_owned_state() {
+	fn internal_server_peer_helpers_update_only_server_owned_state() {
 		let mut server = Server::new(41, None);
 		server.set_identity_kid(17);
 		assert_eq!(server.identity_key_kid(), 17);
@@ -123,11 +123,53 @@ mod tests {
 		let peer = crypto_sign::KeyPair::generate().unwrap().public_key;
 		server.add_known_kid(9, peer.clone());
 		assert_eq!(server.pk_by_kid(9), Some(&peer));
-		assert_eq!(server.encrypt_message(b"before reset", 9).unwrap().seq, 1);
-		server.reset_known_kid(9);
-		assert_eq!(server.encrypt_message(b"after reset", 9).unwrap().seq, 1);
 		server.delete_known_kid(9);
 		assert!(server.pk_by_kid(9).is_none());
+	}
+
+	#[test]
+	fn deleting_a_peer_does_not_make_its_registration_replayable() {
+		let mut server = Server::new(0, None);
+		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+		let bundle = beacon.get_registration_bundle().unwrap();
+		let pending = server.get_shared_secret(&bundle).unwrap();
+		let response = server.build_registration_response(pending, None).unwrap();
+		beacon.finish_registration(&response.serialized).unwrap();
+
+		server.delete_known_kid(response.kid);
+		assert!(server.pk_by_kid(response.kid).is_none());
+		assert!(server.get_shared_secret(&bundle).is_none());
+	}
+
+	#[test]
+	fn internal_peer_collision_blocks_registration_commit() {
+		let mut server = Server::new(0, None);
+		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+		let bundle = beacon.get_registration_bundle().unwrap();
+		let pending = server.get_shared_secret(&bundle).unwrap();
+		let occupied_kid = 1;
+		server.add_known_kid(occupied_kid, beacon.identity_pk().clone());
+
+		assert!(server.build_registration_response(pending, None).is_none());
+		assert_eq!(server.server_kid(), 0);
+		assert_eq!(server.pk_by_kid(occupied_kid), Some(beacon.identity_pk()));
+	}
+
+	#[test]
+	fn internal_peer_deletion_does_not_regress_the_key_id_counter() {
+		let mut server = Server::new(0, None);
+		let server_identity = server.identity_pk().to_owned();
+		let mut first = Beacon::new(0, server_identity.as_bytes());
+		let mut second = Beacon::new(0, server_identity.as_bytes());
+		register(&mut server, &mut first);
+		register(&mut server, &mut second);
+		server.delete_known_kid(2);
+		assert_eq!(server.server_kid(), 2);
+
+		let mut third = Beacon::new(0, server_identity.as_bytes());
+		register(&mut server, &mut third);
+		assert_eq!(server.server_kid(), 3);
+		assert!(server.pk_by_kid(3).is_some());
 	}
 
 	#[test]
@@ -286,7 +328,7 @@ mod tests {
 				.unwrap()
 				.send_state()
 				.as_slice(),
-			beacon.ratchet_manager().recv_state().as_slice()
+			beacon.ratchet_manager().unwrap().recv_state().as_slice()
 		);
 	}
 

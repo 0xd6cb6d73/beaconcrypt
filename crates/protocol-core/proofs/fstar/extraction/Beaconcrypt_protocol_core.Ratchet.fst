@@ -38,18 +38,12 @@ let impl_RatchetChain__into_bytes (self: t_RatchetChain) : t_Array u8 (mk_usize 
 /// Fixed-width symmetric-ratchet message-key bytes owned by the extracted boundary.
 type t_RatchetKey = { f_bytes:t_Array u8 (mk_usize 32) }
 
-let impl_17: Core_models.Clone.t_Clone t_RatchetKey =
-  { f_clone = (fun x -> x); f_clone_pre = (fun _ -> True); f_clone_post = (fun _ _ -> True) }
-
 let impl_RatchetKey__as_bytes (self: t_RatchetKey) : t_Array u8 (mk_usize 32) = self.f_bytes
 
 let impl_RatchetKey__into_bytes (self: t_RatchetKey) : t_Array u8 (mk_usize 32) = self.f_bytes
 
 /// Fixed-width symmetric-ratchet AEAD nonce bytes owned by the extracted boundary.
 type t_RatchetNonce = { f_bytes:t_Array u8 (mk_usize 12) }
-
-let impl_21: Core_models.Clone.t_Clone t_RatchetNonce =
-  { f_clone = (fun x -> x); f_clone_pre = (fun _ -> True); f_clone_post = (fun _ _ -> True) }
 
 let impl_RatchetNonce__as_bytes (self: t_RatchetNonce) : t_Array u8 (mk_usize 12) = self.f_bytes
 
@@ -64,12 +58,6 @@ type t_RatchetMaterial = {
 let impl_RatchetMaterial__key (self: t_RatchetMaterial) : t_RatchetKey = self.f_key
 
 let impl_RatchetMaterial__nonce (self: t_RatchetMaterial) : t_RatchetNonce = self.f_nonce
-
-let impl_RatchetMaterial__into_parts (self: t_RatchetMaterial) : (t_RatchetKey & t_RatchetNonce) =
-  Core_models.Clone.f_clone #t_RatchetKey #FStar.Tactics.Typeclasses.solve self.f_key,
-  Core_models.Clone.f_clone #t_RatchetNonce #FStar.Tactics.Typeclasses.solve self.f_nonce
-  <:
-  (t_RatchetKey & t_RatchetNonce)
 
 /// Core-owned invocation of the symmetric-ratchet KDF domain.
 /// Both fields are private so an executor can read but cannot alter the exact

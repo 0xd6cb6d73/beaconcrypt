@@ -25,9 +25,17 @@ class BeaconCryptServer:
     def encrypt_and_update(self, /, data: Sequence[int], kid: int) -> EncryptState |None: ...
     def encrypt_and_update_json(self, /, data: Sequence[int], kid: int) -> str |None: ...
     def encrypt_to_beacon(self, /, data: Sequence[int], kid: int) -> bytes |None: ...
-    def export_state(self, /) -> str |None: ...
+    def export_state(self, /) -> bytes:
+        """
+        Export the current plaintext checkpoint.
+
+        Save it immediately after every state-changing call and before using that call's output.
+        """
     @staticmethod
-    def from_state(server_state: str) -> BeaconCryptServer: ...
+    def from_state(state: Sequence[int]) -> BeaconCryptServer:
+        """
+        Restore trusted checkpoint bytes. The bytes do not authenticate themselves or prevent stale rollback. Restoration advances the generation, so export and save the returned server immediately before using it.
+        """
     def id_pk(self, /) -> bytes: ...
     def register_beacon(self, /, reg_buffer: bytes, initial_message: bytes |None) -> RegResponse |None: ...
 
@@ -38,7 +46,9 @@ class EncryptState:
     def seq(self, /) -> int: ...
     def state(self, /) -> str:
         """
-        Return the complete ratchet state as JSON.
+        Return inert plaintext ratchet JSON for observation only.
+
+        It is secret-bearing, unauthenticated, and not restorable.
         """
 
 @final

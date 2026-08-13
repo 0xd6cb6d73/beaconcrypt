@@ -35,14 +35,21 @@ fn main() {
 		.expect("Unable to generate bindings");
 	bindings.write_to_file("bindings.h");
 	let header = std::fs::read_to_string("bindings.h").expect("read generated bindings");
-	let header = header
-		.replace(
-			"typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;\n\ntypedef struct beaconcrypt_Beacon beaconcrypt_Beacon;",
-			"typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;",
-		)
-		.replace(
-			"typedef struct beaconcrypt_Server beaconcrypt_Server;\n\ntypedef struct beaconcrypt_Server beaconcrypt_Server;",
-			"typedef struct beaconcrypt_Server beaconcrypt_Server;",
-		);
+	let header = deduplicate_opaque_typedef(&header, "beaconcrypt_Beacon");
+	let header = deduplicate_opaque_typedef(&header, "beaconcrypt_Server");
 	std::fs::write("bindings.h", header).expect("write generated bindings");
+}
+
+fn deduplicate_opaque_typedef(header: &str, name: &str) -> String {
+	let declaration = format!("typedef struct {name} {name};");
+	let mut header = header.to_owned();
+	while header.match_indices(&declaration).count() > 1 {
+		let first = header.find(&declaration).expect("duplicate declaration");
+		let mut end = first + declaration.len();
+		while header[end..].starts_with('\n') {
+			end += 1;
+		}
+		header.replace_range(first..end, "");
+	}
+	header
 }

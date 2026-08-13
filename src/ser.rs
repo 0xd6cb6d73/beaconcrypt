@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: 0BSD
 
 #[cfg(feature = "server")]
-use super::{RemotePrincipal, SignType, encode_sign};
+use super::{EstablishedRemote, SignType, encode_sign};
 use crate::ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager};
 #[cfg(test)]
 use crate::ratchet::{RatchetKernel, ratchet_hkdf};
 #[cfg(feature = "server")]
-use crate::server::StateUpdate;
+use crate::server::{RatchetSnapshot, StateUpdate};
 use crate::shared::{roles, systems};
 #[cfg(feature = "server")]
 use libsodium_rs::crypto_sign;
@@ -103,6 +103,16 @@ impl<Role: roles::ChainKey> Serialize for StateUpdate<Role> {
 	}
 }
 
+#[cfg(feature = "server")]
+impl Serialize for RatchetSnapshot {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: Serializer,
+	{
+		serializer.serialize_str(self.as_str())
+	}
+}
+
 struct DirectionalKeyMaterialRef<'a, KeyRole, NonceRole> {
 	material: &'a KeyMaterial,
 	_roles: PhantomData<(KeyRole, NonceRole)>,
@@ -163,11 +173,16 @@ where
 		S: Serializer,
 	{
 		let len = self.ratchet.receive_cache_len();
-		let mut map = serializer.serialize_map(Some(len as usize))?;
+		let mut entries = Vec::with_capacity(len as usize);
 		for slot in 0..len {
-			let (sequence, material) = self.ratchet.receive_entry_at(slot).ok_or_else(|| {
+			entries.push(self.ratchet.receive_entry_at(slot).ok_or_else(|| {
 				S::Error::custom("refined receive cache contains an invalid entry")
-			})?;
+			})?);
+		}
+		entries.sort_unstable_by_key(|(sequence, _)| *sequence);
+
+		let mut map = serializer.serialize_map(Some(len as usize))?;
+		for (sequence, material) in entries {
 			map.serialize_entry(
 				&sequence,
 				&DirectionalKeyMaterialRef::<KeyRole, NonceRole>::new(material),
@@ -214,7 +229,7 @@ impl Serialize for EncodedSignaturePublicKey<'_> {
 }
 
 #[cfg(feature = "server")]
-impl Serialize for RemotePrincipal<crypto_sign::PublicKey> {
+impl Serialize for EstablishedRemote<crypto_sign::PublicKey> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: Serializer,
@@ -227,7 +242,7 @@ impl Serialize for RemotePrincipal<crypto_sign::PublicKey> {
 }
 
 #[cfg(feature = "server")]
-struct SerializableKnownIds<'a>(&'a HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>);
+struct SerializableKnownIds<'a>(&'a HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>);
 
 #[cfg(feature = "server")]
 struct SerializableConsumedRegistrations<'a>(
@@ -239,7 +254,7 @@ struct SerializableServerState<'a> {
 	identity_key: &'a crypto_sign::KeyPair,
 	identity_key_kid: u64,
 	server_kid: u64,
-	known_ids: &'a HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+	known_ids: &'a HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>,
 	consumed_registrations:
 		&'a HashSet<[u8; beaconcrypt_protocol_core::pqxdh::REGISTRATION_ID_SIZE]>,
 }
@@ -249,7 +264,7 @@ pub(crate) fn serialize_server_state(
 	identity_key: &crypto_sign::KeyPair,
 	identity_key_kid: u64,
 	server_kid: u64,
-	known_ids: &HashMap<u64, RemotePrincipal<crypto_sign::PublicKey>>,
+	known_ids: &HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>,
 	consumed_registrations: &HashSet<[u8; beaconcrypt_protocol_core::pqxdh::REGISTRATION_ID_SIZE]>,
 ) -> Option<String> {
 	serde_json::to_string(&SerializableServerState {
@@ -334,7 +349,7 @@ mod tests {
 	use serde_json::json;
 
 	#[test]
-	fn state_updates_include_the_complete_ratchet_state() {
+	fn state_updates_include_an_inert_serialized_ratchet_snapshot() {
 		let send_bytes = [0x21; KDF_STATE_SIZE];
 		let mut send_state = RatchetManager::default();
 		send_state.refined = RatchetKernel::new(
@@ -342,10 +357,11 @@ mod tests {
 			beaconcrypt_protocol_core::ratchet::RatchetChain::from_bytes([0; KDF_STATE_SIZE]),
 			ratchet_hkdf,
 		);
+		let expected_send_state = serde_json::to_string(&send_state).unwrap();
 		let send_update = SendState {
 			kid: 7,
 			seq: 11,
-			state: send_state.clone(),
+			state: RatchetSnapshot::capture(&send_state).unwrap(),
 			data: vec![0x31, 0x32],
 			_role: PhantomData,
 		};
@@ -357,10 +373,11 @@ mod tests {
 			beaconcrypt_protocol_core::ratchet::RatchetChain::from_bytes(recv_bytes),
 			ratchet_hkdf,
 		);
+		let expected_recv_state = serde_json::to_string(&recv_state).unwrap();
 		let recv_update = RecvState {
 			kid: 9,
 			seq: 13,
-			state: recv_state.clone(),
+			state: RatchetSnapshot::capture(&recv_state).unwrap(),
 			data: vec![0x51, 0x52],
 			_role: PhantomData,
 		};
@@ -373,7 +390,7 @@ mod tests {
 			json!({
 				"kid": 7,
 				"seq": 11,
-				"state": serde_json::to_value(send_state).unwrap(),
+				"state": expected_send_state,
 				"data": [0x31, 0x32],
 			})
 		);
@@ -382,7 +399,7 @@ mod tests {
 			json!({
 				"kid": 9,
 				"seq": 13,
-				"state": serde_json::to_value(recv_state).unwrap(),
+				"state": expected_recv_state,
 				"data": [0x51, 0x52],
 			})
 		);

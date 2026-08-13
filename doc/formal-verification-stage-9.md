@@ -2,6 +2,8 @@
 
 # Formal verification Stage 9 implementation record
 
+This document records the original Stage 9 inventory rollout. The maintained inventory now includes affine operational ratchet state, establishment-gated `EstablishedRemote`/`BeaconState::Established` ownership, inert update snapshots, duplicate-rejecting canonical state decoding, and generation/head CAS with loser fencing. `SnapshotStore` is trusted for payload integrity and provenance plus linearizable, durable, rollback-resistant head management; snapshots have no cryptographic authentication or encryption. These are reviewed production refinements, not new F* or ProVerif conclusions. Historical references below to clonable forks and the original adapter-count baseline describe the earlier snapshot.
+
 ## Result and scope
 
 Stage 9 completes the staged rollout with a maintained, mechanically checked

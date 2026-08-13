@@ -13,6 +13,7 @@ import (
 const (
 	serverKID     uint64 = 0
 	transportPath        = "transport"
+	statePath            = "server-state.bin"
 )
 
 var registrationMessage = []byte("registration ok")
@@ -35,6 +36,9 @@ func run() error {
 		return err
 	}
 	defer server.Close()
+	if err := saveServer(server); err != nil {
+		return err
+	}
 
 	// It is assumed that the server's public key is compiled into beacons.
 	serverPK, err := server.IdentityPK()
@@ -47,6 +51,7 @@ func run() error {
 	}
 	defer beacon.Close()
 	defer os.Remove(transportPath)
+	defer os.Remove(statePath)
 
 	// The beacon is run and registers.
 	bReg1, err := beacon.GenerateRegistration()
@@ -67,6 +72,9 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	if err := saveServer(server); err != nil {
+		return err
+	}
 	// Ship the response back over your transport.
 	if err := writeTransport(sRegResp.Serialized); err != nil {
 		return err
@@ -82,6 +90,23 @@ func run() error {
 		return err
 	}
 	fmt.Printf("Beacon got initial message: %q\n", firstMessage)
+
+	// Simulate a restart. NewServerFromState trusts these bytes as the current
+	// checkpoint; they do not authenticate themselves or prevent stale rollback.
+	server.Close()
+	serializedState, err := os.ReadFile(statePath)
+	if err != nil {
+		return err
+	}
+	server, err = beaconcrypt.NewServerFromState(serializedState)
+	if err != nil {
+		return err
+	}
+	defer server.Close()
+	if err := saveServer(server); err != nil { // Save the activation generation.
+		return err
+	}
+	fmt.Printf("Restored server state from %s\n", statePath)
 
 	bPing, err := beacon.EncryptToServer([]byte("ping"))
 	if err != nil {
@@ -100,19 +125,25 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	if err := saveServer(server); err != nil {
+		return err
+	}
 	fmt.Printf("Server got ping: %q\n", ping.Data)
 	fmt.Printf("Key ID: %d\n", ping.KeyID)
 	fmt.Printf("Consumed key sequence: %d\n", ping.Seq)
-	fmt.Printf("Ratchet state updated (%d bytes)\n", len(ping.State))
+	fmt.Printf("Ratchet state: %s\n", ping.State)
 
 	// The C2 needs to know what the beacon's ID is so it can encrypt to it.
 	sTask0, err := server.EncryptAndUpdate(sRegResp.KeyID, []byte("task contents"))
 	if err != nil {
 		return err
 	}
+	if err := saveServer(server); err != nil {
+		return err
+	}
 	fmt.Printf("Key ID: %d\n", sTask0.KeyID)
 	fmt.Printf("Consumed key sequence: %d\n", sTask0.Seq)
-	fmt.Printf("Ratchet state updated (%d bytes)\n", len(sTask0.State))
+	fmt.Printf("Ratchet state: %s\n", sTask0.State)
 	if err := writeTransport(sTask0.Data); err != nil {
 		return err
 	}
@@ -144,12 +175,26 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	if err := saveServer(server); err != nil {
+		return err
+	}
 	fmt.Printf("Server got response to first task: %q\n", task1.Data)
 	fmt.Printf("Key ID: %d\n", task1.KeyID)
 	fmt.Printf("Consumed key sequence: %d\n", task1.Seq)
-	fmt.Printf("Ratchet state updated (%d bytes)\n", len(task1.State))
+	fmt.Printf("Ratchet state: %s\n", task1.State)
 
 	return nil
+}
+
+func saveServer(server *beaconcrypt.Server) error {
+	// Checkpoints are plaintext secret material. Save immediately after every
+	// state-changing call and before using its output. A production store must
+	// also reject stale rollback and coordinate concurrent owners.
+	state, err := server.ExportState()
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(statePath, state, 0o600)
 }
 
 func writeTransport(data []byte) error {

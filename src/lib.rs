@@ -3,6 +3,8 @@
 #[cfg(feature = "beacon")]
 mod beacon;
 mod error;
+#[cfg(feature = "server")]
+mod persistence;
 #[cfg(feature = "pqxdh")]
 mod pqxdh;
 mod ratchet;
@@ -62,11 +64,20 @@ pub use beacon::ProviderBeacon;
 pub use error::{
 	CipherTextError, DecodingError, DecryptionError, EncodingError, KeyGenError, SignatureError,
 };
-pub use ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE};
+#[cfg(feature = "server")]
+pub use persistence::{
+	PersistenceError, PersistentServer, ServerSnapshot, SnapshotHead, SnapshotLineage,
+	SnapshotStore,
+};
+pub use ratchet::{
+	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_RATCHET_OUTPUT_LEN, KDF_STATE_SIZE, RatchetStatus,
+};
 #[cfg(all(feature = "pqxdh", feature = "server"))]
 pub use server::Server;
 #[cfg(feature = "server")]
-pub use server::{ProviderServer, RecvState, RegResponse, RegistrationOutput, SendState};
+pub use server::{
+	ProviderServer, RatchetSnapshot, RecvState, RegResponse, RegistrationOutput, SendState,
+};
 pub use shared::{DH_OUT_LEN, Decrypted, ED25519_SEED_SIZE, Encrypted, KEX_KDF_OUT_LEN, SignType};
 
 capnp::generated_code!(pub mod phase1_capnp);

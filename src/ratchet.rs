@@ -41,6 +41,28 @@ const _: () = assert!(RATCHET_MAX_GAP == verified_ratchet::RATCHET_MAX_GAP);
 pub const COMMITMENT_SIZE: usize = 64;
 pub const MESSAGE_OVERHEAD: usize = COMMITMENT_SIZE + AEAD_TAG_LEN;
 
+/// Non-secret progress metadata for an established symmetric ratchet.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RatchetStatus {
+	send_sequence: u64,
+	receive_sequence: u64,
+	receive_cache_len: u8,
+}
+
+impl RatchetStatus {
+	pub const fn send_sequence(self) -> u64 {
+		self.send_sequence
+	}
+
+	pub const fn receive_sequence(self) -> u64 {
+		self.receive_sequence
+	}
+
+	pub const fn receive_cache_len(self) -> u8 {
+		self.receive_cache_len
+	}
+}
+
 /// Expected to be bound by [roles::ChainKey] but the compiler doesn't enforce it
 #[cfg(test)]
 pub type KdfState<Role> = SecretArr<KDF_STATE_SIZE, systems::HkdfSha512, Role>;
@@ -88,6 +110,7 @@ pub(crate) type KeyMaterial = verified_ratchet::RatchetMaterial;
 pub(crate) type SendChain = verified_ratchet::RatchetChain;
 pub(crate) type RatchetKernel = verified_ratchet::ConcreteRatchetKernel;
 
+#[cfg(test)]
 fn empty_ratchet_kernel() -> RatchetKernel {
 	RatchetKernel::new(
 		verified_ratchet::RatchetChain::from_bytes([0; KDF_STATE_SIZE]),
@@ -96,14 +119,14 @@ fn empty_ratchet_kernel() -> RatchetKernel {
 	)
 }
 
-#[derive(Clone)]
-pub struct RatchetManager {
+pub(crate) struct RatchetManager {
 	/// Shared refined kernel owning counters, both KDF chains, and concrete receive slots.
 	pub(crate) refined: RatchetKernel,
 }
 
 impl RatchetManager {
-	pub fn default() -> Self {
+	#[cfg(test)]
+	pub(crate) fn default() -> Self {
 		Self {
 			refined: empty_ratchet_kernel(),
 		}
@@ -113,9 +136,12 @@ impl RatchetManager {
 		Self { refined }
 	}
 
-	#[cfg(feature = "server")]
-	pub fn from_json(json: String) -> Self {
-		serde_json::from_str(&json).unwrap()
+	pub(crate) fn status(&self) -> RatchetStatus {
+		RatchetStatus {
+			send_sequence: self.refined.send_sequence(),
+			receive_sequence: self.refined.receive_sequence(),
+			receive_cache_len: self.refined.receive_cache_len(),
+		}
 	}
 
 	#[cfg(test)]
@@ -184,7 +210,8 @@ impl RatchetManager {
 		self.complete_recv_key(seq, true);
 	}
 
-	pub fn reset(&mut self) {
+	#[cfg(test)]
+	pub(crate) fn reset(&mut self) {
 		self.refined = empty_ratchet_kernel();
 	}
 
@@ -199,7 +226,8 @@ impl RatchetManager {
 	}
 
 	/// Number of retained receive attempts, without exposing their material.
-	pub fn receive_cache_len(&self) -> u8 {
+	#[cfg(any(feature = "server", test))]
+	pub(crate) fn receive_cache_len(&self) -> u8 {
 		self.refined.receive_cache_len()
 	}
 
@@ -208,11 +236,13 @@ impl RatchetManager {
 		self.refined.receive_entry_at(slot)
 	}
 
-	pub fn send_state(&self) -> &[u8; KDF_STATE_SIZE] {
+	#[cfg(test)]
+	pub(crate) fn send_state(&self) -> &[u8; KDF_STATE_SIZE] {
 		self.refined.send_chain().as_bytes()
 	}
 
-	pub fn recv_state(&self) -> &[u8; KDF_STATE_SIZE] {
+	#[cfg(test)]
+	pub(crate) fn recv_state(&self) -> &[u8; KDF_STATE_SIZE] {
 		self.refined.receive_chain().as_bytes()
 	}
 }

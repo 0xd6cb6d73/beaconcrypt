@@ -164,10 +164,10 @@ def test_beacon_encrypts_to_server():
     assert plaintext == message
 
 
-def test_server_encrypt_and_update_returns_ratchet_state():
+def test_server_encrypt_and_update_returns_serialized_ratchet_snapshot():
     server = BeaconCryptServer(0, None)
     beacon = BeaconCryptBeacon(0, server.id_pk())
-    message = b"server to beacon with updated state"
+    message = b"server to beacon with snapshot"
 
     beacon_kid = register_beacon(server, beacon)
     update = server.encrypt_and_update(message, beacon_kid)
@@ -175,23 +175,23 @@ def test_server_encrypt_and_update_returns_ratchet_state():
     assert update is not None
     assert update.key_id() == beacon_kid
     assert update.seq() == 2
-    state = json.loads(update.state())
-    assert set(state) == {
+    snapshot = json.loads(update.state())
+    assert set(snapshot) == {
         "send_key",
         "recv_key",
         "send_ctr",
         "recv_past",
         "recv_ctr",
     }
-    assert state["send_key"][:2] == [6, 8]
-    assert len(state["send_key"][2]) == 32
+    assert snapshot["send_key"][:2] == [6, 8]
+    assert len(snapshot["send_key"][2]) == 32
     assert beacon.decrypt_server_message(update.data()) == message
 
 
-def test_server_decrypt_and_update_returns_ratchet_state():
+def test_server_decrypt_and_update_returns_serialized_ratchet_snapshot():
     server = BeaconCryptServer(0, None)
     beacon = BeaconCryptBeacon(0, server.id_pk())
-    message = b"beacon to server with updated state"
+    message = b"beacon to server with snapshot"
 
     beacon_kid = register_beacon(server, beacon)
     ciphertext = beacon.encrypt_message_to_server(message)
@@ -200,16 +200,16 @@ def test_server_decrypt_and_update_returns_ratchet_state():
     assert update is not None
     assert update.key_id() == beacon_kid
     assert update.seq() == 1
-    state = json.loads(update.state())
-    assert set(state) == {
+    snapshot = json.loads(update.state())
+    assert set(snapshot) == {
         "send_key",
         "recv_key",
         "send_ctr",
         "recv_past",
         "recv_ctr",
     }
-    assert state["recv_key"][:2] == [6, 9]
-    assert len(state["recv_key"][2]) == 32
+    assert snapshot["recv_key"][:2] == [6, 9]
+    assert len(snapshot["recv_key"][2]) == 32
     assert update.data() == message
 
 

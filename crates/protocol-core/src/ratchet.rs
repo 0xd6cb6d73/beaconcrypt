@@ -23,7 +23,7 @@ pub const RATCHET_KDF_OUTPUT_SIZE: usize =
 const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 76);
 
 /// Fixed-width symmetric-ratchet chain bytes owned by the extracted boundary.
-#[derive(Clone, Zeroize, ZeroizeOnDrop)]
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct RatchetChain {
 	bytes: [u8; RATCHET_CHAIN_SIZE],
 }
@@ -43,7 +43,7 @@ impl RatchetChain {
 }
 
 /// Fixed-width symmetric-ratchet message-key bytes owned by the extracted boundary.
-#[derive(Clone, Zeroize, ZeroizeOnDrop)]
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct RatchetKey {
 	bytes: [u8; crate::commitment::AEAD_KEY_SIZE],
 }
@@ -63,7 +63,7 @@ impl RatchetKey {
 }
 
 /// Fixed-width symmetric-ratchet AEAD nonce bytes owned by the extracted boundary.
-#[derive(Clone, Zeroize, ZeroizeOnDrop)]
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct RatchetNonce {
 	bytes: [u8; crate::commitment::AEAD_NONCE_SIZE],
 }
@@ -83,7 +83,7 @@ impl RatchetNonce {
 }
 
 /// Fixed-width key and nonce produced by one symmetric-ratchet step.
-#[derive(Clone, Zeroize, ZeroizeOnDrop)]
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct RatchetMaterial {
 	key: RatchetKey,
 	nonce: RatchetNonce,
@@ -111,17 +111,13 @@ impl RatchetMaterial {
 	pub const fn nonce(&self) -> &RatchetNonce {
 		&self.nonce
 	}
-
-	pub fn into_parts(self) -> (RatchetKey, RatchetNonce) {
-		(self.key.clone(), self.nonce.clone())
-	}
 }
 
 /// Core-owned invocation of the symmetric-ratchet KDF domain.
 ///
 /// Both fields are private so an executor can read but cannot alter the exact
 /// input or protocol label selected by the core transition that created it.
-#[derive(Clone, Zeroize, ZeroizeOnDrop)]
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct SymmetricRatchetKdfRequest {
 	input: [u8; RATCHET_CHAIN_SIZE],
 	info: [u8; SYM_RATCHET_INFO_SIZE],
@@ -210,7 +206,6 @@ pub fn derive_ratchet_step(
 /// A concrete chain binds its fixed-width bytes to the sole KDF executor that
 /// is carried through every later step. The fields stay private so callers
 /// cannot replace the executor while retaining the same logical kernel.
-#[derive(Clone)]
 #[cfg_attr(feature = "proverif", hax_lib::fstar::before("noeq"))]
 struct ConcreteRatchetChain {
 	chain: RatchetChain,
@@ -709,7 +704,6 @@ pub struct RatchetStep<Chain, Material> {
 ///
 /// Private fields prevent adapters from manufacturing or retagging cached
 /// material independently of the checked receive and restoration transitions.
-#[derive(Clone)]
 pub struct CachedReceiveKey<Material> {
 	sequence: u64,
 	material: Material,
@@ -734,7 +728,6 @@ fn empty_material_slots<Material>() -> [Option<CachedReceiveKey<Material>>; RECE
 /// arbitrary opaque HKDF inputs and outputs. Each concrete receive value is
 /// sealed with its sequence, and private fields ensure Rust callers can only
 /// construct and mutate that correspondence through this kernel.
-#[derive(Clone)]
 pub struct RefinedRatchet<SendChain, ReceiveChain, Material> {
 	control: RatchetState,
 	send_chain: SendChain,
@@ -1087,7 +1080,6 @@ pub fn refined_open_and_finish<SendChain, ReceiveChain, Material, Context, Plain
 /// Both directional chains carry the same private KDF executor, and every
 /// public transition below selects [`concrete_ratchet_step`] internally. This
 /// removes the generic step callback from the production-facing lifecycle.
-#[derive(Clone)]
 #[cfg_attr(feature = "proverif", hax_lib::fstar::before("noeq"))]
 pub struct ConcreteRatchetKernel {
 	refined: RefinedRatchet<ConcreteRatchetChain, ConcreteRatchetChain, RatchetMaterial>,
@@ -1178,7 +1170,6 @@ pub fn concrete_open_and_finish<Context, Plaintext>(
 }
 
 /// Checked restoration builder for a complete refined ratchet.
-#[derive(Clone)]
 pub struct RefinedRatchetRestore<SendChain, ReceiveChain, Material> {
 	logical: RatchetRestore,
 	send_chain: SendChain,
@@ -1231,7 +1222,6 @@ pub fn finish_refined_restore<SendChain, ReceiveChain, Material>(
 
 /// Checked restoration builder that binds one concrete KDF executor to both
 /// directional chains before any restored material can be published.
-#[derive(Clone)]
 #[cfg_attr(feature = "proverif", hax_lib::fstar::before("noeq"))]
 pub struct ConcreteRatchetRestore {
 	refined: RefinedRatchetRestore<ConcreteRatchetChain, ConcreteRatchetChain, RatchetMaterial>,

@@ -428,13 +428,13 @@ pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::Der
 
 pub trait SignaturePk {}
 
-pub struct RemotePrincipal<PkType: SignaturePk> {
+pub struct EstablishedRemote<PkType: SignaturePk> {
 	pk: PkType,
 	ratchet: RatchetManager,
 }
 
-impl<PkType: SignaturePk> RemotePrincipal<PkType> {
-	pub fn new(pk: PkType, ratchet: RatchetManager) -> Self {
+impl<PkType: SignaturePk> EstablishedRemote<PkType> {
+	pub(crate) fn new(pk: PkType, ratchet: RatchetManager) -> Self {
 		Self { pk, ratchet }
 	}
 
@@ -442,11 +442,11 @@ impl<PkType: SignaturePk> RemotePrincipal<PkType> {
 		&self.pk
 	}
 
-	pub fn ratchet(&self) -> &RatchetManager {
+	pub(crate) fn ratchet(&self) -> &RatchetManager {
 		&self.ratchet
 	}
 
-	pub fn ratchet_mut(&mut self) -> &mut RatchetManager {
+	pub(crate) fn ratchet_mut(&mut self) -> &mut RatchetManager {
 		&mut self.ratchet
 	}
 }
@@ -504,6 +504,18 @@ mod tests {
 		assert_eq!(nonce_bytes(left.nonce()), nonce_bytes(right.nonce()));
 	}
 
+	fn key_material_snapshot(material: &KeyMaterial) -> (Vec<u8>, Vec<u8>) {
+		(
+			key_bytes(material.key()).to_vec(),
+			nonce_bytes(material.nonce()).to_vec(),
+		)
+	}
+
+	fn assert_key_material_matches_snapshot(material: &KeyMaterial, snapshot: &(Vec<u8>, Vec<u8>)) {
+		assert_eq!(key_bytes(material.key()), snapshot.0.as_slice());
+		assert_eq!(nonce_bytes(material.nonce()), snapshot.1.as_slice());
+	}
+
 	fn receive_slot_snapshot(ratchet: &RatchetManager) -> Vec<Option<(Vec<u8>, Vec<u8>)>> {
 		(0..verified_ratchet::RECEIVE_CACHE_CAPACITY as u8)
 			.map(|slot| {
@@ -536,8 +548,12 @@ mod tests {
 	}
 
 	fn set_counters(ratchet: &mut RatchetManager, send_sequence: u64, receive_sequence: u64) {
-		let send_chain = ratchet.refined.send_chain().clone();
-		let receive_chain = ratchet.refined.receive_chain().clone();
+		let send_chain = beaconcrypt_protocol_core::ratchet::RatchetChain::from_bytes(
+			*ratchet.refined.send_chain().as_bytes(),
+		);
+		let receive_chain = beaconcrypt_protocol_core::ratchet::RatchetChain::from_bytes(
+			*ratchet.refined.receive_chain().as_bytes(),
+		);
 		ratchet.refined = RatchetKernel::from_counters(
 			send_sequence,
 			receive_sequence,
@@ -1320,10 +1336,6 @@ mod tests {
 		assert_eq!(logical_snapshot(&ratchet), after_consumption);
 		assert_receive_slots_aligned(&ratchet);
 
-		let cloned = ratchet.clone();
-		assert_eq!(logical_snapshot(&cloned), logical_snapshot(&ratchet));
-		assert_receive_slots_aligned(&cloned);
-
 		ratchet.reset();
 		assert_eq!(logical_snapshot(&ratchet), (0, 0, Vec::new()));
 		assert_receive_slots_aligned(&ratchet);
@@ -1366,7 +1378,7 @@ mod tests {
 
 		let target_slot = receive_slot(&ratchet, 2).unwrap();
 		let last_slot = receive_slot(&ratchet, 4).unwrap();
-		let last_material = ratchet.recv_key(4).unwrap().clone();
+		let last_material = key_material_snapshot(ratchet.recv_key(4).unwrap());
 		assert_ne!(target_slot, last_slot);
 
 		assert_eq!(
@@ -1375,7 +1387,7 @@ mod tests {
 		);
 		assert_eq!(receive_slot(&ratchet, 2), None);
 		assert_eq!(receive_slot(&ratchet, 4), Some(target_slot));
-		assert_key_material_eq(
+		assert_key_material_matches_snapshot(
 			ratchet.receive_entry_at(target_slot).unwrap().1,
 			&last_material,
 		);
@@ -1398,7 +1410,7 @@ mod tests {
 				(
 					sequence,
 					receive_slot(&ratchet, sequence).unwrap(),
-					ratchet.recv_key(sequence).unwrap().clone(),
+					key_material_snapshot(ratchet.recv_key(sequence).unwrap()),
 				)
 			})
 			.collect::<Vec<_>>();
@@ -1411,7 +1423,7 @@ mod tests {
 		assert!(ratchet.receive_entry_at(last_slot).is_none());
 		for (sequence, slot, material) in prefix {
 			assert_eq!(receive_slot(&ratchet, sequence), Some(slot));
-			assert_key_material_eq(ratchet.recv_key(sequence).unwrap(), &material);
+			assert_key_material_matches_snapshot(ratchet.recv_key(sequence).unwrap(), &material);
 		}
 		assert_receive_slots_aligned(&ratchet);
 	}
@@ -1493,7 +1505,7 @@ mod tests {
 
 		let target_slot = receive_slot(&ratchet, 2).unwrap();
 		let old_last_slot = receive_slot(&ratchet, capacity).unwrap();
-		let old_last_material = ratchet.recv_key(capacity).unwrap().clone();
+		let old_last_material = key_material_snapshot(ratchet.recv_key(capacity).unwrap());
 		assert_ne!(target_slot, old_last_slot);
 		assert_eq!(
 			ratchet.complete_recv_key(2, true),
@@ -1501,7 +1513,10 @@ mod tests {
 		);
 		assert_eq!(ratchet.receive_cache_len(), capacity as u8 - 1);
 		assert_eq!(receive_slot(&ratchet, capacity), Some(target_slot));
-		assert_key_material_eq(ratchet.recv_key(capacity).unwrap(), &old_last_material);
+		assert_key_material_matches_snapshot(
+			ratchet.recv_key(capacity).unwrap(),
+			&old_last_material,
+		);
 		assert!(ratchet.receive_entry_at(old_last_slot).is_none());
 
 		let next_sequence = capacity + 1;
@@ -1511,35 +1526,6 @@ mod tests {
 		);
 		assert_eq!(receive_slot(&ratchet, next_sequence), Some(old_last_slot));
 		assert!(ratchet.receive_entry_at(old_last_slot).is_some());
-		assert_receive_slots_aligned(&ratchet);
-	}
-
-	#[test]
-	fn cloned_receive_cache_remains_independent_after_non_last_removal() {
-		let mut ratchet = RatchetManager::default();
-		ratchet.init_ratchets(
-			&[0xB9; KDF_STATE_SIZE],
-			beaconcrypt_protocol_core::pqxdh::beacon_ratchet_initialization(),
-		);
-		assert_eq!(ratchet.ratchet_recv_until(4), Some(4));
-
-		let cloned = ratchet.clone();
-		let cloned_logical = logical_snapshot(&cloned);
-		let cloned_chain = cloned.recv_state().as_slice().to_vec();
-		let cloned_slots = receive_slot_snapshot(&cloned);
-		assert_eq!(
-			ratchet.complete_recv_key(2, true),
-			verified_ratchet::ReceiveDisposition::Consumed
-		);
-
-		assert_eq!(logical_snapshot(&cloned), cloned_logical);
-		assert_eq!(cloned.recv_state().as_slice(), cloned_chain);
-		assert_eq!(receive_slot_snapshot(&cloned), cloned_slots);
-		assert_eq!(receive_slot(&cloned, 2), Some(1));
-		assert_eq!(receive_slot(&cloned, 4), Some(3));
-		assert_eq!(receive_slot(&ratchet, 2), None);
-		assert_eq!(receive_slot(&ratchet, 4), Some(1));
-		assert_receive_slots_aligned(&cloned);
 		assert_receive_slots_aligned(&ratchet);
 	}
 
@@ -1589,12 +1575,12 @@ mod tests {
 	}
 
 	#[test]
-	fn remote_principal_exposes_its_key_and_ratchet() {
+	fn established_remote_exposes_its_key_and_ratchet() {
 		struct TestPublicKey([u8; 4]);
 		impl SignaturePk for TestPublicKey {}
 
 		let mut principal =
-			RemotePrincipal::new(TestPublicKey([1, 2, 3, 4]), RatchetManager::default());
+			EstablishedRemote::new(TestPublicKey([1, 2, 3, 4]), RatchetManager::default());
 		assert_eq!(principal.pk().0, [1, 2, 3, 4]);
 		assert!(principal.ratchet().recv_key(1).is_none());
 		assert_eq!(principal.ratchet_mut().ratchet_recv(), Some(1),);

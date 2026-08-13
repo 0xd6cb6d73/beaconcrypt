@@ -2,10 +2,10 @@
 
 use crate::pqxdh::{AD_SIZE, derive_root_key_input, shared_secrets, zeroize_shared_secrets};
 use crate::ratchet::{
-	RatchetManager, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
+	RatchetManager, RatchetStatus, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
 	initial_ratchet_hkdf, ratchet_hkdf,
 };
-use crate::shared::{DhSecret, RemotePrincipal};
+use crate::shared::DhSecret;
 use crate::{phase1_capnp, phase2_capnp};
 use beaconcrypt_protocol_core::pqxdh as verified_pqxdh;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
@@ -33,17 +33,19 @@ enum BeaconState {
 	Established {
 		control: verified_pqxdh::BeaconEstablished,
 		associated_data: [u8; AD_SIZE],
+		ratchet: RatchetManager,
 	},
 	Aborted {
 		control: verified_pqxdh::BeaconAborted,
 	},
 }
 
+/// Opaque beacon handle exposed by the C API and owned by its caller.
 pub struct Beacon {
 	identity_key: crypto_sign::KeyPair,
 	identity_key_kid: u64,
 	state: BeaconState,
-	server: RemotePrincipal<crypto_sign::PublicKey>,
+	server_id: crypto_sign::PublicKey,
 }
 
 pub trait ProviderBeacon {
@@ -66,7 +68,7 @@ impl Beacon {
 				prekey: crypto_kx::KeyPair::generate().unwrap(),
 				pq_key: crypto_kem::mlkem768::KeyPair::generate().unwrap(),
 			},
-			server: RemotePrincipal::new(id, RatchetManager::default()),
+			server_id: id,
 		}
 	}
 	pub fn identity_key_kid(&self) -> u64 {
@@ -79,7 +81,7 @@ impl Beacon {
 		&self.identity_key.secret_key
 	}
 	pub fn server_id(&self) -> &crypto_sign::PublicKey {
-		self.server.pk()
+		&self.server_id
 	}
 	pub fn server_kid(&self) -> u64 {
 		match &self.state {
@@ -107,11 +109,12 @@ impl Beacon {
 			_ => None,
 		}
 	}
-	pub fn ratchet_manager(&self) -> &RatchetManager {
-		self.server.ratchet()
-	}
-	pub fn ratchet_manager_mut(&mut self) -> &mut RatchetManager {
-		self.server.ratchet_mut()
+	#[cfg(test)]
+	pub(crate) fn ratchet_manager(&self) -> Option<&RatchetManager> {
+		match &self.state {
+			BeaconState::Established { ratchet, .. } => Some(ratchet),
+			_ => None,
+		}
 	}
 	pub fn associated_data(&self) -> Option<[u8; AD_SIZE]> {
 		match self.state {
@@ -121,7 +124,14 @@ impl Beacon {
 			_ => None,
 		}
 	}
-	pub fn set_associated_data(&mut self, data: [u8; AD_SIZE]) {
+	pub fn ratchet_status(&self) -> Option<RatchetStatus> {
+		match &self.state {
+			BeaconState::Established { ratchet, .. } => Some(ratchet.status()),
+			_ => None,
+		}
+	}
+	#[cfg(test)]
+	pub(crate) fn set_associated_data(&mut self, data: [u8; AD_SIZE]) {
 		if let BeaconState::Established {
 			associated_data, ..
 		} = &mut self.state
@@ -130,21 +140,32 @@ impl Beacon {
 		}
 	}
 	pub fn encrypt_message(&mut self, b: &[u8]) -> Option<crate::Encrypted> {
-		let kid = self.server_kid();
 		let sender = self.identity_key_kid;
-		let ad = self.associated_data()?;
-		encrypt_message_with_ratchet(b, kid, sender, &ad, self.server.ratchet_mut())
+		let BeaconState::Established {
+			control,
+			associated_data,
+			ratchet,
+		} = &mut self.state
+		else {
+			return None;
+		};
+		encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, ratchet)
 	}
 	pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> {
-		let kid = self.server_kid();
-		let ad = self.associated_data()?;
-		decrypt_message_with_ratchet(b, kid, &ad, self.server.ratchet_mut())
+		let BeaconState::Established {
+			control,
+			associated_data,
+			ratchet,
+		} = &mut self.state
+		else {
+			return None;
+		};
+		decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, ratchet)
 	}
 
 	fn abort_registration(&mut self, control: verified_pqxdh::BeaconInitSent) {
 		let server_kid = control.server_key_id();
 		self.identity_key_kid = server_kid;
-		self.server.ratchet_mut().reset();
 		self.state = BeaconState::Aborted {
 			control: verified_pqxdh::beacon_abort_init(control),
 		};
@@ -465,16 +486,15 @@ impl ProviderBeacon for Beacon {
 			self.abort_registration(control);
 			return None;
 		}
-		if self.server.pk().as_bytes() != &server_binding.identity_public_key {
+		if self.server_id.as_bytes() != &server_binding.identity_public_key {
 			self.abort_registration(control);
 			return None;
 		}
-		let remote = &mut self.server;
-		*remote.ratchet_mut() = ratchet;
 		self.identity_key_kid = authenticated.assigned_key_id();
 		self.state = BeaconState::Established {
 			control: verified_pqxdh::beacon_commit(authenticated),
 			associated_data,
+			ratchet,
 		};
 		Some(plaintext)
 	}

@@ -54,7 +54,7 @@ I don't use rust a lot, so the code is probably fairly naive. It provides both a
 
 The reference implementation expects that all beacons are compiled with the server's public key, and that beaconcrypt is initialized with it.
 
-The server is currently not very usable as it doesn't support saving the state of any individual beacon. This means that if your server goes down, you will not be able to communicate with any previously-registered beacons anymore. The server does support being initialized with an Ed25519 seed (32 random bytes). Users wishing to use the server in practical cases should use this interface to ensure their server keeps its identity across reboots.
+The Rust API supports durable full-server state through `PersistentServer` and a caller-supplied `SnapshotStore`. Snapshot records are neither encrypted nor self-authenticating; the store is trusted to preserve their integrity and provenance, maintain one rollback-resistant authoritative head, and implement linearizable durable compare-and-swap. Restoration and every potentially mutating result are fenced by lineage, monotonic generation, complete-snapshot digest, and compare-and-swap. C, Go, and Python additionally expose plaintext trusted-checkpoint export and restoration for single-owner applications. Those convenience APIs require callers to save immediately after every mutation and cannot detect rollback to an older exported checkpoint; they do not replace a durable authoritative store. Runnable save/restore examples are provided for [Rust](examples/rust/main.rs), [Python](examples/python/main.py), [C](examples/c/main.c), and [Go](examples/go/main.go). See [server-state persistence](doc/persistence.md).
 
 ## Building
 You will need [Capn'Proto](https://capnproto.org/install.html) (just the binaries) and a recent version of rust for every build.
@@ -147,7 +147,7 @@ From Rust, usage is mostly just constructing role-specific `Server` and `Beacon`
 
 From python, you can just use the wheels published to pypi, see the [example](examples/python/main.py) for usage.
 
-The [C interface](src/cbinds.rs) emulates the class interface, the caller is responsible for providing a valid state object to every function. See the [example](examples/c/main.c) for usage.
+The [C interface](src/cbinds.rs) uses opaque role-specific handles; the caller is responsible for their lifetimes and for freeing returned buffers. See the [example](examples/c/main.c) for usage.
 
 Go is unfortunately the worst off as the bindings use cgo and therefore building your binary requires being able to link to a version of the library built with the `gobinds` feature. See the [example](examples/go/main.go) for usage.
 

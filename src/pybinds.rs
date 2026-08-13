@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: 0BSD
 
+use crate::persistence::BindingServer;
 use crate::server::{RecvState, SendState};
-use crate::{
-	Beacon as PqxdhBeacon, ProviderBeacon, ProviderServer, RegResponse, Server as PqxdhServer,
-};
+use crate::{Beacon as PqxdhBeacon, ProviderBeacon, RegResponse};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -43,7 +42,8 @@ impl EncryptStatePy {
 		&self.data
 	}
 
-	/// Return the complete ratchet state as JSON.
+	/// Return inert plaintext ratchet JSON for observation only.
+	/// It is secret-bearing, unauthenticated, and not restorable.
 	pub fn state(&self) -> &str {
 		&self.state
 	}
@@ -57,53 +57,63 @@ impl EncryptStatePy {
 	}
 }
 
-impl TryFrom<SendState> for EncryptStatePy {
-	type Error = serde_json::Error;
-
-	fn try_from(value: SendState) -> Result<Self, Self::Error> {
-		let state = serde_json::to_string(&value.state)?;
-		Ok(Self {
+impl From<SendState> for EncryptStatePy {
+	fn from(value: SendState) -> Self {
+		let state = value.state.as_str().to_owned();
+		Self {
 			data: value.data,
 			state,
 			kid: value.kid,
 			seq: value.seq,
-		})
+		}
 	}
 }
 
-impl TryFrom<RecvState> for EncryptStatePy {
-	type Error = serde_json::Error;
-
-	fn try_from(value: RecvState) -> Result<Self, Self::Error> {
-		let state = serde_json::to_string(&value.state)?;
-		Ok(Self {
+impl From<RecvState> for EncryptStatePy {
+	fn from(value: RecvState) -> Self {
+		let state = value.state.as_str().to_owned();
+		Self {
 			data: value.data,
 			state,
 			kid: value.kid,
 			seq: value.seq,
-		})
+		}
 	}
 }
 
 #[pyclass(name = "BeaconCryptServer")]
 pub struct Server {
-	_0: PqxdhServer,
+	_0: BindingServer,
 }
 
 #[pymethods]
 impl Server {
 	#[new]
-	fn new(kid: u64, id_seed: Option<&[u8]>) -> Self {
-		Self {
-			_0: PqxdhServer::new(kid, id_seed),
-		}
+	fn new(kid: u64, id_seed: Option<&[u8]>) -> PyResult<Self> {
+		BindingServer::create_binding(kid, id_seed)
+			.map(|server| Self { _0: server })
+			.map_err(|error| PyValueError::new_err(error.to_string()))
 	}
 
+	/// Restore a server from trusted plaintext checkpoint bytes.
+	///
+	/// The caller must reject stale or untrusted checkpoints. Exported bytes do not authenticate
+	/// themselves and cannot detect rollback to an older export. Restoration advances the
+	/// generation, so export and save the returned server immediately before using it.
 	#[staticmethod]
-	fn from_state(server_state: &str) -> PyResult<Self> {
-		<PqxdhServer as ProviderServer>::try_from_state(server_state)
-			.map(|provider| Self { _0: provider })
-			.ok_or_else(|| PyValueError::new_err("invalid server state"))
+	fn from_state(state: Vec<u8>) -> PyResult<Self> {
+		BindingServer::restore_binding(state)
+			.map(|server| Self { _0: server })
+			.map_err(|error| PyValueError::new_err(error.to_string()))
+	}
+
+	/// Export the current plaintext checkpoint.
+	///
+	/// Save it immediately after every state-changing call and before using that call's output.
+	fn export_state(&self) -> PyResult<Vec<u8>> {
+		self._0
+			.export_binding_state()
+			.map_err(|error| PyValueError::new_err(error.to_string()))
 	}
 
 	fn register_beacon(
@@ -111,10 +121,12 @@ impl Server {
 		reg_buffer: &[u8],
 		initial_message: Option<&[u8]>,
 	) -> Option<RegResponsePy> {
-		match self._0.get_shared_secret(reg_buffer) {
+		match self._0.get_shared_secret(reg_buffer).ok().flatten() {
 			Some(secrets) => self
 				._0
 				.build_registration_response(secrets, initial_message)
+				.ok()
+				.flatten()
 				.map(|response| response.into()),
 			None => None,
 		}
@@ -123,37 +135,41 @@ impl Server {
 	fn decrypt_beacon_message(&mut self, data: Vec<u8>) -> Option<Vec<u8>> {
 		self._0
 			.decrypt_message(&data)
+			.ok()
+			.flatten()
 			.map(|decrypted| decrypted.plaintext)
 	}
 
 	fn encrypt_to_beacon(&mut self, data: Vec<u8>, kid: u64) -> Option<Vec<u8>> {
 		self._0
 			.encrypt_message(&data, kid)
+			.ok()
+			.flatten()
 			.map(|encrypted| encrypted.ciphertext)
 	}
 
 	fn encrypt_and_update(&mut self, data: Vec<u8>, kid: u64) -> Option<EncryptStatePy> {
 		self._0
 			.encrypt_and_update(&data, kid)
-			.and_then(|state| state.try_into().ok())
+			.ok()
+			.flatten()
+			.map(EncryptStatePy::from)
 	}
 
 	fn encrypt_and_update_json(&mut self, data: Vec<u8>, kid: u64) -> Option<String> {
-		self._0.encrypt_and_update_json(&data, kid)
+		self._0.encrypt_and_update_json(&data, kid).ok().flatten()
 	}
 
 	fn decrypt_and_update(&mut self, data: Vec<u8>) -> Option<EncryptStatePy> {
 		self._0
 			.decrypt_and_update(&data)
-			.and_then(|state| state.try_into().ok())
+			.ok()
+			.flatten()
+			.map(EncryptStatePy::from)
 	}
 
 	fn decrypt_and_update_json(&mut self, data: Vec<u8>) -> Option<String> {
-		self._0.decrypt_and_update_json(&data)
-	}
-
-	fn export_state(&self) -> Option<String> {
-		self._0.export_state()
+		self._0.decrypt_and_update_json(&data).ok().flatten()
 	}
 
 	fn id_pk(&self) -> &[u8] {
