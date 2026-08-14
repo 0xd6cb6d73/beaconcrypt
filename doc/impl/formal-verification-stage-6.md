@@ -4,7 +4,7 @@
 
 ## Status and scope
 
-This document records the original Stage 6 snapshot. The maintained core stores the configured public key and numeric identity-key ID together in beacon state and proves their preservation and agreement through successful response-key and authenticated sender-ID acceptance; see [the current analysis](formal-verification-analysis.md#pqxdh-registration-and-key-establishment). The maintained adapter additionally uses affine establishment-gated runtime state and trusted-store generation/head CAS persistence, but those mechanisms do not strengthen the Stage 6 F* theorem and remain external refinements. Adapter-only equality and persistence descriptions below are historical.
+This document records the original Stage 6 snapshot. The maintained core stores the configured public key and numeric identity-key ID together in beacon state and proves their preservation and agreement through successful response-key and authenticated sender-ID acceptance; see [the current analysis](../formal-verification-analysis.md#pqxdh-registration-and-key-establishment). The maintained adapter additionally uses affine establishment-gated runtime state and trusted-store generation/head CAS persistence, but those mechanisms do not strengthen the Stage 6 F* theorem and remain external refinements. Adapter-only equality and persistence descriptions below are historical.
 
 Stage 6 adds the handwritten F* semantics for the extracted PQXDH protocol
 core. It proves exact key tagging and validation, registration-ID and root

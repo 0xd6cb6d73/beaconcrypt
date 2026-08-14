@@ -427,7 +427,7 @@ At the end of Step 2, the production `RatchetManager` remained unchanged. The in
 
 ### Step 3 implementation
 
-The detailed implementation record is in [`formal-verification-stage-3.md`](formal-verification-stage-3.md).
+The detailed implementation record is in [`formal-verification-stage-3.md`](impl/formal-verification-stage-3.md).
 
 The production crate depends on `beaconcrypt-protocol-core`, and `RatchetManager` now wraps one private `ConcreteRatchetKernel`. This extracted concrete kernel owns the logical counters and packed sequence cache, both fixed-width executor-bearing chain values, and `[Option<CachedReceiveKey<RatchetMaterial>>; 50]`; production no longer stores parallel chains, receive slots, role-specific chain wrappers, or persistent libsodium material. The cached record fields are private, and every live record repeats the sequence that caused the kernel to store its material.
 
@@ -442,7 +442,7 @@ The verified production trace remains restricted to high-level encryption and de
 ### Step 4 implementation
 
 The detailed implementation record is in
-[`formal-verification-stage-4.md`](formal-verification-stage-4.md).
+[`formal-verification-stage-4.md`](impl/formal-verification-stage-4.md).
 
 The protocol core now owns deterministic PQXDH composition: disjoint encoded
 key type/role markers, the exact padding and DH/KEM root input, ordered associated data,
@@ -474,7 +474,7 @@ the agreement, transcript, associated-data, and initialization proofs.
 ### Step 5 implementation
 
 The detailed implementation record is in
-[`formal-verification-stage-5.md`](formal-verification-stage-5.md).
+[`formal-verification-stage-5.md`](impl/formal-verification-stage-5.md).
 
 The server now derives a canonical 64-byte registration identifier from the
 verified beacon identity and signed one-time public key. The production adapter
@@ -518,7 +518,7 @@ deferred here.
 ### Step 6 implementation
 
 The detailed implementation record is in
-[`formal-verification-stage-6.md`](formal-verification-stage-6.md).
+[`formal-verification-stage-6.md`](impl/formal-verification-stage-6.md).
 
 The Stage 5 extraction was reviewed before adding semantic claims. Its fixed
 copy loops reached F* through a library operation without a useful
@@ -539,7 +539,7 @@ and the target checks them without `--lax`.
 ### Step 7 implementation
 
 The detailed implementation record is in
-[`formal-verification-stage-7.md`](formal-verification-stage-7.md).
+[`formal-verification-stage-7.md`](impl/formal-verification-stage-7.md).
 That record is historical; the attacker-owned-registration extension described
 below is tracked by the current analysis and canonical trust-boundary inventory.
 
@@ -626,7 +626,7 @@ security query. `make check-generated` covers both generated directories.
 ### Step 8 implementation
 
 The detailed implementation record is in
-[`formal-verification-stage-8.md`](formal-verification-stage-8.md).
+[`formal-verification-stage-8.md`](impl/formal-verification-stage-8.md).
 
 The repository now owns [`flake.nix`](../flake.nix) and
 [`flake.lock`](../flake.lock). The flake extends hax's revision-pinned proof
@@ -668,7 +668,7 @@ changed in Stage 8.
 ### Step 9 implementation
 
 The detailed implementation record is in
-[`formal-verification-stage-9.md`](formal-verification-stage-9.md), and the
+[`formal-verification-stage-9.md`](impl/formal-verification-stage-9.md), and the
 canonical maintained inventory is
 [`crates/protocol-core/proofs/trusted-boundary.md`](../crates/protocol-core/proofs/trusted-boundary.md).
 

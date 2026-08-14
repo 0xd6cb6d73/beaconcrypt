@@ -14,7 +14,7 @@ generated-code exceptions, embedded ProVerif replacements, every handwritten
 F*/ProVerif review unit, and the result-classification control.
 
 The canonical inventory is
-[`crates/protocol-core/proofs/trusted-boundary.md`](../crates/protocol-core/proofs/trusted-boundary.md).
+[`crates/protocol-core/proofs/trusted-boundary.md`](../../crates/protocol-core/proofs/trusted-boundary.md).
 Its companion manifest fingerprints the complete monitored surface, while a
 standalone checker verifies file membership, hashes, backend structure, and
 exception use. The existing formal-verification CI entry point now runs this

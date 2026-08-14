@@ -147,7 +147,7 @@ it omits Rust's all-zero-DH error, which F* checks separately.
 The wire protocol, ideal cryptographic rules, honest participants, replay
 owner, compromise schedule, proof-bookkeeping events, and security questions
 are also handwritten. This boundary is described in the
-[Stage 7 implementation record](formal-verification-stage-7.md#generated-proverif-boundary)
+[Stage 7 implementation record](impl/formal-verification-stage-7.md#generated-proverif-boundary)
 and the [generated-code exceptions](../crates/protocol-core/proofs/trusted-boundary.md#generated-code-exceptions),
 and the resulting rules are visible in
 [`lib.pvl`](../crates/protocol-core/proofs/pro-verif/extraction/lib.pvl#L347-L357).
@@ -497,7 +497,7 @@ The corpus does not prove:
   resistance, or memory safety of the concrete primitive implementations;
 - constant-time or information-flow behavior of the selected pure core or its
   adapters; even the redundant all-zero-DH array comparison has no formal
-  timing guarantee ([documented limitation](formal-verification-stage-4.md#L123-L127));
+  timing guarantee ([documented limitation](impl/formal-verification-stage-4.md#L123-L127));
 - a complete behavioral specification for every extracted function and error
   path; extraction checks generated safety conditions, but the beacon abort
   helpers and arbitrary malformed/finishing errors have no handwritten semantic
@@ -688,7 +688,7 @@ Its manifest and structural checks make unacknowledged boundary drift fail the
 verification gate. Updating the recorded hashes can make an intentional change
 pass, so this is a review-control improvement, not a proof of the inventoried
 assumptions or of the adequacy of a human review
-([Stage 9 scope](formal-verification-stage-9.md#result-and-scope)).
+([Stage 9 scope](impl/formal-verification-stage-9.md#result-and-scope)).
 
 ## How the theorems yield concrete security statements
 
@@ -819,9 +819,9 @@ The current proof entry point is:
 make -C crates/protocol-core verify
 ```
 
-It enters the locked Nix environment, checks exact tool identities, regenerates both proof backends, enforces the local no-`assume`/no-`admit` policy, strictly checks generated and handwritten F*, and runs all ProVerif scenarios. After intentional boundary diffs have been reviewed and their hashes refreshed, the separate `make -C crates/protocol-core check-inventory` command checks the trust-boundary inventory. The reviewed tool bundle is recorded in the [Stage 8 document](formal-verification-stage-8.md#locked-proof-bundle).
+It enters the locked Nix environment, checks exact tool identities, regenerates both proof backends, enforces the local no-`assume`/no-`admit` policy, strictly checks generated and handwritten F*, and runs all ProVerif scenarios. After intentional boundary diffs have been reviewed and their hashes refreshed, the separate `make -C crates/protocol-core check-inventory` command checks the trust-boundary inventory. The reviewed tool bundle is recorded in the [Stage 8 document](impl/formal-verification-stage-8.md#locked-proof-bundle).
 
-The historical Stage 3 through Stage 9 documents describe how this boundary was built. Older statements such as “semantic proofs remain future work,” older tool versions, hashes, and test counts describe their stage at that time. The current proof claims are the Stage 6 F* results plus the composed failed-receive lemmas, the current ProVerif model (which extends the Stage 7 baseline with attacker-owned registrations and explicit failed-receive scenarios), and Stage 8 reproducibility controls. Stage 9 adds a mechanically checked [trust-boundary inventory](../crates/protocol-core/proofs/trusted-boundary.md); its historical snapshot changed no theorem, symbolic rule, security question, or production behavior, while the maintained inventory now records the later proof extensions. Stage 8 likewise explicitly changed no theorem, model, or expected query result ([Stage 8 scope](formal-verification-stage-8.md#result-and-scope)).
+The historical Stage 3 through Stage 9 documents describe how this boundary was built. Older statements such as “semantic proofs remain future work,” older tool versions, hashes, and test counts describe their stage at that time. The current proof claims are the Stage 6 F* results plus the composed failed-receive lemmas, the current ProVerif model (which extends the Stage 7 baseline with attacker-owned registrations and explicit failed-receive scenarios), and Stage 8 reproducibility controls. Stage 9 adds a mechanically checked [trust-boundary inventory](../crates/protocol-core/proofs/trusted-boundary.md); its historical snapshot changed no theorem, symbolic rule, security question, or production behavior, while the maintained inventory now records the later proof extensions. Stage 8 likewise explicitly changed no theorem, model, or expected query result ([Stage 8 scope](impl/formal-verification-stage-8.md#result-and-scope)).
 
 The result gate requires exactly:
 

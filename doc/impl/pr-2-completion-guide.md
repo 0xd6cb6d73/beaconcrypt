@@ -6,7 +6,7 @@
 **Base:** `proof`
 **Purpose of this guide:** finish PR #2 so it implements the intended mechanized receive-slot refinement, without undoing the useful fixed-array work already present or changing unrelated protocol behavior.
 
-> Historical scope notice: this guide records the constraints of the receive-slot-only PR #2 work. Its parallel production receive array, returned-slot/removal-plan boundary, send-key staging, and former six-field `RatchetManager` schema were superseded by the extracted `RefinedRatchet` follow-up. The current kernel owns typed chains and fixed concrete-material slots, production supplies only the opaque HKDF step, and persistence uses the five fields documented in [persistence.md](persistence.md) and [formal-verification-stage-3.md](formal-verification-stage-3.md).
+> Historical scope notice: this guide records the constraints of the receive-slot-only PR #2 work. Its parallel production receive array, returned-slot/removal-plan boundary, send-key staging, and former six-field `RatchetManager` schema were superseded by the extracted `RefinedRatchet` follow-up. The current kernel owns typed chains and fixed concrete-material slots, production supplies only the opaque HKDF step, and persistence uses the five fields documented in [persistence.md](../persistence.md) and [formal-verification-stage-3.md](formal-verification-stage-3.md).
 
 ---
 
@@ -1012,7 +1012,7 @@ State that:
 - `RefinedSendKey<Material>` keeps the send sequence and material together until consuming finish; and
 - the older logical APIs remain only as proof-compatibility surfaces.
 
-### `doc/formal-verification-stage-3.md`
+### `doc/impl/formal-verification-stage-3.md`
 
 Describe the structural invariant:
 

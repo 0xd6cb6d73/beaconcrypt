@@ -10,7 +10,7 @@ The extracted generic `RefinedRatchet<SendChain, ReceiveChain, Material>` remain
 
 The concrete cryptographic boundary is represented by `SymmetricRatchetKdfRequest`, whose private fields contain the exact core-selected 32-byte input and the exact `SYM_RATCHET_INFO` bytes, plus fixed-output executors for the initial 64-byte expansion and each later 76-byte expansion. `derive_initial_ratchet_chains` constructs that request from the agreed root, partitions the executor output, and selects complementary role directions; `derive_beacon_ratchet_kernel` and `derive_server_ratchet_kernel` construct the role-bound `ConcreteRatchetKernel` values directly. `derive_ratchet_step` constructs the same request from the exact old chain, and the concrete chain carries its executor unchanged into the next chain. Public `concrete_seal_next` and `concrete_open_and_finish` select that fixed step internally, so production supplies only the request executor and the ephemeral seal/open callback; it no longer converts persistent core values into role-specific chain/material wrappers or reconstructs a `RatchetStep` outside extraction. Receive admission, whole-plan destination preflight, bounded ordered derivation, tagged lookup, retention, consumption, and swap-removal remain inside the kernel. Seal/open callbacks borrow core `RatchetMaterial`; production converts its key and nonce arrays only ephemerally for the corresponding libsodium call.
 
-The concrete restoration builder accepts each `(sequence, RatchetMaterial)` pair in one checked operation, seals that sequence into the cached value, reconstructs control and cached slots together, and binds the same executor into both restored directional chains through `start_concrete_restore`, `concrete_restore_receive_key`, and `finish_concrete_restore`. The internal payload retains the five fields `send_key`, `recv_key`, `send_ctr`, `recv_past`, and `recv_ctr`; serialization reads active sequence/material pairs through the tag-checking accessor and emits them in numeric order, while import rejects duplicate and noncanonical numeric keys before `HashMap` insertion and supplies sorted pairs to the builder. Imports with more than 50 outstanding receive keys and legacy objects containing `send_past` are rejected. The unconditional builder lemmas prove only structural sequence/material association. The separate proof-only `reachable_restore` relation starts only when trusted persistence provenance supplies canonical live chains and cached material. Production attempts to discharge that premise through `PersistentServer`, whose `SnapshotStore` contract requires payload integrity and provenance plus a linearizable, durable, rollback-resistant lineage/generation/head CAS before activation and result release. Snapshots have no cryptographic authentication or encryption, and F* does not verify serde, the store contract, crash behavior, or deployment fencing. See Step 3 of the [formal verification plan](../../doc/formal-verification.md) and the [Stage 3 implementation record](../../doc/formal-verification-stage-3.md).
+The concrete restoration builder accepts each `(sequence, RatchetMaterial)` pair in one checked operation, seals that sequence into the cached value, reconstructs control and cached slots together, and binds the same executor into both restored directional chains through `start_concrete_restore`, `concrete_restore_receive_key`, and `finish_concrete_restore`. The internal payload retains the five fields `send_key`, `recv_key`, `send_ctr`, `recv_past`, and `recv_ctr`; serialization reads active sequence/material pairs through the tag-checking accessor and emits them in numeric order, while import rejects duplicate and noncanonical numeric keys before `HashMap` insertion and supplies sorted pairs to the builder. Imports with more than 50 outstanding receive keys and legacy objects containing `send_past` are rejected. The unconditional builder lemmas prove only structural sequence/material association. The separate proof-only `reachable_restore` relation starts only when trusted persistence provenance supplies canonical live chains and cached material. Production attempts to discharge that premise through `PersistentServer`, whose `SnapshotStore` contract requires payload integrity and provenance plus a linearizable, durable, rollback-resistant lineage/generation/head CAS before activation and result release. Snapshots have no cryptographic authentication or encryption, and F* does not verify serde, the store contract, crash behavior, or deployment fencing. See Step 3 of the [formal verification plan](../../doc/formal-verification.md) and the [Stage 3 implementation record](../../doc/impl/formal-verification-stage-3.md).
 
 The generic F* refinement lemmas remain parametric, but the concrete layer closes the production specialization. `symmetric_ratchet_kdf_request_is_exact` proves that every core-created request contains the exact input and `SYM_RATCHET_INFO`; `ratchet_step_uses_exact_chain_and_partition` proves exact old-chain handoff and the 32/32/12-byte output partition; `concrete_ratchet_step_preserves_executor` proves that every next chain retains the same executor; `concrete_kernel_new_is_reachable`, `concrete_seal_next_preserves_reachability`, and `concrete_open_and_finish_preserves_reachability` specialize the lifetime derivation invariant and its public transitions to `ConcreteRatchetKernel`. In the PQXDH layer, `authenticated_registration_derives_common_fixed_root` bridges authenticated equal root-input transcripts under one fixed pure root derivation, `concrete_initial_kernels_are_complementary` and `concrete_initial_kernels_are_reachable` connect the agreed root to both role constructors, and `concrete_directional_materials_agree` proves at every natural-number sequence that beacon-send material equals server-receive material and server-send material equals beacon-receive material. The capstone `authenticated_registrations_establish_concrete_session` composes authenticated root agreement, direct role-kernel construction, fresh concrete reachability, and both material equalities at an arbitrary sequence. `beacon_seal_server_open_preserves_concrete_session` and `server_seal_beacon_open_preserves_concrete_session` prove that the paired reachable-session invariant survives the corresponding public seal/open attempts for every pure callback outcome. These results compose exact initial directions, one fixed lifetime executor, all-sequence cross-role material agreement, and public lifecycle preservation without an adapter-reconstructed `RatchetStep`.
 
@@ -45,7 +45,7 @@ ID.
 
 See Step 4 of the
 [formal verification plan](../../doc/formal-verification.md) and the
-[Stage 4 implementation record](../../doc/formal-verification-stage-4.md).
+[Stage 4 implementation record](../../doc/impl/formal-verification-stage-4.md).
 
 Stage 5 derives a canonical registration ID from the verified beacon identity and signed one-time public key. The adapter refines the core's fresh/consumed classification with a persistent set, consumes an ID before returning a pending token, and rejects replay after a failed response or fresh restoration from the trusted store. The set is serialized deterministically inside the snapshot payload; malformed, duplicate, missing, and structurally incomplete histories with fewer entries than committed peers fail closed. Payload integrity and provenance, plus freshness across restarts or workers, depend on the shared conforming `SnapshotStore`. Response failure leaves the counter, peer map, and ratchet unchanged while replay history remains consumed.
 
@@ -60,7 +60,7 @@ Key allocation now rejects `u64::MAX` exhaustion and takes an explicit
 available/occupied classification for the exact next ID, so neither the
 registration path nor the compatibility allocator can wrap or overwrite a
 peer. See the
-[Stage 5 implementation record](../../doc/formal-verification-stage-5.md).
+[Stage 5 implementation record](../../doc/impl/formal-verification-stage-5.md).
 
 Stage 6 makes every proof-relevant byte layout visible to F* and adds the
 handwritten PQXDH semantic lemmas. They prove exact tagged-key round trips,
@@ -71,7 +71,7 @@ conditional on pairwise X25519/ML-KEM agreement, authenticated role identities,
 truthful replay and availability classifications, AEAD provenance for the
 assigned-ID prefix, deterministic adapter KDFs, and non-rollback single-owner
 server state. See the
-[Stage 6 implementation record](../../doc/formal-verification-stage-6.md).
+[Stage 6 implementation record](../../doc/impl/formal-verification-stage-6.md).
 
 Stage 7 adds an active-attacker ProVerif model. Its review found that the
 prekey and one-time key previously shared the same signed X25519 tag, permitting
@@ -96,7 +96,7 @@ not a production ACL. The late-compromise model proves secrecy for deleted
 initial and advanced keys while deliberately finding attacks on a cached
 skipped key and on future traffic in both directions, recording the absence of
 post-compromise security. See the
-[Stage 7 implementation record](../../doc/formal-verification-stage-7.md) and
+[Stage 7 implementation record](../../doc/impl/formal-verification-stage-7.md) and
 [current proof analysis](../../doc/formal-verification-analysis.md).
 
 The production CTX transcript delegates to the core's fixed-size commitment builder.
@@ -113,7 +113,7 @@ generated-backend exceptions, and every handwritten proof/model/control
 fragment. A category/path/SHA-256 manifest and structural checks make an
 unreviewed boundary change fail CI. See the
 [canonical inventory](proofs/trusted-boundary.md) and
-[Stage 9 implementation record](../../doc/formal-verification-stage-9.md).
+[Stage 9 implementation record](../../doc/impl/formal-verification-stage-9.md).
 
 ## Strict hax/F*/ProVerif verification
 
@@ -156,4 +156,4 @@ F* revision `7b347386330d0e5a331a220535b6f15288903234`
 checked version banner differs. Z3 4.15.3 is the newest solver bundled by this
 F* release and was qualified against the complete corpus; later F* releases
 were tested and rejected by hax's proof libraries. See the
-[Stage 8 implementation record](../../doc/formal-verification-stage-8.md).
+[Stage 8 implementation record](../../doc/impl/formal-verification-stage-8.md).

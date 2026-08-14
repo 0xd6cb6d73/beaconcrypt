@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-The main Rust crate lives in `src/`; `beacon.rs` and `server.rs` implement the protocol roles, while `cbinds.rs`, `pybinds.rs`, and the top-level Go files expose language bindings. Cap'n Proto schemas are under `src/schema/`. The dependency-free, `no_std` state-machine boundary is the workspace crate in `crates/protocol-core/`, with F* and ProVerif material in its `proofs/` directory. Integration tests live in `tests/`; examples are grouped by language in `examples/`. Protocol specifications, threat analysis, persistence notes, and verification records belong in `doc/`. `wycheproof/` and `rooterberg/` are pinned test-vector submodules; do not edit them as source trees.
+The main Rust crate lives in `src/`; `beacon.rs` and `server.rs` implement the protocol roles, while `cbinds.rs`, `pybinds.rs`, and the top-level Go files expose language bindings. Cap'n Proto schemas are under `src/schema/`. The dependency-free, `no_std` state-machine boundary is the workspace crate in `crates/protocol-core/`, with F* and ProVerif material in its `proofs/` directory. Integration tests live in `tests/`; examples are grouped by language in `examples/`. Read and write implementation plans, completion guides, and historical implementation records in `doc/impl/`. Protocol specifications, threat analysis, persistence notes, verification analysis, and other maintained reference documentation belong directly in `doc/`. `wycheproof/` and `rooterberg/` are pinned test-vector submodules; do not edit them as source trees.
 
 ## Build, Test, and Development Commands
 
