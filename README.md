@@ -93,6 +93,8 @@ cargo mutants --workspace --jobs 2 --iterate
 
 Do not use `--iterate` for the final verification pass; finish with the complete non-iterative command so stale results cannot hide a regression. Mutation testing covers the Rust implementation and complements, but does not replace, `make -C crates/protocol-core verify` or the Go and Python binding tests.
 
+Run the complete mutation suite after every substantial code addition, and fix every missed or timed-out viable mutant before considering the work complete.
+
 ### Reproducing known-answer test vectors
 
 The fixed cryptographic values used by the Rust known-answer tests can be

@@ -26,7 +26,7 @@ Mid-sentence line breaks MUST NOT be added in Markdown or other text files.
 
 ## Testing Guidelines
 
-Add Rust integration coverage as `tests/<area>.rs` and Python tests as `tests/test_<area>.py`. Exercise success, authentication failure, replay, malformed input, and state-rollback behavior for cryptographic changes. New behavior and regressions should receive focused tests. Never silently regenerate known-answer or proof artifacts—review their diffs and document why they changed. New proofs and substantial changes to existing proofs MUST include a plain-English explanation in `doc/formal-verification-analysis.md`.
+Add Rust integration coverage as `tests/<area>.rs` and Python tests as `tests/test_<area>.py`. Exercise success, authentication failure, replay, malformed input, and state-rollback behavior for cryptographic changes. New behavior and regressions should receive focused tests. After every substantial code addition, run the complete mutation suite and fix every missed or timed-out viable mutant before considering the work complete. Never silently regenerate known-answer or proof artifacts—review their diffs and document why they changed. New proofs and substantial changes to existing proofs MUST include a plain-English explanation in `doc/formal-verification-analysis.md`.
 
 ## Commit & Pull Request Guidelines
 
