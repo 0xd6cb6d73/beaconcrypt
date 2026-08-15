@@ -1,0 +1,24 @@
+[package]
+name = "beaconcrypt-core"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license-file = "../LICENSE"
+readme = "README.md"
+description = "Extractable protocol state transitions for beaconcrypt"
+repository = "https://github.com/0xd6cb6d73/beaconcrypt"
+keywords = ["cryptography", "protocol", "state-machine", "no-std"]
+categories = ["cryptography", "no-std"]
+exclude = ["Makefile", "proofs/**"]
+
+[features]
+proverif = ["dep:hax-lib"]
+test-utils = []
+
+[dependencies]
+hax-lib = { version = "=0.3.7", optional = true }
+zeroize = { version = "1.9", default-features = false, features = ["zeroize_derive"] }
+
+[lib]
+name = "beaconcrypt_core"
+path = "src/lib.rs"

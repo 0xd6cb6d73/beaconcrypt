@@ -54,7 +54,7 @@ I don't use rust a lot, so the code is probably fairly naive. It provides both a
 
 The reference implementation expects that all beacons are compiled with the server's public key, and that beaconcrypt is initialized with it.
 
-The Rust API supports durable full-server state through `PersistentServer` and a caller-supplied `SnapshotStore`. Snapshot records are neither encrypted nor self-authenticating; the store is trusted to preserve their integrity and provenance, maintain one rollback-resistant authoritative head, and implement linearizable durable compare-and-swap. Restoration, every accepted receive, and every other potentially mutating result are fenced by lineage, monotonic generation, complete-snapshot digest, and compare-and-swap. A normally rejected receive is state-neutral and performs no snapshot encoding or CAS. C, Go, and Python additionally expose plaintext trusted-checkpoint export and restoration for single-owner applications. Those convenience APIs require callers to save immediately after every accepted or otherwise state-changing operation; a normal rejected receive leaves exported checkpoint bytes unchanged. They cannot detect rollback to an older exported checkpoint and do not replace a durable authoritative store. Runnable save/restore examples are provided for [Rust](examples/rust/main.rs), [Python](examples/python/main.py), [C](examples/c/main.c), and [Go](examples/go/main.go). See [server-state persistence](doc/persistence.md).
+The Rust API supports durable full-server state through `PersistentServer` and a caller-supplied `SnapshotStore`. Snapshot records are neither encrypted nor self-authenticating; the store is trusted to preserve their integrity and provenance, maintain one rollback-resistant authoritative head, and implement linearizable durable compare-and-swap. Restoration, every accepted receive, and every other potentially mutating result are fenced by lineage, monotonic generation, complete-snapshot digest, and compare-and-swap. A normally rejected receive is state-neutral and performs no snapshot encoding or CAS. C, Go, and Python additionally expose plaintext trusted-checkpoint export and restoration for single-owner applications. Those convenience APIs require callers to save immediately after every accepted or otherwise state-changing operation; a normal rejected receive leaves exported checkpoint bytes unchanged. They cannot detect rollback to an older exported checkpoint and do not replace a durable authoritative store. Runnable save/restore examples are provided for [Rust](beaconcrypt/examples/rust/main.rs), [Python](examples/python/main.py), [C](examples/c/main.c), and [Go](examples/go/main.go). See [server-state persistence](doc/persistence.md).
 
 ## Building
 You will need [Capn'Proto](https://capnproto.org/install.html) (just the binaries) and a recent version of rust for every build.
@@ -64,7 +64,7 @@ For windows, I prefer building with stable-gnu for normal usage, and nightly-gnu
 Build and run all tests:
 ```bash
 cargo test
-cargo build --features gobinds --release --target x86_64-pc-windows-gnu
+cargo build -p beaconcrypt --features gobinds --release --target x86_64-pc-windows-gnu
 go test -a -count=1 .
 uv run maturin develop --uv
 uv run pytest tests
@@ -78,20 +78,20 @@ Mutation testing uses [cargo-mutants](https://mutants.rs/) 27.1.0. Install the p
 
 ```bash
 cargo install --locked cargo-mutants@27.1.0
-cargo mutants --workspace --jobs 2
+cargo mutants --workspace --jobs 8
 ```
 
-The checked-in [configuration](.cargo/mutants.toml) runs the top-level integration and vector tests for mutations in both `beaconcrypt` and `beaconcrypt-protocol-core`. It excludes the feature-gated C and Python adapters because those are exercised by their language-specific test suites, and it documents narrowly scoped equivalent mutations that cannot occur through valid public state.
+The checked-in [configuration](.cargo/mutants.toml) runs the top-level integration and vector tests for mutations in both `beaconcrypt` and `beaconcrypt-core`. It excludes the feature-gated C and Python adapters because those are exercised by their language-specific test suites, and it documents narrowly scoped equivalent mutations that cannot occur through valid public state.
 
 A successful run exits with status zero and reports every viable mutant as caught. Detailed outcomes are written to `mutants.out/`; `missed.txt` and `timeout.txt` must both be empty. Mutants classified as unviable failed to compile and do not indicate a test gap.
 
 After adding tests for missed mutants, rerun only the previous misses and any newly discovered mutants with:
 
 ```bash
-cargo mutants --workspace --jobs 2 --iterate
+cargo mutants --workspace --jobs 8 --iterate
 ```
 
-Do not use `--iterate` for the final verification pass; finish with the complete non-iterative command so stale results cannot hide a regression. Mutation testing covers the Rust implementation and complements, but does not replace, `make -C crates/protocol-core verify` or the Go and Python binding tests.
+Do not use `--iterate` for the final verification pass; finish with the complete non-iterative command so stale results cannot hide a regression. Mutation testing covers the Rust implementation and complements, but does not replace, `make -C beaconcrypt-core verify` or the Go and Python binding tests.
 
 Run the complete mutation suite after every substantial code addition, and fix every missed or timed-out viable mutant before considering the work complete.
 
@@ -145,11 +145,11 @@ matrix, upstream format caveats and update procedure.
 ## Usage
 The reference implementation is a library that can currently be used either from rust, through C FFI, go and python bindings. The C interface is currently only tested through the go bindings. Note that 0-length messages are explicitly disallowed by the reference implementation, as my feeling is that such messages have no purpose except testing parser edge cases. The library also doesn't handle chnking of any kind and will try to process entire messages at once in memory. It is expected that the caller should handle chunking itself if that is required.
 
-From Rust, usage is mostly just constructing role-specific `Server` and `Beacon` objects. See the [example](examples/rust/main.rs) for usage.
+From Rust, usage is mostly just constructing role-specific `Server` and `Beacon` objects. See the [example](beaconcrypt/examples/rust/main.rs) for usage.
 
 From python, you can just use the wheels published to pypi, see the [example](examples/python/main.py) for usage.
 
-The [C interface](src/cbinds.rs) uses opaque role-specific handles; the caller is responsible for their lifetimes and for freeing returned buffers. See the [example](examples/c/main.c) for usage.
+The [C interface](beaconcrypt/src/cbinds.rs) uses opaque role-specific handles; the caller is responsible for their lifetimes and for freeing returned buffers. See the [example](examples/c/main.c) for usage.
 
 Go is unfortunately the worst off as the bindings use cgo and therefore building your binary requires being able to link to a version of the library built with the `gobinds` feature. See the [example](examples/go/main.go) for usage.
 

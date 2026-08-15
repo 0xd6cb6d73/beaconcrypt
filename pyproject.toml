@@ -16,6 +16,7 @@ dynamic = ["version"]
 bindings = "pyo3"
 features = ["pybinds"]
 include = ["beaconcrypt.pyi"]
+manifest-path = "beaconcrypt/Cargo.toml"
 
 [tool.uv]
 # `maturin develop` owns the native extension installed in the development

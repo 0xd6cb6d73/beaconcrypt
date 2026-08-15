@@ -24,6 +24,8 @@ def main() -> int:
         [
             maturin,
             "generate-stubs",
+            "--manifest-path",
+            str(ROOT / "beaconcrypt" / "Cargo.toml"),
             "--features",
             "pybinds",
             "--out",

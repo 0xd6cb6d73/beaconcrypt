@@ -119,7 +119,7 @@ Where:
 
 # Protocol message
 ## CryptoFrame
-This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../src/schema/cryptoframe.capnp). It carries a key identifier (`seq`), a key identifier `keyId`, and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
+This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../beaconcrypt/src/schema/cryptoframe.capnp). It carries a key identifier (`seq`), a key identifier `keyId`, and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
 - Ratchet their `send` keychain forward and get the sequence number `key_seq`
 - Use their current `send` key to encrypt the message into a pair of temporary variables `CT` and `T` 
 - Compute the commitment `T*` using `Hash(Key, Nonce, Associated Data, T, key_seq, key_id)`
@@ -154,7 +154,7 @@ To read a `CryptoFrame`, the reader must:
 State-neutral rejection prevents unauthenticated traffic from consuming receive-cache capacity, but it trades that protection for bounded recomputation: retrying the same invalid future frame can repeat up to 50 private ratchet-KDF steps. Deployments should apply per-peer rate limits, admission quotas, or transport replay filtering as external availability controls; those controls must not encode rejection by mutating the cryptographic ratchet.
 
 ## InitKex
-This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../src/schema/phase1.capnp). It must only be run once per beacon instance. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. Ed25519 and ML-KEM-768 public keys are encoded as a one-byte type marker followed by the public-key buffer. The two X25519 fields additionally authenticate their semantic role and are encoded as `[type: u8, role: u8, key]`: `preKey` is `[0x04, 0x80, 32-byte key]` and `oneTimeKey` is `[0x04, 0x81, 32-byte key]`. Type markers occupy the low half of the byte domain and role markers the high half, so the domains are disjoint. The beacon builds this message as follows:
+This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../beaconcrypt/src/schema/phase1.capnp). It must only be run once per beacon instance. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. Ed25519 and ML-KEM-768 public keys are encoded as a one-byte type marker followed by the public-key buffer. The two X25519 fields additionally authenticate their semantic role and are encoded as `[type: u8, role: u8, key]`: `preKey` is `[0x04, 0x80, 32-byte key]` and `oneTimeKey` is `[0x04, 0x81, 32-byte key]`. Type markers occupy the low half of the byte domain and role markers the high half, so the domains are disjoint. The beacon builds this message as follows:
 - Set `identityKey` to the beacon's Ed25519 encoded identity public key
 - Set `preKey` to the complete type-and-prekey-role encoded X25519 public key signed under the beacon's identity key
 - Set `oneTimeKey` to the complete type-and-one-time-role encoded X25519 public key signed under the beacon's identity key
@@ -187,7 +187,7 @@ The server must use this message as follows:
 - Return the KEM ciphertext, derived secret, ephemeral public key and beacon public key
 
 ## KexResponse
-This message enables the beacon to obtain the elements it needs to derive the shared secret. It is defined in [phase2.capnp](../src/schema/phase2.capnp) It is intrinsically linked to the corresponding `InitKex` which intiated the protocol run. It is expected that the server will create this message immediately after parsing a valid `InitKex`. It also potentially carries the first of the server's messages to the beacon. The server must contruct it as follows:
+This message enables the beacon to obtain the elements it needs to derive the shared secret. It is defined in [phase2.capnp](../beaconcrypt/src/schema/phase2.capnp) It is intrinsically linked to the corresponding `InitKex` which intiated the protocol run. It is expected that the server will create this message immediately after parsing a valid `InitKex`. It also potentially carries the first of the server's messages to the beacon. The server must contruct it as follows:
 - Create a new key ID to assign to the beacon using checked increment; abort if
   the counter is exhausted or the exact next ID is already occupied
 - Stage a new known cryptographic identity using the beacon's public key and

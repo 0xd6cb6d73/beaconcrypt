@@ -1,6 +1,6 @@
 additional_cargo_args = ["--locked"]
 
-# Mutants in protocol-core must also be exercised by beaconcrypt's integration and vector tests.
+# Mutants in beaconcrypt-core must also be exercised by beaconcrypt's integration and vector tests.
 test_workspace = true
 
 # Keep local scratch copies small. CI uses --in-place.
@@ -10,21 +10,21 @@ gitignore = true
 # cargo-mutants does not evaluate cfg predicates, so default-feature runs would otherwise report
 # mutations in these files as missed without compiling them.
 exclude_globs = [
-	"src/cbinds.rs",
-	"src/pybinds.rs",
+	"beaconcrypt/src/cbinds.rs",
+	"beaconcrypt/src/pybinds.rs",
 ]
 
 # These mutations differ only for states that the public constructors and persistence validation cannot create: out-of-range private ratchet offsets, inconsistent results from pure core transitions, or out-of-range private cache indices.
 # The recursive lookup's remaining counter is also redundant at runtime with its independently advancing, capacity-checked slot, but is retained as the extraction backend's explicit termination measure.
 # Keep the full mutant name so source changes force re-evaluation.
 exclude_re = [
-	"^crates/protocol-core/src/ratchet\\.rs:554:63: replace - with \\+ in lookup_receive_key_from$",
-	"^crates/protocol-core/src/ratchet\\.rs:554:63: replace - with / in lookup_receive_key_from$",
-	"^crates/protocol-core/src/ratchet\\.rs:871:47: replace \\|\\| with && in refined_advance_send$",
-	"^crates/protocol-core/src/ratchet\\.rs:929:3: replace \\|\\| with && in refined_advance_receive$",
-	"^crates/protocol-core/src/ratchet\\.rs:1461:5: replace \\|\\| with && in refined_finish_receive$",
-	"^crates/protocol-core/src/ratchet\\.rs:1462:5: replace \\|\\| with && in refined_finish_receive$",
+	"^beaconcrypt-core/src/ratchet\\.rs:554:63: replace - with \\+ in lookup_receive_key_from$",
+	"^beaconcrypt-core/src/ratchet\\.rs:554:63: replace - with / in lookup_receive_key_from$",
+	"^beaconcrypt-core/src/ratchet\\.rs:871:47: replace \\|\\| with && in refined_advance_send$",
+	"^beaconcrypt-core/src/ratchet\\.rs:929:3: replace \\|\\| with && in refined_advance_receive$",
+	"^beaconcrypt-core/src/ratchet\\.rs:1461:5: replace \\|\\| with && in refined_finish_receive$",
+	"^beaconcrypt-core/src/ratchet\\.rs:1462:5: replace \\|\\| with && in refined_finish_receive$",
 
 	# These helpers are compiled only as support for the excluded C and Python adapters.
-	"^src/persistence\\.rs:[0-9]+:[0-9]+: .*BindingSnapshotStore",
+	"^beaconcrypt/src/persistence\\.rs:[0-9]+:[0-9]+: .*BindingSnapshotStore",
 ]

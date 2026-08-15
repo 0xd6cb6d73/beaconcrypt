@@ -16,7 +16,7 @@ The result will therefore be a reviewed cross-prover composition unless a separa
 
 ## Objective
 
-Add a computational proof backend for beaconcrypt that reuses the production-used [`beaconcrypt-protocol-core`](../../crates/protocol-core/README.md), hax extraction, the existing F* theorems, and the current formal-proof infrastructure as far as practical.
+Add a computational proof backend for beaconcrypt that reuses the production-used [`beaconcrypt-protocol-core`](../../beaconcrypt-core/README.md), hax extraction, the existing F* theorems, and the current formal-proof infrastructure as far as practical.
 
 The proof suite will establish properties of beaconcrypt's composition and state machine rather than re-proving the implementations of Ed25519, X25519, ML-KEM-768, HKDF-SHA-512, ChaCha20-Poly1305-IETF, BLAKE2b-512, or the random-number generator.
 
@@ -53,16 +53,16 @@ The intended negative results are equally important:
 
 ## Existing baseline and prerequisites
 
-The maintained [formal-verification analysis](../formal-verification-analysis.md) and [trust-boundary inventory](../../crates/protocol-core/proofs/trusted-boundary.md) are the baseline for all new claims.
+The maintained [formal-verification analysis](../formal-verification-analysis.md) and [trust-boundary inventory](../../beaconcrypt-core/proofs/trusted-boundary.md) are the baseline for all new claims.
 
 The existing proof assets are:
 
 - Hax-generated F* for selected `protocol-core` functions, plus handwritten lemmas for commitment construction, PQXDH control and layout, and the concrete ratchet.
-- F* proofs of the exact 229-byte CTX transcript, complete six-field injectivity, and `ctx_distinct_openings_imply_hash_collision` for arbitrary pure hash and open functions in [`Commitment.Lemmas.fst`](../../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst).
-- F* proofs of PQXDH root-input and associated-data layout, conditional equal-root composition, complementary initial ratchet directions, and deterministic commit-state relationships in [`Pqxdh.Lemmas.fst`](../../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst).
-- F* proofs of exact ratchet KDF requests and output partitions, reachability, cache capacity, failed-open retention, retry, consumption, replay, and conditional restoration in [`Ratchet.Lemmas.fst`](../../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst).
+- F* proofs of the exact 229-byte CTX transcript, complete six-field injectivity, and `ctx_distinct_openings_imply_hash_collision` for arbitrary pure hash and open functions in [`Commitment.Lemmas.fst`](../../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst).
+- F* proofs of PQXDH root-input and associated-data layout, conditional equal-root composition, complementary initial ratchet directions, and deterministic commit-state relationships in [`Pqxdh.Lemmas.fst`](../../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst).
+- F* proofs of exact ratchet KDF requests and output partitions, reachability, cache capacity, failed-open retention, retry, consumption, replay, and conditional restoration in [`Ratchet.Lemmas.fst`](../../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Ratchet.Lemmas.fst).
 - A ProVerif active-attacker model, compromise scenarios, failed-active-receive scenarios, reachability checks, and CTX/no-CTX negative controls.
-- A locked proof shell and proof entry points in the [`protocol-core` Makefile](../../crates/protocol-core/Makefile).
+- A locked proof shell and proof entry points in the [`protocol-core` Makefile](../../beaconcrypt-core/Makefile).
 
 The present proof shell pins hax 0.3.7, F*, Z3, and ProVerif, but does not pin a Coq/Rocq kernel or SSProve.
 An exploratory planning probe made hax 0.3.7 emit SSProve `.v` files for selected commitment, PQXDH, and concrete-ratchet items, but those files were not compiled and the probe is not acceptance evidence.
@@ -461,7 +461,7 @@ File responsibilities will be:
 - `NegativeControls.v`: executable counterexamples and deliberately false stronger claims, kept separate from positive results.
 - `AssumptionAudit.v` and `check-assumptions.sh`: `Print Assumptions` commands, exact output classification, and `coqchk` checks for every exported capstone.
 
-The [`protocol-core` Makefile](../../crates/protocol-core/Makefile) will gain narrowly scoped variables and targets such as `HAX_SSPROVE_ITEMS`, `extract-ssprove`, `check-ssprove-extraction`, `check-ssprove-policy`, `check-ssprove`, `verify-ssprove`, and `verify-ssprove-in-shell`.
+The [`protocol-core` Makefile](../../beaconcrypt-core/Makefile) will gain narrowly scoped variables and targets such as `HAX_SSPROVE_ITEMS`, `extract-ssprove`, `check-ssprove-extraction`, `check-ssprove-policy`, `check-ssprove`, `verify-ssprove`, and `verify-ssprove-in-shell`.
 The existing backend targets will remain independently runnable.
 The initial extraction target should preserve the current backend-enabling Cargo feature and use hax 0.3.7's supported command shape: `cargo hax -C --locked --features=proverif ';' into -i '$(HAX_SSPROVE_ITEMS)' --output-dir proofs/ssprove/extraction ssprove`.
 Renaming the currently backend-misnamed `proverif` feature is optional cleanup and SHOULD NOT be mixed into the feasibility change unless hax requires it.
@@ -688,7 +688,7 @@ This phase is part of the full record/AKE milestone and is deferred by the D5 bi
 4. Update the GitHub Actions proof job to run all proof backends, generated-diff checks, assumption checks, negative controls, and the standalone inventory check within reviewed timeouts.
 5. Update [`formal-verification-analysis.md`](../formal-verification-analysis.md) with a plain-English explanation of every new result, exact limitations, cross-prover contracts, advantage terms, and expected attacks.
 6. Update [`formal-verification.md`](../formal-verification.md), [`protocol.md`](../protocol.md), [`threat_model.md`](../threat_model.md), [`ctx-commitment.md`](../ctx-commitment.md), and [`persistence.md`](../persistence.md) only where completed theorems or approved protocol changes require it.
-7. Update [`trusted-boundary.md`](../../crates/protocol-core/proofs/trusted-boundary.md), structural counts, and `reviewed-inventory.txt` only after all generated and handwritten diffs have been reviewed.
+7. Update [`trusted-boundary.md`](../../beaconcrypt-core/proofs/trusted-boundary.md), structural counts, and `reviewed-inventory.txt` only after all generated and handwritten diffs have been reviewed.
 8. Add `doc/impl/computational-security-proof-completion.md` as an implementation record that lists theorem names, final bounds, commands, decisions, negative controls, and residual trust.
 
 #### Exit criteria

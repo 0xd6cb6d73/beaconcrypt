@@ -1,0 +1,174 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Baseline active-attacker secrecy for taskings routed to honest recipients.
+   baseline.pv also contains replicated attacker-owned registrations whose
+   complete beacon key state is public; those sessions receive only the
+   separately checked MALICIOUS_TASK_SECRET. *)
+query attacker(INITIAL_SECRET).
+query attacker(CACHED_SECRET).
+query attacker(ADVANCE_SECRET).
+query attacker(FUTURE_SECRET).
+query attacker(BEACON_RECORD_SECRET).
+
+(* For an honest beacon identity, acceptance and replay consumption agree on
+   the exact ordered, role-tagged InitKex transcript and semantic identifier.
+   The fresh origin marker makes the injective session correspondence
+   explicit without entering any cryptographic computation or replay check. *)
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      origin: bitstring;
+  inj-event(ServerAccepted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    root_input,
+    root,
+    origin
+  )) ==>
+  inj-event(BeaconInitiated(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )).
+
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      origin: bitstring;
+  inj-event(ServerAccepted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    root_input,
+    root,
+    origin
+  )) ==>
+  inj-event(RegistrationConsumed(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )).
+
+(* This is the replay theorem: no two successful persistent-set insertions can
+   correspond to one honest single-use registration origin. *)
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      origin: bitstring;
+  inj-event(RegistrationConsumed(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )) ==>
+  inj-event(BeaconInitiated(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )).
+
+(* The modeled response failure occurs only after irreversible replay
+   consumption, matching the production ordering. *)
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      origin: bitstring;
+  inj-event(ServerResponseAborted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    root_input,
+    root,
+    origin
+  )) ==>
+  inj-event(RegistrationConsumed(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )).
+
+(* Beacon acceptance implies a unique committed response agreeing on both
+   identities, assigned ID, exact transcript/root, AD, and session label. *)
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      assigned_key_id: key_id,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      associated_data: bitstring,
+      session: bitstring,
+      origin: bitstring;
+  inj-event(BeaconCommitted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    assigned_key_id,
+    root_input,
+    root,
+    associated_data,
+    session,
+    origin
+  )) ==>
+  inj-event(ServerCommitted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    assigned_key_id,
+    root_input,
+    root,
+    associated_data,
+    session,
+    origin
+  )).
+
+(* Authentication, replay resistance, peer binding, direction separation,
+   and sequence binding for every honest-role accepted record in the bounded
+   prefix.  The malicious server path emits none of these honest events. *)
+query session: bitstring,
+      message_direction: direction,
+      message_sequence: sequence,
+      sender: key_id,
+      receiver: key_id,
+      plaintext: bitstring;
+  inj-event(MessageReceived(
+    session,
+    message_direction,
+    message_sequence,
+    sender,
+    receiver,
+    plaintext
+  )) ==>
+  inj-event(MessageSent(
+    session,
+    message_direction,
+    message_sequence,
+    sender,
+    receiver,
+    plaintext
+  )).

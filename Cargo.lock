@@ -86,7 +86,7 @@ checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 name = "beaconcrypt"
 version = "0.4.3"
 dependencies = [
- "beaconcrypt-protocol-core",
+ "beaconcrypt-core",
  "capnp",
  "capnpc",
  "cbindgen",
@@ -98,7 +98,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "beaconcrypt-protocol-core"
+name = "beaconcrypt-core"
 version = "0.1.0"
 dependencies = [
  "hax-lib",

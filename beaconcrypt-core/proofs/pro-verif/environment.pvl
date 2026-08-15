@@ -1,0 +1,2429 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+
+(* Wire adapters and event vocabulary                                     *)
+(**************************************************************************)
+
+fun signed_init_kex(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+): bitstring [data].
+
+fun registration_continue(
+  beaconcrypt_core__pqxdh__t_RegistrationId
+): bitstring [data].
+fun registration_abort(
+  beaconcrypt_core__pqxdh__t_RegistrationId
+): bitstring [data].
+
+fun registration_payload(
+  beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+  bitstring
+): bitstring [data].
+
+fun kex_response(
+  bitstring,
+  bitstring,
+  bitstring,
+  key_id,
+  bitstring
+): bitstring [data].
+
+fun session_label(
+  bitstring,
+  bitstring,
+  key_id,
+  beaconcrypt_core__pqxdh__t_RootKeyInput
+): bitstring [data].
+
+(* Explicit proof state for the bounded state-neutral receive traces. *)
+(* The arguments are the committed receive counter, live chain, and exact logical cache, whose entries are newest first. *)
+type receive_cache.
+fun receive_cache_empty(): receive_cache [data].
+fun receive_cache_entry(
+  sequence,
+  bitstring,
+  receive_cache
+): receive_cache [data].
+fun receive_state(
+  sequence,
+  bitstring,
+  receive_cache
+): bitstring [data].
+
+(* Public, correctly typed junk used to construct a parseable frame whose
+   commitment and AEAD opening cannot match an honest seal_frame term. *)
+fun forged_frame_component(): bitstring [data].
+
+type replay_status.
+fun replay_fresh(): replay_status [data].
+fun replay_consumed(): replay_status [data].
+
+event BeaconInitiated(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_InitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  bitstring
+).
+event RegistrationConsumed(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_InitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  bitstring
+).
+event RegistrationReplayRejected(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_InitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  bitstring
+).
+event ServerAccepted(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_InitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  beaconcrypt_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring
+).
+event ServerResponseAborted(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_InitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  beaconcrypt_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring
+).
+event ServerCommitted(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_InitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  key_id,
+  beaconcrypt_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event BeaconCommitted(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_InitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  key_id,
+  beaconcrypt_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event MaliciousRegistrationCommitted(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_InitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  key_id,
+  beaconcrypt_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event MessageSent(
+  bitstring,
+  direction,
+  sequence,
+  key_id,
+  key_id,
+  bitstring
+).
+event MessageReceived(
+  bitstring,
+  direction,
+  sequence,
+  key_id,
+  key_id,
+  bitstring
+).
+event MessageKeyUnavailable(
+  bitstring,
+  role,
+  direction,
+  sequence,
+  bitstring
+).
+event MessageKeyCached(
+  bitstring,
+  role,
+  direction,
+  sequence,
+  bitstring
+).
+event StateCompromised(
+  bitstring,
+  role,
+  bitstring,
+  bitstring
+).
+event ReceiveRejectedNeutral(
+  bitstring,
+  sequence,
+  bitstring,
+  bitstring
+).
+event ReceiveRejectionRetried(
+  bitstring,
+  sequence,
+  bitstring,
+  bitstring
+).
+event ReceiveFutureAccepted(
+  bitstring,
+  sequence,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event ReceiveHonestFutureDelivered(
+  bitstring,
+  sequence,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event ReceiveReplayRejected(
+  bitstring,
+  sequence,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event ReceiveDelayedCachedAccepted(
+  bitstring,
+  sequence,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event ReceiveMaximumGapAccepted(
+  bitstring,
+  sequence,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event ReceiveCapacityRejected(
+  bitstring,
+  sequence,
+  bitstring,
+  bitstring
+).
+event ReceiveCachedKeyConsumed(
+  bitstring,
+  sequence,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event ReceiveAfterCapacityReleaseAccepted(
+  bitstring,
+  sequence,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event ReceiveStateCompromised(
+  bitstring,
+  sequence,
+  bitstring,
+  bitstring
+).
+
+table honest_origin(bitstring, bitstring).
+table malicious_origin(bitstring, bitstring).
+
+free SERVER_IDENTITY_SECRET: bitstring [private].
+free SERVER_KEY_ID: key_id.
+free INITIAL_SECRET: bitstring [private].
+free CACHED_SECRET: bitstring [private].
+free ADVANCE_SECRET: bitstring [private].
+free FUTURE_SECRET: bitstring [private].
+free BEACON_RECORD_SECRET: bitstring [private].
+free MALICIOUS_TASK_SECRET: bitstring [private].
+free RECEIVE_PAST_SECRET: bitstring [private].
+free RECEIVE_SKIPPED_SECRET: bitstring [private].
+free RECEIVE_TARGET_SECRET: bitstring [private].
+free RECEIVE_MAX_GAP_SECRET: bitstring [private].
+free RECEIVE_CACHED_SECRET: bitstring [private].
+free RECEIVE_AFTER_RELEASE_SECRET: bitstring [private].
+
+free replay_requests: channel [private].
+free compromise_snapshots: channel [private].
+free receive_snapshots: channel [private].
+
+(**************************************************************************)
+(* Single-owner, non-rollback registration replay state                    *)
+(**************************************************************************)
+
+(* The current production typestate creates one bundle under each fresh
+   beacon identity.  Under that invariant, one owner per honest identity is
+   equivalent to the semantic-ID set for valid bundles.  Crucially, the owner
+   records the publicly parsed InitKex and ID from the first request rather
+   than matching private originals, so a field-substitution regression makes
+   the exact-origin correspondence fail instead of blocking invisibly. *)
+let RegistrationReplayGuard(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  origin: bitstring
+) =
+  in(
+    replay_requests,
+    (
+      =beacon_identity,
+      accepted_init: beaconcrypt_core__pqxdh__t_InitKex,
+      accepted_registration_id:
+        beaconcrypt_core__pqxdh__t_RegistrationId,
+      first_reply: channel
+    )
+  );
+  event RegistrationConsumed(
+    server_identity,
+    beacon_identity,
+    accepted_init,
+    accepted_registration_id,
+    origin
+  );
+  out(first_reply, replay_fresh());
+  !in(
+    replay_requests,
+    (
+      =beacon_identity,
+      replay_init: beaconcrypt_core__pqxdh__t_InitKex,
+      replay_registration_id:
+        beaconcrypt_core__pqxdh__t_RegistrationId,
+      replay_reply: channel
+    )
+  );
+   out(replay_reply, replay_consumed()).
+
+(**************************************************************************)
+(* One honest beacon registration and its bounded record prefix            *)
+(**************************************************************************)
+
+let HonestBeacon() =
+  new beacon_identity_secret: bitstring;
+  new beacon_prekey_secret: bitstring;
+  new beacon_one_time_secret: bitstring;
+  new beacon_pq_secret: bitstring;
+  let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let beacon_prekey = x25519_public(beacon_prekey_secret) in
+  let beacon_one_time = x25519_public(beacon_one_time_secret) in
+  let beacon_pq = mlkem_public(beacon_pq_secret) in
+  let core_init = beaconcrypt_core__pqxdh__InitKex(
+    tag_ed25519(beacon_identity),
+    tag_x25519_prekey(beacon_prekey),
+    tag_x25519_one_time(beacon_one_time),
+    tag_mlkem768(beacon_pq)
+  ) in
+  let verified_init = beaconcrypt_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq
+  ) in
+  let registration_id =
+    beaconcrypt_core__pqxdh__registration_id(verified_init)
+  in
+  new registration_session: bitstring;
+  event BeaconInitiated(
+    server_identity,
+    beacon_identity,
+    core_init,
+    registration_id,
+    registration_session
+  );
+  insert honest_origin(beacon_identity, registration_session);
+  (
+  RegistrationReplayGuard(
+    server_identity,
+    beacon_identity,
+    registration_session
+  )
+  |
+  out(
+    c,
+    signed_init_kex(
+      tag_ed25519(beacon_identity),
+      sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+      sign(tag_mlkem768(beacon_pq), beacon_identity_secret)
+    )
+  );
+  out(c, registration_continue(registration_id));
+  in(c, response: bitstring);
+  let kex_response(
+    response_server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    assigned_key_id,
+    initial_frame
+  ) = response in
+  if response_server_identity = server_identity then
+    let dh1 = x25519_beacon_dh(
+      beacon_prekey_secret,
+      x25519_public(SERVER_IDENTITY_SECRET)
+    ) in
+    let dh2 = x25519_beacon_dh(beacon_identity_secret, server_ephemeral) in
+    let dh3 = x25519_beacon_dh(beacon_prekey_secret, server_ephemeral) in
+    let dh4 = x25519_beacon_dh(beacon_one_time_secret, server_ephemeral) in
+    let kem_secret = mlkem_decapsulate(kem_ciphertext, beacon_pq_secret) in
+    let shared_secrets = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+      dh1,
+      dh2,
+      dh3,
+      dh4,
+      kem_secret
+    ) in
+    let root_input =
+      beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)
+    in
+    let root = pqxdh_root(
+      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+    ) in
+    let associated_data =
+      beaconcrypt_core__pqxdh__build_associated_data(
+        server_identity,
+        beacon_identity
+      )
+    in
+    let session = session_label(
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root_input
+    ) in
+    let server_chain_1 = server_to_beacon_chain(root) in
+    let server_material_1 = ratchet_material(server_chain_1) in
+    let opened_initial = open_frame(
+      server_material_1,
+      associated_data,
+      first_sequence(),
+      SERVER_KEY_ID,
+      initial_frame
+    ) in
+    let expected_binding =
+      beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+        key_id_encoding(assigned_key_id)
+      )
+    in
+    let registration_payload(=expected_binding, initial_plaintext) = opened_initial in
+    event MessageReceived(
+      session,
+      server_to_beacon(),
+      first_sequence(),
+      SERVER_KEY_ID,
+      assigned_key_id,
+      initial_plaintext
+    );
+    event MessageKeyUnavailable(
+      session,
+      beacon_role(),
+      server_to_beacon(),
+      first_sequence(),
+      server_material_1
+    );
+    event BeaconCommitted(
+      server_identity,
+      beacon_identity,
+      core_init,
+      registration_id,
+      assigned_key_id,
+      root_input,
+      root,
+      associated_data,
+      session,
+      registration_session
+    );
+
+    (* Receive sequence three first.  The bounded receive transition derives
+       and retains sequence two, then consumes only sequence three. *)
+    let server_chain_2 = ratchet_next(server_chain_1) in
+    let server_chain_3 = ratchet_next(server_chain_2) in
+    let server_material_2 = ratchet_material(server_chain_2) in
+    let server_material_3 = ratchet_material(server_chain_3) in
+    in(c, third_frame: bitstring);
+    let third_plaintext = open_frame(
+      server_material_3,
+      associated_data,
+      next_sequence(next_sequence(first_sequence())),
+      SERVER_KEY_ID,
+      third_frame
+    ) in
+    event MessageKeyCached(
+      session,
+      beacon_role(),
+      server_to_beacon(),
+      next_sequence(first_sequence()),
+      server_material_2
+    );
+    event MessageReceived(
+      session,
+      server_to_beacon(),
+      next_sequence(next_sequence(first_sequence())),
+      SERVER_KEY_ID,
+      assigned_key_id,
+      third_plaintext
+    );
+    event MessageKeyUnavailable(
+      session,
+      beacon_role(),
+      server_to_beacon(),
+      next_sequence(next_sequence(first_sequence())),
+      server_material_3
+    );
+
+    (* Capture and acknowledge the state at this exact cache-live point.  The
+       baseline sink keeps it private; the compromise process reveals it before
+       acknowledging, so later record events are ordered after compromise. *)
+    let beacon_send_chain_1 = beacon_to_server_chain(root) in
+    new compromise_ack: channel;
+    out(
+      compromise_snapshots,
+      (
+        session,
+        ratchet_next(server_chain_3),
+        server_material_2,
+        beacon_send_chain_1,
+        compromise_ack
+      )
+    );
+    in(compromise_ack, =session);
+
+    in(c, second_frame: bitstring);
+    let second_plaintext = open_frame(
+      server_material_2,
+      associated_data,
+      next_sequence(first_sequence()),
+      SERVER_KEY_ID,
+      second_frame
+    ) in
+    event MessageReceived(
+      session,
+      server_to_beacon(),
+      next_sequence(first_sequence()),
+      SERVER_KEY_ID,
+      assigned_key_id,
+      second_plaintext
+    );
+    event MessageKeyUnavailable(
+      session,
+      beacon_role(),
+      server_to_beacon(),
+      next_sequence(first_sequence()),
+      server_material_2
+    );
+
+    in(c, fourth_frame: bitstring);
+    let fourth_plaintext = open_frame(
+      ratchet_material(ratchet_next(server_chain_3)),
+      associated_data,
+      next_sequence(next_sequence(next_sequence(first_sequence()))),
+      SERVER_KEY_ID,
+      fourth_frame
+    ) in
+    event MessageReceived(
+      session,
+      server_to_beacon(),
+      next_sequence(next_sequence(next_sequence(first_sequence()))),
+      SERVER_KEY_ID,
+      assigned_key_id,
+      fourth_plaintext
+    );
+    event MessageKeyUnavailable(
+      session,
+      beacon_role(),
+      server_to_beacon(),
+      next_sequence(next_sequence(next_sequence(first_sequence()))),
+      ratchet_material(ratchet_next(server_chain_3))
+    );
+
+    let beacon_material_1 = ratchet_material(beacon_send_chain_1) in
+    let beacon_frame = seal_frame(
+      beacon_material_1,
+      associated_data,
+      first_sequence(),
+      assigned_key_id,
+      BEACON_RECORD_SECRET
+    ) in
+    event MessageSent(
+      session,
+      beacon_to_server(),
+      first_sequence(),
+      assigned_key_id,
+      SERVER_KEY_ID,
+      BEACON_RECORD_SECRET
+    );
+    event MessageKeyUnavailable(
+      session,
+      beacon_role(),
+      beacon_to_server(),
+      first_sequence(),
+      beacon_material_1
+    );
+    out(c, beacon_frame)
+  ).
+
+(**************************************************************************)
+(* Attacker-owned beacon registration                                     *)
+(**************************************************************************)
+
+(* Every instance gives the active attacker all four freshly generated
+   beacon secrets before publishing a correctly signed registration.  The
+   server must therefore accept registrations whose complete beacon state is
+   attacker-controlled, while keeping honest-recipient task canaries isolated
+   by the application-routing branch below. *)
+let MaliciousBeacon() =
+  new beacon_identity_secret: bitstring;
+  new beacon_prekey_secret: bitstring;
+  new beacon_one_time_secret: bitstring;
+  new beacon_pq_secret: bitstring;
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let beacon_prekey = x25519_public(beacon_prekey_secret) in
+  let beacon_one_time = x25519_public(beacon_one_time_secret) in
+  let beacon_pq = mlkem_public(beacon_pq_secret) in
+  let verified_init = beaconcrypt_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq
+  ) in
+  let registration_id =
+    beaconcrypt_core__pqxdh__registration_id(verified_init)
+  in
+  new registration_session: bitstring;
+  insert malicious_origin(beacon_identity, registration_session);
+  out(c, beacon_identity_secret);
+  out(c, beacon_prekey_secret);
+  out(c, beacon_one_time_secret);
+  out(c, beacon_pq_secret);
+  out(
+    c,
+    signed_init_kex(
+      tag_ed25519(beacon_identity),
+      sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+      sign(tag_mlkem768(beacon_pq), beacon_identity_secret)
+    )
+  );
+  out(c, registration_continue(registration_id)).
+
+(**************************************************************************)
+(* Serialized, non-rollback server registration                            *)
+(**************************************************************************)
+
+let Server() =
+  in(c, incoming_init: bitstring);
+  let signed_init_kex(
+    encoded_identity,
+    signed_prekey,
+    signed_one_time,
+    signed_pq
+  ) = incoming_init in
+  let tag_ed25519(beacon_identity: bitstring) = encoded_identity in
+  let tag_x25519_prekey(beacon_prekey: bitstring) =
+    verify_signature(signed_prekey, beacon_identity)
+  in
+  let tag_x25519_one_time(beacon_one_time: bitstring) =
+    verify_signature(signed_one_time, beacon_identity)
+  in
+  let tag_mlkem768(beacon_pq: bitstring) =
+    verify_signature(signed_pq, beacon_identity)
+  in
+  let core_init = beaconcrypt_core__pqxdh__InitKex(
+    encoded_identity,
+    tag_x25519_prekey(beacon_prekey),
+    tag_x25519_one_time(beacon_one_time),
+    tag_mlkem768(beacon_pq)
+  ) in
+  let verified_init = beaconcrypt_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq
+  ) in
+  let registration_id =
+    beaconcrypt_core__pqxdh__registration_id(verified_init)
+  in
+  (* Honest agreement and replay events are scoped to an uncompromised
+     identity.  Attacker-owned identities use MaliciousServer below. *)
+  get honest_origin(=beacon_identity, registration_session: bitstring) in
+  new server_ephemeral_secret: bitstring;
+  new kem_coins: bitstring;
+  let server_ephemeral = x25519_public(server_ephemeral_secret) in
+  let kem_ciphertext = mlkem_ciphertext(beacon_pq, kem_coins) in
+  let kem_secret = mlkem_shared_secret(beacon_pq, kem_coins) in
+  let dh1 = x25519_server_dh(SERVER_IDENTITY_SECRET, beacon_prekey) in
+  let dh2 = x25519_server_dh(
+    server_ephemeral_secret,
+    x25519_public_from_ed(beacon_identity)
+  ) in
+  let dh3 = x25519_server_dh(server_ephemeral_secret, beacon_prekey) in
+  let dh4 = x25519_server_dh(server_ephemeral_secret, beacon_one_time) in
+  let shared_secrets = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+    dh1,
+    dh2,
+    dh3,
+    dh4,
+    kem_secret
+  ) in
+  let root_input =
+    beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)
+  in
+  let root = pqxdh_root(
+    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+  ) in
+  let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
+
+  (* A private one-owner process performs the atomic Fresh -> Consumed
+     transition and answers Consumed forever after, including after abort. *)
+  new replay_reply: channel;
+  out(
+    replay_requests,
+    (beacon_identity, core_init, registration_id, replay_reply)
+  );
+  in(replay_reply, replay_result: replay_status);
+  if replay_result = replay_fresh() then
+  (
+    event ServerAccepted(
+      server_identity,
+      beacon_identity,
+      core_init,
+      registration_id,
+      root_input,
+      root,
+      registration_session
+    );
+
+    (* Replay state remains consumed even on this modeled response failure. *)
+    in(c, registration_control: bitstring);
+    if registration_control = registration_abort(registration_id) then
+      event ServerResponseAborted(
+        server_identity,
+        beacon_identity,
+        core_init,
+        registration_id,
+        root_input,
+        root,
+        registration_session
+      )
+    else
+      let registration_continue(=registration_id) = registration_control in
+      new assigned_key_id: key_id;
+      let associated_data =
+        beaconcrypt_core__pqxdh__build_associated_data(
+          server_identity,
+          beacon_identity
+        )
+      in
+      let session = session_label(
+        server_identity,
+        beacon_identity,
+        assigned_key_id,
+        root_input
+      ) in
+      let server_chain_1 = server_to_beacon_chain(root) in
+      let server_material_1 = ratchet_material(server_chain_1) in
+      let binding =
+        beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+          key_id_encoding(assigned_key_id)
+        )
+      in
+      let initial_frame = seal_frame(
+        server_material_1,
+        associated_data,
+        first_sequence(),
+        SERVER_KEY_ID,
+        registration_payload(binding, INITIAL_SECRET)
+      ) in
+      event MessageSent(
+        session,
+        server_to_beacon(),
+        first_sequence(),
+        SERVER_KEY_ID,
+        assigned_key_id,
+        INITIAL_SECRET
+      );
+      event MessageKeyUnavailable(
+        session,
+        server_role(),
+        server_to_beacon(),
+        first_sequence(),
+        server_material_1
+      );
+      event ServerCommitted(
+        server_identity,
+        beacon_identity,
+        core_init,
+        registration_id,
+        assigned_key_id,
+        root_input,
+        root,
+        associated_data,
+        session,
+        registration_session
+      );
+      out(
+        c,
+        kex_response(
+          server_identity,
+          server_ephemeral,
+          kem_ciphertext,
+          assigned_key_id,
+          initial_frame
+        )
+      );
+
+      let server_chain_2 = ratchet_next(server_chain_1) in
+      let server_chain_3 = ratchet_next(server_chain_2) in
+      let server_chain_4 = ratchet_next(server_chain_3) in
+      let server_material_2 = ratchet_material(server_chain_2) in
+      let server_material_3 = ratchet_material(server_chain_3) in
+      let server_material_4 = ratchet_material(server_chain_4) in
+      let second_frame = seal_frame(
+        server_material_2,
+        associated_data,
+        next_sequence(first_sequence()),
+        SERVER_KEY_ID,
+        CACHED_SECRET
+      ) in
+      event MessageSent(
+        session,
+        server_to_beacon(),
+        next_sequence(first_sequence()),
+        SERVER_KEY_ID,
+        assigned_key_id,
+        CACHED_SECRET
+      );
+      event MessageKeyUnavailable(
+        session,
+        server_role(),
+        server_to_beacon(),
+        next_sequence(first_sequence()),
+        server_material_2
+      );
+      out(c, second_frame);
+
+      let third_frame = seal_frame(
+        server_material_3,
+        associated_data,
+        next_sequence(next_sequence(first_sequence())),
+        SERVER_KEY_ID,
+        ADVANCE_SECRET
+      ) in
+      event MessageSent(
+        session,
+        server_to_beacon(),
+        next_sequence(next_sequence(first_sequence())),
+        SERVER_KEY_ID,
+        assigned_key_id,
+        ADVANCE_SECRET
+      );
+      event MessageKeyUnavailable(
+        session,
+        server_role(),
+        server_to_beacon(),
+        next_sequence(next_sequence(first_sequence())),
+        server_material_3
+      );
+      out(c, third_frame);
+
+      let fourth_frame = seal_frame(
+        server_material_4,
+        associated_data,
+        next_sequence(next_sequence(next_sequence(first_sequence()))),
+        SERVER_KEY_ID,
+        FUTURE_SECRET
+      ) in
+      event MessageSent(
+        session,
+        server_to_beacon(),
+        next_sequence(next_sequence(next_sequence(first_sequence()))),
+        SERVER_KEY_ID,
+        assigned_key_id,
+        FUTURE_SECRET
+      );
+      event MessageKeyUnavailable(
+        session,
+        server_role(),
+        server_to_beacon(),
+        next_sequence(next_sequence(next_sequence(first_sequence()))),
+        server_material_4
+      );
+      out(c, fourth_frame);
+
+      in(c, beacon_frame: bitstring);
+      let beacon_material_1 = ratchet_material(beacon_to_server_chain(root)) in
+      let beacon_plaintext = open_frame(
+        beacon_material_1,
+        associated_data,
+        first_sequence(),
+        assigned_key_id,
+        beacon_frame
+      ) in
+      event MessageReceived(
+        session,
+        beacon_to_server(),
+        first_sequence(),
+        assigned_key_id,
+        SERVER_KEY_ID,
+        beacon_plaintext
+      );
+      event MessageKeyUnavailable(
+        session,
+        server_role(),
+        beacon_to_server(),
+        first_sequence(),
+        beacon_material_1
+      )
+  )
+  else
+    event RegistrationReplayRejected(
+      server_identity,
+      beacon_identity,
+      core_init,
+      registration_id,
+      registration_session
+    ).
+
+(**************************************************************************)
+(* Server path for attacker-owned registrations                           *)
+(**************************************************************************)
+
+(* This is the same public-wire validation and PQXDH response construction
+   as Server, but it carries no honest agreement events and routes only the
+   malicious-session canary.  Treating each request as fresh deliberately
+   over-approximates production replay handling for the isolation theorem. *)
+let MaliciousServer() =
+  in(c, incoming_init: bitstring);
+  let signed_init_kex(
+    encoded_identity,
+    signed_prekey,
+    signed_one_time,
+    signed_pq
+  ) = incoming_init in
+  let tag_ed25519(beacon_identity: bitstring) = encoded_identity in
+  let tag_x25519_prekey(beacon_prekey: bitstring) =
+    verify_signature(signed_prekey, beacon_identity)
+  in
+  let tag_x25519_one_time(beacon_one_time: bitstring) =
+    verify_signature(signed_one_time, beacon_identity)
+  in
+  let tag_mlkem768(beacon_pq: bitstring) =
+    verify_signature(signed_pq, beacon_identity)
+  in
+  let core_init = beaconcrypt_core__pqxdh__InitKex(
+    encoded_identity,
+    tag_x25519_prekey(beacon_prekey),
+    tag_x25519_one_time(beacon_one_time),
+    tag_mlkem768(beacon_pq)
+  ) in
+  let verified_init = beaconcrypt_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq
+  ) in
+  let registration_id =
+    beaconcrypt_core__pqxdh__registration_id(verified_init)
+  in
+  get malicious_origin(=beacon_identity, registration_session: bitstring) in
+  new server_ephemeral_secret: bitstring;
+  new kem_coins: bitstring;
+  let server_ephemeral = x25519_public(server_ephemeral_secret) in
+  let kem_ciphertext = mlkem_ciphertext(beacon_pq, kem_coins) in
+  let kem_secret = mlkem_shared_secret(beacon_pq, kem_coins) in
+  let dh1 = x25519_server_dh(SERVER_IDENTITY_SECRET, beacon_prekey) in
+  let dh2 = x25519_server_dh(
+    server_ephemeral_secret,
+    x25519_public_from_ed(beacon_identity)
+  ) in
+  let dh3 = x25519_server_dh(server_ephemeral_secret, beacon_prekey) in
+  let dh4 = x25519_server_dh(server_ephemeral_secret, beacon_one_time) in
+  let shared_secrets = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+    dh1,
+    dh2,
+    dh3,
+    dh4,
+    kem_secret
+  ) in
+  let root_input =
+    beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)
+  in
+  let root = pqxdh_root(
+    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+  ) in
+  let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
+  in(c, registration_control: bitstring);
+  let registration_continue(=registration_id) = registration_control in
+  new assigned_key_id: key_id;
+  let associated_data =
+    beaconcrypt_core__pqxdh__build_associated_data(
+      server_identity,
+      beacon_identity
+    )
+  in
+  let session = session_label(
+    server_identity,
+    beacon_identity,
+    assigned_key_id,
+    root_input
+  ) in
+  let server_material_1 = ratchet_material(server_to_beacon_chain(root)) in
+  let binding =
+    beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+      key_id_encoding(assigned_key_id)
+    )
+  in
+  let initial_frame = seal_frame(
+    server_material_1,
+    associated_data,
+    first_sequence(),
+    SERVER_KEY_ID,
+    registration_payload(binding, MALICIOUS_TASK_SECRET)
+  ) in
+  event MaliciousRegistrationCommitted(
+    server_identity,
+    beacon_identity,
+    core_init,
+    registration_id,
+    assigned_key_id,
+    root_input,
+    root,
+    associated_data,
+    session,
+    MALICIOUS_TASK_SECRET
+  );
+  out(
+    c,
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      assigned_key_id,
+      initial_frame
+    )
+  ).
+
+(**************************************************************************)
+(* Explicit late-state compromise                                         *)
+(**************************************************************************)
+
+let KeepBeaconStatePrivate() =
+  in(
+    compromise_snapshots,
+    (
+      session: bitstring,
+      live_receive_chain: bitstring,
+      cached_receive_material: bitstring,
+      live_send_chain: bitstring,
+      compromise_ack: channel
+    )
+  );
+  out(compromise_ack, session).
+
+let CompromiseBeaconState() =
+  in(
+    compromise_snapshots,
+    (
+      session: bitstring,
+      live_receive_chain: bitstring,
+      cached_receive_material: bitstring,
+      live_send_chain: bitstring,
+      compromise_ack: channel
+    )
+  );
+  event StateCompromised(
+    session,
+    beacon_role(),
+    live_receive_chain,
+    live_send_chain
+  );
+  out(c, live_receive_chain);
+  out(c, cached_receive_material);
+  out(c, live_send_chain);
+  out(compromise_ack, session).
+
+(**************************************************************************)
+(* Explicit state-neutral future-receive state machines. *)
+(**************************************************************************)
+
+(* Sequence one is consumed, two invalid sequence-three attempts reuse the exact entry-state term, and only an authentic sequence-three open publishes skipped sequence two. *)
+let StateNeutralFutureReceive() =
+  new root: bitstring;
+  new associated_data: bitstring;
+  new session: bitstring;
+  new sender_id: key_id;
+  new receiver_id: key_id;
+  let first = first_sequence() in
+  let skipped_sequence = next_sequence(first) in
+  let target_sequence = next_sequence(skipped_sequence) in
+  let chain_1 = server_to_beacon_chain(root) in
+  let chain_2 = ratchet_next(chain_1) in
+  let chain_3 = ratchet_next(chain_2) in
+  let chain_4 = ratchet_next(chain_3) in
+  let material_1 = ratchet_material(chain_1) in
+  let skipped_material = ratchet_material(chain_2) in
+  let target_material = ratchet_material(chain_3) in
+  let first_frame = seal_frame(
+    material_1,
+    associated_data,
+    first,
+    sender_id,
+    RECEIVE_PAST_SECRET
+  ) in
+  let skipped_frame = seal_frame(
+    skipped_material,
+    associated_data,
+    skipped_sequence,
+    sender_id,
+    RECEIVE_SKIPPED_SECRET
+  ) in
+  let target_frame = seal_frame(
+    target_material,
+    associated_data,
+    target_sequence,
+    sender_id,
+    RECEIVE_TARGET_SECRET
+  ) in
+  let forged_target_frame = crypto_frame(
+    forged_frame_component(),
+    forged_frame_component(),
+    forged_frame_component(),
+    target_sequence,
+    sender_id
+  ) in
+  event MessageSent(
+    session,
+    server_to_beacon(),
+    first,
+    sender_id,
+    receiver_id,
+    RECEIVE_PAST_SECRET
+  );
+  event MessageSent(
+    session,
+    server_to_beacon(),
+    skipped_sequence,
+    sender_id,
+    receiver_id,
+    RECEIVE_SKIPPED_SECRET
+  );
+  event MessageSent(
+    session,
+    server_to_beacon(),
+    target_sequence,
+    sender_id,
+    receiver_id,
+    RECEIVE_TARGET_SECRET
+  );
+  out(c, associated_data);
+  out(c, first_frame);
+  out(c, skipped_frame);
+  out(c, target_frame);
+  out(c, forged_target_frame);
+
+  in(c, first_candidate: bitstring);
+  let first_plaintext = open_frame(
+    material_1,
+    associated_data,
+    first,
+    sender_id,
+    first_candidate
+  ) in
+  event MessageReceived(
+    session,
+    server_to_beacon(),
+    first,
+    sender_id,
+    receiver_id,
+    first_plaintext
+  );
+  event MessageKeyUnavailable(
+    session,
+    beacon_role(),
+    server_to_beacon(),
+    first,
+    material_1
+  );
+  let empty_cache = receive_cache_empty() in
+  let ready_state = receive_state(first, chain_2, empty_cache) in
+
+  in(c, forged_candidate: bitstring);
+  if forged_candidate = forged_target_frame then
+    let forged_plaintext = open_frame(
+      target_material,
+      associated_data,
+      target_sequence,
+      sender_id,
+      forged_candidate
+    ) in
+      event MessageReceived(
+        session,
+        server_to_beacon(),
+        target_sequence,
+        sender_id,
+        receiver_id,
+        forged_plaintext
+      )
+    else
+    (
+      event ReceiveRejectedNeutral(
+        session,
+        target_sequence,
+        forged_target_frame,
+        ready_state
+      );
+      in(c, repeated_candidate: bitstring);
+      if repeated_candidate = forged_target_frame then
+        let repeated_plaintext = open_frame(
+          target_material,
+          associated_data,
+          target_sequence,
+          sender_id,
+          repeated_candidate
+        ) in
+          event MessageReceived(
+            session,
+            server_to_beacon(),
+            target_sequence,
+            sender_id,
+            receiver_id,
+            repeated_plaintext
+          )
+        else
+        (
+          event ReceiveRejectionRetried(
+            session,
+            target_sequence,
+            forged_target_frame,
+            ready_state
+          );
+          new compromise_ack: channel;
+          out(
+            receive_snapshots,
+            (
+              session,
+              target_sequence,
+              ready_state,
+              ready_state,
+              chain_2,
+              empty_cache,
+              compromise_ack
+            )
+          );
+          in(compromise_ack, =session);
+          in(c, accepted_candidate: bitstring);
+          let accepted_plaintext = open_frame(
+            target_material,
+            associated_data,
+            target_sequence,
+            sender_id,
+            accepted_candidate
+          ) in
+          event MessageKeyCached(
+            session,
+            beacon_role(),
+            server_to_beacon(),
+            skipped_sequence,
+            skipped_material
+          );
+          let committed_cache = receive_cache_entry(
+            skipped_sequence,
+            skipped_material,
+            empty_cache
+          ) in
+          let committed_state = receive_state(
+            target_sequence,
+            chain_4,
+            committed_cache
+          ) in
+          event MessageReceived(
+            session,
+            server_to_beacon(),
+            target_sequence,
+            sender_id,
+            receiver_id,
+            accepted_plaintext
+          );
+          event MessageKeyUnavailable(
+            session,
+            beacon_role(),
+            server_to_beacon(),
+            target_sequence,
+            target_material
+          );
+          event ReceiveFutureAccepted(
+            session,
+            target_sequence,
+            sender_id,
+            receiver_id,
+            accepted_plaintext,
+            accepted_candidate,
+            target_material,
+            forged_target_frame,
+            ready_state,
+            committed_state
+          );
+          if accepted_candidate = target_frame then
+          (
+            event ReceiveHonestFutureDelivered(
+              session,
+              target_sequence,
+              sender_id,
+              receiver_id,
+              accepted_plaintext,
+              accepted_candidate,
+              target_material,
+              forged_target_frame,
+              ready_state,
+              committed_state
+            );
+            in(c, replay_candidate: bitstring);
+            if replay_candidate = accepted_candidate then
+            (
+              event ReceiveReplayRejected(
+                session,
+                target_sequence,
+                sender_id,
+                receiver_id,
+                accepted_plaintext,
+                accepted_candidate,
+                target_material,
+                forged_target_frame,
+                ready_state,
+                committed_state
+              );
+              in(c, delayed_candidate: bitstring);
+              let delayed_plaintext = open_frame(
+                skipped_material,
+                associated_data,
+                skipped_sequence,
+                sender_id,
+                delayed_candidate
+              ) in
+              let delayed_state = receive_state(
+                target_sequence,
+                chain_4,
+                empty_cache
+              ) in
+              event MessageReceived(
+                session,
+                server_to_beacon(),
+                skipped_sequence,
+                sender_id,
+                receiver_id,
+                delayed_plaintext
+              );
+              event MessageKeyUnavailable(
+                session,
+                beacon_role(),
+                server_to_beacon(),
+                skipped_sequence,
+                skipped_material
+              );
+              event ReceiveDelayedCachedAccepted(
+                session,
+                skipped_sequence,
+                sender_id,
+                receiver_id,
+                delayed_plaintext,
+                delayed_candidate,
+                skipped_material,
+                committed_state,
+                delayed_state
+              )
+            )
+          )
+        )
+    ).
+
+(* A separate exact capacity leg accepts sequence 51 from counter one, retaining 49 skipped keys and consuming the target. *)
+(* A distance-two future frame is then rejected because 49 + 2 exceeds capacity; consuming cached sequence 50 makes the same future distance admissible. *)
+let StateNeutralCapacityReceive() =
+  new capacity_root: bitstring;
+  new capacity_associated_data: bitstring;
+  new capacity_session: bitstring;
+  new capacity_sender_id: key_id;
+  new capacity_receiver_id: key_id;
+  new capacity_first_plaintext: bitstring;
+  let capacity_sequence_1 = first_sequence() in
+  let capacity_sequence_2 = next_sequence(capacity_sequence_1) in
+  let capacity_sequence_3 = next_sequence(capacity_sequence_2) in
+  let capacity_sequence_4 = next_sequence(capacity_sequence_3) in
+  let capacity_sequence_5 = next_sequence(capacity_sequence_4) in
+  let capacity_sequence_6 = next_sequence(capacity_sequence_5) in
+  let capacity_sequence_7 = next_sequence(capacity_sequence_6) in
+  let capacity_sequence_8 = next_sequence(capacity_sequence_7) in
+  let capacity_sequence_9 = next_sequence(capacity_sequence_8) in
+  let capacity_sequence_10 = next_sequence(capacity_sequence_9) in
+  let capacity_sequence_11 = next_sequence(capacity_sequence_10) in
+  let capacity_sequence_12 = next_sequence(capacity_sequence_11) in
+  let capacity_sequence_13 = next_sequence(capacity_sequence_12) in
+  let capacity_sequence_14 = next_sequence(capacity_sequence_13) in
+  let capacity_sequence_15 = next_sequence(capacity_sequence_14) in
+  let capacity_sequence_16 = next_sequence(capacity_sequence_15) in
+  let capacity_sequence_17 = next_sequence(capacity_sequence_16) in
+  let capacity_sequence_18 = next_sequence(capacity_sequence_17) in
+  let capacity_sequence_19 = next_sequence(capacity_sequence_18) in
+  let capacity_sequence_20 = next_sequence(capacity_sequence_19) in
+  let capacity_sequence_21 = next_sequence(capacity_sequence_20) in
+  let capacity_sequence_22 = next_sequence(capacity_sequence_21) in
+  let capacity_sequence_23 = next_sequence(capacity_sequence_22) in
+  let capacity_sequence_24 = next_sequence(capacity_sequence_23) in
+  let capacity_sequence_25 = next_sequence(capacity_sequence_24) in
+  let capacity_sequence_26 = next_sequence(capacity_sequence_25) in
+  let capacity_sequence_27 = next_sequence(capacity_sequence_26) in
+  let capacity_sequence_28 = next_sequence(capacity_sequence_27) in
+  let capacity_sequence_29 = next_sequence(capacity_sequence_28) in
+  let capacity_sequence_30 = next_sequence(capacity_sequence_29) in
+  let capacity_sequence_31 = next_sequence(capacity_sequence_30) in
+  let capacity_sequence_32 = next_sequence(capacity_sequence_31) in
+  let capacity_sequence_33 = next_sequence(capacity_sequence_32) in
+  let capacity_sequence_34 = next_sequence(capacity_sequence_33) in
+  let capacity_sequence_35 = next_sequence(capacity_sequence_34) in
+  let capacity_sequence_36 = next_sequence(capacity_sequence_35) in
+  let capacity_sequence_37 = next_sequence(capacity_sequence_36) in
+  let capacity_sequence_38 = next_sequence(capacity_sequence_37) in
+  let capacity_sequence_39 = next_sequence(capacity_sequence_38) in
+  let capacity_sequence_40 = next_sequence(capacity_sequence_39) in
+  let capacity_sequence_41 = next_sequence(capacity_sequence_40) in
+  let capacity_sequence_42 = next_sequence(capacity_sequence_41) in
+  let capacity_sequence_43 = next_sequence(capacity_sequence_42) in
+  let capacity_sequence_44 = next_sequence(capacity_sequence_43) in
+  let capacity_sequence_45 = next_sequence(capacity_sequence_44) in
+  let capacity_sequence_46 = next_sequence(capacity_sequence_45) in
+  let capacity_sequence_47 = next_sequence(capacity_sequence_46) in
+  let capacity_sequence_48 = next_sequence(capacity_sequence_47) in
+  let capacity_sequence_49 = next_sequence(capacity_sequence_48) in
+  let capacity_sequence_50 = next_sequence(capacity_sequence_49) in
+  let capacity_sequence_51 = next_sequence(capacity_sequence_50) in
+  let capacity_sequence_52 = next_sequence(capacity_sequence_51) in
+  let capacity_sequence_53 = next_sequence(capacity_sequence_52) in
+  let capacity_chain_1 = server_to_beacon_chain(capacity_root) in
+  let capacity_chain_2 = ratchet_next(capacity_chain_1) in
+  let capacity_chain_3 = ratchet_next(capacity_chain_2) in
+  let capacity_chain_4 = ratchet_next(capacity_chain_3) in
+  let capacity_chain_5 = ratchet_next(capacity_chain_4) in
+  let capacity_chain_6 = ratchet_next(capacity_chain_5) in
+  let capacity_chain_7 = ratchet_next(capacity_chain_6) in
+  let capacity_chain_8 = ratchet_next(capacity_chain_7) in
+  let capacity_chain_9 = ratchet_next(capacity_chain_8) in
+  let capacity_chain_10 = ratchet_next(capacity_chain_9) in
+  let capacity_chain_11 = ratchet_next(capacity_chain_10) in
+  let capacity_chain_12 = ratchet_next(capacity_chain_11) in
+  let capacity_chain_13 = ratchet_next(capacity_chain_12) in
+  let capacity_chain_14 = ratchet_next(capacity_chain_13) in
+  let capacity_chain_15 = ratchet_next(capacity_chain_14) in
+  let capacity_chain_16 = ratchet_next(capacity_chain_15) in
+  let capacity_chain_17 = ratchet_next(capacity_chain_16) in
+  let capacity_chain_18 = ratchet_next(capacity_chain_17) in
+  let capacity_chain_19 = ratchet_next(capacity_chain_18) in
+  let capacity_chain_20 = ratchet_next(capacity_chain_19) in
+  let capacity_chain_21 = ratchet_next(capacity_chain_20) in
+  let capacity_chain_22 = ratchet_next(capacity_chain_21) in
+  let capacity_chain_23 = ratchet_next(capacity_chain_22) in
+  let capacity_chain_24 = ratchet_next(capacity_chain_23) in
+  let capacity_chain_25 = ratchet_next(capacity_chain_24) in
+  let capacity_chain_26 = ratchet_next(capacity_chain_25) in
+  let capacity_chain_27 = ratchet_next(capacity_chain_26) in
+  let capacity_chain_28 = ratchet_next(capacity_chain_27) in
+  let capacity_chain_29 = ratchet_next(capacity_chain_28) in
+  let capacity_chain_30 = ratchet_next(capacity_chain_29) in
+  let capacity_chain_31 = ratchet_next(capacity_chain_30) in
+  let capacity_chain_32 = ratchet_next(capacity_chain_31) in
+  let capacity_chain_33 = ratchet_next(capacity_chain_32) in
+  let capacity_chain_34 = ratchet_next(capacity_chain_33) in
+  let capacity_chain_35 = ratchet_next(capacity_chain_34) in
+  let capacity_chain_36 = ratchet_next(capacity_chain_35) in
+  let capacity_chain_37 = ratchet_next(capacity_chain_36) in
+  let capacity_chain_38 = ratchet_next(capacity_chain_37) in
+  let capacity_chain_39 = ratchet_next(capacity_chain_38) in
+  let capacity_chain_40 = ratchet_next(capacity_chain_39) in
+  let capacity_chain_41 = ratchet_next(capacity_chain_40) in
+  let capacity_chain_42 = ratchet_next(capacity_chain_41) in
+  let capacity_chain_43 = ratchet_next(capacity_chain_42) in
+  let capacity_chain_44 = ratchet_next(capacity_chain_43) in
+  let capacity_chain_45 = ratchet_next(capacity_chain_44) in
+  let capacity_chain_46 = ratchet_next(capacity_chain_45) in
+  let capacity_chain_47 = ratchet_next(capacity_chain_46) in
+  let capacity_chain_48 = ratchet_next(capacity_chain_47) in
+  let capacity_chain_49 = ratchet_next(capacity_chain_48) in
+  let capacity_chain_50 = ratchet_next(capacity_chain_49) in
+  let capacity_chain_51 = ratchet_next(capacity_chain_50) in
+  let capacity_chain_52 = ratchet_next(capacity_chain_51) in
+  let capacity_chain_53 = ratchet_next(capacity_chain_52) in
+  let capacity_chain_54 = ratchet_next(capacity_chain_53) in
+  let capacity_material_1 = ratchet_material(capacity_chain_1) in
+  let capacity_material_2 = ratchet_material(capacity_chain_2) in
+  let capacity_material_3 = ratchet_material(capacity_chain_3) in
+  let capacity_material_4 = ratchet_material(capacity_chain_4) in
+  let capacity_material_5 = ratchet_material(capacity_chain_5) in
+  let capacity_material_6 = ratchet_material(capacity_chain_6) in
+  let capacity_material_7 = ratchet_material(capacity_chain_7) in
+  let capacity_material_8 = ratchet_material(capacity_chain_8) in
+  let capacity_material_9 = ratchet_material(capacity_chain_9) in
+  let capacity_material_10 = ratchet_material(capacity_chain_10) in
+  let capacity_material_11 = ratchet_material(capacity_chain_11) in
+  let capacity_material_12 = ratchet_material(capacity_chain_12) in
+  let capacity_material_13 = ratchet_material(capacity_chain_13) in
+  let capacity_material_14 = ratchet_material(capacity_chain_14) in
+  let capacity_material_15 = ratchet_material(capacity_chain_15) in
+  let capacity_material_16 = ratchet_material(capacity_chain_16) in
+  let capacity_material_17 = ratchet_material(capacity_chain_17) in
+  let capacity_material_18 = ratchet_material(capacity_chain_18) in
+  let capacity_material_19 = ratchet_material(capacity_chain_19) in
+  let capacity_material_20 = ratchet_material(capacity_chain_20) in
+  let capacity_material_21 = ratchet_material(capacity_chain_21) in
+  let capacity_material_22 = ratchet_material(capacity_chain_22) in
+  let capacity_material_23 = ratchet_material(capacity_chain_23) in
+  let capacity_material_24 = ratchet_material(capacity_chain_24) in
+  let capacity_material_25 = ratchet_material(capacity_chain_25) in
+  let capacity_material_26 = ratchet_material(capacity_chain_26) in
+  let capacity_material_27 = ratchet_material(capacity_chain_27) in
+  let capacity_material_28 = ratchet_material(capacity_chain_28) in
+  let capacity_material_29 = ratchet_material(capacity_chain_29) in
+  let capacity_material_30 = ratchet_material(capacity_chain_30) in
+  let capacity_material_31 = ratchet_material(capacity_chain_31) in
+  let capacity_material_32 = ratchet_material(capacity_chain_32) in
+  let capacity_material_33 = ratchet_material(capacity_chain_33) in
+  let capacity_material_34 = ratchet_material(capacity_chain_34) in
+  let capacity_material_35 = ratchet_material(capacity_chain_35) in
+  let capacity_material_36 = ratchet_material(capacity_chain_36) in
+  let capacity_material_37 = ratchet_material(capacity_chain_37) in
+  let capacity_material_38 = ratchet_material(capacity_chain_38) in
+  let capacity_material_39 = ratchet_material(capacity_chain_39) in
+  let capacity_material_40 = ratchet_material(capacity_chain_40) in
+  let capacity_material_41 = ratchet_material(capacity_chain_41) in
+  let capacity_material_42 = ratchet_material(capacity_chain_42) in
+  let capacity_material_43 = ratchet_material(capacity_chain_43) in
+  let capacity_material_44 = ratchet_material(capacity_chain_44) in
+  let capacity_material_45 = ratchet_material(capacity_chain_45) in
+  let capacity_material_46 = ratchet_material(capacity_chain_46) in
+  let capacity_material_47 = ratchet_material(capacity_chain_47) in
+  let capacity_material_48 = ratchet_material(capacity_chain_48) in
+  let capacity_material_49 = ratchet_material(capacity_chain_49) in
+  let capacity_material_50 = ratchet_material(capacity_chain_50) in
+  let capacity_material_51 = ratchet_material(capacity_chain_51) in
+  let capacity_material_52 = ratchet_material(capacity_chain_52) in
+  let capacity_material_53 = ratchet_material(capacity_chain_53) in
+  let capacity_first_frame = seal_frame(
+    capacity_material_1,
+    capacity_associated_data,
+    capacity_sequence_1,
+    capacity_sender_id,
+    capacity_first_plaintext
+  ) in
+  let maximum_gap_frame = seal_frame(
+    capacity_material_51,
+    capacity_associated_data,
+    capacity_sequence_51,
+    capacity_sender_id,
+    RECEIVE_MAX_GAP_SECRET
+  ) in
+  let cached_frame = seal_frame(
+    capacity_material_50,
+    capacity_associated_data,
+    capacity_sequence_50,
+    capacity_sender_id,
+    RECEIVE_CACHED_SECRET
+  ) in
+  let after_release_frame = seal_frame(
+    capacity_material_53,
+    capacity_associated_data,
+    capacity_sequence_53,
+    capacity_sender_id,
+    RECEIVE_AFTER_RELEASE_SECRET
+  ) in
+  let capacity_rejected_frame = crypto_frame(
+    forged_frame_component(),
+    forged_frame_component(),
+    forged_frame_component(),
+    capacity_sequence_53,
+    capacity_sender_id
+  ) in
+  event MessageSent(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_1,
+    capacity_sender_id,
+    capacity_receiver_id,
+    capacity_first_plaintext
+  );
+  event MessageSent(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_51,
+    capacity_sender_id,
+    capacity_receiver_id,
+    RECEIVE_MAX_GAP_SECRET
+  );
+  event MessageSent(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_50,
+    capacity_sender_id,
+    capacity_receiver_id,
+    RECEIVE_CACHED_SECRET
+  );
+  event MessageSent(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_53,
+    capacity_sender_id,
+    capacity_receiver_id,
+    RECEIVE_AFTER_RELEASE_SECRET
+  );
+  out(c, capacity_associated_data);
+  out(c, capacity_first_frame);
+  out(c, maximum_gap_frame);
+  out(c, cached_frame);
+  out(c, after_release_frame);
+  out(c, capacity_rejected_frame);
+
+  in(c, capacity_first_candidate: bitstring);
+  let capacity_first_opened = open_frame(
+    capacity_material_1,
+    capacity_associated_data,
+    capacity_sequence_1,
+    capacity_sender_id,
+    capacity_first_candidate
+  ) in
+  event MessageReceived(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_1,
+    capacity_sender_id,
+    capacity_receiver_id,
+    capacity_first_opened
+  );
+  event MessageKeyUnavailable(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_1,
+    capacity_material_1
+  );
+  let capacity_cache_empty = receive_cache_empty() in
+  let capacity_ready_state = receive_state(
+    capacity_sequence_1,
+    capacity_chain_2,
+    capacity_cache_empty
+  ) in
+
+  in(c, maximum_gap_candidate: bitstring);
+  let maximum_gap_plaintext = open_frame(
+    capacity_material_51,
+    capacity_associated_data,
+    capacity_sequence_51,
+    capacity_sender_id,
+    maximum_gap_candidate
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_2,
+    capacity_material_2
+  );
+  let capacity_cache_2 = receive_cache_entry(
+    capacity_sequence_2,
+    capacity_material_2,
+    capacity_cache_empty
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_3,
+    capacity_material_3
+  );
+  let capacity_cache_3 = receive_cache_entry(
+    capacity_sequence_3,
+    capacity_material_3,
+    capacity_cache_2
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_4,
+    capacity_material_4
+  );
+  let capacity_cache_4 = receive_cache_entry(
+    capacity_sequence_4,
+    capacity_material_4,
+    capacity_cache_3
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_5,
+    capacity_material_5
+  );
+  let capacity_cache_5 = receive_cache_entry(
+    capacity_sequence_5,
+    capacity_material_5,
+    capacity_cache_4
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_6,
+    capacity_material_6
+  );
+  let capacity_cache_6 = receive_cache_entry(
+    capacity_sequence_6,
+    capacity_material_6,
+    capacity_cache_5
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_7,
+    capacity_material_7
+  );
+  let capacity_cache_7 = receive_cache_entry(
+    capacity_sequence_7,
+    capacity_material_7,
+    capacity_cache_6
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_8,
+    capacity_material_8
+  );
+  let capacity_cache_8 = receive_cache_entry(
+    capacity_sequence_8,
+    capacity_material_8,
+    capacity_cache_7
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_9,
+    capacity_material_9
+  );
+  let capacity_cache_9 = receive_cache_entry(
+    capacity_sequence_9,
+    capacity_material_9,
+    capacity_cache_8
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_10,
+    capacity_material_10
+  );
+  let capacity_cache_10 = receive_cache_entry(
+    capacity_sequence_10,
+    capacity_material_10,
+    capacity_cache_9
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_11,
+    capacity_material_11
+  );
+  let capacity_cache_11 = receive_cache_entry(
+    capacity_sequence_11,
+    capacity_material_11,
+    capacity_cache_10
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_12,
+    capacity_material_12
+  );
+  let capacity_cache_12 = receive_cache_entry(
+    capacity_sequence_12,
+    capacity_material_12,
+    capacity_cache_11
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_13,
+    capacity_material_13
+  );
+  let capacity_cache_13 = receive_cache_entry(
+    capacity_sequence_13,
+    capacity_material_13,
+    capacity_cache_12
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_14,
+    capacity_material_14
+  );
+  let capacity_cache_14 = receive_cache_entry(
+    capacity_sequence_14,
+    capacity_material_14,
+    capacity_cache_13
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_15,
+    capacity_material_15
+  );
+  let capacity_cache_15 = receive_cache_entry(
+    capacity_sequence_15,
+    capacity_material_15,
+    capacity_cache_14
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_16,
+    capacity_material_16
+  );
+  let capacity_cache_16 = receive_cache_entry(
+    capacity_sequence_16,
+    capacity_material_16,
+    capacity_cache_15
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_17,
+    capacity_material_17
+  );
+  let capacity_cache_17 = receive_cache_entry(
+    capacity_sequence_17,
+    capacity_material_17,
+    capacity_cache_16
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_18,
+    capacity_material_18
+  );
+  let capacity_cache_18 = receive_cache_entry(
+    capacity_sequence_18,
+    capacity_material_18,
+    capacity_cache_17
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_19,
+    capacity_material_19
+  );
+  let capacity_cache_19 = receive_cache_entry(
+    capacity_sequence_19,
+    capacity_material_19,
+    capacity_cache_18
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_20,
+    capacity_material_20
+  );
+  let capacity_cache_20 = receive_cache_entry(
+    capacity_sequence_20,
+    capacity_material_20,
+    capacity_cache_19
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_21,
+    capacity_material_21
+  );
+  let capacity_cache_21 = receive_cache_entry(
+    capacity_sequence_21,
+    capacity_material_21,
+    capacity_cache_20
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_22,
+    capacity_material_22
+  );
+  let capacity_cache_22 = receive_cache_entry(
+    capacity_sequence_22,
+    capacity_material_22,
+    capacity_cache_21
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_23,
+    capacity_material_23
+  );
+  let capacity_cache_23 = receive_cache_entry(
+    capacity_sequence_23,
+    capacity_material_23,
+    capacity_cache_22
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_24,
+    capacity_material_24
+  );
+  let capacity_cache_24 = receive_cache_entry(
+    capacity_sequence_24,
+    capacity_material_24,
+    capacity_cache_23
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_25,
+    capacity_material_25
+  );
+  let capacity_cache_25 = receive_cache_entry(
+    capacity_sequence_25,
+    capacity_material_25,
+    capacity_cache_24
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_26,
+    capacity_material_26
+  );
+  let capacity_cache_26 = receive_cache_entry(
+    capacity_sequence_26,
+    capacity_material_26,
+    capacity_cache_25
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_27,
+    capacity_material_27
+  );
+  let capacity_cache_27 = receive_cache_entry(
+    capacity_sequence_27,
+    capacity_material_27,
+    capacity_cache_26
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_28,
+    capacity_material_28
+  );
+  let capacity_cache_28 = receive_cache_entry(
+    capacity_sequence_28,
+    capacity_material_28,
+    capacity_cache_27
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_29,
+    capacity_material_29
+  );
+  let capacity_cache_29 = receive_cache_entry(
+    capacity_sequence_29,
+    capacity_material_29,
+    capacity_cache_28
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_30,
+    capacity_material_30
+  );
+  let capacity_cache_30 = receive_cache_entry(
+    capacity_sequence_30,
+    capacity_material_30,
+    capacity_cache_29
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_31,
+    capacity_material_31
+  );
+  let capacity_cache_31 = receive_cache_entry(
+    capacity_sequence_31,
+    capacity_material_31,
+    capacity_cache_30
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_32,
+    capacity_material_32
+  );
+  let capacity_cache_32 = receive_cache_entry(
+    capacity_sequence_32,
+    capacity_material_32,
+    capacity_cache_31
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_33,
+    capacity_material_33
+  );
+  let capacity_cache_33 = receive_cache_entry(
+    capacity_sequence_33,
+    capacity_material_33,
+    capacity_cache_32
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_34,
+    capacity_material_34
+  );
+  let capacity_cache_34 = receive_cache_entry(
+    capacity_sequence_34,
+    capacity_material_34,
+    capacity_cache_33
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_35,
+    capacity_material_35
+  );
+  let capacity_cache_35 = receive_cache_entry(
+    capacity_sequence_35,
+    capacity_material_35,
+    capacity_cache_34
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_36,
+    capacity_material_36
+  );
+  let capacity_cache_36 = receive_cache_entry(
+    capacity_sequence_36,
+    capacity_material_36,
+    capacity_cache_35
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_37,
+    capacity_material_37
+  );
+  let capacity_cache_37 = receive_cache_entry(
+    capacity_sequence_37,
+    capacity_material_37,
+    capacity_cache_36
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_38,
+    capacity_material_38
+  );
+  let capacity_cache_38 = receive_cache_entry(
+    capacity_sequence_38,
+    capacity_material_38,
+    capacity_cache_37
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_39,
+    capacity_material_39
+  );
+  let capacity_cache_39 = receive_cache_entry(
+    capacity_sequence_39,
+    capacity_material_39,
+    capacity_cache_38
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_40,
+    capacity_material_40
+  );
+  let capacity_cache_40 = receive_cache_entry(
+    capacity_sequence_40,
+    capacity_material_40,
+    capacity_cache_39
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_41,
+    capacity_material_41
+  );
+  let capacity_cache_41 = receive_cache_entry(
+    capacity_sequence_41,
+    capacity_material_41,
+    capacity_cache_40
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_42,
+    capacity_material_42
+  );
+  let capacity_cache_42 = receive_cache_entry(
+    capacity_sequence_42,
+    capacity_material_42,
+    capacity_cache_41
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_43,
+    capacity_material_43
+  );
+  let capacity_cache_43 = receive_cache_entry(
+    capacity_sequence_43,
+    capacity_material_43,
+    capacity_cache_42
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_44,
+    capacity_material_44
+  );
+  let capacity_cache_44 = receive_cache_entry(
+    capacity_sequence_44,
+    capacity_material_44,
+    capacity_cache_43
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_45,
+    capacity_material_45
+  );
+  let capacity_cache_45 = receive_cache_entry(
+    capacity_sequence_45,
+    capacity_material_45,
+    capacity_cache_44
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_46,
+    capacity_material_46
+  );
+  let capacity_cache_46 = receive_cache_entry(
+    capacity_sequence_46,
+    capacity_material_46,
+    capacity_cache_45
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_47,
+    capacity_material_47
+  );
+  let capacity_cache_47 = receive_cache_entry(
+    capacity_sequence_47,
+    capacity_material_47,
+    capacity_cache_46
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_48,
+    capacity_material_48
+  );
+  let capacity_cache_48 = receive_cache_entry(
+    capacity_sequence_48,
+    capacity_material_48,
+    capacity_cache_47
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_49,
+    capacity_material_49
+  );
+  let capacity_cache_49 = receive_cache_entry(
+    capacity_sequence_49,
+    capacity_material_49,
+    capacity_cache_48
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_50,
+    capacity_material_50
+  );
+  let capacity_cache_50 = receive_cache_entry(
+    capacity_sequence_50,
+    capacity_material_50,
+    capacity_cache_49
+  ) in
+  let maximum_gap_state = receive_state(
+    capacity_sequence_51,
+    capacity_chain_52,
+    capacity_cache_50
+  ) in
+  event MessageReceived(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_51,
+    capacity_sender_id,
+    capacity_receiver_id,
+    maximum_gap_plaintext
+  );
+  event MessageKeyUnavailable(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_51,
+    capacity_material_51
+  );
+  event ReceiveMaximumGapAccepted(
+    capacity_session,
+    capacity_sequence_51,
+    capacity_sender_id,
+    capacity_receiver_id,
+    maximum_gap_plaintext,
+    maximum_gap_candidate,
+    capacity_material_51,
+    capacity_ready_state,
+    maximum_gap_state
+  );
+
+  in(c, capacity_rejected_candidate: bitstring);
+  if capacity_rejected_candidate = capacity_rejected_frame then
+  (
+    event ReceiveCapacityRejected(
+      capacity_session,
+      capacity_sequence_53,
+      capacity_rejected_frame,
+      maximum_gap_state
+    );
+    in(c, cached_candidate: bitstring);
+    let cached_plaintext = open_frame(
+      capacity_material_50,
+      capacity_associated_data,
+      capacity_sequence_50,
+      capacity_sender_id,
+      cached_candidate
+    ) in
+    let released_state = receive_state(
+      capacity_sequence_51,
+      capacity_chain_52,
+      capacity_cache_49
+    ) in
+    event MessageReceived(
+      capacity_session,
+      server_to_beacon(),
+      capacity_sequence_50,
+      capacity_sender_id,
+      capacity_receiver_id,
+      cached_plaintext
+    );
+    event MessageKeyUnavailable(
+      capacity_session,
+      beacon_role(),
+      server_to_beacon(),
+      capacity_sequence_50,
+      capacity_material_50
+    );
+    event ReceiveCachedKeyConsumed(
+      capacity_session,
+      capacity_sequence_50,
+      capacity_material_50,
+      maximum_gap_state,
+      released_state
+    );
+    in(c, after_release_candidate: bitstring);
+    let after_release_plaintext = open_frame(
+      capacity_material_53,
+      capacity_associated_data,
+      capacity_sequence_53,
+      capacity_sender_id,
+      after_release_candidate
+    ) in
+    event MessageKeyCached(
+      capacity_session,
+      beacon_role(),
+      server_to_beacon(),
+      capacity_sequence_52,
+      capacity_material_52
+    );
+    let after_release_cache = receive_cache_entry(
+      capacity_sequence_52,
+      capacity_material_52,
+      capacity_cache_49
+    ) in
+    let after_release_state = receive_state(
+      capacity_sequence_53,
+      capacity_chain_54,
+      after_release_cache
+    ) in
+    event MessageReceived(
+      capacity_session,
+      server_to_beacon(),
+      capacity_sequence_53,
+      capacity_sender_id,
+      capacity_receiver_id,
+      after_release_plaintext
+    );
+    event MessageKeyUnavailable(
+      capacity_session,
+      beacon_role(),
+      server_to_beacon(),
+      capacity_sequence_53,
+      capacity_material_53
+    );
+    event ReceiveAfterCapacityReleaseAccepted(
+      capacity_session,
+      capacity_sequence_53,
+      capacity_sender_id,
+      capacity_receiver_id,
+      after_release_plaintext,
+      after_release_candidate,
+      capacity_material_53,
+      maximum_gap_state,
+      released_state,
+      after_release_state
+    )
+  ).
+
+let FailedReceiveScenario() =
+  (
+    StateNeutralFutureReceive()
+    | StateNeutralCapacityReceive()
+  ).
+
+let KeepReceiveStatePrivate() =
+  in(
+    receive_snapshots,
+    (
+      session: bitstring,
+      target_sequence: sequence,
+      before_state: bitstring,
+      after_state: bitstring,
+      live_receive_chain: bitstring,
+      live_cache: receive_cache,
+      compromise_ack: channel
+    )
+  );
+  out(compromise_ack, session).
+
+(* The compromise branch discloses the unchanged live chain after rejection and no rejection-created cache material. *)
+let CompromiseReceiveState() =
+  in(
+    receive_snapshots,
+    (
+      session: bitstring,
+      target_sequence: sequence,
+      before_state: bitstring,
+      after_state: bitstring,
+      live_receive_chain: bitstring,
+      live_cache: receive_cache,
+      compromise_ack: channel
+    )
+  );
+  let receive_cache_empty() = live_cache in
+  event ReceiveStateCompromised(
+    session,
+    target_sequence,
+    before_state,
+    after_state
+  );
+  out(c, live_receive_chain);
+  out(compromise_ack, session).

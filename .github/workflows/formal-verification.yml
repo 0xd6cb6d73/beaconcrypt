@@ -36,4 +36,4 @@ jobs:
           extraPullNames: fstar-nix-versions,z3-nix-versions
 
       - name: Regenerate and verify formal proof artifacts
-        run: make -C crates/protocol-core check-generated
+        run: make -C beaconcrypt-core check-generated

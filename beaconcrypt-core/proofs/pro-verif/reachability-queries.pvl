@@ -1,0 +1,118 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* These intentional reachability attacks prevent correspondence and secrecy
+   results from passing vacuously after an extraction or process change. *)
+
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      origin: bitstring;
+  event(ServerAccepted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    root_input,
+    root,
+    origin
+  )).
+
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      origin: bitstring;
+  event(RegistrationReplayRejected(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    origin
+  )).
+
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      origin: bitstring;
+  event(ServerResponseAborted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    root_input,
+    root,
+    origin
+  )).
+
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      assigned_key_id: key_id,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      associated_data: bitstring,
+      session: bitstring,
+      origin: bitstring;
+  event(BeaconCommitted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    assigned_key_id,
+    root_input,
+    root,
+    associated_data,
+    session,
+    origin
+  )).
+
+query session: bitstring,
+      message_direction: direction,
+      message_sequence: sequence,
+      sender: key_id,
+      receiver: key_id,
+      plaintext: bitstring;
+  event(MessageReceived(
+    session,
+    message_direction,
+    message_sequence,
+    sender,
+    receiver,
+    plaintext
+  )).
+
+(* A self-signed registration whose complete beacon state is attacker-known
+   reaches the normal response-commit point. *)
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      assigned_key_id: key_id,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      associated_data: bitstring,
+      session: bitstring,
+      plaintext: bitstring;
+  event(MaliciousRegistrationCommitted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    assigned_key_id,
+    root_input,
+    root,
+    associated_data,
+    session,
+    plaintext
+  )).
+
+(* This deliberate negative secrecy result proves that the attacker-known
+   beacon can derive the task canary routed to the server's response. *)
+query attacker(MALICIOUS_TASK_SECRET).

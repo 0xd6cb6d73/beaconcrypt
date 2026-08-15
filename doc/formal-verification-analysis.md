@@ -8,7 +8,7 @@ This document explains the formal-verification results in plain language. It is
 an audit of the proof sources currently in the repository, not a list of future
 goals. It compares the claims in the formal-verification documentation with the
 F* and ProVerif files under
-[`crates/protocol-core/proofs`](../crates/protocol-core/proofs).
+[`beaconcrypt-core/proofs`](../beaconcrypt-core/proofs).
 
 The short conclusion is:
 
@@ -102,7 +102,7 @@ Some terms used below are worth defining:
 The two proof systems have different source connections:
 
 ```text
-selected deterministic protocol-core Rust
+selected deterministic beaconcrypt-core Rust
               |
               +---- hax F* extraction ---- generated F* definitions
               |                                      |
@@ -124,7 +124,7 @@ full application adapters, real crypto, wire formats, persistence, FFI
 
 The F* path is the stronger source connection. The build selects the exact
 commitment, ratchet, and PQXDH Rust items in the
-[`HAX_ITEMS` list](../crates/protocol-core/Makefile#L13-L45), regenerates their
+[`HAX_ITEMS` list](../beaconcrypt-core/Makefile#L13-L45), regenerates their
 F* definitions, then checks the generated modules and handwritten lemmas
 with every proof obligation required—the checker is not allowed to accept a
 missing proof. Subject to trusting hax and its Rust model, these lemmas are about
@@ -136,7 +136,7 @@ private in Rust, so a lemma can construct states that ordinary Rust callers
 cannot. The composed handshake theorem explicitly calls the authentication
 transition, but an isolated field-preservation lemma is not by itself proof
 that a value came through the production validation path
-([exception](../crates/protocol-core/proofs/trusted-boundary.md#generated-code-exceptions)).
+([exception](../beaconcrypt-core/proofs/trusted-boundary.md#generated-code-exceptions)).
 
 The ProVerif branch is parallel to, not generated from, the F* branch. Hax emits
 the selected data-type declarations, but its three relevant operations—
@@ -148,9 +148,9 @@ The wire protocol, ideal cryptographic rules, honest participants, replay
 owner, compromise schedule, proof-bookkeeping events, and security questions
 are also handwritten. This boundary is described in the
 [Stage 7 implementation record](impl/formal-verification-stage-7.md#generated-proverif-boundary)
-and the [generated-code exceptions](../crates/protocol-core/proofs/trusted-boundary.md#generated-code-exceptions),
+and the [generated-code exceptions](../beaconcrypt-core/proofs/trusted-boundary.md#generated-code-exceptions),
 and the resulting rules are visible in
-[`lib.pvl`](../crates/protocol-core/proofs/pro-verif/extraction/lib.pvl#L347-L357).
+[`lib.pvl`](../beaconcrypt-core/proofs/pro-verif/extraction/lib.pvl#L347-L357).
 The F* byte-layout theorems support human review of those three definitions,
 but there is no machine-checked theorem connecting the two branches or showing
 that the complete ProVerif process is the complete production application.
@@ -181,8 +181,8 @@ Production parses the frame, checks the sender and minimum protected-payload len
 
 ### Commitment transcript and collision witness
 
-The production BLAKE2b wrapper delegates byte construction to the selected `no_std` [`build_commitment_transcript`](../crates/protocol-core/src/commitment.rs) helper.
-The checked [`Commitment.Lemmas.fst`](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst) module proves that its 229 output bytes are exactly the 32-byte key, 12-byte nonce, 153-byte associated data, 16-byte AEAD tag, little-endian 64-bit sequence, and little-endian 64-bit sender ID in that order.
+The production BLAKE2b wrapper delegates byte construction to the selected `no_std` [`build_commitment_transcript`](../beaconcrypt-core/src/commitment.rs) helper.
+The checked [`Commitment.Lemmas.fst`](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst) module proves that its 229 output bytes are exactly the 32-byte key, 12-byte nonce, 153-byte associated data, 16-byte AEAD tag, little-endian 64-bit sequence, and little-endian 64-bit sender ID in that order.
 It also proves `encode_u64_le_is_injective` and `production_commitment_input_is_injective`, so equality of two production transcript arrays implies equality of all six semantic inputs.
 
 The theorem `ctx_distinct_openings_imply_hash_collision` quantifies over arbitrary pure hash and AEAD-open functions and fixes one ciphertext core, transmitted tag, and outer commitment for both openings.
@@ -197,21 +197,21 @@ The libsodium BLAKE2b call, successful slice-to-array conversions, input provena
 ### PQXDH registration and key establishment
 
 The PQXDH lemmas are checked against the generated Rust translation in
-[`Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst`](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst).
+[`Beaconcrypt_core.Pqxdh.Lemmas.fst`](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst).
 
 | Area | Exact machine-checked result | Important qualification |
 | --- | --- | --- |
-| Public-key encodings | The Ed25519, ML-KEM-768, and X25519 type markers and the two X25519 role markers have the documented distinct byte values. Each encoding preserves the key bytes exactly; encoder/decoder pairs round-trip; a prekey encoding is rejected as a one-time key and vice versa ([marker and role lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L74-L178)). | Signature verification occurs outside the core. The theorem proves what bytes are tagged and decoded, not that Ed25519 authenticated them. |
-| Honest `InitKex` construction | A value made by `beacon_start` is accepted by `validate_init_kex` and yields exactly the four original public keys and expected pending state ([theorem](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L180-L207)). | This is a constructor/validator round trip, not an attacker-controlled wire theorem and not a proof that only one bundle can ever be emitted. |
-| Server trust-anchor binding | `BeaconFresh` stores the expected server public key and numeric identity-key ID together. `beacon_start` preserves both fields in `BeaconInitSent`; a different response public key is rejected; a successful finish copies both fields into the candidate and derives associated data from the stored public key; post-open authentication rejects a different sender ID; and commit preserves the pair in `BeaconEstablished` ([state preservation](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L180-L221), [finish and authentication](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L482-L634), [acceptance-implies-agreement theorem](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L764-L816)). | The constructor must still receive the authentic compiled-in binding, and the adapter must truthfully pass the parsed response key plus the sender ID and assigned-ID prefix returned by the successful initial open. The acceptance theorem assumes no stored/accepting binding equality: successful key and ID checks derive both fields' equality with the accepting server candidate. The proof prevents later mutable-map replacement from redefining the expected binding; it cannot repair a trust anchor replaced before construction. |
-| Registration identifier | The identifier is exactly the fixed-width beacon identity followed by the one-time X25519 key ([theorem](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L223-L230)). | This avoids a hash-collision assumption for the encoding. Freshness, one-time use, persistent insertion, and absence of rollback are not established by this theorem. |
-| Root-key input | When none of the four 32-byte DH outputs is the all-zero array, the 192 bytes are exactly `0xff` repeated 32 times, followed by DH1, DH2, DH3, DH4, and the ML-KEM shared secret in that order. If any DH output is all zero, construction returns `InvalidDhOutput` ([theorems](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L232-L338)). | The KEM secret is not required to be nonzero. This proves the input to later key derivation, not the HKDF implementation or its output. |
-| Honest-role input and root agreement | If the adapters supply byte-identical DH1 through DH4 values and byte-identical ML-KEM secrets, the two roles return the same root-input result. `equal_root_inputs_derive_same_fixed_root` and `authenticated_registration_derives_common_fixed_root` then prove equal 32-byte roots when the authenticated beacon candidate and pending server registration expose equal verified transcripts to the same fixed pure root function ([lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst)). | X25519 and ML-KEM agreement are preconditions. The bridge does not prove HKDF: production must faithfully and totally apply HKDF-SHA-512 to the exact transcript with `PQXDH_INFO`. |
-| Associated data | The 153 bytes are exactly the tagged server identity, tagged beacon identity, `PQXDH_INFO`, and `SYM_RATCHET_INFO`, in that order. Equal role identities give equal associated data ([theorems](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L355-L478)). | The adapter must actually supply the returned bytes to authenticated encryption (AEAD). The theorem does not prove AEAD security. |
-| Concrete ratchet composition | `initial_ratchet_chains_use_exact_root_and_directions` proves that the core-created initial request contains the exact root and `SYM_RATCHET_INFO` and that its two fixed 32-byte halves are complementary. `concrete_initial_kernels_are_complementary` and `concrete_initial_kernels_are_reachable` cover the role-bound kernel constructors, while `concrete_directional_materials_agree` proves both cross-role material equalities at every sequence. `beacon_seal_server_open_preserves_concrete_session` and `server_seal_beacon_open_preserves_concrete_session` preserve the paired concrete-session reachability invariant on every pure callback outcome ([lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst)). | F* treats both KDF executors and seal/open callbacks as pure functions; it proves equality and reachability, not HKDF or AEAD security or that a ciphertext produced by one callback is accepted by the other. HKDF semantics/totality, ephemeral libsodium conversion and callback fidelity, compiler correspondence, peer selection, publication, and rollback prevention remain external. |
-| Authenticated response IDs | The assigned-ID binding is the exact eight-byte little-endian encoding of the `u64`. The authentication transition requires both the initial frame's sender ID to equal the candidate's pinned server identity-key ID and the assigned-ID bytes to equal the candidate binding; either mismatch is rejected, and commit preserves the complete server binding plus assigned ID ([theorems](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L549-L634)). | The numeric sender and eight assigned-ID bytes must really be the values returned by a successful initial AEAD open. F* accepts those values as inputs; it does not prove their wire or AEAD provenance. |
-| Replay status and pending acceptance | `Fresh` is admitted, `Consumed` is rejected, and a fresh successful `server_accept` returns the exact pending values without advancing the live core counter ([theorems](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L636-L686)). | The persistent set lookup and insertion are outside F*. The adapter supplies the `Fresh` or `Consumed` classification. |
-| Allocation and server transaction shape | The next key ID is mathematical increment by one or explicit exhaustion at `u64::MAX`; it cannot wrap. A different server binding and an adapter-reported occupied ID are rejected. An available ID produces the exact proposed state and peer; pure commit returns that proposal and pure abort returns the previous state ([theorems](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L688-L762)). | The adapter supplies truthful availability. F* proves return values, not atomic mutation of the production counter, map, ratchet, or persistent storage. |
+| Public-key encodings | The Ed25519, ML-KEM-768, and X25519 type markers and the two X25519 role markers have the documented distinct byte values. Each encoding preserves the key bytes exactly; encoder/decoder pairs round-trip; a prekey encoding is rejected as a one-time key and vice versa ([marker and role lemmas](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L74-L178)). | Signature verification occurs outside the core. The theorem proves what bytes are tagged and decoded, not that Ed25519 authenticated them. |
+| Honest `InitKex` construction | A value made by `beacon_start` is accepted by `validate_init_kex` and yields exactly the four original public keys and expected pending state ([theorem](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L180-L207)). | This is a constructor/validator round trip, not an attacker-controlled wire theorem and not a proof that only one bundle can ever be emitted. |
+| Server trust-anchor binding | `BeaconFresh` stores the expected server public key and numeric identity-key ID together. `beacon_start` preserves both fields in `BeaconInitSent`; a different response public key is rejected; a successful finish copies both fields into the candidate and derives associated data from the stored public key; post-open authentication rejects a different sender ID; and commit preserves the pair in `BeaconEstablished` ([state preservation](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L180-L221), [finish and authentication](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L482-L634), [acceptance-implies-agreement theorem](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L764-L816)). | The constructor must still receive the authentic compiled-in binding, and the adapter must truthfully pass the parsed response key plus the sender ID and assigned-ID prefix returned by the successful initial open. The acceptance theorem assumes no stored/accepting binding equality: successful key and ID checks derive both fields' equality with the accepting server candidate. The proof prevents later mutable-map replacement from redefining the expected binding; it cannot repair a trust anchor replaced before construction. |
+| Registration identifier | The identifier is exactly the fixed-width beacon identity followed by the one-time X25519 key ([theorem](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L223-L230)). | This avoids a hash-collision assumption for the encoding. Freshness, one-time use, persistent insertion, and absence of rollback are not established by this theorem. |
+| Root-key input | When none of the four 32-byte DH outputs is the all-zero array, the 192 bytes are exactly `0xff` repeated 32 times, followed by DH1, DH2, DH3, DH4, and the ML-KEM shared secret in that order. If any DH output is all zero, construction returns `InvalidDhOutput` ([theorems](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L232-L338)). | The KEM secret is not required to be nonzero. This proves the input to later key derivation, not the HKDF implementation or its output. |
+| Honest-role input and root agreement | If the adapters supply byte-identical DH1 through DH4 values and byte-identical ML-KEM secrets, the two roles return the same root-input result. `equal_root_inputs_derive_same_fixed_root` and `authenticated_registration_derives_common_fixed_root` then prove equal 32-byte roots when the authenticated beacon candidate and pending server registration expose equal verified transcripts to the same fixed pure root function ([lemmas](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst)). | X25519 and ML-KEM agreement are preconditions. The bridge does not prove HKDF: production must faithfully and totally apply HKDF-SHA-512 to the exact transcript with `PQXDH_INFO`. |
+| Associated data | The 153 bytes are exactly the tagged server identity, tagged beacon identity, `PQXDH_INFO`, and `SYM_RATCHET_INFO`, in that order. Equal role identities give equal associated data ([theorems](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L355-L478)). | The adapter must actually supply the returned bytes to authenticated encryption (AEAD). The theorem does not prove AEAD security. |
+| Concrete ratchet composition | `initial_ratchet_chains_use_exact_root_and_directions` proves that the core-created initial request contains the exact root and `SYM_RATCHET_INFO` and that its two fixed 32-byte halves are complementary. `concrete_initial_kernels_are_complementary` and `concrete_initial_kernels_are_reachable` cover the role-bound kernel constructors, while `concrete_directional_materials_agree` proves both cross-role material equalities at every sequence. `beacon_seal_server_open_preserves_concrete_session` and `server_seal_beacon_open_preserves_concrete_session` preserve the paired concrete-session reachability invariant on every pure callback outcome ([lemmas](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst)). | F* treats both KDF executors and seal/open callbacks as pure functions; it proves equality and reachability, not HKDF or AEAD security or that a ciphertext produced by one callback is accepted by the other. HKDF semantics/totality, ephemeral libsodium conversion and callback fidelity, compiler correspondence, peer selection, publication, and rollback prevention remain external. |
+| Authenticated response IDs | The assigned-ID binding is the exact eight-byte little-endian encoding of the `u64`. The authentication transition requires both the initial frame's sender ID to equal the candidate's pinned server identity-key ID and the assigned-ID bytes to equal the candidate binding; either mismatch is rejected, and commit preserves the complete server binding plus assigned ID ([theorems](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L549-L634)). | The numeric sender and eight assigned-ID bytes must really be the values returned by a successful initial AEAD open. F* accepts those values as inputs; it does not prove their wire or AEAD provenance. |
+| Replay status and pending acceptance | `Fresh` is admitted, `Consumed` is rejected, and a fresh successful `server_accept` returns the exact pending values without advancing the live core counter ([theorems](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L636-L686)). | The persistent set lookup and insertion are outside F*. The adapter supplies the `Fresh` or `Consumed` classification. |
+| Allocation and server transaction shape | The next key ID is mathematical increment by one or explicit exhaustion at `u64::MAX`; it cannot wrap. A different server binding and an adapter-reported occupied ID are rejected. An available ID produces the exact proposed state and peer; pure commit returns that proposal and pure abort returns the previous state ([theorems](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L688-L762)). | The adapter supplies truthful availability. F* proves return values, not atomic mutation of the production counter, map, ratchet, or persistent storage. |
 
 In plain language, these results remove ambiguity from the bytes both sides are
 supposed to use, reject several dangerous boundary cases instead of wrapping or
@@ -224,7 +224,7 @@ cryptography, database operation, or state publication correctly.
 For the server trust anchor specifically, the deployment assumption now enters the verified state once rather than being re-created by a peer-map lookup during finish. The F* lemmas follow the original public-key/ID pair from fresh state through `BeaconInitSent`, candidate, authenticated response, and established state. A focused theorem assumes no equality between that stored pair and an accepting server candidate; when response-key preparation and sender-ID authentication both succeed, it derives equality of both fields throughout those states. Production still has to construct the initial pair from the intended compiled-in values and accurately report the response fields authenticated by the initial open.
 
 The broadest PQXDH theorem is
-[`conditional_honest_run_correspondence`](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Pqxdh.Lemmas.fst#L818-L941).
+[`conditional_honest_run_correspondence`](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst#L818-L941).
 It assumes a non-exhausted counter, a registration whose beacon identity matches the pending beacon state, four valid and pairwise-equal DH results, an equal KEM secret, `Fresh` replay status, an `Available` next ID, and field-by-field equality between the accepting server binding and the binding already retained in beacon state so that it can state a complete honest successful run. The response public key and successfully opened sender ID are still checked by the beacon transitions, and this broad theorem invokes the separate acceptance-implies-agreement result in its successful server-candidate branch. The production adapter, not either theorem, must authenticate the wire provenance of those values. Under those conditions the broad theorem proves equal root inputs, equal associated data, equality of both server-binding fields, the same assigned peer ID and binding bytes, complementary ratchet directions, successful binding authentication, and matching committed core peer data.
 
 That theorem describes the result after inputs have already been validated and both parties follow the protocol. The newer `authenticated_registration_derives_common_fixed_root`, `concrete_initial_kernels_are_complementary`, and `concrete_initial_kernels_are_reachable` lemmas continue the composition from authenticated equal root-input transcripts through a fixed pure root derivation to complementary reachable production-specialized kernels. They still do not verify signatures, wire provenance, X25519/ML-KEM or HKDF semantics, AEAD, set/map lookups, actual network behavior, or publication. These results should not be read as an active-attacker handshake proof; that is the separate ProVerif layer.
@@ -233,7 +233,7 @@ That theorem describes the result after inputs have already been validated and b
 
 The extracted ratchet has a logical control layer, a generic refined proof layer, and the production-facing `ConcreteRatchetKernel`. The generic `RefinedRatchet<SendChain, ReceiveChain, Material>` owns control, both live chain values, and a fixed `[Option<CachedReceiveKey<Material>>; 50]` array; the concrete kernel specializes those parameters to private executor-bearing chains and core `RatchetMaterial`. Each private cached record holds both `sequence` and `material`; successful future publication and restoration seal skipped or imported pairs together, lookup compares the tag with the requested logical sequence, and cached completion checks the target and old-last tags before mutation. For example, while preparing sequence 3 from counter 1, the canonical sequence-2 record remains private alongside separate sequence-3 target material; only after successful authentication does sequence 2 enter the live cache, while sequence 3 is consumed without ever being cached.
 
-The proof-only `chain_after(initial, step, count)` recursively applies one fixed pure step `count` times, and `material_at(initial, step, sequence)` selects the material returned by the step that allocates that positive sequence. The generic `reachable` predicate strengthens `valid_refined` with canonical live-chain and cached-material derivations. `concrete_reachable` specializes it to `ConcreteRatchetKernel` and the sole core-selected `concrete_ratchet_step`; each private concrete chain contains its fixed-width bytes and executor, and `concrete_ratchet_step_preserves_executor` proves that every next chain carries the identical executor. The structural clauses still bound the cache at 50, require unique nonzero logical sequences no greater than the receive counter, require every active concrete tag to match its logical sequence, and require inactive slots to be empty ([ratchet lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst)).
+The proof-only `chain_after(initial, step, count)` recursively applies one fixed pure step `count` times, and `material_at(initial, step, sequence)` selects the material returned by the step that allocates that positive sequence. The generic `reachable` predicate strengthens `valid_refined` with canonical live-chain and cached-material derivations. `concrete_reachable` specializes it to `ConcreteRatchetKernel` and the sole core-selected `concrete_ratchet_step`; each private concrete chain contains its fixed-width bytes and executor, and `concrete_ratchet_step_preserves_executor` proves that every next chain carries the identical executor. The structural clauses still bound the cache at 50, require unique nonzero logical sequences no greater than the receive counter, require every active concrete tag to match its logical sequence, and require inactive slots to be empty ([ratchet lemmas](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Ratchet.Lemmas.fst)).
 
 The following properties are proved:
 
@@ -284,7 +284,7 @@ are replicated, so the model considers unbounded concurrent instances. Each
 honest instance nevertheless executes one fixed record schedule: four
 server-to-beacon records and one beacon-to-server record, with server sequence 3
 received before sequence 2
-([model](../crates/protocol-core/proofs/pro-verif/environment.pvl)). The separate
+([model](../beaconcrypt-core/proofs/pro-verif/environment.pvl)). The separate
 late-compromise scenario retains the honest protocol processes and adds its
 snapshot-specific compromise process; it does not need the malicious-registration
 processes to establish those conditional compromise results.
@@ -306,11 +306,11 @@ application selects the correct recipient.
 
 ### CTX commitment negative control
 
-The ordinary record model's [`open_frame`](../crates/protocol-core/proofs/pro-verif/crypto.pvl) rule already requires an exact key, nonce-derived material, associated data, sequence, sender ID, tag, and ciphertext term.
+The ordinary record model's [`open_frame`](../beaconcrypt-core/proofs/pro-verif/crypto.pvl) rule already requires an exact key, nonce-derived material, associated data, sequence, sender ID, tag, and ciphertext term.
 Its record correspondence therefore establishes origin only under that ideal exact-opening rule; by itself it does not show what CTX adds to a non-key-committing AEAD.
 
-The dedicated [`aead-commitment-negative-control.pvl`](../crates/protocol-core/proofs/pro-verif/aead-commitment-negative-control.pvl) instead defines one ciphertext/tag term with two successful reductions to distinct fresh plaintexts under structurally distinct key, nonce, and associated-data terms.
-Both top-level scenarios run the exact same [`WeakAeadMultiOpened` query](../crates/protocol-core/proofs/pro-verif/aead-commitment-negative-control-queries.pvl): [`aead-commitment.pv`](../crates/protocol-core/proofs/pro-verif/aead-commitment.pv) must report the event unreachable because the one collision-free `ctx_commitment` term cannot validate both contexts, while [`aead-no-commitment.pv`](../crates/protocol-core/proofs/pro-verif/aead-no-commitment.pv) removes those checks and must produce a trace reaching the event.
+The dedicated [`aead-commitment-negative-control.pvl`](../beaconcrypt-core/proofs/pro-verif/aead-commitment-negative-control.pvl) instead defines one ciphertext/tag term with two successful reductions to distinct fresh plaintexts under structurally distinct key, nonce, and associated-data terms.
+Both top-level scenarios run the exact same [`WeakAeadMultiOpened` query](../beaconcrypt-core/proofs/pro-verif/aead-commitment-negative-control-queries.pvl): [`aead-commitment.pv`](../beaconcrypt-core/proofs/pro-verif/aead-commitment.pv) must report the event unreachable because the one collision-free `ctx_commitment` term cannot validate both contexts, while [`aead-no-commitment.pv`](../beaconcrypt-core/proofs/pro-verif/aead-no-commitment.pv) removes those checks and must produce a trace reaching the event.
 The result classifier requires those exact opposite classifications.
 
 This differential result supplements the F* pointwise theorem with an explicit ideal-hash CTX/no-CTX counterfactual and does not assume that the base AEAD is key committing.
@@ -320,7 +320,7 @@ The [computational lifting](ctx-commitment.md) conventionally turns the F*-prove
 ### Baseline secrecy
 
 The five baseline secrecy queries in
-[`queries.pvl`](../crates/protocol-core/proofs/pro-verif/queries.pvl#L7-L11)
+[`queries.pvl`](../beaconcrypt-core/proofs/pro-verif/queries.pvl#L7-L11)
 all succeed while attacker-owned beacons concurrently submit valid registrations
 and the server can commit their responses. The symbolic attacker cannot derive
 these named honest-session application values while honest state remains
@@ -362,7 +362,7 @@ specific honest registration bundle. It is not a field on the wire.
 | `MessageReceived` | `MessageSent`: session, direction, sequence, sender, receiver, plaintext | Each accepted record in the fixed schedule has one matching honest send, with peer, direction, sequence, session, and content bound. |
 
 The exact queries are in
-[`queries.pvl`](../crates/protocol-core/proofs/pro-verif/queries.pvl#L13-L174).
+[`queries.pvl`](../beaconcrypt-core/proofs/pro-verif/queries.pvl#L13-L174).
 The last correspondence is the basis for the modeled record-authentication,
 cross-direction, cross-peer, cross-session, replay, and “a party cannot be
 tricked about who shares the key” claims. Those are consequences of the event
@@ -376,7 +376,7 @@ An implication can be vacuously true if its later event can never occur. For
 example, “every accepted message was sent honestly” says nothing if the model
 can never accept any message. Seven separate queries provide non-vacuity
 controls
-([queries](../crates/protocol-core/proofs/pro-verif/reachability-queries.pvl)).
+([queries](../beaconcrypt-core/proofs/pro-verif/reachability-queries.pvl)).
 Five show that the model can reach honest server acceptance, registration
 replay rejection, abort after consumption, beacon commit, and a message receive.
 One reaches a committed attacker-owned registration response, and the last
@@ -391,7 +391,7 @@ every one of the five honest secret-bearing record sites.
 
 ### State-neutral receive and compromise
 
-The dedicated [`failed-receive.pv`](../crates/protocol-core/proofs/pro-verif/failed-receive.pv) file now contains a state-neutral server-to-beacon receive scenario. It gives the attacker public authentic ciphertexts and a correctly typed forged frame whose protected component cannot satisfy the ideal `open_frame` rule. The short leg uses one explicit `ready_state` term before the attempt, after the first rejection, after the repeated rejection, and at the later authentic receive. F* proves the corresponding generic rejection equality, non-vacuous exact preparation, conditional success publication, replay neutrality, and repeated-fixed-rejection retry equivalence without a role or direction parameter; ProVerif supplies the finite cryptographic secrecy, compromise, and exact-schedule witnesses and does not duplicate this trace in the beacon-to-server direction.
+The dedicated [`failed-receive.pv`](../beaconcrypt-core/proofs/pro-verif/failed-receive.pv) file now contains a state-neutral server-to-beacon receive scenario. It gives the attacker public authentic ciphertexts and a correctly typed forged frame whose protected component cannot satisfy the ideal `open_frame` rule. The short leg uses one explicit `ready_state` term before the attempt, after the first rejection, after the repeated rejection, and at the later authentic receive. F* proves the corresponding generic rejection equality, non-vacuous exact preparation, conditional success publication, replay neutrality, and repeated-fixed-rejection retry equivalence without a role or direction parameter; ProVerif supplies the finite cryptographic secrecy, compromise, and exact-schedule witnesses and does not duplicate this trace in the beacon-to-server direction.
 
 The finite execution has two exact legs:
 
@@ -410,13 +410,13 @@ The private-state queries require all six named application values—consumed pa
 
 The repository threat model permits the attacker to register and fully control separate malicious beacons but excludes access to a legitimate beacon's execution state. The private receive top level runs those malicious registration processes concurrently: their canary is attacker-readable while all six receive canaries remain secret. This is direct symbolic composition of the capabilities, not an end-to-end handshake/record trace; both receive legs begin from fresh symbolic roots. Interpreting the disjoint symbolic states as distinct production peers still depends on the reviewed peer-selection and independent-root adapter refinements. Registering a malicious beacon does not trigger the separate receive-state compromise process.
 
-The separate [`failed-receive-compromise.pv`](../crates/protocol-core/proofs/pro-verif/failed-receive-compromise.pv) scenario synchronizes compromise immediately after the two rejected attempts and before authentic sequence-3 delivery. The private snapshot message carries `ready_state` as both its before and after term, the unchanged chain-2 live chain, and the empty cache. The compromise process structurally requires that empty cache and discloses only the live chain. The consumed sequence-1 value remains secret. The short-leg skipped and target values are deliberate negative secrecy results because the forward chain derives their material; the independently rooted maximum-gap, cached, and after-release values remain secret. The result is that rejection did not enlarge state or exposure, not that future material survives compromise of a live symmetric chain.
+The separate [`failed-receive-compromise.pv`](../beaconcrypt-core/proofs/pro-verif/failed-receive-compromise.pv) scenario synchronizes compromise immediately after the two rejected attempts and before authentic sequence-3 delivery. The private snapshot message carries `ready_state` as both its before and after term, the unchanged chain-2 live chain, and the empty cache. The compromise process structurally requires that empty cache and discloses only the live chain. The consumed sequence-1 value remains secret. The short-leg skipped and target values are deliberate negative secrecy results because the forward chain derives their material; the independently rooted maximum-gap, cached, and after-release values remain secret. The result is that rejection did not enlarge state or exposure, not that future material survives compromise of a live symmetric chain.
 
 Compromise does not make later honest delivery impossible. A separate reachability witness schedules the attacker to forward the original authentic sequence-3 ciphertext after compromise, and the receiver can still accept it through a freshly prepared candidate. This is possibility, not liveness: the active attacker may block delivery or use the compromised future material to construct another accepted frame first, in which case the honest ciphertext will later be rejected.
 
 This ProVerif result is one exact, unrolled capacity-50 schedule under ideal cryptography. It is not a quantification over every gap, cache arrangement, retry count, or interleaving. The general F* state statements cover exact canonical live-chain iterations and cached-material derivations, whole-plan preflight, callback-`None` entry-state equality, reachability preservation, and non-vacuous exact preparation for every valid admitted nonzero future plan and valid cached target. Callback-success publication is still conditional on the supplied pure callback returning plaintext. The high-level capstones additionally prove that public success consumes the target and makes replay neutral, any finite repetition of one fixed rejected operation leaves an arbitrary later retry equal to its direct transition, rejection preserves cache capacity, and a fresh empty-cache maximum-gap plan publishes exactly 49 skipped entries when the callback accepts the canonical target. `concrete_reachable` specializes the derivational facts to the core chain/material types and fixed lifetime executor, while the PQXDH lemmas prove both cross-role material equalities at every sequence. F* still cannot establish concrete root or ratchet HKDF semantics or totality, output noncollision, ephemeral libsodium conversion and AEAD behavior, cryptographic secrecy, compromise, or forgery conclusions of the symbolic trace.
 
-The ProVerif attacker starts at the post-parser admission boundary. A symbolic `crypto_frame` represents a frame whose constructor, sender, sequence, and protected component are available to the network attacker; it does not represent Cap'n Proto byte parsing or an arbitrary byte length. Therefore the model does not prove that frames which are empty, truncated, unparsable, from an unknown or wrong sender, or carry no more than the production overhead are rejected before ratcheting. Production ordering in [`decrypt_message_with_ratchet`](../src/ratchet.rs) and the boundary/truncation regressions in [`tests/protocol.rs`](../tests/protocol.rs) support those separate adapter claims.
+The ProVerif attacker starts at the post-parser admission boundary. A symbolic `crypto_frame` represents a frame whose constructor, sender, sequence, and protected component are available to the network attacker; it does not represent Cap'n Proto byte parsing or an arbitrary byte length. Therefore the model does not prove that frames which are empty, truncated, unparsable, from an unknown or wrong sender, or carry no more than the production overhead are rejected before ratcheting. Production ordering in [`decrypt_message_with_ratchet`](../beaconcrypt/src/ratchet.rs) and the boundary/truncation regressions in [`beaconcrypt/tests/protocol.rs`](../beaconcrypt/tests/protocol.rs) support those separate adapter claims.
 
 ### Precisely scoped late-compromise results
 
@@ -431,8 +431,8 @@ exactly:
 
 It does not reveal long-term identity, prekey, KEM, or server state. The model
 constructs the snapshot at the exact point shown in the
-[beacon process](../crates/protocol-core/proofs/pro-verif/environment.pvl#L516-L531),
-and the [compromise process](../crates/protocol-core/proofs/pro-verif/environment.pvl#L1065-L1085)
+[beacon process](../beaconcrypt-core/proofs/pro-verif/environment.pvl#L516-L531),
+and the [compromise process](../beaconcrypt-core/proofs/pro-verif/environment.pvl#L1065-L1085)
 reveals its three fields.
 
 The expected results are:
@@ -475,7 +475,7 @@ sources gives these important qualifications:
 
 | Broadly worded inventory claim | What the current corpus actually supports |
 | --- | --- |
-| “The commitment input is exactly `(key, nonce, associated data, AEAD tag, sequence, sender ID)`.” | Production delegates its hash input to the extracted fixed-size builder, and F* proves its exact six ranges plus both little-endian encodings ([Rust helper](../crates/protocol-core/src/commitment.rs), [lemmas](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst)). The caller's field provenance, BLAKE2b call, hax/compiler correctness, and machine code remain outside the theorem. |
+| “The commitment input is exactly `(key, nonce, associated data, AEAD tag, sequence, sender ID)`.” | Production delegates its hash input to the extracted fixed-size builder, and F* proves its exact six ranges plus both little-endian encodings ([Rust helper](../beaconcrypt-core/src/commitment.rs), [lemmas](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst)). The caller's field provenance, BLAKE2b call, hax/compiler correctness, and machine code remain outside the theorem. |
 | “The modified CTX construction provides strong commitment.” | F* proves the pointwise collision witness for arbitrary pure hash and AEAD-open functions, including unequal-key and unequal-context base-AEAD openings; the conventional computational lifting bounds misattribution advantage by BLAKE2b-512 collision advantage. ProVerif separately confirms the intended ideal-hash CTX/no-CTX differential. The probability/runtime lifting is not mechanized, and BLAKE2b, libsodium, adapter provenance, compiler correspondence, and confidentiality/authenticity preservation remain assumptions or separate obligations. |
 | “A ratchet step applies the fixed domain KDF to its old chain and returns the intended key, next chain, and nonce.” | `symmetric_ratchet_kdf_request_is_exact` proves that the core-owned request contains the exact old chain and `SYM_RATCHET_INFO`; `ratchet_step_uses_exact_chain_and_partition` proves exact output ranges `0..32`, `32..64`, and `64..76` in owned fixed-width key, chain, and nonce types; and `concrete_ratchet_step_preserves_executor` proves that the identical executor remains in the next chain. HKDF-SHA-512 semantics/totality, output noncollision, ephemeral libsodium conversion fidelity, callback behavior, compiler correspondence, panic behavior, and physical erasure remain external. |
 | “Peer, counter, and ratchet publication commit atomically.” | F* proves private candidate and publication relations, callback-`None` entry-state equality, and one prevalidated callback-`Some` publication with no reported failure that can expose a prefix. The extracted definition places admission and fixed-array preflight before KDF/open work, and the pure rejection theorem is extensionally independent of arbitrary executor/callback functions; the claim that production invokes neither on those paths additionally relies on generated/source control-flow review, faithful compilation, and Rust call-count tests. An admitted authentication rejection may invoke both while remaining state-neutral. F* separately proves the pure peer candidate's returned shape. The maintained `PersistentServer` wrapper performs no successor encoding or CAS for a rejected receive, withholds accepted output until a complete successor snapshot wins external CAS, and poisons a losing accepted branch. F* does not prove the surrounding Server mutation, callback effects, snapshot codec, trusted payload provenance, store atomicity/durability, crash behavior, or rollback resistance. |
@@ -529,7 +529,7 @@ The corpus also does not prove:
 - trusted provenance of restored chains, counters, and receive sequence/material pairs as a theorem conclusion; the restoration theorems remain conditional, while production attempts to discharge the premise with a trusted-store payload-integrity/provenance contract, canonical decode/re-encode check, and fresh activation CAS that F* does not verify;
 - canonical JSON parsing, duplicate-key rejection, or serialization injectivity; production uses a duplicate-rejecting visitor before `HashMap` insertion, canonical decimal `u64` keys, sorted output, unknown-field rejection, and byte-identical decode/re-encode validation, but these are reviewed adapter behavior rather than proof conclusions;
 - byte-level equivalence between ProVerif's admitted symbolic frame and production Cap'n Proto parsing, sender lookup/checks, overhead-length validation, commitment slicing, or malformed-input rejection;
-- behavior through direct protocol-core construction or test-only/crate-private receive-ratchet, peer-map, reset, compatibility, or mutation helpers outside the documented high-level API trace;
+- behavior through direct beaconcrypt-core construction or test-only/crate-private receive-ratchet, peer-map, reset, compatibility, or mutation helpers outside the documented high-level API trace;
 - security after an unsafe retained copy, bypass of the affine high-level API, use of an independent store, or rollback of counters and replay history; those cases can repeat the same canonical sequence material even though supported operational types are not `Clone`; or
 - physical deletion of old keys. Server snapshots contain current ratchet chains and cached receive keys and are explicitly documented as weakening server-side forward secrecy ([persistence overview](persistence.md#server-state-persistence)). The trusted store, not snapshot cryptography, supplies their integrity and provenance.
 
@@ -581,7 +581,7 @@ true:
 
 ProVerif represents these with stronger perfect symbolic constructors and
 equations in
-[`crypto.pvl`](../crates/protocol-core/proofs/pro-verif/crypto.pvl). Signatures
+[`crypto.pvl`](../beaconcrypt-core/proofs/pro-verif/crypto.pvl). Signatures
 are unforgeable, matching DH and KEM always agree, constructors do not collide,
 secrets cannot be recovered by inversion, and a frame opens only with exactly
 matching material, associated data, sequence, and sender ID. The model uses
@@ -670,19 +670,19 @@ by the pinned hax proof library; their stated prefix/range/suffix behavior is
 trusted rather than proved in this repository. The little-endian key-ID proof
 also relies on a specification-only right-shift lemma equating bounded shifts
 with division by the corresponding power of two
-([inventory](../crates/protocol-core/proofs/trusted-boundary.md#proof-library-and-tool-assumptions)).
+([inventory](../beaconcrypt-core/proofs/trusted-boundary.md#proof-library-and-tool-assumptions)).
 The handwritten AWK result classifier is likewise trusted to recognize every
 required ProVerif query and classify its output correctly. The repository
 prevents local proof shortcuts by rejecting `assume` and `admit` in
 repository-owned F* files
 and rejecting checker flags that would permit missing proofs
-([policy gate](../crates/protocol-core/Makefile#L135-L147)). This does not remove
+([policy gate](../beaconcrypt-core/Makefile#L135-L147)). This does not remove
 assumptions or trusted interfaces from external hax/F* libraries.
 
 Stage 9 now records the opaque functions, primitive laws, adapter refinements,
 proof-library interfaces, generated exceptions, and handwritten model fragments
 in the canonical
-[trust-boundary inventory](../crates/protocol-core/proofs/trusted-boundary.md).
+[trust-boundary inventory](../beaconcrypt-core/proofs/trusted-boundary.md).
 Its manifest and structural checks make unacknowledged boundary drift fail the
 verification gate. Updating the recorded hashes can make an intentional change
 pass, so this is a review-control improvement, not a proof of the inventoried
@@ -815,12 +815,12 @@ The defensible statement is therefore: **in the combined private symbolic run, a
 The current proof entry point is:
 
 ```sh
-make -C crates/protocol-core verify
+make -C beaconcrypt-core verify
 ```
 
-It enters the locked Nix environment, checks exact tool identities, regenerates both proof backends, enforces the local no-`assume`/no-`admit` policy, strictly checks generated and handwritten F*, and runs all ProVerif scenarios. After intentional boundary diffs have been reviewed and their hashes refreshed, the separate `make -C crates/protocol-core check-inventory` command checks the trust-boundary inventory. The reviewed tool bundle is recorded in the [Stage 8 document](impl/formal-verification-stage-8.md#locked-proof-bundle).
+It enters the locked Nix environment, checks exact tool identities, regenerates both proof backends, enforces the local no-`assume`/no-`admit` policy, strictly checks generated and handwritten F*, and runs all ProVerif scenarios. After intentional boundary diffs have been reviewed and their hashes refreshed, the separate `make -C beaconcrypt-core check-inventory` command checks the trust-boundary inventory. The reviewed tool bundle is recorded in the [Stage 8 document](impl/formal-verification-stage-8.md#locked-proof-bundle).
 
-The historical Stage 3 through Stage 9 documents describe how this boundary was built. Older statements such as “semantic proofs remain future work,” older tool versions, hashes, test counts, and failure-retention behavior describe their stage at that time. The current proof claims are the Stage 6 F* results plus the state-neutral preparation/publication lemmas, the current ProVerif model extending the Stage 7 baseline with attacker-owned registrations and explicit state-neutral receive scenarios, and Stage 8 reproducibility controls. Stage 9 adds a mechanically checked [trust-boundary inventory](../crates/protocol-core/proofs/trusted-boundary.md); its historical snapshot changed no theorem, symbolic rule, security question, or production behavior, while the maintained inventory now records the later proof extensions. Stage 8 likewise explicitly changed no theorem, model, or expected query result ([Stage 8 scope](impl/formal-verification-stage-8.md#result-and-scope)).
+The historical Stage 3 through Stage 9 documents describe how this boundary was built. Older statements such as “semantic proofs remain future work,” older tool versions, hashes, test counts, and failure-retention behavior describe their stage at that time. The current proof claims are the Stage 6 F* results plus the state-neutral preparation/publication lemmas, the current ProVerif model extending the Stage 7 baseline with attacker-owned registrations and explicit state-neutral receive scenarios, and Stage 8 reproducibility controls. Stage 9 adds a mechanically checked [trust-boundary inventory](../beaconcrypt-core/proofs/trusted-boundary.md); its historical snapshot changed no theorem, symbolic rule, security question, or production behavior, while the maintained inventory now records the later proof extensions. Stage 8 likewise explicitly changed no theorem, model, or expected query result ([Stage 8 scope](impl/formal-verification-stage-8.md#result-and-scope)).
 
 The result gate requires exactly:
 
@@ -831,23 +831,25 @@ The result gate requires exactly:
 - all 17 private state-neutral receive queries to be true (six secrecy and eleven state/origin correspondences), with all twelve receive reachability negations false (ten rejection/success phases plus malicious-registration commit and malicious-canary recovery); and
 - in the nine-query state-neutral receive compromise run, consumed-past and all three independently rooted capacity-leg secrecy results plus both compromise-order correspondences are true, short-leg skipped/target secrecy and honest-origin correspondence are false, and both unchanged-state compromise and later-honest-delivery reachability negations are false.
 
-During final receive-slot conformance verification on 11 August 2026, `cargo test --locked -p beaconcrypt-protocol-core`, `cargo test --locked`, `make -C crates/protocol-core verify`, and `make -C crates/protocol-core check-inventory` completed successfully against the repository state represented by this report. Repeating extraction after the reviewed generated update produced no additional generated diff. All F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the refreshed trust-boundary inventory matched the reviewed adapter, core, and proof inputs.
+During final receive-slot conformance verification on 11 August 2026, `cargo test --locked -p beaconcrypt-core`, `cargo test --locked`, `make -C beaconcrypt-core verify`, and `make -C beaconcrypt-core check-inventory` completed successfully against the repository state represented by this report. Repeating extraction after the reviewed generated update produced no additional generated diff. All F* verification conditions were discharged, every ProVerif classification matched the reviewed result set above, and the refreshed trust-boundary inventory matched the reviewed adapter, core, and proof inputs.
 
-After the subsequent derivational-reachability update on 11 August 2026, `cargo fmt --all -- --check`, `cargo test --locked -p beaconcrypt-protocol-core`, `cargo test --locked`, `cargo clippy --locked -p beaconcrypt-protocol-core --tests -- -D warnings`, `make -C crates/protocol-core CACHE_DIR=/tmp/beaconcrypt-fstar-cache verify`, and `make -C crates/protocol-core check-inventory` completed successfully. The full locked proof run regenerated no changed F* or ProVerif artifact, discharged every F* verification condition including the new reachability and conditional-restoration lemmas, and matched every reviewed ProVerif classification.
+After the subsequent derivational-reachability update on 11 August 2026, `cargo fmt --all -- --check`, `cargo test --locked -p beaconcrypt-core`, `cargo test --locked`, `cargo clippy --locked -p beaconcrypt-core --tests -- -D warnings`, `make -C beaconcrypt-core CACHE_DIR=/tmp/beaconcrypt-fstar-cache verify`, and `make -C beaconcrypt-core check-inventory` completed successfully. The full locked proof run regenerated no changed F* or ProVerif artifact, discharged every F* verification condition including the new reachability and conditional-restoration lemmas, and matched every reviewed ProVerif classification.
 
-After the ratchet work and Server/Beacon split were combined on the `proof` branch on 11 August 2026, the inventory tripwire detected changes in `build.rs`, `src/cbinds.rs`, `src/lib.rs`, `src/pqxdh.rs`, `src/pybinds.rs`, `src/shared.rs`, and `tests/protocol.rs`. Substantive review confirmed that the split preserved the extracted-core calls, authenticated transcript layouts, ratchet helpers, five-field persistence format, and registration commit ordering, but also found that the merge had dropped adapter regressions for signed Phase-1 field/type/role mapping and registration-key disposal. Those regressions were restored in `src/pqxdh.rs`, the trust-boundary mappings were updated to the concrete role APIs, and the eight affected fingerprints, including `proofs/trusted-boundary.md`, were refreshed. The resulting baseline was accepted only after the full Rust suite, clippy, both role-only builds, `check-inventory`, and `check-generated` passed. F* and ProVerif extraction remained unchanged, so this reconciliation changes no theorem, symbolic model, or proof result.
+After the ratchet work and Server/Beacon split were combined on the `proof` branch on 11 August 2026, the inventory tripwire detected changes in `beaconcrypt/build.rs`, `beaconcrypt/src/cbinds.rs`, `beaconcrypt/src/lib.rs`, `beaconcrypt/src/pqxdh.rs`, `beaconcrypt/src/pybinds.rs`, `beaconcrypt/src/shared.rs`, and `beaconcrypt/tests/protocol.rs`. Substantive review confirmed that the split preserved the extracted-core calls, authenticated transcript layouts, ratchet helpers, five-field persistence format, and registration commit ordering, but also found that the merge had dropped adapter regressions for signed Phase-1 field/type/role mapping and registration-key disposal. Those regressions were restored in `beaconcrypt/src/pqxdh.rs`, the trust-boundary mappings were updated to the concrete role APIs, and the eight affected fingerprints, including `proofs/trusted-boundary.md`, were refreshed. The resulting baseline was accepted only after the full Rust suite, clippy, both role-only builds, `check-inventory`, and `check-generated` passed. F* and ProVerif extraction remained unchanged, so this reconciliation changes no theorem, symbolic model, or proof result.
+
+The workspace-layout migration renamed the proof module namespace from `Beaconcrypt_protocol_core` to `Beaconcrypt_core` without changing any theorem statement, model rule, query, or expected result. That symbol rename perturbed one previously implicit F* refinement discharge in `receive_control_prefix_matches_for_equal_prefix`; its proof body now states the already-derived `v slot < 50` fact explicitly before assigning the bounded cache index. This changes neither the theorem preconditions nor its conclusion and makes the proof independent of solver behavior tied to generated symbol names.
 
 The checker rejects missing or substituted queries, timeouts, unknown or
 inconclusive results, and any changed classification
-([checker](../crates/protocol-core/proofs/pro-verif/check-results.awk)).
+([checker](../beaconcrypt-core/proofs/pro-verif/check-results.awk)).
 
 For CI and reviewed generated artifacts, use:
 
 ```sh
-make -C crates/protocol-core check-generated
+make -C beaconcrypt-core check-generated
 ```
 
-That runs the same suite and rejects tracked or untracked extraction drift. The dedicated formal-verification workflow runs this command. Run `make -C crates/protocol-core check-inventory` separately to check monitored trust-boundary membership and fingerprints. Together, those commands make the proof reproducible and prevent a query, monitored trust-boundary file, or generated file from silently disappearing or changing without an explicit baseline update. They do not prove that the handwritten model is faithful to production or that the reviewed assumptions hold; those conclusions still require substantive review beyond the mechanical Stage 9 gate.
+That runs the same suite and rejects tracked or untracked extraction drift. The dedicated formal-verification workflow runs this command. Run `make -C beaconcrypt-core check-inventory` separately to check monitored trust-boundary membership and fingerprints. Together, those commands make the proof reproducible and prevent a query, monitored trust-boundary file, or generated file from silently disappearing or changing without an explicit baseline update. They do not prove that the handwritten model is faithful to production or that the reviewed assumptions hold; those conclusions still require substantive review beyond the mechanical Stage 9 gate.
 
 ## Safe summary wording
 

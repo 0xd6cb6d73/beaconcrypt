@@ -14,9 +14,9 @@ R = C || T || U
 ```
 
 The transcript `X` is exactly 229 bytes: 32 bytes of key, 12 bytes of nonce, 153 bytes of associated data, 16 bytes of AEAD tag, and two eight-byte integers.
-The fixed-width builder is [`build_commitment_transcript`](../crates/protocol-core/src/commitment.rs#L55-L75), and the production wrapper checks input lengths and passes those bytes to unkeyed 64-byte `generichash` in [`build_commitment`](../src/ratchet.rs#L466-L481).
-The seal and open paths place and parse `C || T || U` in [`encrypt_message_with_ratchet`](../src/ratchet.rs#L350-L372) and [`decrypt_message_with_ratchet`](../src/ratchet.rs#L410-L449).
-The checked F* [`Commitment.Lemmas`](../crates/protocol-core/proofs/fstar/Beaconcrypt_protocol_core.Commitment.Lemmas.fst) module proves the exact per-byte layout, proves `encode_u64_le_is_injective`, and proves `production_commitment_input_is_injective`, so equality of two extracted production transcripts implies equality of all six semantic fields `(K, N, A, T, S, I)`.
+The fixed-width builder is [`build_commitment_transcript`](../beaconcrypt-core/src/commitment.rs#L55-L75), and the production wrapper checks input lengths and passes those bytes to unkeyed 64-byte `generichash` in [`build_commitment`](../beaconcrypt/src/ratchet.rs#L466-L481).
+The seal and open paths place and parse `C || T || U` in [`encrypt_message_with_ratchet`](../beaconcrypt/src/ratchet.rs#L350-L372) and [`decrypt_message_with_ratchet`](../beaconcrypt/src/ratchet.rs#L410-L449).
+The checked F* [`Commitment.Lemmas`](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst) module proves the exact per-byte layout, proves `encode_u64_le_is_injective`, and proves `production_commitment_input_is_injective`, so equality of two extracted production transcripts implies equality of all six semantic fields `(K, N, A, T, S, I)`.
 
 This is a modification of Chan and Rogaway's [CTX transform](https://eprint.iacr.org/2022/1260.pdf).
 CTX replaces the base tag `T` with `U`; beaconcrypt retains `T` so that it can call libsodium's public AEAD open interface, adds `S` and `I` to the hash transcript, and transmits `C || T || U`.
@@ -72,8 +72,8 @@ This heuristic is not a proof about BLAKE2b and must not be reported as one.
 
 ## Supplementary symbolic negative control
 
-The ProVerif [`aead-commitment-negative-control.pvl`](../crates/protocol-core/proofs/pro-verif/aead-commitment-negative-control.pvl) theory deliberately permits the same ciphertext and tag to open to different plaintexts under distinct keys, nonces, and associated-data contexts.
-The shared query is unreachable in [`aead-commitment.pv`](../crates/protocol-core/proofs/pro-verif/aead-commitment.pv) and reachable when only the CTX checks are removed in [`aead-no-commitment.pv`](../crates/protocol-core/proofs/pro-verif/aead-no-commitment.pv).
+The ProVerif [`aead-commitment-negative-control.pvl`](../beaconcrypt-core/proofs/pro-verif/aead-commitment-negative-control.pvl) theory deliberately permits the same ciphertext and tag to open to different plaintexts under distinct keys, nonces, and associated-data contexts.
+The shared query is unreachable in [`aead-commitment.pv`](../beaconcrypt-core/proofs/pro-verif/aead-commitment.pv) and reachable when only the CTX checks are removed in [`aead-no-commitment.pv`](../beaconcrypt-core/proofs/pro-verif/aead-no-commitment.pv).
 This differential control supplements the F* theorem with an explicit ideal-hash counterfactual and demonstrates that the ordinary exact-opening AEAD rule is not being used as evidence for CTX's added benefit.
 It is not a computational proof or a proof of BLAKE2b.
 

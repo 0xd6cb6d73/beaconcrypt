@@ -1,0 +1,348 @@
+(*****************************************)
+(* Preamble *)
+(*****************************************)
+
+channel c.
+
+fun construct_fail() : bitstring
+reduc construct_fail() = fail.
+
+type Option.
+fun Some(bitstring): Option [data].
+fun None(): Option [data].
+letfun Option_err() = let x = construct_fail() in None().
+
+const empty: bitstring.
+letfun bitstring_default() = empty.
+letfun bitstring_err() = let x = construct_fail() in bitstring_default().
+
+letfun nat_default() = 0.
+fun nat_to_bitstring(nat): bitstring.
+letfun nat_err() = let x = construct_fail() in nat_default().
+
+letfun bool_default() = false.
+
+
+(*****************************************)
+(* Types and Constructors *)
+(*****************************************)
+
+type beaconcrypt_core__pqxdh__t_InitKex.
+
+fun beaconcrypt_core__pqxdh__t_InitKex_to_bitstring(
+      beaconcrypt_core__pqxdh__t_InitKex
+    )
+    : bitstring [typeConverter].
+fun beaconcrypt_core__pqxdh__t_InitKex_from_bitstring(bitstring)
+    : beaconcrypt_core__pqxdh__t_InitKex [typeConverter].
+const beaconcrypt_core__pqxdh__t_InitKex_default_value: beaconcrypt_core__pqxdh__t_InitKex.
+letfun beaconcrypt_core__pqxdh__t_InitKex_default() =
+       beaconcrypt_core__pqxdh__t_InitKex_default_value.
+letfun beaconcrypt_core__pqxdh__t_InitKex_err() =
+       let x = construct_fail() in beaconcrypt_core__pqxdh__t_InitKex_default_value.
+fun beaconcrypt_core__pqxdh__InitKex(bitstring, bitstring, bitstring, bitstring)
+    : beaconcrypt_core__pqxdh__t_InitKex [data].
+reduc forall 
+  beaconcrypt_core__pqxdh__f_identity_key: bitstring,
+  beaconcrypt_core__pqxdh__f_prekey: bitstring,
+  beaconcrypt_core__pqxdh__f_one_time_key: bitstring,
+  beaconcrypt_core__pqxdh__f_pq_key: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_InitKex_beaconcrypt_core__pqxdh__f_identity_key(
+      beaconcrypt_core__pqxdh__InitKex(
+        beaconcrypt_core__pqxdh__f_identity_key,
+        beaconcrypt_core__pqxdh__f_prekey,
+        beaconcrypt_core__pqxdh__f_one_time_key,
+        beaconcrypt_core__pqxdh__f_pq_key
+      )
+    ) = beaconcrypt_core__pqxdh__f_identity_key.
+reduc forall 
+  beaconcrypt_core__pqxdh__f_identity_key: bitstring,
+  beaconcrypt_core__pqxdh__f_prekey: bitstring,
+  beaconcrypt_core__pqxdh__f_one_time_key: bitstring,
+  beaconcrypt_core__pqxdh__f_pq_key: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_InitKex_beaconcrypt_core__pqxdh__f_prekey(
+      beaconcrypt_core__pqxdh__InitKex(
+        beaconcrypt_core__pqxdh__f_identity_key,
+        beaconcrypt_core__pqxdh__f_prekey,
+        beaconcrypt_core__pqxdh__f_one_time_key,
+        beaconcrypt_core__pqxdh__f_pq_key
+      )
+    ) = beaconcrypt_core__pqxdh__f_prekey.
+reduc forall 
+  beaconcrypt_core__pqxdh__f_identity_key: bitstring,
+  beaconcrypt_core__pqxdh__f_prekey: bitstring,
+  beaconcrypt_core__pqxdh__f_one_time_key: bitstring,
+  beaconcrypt_core__pqxdh__f_pq_key: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_InitKex_beaconcrypt_core__pqxdh__f_one_time_key(
+      beaconcrypt_core__pqxdh__InitKex(
+        beaconcrypt_core__pqxdh__f_identity_key,
+        beaconcrypt_core__pqxdh__f_prekey,
+        beaconcrypt_core__pqxdh__f_one_time_key,
+        beaconcrypt_core__pqxdh__f_pq_key
+      )
+    ) = beaconcrypt_core__pqxdh__f_one_time_key.
+reduc forall 
+  beaconcrypt_core__pqxdh__f_identity_key: bitstring,
+  beaconcrypt_core__pqxdh__f_prekey: bitstring,
+  beaconcrypt_core__pqxdh__f_one_time_key: bitstring,
+  beaconcrypt_core__pqxdh__f_pq_key: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_InitKex_beaconcrypt_core__pqxdh__f_pq_key(
+      beaconcrypt_core__pqxdh__InitKex(
+        beaconcrypt_core__pqxdh__f_identity_key,
+        beaconcrypt_core__pqxdh__f_prekey,
+        beaconcrypt_core__pqxdh__f_one_time_key,
+        beaconcrypt_core__pqxdh__f_pq_key
+      )
+    ) = beaconcrypt_core__pqxdh__f_pq_key.
+
+type beaconcrypt_core__pqxdh__t_VerifiedInitKex.
+
+fun beaconcrypt_core__pqxdh__t_VerifiedInitKex_to_bitstring(
+      beaconcrypt_core__pqxdh__t_VerifiedInitKex
+    )
+    : bitstring [typeConverter].
+fun beaconcrypt_core__pqxdh__t_VerifiedInitKex_from_bitstring(bitstring)
+    : beaconcrypt_core__pqxdh__t_VerifiedInitKex [typeConverter].
+const beaconcrypt_core__pqxdh__t_VerifiedInitKex_default_value: beaconcrypt_core__pqxdh__t_VerifiedInitKex.
+letfun beaconcrypt_core__pqxdh__t_VerifiedInitKex_default() =
+       beaconcrypt_core__pqxdh__t_VerifiedInitKex_default_value.
+letfun beaconcrypt_core__pqxdh__t_VerifiedInitKex_err() =
+       let x = construct_fail() in beaconcrypt_core__pqxdh__t_VerifiedInitKex_default_value.
+fun beaconcrypt_core__pqxdh__VerifiedInitKex(
+      bitstring, bitstring, bitstring, bitstring
+    )
+    : beaconcrypt_core__pqxdh__t_VerifiedInitKex [data].
+reduc forall 
+  beaconcrypt_core__pqxdh__f_beacon_identity_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_prekey_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_one_time_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_pq_public_key: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_VerifiedInitKex_beaconcrypt_core__pqxdh__f_beacon_identity_public_key(
+      beaconcrypt_core__pqxdh__VerifiedInitKex(
+        beaconcrypt_core__pqxdh__f_beacon_identity_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_prekey_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_one_time_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_pq_public_key
+      )
+    ) = beaconcrypt_core__pqxdh__f_beacon_identity_public_key.
+reduc forall 
+  beaconcrypt_core__pqxdh__f_beacon_identity_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_prekey_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_one_time_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_pq_public_key: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_VerifiedInitKex_beaconcrypt_core__pqxdh__f_beacon_prekey_public_key(
+      beaconcrypt_core__pqxdh__VerifiedInitKex(
+        beaconcrypt_core__pqxdh__f_beacon_identity_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_prekey_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_one_time_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_pq_public_key
+      )
+    ) = beaconcrypt_core__pqxdh__f_beacon_prekey_public_key.
+reduc forall 
+  beaconcrypt_core__pqxdh__f_beacon_identity_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_prekey_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_one_time_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_pq_public_key: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_VerifiedInitKex_beaconcrypt_core__pqxdh__f_beacon_one_time_public_key(
+      beaconcrypt_core__pqxdh__VerifiedInitKex(
+        beaconcrypt_core__pqxdh__f_beacon_identity_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_prekey_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_one_time_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_pq_public_key
+      )
+    ) = beaconcrypt_core__pqxdh__f_beacon_one_time_public_key.
+reduc forall 
+  beaconcrypt_core__pqxdh__f_beacon_identity_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_prekey_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_one_time_public_key: bitstring,
+  beaconcrypt_core__pqxdh__f_beacon_pq_public_key: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_VerifiedInitKex_beaconcrypt_core__pqxdh__f_beacon_pq_public_key(
+      beaconcrypt_core__pqxdh__VerifiedInitKex(
+        beaconcrypt_core__pqxdh__f_beacon_identity_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_prekey_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_one_time_public_key,
+        beaconcrypt_core__pqxdh__f_beacon_pq_public_key
+      )
+    ) = beaconcrypt_core__pqxdh__f_beacon_pq_public_key.
+
+type beaconcrypt_core__pqxdh__t_RegistrationId.
+
+fun beaconcrypt_core__pqxdh__t_RegistrationId_to_bitstring(
+      beaconcrypt_core__pqxdh__t_RegistrationId
+    )
+    : bitstring [typeConverter].
+fun beaconcrypt_core__pqxdh__t_RegistrationId_from_bitstring(bitstring)
+    : beaconcrypt_core__pqxdh__t_RegistrationId [typeConverter].
+const beaconcrypt_core__pqxdh__t_RegistrationId_default_value: beaconcrypt_core__pqxdh__t_RegistrationId.
+letfun beaconcrypt_core__pqxdh__t_RegistrationId_default() =
+       beaconcrypt_core__pqxdh__t_RegistrationId_default_value.
+letfun beaconcrypt_core__pqxdh__t_RegistrationId_err() =
+       let x = construct_fail() in beaconcrypt_core__pqxdh__t_RegistrationId_default_value.
+fun beaconcrypt_core__pqxdh__RegistrationId(bitstring)
+    : beaconcrypt_core__pqxdh__t_RegistrationId [data].
+reduc forall beaconcrypt_core__pqxdh__f_bytes: bitstring;
+    accessor_beaconcrypt_core__pqxdh__t_RegistrationId_beaconcrypt_core__pqxdh__f_bytes(
+      beaconcrypt_core__pqxdh__RegistrationId(beaconcrypt_core__pqxdh__f_bytes)
+    ) = beaconcrypt_core__pqxdh__f_bytes.
+
+type beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets.
+
+fun beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_to_bitstring(
+      beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets
+    )
+    : bitstring [typeConverter].
+fun beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_from_bitstring(bitstring)
+    : beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets [typeConverter].
+const beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_default_value: beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets.
+letfun beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_default() =
+       beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_default_value.
+letfun beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_err() =
+       let x = construct_fail() in beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_default_value.
+fun beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+      bitstring, bitstring, bitstring, bitstring, bitstring
+    )
+    : beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets [data].
+reduc forall 
+  beaconcrypt_core__pqxdh__f_dh1: bitstring,
+  beaconcrypt_core__pqxdh__f_dh2: bitstring,
+  beaconcrypt_core__pqxdh__f_dh3: bitstring,
+  beaconcrypt_core__pqxdh__f_dh4: bitstring,
+  beaconcrypt_core__pqxdh__f_kem_shared_secret: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_beaconcrypt_core__pqxdh__f_dh1(
+      beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+        beaconcrypt_core__pqxdh__f_dh1,
+        beaconcrypt_core__pqxdh__f_dh2,
+        beaconcrypt_core__pqxdh__f_dh3,
+        beaconcrypt_core__pqxdh__f_dh4,
+        beaconcrypt_core__pqxdh__f_kem_shared_secret
+      )
+    ) = beaconcrypt_core__pqxdh__f_dh1.
+reduc forall 
+  beaconcrypt_core__pqxdh__f_dh1: bitstring,
+  beaconcrypt_core__pqxdh__f_dh2: bitstring,
+  beaconcrypt_core__pqxdh__f_dh3: bitstring,
+  beaconcrypt_core__pqxdh__f_dh4: bitstring,
+  beaconcrypt_core__pqxdh__f_kem_shared_secret: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_beaconcrypt_core__pqxdh__f_dh2(
+      beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+        beaconcrypt_core__pqxdh__f_dh1,
+        beaconcrypt_core__pqxdh__f_dh2,
+        beaconcrypt_core__pqxdh__f_dh3,
+        beaconcrypt_core__pqxdh__f_dh4,
+        beaconcrypt_core__pqxdh__f_kem_shared_secret
+      )
+    ) = beaconcrypt_core__pqxdh__f_dh2.
+reduc forall 
+  beaconcrypt_core__pqxdh__f_dh1: bitstring,
+  beaconcrypt_core__pqxdh__f_dh2: bitstring,
+  beaconcrypt_core__pqxdh__f_dh3: bitstring,
+  beaconcrypt_core__pqxdh__f_dh4: bitstring,
+  beaconcrypt_core__pqxdh__f_kem_shared_secret: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_beaconcrypt_core__pqxdh__f_dh3(
+      beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+        beaconcrypt_core__pqxdh__f_dh1,
+        beaconcrypt_core__pqxdh__f_dh2,
+        beaconcrypt_core__pqxdh__f_dh3,
+        beaconcrypt_core__pqxdh__f_dh4,
+        beaconcrypt_core__pqxdh__f_kem_shared_secret
+      )
+    ) = beaconcrypt_core__pqxdh__f_dh3.
+reduc forall 
+  beaconcrypt_core__pqxdh__f_dh1: bitstring,
+  beaconcrypt_core__pqxdh__f_dh2: bitstring,
+  beaconcrypt_core__pqxdh__f_dh3: bitstring,
+  beaconcrypt_core__pqxdh__f_dh4: bitstring,
+  beaconcrypt_core__pqxdh__f_kem_shared_secret: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_beaconcrypt_core__pqxdh__f_dh4(
+      beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+        beaconcrypt_core__pqxdh__f_dh1,
+        beaconcrypt_core__pqxdh__f_dh2,
+        beaconcrypt_core__pqxdh__f_dh3,
+        beaconcrypt_core__pqxdh__f_dh4,
+        beaconcrypt_core__pqxdh__f_kem_shared_secret
+      )
+    ) = beaconcrypt_core__pqxdh__f_dh4.
+reduc forall 
+  beaconcrypt_core__pqxdh__f_dh1: bitstring,
+  beaconcrypt_core__pqxdh__f_dh2: bitstring,
+  beaconcrypt_core__pqxdh__f_dh3: bitstring,
+  beaconcrypt_core__pqxdh__f_dh4: bitstring,
+  beaconcrypt_core__pqxdh__f_kem_shared_secret: bitstring
+;
+    accessor_beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_beaconcrypt_core__pqxdh__f_kem_shared_secret(
+      beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+        beaconcrypt_core__pqxdh__f_dh1,
+        beaconcrypt_core__pqxdh__f_dh2,
+        beaconcrypt_core__pqxdh__f_dh3,
+        beaconcrypt_core__pqxdh__f_dh4,
+        beaconcrypt_core__pqxdh__f_kem_shared_secret
+      )
+    ) = beaconcrypt_core__pqxdh__f_kem_shared_secret.
+
+type beaconcrypt_core__pqxdh__t_RootKeyInput.
+
+fun beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(
+      beaconcrypt_core__pqxdh__t_RootKeyInput
+    )
+    : bitstring [typeConverter].
+fun beaconcrypt_core__pqxdh__t_RootKeyInput_from_bitstring(bitstring)
+    : beaconcrypt_core__pqxdh__t_RootKeyInput [typeConverter].
+const beaconcrypt_core__pqxdh__t_RootKeyInput_default_value: beaconcrypt_core__pqxdh__t_RootKeyInput.
+letfun beaconcrypt_core__pqxdh__t_RootKeyInput_default() =
+       beaconcrypt_core__pqxdh__t_RootKeyInput_default_value.
+letfun beaconcrypt_core__pqxdh__t_RootKeyInput_err() =
+       let x = construct_fail() in beaconcrypt_core__pqxdh__t_RootKeyInput_default_value.
+fun beaconcrypt_core__pqxdh__RootKeyInput(bitstring)
+    : beaconcrypt_core__pqxdh__t_RootKeyInput [data].
+reduc forall beaconcrypt_core__pqxdh__f_bytes: bitstring;
+    accessor_beaconcrypt_core__pqxdh__t_RootKeyInput_beaconcrypt_core__pqxdh__f_bytes(
+      beaconcrypt_core__pqxdh__RootKeyInput(beaconcrypt_core__pqxdh__f_bytes)
+    ) = beaconcrypt_core__pqxdh__f_bytes.
+
+type beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding.
+
+fun beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding_to_bitstring(
+      beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding
+    )
+    : bitstring [typeConverter].
+fun beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding_from_bitstring(bitstring
+    )
+    : beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding [typeConverter].
+const beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding_default_value: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding.
+letfun beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding_default() =
+       beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding_default_value.
+letfun beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding_err() =
+       let x = construct_fail() in beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding_default_value.
+fun beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(bitstring)
+    : beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding [data].
+reduc forall beaconcrypt_core__pqxdh__f_bytes: bitstring;
+    accessor_beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding_beaconcrypt_core__pqxdh__f_bytes(
+      beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+        beaconcrypt_core__pqxdh__f_bytes
+      )
+    ) = beaconcrypt_core__pqxdh__f_bytes.
+
+(*****************************************)
+(* Functions *)
+(*****************************************)
+
+reduc forall identity: bitstring, prekey: bitstring, one_time: bitstring, pq: bitstring;
+  beaconcrypt_core__pqxdh__registration_id(beaconcrypt_core__pqxdh__VerifiedInitKex(identity, prekey, one_time, pq)) = beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(identity, one_time)).
+
+reduc forall dh1: bitstring, dh2: bitstring, dh3: bitstring, dh4: bitstring, kem: bitstring;
+  beaconcrypt_core__pqxdh__build_root_key_input(beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem)) = beaconcrypt_core__pqxdh__RootKeyInput(pqxdh_root_input(dh1, dh2, dh3, dh4, kem)).
+
+fun beaconcrypt_core__pqxdh__build_associated_data(bitstring, bitstring): bitstring [data].
+

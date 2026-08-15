@@ -31,7 +31,7 @@ Cap'n Proto / libsodium / serde / OS RNG / persistence
                       adapters
                          |
                          v
-              beaconcrypt-protocol-core
+              beaconcrypt-core
               +-------------------------+
               | typed PQXDH states      |
               | symmetric ratchet state |
@@ -50,7 +50,7 @@ Cap'n Proto / libsodium / serde / OS RNG / persistence
 A target repository layout is:
 
 ```text
-crates/protocol-core/
+beaconcrypt-core/
   Cargo.toml
   src/
     lib.rs
@@ -75,7 +75,7 @@ The first extraction slice may be smaller than this layout. In particular, a sin
 
 ## The extractable production core
 
-The initial production seams were the ratchet state and frame encryption/decryption operations now in [`src/ratchet.rs`](../src/ratchet.rs), and the PQXDH role transitions in [`src/pqxdh.rs`](../src/pqxdh.rs).
+The initial production seams were the ratchet state and frame encryption/decryption operations now in [`beaconcrypt/src/ratchet.rs`](../beaconcrypt/src/ratchet.rs), and the PQXDH role transitions in [`beaconcrypt/src/pqxdh.rs`](../beaconcrypt/src/pqxdh.rs).
 Stages 1 through 7 moved their deterministic control decisions into the protocol core while leaving concrete cryptography and wire translation in those adapters.
 Further moves should remain incremental rather than attempting to extract the whole crate.
 
@@ -185,7 +185,7 @@ pub fn receive(
 ) -> (RatchetState, Result<Plaintext, RatchetError>);
 ```
 
-Returning the receive state on both success and failure makes the normal-return contract explicit. Production rejects empty, unparsable, wrong-sender, too-short, inadmissible, and missing-key frames without changing the selected ratchet. For an admitted future frame, the core derives a bounded private candidate containing the final receive chain, skipped entries, separate target material, and post-consumption logical control while leaving the live refined state untouched. Commitment comparison and AEAD opening run against that exact private target before publication. Callback `None` drops the candidate and returns the complete entry state; callback `Some` publishes the prevalidated final chain, counter, and skipped entries while consuming rather than caching the target. Repeating an invalid future target therefore repeats bounded derivation work but cannot fill the live cache. The implementation tests complete neutrality, authentic retry, replay rejection, cached out-of-order delivery, and the exact gap/capacity boundary in [`tests/protocol.rs`](../tests/protocol.rs).
+Returning the receive state on both success and failure makes the normal-return contract explicit. Production rejects empty, unparsable, wrong-sender, too-short, inadmissible, and missing-key frames without changing the selected ratchet. For an admitted future frame, the core derives a bounded private candidate containing the final receive chain, skipped entries, separate target material, and post-consumption logical control while leaving the live refined state untouched. Commitment comparison and AEAD opening run against that exact private target before publication. Callback `None` drops the candidate and returns the complete entry state; callback `Some` publishes the prevalidated final chain, counter, and skipped entries while consuming rather than caching the target. Repeating an invalid future target therefore repeats bounded derivation work but cannot fill the live cache. The implementation tests complete neutrality, authentic retry, replay rejection, cached out-of-order delivery, and the exact gap/capacity boundary in [`beaconcrypt/tests/protocol.rs`](../beaconcrypt/tests/protocol.rs).
 
 For extraction, replace `HashMap` with a bounded, packed sequence whose uniqueness and size are visible to the prover. Restoration can require sorted input even though successful receive uses swap-removal and does not preserve entry order. The generic `RefinedRatchet` owns that logical sequence and its fixed array of sealed `CachedReceiveKey<Material>` values; production stores the extracted `ConcreteRatchetKernel`, which specializes both directional chains and cached material to core fixed-width values and binds the same private executor into both chains for the kernel lifetime. Each cached value repeats its logical sequence in a private tag, so tag equality, mismatch-aware lookup, whole-entry removal, and restoration are structural invariant preservation rather than a relation to a parallel adapter array. The proof-only `concrete_reachable` relation specializes canonical derivation to the sole core-selected concrete step.
 
@@ -193,7 +193,7 @@ For extraction, replace `HashMap` with a bounded, packed sequence whose uniquene
 
 After each extraction-sized move, the public `Beacon` and `Server` APIs must delegate to the new core. Existing known-answer and protocol tests must continue to exercise those paths. A proof-only reimplementation is out of scope because its correspondence to production code would become a new, unproved assumption.
 
-The low-level ratchet methods currently exposed from [`src/ratchet.rs`](../src/ratchet.rs) can bypass invariants expected at the higher-level protocol API. Either narrow their visibility or state theorem preconditions so that verified traces are explicitly limited to calls through the high-level API.
+The low-level ratchet methods currently exposed from [`beaconcrypt/src/ratchet.rs`](../beaconcrypt/src/ratchet.rs) can bypass invariants expected at the higher-level protocol API. Either narrow their visibility or state theorem preconditions so that verified traces are explicitly limited to calls through the high-level API.
 
 ## Primitive abstraction boundary
 
@@ -324,7 +324,7 @@ The state-neutral receive ProVerif process is one exact finite witness, not an u
 
 ## Closed counterexamples
 
-Three regression tests in [`tests/protocol.rs`](../tests/protocol.rs) track
+Three regression tests in [`beaconcrypt/tests/protocol.rs`](../beaconcrypt/tests/protocol.rs) track
 executable counterexamples to properties that a proof might otherwise claim:
 
 1. `beacon_rejects_tampered_registration_key_id`: Stage 5 authenticates the
@@ -395,7 +395,7 @@ The transition need not yet implement the complete production ratchet. Its purpo
 
 ### Step 1 implementation
 
-The initial slice now lives in [`crates/protocol-core`](../crates/protocol-core). It is a dependency-free `no_std` workspace member containing a pure sending-counter transition with explicit exhaustion behaviour. hax extracts only that entry point and its transitive dependencies to [`proofs/fstar/extraction`](../crates/protocol-core/proofs/fstar/extraction).
+The initial slice now lives in [`beaconcrypt-core`](../beaconcrypt-core). It is a dependency-free `no_std` workspace member containing a pure sending-counter transition with explicit exhaustion behaviour. hax extracts only that entry point and its transitive dependencies to [`proofs/fstar/extraction`](../beaconcrypt-core/proofs/fstar/extraction).
 
 Run the complete check from the core crate:
 
@@ -429,7 +429,7 @@ At the end of Step 2, the production `RatchetManager` remained unchanged. The in
 
 The detailed implementation record is in [`formal-verification-stage-3.md`](impl/formal-verification-stage-3.md).
 
-The production crate depends on `beaconcrypt-protocol-core`, and `RatchetManager` now wraps one private `ConcreteRatchetKernel`. This extracted concrete kernel owns the logical counters and packed sequence cache, both fixed-width executor-bearing chain values, and `[Option<CachedReceiveKey<RatchetMaterial>>; 50]`; production no longer stores parallel chains, receive slots, role-specific chain wrappers, or persistent libsodium material. The cached record fields are private, and every live record repeats the sequence that caused the kernel to store its material.
+The production crate depends on `beaconcrypt-core`, and `RatchetManager` now wraps one private `ConcreteRatchetKernel`. This extracted concrete kernel owns the logical counters and packed sequence cache, both fixed-width executor-bearing chain values, and `[Option<CachedReceiveKey<RatchetMaterial>>; 50]`; production no longer stores parallel chains, receive slots, role-specific chain wrappers, or persistent libsodium material. The cached record fields are private, and every live record repeats the sequence that caused the kernel to store its material.
 
 The core constructs `SymmetricRatchetKdfRequest` with the exact root or old chain and fixed `SYM_RATCHET_INFO`; production's `initial_ratchet_hkdf` and `ratchet_hkdf` functions only execute the request and return the statically sized output. `derive_initial_ratchet_kernel` constructs `ConcreteRatchetKernel` directly, and each concrete chain carries `ratchet_hkdf` unchanged into the next step, so production no longer rebuilds a `RatchetStep`. Public `concrete_open_and_finish` privately prepares the exact target under the fixed step, lends its material and sequence plus frame context to one callback, drops the candidate unchanged on `None`, and publishes consumption plus skipped material only on `Some`; `concrete_seal_next` retains its existing one-use send behavior. The callbacks convert borrowed key and nonce arrays to libsodium types only for the operation; those external values are not persistent ratchet storage.
 
@@ -463,10 +463,10 @@ data from the core candidate. It also records the accepting server's identity
 public key and identity key ID, and candidate preparation rejects use by a
 differently bound `Server` without changing live state.
 
-The Stage 4 correspondence claim covers high-level registration transitions on `Beacon` and `Server`; direct protocol-core construction and test-only or crate-private compatibility setters, peer-map mutation, and low-level ratchet calls remain outside that trace. The maintained high-level operational state is not `Clone`, while persistent no-fork/no-rollback behavior depends on `PersistentServer` and its external store contract and is not proved by Stage 4.
+The Stage 4 correspondence claim covers high-level registration transitions on `Beacon` and `Server`; direct beaconcrypt-core construction and test-only or crate-private compatibility setters, peer-map mutation, and low-level ratchet calls remain outside that trace. The maintained high-level operational state is not `Clone`, while persistent no-fork/no-rollback behavior depends on `PersistentServer` and its external store contract and is not proved by Stage 4.
 
 The pinned hax item list extracts these PQXDH transitions to
-`Beaconcrypt_protocol_core.Pqxdh.fst`, and the existing strict F* target
+`Beaconcrypt_core.Pqxdh.fst`, and the existing strict F* target
 checks that generated module and its generated safety obligations without
 `--lax`. No PQXDH semantic lemma module was part of Stage 4; Stage 6 now adds
 the agreement, transcript, associated-data, and initialization proofs.
@@ -527,7 +527,7 @@ whole-`ServerBinding` equality introduced a local generated assumption. The
 core now uses specified fixed-range slice updates, constructs LE64 bytes from
 explicit shifts and narrowing casts, and compares the two server-binding fields
 directly. Compile-time assertions tie the literal proof ranges and production
-KDF slices to the public protocol-core sizes. Production-used candidate
+KDF slices to the public beaconcrypt-core sizes. Production-used candidate
 ratchet and binding accessors are also included in extraction.
 
 The strict handwritten PQXDH module proves exact tagged-key construction and validation, exact semantic registration IDs, the six-segment root transcript and zero-DH rejection, exact associated data, server-binding and response-ID checks, checked allocation, and commit/abort shape. `authenticated_registration_derives_common_fixed_root` bridges authenticated equal root transcripts under one fixed pure root function. `concrete_initial_kernels_are_complementary`, `concrete_initial_kernels_are_reachable`, and `concrete_directional_materials_agree` cover direct role-bound kernel construction and both opposing material equalities at every sequence; `authenticated_registrations_establish_concrete_session` is the capstone composition. `beacon_seal_server_open_preserves_concrete_session` and `server_seal_beacon_open_preserves_concrete_session` preserve the paired concrete reachability invariant through public operations. Root-HKDF and ratchet-HKDF semantics/totality, output noncollision, ephemeral libsodium conversion and callback fidelity, compiler correspondence, and atomic peer-map publication remain obligations.
@@ -547,7 +547,7 @@ Stage 7 reviewed the complete Stage 6 commit `493a23f` before adding a trace
 model. The ProVerif backend now extracts the production `InitKex`, verified
 registration, registration-ID, root-input, assigned-ID-binding, and associated
 data boundary into
-[`proofs/pro-verif/extraction/lib.pvl`](../crates/protocol-core/proofs/pro-verif/extraction/lib.pvl).
+[`proofs/pro-verif/extraction/lib.pvl`](../beaconcrypt-core/proofs/pro-verif/extraction/lib.pvl).
 The three proof-visible production functions use narrowly scoped backend
 replacements whose constructor arguments are the exact layouts already checked
 by F*. Processes, events, the active network, primitive equations, and queries
@@ -655,7 +655,7 @@ retained dependency.
 
 The dedicated `formal-verification.yml` GitHub Actions workflow installs Nix,
 uses the public hax/F*/Z3 caches read-only, and runs
-`make -C crates/protocol-core check-generated` on main-branch pushes, pull
+`make -C beaconcrypt-core check-generated` on main-branch pushes, pull
 requests targeting `main`, merge-queue checks, and manual dispatch. The job has
 read-only repository permission and a 60-minute bound. It therefore
 regenerates both backends, runs every strict Stage 2/6 F* and Stage 7 ProVerif
@@ -670,7 +670,7 @@ changed in Stage 8.
 The detailed implementation record is in
 [`formal-verification-stage-9.md`](impl/formal-verification-stage-9.md), and the
 canonical maintained inventory is
-[`crates/protocol-core/proofs/trusted-boundary.md`](../crates/protocol-core/proofs/trusted-boundary.md).
+[`beaconcrypt-core/proofs/trusted-boundary.md`](../beaconcrypt-core/proofs/trusted-boundary.md).
 
 Stage 9 inventories the repository-owned production wrappers around entropy,
 Ed25519, Ed25519/X25519 conversion, X25519, ML-KEM, HKDF,
@@ -681,7 +681,7 @@ refinement, the pinned hax/F*/ProVerif trust surface, all generated-code
 exceptions, and every handwritten F* or ProVerif review unit.
 
 `make check-inventory` validates a category/path/SHA-256 manifest and derives
-the complete production Rust/schema, protocol-core Rust, generated-backend,
+the complete production Rust/schema, beaconcrypt-core Rust, generated-backend,
 and handwritten-backend file sets. It also enforces the three and only three
 ProVerif replacements; the generated type/default/converter/error baseline;
 the single permitted generated converter used by handwritten code; the

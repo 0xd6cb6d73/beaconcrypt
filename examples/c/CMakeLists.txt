@@ -13,7 +13,7 @@ find_program(CARGO_EXECUTABLE cargo REQUIRED)
 option(BEACONCRYPT_CARGO_RELEASE "Build beaconcrypt with Cargo's release profile" OFF)
 
 set(BEACONCRYPT_CARGO_PROFILE debug)
-set(BEACONCRYPT_CARGO_ARGS build --features cbinds)
+set(BEACONCRYPT_CARGO_ARGS build -p beaconcrypt --features cbinds)
 if(BEACONCRYPT_CARGO_RELEASE)
 	set(BEACONCRYPT_CARGO_PROFILE release)
 	list(APPEND BEACONCRYPT_CARGO_ARGS --release)
@@ -55,7 +55,7 @@ endif()
 
 add_executable(beaconcrypt_c_example main.c)
 add_dependencies(beaconcrypt_c_example beaconcrypt_rust)
-target_include_directories(beaconcrypt_c_example PRIVATE "${BEACONCRYPT_REPO_ROOT}")
+target_include_directories(beaconcrypt_c_example PRIVATE "${BEACONCRYPT_REPO_ROOT}/beaconcrypt")
 target_link_libraries(beaconcrypt_c_example PRIVATE beaconcrypt_shared)
 
 if(WIN32)
