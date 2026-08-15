@@ -12,7 +12,7 @@ EXPECTED_Z3 := Z3 version 4.15.3 - 64 bit
 EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
 HAX_ITEMS := -** \
 	+beaconcrypt_core::commitment::build_commitment_transcript \
-	+beaconcrypt_core::ratchet::SequenceCache \
+	+beaconcrypt_core::ratchet::control::SequenceCache \
 	+beaconcrypt_core::ratchet::RatchetChain \
 	+beaconcrypt_core::ratchet::RatchetKey \
 	+beaconcrypt_core::ratchet::RatchetNonce \
@@ -23,12 +23,12 @@ HAX_ITEMS := -** \
 	+beaconcrypt_core::ratchet::derive_ratchet_step \
 	+beaconcrypt_core::ratchet::ConcreteRatchetChain \
 	+beaconcrypt_core::ratchet::concrete_ratchet_step \
-	+beaconcrypt_core::ratchet::RatchetStep \
-	+beaconcrypt_core::ratchet::CachedReceiveKey \
-	+beaconcrypt_core::ratchet::RefinedRatchet \
+	+beaconcrypt_core::ratchet::refined::RatchetStep \
+	+beaconcrypt_core::ratchet::refined::CachedReceiveKey \
+	+beaconcrypt_core::ratchet::refined::RefinedRatchet \
 	+beaconcrypt_core::ratchet::ConcreteRatchetKernel \
-	+beaconcrypt_core::ratchet::RefinedSendKey \
-	+beaconcrypt_core::ratchet::RefinedRatchetRestore \
+	+beaconcrypt_core::ratchet::refined::RefinedSendKey \
+	+beaconcrypt_core::ratchet::refined::RefinedRatchetRestore \
 	+beaconcrypt_core::ratchet::ConcreteRatchetRestore \
 	+beaconcrypt_core::ratchet::**::new \
 	+beaconcrypt_core::ratchet::**::from_counters \
@@ -47,51 +47,51 @@ HAX_ITEMS := -** \
 	+beaconcrypt_core::ratchet::**::into_bytes \
 	+beaconcrypt_core::ratchet::**::into_parts \
 	+beaconcrypt_core::ratchet::**::into_step \
-	+beaconcrypt_core::ratchet::refined_advance_send \
-	+beaconcrypt_core::ratchet::refined_finish_send \
-	+beaconcrypt_core::ratchet::refined_seal_next \
-	+beaconcrypt_core::ratchet::refined_advance_receive \
-	+beaconcrypt_core::ratchet::refined_advance_receive_until \
-	+beaconcrypt_core::ratchet::refined_receive_key \
-	+beaconcrypt_core::ratchet::refined_finish_receive \
-	+beaconcrypt_core::ratchet::PreparedReceive \
-	+beaconcrypt_core::ratchet::PreparedCachedReceive \
-	+beaconcrypt_core::ratchet::PreparedFutureTarget \
-	+beaconcrypt_core::ratchet::PendingReceive \
-	+beaconcrypt_core::ratchet::prepare_cached_receive \
-	+beaconcrypt_core::ratchet::prepare_future_receive_steps \
-	+beaconcrypt_core::ratchet::receive_control_prefix_matches \
-	+beaconcrypt_core::ratchet::pending_receive_slots_are_valid \
-	+beaconcrypt_core::ratchet::pending_receive_is_valid \
-	+beaconcrypt_core::ratchet::prepare_receive \
-	+beaconcrypt_core::ratchet::publish_cached_receive \
-	+beaconcrypt_core::ratchet::publish_future_receive_slots \
-	+beaconcrypt_core::ratchet::publish_future_receive \
-	+beaconcrypt_core::ratchet::refined_open_and_finish \
+	+beaconcrypt_core::ratchet::refined::refined_advance_send \
+	+beaconcrypt_core::ratchet::refined::refined_finish_send \
+	+beaconcrypt_core::ratchet::refined::refined_seal_next \
+	+beaconcrypt_core::ratchet::refined::refined_advance_receive \
+	+beaconcrypt_core::ratchet::refined::refined_advance_receive_until \
+	+beaconcrypt_core::ratchet::refined::refined_receive_key \
+	+beaconcrypt_core::ratchet::refined::refined_finish_receive \
+	+beaconcrypt_core::ratchet::refined::PreparedReceive \
+	+beaconcrypt_core::ratchet::refined::PreparedCachedReceive \
+	+beaconcrypt_core::ratchet::refined::PreparedFutureTarget \
+	+beaconcrypt_core::ratchet::refined::PendingReceive \
+	+beaconcrypt_core::ratchet::refined::prepare_cached_receive \
+	+beaconcrypt_core::ratchet::refined::prepare_future_receive_steps \
+	+beaconcrypt_core::ratchet::refined::receive_control_prefix_matches \
+	+beaconcrypt_core::ratchet::refined::pending_receive_slots_are_valid \
+	+beaconcrypt_core::ratchet::refined::pending_receive_is_valid \
+	+beaconcrypt_core::ratchet::refined::prepare_receive \
+	+beaconcrypt_core::ratchet::refined::publish_cached_receive \
+	+beaconcrypt_core::ratchet::refined::publish_future_receive_slots \
+	+beaconcrypt_core::ratchet::refined::publish_future_receive \
+	+beaconcrypt_core::ratchet::refined::refined_open_and_finish \
 	+beaconcrypt_core::ratchet::concrete_seal_next \
 	+beaconcrypt_core::ratchet::concrete_open_and_finish \
-	+beaconcrypt_core::ratchet::start_refined_restore \
-	+beaconcrypt_core::ratchet::refined_restore_receive_key \
-	+beaconcrypt_core::ratchet::finish_refined_restore \
+	+beaconcrypt_core::ratchet::refined::start_refined_restore \
+	+beaconcrypt_core::ratchet::refined::refined_restore_receive_key \
+	+beaconcrypt_core::ratchet::refined::finish_refined_restore \
 	+beaconcrypt_core::ratchet::start_concrete_restore \
 	+beaconcrypt_core::ratchet::concrete_restore_receive_key \
 	+beaconcrypt_core::ratchet::finish_concrete_restore \
-	+beaconcrypt_core::ratchet::advance_send \
-	+beaconcrypt_core::ratchet::finish_send \
-	+beaconcrypt_core::ratchet::plan_receive_until \
-	+beaconcrypt_core::ratchet::advance_receive \
-	+beaconcrypt_core::ratchet::lookup_receive_key \
-	+beaconcrypt_core::ratchet::ReceiveRemoval \
-	+beaconcrypt_core::ratchet::ReceiveFinishWithRemoval \
-	+beaconcrypt_core::ratchet::finish_receive_with_removal \
-	+beaconcrypt_core::ratchet::finish_receive \
-	+beaconcrypt_core::ratchet::start_restore \
-	+beaconcrypt_core::ratchet::ReceiveRestoreStep \
-	+beaconcrypt_core::ratchet::restore_receive_key_with_slot \
-	+beaconcrypt_core::ratchet::restore_receive_key \
-	+beaconcrypt_core::ratchet::finish_restore \
-	+beaconcrypt_core::ratchet::replace_ratchet_for_peer \
-	+beaconcrypt_core::ratchet::advance_send_for_peer \
+	+beaconcrypt_core::ratchet::control::advance_send \
+	+beaconcrypt_core::ratchet::control::finish_send \
+	+beaconcrypt_core::ratchet::control::plan_receive_until \
+	+beaconcrypt_core::ratchet::control::advance_receive \
+	+beaconcrypt_core::ratchet::control::lookup_receive_key \
+	+beaconcrypt_core::ratchet::control::ReceiveRemoval \
+	+beaconcrypt_core::ratchet::control::ReceiveFinishWithRemoval \
+	+beaconcrypt_core::ratchet::control::finish_receive_with_removal \
+	+beaconcrypt_core::ratchet::control::finish_receive \
+	+beaconcrypt_core::ratchet::control::start_restore \
+	+beaconcrypt_core::ratchet::control::ReceiveRestoreStep \
+	+beaconcrypt_core::ratchet::control::restore_receive_key_with_slot \
+	+beaconcrypt_core::ratchet::control::restore_receive_key \
+	+beaconcrypt_core::ratchet::control::finish_restore \
+	+beaconcrypt_core::ratchet::control::replace_ratchet_for_peer \
+	+beaconcrypt_core::ratchet::control::advance_send_for_peer \
 	+beaconcrypt_core::pqxdh::beacon_start \
 	+beaconcrypt_core::pqxdh::validate_init_kex \
 	+beaconcrypt_core::pqxdh::build_root_key_input \

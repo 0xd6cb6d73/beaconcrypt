@@ -411,6 +411,7 @@ pub const fn server_ratchet_initialization() -> RatchetInitialization {
 }
 
 /// Role-ordered fixed-width initial send and receive chains.
+#[cfg_attr(feature = "proverif", hax_lib::fstar::before("noeq"))]
 pub struct InitialRatchetChains {
 	send_chain: crate::ratchet::RatchetChain,
 	receive_chain: crate::ratchet::RatchetChain,

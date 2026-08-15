@@ -16,6 +16,16 @@ The generic F* refinement lemmas remain parametric, but the concrete layer close
 
 The correspondence claim covers high-level encryption and decryption traces that begin in a concrete reachable established initialization and continue without state rollback. The production runtime stores server ratchets only in `EstablishedRemote` entries and a beacon ratchet only in `BeaconState::Established`; this is an adapter establishment gate, not a new generic F* typestate theorem. Equal concrete roots still depend on correct PQXDH root derivation, and request executors and callbacks must faithfully implement HKDF-SHA-512, commitment, and ChaCha20-Poly1305. Core arrays zeroize on `Drop`, but physical erasure and compiler behavior remain outside F*. A no-reuse conclusion remains conditional on noncollision of relevant KDF projections and one authoritative owner. Affine Rust state and `PersistentServer` generation/head CAS support that ownership premise only with a conforming durable store. The C, Go, and Python trusted-checkpoint helpers use an in-memory store and can be forked or rolled back by restoring exported bytes, so they are outside that persistence premise. F* does not prove the Rust ownership boundary, codec/store behavior, trusted payload provenance, crash durability, role-specific selection, external copies, or rollback prevention.
 
+## Ratchet module and interface layout
+
+The Rust implementation keeps the existing flat `beaconcrypt_core::ratchet` API through scoped re-exports while placing definitions in three dependency-ordered modules:
+
+- [`src/ratchet/control.rs`](src/ratchet/control.rs) contains logical counters, cache admission, send/receive transitions, restoration, and peer helpers; hax generates `Beaconcrypt_core.Ratchet.Control`.
+- [`src/ratchet/refined.rs`](src/ratchet/refined.rs) binds Control state to generic chain and material values and owns refined send, receive, open, and restoration machinery; hax generates `Beaconcrypt_core.Ratchet.Refined`.
+- [`src/ratchet.rs`](src/ratchet.rs) retains fixed-width KDF types, concrete chain and kernel specialization, concrete restoration, and tests; hax generates `Beaconcrypt_core.Ratchet`.
+
+The dependency direction is `Ratchet.Control` → `Ratchet.Refined` → `Ratchet` → `Pqxdh`. The corresponding Control and Refined `.fsti` files expose only declarations used by the next layer, and [`proofs/fstar/Beaconcrypt_core.Ratchet.fsti`](proofs/fstar/Beaconcrypt_core.Ratchet.fsti) exposes the eight constants, types, and constructors used directly by generated PQXDH. The Ratchet and PQXDH lemma interfaces export no declarations; their named implementations use explicit F* friend access where representation-dependent proofs need hidden definitions.
+
 ## PQXDH typestates and transactional adapter
 
 Stage 4 adds deterministic beacon and server registration transitions. The

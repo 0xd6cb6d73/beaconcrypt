@@ -44,11 +44,11 @@ done < "$manifest"
 declare -A expected_category_counts=(
 	[adapter-rust]=13
 	[adapter-schema]=3
-	[core-rust]=4
+	[core-rust]=6
 	[control]=12
-	[generated-fstar]=3
+	[generated-fstar]=5
 	[generated-proverif]=1
-	[handwritten-fstar]=3
+	[handwritten-fstar]=8
 	[handwritten-proverif]=18
 	[inventory]=2
 	[validation]=2
@@ -200,10 +200,10 @@ reject_matches() {
 
 reject_matches "new hax opaque annotation requires inventory review" \
 	'hax_lib\s*::\s*(?:opaque|opaque_type)\b' src
-require_occurrence_count 3 \
+require_occurrence_count 4 \
 	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)' \
 	"reviewed F* noeq insertion" src
-require_occurrence_count 3 \
+require_occurrence_count 6 \
 	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(' \
 	"complete F* before-annotation allowlist" src
 for concrete_type in ConcreteRatchetChain ConcreteRatchetKernel ConcreteRatchetRestore; do
@@ -211,9 +211,62 @@ for concrete_type in ConcreteRatchetChain ConcreteRatchetKernel ConcreteRatchetR
 		'#\[cfg_attr\(feature\s*=\s*"proverif",\s*hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)\)\]\s*(?:pub\s+)?struct\s+'"${concrete_type}"'\b' \
 		"reviewed noeq target ${concrete_type}" src/ratchet.rs
 done
+require_occurrence_count 1 \
+	'#\[cfg_attr\(feature\s*=\s*"proverif",\s*hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)\)\]\s*pub\s+struct\s+InitialRatchetChains\b' \
+	"reviewed noeq target InitialRatchetChains" src/pqxdh.rs
+require_occurrence_count 1 \
+	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"friend Beaconcrypt_core\.Ratchet\.Refined"\s*\)' \
+	"reviewed Ratchet-to-Refined friend edge" src/ratchet.rs
+require_occurrence_count 1 \
+	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"friend Beaconcrypt_core\.Ratchet\.Control"\s*\)' \
+	"reviewed Refined-to-Control friend edge" src/ratchet/refined.rs
 require_line_count 3 '^noeq$' \
 	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
 	"generated function-record noeq directive"
+require_line_count 1 '^noeq$' \
+	proofs/fstar/extraction/Beaconcrypt_core.Pqxdh.fst \
+	"generated initial-chain noeq directive"
+require_line_count 1 '^friend Beaconcrypt_core\.Ratchet\.Refined$' \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
+	"generated Ratchet-to-Refined friend edge"
+require_line_count 1 '^friend Beaconcrypt_core\.Ratchet\.Control$' \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst \
+	"generated Refined-to-Control friend edge"
+
+require_line_count 8 '^val ' proofs/fstar/Beaconcrypt_core.Ratchet.fsti \
+	"narrow PQXDH-facing ratchet declaration"
+for declaration in \
+	v_RATCHET_CHAIN_SIZE \
+	v_SYM_RATCHET_INFO \
+	t_RatchetChain \
+	impl_RatchetChain__from_bytes \
+	t_SymmetricRatchetKdfRequest \
+	impl_SymmetricRatchetKdfRequest__new \
+	t_ConcreteRatchetKernel \
+	impl_ConcreteRatchetKernel__new; do
+	require_line_count 1 "^val ${declaration}( | :)" \
+		proofs/fstar/Beaconcrypt_core.Ratchet.fsti \
+		"PQXDH-facing ratchet declaration ${declaration}"
+done
+require_line_count 29 '^val ' proofs/fstar/Beaconcrypt_core.Ratchet.Control.fsti \
+	"Refined-facing control declaration"
+require_line_count 15 '^val ' proofs/fstar/Beaconcrypt_core.Ratchet.Refined.fsti \
+	"root-facing refined declaration"
+reject_matches "stable ratchet interface exposes a representation" \
+	'^type\s' \
+	proofs/fstar/Beaconcrypt_core.Ratchet.fsti \
+	proofs/fstar/Beaconcrypt_core.Ratchet.Control.fsti \
+	proofs/fstar/Beaconcrypt_core.Ratchet.Refined.fsti
+require_line_count 3 '^friend Beaconcrypt_core\.Ratchet' \
+	proofs/fstar/Beaconcrypt_core.Ratchet.Lemmas.fst \
+	"ratchet proof friend edge"
+require_line_count 4 '^friend Beaconcrypt_core\.Ratchet' \
+	proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst \
+	"PQXDH proof friend edge"
+reject_matches "proof interface exposes implementation friendship" \
+	'^friend\s' \
+	proofs/fstar/Beaconcrypt_core.Ratchet.Lemmas.fsti \
+	proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fsti
 
 replacement_pattern='hax_lib\s*::\s*proverif\s*::\s*replace\s*\('
 require_occurrence_count 3 "$replacement_pattern" \
@@ -379,26 +432,26 @@ reject_matches "successful receive target remains cached" \
 # They may not acquire Clone or Copy derives that would turn them into duplicable live capabilities.
 for pending_type in PreparedReceive PreparedCachedReceive PreparedFutureTarget PendingReceive; do
 	require_line_count 1 \
-		"^(enum|struct) ${pending_type}([[:space:]<{]|$)" \
-		src/ratchet.rs \
+		"^(pub\\(super\\) )?(enum|struct) ${pending_type}([[:space:]<{]|$)" \
+		src/ratchet/refined.rs \
 		"private pending receive type ${pending_type}"
 	require_line_count 1 "^type t_${pending_type}( | = )" \
-		proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
+		proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst \
 		"generated pending receive type ${pending_type}"
 done
 reject_matches "pending receive capability became Clone or Copy" \
-	'#\[derive\([^]]*\b(?:Clone|Copy)\b[^]]*\)\]\s*(?:(?:#\[[^]]*\]|//[^\n]*|/\*[\s\S]*?\*/)\s*)*(?:enum\s+PreparedReceive|struct\s+(?:PreparedCachedReceive|PreparedFutureTarget|PendingReceive))' \
-	src/ratchet.rs
+	'#\[derive\([^]]*\b(?:Clone|Copy)\b[^]]*\)\]\s*(?:(?:#\[[^]]*\]|//[^\n]*|/\*[\s\S]*?\*/)\s*)*(?:pub(?:\([^)]*\))?\s+)?(?:enum\s+PreparedReceive|struct\s+(?:PreparedCachedReceive|PreparedFutureTarget|PendingReceive))' \
+	src/ratchet/refined.rs
 reject_matches "pending receive capability gained conditional Clone or Copy derive" \
-	'#\[cfg_attr\([^]]*\bderive\s*\([^)]*\b(?:Clone|Copy)\b[^)]*\)[^]]*\)\]\s*(?:(?:#\[[^]]*\]|//[^\n]*|/\*[\s\S]*?\*/)\s*)*(?:enum\s+PreparedReceive|struct\s+(?:PreparedCachedReceive|PreparedFutureTarget|PendingReceive))' \
-	src/ratchet.rs
+	'#\[cfg_attr\([^]]*\bderive\s*\([^)]*\b(?:Clone|Copy)\b[^)]*\)[^]]*\)\]\s*(?:(?:#\[[^]]*\]|//[^\n]*|/\*[\s\S]*?\*/)\s*)*(?:pub(?:\([^)]*\))?\s+)?(?:enum\s+PreparedReceive|struct\s+(?:PreparedCachedReceive|PreparedFutureTarget|PendingReceive))' \
+	src/ratchet/refined.rs
 reject_matches "pending receive capability gained explicit Clone or Copy implementation" \
 	'impl(?:\s*<[\s\S]{0,500}?>)?\s+(?:[A-Za-z_][A-Za-z0-9_]*::)*(?:Clone|Copy)\s+for\s+(?:PreparedReceive|PreparedCachedReceive|PreparedFutureTarget|PendingReceive)\b' \
-	src/ratchet.rs
+	src/ratchet/refined.rs
 require_occurrence_count 1 \
 	'fn\s+prepare_future_receive_steps[\s\S]{0,600}?staged_slots:\s*&mut\s*\[Option<CachedReceiveKey<Material>>;\s*RECEIVE_CACHE_CAPACITY\],' \
 	"single borrowed future-receive staging buffer" \
-	src/ratchet.rs
+	src/ratchet/refined.rs
 require_occurrence_count 1 \
 	'#\[cfg\(any\(test,\s*feature\s*=\s*"test-utils"\)\)\]\s*#\[doc\(hidden\)\]\s*pub\s+fn\s+concrete_advance_receive_until\b' \
 	"narrow dev-only receive-advancement compatibility gate" \
@@ -417,7 +470,7 @@ for helper in \
 	publish_future_receive_slots \
 	publish_future_receive; do
 	require_line_count 1 "^let( rec)? ${helper}( |$)" \
-		proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
+		proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst \
 		"generated pending receive helper ${helper}"
 done
 
@@ -597,11 +650,11 @@ require_line_count 1 '^let finish_refined_restore_is_valid$' \
 	proofs/fstar/Beaconcrypt_core.Ratchet.Lemmas.fst \
 	"refined restoration-finish lemma"
 require_line_count 5 'Core_models\.Option\.impl__take' \
-	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst \
 	"transparent refined cached and pending-slot movement"
 reject_matches "unconstrained memory replacement in refined ratchet" \
 	'Core_models\.Mem\.replace' \
-	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst
 
 require_line_count 1 '^let commitment_transcript_is_exact' \
 	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \

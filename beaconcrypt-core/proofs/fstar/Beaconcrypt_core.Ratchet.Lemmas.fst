@@ -4,6 +4,12 @@ module Beaconcrypt_core.Ratchet.Lemmas
 open Rust_primitives.Integers
 open Rust_primitives.Arrays
 open Beaconcrypt_core.Ratchet
+open Beaconcrypt_core.Ratchet.Control
+open Beaconcrypt_core.Ratchet.Refined
+
+friend Beaconcrypt_core.Ratchet
+friend Beaconcrypt_core.Ratchet.Control
+friend Beaconcrypt_core.Ratchet.Refined
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 60"
 
@@ -104,6 +110,11 @@ let positive_at_most_one_is_one
 let u64_below_max_is_not_max
     (n:u64 { v n < v Core_models.Num.impl_u64__MAX })
   : Lemma (n <> Core_models.Num.impl_u64__MAX)
+  = ()
+
+let u64_successor_value
+    (n:u64 { v n < v Core_models.Num.impl_u64__MAX })
+  : Lemma (v (n +! mk_u64 1) == v n + 1)
   = ()
 
 let u64_value_is_bounded
@@ -1925,7 +1936,7 @@ let refined_from_counters_is_valid
     (receive_chain:v_ReceiveChain)
   : Lemma
       (valid_refined
-        (impl_10__from_counters #v_SendChain #v_ReceiveChain #v_Material
+        (impl__from_counters #v_SendChain #v_ReceiveChain #v_Material
           send_sequence receive_sequence send_chain receive_chain))
   = from_counters_is_valid send_sequence receive_sequence;
     empty_material_slots_are_none #v_Material
@@ -1936,7 +1947,7 @@ let refined_new_is_valid
     (receive_chain:v_ReceiveChain)
   : Lemma
       (valid_refined
-        (impl_10__new #v_SendChain #v_ReceiveChain #v_Material
+        (impl__new #v_SendChain #v_ReceiveChain #v_Material
           send_chain receive_chain))
   = refined_from_counters_is_valid #v_SendChain #v_ReceiveChain #v_Material
       (mk_u64 0) (mk_u64 0) send_chain receive_chain
@@ -1963,7 +1974,7 @@ let refined_from_counters_is_reachable
       (ensures
         (reachable #v_SendChain #v_ReceiveChain #v_Material
           initial_send initial_receive send_step receive_step
-          (impl_10__from_counters #v_SendChain #v_ReceiveChain #v_Material
+          (impl__from_counters #v_SendChain #v_ReceiveChain #v_Material
             send_sequence receive_sequence send_chain receive_chain)))
   =
   refined_from_counters_is_valid #v_SendChain #v_ReceiveChain #v_Material
@@ -1982,7 +1993,7 @@ let refined_new_is_reachable
   : Lemma
       (reachable #v_SendChain #v_ReceiveChain #v_Material
         initial_send initial_receive send_step receive_step
-        (impl_10__new #v_SendChain #v_ReceiveChain #v_Material
+        (impl__new #v_SendChain #v_ReceiveChain #v_Material
           initial_send initial_receive))
   =
   refined_from_counters_is_reachable
@@ -2036,7 +2047,7 @@ let refined_advance_send_success_uses_step
            state'.f_receive_chain == state.f_receive_chain /\
            state'.f_receive_slots == state.f_receive_slots /\
            key.f_material == stepped.f_material /\
-           impl_11__sequence key ==
+           impl_1__sequence key ==
              Core_models.Option.Option_Some state'.f_control.f_send_sequence /\
            v state'.f_control.f_send_sequence ==
              v state.f_control.f_send_sequence + 1 /\
@@ -2694,7 +2705,7 @@ let refined_receive_entry_is_associated
        v slot < 50 /\
        v slot < cache_len state.f_control.f_receive_cache })
   : Lemma
-      (match impl_10__receive_entry_at state slot with
+      (match impl__receive_entry_at state slot with
        | Core_models.Option.Option_Some (sequence, material) ->
            refined_slot state sequence material slot
        | Core_models.Option.Option_None -> False)
@@ -2713,7 +2724,7 @@ let refined_receive_entry_mismatched_tag_is_rejected
          Core_models.Option.Option_Some cached /\
        cached.f_sequence <> sequence })
   : Lemma
-      (impl_10__receive_entry_at state slot ==
+      (impl__receive_entry_at state slot ==
         Core_models.Option.Option_None)
   = ()
 
@@ -3231,15 +3242,10 @@ let refined_finish_receive_success_is_exact_swap_removal
       cache_entry state.f_control.f_receive_cache (v last_slot));
   assert (last_slot <. state.f_control.f_receive_cache.f_len);
   assert
-    ((cast (last_slot <: u8) <: usize) <.
-      v_RECEIVE_CACHE_CAPACITY);
-  assert
-    (impl_RatchetState__receive_key_at state.f_control last_slot ==
-      Core_models.Option.Option_Some
-        (cache_entry state.f_control.f_receive_cache (v last_slot)));
-  assert
-    (impl_RatchetState__receive_key_at state.f_control last_slot ==
-      Core_models.Option.Option_Some last_cached.f_sequence);
+    (cache_slot state.f_control.f_receive_cache
+      last_cached.f_sequence last_slot);
+  receive_key_at_matches_cache_slot
+    state.f_control last_cached.f_sequence last_slot;
   let finished =
     finish_receive_with_removal state.f_control sequence target_slot true in
   finish_receive_with_removal_success_shape
@@ -3942,6 +3948,7 @@ let rec pending_receive_slots_are_valid_for_trace
               (v expected_sequence <
                 v Core_models.Num.impl_u64__MAX);
             u64_below_max_is_not_max expected_sequence;
+            u64_successor_value expected_sequence;
             assert
               (v (slot +! mk_u8 1) ==
                 cache_len entry.f_control.f_receive_cache + offset + 1);

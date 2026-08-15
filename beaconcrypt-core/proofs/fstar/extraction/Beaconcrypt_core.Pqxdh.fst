@@ -199,6 +199,8 @@ let beacon_ratchet_initialization (_: Prims.unit) : t_RatchetInitialization = v_
 /// PQXDH code obtains the same plan from a server candidate typestate.
 let server_ratchet_initialization (_: Prims.unit) : t_RatchetInitialization = v_SERVER_RATCHETS
 
+noeq
+
 /// Role-ordered fixed-width initial send and receive chains.
 type t_InitialRatchetChains = {
   f_send_chain:Beaconcrypt_core.Ratchet.t_RatchetChain;
