@@ -919,606 +919,14 @@ let empty_material_slot_is_none
   let slots = empty_material_slots #v_Material () in
   FStar.Pervasives.assert_norm (slots == Seq.seq_of_list xs);
   FStar.Seq.Base.lemma_eq_refl slots (Seq.seq_of_list xs);
-  if i = 0 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (0 < Seq.length slots);
-     assert (0 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 0 == Seq.index (Seq.seq_of_list xs) 0);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 0;
-     none_material_list_index #v_Material 50 0;
-     refined_slot_value_is_index slots 0;
-     assert
-       (refined_slot_value slots 0 == Core_models.Option.Option_None);
-     ())
-  else if i = 1 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (1 < Seq.length slots);
-     assert (1 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 1 == Seq.index (Seq.seq_of_list xs) 1);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 1;
-     none_material_list_index #v_Material 50 1;
-     refined_slot_value_is_index slots 1;
-     assert
-       (refined_slot_value slots 1 == Core_models.Option.Option_None);
-     ())
-  else if i = 2 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (2 < Seq.length slots);
-     assert (2 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 2 == Seq.index (Seq.seq_of_list xs) 2);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 2;
-     none_material_list_index #v_Material 50 2;
-     refined_slot_value_is_index slots 2;
-     assert
-       (refined_slot_value slots 2 == Core_models.Option.Option_None);
-     ())
-  else if i = 3 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (3 < Seq.length slots);
-     assert (3 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 3 == Seq.index (Seq.seq_of_list xs) 3);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 3;
-     none_material_list_index #v_Material 50 3;
-     refined_slot_value_is_index slots 3;
-     assert
-       (refined_slot_value slots 3 == Core_models.Option.Option_None);
-     ())
-  else if i = 4 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (4 < Seq.length slots);
-     assert (4 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 4 == Seq.index (Seq.seq_of_list xs) 4);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 4;
-     none_material_list_index #v_Material 50 4;
-     refined_slot_value_is_index slots 4;
-     assert
-       (refined_slot_value slots 4 == Core_models.Option.Option_None);
-     ())
-  else if i = 5 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (5 < Seq.length slots);
-     assert (5 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 5 == Seq.index (Seq.seq_of_list xs) 5);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 5;
-     none_material_list_index #v_Material 50 5;
-     refined_slot_value_is_index slots 5;
-     assert
-       (refined_slot_value slots 5 == Core_models.Option.Option_None);
-     ())
-  else if i = 6 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (6 < Seq.length slots);
-     assert (6 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 6 == Seq.index (Seq.seq_of_list xs) 6);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 6;
-     none_material_list_index #v_Material 50 6;
-     refined_slot_value_is_index slots 6;
-     assert
-       (refined_slot_value slots 6 == Core_models.Option.Option_None);
-     ())
-  else if i = 7 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (7 < Seq.length slots);
-     assert (7 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 7 == Seq.index (Seq.seq_of_list xs) 7);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 7;
-     none_material_list_index #v_Material 50 7;
-     refined_slot_value_is_index slots 7;
-     assert
-       (refined_slot_value slots 7 == Core_models.Option.Option_None);
-     ())
-  else if i = 8 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (8 < Seq.length slots);
-     assert (8 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 8 == Seq.index (Seq.seq_of_list xs) 8);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 8;
-     none_material_list_index #v_Material 50 8;
-     refined_slot_value_is_index slots 8;
-     assert
-       (refined_slot_value slots 8 == Core_models.Option.Option_None);
-     ())
-  else if i = 9 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (9 < Seq.length slots);
-     assert (9 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 9 == Seq.index (Seq.seq_of_list xs) 9);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 9;
-     none_material_list_index #v_Material 50 9;
-     refined_slot_value_is_index slots 9;
-     assert
-       (refined_slot_value slots 9 == Core_models.Option.Option_None);
-     ())
-  else if i = 10 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (10 < Seq.length slots);
-     assert (10 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 10 == Seq.index (Seq.seq_of_list xs) 10);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 10;
-     none_material_list_index #v_Material 50 10;
-     refined_slot_value_is_index slots 10;
-     assert
-       (refined_slot_value slots 10 == Core_models.Option.Option_None);
-     ())
-  else if i = 11 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (11 < Seq.length slots);
-     assert (11 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 11 == Seq.index (Seq.seq_of_list xs) 11);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 11;
-     none_material_list_index #v_Material 50 11;
-     refined_slot_value_is_index slots 11;
-     assert
-       (refined_slot_value slots 11 == Core_models.Option.Option_None);
-     ())
-  else if i = 12 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (12 < Seq.length slots);
-     assert (12 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 12 == Seq.index (Seq.seq_of_list xs) 12);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 12;
-     none_material_list_index #v_Material 50 12;
-     refined_slot_value_is_index slots 12;
-     assert
-       (refined_slot_value slots 12 == Core_models.Option.Option_None);
-     ())
-  else if i = 13 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (13 < Seq.length slots);
-     assert (13 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 13 == Seq.index (Seq.seq_of_list xs) 13);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 13;
-     none_material_list_index #v_Material 50 13;
-     refined_slot_value_is_index slots 13;
-     assert
-       (refined_slot_value slots 13 == Core_models.Option.Option_None);
-     ())
-  else if i = 14 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (14 < Seq.length slots);
-     assert (14 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 14 == Seq.index (Seq.seq_of_list xs) 14);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 14;
-     none_material_list_index #v_Material 50 14;
-     refined_slot_value_is_index slots 14;
-     assert
-       (refined_slot_value slots 14 == Core_models.Option.Option_None);
-     ())
-  else if i = 15 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (15 < Seq.length slots);
-     assert (15 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 15 == Seq.index (Seq.seq_of_list xs) 15);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 15;
-     none_material_list_index #v_Material 50 15;
-     refined_slot_value_is_index slots 15;
-     assert
-       (refined_slot_value slots 15 == Core_models.Option.Option_None);
-     ())
-  else if i = 16 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (16 < Seq.length slots);
-     assert (16 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 16 == Seq.index (Seq.seq_of_list xs) 16);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 16;
-     none_material_list_index #v_Material 50 16;
-     refined_slot_value_is_index slots 16;
-     assert
-       (refined_slot_value slots 16 == Core_models.Option.Option_None);
-     ())
-  else if i = 17 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (17 < Seq.length slots);
-     assert (17 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 17 == Seq.index (Seq.seq_of_list xs) 17);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 17;
-     none_material_list_index #v_Material 50 17;
-     refined_slot_value_is_index slots 17;
-     assert
-       (refined_slot_value slots 17 == Core_models.Option.Option_None);
-     ())
-  else if i = 18 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (18 < Seq.length slots);
-     assert (18 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 18 == Seq.index (Seq.seq_of_list xs) 18);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 18;
-     none_material_list_index #v_Material 50 18;
-     refined_slot_value_is_index slots 18;
-     assert
-       (refined_slot_value slots 18 == Core_models.Option.Option_None);
-     ())
-  else if i = 19 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (19 < Seq.length slots);
-     assert (19 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 19 == Seq.index (Seq.seq_of_list xs) 19);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 19;
-     none_material_list_index #v_Material 50 19;
-     refined_slot_value_is_index slots 19;
-     assert
-       (refined_slot_value slots 19 == Core_models.Option.Option_None);
-     ())
-  else if i = 20 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (20 < Seq.length slots);
-     assert (20 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 20 == Seq.index (Seq.seq_of_list xs) 20);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 20;
-     none_material_list_index #v_Material 50 20;
-     refined_slot_value_is_index slots 20;
-     assert
-       (refined_slot_value slots 20 == Core_models.Option.Option_None);
-     ())
-  else if i = 21 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (21 < Seq.length slots);
-     assert (21 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 21 == Seq.index (Seq.seq_of_list xs) 21);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 21;
-     none_material_list_index #v_Material 50 21;
-     refined_slot_value_is_index slots 21;
-     assert
-       (refined_slot_value slots 21 == Core_models.Option.Option_None);
-     ())
-  else if i = 22 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (22 < Seq.length slots);
-     assert (22 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 22 == Seq.index (Seq.seq_of_list xs) 22);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 22;
-     none_material_list_index #v_Material 50 22;
-     refined_slot_value_is_index slots 22;
-     assert
-       (refined_slot_value slots 22 == Core_models.Option.Option_None);
-     ())
-  else if i = 23 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (23 < Seq.length slots);
-     assert (23 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 23 == Seq.index (Seq.seq_of_list xs) 23);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 23;
-     none_material_list_index #v_Material 50 23;
-     refined_slot_value_is_index slots 23;
-     assert
-       (refined_slot_value slots 23 == Core_models.Option.Option_None);
-     ())
-  else if i = 24 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (24 < Seq.length slots);
-     assert (24 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 24 == Seq.index (Seq.seq_of_list xs) 24);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 24;
-     none_material_list_index #v_Material 50 24;
-     refined_slot_value_is_index slots 24;
-     assert
-       (refined_slot_value slots 24 == Core_models.Option.Option_None);
-     ())
-  else if i = 25 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (25 < Seq.length slots);
-     assert (25 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 25 == Seq.index (Seq.seq_of_list xs) 25);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 25;
-     none_material_list_index #v_Material 50 25;
-     refined_slot_value_is_index slots 25;
-     assert
-       (refined_slot_value slots 25 == Core_models.Option.Option_None);
-     ())
-  else if i = 26 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (26 < Seq.length slots);
-     assert (26 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 26 == Seq.index (Seq.seq_of_list xs) 26);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 26;
-     none_material_list_index #v_Material 50 26;
-     refined_slot_value_is_index slots 26;
-     assert
-       (refined_slot_value slots 26 == Core_models.Option.Option_None);
-     ())
-  else if i = 27 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (27 < Seq.length slots);
-     assert (27 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 27 == Seq.index (Seq.seq_of_list xs) 27);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 27;
-     none_material_list_index #v_Material 50 27;
-     refined_slot_value_is_index slots 27;
-     assert
-       (refined_slot_value slots 27 == Core_models.Option.Option_None);
-     ())
-  else if i = 28 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (28 < Seq.length slots);
-     assert (28 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 28 == Seq.index (Seq.seq_of_list xs) 28);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 28;
-     none_material_list_index #v_Material 50 28;
-     refined_slot_value_is_index slots 28;
-     assert
-       (refined_slot_value slots 28 == Core_models.Option.Option_None);
-     ())
-  else if i = 29 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (29 < Seq.length slots);
-     assert (29 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 29 == Seq.index (Seq.seq_of_list xs) 29);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 29;
-     none_material_list_index #v_Material 50 29;
-     refined_slot_value_is_index slots 29;
-     assert
-       (refined_slot_value slots 29 == Core_models.Option.Option_None);
-     ())
-  else if i = 30 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (30 < Seq.length slots);
-     assert (30 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 30 == Seq.index (Seq.seq_of_list xs) 30);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 30;
-     none_material_list_index #v_Material 50 30;
-     refined_slot_value_is_index slots 30;
-     assert
-       (refined_slot_value slots 30 == Core_models.Option.Option_None);
-     ())
-  else if i = 31 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (31 < Seq.length slots);
-     assert (31 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 31 == Seq.index (Seq.seq_of_list xs) 31);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 31;
-     none_material_list_index #v_Material 50 31;
-     refined_slot_value_is_index slots 31;
-     assert
-       (refined_slot_value slots 31 == Core_models.Option.Option_None);
-     ())
-  else if i = 32 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (32 < Seq.length slots);
-     assert (32 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 32 == Seq.index (Seq.seq_of_list xs) 32);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 32;
-     none_material_list_index #v_Material 50 32;
-     refined_slot_value_is_index slots 32;
-     assert
-       (refined_slot_value slots 32 == Core_models.Option.Option_None);
-     ())
-  else if i = 33 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (33 < Seq.length slots);
-     assert (33 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 33 == Seq.index (Seq.seq_of_list xs) 33);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 33;
-     none_material_list_index #v_Material 50 33;
-     refined_slot_value_is_index slots 33;
-     assert
-       (refined_slot_value slots 33 == Core_models.Option.Option_None);
-     ())
-  else if i = 34 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (34 < Seq.length slots);
-     assert (34 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 34 == Seq.index (Seq.seq_of_list xs) 34);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 34;
-     none_material_list_index #v_Material 50 34;
-     refined_slot_value_is_index slots 34;
-     assert
-       (refined_slot_value slots 34 == Core_models.Option.Option_None);
-     ())
-  else if i = 35 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (35 < Seq.length slots);
-     assert (35 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 35 == Seq.index (Seq.seq_of_list xs) 35);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 35;
-     none_material_list_index #v_Material 50 35;
-     refined_slot_value_is_index slots 35;
-     assert
-       (refined_slot_value slots 35 == Core_models.Option.Option_None);
-     ())
-  else if i = 36 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (36 < Seq.length slots);
-     assert (36 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 36 == Seq.index (Seq.seq_of_list xs) 36);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 36;
-     none_material_list_index #v_Material 50 36;
-     refined_slot_value_is_index slots 36;
-     assert
-       (refined_slot_value slots 36 == Core_models.Option.Option_None);
-     ())
-  else if i = 37 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (37 < Seq.length slots);
-     assert (37 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 37 == Seq.index (Seq.seq_of_list xs) 37);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 37;
-     none_material_list_index #v_Material 50 37;
-     refined_slot_value_is_index slots 37;
-     assert
-       (refined_slot_value slots 37 == Core_models.Option.Option_None);
-     ())
-  else if i = 38 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (38 < Seq.length slots);
-     assert (38 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 38 == Seq.index (Seq.seq_of_list xs) 38);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 38;
-     none_material_list_index #v_Material 50 38;
-     refined_slot_value_is_index slots 38;
-     assert
-       (refined_slot_value slots 38 == Core_models.Option.Option_None);
-     ())
-  else if i = 39 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (39 < Seq.length slots);
-     assert (39 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 39 == Seq.index (Seq.seq_of_list xs) 39);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 39;
-     none_material_list_index #v_Material 50 39;
-     refined_slot_value_is_index slots 39;
-     assert
-       (refined_slot_value slots 39 == Core_models.Option.Option_None);
-     ())
-  else if i = 40 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (40 < Seq.length slots);
-     assert (40 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 40 == Seq.index (Seq.seq_of_list xs) 40);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 40;
-     none_material_list_index #v_Material 50 40;
-     refined_slot_value_is_index slots 40;
-     assert
-       (refined_slot_value slots 40 == Core_models.Option.Option_None);
-     ())
-  else if i = 41 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (41 < Seq.length slots);
-     assert (41 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 41 == Seq.index (Seq.seq_of_list xs) 41);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 41;
-     none_material_list_index #v_Material 50 41;
-     refined_slot_value_is_index slots 41;
-     assert
-       (refined_slot_value slots 41 == Core_models.Option.Option_None);
-     ())
-  else if i = 42 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (42 < Seq.length slots);
-     assert (42 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 42 == Seq.index (Seq.seq_of_list xs) 42);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 42;
-     none_material_list_index #v_Material 50 42;
-     refined_slot_value_is_index slots 42;
-     assert
-       (refined_slot_value slots 42 == Core_models.Option.Option_None);
-     ())
-  else if i = 43 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (43 < Seq.length slots);
-     assert (43 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 43 == Seq.index (Seq.seq_of_list xs) 43);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 43;
-     none_material_list_index #v_Material 50 43;
-     refined_slot_value_is_index slots 43;
-     assert
-       (refined_slot_value slots 43 == Core_models.Option.Option_None);
-     ())
-  else if i = 44 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (44 < Seq.length slots);
-     assert (44 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 44 == Seq.index (Seq.seq_of_list xs) 44);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 44;
-     none_material_list_index #v_Material 50 44;
-     refined_slot_value_is_index slots 44;
-     assert
-       (refined_slot_value slots 44 == Core_models.Option.Option_None);
-     ())
-  else if i = 45 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (45 < Seq.length slots);
-     assert (45 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 45 == Seq.index (Seq.seq_of_list xs) 45);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 45;
-     none_material_list_index #v_Material 50 45;
-     refined_slot_value_is_index slots 45;
-     assert
-       (refined_slot_value slots 45 == Core_models.Option.Option_None);
-     ())
-  else if i = 46 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (46 < Seq.length slots);
-     assert (46 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 46 == Seq.index (Seq.seq_of_list xs) 46);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 46;
-     none_material_list_index #v_Material 50 46;
-     refined_slot_value_is_index slots 46;
-     assert
-       (refined_slot_value slots 46 == Core_models.Option.Option_None);
-     ())
-  else if i = 47 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (47 < Seq.length slots);
-     assert (47 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 47 == Seq.index (Seq.seq_of_list xs) 47);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 47;
-     none_material_list_index #v_Material 50 47;
-     refined_slot_value_is_index slots 47;
-     assert
-       (refined_slot_value slots 47 == Core_models.Option.Option_None);
-     ())
-  else if i = 48 then
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (48 < Seq.length slots);
-     assert (48 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 48 == Seq.index (Seq.seq_of_list xs) 48);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 48;
-     none_material_list_index #v_Material 50 48;
-     refined_slot_value_is_index slots 48;
-     assert
-       (refined_slot_value slots 48 == Core_models.Option.Option_None);
-     ())
-  else
-    (assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
-     assert (49 < Seq.length slots);
-     assert (49 < Seq.length (Seq.seq_of_list xs));
-     assert
-       (Seq.index slots 49 == Seq.index (Seq.seq_of_list xs) 49);
-     FStar.Seq.Properties.lemma_seq_of_list_index xs 49;
-     none_material_list_index #v_Material 50 49;
-     refined_slot_value_is_index slots 49;
-     assert
-       (refined_slot_value slots 49 == Core_models.Option.Option_None);
-     ())
+  assert (FStar.Seq.Base.equal slots (Seq.seq_of_list xs));
+  assert (i < Seq.length slots);
+  assert (i < Seq.length (Seq.seq_of_list xs));
+  assert
+    (Seq.index slots i == Seq.index (Seq.seq_of_list xs) i);
+  FStar.Seq.Properties.lemma_seq_of_list_index xs i;
+  none_material_list_index #v_Material 50 i;
+  refined_slot_value_is_index slots i
 
 /// The explicit source-level empty array establishes the material occupancy invariant.
 let empty_material_slots_are_none
@@ -4200,6 +3608,23 @@ let prepare_future_receive_steps_next_computes
            (skipped +! mk_u8 1) staged_slots'))
   = ()
 
+/// Introduce three existential witnesses without repeating the partially applied proposition at each nesting level.
+let exists3_intro
+    (#a #b #c:Type)
+    (p:a -> b -> c -> prop)
+    (x:a)
+    (y:b)
+    (z:c)
+  : Lemma
+      (requires (p x y z))
+      (ensures (exists (x':a) (y':b) (z':c). p x' y' z'))
+  =
+  FStar.Classical.exists_intro (p x y) z;
+  FStar.Classical.exists_intro
+    (fun y' -> exists z'. p x y' z') y;
+  FStar.Classical.exists_intro
+    (fun x' -> exists y' z'. p x' y' z') x
+
 /// Under the admitted bounds and exact accumulator invariants, private future
 /// derivation is total and returns one pending delta with the complete trace.
 /// This is the non-vacuity theorem for the recursive preparation helper.
@@ -4334,28 +3759,10 @@ let rec prepare_future_receive_steps_is_total_and_exact
                    advanced.f_state slot removal;
                  finish_receive_with_removal_consumes_target
                    advanced.f_state target slot;
-                 FStar.Classical.exists_intro
-                   (fun candidate_removal ->
-                      future_commit_witness
-                        entry pending target derivations advanced.f_state
-                        slot candidate_removal)
-                   removal;
-                 FStar.Classical.exists_intro
-                   (fun candidate_slot ->
-                      exists (candidate_removal:t_ReceiveRemoval).
-                        future_commit_witness
-                          entry pending target derivations advanced.f_state
-                          candidate_slot candidate_removal)
-                   slot;
-                 FStar.Classical.exists_intro
-                   (fun candidate_control ->
-                      exists
-                        (candidate_slot:u8)
-                        (candidate_removal:t_ReceiveRemoval).
-                          future_commit_witness entry pending target
-                            derivations candidate_control candidate_slot
-                            candidate_removal)
-                   advanced.f_state;
+                 exists3_intro
+                   (future_commit_witness
+                     entry pending target derivations)
+                   advanced.f_state slot removal;
                  let target_stays_private (i:nat{i < 50})
                    : Lemma
                        (i ==
@@ -4987,6 +4394,41 @@ let prepared_future_publication_is_exact
     entry.f_control.f_receive_cache
     published.f_control.f_receive_cache
 
+/// The exact target, last-record, and control-removal witnesses fixed by a successful cached preparation.
+let cached_preparation_witness
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (prepared:t_PreparedCachedReceive)
+    (target:u64)
+    (target_index:nat{target_index < 50})
+    (last_index:nat{last_index < 50})
+    (target_cached last_cached:t_CachedReceiveKey v_Material)
+    (removal:t_ReceiveRemoval)
+  : prop =
+  let finished = finish_receive_with_removal
+    entry.f_control target prepared.f_target_slot true in
+  let published = publish_cached_receive entry prepared in
+  refined_slot_value entry.f_receive_slots
+    target_index ==
+      Core_models.Option.Option_Some target_cached /\
+  target_cached.f_sequence == target /\
+  refined_slot_value entry.f_receive_slots
+    last_index ==
+      Core_models.Option.Option_Some last_cached /\
+  impl_RatchetState__receive_key_at
+    entry.f_control prepared.f_last_slot ==
+      Core_models.Option.Option_Some last_cached.f_sequence /\
+  finished.f_disposition == ReceiveDisposition_Consumed /\
+  finished.f_removal == Core_models.Option.Option_Some removal /\
+  removal.f_target_slot == prepared.f_target_slot /\
+  removal.f_last_slot == prepared.f_last_slot /\
+  prepared.f_committed_control == finished.f_state /\
+  published.f_receive_slots ==
+    material_slots_after_swap_remove
+      entry.f_receive_slots prepared.f_target_slot
+      prepared.f_last_slot last_cached /\
+  published.f_control == finished.f_state
+
 /// A cached preparation names the requested live record, prevalidates the
 /// complete old-last record, and fixes the exact whole-entry swap-removal that
 /// success will publish.
@@ -4996,8 +4438,6 @@ let valid_cached_preparation
     (prepared:t_PreparedCachedReceive)
     (target:u64)
   : prop =
-  let finished = finish_receive_with_removal
-    entry.f_control target prepared.f_target_slot true in
   let published = publish_cached_receive entry prepared in
   valid_refined entry /\
   prepared.f_sequence == target /\
@@ -5008,26 +4448,10 @@ let valid_cached_preparation
   (exists
      (target_cached last_cached:t_CachedReceiveKey v_Material)
      (removal:t_ReceiveRemoval).
-       refined_slot_value entry.f_receive_slots
-         (v prepared.f_target_slot) ==
-           Core_models.Option.Option_Some target_cached /\
-       target_cached.f_sequence == target /\
-       refined_slot_value entry.f_receive_slots
-         (v prepared.f_last_slot) ==
-           Core_models.Option.Option_Some last_cached /\
-       impl_RatchetState__receive_key_at
-         entry.f_control prepared.f_last_slot ==
-           Core_models.Option.Option_Some last_cached.f_sequence /\
-       finished.f_disposition == ReceiveDisposition_Consumed /\
-       finished.f_removal == Core_models.Option.Option_Some removal /\
-       removal.f_target_slot == prepared.f_target_slot /\
-       removal.f_last_slot == prepared.f_last_slot /\
-       prepared.f_committed_control == finished.f_state /\
-       published.f_receive_slots ==
-         material_slots_after_swap_remove
-           entry.f_receive_slots prepared.f_target_slot
-           prepared.f_last_slot last_cached /\
-       published.f_control == finished.f_state) /\
+       cached_preparation_witness
+         entry prepared target
+         (v prepared.f_target_slot) (v prepared.f_last_slot)
+         target_cached last_cached removal) /\
   valid_refined published /\
   published.f_send_chain == entry.f_send_chain /\
   published.f_receive_chain == entry.f_receive_chain /\
@@ -5145,99 +4569,10 @@ let prepare_cached_receive_establishes_valid_cached
                         preserve_requires other
                   in
                   FStar.Classical.forall_intro preserve;
-                  FStar.Classical.exists_intro
-                    (fun (candidate_removal:t_ReceiveRemoval) ->
-                       refined_slot_value entry.f_receive_slots
-                         (v prepared.f_target_slot) ==
-                           Core_models.Option.Option_Some target_cached /\
-                       target_cached.f_sequence == target /\
-                       refined_slot_value entry.f_receive_slots
-                         (v prepared.f_last_slot) ==
-                           Core_models.Option.Option_Some last_cached /\
-                       impl_RatchetState__receive_key_at
-                         entry.f_control prepared.f_last_slot ==
-                           Core_models.Option.Option_Some
-                             last_cached.f_sequence /\
-                       finished.f_disposition ==
-                         ReceiveDisposition_Consumed /\
-                       finished.f_removal ==
-                         Core_models.Option.Option_Some candidate_removal /\
-                       candidate_removal.f_target_slot ==
-                         prepared.f_target_slot /\
-                       candidate_removal.f_last_slot ==
-                         prepared.f_last_slot /\
-                       prepared.f_committed_control == finished.f_state /\
-                       published.f_receive_slots ==
-                         material_slots_after_swap_remove
-                           entry.f_receive_slots prepared.f_target_slot
-                           prepared.f_last_slot last_cached /\
-                       published.f_control == finished.f_state)
-                    removal;
-                  FStar.Classical.exists_intro
-                    (fun (candidate_last:t_CachedReceiveKey v_Material) ->
-                       exists (candidate_removal:t_ReceiveRemoval).
-                         refined_slot_value entry.f_receive_slots
-                           (v prepared.f_target_slot) ==
-                             Core_models.Option.Option_Some target_cached /\
-                         target_cached.f_sequence == target /\
-                         refined_slot_value entry.f_receive_slots
-                           (v prepared.f_last_slot) ==
-                             Core_models.Option.Option_Some candidate_last /\
-                         impl_RatchetState__receive_key_at
-                           entry.f_control prepared.f_last_slot ==
-                             Core_models.Option.Option_Some
-                               candidate_last.f_sequence /\
-                         finished.f_disposition ==
-                           ReceiveDisposition_Consumed /\
-                         finished.f_removal ==
-                           Core_models.Option.Option_Some candidate_removal /\
-                         candidate_removal.f_target_slot ==
-                           prepared.f_target_slot /\
-                         candidate_removal.f_last_slot ==
-                           prepared.f_last_slot /\
-                         prepared.f_committed_control == finished.f_state /\
-                         published.f_receive_slots ==
-                           material_slots_after_swap_remove
-                             entry.f_receive_slots prepared.f_target_slot
-                             prepared.f_last_slot candidate_last /\
-                         published.f_control == finished.f_state)
-                    last_cached;
-                  FStar.Classical.exists_intro
-                    (fun (candidate_target:t_CachedReceiveKey v_Material) ->
-                       exists
-                         (candidate_last:t_CachedReceiveKey v_Material)
-                         (candidate_removal:t_ReceiveRemoval).
-                           refined_slot_value entry.f_receive_slots
-                             (v prepared.f_target_slot) ==
-                               Core_models.Option.Option_Some
-                                 candidate_target /\
-                           candidate_target.f_sequence == target /\
-                           refined_slot_value entry.f_receive_slots
-                             (v prepared.f_last_slot) ==
-                               Core_models.Option.Option_Some
-                                 candidate_last /\
-                           impl_RatchetState__receive_key_at
-                             entry.f_control prepared.f_last_slot ==
-                               Core_models.Option.Option_Some
-                                 candidate_last.f_sequence /\
-                           finished.f_disposition ==
-                             ReceiveDisposition_Consumed /\
-                           finished.f_removal ==
-                             Core_models.Option.Option_Some
-                               candidate_removal /\
-                           candidate_removal.f_target_slot ==
-                             prepared.f_target_slot /\
-                           candidate_removal.f_last_slot ==
-                             prepared.f_last_slot /\
-                           prepared.f_committed_control ==
-                             finished.f_state /\
-                           published.f_receive_slots ==
-                             material_slots_after_swap_remove
-                               entry.f_receive_slots
-                               prepared.f_target_slot
-                               prepared.f_last_slot candidate_last /\
-                           published.f_control == finished.f_state)
-                    target_cached
+                  exists3_intro
+                    (cached_preparation_witness entry prepared target
+                      (v prepared.f_target_slot) (v prepared.f_last_slot))
+                    target_cached last_cached removal
 
 /// The prevalidated cached publication is exactly the already-verified
 /// refined successful swap-removal, not merely implementation-relative.

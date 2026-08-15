@@ -304,6 +304,38 @@ let encode_u64_le_is_injective (left right:u64)
     mk_int_v_lemma left;
     mk_int_v_lemma right
 
+/// Equal inputs have equal same-offset segments when each segment has the declared byte view.
+let equal_embedded_segment
+    (left_input right_input:t_Slice u8)
+    (left_segment right_segment:t_Slice u8)
+    (offset:nat {
+      offset + Seq.length left_segment <= Seq.length left_input /\
+      offset + Seq.length right_segment <= Seq.length right_input })
+  : Lemma
+      (requires
+        (left_input == right_input /\
+         Seq.length left_segment == Seq.length right_segment /\
+         (forall (i:nat { i < Seq.length left_segment }).
+            Seq.index left_input (offset + i) ==
+            Seq.index left_segment i) /\
+         (forall (i:nat { i < Seq.length right_segment }).
+            Seq.index right_input (offset + i) ==
+            Seq.index right_segment i)))
+      (ensures (left_segment == right_segment))
+  =
+  let segment_byte (i:nat { i < Seq.length left_segment })
+    : Lemma (Seq.index left_segment i == Seq.index right_segment i)
+    = assert
+        (Seq.index left_input (offset + i) ==
+         Seq.index left_segment i);
+      assert
+        (Seq.index right_input (offset + i) ==
+         Seq.index right_segment i)
+  in
+  FStar.Classical.forall_intro segment_byte;
+  FStar.Seq.Base.lemma_eq_intro left_segment right_segment;
+  FStar.Seq.Base.lemma_eq_elim left_segment right_segment
+
 let production_commitment_input
     (key:t_Array u8 (mk_usize 32))
     (nonce:t_Array u8 (mk_usize 12))
@@ -349,79 +381,18 @@ let production_commitment_input_is_injective
   commitment_transcript_is_exact
     right_key right_nonce right_associated_data right_tag
     right_sequence right_sender_id;
-  let key_byte (i:nat { i < 32 })
-    : Lemma (Seq.index left_key i == Seq.index right_key i)
-    = assert (Seq.index left_input i == Seq.index left_key i);
-      assert (Seq.index right_input i == Seq.index right_key i)
-  in
-  FStar.Classical.forall_intro key_byte;
-  FStar.Seq.Base.lemma_eq_intro left_key right_key;
-  FStar.Seq.Base.lemma_eq_elim left_key right_key;
-  let nonce_byte (i:nat { i < 12 })
-    : Lemma (Seq.index left_nonce i == Seq.index right_nonce i)
-    = assert (Seq.index left_input (32 + i) == Seq.index left_nonce i);
-      assert (Seq.index right_input (32 + i) == Seq.index right_nonce i)
-  in
-  FStar.Classical.forall_intro nonce_byte;
-  FStar.Seq.Base.lemma_eq_intro left_nonce right_nonce;
-  FStar.Seq.Base.lemma_eq_elim left_nonce right_nonce;
-  let associated_data_byte (i:nat { i < 153 })
-    : Lemma
-        (Seq.index left_associated_data i ==
-         Seq.index right_associated_data i)
-    = assert
-        (Seq.index left_input (44 + i) ==
-         Seq.index left_associated_data i);
-      assert
-        (Seq.index right_input (44 + i) ==
-         Seq.index right_associated_data i)
-  in
-  FStar.Classical.forall_intro associated_data_byte;
-  FStar.Seq.Base.lemma_eq_intro
-    left_associated_data right_associated_data;
-  FStar.Seq.Base.lemma_eq_elim
-    left_associated_data right_associated_data;
-  let tag_byte (i:nat { i < 16 })
-    : Lemma (Seq.index left_tag i == Seq.index right_tag i)
-    = assert (Seq.index left_input (197 + i) == Seq.index left_tag i);
-      assert (Seq.index right_input (197 + i) == Seq.index right_tag i)
-  in
-  FStar.Classical.forall_intro tag_byte;
-  FStar.Seq.Base.lemma_eq_intro left_tag right_tag;
-  FStar.Seq.Base.lemma_eq_elim left_tag right_tag;
-  let sequence_byte (i:nat { i < 8 })
-    : Lemma
-        (Seq.index (encode_u64_le left_sequence) i ==
-         Seq.index (encode_u64_le right_sequence) i)
-    = assert
-        (Seq.index left_input (213 + i) ==
-         Seq.index (encode_u64_le left_sequence) i);
-      assert
-        (Seq.index right_input (213 + i) ==
-         Seq.index (encode_u64_le right_sequence) i)
-  in
-  FStar.Classical.forall_intro sequence_byte;
-  FStar.Seq.Base.lemma_eq_intro
-    (encode_u64_le left_sequence) (encode_u64_le right_sequence);
-  FStar.Seq.Base.lemma_eq_elim
-    (encode_u64_le left_sequence) (encode_u64_le right_sequence);
+  equal_embedded_segment left_input right_input left_key right_key 0;
+  equal_embedded_segment left_input right_input left_nonce right_nonce 32;
+  equal_embedded_segment
+    left_input right_input left_associated_data right_associated_data 44;
+  equal_embedded_segment left_input right_input left_tag right_tag 197;
+  equal_embedded_segment
+    left_input right_input
+    (encode_u64_le left_sequence) (encode_u64_le right_sequence) 213;
   encode_u64_le_is_injective left_sequence right_sequence;
-  let sender_id_byte (i:nat { i < 8 })
-    : Lemma
-        (Seq.index (encode_u64_le left_sender_id) i ==
-         Seq.index (encode_u64_le right_sender_id) i)
-    = assert
-        (Seq.index left_input (221 + i) ==
-         Seq.index (encode_u64_le left_sender_id) i);
-      assert
-        (Seq.index right_input (221 + i) ==
-         Seq.index (encode_u64_le right_sender_id) i)
-  in
-  FStar.Classical.forall_intro sender_id_byte;
-  FStar.Seq.Base.lemma_eq_intro
-    (encode_u64_le left_sender_id) (encode_u64_le right_sender_id);
-  FStar.Seq.Base.lemma_eq_elim
-    (encode_u64_le left_sender_id) (encode_u64_le right_sender_id);
+  equal_embedded_segment
+    left_input right_input
+    (encode_u64_le left_sender_id) (encode_u64_le right_sender_id) 221;
   encode_u64_le_is_injective left_sender_id right_sender_id
 
 let ctx_opening_accepted
