@@ -40,7 +40,7 @@ The server uses these values to perform its leg of the `PQXDH` protocol and init
 The beacon receives the initial message and uses the `phase2` bundle to perform the final leg of the `PQXDH` protocol run. It uses the shared secret to initialize its KDF chains, then attempts to decrypt the bundled ciphertext using its receive chain. If this succeeds and the authenticated sender and assigned IDs match, the session is established. At runtime the beacon's operational ratchet is owned only by `BeaconState::Established`, and the server peer map contains only `EstablishedRemote` entries produced by a successful registration commit or fresh restoration through the trusted store. Fresh, pending, and aborted beacon states cannot encrypt or decrypt application records, and the production API does not expose manual peer insertion, ratchet reset, or mutable ratchet access.
 
 # Message encryption
-Every encryption wraps its payload in a Cap’n Proto message called a `CryptoFrame`, whose metadata supports out-of-order delivery. An established sender derives a key, next chain, and nonce from its current send chain, advances the affine operational ratchet, and consumes the private send capability before returning. The operational ratchet and its secret-bearing chain/material components are not `Clone`, and update APIs return an inert serialized `RatchetSnapshot` rather than another live manager. These ownership controls prevent safe in-process state forks, while restart and multi-owner safety depend on the trusted-store generation/digest/CAS persistence path. Under that contract and the stated HKDF noncollision assumption, distinct committed send allocations in one directional lineage use distinct key/nonce pairs. Send material is removed logically after the attempt and core arrays use best-effort zeroization on drop, but physical erasure is not a formal guarantee. Receive material can be retained for bounded out-of-order delivery or retry after failed authentication; successful authentication consumes the selected record and later replay fails. The commitment described below binds `seq` and `keyId` to the protected payload, with `seq` selecting the derivation position and `keyId` identifying the sender and selected receive ratchet.
+Every encryption wraps its payload in a Cap’n Proto message called a `CryptoFrame`, whose metadata supports out-of-order delivery. An established sender derives a key, next chain, and nonce from its current send chain, advances the affine operational ratchet, and consumes the private send capability before returning. The operational ratchet and its secret-bearing chain/material components are not `Clone`, and update APIs return an inert serialized `RatchetSnapshot` rather than another live manager. These ownership controls prevent safe in-process state forks, while restart and multi-owner safety depend on the trusted-store generation/digest/CAS persistence path. Under that contract and the stated HKDF noncollision assumption, distinct committed send allocations in one directional lineage use distinct key/nonce pairs. Send material is removed logically after the attempt and core arrays use best-effort zeroization on drop, but physical erasure is not a formal guarantee. Receive material is retained only for bounded out-of-order delivery after a successful future receive; every normally rejected receive preserves the complete entry state, while successful authentication consumes the selected record and later replay fails. The commitment described below binds `seq` and `keyId` to the protected payload, with `seq` selecting the derivation position and `keyId` identifying the sender and selected receive ratchet.
 
 ## State ownership and persistence
 
@@ -138,17 +138,20 @@ To read a `CryptoFrame`, the reader must:
   - The reference implementation permits a forward distance of at most 50
   - The number of already cached receive keys plus that forward distance must also be at most 50
   - Abort processing without changing state if either limit is exceeded
-- Ratchet their `recv` keychain forward to `seq`, caching every skipped key and the target key
-  - This admission and cache update occurs before commitment or AEAD authentication
-  - If either authentication step later fails, retain the advanced chain and every cached key, including the target key; do not roll back to the pre-frame state
+- Privately prepare the candidate receive transition without changing the live receive chain, counter, or cache
+  - For a future `seq`, derive the bounded candidate chain and material while staging only the skipped keys; keep the target material separate
+  - For an old `seq`, select the exact sequence-tagged cached key without removing or moving it
 - Extract `CT`, `T` and `T*` from the `cipherText` field
 - Compute the commitment `T*'` using `Hash(Key, Nonce, Associated Data, T, seq, keyId)`
   - The hash function is unkeyed Blake2b with a 512bit output length
   - `seq` and `keyId` are serialized as little-endian 64-bit unsigned integers
 - Perform a constant-time comparison of `T*` and `T*'`
-  - Abort processing if there is a mismatch
-- Use the key associated with `seq` to decrypt 
-- Delete the `seq` key on their `recv` keychain if decryption was successful
+  - Reject the frame with the complete entry state unchanged if there is a mismatch
+- Use the privately selected key associated with `seq` to decrypt
+  - Reject the frame with the complete entry state unchanged if AEAD authentication fails
+- Publish the prepared receive chain, counter, and skipped keys only after successful authentication, and consume rather than cache the target key
+
+State-neutral rejection prevents unauthenticated traffic from consuming receive-cache capacity, but it trades that protection for bounded recomputation: retrying the same invalid future frame can repeat up to 50 private ratchet-KDF steps. Deployments should apply per-peer rate limits, admission quotas, or transport replay filtering as external availability controls; those controls must not encode rejection by mutating the cryptographic ratchet.
 
 ## InitKex
 This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../src/schema/phase1.capnp). It must only be run once per beacon instance. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. Ed25519 and ML-KEM-768 public keys are encoded as a one-byte type marker followed by the public-key buffer. The two X25519 fields additionally authenticate their semantic role and are encoded as `[type: u8, role: u8, key]`: `preKey` is `[0x04, 0x80, 32-byte key]` and `oneTimeKey` is `[0x04, 0x81, 32-byte key]`. Type markers occupy the low half of the byte domain and role markers the high half, so the domains are disjoint. The beacon builds this message as follows:

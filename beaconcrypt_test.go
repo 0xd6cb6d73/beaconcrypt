@@ -961,6 +961,53 @@ func TestServerCanRetryDecryptionAfterCorruptedAEADMessage(t *testing.T) {
 	}
 }
 
+func TestRejectedReceiveLeavesServerCheckpointUnchanged(t *testing.T) {
+	server := newServer(t)
+	serverPK, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	beacon := newBeacon(t, serverPK)
+	message := bytes.Repeat([]byte{0x5A}, 32)
+
+	registerBeacon(t, server, beacon)
+	ciphertext, err := beacon.EncryptToServer(message)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupted := corruptAEADCiphertext(t, ciphertext)
+	checkpoint, err := server.ExportState()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := server.DecryptBeaconMessage(corrupted); err == nil {
+		t.Fatal("expected corrupted ciphertext to be rejected")
+	}
+	afterRejection, err := server.ExportState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(afterRejection, checkpoint) {
+		t.Fatal("rejected receive changed the exported checkpoint")
+	}
+
+	plaintext, err := server.DecryptBeaconMessage(ciphertext)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(plaintext, message) {
+		t.Fatalf("accepted plaintext mismatch: got %x want %x", plaintext, message)
+	}
+	afterSuccess, err := server.ExportState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(afterSuccess, checkpoint) {
+		t.Fatal("accepted receive did not change the exported checkpoint")
+	}
+}
+
 func TestConcurrentHandleUseIsSerialized(t *testing.T) {
 	server := newServer(t)
 	serverPK, err := server.IdentityPK()

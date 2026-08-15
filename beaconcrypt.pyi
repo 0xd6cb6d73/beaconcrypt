@@ -29,7 +29,7 @@ class BeaconCryptServer:
         """
         Export the current plaintext checkpoint.
 
-        Save it immediately after every state-changing call and before using that call's output.
+        Save it immediately after every accepted receive or other state-changing call and before using that call's output. A normal rejected receive leaves the checkpoint unchanged.
         """
     @staticmethod
     def from_state(state: Sequence[int]) -> BeaconCryptServer:

@@ -109,7 +109,8 @@ impl Server {
 
 	/// Export the current plaintext checkpoint.
 	///
-	/// Save it immediately after every state-changing call and before using that call's output.
+	/// Save it immediately after every accepted receive or other state-changing call and before using that call's output.
+	/// A normal rejected receive leaves the checkpoint unchanged.
 	fn export_state(&self) -> PyResult<Vec<u8>> {
 		self._0
 			.export_binding_state()

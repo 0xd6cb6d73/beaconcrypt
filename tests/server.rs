@@ -7,6 +7,8 @@ use std::thread;
 const SNAPSHOT_HEADER_SIZE: usize = 16 + 2 + 1 + 1 + 32 + 8 + 32 + 8;
 const SNAPSHOT_PARENT_DIGEST_OFFSET: usize = 16 + 2 + 1 + 1 + 32 + 8;
 const SNAPSHOT_PAYLOAD_LENGTH_OFFSET: usize = SNAPSHOT_HEADER_SIZE - 8;
+const CRYPTO_FRAME_COMMITMENT_SIZE: usize = 64;
+const RECEIVE_MAX_GAP: u64 = 50;
 
 #[derive(Default)]
 struct MemoryStoreState {
@@ -109,6 +111,29 @@ impl SnapshotStore for MemoryStore {
 	}
 }
 
+#[derive(Debug, Eq, PartialEq)]
+struct PersistentObservation {
+	head: SnapshotHead,
+	snapshot: Vec<u8>,
+	cas_attempts: usize,
+	poisoned: bool,
+	status: RatchetStatus,
+}
+
+fn observe_persistent_state(
+	server: &PersistentServer<MemoryStore>,
+	store: &MemoryStore,
+	kid: u64,
+) -> PersistentObservation {
+	PersistentObservation {
+		head: server.head(),
+		snapshot: store.snapshot_bytes(),
+		cas_attempts: store.cas_attempts(),
+		poisoned: server.is_poisoned(),
+		status: server.ratchet_status(kid).unwrap(),
+	}
+}
+
 fn test_register_pqxdh_beacon(server: &mut Server, beacon: &mut Beacon) -> Vec<u8> {
 	let message = [0xFFu8; 32];
 	let phase_1 = beacon.get_registration_bundle().unwrap();
@@ -145,21 +170,90 @@ fn snapshot_with_payload(snapshot: &[u8], payload: &[u8]) -> Vec<u8> {
 	bytes
 }
 
-fn corrupt_crypto_frame_ciphertext(serialized: &[u8]) -> Vec<u8> {
+fn rewrite_crypto_frame(
+	serialized: &[u8],
+	mutate: impl FnOnce(&mut u64, &mut u64, &mut Vec<u8>),
+) -> Vec<u8> {
 	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
 	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
 	let frame = typed.get().unwrap();
+	let mut seq = frame.get_seq();
+	let mut kid = frame.get_key_id();
 	let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
-	ciphertext[0] ^= 1;
+	mutate(&mut seq, &mut kid, &mut ciphertext);
 
 	let mut message = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
 	let mut corrupted = message.init_root();
-	corrupted.set_seq(frame.get_seq());
-	corrupted.set_key_id(frame.get_key_id());
+	corrupted.set_seq(seq);
+	corrupted.set_key_id(kid);
 	corrupted.set_cipher_text(&ciphertext);
 	let mut serialized = Vec::new();
 	capnp::serialize::write_message(&mut serialized, message.borrow_inner()).unwrap();
 	serialized
+}
+
+fn corrupt_crypto_frame_ciphertext(serialized: &[u8]) -> Vec<u8> {
+	rewrite_crypto_frame(serialized, |_, _, ciphertext| ciphertext[0] ^= 1)
+}
+
+fn corrupt_crypto_frame_tag(serialized: &[u8]) -> Vec<u8> {
+	rewrite_crypto_frame(serialized, |_, _, ciphertext| {
+		let tag_byte = ciphertext.len() - CRYPTO_FRAME_COMMITMENT_SIZE - 1;
+		ciphertext[tag_byte] ^= 1;
+	})
+}
+
+fn corrupt_crypto_frame_commitment(serialized: &[u8]) -> Vec<u8> {
+	rewrite_crypto_frame(serialized, |_, _, ciphertext| {
+		let commitment_byte = ciphertext.len() - 1;
+		ciphertext[commitment_byte] ^= 1;
+	})
+}
+
+fn relabel_crypto_frame_sender(serialized: &[u8]) -> Vec<u8> {
+	rewrite_crypto_frame(serialized, |_, kid, _| *kid = kid.wrapping_add(1))
+}
+
+fn move_crypto_frame_over_gap(serialized: &[u8]) -> Vec<u8> {
+	rewrite_crypto_frame(serialized, |seq, _, _| {
+		*seq = seq.checked_add(RECEIVE_MAX_GAP).unwrap();
+	})
+}
+
+#[derive(Clone, Copy, Debug)]
+enum PersistentReceiveApi {
+	Message,
+	Update,
+	Json,
+}
+
+fn reject_through(
+	server: &mut PersistentServer<MemoryStore>,
+	api: PersistentReceiveApi,
+	frame: &[u8],
+) {
+	let rejected = match api {
+		PersistentReceiveApi::Message => server.decrypt_message(frame).unwrap().is_none(),
+		PersistentReceiveApi::Update => server.decrypt_and_update(frame).unwrap().is_none(),
+		PersistentReceiveApi::Json => server.decrypt_and_update_json(frame).unwrap().is_none(),
+	};
+	assert!(rejected, "{api:?} unexpectedly accepted a rejected frame");
+}
+
+fn accept_through(
+	server: &mut PersistentServer<MemoryStore>,
+	api: PersistentReceiveApi,
+	frame: &[u8],
+) -> Vec<u8> {
+	match api {
+		PersistentReceiveApi::Message => server.decrypt_message(frame).unwrap().unwrap().plaintext,
+		PersistentReceiveApi::Update => server.decrypt_and_update(frame).unwrap().unwrap().data,
+		PersistentReceiveApi::Json => {
+			let json = server.decrypt_and_update_json(frame).unwrap().unwrap();
+			let update: serde_json::Value = serde_json::from_str(&json).unwrap();
+			serde_json::from_value(update["data"].clone()).unwrap()
+		}
+	}
 }
 
 #[test]
@@ -314,7 +408,7 @@ fn persistent_restore_preserves_cached_receive_keys_and_continues_the_session() 
 }
 
 #[test]
-fn failed_future_receive_advancement_is_committed_and_restored() {
+fn failed_future_receive_is_state_neutral_and_not_persisted() {
 	let store = MemoryStore::default();
 	let mut server = PersistentServer::create_with_lineage(
 		0,
@@ -330,25 +424,42 @@ fn failed_future_receive_advancement_is_committed_and_restored() {
 	let third = beacon.encrypt_message(b"third").unwrap();
 	assert_eq!(third.seq, 3);
 	let corrupted_third = corrupt_crypto_frame_ciphertext(&third);
-	let before_failure = server.head();
+	let before_failure = observe_persistent_state(&server, &store, kid);
 	assert_eq!(server.ratchet_status(kid).unwrap().receive_sequence(), 0);
 
 	assert!(server.decrypt_message(&corrupted_third).unwrap().is_none());
-	assert_eq!(server.head().generation(), before_failure.generation() + 1);
-	let retained = server.ratchet_status(kid).unwrap();
-	assert_eq!(retained.receive_sequence(), third.seq);
-	assert_eq!(retained.receive_cache_len(), 3);
+	assert_eq!(
+		observe_persistent_state(&server, &store, kid),
+		before_failure
+	);
+
+	assert_eq!(
+		server.decrypt_message(&third).unwrap().unwrap().plaintext,
+		b"third"
+	);
+	let accepted = observe_persistent_state(&server, &store, kid);
+	assert_eq!(
+		accepted.head.generation(),
+		before_failure.head.generation() + 1
+	);
+	assert_eq!(accepted.cas_attempts, before_failure.cas_attempts + 1);
+	assert_ne!(accepted.snapshot, before_failure.snapshot);
+	assert_eq!(
+		&accepted.snapshot[SNAPSHOT_PARENT_DIGEST_OFFSET..SNAPSHOT_PARENT_DIGEST_OFFSET + 32],
+		before_failure.head.digest().as_slice()
+	);
+	assert_eq!(accepted.status.receive_sequence(), third.seq);
+	assert_eq!(accepted.status.receive_cache_len(), 2);
+
+	assert!(server.decrypt_message(&third).unwrap().is_none());
+	assert_eq!(observe_persistent_state(&server, &store, kid), accepted);
 	drop(server);
 
 	let mut restored = PersistentServer::restore(store).unwrap();
 	let restored_status = restored.ratchet_status(kid).unwrap();
 	assert_eq!(restored_status.receive_sequence(), third.seq);
-	assert_eq!(restored_status.receive_cache_len(), 3);
-	assert_eq!(
-		restored.decrypt_message(&third).unwrap().unwrap().plaintext,
-		b"third"
-	);
 	assert_eq!(restored.ratchet_status(kid).unwrap().receive_cache_len(), 2);
+	assert!(restored.decrypt_message(&third).unwrap().is_none());
 	assert_eq!(
 		restored.decrypt_message(&first).unwrap().unwrap().plaintext,
 		b"first"
@@ -361,6 +472,127 @@ fn failed_future_receive_advancement_is_committed_and_restored() {
 			.plaintext,
 		b"second"
 	);
+}
+
+#[test]
+fn every_persistent_receive_api_skips_persistence_for_rejections() {
+	let store = MemoryStore::default();
+	let mut server = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x40; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x4C; 32]),
+	)
+	.unwrap();
+	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let kid = test_register_persistent(&mut server, &mut beacon);
+
+	for (api, plaintext) in [
+		(PersistentReceiveApi::Message, b"message".as_slice()),
+		(PersistentReceiveApi::Update, b"update".as_slice()),
+		(PersistentReceiveApi::Json, b"json".as_slice()),
+	] {
+		let authentic = beacon.encrypt_message(plaintext).unwrap();
+		let rejected_frames = [
+			b"not a crypto frame".to_vec(),
+			corrupt_crypto_frame_ciphertext(&authentic),
+			corrupt_crypto_frame_tag(&authentic),
+			corrupt_crypto_frame_commitment(&authentic),
+			relabel_crypto_frame_sender(&authentic),
+			move_crypto_frame_over_gap(&authentic),
+		];
+
+		for rejected in rejected_frames {
+			let before = observe_persistent_state(&server, &store, kid);
+			reject_through(&mut server, api, &rejected);
+			assert_eq!(observe_persistent_state(&server, &store, kid), before);
+		}
+
+		let before_accept = observe_persistent_state(&server, &store, kid);
+		assert_eq!(accept_through(&mut server, api, &authentic), plaintext);
+		let after_accept = observe_persistent_state(&server, &store, kid);
+		assert_eq!(
+			after_accept.head.generation(),
+			before_accept.head.generation() + 1
+		);
+		assert_eq!(after_accept.cas_attempts, before_accept.cas_attempts + 1);
+		assert_ne!(after_accept.snapshot, before_accept.snapshot);
+		assert!(!after_accept.poisoned);
+
+		reject_through(&mut server, api, &authentic);
+		assert_eq!(observe_persistent_state(&server, &store, kid), after_accept);
+	}
+}
+
+#[test]
+fn rejected_receive_does_not_consume_an_armed_cas_failure() {
+	let store = MemoryStore::default();
+	let mut server = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x4D; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x4E; 32]),
+	)
+	.unwrap();
+	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let kid = test_register_persistent(&mut server, &mut beacon);
+	let authentic = beacon.encrypt_message(b"must remain withheld").unwrap();
+	let corrupted = corrupt_crypto_frame_ciphertext(&authentic);
+	let before = observe_persistent_state(&server, &store, kid);
+
+	store.fail_next_cas();
+	assert!(server.decrypt_message(&corrupted).unwrap().is_none());
+	assert_eq!(observe_persistent_state(&server, &store, kid), before);
+	assert!(matches!(
+		server.decrypt_message(&authentic),
+		Err(PersistenceError::StaleGeneration)
+	));
+	assert!(server.is_poisoned());
+	assert_eq!(server.head(), before.head);
+	assert_eq!(store.trusted_head(), Some(before.head));
+	assert_eq!(store.cas_attempts(), before.cas_attempts + 1);
+}
+
+#[test]
+fn stale_owner_rejection_is_neutral_until_an_accepted_receive_loses_cas() {
+	let store = MemoryStore::default();
+	let mut stale = PersistentServer::create_with_lineage(
+		0,
+		Some(&[0x4F; ED25519_SEED_SIZE]),
+		store.clone(),
+		SnapshotLineage::from_bytes([0x50; 32]),
+	)
+	.unwrap();
+	let mut beacon = Beacon::new(0, stale.identity_pk().as_bytes());
+	let kid = test_register_persistent(&mut stale, &mut beacon);
+	let authentic = beacon.encrypt_message(b"stale plaintext").unwrap();
+	let corrupted = corrupt_crypto_frame_ciphertext(&authentic);
+
+	let active = PersistentServer::restore(store.clone()).unwrap();
+	let authoritative_head = active.head();
+	drop(active);
+	let store_before_rejection = store.snapshot_bytes();
+	let attempts_before_rejection = store.cas_attempts();
+	let stale_head = stale.head();
+	let stale_status = stale.ratchet_status(kid).unwrap();
+
+	assert!(stale.decrypt_message(&corrupted).unwrap().is_none());
+	assert_eq!(stale.head(), stale_head);
+	assert_eq!(stale.ratchet_status(kid), Some(stale_status));
+	assert!(!stale.is_poisoned());
+	assert_eq!(store.trusted_head(), Some(authoritative_head));
+	assert_eq!(store.snapshot_bytes(), store_before_rejection);
+	assert_eq!(store.cas_attempts(), attempts_before_rejection);
+
+	assert!(matches!(
+		stale.decrypt_message(&authentic),
+		Err(PersistenceError::StaleGeneration)
+	));
+	assert!(stale.is_poisoned());
+	assert_eq!(stale.head(), stale_head);
+	assert_eq!(store.trusted_head(), Some(authoritative_head));
+	assert_eq!(store.snapshot_bytes(), store_before_rejection);
+	assert_eq!(store.cas_attempts(), attempts_before_rejection + 1);
 }
 
 #[test]

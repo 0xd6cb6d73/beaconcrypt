@@ -1,6 +1,7 @@
 (* SPDX-License-Identifier: 0BSD *)
 
 (**************************************************************************)
+
 (* Wire adapters and event vocabulary                                     *)
 (**************************************************************************)
 
@@ -38,23 +39,19 @@ fun session_label(
   beaconcrypt_protocol_core__pqxdh__t_RootKeyInput
 ): bitstring [data].
 
-(* Explicit proof state for the bounded failed-receive trace.  The first
-   argument is the committed receive counter, the second is the live chain,
-   and the third is the exact logical cache.  Cache entries are newest first;
-   the post-success trace rebuilds all 49 survivors while omitting the consumed
-   target.  These terms never cross the public network unless the dedicated
-   compromise process discloses their components. *)
-type failed_receive_cache.
-fun failed_receive_cache_empty(): failed_receive_cache [data].
-fun failed_receive_cache_entry(
+(* Explicit proof state for the bounded state-neutral receive traces. *)
+(* The arguments are the committed receive counter, live chain, and exact logical cache, whose entries are newest first. *)
+type receive_cache.
+fun receive_cache_empty(): receive_cache [data].
+fun receive_cache_entry(
   sequence,
   bitstring,
-  failed_receive_cache
-): failed_receive_cache [data].
-fun failed_receive_state(
+  receive_cache
+): receive_cache [data].
+fun receive_state(
   sequence,
   bitstring,
-  failed_receive_cache
+  receive_cache
 ): bitstring [data].
 
 (* Public, correctly typed junk used to construct a parseable frame whose
@@ -176,37 +173,19 @@ event StateCompromised(
   bitstring,
   bitstring
 ).
-event FailedReceiveStateAdvanced(
+event ReceiveRejectedNeutral(
   bitstring,
   sequence,
   bitstring,
-  bitstring,
-  bitstring,
   bitstring
 ).
-event FailedReceiveCacheFilled(
-  bitstring,
-  bitstring,
-  bitstring
-).
-event FailedReceiveCapacityRejected(
-  bitstring,
-  sequence,
-  sequence,
-  bitstring,
-  bitstring,
-  bitstring
-).
-event FailedReceiveRetryRetained(
+event ReceiveRejectionRetried(
   bitstring,
   sequence,
   bitstring,
-  bitstring,
-  bitstring,
-  bitstring,
   bitstring
 ).
-event FailedReceiveAccepted(
+event ReceiveFutureAccepted(
   bitstring,
   sequence,
   key_id,
@@ -216,17 +195,9 @@ event FailedReceiveAccepted(
   bitstring,
   bitstring,
   bitstring,
-  bitstring,
-  bitstring,
   bitstring
 ).
-event FailedReceiveKeyConsumed(
-  bitstring,
-  sequence,
-  bitstring,
-  bitstring
-).
-event FailedReceiveHonestDelivery(
+event ReceiveHonestFutureDelivered(
   bitstring,
   sequence,
   key_id,
@@ -236,11 +207,9 @@ event FailedReceiveHonestDelivery(
   bitstring,
   bitstring,
   bitstring,
-  bitstring,
-  bitstring,
   bitstring
 ).
-event FailedReceiveReplayRejected(
+event ReceiveReplayRejected(
   bitstring,
   sequence,
   key_id,
@@ -250,21 +219,56 @@ event FailedReceiveReplayRejected(
   bitstring,
   bitstring,
   bitstring,
+  bitstring
+).
+event ReceiveDelayedCachedAccepted(
+  bitstring,
+  sequence,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring,
   bitstring,
   bitstring,
   bitstring
 ).
-event FailedReceiveAfterCapacityReleaseAdmitted(
+event ReceiveMaximumGapAccepted(
   bitstring,
   sequence,
-  sequence,
+  key_id,
+  key_id,
   bitstring,
   bitstring,
   bitstring,
   bitstring,
   bitstring
 ).
-event FailedReceiveStateCompromised(
+event ReceiveCapacityRejected(
+  bitstring,
+  sequence,
+  bitstring,
+  bitstring
+).
+event ReceiveCachedKeyConsumed(
+  bitstring,
+  sequence,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event ReceiveAfterCapacityReleaseAccepted(
+  bitstring,
+  sequence,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event ReceiveStateCompromised(
   bitstring,
   sequence,
   bitstring,
@@ -282,14 +286,16 @@ free ADVANCE_SECRET: bitstring [private].
 free FUTURE_SECRET: bitstring [private].
 free BEACON_RECORD_SECRET: bitstring [private].
 free MALICIOUS_TASK_SECRET: bitstring [private].
-free FAILED_PAST_SECRET: bitstring [private].
-free FAILED_SKIPPED_SECRET: bitstring [private].
-free FAILED_TARGET_SECRET: bitstring [private].
-free FAILED_FUTURE_SECRET: bitstring [private].
+free RECEIVE_PAST_SECRET: bitstring [private].
+free RECEIVE_SKIPPED_SECRET: bitstring [private].
+free RECEIVE_TARGET_SECRET: bitstring [private].
+free RECEIVE_MAX_GAP_SECRET: bitstring [private].
+free RECEIVE_CACHED_SECRET: bitstring [private].
+free RECEIVE_AFTER_RELEASE_SECRET: bitstring [private].
 
 free replay_requests: channel [private].
 free compromise_snapshots: channel [private].
-free failed_receive_snapshots: channel [private].
+free receive_snapshots: channel [private].
 
 (**************************************************************************)
 (* Single-owner, non-rollback registration replay state                    *)
@@ -1085,115 +1091,11 @@ let CompromiseBeaconState() =
   out(compromise_ack, session).
 
 (**************************************************************************)
-(* Explicit failed future-receive state machine                           *)
+(* Explicit state-neutral future-receive state machines. *)
 (**************************************************************************)
 
-(* This continuation owns the state after the retained target capability
-   has authenticated successfully.  It rejects an exact replay without
-   mutation, then retries the frame rejected at full capacity.  Consuming
-   the target freed one slot, so sequence 52 is now derived and cached before
-   its deliberately invalid authentication fails. *)
-let FailedReceiveAfterAccepted(
-  session: bitstring,
-  target_sequence: sequence,
-  capacity_sequence: sequence,
-  sender_id: key_id,
-  receiver_id: key_id,
-  associated_data: bitstring,
-  capacity_material: bitstring,
-  retained_material: bitstring,
-  forged_target_frame: bitstring,
-  accepted_plaintext: bitstring,
-  ready_state: bitstring,
-  retained_state: bitstring,
-  full_state: bitstring,
-  consumed_state: bitstring,
-  consumed_cache: failed_receive_cache,
-  live_receive_chain: bitstring,
-  accepted_frame: bitstring,
-  capacity_frame: bitstring
-) =
-  in(c, replay_frame: bitstring);
-  if replay_frame = accepted_frame then
-  (
-    event FailedReceiveReplayRejected(
-      session,
-      target_sequence,
-      sender_id,
-      receiver_id,
-      accepted_plaintext,
-      accepted_frame,
-      retained_material,
-      forged_target_frame,
-      ready_state,
-      retained_state,
-      full_state,
-      consumed_state
-    );
-    in(c, capacity_candidate: bitstring);
-    if capacity_candidate = capacity_frame then
-    (
-      event MessageKeyCached(
-        session,
-        beacon_role(),
-        server_to_beacon(),
-        capacity_sequence,
-        capacity_material
-      );
-      let refilled_cache = failed_receive_cache_entry(
-        capacity_sequence,
-        capacity_material,
-        consumed_cache
-      ) in
-      let refilled_state = failed_receive_state(
-        capacity_sequence,
-        ratchet_next(live_receive_chain),
-        refilled_cache
-      ) in
-      let capacity_plaintext = open_frame(
-        capacity_material,
-        associated_data,
-        capacity_sequence,
-        sender_id,
-        capacity_candidate
-      ) in
-        (* Unreachable for the canonical forged frame.  A future opening-rule
-           regression is exposed as an unauthenticated MessageReceived. *)
-        event MessageReceived(
-          session,
-          server_to_beacon(),
-          capacity_sequence,
-          sender_id,
-          receiver_id,
-          capacity_plaintext
-        )
-      else
-        event FailedReceiveAfterCapacityReleaseAdmitted(
-          session,
-          target_sequence,
-          capacity_sequence,
-          capacity_frame,
-          retained_state,
-          full_state,
-          consumed_state,
-          refilled_state
-        )
-    )
-  ).
-
-(* Exact production-capacity trace.  Sequence one is consumed normally.
-   An attacker-supplied, correctly shaped sequence-three frame advances and
-   caches sequences two and three before authentication; failure retains that
-   post-admission state.  A second failed frame advances through sequence 51,
-   filling all 50 slots.  Sequence 52 is then rejected without derivation.
-   After a snapshot, the original forgery is retried, a legitimate sequence-
-   three frame consumes its retained key, replay is rejected, and the same
-   sequence-52 frame is admitted after the successful receive frees a slot.
-
-   The F* model proves the general capacity arithmetic and capability
-   transitions.  This ProVerif trace composes one exact 50-slot instance with
-   active-network cryptography and optional post-failure compromise. *)
-let FailedReceiveScenario() =
+(* Sequence one is consumed, two invalid sequence-three attempts reuse the exact entry-state term, and only an authentic sequence-three open publishes skipped sequence two. *)
+let StateNeutralFutureReceive() =
   new root: bitstring;
   new associated_data: bitstring;
   new session: bitstring;
@@ -1202,187 +1104,33 @@ let FailedReceiveScenario() =
   let first = first_sequence() in
   let skipped_sequence = next_sequence(first) in
   let target_sequence = next_sequence(skipped_sequence) in
-  let sequence_4 = next_sequence(target_sequence) in
-  let sequence_5 = next_sequence(sequence_4) in
-  let sequence_6 = next_sequence(sequence_5) in
-  let sequence_7 = next_sequence(sequence_6) in
-  let sequence_8 = next_sequence(sequence_7) in
-  let sequence_9 = next_sequence(sequence_8) in
-  let sequence_10 = next_sequence(sequence_9) in
-  let sequence_11 = next_sequence(sequence_10) in
-  let sequence_12 = next_sequence(sequence_11) in
-  let sequence_13 = next_sequence(sequence_12) in
-  let sequence_14 = next_sequence(sequence_13) in
-  let sequence_15 = next_sequence(sequence_14) in
-  let sequence_16 = next_sequence(sequence_15) in
-  let sequence_17 = next_sequence(sequence_16) in
-  let sequence_18 = next_sequence(sequence_17) in
-  let sequence_19 = next_sequence(sequence_18) in
-  let sequence_20 = next_sequence(sequence_19) in
-  let sequence_21 = next_sequence(sequence_20) in
-  let sequence_22 = next_sequence(sequence_21) in
-  let sequence_23 = next_sequence(sequence_22) in
-  let sequence_24 = next_sequence(sequence_23) in
-  let sequence_25 = next_sequence(sequence_24) in
-  let sequence_26 = next_sequence(sequence_25) in
-  let sequence_27 = next_sequence(sequence_26) in
-  let sequence_28 = next_sequence(sequence_27) in
-  let sequence_29 = next_sequence(sequence_28) in
-  let sequence_30 = next_sequence(sequence_29) in
-  let sequence_31 = next_sequence(sequence_30) in
-  let sequence_32 = next_sequence(sequence_31) in
-  let sequence_33 = next_sequence(sequence_32) in
-  let sequence_34 = next_sequence(sequence_33) in
-  let sequence_35 = next_sequence(sequence_34) in
-  let sequence_36 = next_sequence(sequence_35) in
-  let sequence_37 = next_sequence(sequence_36) in
-  let sequence_38 = next_sequence(sequence_37) in
-  let sequence_39 = next_sequence(sequence_38) in
-  let sequence_40 = next_sequence(sequence_39) in
-  let sequence_41 = next_sequence(sequence_40) in
-  let sequence_42 = next_sequence(sequence_41) in
-  let sequence_43 = next_sequence(sequence_42) in
-  let sequence_44 = next_sequence(sequence_43) in
-  let sequence_45 = next_sequence(sequence_44) in
-  let sequence_46 = next_sequence(sequence_45) in
-  let sequence_47 = next_sequence(sequence_46) in
-  let sequence_48 = next_sequence(sequence_47) in
-  let sequence_49 = next_sequence(sequence_48) in
-  let sequence_50 = next_sequence(sequence_49) in
-  let sequence_51 = next_sequence(sequence_50) in
-  let capacity_sequence = next_sequence(sequence_51) in
   let chain_1 = server_to_beacon_chain(root) in
   let chain_2 = ratchet_next(chain_1) in
   let chain_3 = ratchet_next(chain_2) in
   let chain_4 = ratchet_next(chain_3) in
-  let chain_5 = ratchet_next(chain_4) in
-  let chain_6 = ratchet_next(chain_5) in
-  let chain_7 = ratchet_next(chain_6) in
-  let chain_8 = ratchet_next(chain_7) in
-  let chain_9 = ratchet_next(chain_8) in
-  let chain_10 = ratchet_next(chain_9) in
-  let chain_11 = ratchet_next(chain_10) in
-  let chain_12 = ratchet_next(chain_11) in
-  let chain_13 = ratchet_next(chain_12) in
-  let chain_14 = ratchet_next(chain_13) in
-  let chain_15 = ratchet_next(chain_14) in
-  let chain_16 = ratchet_next(chain_15) in
-  let chain_17 = ratchet_next(chain_16) in
-  let chain_18 = ratchet_next(chain_17) in
-  let chain_19 = ratchet_next(chain_18) in
-  let chain_20 = ratchet_next(chain_19) in
-  let chain_21 = ratchet_next(chain_20) in
-  let chain_22 = ratchet_next(chain_21) in
-  let chain_23 = ratchet_next(chain_22) in
-  let chain_24 = ratchet_next(chain_23) in
-  let chain_25 = ratchet_next(chain_24) in
-  let chain_26 = ratchet_next(chain_25) in
-  let chain_27 = ratchet_next(chain_26) in
-  let chain_28 = ratchet_next(chain_27) in
-  let chain_29 = ratchet_next(chain_28) in
-  let chain_30 = ratchet_next(chain_29) in
-  let chain_31 = ratchet_next(chain_30) in
-  let chain_32 = ratchet_next(chain_31) in
-  let chain_33 = ratchet_next(chain_32) in
-  let chain_34 = ratchet_next(chain_33) in
-  let chain_35 = ratchet_next(chain_34) in
-  let chain_36 = ratchet_next(chain_35) in
-  let chain_37 = ratchet_next(chain_36) in
-  let chain_38 = ratchet_next(chain_37) in
-  let chain_39 = ratchet_next(chain_38) in
-  let chain_40 = ratchet_next(chain_39) in
-  let chain_41 = ratchet_next(chain_40) in
-  let chain_42 = ratchet_next(chain_41) in
-  let chain_43 = ratchet_next(chain_42) in
-  let chain_44 = ratchet_next(chain_43) in
-  let chain_45 = ratchet_next(chain_44) in
-  let chain_46 = ratchet_next(chain_45) in
-  let chain_47 = ratchet_next(chain_46) in
-  let chain_48 = ratchet_next(chain_47) in
-  let chain_49 = ratchet_next(chain_48) in
-  let chain_50 = ratchet_next(chain_49) in
-  let chain_51 = ratchet_next(chain_50) in
-  let chain_52 = ratchet_next(chain_51) in
-  let chain_53 = ratchet_next(chain_52) in
   let material_1 = ratchet_material(chain_1) in
   let skipped_material = ratchet_material(chain_2) in
-  let retained_material = ratchet_material(chain_3) in
-  let material_4 = ratchet_material(chain_4) in
-  let material_5 = ratchet_material(chain_5) in
-  let material_6 = ratchet_material(chain_6) in
-  let material_7 = ratchet_material(chain_7) in
-  let material_8 = ratchet_material(chain_8) in
-  let material_9 = ratchet_material(chain_9) in
-  let material_10 = ratchet_material(chain_10) in
-  let material_11 = ratchet_material(chain_11) in
-  let material_12 = ratchet_material(chain_12) in
-  let material_13 = ratchet_material(chain_13) in
-  let material_14 = ratchet_material(chain_14) in
-  let material_15 = ratchet_material(chain_15) in
-  let material_16 = ratchet_material(chain_16) in
-  let material_17 = ratchet_material(chain_17) in
-  let material_18 = ratchet_material(chain_18) in
-  let material_19 = ratchet_material(chain_19) in
-  let material_20 = ratchet_material(chain_20) in
-  let material_21 = ratchet_material(chain_21) in
-  let material_22 = ratchet_material(chain_22) in
-  let material_23 = ratchet_material(chain_23) in
-  let material_24 = ratchet_material(chain_24) in
-  let material_25 = ratchet_material(chain_25) in
-  let material_26 = ratchet_material(chain_26) in
-  let material_27 = ratchet_material(chain_27) in
-  let material_28 = ratchet_material(chain_28) in
-  let material_29 = ratchet_material(chain_29) in
-  let material_30 = ratchet_material(chain_30) in
-  let material_31 = ratchet_material(chain_31) in
-  let material_32 = ratchet_material(chain_32) in
-  let material_33 = ratchet_material(chain_33) in
-  let material_34 = ratchet_material(chain_34) in
-  let material_35 = ratchet_material(chain_35) in
-  let material_36 = ratchet_material(chain_36) in
-  let material_37 = ratchet_material(chain_37) in
-  let material_38 = ratchet_material(chain_38) in
-  let material_39 = ratchet_material(chain_39) in
-  let material_40 = ratchet_material(chain_40) in
-  let material_41 = ratchet_material(chain_41) in
-  let material_42 = ratchet_material(chain_42) in
-  let material_43 = ratchet_material(chain_43) in
-  let material_44 = ratchet_material(chain_44) in
-  let material_45 = ratchet_material(chain_45) in
-  let material_46 = ratchet_material(chain_46) in
-  let material_47 = ratchet_material(chain_47) in
-  let material_48 = ratchet_material(chain_48) in
-  let material_49 = ratchet_material(chain_49) in
-  let material_50 = ratchet_material(chain_50) in
-  let material_51 = ratchet_material(chain_51) in
-  let future_material = ratchet_material(chain_52) in
+  let target_material = ratchet_material(chain_3) in
   let first_frame = seal_frame(
     material_1,
     associated_data,
     first,
     sender_id,
-    FAILED_PAST_SECRET
+    RECEIVE_PAST_SECRET
   ) in
   let skipped_frame = seal_frame(
     skipped_material,
     associated_data,
     skipped_sequence,
     sender_id,
-    FAILED_SKIPPED_SECRET
+    RECEIVE_SKIPPED_SECRET
   ) in
   let target_frame = seal_frame(
-    retained_material,
+    target_material,
     associated_data,
     target_sequence,
     sender_id,
-    FAILED_TARGET_SECRET
-  ) in
-  let future_frame = seal_frame(
-    future_material,
-    associated_data,
-    capacity_sequence,
-    sender_id,
-    FAILED_FUTURE_SECRET
+    RECEIVE_TARGET_SECRET
   ) in
   let forged_target_frame = crypto_frame(
     forged_frame_component(),
@@ -1391,27 +1139,13 @@ let FailedReceiveScenario() =
     target_sequence,
     sender_id
   ) in
-  let forged_fill_frame = crypto_frame(
-    forged_frame_component(),
-    forged_frame_component(),
-    forged_frame_component(),
-    sequence_51,
-    sender_id
-  ) in
-  let forged_capacity_frame = crypto_frame(
-    forged_frame_component(),
-    forged_frame_component(),
-    forged_frame_component(),
-    capacity_sequence,
-    sender_id
-  ) in
   event MessageSent(
     session,
     server_to_beacon(),
     first,
     sender_id,
     receiver_id,
-    FAILED_PAST_SECRET
+    RECEIVE_PAST_SECRET
   );
   event MessageSent(
     session,
@@ -1419,7 +1153,7 @@ let FailedReceiveScenario() =
     skipped_sequence,
     sender_id,
     receiver_id,
-    FAILED_SKIPPED_SECRET
+    RECEIVE_SKIPPED_SECRET
   );
   event MessageSent(
     session,
@@ -1427,24 +1161,14 @@ let FailedReceiveScenario() =
     target_sequence,
     sender_id,
     receiver_id,
-    FAILED_TARGET_SECRET
-  );
-  event MessageSent(
-    session,
-    server_to_beacon(),
-    capacity_sequence,
-    sender_id,
-    receiver_id,
-    FAILED_FUTURE_SECRET
+    RECEIVE_TARGET_SECRET
   );
   out(c, associated_data);
   out(c, first_frame);
   out(c, skipped_frame);
   out(c, target_frame);
-  out(c, future_frame);
+  out(c, forged_target_frame);
 
-  (* This ordinary authenticated receive consumes sequence one before any
-     attacker-selected future attempt. *)
   in(c, first_candidate: bitstring);
   let first_plaintext = open_frame(
     material_1,
@@ -1468,46 +1192,13 @@ let FailedReceiveScenario() =
     first,
     material_1
   );
-  let empty_cache = failed_receive_cache_empty() in
-  let ready_state = failed_receive_state(first, chain_2, empty_cache) in
+  let empty_cache = receive_cache_empty() in
+  let ready_state = receive_state(first, chain_2, empty_cache) in
 
-  (* Structural parsing, expected-sender checking, and the production minimum
-     length guard have succeeded when this trace begins.  The canonical junk
-     term is publicly constructible but cannot satisfy open_frame. *)
   in(c, forged_candidate: bitstring);
   if forged_candidate = forged_target_frame then
-  (
-    event MessageKeyCached(
-      session,
-      beacon_role(),
-      server_to_beacon(),
-      skipped_sequence,
-      skipped_material
-    );
-    let cache_2 = failed_receive_cache_entry(
-      skipped_sequence,
-      skipped_material,
-      empty_cache
-    ) in
-    event MessageKeyCached(
-      session,
-      beacon_role(),
-      server_to_beacon(),
-      target_sequence,
-      retained_material
-    );
-    let cache_3 = failed_receive_cache_entry(
-      target_sequence,
-      retained_material,
-      cache_2
-    ) in
-    let retained_state = failed_receive_state(
-      target_sequence,
-      chain_4,
-      cache_3
-    ) in
     let forged_plaintext = open_frame(
-      retained_material,
+      target_material,
       associated_data,
       target_sequence,
       sender_id,
@@ -1523,1382 +1214,1216 @@ let FailedReceiveScenario() =
       )
     else
     (
-      event FailedReceiveStateAdvanced(
+      event ReceiveRejectedNeutral(
         session,
         target_sequence,
-        retained_material,
         forged_target_frame,
-        ready_state,
-        retained_state
+        ready_state
       );
-
-      (* From receive counter three, the second forged target derives 48
-         additional capabilities.  Together with sequences two and three,
-         this reaches the production cache capacity of exactly 50. *)
-      in(c, fill_candidate: bitstring);
-      if fill_candidate = forged_fill_frame then
-      (
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_4,
-          material_4
-        );
-        let cache_4 = failed_receive_cache_entry(
-          sequence_4,
-          material_4,
-          cache_3
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_5,
-          material_5
-        );
-        let cache_5 = failed_receive_cache_entry(
-          sequence_5,
-          material_5,
-          cache_4
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_6,
-          material_6
-        );
-        let cache_6 = failed_receive_cache_entry(
-          sequence_6,
-          material_6,
-          cache_5
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_7,
-          material_7
-        );
-        let cache_7 = failed_receive_cache_entry(
-          sequence_7,
-          material_7,
-          cache_6
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_8,
-          material_8
-        );
-        let cache_8 = failed_receive_cache_entry(
-          sequence_8,
-          material_8,
-          cache_7
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_9,
-          material_9
-        );
-        let cache_9 = failed_receive_cache_entry(
-          sequence_9,
-          material_9,
-          cache_8
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_10,
-          material_10
-        );
-        let cache_10 = failed_receive_cache_entry(
-          sequence_10,
-          material_10,
-          cache_9
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_11,
-          material_11
-        );
-        let cache_11 = failed_receive_cache_entry(
-          sequence_11,
-          material_11,
-          cache_10
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_12,
-          material_12
-        );
-        let cache_12 = failed_receive_cache_entry(
-          sequence_12,
-          material_12,
-          cache_11
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_13,
-          material_13
-        );
-        let cache_13 = failed_receive_cache_entry(
-          sequence_13,
-          material_13,
-          cache_12
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_14,
-          material_14
-        );
-        let cache_14 = failed_receive_cache_entry(
-          sequence_14,
-          material_14,
-          cache_13
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_15,
-          material_15
-        );
-        let cache_15 = failed_receive_cache_entry(
-          sequence_15,
-          material_15,
-          cache_14
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_16,
-          material_16
-        );
-        let cache_16 = failed_receive_cache_entry(
-          sequence_16,
-          material_16,
-          cache_15
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_17,
-          material_17
-        );
-        let cache_17 = failed_receive_cache_entry(
-          sequence_17,
-          material_17,
-          cache_16
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_18,
-          material_18
-        );
-        let cache_18 = failed_receive_cache_entry(
-          sequence_18,
-          material_18,
-          cache_17
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_19,
-          material_19
-        );
-        let cache_19 = failed_receive_cache_entry(
-          sequence_19,
-          material_19,
-          cache_18
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_20,
-          material_20
-        );
-        let cache_20 = failed_receive_cache_entry(
-          sequence_20,
-          material_20,
-          cache_19
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_21,
-          material_21
-        );
-        let cache_21 = failed_receive_cache_entry(
-          sequence_21,
-          material_21,
-          cache_20
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_22,
-          material_22
-        );
-        let cache_22 = failed_receive_cache_entry(
-          sequence_22,
-          material_22,
-          cache_21
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_23,
-          material_23
-        );
-        let cache_23 = failed_receive_cache_entry(
-          sequence_23,
-          material_23,
-          cache_22
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_24,
-          material_24
-        );
-        let cache_24 = failed_receive_cache_entry(
-          sequence_24,
-          material_24,
-          cache_23
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_25,
-          material_25
-        );
-        let cache_25 = failed_receive_cache_entry(
-          sequence_25,
-          material_25,
-          cache_24
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_26,
-          material_26
-        );
-        let cache_26 = failed_receive_cache_entry(
-          sequence_26,
-          material_26,
-          cache_25
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_27,
-          material_27
-        );
-        let cache_27 = failed_receive_cache_entry(
-          sequence_27,
-          material_27,
-          cache_26
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_28,
-          material_28
-        );
-        let cache_28 = failed_receive_cache_entry(
-          sequence_28,
-          material_28,
-          cache_27
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_29,
-          material_29
-        );
-        let cache_29 = failed_receive_cache_entry(
-          sequence_29,
-          material_29,
-          cache_28
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_30,
-          material_30
-        );
-        let cache_30 = failed_receive_cache_entry(
-          sequence_30,
-          material_30,
-          cache_29
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_31,
-          material_31
-        );
-        let cache_31 = failed_receive_cache_entry(
-          sequence_31,
-          material_31,
-          cache_30
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_32,
-          material_32
-        );
-        let cache_32 = failed_receive_cache_entry(
-          sequence_32,
-          material_32,
-          cache_31
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_33,
-          material_33
-        );
-        let cache_33 = failed_receive_cache_entry(
-          sequence_33,
-          material_33,
-          cache_32
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_34,
-          material_34
-        );
-        let cache_34 = failed_receive_cache_entry(
-          sequence_34,
-          material_34,
-          cache_33
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_35,
-          material_35
-        );
-        let cache_35 = failed_receive_cache_entry(
-          sequence_35,
-          material_35,
-          cache_34
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_36,
-          material_36
-        );
-        let cache_36 = failed_receive_cache_entry(
-          sequence_36,
-          material_36,
-          cache_35
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_37,
-          material_37
-        );
-        let cache_37 = failed_receive_cache_entry(
-          sequence_37,
-          material_37,
-          cache_36
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_38,
-          material_38
-        );
-        let cache_38 = failed_receive_cache_entry(
-          sequence_38,
-          material_38,
-          cache_37
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_39,
-          material_39
-        );
-        let cache_39 = failed_receive_cache_entry(
-          sequence_39,
-          material_39,
-          cache_38
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_40,
-          material_40
-        );
-        let cache_40 = failed_receive_cache_entry(
-          sequence_40,
-          material_40,
-          cache_39
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_41,
-          material_41
-        );
-        let cache_41 = failed_receive_cache_entry(
-          sequence_41,
-          material_41,
-          cache_40
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_42,
-          material_42
-        );
-        let cache_42 = failed_receive_cache_entry(
-          sequence_42,
-          material_42,
-          cache_41
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_43,
-          material_43
-        );
-        let cache_43 = failed_receive_cache_entry(
-          sequence_43,
-          material_43,
-          cache_42
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_44,
-          material_44
-        );
-        let cache_44 = failed_receive_cache_entry(
-          sequence_44,
-          material_44,
-          cache_43
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_45,
-          material_45
-        );
-        let cache_45 = failed_receive_cache_entry(
-          sequence_45,
-          material_45,
-          cache_44
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_46,
-          material_46
-        );
-        let cache_46 = failed_receive_cache_entry(
-          sequence_46,
-          material_46,
-          cache_45
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_47,
-          material_47
-        );
-        let cache_47 = failed_receive_cache_entry(
-          sequence_47,
-          material_47,
-          cache_46
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_48,
-          material_48
-        );
-        let cache_48 = failed_receive_cache_entry(
-          sequence_48,
-          material_48,
-          cache_47
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_49,
-          material_49
-        );
-        let cache_49 = failed_receive_cache_entry(
-          sequence_49,
-          material_49,
-          cache_48
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_50,
-          material_50
-        );
-        let cache_50 = failed_receive_cache_entry(
-          sequence_50,
-          material_50,
-          cache_49
-        ) in
-        event MessageKeyCached(
-          session,
-          beacon_role(),
-          server_to_beacon(),
-          sequence_51,
-          material_51
-        );
-        let cache_51 = failed_receive_cache_entry(
-          sequence_51,
-          material_51,
-          cache_50
-        ) in
-        let full_state = failed_receive_state(
-          sequence_51,
-          chain_52,
-          cache_51
-        ) in
-        let fill_plaintext = open_frame(
-          material_51,
+      in(c, repeated_candidate: bitstring);
+      if repeated_candidate = forged_target_frame then
+        let repeated_plaintext = open_frame(
+          target_material,
           associated_data,
-          sequence_51,
+          target_sequence,
           sender_id,
-          fill_candidate
+          repeated_candidate
         ) in
           event MessageReceived(
             session,
             server_to_beacon(),
-            sequence_51,
+            target_sequence,
             sender_id,
             receiver_id,
-            fill_plaintext
+            repeated_plaintext
           )
         else
         (
-          event FailedReceiveCacheFilled(
+          event ReceiveRejectionRetried(
             session,
-            retained_state,
-            full_state
+            target_sequence,
+            forged_target_frame,
+            ready_state
           );
-
-          (* With 50 outstanding cached capabilities, planning sequence 52
-             fails before ratchet_material is derived or open_frame is tried.
-             The event carries the same full_state on both sides of this
-             state-neutral capacity rejection. *)
-          in(c, capacity_candidate: bitstring);
-          if capacity_candidate = forged_capacity_frame then
-          (
-            event FailedReceiveCapacityRejected(
+          new compromise_ack: channel;
+          out(
+            receive_snapshots,
+            (
               session,
               target_sequence,
-              capacity_sequence,
-              forged_capacity_frame,
-              retained_state,
-              full_state
+              ready_state,
+              ready_state,
+              chain_2,
+              empty_cache,
+              compromise_ack
+            )
+          );
+          in(compromise_ack, =session);
+          in(c, accepted_candidate: bitstring);
+          let accepted_plaintext = open_frame(
+            target_material,
+            associated_data,
+            target_sequence,
+            sender_id,
+            accepted_candidate
+          ) in
+          event MessageKeyCached(
+            session,
+            beacon_role(),
+            server_to_beacon(),
+            skipped_sequence,
+            skipped_material
+          );
+          let committed_cache = receive_cache_entry(
+            skipped_sequence,
+            skipped_material,
+            empty_cache
+          ) in
+          let committed_state = receive_state(
+            target_sequence,
+            chain_4,
+            committed_cache
+          ) in
+          event MessageReceived(
+            session,
+            server_to_beacon(),
+            target_sequence,
+            sender_id,
+            receiver_id,
+            accepted_plaintext
+          );
+          event MessageKeyUnavailable(
+            session,
+            beacon_role(),
+            server_to_beacon(),
+            target_sequence,
+            target_material
+          );
+          event ReceiveFutureAccepted(
+            session,
+            target_sequence,
+            sender_id,
+            receiver_id,
+            accepted_plaintext,
+            accepted_candidate,
+            target_material,
+            forged_target_frame,
+            ready_state,
+            committed_state
+          );
+          if accepted_candidate = target_frame then
+          (
+            event ReceiveHonestFutureDelivered(
+              session,
+              target_sequence,
+              sender_id,
+              receiver_id,
+              accepted_plaintext,
+              accepted_candidate,
+              target_material,
+              forged_target_frame,
+              ready_state,
+              committed_state
             );
-            new compromise_ack: channel;
-            out(
-              failed_receive_snapshots,
-              (
+            in(c, replay_candidate: bitstring);
+            if replay_candidate = accepted_candidate then
+            (
+              event ReceiveReplayRejected(
                 session,
                 target_sequence,
-                retained_state,
-                full_state,
-                compromise_ack
-              )
-            );
-            in(compromise_ack, =session);
-
-            (* Retrying the exact sequence-three forgery uses its retained
-               cache entry and leaves the already-full state unchanged. *)
-            in(c, retry_candidate: bitstring);
-            if retry_candidate = forged_target_frame then
-            (
-              let retry_plaintext = open_frame(
-                retained_material,
-                associated_data,
-                target_sequence,
                 sender_id,
-                retry_candidate
+                receiver_id,
+                accepted_plaintext,
+                accepted_candidate,
+                target_material,
+                forged_target_frame,
+                ready_state,
+                committed_state
+              );
+              in(c, delayed_candidate: bitstring);
+              let delayed_plaintext = open_frame(
+                skipped_material,
+                associated_data,
+                skipped_sequence,
+                sender_id,
+                delayed_candidate
               ) in
-                event MessageReceived(
-                  session,
-                  server_to_beacon(),
-                  target_sequence,
-                  sender_id,
-                  receiver_id,
-                  retry_plaintext
-                )
-              else
-              (
-                event FailedReceiveRetryRetained(
-                  session,
-                  target_sequence,
-                  retained_material,
-                  forged_target_frame,
-                  ready_state,
-                  retained_state,
-                  full_state
-                );
-                in(c, accepted_frame: bitstring);
-                let accepted_plaintext = open_frame(
-                  retained_material,
-                  associated_data,
-                  target_sequence,
-                  sender_id,
-                  accepted_frame
-                ) in
-                let consumed_cache_2 = failed_receive_cache_entry(
-                  skipped_sequence,
-                  skipped_material,
-                  empty_cache
-                ) in
-                let consumed_cache_4 = failed_receive_cache_entry(
-                  sequence_4,
-                  material_4,
-                  consumed_cache_2
-                ) in
-                let consumed_cache_5 = failed_receive_cache_entry(
-                  sequence_5,
-                  material_5,
-                  consumed_cache_4
-                ) in
-                let consumed_cache_6 = failed_receive_cache_entry(
-                  sequence_6,
-                  material_6,
-                  consumed_cache_5
-                ) in
-                let consumed_cache_7 = failed_receive_cache_entry(
-                  sequence_7,
-                  material_7,
-                  consumed_cache_6
-                ) in
-                let consumed_cache_8 = failed_receive_cache_entry(
-                  sequence_8,
-                  material_8,
-                  consumed_cache_7
-                ) in
-                let consumed_cache_9 = failed_receive_cache_entry(
-                  sequence_9,
-                  material_9,
-                  consumed_cache_8
-                ) in
-                let consumed_cache_10 = failed_receive_cache_entry(
-                  sequence_10,
-                  material_10,
-                  consumed_cache_9
-                ) in
-                let consumed_cache_11 = failed_receive_cache_entry(
-                  sequence_11,
-                  material_11,
-                  consumed_cache_10
-                ) in
-                let consumed_cache_12 = failed_receive_cache_entry(
-                  sequence_12,
-                  material_12,
-                  consumed_cache_11
-                ) in
-                let consumed_cache_13 = failed_receive_cache_entry(
-                  sequence_13,
-                  material_13,
-                  consumed_cache_12
-                ) in
-                let consumed_cache_14 = failed_receive_cache_entry(
-                  sequence_14,
-                  material_14,
-                  consumed_cache_13
-                ) in
-                let consumed_cache_15 = failed_receive_cache_entry(
-                  sequence_15,
-                  material_15,
-                  consumed_cache_14
-                ) in
-                let consumed_cache_16 = failed_receive_cache_entry(
-                  sequence_16,
-                  material_16,
-                  consumed_cache_15
-                ) in
-                let consumed_cache_17 = failed_receive_cache_entry(
-                  sequence_17,
-                  material_17,
-                  consumed_cache_16
-                ) in
-                let consumed_cache_18 = failed_receive_cache_entry(
-                  sequence_18,
-                  material_18,
-                  consumed_cache_17
-                ) in
-                let consumed_cache_19 = failed_receive_cache_entry(
-                  sequence_19,
-                  material_19,
-                  consumed_cache_18
-                ) in
-                let consumed_cache_20 = failed_receive_cache_entry(
-                  sequence_20,
-                  material_20,
-                  consumed_cache_19
-                ) in
-                let consumed_cache_21 = failed_receive_cache_entry(
-                  sequence_21,
-                  material_21,
-                  consumed_cache_20
-                ) in
-                let consumed_cache_22 = failed_receive_cache_entry(
-                  sequence_22,
-                  material_22,
-                  consumed_cache_21
-                ) in
-                let consumed_cache_23 = failed_receive_cache_entry(
-                  sequence_23,
-                  material_23,
-                  consumed_cache_22
-                ) in
-                let consumed_cache_24 = failed_receive_cache_entry(
-                  sequence_24,
-                  material_24,
-                  consumed_cache_23
-                ) in
-                let consumed_cache_25 = failed_receive_cache_entry(
-                  sequence_25,
-                  material_25,
-                  consumed_cache_24
-                ) in
-                let consumed_cache_26 = failed_receive_cache_entry(
-                  sequence_26,
-                  material_26,
-                  consumed_cache_25
-                ) in
-                let consumed_cache_27 = failed_receive_cache_entry(
-                  sequence_27,
-                  material_27,
-                  consumed_cache_26
-                ) in
-                let consumed_cache_28 = failed_receive_cache_entry(
-                  sequence_28,
-                  material_28,
-                  consumed_cache_27
-                ) in
-                let consumed_cache_29 = failed_receive_cache_entry(
-                  sequence_29,
-                  material_29,
-                  consumed_cache_28
-                ) in
-                let consumed_cache_30 = failed_receive_cache_entry(
-                  sequence_30,
-                  material_30,
-                  consumed_cache_29
-                ) in
-                let consumed_cache_31 = failed_receive_cache_entry(
-                  sequence_31,
-                  material_31,
-                  consumed_cache_30
-                ) in
-                let consumed_cache_32 = failed_receive_cache_entry(
-                  sequence_32,
-                  material_32,
-                  consumed_cache_31
-                ) in
-                let consumed_cache_33 = failed_receive_cache_entry(
-                  sequence_33,
-                  material_33,
-                  consumed_cache_32
-                ) in
-                let consumed_cache_34 = failed_receive_cache_entry(
-                  sequence_34,
-                  material_34,
-                  consumed_cache_33
-                ) in
-                let consumed_cache_35 = failed_receive_cache_entry(
-                  sequence_35,
-                  material_35,
-                  consumed_cache_34
-                ) in
-                let consumed_cache_36 = failed_receive_cache_entry(
-                  sequence_36,
-                  material_36,
-                  consumed_cache_35
-                ) in
-                let consumed_cache_37 = failed_receive_cache_entry(
-                  sequence_37,
-                  material_37,
-                  consumed_cache_36
-                ) in
-                let consumed_cache_38 = failed_receive_cache_entry(
-                  sequence_38,
-                  material_38,
-                  consumed_cache_37
-                ) in
-                let consumed_cache_39 = failed_receive_cache_entry(
-                  sequence_39,
-                  material_39,
-                  consumed_cache_38
-                ) in
-                let consumed_cache_40 = failed_receive_cache_entry(
-                  sequence_40,
-                  material_40,
-                  consumed_cache_39
-                ) in
-                let consumed_cache_41 = failed_receive_cache_entry(
-                  sequence_41,
-                  material_41,
-                  consumed_cache_40
-                ) in
-                let consumed_cache_42 = failed_receive_cache_entry(
-                  sequence_42,
-                  material_42,
-                  consumed_cache_41
-                ) in
-                let consumed_cache_43 = failed_receive_cache_entry(
-                  sequence_43,
-                  material_43,
-                  consumed_cache_42
-                ) in
-                let consumed_cache_44 = failed_receive_cache_entry(
-                  sequence_44,
-                  material_44,
-                  consumed_cache_43
-                ) in
-                let consumed_cache_45 = failed_receive_cache_entry(
-                  sequence_45,
-                  material_45,
-                  consumed_cache_44
-                ) in
-                let consumed_cache_46 = failed_receive_cache_entry(
-                  sequence_46,
-                  material_46,
-                  consumed_cache_45
-                ) in
-                let consumed_cache_47 = failed_receive_cache_entry(
-                  sequence_47,
-                  material_47,
-                  consumed_cache_46
-                ) in
-                let consumed_cache_48 = failed_receive_cache_entry(
-                  sequence_48,
-                  material_48,
-                  consumed_cache_47
-                ) in
-                let consumed_cache_49 = failed_receive_cache_entry(
-                  sequence_49,
-                  material_49,
-                  consumed_cache_48
-                ) in
-                let consumed_cache_50 = failed_receive_cache_entry(
-                  sequence_50,
-                  material_50,
-                  consumed_cache_49
-                ) in
-                let consumed_cache_51 = failed_receive_cache_entry(
-                  sequence_51,
-                  material_51,
-                  consumed_cache_50
-                ) in
-                let consumed_state = failed_receive_state(
-                  sequence_51,
-                  chain_52,
-                  consumed_cache_51
-                ) in
-                event MessageReceived(
-                  session,
-                  server_to_beacon(),
-                  target_sequence,
-                  sender_id,
-                  receiver_id,
-                  accepted_plaintext
-                );
-                event MessageKeyUnavailable(
-                  session,
-                  beacon_role(),
-                  server_to_beacon(),
-                  target_sequence,
-                  retained_material
-                );
-                event FailedReceiveKeyConsumed(
-                  session,
-                  target_sequence,
-                  full_state,
-                  consumed_state
-                );
-                event FailedReceiveAccepted(
-                  session,
-                  target_sequence,
-                  sender_id,
-                  receiver_id,
-                  accepted_plaintext,
-                  accepted_frame,
-                  retained_material,
-                  forged_target_frame,
-                  ready_state,
-                  retained_state,
-                  full_state,
-                  consumed_state
-                );
-                if accepted_frame = target_frame then
-                (
-                  event FailedReceiveHonestDelivery(
-                    session,
-                    target_sequence,
-                    sender_id,
-                    receiver_id,
-                    accepted_plaintext,
-                    accepted_frame,
-                    retained_material,
-                    forged_target_frame,
-                    ready_state,
-                    retained_state,
-                    full_state,
-                    consumed_state
-                  );
-                  FailedReceiveAfterAccepted(
-                    session,
-                    target_sequence,
-                    capacity_sequence,
-                    sender_id,
-                    receiver_id,
-                    associated_data,
-                    future_material,
-                    retained_material,
-                    forged_target_frame,
-                    accepted_plaintext,
-                    ready_state,
-                    retained_state,
-                    full_state,
-                    consumed_state,
-                    consumed_cache_51,
-                    chain_52,
-                    accepted_frame,
-                    forged_capacity_frame
-                  )
-                )
-                else
-                  FailedReceiveAfterAccepted(
-                    session,
-                    target_sequence,
-                    capacity_sequence,
-                    sender_id,
-                    receiver_id,
-                    associated_data,
-                    future_material,
-                    retained_material,
-                    forged_target_frame,
-                    accepted_plaintext,
-                    ready_state,
-                    retained_state,
-                    full_state,
-                    consumed_state,
-                    consumed_cache_51,
-                    chain_52,
-                    accepted_frame,
-                    forged_capacity_frame
-                  )
+              let delayed_state = receive_state(
+                target_sequence,
+                chain_4,
+                empty_cache
+              ) in
+              event MessageReceived(
+                session,
+                server_to_beacon(),
+                skipped_sequence,
+                sender_id,
+                receiver_id,
+                delayed_plaintext
+              );
+              event MessageKeyUnavailable(
+                session,
+                beacon_role(),
+                server_to_beacon(),
+                skipped_sequence,
+                skipped_material
+              );
+              event ReceiveDelayedCachedAccepted(
+                session,
+                skipped_sequence,
+                sender_id,
+                receiver_id,
+                delayed_plaintext,
+                delayed_candidate,
+                skipped_material,
+                committed_state,
+                delayed_state
               )
             )
           )
         )
-      )
+    ).
+
+(* A separate exact capacity leg accepts sequence 51 from counter one, retaining 49 skipped keys and consuming the target. *)
+(* A distance-two future frame is then rejected because 49 + 2 exceeds capacity; consuming cached sequence 50 makes the same future distance admissible. *)
+let StateNeutralCapacityReceive() =
+  new capacity_root: bitstring;
+  new capacity_associated_data: bitstring;
+  new capacity_session: bitstring;
+  new capacity_sender_id: key_id;
+  new capacity_receiver_id: key_id;
+  new capacity_first_plaintext: bitstring;
+  let capacity_sequence_1 = first_sequence() in
+  let capacity_sequence_2 = next_sequence(capacity_sequence_1) in
+  let capacity_sequence_3 = next_sequence(capacity_sequence_2) in
+  let capacity_sequence_4 = next_sequence(capacity_sequence_3) in
+  let capacity_sequence_5 = next_sequence(capacity_sequence_4) in
+  let capacity_sequence_6 = next_sequence(capacity_sequence_5) in
+  let capacity_sequence_7 = next_sequence(capacity_sequence_6) in
+  let capacity_sequence_8 = next_sequence(capacity_sequence_7) in
+  let capacity_sequence_9 = next_sequence(capacity_sequence_8) in
+  let capacity_sequence_10 = next_sequence(capacity_sequence_9) in
+  let capacity_sequence_11 = next_sequence(capacity_sequence_10) in
+  let capacity_sequence_12 = next_sequence(capacity_sequence_11) in
+  let capacity_sequence_13 = next_sequence(capacity_sequence_12) in
+  let capacity_sequence_14 = next_sequence(capacity_sequence_13) in
+  let capacity_sequence_15 = next_sequence(capacity_sequence_14) in
+  let capacity_sequence_16 = next_sequence(capacity_sequence_15) in
+  let capacity_sequence_17 = next_sequence(capacity_sequence_16) in
+  let capacity_sequence_18 = next_sequence(capacity_sequence_17) in
+  let capacity_sequence_19 = next_sequence(capacity_sequence_18) in
+  let capacity_sequence_20 = next_sequence(capacity_sequence_19) in
+  let capacity_sequence_21 = next_sequence(capacity_sequence_20) in
+  let capacity_sequence_22 = next_sequence(capacity_sequence_21) in
+  let capacity_sequence_23 = next_sequence(capacity_sequence_22) in
+  let capacity_sequence_24 = next_sequence(capacity_sequence_23) in
+  let capacity_sequence_25 = next_sequence(capacity_sequence_24) in
+  let capacity_sequence_26 = next_sequence(capacity_sequence_25) in
+  let capacity_sequence_27 = next_sequence(capacity_sequence_26) in
+  let capacity_sequence_28 = next_sequence(capacity_sequence_27) in
+  let capacity_sequence_29 = next_sequence(capacity_sequence_28) in
+  let capacity_sequence_30 = next_sequence(capacity_sequence_29) in
+  let capacity_sequence_31 = next_sequence(capacity_sequence_30) in
+  let capacity_sequence_32 = next_sequence(capacity_sequence_31) in
+  let capacity_sequence_33 = next_sequence(capacity_sequence_32) in
+  let capacity_sequence_34 = next_sequence(capacity_sequence_33) in
+  let capacity_sequence_35 = next_sequence(capacity_sequence_34) in
+  let capacity_sequence_36 = next_sequence(capacity_sequence_35) in
+  let capacity_sequence_37 = next_sequence(capacity_sequence_36) in
+  let capacity_sequence_38 = next_sequence(capacity_sequence_37) in
+  let capacity_sequence_39 = next_sequence(capacity_sequence_38) in
+  let capacity_sequence_40 = next_sequence(capacity_sequence_39) in
+  let capacity_sequence_41 = next_sequence(capacity_sequence_40) in
+  let capacity_sequence_42 = next_sequence(capacity_sequence_41) in
+  let capacity_sequence_43 = next_sequence(capacity_sequence_42) in
+  let capacity_sequence_44 = next_sequence(capacity_sequence_43) in
+  let capacity_sequence_45 = next_sequence(capacity_sequence_44) in
+  let capacity_sequence_46 = next_sequence(capacity_sequence_45) in
+  let capacity_sequence_47 = next_sequence(capacity_sequence_46) in
+  let capacity_sequence_48 = next_sequence(capacity_sequence_47) in
+  let capacity_sequence_49 = next_sequence(capacity_sequence_48) in
+  let capacity_sequence_50 = next_sequence(capacity_sequence_49) in
+  let capacity_sequence_51 = next_sequence(capacity_sequence_50) in
+  let capacity_sequence_52 = next_sequence(capacity_sequence_51) in
+  let capacity_sequence_53 = next_sequence(capacity_sequence_52) in
+  let capacity_chain_1 = server_to_beacon_chain(capacity_root) in
+  let capacity_chain_2 = ratchet_next(capacity_chain_1) in
+  let capacity_chain_3 = ratchet_next(capacity_chain_2) in
+  let capacity_chain_4 = ratchet_next(capacity_chain_3) in
+  let capacity_chain_5 = ratchet_next(capacity_chain_4) in
+  let capacity_chain_6 = ratchet_next(capacity_chain_5) in
+  let capacity_chain_7 = ratchet_next(capacity_chain_6) in
+  let capacity_chain_8 = ratchet_next(capacity_chain_7) in
+  let capacity_chain_9 = ratchet_next(capacity_chain_8) in
+  let capacity_chain_10 = ratchet_next(capacity_chain_9) in
+  let capacity_chain_11 = ratchet_next(capacity_chain_10) in
+  let capacity_chain_12 = ratchet_next(capacity_chain_11) in
+  let capacity_chain_13 = ratchet_next(capacity_chain_12) in
+  let capacity_chain_14 = ratchet_next(capacity_chain_13) in
+  let capacity_chain_15 = ratchet_next(capacity_chain_14) in
+  let capacity_chain_16 = ratchet_next(capacity_chain_15) in
+  let capacity_chain_17 = ratchet_next(capacity_chain_16) in
+  let capacity_chain_18 = ratchet_next(capacity_chain_17) in
+  let capacity_chain_19 = ratchet_next(capacity_chain_18) in
+  let capacity_chain_20 = ratchet_next(capacity_chain_19) in
+  let capacity_chain_21 = ratchet_next(capacity_chain_20) in
+  let capacity_chain_22 = ratchet_next(capacity_chain_21) in
+  let capacity_chain_23 = ratchet_next(capacity_chain_22) in
+  let capacity_chain_24 = ratchet_next(capacity_chain_23) in
+  let capacity_chain_25 = ratchet_next(capacity_chain_24) in
+  let capacity_chain_26 = ratchet_next(capacity_chain_25) in
+  let capacity_chain_27 = ratchet_next(capacity_chain_26) in
+  let capacity_chain_28 = ratchet_next(capacity_chain_27) in
+  let capacity_chain_29 = ratchet_next(capacity_chain_28) in
+  let capacity_chain_30 = ratchet_next(capacity_chain_29) in
+  let capacity_chain_31 = ratchet_next(capacity_chain_30) in
+  let capacity_chain_32 = ratchet_next(capacity_chain_31) in
+  let capacity_chain_33 = ratchet_next(capacity_chain_32) in
+  let capacity_chain_34 = ratchet_next(capacity_chain_33) in
+  let capacity_chain_35 = ratchet_next(capacity_chain_34) in
+  let capacity_chain_36 = ratchet_next(capacity_chain_35) in
+  let capacity_chain_37 = ratchet_next(capacity_chain_36) in
+  let capacity_chain_38 = ratchet_next(capacity_chain_37) in
+  let capacity_chain_39 = ratchet_next(capacity_chain_38) in
+  let capacity_chain_40 = ratchet_next(capacity_chain_39) in
+  let capacity_chain_41 = ratchet_next(capacity_chain_40) in
+  let capacity_chain_42 = ratchet_next(capacity_chain_41) in
+  let capacity_chain_43 = ratchet_next(capacity_chain_42) in
+  let capacity_chain_44 = ratchet_next(capacity_chain_43) in
+  let capacity_chain_45 = ratchet_next(capacity_chain_44) in
+  let capacity_chain_46 = ratchet_next(capacity_chain_45) in
+  let capacity_chain_47 = ratchet_next(capacity_chain_46) in
+  let capacity_chain_48 = ratchet_next(capacity_chain_47) in
+  let capacity_chain_49 = ratchet_next(capacity_chain_48) in
+  let capacity_chain_50 = ratchet_next(capacity_chain_49) in
+  let capacity_chain_51 = ratchet_next(capacity_chain_50) in
+  let capacity_chain_52 = ratchet_next(capacity_chain_51) in
+  let capacity_chain_53 = ratchet_next(capacity_chain_52) in
+  let capacity_chain_54 = ratchet_next(capacity_chain_53) in
+  let capacity_material_1 = ratchet_material(capacity_chain_1) in
+  let capacity_material_2 = ratchet_material(capacity_chain_2) in
+  let capacity_material_3 = ratchet_material(capacity_chain_3) in
+  let capacity_material_4 = ratchet_material(capacity_chain_4) in
+  let capacity_material_5 = ratchet_material(capacity_chain_5) in
+  let capacity_material_6 = ratchet_material(capacity_chain_6) in
+  let capacity_material_7 = ratchet_material(capacity_chain_7) in
+  let capacity_material_8 = ratchet_material(capacity_chain_8) in
+  let capacity_material_9 = ratchet_material(capacity_chain_9) in
+  let capacity_material_10 = ratchet_material(capacity_chain_10) in
+  let capacity_material_11 = ratchet_material(capacity_chain_11) in
+  let capacity_material_12 = ratchet_material(capacity_chain_12) in
+  let capacity_material_13 = ratchet_material(capacity_chain_13) in
+  let capacity_material_14 = ratchet_material(capacity_chain_14) in
+  let capacity_material_15 = ratchet_material(capacity_chain_15) in
+  let capacity_material_16 = ratchet_material(capacity_chain_16) in
+  let capacity_material_17 = ratchet_material(capacity_chain_17) in
+  let capacity_material_18 = ratchet_material(capacity_chain_18) in
+  let capacity_material_19 = ratchet_material(capacity_chain_19) in
+  let capacity_material_20 = ratchet_material(capacity_chain_20) in
+  let capacity_material_21 = ratchet_material(capacity_chain_21) in
+  let capacity_material_22 = ratchet_material(capacity_chain_22) in
+  let capacity_material_23 = ratchet_material(capacity_chain_23) in
+  let capacity_material_24 = ratchet_material(capacity_chain_24) in
+  let capacity_material_25 = ratchet_material(capacity_chain_25) in
+  let capacity_material_26 = ratchet_material(capacity_chain_26) in
+  let capacity_material_27 = ratchet_material(capacity_chain_27) in
+  let capacity_material_28 = ratchet_material(capacity_chain_28) in
+  let capacity_material_29 = ratchet_material(capacity_chain_29) in
+  let capacity_material_30 = ratchet_material(capacity_chain_30) in
+  let capacity_material_31 = ratchet_material(capacity_chain_31) in
+  let capacity_material_32 = ratchet_material(capacity_chain_32) in
+  let capacity_material_33 = ratchet_material(capacity_chain_33) in
+  let capacity_material_34 = ratchet_material(capacity_chain_34) in
+  let capacity_material_35 = ratchet_material(capacity_chain_35) in
+  let capacity_material_36 = ratchet_material(capacity_chain_36) in
+  let capacity_material_37 = ratchet_material(capacity_chain_37) in
+  let capacity_material_38 = ratchet_material(capacity_chain_38) in
+  let capacity_material_39 = ratchet_material(capacity_chain_39) in
+  let capacity_material_40 = ratchet_material(capacity_chain_40) in
+  let capacity_material_41 = ratchet_material(capacity_chain_41) in
+  let capacity_material_42 = ratchet_material(capacity_chain_42) in
+  let capacity_material_43 = ratchet_material(capacity_chain_43) in
+  let capacity_material_44 = ratchet_material(capacity_chain_44) in
+  let capacity_material_45 = ratchet_material(capacity_chain_45) in
+  let capacity_material_46 = ratchet_material(capacity_chain_46) in
+  let capacity_material_47 = ratchet_material(capacity_chain_47) in
+  let capacity_material_48 = ratchet_material(capacity_chain_48) in
+  let capacity_material_49 = ratchet_material(capacity_chain_49) in
+  let capacity_material_50 = ratchet_material(capacity_chain_50) in
+  let capacity_material_51 = ratchet_material(capacity_chain_51) in
+  let capacity_material_52 = ratchet_material(capacity_chain_52) in
+  let capacity_material_53 = ratchet_material(capacity_chain_53) in
+  let capacity_first_frame = seal_frame(
+    capacity_material_1,
+    capacity_associated_data,
+    capacity_sequence_1,
+    capacity_sender_id,
+    capacity_first_plaintext
+  ) in
+  let maximum_gap_frame = seal_frame(
+    capacity_material_51,
+    capacity_associated_data,
+    capacity_sequence_51,
+    capacity_sender_id,
+    RECEIVE_MAX_GAP_SECRET
+  ) in
+  let cached_frame = seal_frame(
+    capacity_material_50,
+    capacity_associated_data,
+    capacity_sequence_50,
+    capacity_sender_id,
+    RECEIVE_CACHED_SECRET
+  ) in
+  let after_release_frame = seal_frame(
+    capacity_material_53,
+    capacity_associated_data,
+    capacity_sequence_53,
+    capacity_sender_id,
+    RECEIVE_AFTER_RELEASE_SECRET
+  ) in
+  let capacity_rejected_frame = crypto_frame(
+    forged_frame_component(),
+    forged_frame_component(),
+    forged_frame_component(),
+    capacity_sequence_53,
+    capacity_sender_id
+  ) in
+  event MessageSent(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_1,
+    capacity_sender_id,
+    capacity_receiver_id,
+    capacity_first_plaintext
+  );
+  event MessageSent(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_51,
+    capacity_sender_id,
+    capacity_receiver_id,
+    RECEIVE_MAX_GAP_SECRET
+  );
+  event MessageSent(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_50,
+    capacity_sender_id,
+    capacity_receiver_id,
+    RECEIVE_CACHED_SECRET
+  );
+  event MessageSent(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_53,
+    capacity_sender_id,
+    capacity_receiver_id,
+    RECEIVE_AFTER_RELEASE_SECRET
+  );
+  out(c, capacity_associated_data);
+  out(c, capacity_first_frame);
+  out(c, maximum_gap_frame);
+  out(c, cached_frame);
+  out(c, after_release_frame);
+  out(c, capacity_rejected_frame);
+
+  in(c, capacity_first_candidate: bitstring);
+  let capacity_first_opened = open_frame(
+    capacity_material_1,
+    capacity_associated_data,
+    capacity_sequence_1,
+    capacity_sender_id,
+    capacity_first_candidate
+  ) in
+  event MessageReceived(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_1,
+    capacity_sender_id,
+    capacity_receiver_id,
+    capacity_first_opened
+  );
+  event MessageKeyUnavailable(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_1,
+    capacity_material_1
+  );
+  let capacity_cache_empty = receive_cache_empty() in
+  let capacity_ready_state = receive_state(
+    capacity_sequence_1,
+    capacity_chain_2,
+    capacity_cache_empty
+  ) in
+
+  in(c, maximum_gap_candidate: bitstring);
+  let maximum_gap_plaintext = open_frame(
+    capacity_material_51,
+    capacity_associated_data,
+    capacity_sequence_51,
+    capacity_sender_id,
+    maximum_gap_candidate
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_2,
+    capacity_material_2
+  );
+  let capacity_cache_2 = receive_cache_entry(
+    capacity_sequence_2,
+    capacity_material_2,
+    capacity_cache_empty
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_3,
+    capacity_material_3
+  );
+  let capacity_cache_3 = receive_cache_entry(
+    capacity_sequence_3,
+    capacity_material_3,
+    capacity_cache_2
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_4,
+    capacity_material_4
+  );
+  let capacity_cache_4 = receive_cache_entry(
+    capacity_sequence_4,
+    capacity_material_4,
+    capacity_cache_3
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_5,
+    capacity_material_5
+  );
+  let capacity_cache_5 = receive_cache_entry(
+    capacity_sequence_5,
+    capacity_material_5,
+    capacity_cache_4
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_6,
+    capacity_material_6
+  );
+  let capacity_cache_6 = receive_cache_entry(
+    capacity_sequence_6,
+    capacity_material_6,
+    capacity_cache_5
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_7,
+    capacity_material_7
+  );
+  let capacity_cache_7 = receive_cache_entry(
+    capacity_sequence_7,
+    capacity_material_7,
+    capacity_cache_6
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_8,
+    capacity_material_8
+  );
+  let capacity_cache_8 = receive_cache_entry(
+    capacity_sequence_8,
+    capacity_material_8,
+    capacity_cache_7
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_9,
+    capacity_material_9
+  );
+  let capacity_cache_9 = receive_cache_entry(
+    capacity_sequence_9,
+    capacity_material_9,
+    capacity_cache_8
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_10,
+    capacity_material_10
+  );
+  let capacity_cache_10 = receive_cache_entry(
+    capacity_sequence_10,
+    capacity_material_10,
+    capacity_cache_9
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_11,
+    capacity_material_11
+  );
+  let capacity_cache_11 = receive_cache_entry(
+    capacity_sequence_11,
+    capacity_material_11,
+    capacity_cache_10
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_12,
+    capacity_material_12
+  );
+  let capacity_cache_12 = receive_cache_entry(
+    capacity_sequence_12,
+    capacity_material_12,
+    capacity_cache_11
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_13,
+    capacity_material_13
+  );
+  let capacity_cache_13 = receive_cache_entry(
+    capacity_sequence_13,
+    capacity_material_13,
+    capacity_cache_12
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_14,
+    capacity_material_14
+  );
+  let capacity_cache_14 = receive_cache_entry(
+    capacity_sequence_14,
+    capacity_material_14,
+    capacity_cache_13
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_15,
+    capacity_material_15
+  );
+  let capacity_cache_15 = receive_cache_entry(
+    capacity_sequence_15,
+    capacity_material_15,
+    capacity_cache_14
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_16,
+    capacity_material_16
+  );
+  let capacity_cache_16 = receive_cache_entry(
+    capacity_sequence_16,
+    capacity_material_16,
+    capacity_cache_15
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_17,
+    capacity_material_17
+  );
+  let capacity_cache_17 = receive_cache_entry(
+    capacity_sequence_17,
+    capacity_material_17,
+    capacity_cache_16
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_18,
+    capacity_material_18
+  );
+  let capacity_cache_18 = receive_cache_entry(
+    capacity_sequence_18,
+    capacity_material_18,
+    capacity_cache_17
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_19,
+    capacity_material_19
+  );
+  let capacity_cache_19 = receive_cache_entry(
+    capacity_sequence_19,
+    capacity_material_19,
+    capacity_cache_18
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_20,
+    capacity_material_20
+  );
+  let capacity_cache_20 = receive_cache_entry(
+    capacity_sequence_20,
+    capacity_material_20,
+    capacity_cache_19
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_21,
+    capacity_material_21
+  );
+  let capacity_cache_21 = receive_cache_entry(
+    capacity_sequence_21,
+    capacity_material_21,
+    capacity_cache_20
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_22,
+    capacity_material_22
+  );
+  let capacity_cache_22 = receive_cache_entry(
+    capacity_sequence_22,
+    capacity_material_22,
+    capacity_cache_21
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_23,
+    capacity_material_23
+  );
+  let capacity_cache_23 = receive_cache_entry(
+    capacity_sequence_23,
+    capacity_material_23,
+    capacity_cache_22
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_24,
+    capacity_material_24
+  );
+  let capacity_cache_24 = receive_cache_entry(
+    capacity_sequence_24,
+    capacity_material_24,
+    capacity_cache_23
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_25,
+    capacity_material_25
+  );
+  let capacity_cache_25 = receive_cache_entry(
+    capacity_sequence_25,
+    capacity_material_25,
+    capacity_cache_24
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_26,
+    capacity_material_26
+  );
+  let capacity_cache_26 = receive_cache_entry(
+    capacity_sequence_26,
+    capacity_material_26,
+    capacity_cache_25
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_27,
+    capacity_material_27
+  );
+  let capacity_cache_27 = receive_cache_entry(
+    capacity_sequence_27,
+    capacity_material_27,
+    capacity_cache_26
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_28,
+    capacity_material_28
+  );
+  let capacity_cache_28 = receive_cache_entry(
+    capacity_sequence_28,
+    capacity_material_28,
+    capacity_cache_27
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_29,
+    capacity_material_29
+  );
+  let capacity_cache_29 = receive_cache_entry(
+    capacity_sequence_29,
+    capacity_material_29,
+    capacity_cache_28
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_30,
+    capacity_material_30
+  );
+  let capacity_cache_30 = receive_cache_entry(
+    capacity_sequence_30,
+    capacity_material_30,
+    capacity_cache_29
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_31,
+    capacity_material_31
+  );
+  let capacity_cache_31 = receive_cache_entry(
+    capacity_sequence_31,
+    capacity_material_31,
+    capacity_cache_30
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_32,
+    capacity_material_32
+  );
+  let capacity_cache_32 = receive_cache_entry(
+    capacity_sequence_32,
+    capacity_material_32,
+    capacity_cache_31
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_33,
+    capacity_material_33
+  );
+  let capacity_cache_33 = receive_cache_entry(
+    capacity_sequence_33,
+    capacity_material_33,
+    capacity_cache_32
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_34,
+    capacity_material_34
+  );
+  let capacity_cache_34 = receive_cache_entry(
+    capacity_sequence_34,
+    capacity_material_34,
+    capacity_cache_33
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_35,
+    capacity_material_35
+  );
+  let capacity_cache_35 = receive_cache_entry(
+    capacity_sequence_35,
+    capacity_material_35,
+    capacity_cache_34
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_36,
+    capacity_material_36
+  );
+  let capacity_cache_36 = receive_cache_entry(
+    capacity_sequence_36,
+    capacity_material_36,
+    capacity_cache_35
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_37,
+    capacity_material_37
+  );
+  let capacity_cache_37 = receive_cache_entry(
+    capacity_sequence_37,
+    capacity_material_37,
+    capacity_cache_36
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_38,
+    capacity_material_38
+  );
+  let capacity_cache_38 = receive_cache_entry(
+    capacity_sequence_38,
+    capacity_material_38,
+    capacity_cache_37
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_39,
+    capacity_material_39
+  );
+  let capacity_cache_39 = receive_cache_entry(
+    capacity_sequence_39,
+    capacity_material_39,
+    capacity_cache_38
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_40,
+    capacity_material_40
+  );
+  let capacity_cache_40 = receive_cache_entry(
+    capacity_sequence_40,
+    capacity_material_40,
+    capacity_cache_39
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_41,
+    capacity_material_41
+  );
+  let capacity_cache_41 = receive_cache_entry(
+    capacity_sequence_41,
+    capacity_material_41,
+    capacity_cache_40
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_42,
+    capacity_material_42
+  );
+  let capacity_cache_42 = receive_cache_entry(
+    capacity_sequence_42,
+    capacity_material_42,
+    capacity_cache_41
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_43,
+    capacity_material_43
+  );
+  let capacity_cache_43 = receive_cache_entry(
+    capacity_sequence_43,
+    capacity_material_43,
+    capacity_cache_42
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_44,
+    capacity_material_44
+  );
+  let capacity_cache_44 = receive_cache_entry(
+    capacity_sequence_44,
+    capacity_material_44,
+    capacity_cache_43
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_45,
+    capacity_material_45
+  );
+  let capacity_cache_45 = receive_cache_entry(
+    capacity_sequence_45,
+    capacity_material_45,
+    capacity_cache_44
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_46,
+    capacity_material_46
+  );
+  let capacity_cache_46 = receive_cache_entry(
+    capacity_sequence_46,
+    capacity_material_46,
+    capacity_cache_45
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_47,
+    capacity_material_47
+  );
+  let capacity_cache_47 = receive_cache_entry(
+    capacity_sequence_47,
+    capacity_material_47,
+    capacity_cache_46
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_48,
+    capacity_material_48
+  );
+  let capacity_cache_48 = receive_cache_entry(
+    capacity_sequence_48,
+    capacity_material_48,
+    capacity_cache_47
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_49,
+    capacity_material_49
+  );
+  let capacity_cache_49 = receive_cache_entry(
+    capacity_sequence_49,
+    capacity_material_49,
+    capacity_cache_48
+  ) in
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_50,
+    capacity_material_50
+  );
+  let capacity_cache_50 = receive_cache_entry(
+    capacity_sequence_50,
+    capacity_material_50,
+    capacity_cache_49
+  ) in
+  let maximum_gap_state = receive_state(
+    capacity_sequence_51,
+    capacity_chain_52,
+    capacity_cache_50
+  ) in
+  event MessageReceived(
+    capacity_session,
+    server_to_beacon(),
+    capacity_sequence_51,
+    capacity_sender_id,
+    capacity_receiver_id,
+    maximum_gap_plaintext
+  );
+  event MessageKeyUnavailable(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
+    capacity_sequence_51,
+    capacity_material_51
+  );
+  event ReceiveMaximumGapAccepted(
+    capacity_session,
+    capacity_sequence_51,
+    capacity_sender_id,
+    capacity_receiver_id,
+    maximum_gap_plaintext,
+    maximum_gap_candidate,
+    capacity_material_51,
+    capacity_ready_state,
+    maximum_gap_state
+  );
+
+  in(c, capacity_rejected_candidate: bitstring);
+  if capacity_rejected_candidate = capacity_rejected_frame then
+  (
+    event ReceiveCapacityRejected(
+      capacity_session,
+      capacity_sequence_53,
+      capacity_rejected_frame,
+      maximum_gap_state
+    );
+    in(c, cached_candidate: bitstring);
+    let cached_plaintext = open_frame(
+      capacity_material_50,
+      capacity_associated_data,
+      capacity_sequence_50,
+      capacity_sender_id,
+      cached_candidate
+    ) in
+    let released_state = receive_state(
+      capacity_sequence_51,
+      capacity_chain_52,
+      capacity_cache_49
+    ) in
+    event MessageReceived(
+      capacity_session,
+      server_to_beacon(),
+      capacity_sequence_50,
+      capacity_sender_id,
+      capacity_receiver_id,
+      cached_plaintext
+    );
+    event MessageKeyUnavailable(
+      capacity_session,
+      beacon_role(),
+      server_to_beacon(),
+      capacity_sequence_50,
+      capacity_material_50
+    );
+    event ReceiveCachedKeyConsumed(
+      capacity_session,
+      capacity_sequence_50,
+      capacity_material_50,
+      maximum_gap_state,
+      released_state
+    );
+    in(c, after_release_candidate: bitstring);
+    let after_release_plaintext = open_frame(
+      capacity_material_53,
+      capacity_associated_data,
+      capacity_sequence_53,
+      capacity_sender_id,
+      after_release_candidate
+    ) in
+    event MessageKeyCached(
+      capacity_session,
+      beacon_role(),
+      server_to_beacon(),
+      capacity_sequence_52,
+      capacity_material_52
+    );
+    let after_release_cache = receive_cache_entry(
+      capacity_sequence_52,
+      capacity_material_52,
+      capacity_cache_49
+    ) in
+    let after_release_state = receive_state(
+      capacity_sequence_53,
+      capacity_chain_54,
+      after_release_cache
+    ) in
+    event MessageReceived(
+      capacity_session,
+      server_to_beacon(),
+      capacity_sequence_53,
+      capacity_sender_id,
+      capacity_receiver_id,
+      after_release_plaintext
+    );
+    event MessageKeyUnavailable(
+      capacity_session,
+      beacon_role(),
+      server_to_beacon(),
+      capacity_sequence_53,
+      capacity_material_53
+    );
+    event ReceiveAfterCapacityReleaseAccepted(
+      capacity_session,
+      capacity_sequence_53,
+      capacity_sender_id,
+      capacity_receiver_id,
+      after_release_plaintext,
+      after_release_candidate,
+      capacity_material_53,
+      maximum_gap_state,
+      released_state,
+      after_release_state
     )
   ).
 
-let KeepFailedReceiveStatePrivate() =
+let FailedReceiveScenario() =
+  (
+    StateNeutralFutureReceive()
+    | StateNeutralCapacityReceive()
+  ).
+
+let KeepReceiveStatePrivate() =
   in(
-    failed_receive_snapshots,
+    receive_snapshots,
     (
       session: bitstring,
       target_sequence: sequence,
-      retained_state: bitstring,
-      full_state: bitstring,
+      before_state: bitstring,
+      after_state: bitstring,
+      live_receive_chain: bitstring,
+      live_cache: receive_cache,
       compromise_ack: channel
     )
   );
   out(compromise_ack, session).
 
-(* Compromise occurs after both failed future opens and the neutral capacity
-   rejection.  It publishes the exact 50 cached materials plus the live
-   receive chain.  Consequently sequences two and three and the future
-   sequence-52 ciphertext become readable, while the already-consumed
-   sequence-one material remains unreachable. *)
-let CompromiseFailedReceiveState() =
+(* The compromise branch discloses the unchanged live chain after rejection and no rejection-created cache material. *)
+let CompromiseReceiveState() =
   in(
-    failed_receive_snapshots,
+    receive_snapshots,
     (
       session: bitstring,
       target_sequence: sequence,
-      retained_state: bitstring,
-      full_state: bitstring,
+      before_state: bitstring,
+      after_state: bitstring,
+      live_receive_chain: bitstring,
+      live_cache: receive_cache,
       compromise_ack: channel
     )
   );
-  let failed_receive_state(
-    full_sequence: sequence,
-    live_receive_chain: bitstring,
-    full_cache: failed_receive_cache
-  ) = full_state in
-  let failed_receive_cache_entry(
-    cached_sequence_51: sequence,
-    cached_material_51: bitstring,
-    cache_tail_50: failed_receive_cache
-  ) = full_cache in
-  let failed_receive_cache_entry(
-    cached_sequence_50: sequence,
-    cached_material_50: bitstring,
-    cache_tail_49: failed_receive_cache
-  ) = cache_tail_50 in
-  let failed_receive_cache_entry(
-    cached_sequence_49: sequence,
-    cached_material_49: bitstring,
-    cache_tail_48: failed_receive_cache
-  ) = cache_tail_49 in
-  let failed_receive_cache_entry(
-    cached_sequence_48: sequence,
-    cached_material_48: bitstring,
-    cache_tail_47: failed_receive_cache
-  ) = cache_tail_48 in
-  let failed_receive_cache_entry(
-    cached_sequence_47: sequence,
-    cached_material_47: bitstring,
-    cache_tail_46: failed_receive_cache
-  ) = cache_tail_47 in
-  let failed_receive_cache_entry(
-    cached_sequence_46: sequence,
-    cached_material_46: bitstring,
-    cache_tail_45: failed_receive_cache
-  ) = cache_tail_46 in
-  let failed_receive_cache_entry(
-    cached_sequence_45: sequence,
-    cached_material_45: bitstring,
-    cache_tail_44: failed_receive_cache
-  ) = cache_tail_45 in
-  let failed_receive_cache_entry(
-    cached_sequence_44: sequence,
-    cached_material_44: bitstring,
-    cache_tail_43: failed_receive_cache
-  ) = cache_tail_44 in
-  let failed_receive_cache_entry(
-    cached_sequence_43: sequence,
-    cached_material_43: bitstring,
-    cache_tail_42: failed_receive_cache
-  ) = cache_tail_43 in
-  let failed_receive_cache_entry(
-    cached_sequence_42: sequence,
-    cached_material_42: bitstring,
-    cache_tail_41: failed_receive_cache
-  ) = cache_tail_42 in
-  let failed_receive_cache_entry(
-    cached_sequence_41: sequence,
-    cached_material_41: bitstring,
-    cache_tail_40: failed_receive_cache
-  ) = cache_tail_41 in
-  let failed_receive_cache_entry(
-    cached_sequence_40: sequence,
-    cached_material_40: bitstring,
-    cache_tail_39: failed_receive_cache
-  ) = cache_tail_40 in
-  let failed_receive_cache_entry(
-    cached_sequence_39: sequence,
-    cached_material_39: bitstring,
-    cache_tail_38: failed_receive_cache
-  ) = cache_tail_39 in
-  let failed_receive_cache_entry(
-    cached_sequence_38: sequence,
-    cached_material_38: bitstring,
-    cache_tail_37: failed_receive_cache
-  ) = cache_tail_38 in
-  let failed_receive_cache_entry(
-    cached_sequence_37: sequence,
-    cached_material_37: bitstring,
-    cache_tail_36: failed_receive_cache
-  ) = cache_tail_37 in
-  let failed_receive_cache_entry(
-    cached_sequence_36: sequence,
-    cached_material_36: bitstring,
-    cache_tail_35: failed_receive_cache
-  ) = cache_tail_36 in
-  let failed_receive_cache_entry(
-    cached_sequence_35: sequence,
-    cached_material_35: bitstring,
-    cache_tail_34: failed_receive_cache
-  ) = cache_tail_35 in
-  let failed_receive_cache_entry(
-    cached_sequence_34: sequence,
-    cached_material_34: bitstring,
-    cache_tail_33: failed_receive_cache
-  ) = cache_tail_34 in
-  let failed_receive_cache_entry(
-    cached_sequence_33: sequence,
-    cached_material_33: bitstring,
-    cache_tail_32: failed_receive_cache
-  ) = cache_tail_33 in
-  let failed_receive_cache_entry(
-    cached_sequence_32: sequence,
-    cached_material_32: bitstring,
-    cache_tail_31: failed_receive_cache
-  ) = cache_tail_32 in
-  let failed_receive_cache_entry(
-    cached_sequence_31: sequence,
-    cached_material_31: bitstring,
-    cache_tail_30: failed_receive_cache
-  ) = cache_tail_31 in
-  let failed_receive_cache_entry(
-    cached_sequence_30: sequence,
-    cached_material_30: bitstring,
-    cache_tail_29: failed_receive_cache
-  ) = cache_tail_30 in
-  let failed_receive_cache_entry(
-    cached_sequence_29: sequence,
-    cached_material_29: bitstring,
-    cache_tail_28: failed_receive_cache
-  ) = cache_tail_29 in
-  let failed_receive_cache_entry(
-    cached_sequence_28: sequence,
-    cached_material_28: bitstring,
-    cache_tail_27: failed_receive_cache
-  ) = cache_tail_28 in
-  let failed_receive_cache_entry(
-    cached_sequence_27: sequence,
-    cached_material_27: bitstring,
-    cache_tail_26: failed_receive_cache
-  ) = cache_tail_27 in
-  let failed_receive_cache_entry(
-    cached_sequence_26: sequence,
-    cached_material_26: bitstring,
-    cache_tail_25: failed_receive_cache
-  ) = cache_tail_26 in
-  let failed_receive_cache_entry(
-    cached_sequence_25: sequence,
-    cached_material_25: bitstring,
-    cache_tail_24: failed_receive_cache
-  ) = cache_tail_25 in
-  let failed_receive_cache_entry(
-    cached_sequence_24: sequence,
-    cached_material_24: bitstring,
-    cache_tail_23: failed_receive_cache
-  ) = cache_tail_24 in
-  let failed_receive_cache_entry(
-    cached_sequence_23: sequence,
-    cached_material_23: bitstring,
-    cache_tail_22: failed_receive_cache
-  ) = cache_tail_23 in
-  let failed_receive_cache_entry(
-    cached_sequence_22: sequence,
-    cached_material_22: bitstring,
-    cache_tail_21: failed_receive_cache
-  ) = cache_tail_22 in
-  let failed_receive_cache_entry(
-    cached_sequence_21: sequence,
-    cached_material_21: bitstring,
-    cache_tail_20: failed_receive_cache
-  ) = cache_tail_21 in
-  let failed_receive_cache_entry(
-    cached_sequence_20: sequence,
-    cached_material_20: bitstring,
-    cache_tail_19: failed_receive_cache
-  ) = cache_tail_20 in
-  let failed_receive_cache_entry(
-    cached_sequence_19: sequence,
-    cached_material_19: bitstring,
-    cache_tail_18: failed_receive_cache
-  ) = cache_tail_19 in
-  let failed_receive_cache_entry(
-    cached_sequence_18: sequence,
-    cached_material_18: bitstring,
-    cache_tail_17: failed_receive_cache
-  ) = cache_tail_18 in
-  let failed_receive_cache_entry(
-    cached_sequence_17: sequence,
-    cached_material_17: bitstring,
-    cache_tail_16: failed_receive_cache
-  ) = cache_tail_17 in
-  let failed_receive_cache_entry(
-    cached_sequence_16: sequence,
-    cached_material_16: bitstring,
-    cache_tail_15: failed_receive_cache
-  ) = cache_tail_16 in
-  let failed_receive_cache_entry(
-    cached_sequence_15: sequence,
-    cached_material_15: bitstring,
-    cache_tail_14: failed_receive_cache
-  ) = cache_tail_15 in
-  let failed_receive_cache_entry(
-    cached_sequence_14: sequence,
-    cached_material_14: bitstring,
-    cache_tail_13: failed_receive_cache
-  ) = cache_tail_14 in
-  let failed_receive_cache_entry(
-    cached_sequence_13: sequence,
-    cached_material_13: bitstring,
-    cache_tail_12: failed_receive_cache
-  ) = cache_tail_13 in
-  let failed_receive_cache_entry(
-    cached_sequence_12: sequence,
-    cached_material_12: bitstring,
-    cache_tail_11: failed_receive_cache
-  ) = cache_tail_12 in
-  let failed_receive_cache_entry(
-    cached_sequence_11: sequence,
-    cached_material_11: bitstring,
-    cache_tail_10: failed_receive_cache
-  ) = cache_tail_11 in
-  let failed_receive_cache_entry(
-    cached_sequence_10: sequence,
-    cached_material_10: bitstring,
-    cache_tail_9: failed_receive_cache
-  ) = cache_tail_10 in
-  let failed_receive_cache_entry(
-    cached_sequence_9: sequence,
-    cached_material_9: bitstring,
-    cache_tail_8: failed_receive_cache
-  ) = cache_tail_9 in
-  let failed_receive_cache_entry(
-    cached_sequence_8: sequence,
-    cached_material_8: bitstring,
-    cache_tail_7: failed_receive_cache
-  ) = cache_tail_8 in
-  let failed_receive_cache_entry(
-    cached_sequence_7: sequence,
-    cached_material_7: bitstring,
-    cache_tail_6: failed_receive_cache
-  ) = cache_tail_7 in
-  let failed_receive_cache_entry(
-    cached_sequence_6: sequence,
-    cached_material_6: bitstring,
-    cache_tail_5: failed_receive_cache
-  ) = cache_tail_6 in
-  let failed_receive_cache_entry(
-    cached_sequence_5: sequence,
-    cached_material_5: bitstring,
-    cache_tail_4: failed_receive_cache
-  ) = cache_tail_5 in
-  let failed_receive_cache_entry(
-    cached_sequence_4: sequence,
-    cached_material_4: bitstring,
-    cache_tail_3: failed_receive_cache
-  ) = cache_tail_4 in
-  let failed_receive_cache_entry(
-    cached_sequence_3: sequence,
-    cached_material_3: bitstring,
-    cache_tail_2: failed_receive_cache
-  ) = cache_tail_3 in
-  let failed_receive_cache_entry(
-    cached_sequence_2: sequence,
-    cached_material_2: bitstring,
-    cache_tail_1: failed_receive_cache
-  ) = cache_tail_2 in
-  event FailedReceiveStateCompromised(
+  let receive_cache_empty() = live_cache in
+  event ReceiveStateCompromised(
     session,
     target_sequence,
-    retained_state,
-    full_state
+    before_state,
+    after_state
   );
   out(c, live_receive_chain);
-  out(c, cached_material_2);
-  out(c, cached_material_3);
-  out(c, cached_material_4);
-  out(c, cached_material_5);
-  out(c, cached_material_6);
-  out(c, cached_material_7);
-  out(c, cached_material_8);
-  out(c, cached_material_9);
-  out(c, cached_material_10);
-  out(c, cached_material_11);
-  out(c, cached_material_12);
-  out(c, cached_material_13);
-  out(c, cached_material_14);
-  out(c, cached_material_15);
-  out(c, cached_material_16);
-  out(c, cached_material_17);
-  out(c, cached_material_18);
-  out(c, cached_material_19);
-  out(c, cached_material_20);
-  out(c, cached_material_21);
-  out(c, cached_material_22);
-  out(c, cached_material_23);
-  out(c, cached_material_24);
-  out(c, cached_material_25);
-  out(c, cached_material_26);
-  out(c, cached_material_27);
-  out(c, cached_material_28);
-  out(c, cached_material_29);
-  out(c, cached_material_30);
-  out(c, cached_material_31);
-  out(c, cached_material_32);
-  out(c, cached_material_33);
-  out(c, cached_material_34);
-  out(c, cached_material_35);
-  out(c, cached_material_36);
-  out(c, cached_material_37);
-  out(c, cached_material_38);
-  out(c, cached_material_39);
-  out(c, cached_material_40);
-  out(c, cached_material_41);
-  out(c, cached_material_42);
-  out(c, cached_material_43);
-  out(c, cached_material_44);
-  out(c, cached_material_45);
-  out(c, cached_material_46);
-  out(c, cached_material_47);
-  out(c, cached_material_48);
-  out(c, cached_material_49);
-  out(c, cached_material_50);
-  out(c, cached_material_51);
   out(compromise_ack, session).

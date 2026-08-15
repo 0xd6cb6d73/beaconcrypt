@@ -20,10 +20,10 @@ exclude_globs = [
 exclude_re = [
 	"^crates/protocol-core/src/ratchet\\.rs:554:63: replace - with \\+ in lookup_receive_key_from$",
 	"^crates/protocol-core/src/ratchet\\.rs:554:63: replace - with / in lookup_receive_key_from$",
-	"^crates/protocol-core/src/ratchet\\.rs:827:47: replace \\|\\| with && in refined_advance_send$",
-	"^crates/protocol-core/src/ratchet\\.rs:884:3: replace \\|\\| with && in refined_advance_receive$",
-	"^crates/protocol-core/src/ratchet\\.rs:1019:5: replace \\|\\| with && in refined_finish_receive$",
-	"^crates/protocol-core/src/ratchet\\.rs:1020:5: replace \\|\\| with && in refined_finish_receive$",
+	"^crates/protocol-core/src/ratchet\\.rs:871:47: replace \\|\\| with && in refined_advance_send$",
+	"^crates/protocol-core/src/ratchet\\.rs:929:3: replace \\|\\| with && in refined_advance_receive$",
+	"^crates/protocol-core/src/ratchet\\.rs:1461:5: replace \\|\\| with && in refined_finish_receive$",
+	"^crates/protocol-core/src/ratchet\\.rs:1462:5: replace \\|\\| with && in refined_finish_receive$",
 
 	# These helpers are compiled only as support for the excluded C and Python adapters.
 	"^src/persistence\\.rs:[0-9]+:[0-9]+: .*BindingSnapshotStore",

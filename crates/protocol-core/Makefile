@@ -54,6 +54,19 @@ HAX_ITEMS := -** \
 	+beaconcrypt_protocol_core::ratchet::refined_advance_receive_until \
 	+beaconcrypt_protocol_core::ratchet::refined_receive_key \
 	+beaconcrypt_protocol_core::ratchet::refined_finish_receive \
+	+beaconcrypt_protocol_core::ratchet::PreparedReceive \
+	+beaconcrypt_protocol_core::ratchet::PreparedCachedReceive \
+	+beaconcrypt_protocol_core::ratchet::PreparedFutureTarget \
+	+beaconcrypt_protocol_core::ratchet::PendingReceive \
+	+beaconcrypt_protocol_core::ratchet::prepare_cached_receive \
+	+beaconcrypt_protocol_core::ratchet::prepare_future_receive_steps \
+	+beaconcrypt_protocol_core::ratchet::receive_control_prefix_matches \
+	+beaconcrypt_protocol_core::ratchet::pending_receive_slots_are_valid \
+	+beaconcrypt_protocol_core::ratchet::pending_receive_is_valid \
+	+beaconcrypt_protocol_core::ratchet::prepare_receive \
+	+beaconcrypt_protocol_core::ratchet::publish_cached_receive \
+	+beaconcrypt_protocol_core::ratchet::publish_future_receive_slots \
+	+beaconcrypt_protocol_core::ratchet::publish_future_receive \
 	+beaconcrypt_protocol_core::ratchet::refined_open_and_finish \
 	+beaconcrypt_protocol_core::ratchet::concrete_seal_next \
 	+beaconcrypt_protocol_core::ratchet::concrete_open_and_finish \

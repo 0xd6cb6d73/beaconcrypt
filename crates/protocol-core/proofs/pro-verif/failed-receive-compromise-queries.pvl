@@ -1,104 +1,24 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(* Sequence one was consumed before the failed future attempts and remains
-   secret.  Compromise deliberately reveals all 50 cached materials and the
-   live chain, so skipped, retained-target, and future plaintext are attacks. *)
-query attacker(FAILED_PAST_SECRET).
-query attacker(FAILED_SKIPPED_SECRET).
-query attacker(FAILED_TARGET_SECRET).
-query attacker(FAILED_FUTURE_SECRET).
+(* Compromise reveals the unchanged short-leg live chain, so skipped and target plaintext become attacks while the consumed past and independent capacity leg remain secret. *)
+query attacker(RECEIVE_PAST_SECRET).
+query attacker(RECEIVE_SKIPPED_SECRET).
+query attacker(RECEIVE_TARGET_SECRET).
+query attacker(RECEIVE_MAX_GAP_SECRET).
+query attacker(RECEIVE_CACHED_SECRET).
+query attacker(RECEIVE_AFTER_RELEASE_SECRET).
 
-(* The snapshot is disclosed and acknowledged before any successful later
-   receive.  This directly covers compromise after the forged future frame. *)
-query session: bitstring,
-      target_sequence: sequence,
-      sender: key_id,
-      receiver: key_id,
-      plaintext: bitstring,
-      accepted_frame: bitstring,
-      target_material: bitstring,
-      forged_frame: bitstring,
-      ready_state: bitstring,
-      retained_state: bitstring,
-      full_state: bitstring,
-      consumed_state: bitstring;
-  inj-event(FailedReceiveAccepted(
-    session,
-    target_sequence,
-    sender,
-    receiver,
-    plaintext,
-    accepted_frame,
-    target_material,
-    forged_frame,
-    ready_state,
-    retained_state,
-    full_state,
-    consumed_state
-  )) ==>
-  inj-event(FailedReceiveStateCompromised(
-    session,
-    target_sequence,
-    retained_state,
-    full_state
-  )).
+(* The snapshot exposed immediately after rejection contains the same symbolic state term that preceded the attempt. *)
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring, accepted_frame: bitstring, target_material: bitstring, forged_frame: bitstring, entry_state: bitstring, committed_state: bitstring;
+  inj-event(ReceiveFutureAccepted(session, target_sequence, sender, receiver, plaintext, accepted_frame, target_material, forged_frame, entry_state, committed_state)) ==>
+  inj-event(ReceiveStateCompromised(session, target_sequence, entry_state, entry_state)).
 
-(* A legitimate ciphertext can still be delivered after that compromise. *)
-query session: bitstring,
-      target_sequence: sequence,
-      sender: key_id,
-      receiver: key_id,
-      plaintext: bitstring,
-      accepted_frame: bitstring,
-      target_material: bitstring,
-      forged_frame: bitstring,
-      ready_state: bitstring,
-      retained_state: bitstring,
-      full_state: bitstring,
-      consumed_state: bitstring;
-  inj-event(FailedReceiveHonestDelivery(
-    session,
-    target_sequence,
-    sender,
-    receiver,
-    plaintext,
-    accepted_frame,
-    target_material,
-    forged_frame,
-    ready_state,
-    retained_state,
-    full_state,
-    consumed_state
-  )) ==>
-  inj-event(FailedReceiveStateCompromised(
-    session,
-    target_sequence,
-    retained_state,
-    full_state
-  )).
+(* A legitimate ciphertext can still be delivered after compromise of the unchanged state. *)
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring, accepted_frame: bitstring, target_material: bitstring, forged_frame: bitstring, entry_state: bitstring, committed_state: bitstring;
+  inj-event(ReceiveHonestFutureDelivered(session, target_sequence, sender, receiver, plaintext, accepted_frame, target_material, forged_frame, entry_state, committed_state)) ==>
+  inj-event(ReceiveStateCompromised(session, target_sequence, entry_state, entry_state)).
 
-(* This correspondence is intentionally false after compromise: possession of
-   the retained target material lets the attacker manufacture a different
-   authentic frame before the legitimate ciphertext is delivered. *)
-query session: bitstring,
-      message_direction: direction,
-      message_sequence: sequence,
-      sender: key_id,
-      receiver: key_id,
-      plaintext: bitstring;
-  inj-event(MessageReceived(
-    session,
-    message_direction,
-    message_sequence,
-    sender,
-    receiver,
-    plaintext
-  )) ==>
-  inj-event(MessageSent(
-    session,
-    message_direction,
-    message_sequence,
-    sender,
-    receiver,
-    plaintext
-  )).
+(* This correspondence is intentionally false after compromise because the unchanged live chain still derives future receive material. *)
+query session: bitstring, message_direction: direction, message_sequence: sequence, sender: key_id, receiver: key_id, plaintext: bitstring;
+  inj-event(MessageReceived(session, message_direction, message_sequence, sender, receiver, plaintext)) ==>
+  inj-event(MessageSent(session, message_direction, message_sequence, sender, receiver, plaintext)).

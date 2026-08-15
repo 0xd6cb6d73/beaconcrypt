@@ -65,17 +65,19 @@ END {
   commit_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,assigned_key_id_3,root_input_3,root_3,associated_data_3,session_4,origin_1"
   message_arguments = "session_4,message_direction,message_sequence_6,sender,receiver,plaintext_6"
   malicious_commit_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,assigned_key_id_3,root_input_3,root_3,associated_data_3,session_4,plaintext_6"
-  failed_advanced_arguments = "session_5,target_sequence_2,target_material,forged_frame,ready_state_1,retained_state_2"
-  failed_retry_arguments = failed_advanced_arguments ",full_state_2"
-  failed_cache_arguments = "session_5,retained_state_2,full_state_2"
-  failed_capacity_arguments = "session_5,target_sequence_2,capacity_sequence_1,capacity_frame,retained_state_2,full_state_2"
-  failed_accepted_arguments = "session_5,target_sequence_2,sender,receiver,plaintext_5,accepted_frame_1,target_material,forged_frame,ready_state_1,retained_state_2,full_state_2,consumed_state_1"
-  failed_reachable_accepted_arguments = "session_5,target_sequence_2,sender,receiver,FAILED_TARGET_SECRET[],accepted_frame_1,target_material,forged_frame,ready_state_1,retained_state_2,full_state_2,consumed_state_1"
-  failed_consumed_arguments = "session_5,target_sequence_2,full_state_2,consumed_state_1"
-  failed_after_release_arguments = "session_5,target_sequence_2,capacity_sequence_1,capacity_frame,retained_state_2,full_state_2,consumed_state_1,refilled_state_2"
-  failed_compromise_arguments = "session_5,target_sequence_2,retained_state_2,full_state_2"
-  failed_message_arguments = "session_5,message_direction,message_sequence_1,sender,receiver,plaintext_5"
-  failed_malicious_commit_arguments = "server_identity_1,beacon_identity_2,init,registration_id_2,assigned_key_id_1,root_input_1,root_2,associated_data_8,session_5,plaintext_5"
+  receive_rejected_arguments = "session_3,target_sequence_2,forged_frame,entry_state"
+  receive_future_arguments = "session_3,target_sequence_2,sender,receiver,plaintext_8,accepted_frame,target_material_1,forged_frame,entry_state,committed_state_1"
+  receive_reachable_future_arguments = "session_3,target_sequence_2,sender,receiver,RECEIVE_TARGET_SECRET[],accepted_frame,target_material_1,forged_frame,entry_state,committed_state_1"
+  receive_delayed_arguments = "session_3,delayed_sequence,sender,receiver,plaintext_8,delayed_frame,delayed_material,committed_state_1,final_state"
+  receive_reachable_delayed_arguments = "session_3,delayed_sequence,sender,receiver,RECEIVE_SKIPPED_SECRET[],delayed_frame,delayed_material,committed_state_1,final_state"
+  receive_maximum_arguments = "session_3,target_sequence_2,sender,receiver,plaintext_8,accepted_frame,target_material_1,entry_state,committed_state_1"
+  receive_reachable_maximum_arguments = "session_3,target_sequence_2,sender,receiver,RECEIVE_MAX_GAP_SECRET[],accepted_frame,target_material_1,entry_state,committed_state_1"
+  receive_capacity_arguments = "session_3,target_sequence_2,rejected_frame,rejected_state"
+  receive_cached_arguments = "session_3,cached_sequence,cached_material,full_state,released_state_1"
+  receive_after_release_arguments = "session_3,target_sequence_2,sender,receiver,plaintext_8,accepted_frame,target_material_1,rejected_state,released_state_1,committed_state_1"
+  receive_reachable_after_release_arguments = "session_3,target_sequence_2,sender,receiver,RECEIVE_AFTER_RELEASE_SECRET[],accepted_frame,target_material_1,rejected_state,released_state_1,committed_state_1"
+  receive_message_arguments = "session_3,message_direction,message_sequence_1,sender,receiver,plaintext_8"
+  receive_malicious_commit_arguments = "server_identity_1,beacon_identity_2,init,registration_id_2,assigned_key_id_1,root_input_1,root_2,associated_data_9,session_3,plaintext_8"
   weak_aead_arguments = "left_key_1,right_key_1,left_context_1,right_context_1,left_plaintext_1,right_plaintext_1"
 
   if (scenario == "aead-commitment" ||
@@ -157,86 +159,93 @@ END {
       }
     }
   } else if (scenario == "failed-receive") {
-    if (query_count != 13) {
-      reject("expected 13 failed-receive queries, saw " query_count)
+    if (query_count != 17) {
+      reject("expected 17 state-neutral receive queries, saw " query_count)
     }
 
-    failed_secret[1] = "FAILED_PAST_SECRET"
-    failed_secret[2] = "FAILED_SKIPPED_SECRET"
-    failed_secret[3] = "FAILED_TARGET_SECRET"
-    failed_secret[4] = "FAILED_FUTURE_SECRET"
-    for (secret_index = 1; secret_index <= 4; secret_index++) {
-      wanted = "Query not attacker(" failed_secret[secret_index] "[]) is true."
-      require_exact(wanted, "failed-receive secrecy")
+    receive_secret[1] = "RECEIVE_PAST_SECRET"
+    receive_secret[2] = "RECEIVE_SKIPPED_SECRET"
+    receive_secret[3] = "RECEIVE_TARGET_SECRET"
+    receive_secret[4] = "RECEIVE_MAX_GAP_SECRET"
+    receive_secret[5] = "RECEIVE_CACHED_SECRET"
+    receive_secret[6] = "RECEIVE_AFTER_RELEASE_SECRET"
+    for (secret_index = 1; secret_index <= 6; secret_index++) {
+      wanted = "Query not attacker(" receive_secret[secret_index] "[]) is true."
+      require_exact(wanted, "state-neutral receive secrecy")
     }
 
-    failed_correspondence[1] = "Query inj-event(FailedReceiveStateAdvanced(" failed_advanced_arguments ")) ==> inj-event(MessageKeyCached(session_5,beacon_role,server_to_beacon,target_sequence_2,target_material)) is true."
-    failed_correspondence[2] = "Query inj-event(FailedReceiveRetryRetained(" failed_retry_arguments ")) ==> inj-event(FailedReceiveStateAdvanced(" failed_advanced_arguments ")) is true."
-    failed_correspondence[3] = "Query inj-event(FailedReceiveCapacityRejected(" failed_capacity_arguments ")) ==> inj-event(FailedReceiveCacheFilled(" failed_cache_arguments ")) is true."
-    failed_correspondence[4] = "Query inj-event(FailedReceiveAccepted(" failed_accepted_arguments ")) ==> inj-event(FailedReceiveRetryRetained(" failed_retry_arguments ")) is true."
-    failed_correspondence[5] = "Query inj-event(FailedReceiveAccepted(" failed_accepted_arguments ")) ==> inj-event(FailedReceiveKeyConsumed(" failed_consumed_arguments ")) is true."
-    failed_correspondence[6] = "Query inj-event(FailedReceiveReplayRejected(" failed_accepted_arguments ")) ==> inj-event(FailedReceiveAccepted(" failed_accepted_arguments ")) is true."
-    failed_correspondence[7] = "Query inj-event(FailedReceiveAfterCapacityReleaseAdmitted(" failed_after_release_arguments ")) ==> inj-event(FailedReceiveCapacityRejected(" failed_capacity_arguments ")) is true."
-    failed_correspondence[8] = "Query inj-event(FailedReceiveAfterCapacityReleaseAdmitted(" failed_after_release_arguments ")) ==> inj-event(FailedReceiveKeyConsumed(" failed_consumed_arguments ")) is true."
-    failed_correspondence[9] = "Query inj-event(MessageReceived(" failed_message_arguments ")) ==> inj-event(MessageSent(" failed_message_arguments ")) is true."
+    receive_correspondence[1] = "Query inj-event(ReceiveRejectionRetried(" receive_rejected_arguments ")) ==> inj-event(ReceiveRejectedNeutral(" receive_rejected_arguments ")) is true."
+    receive_correspondence[2] = "Query inj-event(ReceiveFutureAccepted(" receive_future_arguments ")) ==> inj-event(ReceiveRejectionRetried(" receive_rejected_arguments ")) is true."
+    receive_correspondence[3] = "Query inj-event(ReceiveHonestFutureDelivered(" receive_future_arguments ")) ==> inj-event(ReceiveFutureAccepted(" receive_future_arguments ")) is true."
+    receive_correspondence[4] = "Query inj-event(ReceiveFutureAccepted(" receive_future_arguments ")) ==> inj-event(MessageKeyUnavailable(session_3,beacon_role,server_to_beacon,target_sequence_2,target_material_1)) is true."
+    receive_correspondence[5] = "Query inj-event(ReceiveReplayRejected(" receive_future_arguments ")) ==> inj-event(ReceiveFutureAccepted(" receive_future_arguments ")) is true."
+    receive_correspondence[6] = "Query inj-event(ReceiveDelayedCachedAccepted(" receive_delayed_arguments ")) ==> inj-event(MessageKeyCached(session_3,beacon_role,server_to_beacon,delayed_sequence,delayed_material)) is true."
+    receive_correspondence[7] = "Query inj-event(ReceiveDelayedCachedAccepted(" receive_delayed_arguments ")) ==> inj-event(MessageKeyUnavailable(session_3,beacon_role,server_to_beacon,delayed_sequence,delayed_material)) is true."
+    receive_correspondence[8] = "Query inj-event(ReceiveMaximumGapAccepted(" receive_maximum_arguments ")) ==> inj-event(MessageKeyUnavailable(session_3,beacon_role,server_to_beacon,target_sequence_2,target_material_1)) is true."
+    receive_correspondence[9] = "Query inj-event(ReceiveCachedKeyConsumed(" receive_cached_arguments ")) ==> inj-event(MessageKeyUnavailable(session_3,beacon_role,server_to_beacon,cached_sequence,cached_material)) is true."
+    receive_correspondence[10] = "Query inj-event(ReceiveAfterCapacityReleaseAccepted(" receive_after_release_arguments ")) ==> inj-event(MessageKeyUnavailable(session_3,beacon_role,server_to_beacon,target_sequence_2,target_material_1)) is true."
+    receive_correspondence[11] = "Query inj-event(MessageReceived(" receive_message_arguments ")) ==> inj-event(MessageSent(" receive_message_arguments ")) is true."
     for (correspondence_index = 1;
-         correspondence_index <= 9;
+         correspondence_index <= 11;
          correspondence_index++) {
-      require_exact(failed_correspondence[correspondence_index],
-                    "failed-receive correspondence")
+      require_exact(receive_correspondence[correspondence_index],
+                    "state-neutral receive correspondence")
     }
   } else if (scenario == "failed-receive-reachability") {
-    if (query_count != 11) {
-      reject("expected 11 failed-receive reachability queries, saw " query_count)
+    if (query_count != 12) {
+      reject("expected 12 state-neutral receive reachability queries, saw " query_count)
     }
 
-    failed_reachable[1] = "Query not event(FailedReceiveStateAdvanced(" failed_advanced_arguments ")) is false."
-    failed_reachable[2] = "Query not event(FailedReceiveCacheFilled(" failed_cache_arguments ")) is false."
-    failed_reachable[3] = "Query not event(FailedReceiveCapacityRejected(" failed_capacity_arguments ")) is false."
-    failed_reachable[4] = "Query not event(FailedReceiveRetryRetained(" failed_retry_arguments ")) is false."
-    failed_reachable[5] = "Query not event(FailedReceiveAccepted(" failed_reachable_accepted_arguments ")) is false."
-    failed_reachable[6] = "Query not event(FailedReceiveKeyConsumed(" failed_consumed_arguments ")) is false."
-    failed_reachable[7] = "Query not event(FailedReceiveHonestDelivery(" failed_reachable_accepted_arguments ")) is false."
-    failed_reachable[8] = "Query not event(FailedReceiveReplayRejected(" failed_reachable_accepted_arguments ")) is false."
-    failed_reachable[9] = "Query not event(FailedReceiveAfterCapacityReleaseAdmitted(" failed_after_release_arguments ")) is false."
-    failed_reachable[10] = "Query not event(MaliciousRegistrationCommitted(" failed_malicious_commit_arguments ")) is false."
-    failed_reachable[11] = "Query not attacker(MALICIOUS_TASK_SECRET[]) is false."
-    for (required_index = 1; required_index <= 11; required_index++) {
-      require_exact(failed_reachable[required_index],
-                    "failed-receive reachability")
+    receive_reachable[1] = "Query not event(ReceiveRejectedNeutral(" receive_rejected_arguments ")) is false."
+    receive_reachable[2] = "Query not event(ReceiveRejectionRetried(" receive_rejected_arguments ")) is false."
+    receive_reachable[3] = "Query not event(ReceiveFutureAccepted(" receive_reachable_future_arguments ")) is false."
+    receive_reachable[4] = "Query not event(ReceiveHonestFutureDelivered(" receive_reachable_future_arguments ")) is false."
+    receive_reachable[5] = "Query not event(ReceiveReplayRejected(" receive_reachable_future_arguments ")) is false."
+    receive_reachable[6] = "Query not event(ReceiveDelayedCachedAccepted(" receive_reachable_delayed_arguments ")) is false."
+    receive_reachable[7] = "Query not event(ReceiveMaximumGapAccepted(" receive_reachable_maximum_arguments ")) is false."
+    receive_reachable[8] = "Query not event(ReceiveCapacityRejected(" receive_capacity_arguments ")) is false."
+    receive_reachable[9] = "Query not event(ReceiveCachedKeyConsumed(" receive_cached_arguments ")) is false."
+    receive_reachable[10] = "Query not event(ReceiveAfterCapacityReleaseAccepted(" receive_reachable_after_release_arguments ")) is false."
+    receive_reachable[11] = "Query not event(MaliciousRegistrationCommitted(" receive_malicious_commit_arguments ")) is false."
+    receive_reachable[12] = "Query not attacker(MALICIOUS_TASK_SECRET[]) is false."
+    for (required_index = 1; required_index <= 12; required_index++) {
+      require_exact(receive_reachable[required_index],
+                    "state-neutral receive reachability")
     }
   } else if (scenario == "failed-receive-compromise") {
-    if (query_count != 7) {
-      reject("expected 7 failed-receive compromise queries, saw " query_count)
+    if (query_count != 9) {
+      reject("expected 9 state-neutral receive compromise queries, saw " query_count)
     }
 
-    failed_compromise_secret[1] = "Query not attacker(FAILED_PAST_SECRET[]) is true."
-    failed_compromise_secret[2] = "Query not attacker(FAILED_SKIPPED_SECRET[]) is false."
-    failed_compromise_secret[3] = "Query not attacker(FAILED_TARGET_SECRET[]) is false."
-    failed_compromise_secret[4] = "Query not attacker(FAILED_FUTURE_SECRET[]) is false."
-    for (secret_index = 1; secret_index <= 4; secret_index++) {
-      require_exact(failed_compromise_secret[secret_index],
-                    "failed-receive compromise secrecy")
+    receive_compromise_secret[1] = "Query not attacker(RECEIVE_PAST_SECRET[]) is true."
+    receive_compromise_secret[2] = "Query not attacker(RECEIVE_SKIPPED_SECRET[]) is false."
+    receive_compromise_secret[3] = "Query not attacker(RECEIVE_TARGET_SECRET[]) is false."
+    receive_compromise_secret[4] = "Query not attacker(RECEIVE_MAX_GAP_SECRET[]) is true."
+    receive_compromise_secret[5] = "Query not attacker(RECEIVE_CACHED_SECRET[]) is true."
+    receive_compromise_secret[6] = "Query not attacker(RECEIVE_AFTER_RELEASE_SECRET[]) is true."
+    for (secret_index = 1; secret_index <= 6; secret_index++) {
+      require_exact(receive_compromise_secret[secret_index],
+                    "state-neutral receive compromise secrecy")
     }
 
-    failed_compromise_query[1] = "Query inj-event(FailedReceiveAccepted(" failed_accepted_arguments ")) ==> inj-event(FailedReceiveStateCompromised(" failed_compromise_arguments ")) is true."
-    failed_compromise_query[2] = "Query inj-event(FailedReceiveHonestDelivery(" failed_accepted_arguments ")) ==> inj-event(FailedReceiveStateCompromised(" failed_compromise_arguments ")) is true."
-    failed_compromise_query[3] = "Query inj-event(MessageReceived(" failed_message_arguments ")) ==> inj-event(MessageSent(" failed_message_arguments ")) is false."
+    receive_compromise_query[1] = "Query inj-event(ReceiveFutureAccepted(" receive_future_arguments ")) ==> inj-event(ReceiveStateCompromised(session_3,target_sequence_2,entry_state,entry_state)) is true."
+    receive_compromise_query[2] = "Query inj-event(ReceiveHonestFutureDelivered(" receive_future_arguments ")) ==> inj-event(ReceiveStateCompromised(session_3,target_sequence_2,entry_state,entry_state)) is true."
+    receive_compromise_query[3] = "Query inj-event(MessageReceived(" receive_message_arguments ")) ==> inj-event(MessageSent(" receive_message_arguments ")) is false."
     for (correspondence_index = 1;
          correspondence_index <= 3;
          correspondence_index++) {
-      require_exact(failed_compromise_query[correspondence_index],
-                    "failed-receive compromise correspondence")
+      require_exact(receive_compromise_query[correspondence_index],
+                    "state-neutral receive compromise correspondence")
     }
   } else if (scenario == "failed-receive-compromise-reachability") {
     if (query_count != 2) {
-      reject("expected 2 failed-receive compromise reachability queries, saw " query_count)
+      reject("expected 2 state-neutral receive compromise reachability queries, saw " query_count)
     }
-    wanted = "Query not event(FailedReceiveStateCompromised(" failed_compromise_arguments ")) is false."
-    require_exact(wanted, "failed-receive compromise reachability")
-    wanted = "Query not event(FailedReceiveHonestDelivery(" failed_reachable_accepted_arguments ")) is false."
+    wanted = "Query not event(ReceiveStateCompromised(session_3,target_sequence_2,unchanged_state,unchanged_state)) is false."
+    require_exact(wanted, "state-neutral receive compromise reachability")
+    wanted = "Query not event(ReceiveHonestFutureDelivered(" receive_reachable_future_arguments ")) is false."
     require_exact(wanted,
-                  "failed-receive post-compromise delivery reachability")
+                  "state-neutral post-compromise delivery reachability")
   } else {
     reject("unknown scenario: " scenario)
   }

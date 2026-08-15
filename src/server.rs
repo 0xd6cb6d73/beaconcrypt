@@ -41,6 +41,32 @@ pub struct RegistrationOutput {
 	pub(crate) control: beaconcrypt_protocol_core::pqxdh::PendingServerRegistration,
 }
 
+/// The state effect of one receive attempt.
+///
+/// `Rejected` is returned only when the complete entry state is preserved. `Accepted` means the
+/// selected receive key was consumed and the resulting state must be committed before releasing
+/// the output from a persistent owner.
+pub(crate) enum ReceiveTransition<T> {
+	Rejected,
+	Accepted(T),
+}
+
+impl<T> ReceiveTransition<T> {
+	pub(crate) fn map<U>(self, map: impl FnOnce(T) -> U) -> ReceiveTransition<U> {
+		match self {
+			Self::Rejected => ReceiveTransition::Rejected,
+			Self::Accepted(output) => ReceiveTransition::Accepted(map(output)),
+		}
+	}
+
+	pub(crate) fn into_option(self) -> Option<T> {
+		match self {
+			Self::Rejected => None,
+			Self::Accepted(output) => Some(output),
+		}
+	}
+}
+
 /// An inert, serialization-only view of ratchet state.
 ///
 /// This value has no operational methods and cannot be deserialized into a live ratchet.
@@ -49,10 +75,14 @@ pub struct RatchetSnapshot {
 }
 
 impl RatchetSnapshot {
-	pub(crate) fn capture(ratchet: &RatchetManager) -> Option<Self> {
-		Some(Self {
-			json: Zeroizing::new(serde_json::to_string(ratchet).ok()?),
+	pub(crate) fn try_capture(ratchet: &RatchetManager) -> serde_json::Result<Self> {
+		Ok(Self {
+			json: Zeroizing::new(serde_json::to_string(ratchet)?),
 		})
+	}
+
+	pub(crate) fn capture(ratchet: &RatchetManager) -> Option<Self> {
+		Self::try_capture(ratchet).ok()
 	}
 
 	pub fn as_str(&self) -> &str {
@@ -68,6 +98,12 @@ pub struct StateUpdate<Role: roles::ChainKey> {
 	pub state: RatchetSnapshot,
 	pub data: Vec<u8>,
 	pub(crate) _role: PhantomData<Role>,
+}
+
+impl<Role: roles::ChainKey> StateUpdate<Role> {
+	pub(crate) fn try_render_json(&self) -> serde_json::Result<String> {
+		serde_json::to_string(self)
+	}
 }
 
 pub type SendState = StateUpdate<roles::ChainSendKey>;
@@ -180,9 +216,52 @@ impl Server {
 		encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)
 	}
 	pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> {
-		let k = crate::ratchet::encrypted_frame_sender(b)?;
-		let ad = self.associated_data(k)?;
-		decrypt_message_with_ratchet(b, k, &ad, self.ratchet_manager_mut(k)?)
+		self.decrypt_message_transition(b).into_option()
+	}
+
+	pub(crate) fn decrypt_message_transition(
+		&mut self,
+		b: &[u8],
+	) -> ReceiveTransition<crate::Decrypted> {
+		let Some(k) = crate::ratchet::encrypted_frame_sender(b) else {
+			return ReceiveTransition::Rejected;
+		};
+		let Some(ad) = self.associated_data(k) else {
+			return ReceiveTransition::Rejected;
+		};
+		let Some(ratchet) = self.ratchet_manager_mut(k) else {
+			return ReceiveTransition::Rejected;
+		};
+		match decrypt_message_with_ratchet(b, k, &ad, ratchet) {
+			Some(decrypted) => ReceiveTransition::Accepted(decrypted),
+			None => ReceiveTransition::Rejected,
+		}
+	}
+
+	pub(crate) fn try_receive_update(
+		&self,
+		decrypted: crate::Decrypted,
+	) -> serde_json::Result<RecvState> {
+		let kid = decrypted.key_id;
+		let ratchet = self
+			.ratchet_manager(kid)
+			.expect("an accepted receive retains its established peer");
+		let state = RatchetSnapshot::try_capture(ratchet)?;
+		Ok(RecvState {
+			kid,
+			seq: decrypted.seq,
+			state,
+			data: decrypted.plaintext,
+			_role: PhantomData,
+		})
+	}
+
+	fn decrypt_and_update_transition(&mut self, bytes: &[u8]) -> ReceiveTransition<RecvState> {
+		let transition = self.decrypt_message_transition(bytes);
+		transition.map(|decrypted| {
+			self.try_receive_update(decrypted)
+				.expect("an accepted receive state must have a serializable snapshot")
+		})
 	}
 
 	pub(crate) fn serialize_state(&self) -> Option<String> {
@@ -431,18 +510,16 @@ impl ProviderServer for Server {
 	}
 
 	fn decrypt_and_update(&mut self, bytes: &[u8]) -> Option<RecvState> {
-		let decrypted = self.decrypt_message(bytes)?;
-		let state = RatchetSnapshot::capture(self.ratchet_manager(decrypted.key_id)?)?;
-		Some(RecvState {
-			kid: decrypted.key_id,
-			seq: decrypted.seq,
-			state,
-			data: decrypted.plaintext,
-			_role: PhantomData,
-		})
+		self.decrypt_and_update_transition(bytes).into_option()
 	}
 
 	fn decrypt_and_update_json(&mut self, bytes: &[u8]) -> Option<String> {
-		serde_json::to_string(&self.decrypt_and_update(bytes)?).ok()
+		self.decrypt_and_update_transition(bytes)
+			.map(|update| {
+				update
+					.try_render_json()
+					.expect("an accepted receive update must be serializable as JSON")
+			})
+			.into_option()
 	}
 }

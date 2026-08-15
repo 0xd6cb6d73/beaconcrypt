@@ -6,7 +6,8 @@ use libsodium_rs::{crypto_generichash, ensure_init, random};
 use zeroize::Zeroizing;
 
 use crate::server::{
-	ProviderServer, RecvState, RegResponse, RegistrationOutput, SendState, Server,
+	ProviderServer, ReceiveTransition, RecvState, RegResponse, RegistrationOutput, SendState,
+	Server,
 };
 use crate::{Decrypted, Encrypted};
 
@@ -417,7 +418,9 @@ impl<S: SnapshotStore> PersistentServer<S> {
 	}
 
 	pub fn decrypt_message(&mut self, bytes: &[u8]) -> Result<Option<Decrypted>, PersistenceError> {
-		self.commit(|server| server.decrypt_message(bytes))
+		Ok(self
+			.commit_receive(|server| server.decrypt_message_transition(bytes))?
+			.into_option())
 	}
 
 	pub fn encrypt_and_update(
@@ -432,7 +435,9 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		&mut self,
 		bytes: &[u8],
 	) -> Result<Option<RecvState>, PersistenceError> {
-		self.commit(|server| server.decrypt_and_update(bytes))
+		self.receive_and_project(bytes, |server, decrypted| {
+			server.try_receive_update(decrypted)
+		})
 	}
 
 	pub fn encrypt_and_update_json(
@@ -447,7 +452,69 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		&mut self,
 		bytes: &[u8],
 	) -> Result<Option<String>, PersistenceError> {
-		self.commit(|server| server.decrypt_and_update_json(bytes))
+		self.receive_and_project(bytes, |server, decrypted| {
+			server
+				.try_receive_update(decrypted)
+				.and_then(|update| update.try_render_json())
+		})
+	}
+
+	fn receive_and_project<T, E>(
+		&mut self,
+		bytes: &[u8],
+		project: impl FnOnce(&Server, Decrypted) -> Result<T, E>,
+	) -> Result<Option<T>, PersistenceError> {
+		// Commit the authoritative receive effect before constructing any caller-visible update.
+		let transition = self.commit_receive(|server| server.decrypt_message_transition(bytes))?;
+		Self::project_receive_output(transition, |decrypted| project(&self.server, decrypted))
+	}
+
+	fn project_receive_output<T, U, E>(
+		transition: ReceiveTransition<T>,
+		project: impl FnOnce(T) -> Result<U, E>,
+	) -> Result<Option<U>, PersistenceError> {
+		match transition {
+			ReceiveTransition::Rejected => Ok(None),
+			ReceiveTransition::Accepted(output) => project(output)
+				.map(Some)
+				.map_err(|_| PersistenceError::OutputEncoding),
+		}
+	}
+
+	fn commit_receive<T>(
+		&mut self,
+		operation: impl FnOnce(&mut Server) -> ReceiveTransition<T>,
+	) -> Result<ReceiveTransition<T>, PersistenceError> {
+		if self.poisoned {
+			return Err(PersistenceError::Poisoned);
+		}
+		self.poisoned = true;
+		let output = match operation(&mut self.server) {
+			ReceiveTransition::Rejected => {
+				// Rejection is an exact-state transition, so it creates no snapshot generation.
+				self.poisoned = false;
+				return Ok(ReceiveTransition::Rejected);
+			}
+			ReceiveTransition::Accepted(output) => output,
+		};
+		let generation = self
+			.head
+			.generation
+			.checked_add(1)
+			.ok_or(PersistenceError::GenerationExhausted)?;
+		let snapshot = ServerSnapshot::encode(
+			&self.server,
+			self.head.lineage,
+			generation,
+			self.head.digest,
+		)?;
+		let successor_head = snapshot.head()?;
+		if !self.store.compare_and_swap(Some(&self.head), &snapshot) {
+			return Err(PersistenceError::StaleGeneration);
+		}
+		self.head = successor_head;
+		self.poisoned = false;
+		Ok(ReceiveTransition::Accepted(output))
 	}
 
 	fn commit<T>(
@@ -512,6 +579,7 @@ pub enum PersistenceError {
 	StaleGeneration,
 	GenerationExhausted,
 	Encoding,
+	OutputEncoding,
 	Initialization,
 	Digest,
 	Poisoned,
@@ -526,6 +594,7 @@ impl fmt::Display for PersistenceError {
 			Self::StaleGeneration => "snapshot generation compare-and-swap failed",
 			Self::GenerationExhausted => "snapshot generation exhausted",
 			Self::Encoding => "server snapshot encoding failed",
+			Self::OutputEncoding => "receive output encoding failed after commit",
 			Self::Initialization => "failed to initialize snapshot dependencies",
 			Self::Digest => "failed to compute snapshot identity digest",
 			Self::Poisoned => "persistent server is poisoned after a failed commit",
@@ -539,6 +608,10 @@ impl Error for PersistenceError {}
 #[cfg(test)]
 mod tests {
 	use super::*;
+	#[cfg(feature = "beacon")]
+	use crate::ratchet::RATCHET_MAX_GAP;
+	#[cfg(feature = "beacon")]
+	use crate::{Beacon, ProviderBeacon};
 
 	#[derive(Default)]
 	struct MemoryStore {
@@ -644,6 +717,10 @@ mod tests {
 				"server snapshot encoding failed",
 			),
 			(
+				PersistenceError::OutputEncoding,
+				"receive output encoding failed after commit",
+			),
+			(
 				PersistenceError::Initialization,
 				"failed to initialize snapshot dependencies",
 			),
@@ -710,5 +787,253 @@ mod tests {
 			persistent.commit(|_| ()),
 			Err(PersistenceError::Poisoned)
 		));
+	}
+
+	#[test]
+	fn rejected_receive_needs_no_successor_generation_and_clears_poison() {
+		let mut persistent = deterministic_persistent_server();
+		persistent.head.generation = u64::MAX;
+		let entry_head = persistent.head();
+
+		let transition = persistent
+			.commit_receive(|_| ReceiveTransition::<()>::Rejected)
+			.unwrap();
+		assert!(matches!(transition, ReceiveTransition::Rejected));
+		assert_eq!(persistent.head(), entry_head);
+		assert!(!persistent.is_poisoned());
+	}
+
+	#[test]
+	fn panicking_receive_operation_leaves_the_live_owner_poisoned() {
+		let mut persistent = deterministic_persistent_server();
+		let committed_head = persistent.head();
+
+		let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+			persistent.commit_receive::<()>(|_| panic!("injected receive panic"))
+		}));
+		assert!(panic.is_err());
+		assert!(persistent.is_poisoned());
+		assert_eq!(persistent.head(), committed_head);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn rejected_future_receive_preserves_complete_live_server_and_snapshot() {
+		let mut persistent = deterministic_persistent_server();
+		let mut beacon = Beacon::new(persistent.server_kid(), persistent.identity_pk().as_bytes());
+		let phase_1 = beacon.get_registration_bundle().unwrap();
+		let registration = persistent.get_shared_secret(&phase_1).unwrap().unwrap();
+		let response = persistent
+			.build_registration_response(registration, Some(b"registration"))
+			.unwrap()
+			.unwrap();
+		beacon.finish_registration(&response.serialized).unwrap();
+		let _first = beacon.encrypt_message(b"first").unwrap();
+		let _second = beacon.encrypt_message(b"second").unwrap();
+		let third = beacon.encrypt_message(b"third").unwrap();
+
+		let message = capnp::serialize::read_message(
+			third.ciphertext.as_slice(),
+			capnp::message::ReaderOptions::new(),
+		)
+		.unwrap();
+		let typed =
+			capnp::message::TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(
+				message,
+			);
+		let frame = typed.get().unwrap();
+		let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+		ciphertext[0] ^= 1;
+		let mut message = capnp::message::TypedBuilder::<
+			crate::cryptoframe_capnp::crypto_frame::Owned,
+		>::new_default();
+		let mut corrupted = message.init_root();
+		corrupted.set_seq(frame.get_seq());
+		corrupted.set_key_id(frame.get_key_id());
+		corrupted.set_cipher_text(&ciphertext);
+		let mut rejected = Vec::new();
+		capnp::serialize::write_message(&mut rejected, message.borrow_inner()).unwrap();
+
+		let live = persistent.server.serialize_state().unwrap();
+		let head = persistent.head();
+		let snapshot = persistent.store.snapshot.clone();
+		assert!(persistent.decrypt_message(&rejected).unwrap().is_none());
+		assert_eq!(persistent.server.serialize_state().unwrap(), live);
+		assert_eq!(persistent.head(), head);
+		assert_eq!(persistent.store.snapshot, snapshot);
+		assert!(!persistent.is_poisoned());
+		assert_eq!(
+			persistent
+				.decrypt_message(&third)
+				.unwrap()
+				.unwrap()
+				.plaintext,
+			b"third"
+		);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn full_legacy_v2_receive_cache_restores_and_makes_forward_progress() {
+		let mut persistent = deterministic_persistent_server();
+		let mut beacon = Beacon::new(persistent.server_kid(), persistent.identity_pk().as_bytes());
+		let phase_1 = beacon.get_registration_bundle().unwrap();
+		let registration = persistent.get_shared_secret(&phase_1).unwrap().unwrap();
+		let response = persistent
+			.build_registration_response(registration, Some(b"registration"))
+			.unwrap()
+			.unwrap();
+		beacon.finish_registration(&response.serialized).unwrap();
+		let frames = (1..=RATCHET_MAX_GAP + 1)
+			.map(|sequence| {
+				let plaintext = format!("legacy cached message {sequence}").into_bytes();
+				let frame = beacon.encrypt_message(&plaintext).unwrap();
+				assert_eq!(frame.seq, sequence);
+				(plaintext, frame)
+			})
+			.collect::<Vec<_>>();
+
+		assert_eq!(
+			persistent
+				.commit(|server| server.ratchet_recv_until(RATCHET_MAX_GAP, response.kid))
+				.unwrap(),
+			Some(RATCHET_MAX_GAP)
+		);
+		assert_eq!(
+			persistent
+				.ratchet_status(response.kid)
+				.unwrap()
+				.receive_cache_len(),
+			RATCHET_MAX_GAP as u8
+		);
+		let snapshot = persistent.store.snapshot.as_ref().unwrap();
+		assert_eq!(
+			u16::from_le_bytes(
+				snapshot[SNAPSHOT_MAGIC.len()..SNAPSHOT_MAGIC.len() + 2]
+					.try_into()
+					.unwrap()
+			),
+			SNAPSHOT_VERSION
+		);
+
+		let PersistentServer { store, .. } = persistent;
+		let mut restored = PersistentServer::restore(store).unwrap();
+		let full_state = restored.head();
+		let full_snapshot = restored.store.snapshot.clone();
+		let target = &frames[RATCHET_MAX_GAP as usize - 1].1;
+		let message = capnp::serialize::read_message(
+			target.ciphertext.as_slice(),
+			capnp::message::ReaderOptions::new(),
+		)
+		.unwrap();
+		let typed =
+			capnp::message::TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(
+				message,
+			);
+		let frame = typed.get().unwrap();
+		let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+		ciphertext[0] ^= 1;
+		let mut message = capnp::message::TypedBuilder::<
+			crate::cryptoframe_capnp::crypto_frame::Owned,
+		>::new_default();
+		let mut corrupted = message.init_root();
+		corrupted.set_seq(frame.get_seq());
+		corrupted.set_key_id(frame.get_key_id());
+		corrupted.set_cipher_text(&ciphertext);
+		let mut rejected = Vec::new();
+		capnp::serialize::write_message(&mut rejected, message.borrow_inner()).unwrap();
+
+		assert!(restored.decrypt_message(&rejected).unwrap().is_none());
+		assert_eq!(restored.head(), full_state);
+		assert_eq!(restored.store.snapshot, full_snapshot);
+		assert_eq!(
+			restored
+				.ratchet_status(response.kid)
+				.unwrap()
+				.receive_cache_len(),
+			RATCHET_MAX_GAP as u8
+		);
+		assert!(
+			restored
+				.decrypt_message(&frames[RATCHET_MAX_GAP as usize].1)
+				.unwrap()
+				.is_none()
+		);
+		assert_eq!(restored.head(), full_state);
+
+		let cached = &frames[RATCHET_MAX_GAP as usize - 1];
+		assert_eq!(
+			restored
+				.decrypt_message(&cached.1)
+				.unwrap()
+				.unwrap()
+				.plaintext,
+			cached.0
+		);
+		let future = &frames[RATCHET_MAX_GAP as usize];
+		assert_eq!(
+			restored
+				.decrypt_message(&future.1)
+				.unwrap()
+				.unwrap()
+				.plaintext,
+			future.0
+		);
+	}
+
+	#[cfg(feature = "beacon")]
+	#[test]
+	fn post_commit_output_failures_do_not_poison_or_undo_receives() {
+		let mut persistent = deterministic_persistent_server();
+		let mut beacon = Beacon::new(persistent.server_kid(), persistent.identity_pk().as_bytes());
+		let phase_1 = beacon.get_registration_bundle().unwrap();
+		let registration = persistent.get_shared_secret(&phase_1).unwrap().unwrap();
+		let response = persistent
+			.build_registration_response(registration, Some(b"registration"))
+			.unwrap()
+			.unwrap();
+		beacon.finish_registration(&response.serialized).unwrap();
+		let update_frame = beacon.encrypt_message(b"update durably consumed").unwrap();
+		let json_frame = beacon.encrypt_message(b"JSON durably consumed").unwrap();
+		let previous = persistent.head();
+
+		let projected: Result<Option<()>, PersistenceError> =
+			persistent.receive_and_project(&update_frame, |_, _| {
+				Err(<serde_json::Error as serde::ser::Error>::custom(
+					"injected update capture failure",
+				))
+			});
+		assert_eq!(projected, Err(PersistenceError::OutputEncoding));
+		assert_eq!(persistent.head().generation(), previous.generation() + 1);
+		assert!(!persistent.is_poisoned());
+		let update_committed = persistent.head();
+		assert!(persistent.decrypt_message(&update_frame).unwrap().is_none());
+		assert_eq!(persistent.head(), update_committed);
+
+		let projected: Result<Option<()>, PersistenceError> =
+			persistent.receive_and_project(&json_frame, |server, decrypted| {
+				let _update = server.try_receive_update(decrypted)?;
+				Err(<serde_json::Error as serde::ser::Error>::custom(
+					"injected JSON rendering failure",
+				))
+			});
+		assert_eq!(projected, Err(PersistenceError::OutputEncoding));
+		assert_eq!(
+			persistent.head().generation(),
+			update_committed.generation() + 1
+		);
+		assert!(!persistent.is_poisoned());
+		let committed = persistent.head();
+		assert!(persistent.decrypt_message(&json_frame).unwrap().is_none());
+		assert_eq!(persistent.head(), committed);
+		assert!(!persistent.is_poisoned());
+
+		let PersistentServer { store, .. } = persistent;
+		let mut restored = PersistentServer::restore(store).unwrap();
+		let restored_head = restored.head();
+		assert!(restored.decrypt_message(&update_frame).unwrap().is_none());
+		assert!(restored.decrypt_message(&json_frame).unwrap().is_none());
+		assert_eq!(restored.head(), restored_head);
+		assert!(!restored.is_poisoned());
 	}
 }

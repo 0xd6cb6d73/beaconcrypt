@@ -49,7 +49,7 @@ declare -A expected_category_counts=(
 	[handwritten-fstar]=3
 	[handwritten-proverif]=18
 	[inventory]=2
-	[validation]=1
+	[validation]=2
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -93,7 +93,8 @@ printf '%s\n' proofs/check-inventory.sh proofs/trusted-boundary.md \
 	> "$tmp_dir/inventory"
 compare_set inventory "$tmp_dir/inventory"
 
-printf '%s\n' ../../tests/protocol.rs > "$tmp_dir/validation"
+printf '%s\n' ../../tests/protocol.rs ../../tests/server.rs \
+	> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
 
 awk -F '\t' '$3 ~ /^proofs\// { print $3 }' "$manifest" \
@@ -259,13 +260,13 @@ require_line_count 6 '^reduc ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive reduction"
 require_line_count 1 '^letfun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive helper"
-require_line_count 23 '^event ' proofs/pro-verif/environment.pvl \
+require_line_count 24 '^event ' proofs/pro-verif/environment.pvl \
 	"handwritten event"
 require_line_count 2 '^table ' proofs/pro-verif/environment.pvl \
 	"handwritten table"
-require_line_count 15 '^free ' proofs/pro-verif/environment.pvl \
+require_line_count 17 '^free ' proofs/pro-verif/environment.pvl \
 	"handwritten free name/channel"
-require_line_count 11 '^let [A-Z]' proofs/pro-verif/environment.pvl \
+require_line_count 12 '^let [A-Z]' proofs/pro-verif/environment.pvl \
 	"handwritten process"
 require_line_count 11 '^query ' proofs/pro-verif/queries.pvl \
 	"baseline query"
@@ -273,17 +274,17 @@ require_line_count 7 '^query ' proofs/pro-verif/reachability-queries.pvl \
 	"reachability query"
 require_line_count 5 '^query ' proofs/pro-verif/compromise-queries.pvl \
 	"compromise query"
-require_line_count 13 '^query ' proofs/pro-verif/failed-receive-queries.pvl \
-	"failed-receive query"
-require_line_count 11 '^query ' \
+require_line_count 17 '^query ' proofs/pro-verif/failed-receive-queries.pvl \
+	"state-neutral receive query"
+require_line_count 12 '^query ' \
 	proofs/pro-verif/failed-receive-reachability-queries.pvl \
-	"failed-receive reachability query"
-require_line_count 7 '^query ' \
+	"state-neutral receive reachability query"
+require_line_count 9 '^query ' \
 	proofs/pro-verif/failed-receive-compromise-queries.pvl \
-	"failed-receive compromise query"
+	"state-neutral receive compromise query"
 require_line_count 2 '^query ' \
 	proofs/pro-verif/failed-receive-compromise-reachability-queries.pvl \
-	"failed-receive compromise reachability query"
+	"state-neutral receive compromise reachability query"
 require_line_count 1 '^query ' \
 	proofs/pro-verif/aead-commitment-negative-control-queries.pvl \
 	"AEAD commitment negative-control query"
@@ -307,48 +308,157 @@ require_line_count 1 '^process$' proofs/pro-verif/aead-commitment.pv \
 require_line_count 1 '^process$' proofs/pro-verif/aead-no-commitment.pv \
 	"AEAD no-commitment top-level process"
 
-# The symbolic cache-fill trace is intentionally the exact production bound:
-# 50 retained entries before rejection and 50 explicit disclosures on the
-# compromise branch.  These guards prevent a shorter witness from silently
-# replacing the reviewed capacity trace.
-require_line_count 50 \
-	'^[[:space:]]+let cache_[0-9]+ = failed_receive_cache_entry\(' \
-	proofs/pro-verif/environment.pvl \
-	"failed-receive cache-fill entry"
-require_line_count 49 \
-	'^[[:space:]]+let consumed_cache_[0-9]+ = failed_receive_cache_entry\(' \
-	proofs/pro-verif/environment.pvl \
-	"failed-receive post-consumption cache entry"
-for consumed_sequence in 2 {4..51}; do
-	require_line_count 1 \
-		"^[[:space:]]+let consumed_cache_${consumed_sequence} = failed_receive_cache_entry\\(" \
-		proofs/pro-verif/environment.pvl \
-		"failed-receive surviving cache sequence ${consumed_sequence}"
-done
-reject_matches "failed-receive consumed target remains cached" \
-	'let consumed_cache_[0-9]+\s*=\s*failed_receive_cache_entry\(\s*target_sequence,' \
+# Both invalid sequence-three attempts and the compromise handoff carry the exact same symbolic entry-state term.
+# No rejection-created cache is constructed or disclosed.
+require_occurrence_count 2 \
+	'event\s+Receive(?:RejectedNeutral|RejectionRetried)\(\s*session,\s*target_sequence,\s*forged_target_frame,\s*ready_state\s*\)' \
+	"state-neutral repeated rejection state" \
 	proofs/pro-verif/environment.pvl
-require_line_count 50 '^[[:space:]]+let failed_receive_cache_entry\(' \
-	proofs/pro-verif/environment.pvl \
-	"failed-receive compromise cache destructure"
-require_line_count 50 '^[[:space:]]+out\(c, cached_material_[0-9]+\);' \
-	proofs/pro-verif/environment.pvl \
-	"failed-receive compromise cache disclosure"
+require_occurrence_count 1 \
+	'out\(\s*receive_snapshots,\s*\(\s*session,\s*target_sequence,\s*ready_state,\s*ready_state,\s*chain_2,\s*empty_cache,' \
+	"state-neutral compromise handoff" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'let\s+receive_cache_empty\(\)\s*=\s*live_cache\s+in' \
+	"unchanged empty-cache compromise state" \
+	proofs/pro-verif/environment.pvl
+reject_matches "obsolete failed-receive advancement vocabulary remains" \
+	'(FailedReceive(?:StateAdvanced|CacheFilled|CapacityRejected|RetryRetained|Accepted|KeyConsumed|HonestDelivery|ReplayRejected|AfterCapacityReleaseAdmitted|StateCompromised)|FAILED_(?:PAST|SKIPPED|TARGET|FUTURE)_SECRET|failed_receive_(?:cache|state|snapshots))' \
+	proofs/pro-verif --glob '*.pv' --glob '*.pvl' --glob '*.awk'
 
-require_line_count 1 '^let admitted_receive_failure_retains_advanced_state' \
+# The exact maximum-gap success publishes sequences two through 50 and retains 49 skipped entries.
+# Both successful targets stay out of the cache.
+require_line_count 49 \
+	'^[[:space:]]+let capacity_cache_[0-9]+ = receive_cache_entry\(' \
+	proofs/pro-verif/environment.pvl \
+	"maximum-gap skipped cache entry"
+for skipped_sequence in {2..50}; do
+	require_line_count 1 \
+		"^[[:space:]]+let capacity_cache_${skipped_sequence} = receive_cache_entry\\(" \
+		proofs/pro-verif/environment.pvl \
+		"maximum-gap skipped sequence ${skipped_sequence}"
+done
+require_occurrence_count 1 \
+	'let\s+committed_cache\s*=\s*receive_cache_entry\(\s*skipped_sequence,\s*skipped_material,\s*empty_cache\s*\)' \
+	"successful future skipped-key publication" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'let\s+committed_state\s*=\s*receive_state\(\s*target_sequence,\s*chain_4,\s*committed_cache\s*\)' \
+	"successful future target consumption state" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'let\s+maximum_gap_state\s*=\s*receive_state\(\s*capacity_sequence_51,\s*capacity_chain_52,\s*capacity_cache_50\s*\)' \
+	"successful maximum-gap 49-entry state" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'event\s+ReceiveCapacityRejected\(\s*capacity_session,\s*capacity_sequence_53,\s*capacity_rejected_frame,\s*maximum_gap_state\s*\)' \
+	"state-neutral capacity rejection" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'let\s+released_state\s*=\s*receive_state\(\s*capacity_sequence_51,\s*capacity_chain_52,\s*capacity_cache_49\s*\)' \
+	"cached success releases one capacity slot" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'let\s+after_release_cache\s*=\s*receive_cache_entry\(\s*capacity_sequence_52,\s*capacity_material_52,\s*capacity_cache_49\s*\)' \
+	"post-release future skipped-key publication" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'let\s+after_release_state\s*=\s*receive_state\(\s*capacity_sequence_53,\s*capacity_chain_54,\s*after_release_cache\s*\)' \
+	"post-release future target consumption state" \
+	proofs/pro-verif/environment.pvl
+reject_matches "successful receive target remains cached" \
+	'receive_cache_entry\(\s*(?:target_sequence|capacity_sequence_(?:51|53))\b' \
+	proofs/pro-verif/environment.pvl
+
+# Pending receive transactions are kernel-private Rust values but must remain transparent in the generated proof surface.
+# They may not acquire Clone or Copy derives that would turn them into duplicable live capabilities.
+for pending_type in PreparedReceive PreparedCachedReceive PreparedFutureTarget PendingReceive; do
+	require_line_count 1 \
+		"^(enum|struct) ${pending_type}([[:space:]<{]|$)" \
+		src/ratchet.rs \
+		"private pending receive type ${pending_type}"
+	require_line_count 1 "^type t_${pending_type}( | = )" \
+		proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst \
+		"generated pending receive type ${pending_type}"
+done
+reject_matches "pending receive capability became Clone or Copy" \
+	'#\[derive\([^]]*\b(?:Clone|Copy)\b[^]]*\)\]\s*(?:(?:#\[[^]]*\]|//[^\n]*|/\*[\s\S]*?\*/)\s*)*(?:enum\s+PreparedReceive|struct\s+(?:PreparedCachedReceive|PreparedFutureTarget|PendingReceive))' \
+	src/ratchet.rs
+reject_matches "pending receive capability gained conditional Clone or Copy derive" \
+	'#\[cfg_attr\([^]]*\bderive\s*\([^)]*\b(?:Clone|Copy)\b[^)]*\)[^]]*\)\]\s*(?:(?:#\[[^]]*\]|//[^\n]*|/\*[\s\S]*?\*/)\s*)*(?:enum\s+PreparedReceive|struct\s+(?:PreparedCachedReceive|PreparedFutureTarget|PendingReceive))' \
+	src/ratchet.rs
+reject_matches "pending receive capability gained explicit Clone or Copy implementation" \
+	'impl(?:\s*<[\s\S]{0,500}?>)?\s+(?:[A-Za-z_][A-Za-z0-9_]*::)*(?:Clone|Copy)\s+for\s+(?:PreparedReceive|PreparedCachedReceive|PreparedFutureTarget|PendingReceive)\b' \
+	src/ratchet.rs
+require_occurrence_count 1 \
+	'fn\s+prepare_future_receive_steps[\s\S]{0,600}?staged_slots:\s*&mut\s*\[Option<CachedReceiveKey<Material>>;\s*RECEIVE_CACHE_CAPACITY\],' \
+	"single borrowed future-receive staging buffer" \
+	src/ratchet.rs
+require_occurrence_count 1 \
+	'#\[cfg\(any\(test,\s*feature\s*=\s*"test-utils"\)\)\]\s*#\[doc\(hidden\)\]\s*pub\s+fn\s+concrete_advance_receive_until\b' \
+	"narrow dev-only receive-advancement compatibility gate" \
+	src/ratchet.rs
+reject_matches "dev-only receive advancement entered extraction" \
+	'^let\s+concrete_advance_receive_until\b' \
+	proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst
+for helper in \
+	prepare_cached_receive \
+	prepare_future_receive_steps \
+	receive_control_prefix_matches \
+	pending_receive_slots_are_valid \
+	pending_receive_is_valid \
+	prepare_receive \
+	publish_cached_receive \
+	publish_future_receive_slots \
+	publish_future_receive; do
+	require_line_count 1 "^let( rec)? ${helper}( |$)" \
+		proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst \
+		"generated pending receive helper ${helper}"
+done
+
+for declaration in \
+	prepared_future_trace \
+	prepare_future_receive_steps_is_total_and_exact \
+	prepared_future_trace_passes_validator \
+	future_publication_is_exact \
+	publish_future_receive_slots_is_exact \
+	prepared_future_publication_is_exact \
+	valid_pending \
+	admitted_future_plan_prepares_valid_pending; do
+	require_line_count 1 "^let( rec)? ${declaration}\$" \
+		proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+		"non-vacuous exact future preparation declaration ${declaration}"
+done
+for declaration in \
+	valid_cached_preparation \
+	valid_cached_target_is_preparable \
+	valid_cached_target_prepares_valid_cached \
+	admitted_cached_target_prepares_valid_cached; do
+	require_line_count 1 "^let ${declaration}\$" \
+		proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+		"non-vacuous exact cached preparation declaration ${declaration}"
+done
+for declaration in \
+	successful_receive \
+	refined_open_and_finish_rejection_is_neutral \
+	refined_open_and_finish_preserves_validity \
+	refined_open_and_finish_is_state_neutral_or_successful \
+	refined_open_success_replay_is_neutral \
+	rejected_open_attempts_preserve_entry \
+	retry_after_rejected_open_attempts_equals_direct \
+	refined_open_rejection_preserves_cache_capacity \
+	fresh_maximum_gap_success_publishes_exactly_49; do
+	require_line_count 1 "^let( rec)? ${declaration}\$" \
+		proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
+		"public state-neutral receive declaration ${declaration}"
+done
+require_line_count 1 '^let cached_receive_failure_retry_consumes_once$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
-	"composed failed-receive advancement lemma"
-require_line_count 1 '^let failed_receive_retry_consumes_once' \
-	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
-	"composed failed-receive retry lemma"
+	"low-level cached/restored retry compatibility lemma"
 require_line_count 1 \
-	'^let failed_receive_fills_cache_and_rejects_next_future' \
+	'^let successful_receive_releases_capacity_for_next_future$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
-	"composed failed-receive capacity lemma"
-require_line_count 1 \
-	'^let successful_receive_releases_capacity_for_next_future' \
-	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
-	"composed failed-receive capacity-release lemma"
+	"low-level cached/restored capacity-release compatibility lemma"
 
 require_line_count 1 '^let valid_refined$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
@@ -448,11 +558,11 @@ require_line_count 1 '^let rec refined_execute_receive_steps_is_exact$' \
 	"refined whole-plan exact execution lemma"
 require_line_count 1 '^let refined_advance_receive_until_executes_plan$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
-	"refined admitted-plan transaction lemma"
+	"compatibility receive-until admitted-plan lemma"
 require_line_count 1 \
 	'^let refined_advance_receive_until_rejection_is_neutral$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
-	"refined whole-plan neutral-rejection lemma"
+	"compatibility receive-until neutral-rejection lemma"
 require_line_count 1 '^let refined_advance_receive_until_is_ordered$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"refined composed callback-ordering lemma"
@@ -481,9 +591,9 @@ require_line_count 1 '^let refined_restore_receive_key_is_atomic$' \
 require_line_count 1 '^let finish_refined_restore_is_valid$' \
 	proofs/fstar/Beaconcrypt_protocol_core.Ratchet.Lemmas.fst \
 	"refined restoration-finish lemma"
-require_line_count 2 'Core_models\.Option\.impl__take' \
+require_line_count 5 'Core_models\.Option\.impl__take' \
 	proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst \
-	"transparent refined sealed-cache removal"
+	"transparent refined cached and pending-slot movement"
 reject_matches "unconstrained memory replacement in refined ratchet" \
 	'Core_models\.Mem\.replace' \
 	proofs/fstar/extraction/Beaconcrypt_protocol_core.Ratchet.fst

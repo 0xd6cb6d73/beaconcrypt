@@ -157,7 +157,9 @@ struct beaconcrypt_Server *beaconcrypt_server_new_from_state(const uint8_t *stat
 /**
  * Export the current plaintext checkpoint.
  *
- * Save it immediately after every state-changing call and before using that call's output. Returns an empty buffer on failure.
+ * Save it immediately after every accepted receive or other state-changing call and before using that call's output.
+ * A normal rejected receive leaves the checkpoint unchanged.
+ * Returns an empty buffer on failure.
  */
 struct beaconcrypt_Buffer beaconcrypt_server_export_state(const struct beaconcrypt_Server *handle);
 

@@ -9,6 +9,7 @@ description = "Extractable protocol state transitions for beaconcrypt"
 
 [features]
 proverif = ["dep:hax-lib"]
+test-utils = []
 
 [dependencies]
 hax-lib = { version = "=0.3.7", optional = true }

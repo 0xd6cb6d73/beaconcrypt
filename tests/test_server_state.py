@@ -74,3 +74,21 @@ def test_full_server_checkpoint_exports_restores_and_continues():
     outbound = restored.encrypt_to_beacon(b"restored reply", beacon_kid)
     assert beacon.decrypt_server_message(outbound) == b"restored reply"
     assert restored.export_state() != checkpoint
+
+
+def test_rejected_receive_leaves_binding_checkpoint_unchanged():
+    server = BeaconCryptServer(0, bytes([0x53]) * 32)
+    beacon = BeaconCryptBeacon(0, server.id_pk())
+    register_beacon(server, beacon)
+    message = bytes([0x5A]) * 32
+    authentic = beacon.encrypt_message_to_server(message)
+    assert authentic is not None
+    corrupted = bytearray(authentic)
+    corrupted[-1] ^= 0x01
+    checkpoint = server.export_state()
+
+    assert server.decrypt_beacon_message(bytes(corrupted)) is None
+    assert server.export_state() == checkpoint
+
+    assert server.decrypt_beacon_message(authentic) == message
+    assert server.export_state() != checkpoint

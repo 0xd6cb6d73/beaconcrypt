@@ -1,197 +1,38 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(* Every state-machine phase must have a concrete trace.  ProVerif reports the
-   negation of each request, so the result gate requires all eleven to be
-   false. *)
+(* Every rejection and success phase must have a concrete trace; ProVerif reports the negation of each request, so the result gate requires all twelve to be false. *)
+query session: bitstring, target_sequence: sequence, forged_frame: bitstring, entry_state: bitstring;
+  event(ReceiveRejectedNeutral(session, target_sequence, forged_frame, entry_state)).
 
-query session: bitstring,
-      target_sequence: sequence,
-      target_material: bitstring,
-      forged_frame: bitstring,
-      ready_state: bitstring,
-      retained_state: bitstring;
-  event(FailedReceiveStateAdvanced(
-    session,
-    target_sequence,
-    target_material,
-    forged_frame,
-    ready_state,
-    retained_state
-  )).
+query session: bitstring, target_sequence: sequence, forged_frame: bitstring, entry_state: bitstring;
+  event(ReceiveRejectionRetried(session, target_sequence, forged_frame, entry_state)).
 
-query session: bitstring,
-      retained_state: bitstring,
-      full_state: bitstring;
-  event(FailedReceiveCacheFilled(
-    session,
-    retained_state,
-    full_state
-  )).
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, accepted_frame: bitstring, target_material: bitstring, forged_frame: bitstring, entry_state: bitstring, committed_state: bitstring;
+  event(ReceiveFutureAccepted(session, target_sequence, sender, receiver, RECEIVE_TARGET_SECRET, accepted_frame, target_material, forged_frame, entry_state, committed_state)).
 
-query session: bitstring,
-      target_sequence: sequence,
-      capacity_sequence: sequence,
-      capacity_frame: bitstring,
-      retained_state: bitstring,
-      full_state: bitstring;
-  event(FailedReceiveCapacityRejected(
-    session,
-    target_sequence,
-    capacity_sequence,
-    capacity_frame,
-    retained_state,
-    full_state
-  )).
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, accepted_frame: bitstring, target_material: bitstring, forged_frame: bitstring, entry_state: bitstring, committed_state: bitstring;
+  event(ReceiveHonestFutureDelivered(session, target_sequence, sender, receiver, RECEIVE_TARGET_SECRET, accepted_frame, target_material, forged_frame, entry_state, committed_state)).
 
-query session: bitstring,
-      target_sequence: sequence,
-      target_material: bitstring,
-      forged_frame: bitstring,
-      ready_state: bitstring,
-      retained_state: bitstring,
-      full_state: bitstring;
-  event(FailedReceiveRetryRetained(
-    session,
-    target_sequence,
-    target_material,
-    forged_frame,
-    ready_state,
-    retained_state,
-    full_state
-  )).
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, accepted_frame: bitstring, target_material: bitstring, forged_frame: bitstring, entry_state: bitstring, committed_state: bitstring;
+  event(ReceiveReplayRejected(session, target_sequence, sender, receiver, RECEIVE_TARGET_SECRET, accepted_frame, target_material, forged_frame, entry_state, committed_state)).
 
-query session: bitstring,
-      target_sequence: sequence,
-      sender: key_id,
-      receiver: key_id,
-      accepted_frame: bitstring,
-      target_material: bitstring,
-      forged_frame: bitstring,
-      ready_state: bitstring,
-      retained_state: bitstring,
-      full_state: bitstring,
-      consumed_state: bitstring;
-  event(FailedReceiveAccepted(
-    session,
-    target_sequence,
-    sender,
-    receiver,
-    FAILED_TARGET_SECRET,
-    accepted_frame,
-    target_material,
-    forged_frame,
-    ready_state,
-    retained_state,
-    full_state,
-    consumed_state
-  )).
+query session: bitstring, delayed_sequence: sequence, sender: key_id, receiver: key_id, delayed_frame: bitstring, delayed_material: bitstring, committed_state: bitstring, final_state: bitstring;
+  event(ReceiveDelayedCachedAccepted(session, delayed_sequence, sender, receiver, RECEIVE_SKIPPED_SECRET, delayed_frame, delayed_material, committed_state, final_state)).
 
-query session: bitstring,
-      target_sequence: sequence,
-      full_state: bitstring,
-      consumed_state: bitstring;
-  event(FailedReceiveKeyConsumed(
-    session,
-    target_sequence,
-    full_state,
-    consumed_state
-  )).
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, accepted_frame: bitstring, target_material: bitstring, entry_state: bitstring, committed_state: bitstring;
+  event(ReceiveMaximumGapAccepted(session, target_sequence, sender, receiver, RECEIVE_MAX_GAP_SECRET, accepted_frame, target_material, entry_state, committed_state)).
 
-query session: bitstring,
-      target_sequence: sequence,
-      sender: key_id,
-      receiver: key_id,
-      accepted_frame: bitstring,
-      target_material: bitstring,
-      forged_frame: bitstring,
-      ready_state: bitstring,
-      retained_state: bitstring,
-      full_state: bitstring,
-      consumed_state: bitstring;
-  event(FailedReceiveHonestDelivery(
-    session,
-    target_sequence,
-    sender,
-    receiver,
-    FAILED_TARGET_SECRET,
-    accepted_frame,
-    target_material,
-    forged_frame,
-    ready_state,
-    retained_state,
-    full_state,
-    consumed_state
-  )).
+query session: bitstring, target_sequence: sequence, rejected_frame: bitstring, rejected_state: bitstring;
+  event(ReceiveCapacityRejected(session, target_sequence, rejected_frame, rejected_state)).
 
-query session: bitstring,
-      target_sequence: sequence,
-      sender: key_id,
-      receiver: key_id,
-      accepted_frame: bitstring,
-      target_material: bitstring,
-      forged_frame: bitstring,
-      ready_state: bitstring,
-      retained_state: bitstring,
-      full_state: bitstring,
-      consumed_state: bitstring;
-  event(FailedReceiveReplayRejected(
-    session,
-    target_sequence,
-    sender,
-    receiver,
-    FAILED_TARGET_SECRET,
-    accepted_frame,
-    target_material,
-    forged_frame,
-    ready_state,
-    retained_state,
-    full_state,
-    consumed_state
-  )).
+query session: bitstring, cached_sequence: sequence, cached_material: bitstring, full_state: bitstring, released_state: bitstring;
+  event(ReceiveCachedKeyConsumed(session, cached_sequence, cached_material, full_state, released_state)).
 
-query session: bitstring,
-      target_sequence: sequence,
-      capacity_sequence: sequence,
-      capacity_frame: bitstring,
-      retained_state: bitstring,
-      full_state: bitstring,
-      consumed_state: bitstring,
-      refilled_state: bitstring;
-  event(FailedReceiveAfterCapacityReleaseAdmitted(
-    session,
-    target_sequence,
-    capacity_sequence,
-    capacity_frame,
-    retained_state,
-    full_state,
-    consumed_state,
-    refilled_state
-  )).
+query session: bitstring, target_sequence: sequence, sender: key_id, receiver: key_id, accepted_frame: bitstring, target_material: bitstring, rejected_state: bitstring, released_state: bitstring, committed_state: bitstring;
+  event(ReceiveAfterCapacityReleaseAccepted(session, target_sequence, sender, receiver, RECEIVE_AFTER_RELEASE_SECRET, accepted_frame, target_material, rejected_state, released_state, committed_state)).
 
-(* The same private-state run includes fully attacker-controlled registered
-   beacons.  These witnesses ensure that capability is active, rather than a
-   disconnected assumption, while the FAILED_* secrecy queries stay true. *)
-query server_identity: bitstring,
-      beacon_identity: bitstring,
-      init: beaconcrypt_protocol_core__pqxdh__t_InitKex,
-      registration_id: beaconcrypt_protocol_core__pqxdh__t_RegistrationId,
-      assigned_key_id: key_id,
-      root_input: beaconcrypt_protocol_core__pqxdh__t_RootKeyInput,
-      root: bitstring,
-      associated_data: bitstring,
-      session: bitstring,
-      plaintext: bitstring;
-  event(MaliciousRegistrationCommitted(
-    server_identity,
-    beacon_identity,
-    init,
-    registration_id,
-    assigned_key_id,
-    root_input,
-    root,
-    associated_data,
-    session,
-    plaintext
-  )).
+(* The same private-state run includes fully attacker-controlled registered beacons, proving that isolation is active rather than assumed. *)
+query server_identity: bitstring, beacon_identity: bitstring, init: beaconcrypt_protocol_core__pqxdh__t_InitKex, registration_id: beaconcrypt_protocol_core__pqxdh__t_RegistrationId, assigned_key_id: key_id, root_input: beaconcrypt_protocol_core__pqxdh__t_RootKeyInput, root: bitstring, associated_data: bitstring, session: bitstring, plaintext: bitstring;
+  event(MaliciousRegistrationCommitted(server_identity, beacon_identity, init, registration_id, assigned_key_id, root_input, root, associated_data, session, plaintext)).
 
 query attacker(MALICIOUS_TASK_SECRET).

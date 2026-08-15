@@ -157,7 +157,9 @@ pub extern "C" fn beaconcrypt_server_new_from_state(
 
 /// Export the current plaintext checkpoint.
 ///
-/// Save it immediately after every state-changing call and before using that call's output. Returns an empty buffer on failure.
+/// Save it immediately after every accepted receive or other state-changing call and before using that call's output.
+/// A normal rejected receive leaves the checkpoint unchanged.
+/// Returns an empty buffer on failure.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_server_export_state(handle: *const Server) -> Buffer {
 	if handle.is_null() {

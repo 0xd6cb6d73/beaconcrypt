@@ -671,6 +671,48 @@ type t_RefinedRatchet (v_SendChain: Type0) (v_ReceiveChain: Type0) (v_Material: 
     (mk_usize 50)
 }
 
+/// Prevalidated metadata for consuming an already cached receive key.
+type t_PreparedCachedReceive = {
+  f_sequence:u64;
+  f_target_slot:u8;
+  f_last_slot:u8;
+  f_committed_control:t_RatchetState
+}
+
+/// Final metadata produced while deriving a future receive into a caller-owned
+/// staging buffer.
+/// Keeping the fixed-capacity buffer out of this recursive result ensures the
+/// Rust implementation has exactly one live staging array regardless of gap.
+type t_PreparedFutureTarget (v_ReceiveChain: Type0) (v_Material: Type0) = {
+  f_committed_control:t_RatchetState;
+  f_final_receive_chain:v_ReceiveChain;
+  f_target_sequence:u64;
+  f_target_material:v_Material;
+  f_first_slot:u8;
+  f_skipped:u8
+}
+
+/// Privately derived future receive delta.
+/// The target material is deliberately separate from `staged_slots`, so a
+/// successful publication can retain only skipped material while dropping the
+/// authenticated target.
+type t_PendingReceive (v_ReceiveChain: Type0) (v_Material: Type0) = {
+  f_committed_control:t_RatchetState;
+  f_final_receive_chain:v_ReceiveChain;
+  f_staged_slots:t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50);
+  f_target_sequence:u64;
+  f_target_material:v_Material;
+  f_first_slot:u8;
+  f_skipped:u8
+}
+
+/// Kernel-private receive preparation that owns only the delta needed for a
+/// successful publication. Neither variant is a live or serializable ratchet.
+type t_PreparedReceive (v_ReceiveChain: Type0) (v_Material: Type0) =
+  | PreparedReceive_Cached : t_PreparedCachedReceive -> t_PreparedReceive v_ReceiveChain v_Material
+  | PreparedReceive_Future : t_PendingReceive v_ReceiveChain v_Material
+    -> t_PreparedReceive v_ReceiveChain v_Material
+
 /// Construct a refined ratchet with arbitrary counters and no cached receive
 /// material. This is also useful for checked exhaustion fixtures.
 let impl_10__from_counters
@@ -958,6 +1000,85 @@ let refined_advance_receive
     state, (Core_models.Option.Option_None <: Core_models.Option.t_Option u64)
     <:
     (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material & Core_models.Option.t_Option u64)
+
+/// Publish a prevalidated cached removal with no remaining failure branch.
+let publish_cached_receive
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (prepared: t_PreparedCachedReceive)
+    : t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+  let target_index:usize = cast (prepared.f_target_slot <: u8) <: usize in
+  let last_index:usize = cast (prepared.f_last_slot <: u8) <: usize in
+  if target_index >=. v_RECEIVE_CACHE_CAPACITY
+  then state
+  else
+    if last_index >=. v_RECEIVE_CACHE_CAPACITY
+    then state
+    else
+      let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+        if target_index =. last_index
+        then
+          let
+          (tmp0: Core_models.Option.t_Option (t_CachedReceiveKey v_Material)),
+          (out: Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) =
+            Core_models.Option.impl__take #(t_CachedReceiveKey v_Material)
+              (state.f_receive_slots.[ last_index ]
+                <:
+                Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+          in
+          let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+            {
+              state with
+              f_receive_slots
+              =
+              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize state.f_receive_slots
+                last_index
+                tmp0
+            }
+            <:
+            t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
+          in
+          let _:Core_models.Option.t_Option (t_CachedReceiveKey v_Material) = out in
+          state
+        else
+          let
+          (tmp0: Core_models.Option.t_Option (t_CachedReceiveKey v_Material)),
+          (out: Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) =
+            Core_models.Option.impl__take #(t_CachedReceiveKey v_Material)
+              (state.f_receive_slots.[ last_index ]
+                <:
+                Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+          in
+          let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+            {
+              state with
+              f_receive_slots
+              =
+              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize state.f_receive_slots
+                last_index
+                tmp0
+            }
+            <:
+            t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
+          in
+          let moved:Core_models.Option.t_Option (t_CachedReceiveKey v_Material) = out in
+          let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+            {
+              state with
+              f_receive_slots
+              =
+              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize state.f_receive_slots
+                target_index
+                moved
+            }
+            <:
+            t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
+          in
+          state
+      in
+      { state with f_control = prepared.f_committed_control }
+      <:
+      t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
 
 noeq
 
@@ -1287,6 +1408,404 @@ let rec refined_receive_slots_are_empty
         (first_slot +! mk_u8 1 <: u8)
         (remaining -! mk_u8 1 <: u8)
 
+/// Derive a future target into a private delta without assigning any live
+/// chain, slot, or logical control field.
+let rec prepare_future_receive_steps
+      (#v_ReceiveChain #v_Material: Type0)
+      (current_chain: v_ReceiveChain)
+      (control: t_RatchetState)
+      (target: u64)
+      (step: (v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material))
+      (remaining first_slot skipped: u8)
+      (staged_slots:
+          t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+    : Prims.Tot
+      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+        Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
+  if remaining =. mk_u8 0
+  then
+    staged_slots,
+    (Core_models.Option.Option_None
+      <:
+      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+    <:
+    (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+  else
+    let advanced:t_ReceiveAdvance = advance_receive control in
+    match advanced.f_sequence <: Core_models.Option.t_Option u64 with
+    | Core_models.Option.Option_Some sequence ->
+      (match advanced.f_slot <: Core_models.Option.t_Option u8 with
+        | Core_models.Option.Option_Some slot ->
+          let slot_index:usize = cast (slot <: u8) <: usize in
+          if
+            (impl_RatchetState__receive_key_at advanced.f_state slot
+              <:
+              Core_models.Option.t_Option u64) <>.
+            (Core_models.Option.Option_Some sequence <: Core_models.Option.t_Option u64)
+          then
+            staged_slots,
+            (Core_models.Option.Option_None
+              <:
+              Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+            <:
+            (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+              Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+          else
+            if slot_index >=. v_RECEIVE_CACHE_CAPACITY
+            then
+              staged_slots,
+              (Core_models.Option.Option_None
+                <:
+                Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+              <:
+              (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+                Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+            else
+              if
+                slot_index <>.
+                ((cast (first_slot <: u8) <: usize) +! (cast (skipped <: u8) <: usize) <: usize)
+              then
+                staged_slots,
+                (Core_models.Option.Option_None
+                  <:
+                  Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                <:
+                (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+                  Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+              else
+                if
+                  Core_models.Option.impl__is_some #(t_CachedReceiveKey v_Material)
+                    (staged_slots.[ slot_index ]
+                      <:
+                      Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                then
+                  staged_slots,
+                  (Core_models.Option.Option_None
+                    <:
+                    Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                  <:
+                  (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                      (mk_usize 50) &
+                    Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                else
+                  let { f_chain = chain ; f_material = material }:t_RatchetStep v_ReceiveChain
+                    v_Material =
+                    step current_chain
+                  in
+                  if remaining =. mk_u8 1
+                  then
+                    if sequence <>. target
+                    then
+                      staged_slots,
+                      (Core_models.Option.Option_None
+                        <:
+                        Core_models.Option.t_Option
+                        (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                      <:
+                      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                          (mk_usize 50) &
+                        Core_models.Option.t_Option
+                        (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                    else
+                      let finished:t_ReceiveFinishWithRemoval =
+                        finish_receive_with_removal advanced.f_state target slot true
+                      in
+                      match finished.f_removal <: Core_models.Option.t_Option t_ReceiveRemoval with
+                      | Core_models.Option.Option_Some removal ->
+                        if
+                          ~.(match finished.f_disposition <: t_ReceiveDisposition with
+                            | ReceiveDisposition_Consumed  -> true
+                            | _ -> false)
+                        then
+                          staged_slots,
+                          (Core_models.Option.Option_None
+                            <:
+                            Core_models.Option.t_Option
+                            (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                          <:
+                          (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                              (mk_usize 50) &
+                            Core_models.Option.t_Option
+                            (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                        else
+                          if removal.f_target_slot <>. slot
+                          then
+                            staged_slots,
+                            (Core_models.Option.Option_None
+                              <:
+                              Core_models.Option.t_Option
+                              (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                            <:
+                            (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                                (mk_usize 50) &
+                              Core_models.Option.t_Option
+                              (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                          else
+                            if removal.f_last_slot <>. slot
+                            then
+                              staged_slots,
+                              (Core_models.Option.Option_None
+                                <:
+                                Core_models.Option.t_Option
+                                (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                              <:
+                              (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                                  (mk_usize 50) &
+                                Core_models.Option.t_Option
+                                (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                            else
+                              staged_slots,
+                              (Core_models.Option.Option_Some
+                                ({
+                                    f_committed_control = finished.f_state;
+                                    f_final_receive_chain = chain;
+                                    f_target_sequence = sequence;
+                                    f_target_material = material;
+                                    f_first_slot = first_slot;
+                                    f_skipped = skipped
+                                  }
+                                  <:
+                                  t_PreparedFutureTarget v_ReceiveChain v_Material)
+                                <:
+                                Core_models.Option.t_Option
+                                (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                              <:
+                              (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                                  (mk_usize 50) &
+                                Core_models.Option.t_Option
+                                (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                      | Core_models.Option.Option_None  ->
+                        staged_slots,
+                        (Core_models.Option.Option_None
+                          <:
+                          Core_models.Option.t_Option
+                          (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                        <:
+                        (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                            (mk_usize 50) &
+                          Core_models.Option.t_Option
+                          (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                  else
+                    if sequence >=. target
+                    then
+                      staged_slots,
+                      (Core_models.Option.Option_None
+                        <:
+                        Core_models.Option.t_Option
+                        (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                      <:
+                      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                          (mk_usize 50) &
+                        Core_models.Option.t_Option
+                        (t_PreparedFutureTarget v_ReceiveChain v_Material))
+                    else
+                      let staged_slots:t_Array
+                        (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)
+                      =
+                        Rust_primitives.Hax.Monomorphized_update_at.update_at_usize staged_slots
+                          slot_index
+                          (Core_models.Option.Option_Some
+                            ({ f_sequence = sequence; f_material = material }
+                              <:
+                              t_CachedReceiveKey v_Material)
+                            <:
+                            Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                      in
+                      let
+                      (tmp0:
+                        t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                          (mk_usize 50)),
+                      (out:
+                        Core_models.Option.t_Option
+                        (t_PreparedFutureTarget v_ReceiveChain v_Material)) =
+                        prepare_future_receive_steps #v_ReceiveChain #v_Material chain
+                          advanced.f_state target step (remaining -! mk_u8 1 <: u8) first_slot
+                          (skipped +! mk_u8 1 <: u8) staged_slots
+                      in
+                      let staged_slots:t_Array
+                        (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)
+                      =
+                        tmp0
+                      in
+                      let hax_temp_output:Core_models.Option.t_Option
+                      (t_PreparedFutureTarget v_ReceiveChain v_Material) =
+                        out
+                      in
+                      staged_slots, hax_temp_output
+                      <:
+                      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                          (mk_usize 50) &
+                        Core_models.Option.t_Option
+                        (t_PreparedFutureTarget v_ReceiveChain v_Material))
+        | Core_models.Option.Option_None  ->
+          staged_slots,
+          (Core_models.Option.Option_None
+            <:
+            Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+          <:
+          (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+            Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material)))
+    | Core_models.Option.Option_None  ->
+      staged_slots,
+      (Core_models.Option.Option_None
+        <:
+        Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+      <:
+      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+        Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+
+let rec receive_control_prefix_matches (entry committed: t_RatchetState) (slot remaining: u8)
+    : Prims.Tot bool
+      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
+  if remaining =. mk_u8 0
+  then true
+  else
+    if (cast (slot <: u8) <: usize) >=. v_RECEIVE_CACHE_CAPACITY
+    then false
+    else
+      if
+        (impl_RatchetState__receive_key_at entry slot <: Core_models.Option.t_Option u64) <>.
+        (impl_RatchetState__receive_key_at committed slot <: Core_models.Option.t_Option u64)
+      then false
+      else
+        receive_control_prefix_matches entry
+          committed
+          (slot +! mk_u8 1 <: u8)
+          (remaining -! mk_u8 1 <: u8)
+
+let rec pending_receive_slots_are_valid
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (pending: t_PendingReceive v_ReceiveChain v_Material)
+      (slot: u8)
+      (expected_sequence: u64)
+      (remaining: u8)
+    : Prims.Tot bool
+      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
+  if remaining =. mk_u8 0
+  then true
+  else
+    let slot_index:usize = cast (slot <: u8) <: usize in
+    if slot_index >=. v_RECEIVE_CACHE_CAPACITY
+    then false
+    else
+      if
+        Core_models.Option.impl__is_some #(t_CachedReceiveKey v_Material)
+          (state.f_receive_slots.[ slot_index ]
+            <:
+            Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      then false
+      else
+        match
+          Core_models.Option.impl__as_ref #(t_CachedReceiveKey v_Material)
+            (pending.f_staged_slots.[ slot_index ]
+              <:
+              Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+          <:
+          Core_models.Option.t_Option (t_CachedReceiveKey v_Material)
+        with
+        | Core_models.Option.Option_Some staged ->
+          let staged:t_CachedReceiveKey v_Material = staged in
+          if staged.f_sequence <>. expected_sequence
+          then false
+          else
+            if
+              (impl_RatchetState__receive_key_at pending.f_committed_control slot
+                <:
+                Core_models.Option.t_Option u64) <>.
+              (Core_models.Option.Option_Some expected_sequence <: Core_models.Option.t_Option u64)
+            then false
+            else
+              if remaining =. mk_u8 1
+              then true
+              else
+                if expected_sequence =. Core_models.Num.impl_u64__MAX
+                then false
+                else
+                  pending_receive_slots_are_valid #v_SendChain
+                    #v_ReceiveChain
+                    #v_Material
+                    state
+                    pending
+                    (slot +! mk_u8 1 <: u8)
+                    (expected_sequence +! mk_u64 1 <: u64)
+                    (remaining -! mk_u8 1 <: u8)
+        | Core_models.Option.Option_None  -> false
+
+let rec publish_future_receive_slots
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (staged_slots:
+          t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+      (slot remaining: u8)
+    : Prims.Tot
+      (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+        t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
+  if remaining =. mk_u8 0
+  then
+    state, staged_slots
+    <:
+    (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+      t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+  else
+    let slot_index:usize = cast (slot <: u8) <: usize in
+    if slot_index >=. v_RECEIVE_CACHE_CAPACITY
+    then
+      state, staged_slots
+      <:
+      (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+        t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+    else
+      let
+      (tmp0: Core_models.Option.t_Option (t_CachedReceiveKey v_Material)),
+      (out: Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) =
+        Core_models.Option.impl__take #(t_CachedReceiveKey v_Material)
+          (staged_slots.[ slot_index ]
+            <:
+            Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      in
+      let staged_slots:t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+        (mk_usize 50) =
+        Rust_primitives.Hax.Monomorphized_update_at.update_at_usize staged_slots slot_index tmp0
+      in
+      let moved:Core_models.Option.t_Option (t_CachedReceiveKey v_Material) = out in
+      let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+        {
+          state with
+          f_receive_slots
+          =
+          Rust_primitives.Hax.Monomorphized_update_at.update_at_usize state.f_receive_slots
+            slot_index
+            moved
+        }
+        <:
+        t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
+      in
+      let
+      (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
+      (tmp1: t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)) =
+        publish_future_receive_slots #v_SendChain
+          #v_ReceiveChain
+          #v_Material
+          state
+          staged_slots
+          (slot +! mk_u8 1 <: u8)
+          (remaining -! mk_u8 1 <: u8)
+      in
+      let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
+      let staged_slots:t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+        (mk_usize 50) =
+        tmp1
+      in
+      let _:Prims.unit = () in
+      state, staged_slots
+      <:
+      (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+        t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+
 /// Commit an already-preflighted suffix of receive steps.
 /// Admission bounds the counter and cache.
 /// Preflight proves every append destination vacant.
@@ -1319,6 +1838,365 @@ let rec refined_execute_receive_steps
 /// Return the physical slot currently containing `sequence`.
 let lookup_receive_key (state: t_RatchetState) (sequence: u64) : Core_models.Option.t_Option u8 =
   lookup_receive_key_from state sequence (mk_u8 0) (cast (v_RECEIVE_CACHE_CAPACITY <: usize) <: u8)
+
+/// Preflight an existing cached target and compute its successful logical
+/// removal without changing the live refined ratchet.
+let prepare_cached_receive
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (sequence: u64)
+    : Core_models.Option.t_Option t_PreparedCachedReceive =
+  match lookup_receive_key state.f_control sequence <: Core_models.Option.t_Option u8 with
+  | Core_models.Option.Option_Some target_slot ->
+    let target_index:usize = cast (target_slot <: u8) <: usize in
+    if target_index >=. v_RECEIVE_CACHE_CAPACITY
+    then Core_models.Option.Option_None <: Core_models.Option.t_Option t_PreparedCachedReceive
+    else
+      if
+        (impl_RatchetState__receive_key_at state.f_control target_slot
+          <:
+          Core_models.Option.t_Option u64) <>.
+        (Core_models.Option.Option_Some sequence <: Core_models.Option.t_Option u64)
+      then Core_models.Option.Option_None <: Core_models.Option.t_Option t_PreparedCachedReceive
+      else
+        (match
+            Core_models.Option.impl__as_ref #(t_CachedReceiveKey v_Material)
+              (state.f_receive_slots.[ target_index ]
+                <:
+                Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+            <:
+            Core_models.Option.t_Option (t_CachedReceiveKey v_Material)
+          with
+          | Core_models.Option.Option_Some target ->
+            if target.f_sequence <>. sequence
+            then
+              Core_models.Option.Option_None <: Core_models.Option.t_Option t_PreparedCachedReceive
+            else
+              let len:u8 = impl_RatchetState__receive_cache_len state.f_control in
+              if len =. mk_u8 0
+              then
+                Core_models.Option.Option_None
+                <:
+                Core_models.Option.t_Option t_PreparedCachedReceive
+              else
+                let last_slot:u8 = len -! mk_u8 1 in
+                let last_index:usize = cast (last_slot <: u8) <: usize in
+                if last_index >=. v_RECEIVE_CACHE_CAPACITY
+                then
+                  Core_models.Option.Option_None
+                  <:
+                  Core_models.Option.t_Option t_PreparedCachedReceive
+                else
+                  (match
+                      impl_RatchetState__receive_key_at state.f_control last_slot
+                      <:
+                      Core_models.Option.t_Option u64
+                    with
+                    | Core_models.Option.Option_Some last_sequence ->
+                      (match
+                          Core_models.Option.impl__as_ref #(t_CachedReceiveKey v_Material)
+                            (state.f_receive_slots.[ last_index ]
+                              <:
+                              Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                          <:
+                          Core_models.Option.t_Option (t_CachedReceiveKey v_Material)
+                        with
+                        | Core_models.Option.Option_Some last ->
+                          if last.f_sequence <>. last_sequence
+                          then
+                            Core_models.Option.Option_None
+                            <:
+                            Core_models.Option.t_Option t_PreparedCachedReceive
+                          else
+                            let finished:t_ReceiveFinishWithRemoval =
+                              finish_receive_with_removal state.f_control sequence target_slot true
+                            in
+                            (match
+                                finished.f_removal <: Core_models.Option.t_Option t_ReceiveRemoval
+                              with
+                              | Core_models.Option.Option_Some removal ->
+                                if
+                                  ~.(match finished.f_disposition <: t_ReceiveDisposition with
+                                    | ReceiveDisposition_Consumed  -> true
+                                    | _ -> false)
+                                then
+                                  Core_models.Option.Option_None
+                                  <:
+                                  Core_models.Option.t_Option t_PreparedCachedReceive
+                                else
+                                  if removal.f_target_slot <>. target_slot
+                                  then
+                                    Core_models.Option.Option_None
+                                    <:
+                                    Core_models.Option.t_Option t_PreparedCachedReceive
+                                  else
+                                    if removal.f_last_slot <>. last_slot
+                                    then
+                                      Core_models.Option.Option_None
+                                      <:
+                                      Core_models.Option.t_Option t_PreparedCachedReceive
+                                    else
+                                      Core_models.Option.Option_Some
+                                      ({
+                                          f_sequence = sequence;
+                                          f_target_slot = target_slot;
+                                          f_last_slot = last_slot;
+                                          f_committed_control = finished.f_state
+                                        }
+                                        <:
+                                        t_PreparedCachedReceive)
+                                      <:
+                                      Core_models.Option.t_Option t_PreparedCachedReceive
+                              | Core_models.Option.Option_None  ->
+                                Core_models.Option.Option_None
+                                <:
+                                Core_models.Option.t_Option t_PreparedCachedReceive)
+                        | Core_models.Option.Option_None  ->
+                          Core_models.Option.Option_None
+                          <:
+                          Core_models.Option.t_Option t_PreparedCachedReceive)
+                    | Core_models.Option.Option_None  ->
+                      Core_models.Option.Option_None
+                      <:
+                      Core_models.Option.t_Option t_PreparedCachedReceive)
+          | Core_models.Option.Option_None  ->
+            Core_models.Option.Option_None <: Core_models.Option.t_Option t_PreparedCachedReceive)
+  | Core_models.Option.Option_None  ->
+    Core_models.Option.Option_None <: Core_models.Option.t_Option t_PreparedCachedReceive
+
+/// Validate the complete private publication invariant before it can escape
+/// preparation. Publication itself can therefore be a total movement phase.
+let pending_receive_is_valid
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (pending: t_PendingReceive v_ReceiveChain v_Material)
+      (requested: u64)
+    : bool =
+  let entry_receive_sequence:u64 = impl_RatchetState__receive_sequence state.f_control in
+  if pending.f_target_sequence <>. requested
+  then false
+  else
+    if requested <=. entry_receive_sequence
+    then false
+    else
+      if pending.f_first_slot <>. (impl_RatchetState__receive_cache_len state.f_control <: u8)
+      then false
+      else
+        if
+          (impl_RatchetState__send_sequence pending.f_committed_control <: u64) <>.
+          (impl_RatchetState__send_sequence state.f_control <: u64)
+        then false
+        else
+          if (impl_RatchetState__receive_sequence pending.f_committed_control <: u64) <>. requested
+          then false
+          else
+            if
+              (requested -! entry_receive_sequence <: u64) <>.
+              ((cast (pending.f_skipped <: u8) <: u64) +! mk_u64 1 <: u64)
+            then false
+            else
+              if
+                Core_models.Option.impl__is_some #u8
+                  (lookup_receive_key pending.f_committed_control requested
+                    <:
+                    Core_models.Option.t_Option u8)
+              then false
+              else
+                let committed_len:usize =
+                  (cast (pending.f_first_slot <: u8) <: usize) +!
+                  (cast (pending.f_skipped <: u8) <: usize)
+                in
+                if committed_len >=. v_RECEIVE_CACHE_CAPACITY
+                then false
+                else
+                  if
+                    (cast (impl_RatchetState__receive_cache_len pending.f_committed_control <: u8)
+                      <:
+                      usize) <>.
+                    committed_len
+                  then false
+                  else
+                    if
+                      ~.(receive_control_prefix_matches state.f_control
+                          pending.f_committed_control
+                          (mk_u8 0)
+                          pending.f_first_slot
+                        <:
+                        bool)
+                    then false
+                    else
+                      let target_index:usize = committed_len in
+                      if
+                        Core_models.Option.impl__is_some #(t_CachedReceiveKey v_Material)
+                          (state.f_receive_slots.[ target_index ]
+                            <:
+                            Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                      then false
+                      else
+                        if
+                          Core_models.Option.impl__is_some #(t_CachedReceiveKey v_Material)
+                            (pending.f_staged_slots.[ target_index ]
+                              <:
+                              Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                        then false
+                        else
+                          let expected_first:u64 = entry_receive_sequence +! mk_u64 1 in
+                          pending_receive_slots_are_valid #v_SendChain
+                            #v_ReceiveChain
+                            #v_Material
+                            state
+                            pending
+                            pending.f_first_slot
+                            expected_first
+                            pending.f_skipped
+
+/// Plan and privately prepare the complete target transaction while leaving
+/// the live refined ratchet unchanged.
+let prepare_receive
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (target: u64)
+      (step: (v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material))
+    : Core_models.Option.t_Option (t_PreparedReceive v_ReceiveChain v_Material) =
+  let plan:t_ReceivePlan = plan_receive_until state.f_control target in
+  match plan.f_sequence <: Core_models.Option.t_Option u64 with
+  | Core_models.Option.Option_Some sequence ->
+    if plan.f_derivations =. mk_u64 0
+    then
+      Core_models.Option.impl__map #t_PreparedCachedReceive
+        #(t_PreparedReceive v_ReceiveChain v_Material)
+        #(t_PreparedCachedReceive -> t_PreparedReceive v_ReceiveChain v_Material)
+        (prepare_cached_receive #v_SendChain #v_ReceiveChain #v_Material state sequence
+          <:
+          Core_models.Option.t_Option t_PreparedCachedReceive)
+        PreparedReceive_Cached
+    else
+      if plan.f_derivations >. v_RATCHET_MAX_GAP
+      then
+        Core_models.Option.Option_None
+        <:
+        Core_models.Option.t_Option (t_PreparedReceive v_ReceiveChain v_Material)
+      else
+        let remaining:u8 = cast (plan.f_derivations <: u64) <: u8 in
+        let first_slot:u8 = impl_RatchetState__receive_cache_len state.f_control in
+        if
+          ~.(refined_receive_slots_are_empty #v_SendChain
+              #v_ReceiveChain
+              #v_Material
+              state
+              first_slot
+              remaining
+            <:
+            bool)
+        then
+          Core_models.Option.Option_None
+          <:
+          Core_models.Option.t_Option (t_PreparedReceive v_ReceiveChain v_Material)
+        else
+          let staged_slots:t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+            (mk_usize 50) =
+            empty_material_slots #v_Material ()
+          in
+          let
+          (tmp0:
+            t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)),
+          (out: Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material)) =
+            prepare_future_receive_steps #v_ReceiveChain #v_Material state.f_receive_chain
+              state.f_control sequence step remaining first_slot (mk_u8 0) staged_slots
+          in
+          let staged_slots:t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+            (mk_usize 50) =
+            tmp0
+          in
+          (match
+              out <: Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material)
+            with
+            | Core_models.Option.Option_Some
+              { f_committed_control = committed_control ;
+                f_final_receive_chain = final_receive_chain ;
+                f_target_sequence = target_sequence ;
+                f_target_material = target_material ;
+                f_first_slot = first_slot ;
+                f_skipped = skipped } ->
+              let pending:t_PendingReceive v_ReceiveChain v_Material =
+                {
+                  f_committed_control = committed_control;
+                  f_final_receive_chain = final_receive_chain;
+                  f_staged_slots = staged_slots;
+                  f_target_sequence = target_sequence;
+                  f_target_material = target_material;
+                  f_first_slot = first_slot;
+                  f_skipped = skipped
+                }
+                <:
+                t_PendingReceive v_ReceiveChain v_Material
+              in
+              if
+                ~.(pending_receive_is_valid #v_SendChain
+                    #v_ReceiveChain
+                    #v_Material
+                    state
+                    pending
+                    target
+                  <:
+                  bool)
+              then
+                Core_models.Option.Option_None
+                <:
+                Core_models.Option.t_Option (t_PreparedReceive v_ReceiveChain v_Material)
+              else
+                Core_models.Option.Option_Some
+                (PreparedReceive_Future pending <: t_PreparedReceive v_ReceiveChain v_Material)
+                <:
+                Core_models.Option.t_Option (t_PreparedReceive v_ReceiveChain v_Material)
+            | Core_models.Option.Option_None  ->
+              Core_models.Option.Option_None
+              <:
+              Core_models.Option.t_Option (t_PreparedReceive v_ReceiveChain v_Material))
+  | Core_models.Option.Option_None  ->
+    Core_models.Option.Option_None
+    <:
+    Core_models.Option.t_Option (t_PreparedReceive v_ReceiveChain v_Material)
+
+/// Publish a validated future delta. The target material remains in `pending`
+/// and is dropped instead of ever entering the live cache.
+let publish_future_receive
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (pending: t_PendingReceive v_ReceiveChain v_Material)
+    : t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+  let first_index:usize = cast (pending.f_first_slot <: u8) <: usize in
+  let skipped:usize = cast (pending.f_skipped <: u8) <: usize in
+  if first_index >=. v_RECEIVE_CACHE_CAPACITY
+  then state
+  else
+    if skipped >=. (v_RECEIVE_CACHE_CAPACITY -! first_index <: usize)
+    then state
+    else
+      let
+      (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
+      (tmp1: t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)) =
+        publish_future_receive_slots #v_SendChain
+          #v_ReceiveChain
+          #v_Material
+          state
+          pending.f_staged_slots
+          pending.f_first_slot
+          pending.f_skipped
+      in
+      let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
+      let pending:t_PendingReceive v_ReceiveChain v_Material =
+        { pending with f_staged_slots = tmp1 } <: t_PendingReceive v_ReceiveChain v_Material
+      in
+      let _:Prims.unit = () in
+      let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+        { state with f_receive_chain = pending.f_final_receive_chain }
+        <:
+        t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
+      in
+      { state with f_control = pending.f_committed_control }
+      <:
+      t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
 
 /// Plan and execute every receive step needed for `target` inside the kernel.
 /// Every destination slot is checked before the first callback.
@@ -1597,8 +2475,10 @@ let refined_finish_receive
 /// Select the exact sequence-tagged receive material, try to authenticate and
 /// open the supplied frame context, and finish that same attempt atomically.
 /// Returning `Some` from the opaque callback consumes the selected material.
-/// Returning `None` retains it for retry. Neither raw material nor an
-/// independently supplied authentication Boolean crosses this public API.
+/// Returning `None` preserves the complete entry state. Future derivations are
+/// owned by a private pending delta and are published only after the callback
+/// succeeds. Neither raw material nor an independently supplied authentication
+/// Boolean crosses this public API.
 let refined_open_and_finish
       (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
@@ -1608,60 +2488,83 @@ let refined_open_and_finish
       (v_open: (v_Material -> u64 -> v_Context -> Core_models.Option.t_Option v_Plaintext))
     : (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
       Core_models.Option.t_Option v_Plaintext) =
-  let
-  (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
-  (out: Core_models.Option.t_Option u64) =
-    refined_advance_receive_until #v_SendChain #v_ReceiveChain #v_Material state target step
-  in
-  let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
-  match out <: Core_models.Option.t_Option u64 with
-  | Core_models.Option.Option_Some sequence ->
-    (match
-        refined_receive_key #v_SendChain #v_ReceiveChain #v_Material state sequence
-        <:
-        Core_models.Option.t_Option v_Material
-      with
-      | Core_models.Option.Option_Some material ->
-        let opened:Core_models.Option.t_Option v_Plaintext = v_open material sequence context in
-        let
-        (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
-        (hax_temp_output: Core_models.Option.t_Option v_Plaintext) =
-          match opened <: Core_models.Option.t_Option v_Plaintext with
-          | Core_models.Option.Option_None  ->
-            state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
-            <:
-            (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
-              Core_models.Option.t_Option v_Plaintext)
-          | Core_models.Option.Option_Some plaintext ->
-            let
-            (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
-            (out: t_ReceiveDisposition) =
-              refined_finish_receive #v_SendChain #v_ReceiveChain #v_Material state sequence true
-            in
-            let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
-            match out <: t_ReceiveDisposition with
-            | ReceiveDisposition_Consumed  ->
-              state,
-              (Core_models.Option.Option_Some plaintext <: Core_models.Option.t_Option v_Plaintext)
+  match
+    prepare_receive #v_SendChain #v_ReceiveChain #v_Material state target step
+    <:
+    Core_models.Option.t_Option (t_PreparedReceive v_ReceiveChain v_Material)
+  with
+  | Core_models.Option.Option_Some prepared ->
+    (match prepared <: t_PreparedReceive v_ReceiveChain v_Material with
+      | PreparedReceive_Cached prepared ->
+        let slot_index:usize = cast (prepared.f_target_slot <: u8) <: usize in
+        if slot_index >=. v_RECEIVE_CACHE_CAPACITY
+        then
+          state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
+          <:
+          (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+            Core_models.Option.t_Option v_Plaintext)
+        else
+          (match
+              Core_models.Option.impl__as_ref #(t_CachedReceiveKey v_Material)
+                (state.f_receive_slots.[ slot_index ]
+                  <:
+                  Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
               <:
-              (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
-                Core_models.Option.t_Option v_Plaintext)
-            | ReceiveDisposition_Missing
-            | ReceiveDisposition_Retained  ->
+              Core_models.Option.t_Option (t_CachedReceiveKey v_Material)
+            with
+            | Core_models.Option.Option_Some cached ->
+              if cached.f_sequence <>. prepared.f_sequence
+              then
+                state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
+                <:
+                (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+                  Core_models.Option.t_Option v_Plaintext)
+              else
+                let opened:Core_models.Option.t_Option v_Plaintext =
+                  v_open cached.f_material prepared.f_sequence context
+                in
+                (match opened <: Core_models.Option.t_Option v_Plaintext with
+                  | Core_models.Option.Option_None  ->
+                    state,
+                    (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
+                    <:
+                    (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+                      Core_models.Option.t_Option v_Plaintext)
+                  | Core_models.Option.Option_Some plaintext ->
+                    let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+                      publish_cached_receive #v_SendChain #v_ReceiveChain #v_Material state prepared
+                    in
+                    state,
+                    (Core_models.Option.Option_Some plaintext
+                      <:
+                      Core_models.Option.t_Option v_Plaintext)
+                    <:
+                    (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+                      Core_models.Option.t_Option v_Plaintext))
+            | Core_models.Option.Option_None  ->
               state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
               <:
               (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
-                Core_models.Option.t_Option v_Plaintext)
+                Core_models.Option.t_Option v_Plaintext))
+      | PreparedReceive_Future pending ->
+        let opened:Core_models.Option.t_Option v_Plaintext =
+          v_open pending.f_target_material pending.f_target_sequence context
         in
-        state, hax_temp_output
-        <:
-        (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
-          Core_models.Option.t_Option v_Plaintext)
-      | Core_models.Option.Option_None  ->
-        state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
-        <:
-        (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
-          Core_models.Option.t_Option v_Plaintext))
+        match opened <: Core_models.Option.t_Option v_Plaintext with
+        | Core_models.Option.Option_None  ->
+          state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
+          <:
+          (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+            Core_models.Option.t_Option v_Plaintext)
+        | Core_models.Option.Option_Some plaintext ->
+          let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+            publish_future_receive #v_SendChain #v_ReceiveChain #v_Material state pending
+          in
+          state,
+          (Core_models.Option.Option_Some plaintext <: Core_models.Option.t_Option v_Plaintext)
+          <:
+          (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+            Core_models.Option.t_Option v_Plaintext))
   | Core_models.Option.Option_None  ->
     state, (Core_models.Option.Option_None <: Core_models.Option.t_Option v_Plaintext)
     <:

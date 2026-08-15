@@ -121,9 +121,10 @@ static int read_transport(uint8_t **out, size_t *out_len) {
 }
 
 static int save_server(const beaconcrypt_Server *server) {
-  /* Checkpoints are plaintext secret material. Save immediately after every
-   * state-changing call and before using its output. A production store must
-   * also reject stale rollback and coordinate concurrent owners. */
+  /* Checkpoints are plaintext secret material.
+   * Save immediately after every accepted receive or other state-changing operation and before using its output.
+   * A normal rejected receive leaves the exported checkpoint unchanged.
+   * A production store must also reject stale rollback and coordinate concurrent owners. */
   beaconcrypt_Buffer state = beaconcrypt_server_export_state(server);
   if (buffer_is_empty(state)) {
     return -1;

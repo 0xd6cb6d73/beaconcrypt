@@ -147,8 +147,9 @@ func NewServerFromState(state []byte) (*Server, error) {
 
 // ExportState returns the current plaintext server checkpoint.
 //
-// Save it immediately after every state-changing call and before using that
-// call's output. A standalone exported checkpoint does not prevent rollback.
+// Save it immediately after every accepted receive or other state-changing call and before using that call's output.
+// A normal rejected receive leaves the checkpoint unchanged.
+// A standalone exported checkpoint does not prevent rollback.
 func (s *Server) ExportState() ([]byte, error) {
 	if s == nil {
 		return nil, ErrClosed

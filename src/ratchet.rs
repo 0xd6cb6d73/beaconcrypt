@@ -160,14 +160,7 @@ impl RatchetManager {
 
 	#[cfg(test)]
 	pub(crate) fn ratchet_recv_until(&mut self, until: u64) -> Option<u64> {
-		let context = TestReceiveAttempt::new(false);
-		let _ = verified_ratchet::concrete_open_and_finish(
-			&mut self.refined,
-			until,
-			&context,
-			test_receive_attempt,
-		);
-		context.seen.get()
+		verified_ratchet::concrete_advance_receive_until(&mut self.refined, until)
 	}
 
 	#[cfg(test)]
@@ -225,7 +218,7 @@ impl RatchetManager {
 		self.refined.receive_sequence()
 	}
 
-	/// Number of retained receive attempts, without exposing their material.
+	/// Number of cached skipped receive keys, without exposing their material.
 	#[cfg(any(feature = "server", test))]
 	pub(crate) fn receive_cache_len(&self) -> u8 {
 		self.refined.receive_cache_len()
@@ -387,10 +380,10 @@ fn open_frame(
 
 /// Decrypt one frame against a staged or committed peer ratchet.
 ///
-/// Authentication failure retains the exact logical and concrete receive key;
-/// successful authentication consumes both through the shared refined kernel.
-/// Production supplies one opaque AEAD callback and never receives material or
-/// reports an independent authentication Boolean.
+/// Every rejected frame preserves the complete entry ratchet state. Successful authentication
+/// atomically publishes the planned receive advance and consumes the selected key through the
+/// shared refined kernel. Production supplies one opaque AEAD callback and never receives material
+/// or reports an independent authentication Boolean.
 pub(crate) fn decrypt_message_with_ratchet(
 	data: &[u8],
 	expected_sender_kid: u64,

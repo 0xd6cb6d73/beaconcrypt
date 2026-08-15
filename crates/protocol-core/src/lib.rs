@@ -21,3 +21,7 @@ pub use ratchet::{
 	replace_ratchet_for_peer, restore_receive_key, restore_receive_key_with_slot,
 	split_ratchet_kdf_output, start_concrete_restore, start_refined_restore, start_restore,
 };
+
+#[cfg(any(test, feature = "test-utils"))]
+#[doc(hidden)]
+pub use ratchet::concrete_advance_receive_until;

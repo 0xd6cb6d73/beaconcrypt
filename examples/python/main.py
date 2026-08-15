@@ -10,9 +10,10 @@ STATE_PATH = "server-state.bin"
 
 
 def save_server(server):
-    # Checkpoints are plaintext secret material. Write immediately after every
-    # state-changing call and before using its output. A production store must
-    # also reject stale rollback and coordinate concurrent owners.
+    # Checkpoints are plaintext secret material.
+    # Write immediately after every accepted receive or other state-changing operation and before using its output.
+    # A normal rejected receive leaves the exported checkpoint unchanged.
+    # A production store must also reject stale rollback and coordinate concurrent owners.
     with open(STATE_PATH, "wb") as state_file:
         state_file.write(server.export_state())
 

@@ -87,6 +87,31 @@ let u64_value_extensionality
     | Rust_primitives.Integers.MkInt _,
       Rust_primitives.Integers.MkInt _ -> ()
 
+let u8_value_extensionality
+    (left right:u8)
+  : Lemma
+      (requires (v left == v right))
+      (ensures (left == right))
+  = match left, right with
+    | Rust_primitives.Integers.MkInt _,
+      Rust_primitives.Integers.MkInt _ -> ()
+
+let positive_at_most_one_is_one
+    (n:nat { n > 0 /\ n <= 1 })
+  : Lemma (n == 1)
+  = ()
+
+let u64_below_max_is_not_max
+    (n:u64 { v n < v Core_models.Num.impl_u64__MAX })
+  : Lemma (n <> Core_models.Num.impl_u64__MAX)
+  = ()
+
+let u64_value_is_bounded
+    (n:u64)
+  : Lemma (v n <= v Core_models.Num.impl_u64__MAX)
+  = match n with
+    | Rust_primitives.Integers.MkInt _ -> ()
+
 /// Logical view of the active part of the fixed receive-key cache.  The Rust
 /// array has length 50 by construction; validity additionally constrains the
 /// logical length and the values stored before it.
@@ -130,6 +155,15 @@ let cache_slot
   v slot < cache_len cache /\
   v slot < 50 /\
   cache_entry cache (v slot) == sequence
+
+let receive_key_at_matches_cache_slot
+    (state:t_RatchetState)
+    (sequence:u64)
+    (slot:u8 { cache_slot state.f_receive_cache sequence slot })
+  : Lemma
+      (impl_RatchetState__receive_key_at state slot ==
+        Core_models.Option.Option_Some sequence)
+  = ()
 
 /// Any successful bounded lookup names an active matching slot inside the part of the cache traversed by that lookup.
 let rec lookup_receive_key_from_sound
@@ -689,49 +723,11 @@ let finish_receive_with_removal_preserves_other_key_exactly_once
   finish_receive_with_removal_preserves_other_key state target slot other;
   finish_receive_with_removal_preserves_validity state target slot true
 
-/// A one-step admissible future receive advances before authentication.  If
-/// authentication then fails, the candidate key and the entire post-admission
-/// state are retained; the result is therefore not neutral relative to the
-/// state that existed before admission.
-let admitted_receive_failure_retains_advanced_state
-    (state:t_RatchetState {
-       valid_state state /\ cache_len state.f_receive_cache < 50 })
-    (target:u64 {
-       v target == v state.f_receive_sequence + 1 })
-  : Lemma
-      (let plan = plan_receive_until state target in
-       let advanced = advance_receive state in
-       match advanced.f_sequence, advanced.f_slot with
-       | Core_models.Option.Option_Some sequence,
-         Core_models.Option.Option_Some slot ->
-           let failed = finish_receive advanced.f_state sequence slot false in
-           plan.f_sequence == Core_models.Option.Option_Some target /\
-           plan.f_derivations == mk_u64 1 /\
-           sequence == target /\
-           failed.f_disposition == ReceiveDisposition_Retained /\
-           failed.f_state == advanced.f_state /\
-           cache_slot failed.f_state.f_receive_cache target slot /\
-           v failed.f_state.f_receive_sequence ==
-             v state.f_receive_sequence + 1 /\
-           cache_len failed.f_state.f_receive_cache ==
-             cache_len state.f_receive_cache + 1 /\
-           failed.f_state <> state
-       | _ -> False)
-  =
-  plan_future_receive_is_bounded state target;
-  advance_receive_success_shape state;
-  advance_receive_preserves_validity state;
-  let advanced = advance_receive state in
-  match advanced.f_sequence, advanced.f_slot with
-  | Core_models.Option.Option_Some sequence,
-    Core_models.Option.Option_Some slot ->
-      finish_receive_failure_retains_key advanced.f_state sequence slot
-  | _ -> ()
-
-/// A retained receive key can be retried successfully exactly once.  The retry
-/// consumes the target, and another use of the same sequence/slot pair is a
-/// state-neutral replay rejection.
-let failed_receive_retry_consumes_once
+/// A key already present in a restored or otherwise pre-existing cache can be
+/// retried successfully after the low-level retained completion. This is a
+/// compatibility fact about `finish_receive`; public receive rejection is
+/// covered by the entry-neutral transaction lemmas below.
+let cached_receive_failure_retry_consumes_once
     (state:t_RatchetState { valid_state state })
     (target:u64)
     (slot:u8 { cache_slot state.f_receive_cache target slot })
@@ -756,48 +752,9 @@ let failed_receive_retry_consumes_once
   finish_receive_consumes_target state target slot;
   finish_receive_replay_is_rejected state target slot
 
-/// Filling the final free cache slot through an admitted future receive and
-/// then failing authentication retains a full cache.  The immediately next
-/// future sequence is consequently rejected by planning without any further
-/// ratchet transition.
-let failed_receive_fills_cache_and_rejects_next_future
-    (state:t_RatchetState {
-       valid_state state /\ cache_len state.f_receive_cache == 49 })
-    (target:u64 {
-       v target == v state.f_receive_sequence + 1 })
-    (next_target:u64 {
-       v next_target == v target + 1 })
-  : Lemma
-      (let advanced = advance_receive state in
-       match advanced.f_sequence, advanced.f_slot with
-       | Core_models.Option.Option_Some sequence,
-         Core_models.Option.Option_Some slot ->
-           let failed = finish_receive advanced.f_state sequence slot false in
-           let next_plan = plan_receive_until failed.f_state next_target in
-           sequence == target /\
-           failed.f_disposition == ReceiveDisposition_Retained /\
-           failed.f_state == advanced.f_state /\
-           cache_slot failed.f_state.f_receive_cache target slot /\
-           cache_len failed.f_state.f_receive_cache == 50 /\
-           next_plan.f_sequence == Core_models.Option.Option_None /\
-           next_plan.f_derivations == mk_u64 0
-       | _ -> False)
-  =
-  admitted_receive_failure_retains_advanced_state state target;
-  advance_receive_preserves_validity state;
-  let advanced = advance_receive state in
-  match advanced.f_sequence, advanced.f_slot with
-  | Core_models.Option.Option_Some sequence,
-    Core_models.Option.Option_Some slot ->
-      finish_receive_failure_retains_key advanced.f_state sequence slot;
-      let failed = finish_receive advanced.f_state sequence slot false in
-      plan_receive_rejects_capacity_overflow failed.f_state next_target
-  | _ -> ()
-
-/// Consuming any present key from a full valid cache frees exactly one slot.
-/// The immediately next future sequence is therefore admitted with one
-/// derivation; this is the control-state justification for refilling the slot
-/// exercised by the finite ProVerif trace.
+/// Consuming a key from a full valid restored cache frees exactly one slot.
+/// This low-level compatibility theorem does not describe public receive
+/// failure, which is entry-neutral and cannot fill the live cache.
 let successful_receive_releases_capacity_for_next_future
     (state:t_RatchetState {
        valid_state state /\ cache_len state.f_receive_cache == 50 })
@@ -1660,6 +1617,44 @@ let chain_after_successor
           (chain_after #v_Chain #v_Material
             initial step count)).f_chain)
   = ()
+
+let rec chain_after_compose
+    (#v_Chain #v_Material:Type0)
+    (initial:v_Chain)
+    (step:v_Chain -> t_RatchetStep v_Chain v_Material)
+    (first second:nat)
+  : Lemma
+      (ensures
+        (chain_after #v_Chain #v_Material
+           (chain_after #v_Chain #v_Material initial step first)
+           step second ==
+         chain_after #v_Chain #v_Material
+           initial step (first + second)))
+      (decreases second)
+  =
+  if second = 0 then ()
+  else
+    chain_after_compose #v_Chain #v_Material
+      initial step first (second - 1)
+
+let material_at_shift
+    (#v_Chain #v_Material:Type0)
+    (initial:v_Chain)
+    (live:v_Chain)
+    (step:v_Chain -> t_RatchetStep v_Chain v_Material)
+    (prefix:nat)
+    (offset:nat { offset > 0 })
+  : Lemma
+      (requires
+        (live ==
+          chain_after #v_Chain #v_Material initial step prefix))
+      (ensures
+        (material_at #v_Chain #v_Material live step offset ==
+          material_at #v_Chain #v_Material
+            initial step (prefix + offset)))
+  =
+  chain_after_compose #v_Chain #v_Material
+    initial step prefix (offset - 1)
 
 let material_at_successor
     (#v_Chain #v_Material:Type0)
@@ -3363,37 +3358,2773 @@ let refined_finish_receive_preserves_reachability
         | _ -> ()
       else ()
 
-/// If the opaque open callback returns `None` for the exact material and sequence selected after admission, the public operation returns that complete admitted state unchanged.
-let refined_open_none_retains_selected_material
-    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
-    (state admitted:t_RefinedRatchet
-      v_SendChain v_ReceiveChain v_Material)
+/// Pure logical control after exactly `count` admitted receive advances. This proof-only function is used to characterize the pending control as post-target consumption without exposing a second live ratchet.
+let rec receive_control_after
+    (state:t_RatchetState)
+    (count:nat)
+  : Tot t_RatchetState (decreases count) =
+  if count = 0 then state
+  else
+    receive_control_after
+      (advance_receive state).f_state (count - 1)
+
+/// Exact logical append trace from an entry control state. The old packed
+/// prefix is unchanged and each suffix slot carries the next sequence in
+/// order. This relation avoids treating the private candidate as a second live
+/// ratchet.
+let receive_control_extension
+    (entry current:t_RatchetState)
+    (count:nat)
+  : prop =
+  valid_state entry /\
+  valid_state current /\
+  current.f_send_sequence == entry.f_send_sequence /\
+  v current.f_receive_sequence ==
+    v entry.f_receive_sequence + count /\
+  cache_len current.f_receive_cache ==
+    cache_len entry.f_receive_cache + count /\
+  (forall (i:nat{i < 50}).
+     (i < cache_len entry.f_receive_cache ==>
+       cache_entry current.f_receive_cache i ==
+         cache_entry entry.f_receive_cache i) /\
+     (cache_len entry.f_receive_cache <= i /\
+      i < cache_len entry.f_receive_cache + count ==>
+        v (cache_entry current.f_receive_cache i) ==
+          v entry.f_receive_sequence +
+            (i - cache_len entry.f_receive_cache) + 1))
+
+let receive_control_extension_refl
+    (entry:t_RatchetState { valid_state entry })
+  : Lemma (receive_control_extension entry entry 0)
+  =
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        ((i < cache_len entry.f_receive_cache ==>
+           cache_entry entry.f_receive_cache i ==
+             cache_entry entry.f_receive_cache i) /\
+         (cache_len entry.f_receive_cache <= i /\
+          i < cache_len entry.f_receive_cache ==>
+            v (cache_entry entry.f_receive_cache i) ==
+              v entry.f_receive_sequence +
+                (i - cache_len entry.f_receive_cache) + 1))
+    = ()
+  in
+  FStar.Classical.forall_intro pointwise
+
+/// One successful logical advance extends the exact append trace by one.
+let receive_control_extension_advance
+    (entry current:t_RatchetState)
+    (count:nat)
+  : Lemma
+      (requires
+        (receive_control_extension entry current count /\
+         cache_len current.f_receive_cache < 50 /\
+         current.f_receive_sequence <>
+           Core_models.Num.impl_u64__MAX))
+      (ensures
+        (let advanced = advance_receive current in
+         match advanced.f_sequence, advanced.f_slot with
+         | Core_models.Option.Option_Some sequence,
+           Core_models.Option.Option_Some slot ->
+             receive_control_extension
+               entry advanced.f_state (count + 1) /\
+             v sequence == v entry.f_receive_sequence + count + 1 /\
+             v slot == cache_len entry.f_receive_cache + count
+         | _ -> False))
+  =
+  advance_receive_success_shape current;
+  advance_receive_preserves_validity current;
+  let advanced = advance_receive current in
+  match advanced.f_sequence, advanced.f_slot with
+  | Core_models.Option.Option_Some sequence,
+    Core_models.Option.Option_Some slot ->
+      let pointwise (i:nat{i < 50})
+        : Lemma
+            ((i < cache_len entry.f_receive_cache ==>
+               cache_entry advanced.f_state.f_receive_cache i ==
+                 cache_entry entry.f_receive_cache i) /\
+             (cache_len entry.f_receive_cache <= i /\
+              i < cache_len entry.f_receive_cache + count + 1 ==>
+                v (cache_entry advanced.f_state.f_receive_cache i) ==
+                  v entry.f_receive_sequence +
+                    (i - cache_len entry.f_receive_cache) + 1))
+        =
+          if i < cache_len entry.f_receive_cache then ()
+          else if i < cache_len entry.f_receive_cache + count then ()
+          else if i < cache_len entry.f_receive_cache + count + 1 then
+            (assert
+               (i == cache_len entry.f_receive_cache + count);
+             assert (i == v slot))
+          else ()
+      in
+      FStar.Classical.forall_intro pointwise
+  | _ -> ()
+
+/// Exact private staged suffix relative to the immutable entry state. The
+/// active range contains the canonical skipped records and every other slot is
+/// empty.
+let staged_receive_extension
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (staged:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (first count:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : prop =
+  forall (i:nat{i < 50}).
+    (first <= i /\ i < first + count ==>
+      (match refined_slot_value staged i with
+      | Core_models.Option.Option_Some cached ->
+          v cached.f_sequence ==
+            v entry.f_control.f_receive_sequence + (i - first) + 1 /\
+          cached.f_material ==
+            material_at #v_ReceiveChain #v_Material
+              entry.f_receive_chain step (i - first + 1)
+      | Core_models.Option.Option_None -> False)) /\
+    (i < first \/ first + count <= i ==>
+      refined_slot_value staged i == Core_models.Option.Option_None)
+
+let staged_receive_extension_outside
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (staged:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (first count:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (i:nat{i < 50})
+  : Lemma
+      (requires
+        (staged_receive_extension entry staged first count step /\
+         (i < first \/ first + count <= i)))
+      (ensures
+        (refined_slot_value staged i ==
+          Core_models.Option.Option_None))
+  = ()
+
+let staged_receive_extension_boundary_is_empty
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (staged:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (first count:nat { first + count < 50 })
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        (staged_receive_extension entry staged first count step))
+      (ensures
+        (refined_slot_value staged (first + count) ==
+          Core_models.Option.Option_None))
+  = staged_receive_extension_outside
+      entry staged first count step (first + count)
+
+let staged_receive_extension_boundary_at_index
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (staged:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (first count:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (i:nat{i < 50})
+  : Lemma
+      (requires
+        (staged_receive_extension entry staged first count step /\
+         i == first + count))
+      (ensures
+        (refined_slot_value staged i ==
+          Core_models.Option.Option_None))
+  = ()
+
+let empty_staged_receive_extension
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (first:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (staged_receive_extension entry
+        (empty_material_slots #v_Material ()) first 0 step)
+  =
+  empty_material_slots_are_none #v_Material;
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        ((first <= i /\ i < first ==>
+          (match refined_slot_value
+            (empty_material_slots #v_Material ()) i with
+          | Core_models.Option.Option_Some cached ->
+              v cached.f_sequence ==
+                v entry.f_control.f_receive_sequence + (i - first) + 1 /\
+              cached.f_material ==
+                material_at #v_ReceiveChain #v_Material
+                  entry.f_receive_chain step (i - first + 1)
+          | Core_models.Option.Option_None -> False)) /\
+         (i < first \/ first <= i ==>
+          refined_slot_value (empty_material_slots #v_Material ()) i ==
+            Core_models.Option.Option_None))
+    = ()
+  in
+  FStar.Classical.forall_intro pointwise
+
+/// Appending one canonical record at the exact end of the private range
+/// preserves the complete staged-suffix characterization.
+let staged_receive_extension_append
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (staged:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (first count:nat { first + count < 50 })
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (sequence:u64 {
+       v sequence == v entry.f_control.f_receive_sequence + count + 1 })
+    (material:v_Material {
+       material == material_at #v_ReceiveChain #v_Material
+         entry.f_receive_chain step (count + 1) })
+  : Lemma
+      (requires
+        (staged_receive_extension entry staged first count step))
+      (ensures
+        (let slot = mk_usize (first + count) in
+         let staged' =
+           Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
+             staged slot
+             (Core_models.Option.Option_Some
+               ({ f_sequence = sequence; f_material = material } <:
+                 t_CachedReceiveKey v_Material)) in
+         staged_receive_extension entry staged' first (count + 1) step))
+  =
+  let slot:(i:nat{i < 50}) = first + count in
+  let cached =
+    ({ f_sequence = sequence; f_material = material } <:
+      t_CachedReceiveKey v_Material) in
+  let some_cached =
+    (Core_models.Option.Option_Some cached <:
+      Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) in
+  let staged' = Seq.upd staged slot some_cached in
+  FStar.Seq.Base.lemma_index_upd1 staged slot some_cached;
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        ((first <= i /\ i < first + count + 1 ==>
+          (match refined_slot_value staged' i with
+          | Core_models.Option.Option_Some present ->
+              v present.f_sequence ==
+                v entry.f_control.f_receive_sequence + (i - first) + 1 /\
+              present.f_material ==
+                material_at #v_ReceiveChain #v_Material
+                  entry.f_receive_chain step (i - first + 1)
+          | Core_models.Option.Option_None -> False)) /\
+         (i < first \/ first + count + 1 <= i ==>
+          refined_slot_value staged' i ==
+            Core_models.Option.Option_None))
+    =
+    if i = slot then ()
+    else
+      (FStar.Seq.Base.lemma_index_upd2 staged slot some_cached i;
+       ())
+  in
+  FStar.Classical.forall_intro pointwise
+
+let ratchet_step_extensionality
+    (#v_Chain #v_Material:Type0)
+    (step:v_Chain -> t_RatchetStep v_Chain v_Material)
+    (left right:v_Chain { left == right })
+  : Lemma
+      ((step left).f_chain == (step right).f_chain /\
+       (step left).f_material == (step right).f_material)
+  = ()
+
+let future_commit_witness
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+    (derivations:nat)
+    (admitted_control:t_RatchetState)
+    (target_slot:u8)
+    (removal:t_ReceiveRemoval)
+  : prop =
+  receive_control_extension
+    entry.f_control admitted_control derivations /\
+  v target_slot ==
+    cache_len entry.f_control.f_receive_cache + derivations - 1 /\
+  cache_slot admitted_control.f_receive_cache target target_slot /\
+  lookup_receive_key admitted_control target ==
+    Core_models.Option.Option_Some target_slot /\
+  (finish_receive_with_removal
+    admitted_control target target_slot true).f_disposition ==
+      ReceiveDisposition_Consumed /\
+  (finish_receive_with_removal
+    admitted_control target target_slot true).f_removal ==
+      Core_models.Option.Option_Some removal /\
+  removal.f_target_slot == target_slot /\
+  removal.f_last_slot == target_slot /\
+  pending.f_committed_control ==
+    (finish_receive_with_removal
+      admitted_control target target_slot true).f_state
+
+let lookup_receive_key_absent_is_none
+    (state:t_RatchetState { valid_state state })
+    (sequence:u64 { ~(cache_has state.f_receive_cache sequence) })
+  : Lemma
+      (lookup_receive_key state sequence ==
+        Core_models.Option.Option_None)
+  =
+  lookup_receive_key_sound state sequence;
+  match lookup_receive_key state sequence with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some slot -> ()
+
+/// The extracted prefix validator succeeds whenever both valid controls carry
+/// the same active entry prefix.
+let rec receive_control_prefix_matches_for_equal_prefix
+    (entry committed:t_RatchetState)
+    (slot remaining:u8)
+  : Lemma
+      (requires
+        (valid_state entry /\
+         valid_state committed /\
+         cache_len entry.f_receive_cache <=
+           cache_len committed.f_receive_cache /\
+         v slot + v remaining <= cache_len entry.f_receive_cache /\
+         (forall (i:nat{i < 50}).
+            i < cache_len entry.f_receive_cache ==>
+              cache_entry committed.f_receive_cache i ==
+                cache_entry entry.f_receive_cache i)))
+      (ensures
+        (receive_control_prefix_matches
+          entry committed slot remaining == true))
+      (decreases (v remaining))
+  =
+  if remaining = mk_u8 0 then ()
+  else
+    (let i:(x:nat{x < 50}) = v slot in
+     let sequence = cache_entry entry.f_receive_cache i in
+     assert (cache_slot entry.f_receive_cache sequence slot);
+     assert (cache_slot committed.f_receive_cache sequence slot);
+     receive_key_at_matches_cache_slot entry sequence slot;
+     receive_key_at_matches_cache_slot committed sequence slot;
+     receive_control_prefix_matches_for_equal_prefix entry committed
+       (slot +! mk_u8 1) (remaining -! mk_u8 1))
+
+/// Target-last consumption preserves every logical association that existed
+/// at entry and leaves the exact skipped-only cache cardinality.
+let future_commit_preserves_entry_cache_prefix
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+    (derivations:nat { derivations > 0 })
+    (admitted_control:t_RatchetState)
+    (target_slot:u8)
+    (removal:t_ReceiveRemoval {
+       future_commit_witness entry pending target derivations
+         admitted_control target_slot removal })
+  : Lemma
+      (let committed = pending.f_committed_control in
+       valid_state committed /\
+       cache_len committed.f_receive_cache ==
+         cache_len entry.f_control.f_receive_cache + derivations - 1 /\
+       (forall (i:nat{i < 50}).
+          i < cache_len entry.f_control.f_receive_cache ==>
+            cache_entry committed.f_receive_cache i ==
+              cache_entry entry.f_control.f_receive_cache i) /\
+       (forall (i:nat{i < 50}).
+          cache_len entry.f_control.f_receive_cache <= i /\
+          i < cache_len entry.f_control.f_receive_cache + derivations - 1 ==>
+            v (cache_entry committed.f_receive_cache i) ==
+              v entry.f_control.f_receive_sequence +
+                (i - cache_len entry.f_control.f_receive_cache) + 1))
+  =
+  finish_receive_with_removal_preserves_validity
+    admitted_control target target_slot true;
+  finish_receive_with_removal_success_shape
+    admitted_control target target_slot;
+  finish_receive_with_removal_preserves_other_physical_slot
+    admitted_control target target_slot;
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        (i < cache_len entry.f_control.f_receive_cache ==>
+          cache_entry pending.f_committed_control.f_receive_cache i ==
+            cache_entry entry.f_control.f_receive_cache i)
+    = ()
+  in
+  FStar.Classical.forall_intro pointwise;
+  let suffix (i:nat{i < 50})
+    : Lemma
+        (cache_len entry.f_control.f_receive_cache <= i /\
+         i < cache_len entry.f_control.f_receive_cache + derivations - 1 ==>
+           v (cache_entry pending.f_committed_control.f_receive_cache i) ==
+             v entry.f_control.f_receive_sequence +
+               (i - cache_len entry.f_control.f_receive_cache) + 1)
+    = ()
+  in
+  FStar.Classical.forall_intro suffix
+
+/// Semantic result of the private derivation recursion before publication.
+/// It records the exact control trace, fixed canonical chain/material trace,
+/// separate target, and exact skipped-only staged range.
+let prepared_future_trace
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+    (derivations:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : prop =
+  valid_refined entry /\
+  derivations > 0 /\
+  derivations <= 50 /\
+  cache_len entry.f_control.f_receive_cache + derivations <= 50 /\
+  v target == v entry.f_control.f_receive_sequence + derivations /\
+  pending.f_target_sequence == target /\
+  v pending.f_first_slot == cache_len entry.f_control.f_receive_cache /\
+  v pending.f_skipped + 1 == derivations /\
+  pending.f_final_receive_chain ==
+    chain_after #v_ReceiveChain #v_Material
+      entry.f_receive_chain step derivations /\
+  pending.f_target_material ==
+    material_at #v_ReceiveChain #v_Material
+      entry.f_receive_chain step derivations /\
+  staged_receive_extension entry pending.f_staged_slots
+    (cache_len entry.f_control.f_receive_cache)
+    (derivations - 1) step /\
+  (forall (i:nat{i < 50}).
+     i == cache_len entry.f_control.f_receive_cache + derivations - 1 ==>
+       refined_slot_value pending.f_staged_slots i ==
+         Core_models.Option.Option_None) /\
+  valid_state pending.f_committed_control /\
+  pending.f_committed_control.f_send_sequence ==
+    entry.f_control.f_send_sequence /\
+  pending.f_committed_control.f_receive_sequence == target /\
+  cache_len pending.f_committed_control.f_receive_cache ==
+    cache_len entry.f_control.f_receive_cache + derivations - 1 /\
+  (forall (i:nat{i < 50}).
+     i < cache_len entry.f_control.f_receive_cache ==>
+       cache_entry pending.f_committed_control.f_receive_cache i ==
+         cache_entry entry.f_control.f_receive_cache i) /\
+  (forall (i:nat{i < 50}).
+     cache_len entry.f_control.f_receive_cache <= i /\
+     i < cache_len entry.f_control.f_receive_cache + derivations - 1 ==>
+       v (cache_entry pending.f_committed_control.f_receive_cache i) ==
+         v entry.f_control.f_receive_sequence +
+           (i - cache_len entry.f_control.f_receive_cache) + 1) /\
+  ~(cache_has pending.f_committed_control.f_receive_cache target) /\
+  (exists
+     (admitted_control:t_RatchetState)
+     (target_slot:u8)
+     (removal:t_ReceiveRemoval).
+       future_commit_witness
+         entry pending target derivations
+         admitted_control target_slot removal)
+
+let pending_receive_slots_last_computes
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (slot:u8)
+    (expected_sequence:u64)
+    (remaining:u8)
+    (staged:t_CachedReceiveKey v_Material)
+  : Lemma
+      (requires
+        (v slot < 50 /\
+         refined_slot_value entry.f_receive_slots (v slot) ==
+           Core_models.Option.Option_None /\
+         refined_slot_value pending.f_staged_slots (v slot) ==
+           Core_models.Option.Option_Some staged /\
+         staged.f_sequence == expected_sequence /\
+         impl_RatchetState__receive_key_at
+           pending.f_committed_control slot ==
+             Core_models.Option.Option_Some expected_sequence /\
+         v remaining == 1))
+      (ensures
+        (pending_receive_slots_are_valid entry pending
+          slot expected_sequence remaining == true))
+  = ()
+
+let pending_receive_slots_next_computes
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (slot:u8)
+    (expected_sequence:u64)
+    (remaining:u8)
+    (staged:t_CachedReceiveKey v_Material)
+  : Lemma
+      (requires
+        (v slot < 50 /\
+         refined_slot_value entry.f_receive_slots (v slot) ==
+           Core_models.Option.Option_None /\
+         refined_slot_value pending.f_staged_slots (v slot) ==
+           Core_models.Option.Option_Some staged /\
+         staged.f_sequence == expected_sequence /\
+         impl_RatchetState__receive_key_at
+           pending.f_committed_control slot ==
+             Core_models.Option.Option_Some expected_sequence /\
+         v remaining > 1 /\
+         expected_sequence <> Core_models.Num.impl_u64__MAX))
+      (ensures
+        (pending_receive_slots_are_valid entry pending
+           slot expected_sequence remaining ==
+         pending_receive_slots_are_valid entry pending
+           (slot +! mk_u8 1)
+           (expected_sequence +! mk_u64 1)
+           (remaining -! mk_u8 1)))
+  = ()
+
+/// The recursive staged-slot validator accepts every slot in the exact
+/// canonical skipped range established by preparation.
+let rec pending_receive_slots_are_valid_for_trace
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+    (derivations:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (slot:u8)
+    (expected_sequence:u64)
+    (remaining:u8)
+    (offset:nat)
+  : Lemma
+      (requires
+        (prepared_future_trace entry pending target derivations step /\
+         offset + v remaining == derivations - 1 /\
+         v slot == cache_len entry.f_control.f_receive_cache + offset /\
+         v expected_sequence ==
+           v entry.f_control.f_receive_sequence + offset + 1))
+      (ensures
+        (pending_receive_slots_are_valid entry pending
+          slot expected_sequence remaining == true))
+      (decreases (v remaining))
+  =
+  if v remaining > 0 then
+    (let i:(x:nat{x < 50}) = v slot in
+     assert (offset < derivations - 1);
+     assert (cache_len entry.f_control.f_receive_cache <= i);
+     assert
+       (i < cache_len entry.f_control.f_receive_cache + derivations - 1);
+     assert
+       (refined_slot_value entry.f_receive_slots i ==
+         Core_models.Option.Option_None);
+     match refined_slot_value pending.f_staged_slots i with
+     | Core_models.Option.Option_None -> ()
+     | Core_models.Option.Option_Some staged ->
+         assert
+           (v staged.f_sequence ==
+            v entry.f_control.f_receive_sequence + offset + 1);
+         u64_value_extensionality staged.f_sequence expected_sequence;
+         assert (staged.f_sequence == expected_sequence);
+         let committed_sequence =
+           cache_entry pending.f_committed_control.f_receive_cache i in
+         assert
+           (v committed_sequence ==
+            v entry.f_control.f_receive_sequence + offset + 1);
+         u64_value_extensionality committed_sequence expected_sequence;
+         assert
+           (cache_slot pending.f_committed_control.f_receive_cache
+             expected_sequence slot);
+         receive_key_at_matches_cache_slot
+           pending.f_committed_control expected_sequence slot;
+         if v remaining <= 1 then
+           (let small:(n:nat{n > 0 /\ n <= 1}) = v remaining in
+            positive_at_most_one_is_one small;
+            assert (v remaining == 1);
+            pending_receive_slots_last_computes
+              entry pending slot expected_sequence remaining staged)
+         else
+           (assert (offset + 1 < derivations);
+            assert (v expected_sequence < v target);
+            u64_value_is_bounded target;
+            assert
+              (v expected_sequence <
+                v Core_models.Num.impl_u64__MAX);
+            u64_below_max_is_not_max expected_sequence;
+            assert
+              (v (slot +! mk_u8 1) ==
+                cache_len entry.f_control.f_receive_cache + offset + 1);
+            assert
+              (v (expected_sequence +! mk_u64 1) ==
+                v entry.f_control.f_receive_sequence + offset + 2);
+            assert
+              (offset + 1 + v (remaining -! mk_u8 1) ==
+                derivations - 1);
+            pending_receive_slots_are_valid_for_trace
+              entry pending target derivations step
+              (slot +! mk_u8 1)
+              (expected_sequence +! mk_u64 1)
+              (remaining -! mk_u8 1)
+              (offset + 1);
+            pending_receive_slots_next_computes
+              entry pending slot expected_sequence remaining staged))
+  else
+    (assert (v remaining == 0);
+     u8_value_extensionality remaining (mk_u8 0))
+
+/// Once every private validator guard is discharged, its extracted decision
+/// tree returns true. Keeping this computation separate avoids asking one
+/// solver query to both recover the preparation trace and normalize every
+/// boolean guard.
+let pending_receive_is_valid_computes
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+  : Lemma
+      (requires
+        (pending.f_target_sequence == target /\
+         v target > v entry.f_control.f_receive_sequence /\
+         v pending.f_first_slot ==
+           cache_len entry.f_control.f_receive_cache /\
+         pending.f_committed_control.f_send_sequence ==
+           entry.f_control.f_send_sequence /\
+         pending.f_committed_control.f_receive_sequence == target /\
+         v target ==
+           v entry.f_control.f_receive_sequence +
+             v pending.f_skipped + 1 /\
+         lookup_receive_key pending.f_committed_control target ==
+           Core_models.Option.Option_None /\
+         v pending.f_first_slot + v pending.f_skipped < 50 /\
+         cache_len pending.f_committed_control.f_receive_cache ==
+           v pending.f_first_slot + v pending.f_skipped /\
+         receive_control_prefix_matches entry.f_control
+           pending.f_committed_control (mk_u8 0)
+           pending.f_first_slot == true /\
+         refined_slot_value entry.f_receive_slots
+           (v pending.f_first_slot + v pending.f_skipped) ==
+             Core_models.Option.Option_None /\
+         refined_slot_value pending.f_staged_slots
+           (v pending.f_first_slot + v pending.f_skipped) ==
+             Core_models.Option.Option_None /\
+         pending_receive_slots_are_valid entry pending
+           pending.f_first_slot
+           (entry.f_control.f_receive_sequence +! mk_u64 1)
+           pending.f_skipped == true))
+      (ensures
+        (pending_receive_is_valid entry pending target == true))
+  = ()
+
+/// Every exact prepared trace passes the complete extracted private validator,
+/// including its prefix, range, vacancy, target-absence, and cardinality
+/// guards.
+let prepared_future_trace_passes_validator
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+    (derivations:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        (prepared_future_trace entry pending target derivations step))
+      (ensures
+        (pending_receive_is_valid entry pending target == true))
+  =
+  lookup_receive_key_absent_is_none
+    pending.f_committed_control target;
+  receive_control_prefix_matches_for_equal_prefix
+    entry.f_control pending.f_committed_control
+    (mk_u8 0) pending.f_first_slot;
+  let expected_first =
+    entry.f_control.f_receive_sequence +! mk_u64 1 in
+  assert
+    (v expected_first == v entry.f_control.f_receive_sequence + 1);
+  pending_receive_slots_are_valid_for_trace
+    entry pending target derivations step pending.f_first_slot
+    expected_first pending.f_skipped 0;
+  let target_index:(i:nat{i < 50}) =
+    cache_len entry.f_control.f_receive_cache + derivations - 1 in
+  assert
+    (refined_slot_value entry.f_receive_slots target_index ==
+      Core_models.Option.Option_None);
+  assert
+    (target_index ==
+      cache_len entry.f_control.f_receive_cache + (derivations - 1));
+  assert
+    (staged_receive_extension entry pending.f_staged_slots
+      (cache_len entry.f_control.f_receive_cache)
+      (derivations - 1) step);
+  staged_receive_extension_boundary_at_index
+    entry pending.f_staged_slots
+    (cache_len entry.f_control.f_receive_cache) (derivations - 1)
+    step target_index;
+  pending_receive_is_valid_computes entry pending target
+
+/// Reassemble the unchanged semantic pending delta from the extracted caller-owned staging buffer and compact recursive result.
+let pending_receive_from_future_target
+    (#v_ReceiveChain #v_Material:Type0)
+    (staged_slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (prepared:t_PreparedFutureTarget v_ReceiveChain v_Material)
+  : t_PendingReceive v_ReceiveChain v_Material =
+  {
+    f_committed_control = prepared.f_committed_control;
+    f_final_receive_chain = prepared.f_final_receive_chain;
+    f_staged_slots = staged_slots;
+    f_target_sequence = prepared.f_target_sequence;
+    f_target_material = prepared.f_target_material;
+    f_first_slot = prepared.f_first_slot;
+    f_skipped = prepared.f_skipped
+  }
+
+/// Proof-only semantic view of the stack-bounded extracted recursion.
+let prepare_future_receive_pending
+    (#v_ReceiveChain #v_Material:Type0)
+    (current_chain:v_ReceiveChain)
+    (control:t_RatchetState)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (remaining first_slot skipped:u8)
+    (staged_slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+  : Core_models.Option.t_Option
+      (t_PendingReceive v_ReceiveChain v_Material) =
+  let final_slots, prepared =
+    prepare_future_receive_steps current_chain control target step
+      remaining first_slot skipped staged_slots in
+  match prepared with
+  | Core_models.Option.Option_Some prepared ->
+      Core_models.Option.Option_Some
+        (pending_receive_from_future_target final_slots prepared)
+  | Core_models.Option.Option_None ->
+      Core_models.Option.Option_None
+
+/// The final recursive step computes the exact target-only pending record once
+/// every defensive guard has been discharged.
+let prepare_future_receive_steps_last_computes
+    (#v_ReceiveChain #v_Material:Type0)
+    (current_chain:v_ReceiveChain)
+    (control:t_RatchetState)
     (target sequence:u64)
-    (material:v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (remaining first_slot skipped slot:u8)
+    (staged_slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (removal:t_ReceiveRemoval)
+  : Lemma
+      (requires
+        ((advance_receive control).f_sequence ==
+           Core_models.Option.Option_Some sequence /\
+         (advance_receive control).f_slot ==
+           Core_models.Option.Option_Some slot /\
+         impl_RatchetState__receive_key_at
+           (advance_receive control).f_state slot ==
+             Core_models.Option.Option_Some sequence /\
+         v slot < 50 /\
+         v slot == v first_slot + v skipped /\
+         refined_slot_value staged_slots (v slot) ==
+           Core_models.Option.Option_None /\
+         remaining == mk_u8 1 /\
+         sequence == target /\
+         (finish_receive_with_removal
+           (advance_receive control).f_state target slot true).f_disposition ==
+             ReceiveDisposition_Consumed /\
+         (finish_receive_with_removal
+           (advance_receive control).f_state target slot true).f_removal ==
+             Core_models.Option.Option_Some removal /\
+         removal.f_target_slot == slot /\
+         removal.f_last_slot == slot))
+      (ensures
+        (let stepped = step current_chain in
+         let finished = finish_receive_with_removal
+           (advance_receive control).f_state target slot true in
+         let pending =
+           ({
+              f_committed_control = finished.f_state;
+              f_final_receive_chain = stepped.f_chain;
+              f_staged_slots = staged_slots;
+              f_target_sequence = sequence;
+              f_target_material = stepped.f_material;
+              f_first_slot = first_slot;
+              f_skipped = skipped
+            } <: t_PendingReceive v_ReceiveChain v_Material) in
+         prepare_future_receive_pending current_chain control target step
+           remaining first_slot skipped staged_slots ==
+             Core_models.Option.Option_Some pending))
+  = ()
+
+/// Every non-final recursive step reduces to the same helper on the exact
+/// advanced control/chain and one-record-extended private accumulator.
+let prepare_future_receive_steps_next_computes
+    (#v_ReceiveChain #v_Material:Type0)
+    (current_chain:v_ReceiveChain)
+    (control:t_RatchetState)
+    (target sequence:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (remaining first_slot skipped slot:u8)
+    (staged_slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+  : Lemma
+      (requires
+        ((advance_receive control).f_sequence ==
+           Core_models.Option.Option_Some sequence /\
+         (advance_receive control).f_slot ==
+           Core_models.Option.Option_Some slot /\
+         impl_RatchetState__receive_key_at
+           (advance_receive control).f_state slot ==
+             Core_models.Option.Option_Some sequence /\
+         v slot < 50 /\
+         v slot == v first_slot + v skipped /\
+         refined_slot_value staged_slots (v slot) ==
+           Core_models.Option.Option_None /\
+         v remaining > 1 /\
+         v sequence < v target))
+      (ensures
+        (let stepped = step current_chain in
+         let slot_index = cast (slot <: u8) <: usize in
+         let staged_slots' =
+           Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
+             staged_slots slot_index
+             (Core_models.Option.Option_Some
+               ({ f_sequence = sequence;
+                  f_material = stepped.f_material } <:
+                t_CachedReceiveKey v_Material)) in
+         prepare_future_receive_pending current_chain control target step
+           remaining first_slot skipped staged_slots ==
+         prepare_future_receive_pending stepped.f_chain
+           (advance_receive control).f_state target step
+           (remaining -! mk_u8 1) first_slot
+           (skipped +! mk_u8 1) staged_slots'))
+  = ()
+
+/// Under the admitted bounds and exact accumulator invariants, private future
+/// derivation is total and returns one pending delta with the complete trace.
+/// This is the non-vacuity theorem for the recursive preparation helper.
+let rec prepare_future_receive_steps_is_total_and_exact
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (current_chain:v_ReceiveChain)
+    (control:t_RatchetState)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (remaining first_slot skipped:u8)
+    (staged_slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (completed derivations:nat)
+  : Lemma
+      (requires
+        (valid_refined entry /\
+         receive_control_extension entry.f_control control completed /\
+         current_chain ==
+           chain_after #v_ReceiveChain #v_Material
+             entry.f_receive_chain step completed /\
+         v first_slot == cache_len entry.f_control.f_receive_cache /\
+         v skipped == completed /\
+         v remaining > 0 /\
+         completed + v remaining == derivations /\
+         derivations > 0 /\
+         derivations <= 50 /\
+         cache_len entry.f_control.f_receive_cache + derivations <= 50 /\
+         v target == v entry.f_control.f_receive_sequence + derivations /\
+         staged_receive_extension entry staged_slots
+           (cache_len entry.f_control.f_receive_cache) completed step))
+      (ensures
+        (exists (pending:t_PendingReceive v_ReceiveChain v_Material).
+           prepare_future_receive_pending current_chain control target step
+             remaining first_slot skipped staged_slots ==
+               Core_models.Option.Option_Some pending /\
+           prepared_future_trace entry pending target derivations step))
+      (decreases (v remaining))
+  =
+  assert (remaining <> mk_u8 0);
+  let advanced = advance_receive control in
+  receive_control_extension_advance entry.f_control control completed;
+  match advanced.f_sequence, advanced.f_slot with
+  | Core_models.Option.Option_None, Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some sequence,
+    Core_models.Option.Option_Some slot ->
+      let slot_index = cast (slot <: u8) <: usize in
+      assert (v slot == cache_len entry.f_control.f_receive_cache + completed);
+      assert (v slot < 50);
+      receive_key_at_matches_cache_slot advanced.f_state sequence slot;
+      assert
+        (slot_index ==
+          ((cast (first_slot <: u8) <: usize) +!
+           (cast (skipped <: u8) <: usize) <: usize));
+      assert
+        (refined_slot_value staged_slots (v slot) ==
+          Core_models.Option.Option_None);
+      let stepped = step current_chain in
+      chain_after_successor #v_ReceiveChain #v_Material
+        entry.f_receive_chain step completed;
+      material_at_successor #v_ReceiveChain #v_Material
+        entry.f_receive_chain step completed;
+      ratchet_step_extensionality #v_ReceiveChain #v_Material step
+        current_chain
+        (chain_after #v_ReceiveChain #v_Material
+          entry.f_receive_chain step completed);
+      assert
+        (stepped.f_chain ==
+          chain_after #v_ReceiveChain #v_Material
+            entry.f_receive_chain step (completed + 1));
+      assert
+        (stepped.f_material ==
+          material_at #v_ReceiveChain #v_Material
+            entry.f_receive_chain step (completed + 1));
+      if v remaining <= 1 then
+        (let small:(n:nat{n > 0 /\ n <= 1}) = v remaining in
+         positive_at_most_one_is_one small;
+         assert (v remaining == 1);
+         u8_value_extensionality remaining (mk_u8 1);
+         assert (remaining == mk_u8 1);
+         assert (completed + 1 == derivations);
+         u64_value_extensionality sequence target;
+         assert (sequence == target);
+         finish_receive_with_removal_success_shape
+           advanced.f_state target slot;
+         finish_receive_with_removal_preserves_validity
+           advanced.f_state target slot true;
+         lookup_receive_key_returns_unique_slot advanced.f_state target;
+         match lookup_receive_key advanced.f_state target with
+         | Core_models.Option.Option_None -> ()
+         | Core_models.Option.Option_Some found ->
+             assert (found == slot);
+             let finished = finish_receive_with_removal
+               advanced.f_state target slot true in
+             match finished.f_removal with
+             | Core_models.Option.Option_None -> ()
+             | Core_models.Option.Option_Some removal ->
+                 assert (removal.f_target_slot == slot);
+                 assert
+                   (cache_len advanced.f_state.f_receive_cache ==
+                    cache_len entry.f_control.f_receive_cache + derivations);
+                 assert
+                   (v slot + 1 ==
+                    cache_len entry.f_control.f_receive_cache + derivations);
+                 assert (v removal.f_last_slot + 1 == v slot + 1);
+                 assert (v removal.f_last_slot == v slot);
+                 u8_value_extensionality removal.f_last_slot slot;
+                 let pending =
+                   ({
+                      f_committed_control = finished.f_state;
+                      f_final_receive_chain = stepped.f_chain;
+                      f_staged_slots = staged_slots;
+                      f_target_sequence = sequence;
+                      f_target_material = stepped.f_material;
+                      f_first_slot = first_slot;
+                      f_skipped = skipped
+                    } <: t_PendingReceive v_ReceiveChain v_Material) in
+                 prepare_future_receive_steps_last_computes
+                   current_chain control target sequence step remaining
+                   first_slot skipped slot staged_slots removal;
+                 assert (completed == derivations - 1);
+                 assert
+                   (staged_receive_extension entry staged_slots
+                     (cache_len entry.f_control.f_receive_cache)
+                     (derivations - 1) step);
+                 assert
+                   (future_commit_witness entry pending target derivations
+                     advanced.f_state slot removal);
+                 future_commit_preserves_entry_cache_prefix
+                   entry pending target derivations
+                   advanced.f_state slot removal;
+                 finish_receive_with_removal_consumes_target
+                   advanced.f_state target slot;
+                 FStar.Classical.exists_intro
+                   (fun candidate_removal ->
+                      future_commit_witness
+                        entry pending target derivations advanced.f_state
+                        slot candidate_removal)
+                   removal;
+                 FStar.Classical.exists_intro
+                   (fun candidate_slot ->
+                      exists (candidate_removal:t_ReceiveRemoval).
+                        future_commit_witness
+                          entry pending target derivations advanced.f_state
+                          candidate_slot candidate_removal)
+                   slot;
+                 FStar.Classical.exists_intro
+                   (fun candidate_control ->
+                      exists
+                        (candidate_slot:u8)
+                        (candidate_removal:t_ReceiveRemoval).
+                          future_commit_witness entry pending target
+                            derivations candidate_control candidate_slot
+                            candidate_removal)
+                   advanced.f_state;
+                 let target_stays_private (i:nat{i < 50})
+                   : Lemma
+                       (i ==
+                          cache_len entry.f_control.f_receive_cache +
+                            derivations - 1 ==>
+                        refined_slot_value staged_slots i ==
+                          Core_models.Option.Option_None)
+                   = ()
+                 in
+                 FStar.Classical.forall_intro target_stays_private;
+                 assert
+                   (prepared_future_trace
+                     entry pending target derivations step);
+                 FStar.Classical.exists_intro
+                   (fun candidate ->
+                      prepare_future_receive_pending current_chain control
+                        target step remaining first_slot skipped staged_slots ==
+                          Core_models.Option.Option_Some candidate /\
+                      prepared_future_trace
+                        entry candidate target derivations step)
+                   pending)
+      else
+        (assert (v remaining > 1);
+         assert (completed + 1 < derivations);
+         assert (v sequence < v target);
+         let staged_slots' =
+           Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
+             staged_slots slot_index
+             (Core_models.Option.Option_Some
+               ({ f_sequence = sequence;
+                  f_material = stepped.f_material } <:
+                t_CachedReceiveKey v_Material)) in
+         staged_receive_extension_append entry staged_slots
+           (cache_len entry.f_control.f_receive_cache) completed step
+           sequence stepped.f_material;
+         prepare_future_receive_steps_is_total_and_exact
+           entry stepped.f_chain advanced.f_state target step
+           (remaining -! mk_u8 1) first_slot
+           (skipped +! mk_u8 1) staged_slots'
+           (completed + 1) derivations;
+         prepare_future_receive_steps_next_computes
+           current_chain control target sequence step remaining first_slot
+           skipped slot staged_slots)
+  | _ -> ()
+
+/// Once every extracted preflight branch is fixed to its admitted value, the
+/// top-level preparer returns the helper's pending result unchanged.
+let prepare_receive_future_computes
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (remaining first_slot:u8)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        (let plan = plan_receive_until entry.f_control target in
+         plan.f_sequence == Core_models.Option.Option_Some target /\
+         (plan.f_derivations =. mk_u64 0) == false /\
+         (plan.f_derivations >. v_RATCHET_MAX_GAP) == false /\
+         remaining == (cast plan.f_derivations <: u8) /\
+         first_slot ==
+           impl_RatchetState__receive_cache_len entry.f_control /\
+         refined_receive_slots_are_empty
+           entry first_slot remaining == true /\
+         prepare_future_receive_pending entry.f_receive_chain
+           entry.f_control target step remaining first_slot (mk_u8 0)
+           (empty_material_slots #v_Material ()) ==
+             Core_models.Option.Option_Some pending /\
+         pending_receive_is_valid entry pending target == true))
+      (ensures
+        (prepare_receive entry target step ==
+          Core_models.Option.Option_Some
+            (PreparedReceive_Future pending)))
+  = ()
+
+/// Invert one returned future constructor into every admitted preflight fact
+/// and the exact private helper/validator result used to build it.
+let prepare_receive_future_result_shape
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        (prepare_receive entry target step ==
+          Core_models.Option.Option_Some
+            (PreparedReceive_Future pending)))
+      (ensures
+        (let plan = plan_receive_until entry.f_control target in
+         let remaining = cast plan.f_derivations <: u8 in
+         let first_slot =
+           impl_RatchetState__receive_cache_len entry.f_control in
+         plan.f_sequence == Core_models.Option.Option_Some target /\
+         v plan.f_derivations > 0 /\
+         v plan.f_derivations <= 50 /\
+         refined_receive_slots_are_empty
+           entry first_slot remaining == true /\
+         prepare_future_receive_pending entry.f_receive_chain
+           entry.f_control target step remaining first_slot (mk_u8 0)
+           (empty_material_slots #v_Material ()) ==
+             Core_models.Option.Option_Some pending /\
+         pending_receive_is_valid entry pending target == true))
+  = plan_receive_shape entry.f_control target
+
+/// An exact top-level helper result survives the extracted validator and is
+/// returned by `prepare_receive` as the same future pending value.
+let exact_future_helper_result_is_published_by_prepare
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (remaining first_slot:u8)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (derivations:nat)
+  : Lemma
+      (requires
+        (valid_refined entry /\
+         (plan_receive_until entry.f_control target).f_sequence ==
+           Core_models.Option.Option_Some target /\
+         v (plan_receive_until entry.f_control target).f_derivations ==
+           derivations /\
+         derivations > 0 /\
+         derivations <= 50 /\
+         remaining ==
+           (cast
+             ((plan_receive_until
+               entry.f_control target).f_derivations <: u64) <: u8) /\
+         first_slot ==
+           impl_RatchetState__receive_cache_len entry.f_control /\
+         refined_receive_slots_are_empty
+           entry first_slot remaining == true /\
+         prepare_future_receive_pending entry.f_receive_chain
+           entry.f_control target step remaining first_slot (mk_u8 0)
+           (empty_material_slots #v_Material ()) ==
+             Core_models.Option.Option_Some pending /\
+         prepared_future_trace entry pending target derivations step))
+      (ensures
+        (pending_receive_is_valid entry pending target == true /\
+         prepare_receive entry target step ==
+           Core_models.Option.Option_Some
+             (PreparedReceive_Future pending)))
+  =
+  prepared_future_trace_passes_validator
+    entry pending target derivations step;
+  assert (pending_receive_is_valid entry pending target == true);
+  let plan = plan_receive_until entry.f_control target in
+  assert (plan.f_sequence == Core_models.Option.Option_Some target);
+  assert (v plan.f_derivations == derivations);
+  assert (v plan.f_derivations > 0);
+  assert (plan.f_derivations <> mk_u64 0);
+  assert (not (plan.f_derivations =. mk_u64 0));
+  assert (v plan.f_derivations <= 50);
+  assert (plan.f_derivations <=. v_RATCHET_MAX_GAP);
+  assert (not (plan.f_derivations >. v_RATCHET_MAX_GAP));
+  assert (remaining == (cast plan.f_derivations <: u8));
+  assert
+    (first_slot == impl_RatchetState__receive_cache_len entry.f_control);
+  assert
+    (refined_receive_slots_are_empty entry first_slot remaining == true);
+  prepare_receive_future_computes
+    entry target step remaining first_slot pending
+
+/// Non-vacuity of future preparation: every admitted nonzero plan on a valid
+/// refined entry passes preflight, derives the exact private trace, passes the
+/// full validator, and returns that same pending delta from `prepare_receive`.
+let admitted_future_plan_prepares_exact_trace
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        ((plan_receive_until entry.f_control target).f_sequence ==
+           Core_models.Option.Option_Some target /\
+         v (plan_receive_until entry.f_control target).f_derivations > 0))
+      (ensures
+        (let derivations =
+           v (plan_receive_until entry.f_control target).f_derivations in
+         exists (pending:t_PendingReceive v_ReceiveChain v_Material).
+           prepare_receive entry target step ==
+             Core_models.Option.Option_Some
+               (PreparedReceive_Future pending) /\
+           prepared_future_trace entry pending target derivations step /\
+           pending_receive_is_valid entry pending target == true))
+  =
+  let plan = plan_receive_until entry.f_control target in
+  plan_receive_shape entry.f_control target;
+  assert (v target > v entry.f_control.f_receive_sequence);
+  plan_future_receive_is_bounded entry.f_control target;
+  let derivations = v plan.f_derivations in
+  let remaining = cast (plan.f_derivations <: u64) <: u8 in
+  let first_slot =
+    impl_RatchetState__receive_cache_len entry.f_control in
+  assert (v remaining == derivations);
+  assert (v first_slot == cache_len entry.f_control.f_receive_cache);
+  refined_receive_slots_are_empty_for_valid entry first_slot remaining;
+  receive_control_extension_refl entry.f_control;
+  empty_staged_receive_extension entry
+    (cache_len entry.f_control.f_receive_cache) step;
+  prepare_future_receive_steps_is_total_and_exact
+    entry entry.f_receive_chain entry.f_control target step
+    remaining first_slot (mk_u8 0) (empty_material_slots #v_Material ())
+    0 derivations;
+  let helper_success
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : prop =
+    prepare_future_receive_pending entry.f_receive_chain
+      entry.f_control target step remaining first_slot (mk_u8 0)
+      (empty_material_slots #v_Material ()) ==
+        Core_models.Option.Option_Some candidate /\
+    prepared_future_trace entry candidate target derivations step in
+  let outer_success
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : prop =
+    prepare_receive entry target step ==
+      Core_models.Option.Option_Some
+        (PreparedReceive_Future candidate) /\
+    prepared_future_trace entry candidate target derivations step /\
+    pending_receive_is_valid entry candidate target == true in
+  let promote_requires
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : Lemma
+        (requires (helper_success candidate))
+        (ensures (exists result. outer_success result))
+    =
+    exact_future_helper_result_is_published_by_prepare
+      entry target step remaining first_slot candidate derivations;
+    FStar.Classical.exists_intro outer_success candidate
+  in
+  let promote
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : Lemma
+        (helper_success candidate ==>
+          exists result. outer_success result)
+    = FStar.Classical.move_requires promote_requires candidate
+  in
+  FStar.Classical.forall_to_exists promote
+
+let material_slot_range_move_is_exact
+    (#v_Material:Type0)
+    (old_slots staged_slots final_slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (first count:nat)
+  : prop =
+  forall (i:nat{i < 50}).
+    (first <= i /\ i < first + count ==>
+      refined_slot_value final_slots i ==
+        refined_slot_value staged_slots i) /\
+    (i < first \/ first + count <= i ==>
+      refined_slot_value final_slots i ==
+        refined_slot_value old_slots i)
+
+/// Moving a prevalidated private range changes only the corresponding live
+/// material slots: every moved slot receives the exact staged record and
+/// every slot outside the range remains bit-for-bit unchanged.
+let rec publish_future_receive_slots_is_exact
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (staged_slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (slot remaining:u8)
+  : Lemma
+      (requires (v slot + v remaining <= 50))
+      (ensures
+        (let state', _ =
+           publish_future_receive_slots
+             state staged_slots slot remaining in
+         state'.f_control == state.f_control /\
+         state'.f_send_chain == state.f_send_chain /\
+         state'.f_receive_chain == state.f_receive_chain /\
+         material_slot_range_move_is_exact
+           state.f_receive_slots staged_slots state'.f_receive_slots
+           (v slot) (v remaining)))
+      (decreases (v remaining))
+  =
+  if v remaining = 0 then
+    (u8_value_extensionality remaining (mk_u8 0);
+     let pointwise (i:nat{i < 50})
+       : Lemma
+           ((v slot <= i /\ i < v slot + v remaining ==>
+               refined_slot_value state.f_receive_slots i ==
+                 refined_slot_value staged_slots i) /\
+            (i < v slot \/ v slot + v remaining <= i ==>
+               refined_slot_value state.f_receive_slots i ==
+                 refined_slot_value state.f_receive_slots i))
+       = ()
+     in
+     FStar.Classical.forall_intro pointwise)
+  else
+    (assert (v remaining > 0);
+     assert (v slot < 50);
+     let slot_index = cast (slot <: u8) <: usize in
+     let moved = refined_slot_value staged_slots (v slot) in
+     let cleared_staged = Seq.upd staged_slots (v slot)
+       (Core_models.Option.Option_None <:
+         Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) in
+     let moved_live = Seq.upd state.f_receive_slots (v slot) moved in
+     let moved_state =
+       ({ state with f_receive_slots = moved_live } <:
+        t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) in
+     FStar.Seq.Base.lemma_index_upd1
+       staged_slots (v slot)
+       (Core_models.Option.Option_None <:
+         Core_models.Option.t_Option (t_CachedReceiveKey v_Material));
+     FStar.Seq.Base.lemma_index_upd1
+       state.f_receive_slots (v slot) moved;
+     assert (v (slot +! mk_u8 1) == v slot + 1);
+     assert (v (remaining -! mk_u8 1) == v remaining - 1);
+     publish_future_receive_slots_is_exact
+       moved_state cleared_staged
+       (slot +! mk_u8 1) (remaining -! mk_u8 1);
+     let final_state, _ = publish_future_receive_slots
+       state staged_slots slot remaining in
+     let recursive_state, _ = publish_future_receive_slots
+       moved_state cleared_staged
+       (slot +! mk_u8 1) (remaining -! mk_u8 1) in
+     assert (final_state == recursive_state);
+     let pointwise (i:nat{i < 50})
+       : Lemma
+           ((v slot <= i /\ i < v slot + v remaining ==>
+               refined_slot_value final_state.f_receive_slots i ==
+                 refined_slot_value staged_slots i) /\
+            (i < v slot \/ v slot + v remaining <= i ==>
+               refined_slot_value final_state.f_receive_slots i ==
+                 refined_slot_value state.f_receive_slots i))
+       =
+       if i = v slot then
+         ()
+       else
+         (FStar.Seq.Base.lemma_index_upd2
+            staged_slots (v slot)
+            (Core_models.Option.Option_None <:
+              Core_models.Option.t_Option
+                (t_CachedReceiveKey v_Material)) i;
+          FStar.Seq.Base.lemma_index_upd2
+            state.f_receive_slots (v slot) moved i)
+     in
+     FStar.Classical.forall_intro pointwise)
+
+/// Exact logical prefix/suffix metadata together with an exact private-slot
+/// move re-establishes the complete logical/concrete material invariant.
+let material_slots_match_after_future_move
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (committed:t_RatchetState)
+    (staged_slots final_slots:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (count:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        (valid_refined entry /\
+         valid_state committed /\
+         cache_len entry.f_control.f_receive_cache + count <= 50 /\
+         cache_len committed.f_receive_cache ==
+           cache_len entry.f_control.f_receive_cache + count /\
+         (forall (i:nat{i < 50}).
+            i < cache_len entry.f_control.f_receive_cache ==>
+              cache_entry committed.f_receive_cache i ==
+                cache_entry entry.f_control.f_receive_cache i) /\
+         (forall (i:nat{i < 50}).
+            cache_len entry.f_control.f_receive_cache <= i /\
+            i < cache_len entry.f_control.f_receive_cache + count ==>
+              v (cache_entry committed.f_receive_cache i) ==
+                v entry.f_control.f_receive_sequence +
+                  (i - cache_len entry.f_control.f_receive_cache) + 1) /\
+         staged_receive_extension entry staged_slots
+           (cache_len entry.f_control.f_receive_cache) count step /\
+         material_slot_range_move_is_exact
+           entry.f_receive_slots staged_slots final_slots
+           (cache_len entry.f_control.f_receive_cache) count))
+      (ensures (material_slots_match committed.f_receive_cache final_slots))
+  =
+  let first = cache_len entry.f_control.f_receive_cache in
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        (match refined_slot_value final_slots i with
+         | Core_models.Option.Option_Some cached ->
+             i < cache_len committed.f_receive_cache /\
+             cached.f_sequence == cache_entry committed.f_receive_cache i
+         | Core_models.Option.Option_None ->
+             cache_len committed.f_receive_cache <= i)
+    =
+    if i < first then
+      (assert
+        (refined_slot_value final_slots i ==
+          refined_slot_value entry.f_receive_slots i);
+       match refined_slot_value entry.f_receive_slots i with
+       | Core_models.Option.Option_Some cached -> ()
+       | Core_models.Option.Option_None -> ())
+    else if i < first + count then
+      (assert
+        (refined_slot_value final_slots i ==
+          refined_slot_value staged_slots i);
+       match refined_slot_value staged_slots i with
+       | Core_models.Option.Option_None -> ()
+       | Core_models.Option.Option_Some cached ->
+           let committed_sequence = cache_entry committed.f_receive_cache i in
+           assert
+             (v cached.f_sequence ==
+               v entry.f_control.f_receive_sequence + (i - first) + 1);
+           assert
+             (v committed_sequence ==
+               v entry.f_control.f_receive_sequence + (i - first) + 1);
+           u64_value_extensionality cached.f_sequence committed_sequence)
+    else
+      (assert
+        (refined_slot_value final_slots i ==
+          refined_slot_value entry.f_receive_slots i);
+       match refined_slot_value entry.f_receive_slots i with
+       | Core_models.Option.Option_Some cached -> ()
+       | Core_models.Option.Option_None -> ())
+  in
+  FStar.Classical.forall_intro pointwise
+
+/// The extracted publication guard has no no-op branch once the complete
+/// prevalidated range is strictly below the fixed capacity.
+let publish_future_receive_computes
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        (v pending.f_first_slot < 50 /\
+         v pending.f_skipped < 50 - v pending.f_first_slot))
+      (ensures
+        (let moved_state, _ = publish_future_receive_slots
+           entry pending.f_staged_slots pending.f_first_slot
+             pending.f_skipped in
+         let published = publish_future_receive entry pending in
+         published.f_control == pending.f_committed_control /\
+         published.f_send_chain == moved_state.f_send_chain /\
+         published.f_receive_chain == pending.f_final_receive_chain /\
+         published.f_receive_slots == moved_state.f_receive_slots))
+  = ()
+
+let cache_has_preserved_by_exact_prefix
+    (old_cache new_cache:t_SequenceCache)
+  : Lemma
+      (requires
+        (cache_len old_cache <= cache_len new_cache /\
+         (forall (i:nat{i < 50}).
+            i < cache_len old_cache ==>
+              cache_entry new_cache i == cache_entry old_cache i)))
+      (ensures
+        (forall (sequence:u64).
+           cache_has old_cache sequence ==>
+             cache_has new_cache sequence))
+  =
+  let preserve (sequence:u64)
+    : Lemma
+        (cache_has old_cache sequence ==>
+          cache_has new_cache sequence)
+    =
+    let promote_requires (i:nat{i < 50})
+      : Lemma
+          (requires
+            (i < cache_len old_cache /\
+             cache_entry old_cache i == sequence))
+          (ensures
+            (exists (j:nat{j < 50}).
+               j < cache_len new_cache /\
+               cache_entry new_cache j == sequence))
+      = FStar.Classical.exists_intro
+          (fun j ->
+             j < cache_len new_cache /\
+             cache_entry new_cache j == sequence) i
+    in
+    let promote (i:nat{i < 50})
+      : Lemma
+          ((i < cache_len old_cache /\
+            cache_entry old_cache i == sequence) ==>
+           exists (j:nat{j < 50}).
+             j < cache_len new_cache /\
+             cache_entry new_cache j == sequence)
+      = FStar.Classical.move_requires promote_requires i
+    in
+    FStar.Classical.forall_to_exists promote
+  in
+  FStar.Classical.forall_intro preserve
+
+/// Semantic publication result for one future pending delta. It fixes the
+/// exact old prefix, every canonical skipped record, the final cardinality,
+/// target absence, and all unchanged directional state.
+let future_publication_is_exact
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+    (derivations:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : prop =
+  let published = publish_future_receive entry pending in
+  let first = cache_len entry.f_control.f_receive_cache in
+  let skipped = derivations - 1 in
+  valid_refined published /\
+  published.f_control == pending.f_committed_control /\
+  published.f_control.f_receive_sequence == target /\
+  published.f_send_chain == entry.f_send_chain /\
+  published.f_receive_chain == pending.f_final_receive_chain /\
+  cache_len published.f_control.f_receive_cache == first + skipped /\
+  (forall (i:nat{i < 50}).
+     i < first ==>
+       cache_entry published.f_control.f_receive_cache i ==
+         cache_entry entry.f_control.f_receive_cache i /\
+       refined_slot_value published.f_receive_slots i ==
+         refined_slot_value entry.f_receive_slots i) /\
+  (forall (i:nat{i < 50}).
+     first <= i /\ i < first + skipped ==>
+       (match refined_slot_value published.f_receive_slots i with
+        | Core_models.Option.Option_Some cached ->
+            cached.f_sequence ==
+              cache_entry published.f_control.f_receive_cache i /\
+            v cached.f_sequence ==
+              v entry.f_control.f_receive_sequence + (i - first) + 1 /\
+            cached.f_material ==
+              material_at #v_ReceiveChain #v_Material
+                entry.f_receive_chain step (i - first + 1)
+        | Core_models.Option.Option_None -> False)) /\
+  (forall (i:nat{i < 50}).
+     first + skipped <= i ==>
+       refined_slot_value published.f_receive_slots i ==
+         Core_models.Option.Option_None) /\
+  ~(cache_has published.f_control.f_receive_cache target) /\
+  (forall (sequence:u64).
+     cache_has entry.f_control.f_receive_cache sequence ==>
+       cache_has published.f_control.f_receive_cache sequence)
+
+/// A complete exact preparation trace publishes one fully valid semantic
+/// result; none of the defensive publication branches can retain a prefix.
+let prepared_future_publication_is_exact
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+    (derivations:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        (prepared_future_trace entry pending target derivations step))
+      (ensures
+        (future_publication_is_exact
+          entry pending target derivations step))
+  =
+  let first = cache_len entry.f_control.f_receive_cache in
+  let skipped = derivations - 1 in
+  assert (v pending.f_first_slot == first);
+  assert (v pending.f_skipped == skipped);
+  assert (first < 50);
+  assert (skipped < 50 - first);
+  publish_future_receive_slots_is_exact
+    entry pending.f_staged_slots
+    pending.f_first_slot pending.f_skipped;
+  publish_future_receive_computes entry pending;
+  let published = publish_future_receive entry pending in
+  assert
+    (material_slot_range_move_is_exact
+      entry.f_receive_slots pending.f_staged_slots
+      published.f_receive_slots first skipped);
+  material_slots_match_after_future_move
+    entry pending.f_committed_control pending.f_staged_slots
+    published.f_receive_slots skipped step;
+  assert (valid_refined published);
+  let old_prefix (i:nat{i < 50})
+    : Lemma
+        (i < first ==>
+          cache_entry published.f_control.f_receive_cache i ==
+            cache_entry entry.f_control.f_receive_cache i /\
+          refined_slot_value published.f_receive_slots i ==
+            refined_slot_value entry.f_receive_slots i)
+    = ()
+  in
+  FStar.Classical.forall_intro old_prefix;
+  let exact_suffix (i:nat{i < 50})
+    : Lemma
+        (first <= i /\ i < first + skipped ==>
+          (match refined_slot_value published.f_receive_slots i with
+           | Core_models.Option.Option_Some cached ->
+               cached.f_sequence ==
+                 cache_entry published.f_control.f_receive_cache i /\
+               v cached.f_sequence ==
+                 v entry.f_control.f_receive_sequence + (i - first) + 1 /\
+               cached.f_material ==
+                 material_at #v_ReceiveChain #v_Material
+                   entry.f_receive_chain step (i - first + 1)
+           | Core_models.Option.Option_None -> False))
+    =
+    if first <= i then
+      if i < first + skipped then
+        (assert
+          (refined_slot_value published.f_receive_slots i ==
+            refined_slot_value pending.f_staged_slots i);
+         match refined_slot_value pending.f_staged_slots i with
+         | Core_models.Option.Option_None -> ()
+         | Core_models.Option.Option_Some cached ->
+             let committed_sequence =
+               cache_entry published.f_control.f_receive_cache i in
+             assert
+               (v committed_sequence ==
+                 v entry.f_control.f_receive_sequence + (i - first) + 1);
+             u64_value_extensionality cached.f_sequence committed_sequence)
+      else ()
+    else ()
+  in
+  FStar.Classical.forall_intro exact_suffix;
+  let inactive_suffix (i:nat{i < 50})
+    : Lemma
+        (first + skipped <= i ==>
+          refined_slot_value published.f_receive_slots i ==
+            Core_models.Option.Option_None)
+    =
+    if first + skipped <= i then
+      (assert
+        (refined_slot_value published.f_receive_slots i ==
+          refined_slot_value entry.f_receive_slots i);
+       match refined_slot_value entry.f_receive_slots i with
+       | Core_models.Option.Option_Some cached -> ()
+       | Core_models.Option.Option_None -> ())
+    else ()
+  in
+  FStar.Classical.forall_intro inactive_suffix;
+  cache_has_preserved_by_exact_prefix
+    entry.f_control.f_receive_cache
+    published.f_control.f_receive_cache
+
+/// A cached preparation names the requested live record, prevalidates the
+/// complete old-last record, and fixes the exact whole-entry swap-removal that
+/// success will publish.
+let valid_cached_preparation
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (prepared:t_PreparedCachedReceive)
+    (target:u64)
+  : prop =
+  let finished = finish_receive_with_removal
+    entry.f_control target prepared.f_target_slot true in
+  let published = publish_cached_receive entry prepared in
+  valid_refined entry /\
+  prepared.f_sequence == target /\
+  v prepared.f_target_slot < 50 /\
+  v prepared.f_last_slot < 50 /\
+  lookup_receive_key entry.f_control target ==
+    Core_models.Option.Option_Some prepared.f_target_slot /\
+  (exists
+     (target_cached last_cached:t_CachedReceiveKey v_Material)
+     (removal:t_ReceiveRemoval).
+       refined_slot_value entry.f_receive_slots
+         (v prepared.f_target_slot) ==
+           Core_models.Option.Option_Some target_cached /\
+       target_cached.f_sequence == target /\
+       refined_slot_value entry.f_receive_slots
+         (v prepared.f_last_slot) ==
+           Core_models.Option.Option_Some last_cached /\
+       impl_RatchetState__receive_key_at
+         entry.f_control prepared.f_last_slot ==
+           Core_models.Option.Option_Some last_cached.f_sequence /\
+       finished.f_disposition == ReceiveDisposition_Consumed /\
+       finished.f_removal == Core_models.Option.Option_Some removal /\
+       removal.f_target_slot == prepared.f_target_slot /\
+       removal.f_last_slot == prepared.f_last_slot /\
+       prepared.f_committed_control == finished.f_state /\
+       published.f_receive_slots ==
+         material_slots_after_swap_remove
+           entry.f_receive_slots prepared.f_target_slot
+           prepared.f_last_slot last_cached /\
+       published.f_control == finished.f_state) /\
+  valid_refined published /\
+  published.f_send_chain == entry.f_send_chain /\
+  published.f_receive_chain == entry.f_receive_chain /\
+  cache_len published.f_control.f_receive_cache + 1 ==
+    cache_len entry.f_control.f_receive_cache /\
+  ~(cache_has published.f_control.f_receive_cache target) /\
+  (forall (other:u64).
+     other <> target /\ cache_has entry.f_control.f_receive_cache other ==>
+       cache_has published.f_control.f_receive_cache other)
+
+/// Successful cached preparation establishes the complete semantic removal
+/// relation; in particular, none of its defensive checks can make the later
+/// publication a no-op.
+let prepare_cached_receive_establishes_valid_cached
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64)
+    (prepared:t_PreparedCachedReceive {
+       prepare_cached_receive entry target ==
+         Core_models.Option.Option_Some prepared })
+  : Lemma (valid_cached_preparation entry prepared target)
+  =
+  lookup_receive_key_returns_unique_slot entry.f_control target;
+  match lookup_receive_key entry.f_control target with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some target_slot ->
+      assert
+        (cache_slot entry.f_control.f_receive_cache target target_slot);
+      let target_index:(i:nat{i < 50}) = v target_slot in
+      receive_key_at_matches_cache_slot
+        entry.f_control target target_slot;
+      match refined_slot_value entry.f_receive_slots target_index with
+      | Core_models.Option.Option_None -> ()
+      | Core_models.Option.Option_Some target_cached ->
+          assert (target_cached.f_sequence == target);
+          let len:u8 =
+            impl_RatchetState__receive_cache_len entry.f_control in
+          assert (v len > 0);
+          let last_slot:u8 = len -! mk_u8 1 in
+          let last_index:(i:nat{i < 50}) = v last_slot in
+          let last_sequence =
+            cache_entry entry.f_control.f_receive_cache last_index in
+          assert
+            (cache_slot entry.f_control.f_receive_cache
+              last_sequence last_slot);
+          receive_key_at_matches_cache_slot
+            entry.f_control last_sequence last_slot;
+          match refined_slot_value entry.f_receive_slots last_index with
+          | Core_models.Option.Option_None -> ()
+          | Core_models.Option.Option_Some last_cached ->
+              assert (last_cached.f_sequence == last_sequence);
+              let finished = finish_receive_with_removal
+                entry.f_control target target_slot true in
+              finish_receive_with_removal_success_shape
+                entry.f_control target target_slot;
+              match finished.f_removal with
+              | Core_models.Option.Option_None -> ()
+              | Core_models.Option.Option_Some removal ->
+                  assert
+                    (finished.f_disposition ==
+                      ReceiveDisposition_Consumed);
+                  assert (removal.f_target_slot == target_slot);
+                  assert (v removal.f_last_slot == v last_slot);
+                  u8_value_extensionality removal.f_last_slot last_slot;
+                  assert (removal.f_last_slot == last_slot);
+                  assert (prepared.f_sequence == target);
+                  assert (prepared.f_target_slot == target_slot);
+                  assert (prepared.f_last_slot == last_slot);
+                  assert
+                    (prepared.f_committed_control == finished.f_state);
+                  generated_material_swap_remove_matches_view
+                    entry.f_receive_slots target_slot last_slot last_cached;
+                  refined_finish_receive_success_is_exact_swap_removal
+                    entry target target_slot last_slot
+                    target_cached last_cached;
+                  refined_finish_receive_success_computes_swap
+                    entry target target_slot last_slot
+                    target_cached last_cached removal;
+                  let published = publish_cached_receive entry prepared in
+                  let slots' = material_slots_after_swap_remove
+                    entry.f_receive_slots target_slot
+                    last_slot last_cached in
+                  let with_slots =
+                    { entry with f_receive_slots = slots' } in
+                  let expected =
+                    { with_slots with f_control = finished.f_state } in
+                  assert (published == expected);
+                  assert
+                    (refined_finish_receive entry target true ==
+                      (expected, ReceiveDisposition_Consumed));
+                  assert (valid_refined published);
+                  finish_receive_with_removal_consumes_target
+                    entry.f_control target target_slot;
+                  let preserve_requires
+                      (other:u64)
+                    : Lemma
+                        (requires
+                          (other <> target /\
+                           cache_has
+                             entry.f_control.f_receive_cache other))
+                        (ensures
+                          (cache_has
+                            published.f_control.f_receive_cache other))
+                    = finish_receive_with_removal_preserves_other_key
+                        entry.f_control target target_slot other
+                  in
+                  let preserve (other:u64)
+                    : Lemma
+                        (other <> target /\
+                         cache_has entry.f_control.f_receive_cache other ==>
+                           cache_has
+                             published.f_control.f_receive_cache other)
+                    = FStar.Classical.move_requires
+                        preserve_requires other
+                  in
+                  FStar.Classical.forall_intro preserve;
+                  FStar.Classical.exists_intro
+                    (fun (candidate_removal:t_ReceiveRemoval) ->
+                       refined_slot_value entry.f_receive_slots
+                         (v prepared.f_target_slot) ==
+                           Core_models.Option.Option_Some target_cached /\
+                       target_cached.f_sequence == target /\
+                       refined_slot_value entry.f_receive_slots
+                         (v prepared.f_last_slot) ==
+                           Core_models.Option.Option_Some last_cached /\
+                       impl_RatchetState__receive_key_at
+                         entry.f_control prepared.f_last_slot ==
+                           Core_models.Option.Option_Some
+                             last_cached.f_sequence /\
+                       finished.f_disposition ==
+                         ReceiveDisposition_Consumed /\
+                       finished.f_removal ==
+                         Core_models.Option.Option_Some candidate_removal /\
+                       candidate_removal.f_target_slot ==
+                         prepared.f_target_slot /\
+                       candidate_removal.f_last_slot ==
+                         prepared.f_last_slot /\
+                       prepared.f_committed_control == finished.f_state /\
+                       published.f_receive_slots ==
+                         material_slots_after_swap_remove
+                           entry.f_receive_slots prepared.f_target_slot
+                           prepared.f_last_slot last_cached /\
+                       published.f_control == finished.f_state)
+                    removal;
+                  FStar.Classical.exists_intro
+                    (fun (candidate_last:t_CachedReceiveKey v_Material) ->
+                       exists (candidate_removal:t_ReceiveRemoval).
+                         refined_slot_value entry.f_receive_slots
+                           (v prepared.f_target_slot) ==
+                             Core_models.Option.Option_Some target_cached /\
+                         target_cached.f_sequence == target /\
+                         refined_slot_value entry.f_receive_slots
+                           (v prepared.f_last_slot) ==
+                             Core_models.Option.Option_Some candidate_last /\
+                         impl_RatchetState__receive_key_at
+                           entry.f_control prepared.f_last_slot ==
+                             Core_models.Option.Option_Some
+                               candidate_last.f_sequence /\
+                         finished.f_disposition ==
+                           ReceiveDisposition_Consumed /\
+                         finished.f_removal ==
+                           Core_models.Option.Option_Some candidate_removal /\
+                         candidate_removal.f_target_slot ==
+                           prepared.f_target_slot /\
+                         candidate_removal.f_last_slot ==
+                           prepared.f_last_slot /\
+                         prepared.f_committed_control == finished.f_state /\
+                         published.f_receive_slots ==
+                           material_slots_after_swap_remove
+                             entry.f_receive_slots prepared.f_target_slot
+                             prepared.f_last_slot candidate_last /\
+                         published.f_control == finished.f_state)
+                    last_cached;
+                  FStar.Classical.exists_intro
+                    (fun (candidate_target:t_CachedReceiveKey v_Material) ->
+                       exists
+                         (candidate_last:t_CachedReceiveKey v_Material)
+                         (candidate_removal:t_ReceiveRemoval).
+                           refined_slot_value entry.f_receive_slots
+                             (v prepared.f_target_slot) ==
+                               Core_models.Option.Option_Some
+                                 candidate_target /\
+                           candidate_target.f_sequence == target /\
+                           refined_slot_value entry.f_receive_slots
+                             (v prepared.f_last_slot) ==
+                               Core_models.Option.Option_Some
+                                 candidate_last /\
+                           impl_RatchetState__receive_key_at
+                             entry.f_control prepared.f_last_slot ==
+                               Core_models.Option.Option_Some
+                                 candidate_last.f_sequence /\
+                           finished.f_disposition ==
+                             ReceiveDisposition_Consumed /\
+                           finished.f_removal ==
+                             Core_models.Option.Option_Some
+                               candidate_removal /\
+                           candidate_removal.f_target_slot ==
+                             prepared.f_target_slot /\
+                           candidate_removal.f_last_slot ==
+                             prepared.f_last_slot /\
+                           prepared.f_committed_control ==
+                             finished.f_state /\
+                           published.f_receive_slots ==
+                             material_slots_after_swap_remove
+                               entry.f_receive_slots
+                               prepared.f_target_slot
+                               prepared.f_last_slot candidate_last /\
+                           published.f_control == finished.f_state)
+                    target_cached
+
+/// The prevalidated cached publication is exactly the already-verified
+/// refined successful swap-removal, not merely implementation-relative.
+let valid_cached_publication_matches_refined_finish
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (prepared:t_PreparedCachedReceive)
+    (target:u64)
+  : Lemma
+      (requires
+        (valid_cached_preparation entry prepared target))
+      (ensures
+        (refined_finish_receive entry target true ==
+          (publish_cached_receive entry prepared,
+           ReceiveDisposition_Consumed)))
+  = ()
+
+/// Every logically and physically valid cached target passes all extracted
+/// cached-preparation guards; preparation cannot spuriously reject it.
+let valid_cached_target_is_preparable
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64 {
+       cache_has entry.f_control.f_receive_cache target })
+  : Lemma
+      (prepare_cached_receive entry target <>
+        Core_models.Option.Option_None)
+  =
+  lookup_receive_key_is_complete entry.f_control target;
+  lookup_receive_key_returns_unique_slot entry.f_control target;
+  match lookup_receive_key entry.f_control target with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some target_slot ->
+      let target_index:(i:nat{i < 50}) = v target_slot in
+      receive_key_at_matches_cache_slot
+        entry.f_control target target_slot;
+      match refined_slot_value entry.f_receive_slots target_index with
+      | Core_models.Option.Option_None -> ()
+      | Core_models.Option.Option_Some target_cached ->
+          assert (target_cached.f_sequence == target);
+          let len = impl_RatchetState__receive_cache_len entry.f_control in
+          assert (v len > 0);
+          let last_slot = len -! mk_u8 1 in
+          let last_index:(i:nat{i < 50}) = v last_slot in
+          let last_sequence =
+            cache_entry entry.f_control.f_receive_cache last_index in
+          assert
+            (cache_slot entry.f_control.f_receive_cache
+              last_sequence last_slot);
+          receive_key_at_matches_cache_slot
+            entry.f_control last_sequence last_slot;
+          match refined_slot_value entry.f_receive_slots last_index with
+          | Core_models.Option.Option_None -> ()
+          | Core_models.Option.Option_Some last_cached ->
+              assert (last_cached.f_sequence == last_sequence);
+              finish_receive_with_removal_success_shape
+                entry.f_control target target_slot;
+              let finished = finish_receive_with_removal
+                entry.f_control target target_slot true in
+              match finished.f_removal with
+              | Core_models.Option.Option_None -> ()
+              | Core_models.Option.Option_Some removal ->
+                  assert (v removal.f_last_slot == v last_slot);
+                  u8_value_extensionality removal.f_last_slot last_slot
+
+/// Non-vacuity of cached preparation: a valid cached target returns one exact
+/// prevalidated whole-entry removal from the private helper.
+let valid_cached_target_prepares_valid_cached
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64 {
+       cache_has entry.f_control.f_receive_cache target })
+  : Lemma
+      (exists (prepared:t_PreparedCachedReceive).
+         prepare_cached_receive entry target ==
+           Core_models.Option.Option_Some prepared /\
+         valid_cached_preparation entry prepared target)
+  =
+  valid_cached_target_is_preparable entry target;
+  match prepare_cached_receive entry target with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some prepared ->
+      prepare_cached_receive_establishes_valid_cached
+        entry target prepared;
+      FStar.Classical.exists_intro
+        (fun candidate ->
+           prepare_cached_receive entry target ==
+             Core_models.Option.Option_Some candidate /\
+           valid_cached_preparation entry candidate target)
+        prepared
+
+let pending_staged_slot_is_canonical
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (i:nat{i < 50})
+  : prop =
+  let first = v pending.f_first_slot in
+  match refined_slot_value pending.f_staged_slots i with
+  | Core_models.Option.Option_Some cached ->
+      let offset:nat =
+        if first <= i then i - first + 1 else 0 in
+      v cached.f_sequence ==
+        v entry.f_control.f_receive_sequence + offset /\
+      cached.f_material ==
+        material_at #v_ReceiveChain #v_Material
+          entry.f_receive_chain step offset
+  | Core_models.Option.Option_None -> False
+
+/// The private staged array contains exactly the canonical skipped sequence/material pairs in its absolute publication range and is empty everywhere else.
+let pending_staged_slots_are_canonical
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : prop =
+  forall (i:nat{i < 50}).
+    let first = v pending.f_first_slot in
+    let skipped = v pending.f_skipped in
+    (first <= i /\ i < first + skipped ==>
+      pending_staged_slot_is_canonical entry pending step i) /\
+    (i < first \/ first + skipped <= i ==>
+      refined_slot_value pending.f_staged_slots i ==
+        Core_models.Option.Option_None)
+
+let future_target_is_absent_from_entry
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64 {
+       v target > v entry.f_control.f_receive_sequence })
+  : Lemma
+      (~(cache_has entry.f_control.f_receive_cache target))
+  = ()
+
+let staged_receive_extension_excludes_target
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (staged:t_Array
+      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+      (mk_usize 50))
+    (target:u64)
+    (first count derivations:nat)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        (derivations > 0 /\
+         count + 1 == derivations /\
+         v target == v entry.f_control.f_receive_sequence + derivations /\
+         staged_receive_extension entry staged first count step))
+      (ensures
+        (forall (i:nat{i < 50}).
+           match refined_slot_value staged i with
+           | Core_models.Option.Option_Some cached ->
+               cached.f_sequence <> target
+           | Core_models.Option.Option_None -> True))
+  =
+  let pointwise (i:nat{i < 50})
+    : Lemma
+        (match refined_slot_value staged i with
+         | Core_models.Option.Option_Some cached ->
+             cached.f_sequence <> target
+         | Core_models.Option.Option_None -> True)
+    =
+    match refined_slot_value staged i with
+    | Core_models.Option.Option_None -> ()
+    | Core_models.Option.Option_Some cached ->
+        if i < first then ()
+        else if first + count <= i then ()
+        else
+          assert (v cached.f_sequence < v target)
+  in
+  FStar.Classical.forall_intro pointwise
+
+/// Proof-visible invariant for a future receive delta. It ties one admitted nonzero plan to the exact canonical chain/material trace, the separate target, exact staged skipped range, post-target logical consumption, unchanged live entry, and success-only publication result.
+let valid_pending
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : prop =
+  let plan = plan_receive_until entry.f_control target in
+  let derivations = v plan.f_derivations in
+  plan.f_sequence == Core_models.Option.Option_Some target /\
+  prepared_future_trace entry pending target derivations step /\
+  pending_receive_is_valid entry pending target == true /\
+  ~(cache_has entry.f_control.f_receive_cache target) /\
+  (forall (i:nat{i < 50}).
+     match refined_slot_value pending.f_staged_slots i with
+     | Core_models.Option.Option_Some cached ->
+         cached.f_sequence <> target
+     | Core_models.Option.Option_None -> True) /\
+  future_publication_is_exact entry pending target derivations step
+
+/// Invert a returned cached constructor to the exact prevalidated helper
+/// result selected for the requested target.
+let prepare_receive_cached_result_shape
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (prepared:t_PreparedCachedReceive)
+  : Lemma
+      (requires
+        (prepare_receive entry target step ==
+          Core_models.Option.Option_Some
+            (PreparedReceive_Cached prepared)))
+      (ensures
+        ((plan_receive_until entry.f_control target).f_sequence ==
+           Core_models.Option.Option_Some target /\
+         (plan_receive_until entry.f_control target).f_derivations ==
+           mk_u64 0 /\
+         prepare_cached_receive entry target ==
+           Core_models.Option.Option_Some prepared))
+  = plan_receive_shape entry.f_control target
+
+let prepare_receive_cached_computes
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (prepared:t_PreparedCachedReceive)
+  : Lemma
+      (requires
+        ((plan_receive_until entry.f_control target).f_sequence ==
+           Core_models.Option.Option_Some target /\
+         (plan_receive_until entry.f_control target).f_derivations ==
+           mk_u64 0 /\
+         prepare_cached_receive entry target ==
+           Core_models.Option.Option_Some prepared))
+      (ensures
+        (prepare_receive entry target step ==
+          Core_models.Option.Option_Some
+            (PreparedReceive_Cached prepared)))
+  = ()
+
+/// A valid cached target is non-vacuously returned by the public preparer as
+/// one exact prevalidated whole-entry removal.
+let admitted_cached_target_prepares_valid_cached
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64 {
+       cache_has entry.f_control.f_receive_cache target })
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        ((plan_receive_until entry.f_control target).f_sequence ==
+           Core_models.Option.Option_Some target /\
+         (plan_receive_until entry.f_control target).f_derivations ==
+           mk_u64 0))
+      (ensures
+        (exists (prepared:t_PreparedCachedReceive).
+           prepare_receive entry target step ==
+             Core_models.Option.Option_Some
+               (PreparedReceive_Cached prepared) /\
+           valid_cached_preparation entry prepared target))
+  =
+  valid_cached_target_prepares_valid_cached entry target;
+  let helper_result (candidate:t_PreparedCachedReceive)
+    : prop =
+    prepare_cached_receive entry target ==
+      Core_models.Option.Option_Some candidate /\
+    valid_cached_preparation entry candidate target in
+  let desired (candidate:t_PreparedCachedReceive)
+    : prop =
+    prepare_receive entry target step ==
+      Core_models.Option.Option_Some
+        (PreparedReceive_Cached candidate) /\
+    valid_cached_preparation entry candidate target in
+  let promote_requires (candidate:t_PreparedCachedReceive)
+    : Lemma
+        (requires (helper_result candidate))
+        (ensures (exists result. desired result))
+    =
+    prepare_receive_cached_computes entry target step candidate;
+    FStar.Classical.exists_intro desired candidate
+  in
+  let promote (candidate:t_PreparedCachedReceive)
+    : Lemma
+        (helper_result candidate ==> exists result. desired result)
+    = FStar.Classical.move_requires promote_requires candidate
+  in
+  FStar.Classical.forall_to_exists promote
+
+/// Exact callback-linked success relation used by the public capstone. Cached success publishes the prevalidated whole-entry removal; future success publishes one valid private pending delta.
+let successful_receive
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry final_state:t_RefinedRatchet
+      v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
+    (plaintext:v_Plaintext)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : prop =
+  match prepare_receive entry target step with
+  | Core_models.Option.Option_None -> False
+  | Core_models.Option.Option_Some prepared ->
+      match prepared with
+      | PreparedReceive_Cached cached_preparation -> (
+          let i = v cached_preparation.f_target_slot in
+          valid_cached_preparation entry cached_preparation target /\
+          cached_preparation.f_sequence == target /\
+          i < 50 /\
+          (match refined_slot_value entry.f_receive_slots i with
+           | Core_models.Option.Option_Some cached ->
+               cached.f_sequence == cached_preparation.f_sequence /\
+               open_callback cached.f_material
+                 cached_preparation.f_sequence context ==
+                   Core_models.Option.Option_Some plaintext /\
+               final_state ==
+                 publish_cached_receive entry cached_preparation
+           | Core_models.Option.Option_None -> False))
+      | PreparedReceive_Future pending ->
+          valid_pending entry pending target step /\
+          open_callback pending.f_target_material
+            pending.f_target_sequence context ==
+              Core_models.Option.Option_Some plaintext /\
+          final_state == publish_future_receive entry pending
+
+/// A rejected admission is definitionally independent of both the KDF executor and open callback and returns the complete entry state.
+let rejected_admission_is_entry_neutral
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (target:u64 {
+       (plan_receive_until entry.f_control target).f_sequence ==
+         Core_models.Option.Option_None })
+    (step1 step2:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open1 open2:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (prepare_receive entry target step1 == Core_models.Option.Option_None /\
+       prepare_receive entry target step2 == Core_models.Option.Option_None /\
+       refined_open_and_finish entry target step1 context open1 ==
+         (entry, Core_models.Option.Option_None) /\
+       refined_open_and_finish entry target step2 context open2 ==
+         (entry, Core_models.Option.Option_None))
+  = ()
+
+/// A successful future preparation establishes the complete proof-visible pending invariant.
+let prepare_receive_future_establishes_valid_pending
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material {
+       prepare_receive entry target step ==
+         Core_models.Option.Option_Some
+           (PreparedReceive_Future pending) })
+  : Lemma (valid_pending entry pending target step)
+  =
+  prepare_receive_future_result_shape entry target step pending;
+  let plan = plan_receive_until entry.f_control target in
+  let derivations = v plan.f_derivations in
+  let remaining = cast plan.f_derivations <: u8 in
+  let first_slot =
+    impl_RatchetState__receive_cache_len entry.f_control in
+  plan_receive_shape entry.f_control target;
+  assert (v target > v entry.f_control.f_receive_sequence);
+  plan_future_receive_is_bounded entry.f_control target;
+  assert (v remaining == derivations);
+  assert (v first_slot == cache_len entry.f_control.f_receive_cache);
+  receive_control_extension_refl entry.f_control;
+  empty_staged_receive_extension entry
+    (cache_len entry.f_control.f_receive_cache) step;
+  prepare_future_receive_steps_is_total_and_exact
+    entry entry.f_receive_chain entry.f_control target step
+    remaining first_slot (mk_u8 0) (empty_material_slots #v_Material ())
+    0 derivations;
+  let helper_success
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : prop =
+    prepare_future_receive_pending entry.f_receive_chain
+      entry.f_control target step remaining first_slot (mk_u8 0)
+      (empty_material_slots #v_Material ()) ==
+        Core_models.Option.Option_Some candidate /\
+    prepared_future_trace entry candidate target derivations step in
+  let promote_requires
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : Lemma
+        (requires (helper_success candidate))
+        (ensures
+          (prepared_future_trace
+            entry pending target derivations step))
+    =
+    assert
+      (Core_models.Option.Option_Some candidate ==
+        Core_models.Option.Option_Some pending);
+    assert (candidate == pending)
+  in
+  let promote
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : Lemma
+        (helper_success candidate ==>
+          prepared_future_trace entry pending target derivations step)
+    = FStar.Classical.move_requires promote_requires candidate
+  in
+  FStar.Classical.forall_to_exists promote;
+  prepared_future_trace_passes_validator
+    entry pending target derivations step;
+  future_target_is_absent_from_entry entry target;
+  staged_receive_extension_excludes_target
+    entry pending.f_staged_slots target
+    (cache_len entry.f_control.f_receive_cache)
+    (derivations - 1) derivations step;
+  prepared_future_publication_is_exact
+    entry pending target derivations step
+
+/// Every admitted nonzero plan non-vacuously returns a pending delta that
+/// satisfies the full exact preparation and publication invariant.
+let admitted_future_plan_prepares_valid_pending
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (requires
+        ((plan_receive_until entry.f_control target).f_sequence ==
+           Core_models.Option.Option_Some target /\
+         v (plan_receive_until entry.f_control target).f_derivations > 0))
+      (ensures
+        (exists (pending:t_PendingReceive v_ReceiveChain v_Material).
+           prepare_receive entry target step ==
+             Core_models.Option.Option_Some
+               (PreparedReceive_Future pending) /\
+           valid_pending entry pending target step))
+  =
+  admitted_future_plan_prepares_exact_trace entry target step;
+  let plan = plan_receive_until entry.f_control target in
+  let derivations = v plan.f_derivations in
+  let exact_result
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : prop =
+    prepare_receive entry target step ==
+      Core_models.Option.Option_Some
+        (PreparedReceive_Future candidate) /\
+    prepared_future_trace entry candidate target derivations step /\
+    pending_receive_is_valid entry candidate target == true in
+  let desired
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : prop =
+    prepare_receive entry target step ==
+      Core_models.Option.Option_Some
+        (PreparedReceive_Future candidate) /\
+    valid_pending entry candidate target step in
+  let promote_requires
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : Lemma
+        (requires (exact_result candidate))
+        (ensures (exists result. desired result))
+    =
+    prepare_receive_future_establishes_valid_pending
+      entry target step candidate;
+    FStar.Classical.exists_intro desired candidate
+  in
+  let promote
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : Lemma
+        (exact_result candidate ==> exists result. desired result)
+    = FStar.Classical.move_requires promote_requires candidate
+  in
+  FStar.Classical.forall_to_exists promote
+
+/// The separate pending target is the exact canonical material at the requested sequence under the fixed entry chain and executor.
+let pending_target_material_is_canonical
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+  : Lemma
+      (requires (valid_pending entry pending target step))
+      (ensures
+        (pending.f_target_sequence == target /\
+         pending.f_target_material ==
+           material_at #v_ReceiveChain #v_Material
+             entry.f_receive_chain step
+             (v target - v entry.f_control.f_receive_sequence)))
+  = ()
+
+/// Every callback rejection, for either cached or future preparation, returns the exact complete entry refined state.
+let refined_open_and_finish_rejection_is_neutral
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
     (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
     (context:v_Context)
     (open_callback:v_Material -> u64 -> v_Context ->
       Core_models.Option.t_Option v_Plaintext)
   : Lemma
+      (let final_state, result =
+         refined_open_and_finish
+           entry target step context open_callback in
+       result == Core_models.Option.Option_None ==>
+         final_state == entry)
+  =
+  match prepare_receive entry target step with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some prepared ->
+      match prepared with
+      | PreparedReceive_Cached cached_preparation -> (
+          let i = v cached_preparation.f_target_slot in
+          if i >= 50 then ()
+          else
+            match refined_slot_value entry.f_receive_slots i with
+            | Core_models.Option.Option_None -> ()
+            | Core_models.Option.Option_Some cached ->
+                if cached.f_sequence <> cached_preparation.f_sequence
+                then ()
+                else
+                  match open_callback cached.f_material
+                    cached_preparation.f_sequence context with
+                  | Core_models.Option.Option_None -> ()
+                  | Core_models.Option.Option_Some _ -> ())
+      | PreparedReceive_Future pending ->
+          match open_callback pending.f_target_material
+            pending.f_target_sequence context with
+          | Core_models.Option.Option_None -> ()
+          | Core_models.Option.Option_Some _ -> ()
+
+/// Cached callback success publishes exactly the prevalidated whole-entry removal and returns exactly the callback plaintext.
+let refined_open_cached_success_publishes_removal
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+    (prepared:t_PreparedCachedReceive)
+    (cached:t_CachedReceiveKey v_Material)
+    (plaintext:v_Plaintext)
+  : Lemma
       (requires
-        (refined_advance_receive_until state target step ==
-           (admitted, Core_models.Option.Option_Some sequence) /\
-         refined_receive_key admitted sequence ==
-           Core_models.Option.Option_Some material /\
-         open_callback material sequence context ==
-           Core_models.Option.Option_None))
+        (prepare_receive entry target step ==
+           Core_models.Option.Option_Some
+             (PreparedReceive_Cached prepared) /\
+         v prepared.f_target_slot < 50 /\
+         refined_slot_value entry.f_receive_slots
+           (v prepared.f_target_slot) ==
+             Core_models.Option.Option_Some cached /\
+         cached.f_sequence == prepared.f_sequence /\
+         open_callback cached.f_material prepared.f_sequence context ==
+           Core_models.Option.Option_Some plaintext))
       (ensures
-        (refined_open_and_finish state target step context open_callback ==
-          (admitted, Core_models.Option.Option_None)))
+        (valid_cached_preparation entry prepared target /\
+         refined_open_and_finish
+           entry target step context open_callback ==
+             (publish_cached_receive entry prepared,
+              Core_models.Option.Option_Some plaintext)))
+  =
+  prepare_receive_cached_result_shape entry target step prepared;
+  prepare_cached_receive_establishes_valid_cached
+    entry target prepared
+
+/// Future callback success publishes exactly the validated pending delta and returns exactly the callback plaintext.
+let refined_open_future_success_publishes_pending
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (plaintext:v_Plaintext)
+  : Lemma
+      (requires
+        (prepare_receive entry target step ==
+           Core_models.Option.Option_Some
+             (PreparedReceive_Future pending) /\
+         open_callback pending.f_target_material
+           pending.f_target_sequence context ==
+             Core_models.Option.Option_Some plaintext))
+      (ensures
+        (valid_pending entry pending target step /\
+         refined_open_and_finish
+           entry target step context open_callback ==
+             (publish_future_receive entry pending,
+              Core_models.Option.Option_Some plaintext)))
+  = prepare_receive_future_establishes_valid_pending
+      entry target step pending
+
+/// The exact cached publication facts are the cached branch of the public
+/// semantic success relation.
+let cached_publication_establishes_successful_receive
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry final_state:t_RefinedRatchet
+      v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+    (prepared:t_PreparedCachedReceive)
+    (cached:t_CachedReceiveKey v_Material)
+    (plaintext:v_Plaintext)
+  : Lemma
+      (requires
+        (prepare_receive entry target step ==
+           Core_models.Option.Option_Some
+             (PreparedReceive_Cached prepared) /\
+         valid_cached_preparation entry prepared target /\
+         v prepared.f_target_slot < 50 /\
+         refined_slot_value entry.f_receive_slots
+           (v prepared.f_target_slot) ==
+             Core_models.Option.Option_Some cached /\
+         cached.f_sequence == prepared.f_sequence /\
+         open_callback cached.f_material prepared.f_sequence context ==
+           Core_models.Option.Option_Some plaintext /\
+         final_state == publish_cached_receive entry prepared))
+      (ensures
+        (successful_receive entry final_state target plaintext
+          step context open_callback))
   = ()
 
-/// If the opaque open callback returns `Some` for the exact selected material, sequence, and context, the public operation returns that plaintext only with the state produced by consuming that same sequence.
-let refined_open_some_consumes_selected_material
+/// The exact future publication facts are the future branch of the public
+/// semantic success relation.
+let future_publication_establishes_successful_receive
     (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
-    (state admitted consumed:t_RefinedRatchet
+    (entry final_state:t_RefinedRatchet
       v_SendChain v_ReceiveChain v_Material)
-    (target sequence:u64)
-    (material:v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (plaintext:v_Plaintext)
+  : Lemma
+      (requires
+        (prepare_receive entry target step ==
+           Core_models.Option.Option_Some
+             (PreparedReceive_Future pending) /\
+         valid_pending entry pending target step /\
+         open_callback pending.f_target_material
+           pending.f_target_sequence context ==
+             Core_models.Option.Option_Some plaintext /\
+         final_state == publish_future_receive entry pending))
+      (ensures
+        (successful_receive entry final_state target plaintext
+          step context open_callback))
+  = ()
+
+/// The public open operation preserves the complete refined invariant across every state-neutral rejection and both success-only publication variants.
+let refined_open_and_finish_preserves_validity
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (let final_state, _ =
+         refined_open_and_finish
+           entry target step context open_callback in
+       valid_refined final_state)
+  =
+  match prepare_receive entry target step with
+  | Core_models.Option.Option_None -> ()
+  | Core_models.Option.Option_Some prepared ->
+      match prepared with
+      | PreparedReceive_Cached cached_preparation ->
+          (prepare_receive_cached_result_shape
+            entry target step cached_preparation;
+          prepare_cached_receive_establishes_valid_cached
+            entry target cached_preparation;
+          let i = v cached_preparation.f_target_slot in
+          if i >= 50 then ()
+          else
+            match refined_slot_value entry.f_receive_slots i with
+            | Core_models.Option.Option_None -> ()
+            | Core_models.Option.Option_Some cached ->
+                if cached.f_sequence <> cached_preparation.f_sequence
+                then ()
+                else
+                  match open_callback cached.f_material
+                    cached_preparation.f_sequence context with
+                  | Core_models.Option.Option_None -> ()
+                  | Core_models.Option.Option_Some _ -> ())
+      | PreparedReceive_Future pending ->
+          (prepare_receive_future_establishes_valid_pending
+            entry target step pending;
+          match open_callback pending.f_target_material
+            pending.f_target_sequence context with
+          | Core_models.Option.Option_None -> ()
+          | Core_models.Option.Option_Some _ -> ())
+
+/// Whenever the actual public result carries plaintext, that payload satisfies
+/// the exact semantic success relation for the published state.
+let refined_open_and_finish_success_result
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (let final_state, result =
+         refined_open_and_finish
+           entry target step context open_callback in
+       match result with
+       | Core_models.Option.Option_None -> True
+       | Core_models.Option.Option_Some plaintext ->
+           successful_receive entry final_state target plaintext
+             step context open_callback)
+  =
+  let final_state, _ =
+    refined_open_and_finish entry target step context open_callback in
+  match prepare_receive entry target step with
+  | Core_models.Option.Option_None ->
+      assert
+        ((snd (refined_open_and_finish
+          entry target step context open_callback)) ==
+            Core_models.Option.Option_None)
+  | Core_models.Option.Option_Some prepared ->
+      match prepared with
+      | PreparedReceive_Cached cached_preparation -> (
+          let i = v cached_preparation.f_target_slot in
+          if i >= 50 then
+            assert
+              ((snd (refined_open_and_finish
+                entry target step context open_callback)) ==
+                  Core_models.Option.Option_None)
+          else
+            match refined_slot_value entry.f_receive_slots i with
+            | Core_models.Option.Option_None ->
+                assert
+                  ((snd (refined_open_and_finish
+                    entry target step context open_callback)) ==
+                      Core_models.Option.Option_None)
+            | Core_models.Option.Option_Some cached ->
+                if cached.f_sequence <> cached_preparation.f_sequence
+                then
+                  assert
+                    ((snd (refined_open_and_finish
+                      entry target step context open_callback)) ==
+                        Core_models.Option.Option_None)
+                else
+                  match open_callback cached.f_material
+                    cached_preparation.f_sequence context with
+                  | Core_models.Option.Option_None ->
+                      assert
+                        ((snd (refined_open_and_finish
+                          entry target step context open_callback)) ==
+                            Core_models.Option.Option_None)
+                  | Core_models.Option.Option_Some plaintext ->
+                      (refined_open_cached_success_publishes_removal
+                         entry target step context open_callback
+                         cached_preparation cached plaintext;
+                       assert
+                         (valid_cached_preparation
+                           entry cached_preparation target);
+                       assert
+                         (refined_open_and_finish
+                           entry target step context open_callback ==
+                             (publish_cached_receive
+                                entry cached_preparation,
+                              Core_models.Option.Option_Some plaintext));
+                       assert
+                         (final_state ==
+                           publish_cached_receive
+                             entry cached_preparation);
+                       cached_publication_establishes_successful_receive
+                         entry final_state target step context open_callback
+                         cached_preparation cached plaintext))
+      | PreparedReceive_Future pending ->
+          match open_callback pending.f_target_material
+            pending.f_target_sequence context with
+          | Core_models.Option.Option_None ->
+              assert
+                ((snd (refined_open_and_finish
+                  entry target step context open_callback)) ==
+                    Core_models.Option.Option_None)
+          | Core_models.Option.Option_Some plaintext ->
+              (refined_open_future_success_publishes_pending
+                 entry target step context open_callback pending plaintext;
+               assert (valid_pending entry pending target step);
+               assert
+                 (refined_open_and_finish
+                   entry target step context open_callback ==
+                     (publish_future_receive entry pending,
+                      Core_models.Option.Option_Some plaintext));
+               assert
+                 (final_state == publish_future_receive entry pending);
+               future_publication_establishes_successful_receive
+                 entry final_state target step context open_callback
+                 pending plaintext)
+
+/// One exact property of an option's actual payload implies the conventional
+/// pointwise implication for every equal `Some` payload.
+let option_payload_property_is_pointwise
+    (#a:Type0)
+    (result:Core_models.Option.t_Option a)
+    (property:a -> prop)
+  : Lemma
+      (requires
+        (match result with
+         | Core_models.Option.Option_None -> True
+         | Core_models.Option.Option_Some payload -> property payload))
+      (ensures
+        (forall payload.
+           result == Core_models.Option.Option_Some payload ==>
+             property payload))
+  =
+  match result with
+  | Core_models.Option.Option_None ->
+      let impossible_requires (payload:a)
+        : Lemma
+            (requires
+              (result == Core_models.Option.Option_Some payload))
+            (ensures (property payload))
+        = ()
+      in
+      let impossible (payload:a)
+        : Lemma
+            (result == Core_models.Option.Option_Some payload ==>
+              property payload)
+        = FStar.Classical.move_requires impossible_requires payload
+      in
+      FStar.Classical.forall_intro impossible
+  | Core_models.Option.Option_Some actual ->
+      let pointwise_requires (payload:a)
+        : Lemma
+            (requires
+              (result == Core_models.Option.Option_Some payload))
+            (ensures (property payload))
+        = assert (actual == payload)
+      in
+      let pointwise (payload:a)
+        : Lemma
+            (result == Core_models.Option.Option_Some payload ==>
+              property payload)
+        = FStar.Classical.move_requires pointwise_requires payload
+      in
+      FStar.Classical.forall_intro pointwise
+
+/// Caller-usable capstone: every normal rejection is exact full-state identity, while every returned plaintext is linked to the same prepared target and success-only publication.
+let refined_open_and_finish_is_state_neutral_or_successful
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (let final_state, result =
+         refined_open_and_finish
+           entry target step context open_callback in
+       valid_refined final_state /\
+       (result == Core_models.Option.Option_None ==>
+         final_state == entry) /\
+       (forall plaintext.
+          result == Core_models.Option.Option_Some plaintext ==>
+            successful_receive entry final_state target plaintext
+              step context open_callback))
+  =
+  refined_open_and_finish_preserves_validity
+    entry target step context open_callback;
+  refined_open_and_finish_rejection_is_neutral
+    entry target step context open_callback;
+  refined_open_and_finish_success_result
+    entry target step context open_callback;
+  let final_state, result =
+    refined_open_and_finish entry target step context open_callback in
+  option_payload_property_is_pointwise result
+    (fun plaintext ->
+      successful_receive entry final_state target plaintext
+        step context open_callback)
+
+/// Either semantic success branch consumes the requested capability exactly
+/// once and leaves a valid state whose receive counter has reached it.
+let successful_receive_consumes_target
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry final_state:t_RefinedRatchet
+      v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
     (plaintext:v_Plaintext)
     (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
     (context:v_Context)
@@ -3401,51 +6132,376 @@ let refined_open_some_consumes_selected_material
       Core_models.Option.t_Option v_Plaintext)
   : Lemma
       (requires
-        (refined_advance_receive_until state target step ==
-           (admitted, Core_models.Option.Option_Some sequence) /\
-         refined_receive_key admitted sequence ==
-           Core_models.Option.Option_Some material /\
-         open_callback material sequence context ==
-           Core_models.Option.Option_Some plaintext /\
-         refined_finish_receive admitted sequence true ==
-           (consumed, ReceiveDisposition_Consumed)))
+        (successful_receive entry final_state target plaintext
+          step context open_callback))
       (ensures
-        (refined_open_and_finish state target step context open_callback ==
-          (consumed, Core_models.Option.Option_Some plaintext)))
+        (valid_refined final_state /\
+         v target <= v final_state.f_control.f_receive_sequence /\
+         ~(cache_has final_state.f_control.f_receive_cache target)))
   = ()
 
-/// The public open operation preserves the complete refined invariant across admission rejection, callback failure retention, and callback success consumption.
-let refined_open_and_finish_preserves_validity
+/// A target at or behind the live counter but absent from the valid cache is
+/// an authoritative replay/missing result and cannot invoke publication.
+let missing_old_target_is_neutral
     (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
-    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
-       valid_refined state })
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64 {
+       v target <= v entry.f_control.f_receive_sequence /\
+       ~(cache_has entry.f_control.f_receive_cache target) })
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+  : Lemma
+      (prepare_receive entry target step ==
+         Core_models.Option.Option_None /\
+       refined_open_and_finish entry target step context open_callback ==
+         (entry, Core_models.Option.Option_None))
+  =
+  plan_receive_shape entry.f_control target;
+  lookup_receive_key_absent_is_none entry.f_control target
+
+/// Replaying a successfully consumed target is a full-state-neutral missing
+/// result for every replay callback and executor.
+let successful_open_replay_is_neutral
+    (#v_SendChain #v_ReceiveChain #v_Material
+      #v_Context #v_Plaintext #v_ReplayContext #v_ReplayPlaintext:Type0)
+    (entry final_state:t_RefinedRatchet
+      v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
+    (plaintext:v_Plaintext)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+    (replay_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (replay_context:v_ReplayContext)
+    (replay_open:v_Material -> u64 -> v_ReplayContext ->
+      Core_models.Option.t_Option v_ReplayPlaintext)
+  : Lemma
+      (requires
+        (successful_receive entry final_state target plaintext
+          step context open_callback))
+      (ensures
+        (refined_open_and_finish final_state target replay_step
+           replay_context replay_open ==
+         (final_state, Core_models.Option.Option_None)))
+  =
+  successful_receive_consumes_target
+    entry final_state target plaintext step context open_callback;
+  missing_old_target_is_neutral
+    final_state target replay_step replay_context replay_open
+
+/// A public successful result can therefore be replayed immediately without
+/// changing any state, independently of the replay callback.
+let refined_open_success_replay_is_neutral
+    (#v_SendChain #v_ReceiveChain #v_Material
+      #v_Context #v_Plaintext #v_ReplayContext #v_ReplayPlaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+    (final_state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (plaintext:v_Plaintext {
+       refined_open_and_finish entry target step context open_callback ==
+         (final_state, Core_models.Option.Option_Some plaintext) })
+    (replay_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (replay_context:v_ReplayContext)
+    (replay_open:v_Material -> u64 -> v_ReplayContext ->
+      Core_models.Option.t_Option v_ReplayPlaintext)
+  : Lemma
+      (refined_open_and_finish final_state target replay_step
+         replay_context replay_open ==
+       (final_state, Core_models.Option.Option_None))
+  =
+  refined_open_and_finish_is_state_neutral_or_successful
+    entry target step context open_callback;
+  assert
+    (successful_receive entry final_state target plaintext
+      step context open_callback);
+  successful_open_replay_is_neutral
+    entry final_state target plaintext step context open_callback
+    replay_step replay_context replay_open
+
+let rec repeated_rejected_open_state
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+    (attempts:nat)
+  : Tot (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (decreases attempts) =
+  if attempts = 0 then entry
+  else
+    let next, _ = refined_open_and_finish
+      entry target step context open_callback in
+    repeated_rejected_open_state
+      next target step context open_callback (attempts - 1)
+
+/// Any finite number of identical rejected attempts preserves the exact entry
+/// state; this is an induction over the public operation, not a one-shot alias.
+let rec rejected_open_attempts_preserve_entry
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+    (attempts:nat)
+  : Lemma
+      (requires
+        (let _, result = refined_open_and_finish
+           entry target step context open_callback in
+         result == Core_models.Option.Option_None))
+      (ensures
+        (repeated_rejected_open_state
+          entry target step context open_callback attempts == entry))
+      (decreases attempts)
+  =
+  if attempts = 0 then ()
+  else
+    (refined_open_and_finish_rejection_is_neutral
+       entry target step context open_callback;
+     rejected_open_attempts_preserve_entry
+       entry target step context open_callback (attempts - 1))
+
+/// Retrying after any finite number of rejected attempts has exactly the same
+/// public transition and plaintext result as retrying directly from entry.
+let retry_after_rejected_open_attempts_equals_direct
+    (#v_SendChain #v_ReceiveChain #v_Material
+      #v_Context #v_Plaintext #v_RetryContext #v_RetryPlaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+    (rejected_target:u64)
+    (rejected_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (rejected_context:v_Context)
+    (rejected_open:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+    (attempts:nat)
+    (retry_target:u64)
+    (retry_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (retry_context:v_RetryContext)
+    (retry_open:v_Material -> u64 -> v_RetryContext ->
+      Core_models.Option.t_Option v_RetryPlaintext)
+  : Lemma
+      (requires
+        (let _, result = refined_open_and_finish
+           entry rejected_target rejected_step rejected_context rejected_open in
+         result == Core_models.Option.Option_None))
+      (ensures
+        (refined_open_and_finish
+           (repeated_rejected_open_state entry rejected_target rejected_step
+             rejected_context rejected_open attempts)
+           retry_target retry_step retry_context retry_open ==
+         refined_open_and_finish entry retry_target retry_step
+           retry_context retry_open))
+  = rejected_open_attempts_preserve_entry
+      entry rejected_target rejected_step rejected_context rejected_open
+      attempts
+
+/// Rejection is exact state identity, so it cannot consume logical cache
+/// capacity (or alter any physical capacity-bearing slot).
+let refined_open_rejection_preserves_cache_capacity
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
     (target:u64)
     (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
     (context:v_Context)
     (open_callback:v_Material -> u64 -> v_Context ->
       Core_models.Option.t_Option v_Plaintext)
   : Lemma
-      (let final_state, _ =
-         refined_open_and_finish state target step context open_callback in
-       valid_refined final_state)
-  =
-  refined_advance_receive_until_executes_plan state target step;
-  let admitted, reached =
-    refined_advance_receive_until state target step in
-  assert (valid_refined admitted);
-  match reached with
-  | Core_models.Option.Option_None -> ()
-  | Core_models.Option.Option_Some sequence ->
-      match refined_receive_key admitted sequence with
-      | Core_models.Option.Option_None -> ()
-      | Core_models.Option.Option_Some material ->
-          match open_callback material sequence context with
-          | Core_models.Option.Option_None -> ()
-          | Core_models.Option.Option_Some _ ->
-              refined_finish_receive_preserves_validity
-                admitted sequence true
+      (let final_state, result = refined_open_and_finish
+         entry target step context open_callback in
+       result == Core_models.Option.Option_None ==>
+         cache_len final_state.f_control.f_receive_cache ==
+           cache_len entry.f_control.f_receive_cache)
+  = refined_open_and_finish_rejection_is_neutral
+      entry target step context open_callback
 
-/// The public open transaction preserves reachability across admission rejection, failed-open retention, and authenticated consumption.
+/// From a fresh empty cache, a maximum admitted gap derives 50 private
+/// materials, publishes exactly the 49 skipped records, keeps the target
+/// private, and returns the callback plaintext in one atomic success.
+let fresh_maximum_gap_success_publishes_exactly_49
+    (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       valid_refined entry /\
+       cache_len entry.f_control.f_receive_cache == 0 })
+    (target:u64)
+    (step:v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material)
+    (context:v_Context)
+    (open_callback:v_Material -> u64 -> v_Context ->
+      Core_models.Option.t_Option v_Plaintext)
+    (plaintext:v_Plaintext)
+  : Lemma
+      (requires
+        ((plan_receive_until entry.f_control target).f_sequence ==
+           Core_models.Option.Option_Some target /\
+         v (plan_receive_until entry.f_control target).f_derivations == 50 /\
+         open_callback
+           (material_at #v_ReceiveChain #v_Material
+             entry.f_receive_chain step 50)
+           target context == Core_models.Option.Option_Some plaintext))
+      (ensures
+        (exists (final_state:t_RefinedRatchet
+          v_SendChain v_ReceiveChain v_Material).
+           refined_open_and_finish entry target step context open_callback ==
+             (final_state,
+              Core_models.Option.Option_Some plaintext) /\
+           valid_refined final_state /\
+           final_state.f_control.f_receive_sequence == target /\
+           cache_len final_state.f_control.f_receive_cache == 49 /\
+           ~(cache_has final_state.f_control.f_receive_cache target)))
+  =
+  admitted_future_plan_prepares_valid_pending entry target step;
+  let pending_result
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : prop =
+    prepare_receive entry target step ==
+      Core_models.Option.Option_Some
+        (PreparedReceive_Future candidate) /\
+    valid_pending entry candidate target step in
+  let final_result
+      (final_state:t_RefinedRatchet
+        v_SendChain v_ReceiveChain v_Material)
+    : prop =
+    refined_open_and_finish entry target step context open_callback ==
+      (final_state, Core_models.Option.Option_Some plaintext) /\
+    valid_refined final_state /\
+    final_state.f_control.f_receive_sequence == target /\
+    cache_len final_state.f_control.f_receive_cache == 49 /\
+    ~(cache_has final_state.f_control.f_receive_cache target) in
+  let promote_requires
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : Lemma
+        (requires (pending_result candidate))
+        (ensures (exists result. final_result result))
+    =
+    assert (candidate.f_target_sequence == target);
+    assert
+      (candidate.f_target_material ==
+        material_at #v_ReceiveChain #v_Material
+          entry.f_receive_chain step 50);
+    assert
+      (open_callback candidate.f_target_material
+        candidate.f_target_sequence context ==
+       Core_models.Option.Option_Some plaintext);
+    refined_open_future_success_publishes_pending
+      entry target step context open_callback candidate plaintext;
+    let final_state = publish_future_receive entry candidate in
+    assert (cache_len final_state.f_control.f_receive_cache == 49);
+    FStar.Classical.exists_intro final_result final_state
+  in
+  let promote
+      (candidate:t_PendingReceive v_ReceiveChain v_Material)
+    : Lemma
+        (pending_result candidate ==> exists result. final_result result)
+    = FStar.Classical.move_requires promote_requires candidate
+  in
+  FStar.Classical.forall_to_exists promote
+
+let valid_cached_publication_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step entry })
+    (prepared:t_PreparedCachedReceive)
+    (target:u64)
+  : Lemma
+      (requires (valid_cached_preparation entry prepared target))
+      (ensures
+        (reachable #v_SendChain #v_ReceiveChain #v_Material
+          initial_send initial_receive send_step receive_step
+          (publish_cached_receive entry prepared)))
+  =
+  refined_finish_receive_preserves_reachability
+    initial_send initial_receive send_step receive_step
+    entry target true;
+  valid_cached_publication_matches_refined_finish
+    entry prepared target
+
+let valid_pending_publication_preserves_reachability
+    (#v_SendChain #v_ReceiveChain #v_Material:Type0)
+    (initial_send:v_SendChain)
+    (initial_receive:v_ReceiveChain)
+    (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
+    (receive_step:v_ReceiveChain ->
+      t_RatchetStep v_ReceiveChain v_Material)
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+       reachable #v_SendChain #v_ReceiveChain #v_Material
+         initial_send initial_receive send_step receive_step entry })
+    (pending:t_PendingReceive v_ReceiveChain v_Material)
+    (target:u64)
+  : Lemma
+      (requires
+        (valid_pending entry pending target receive_step))
+      (ensures
+        (reachable #v_SendChain #v_ReceiveChain #v_Material
+          initial_send initial_receive send_step receive_step
+          (publish_future_receive entry pending)))
+  =
+  let plan = plan_receive_until entry.f_control target in
+  let derivations = v plan.f_derivations in
+  let published = publish_future_receive entry pending in
+  let first = cache_len entry.f_control.f_receive_cache in
+  let skipped = derivations - 1 in
+  chain_after_compose #v_ReceiveChain #v_Material
+    initial_receive receive_step
+    (v entry.f_control.f_receive_sequence) derivations;
+  assert
+    (published.f_receive_chain ==
+      chain_after #v_ReceiveChain #v_Material
+        initial_receive receive_step
+        (v published.f_control.f_receive_sequence));
+  let derived (i:nat{i < 50})
+    : Lemma
+        (match refined_slot_value published.f_receive_slots i with
+         | Core_models.Option.Option_Some cached ->
+             v cached.f_sequence > 0 /\
+             cached.f_material ==
+               material_at #v_ReceiveChain #v_Material
+                 initial_receive receive_step (v cached.f_sequence)
+         | Core_models.Option.Option_None -> True)
+    =
+    if i < first then
+      (assert
+        (refined_slot_value published.f_receive_slots i ==
+          refined_slot_value entry.f_receive_slots i);
+       match refined_slot_value entry.f_receive_slots i with
+       | Core_models.Option.Option_None -> ()
+       | Core_models.Option.Option_Some cached -> ())
+    else if i < first + skipped then
+      match refined_slot_value published.f_receive_slots i with
+      | Core_models.Option.Option_None -> ()
+      | Core_models.Option.Option_Some cached ->
+          let offset:(n:nat{n > 0}) = i - first + 1 in
+          material_at_shift #v_ReceiveChain #v_Material
+            initial_receive entry.f_receive_chain receive_step
+            (v entry.f_control.f_receive_sequence) offset
+    else
+      (assert
+        (refined_slot_value published.f_receive_slots i ==
+          Core_models.Option.Option_None);
+       ())
+  in
+  FStar.Classical.forall_intro derived
+
+/// The public open transaction preserves derivational reachability across exact rejection identity and success-only publication.
 let refined_open_and_finish_preserves_reachability
     (#v_SendChain #v_ReceiveChain #v_Material #v_Context #v_Plaintext:Type0)
     (initial_send:v_SendChain)
@@ -3453,9 +6509,9 @@ let refined_open_and_finish_preserves_reachability
     (send_step:v_SendChain -> t_RatchetStep v_SendChain v_Material)
     (receive_step:v_ReceiveChain ->
       t_RatchetStep v_ReceiveChain v_Material)
-    (state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
+    (entry:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material {
        reachable #v_SendChain #v_ReceiveChain #v_Material
-         initial_send initial_receive send_step receive_step state })
+         initial_send initial_receive send_step receive_step entry })
     (target:u64)
     (context:v_Context)
     (open_callback:v_Material -> u64 -> v_Context ->
@@ -3463,31 +6519,47 @@ let refined_open_and_finish_preserves_reachability
   : Lemma
       (let final_state, _ =
          refined_open_and_finish
-           state target receive_step context open_callback in
+           entry target receive_step context open_callback in
        reachable #v_SendChain #v_ReceiveChain #v_Material
          initial_send initial_receive send_step receive_step final_state)
   =
-  refined_advance_receive_until_preserves_reachability
-    initial_send initial_receive send_step receive_step state target;
-  let admitted, reached =
-    refined_advance_receive_until state target receive_step in
-  assert
-    (reachable #v_SendChain #v_ReceiveChain #v_Material
-      initial_send initial_receive send_step receive_step admitted);
-  match reached with
+  match prepare_receive entry target receive_step with
   | Core_models.Option.Option_None -> ()
-  | Core_models.Option.Option_Some sequence ->
-      match refined_receive_key admitted sequence with
-      | Core_models.Option.Option_None -> ()
-      | Core_models.Option.Option_Some material ->
-          match open_callback material sequence context with
-          | Core_models.Option.Option_None -> ()
-          | Core_models.Option.Option_Some _ ->
-              refined_finish_receive_preserves_reachability
-                initial_send initial_receive send_step receive_step
-                admitted sequence true
+  | Core_models.Option.Option_Some prepared ->
+      match prepared with
+      | PreparedReceive_Cached cached_preparation ->
+          (prepare_receive_cached_result_shape
+            entry target receive_step cached_preparation;
+           prepare_cached_receive_establishes_valid_cached
+             entry target cached_preparation;
+           valid_cached_publication_preserves_reachability
+             initial_send initial_receive send_step receive_step
+             entry cached_preparation target;
+           let i = v cached_preparation.f_target_slot in
+           if i >= 50 then ()
+           else
+             match refined_slot_value entry.f_receive_slots i with
+             | Core_models.Option.Option_None -> ()
+             | Core_models.Option.Option_Some cached ->
+                 if cached.f_sequence <> cached_preparation.f_sequence
+                 then ()
+                 else
+                   match open_callback cached.f_material
+                     cached_preparation.f_sequence context with
+                   | Core_models.Option.Option_None -> ()
+                   | Core_models.Option.Option_Some _ -> ())
+      | PreparedReceive_Future pending ->
+          (prepare_receive_future_establishes_valid_pending
+             entry target receive_step pending;
+           valid_pending_publication_preserves_reachability
+             initial_send initial_receive send_step receive_step
+             entry pending target;
+           match open_callback pending.f_target_material
+             pending.f_target_sequence context with
+           | Core_models.Option.Option_None -> ()
+           | Core_models.Option.Option_Some _ -> ())
 
-/// The production-facing open wrapper preserves concrete reachability across rejection, retention, and authenticated consumption while selecting the core-fixed step internally.
+/// The production-facing wrapper preserves concrete reachability while selecting the core-fixed step internally.
 let concrete_open_and_finish_preserves_reachability
     (#v_Context #v_Plaintext:Type0)
     (initial_send initial_receive:t_ConcreteRatchetChain)

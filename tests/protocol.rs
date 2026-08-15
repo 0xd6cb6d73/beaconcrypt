@@ -22,8 +22,7 @@ fn snapshot_status(snapshot: &str) -> (u64, u64, usize) {
 trait TestEndpoint {
 	fn encrypt_for_test(&mut self, data: &[u8], kid: u64) -> Option<Encrypted>;
 	fn decrypt_for_test(&mut self, data: &[u8]) -> Option<Decrypted>;
-	fn receive_sequence_for_test(&self, kid: u64) -> u64;
-	fn receive_cache_len_for_test(&self, kid: u64) -> usize;
+	fn ratchet_status_for_test(&self, kid: u64) -> RatchetStatus;
 }
 impl TestEndpoint for Server {
 	fn encrypt_for_test(&mut self, d: &[u8], k: u64) -> Option<Encrypted> {
@@ -32,11 +31,8 @@ impl TestEndpoint for Server {
 	fn decrypt_for_test(&mut self, d: &[u8]) -> Option<Decrypted> {
 		self.decrypt_message(d)
 	}
-	fn receive_sequence_for_test(&self, k: u64) -> u64 {
-		self.ratchet_status(k).unwrap().receive_sequence()
-	}
-	fn receive_cache_len_for_test(&self, k: u64) -> usize {
-		self.ratchet_status(k).unwrap().receive_cache_len() as usize
+	fn ratchet_status_for_test(&self, k: u64) -> RatchetStatus {
+		self.ratchet_status(k).unwrap()
 	}
 }
 impl TestEndpoint for Beacon {
@@ -47,13 +43,9 @@ impl TestEndpoint for Beacon {
 	fn decrypt_for_test(&mut self, d: &[u8]) -> Option<Decrypted> {
 		self.decrypt_message(d)
 	}
-	fn receive_sequence_for_test(&self, k: u64) -> u64 {
+	fn ratchet_status_for_test(&self, k: u64) -> RatchetStatus {
 		assert_eq!(k, self.server_kid());
-		self.ratchet_status().unwrap().receive_sequence()
-	}
-	fn receive_cache_len_for_test(&self, k: u64) -> usize {
-		assert_eq!(k, self.server_kid());
-		self.ratchet_status().unwrap().receive_cache_len() as usize
+		self.ratchet_status().unwrap()
 	}
 }
 
@@ -156,12 +148,12 @@ fn corrupt_crypto_frame_commitment(serialized: &[u8]) -> Vec<u8> {
 	serialize_crypto_frame(seq, key_id, &ciphertext)
 }
 
-fn receive_state(crypto: &impl TestEndpoint, kid: u64) -> u64 {
-	crypto.receive_sequence_for_test(kid)
+fn receive_state(crypto: &impl TestEndpoint, kid: u64) -> RatchetStatus {
+	crypto.ratchet_status_for_test(kid)
 }
 
 fn cached_receive_key_count(crypto: &impl TestEndpoint, kid: u64, _start: u64, _end: u64) -> usize {
-	crypto.receive_cache_len_for_test(kid)
+	crypto.ratchet_status_for_test(kid).receive_cache_len() as usize
 }
 
 fn assert_server_frame_tampering_is_rejected(mut tamper: impl FnMut(&mut Vec<u8>, &[u8])) {
@@ -179,11 +171,17 @@ fn assert_server_frame_tampering_is_rejected(mut tamper: impl FnMut(&mut Vec<u8>
 	let key_id = crypto_frame_key_id(&valid);
 	let mut ciphertext = crypto_frame_ciphertext(&valid);
 	let donor_ciphertext = crypto_frame_ciphertext(&donor);
+	let receive_before = receive_state(&beacon, SERVER_KID);
 
 	tamper(&mut ciphertext, &donor_ciphertext);
 	let tampered = serialize_crypto_frame(seq, key_id, &ciphertext);
 
 	assert!(beacon.decrypt_for_test(&tampered).is_none());
+	assert_eq!(
+		receive_state(&beacon, SERVER_KID),
+		receive_before,
+		"rejecting a tampered frame changed the receive state"
+	);
 	assert_eq!(
 		beacon.decrypt_for_test(&valid).unwrap().plaintext,
 		plaintext,
@@ -206,10 +204,17 @@ fn assert_sequence_relabelling_is_rejected(
 		.unwrap();
 	let first_seq = crypto_frame_seq(&first);
 	let second_seq = crypto_frame_seq(&second);
+	let receiver_remote_kid = crypto_frame_key_id(&first);
 	assert_eq!(second_seq, first_seq + 1);
 
 	let relabelled = rewrite_crypto_frame_seq(&first, second_seq);
+	let receive_before = receive_state(receiver, receiver_remote_kid);
 	assert!(receiver.decrypt_for_test(&relabelled).is_none());
+	assert_eq!(
+		receive_state(receiver, receiver_remote_kid),
+		receive_before,
+		"sequence relabelling changed the receive state"
+	);
 	assert_eq!(
 		receiver.decrypt_for_test(&first).unwrap().plaintext,
 		first_plaintext
@@ -226,21 +231,26 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	sender_target_kid: u64,
 	receiver_remote_kid: u64,
 ) {
-	let first_plaintext = b"first message remains usable after forged future frames";
-	let second_plaintext = b"second message remains usable after forged future frames";
-	let first = sender
-		.encrypt_for_test(first_plaintext, sender_target_kid)
-		.unwrap();
-	let second = sender
-		.encrypt_for_test(second_plaintext, sender_target_kid)
-		.unwrap();
-	let first_seq = crypto_frame_seq(&first);
-	assert_eq!(crypto_frame_seq(&second), first_seq + 1);
+	let frames = (0..RECEIVE_GAP_LIMIT + 2)
+		.map(|index| {
+			let plaintext = format!("capacity-message-{index}").into_bytes();
+			let frame = sender
+				.encrypt_for_test(&plaintext, sender_target_kid)
+				.unwrap();
+			(plaintext, frame)
+		})
+		.collect::<Vec<_>>();
+	let first_seq = crypto_frame_seq(&frames[0].1);
 	let current_seq = first_seq - 1;
 	let initial_state = receive_state(receiver, receiver_remote_kid);
-	let corrupted = corrupt_crypto_frame_commitment(&first);
+	assert_eq!(initial_state.receive_sequence(), current_seq);
+	assert_eq!(initial_state.receive_cache_len(), 0);
+	let boundary = &frames[RECEIVE_GAP_LIMIT as usize - 1];
+	let boundary_seq = crypto_frame_seq(&boundary.1);
+	assert_eq!(boundary_seq, current_seq + RECEIVE_GAP_LIMIT);
+	let corrupted = corrupt_crypto_frame_commitment(&frames[0].1);
 
-	for rejected_seq in [0, current_seq + RECEIVE_GAP_LIMIT + 1, u64::MAX] {
+	for rejected_seq in [0, boundary_seq + 1, u64::MAX] {
 		let forged = rewrite_crypto_frame_seq(&corrupted, rejected_seq);
 		assert!(
 			receiver.decrypt_for_test(&forged).is_none(),
@@ -251,112 +261,70 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 			initial_state,
 			"out-of-range sequence {rejected_seq} advanced the receive state"
 		);
-		assert_eq!(receiver.receive_cache_len_for_test(receiver_remote_kid), 0);
 	}
 
-	let last_cached_seq = current_seq + RECEIVE_GAP_LIMIT;
-	for forged_seq in first_seq..=last_cached_seq {
+	for forged_seq in first_seq..=boundary_seq {
 		let forged = rewrite_crypto_frame_seq(&corrupted, forged_seq);
 		assert!(
 			receiver.decrypt_for_test(&forged).is_none(),
 			"invalid frame at sequence {forged_seq} was accepted"
 		);
 		assert_eq!(
-			cached_receive_key_count(receiver, receiver_remote_kid, first_seq, last_cached_seq),
-			(forged_seq - current_seq) as usize,
-			"unexpected cache size after forged sequence {forged_seq}"
-		);
-	}
-
-	let saturated_state = receive_state(receiver, receiver_remote_kid);
-	assert_eq!(
-		cached_receive_key_count(receiver, receiver_remote_kid, first_seq, last_cached_seq),
-		RECEIVE_GAP_LIMIT as usize
-	);
-
-	for rejected_seq in [
-		last_cached_seq + 1,
-		last_cached_seq + 2,
-		last_cached_seq + RECEIVE_GAP_LIMIT,
-		u64::MAX,
-	] {
-		let forged = rewrite_crypto_frame_seq(&corrupted, rejected_seq);
-		assert!(
-			receiver.decrypt_for_test(&forged).is_none(),
-			"forged sequence {rejected_seq} was accepted after cache saturation"
-		);
-		assert_eq!(
 			receive_state(receiver, receiver_remote_kid),
-			saturated_state,
-			"forged sequence {rejected_seq} advanced a saturated receive state"
-		);
-		assert_eq!(
-			cached_receive_key_count(receiver, receiver_remote_kid, first_seq, last_cached_seq),
-			RECEIVE_GAP_LIMIT as usize
+			initial_state,
+			"invalid frame at sequence {forged_seq} changed the receive state"
 		);
 	}
 
 	assert_eq!(
-		receiver.decrypt_for_test(&first).unwrap().plaintext,
-		first_plaintext
+		receiver.decrypt_for_test(&boundary.1).unwrap().plaintext,
+		boundary.0
 	);
+	let boundary_state = receive_state(receiver, receiver_remote_kid);
+	assert_eq!(boundary_state.receive_sequence(), boundary_seq);
 	assert_eq!(
-		receiver.decrypt_for_test(&second).unwrap().plaintext,
-		second_plaintext
+		boundary_state.receive_cache_len(),
+		RECEIVE_GAP_LIMIT as u8 - 1
 	);
+
+	let distance_two = &frames[RECEIVE_GAP_LIMIT as usize + 1];
+	assert_eq!(crypto_frame_seq(&distance_two.1), boundary_seq + 2);
+	assert!(receiver.decrypt_for_test(&distance_two.1).is_none());
 	assert_eq!(
 		receive_state(receiver, receiver_remote_kid),
-		saturated_state
-	);
-	assert_eq!(
-		cached_receive_key_count(receiver, receiver_remote_kid, first_seq, last_cached_seq),
-		RECEIVE_GAP_LIMIT as usize - 2
+		boundary_state,
+		"capacity rejection changed the receive state"
 	);
 
-	let recovered_boundary_seq = last_cached_seq + 2;
-	let recovered_boundary = rewrite_crypto_frame_seq(&corrupted, recovered_boundary_seq);
-	assert!(
-		receiver.decrypt_for_test(&recovered_boundary).is_none(),
-		"invalid frame at the recovered cache boundary was accepted"
+	let first = &frames[0];
+	assert_eq!(
+		receiver.decrypt_for_test(&first.1).unwrap().plaintext,
+		first.0
+	);
+	let after_cached_consumption = receive_state(receiver, receiver_remote_kid);
+	assert_eq!(
+		after_cached_consumption.receive_cache_len(),
+		RECEIVE_GAP_LIMIT as u8 - 2
+	);
+
+	assert_eq!(
+		receiver
+			.decrypt_for_test(&distance_two.1)
+			.unwrap()
+			.plaintext,
+		distance_two.0
 	);
 	let recovered_state = receive_state(receiver, receiver_remote_kid);
-	assert_ne!(
-		recovered_state, saturated_state,
-		"freeing two cached keys did not permit two more ratchet steps"
-	);
+	assert_eq!(recovered_state.receive_sequence(), boundary_seq + 2);
 	assert_eq!(
-		cached_receive_key_count(
-			receiver,
-			receiver_remote_kid,
-			first_seq + 2,
-			recovered_boundary_seq,
-		),
-		RECEIVE_GAP_LIMIT as usize,
-		"receive cache did not refill to its exact boundary"
+		recovered_state.receive_cache_len(),
+		RECEIVE_GAP_LIMIT as u8 - 1
 	);
 
-	let over_recovered_boundary_seq = recovered_boundary_seq + 1;
-	let over_recovered_boundary = rewrite_crypto_frame_seq(&corrupted, over_recovered_boundary_seq);
-	assert!(
-		receiver
-			.decrypt_for_test(&over_recovered_boundary)
-			.is_none(),
-		"invalid frame beyond the recovered cache boundary was accepted"
-	);
+	let skipped = &frames[RECEIVE_GAP_LIMIT as usize];
 	assert_eq!(
-		receive_state(receiver, receiver_remote_kid),
-		recovered_state,
-		"frame beyond the recovered boundary advanced the receive state"
-	);
-	assert_eq!(
-		cached_receive_key_count(
-			receiver,
-			receiver_remote_kid,
-			first_seq + 2,
-			recovered_boundary_seq,
-		),
-		RECEIVE_GAP_LIMIT as usize,
-		"frame beyond the recovered boundary grew the receive cache"
+		receiver.decrypt_for_test(&skipped.1).unwrap().plaintext,
+		skipped.0
 	);
 }
 
@@ -373,6 +341,7 @@ fn assert_every_inner_payload_bit_is_authenticated(
 	let key_id = crypto_frame_key_id(&valid);
 	let payload = crypto_frame_ciphertext(&valid);
 	assert!(payload.len() > CRYPTO_PAYLOAD_OVERHEAD);
+	let receive_before = receive_state(receiver, key_id);
 
 	for byte in 0..payload.len() {
 		for bit in 0..u8::BITS {
@@ -382,6 +351,11 @@ fn assert_every_inner_payload_bit_is_authenticated(
 			assert!(
 				receiver.decrypt_for_test(&mutated).is_none(),
 				"accepted mutation at payload byte {byte}, bit {bit}"
+			);
+			assert_eq!(
+				receive_state(receiver, key_id),
+				receive_before,
+				"mutation at payload byte {byte}, bit {bit} changed the receive state"
 			);
 		}
 	}
@@ -414,6 +388,7 @@ fn assert_valid_frame_components_cannot_be_spliced(
 	assert_eq!(second_seq, first_seq + 1);
 	assert_eq!(crypto_frame_key_id(&second), key_id);
 	assert_eq!(first_payload.len(), second_payload.len());
+	let receive_before = receive_state(receiver, key_id);
 
 	let body_end = first_payload.len() - CRYPTO_PAYLOAD_OVERHEAD;
 	let tag_end = first_payload.len() - COMMITMENT_SIZE;
@@ -437,6 +412,11 @@ fn assert_valid_frame_components_cannot_be_spliced(
 		assert!(
 			receiver.decrypt_for_test(&spliced).is_none(),
 			"accepted a frame with a spliced {name}"
+		);
+		assert_eq!(
+			receive_state(receiver, key_id),
+			receive_before,
+			"rejecting a frame with a spliced {name} changed the receive state"
 		);
 	}
 
@@ -493,11 +473,10 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 	let boundary = &frames.last().unwrap().1;
 	let corrupted_commitment = corrupt_crypto_frame_commitment(boundary);
 	assert!(receiver.decrypt_for_test(&corrupted_commitment).is_none());
-	let boundary_state = receive_state(receiver, receiver_remote_kid);
-	assert_ne!(boundary_state, initial_state);
 	assert_eq!(
-		cached_receive_key_count(receiver, receiver_remote_kid, first_seq, boundary_seq),
-		RECEIVE_GAP_LIMIT as usize
+		receive_state(receiver, receiver_remote_kid),
+		initial_state,
+		"commitment failure at the gap boundary changed the receive state"
 	);
 
 	for attempt in 0..3 {
@@ -507,21 +486,17 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 		);
 		assert_eq!(
 			receive_state(receiver, receiver_remote_kid),
-			boundary_state,
-			"repeated invalid boundary frame advanced the ratchet"
-		);
-		assert_eq!(
-			cached_receive_key_count(receiver, receiver_remote_kid, first_seq, boundary_seq,),
-			RECEIVE_GAP_LIMIT as usize
+			initial_state,
+			"repeated invalid boundary frame changed the receive state"
 		);
 	}
 
 	let corrupted_ciphertext = corrupt_aead_ciphertext(boundary);
 	assert!(receiver.decrypt_for_test(&corrupted_ciphertext).is_none());
-	assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
 	assert_eq!(
-		cached_receive_key_count(receiver, receiver_remote_kid, first_seq, boundary_seq),
-		RECEIVE_GAP_LIMIT as usize
+		receive_state(receiver, receiver_remote_kid),
+		initial_state,
+		"AEAD failure at the gap boundary changed the receive state"
 	);
 
 	let boundary_plaintext = &frames.last().unwrap().0;
@@ -529,9 +504,11 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 		receiver.decrypt_for_test(boundary).unwrap().plaintext,
 		boundary_plaintext.as_slice()
 	);
+	let boundary_state = receive_state(receiver, receiver_remote_kid);
+	assert_eq!(boundary_state.receive_sequence(), boundary_seq);
 	assert_eq!(
-		receiver.receive_cache_len_for_test(receiver_remote_kid),
-		RECEIVE_GAP_LIMIT as usize - 1
+		boundary_state.receive_cache_len(),
+		RECEIVE_GAP_LIMIT as u8 - 1
 	);
 	assert!(receiver.decrypt_for_test(boundary).is_none());
 	assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
@@ -543,11 +520,16 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 			plaintext.as_slice(),
 			"failed to decrypt cached frame at index {index}"
 		);
+		let after_success = receive_state(receiver, receiver_remote_kid);
 		assert!(
 			receiver.decrypt_for_test(frame).is_none(),
 			"replayed cached frame at index {index} was accepted"
 		);
-		assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
+		assert_eq!(
+			receive_state(receiver, receiver_remote_kid),
+			after_success,
+			"replaying cached frame at index {index} changed the receive state"
+		);
 		assert_eq!(
 			cached_receive_key_count(receiver, receiver_remote_kid, first_seq, boundary_seq,),
 			index,
@@ -944,7 +926,7 @@ fn server_frame_identifies_its_sender() {
 #[test]
 fn authenticated_beacon_frame_rejects_tampering() {
 	let (mut server, mut beacon) = new_pair();
-	register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
+	let response = register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
 
 	let mut ciphertext = beacon
 		.encrypt_for_test(b"beacon to server", SERVER_KID)
@@ -952,7 +934,9 @@ fn authenticated_beacon_frame_rejects_tampering() {
 	let last = ciphertext.len() - 1;
 	ciphertext[last] ^= 0x01;
 
+	let receive_before = receive_state(&server, response.kid);
 	assert!(server.decrypt_for_test(&ciphertext).is_none());
+	assert_eq!(receive_state(&server, response.kid), receive_before);
 }
 
 #[test]
@@ -966,7 +950,9 @@ fn authenticated_server_frame_rejects_tampering() {
 	let last = ciphertext.len() - 1;
 	ciphertext[last] ^= 0x01;
 
+	let receive_before = receive_state(&beacon, SERVER_KID);
 	assert!(beacon.decrypt_for_test(&ciphertext).is_none());
+	assert_eq!(receive_state(&beacon, SERVER_KID), receive_before);
 }
 
 #[test]
@@ -977,12 +963,16 @@ fn decrypt_rejects_wrong_direction() {
 	let server_to_beacon = server
 		.encrypt_for_test(b"server to beacon", response.kid)
 		.unwrap();
+	let server_receive_before = receive_state(&server, response.kid);
 	assert!(server.decrypt_for_test(&server_to_beacon).is_none());
+	assert_eq!(receive_state(&server, response.kid), server_receive_before);
 
 	let beacon_to_server = beacon
 		.encrypt_for_test(b"beacon to server", SERVER_KID)
 		.unwrap();
+	let beacon_receive_before = receive_state(&beacon, SERVER_KID);
 	assert!(beacon.decrypt_for_test(&beacon_to_server).is_none());
+	assert_eq!(receive_state(&beacon, SERVER_KID), beacon_receive_before);
 }
 
 #[test]
@@ -1001,7 +991,9 @@ fn beacon_cannot_decrypt_message_for_different_beacon() {
 		.encrypt_for_test(b"for b2 only", b2_response.kid)
 		.unwrap();
 
+	let b2_receive_before = receive_state(&b2, SERVER_KID);
 	assert!(b2.decrypt_for_test(&for_b1).is_none());
+	assert_eq!(receive_state(&b2, SERVER_KID), b2_receive_before);
 	assert_eq!(
 		b2.decrypt_for_test(&for_b2).unwrap().plaintext,
 		b"for b2 only"
@@ -1022,7 +1014,9 @@ fn ciphertext_cannot_be_replayed() {
 	let first = beacon.decrypt_for_test(&ciphertext).unwrap();
 
 	assert_eq!(first.plaintext, message);
+	let receive_after_success = receive_state(&beacon, SERVER_KID);
 	assert!(beacon.decrypt_for_test(&ciphertext).is_none());
+	assert_eq!(receive_state(&beacon, SERVER_KID), receive_after_success);
 }
 
 #[test]
@@ -1034,7 +1028,9 @@ fn beacon_can_retry_decryption_after_corrupted_aead_message() {
 	let ciphertext = server.encrypt_for_test(message, response.kid).unwrap();
 	let corrupted = corrupt_aead_ciphertext(&ciphertext);
 
+	let receive_before = receive_state(&beacon, SERVER_KID);
 	assert!(beacon.decrypt_for_test(&corrupted).is_none());
+	assert_eq!(receive_state(&beacon, SERVER_KID), receive_before);
 	assert_eq!(
 		beacon.decrypt_for_test(&ciphertext).unwrap().plaintext,
 		message
@@ -1044,13 +1040,15 @@ fn beacon_can_retry_decryption_after_corrupted_aead_message() {
 #[test]
 fn server_can_retry_decryption_after_corrupted_aead_message() {
 	let (mut server, mut beacon) = new_pair();
-	let _response = register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
+	let response = register_beacon(&mut server, &mut beacon, Some(&[0xFF; 32]));
 	let message = b"beacon to server";
 
 	let ciphertext = beacon.encrypt_for_test(message, SERVER_KID).unwrap();
 	let corrupted = corrupt_aead_ciphertext(&ciphertext);
 
+	let receive_before = receive_state(&server, response.kid);
 	assert!(server.decrypt_for_test(&corrupted).is_none());
+	assert_eq!(receive_state(&server, response.kid), receive_before);
 	assert_eq!(
 		server.decrypt_for_test(&ciphertext).unwrap().plaintext,
 		message
@@ -1206,6 +1204,7 @@ fn malformed_crypto_frame_ciphertext_lengths_are_rejected_without_panicking() {
 		.encrypt_for_test(b"valid after malformed frames", response.kid)
 		.unwrap();
 	let seq = crypto_frame_seq(&valid);
+	let receive_before = receive_state(&beacon, SERVER_KID);
 
 	for len in [0, 1, 15, 16, 63, 64, 79, 80] {
 		let malformed = serialize_crypto_frame(seq, SERVER_KID, &vec![0xA5; len]);
@@ -1213,6 +1212,11 @@ fn malformed_crypto_frame_ciphertext_lengths_are_rejected_without_panicking() {
 		assert!(
 			matches!(result, Ok(None)),
 			"ciphertext length {len} was not rejected cleanly"
+		);
+		assert_eq!(
+			receive_state(&beacon, SERVER_KID),
+			receive_before,
+			"ciphertext length {len} changed the receive state"
 		);
 	}
 
@@ -1539,7 +1543,9 @@ fn encrypted_message_cannot_be_relabelled_to_an_unknown_key_id() {
 		.unwrap();
 	let relabelled = rewrite_crypto_frame_key_id(&ciphertext, registration.kid + 1);
 
+	let receive_before = receive_state(&server, registration.kid);
 	assert!(server.decrypt_for_test(&relabelled).is_none());
+	assert_eq!(receive_state(&server, registration.kid), receive_before);
 	assert_eq!(
 		server.decrypt_for_test(&ciphertext).unwrap().plaintext,
 		b"authenticated beacon message"
