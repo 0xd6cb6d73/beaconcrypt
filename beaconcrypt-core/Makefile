@@ -145,11 +145,27 @@ PROVERIF_AEAD_CONTROL_LIBS := \
 PROVERIF_CHECKER := $(PROVERIF_DIR)/check-results.awk
 PROVERIF_TIMEOUT ?= 240
 override PROVERIF := proverif
+PROVERIF_SCENARIOS := \
+	aead-commitment \
+	aead-no-commitment \
+	baseline \
+	reachability \
+	compromise \
+	failed-receive \
+	failed-receive-reachability \
+	failed-receive-compromise \
+	failed-receive-compromise-reachability
+PROVERIF_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_SCENARIOS))
+PROVERIF_VERIFY_TARGETS := $(addprefix verify-proverif-,$(PROVERIF_SCENARIOS))
+PROVERIF_GENERATED_TARGETS := $(addprefix check-generated-proverif-,$(PROVERIF_SCENARIOS))
 
-.PHONY: verify verify-in-shell verify-proverif verify-proverif-in-shell \
+.PHONY: verify verify-in-shell verify-fstar verify-fstar-in-shell \
+	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	check-toolchain check-fstar-policy check-inventory \
 	extract-fstar check-fstar extract-proverif check-proverif \
-	check-proverif-extraction check-generated
+	check-proverif-extraction check-generated check-generated-fstar \
+	$(PROVERIF_CHECK_TARGETS) $(PROVERIF_VERIFY_TARGETS) \
+	$(PROVERIF_GENERATED_TARGETS)
 
 # Enter the repository-locked proof shell, regenerate both backends, and check
 # every proof. --no-update-lock-file makes a stale or incomplete lock fail.
@@ -167,6 +183,16 @@ verify-in-shell:
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
 
+verify-fstar:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-fstar-in-shell
+
+verify-fstar-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) extract-fstar
+	$(MAKE) check-fstar
+
 verify-proverif:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
 		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
@@ -176,6 +202,16 @@ verify-proverif-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+
+$(PROVERIF_VERIFY_TARGETS): verify-proverif-%:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO='$*'
+
+verify-proverif-scenario-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) extract-proverif
+	$(MAKE) check-proverif-$(PROVERIF_SCENARIO)
 
 # Review tripwire for the complete production/proof trust boundary. Run after
 # extraction and proof checks so generated output is checked against the
@@ -250,41 +286,57 @@ check-proverif-extraction:
 		}; \
 	done
 
-check-proverif: check-proverif-extraction
+check-proverif:
+	+$(MAKE) --no-print-directory -j$(words $(PROVERIF_SCENARIOS)) \
+		$(PROVERIF_CHECK_TARGETS)
+
+check-proverif-aead-commitment: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_AEAD_CONTROL_LIBS) \
 			$(PROVERIF_DIR)/aead-commitment.pv | \
 		awk -v scenario=aead-commitment -f '$(PROVERIF_CHECKER)'
+
+check-proverif-aead-no-commitment: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_AEAD_CONTROL_LIBS) \
 			$(PROVERIF_DIR)/aead-no-commitment.pv | \
 		awk -v scenario=aead-no-commitment -f '$(PROVERIF_CHECKER)'
+
+check-proverif-baseline: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_COMMON_LIBS) \
 			-lib $(PROVERIF_DIR)/queries.pvl \
 			$(PROVERIF_DIR)/baseline.pv | \
 		awk -v scenario=baseline -f '$(PROVERIF_CHECKER)'
+
+check-proverif-reachability: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_COMMON_LIBS) \
 			-lib $(PROVERIF_DIR)/reachability-queries.pvl \
 			$(PROVERIF_DIR)/baseline.pv | \
 		awk -v scenario=reachability -f '$(PROVERIF_CHECKER)'
+
+check-proverif-compromise: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_COMMON_LIBS) \
 			-lib $(PROVERIF_DIR)/compromise-queries.pvl \
 			$(PROVERIF_DIR)/compromise.pv | \
 		awk -v scenario=compromise -f '$(PROVERIF_CHECKER)'
+
+check-proverif-failed-receive: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_COMMON_LIBS) \
 			-lib $(PROVERIF_DIR)/failed-receive-queries.pvl \
 			$(PROVERIF_DIR)/failed-receive.pv | \
 		awk -v scenario=failed-receive -f '$(PROVERIF_CHECKER)'
+
+check-proverif-failed-receive-reachability: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_COMMON_LIBS) \
@@ -292,6 +344,8 @@ check-proverif: check-proverif-extraction
 			$(PROVERIF_DIR)/failed-receive.pv | \
 		awk -v scenario=failed-receive-reachability \
 			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-failed-receive-compromise: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_COMMON_LIBS) \
@@ -299,6 +353,8 @@ check-proverif: check-proverif-extraction
 			$(PROVERIF_DIR)/failed-receive-compromise.pv | \
 		awk -v scenario=failed-receive-compromise \
 			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-failed-receive-compromise-reachability: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_COMMON_LIBS) \
@@ -307,6 +363,26 @@ check-proverif: check-proverif-extraction
 			$(PROVERIF_DIR)/failed-receive-compromise.pv | \
 		awk -v scenario=failed-receive-compromise-reachability \
 			-f '$(PROVERIF_CHECKER)'
+
+check-generated-fstar: verify-fstar
+	git diff --exit-code -- proofs/fstar/extraction
+	@untracked="$$(git ls-files --others --exclude-standard -- \
+		proofs/fstar/extraction)"; \
+		if [[ -n "$$untracked" ]]; then \
+			echo 'untracked generated F* proof artifacts:' >&2; \
+			printf '%s\n' "$$untracked" >&2; \
+			exit 1; \
+		fi
+
+$(PROVERIF_GENERATED_TARGETS): check-generated-proverif-%: verify-proverif-%
+	git diff --exit-code -- proofs/pro-verif/extraction
+	@untracked="$$(git ls-files --others --exclude-standard -- \
+		proofs/pro-verif/extraction)"; \
+		if [[ -n "$$untracked" ]]; then \
+			echo 'untracked generated ProVerif proof artifacts:' >&2; \
+			printf '%s\n' "$$untracked" >&2; \
+			exit 1; \
+		fi
 
 # Run this after committing generated output to ensure extraction is stable.
 check-generated: verify

@@ -130,7 +130,7 @@ A policy gate rejects `assume` or `admit` in repository-owned F* modules and
 lax/admitted-query checker flags. The result gate rejects timeouts, missing
 queries, unexpected classifications, and every unproved or inconclusive
 security query. `make verify-proverif` runs only the ProVerif extraction and
-checks in the same locked shell.
+checks in the same locked shell, with the nine scenario targets running concurrently. Each scenario is also available independently as `make check-proverif-<scenario>`, `make verify-proverif-<scenario>`, or `make check-generated-proverif-<scenario>`; for example, `make verify-proverif-baseline` enters the locked shell, regenerates the extraction, and checks only the baseline model.
 
 The inventory-only check does not require entering the proof shell:
 
@@ -147,7 +147,7 @@ changes must update the prose inventory and only the affected manifest hashes
 after their production and proof diffs have been reviewed.
 
 The checked ratchet properties cover the core-owned request's exact input and label, fixed output partition, lifetime executor preservation, counter and cache bounds, sequence/material association, complete receive-rejection equality, non-vacuous exact preparation for admitted future plans and valid cached targets, conditional callback-success publication, exact cached consumption, replay neutrality, arbitrary-retry equivalence after any finite repetition of one fixed rejected operation, rejection capacity preservation, the conditional fresh maximum-gap 49-entry result, restoration structure, and non-selected peer isolation. `concrete_reachable` fixes one kernel's initial chains and step; fresh construction establishes it, and public seal/open preserve it. The finite ProVerif traces and Rust tests additionally supply concrete cryptographic callback, compromise, and exact-schedule witnesses. PQXDH lemmas cover conditional authenticated common-root derivation, complementary reachable role kernels, all-sequence opposing material equality, and paired-session preservation. Structural restoration remains unconditional, while `reachable_restore` requires canonical chain/material premises supplied by trusted persistence provenance. `PersistentServer` and its trusted-store generation/CAS contract are intended to discharge those premises, but neither the store contract nor the adapter is part of the checked F* result.
-`make check-generated` reruns the complete proof suite and additionally fails when extraction changes a tracked artifact or creates an untracked artifact. The dedicated formal-verification workflow runs that target on every main-branch push, pull request targeting `main`, and merge-queue check. Run the separate `make check-inventory` tripwire after reviewing intentional production/proof boundary changes.
+`make check-generated` reruns the complete proof suite and additionally fails when extraction changes a tracked artifact or creates an untracked artifact. The dedicated formal-verification workflow runs F* and every ProVerif scenario as separate matrix jobs on every main-branch push, pull request targeting `main`, and merge-queue check; each job regenerates and checks its relevant extraction before accepting the proof result. Run the separate `make check-inventory` tripwire after reviewing intentional production/proof boundary changes.
 
 The checked-in `flake.lock` pins hax revision
 `5b0ba8be6da3c313fdfed1c19dd0f0721a29f4b3` (hax 0.3.7), its

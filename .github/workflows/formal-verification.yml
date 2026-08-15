@@ -12,10 +12,34 @@ permissions:
   contents: read
 
 jobs:
-  proofs:
-    name: Extract and verify F* and ProVerif
+  proof_components:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: F*
+            target: check-generated-fstar
+          - name: ProVerif CTX commitment
+            target: check-generated-proverif-aead-commitment
+          - name: ProVerif no-CTX control
+            target: check-generated-proverif-aead-no-commitment
+          - name: ProVerif baseline
+            target: check-generated-proverif-baseline
+          - name: ProVerif reachability
+            target: check-generated-proverif-reachability
+          - name: ProVerif compromise
+            target: check-generated-proverif-compromise
+          - name: ProVerif failed receive
+            target: check-generated-proverif-failed-receive
+          - name: ProVerif failed-receive reachability
+            target: check-generated-proverif-failed-receive-reachability
+          - name: ProVerif failed-receive compromise
+            target: check-generated-proverif-failed-receive-compromise
+          - name: ProVerif failed-receive compromise reachability
+            target: check-generated-proverif-failed-receive-compromise-reachability
 
     steps:
       - name: Checkout repository
@@ -36,4 +60,17 @@ jobs:
           extraPullNames: fstar-nix-versions,z3-nix-versions
 
       - name: Regenerate and verify formal proof artifacts
-        run: make -C beaconcrypt-core check-generated
+        run: make -C beaconcrypt-core ${{ matrix.target }}
+
+  proofs:
+    name: Extract and verify F* and ProVerif
+    if: ${{ always() }}
+    needs: proof_components
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Confirm every proof component passed
+        env:
+          PROOF_COMPONENTS_RESULT: ${{ needs.proof_components.result }}
+        run: test "$PROOF_COMPONENTS_RESULT" = success

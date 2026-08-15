@@ -618,10 +618,7 @@ The same payload fixes ciphertext, tag, and commitment, while distinct accepted 
 The conventional probability and runtime lifting bounds commitment advantage by BLAKE2b-512 collision advantage, but that lifting is not mechanized and BLAKE2b collision resistance remains assumed.
 A dedicated weak-AEAD ProVerif library supplements this theorem with one explicit ideal-hash counterfactual: CTX makes its double-opening event unreachable, while the same query produces a trace when the CTX checks are removed.
 
-`make verify` now regenerates and checks both backends in the revision-pinned
-hax shell. Its result parser rejects timeouts, missing or substituted queries,
-unexpected true/false classifications, and every unproved or inconclusive
-security query. `make check-generated` covers both generated directories.
+`make verify` now regenerates and checks both backends in the revision-pinned hax shell. Its result parser rejects timeouts, missing or substituted queries, unexpected true/false classifications, and every unproved or inconclusive security query. The aggregate ProVerif check runs its nine independent `check-proverif-<scenario>` targets concurrently, and the corresponding `verify-proverif-<scenario>` and `check-generated-proverif-<scenario>` targets support isolated locked-shell and generated-drift checks. `make check-generated` covers both generated directories.
 
 ### Step 8 implementation
 
@@ -653,13 +650,7 @@ the selected F* release, 4.15.3, discharged the complete proof corpus. The
 detailed record contains the failure boundary and the rationale for each
 retained dependency.
 
-The dedicated `formal-verification.yml` GitHub Actions workflow installs Nix,
-uses the public hax/F*/Z3 caches read-only, and runs
-`make -C beaconcrypt-core check-generated` on main-branch pushes, pull
-requests targeting `main`, merge-queue checks, and manual dispatch. The job has
-read-only repository permission and a 60-minute bound. It therefore
-regenerates both backends, runs every strict Stage 2/6 F* and Stage 7 ProVerif
-gate, and rejects tracked or untracked generated-artifact drift.
+The dedicated `formal-verification.yml` GitHub Actions workflow installs Nix, uses the public hax/F*/Z3 caches read-only, and runs F* plus each ProVerif scenario as separate matrix jobs on main-branch pushes, pull requests targeting `main`, merge-queue checks, and manual dispatch. Every matrix job has read-only repository permission and a 60-minute bound, regenerates the extraction it consumes, verifies its proof component, and rejects tracked or untracked generated-artifact drift. A final aggregate job retains the established `Extract and verify F* and ProVerif` status and fails unless every matrix job succeeds.
 
 Re-extraction with the pinned Rust nightly is byte-identical to the Stage 7
 artifacts. No theorem, primitive equation, process, or expected ProVerif result
