@@ -10,6 +10,9 @@ HINT_DIR ?= $(CACHE_DIR)/hints
 DEPEND_FILE := $(CACHE_DIR)/depend
 ROOTS := $(wildcard *.fst *.fsti)
 MANUAL_ROOTS := $(wildcard ../*.fst ../*.fsti)
+ALL_ROOTS := $(ROOTS) $(MANUAL_ROOTS)
+GENERATED_CHECKED := $(addsuffix .checked,$(addprefix $(CACHE_DIR)/,$(ROOTS)))
+MANUAL_CHECKED := $(addsuffix .checked,$(addprefix $(CACHE_DIR)/,$(notdir $(MANUAL_ROOTS))))
 
 ifeq ($(strip $(HAX_PROOF_LIBS_HOME)),)
 $(error HAX_PROOF_LIBS_HOME is not set; run `make verify` from the beaconcrypt-core crate)
@@ -44,20 +47,19 @@ override FSTAR := $(FSTAR_BIN) $(FSTAR_FLAGS)
 $(CACHE_DIR) $(HINT_DIR):
 	mkdir -p $@
 
-$(DEPEND_FILE): $(ROOTS) | $(CACHE_DIR) $(HINT_DIR)
-	$(FSTAR) --dep full $(ROOTS) --extract '* -Prims -LowStar -FStar' > $@
+$(DEPEND_FILE): $(ALL_ROOTS) | $(CACHE_DIR) $(HINT_DIR)
+	$(FSTAR) --include . --include .. --dep full $(ALL_ROOTS) \
+		--extract '* -Prims -LowStar -FStar' > $@
 
 include $(DEPEND_FILE)
 
 $(CACHE_DIR)/%.checked: | $(DEPEND_FILE) $(CACHE_DIR) $(HINT_DIR)
-	$(FSTAR) $< --hint_file $(HINT_DIR)/$(notdir $*).hints
+	$(FSTAR) --include . --include .. $< --hint_file $(HINT_DIR)/$(notdir $*).hints
 
-verify-generated: $(addsuffix .checked,$(addprefix $(CACHE_DIR)/,$(ROOTS)))
+verify-generated: $(GENERATED_CHECKED)
 
-# Hand-maintained lemmas live outside extraction/ so hax can freely regenerate
-# that directory.  They are checked only after the extracted modules and share
-# the same strict flags and checked-module cache.
-verify-manual: verify-generated
-	$(FSTAR) --include . --hint_dir $(HINT_DIR) $(MANUAL_ROOTS)
+# Hand-maintained lemmas live outside extraction/ so hax can freely regenerate that directory.
+# Their individual checked targets share the strict flags, cache, and generated dependency graph.
+verify-manual: verify-generated $(MANUAL_CHECKED)
 
 verify: verify-manual
