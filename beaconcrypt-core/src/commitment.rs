@@ -7,7 +7,7 @@
 
 pub const AEAD_KEY_SIZE: usize = 32;
 pub const AEAD_NONCE_SIZE: usize = 12;
-pub const ASSOCIATED_DATA_SIZE: usize = crate::pqxdh::ASSOCIATED_DATA_SIZE;
+pub const ASSOCIATED_DATA_SIZE: usize = crate::constants::ASSOCIATED_DATA_SIZE;
 pub const AEAD_TAG_SIZE: usize = 16;
 pub const ENCODED_U64_SIZE: usize = 8;
 pub const COMMITMENT_TRANSCRIPT_SIZE: usize =
@@ -63,13 +63,21 @@ pub fn build_commitment_transcript(
 ) -> CommitmentTranscript {
 	let sequence = encode_u64_le(sequence);
 	let sender_id = encode_u64_le(sender_id);
-	let mut bytes = [0; COMMITMENT_TRANSCRIPT_SIZE];
-	bytes[0..32].copy_from_slice(key);
-	bytes[32..44].copy_from_slice(nonce);
-	bytes[44..197].copy_from_slice(associated_data);
-	bytes[197..213].copy_from_slice(tag);
-	bytes[213..221].copy_from_slice(&sequence);
-	bytes[221..229].copy_from_slice(&sender_id);
+	let bytes = core::array::from_fn(|i| {
+		if i < 32 {
+			key[i]
+		} else if i < 44 {
+			nonce[i - 32]
+		} else if i < 197 {
+			associated_data[i - 44]
+		} else if i < 213 {
+			tag[i - 197]
+		} else if i < 221 {
+			sequence[i - 213]
+		} else {
+			sender_id[i - 221]
+		}
+	});
 	CommitmentTranscript { bytes }
 }
 

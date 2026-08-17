@@ -4,6 +4,7 @@
 #![forbid(unsafe_code)]
 
 pub mod commitment;
+pub mod constants;
 pub mod pqxdh;
 pub mod ratchet;
 

@@ -159,13 +159,20 @@ PROVERIF_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_VERIFY_TARGETS := $(addprefix verify-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_GENERATED_TARGETS := $(addprefix check-generated-proverif-,$(PROVERIF_SCENARIOS))
 
+LEAN_DIR := proofs/lean
+LEAN_CHARON_ARGS := \
+	--exclude=beaconcrypt_core::ratchet::concrete::* \
+	--exclude=beaconcrypt_core::ratchet::refined::* \
+	--exclude=beaconcrypt_core::pqxdh::concrete::*
+
 .PHONY: verify verify-in-shell verify-fstar verify-fstar-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	check-toolchain check-fstar-policy check-inventory \
 	extract-fstar check-fstar extract-proverif check-proverif \
 	check-proverif-extraction check-generated check-generated-fstar \
 	$(PROVERIF_CHECK_TARGETS) $(PROVERIF_VERIFY_TARGETS) \
-	$(PROVERIF_GENERATED_TARGETS)
+	$(PROVERIF_GENERATED_TARGETS) extract-lean check-lean verify-lean \
+	verify-lean-in-shell
 
 # Enter the repository-locked proof shell, regenerate both backends, and check
 # every proof. --no-update-lock-file makes a stale or incomplete lock fail.
@@ -363,6 +370,27 @@ check-proverif-failed-receive-compromise-reachability: check-proverif-extraction
 			$(PROVERIF_DIR)/failed-receive-compromise.pv | \
 		awk -v scenario=failed-receive-compromise-reachability \
 			-f '$(PROVERIF_CHECKER)'
+
+extract-lean:
+	rm -rf $(LEAN_DIR)/llbc
+	cargo hax -C --locked ';' into lean --lakefile \
+		--charon-args="$(LEAN_CHARON_ARGS)"
+
+check-lean:
+	cd $(LEAN_DIR) && lake build
+
+# Aeneas Lean currently handles the first-order commitment/control layer.
+# Concrete/refined ratchet APIs contain higher-order fn-pointer signatures
+# that Aeneas does not support yet.
+verify-lean:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-lean-in-shell
+
+verify-lean-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) extract-lean
+	$(MAKE) check-lean
 
 check-generated-fstar: verify-fstar
 	git diff --exit-code -- proofs/fstar/extraction

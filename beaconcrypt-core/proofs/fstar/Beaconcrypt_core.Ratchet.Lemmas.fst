@@ -571,6 +571,7 @@ let finish_receive_preserves_other_key
          other)
   = ()
 
+#push-options "--split_queries always"
 let finish_receive_replay_is_rejected
     (state:t_RatchetState { valid_state state })
     (target:u64)
@@ -581,6 +582,7 @@ let finish_receive_replay_is_rejected
          ReceiveDisposition_Missing /\
        (finish_receive consumed target slot true).f_state == consumed)
   = ()
+#pop-options
 
 /// The compatibility wrapper is exactly the state/disposition projection of the detailed operation for every input and outcome.
 let finish_receive_wrapper_matches_detailed
@@ -2597,6 +2599,7 @@ let material_slots_after_swap_remove_matches
   in
   FStar.Classical.forall_intro pointwise
 
+#push-options "--split_queries always"
 /// Successful completion moves the complete old-last tagged token into a
 /// non-last target, clears the old last slot, and publishes the matching
 /// logical removal atomically.
@@ -2701,6 +2704,7 @@ let refined_finish_receive_success_is_exact_swap_removal
           (expected, ReceiveDisposition_Consumed));
       assert (valid_refined expected);
       ()
+#pop-options
 
 /// Every refined completion outcome preserves the logical/material invariant.
 let refined_finish_receive_preserves_validity
@@ -3289,6 +3293,7 @@ let pending_receive_slots_next_computes
            (remaining -! mk_u8 1)))
   = ()
 
+#push-options "--split_queries always"
 /// The recursive staged-slot validator accepts every slot in the exact
 /// canonical skipped range established by preparation.
 let rec pending_receive_slots_are_valid_for_trace
@@ -3377,6 +3382,7 @@ let rec pending_receive_slots_are_valid_for_trace
   else
     (assert (v remaining == 0);
      u8_value_extensionality remaining (mk_u8 0))
+#pop-options
 
 /// Once every private validator guard is discharged, its extracted decision
 /// tree returns true. Keeping this computation separate avoids asking one
@@ -3625,6 +3631,7 @@ let exists3_intro
   FStar.Classical.exists_intro
     (fun x' -> exists y' z'. p x' y' z') x
 
+#push-options "--split_queries always"
 /// Under the admitted bounds and exact accumulator invariants, private future
 /// derivation is total and returns one pending delta with the complete trace.
 /// This is the non-vacuity theorem for the recursive preparation helper.
@@ -3807,6 +3814,7 @@ let rec prepare_future_receive_steps_is_total_and_exact
            current_chain control target sequence step remaining first_slot
            skipped slot staged_slots)
   | _ -> ()
+#pop-options
 
 /// Once every extracted preflight branch is fixed to its admitted value, the
 /// top-level preparer returns the helper's pending result unchanged.

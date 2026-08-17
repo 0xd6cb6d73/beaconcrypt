@@ -22,3 +22,6 @@ zeroize = { version = "1.9", default-features = false, features = ["zeroize_deri
 [lib]
 name = "beaconcrypt_core"
 path = "src/lib.rs"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(hax_compilation)'] }

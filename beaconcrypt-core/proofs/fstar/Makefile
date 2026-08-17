@@ -34,6 +34,7 @@ FSTAR_INCLUDE_DIRS := \
 override FSTAR_FLAGS := \
 	--cmi \
 	--z3version 4.15.3 \
+	--query_stats \
 	--warn_error -331 \
 	--cache_checked_modules \
 	--cache_dir $(CACHE_DIR) \

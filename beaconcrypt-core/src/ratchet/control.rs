@@ -10,7 +10,8 @@ pub const RECEIVE_CACHE_CAPACITY: usize = RATCHET_MAX_GAP as usize;
 ///
 /// Its representation is public to the hax/F* proof boundary, while private
 /// fields prevent Rust callers from constructing states that bypass validation.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct SequenceCache {
 	pub(super) entries: [u64; RECEIVE_CACHE_CAPACITY],
 	pub(super) len: u8,
@@ -55,7 +56,8 @@ impl SequenceCache {
 ///
 /// Cryptographic chain state and concrete message-key bytes stay outside this type.
 /// [`crate::ratchet::RefinedRatchet`] pairs sequences with concrete material.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct RatchetState {
 	pub(super) send_sequence: u64,
 	pub(super) receive_sequence: u64,
@@ -102,7 +104,8 @@ impl Default for RatchetState {
 }
 
 /// One-use logical capability paired with concrete send material by the refined kernel.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct SendKey {
 	pub(super) sequence: u64,
 	pub(super) available: bool,
@@ -130,7 +133,8 @@ impl SendKey {
 }
 
 /// Result of attempting to allocate the next sending sequence number.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct SendAdvance {
 	pub state: RatchetState,
 	pub sequence: Option<u64>,
@@ -167,7 +171,8 @@ pub(crate) fn advance_send(state: RatchetState) -> SendAdvance {
 }
 
 /// Result of consuming a logical send-key capability.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct SendFinish {
 	pub key: SendKey,
 	pub consumed: bool,
@@ -199,7 +204,8 @@ pub(crate) fn finish_send(key: SendKey) -> SendFinish {
 /// `sequence == None` is a state-neutral rejection. A zero derivation count
 /// deliberately preserves the current low-level behavior for old, consumed,
 /// and zero sequences: a later key lookup decides whether the key exists.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct ReceivePlan {
 	pub sequence: Option<u64>,
 	pub derivations: u64,
@@ -231,7 +237,8 @@ pub(crate) fn plan_receive_until(state: RatchetState, target: u64) -> ReceivePla
 }
 
 /// Result of deriving one logical receive key.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct ReceiveAdvance {
 	pub state: RatchetState,
 	pub sequence: Option<u64>,
@@ -273,7 +280,8 @@ pub(crate) fn advance_receive(state: RatchetState) -> ReceiveAdvance {
 }
 
 /// Outcome of authenticating a cached receive key.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub enum ReceiveDisposition {
 	/// The slot did not contain the requested sequence.
 	Missing,
@@ -284,14 +292,16 @@ pub enum ReceiveDisposition {
 }
 
 /// Result of completing a receive attempt.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct ReceiveFinish {
 	pub state: RatchetState,
 	pub disposition: ReceiveDisposition,
 }
 
 /// Physical swap-removal indices selected by the logical receive transition.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct ReceiveRemoval {
 	/// Slot containing the authenticated target before removal.
 	pub target_slot: u8,
@@ -300,7 +310,8 @@ pub struct ReceiveRemoval {
 }
 
 /// Logical completion result plus the exact concrete removal operation.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct ReceiveFinishWithRemoval {
 	pub state: RatchetState,
 	pub disposition: ReceiveDisposition,
@@ -372,7 +383,7 @@ pub(crate) fn finish_receive_with_removal(
 	let slot_index = slot as usize;
 	if len_index > RECEIVE_CACHE_CAPACITY
 		|| slot_index >= len_index
-		|| state.receive_cache.entries[slot_index] != target
+		|| !(state.receive_cache.entries[slot_index] == target)
 	{
 		return ReceiveFinishWithRemoval {
 			state,
@@ -413,7 +424,8 @@ pub(crate) fn finish_receive_with_removal(
 ///
 /// This typestate prevents callers from manufacturing an invalid `RatchetState`.
 /// [`crate::ratchet::RefinedRatchetRestore`] additionally binds concrete material.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct RatchetRestore {
 	pub(super) state: RatchetState,
 	pub(super) last_sequence: u64,
@@ -427,7 +439,8 @@ pub const fn start_restore(send_sequence: u64, receive_sequence: u64) -> Ratchet
 }
 
 /// One checked persistence-restoration append and its allocated slot.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct ReceiveRestoreStep {
 	pub restore: RatchetRestore,
 	pub slot: u8,
@@ -445,7 +458,10 @@ pub fn restore_receive_key_with_slot(
 		return None;
 	}
 
-	let (receive_cache, slot) = restore.state.receive_cache.append(sequence)?;
+	let (receive_cache, slot) = match restore.state.receive_cache.append(sequence) {
+		Some(value) => value,
+		None => return None,
+	};
 	Some(ReceiveRestoreStep {
 		restore: RatchetRestore {
 			state: RatchetState {
@@ -466,7 +482,8 @@ pub const fn finish_restore(restore: RatchetRestore) -> RatchetState {
 	restore.state
 }
 /// Ratchet state associated with one peer identifier.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct PeerRatchetState {
 	pub peer_id: u64,
 	pub ratchet: RatchetState,
@@ -481,7 +498,7 @@ pub fn replace_ratchet_for_peer(
 	peer: PeerRatchetState,
 	replacement: RatchetState,
 ) -> PeerRatchetState {
-	if requested_peer != peer.peer_id {
+	if !(requested_peer == peer.peer_id) {
 		peer
 	} else {
 		PeerRatchetState {
@@ -492,7 +509,8 @@ pub fn replace_ratchet_for_peer(
 }
 
 /// Result of applying a send transition pointwise to a peer.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
 pub struct PeerSendAdvance {
 	pub peer: PeerRatchetState,
 	pub sequence: Option<u64>,
@@ -508,7 +526,7 @@ pub(crate) fn advance_send_for_peer(
 	requested_peer: u64,
 	peer: PeerRatchetState,
 ) -> PeerSendAdvance {
-	if requested_peer != peer.peer_id {
+	if !(requested_peer == peer.peer_id) {
 		PeerSendAdvance {
 			peer,
 			sequence: None,
