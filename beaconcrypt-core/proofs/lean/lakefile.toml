@@ -12,6 +12,11 @@ rev = "nightly-2026.08.04-8125bcf"
 subDir = "backends/lean"
 
 [[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "v4.28.0"
+
+[[require]]
 name = "Hax"
 git = { url = "https://github.com/cryspen/hax-lean" }
 rev = "v0.2.0"
