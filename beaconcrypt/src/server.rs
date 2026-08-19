@@ -17,7 +17,7 @@ use crate::shared::{
 	roles, serialize_server_state,
 };
 use crate::{phase1_capnp, phase2_capnp};
-use beaconcrypt_core::pqxdh as verified_pqxdh;
+use beaconcrypt_core::pqxdh::{self as verified_pqxdh, derive_server_candidate_ratchet_kernel};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
 use std::vec;
@@ -442,7 +442,8 @@ impl ProviderServer for Server {
 			crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?;
 		debug_assert!(!self.known_ids.contains_key(&remote_kid));
 		self.known_ids.try_reserve(1).ok()?;
-		let mut ratchet = RatchetManager::from_kernel(candidate.derive_ratchet_kernel(
+		let mut ratchet = RatchetManager::from_kernel(derive_server_candidate_ratchet_kernel(
+			&candidate,
 			derived_secret.as_array(),
 			initial_ratchet_hkdf,
 			ratchet_hkdf,

@@ -7,7 +7,7 @@ use crate::ratchet::{
 };
 use crate::shared::DhSecret;
 use crate::{phase1_capnp, phase2_capnp};
-use beaconcrypt_core::pqxdh as verified_pqxdh;
+use beaconcrypt_core::pqxdh::{self as verified_pqxdh, derive_beacon_candidate_ratchet_kernel};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
 use std::vec;
@@ -446,7 +446,8 @@ impl ProviderBeacon for Beacon {
 			zeroize_shared_secrets(&mut finish_inputs.shared_secrets);
 			let mut candidate = prepared.ok()?;
 			let derived_secret = derive_root_key_input(candidate.root_key_input_mut())?;
-			let mut ratchet = RatchetManager::from_kernel(candidate.derive_ratchet_kernel(
+			let mut ratchet = RatchetManager::from_kernel(derive_beacon_candidate_ratchet_kernel(
+				&candidate,
 				derived_secret.as_array(),
 				initial_ratchet_hkdf,
 				ratchet_hkdf,
