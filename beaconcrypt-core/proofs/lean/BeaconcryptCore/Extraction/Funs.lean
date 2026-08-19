@@ -2971,46 +2971,57 @@ def ratchet.control.ReceiveFinishWithRemoval.Insts.CoreMarkerCopy :
     ratchet.control.ReceiveFinishWithRemoval.Insts.CoreCloneClone
 }
 
-/-- [beaconcrypt_core::ratchet::control::lookup_receive_key_from]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 325:0-344:1 -/
-def ratchet.control.lookup_receive_key_from
-  (state : ratchet.control.RatchetState) (sequence : Std.U64) (slot : Std.U8)
-  (remaining : Std.U8) :
-  Result (core.option.Option Std.U8)
+/-- [beaconcrypt_core::ratchet::control::lookup_receive_key]: loop body 0:
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 330:4-350:1 -/
+@[rust_loop_body]
+def ratchet.control.lookup_receive_key_loop.body
+  (i : Std.Usize) (state : ratchet.control.RatchetState) (sequence : Std.U64)
+  (slot : Std.U8) (remaining : Std.U8) :
+  Result (ControlFlow (Std.U8 × Std.U8) (core.option.Option Std.U8))
   := do
-  if remaining = 0#u8
-  then ok core.option.Option.None
-  else
-    let i ← lift (UScalar.cast .Usize slot)
-    let i1 ← ratchet.control.RECEIVE_CACHE_CAPACITY
-    if i >= i1
-    then ok core.option.Option.None
+  if remaining > 0#u8
+  then
+    let slot_index ← lift (UScalar.cast .Usize slot)
+    if slot_index >= i
+    then ok (done core.option.Option.None)
     else
       if slot >= state.receive_cache.len
-      then ok core.option.Option.None
+      then ok (done core.option.Option.None)
       else
-        let i2 ← lift (UScalar.cast .Usize slot)
-        let i3 ← Array.index_usize state.receive_cache.entries i2
-        if i3 = sequence
-        then ok (core.option.Option.Some slot)
+        let i1 ← Array.index_usize state.receive_cache.entries slot_index
+        if i1 = sequence
+        then ok (done (core.option.Option.Some slot))
         else
-          let i4 ← slot + 1#u8
-          let i5 ← remaining - 1#u8
-          ratchet.control.lookup_receive_key_from state sequence i4 i5
-partial_fixpoint
+          let slot1 ← slot + 1#u8
+          let remaining1 ← remaining - 1#u8
+          ok (cont (slot1, remaining1))
+  else ok (done core.option.Option.None)
+
+/-- [beaconcrypt_core::ratchet::control::lookup_receive_key]: loop 0:
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 330:4-350:1 -/
+@[rust_loop]
+def ratchet.control.lookup_receive_key_loop
+  (i : Std.Usize) (state : ratchet.control.RatchetState) (sequence : Std.U64)
+  (slot : Std.U8) (remaining : Std.U8) :
+  Result (core.option.Option Std.U8)
+  := do
+  loop
+    (fun (slot1, remaining1) => ratchet.control.lookup_receive_key_loop.body i
+      state sequence slot1 remaining1)
+    (slot, remaining)
 
 /-- [beaconcrypt_core::ratchet::control::lookup_receive_key]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 347:0-349:1 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 326:0-350:1 -/
 def ratchet.control.lookup_receive_key
   (state : ratchet.control.RatchetState) (sequence : Std.U64) :
   Result (core.option.Option Std.U8)
   := do
   let i ← ratchet.control.RECEIVE_CACHE_CAPACITY
-  let i1 ← lift (UScalar.cast .U8 i)
-  ratchet.control.lookup_receive_key_from state sequence 0#u8 i1
+  let remaining ← lift (UScalar.cast .U8 i)
+  ratchet.control.lookup_receive_key_loop i state sequence 0#u8 remaining
 
 /-- [beaconcrypt_core::ratchet::control::finish_receive_with_removal]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 375:0-421:1 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 376:0-422:1 -/
 def ratchet.control.finish_receive_with_removal
   (state : ratchet.control.RatchetState) (target : Std.U64) (slot : Std.U8)
   (authenticated : Bool) :
@@ -3077,7 +3088,7 @@ def ratchet.control.finish_receive_with_removal
           }
 
 /-- [beaconcrypt_core::ratchet::control::finish_receive]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 358:0-369:1 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 359:0-370:1 -/
 def ratchet.control.finish_receive
   (state : ratchet.control.RatchetState) (target : Std.U64) (slot : Std.U8)
   (authenticated : Bool) :
@@ -3088,7 +3099,7 @@ def ratchet.control.finish_receive
   ok { state := finished.state, disposition := finished.disposition }
 
 /-- [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::RatchetRestore}::clone]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 427:9-427:14
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 428:9-428:14
     Visibility: public -/
 def ratchet.control.RatchetRestore.Insts.CoreCloneClone.clone
   (self : ratchet.control.RatchetRestore) :
@@ -3097,7 +3108,7 @@ def ratchet.control.RatchetRestore.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::RatchetRestore}]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 427:9-427:14 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 428:9-428:14 -/
 @[reducible]
 def ratchet.control.RatchetRestore.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.RatchetRestore := {
@@ -3105,7 +3116,7 @@ def ratchet.control.RatchetRestore.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::RatchetRestore}]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 427:16-427:20 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 428:16-428:20 -/
 @[reducible]
 def ratchet.control.RatchetRestore.Insts.CoreMarkerCopy : core.marker.Copy
   ratchet.control.RatchetRestore := {
@@ -3113,7 +3124,7 @@ def ratchet.control.RatchetRestore.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [beaconcrypt_core::ratchet::control::start_restore]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 434:0-439:1
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 435:0-440:1
     Visibility: public -/
 def ratchet.control.start_restore
   (send_sequence : Std.U64) (receive_sequence : Std.U64) :
@@ -3124,7 +3135,7 @@ def ratchet.control.start_restore
   ok { state := rs, last_sequence := 0#u64 }
 
 /-- [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::ReceiveRestoreStep}::clone]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 442:9-442:14
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 443:9-443:14
     Visibility: public -/
 def ratchet.control.ReceiveRestoreStep.Insts.CoreCloneClone.clone
   (self : ratchet.control.ReceiveRestoreStep) :
@@ -3133,7 +3144,7 @@ def ratchet.control.ReceiveRestoreStep.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::ReceiveRestoreStep}]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 442:9-442:14 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 443:9-443:14 -/
 @[reducible]
 def ratchet.control.ReceiveRestoreStep.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.ReceiveRestoreStep := {
@@ -3141,7 +3152,7 @@ def ratchet.control.ReceiveRestoreStep.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::ReceiveRestoreStep}]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 442:16-442:20 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 443:16-443:20 -/
 @[reducible]
 def ratchet.control.ReceiveRestoreStep.Insts.CoreMarkerCopy : core.marker.Copy
   ratchet.control.ReceiveRestoreStep := {
@@ -3149,7 +3160,7 @@ def ratchet.control.ReceiveRestoreStep.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [beaconcrypt_core::ratchet::control::restore_receive_key_with_slot]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 450:0-475:1
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 451:0-476:1
     Visibility: public -/
 def ratchet.control.restore_receive_key_with_slot
   (restore : ratchet.control.RatchetRestore) (sequence : Std.U64) :
@@ -3182,7 +3193,7 @@ def ratchet.control.restore_receive_key_with_slot
             })
 
 /-- [beaconcrypt_core::ratchet::control::restore_receive_key::{impl core::ops::function::FnOnce<(beaconcrypt_core::ratchet::control::ReceiveRestoreStep,), beaconcrypt_core::ratchet::control::RatchetRestore> for beaconcrypt_core::ratchet::control::restore_receive_key::closure}::call_once]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 478:57-478:76 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 479:57-479:76 -/
 def
   ratchet.control.restore_receive_key.closure.Insts.CoreOpsFunctionFnOnceTupleReceiveRestoreStepRatchetRestore.call_once
   (c : ratchet.control.restore_receive_key.closure)
@@ -3192,7 +3203,7 @@ def
   ok tupled_args.restore
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::restore_receive_key::{impl core::ops::function::FnOnce<(beaconcrypt_core::ratchet::control::ReceiveRestoreStep,), beaconcrypt_core::ratchet::control::RatchetRestore> for beaconcrypt_core::ratchet::control::restore_receive_key::closure}]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 478:57-478:76 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 479:57-479:76 -/
 @[reducible]
 def
   ratchet.control.restore_receive_key.closure.Insts.CoreOpsFunctionFnOnceTupleReceiveRestoreStepRatchetRestore
@@ -3203,7 +3214,7 @@ def
 }
 
 /-- [beaconcrypt_core::ratchet::control::restore_receive_key]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 477:0-479:1
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 478:0-480:1
     Visibility: public -/
 def ratchet.control.restore_receive_key
   (restore : ratchet.control.RatchetRestore) (sequence : Std.U64) :
@@ -3215,7 +3226,7 @@ def ratchet.control.restore_receive_key
     o ()
 
 /-- [beaconcrypt_core::ratchet::control::finish_restore]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 481:0-483:1
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 482:0-484:1
     Visibility: public -/
 def ratchet.control.finish_restore
   (restore : ratchet.control.RatchetRestore) :
@@ -3224,7 +3235,7 @@ def ratchet.control.finish_restore
   ok restore.state
 
 /-- [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::PeerRatchetState}::clone]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 485:9-485:14
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 486:9-486:14
     Visibility: public -/
 def ratchet.control.PeerRatchetState.Insts.CoreCloneClone.clone
   (self : ratchet.control.PeerRatchetState) :
@@ -3233,7 +3244,7 @@ def ratchet.control.PeerRatchetState.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::PeerRatchetState}]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 485:9-485:14 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 486:9-486:14 -/
 @[reducible]
 def ratchet.control.PeerRatchetState.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.PeerRatchetState := {
@@ -3241,7 +3252,7 @@ def ratchet.control.PeerRatchetState.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::PeerRatchetState}]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 485:16-485:20 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 486:16-486:20 -/
 @[reducible]
 def ratchet.control.PeerRatchetState.Insts.CoreMarkerCopy : core.marker.Copy
   ratchet.control.PeerRatchetState := {
@@ -3249,7 +3260,7 @@ def ratchet.control.PeerRatchetState.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [beaconcrypt_core::ratchet::control::replace_ratchet_for_peer]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 496:0-509:1
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 497:0-510:1
     Visibility: public -/
 def ratchet.control.replace_ratchet_for_peer
   (requested_peer : Std.U64) (peer : ratchet.control.PeerRatchetState)
@@ -3261,7 +3272,7 @@ def ratchet.control.replace_ratchet_for_peer
   else ok peer
 
 /-- [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::PeerSendAdvance}::clone]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 512:9-512:14
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 513:9-513:14
     Visibility: public -/
 def ratchet.control.PeerSendAdvance.Insts.CoreCloneClone.clone
   (self : ratchet.control.PeerSendAdvance) :
@@ -3270,7 +3281,7 @@ def ratchet.control.PeerSendAdvance.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::PeerSendAdvance}]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 512:9-512:14 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 513:9-513:14 -/
 @[reducible]
 def ratchet.control.PeerSendAdvance.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.PeerSendAdvance := {
@@ -3278,7 +3289,7 @@ def ratchet.control.PeerSendAdvance.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::PeerSendAdvance}]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 512:16-512:20 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 513:16-513:20 -/
 @[reducible]
 def ratchet.control.PeerSendAdvance.Insts.CoreMarkerCopy : core.marker.Copy
   ratchet.control.PeerSendAdvance := {
@@ -3286,7 +3297,7 @@ def ratchet.control.PeerSendAdvance.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [beaconcrypt_core::ratchet::control::advance_send_for_peer]:
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 525:0-543:1 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 526:0-544:1 -/
 def ratchet.control.advance_send_for_peer
   (requested_peer : Std.U64) (peer : ratchet.control.PeerRatchetState) :
   Result ratchet.control.PeerSendAdvance

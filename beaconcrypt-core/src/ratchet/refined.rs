@@ -273,14 +273,26 @@ fn refined_receive_slots_are_empty<SendChain, ReceiveChain, Material>(
 	first_slot: u8,
 	remaining: u8,
 ) -> bool {
-	if remaining == 0 {
-		return true;
+	let mut slot = first_slot;
+	let mut left = remaining;
+
+	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
+		let slot_index = slot as usize;
+		if slot_index >= RECEIVE_CACHE_CAPACITY {
+			return false;
+		}
+		if state.receive_slots[slot_index].is_some() {
+			return false;
+		}
+
+		slot += 1;
+		left -= 1;
 	}
-	let slot_index = first_slot as usize;
-	if slot_index >= RECEIVE_CACHE_CAPACITY || state.receive_slots[slot_index].is_some() {
-		return false;
-	}
-	refined_receive_slots_are_empty(state, first_slot + 1, remaining - 1)
+
+	true
 }
 
 /// Preflight an existing cached target and compute its successful logical
@@ -342,9 +354,14 @@ fn prepare_cached_receive<SendChain, ReceiveChain, Material>(
 )]
 /// Derive a future target into a private delta without assigning any live
 /// chain, slot, or logical control field.
+///
+/// The traversal is iterative so its call-stack consumption is independent of
+/// the admitted receive gap. Exactly one derived chain and one material value
+/// are live for the current iteration, in addition to the caller-owned staging
+/// array.
 #[allow(clippy::too_many_arguments)]
 fn prepare_future_receive_steps<ReceiveChain, Material>(
-	current_chain: &ReceiveChain,
+	entry_chain: &ReceiveChain,
 	control: RatchetState,
 	target: u64,
 	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
@@ -357,63 +374,90 @@ fn prepare_future_receive_steps<ReceiveChain, Material>(
 		return None;
 	}
 
-	let advanced = advance_receive(control);
-	let sequence = advanced.sequence?;
-	let slot = advanced.slot?;
-	let slot_index = slot as usize;
-	if advanced.state.receive_key_at(slot) != Some(sequence) {
-		return None;
-	}
-	if slot_index >= RECEIVE_CACHE_CAPACITY {
-		return None;
-	}
-	if slot_index != first_slot as usize + skipped as usize {
-		return None;
-	}
-	if staged_slots[slot_index].is_some() {
-		return None;
+	let mut current_chain: Option<ReceiveChain> = None;
+	let mut current_control = control;
+	let mut left = remaining;
+	let mut skipped_count = skipped;
+
+	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
+		let advanced = advance_receive(current_control);
+		let sequence = match advanced.sequence {
+			Some(sequence) => sequence,
+			None => return None,
+		};
+		let slot = match advanced.slot {
+			Some(slot) => slot,
+			None => return None,
+		};
+		let slot_index = slot as usize;
+
+		if advanced.state.receive_key_at(slot) != Some(sequence) {
+			return None;
+		}
+		if slot_index >= RECEIVE_CACHE_CAPACITY {
+			return None;
+		}
+		if slot_index != first_slot as usize + skipped_count as usize {
+			return None;
+		}
+		if staged_slots[slot_index].is_some() {
+			return None;
+		}
+
+		let stepped = match current_chain.as_ref() {
+			Some(chain) => step(chain),
+			None => step(entry_chain),
+		};
+
+		let RatchetStep { chain, material } = stepped;
+
+		if left == 1 {
+			if sequence != target {
+				return None;
+			}
+
+			let finished = finish_receive_with_removal(advanced.state, target, slot, true);
+			let removal = match finished.removal {
+				Some(removal) => removal,
+				None => return None,
+			};
+
+			if !matches!(finished.disposition, ReceiveDisposition::Consumed) {
+				return None;
+			}
+			if removal.target_slot != slot {
+				return None;
+			}
+			if removal.last_slot != slot {
+				return None;
+			}
+
+			return Some(PreparedFutureTarget {
+				committed_control: finished.state,
+				final_receive_chain: chain,
+				target_sequence: sequence,
+				target_material: material,
+				first_slot,
+				skipped: skipped_count,
+			});
+		}
+
+		if sequence >= target {
+			return None;
+		}
+
+		staged_slots[slot_index] = Some(CachedReceiveKey { sequence, material });
+
+		current_chain = Some(chain);
+		current_control = advanced.state;
+		skipped_count += 1;
+		left -= 1;
 	}
 
-	let RatchetStep { chain, material } = step(current_chain);
-	if remaining == 1 {
-		if sequence != target {
-			return None;
-		}
-		let finished = finish_receive_with_removal(advanced.state, target, slot, true);
-		let removal = finished.removal?;
-		if !matches!(finished.disposition, ReceiveDisposition::Consumed) {
-			return None;
-		}
-		if removal.target_slot != slot {
-			return None;
-		}
-		if removal.last_slot != slot {
-			return None;
-		}
-		return Some(PreparedFutureTarget {
-			committed_control: finished.state,
-			final_receive_chain: chain,
-			target_sequence: sequence,
-			target_material: material,
-			first_slot,
-			skipped,
-		});
-	}
-	if sequence >= target {
-		return None;
-	}
-
-	staged_slots[slot_index] = Some(CachedReceiveKey { sequence, material });
-	prepare_future_receive_steps(
-		&chain,
-		advanced.state,
-		target,
-		step,
-		remaining - 1,
-		first_slot,
-		skipped + 1,
-		staged_slots,
-	)
+	None
 }
 
 #[cfg_attr(
@@ -426,16 +470,25 @@ pub(super) fn receive_control_prefix_matches(
 	slot: u8,
 	remaining: u8,
 ) -> bool {
-	if remaining == 0 {
-		return true;
+	let mut current_slot = slot;
+	let mut left = remaining;
+
+	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
+		if current_slot as usize >= RECEIVE_CACHE_CAPACITY {
+			return false;
+		}
+		if !(entry.receive_key_at(current_slot) == committed.receive_key_at(current_slot)) {
+			return false;
+		}
+
+		current_slot += 1;
+		left -= 1;
 	}
-	if slot as usize >= RECEIVE_CACHE_CAPACITY {
-		return false;
-	}
-	if entry.receive_key_at(slot) != committed.receive_key_at(slot) {
-		return false;
-	}
-	receive_control_prefix_matches(entry, committed, slot + 1, remaining - 1)
+
+	true
 }
 
 #[cfg_attr(
@@ -449,39 +502,49 @@ pub(super) fn pending_receive_slots_are_valid<SendChain, ReceiveChain, Material>
 	expected_sequence: u64,
 	remaining: u8,
 ) -> bool {
-	if remaining == 0 {
-		return true;
+	let mut current_slot = slot;
+	let mut expected = expected_sequence;
+	let mut left = remaining;
+
+	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
+		let slot_index = current_slot as usize;
+		if slot_index >= RECEIVE_CACHE_CAPACITY {
+			return false;
+		}
+		if state.receive_slots[slot_index].is_some() {
+			return false;
+		}
+
+		let staged = match pending.staged_slots[slot_index].as_ref() {
+			Some(staged) => staged,
+			None => return false,
+		};
+
+		if !(staged.sequence == expected) {
+			return false;
+		}
+
+		if !(pending.committed_control.receive_key_at(current_slot) == Some(expected)) {
+			return false;
+		}
+
+		left -= 1;
+		if left == 0 {
+			break;
+		}
+
+		if expected == u64::MAX {
+			return false;
+		}
+
+		current_slot += 1;
+		expected += 1;
 	}
-	let slot_index = slot as usize;
-	if slot_index >= RECEIVE_CACHE_CAPACITY {
-		return false;
-	}
-	if state.receive_slots[slot_index].is_some() {
-		return false;
-	}
-	let staged = match pending.staged_slots[slot_index].as_ref() {
-		Some(staged) => staged,
-		None => return false,
-	};
-	if staged.sequence != expected_sequence {
-		return false;
-	}
-	if pending.committed_control.receive_key_at(slot) != Some(expected_sequence) {
-		return false;
-	}
-	if remaining == 1 {
-		return true;
-	}
-	if expected_sequence == u64::MAX {
-		return false;
-	}
-	pending_receive_slots_are_valid(
-		state,
-		pending,
-		slot + 1,
-		expected_sequence + 1,
-		remaining - 1,
-	)
+
+	true
 }
 
 /// Validate the complete private publication invariant before it can escape
@@ -635,18 +698,24 @@ pub(super) fn publish_future_receive_slots<SendChain, ReceiveChain, Material>(
 	slot: u8,
 	remaining: u8,
 ) {
-	if remaining == 0 {
-		return;
+	let mut current_slot = slot;
+	let mut left = remaining;
+
+	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
+		let slot_index = current_slot as usize;
+		if slot_index >= RECEIVE_CACHE_CAPACITY {
+			return;
+		}
+
+		let moved = staged_slots[slot_index].take();
+		state.receive_slots[slot_index] = moved;
+
+		current_slot += 1;
+		left -= 1;
 	}
-	let slot_index = slot as usize;
-	// The pending validator proves this bound for the complete moved range.
-	// Retaining it locally also makes the extracted array access total.
-	if slot_index >= RECEIVE_CACHE_CAPACITY {
-		return;
-	}
-	let moved = staged_slots[slot_index].take();
-	state.receive_slots[slot_index] = moved;
-	publish_future_receive_slots(state, staged_slots, slot + 1, remaining - 1)
 }
 
 /// Publish a validated future delta. The target material remains in `pending`
@@ -692,11 +761,15 @@ fn refined_execute_receive_steps<SendChain, ReceiveChain, Material>(
 	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
 	remaining: u8,
 ) {
-	if remaining == 0 {
-		return;
+	let mut left = remaining;
+
+	while left > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(left as usize);
+
+		let _ = refined_advance_receive(state, step);
+		left -= 1;
 	}
-	let _ = refined_advance_receive(state, step);
-	refined_execute_receive_steps(state, step, remaining - 1)
 }
 
 /// Plan and execute every receive step needed for `target` inside the kernel.
