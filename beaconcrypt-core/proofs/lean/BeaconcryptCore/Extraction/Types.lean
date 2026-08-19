@@ -386,33 +386,33 @@ structure ratchet.control.ReceiveFinishWithRemoval where
   removal : core.option.Option ratchet.control.ReceiveRemoval
 
 /-- [beaconcrypt_core::ratchet::control::RatchetRestore]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 429:0-432:1
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 430:0-433:1
     Visibility: public -/
 structure ratchet.control.RatchetRestore where
   state : ratchet.control.RatchetState
   last_sequence : Std.U64
 
 /-- [beaconcrypt_core::ratchet::control::ReceiveRestoreStep]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 444:0-447:1
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 445:0-448:1
     Visibility: public -/
 structure ratchet.control.ReceiveRestoreStep where
   restore : ratchet.control.RatchetRestore
   slot : Std.U8
 
 /-- [beaconcrypt_core::ratchet::control::restore_receive_key::closure]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 478:57-478:76 -/
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 479:57-479:76 -/
 @[reducible]
 def ratchet.control.restore_receive_key.closure := Unit
 
 /-- [beaconcrypt_core::ratchet::control::PeerRatchetState]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 487:0-490:1
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 488:0-491:1
     Visibility: public -/
 structure ratchet.control.PeerRatchetState where
   peer_id : Std.U64
   ratchet : ratchet.control.RatchetState
 
 /-- [beaconcrypt_core::ratchet::control::PeerSendAdvance]
-    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 514:0-518:1
+    Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 515:0-519:1
     Visibility: public -/
 structure ratchet.control.PeerSendAdvance where
   peer : ratchet.control.PeerRatchetState

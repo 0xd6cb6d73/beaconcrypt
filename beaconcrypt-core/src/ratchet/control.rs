@@ -318,34 +318,35 @@ pub struct ReceiveFinishWithRemoval {
 	pub removal: Option<ReceiveRemoval>,
 }
 
-#[cfg_attr(
-	feature = "proverif",
-	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
-)]
-fn lookup_receive_key_from(
-	state: RatchetState,
-	sequence: u64,
-	slot: u8,
-	remaining: u8,
-) -> Option<u8> {
-	if remaining == 0 {
-		return None;
-	}
-	if (slot as usize) >= RECEIVE_CACHE_CAPACITY {
-		return None;
-	}
-	if slot >= state.receive_cache.len {
-		return None;
-	}
-	if state.receive_cache.entries[slot as usize] == sequence {
-		return Some(slot);
-	}
-	lookup_receive_key_from(state, sequence, slot + 1, remaining - 1)
-}
-
 /// Return the physical slot currently containing `sequence`.
+///
+/// The bounded scan is iterative so stack consumption is independent of
+/// `RECEIVE_CACHE_CAPACITY`. The explicit remaining counter is retained as the
+/// extraction-visible termination measure.
 pub(crate) fn lookup_receive_key(state: RatchetState, sequence: u64) -> Option<u8> {
-	lookup_receive_key_from(state, sequence, 0, RECEIVE_CACHE_CAPACITY as u8)
+	let mut slot = 0u8;
+	let mut remaining = RECEIVE_CACHE_CAPACITY as u8;
+
+	while remaining > 0 {
+		#[cfg(feature = "proverif")]
+		hax_lib::loop_decreases!(remaining as usize);
+
+		let slot_index = slot as usize;
+		if slot_index >= RECEIVE_CACHE_CAPACITY {
+			return None;
+		}
+		if slot >= state.receive_cache.len {
+			return None;
+		}
+		if state.receive_cache.entries[slot_index] == sequence {
+			return Some(slot);
+		}
+
+		slot += 1;
+		remaining -= 1;
+	}
+
+	None
 }
 
 /// Complete authentication for a receive key identified by both slot and
