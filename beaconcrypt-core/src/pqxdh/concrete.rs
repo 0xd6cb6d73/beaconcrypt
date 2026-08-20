@@ -29,6 +29,12 @@ pub type InitialRatchetKdfExecutor =
 /// Label selection and HKDF details are private to that domain-specific
 /// primitive. Input selection, output size, role ordering, partitioning, and
 /// fixed-width construction remain owned by the core.
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::fstar::before(
+		"friend Beaconcrypt_core.Ratchet\nfriend Beaconcrypt_core.Ratchet.Concrete"
+	)
+)]
 pub fn derive_initial_ratchet_chains(
 	root: &[u8; RATCHET_CHAIN_SIZE],
 	initialization: RatchetInitialization,

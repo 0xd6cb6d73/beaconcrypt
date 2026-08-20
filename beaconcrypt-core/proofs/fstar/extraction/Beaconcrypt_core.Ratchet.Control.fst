@@ -271,7 +271,7 @@ let finish_receive_with_removal
   let slot_index:usize = cast (slot <: u8) <: usize in
   if
     len_index >. v_RECEIVE_CACHE_CAPACITY || slot_index >=. len_index ||
-    (state.f_receive_cache.f_entries.[ slot_index ] <: u64) <>. target
+    ~.((state.f_receive_cache.f_entries.[ slot_index ] <: u64) =. target <: bool)
   then
     {
       f_state = state;
@@ -370,7 +370,8 @@ let restore_receive_key_with_slot (restore: t_RatchetRestore) (sequence: u64)
       <:
       Core_models.Option.t_Option (t_SequenceCache & u8)
     with
-    | Core_models.Option.Option_Some (receive_cache, slot) ->
+    | Core_models.Option.Option_Some value ->
+      let (receive_cache: t_SequenceCache), (slot: u8) = value in
       Core_models.Option.Option_Some
       ({
           f_restore
@@ -418,7 +419,7 @@ let replace_ratchet_for_peer
       (peer: t_PeerRatchetState)
       (replacement: t_RatchetState)
     : t_PeerRatchetState =
-  if requested_peer <>. peer.f_peer_id
+  if ~.(requested_peer =. peer.f_peer_id <: bool)
   then peer
   else { f_peer_id = peer.f_peer_id; f_ratchet = replacement } <: t_PeerRatchetState
 
@@ -433,7 +434,7 @@ type t_PeerSendAdvance = {
 /// Applying this function pointwise to a uniquely keyed peer map gives the
 /// frame rule: every non-selected peer is returned byte-for-byte unchanged.
 let advance_send_for_peer (requested_peer: u64) (peer: t_PeerRatchetState) : t_PeerSendAdvance =
-  if requested_peer <>. peer.f_peer_id
+  if ~.(requested_peer =. peer.f_peer_id <: bool)
   then
     {
       f_peer = peer;
@@ -452,26 +453,186 @@ let advance_send_for_peer (requested_peer: u64) (peer: t_PeerRatchetState) : t_P
     <:
     t_PeerSendAdvance
 
+/// Return the physical slot currently containing `sequence`.
+/// The bounded scan is iterative so stack consumption is independent of
+/// `RECEIVE_CACHE_CAPACITY`. The explicit remaining counter is retained as the
+/// extraction-visible termination measure.
 let rec lookup_receive_key_from (state: t_RatchetState) (sequence: u64) (slot remaining: u8)
     : Prims.Tot (Core_models.Option.t_Option u8)
       (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
   if remaining =. mk_u8 0
   then Core_models.Option.Option_None <: Core_models.Option.t_Option u8
   else
-    if (cast (slot <: u8) <: usize) >=. v_RECEIVE_CACHE_CAPACITY
+    let slot_index:usize = cast (slot <: u8) <: usize in
+    if slot_index >=. v_RECEIVE_CACHE_CAPACITY || slot >=. state.f_receive_cache.f_len
     then Core_models.Option.Option_None <: Core_models.Option.t_Option u8
     else
-      if slot >=. state.f_receive_cache.f_len
-      then Core_models.Option.Option_None <: Core_models.Option.t_Option u8
+      if (state.f_receive_cache.f_entries.[ slot_index ] <: u64) =. sequence
+      then Core_models.Option.Option_Some slot <: Core_models.Option.t_Option u8
       else
-        if (state.f_receive_cache.f_entries.[ cast (slot <: u8) <: usize ] <: u64) =. sequence
-        then Core_models.Option.Option_Some slot <: Core_models.Option.t_Option u8
-        else
-          lookup_receive_key_from state
-            sequence
-            (slot +! mk_u8 1 <: u8)
-            (remaining -! mk_u8 1 <: u8)
+        lookup_receive_key_from state sequence (slot +! mk_u8 1 <: u8) (remaining -! mk_u8 1 <: u8)
 
-/// Return the physical slot currently containing `sequence`.
-let lookup_receive_key (state: t_RatchetState) (sequence: u64) : Core_models.Option.t_Option u8 =
-  lookup_receive_key_from state sequence (mk_u8 0) (cast (v_RECEIVE_CACHE_CAPACITY <: usize) <: u8)
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"
+
+let lookup_receive_key_from_stops_at_capacity
+      (state: t_RatchetState)
+      (sequence: u64)
+      (slot remaining: u8)
+    : Prims.Pure Prims.unit
+      (requires remaining >. mk_u8 0 && (cast (slot <: u8) <: usize) >=. v_RECEIVE_CACHE_CAPACITY)
+      (ensures
+        fun temp_0_ ->
+          let _:Prims.unit = temp_0_ in
+          (lookup_receive_key_from state sequence slot remaining <: Core_models.Option.t_Option u8) =.
+          (Core_models.Option.Option_None <: Core_models.Option.t_Option u8)) = ()
+
+#pop-options
+
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"
+
+let lookup_receive_key_from_stops_at_len
+      (state: t_RatchetState)
+      (sequence: u64)
+      (slot remaining: u8)
+    : Prims.Pure Prims.unit
+      (requires
+        remaining >. mk_u8 0 && (cast (slot <: u8) <: usize) <. v_RECEIVE_CACHE_CAPACITY &&
+        slot >=. state.f_receive_cache.f_len)
+      (ensures
+        fun temp_0_ ->
+          let _:Prims.unit = temp_0_ in
+          (lookup_receive_key_from state sequence slot remaining <: Core_models.Option.t_Option u8) =.
+          (Core_models.Option.Option_None <: Core_models.Option.t_Option u8)) = ()
+
+#pop-options
+
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"
+
+let lookup_receive_key_from_matches (state: t_RatchetState) (sequence: u64) (slot remaining: u8)
+    : Prims.Pure Prims.unit
+      (requires
+        remaining >. mk_u8 0 && (cast (slot <: u8) <: usize) <. v_RECEIVE_CACHE_CAPACITY &&
+        slot <. state.f_receive_cache.f_len &&
+        (state.f_receive_cache.f_entries.[ cast (slot <: u8) <: usize ] <: u64) =. sequence)
+      (ensures
+        fun temp_0_ ->
+          let _:Prims.unit = temp_0_ in
+          (lookup_receive_key_from state sequence slot remaining <: Core_models.Option.t_Option u8) =.
+          (Core_models.Option.Option_Some slot <: Core_models.Option.t_Option u8)) = ()
+
+#pop-options
+
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"
+
+let lookup_receive_key_from_advances (state: t_RatchetState) (sequence: u64) (slot remaining: u8)
+    : Prims.Pure Prims.unit
+      (requires
+        remaining >. mk_u8 0 && (cast (slot <: u8) <: usize) <. v_RECEIVE_CACHE_CAPACITY &&
+        slot <. state.f_receive_cache.f_len &&
+        (state.f_receive_cache.f_entries.[ cast (slot <: u8) <: usize ] <: u64) <>. sequence)
+      (ensures
+        fun temp_0_ ->
+          let _:Prims.unit = temp_0_ in
+          (lookup_receive_key_from state sequence slot remaining <: Core_models.Option.t_Option u8) =.
+          (lookup_receive_key_from state
+              sequence
+              (slot +! mk_u8 1 <: u8)
+              (remaining -! mk_u8 1 <: u8)
+            <:
+            Core_models.Option.t_Option u8)) = ()
+
+#pop-options
+
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"
+
+let lookup_receive_key (state: t_RatchetState) (sequence: u64)
+    : Prims.Pure (Core_models.Option.t_Option u8)
+      Prims.l_True
+      (ensures
+        fun result ->
+          let result:Core_models.Option.t_Option u8 = result in
+          result =.
+          (lookup_receive_key_from state
+              sequence
+              (mk_u8 0)
+              (cast (v_RECEIVE_CACHE_CAPACITY <: usize) <: u8)
+            <:
+            Core_models.Option.t_Option u8)) =
+  let slot:u8 = mk_u8 0 in
+  let remaining:u8 = cast (v_RECEIVE_CACHE_CAPACITY <: usize) <: u8 in
+  let found:Core_models.Option.t_Option u8 =
+    Core_models.Option.Option_None <: Core_models.Option.t_Option u8
+  in
+  let (found: Core_models.Option.t_Option u8), (remaining: u8), (slot: u8) =
+    Rust_primitives.Hax.while_loop (fun temp_0_ ->
+          let (found: Core_models.Option.t_Option u8), (remaining: u8), (slot: u8) = temp_0_ in
+          b2t
+          (match found <: Core_models.Option.t_Option u8 with
+            | Core_models.Option.Option_Some found_slot ->
+              (remaining =. mk_u8 0 <: bool) &&
+              ((Core_models.Option.Option_Some found_slot <: Core_models.Option.t_Option u8) =.
+                (lookup_receive_key_from state
+                    sequence
+                    (mk_u8 0)
+                    (cast (v_RECEIVE_CACHE_CAPACITY <: usize) <: u8)
+                  <:
+                  Core_models.Option.t_Option u8)
+                <:
+                bool)
+            | Core_models.Option.Option_None  ->
+              (lookup_receive_key_from state sequence slot remaining
+                <:
+                Core_models.Option.t_Option u8) =.
+              (lookup_receive_key_from state
+                  sequence
+                  (mk_u8 0)
+                  (cast (v_RECEIVE_CACHE_CAPACITY <: usize) <: u8)
+                <:
+                Core_models.Option.t_Option u8)
+              <:
+              bool))
+      (fun temp_0_ ->
+          let (found: Core_models.Option.t_Option u8), (remaining: u8), (slot: u8) = temp_0_ in
+          remaining >. mk_u8 0 <: bool)
+      (fun temp_0_ ->
+          let (found: Core_models.Option.t_Option u8), (remaining: u8), (slot: u8) = temp_0_ in
+          Rust_primitives.Hax.Int.from_machine (cast (remaining <: u8) <: usize)
+          <:
+          Hax_lib.Int.t_Int)
+      (found, remaining, slot <: (Core_models.Option.t_Option u8 & u8 & u8))
+      (fun temp_0_ ->
+          let (found: Core_models.Option.t_Option u8), (remaining: u8), (slot: u8) = temp_0_ in
+          let slot_index:usize = cast (slot <: u8) <: usize in
+          if slot_index >=. v_RECEIVE_CACHE_CAPACITY
+          then
+            let _:Prims.unit =
+              lookup_receive_key_from_stops_at_capacity state sequence slot remaining
+            in
+            let remaining:u8 = mk_u8 0 in
+            found, remaining, slot <: (Core_models.Option.t_Option u8 & u8 & u8)
+          else
+            if slot >=. state.f_receive_cache.f_len
+            then
+              let _:Prims.unit =
+                lookup_receive_key_from_stops_at_len state sequence slot remaining
+              in
+              let remaining:u8 = mk_u8 0 in
+              found, remaining, slot <: (Core_models.Option.t_Option u8 & u8 & u8)
+            else
+              if (state.f_receive_cache.f_entries.[ slot_index ] <: u64) =. sequence
+              then
+                let _:Prims.unit = lookup_receive_key_from_matches state sequence slot remaining in
+                let found:Core_models.Option.t_Option u8 =
+                  Core_models.Option.Option_Some slot <: Core_models.Option.t_Option u8
+                in
+                let remaining:u8 = mk_u8 0 in
+                found, remaining, slot <: (Core_models.Option.t_Option u8 & u8 & u8)
+              else
+                let _:Prims.unit = lookup_receive_key_from_advances state sequence slot remaining in
+                let slot:u8 = slot +! mk_u8 1 in
+                let remaining:u8 = remaining -! mk_u8 1 in
+                found, remaining, slot <: (Core_models.Option.t_Option u8 & u8 & u8))
+  in
+  found
+
+#pop-options

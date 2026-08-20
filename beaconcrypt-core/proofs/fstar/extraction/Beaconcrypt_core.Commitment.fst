@@ -3,6 +3,8 @@ module Beaconcrypt_core.Commitment
 open FStar.Mul
 open Core_models
 
+let v_AEAD_KEY_SIZE: usize = mk_usize 32
+
 /// Fixed-width input to the production BLAKE2b-512 commitment operation.
 type t_CommitmentTranscript = { f_bytes:t_Array u8 (mk_usize 229) }
 
@@ -32,113 +34,26 @@ let build_commitment_transcript
     : t_CommitmentTranscript =
   let sequence:t_Array u8 (mk_usize 8) = encode_u64_le sequence in
   let sender_id:t_Array u8 (mk_usize 8) = encode_u64_le sender_id in
-  let bytes:t_Array u8 (mk_usize 229) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 229) in
   let bytes:t_Array u8 (mk_usize 229) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-      ({ Core_models.Ops.Range.f_start = mk_usize 0; Core_models.Ops.Range.f_end = mk_usize 32 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (bytes.[ {
-                Core_models.Ops.Range.f_start = mk_usize 0;
-                Core_models.Ops.Range.f_end = mk_usize 32
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (key <: t_Slice u8)
-        <:
-        t_Slice u8)
-  in
-  let bytes:t_Array u8 (mk_usize 229) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-      ({ Core_models.Ops.Range.f_start = mk_usize 32; Core_models.Ops.Range.f_end = mk_usize 44 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (bytes.[ {
-                Core_models.Ops.Range.f_start = mk_usize 32;
-                Core_models.Ops.Range.f_end = mk_usize 44
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (nonce <: t_Slice u8)
-        <:
-        t_Slice u8)
-  in
-  let bytes:t_Array u8 (mk_usize 229) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-      ({ Core_models.Ops.Range.f_start = mk_usize 44; Core_models.Ops.Range.f_end = mk_usize 197 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (bytes.[ {
-                Core_models.Ops.Range.f_start = mk_usize 44;
-                Core_models.Ops.Range.f_end = mk_usize 197
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (associated_data <: t_Slice u8)
-        <:
-        t_Slice u8)
-  in
-  let bytes:t_Array u8 (mk_usize 229) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-      ({ Core_models.Ops.Range.f_start = mk_usize 197; Core_models.Ops.Range.f_end = mk_usize 213 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (bytes.[ {
-                Core_models.Ops.Range.f_start = mk_usize 197;
-                Core_models.Ops.Range.f_end = mk_usize 213
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (tag <: t_Slice u8)
-        <:
-        t_Slice u8)
-  in
-  let bytes:t_Array u8 (mk_usize 229) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-      ({ Core_models.Ops.Range.f_start = mk_usize 213; Core_models.Ops.Range.f_end = mk_usize 221 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (bytes.[ {
-                Core_models.Ops.Range.f_start = mk_usize 213;
-                Core_models.Ops.Range.f_end = mk_usize 221
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (sequence <: t_Slice u8)
-        <:
-        t_Slice u8)
-  in
-  let bytes:t_Array u8 (mk_usize 229) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-      ({ Core_models.Ops.Range.f_start = mk_usize 221; Core_models.Ops.Range.f_end = mk_usize 229 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (bytes.[ {
-                Core_models.Ops.Range.f_start = mk_usize 221;
-                Core_models.Ops.Range.f_end = mk_usize 229
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (sender_id <: t_Slice u8)
-        <:
-        t_Slice u8)
+    Core_models.Array.from_fn #u8
+      (mk_usize 229)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          if i <. mk_usize 32 <: bool
+          then key.[ i ] <: u8
+          else
+            if i <. mk_usize 44 <: bool
+            then nonce.[ i -! mk_usize 32 <: usize ] <: u8
+            else
+              if i <. mk_usize 197 <: bool
+              then associated_data.[ i -! mk_usize 44 <: usize ] <: u8
+              else
+                if i <. mk_usize 213 <: bool
+                then tag.[ i -! mk_usize 197 <: usize ] <: u8
+                else
+                  if i <. mk_usize 221 <: bool
+                  then sequence.[ i -! mk_usize 213 <: usize ] <: u8
+                  else sender_id.[ i -! mk_usize 221 <: usize ] <: u8)
   in
   { f_bytes = bytes } <: t_CommitmentTranscript

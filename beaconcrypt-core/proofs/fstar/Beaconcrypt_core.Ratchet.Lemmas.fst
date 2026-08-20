@@ -4,10 +4,12 @@ module Beaconcrypt_core.Ratchet.Lemmas
 open Rust_primitives.Integers
 open Rust_primitives.Arrays
 open Beaconcrypt_core.Ratchet
+open Beaconcrypt_core.Ratchet.Concrete
 open Beaconcrypt_core.Ratchet.Control
 open Beaconcrypt_core.Ratchet.Refined
 
 friend Beaconcrypt_core.Ratchet
+friend Beaconcrypt_core.Ratchet.Concrete
 friend Beaconcrypt_core.Ratchet.Control
 friend Beaconcrypt_core.Ratchet.Refined
 

@@ -3,69 +3,23 @@ module Beaconcrypt_core.Pqxdh.Lemmas
 
 open Rust_primitives.Integers
 open Rust_primitives.Arrays
+open Rust_primitives.Notations
 open Beaconcrypt_core.Pqxdh
+open Beaconcrypt_core.Pqxdh.Concrete
 open Beaconcrypt_core.Ratchet
+open Beaconcrypt_core.Ratchet.Concrete
 open Beaconcrypt_core.Ratchet.Control
 open Beaconcrypt_core.Ratchet.Refined
 open Beaconcrypt_core.Ratchet.Lemmas
 
 friend Beaconcrypt_core.Ratchet
+friend Beaconcrypt_core.Ratchet.Concrete
 friend Beaconcrypt_core.Ratchet.Control
 friend Beaconcrypt_core.Ratchet.Refined
 friend Beaconcrypt_core.Ratchet.Lemmas
+friend Beaconcrypt_core.Pqxdh.Concrete
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 600"
-
-/// Per-byte view of the monomorphized fixed-range update contract.  Keeping
-/// this small derived lemma local lets the manual proof module cache cleanly
-/// without adding another proof-library module to the generated dependency
-/// graph.
-let update_at_range_byte_view
-    (s:t_Slice u8)
-    (range:Core_models.Ops.Range.t_Range usize)
-    (replacement:t_Slice u8)
-  : Lemma
-      (requires
-        v range.f_start >= 0 /\
-        v range.f_start <= Seq.length s /\
-        v range.f_end <= Seq.length s /\
-        Seq.length replacement == v range.f_end - v range.f_start)
-      (ensures
-        (let out =
-           Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-             s range replacement in
-         forall (i:nat).
-           (i < v range.f_start ==> Seq.index out i == Seq.index s i) /\
-           (i >= v range.f_start /\ i < v range.f_end ==>
-              Seq.index out i ==
-                Seq.index replacement (i - v range.f_start)) /\
-           (i >= v range.f_end /\ i < Seq.length out ==>
-              Seq.index out i == Seq.index s i)))
-  =
-  let out = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    s range replacement in
-  let byte_view (i:nat) : Lemma
-      ((i < v range.f_start ==> Seq.index out i == Seq.index s i) /\
-       (i >= v range.f_start /\ i < v range.f_end ==>
-          Seq.index out i == Seq.index replacement (i - v range.f_start)) /\
-       (i >= v range.f_end /\ i < Seq.length out ==>
-          Seq.index out i == Seq.index s i))
-    =
-    if i < v range.f_start then
-      (FStar.Seq.Base.lemma_index_slice out 0 (v range.f_start) i;
-       FStar.Seq.Base.lemma_index_slice s 0 (v range.f_start) i)
-    else if i < v range.f_end then
-      FStar.Seq.Base.lemma_index_slice
-        out (v range.f_start) (v range.f_end) (i - v range.f_start)
-    else if i < Seq.length out then
-      (FStar.Seq.Base.lemma_index_slice
-         out (v range.f_end) (Seq.length out) (i - v range.f_end);
-       FStar.Seq.Base.lemma_index_slice
-         s (v range.f_end) (Seq.length s) (i - v range.f_end))
-    else
-      ()
-  in
-  FStar.Classical.forall_intro byte_view
 
 /// The adapter contract for an honest PQXDH execution: both roles supply the
 /// same four ordered X25519 results and the same ML-KEM shared secret.  The
@@ -101,20 +55,33 @@ let key_type_and_role_markers_are_disjoint (_:Prims.unit)
        v_KEY_ROLE_PREKEY <> v_KEY_ROLE_ONE_TIME)
   = ()
 
+let exact_embedded_slice
+    (whole part:t_Slice u8)
+    (offset:nat { offset + Seq.length part <= Seq.length whole })
+  : Lemma
+      (requires
+        (forall (i:nat { i < Seq.length part }).
+           Seq.index whole (offset + i) == Seq.index part i))
+      (ensures
+        (Seq.slice whole offset (offset + Seq.length part) == part))
+  =
+  let slice = Seq.slice whole offset (offset + Seq.length part) in
+  let slice_byte (i:nat { i < Seq.length part })
+    : Lemma (Seq.index slice i == Seq.index part i)
+    = FStar.Seq.Base.lemma_index_slice
+        whole offset (offset + Seq.length part) i
+  in
+  FStar.Classical.forall_intro slice_byte;
+  FStar.Seq.Base.lemma_eq_intro slice part;
+  FStar.Seq.Base.lemma_eq_elim slice part
+
 /// Each tagged encoding consists of exactly one algorithm byte followed by
 /// the unmodified key bytes.
 let sign_key_tag_is_exact (key:t_Array u8 (mk_usize 32))
   : Lemma
       (Seq.index (tag_sign_key key) 0 == v_SIGN_TYPE_ED25519 /\
        Seq.slice (tag_sign_key key) 1 33 == key)
-  =
-  let initialized =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
-      (Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 33))
-      (mk_usize 0)
-      v_SIGN_TYPE_ED25519 in
-  FStar.Seq.Base.lemma_index_slice initialized 0 1 0;
-  FStar.Seq.Base.lemma_index_slice (tag_sign_key key) 0 1 0
+  = exact_embedded_slice (tag_sign_key key) key 1
 
 let x25519_key_tag_is_exact
     (role:u8)
@@ -123,41 +90,63 @@ let x25519_key_tag_is_exact
       (Seq.index (tag_x25519_key role key) 0 == v_KEM_TYPE_X25519 /\
        Seq.index (tag_x25519_key role key) 1 == role /\
        Seq.slice (tag_x25519_key role key) 2 34 == key)
-  =
-  let type_tagged =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
-      (Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 34))
-      (mk_usize 0)
-      v_KEM_TYPE_X25519 in
-  let initialized =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
-      type_tagged
-      (mk_usize 1)
-      role in
-  FStar.Seq.Base.lemma_index_slice initialized 0 2 0;
-  FStar.Seq.Base.lemma_index_slice initialized 0 2 1;
-  FStar.Seq.Base.lemma_index_slice (tag_x25519_key role key) 0 2 0;
-  FStar.Seq.Base.lemma_index_slice (tag_x25519_key role key) 0 2 1
+  = exact_embedded_slice (tag_x25519_key role key) key 2
 
 let mlkem768_key_tag_is_exact (key:t_Array u8 (mk_usize 1184))
   : Lemma
       (Seq.index (tag_mlkem768_key key) 0 == v_KEM_TYPE_MLKEM768 /\
        Seq.slice (tag_mlkem768_key key) 1 1185 == key)
+  = exact_embedded_slice (tag_mlkem768_key key) key 1
+
+let fixed_array_extensionality
+    (#length:usize)
+    (left right:t_Array u8 length)
+  : Lemma
+      (requires
+        (forall (i:nat { i < v length }).
+           Seq.index left i == Seq.index right i))
+      (ensures (left == right))
   =
-  let initialized =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_usize
-      (Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 1185))
-      (mk_usize 0)
-      v_KEM_TYPE_MLKEM768 in
-  FStar.Seq.Base.lemma_index_slice initialized 0 1 0;
-  FStar.Seq.Base.lemma_index_slice (tag_mlkem768_key key) 0 1 0
+  FStar.Seq.Base.lemma_eq_intro left right;
+  FStar.Seq.Base.lemma_eq_elim left right
+
+let sign_key_payload (encoded:t_Array u8 (mk_usize 33))
+  : t_Array u8 (mk_usize 32) =
+  Core_models.Array.from_fn #u8
+    (mk_usize 32)
+    #(usize -> u8)
+    (fun i ->
+        let i:usize = i in
+        encoded.[ i +! mk_usize 1 <: usize ] <: u8)
+
+let x25519_key_payload (encoded:t_Array u8 (mk_usize 34))
+  : t_Array u8 (mk_usize 32) =
+  Core_models.Array.from_fn #u8
+    (mk_usize 32)
+    #(usize -> u8)
+    (fun i ->
+        let i:usize = i in
+        encoded.[ i +! mk_usize 2 <: usize ] <: u8)
+
+let mlkem768_key_payload (encoded:t_Array u8 (mk_usize 1185))
+  : t_Array u8 (mk_usize 1184) =
+  Core_models.Array.from_fn #u8
+    (mk_usize 1184)
+    #(usize -> u8)
+    (fun i ->
+        let i:usize = i in
+        encoded.[ i +! mk_usize 1 <: usize ] <: u8)
 
 /// The protocol-owned encoders and decoders are exact inverses.
 let sign_key_tag_round_trip (key:t_Array u8 (mk_usize 32))
   : Lemma
       (untag_sign_key (tag_sign_key key) ==
        Core_models.Option.Option_Some key)
-  = sign_key_tag_is_exact key
+  =
+  let encoded = tag_sign_key key in
+  let decoded = sign_key_payload encoded in
+  sign_key_tag_is_exact key;
+  fixed_array_extensionality decoded key
 
 let x25519_key_tag_round_trip
     (role:u8)
@@ -165,7 +154,11 @@ let x25519_key_tag_round_trip
   : Lemma
       (untag_x25519_key (tag_x25519_key role key) role ==
        Core_models.Option.Option_Some key)
-  = x25519_key_tag_is_exact role key
+  =
+  let encoded = tag_x25519_key role key in
+  let decoded = x25519_key_payload encoded in
+  x25519_key_tag_is_exact role key;
+  fixed_array_extensionality decoded key
 
 /// A valid key signed for one X25519 field cannot validate in the other.
 let x25519_key_roles_are_enforced (key:t_Array u8 (mk_usize 32))
@@ -184,7 +177,11 @@ let mlkem768_key_tag_round_trip (key:t_Array u8 (mk_usize 1184))
   : Lemma
       (untag_mlkem768_key (tag_mlkem768_key key) ==
        Core_models.Option.Option_Some key)
-  = mlkem768_key_tag_is_exact key
+  =
+  let encoded = tag_mlkem768_key key in
+  let decoded = mlkem768_key_payload encoded in
+  mlkem768_key_tag_is_exact key;
+  fixed_array_extensionality decoded key
 
 /// A message emitted by `beacon_start` validates to exactly the public
 /// material from which it was constructed and carries both fields of the
@@ -236,7 +233,10 @@ let registration_id_is_exact (registration:t_VerifiedInitKex)
       (let id = impl_VerifiedInitKex__registration_id registration in
        Seq.slice id.f_bytes 0 32 == registration.f_beacon_identity_public_key /\
        Seq.slice id.f_bytes 32 64 == registration.f_beacon_one_time_public_key)
-  = ()
+  =
+  let id = impl_VerifiedInitKex__registration_id registration in
+  exact_embedded_slice id.f_bytes registration.f_beacon_identity_public_key 0;
+  exact_embedded_slice id.f_bytes registration.f_beacon_one_time_public_key 32
 
 let valid_shared_secrets (secrets:t_PqxdhSharedSecrets) : prop =
   not (is_all_zero secrets.f_dh1) /\
@@ -244,41 +244,59 @@ let valid_shared_secrets (secrets:t_PqxdhSharedSecrets) : prop =
   not (is_all_zero secrets.f_dh3) /\
   not (is_all_zero secrets.f_dh4)
 
-let v_ROOT_RANGE_1:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 32;
-    Core_models.Ops.Range.f_end = mk_usize 64 }
-
-let v_ROOT_RANGE_2:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 64;
-    Core_models.Ops.Range.f_end = mk_usize 96 }
-
-let v_ROOT_RANGE_3:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 96;
-    Core_models.Ops.Range.f_end = mk_usize 128 }
-
-let v_ROOT_RANGE_4:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 128;
-    Core_models.Ops.Range.f_end = mk_usize 160 }
-
-let v_ROOT_RANGE_5:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 160;
-    Core_models.Ops.Range.f_end = mk_usize 192 }
-
-/// A proof-only name for the straight-line fixed-range update expression in
-/// `build_root_key_input`.
+/// A proof-only name for the indexed array expression in `build_root_key_input`.
 let root_transcript_bytes (secrets:t_PqxdhSharedSecrets)
   : t_Array u8 (mk_usize 192) =
-  let b0 = Rust_primitives.Hax.repeat (mk_u8 255) (mk_usize 192) in
-  let b1 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b0 v_ROOT_RANGE_1 secrets.f_dh1 in
-  let b2 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b1 v_ROOT_RANGE_2 secrets.f_dh2 in
-  let b3 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b2 v_ROOT_RANGE_3 secrets.f_dh3 in
-  let b4 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b3 v_ROOT_RANGE_4 secrets.f_dh4 in
-  Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b4 v_ROOT_RANGE_5 secrets.f_kem_shared_secret
+  Core_models.Array.from_fn #u8
+    (mk_usize 192)
+    #(usize -> u8)
+    (fun i ->
+        let i:usize = i in
+        if i <. v_PQXDH_PADDING_SIZE <: bool
+        then mk_u8 255
+        else
+          if i <. (v_PQXDH_PADDING_SIZE +! v_DH_SECRET_SIZE <: usize) <: bool
+          then secrets.f_dh1.[ i -! v_PQXDH_PADDING_SIZE <: usize ] <: u8
+          else
+            if
+              i <. (v_PQXDH_PADDING_SIZE +! (mk_usize 2 *! v_DH_SECRET_SIZE <: usize) <: usize)
+              <:
+              bool
+            then
+              secrets.f_dh2.[ (i -! v_PQXDH_PADDING_SIZE <: usize) -! v_DH_SECRET_SIZE <: usize ]
+              <:
+              u8
+            else
+              if
+                i <. (v_PQXDH_PADDING_SIZE +! (mk_usize 3 *! v_DH_SECRET_SIZE <: usize) <: usize)
+                <:
+                bool
+              then
+                secrets.f_dh3.[ (i -! v_PQXDH_PADDING_SIZE <: usize) -!
+                  (mk_usize 2 *! v_DH_SECRET_SIZE <: usize)
+                  <:
+                  usize ]
+                <:
+                u8
+              else
+                if
+                  i <. (v_PQXDH_PADDING_SIZE +! (mk_usize 4 *! v_DH_SECRET_SIZE <: usize) <: usize)
+                  <:
+                  bool
+                then
+                  secrets.f_dh4.[ (i -! v_PQXDH_PADDING_SIZE <: usize) -!
+                    (mk_usize 3 *! v_DH_SECRET_SIZE <: usize)
+                    <:
+                    usize ]
+                  <:
+                  u8
+                else
+                  secrets.f_kem_shared_secret.[ (i -! v_PQXDH_PADDING_SIZE <: usize) -!
+                    (mk_usize 4 *! v_DH_SECRET_SIZE <: usize)
+                    <:
+                    usize ]
+                  <:
+                  u8)
 
 let root_transcript_byte_is_exact
     (secrets:t_PqxdhSharedSecrets)
@@ -291,22 +309,7 @@ let root_transcript_byte_is_exact
        else if i < 128 then Seq.index secrets.f_dh3 (i - 96)
        else if i < 160 then Seq.index secrets.f_dh4 (i - 128)
        else Seq.index secrets.f_kem_shared_secret (i - 160)))
-  =
-  let b0 = Rust_primitives.Hax.repeat (mk_u8 255) (mk_usize 192) in
-  let b1 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b0 v_ROOT_RANGE_1 secrets.f_dh1 in
-  let b2 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b1 v_ROOT_RANGE_2 secrets.f_dh2 in
-  let b3 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b2 v_ROOT_RANGE_3 secrets.f_dh3 in
-  let b4 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b3 v_ROOT_RANGE_4 secrets.f_dh4 in
-  update_at_range_byte_view b0 v_ROOT_RANGE_1 secrets.f_dh1;
-  update_at_range_byte_view b1 v_ROOT_RANGE_2 secrets.f_dh2;
-  update_at_range_byte_view b2 v_ROOT_RANGE_3 secrets.f_dh3;
-  update_at_range_byte_view b3 v_ROOT_RANGE_4 secrets.f_dh4;
-  update_at_range_byte_view b4 v_ROOT_RANGE_5 secrets.f_kem_shared_secret;
-  FStar.Seq.Base.lemma_index_create 192 (mk_u8 255) i
+  = ()
 
 let valid_root_build_uses_exact_bytes
     (secrets:t_PqxdhSharedSecrets { valid_shared_secrets secrets })
@@ -383,71 +386,25 @@ let authenticated_registration_derives_common_fixed_root
       authenticated.f_candidate.f_root_key_input pending.f_root_key_input
       derive_root
 
-let v_AD_RANGE_1:Core_models.Ops.Range.t_RangeTo usize =
-  { Core_models.Ops.Range.f_end = mk_usize 33 }
-
-let v_AD_RANGE_2:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 33;
-    Core_models.Ops.Range.f_end = mk_usize 66 }
-
-let v_AD_RANGE_3:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 66;
-    Core_models.Ops.Range.f_end = mk_usize 112 }
-
-let v_AD_RANGE_4:Core_models.Ops.Range.t_RangeFrom usize =
-  { Core_models.Ops.Range.f_start = mk_usize 112 }
-
 let associated_data_bytes
     (server_identity beacon_identity:t_Array u8 (mk_usize 32))
   : t_Array u8 (mk_usize 153) =
   let server_tag = tag_sign_key server_identity in
   let beacon_tag = tag_sign_key beacon_identity in
-  let b0 = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 153) in
-  let b1 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range_to
-    b0 v_AD_RANGE_1 server_tag in
-  let b2 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b1 v_AD_RANGE_2 beacon_tag in
-  let b3 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b2 v_AD_RANGE_3 v_PQXDH_INFO in
-  Rust_primitives.Hax.Monomorphized_update_at.update_at_range_from
-    b3 v_AD_RANGE_4 v_SYM_RATCHET_INFO
-
-let ad_range_to_byte
-    (s:t_Array u8 (mk_usize 153))
-    (x:t_Array u8 (mk_usize 33))
-    (i:nat { i < 153 })
-  : Lemma
-      (let out =
-         Rust_primitives.Hax.Monomorphized_update_at.update_at_range_to
-           s v_AD_RANGE_1 x in
-       Seq.index out i == (if i < 33 then Seq.index x i else Seq.index s i))
-  =
-  let out = Rust_primitives.Hax.Monomorphized_update_at.update_at_range_to
-    s v_AD_RANGE_1 x in
-  if i < 33 then
-    FStar.Seq.Base.lemma_index_slice out 0 33 i
-  else
-    (FStar.Seq.Base.lemma_index_slice out 33 153 (i - 33);
-     FStar.Seq.Base.lemma_index_slice s 33 153 (i - 33))
-
-let ad_range_from_byte
-    (s:t_Array u8 (mk_usize 153))
-    (x:t_Array u8 (mk_usize 41))
-    (i:nat { i < 153 })
-  : Lemma
-      (let out =
-         Rust_primitives.Hax.Monomorphized_update_at.update_at_range_from
-           s v_AD_RANGE_4 x in
-       Seq.index out i ==
-         (if i < 112 then Seq.index s i else Seq.index x (i - 112)))
-  =
-  let out = Rust_primitives.Hax.Monomorphized_update_at.update_at_range_from
-    s v_AD_RANGE_4 x in
-  if i < 112 then
-    (FStar.Seq.Base.lemma_index_slice out 0 112 i;
-     FStar.Seq.Base.lemma_index_slice s 0 112 i)
-  else
-    FStar.Seq.Base.lemma_index_slice out 112 153 (i - 112)
+  Core_models.Array.from_fn #u8
+    (mk_usize 153)
+    #(usize -> u8)
+    (fun i ->
+        let i:usize = i in
+        if i <. mk_usize 33 <: bool
+        then server_tag.[ i ] <: u8
+        else
+          if i <. mk_usize 66 <: bool
+          then beacon_tag.[ i -! mk_usize 33 <: usize ] <: u8
+          else
+            if i <. mk_usize 112 <: bool
+            then v_PQXDH_INFO.[ i -! mk_usize 66 <: usize ] <: u8
+            else v_SYM_RATCHET_INFO.[ i -! mk_usize 112 <: usize ] <: u8)
 
 let associated_data_byte_is_exact
     (server_identity beacon_identity:t_Array u8 (mk_usize 32))
@@ -458,27 +415,22 @@ let associated_data_byte_is_exact
         else if i < 66 then Seq.index (tag_sign_key beacon_identity) (i - 33)
         else if i < 112 then Seq.index v_PQXDH_INFO (i - 66)
         else Seq.index v_SYM_RATCHET_INFO (i - 112)))
-  =
-  let server_tag = tag_sign_key server_identity in
-  let beacon_tag = tag_sign_key beacon_identity in
-  let b0 = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 153) in
-  let b1 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range_to
-    b0 v_AD_RANGE_1 server_tag in
-  let b2 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b1 v_AD_RANGE_2 beacon_tag in
-  let b3 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b2 v_AD_RANGE_3 v_PQXDH_INFO in
-  ad_range_to_byte b0 server_tag i;
-  update_at_range_byte_view b1 v_AD_RANGE_2 beacon_tag;
-  update_at_range_byte_view b2 v_AD_RANGE_3 v_PQXDH_INFO;
-  ad_range_from_byte b3 v_SYM_RATCHET_INFO i
+  = ()
 
 let associated_data_build_uses_exact_bytes
     (server_identity beacon_identity:t_Array u8 (mk_usize 32))
   : Lemma
       (build_associated_data server_identity beacon_identity ==
        associated_data_bytes server_identity beacon_identity)
-  = ()
+  =
+  let built = build_associated_data server_identity beacon_identity in
+  let expected = associated_data_bytes server_identity beacon_identity in
+  let byte (i:nat { i < 153 })
+    : Lemma (Seq.index built i == Seq.index expected i)
+    = associated_data_byte_is_exact server_identity beacon_identity i
+  in
+  FStar.Classical.forall_intro byte;
+  fixed_array_extensionality built expected
 
 /// Associated data is the exact ordered transcript
 /// `tag(server) || tag(beacon) || PQXDH_INFO || SYM_RATCHET_INFO`.
@@ -705,7 +657,7 @@ let authenticated_registrations_establish_concrete_session
          derive_root authenticated.f_candidate.f_root_key_input in
        let pending_root = derive_root pending.f_root_key_input in
        let beacon =
-         impl_BeaconRegistrationCandidate__derive_ratchet_kernel
+         derive_beacon_candidate_ratchet_kernel
            authenticated.f_candidate common_root initial_kdf ratchet_kdf in
        let server =
          derive_server_ratchet_kernel pending_root initial_kdf ratchet_kdf in
@@ -809,6 +761,20 @@ let candidate_ratchet_initializations_are_complementary
          (impl_ServerRegistrationCandidate__ratchet_initialization server).f_receive_offset /\
        (impl_BeaconRegistrationCandidate__ratchet_initialization beacon).f_receive_offset ==
          (impl_ServerRegistrationCandidate__ratchet_initialization server).f_send_offset)
+  = ()
+
+/// The accepted-server candidate constructor preserves the supplied root and KDF executors while selecting exactly the server ratchet direction.
+let server_candidate_ratchet_kernel_uses_server_direction
+    (candidate:t_ServerRegistrationCandidate)
+    (root:t_Array u8 (mk_usize 32))
+    (initial_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 64))
+    (ratchet_kdf:t_SymmetricRatchetKdfRequest ->
+      t_Array u8 (mk_usize 76))
+  : Lemma
+      (derive_server_candidate_ratchet_kernel
+         candidate root initial_kdf ratchet_kdf ==
+       derive_server_ratchet_kernel root initial_kdf ratchet_kdf)
   = ()
 
 /// The authenticated key-ID prefix is the exact little-endian representation

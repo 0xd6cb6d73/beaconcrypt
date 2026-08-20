@@ -20,16 +20,16 @@ HAX_ITEMS := -** \
 	+beaconcrypt_core::ratchet::SymmetricRatchetKdfRequest \
 	+beaconcrypt_core::ratchet::RatchetKdfOutput \
 	+beaconcrypt_core::ratchet::split_ratchet_kdf_output \
-	+beaconcrypt_core::ratchet::derive_ratchet_step \
-	+beaconcrypt_core::ratchet::ConcreteRatchetChain \
-	+beaconcrypt_core::ratchet::concrete_ratchet_step \
+	+beaconcrypt_core::ratchet::concrete::derive_ratchet_step \
+	+beaconcrypt_core::ratchet::concrete::ConcreteRatchetChain \
+	+beaconcrypt_core::ratchet::concrete::concrete_ratchet_step \
 	+beaconcrypt_core::ratchet::refined::RatchetStep \
 	+beaconcrypt_core::ratchet::refined::CachedReceiveKey \
 	+beaconcrypt_core::ratchet::refined::RefinedRatchet \
-	+beaconcrypt_core::ratchet::ConcreteRatchetKernel \
+	+beaconcrypt_core::ratchet::concrete::ConcreteRatchetKernel \
 	+beaconcrypt_core::ratchet::refined::RefinedSendKey \
 	+beaconcrypt_core::ratchet::refined::RefinedRatchetRestore \
-	+beaconcrypt_core::ratchet::ConcreteRatchetRestore \
+	+beaconcrypt_core::ratchet::concrete::ConcreteRatchetRestore \
 	+beaconcrypt_core::ratchet::**::new \
 	+beaconcrypt_core::ratchet::**::from_counters \
 	+beaconcrypt_core::ratchet::**::send_sequence \
@@ -46,7 +46,6 @@ HAX_ITEMS := -** \
 	+beaconcrypt_core::ratchet::**::as_bytes \
 	+beaconcrypt_core::ratchet::**::into_bytes \
 	+beaconcrypt_core::ratchet::**::into_parts \
-	+beaconcrypt_core::ratchet::**::into_step \
 	+beaconcrypt_core::ratchet::refined::refined_advance_send \
 	+beaconcrypt_core::ratchet::refined::refined_finish_send \
 	+beaconcrypt_core::ratchet::refined::refined_seal_next \
@@ -65,21 +64,23 @@ HAX_ITEMS := -** \
 	+beaconcrypt_core::ratchet::refined::pending_receive_is_valid \
 	+beaconcrypt_core::ratchet::refined::prepare_receive \
 	+beaconcrypt_core::ratchet::refined::publish_cached_receive \
+	+beaconcrypt_core::ratchet::refined::publish_future_receive_slots_from \
 	+beaconcrypt_core::ratchet::refined::publish_future_receive_slots \
 	+beaconcrypt_core::ratchet::refined::publish_future_receive \
 	+beaconcrypt_core::ratchet::refined::refined_open_and_finish \
-	+beaconcrypt_core::ratchet::concrete_seal_next \
-	+beaconcrypt_core::ratchet::concrete_open_and_finish \
+	+beaconcrypt_core::ratchet::concrete::concrete_seal_next \
+	+beaconcrypt_core::ratchet::concrete::concrete_open_and_finish \
 	+beaconcrypt_core::ratchet::refined::start_refined_restore \
 	+beaconcrypt_core::ratchet::refined::refined_restore_receive_key \
 	+beaconcrypt_core::ratchet::refined::finish_refined_restore \
-	+beaconcrypt_core::ratchet::start_concrete_restore \
-	+beaconcrypt_core::ratchet::concrete_restore_receive_key \
-	+beaconcrypt_core::ratchet::finish_concrete_restore \
+	+beaconcrypt_core::ratchet::concrete::start_concrete_restore \
+	+beaconcrypt_core::ratchet::concrete::concrete_restore_receive_key \
+	+beaconcrypt_core::ratchet::concrete::finish_concrete_restore \
 	+beaconcrypt_core::ratchet::control::advance_send \
 	+beaconcrypt_core::ratchet::control::finish_send \
 	+beaconcrypt_core::ratchet::control::plan_receive_until \
 	+beaconcrypt_core::ratchet::control::advance_receive \
+	+beaconcrypt_core::ratchet::control::lookup_receive_key_from \
 	+beaconcrypt_core::ratchet::control::lookup_receive_key \
 	+beaconcrypt_core::ratchet::control::ReceiveRemoval \
 	+beaconcrypt_core::ratchet::control::ReceiveFinishWithRemoval \
@@ -99,11 +100,12 @@ HAX_ITEMS := -** \
 	+beaconcrypt_core::pqxdh::server_ratchet_initialization \
 	+beaconcrypt_core::pqxdh::InitialRatchetChains \
 	+beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output \
-	+beaconcrypt_core::pqxdh::derive_initial_ratchet_chains \
-	+beaconcrypt_core::pqxdh::derive_initial_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::derive_beacon_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::derive_server_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::**::derive_ratchet_kernel \
+	+beaconcrypt_core::pqxdh::concrete::derive_initial_ratchet_chains \
+	+beaconcrypt_core::pqxdh::concrete::derive_initial_ratchet_kernel \
+	+beaconcrypt_core::pqxdh::concrete::derive_beacon_ratchet_kernel \
+	+beaconcrypt_core::pqxdh::concrete::derive_server_ratchet_kernel \
+	+beaconcrypt_core::pqxdh::concrete::derive_beacon_candidate_ratchet_kernel \
+	+beaconcrypt_core::pqxdh::concrete::derive_server_candidate_ratchet_kernel \
 	+beaconcrypt_core::pqxdh::**::ratchet_initialization \
 	+beaconcrypt_core::pqxdh::**::key_id_binding \
 	+beaconcrypt_core::pqxdh::beacon_prepare_finish \
@@ -252,7 +254,7 @@ check-toolchain:
 			"$$(proverif -help 2>&1 | sed -n '1p')"
 
 extract-fstar:
-	# Enable hax-lib so the bounded recursive lookup carries its checked measure.
+	# Enable hax-lib so each bounded loop carries its checked measure.
 	cargo hax -C --locked --features=proverif ';' into -i '$(HAX_ITEMS)' fstar
 
 # F* accepts explicit assumptions and lax/admit flags, so strict typechecking

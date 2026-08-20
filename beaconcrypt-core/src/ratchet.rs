@@ -61,10 +61,6 @@ pub const RATCHET_KDF_OUTPUT_SIZE: usize =
 const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 76);
 
 /// Fixed-width symmetric-ratchet chain bytes owned by the extracted boundary.
-#[cfg_attr(
-	feature = "proverif",
-	hax_lib::fstar::before("friend Beaconcrypt_core.Ratchet.Refined")
-)]
 #[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
 pub struct RatchetChain {
 	bytes: [u8; RATCHET_CHAIN_SIZE],

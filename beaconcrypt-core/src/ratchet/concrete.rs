@@ -13,7 +13,12 @@ pub type RatchetKdfExecutor = fn(&SymmetricRatchetKdfRequest) -> [u8; RATCHET_KD
 /// A concrete chain binds its fixed-width bytes to the sole KDF executor that
 /// is carried through every later step. The fields stay private so callers
 /// cannot replace the executor while retaining the same logical kernel.
-#[cfg_attr(feature = "proverif", hax_lib::fstar::before("noeq"))]
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::fstar::before(
+		"friend Beaconcrypt_core.Ratchet\nfriend Beaconcrypt_core.Ratchet.Refined\nnoeq"
+	)
+)]
 struct ConcreteRatchetChain {
 	chain: RatchetChain,
 	kdf: RatchetKdfExecutor,

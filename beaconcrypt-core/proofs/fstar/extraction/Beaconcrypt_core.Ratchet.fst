@@ -19,8 +19,6 @@ let v_SYM_RATCHET_INFO: t_Array u8 (mk_usize 41) =
   FStar.Pervasives.assert_norm (Prims.eq2 (List.Tot.length list) 41);
   Rust_primitives.Hax.array_of_list 41 list
 
-friend Beaconcrypt_core.Ratchet.Refined
-
 /// Fixed-width symmetric-ratchet chain bytes owned by the extracted boundary.
 type t_RatchetChain = { f_bytes:t_Array u8 (mk_usize 32) }
 
@@ -34,12 +32,18 @@ let impl_RatchetChain__into_bytes (self: t_RatchetChain) : t_Array u8 (mk_usize 
 /// Fixed-width symmetric-ratchet message-key bytes owned by the extracted boundary.
 type t_RatchetKey = { f_bytes:t_Array u8 (mk_usize 32) }
 
+let impl_RatchetKey__from_bytes (bytes: t_Array u8 (mk_usize 32)) : t_RatchetKey =
+  { f_bytes = bytes } <: t_RatchetKey
+
 let impl_RatchetKey__as_bytes (self: t_RatchetKey) : t_Array u8 (mk_usize 32) = self.f_bytes
 
 let impl_RatchetKey__into_bytes (self: t_RatchetKey) : t_Array u8 (mk_usize 32) = self.f_bytes
 
 /// Fixed-width symmetric-ratchet AEAD nonce bytes owned by the extracted boundary.
 type t_RatchetNonce = { f_bytes:t_Array u8 (mk_usize 12) }
+
+let impl_RatchetNonce__from_bytes (bytes: t_Array u8 (mk_usize 12)) : t_RatchetNonce =
+  { f_bytes = bytes } <: t_RatchetNonce
 
 let impl_RatchetNonce__as_bytes (self: t_RatchetNonce) : t_Array u8 (mk_usize 12) = self.f_bytes
 
@@ -81,293 +85,41 @@ let impl_RatchetKdfOutput__next_chain (self: t_RatchetKdfOutput) : t_RatchetChai
 
 let impl_RatchetKdfOutput__nonce (self: t_RatchetKdfOutput) : t_RatchetNonce = self.f_nonce
 
-let impl_RatchetKdfOutput__into_step (self: t_RatchetKdfOutput)
-    : Beaconcrypt_core.Ratchet.Refined.t_RatchetStep t_RatchetChain t_RatchetMaterial =
-  {
-    Beaconcrypt_core.Ratchet.Refined.f_chain = self.f_next_chain;
-    Beaconcrypt_core.Ratchet.Refined.f_material
-    =
-    { f_key = self.f_key; f_nonce = self.f_nonce } <: t_RatchetMaterial
-  }
-  <:
-  Beaconcrypt_core.Ratchet.Refined.t_RatchetStep t_RatchetChain t_RatchetMaterial
-
 /// Split `key || next_chain || nonce` into fixed-width values at the protocol's exact offsets.
 let split_ratchet_kdf_output (output: t_Array u8 (mk_usize 76)) : t_RatchetKdfOutput =
-  let key:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
   let key:t_Array u8 (mk_usize 32) =
-    Core_models.Slice.impl__copy_from_slice #u8
-      key
-      (output.[ {
-            Core_models.Ops.Range.f_start = mk_usize 0;
-            Core_models.Ops.Range.f_end = mk_usize 32
-          }
-          <:
-          Core_models.Ops.Range.t_Range usize ]
-        <:
-        t_Slice u8)
+    Core_models.Array.from_fn #u8
+      (mk_usize 32)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          output.[ i ] <: u8)
   in
-  let next_chain:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
   let next_chain:t_Array u8 (mk_usize 32) =
-    Core_models.Slice.impl__copy_from_slice #u8
-      next_chain
-      (output.[ {
-            Core_models.Ops.Range.f_start = mk_usize 32;
-            Core_models.Ops.Range.f_end = mk_usize 64
-          }
-          <:
-          Core_models.Ops.Range.t_Range usize ]
-        <:
-        t_Slice u8)
+    Core_models.Array.from_fn #u8
+      (mk_usize 32)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          output.[ i +! Beaconcrypt_core.Commitment.v_AEAD_KEY_SIZE <: usize ] <: u8)
   in
-  let nonce:t_Array u8 (mk_usize 12) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 12) in
   let nonce:t_Array u8 (mk_usize 12) =
-    Core_models.Slice.impl__copy_from_slice #u8
-      nonce
-      (output.[ {
-            Core_models.Ops.Range.f_start = mk_usize 64;
-            Core_models.Ops.Range.f_end = mk_usize 76
-          }
+    Core_models.Array.from_fn #u8
+      (mk_usize 12)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          output.[ (i +! Beaconcrypt_core.Commitment.v_AEAD_KEY_SIZE <: usize) +!
+            v_RATCHET_CHAIN_SIZE
+            <:
+            usize ]
           <:
-          Core_models.Ops.Range.t_Range usize ]
-        <:
-        t_Slice u8)
+          u8)
   in
   {
-    f_key = { f_bytes = key } <: t_RatchetKey;
-    f_next_chain = { f_bytes = next_chain } <: t_RatchetChain;
-    f_nonce = { f_bytes = nonce } <: t_RatchetNonce
+    f_key = impl_RatchetKey__from_bytes key;
+    f_next_chain = impl_RatchetChain__from_bytes next_chain;
+    f_nonce = impl_RatchetNonce__from_bytes nonce
   }
   <:
   t_RatchetKdfOutput
-
-/// Apply the sole opaque ratchet primitive to the exact old chain and interpret its fixed output.
-/// The primitive's complete production-facing type is `old 32-byte chain -> 76-byte output`.
-/// Label selection and HKDF details are private to that domain-specific primitive.
-/// Input selection, output size, partitioning, and fixed-width construction are owned here.
-let derive_ratchet_step
-      (old_chain: t_RatchetChain)
-      (kdf: (t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76)))
-    : Beaconcrypt_core.Ratchet.Refined.t_RatchetStep t_RatchetChain t_RatchetMaterial =
-  let request:t_SymmetricRatchetKdfRequest =
-    impl_SymmetricRatchetKdfRequest__new (impl_RatchetChain__as_bytes old_chain
-        <:
-        t_Array u8 (mk_usize 32))
-  in
-  let output:t_Array u8 (mk_usize 76) = kdf request in
-  impl_RatchetKdfOutput__into_step (split_ratchet_kdf_output output <: t_RatchetKdfOutput)
-
-noeq
-
-/// A concrete chain binds its fixed-width bytes to the sole KDF executor that
-/// is carried through every later step. The fields stay private so callers
-/// cannot replace the executor while retaining the same logical kernel.
-type t_ConcreteRatchetChain = {
-  f_chain:t_RatchetChain;
-  f_kdf:t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76)
-}
-
-/// Apply the executor bound into `old_chain` to a core-constructed request and
-/// carry that same executor into the returned next chain.
-let concrete_ratchet_step (old_chain: t_ConcreteRatchetChain)
-    : Beaconcrypt_core.Ratchet.Refined.t_RatchetStep t_ConcreteRatchetChain t_RatchetMaterial =
-  let stepped:Beaconcrypt_core.Ratchet.Refined.t_RatchetStep t_RatchetChain t_RatchetMaterial =
-    derive_ratchet_step old_chain.f_chain old_chain.f_kdf
-  in
-  {
-    Beaconcrypt_core.Ratchet.Refined.f_chain
-    =
-    { f_chain = stepped.Beaconcrypt_core.Ratchet.Refined.f_chain; f_kdf = old_chain.f_kdf }
-    <:
-    t_ConcreteRatchetChain;
-    Beaconcrypt_core.Ratchet.Refined.f_material
-    =
-    stepped.Beaconcrypt_core.Ratchet.Refined.f_material
-  }
-  <:
-  Beaconcrypt_core.Ratchet.Refined.t_RatchetStep t_ConcreteRatchetChain t_RatchetMaterial
-
-noeq
-
-/// Production-specialized ratchet kernel.
-/// Both directional chains carry the same private KDF executor, and every
-/// public transition below selects `concrete_ratchet_step` internally. This
-/// removes the generic step callback from the production-facing lifecycle.
-type t_ConcreteRatchetKernel = {
-  f_refined:Beaconcrypt_core.Ratchet.Refined.t_RefinedRatchet t_ConcreteRatchetChain
-    t_ConcreteRatchetChain
-    t_RatchetMaterial
-}
-
-/// Construct a concrete kernel at checked persistence counters.
-let impl_ConcreteRatchetKernel__from_counters
-      (send_sequence receive_sequence: u64)
-      (send_chain receive_chain: t_RatchetChain)
-      (kdf: (t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76)))
-    : t_ConcreteRatchetKernel =
-  {
-    f_refined
-    =
-    Beaconcrypt_core.Ratchet.Refined.impl__from_counters #t_ConcreteRatchetChain
-      #t_ConcreteRatchetChain
-      #t_RatchetMaterial
-      send_sequence
-      receive_sequence
-      ({ f_chain = send_chain; f_kdf = kdf } <: t_ConcreteRatchetChain)
-      ({ f_chain = receive_chain; f_kdf = kdf } <: t_ConcreteRatchetChain)
-  }
-  <:
-  t_ConcreteRatchetKernel
-
-/// Construct a fresh concrete kernel and bind one KDF executor for its lifetime.
-let impl_ConcreteRatchetKernel__new
-      (send_chain receive_chain: t_RatchetChain)
-      (kdf: (t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76)))
-    : t_ConcreteRatchetKernel =
-  impl_ConcreteRatchetKernel__from_counters (mk_u64 0) (mk_u64 0) send_chain receive_chain kdf
-
-let impl_ConcreteRatchetKernel__send_sequence (self: t_ConcreteRatchetKernel) : u64 =
-  Beaconcrypt_core.Ratchet.Refined.impl__send_sequence #t_ConcreteRatchetChain
-    #t_ConcreteRatchetChain
-    #t_RatchetMaterial
-    self.f_refined
-
-let impl_ConcreteRatchetKernel__receive_sequence (self: t_ConcreteRatchetKernel) : u64 =
-  Beaconcrypt_core.Ratchet.Refined.impl__receive_sequence #t_ConcreteRatchetChain
-    #t_ConcreteRatchetChain
-    #t_RatchetMaterial
-    self.f_refined
-
-let impl_ConcreteRatchetKernel__receive_cache_len (self: t_ConcreteRatchetKernel) : u8 =
-  Beaconcrypt_core.Ratchet.Refined.impl__receive_cache_len #t_ConcreteRatchetChain
-    #t_ConcreteRatchetChain
-    #t_RatchetMaterial
-    self.f_refined
-
-let impl_ConcreteRatchetKernel__send_chain (self: t_ConcreteRatchetKernel) : t_RatchetChain =
-  self.f_refined.Beaconcrypt_core.Ratchet.Refined.f_send_chain.f_chain
-
-let impl_ConcreteRatchetKernel__receive_chain (self: t_ConcreteRatchetKernel) : t_RatchetChain =
-  self.f_refined.Beaconcrypt_core.Ratchet.Refined.f_receive_chain.f_chain
-
-let impl_ConcreteRatchetKernel__receive_entry_at (self: t_ConcreteRatchetKernel) (slot: u8)
-    : Core_models.Option.t_Option (u64 & t_RatchetMaterial) =
-  Beaconcrypt_core.Ratchet.Refined.impl__receive_entry_at #t_ConcreteRatchetChain
-    #t_ConcreteRatchetChain
-    #t_RatchetMaterial
-    self.f_refined
-    slot
-
-/// Advance and seal with the core-fixed concrete step and KDF request.
-let concrete_seal_next
-      (#v_Context #v_Output: Type0)
-      (state: t_ConcreteRatchetKernel)
-      (context: v_Context)
-      (seal: (t_RatchetMaterial -> u64 -> v_Context -> Core_models.Option.t_Option v_Output))
-    : (t_ConcreteRatchetKernel & Core_models.Option.t_Option v_Output) =
-  let
-  (tmp0:
-    Beaconcrypt_core.Ratchet.Refined.t_RefinedRatchet t_ConcreteRatchetChain
-      t_ConcreteRatchetChain
-      t_RatchetMaterial),
-  (out: Core_models.Option.t_Option v_Output) =
-    Beaconcrypt_core.Ratchet.Refined.refined_seal_next #t_ConcreteRatchetChain
-      #t_ConcreteRatchetChain
-      #t_RatchetMaterial
-      #v_Context
-      #v_Output
-      state.f_refined
-      concrete_ratchet_step
-      context
-      seal
-  in
-  let state:t_ConcreteRatchetKernel = { state with f_refined = tmp0 } <: t_ConcreteRatchetKernel in
-  let hax_temp_output:Core_models.Option.t_Option v_Output = out in
-  state, hax_temp_output <: (t_ConcreteRatchetKernel & Core_models.Option.t_Option v_Output)
-
-/// Admit, select, open, and finish with the core-fixed concrete step and KDF request.
-let concrete_open_and_finish
-      (#v_Context #v_Plaintext: Type0)
-      (state: t_ConcreteRatchetKernel)
-      (target: u64)
-      (context: v_Context)
-      (v_open: (t_RatchetMaterial -> u64 -> v_Context -> Core_models.Option.t_Option v_Plaintext))
-    : (t_ConcreteRatchetKernel & Core_models.Option.t_Option v_Plaintext) =
-  let
-  (tmp0:
-    Beaconcrypt_core.Ratchet.Refined.t_RefinedRatchet t_ConcreteRatchetChain
-      t_ConcreteRatchetChain
-      t_RatchetMaterial),
-  (out: Core_models.Option.t_Option v_Plaintext) =
-    Beaconcrypt_core.Ratchet.Refined.refined_open_and_finish #t_ConcreteRatchetChain
-      #t_ConcreteRatchetChain #t_RatchetMaterial #v_Context #v_Plaintext state.f_refined target
-      concrete_ratchet_step context v_open
-  in
-  let state:t_ConcreteRatchetKernel = { state with f_refined = tmp0 } <: t_ConcreteRatchetKernel in
-  let hax_temp_output:Core_models.Option.t_Option v_Plaintext = out in
-  state, hax_temp_output <: (t_ConcreteRatchetKernel & Core_models.Option.t_Option v_Plaintext)
-
-noeq
-
-/// Checked restoration builder that binds one concrete KDF executor to both
-/// directional chains before any restored material can be published.
-type t_ConcreteRatchetRestore = {
-  f_refined:Beaconcrypt_core.Ratchet.Refined.t_RefinedRatchetRestore t_ConcreteRatchetChain
-    t_ConcreteRatchetChain
-    t_RatchetMaterial
-}
-
-let start_concrete_restore
-      (send_sequence receive_sequence: u64)
-      (send_chain receive_chain: t_RatchetChain)
-      (kdf: (t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76)))
-    : t_ConcreteRatchetRestore =
-  {
-    f_refined
-    =
-    Beaconcrypt_core.Ratchet.Refined.start_refined_restore #t_ConcreteRatchetChain
-      #t_ConcreteRatchetChain
-      #t_RatchetMaterial
-      send_sequence
-      receive_sequence
-      ({ f_chain = send_chain; f_kdf = kdf } <: t_ConcreteRatchetChain)
-      ({ f_chain = receive_chain; f_kdf = kdf } <: t_ConcreteRatchetChain)
-  }
-  <:
-  t_ConcreteRatchetRestore
-
-let concrete_restore_receive_key
-      (restore: t_ConcreteRatchetRestore)
-      (sequence: u64)
-      (material: t_RatchetMaterial)
-    : (t_ConcreteRatchetRestore & bool) =
-  let
-  (tmp0:
-    Beaconcrypt_core.Ratchet.Refined.t_RefinedRatchetRestore t_ConcreteRatchetChain
-      t_ConcreteRatchetChain
-      t_RatchetMaterial),
-  (out: bool) =
-    Beaconcrypt_core.Ratchet.Refined.refined_restore_receive_key #t_ConcreteRatchetChain
-      #t_ConcreteRatchetChain
-      #t_RatchetMaterial
-      restore.f_refined
-      sequence
-      material
-  in
-  let restore:t_ConcreteRatchetRestore =
-    { restore with f_refined = tmp0 } <: t_ConcreteRatchetRestore
-  in
-  let hax_temp_output:bool = out in
-  restore, hax_temp_output <: (t_ConcreteRatchetRestore & bool)
-
-let finish_concrete_restore (restore: t_ConcreteRatchetRestore) : t_ConcreteRatchetKernel =
-  {
-    f_refined
-    =
-    Beaconcrypt_core.Ratchet.Refined.finish_refined_restore #t_ConcreteRatchetChain
-      #t_ConcreteRatchetChain
-      #t_RatchetMaterial
-      restore.f_refined
-  }
-  <:
-  t_ConcreteRatchetKernel

@@ -44,11 +44,11 @@ done < "$manifest"
 declare -A expected_category_counts=(
 	[adapter-rust]=13
 	[adapter-schema]=3
-	[core-rust]=6
+	[core-rust]=9
 	[control]=12
-	[generated-fstar]=5
+	[generated-fstar]=7
 	[generated-proverif]=1
-	[handwritten-fstar]=8
+	[handwritten-fstar]=10
 	[handwritten-proverif]=18
 	[inventory]=2
 	[validation]=2
@@ -201,52 +201,86 @@ reject_matches() {
 reject_matches "new hax opaque annotation requires inventory review" \
 	'hax_lib\s*::\s*(?:opaque|opaque_type)\b' src
 require_occurrence_count 4 \
-	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)' \
+	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"[^"]*noeq[^"]*"\s*\)' \
 	"reviewed F* noeq insertion" src
-require_occurrence_count 6 \
+require_occurrence_count 14 \
 	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(' \
 	"complete F* before-annotation allowlist" src
+require_occurrence_count 8 \
+	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"#push-options \\"--fuel 1 --ifuel 1 --z3rlimit 60\\""\s*\)' \
+	"reviewed loop-reference F* option scope" src
+require_occurrence_count 8 \
+	'hax_lib\s*::\s*fstar\s*::\s*after\s*\(' \
+	"complete F* after-annotation allowlist" src
+require_occurrence_count 8 \
+	'hax_lib\s*::\s*fstar\s*::\s*after\s*\(\s*"#pop-options"\s*\)' \
+	"reviewed loop-reference F* option scope end" src
+require_occurrence_count 8 \
+	'hax_lib\s*::\s*ensures\s*\(' \
+	"reviewed loop-reference postcondition" src
+require_occurrence_count 4 \
+	'hax_lib\s*::\s*loop_invariant!' \
+	"reviewed iterative-loop invariant" src
 for concrete_type in ConcreteRatchetChain ConcreteRatchetKernel ConcreteRatchetRestore; do
 	require_occurrence_count 1 \
-		'#\[cfg_attr\(feature\s*=\s*"proverif",\s*hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)\)\]\s*(?:pub\s+)?struct\s+'"${concrete_type}"'\b' \
-		"reviewed noeq target ${concrete_type}" src/ratchet.rs
+		'#\[cfg_attr\(\s*feature\s*=\s*"proverif",\s*hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"[^"]*noeq[^"]*"\s*\)\s*\)\]\s*(?:pub\s+)?struct\s+'"${concrete_type}"'\b' \
+		"reviewed noeq target ${concrete_type}" src/ratchet/concrete.rs
 done
 require_occurrence_count 1 \
 	'#\[cfg_attr\(feature\s*=\s*"proverif",\s*hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)\)\]\s*pub\s+struct\s+InitialRatchetChains\b' \
 	"reviewed noeq target InitialRatchetChains" src/pqxdh.rs
 require_occurrence_count 1 \
-	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"friend Beaconcrypt_core\.Ratchet\.Refined"\s*\)' \
-	"reviewed Ratchet-to-Refined friend edge" src/ratchet.rs
+	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"friend Beaconcrypt_core\.Ratchet\\nfriend Beaconcrypt_core\.Ratchet\.Refined\\nnoeq"\s*\)' \
+	"reviewed Concrete-to-Ratchet-and-Refined friend edges" src/ratchet/concrete.rs
 require_occurrence_count 1 \
 	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"friend Beaconcrypt_core\.Ratchet\.Control"\s*\)' \
 	"reviewed Refined-to-Control friend edge" src/ratchet/refined.rs
+require_occurrence_count 1 \
+	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"friend Beaconcrypt_core\.Ratchet\\nfriend Beaconcrypt_core\.Ratchet\.Concrete"\s*\)' \
+	"reviewed PQXDH.Concrete-to-Ratchet friend edges" src/pqxdh/concrete.rs
 require_line_count 3 '^noeq$' \
-	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Concrete.fst \
 	"generated function-record noeq directive"
 require_line_count 1 '^noeq$' \
 	proofs/fstar/extraction/Beaconcrypt_core.Pqxdh.fst \
 	"generated initial-chain noeq directive"
+require_line_count 1 '^friend Beaconcrypt_core\.Ratchet$' \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Concrete.fst \
+	"generated Concrete-to-Ratchet friend edge"
 require_line_count 1 '^friend Beaconcrypt_core\.Ratchet\.Refined$' \
-	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
-	"generated Ratchet-to-Refined friend edge"
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Concrete.fst \
+	"generated Concrete-to-Refined friend edge"
 require_line_count 1 '^friend Beaconcrypt_core\.Ratchet\.Control$' \
 	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst \
 	"generated Refined-to-Control friend edge"
+require_line_count 1 '^friend Beaconcrypt_core\.Ratchet$' \
+	proofs/fstar/extraction/Beaconcrypt_core.Pqxdh.Concrete.fst \
+	"generated PQXDH.Concrete-to-Ratchet friend edge"
+require_line_count 1 '^friend Beaconcrypt_core\.Ratchet\.Concrete$' \
+	proofs/fstar/extraction/Beaconcrypt_core.Pqxdh.Concrete.fst \
+	"generated PQXDH.Concrete-to-Ratchet.Concrete friend edge"
 
-require_line_count 8 '^val ' proofs/fstar/Beaconcrypt_core.Ratchet.fsti \
-	"narrow PQXDH-facing ratchet declaration"
+require_line_count 6 '^val ' proofs/fstar/Beaconcrypt_core.Ratchet.fsti \
+	"narrow PQXDH-facing ratchet value declaration"
 for declaration in \
 	v_RATCHET_CHAIN_SIZE \
 	v_SYM_RATCHET_INFO \
 	t_RatchetChain \
 	impl_RatchetChain__from_bytes \
 	t_SymmetricRatchetKdfRequest \
-	impl_SymmetricRatchetKdfRequest__new \
+	impl_SymmetricRatchetKdfRequest__new; do
+	require_line_count 1 "^val ${declaration}( | :)" \
+		proofs/fstar/Beaconcrypt_core.Ratchet.fsti \
+		"PQXDH-facing ratchet value declaration ${declaration}"
+done
+require_line_count 2 '^val ' proofs/fstar/Beaconcrypt_core.Ratchet.Concrete.fsti \
+	"narrow PQXDH.Concrete-facing concrete ratchet declaration"
+for declaration in \
 	t_ConcreteRatchetKernel \
 	impl_ConcreteRatchetKernel__new; do
 	require_line_count 1 "^val ${declaration}( | :)" \
-		proofs/fstar/Beaconcrypt_core.Ratchet.fsti \
-		"PQXDH-facing ratchet declaration ${declaration}"
+		proofs/fstar/Beaconcrypt_core.Ratchet.Concrete.fsti \
+		"PQXDH.Concrete-facing concrete ratchet declaration ${declaration}"
 done
 require_line_count 29 '^val ' proofs/fstar/Beaconcrypt_core.Ratchet.Control.fsti \
 	"Refined-facing control declaration"
@@ -255,14 +289,21 @@ require_line_count 15 '^val ' proofs/fstar/Beaconcrypt_core.Ratchet.Refined.fsti
 reject_matches "stable ratchet interface exposes a representation" \
 	'^type\s' \
 	proofs/fstar/Beaconcrypt_core.Ratchet.fsti \
+	proofs/fstar/Beaconcrypt_core.Ratchet.Concrete.fsti \
 	proofs/fstar/Beaconcrypt_core.Ratchet.Control.fsti \
 	proofs/fstar/Beaconcrypt_core.Ratchet.Refined.fsti
-require_line_count 3 '^friend Beaconcrypt_core\.Ratchet' \
+reject_matches "PQXDH.Concrete companion interface exposes a declaration" \
+	'^(?:val|type|let|friend)\b' \
+	proofs/fstar/Beaconcrypt_core.Pqxdh.Concrete.fsti
+require_line_count 4 '^friend Beaconcrypt_core\.Ratchet' \
 	proofs/fstar/Beaconcrypt_core.Ratchet.Lemmas.fst \
 	"ratchet proof friend edge"
-require_line_count 4 '^friend Beaconcrypt_core\.Ratchet' \
+require_line_count 5 '^friend Beaconcrypt_core\.Ratchet' \
 	proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst \
 	"PQXDH proof friend edge"
+require_line_count 1 '^friend Beaconcrypt_core\.Pqxdh\.Concrete$' \
+	proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst \
+	"PQXDH proof concrete-module friend edge"
 reject_matches "proof interface exposes implementation friendship" \
 	'^friend\s' \
 	proofs/fstar/Beaconcrypt_core.Ratchet.Lemmas.fsti \
@@ -652,6 +693,51 @@ require_line_count 1 '^let finish_refined_restore_is_valid$' \
 require_line_count 5 'Core_models\.Option\.impl__take' \
 	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst \
 	"transparent refined cached and pending-slot movement"
+require_line_count 1 'Rust_primitives\.Hax\.while_loop \(fun' \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Control.fst \
+	"transparent bounded control loop"
+require_line_count 6 'Rust_primitives\.Hax\.while_loop \(fun' \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst \
+	"transparent bounded refined loops"
+require_line_count 1 'Core_models\.Array\.from_fn' \
+	proofs/fstar/extraction/Beaconcrypt_core.Commitment.fst \
+	"reviewed commitment array-from-function contract use"
+require_line_count 3 'Core_models\.Array\.from_fn' \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
+	"reviewed ratchet array-from-function contract use"
+require_line_count 11 'Core_models\.Array\.from_fn' \
+	proofs/fstar/extraction/Beaconcrypt_core.Pqxdh.fst \
+	"reviewed PQXDH array-from-function contract use"
+require_line_count 5 '^#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"$' \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Control.fst \
+	"generated control loop-reference option scope"
+require_line_count 5 '^#pop-options$' \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Control.fst \
+	"generated control loop-reference option scope end"
+require_line_count 3 '^#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"$' \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst \
+	"generated refined loop-reference option scope"
+require_line_count 3 '^#pop-options$' \
+	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst \
+	"generated refined loop-reference option scope end"
+for declaration in \
+	lookup_receive_key_from \
+	lookup_receive_key_from_stops_at_capacity \
+	lookup_receive_key_from_stops_at_len \
+	lookup_receive_key_from_matches \
+	lookup_receive_key_from_advances; do
+	require_line_count 1 "^let( rec)? ${declaration}\\b" \
+		proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Control.fst \
+		"generated control loop reference ${declaration}"
+done
+for declaration in \
+	refined_receive_slots_are_empty_from \
+	receive_control_prefix_matches_from \
+	pending_receive_slots_are_valid_from; do
+	require_line_count 1 "^let rec ${declaration}\\b" \
+		proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst \
+		"generated refined loop reference ${declaration}"
+done
 reject_matches "unconstrained memory replacement in refined ratchet" \
 	'Core_models\.Mem\.replace' \
 	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Refined.fst

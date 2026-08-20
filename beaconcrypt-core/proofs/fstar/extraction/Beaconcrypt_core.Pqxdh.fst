@@ -3,6 +3,12 @@ module Beaconcrypt_core.Pqxdh
 open FStar.Mul
 open Core_models
 
+let v_SIGN_PUBLIC_KEY_SIZE: usize = mk_usize 32
+
+let v_DH_SECRET_SIZE: usize = mk_usize 32
+
+let v_PQXDH_PADDING_SIZE: usize = mk_usize 32
+
 let v_RATCHET_CHAIN_SIZE: usize = Beaconcrypt_core.Ratchet.v_RATCHET_CHAIN_SIZE
 
 let v_SIGN_TYPE_ED25519: u8 = mk_u8 1
@@ -90,32 +96,15 @@ type t_RegistrationId = { f_bytes:t_Array u8 (mk_usize 64) }
 /// Exact equality is used by the adapter's consumed-registration set; no
 /// hash or collision-resistance assumption is needed.
 let impl_VerifiedInitKex__registration_id (self: t_VerifiedInitKex) : t_RegistrationId =
-  let bytes:t_Array u8 (mk_usize 64) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 64) in
-  let bytes:t_Array u8 (mk_usize 64) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range_to bytes
-      ({ Core_models.Ops.Range.f_end = mk_usize 32 } <: Core_models.Ops.Range.t_RangeTo usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (bytes.[ { Core_models.Ops.Range.f_end = mk_usize 32 }
-              <:
-              Core_models.Ops.Range.t_RangeTo usize ]
-            <:
-            t_Slice u8)
-          (self.f_beacon_identity_public_key <: t_Slice u8)
-        <:
-        t_Slice u8)
-  in
-  let bytes:t_Array u8 (mk_usize 64) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range_from bytes
-      ({ Core_models.Ops.Range.f_start = mk_usize 32 } <: Core_models.Ops.Range.t_RangeFrom usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (bytes.[ { Core_models.Ops.Range.f_start = mk_usize 32 }
-              <:
-              Core_models.Ops.Range.t_RangeFrom usize ]
-            <:
-            t_Slice u8)
-          (self.f_beacon_one_time_public_key <: t_Slice u8)
-        <:
-        t_Slice u8)
+  let (bytes: t_Array u8 (mk_usize 64)):t_Array u8 (mk_usize 64) =
+    Core_models.Array.from_fn #u8
+      (mk_usize 64)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          if i <. v_SIGN_PUBLIC_KEY_SIZE <: bool
+          then self.f_beacon_identity_public_key.[ i ] <: u8
+          else self.f_beacon_one_time_public_key.[ i -! v_SIGN_PUBLIC_KEY_SIZE <: usize ] <: u8)
   in
   { f_bytes = bytes } <: t_RegistrationId
 
@@ -218,31 +207,21 @@ let split_initial_ratchet_kdf_output
       (output: t_Array u8 (mk_usize 64))
       (initialization: t_RatchetInitialization)
     : t_InitialRatchetChains =
-  let left:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
   let left:t_Array u8 (mk_usize 32) =
-    Core_models.Slice.impl__copy_from_slice #u8
-      left
-      (output.[ {
-            Core_models.Ops.Range.f_start = mk_usize 0;
-            Core_models.Ops.Range.f_end = mk_usize 32
-          }
-          <:
-          Core_models.Ops.Range.t_Range usize ]
-        <:
-        t_Slice u8)
+    Core_models.Array.from_fn #u8
+      (mk_usize 32)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          output.[ i ] <: u8)
   in
-  let right:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
   let right:t_Array u8 (mk_usize 32) =
-    Core_models.Slice.impl__copy_from_slice #u8
-      right
-      (output.[ {
-            Core_models.Ops.Range.f_start = mk_usize 32;
-            Core_models.Ops.Range.f_end = mk_usize 64
-          }
-          <:
-          Core_models.Ops.Range.t_Range usize ]
-        <:
-        t_Slice u8)
+    Core_models.Array.from_fn #u8
+      (mk_usize 32)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          output.[ i +! v_RATCHET_CHAIN_SIZE <: usize ] <: u8)
   in
   if initialization.f_send_offset =. mk_u8 0
   then
@@ -260,61 +239,6 @@ let split_initial_ratchet_kdf_output
     <:
     t_InitialRatchetChains
 
-/// Apply the sole opaque initial-chain primitive to the exact session root and order its output.
-/// The primitive's complete production-facing type is `32-byte root -> 64-byte output`.
-/// Label selection and HKDF details are private to that domain-specific primitive.
-/// Input selection, output size, role ordering, partitioning, and fixed-width construction are owned here.
-let derive_initial_ratchet_chains
-      (root: t_Array u8 (mk_usize 32))
-      (initialization: t_RatchetInitialization)
-      (kdf: (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 64)))
-    : t_InitialRatchetChains =
-  let request:Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest =
-    Beaconcrypt_core.Ratchet.impl_SymmetricRatchetKdfRequest__new root
-  in
-  let output:t_Array u8 (mk_usize 64) = kdf request in
-  split_initial_ratchet_kdf_output output initialization
-
-/// Construct a concrete kernel directly from one root, one fixed role plan,
-/// and the executors for initial and subsequent core-owned KDF requests.
-let derive_initial_ratchet_kernel
-      (root: t_Array u8 (mk_usize 32))
-      (initialization: t_RatchetInitialization)
-      (initial_kdf:
-          (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 64)))
-      (ratchet_kdf:
-          (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76)))
-    : Beaconcrypt_core.Ratchet.t_ConcreteRatchetKernel =
-  let chains:t_InitialRatchetChains =
-    derive_initial_ratchet_chains root initialization initial_kdf
-  in
-  let
-  (send_chain: Beaconcrypt_core.Ratchet.t_RatchetChain),
-  (receive_chain: Beaconcrypt_core.Ratchet.t_RatchetChain) =
-    impl_InitialRatchetChains__into_parts chains
-  in
-  Beaconcrypt_core.Ratchet.impl_ConcreteRatchetKernel__new send_chain receive_chain ratchet_kdf
-
-/// Construct the beacon role's complementary concrete kernel.
-let derive_beacon_ratchet_kernel
-      (root: t_Array u8 (mk_usize 32))
-      (initial_kdf:
-          (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 64)))
-      (ratchet_kdf:
-          (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76)))
-    : Beaconcrypt_core.Ratchet.t_ConcreteRatchetKernel =
-  derive_initial_ratchet_kernel root v_BEACON_RATCHETS initial_kdf ratchet_kdf
-
-/// Construct the server role's complementary concrete kernel.
-let derive_server_ratchet_kernel
-      (root: t_Array u8 (mk_usize 32))
-      (initial_kdf:
-          (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 64)))
-      (ratchet_kdf:
-          (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76)))
-    : Beaconcrypt_core.Ratchet.t_ConcreteRatchetKernel =
-  derive_initial_ratchet_kernel root v_SERVER_RATCHETS initial_kdf ratchet_kdf
-
 /// Candidate beacon session. Its root, AD, identity assignment, and ratchet
 /// direction have been validated, but its initial ciphertext has not yet
 /// authenticated. It must be consumed by [`beacon_commit`] or
@@ -328,18 +252,6 @@ type t_BeaconRegistrationCandidate = {
 
 let impl_BeaconRegistrationCandidate__ratchet_initialization (self: t_BeaconRegistrationCandidate)
     : t_RatchetInitialization = v_BEACON_RATCHETS
-
-/// Bind the authenticated candidate's beacon direction directly to a
-/// concrete core ratchet kernel.
-let impl_BeaconRegistrationCandidate__derive_ratchet_kernel
-      (self: t_BeaconRegistrationCandidate)
-      (root: t_Array u8 (mk_usize 32))
-      (initial_kdf:
-          (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 64)))
-      (ratchet_kdf:
-          (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76)))
-    : Beaconcrypt_core.Ratchet.t_ConcreteRatchetKernel =
-  derive_beacon_ratchet_kernel root initial_kdf ratchet_kdf
 
 type t_BeaconFinishInputs = {
   f_response_server_identity:t_Array u8 (mk_usize 32);
@@ -388,16 +300,18 @@ let authenticate_registration_key_id_binding
       (authenticated_server_key_id: u64)
       (authenticated_binding: t_Array u8 (mk_usize 8))
     : Core_models.Result.t_Result t_AuthenticatedBeaconRegistration t_RegistrationError =
-  if authenticated_server_key_id <>. candidate.f_server_binding.f_identity_key_id
+  if ~.(authenticated_server_key_id =. candidate.f_server_binding.f_identity_key_id <: bool)
   then
     Core_models.Result.Result_Err (RegistrationError_IdentityMismatch <: t_RegistrationError)
     <:
     Core_models.Result.t_Result t_AuthenticatedBeaconRegistration t_RegistrationError
   else
     if
-      authenticated_binding <>.
-      (impl_BeaconRegistrationCandidate__key_id_binding candidate <: t_RegistrationKeyIdBinding)
-        .f_bytes
+      ~.(authenticated_binding =.
+        (impl_BeaconRegistrationCandidate__key_id_binding candidate <: t_RegistrationKeyIdBinding)
+          .f_bytes
+        <:
+        bool)
     then
       Core_models.Result.Result_Err (RegistrationError_KeyIdMismatch <: t_RegistrationError)
       <:
@@ -471,18 +385,6 @@ let impl_ServerRegistrationCandidate__ratchet_initialization (self: t_ServerRegi
 let impl_ServerRegistrationCandidate__key_id_binding (self: t_ServerRegistrationCandidate)
     : t_RegistrationKeyIdBinding = registration_key_id_binding self.f_key_id
 
-/// Bind the accepted server candidate's direction directly to a concrete
-/// core ratchet kernel.
-let impl_ServerRegistrationCandidate__derive_ratchet_kernel
-      (self: t_ServerRegistrationCandidate)
-      (root: t_Array u8 (mk_usize 32))
-      (initial_kdf:
-          (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 64)))
-      (ratchet_kdf:
-          (Beaconcrypt_core.Ratchet.t_SymmetricRatchetKdfRequest -> t_Array u8 (mk_usize 76)))
-    : Beaconcrypt_core.Ratchet.t_ConcreteRatchetKernel =
-  derive_server_ratchet_kernel root initial_kdf ratchet_kdf
-
 type t_KeyIdAvailability =
   | KeyIdAvailability_Available : t_KeyIdAvailability
   | KeyIdAvailability_Occupied : t_KeyIdAvailability
@@ -521,29 +423,15 @@ let server_abort_candidate (candidate: t_ServerRegistrationCandidate) : t_Server
   candidate.f_previous_state
 
 let tag_sign_key (key: t_Array u8 (mk_usize 32)) : t_Array u8 (mk_usize 33) =
-  let output:t_Array u8 (mk_usize 33) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 33) in
-  let output:t_Array u8 (mk_usize 33) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
-      (mk_usize 0)
-      v_SIGN_TYPE_ED25519
-  in
-  let output:t_Array u8 (mk_usize 33) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
-      ({ Core_models.Ops.Range.f_start = mk_usize 1; Core_models.Ops.Range.f_end = mk_usize 33 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (output.[ {
-                Core_models.Ops.Range.f_start = mk_usize 1;
-                Core_models.Ops.Range.f_end = mk_usize 33
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (key <: t_Slice u8)
-        <:
-        t_Slice u8)
+  let (output: t_Array u8 (mk_usize 33)):t_Array u8 (mk_usize 33) =
+    Core_models.Array.from_fn #u8
+      (mk_usize 33)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          if i <. mk_usize 1 <: bool
+          then v_SIGN_TYPE_ED25519
+          else key.[ i -! mk_usize 1 <: usize ] <: u8)
   in
   output
 
@@ -554,68 +442,21 @@ let build_associated_data
     : t_Array u8 (mk_usize 153) =
   let encoded_server:t_Array u8 (mk_usize 33) = tag_sign_key server_identity_public_key in
   let encoded_beacon:t_Array u8 (mk_usize 33) = tag_sign_key beacon_identity_public_key in
-  let output:t_Array u8 (mk_usize 153) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 153) in
-  let output:t_Array u8 (mk_usize 153) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range_to output
-      ({ Core_models.Ops.Range.f_end = mk_usize 33 } <: Core_models.Ops.Range.t_RangeTo usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (output.[ { Core_models.Ops.Range.f_end = mk_usize 33 }
-              <:
-              Core_models.Ops.Range.t_RangeTo usize ]
-            <:
-            t_Slice u8)
-          (encoded_server <: t_Slice u8)
-        <:
-        t_Slice u8)
-  in
-  let output:t_Array u8 (mk_usize 153) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
-      ({ Core_models.Ops.Range.f_start = mk_usize 33; Core_models.Ops.Range.f_end = mk_usize 66 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (output.[ {
-                Core_models.Ops.Range.f_start = mk_usize 33;
-                Core_models.Ops.Range.f_end = mk_usize 66
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (encoded_beacon <: t_Slice u8)
-        <:
-        t_Slice u8)
-  in
-  let output:t_Array u8 (mk_usize 153) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
-      ({ Core_models.Ops.Range.f_start = mk_usize 66; Core_models.Ops.Range.f_end = mk_usize 112 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (output.[ {
-                Core_models.Ops.Range.f_start = mk_usize 66;
-                Core_models.Ops.Range.f_end = mk_usize 112
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (v_PQXDH_INFO <: t_Slice u8)
-        <:
-        t_Slice u8)
-  in
-  let output:t_Array u8 (mk_usize 153) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range_from output
-      ({ Core_models.Ops.Range.f_start = mk_usize 112 } <: Core_models.Ops.Range.t_RangeFrom usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (output.[ { Core_models.Ops.Range.f_start = mk_usize 112 }
-              <:
-              Core_models.Ops.Range.t_RangeFrom usize ]
-            <:
-            t_Slice u8)
-          (v_SYM_RATCHET_INFO <: t_Slice u8)
-        <:
-        t_Slice u8)
+  let (output: t_Array u8 (mk_usize 153)):t_Array u8 (mk_usize 153) =
+    Core_models.Array.from_fn #u8
+      (mk_usize 153)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          if i <. mk_usize 33 <: bool
+          then encoded_server.[ i ] <: u8
+          else
+            if i <. mk_usize 66 <: bool
+            then encoded_beacon.[ i -! mk_usize 33 <: usize ] <: u8
+            else
+              if i <. mk_usize 112 <: bool
+              then v_PQXDH_INFO.[ i -! mk_usize 66 <: usize ] <: u8
+              else v_SYM_RATCHET_INFO.[ i -! mk_usize 112 <: usize ] <: u8)
   in
   output
 
@@ -627,15 +468,21 @@ let server_prepare_commit
       (key_id_availability: t_KeyIdAvailability)
     : Core_models.Result.t_Result t_ServerRegistrationCandidate t_RegistrationError =
   if
-    pending.f_server_binding.f_identity_key_id <>. current_server_binding.f_identity_key_id ||
-    pending.f_server_binding.f_identity_public_key <>. current_server_binding.f_identity_public_key
+    ~.(pending.f_server_binding.f_identity_key_id =. current_server_binding.f_identity_key_id
+      <:
+      bool) ||
+    ~.(pending.f_server_binding.f_identity_public_key =.
+      current_server_binding.f_identity_public_key
+      <:
+      bool)
   then
     Core_models.Result.Result_Err (RegistrationError_IdentityMismatch <: t_RegistrationError)
     <:
     Core_models.Result.t_Result t_ServerRegistrationCandidate t_RegistrationError
   else
     match server_next_key_id state <: Core_models.Result.t_Result u64 t_RegistrationError with
-    | Core_models.Result.Result_Ok key_id ->
+    | Core_models.Result.Result_Ok value ->
+      let key_id:u64 = value in
       if
         match key_id_availability <: t_KeyIdAvailability with
         | KeyIdAvailability_Occupied  -> true
@@ -670,59 +517,28 @@ let server_prepare_commit
       Core_models.Result.t_Result t_ServerRegistrationCandidate t_RegistrationError
 
 let tag_x25519_key (role: u8) (key: t_Array u8 (mk_usize 32)) : t_Array u8 (mk_usize 34) =
-  let output:t_Array u8 (mk_usize 34) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 34) in
-  let output:t_Array u8 (mk_usize 34) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
-      (mk_usize 0)
-      v_KEM_TYPE_X25519
-  in
-  let output:t_Array u8 (mk_usize 34) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output (mk_usize 1) role
-  in
-  let output:t_Array u8 (mk_usize 34) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
-      ({ Core_models.Ops.Range.f_start = mk_usize 2; Core_models.Ops.Range.f_end = mk_usize 34 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (output.[ {
-                Core_models.Ops.Range.f_start = mk_usize 2;
-                Core_models.Ops.Range.f_end = mk_usize 34
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (key <: t_Slice u8)
-        <:
-        t_Slice u8)
+  let (output: t_Array u8 (mk_usize 34)):t_Array u8 (mk_usize 34) =
+    Core_models.Array.from_fn #u8
+      (mk_usize 34)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          if i <. mk_usize 1 <: bool
+          then v_KEM_TYPE_X25519
+          else if i <. mk_usize 2 <: bool then role else key.[ i -! mk_usize 2 <: usize ] <: u8)
   in
   output
 
 let tag_mlkem768_key (key: t_Array u8 (mk_usize 1184)) : t_Array u8 (mk_usize 1185) =
-  let output:t_Array u8 (mk_usize 1185) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 1185) in
-  let output:t_Array u8 (mk_usize 1185) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_usize output
-      (mk_usize 0)
-      v_KEM_TYPE_MLKEM768
-  in
-  let output:t_Array u8 (mk_usize 1185) =
-    Rust_primitives.Hax.Monomorphized_update_at.update_at_range output
-      ({ Core_models.Ops.Range.f_start = mk_usize 1; Core_models.Ops.Range.f_end = mk_usize 1185 }
-        <:
-        Core_models.Ops.Range.t_Range usize)
-      (Core_models.Slice.impl__copy_from_slice #u8
-          (output.[ {
-                Core_models.Ops.Range.f_start = mk_usize 1;
-                Core_models.Ops.Range.f_end = mk_usize 1185
-              }
-              <:
-              Core_models.Ops.Range.t_Range usize ]
-            <:
-            t_Slice u8)
-          (key <: t_Slice u8)
-        <:
-        t_Slice u8)
+  let (output: t_Array u8 (mk_usize 1185)):t_Array u8 (mk_usize 1185) =
+    Core_models.Array.from_fn #u8
+      (mk_usize 1185)
+      #(usize -> u8)
+      (fun i ->
+          let i:usize = i in
+          if i <. mk_usize 1 <: bool
+          then v_KEM_TYPE_MLKEM768
+          else key.[ i -! mk_usize 1 <: usize ] <: u8)
   in
   output
 
@@ -755,63 +571,48 @@ let beacon_start (state: t_BeaconFresh) (inputs: t_BeaconStartInputs) (coins: t_
 
 let untag_sign_key (encoded: t_Array u8 (mk_usize 33))
     : Core_models.Option.t_Option (t_Array u8 (mk_usize 32)) =
-  if (encoded.[ mk_usize 0 ] <: u8) <>. v_SIGN_TYPE_ED25519
+  if ~.((encoded.[ mk_usize 0 ] <: u8) =. v_SIGN_TYPE_ED25519 <: bool)
   then Core_models.Option.Option_None <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
   else
-    let key:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
-    let key:t_Array u8 (mk_usize 32) =
-      Core_models.Slice.impl__copy_from_slice #u8
-        key
-        (encoded.[ {
-              Core_models.Ops.Range.f_start = mk_usize 1;
-              Core_models.Ops.Range.f_end = mk_usize 33
-            }
-            <:
-            Core_models.Ops.Range.t_Range usize ]
-          <:
-          t_Slice u8)
+    let (key: t_Array u8 (mk_usize 32)):t_Array u8 (mk_usize 32) =
+      Core_models.Array.from_fn #u8
+        (mk_usize 32)
+        #(usize -> u8)
+        (fun i ->
+            let i:usize = i in
+            encoded.[ i +! mk_usize 1 <: usize ] <: u8)
     in
     Core_models.Option.Option_Some key <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
 
 let untag_x25519_key (encoded: t_Array u8 (mk_usize 34)) (expected_role: u8)
     : Core_models.Option.t_Option (t_Array u8 (mk_usize 32)) =
   if
-    (encoded.[ mk_usize 0 ] <: u8) <>. v_KEM_TYPE_X25519 ||
-    (encoded.[ mk_usize 1 ] <: u8) <>. expected_role
+    ~.((encoded.[ mk_usize 0 ] <: u8) =. v_KEM_TYPE_X25519 <: bool) ||
+    ~.((encoded.[ mk_usize 1 ] <: u8) =. expected_role <: bool)
   then Core_models.Option.Option_None <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
   else
-    let key:t_Array u8 (mk_usize 32) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 32) in
-    let key:t_Array u8 (mk_usize 32) =
-      Core_models.Slice.impl__copy_from_slice #u8
-        key
-        (encoded.[ {
-              Core_models.Ops.Range.f_start = mk_usize 2;
-              Core_models.Ops.Range.f_end = mk_usize 34
-            }
-            <:
-            Core_models.Ops.Range.t_Range usize ]
-          <:
-          t_Slice u8)
+    let (key: t_Array u8 (mk_usize 32)):t_Array u8 (mk_usize 32) =
+      Core_models.Array.from_fn #u8
+        (mk_usize 32)
+        #(usize -> u8)
+        (fun i ->
+            let i:usize = i in
+            encoded.[ i +! mk_usize 2 <: usize ] <: u8)
     in
     Core_models.Option.Option_Some key <: Core_models.Option.t_Option (t_Array u8 (mk_usize 32))
 
 let untag_mlkem768_key (encoded: t_Array u8 (mk_usize 1185))
     : Core_models.Option.t_Option (t_Array u8 (mk_usize 1184)) =
-  if (encoded.[ mk_usize 0 ] <: u8) <>. v_KEM_TYPE_MLKEM768
+  if ~.((encoded.[ mk_usize 0 ] <: u8) =. v_KEM_TYPE_MLKEM768 <: bool)
   then Core_models.Option.Option_None <: Core_models.Option.t_Option (t_Array u8 (mk_usize 1184))
   else
-    let key:t_Array u8 (mk_usize 1184) = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 1184) in
-    let key:t_Array u8 (mk_usize 1184) =
-      Core_models.Slice.impl__copy_from_slice #u8
-        key
-        (encoded.[ {
-              Core_models.Ops.Range.f_start = mk_usize 1;
-              Core_models.Ops.Range.f_end = mk_usize 1185
-            }
-            <:
-            Core_models.Ops.Range.t_Range usize ]
-          <:
-          t_Slice u8)
+    let (key: t_Array u8 (mk_usize 1184)):t_Array u8 (mk_usize 1184) =
+      Core_models.Array.from_fn #u8
+        (mk_usize 1184)
+        #(usize -> u8)
+        (fun i ->
+            let i:usize = i in
+            encoded.[ i +! mk_usize 1 <: usize ] <: u8)
     in
     Core_models.Option.Option_Some key <: Core_models.Option.t_Option (t_Array u8 (mk_usize 1184))
 
@@ -884,102 +685,60 @@ let build_root_key_input (secrets: t_PqxdhSharedSecrets)
     <:
     Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
   else
-    let bytes:t_Array u8 (mk_usize 192) = Rust_primitives.Hax.repeat (mk_u8 255) (mk_usize 192) in
-    let bytes:t_Array u8 (mk_usize 192) =
-      Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-        ({ Core_models.Ops.Range.f_start = mk_usize 32; Core_models.Ops.Range.f_end = mk_usize 64 }
-          <:
-          Core_models.Ops.Range.t_Range usize)
-        (Core_models.Slice.impl__copy_from_slice #u8
-            (bytes.[ {
-                  Core_models.Ops.Range.f_start = mk_usize 32;
-                  Core_models.Ops.Range.f_end = mk_usize 64
-                }
-                <:
-                Core_models.Ops.Range.t_Range usize ]
-              <:
-              t_Slice u8)
-            (secrets.f_dh1 <: t_Slice u8)
-          <:
-          t_Slice u8)
-    in
-    let bytes:t_Array u8 (mk_usize 192) =
-      Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-        ({ Core_models.Ops.Range.f_start = mk_usize 64; Core_models.Ops.Range.f_end = mk_usize 96 }
-          <:
-          Core_models.Ops.Range.t_Range usize)
-        (Core_models.Slice.impl__copy_from_slice #u8
-            (bytes.[ {
-                  Core_models.Ops.Range.f_start = mk_usize 64;
-                  Core_models.Ops.Range.f_end = mk_usize 96
-                }
-                <:
-                Core_models.Ops.Range.t_Range usize ]
-              <:
-              t_Slice u8)
-            (secrets.f_dh2 <: t_Slice u8)
-          <:
-          t_Slice u8)
-    in
-    let bytes:t_Array u8 (mk_usize 192) =
-      Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-        ({ Core_models.Ops.Range.f_start = mk_usize 96; Core_models.Ops.Range.f_end = mk_usize 128 }
-          <:
-          Core_models.Ops.Range.t_Range usize)
-        (Core_models.Slice.impl__copy_from_slice #u8
-            (bytes.[ {
-                  Core_models.Ops.Range.f_start = mk_usize 96;
-                  Core_models.Ops.Range.f_end = mk_usize 128
-                }
-                <:
-                Core_models.Ops.Range.t_Range usize ]
-              <:
-              t_Slice u8)
-            (secrets.f_dh3 <: t_Slice u8)
-          <:
-          t_Slice u8)
-    in
-    let bytes:t_Array u8 (mk_usize 192) =
-      Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-        ({
-            Core_models.Ops.Range.f_start = mk_usize 128;
-            Core_models.Ops.Range.f_end = mk_usize 160
-          }
-          <:
-          Core_models.Ops.Range.t_Range usize)
-        (Core_models.Slice.impl__copy_from_slice #u8
-            (bytes.[ {
-                  Core_models.Ops.Range.f_start = mk_usize 128;
-                  Core_models.Ops.Range.f_end = mk_usize 160
-                }
-                <:
-                Core_models.Ops.Range.t_Range usize ]
-              <:
-              t_Slice u8)
-            (secrets.f_dh4 <: t_Slice u8)
-          <:
-          t_Slice u8)
-    in
-    let bytes:t_Array u8 (mk_usize 192) =
-      Rust_primitives.Hax.Monomorphized_update_at.update_at_range bytes
-        ({
-            Core_models.Ops.Range.f_start = mk_usize 160;
-            Core_models.Ops.Range.f_end = mk_usize 192
-          }
-          <:
-          Core_models.Ops.Range.t_Range usize)
-        (Core_models.Slice.impl__copy_from_slice #u8
-            (bytes.[ {
-                  Core_models.Ops.Range.f_start = mk_usize 160;
-                  Core_models.Ops.Range.f_end = mk_usize 192
-                }
-                <:
-                Core_models.Ops.Range.t_Range usize ]
-              <:
-              t_Slice u8)
-            (secrets.f_kem_shared_secret <: t_Slice u8)
-          <:
-          t_Slice u8)
+    let (bytes: t_Array u8 (mk_usize 192)):t_Array u8 (mk_usize 192) =
+      Core_models.Array.from_fn #u8
+        (mk_usize 192)
+        #(usize -> u8)
+        (fun i ->
+            let i:usize = i in
+            if i <. v_PQXDH_PADDING_SIZE <: bool
+            then mk_u8 255
+            else
+              if i <. (v_PQXDH_PADDING_SIZE +! v_DH_SECRET_SIZE <: usize) <: bool
+              then secrets.f_dh1.[ i -! v_PQXDH_PADDING_SIZE <: usize ] <: u8
+              else
+                if
+                  i <. (v_PQXDH_PADDING_SIZE +! (mk_usize 2 *! v_DH_SECRET_SIZE <: usize) <: usize)
+                  <:
+                  bool
+                then
+                  secrets.f_dh2.[ (i -! v_PQXDH_PADDING_SIZE <: usize) -! v_DH_SECRET_SIZE <: usize
+                  ]
+                  <:
+                  u8
+                else
+                  if
+                    i <.
+                    (v_PQXDH_PADDING_SIZE +! (mk_usize 3 *! v_DH_SECRET_SIZE <: usize) <: usize)
+                    <:
+                    bool
+                  then
+                    secrets.f_dh3.[ (i -! v_PQXDH_PADDING_SIZE <: usize) -!
+                      (mk_usize 2 *! v_DH_SECRET_SIZE <: usize)
+                      <:
+                      usize ]
+                    <:
+                    u8
+                  else
+                    if
+                      i <.
+                      (v_PQXDH_PADDING_SIZE +! (mk_usize 4 *! v_DH_SECRET_SIZE <: usize) <: usize)
+                      <:
+                      bool
+                    then
+                      secrets.f_dh4.[ (i -! v_PQXDH_PADDING_SIZE <: usize) -!
+                        (mk_usize 3 *! v_DH_SECRET_SIZE <: usize)
+                        <:
+                        usize ]
+                      <:
+                      u8
+                    else
+                      secrets.f_kem_shared_secret.[ (i -! v_PQXDH_PADDING_SIZE <: usize) -!
+                        (mk_usize 4 *! v_DH_SECRET_SIZE <: usize)
+                        <:
+                        usize ]
+                      <:
+                      u8)
     in
     Core_models.Result.Result_Ok ({ f_bytes = bytes } <: t_RootKeyInput)
     <:
@@ -987,7 +746,10 @@ let build_root_key_input (secrets: t_PqxdhSharedSecrets)
 
 let beacon_prepare_finish (state: t_BeaconInitSent) (inputs: t_BeaconFinishInputs)
     : Core_models.Result.t_Result t_BeaconRegistrationCandidate t_RegistrationError =
-  if state.f_expected_server_binding.f_identity_public_key <>. inputs.f_response_server_identity
+  if
+    ~.(state.f_expected_server_binding.f_identity_public_key =. inputs.f_response_server_identity
+      <:
+      bool)
   then
     Core_models.Result.Result_Err (RegistrationError_IdentityMismatch <: t_RegistrationError)
     <:
@@ -998,7 +760,8 @@ let beacon_prepare_finish (state: t_BeaconInitSent) (inputs: t_BeaconFinishInput
       <:
       Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
     with
-    | Core_models.Result.Result_Ok root_key_input ->
+    | Core_models.Result.Result_Ok value ->
+      let root_key_input:t_RootKeyInput = value in
       let associated_data:t_Array u8 (mk_usize 153) =
         build_associated_data state.f_expected_server_binding.f_identity_public_key
           state.f_beacon_identity_public_key
@@ -1039,7 +802,8 @@ let server_accept
         <:
         Core_models.Result.t_Result t_RootKeyInput t_RegistrationError
       with
-      | Core_models.Result.Result_Ok root_key_input ->
+      | Core_models.Result.Result_Ok value ->
+        let root_key_input:t_RootKeyInput = value in
         Core_models.Result.Result_Ok
         (state,
           ({

@@ -4,6 +4,7 @@ module Beaconcrypt_core.Commitment.Lemmas
 open FStar.Mul
 open Rust_primitives.Integers
 open Rust_primitives.Arrays
+open Rust_primitives.Notations
 open Beaconcrypt_core.Commitment
 
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 600"
@@ -48,79 +49,7 @@ let encode_u64_le_has_le64_values (value:u64)
     shift_right_lemma value (mk_i32 48);
     shift_right_lemma value (mk_i32 56)
 
-/// Per-byte view of the monomorphized fixed-range update contract.
-let update_at_range_byte_view
-    (s:t_Slice u8)
-    (range:Core_models.Ops.Range.t_Range usize)
-    (replacement:t_Slice u8)
-  : Lemma
-      (requires
-        v range.f_start >= 0 /\
-        v range.f_start <= Seq.length s /\
-        v range.f_end <= Seq.length s /\
-        Seq.length replacement == v range.f_end - v range.f_start)
-      (ensures
-        (let out =
-           Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-             s range replacement in
-         forall (i:nat).
-           (i < v range.f_start ==> Seq.index out i == Seq.index s i) /\
-           (i >= v range.f_start /\ i < v range.f_end ==>
-              Seq.index out i ==
-                Seq.index replacement (i - v range.f_start)) /\
-           (i >= v range.f_end /\ i < Seq.length out ==>
-              Seq.index out i == Seq.index s i)))
-  =
-  let out = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    s range replacement in
-  let byte_view (i:nat) : Lemma
-      ((i < v range.f_start ==> Seq.index out i == Seq.index s i) /\
-       (i >= v range.f_start /\ i < v range.f_end ==>
-          Seq.index out i == Seq.index replacement (i - v range.f_start)) /\
-       (i >= v range.f_end /\ i < Seq.length out ==>
-          Seq.index out i == Seq.index s i))
-    =
-    if i < v range.f_start then
-      (FStar.Seq.Base.lemma_index_slice out 0 (v range.f_start) i;
-       FStar.Seq.Base.lemma_index_slice s 0 (v range.f_start) i)
-    else if i < v range.f_end then
-      FStar.Seq.Base.lemma_index_slice
-        out (v range.f_start) (v range.f_end) (i - v range.f_start)
-    else if i < Seq.length out then
-      (FStar.Seq.Base.lemma_index_slice
-         out (v range.f_end) (Seq.length out) (i - v range.f_end);
-       FStar.Seq.Base.lemma_index_slice
-         s (v range.f_end) (Seq.length s) (i - v range.f_end))
-    else
-      ()
-  in
-  FStar.Classical.forall_intro byte_view
-
-let v_KEY_RANGE:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 0;
-    Core_models.Ops.Range.f_end = mk_usize 32 }
-
-let v_NONCE_RANGE:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 32;
-    Core_models.Ops.Range.f_end = mk_usize 44 }
-
-let v_AD_RANGE:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 44;
-    Core_models.Ops.Range.f_end = mk_usize 197 }
-
-let v_TAG_RANGE:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 197;
-    Core_models.Ops.Range.f_end = mk_usize 213 }
-
-let v_SEQUENCE_RANGE:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 213;
-    Core_models.Ops.Range.f_end = mk_usize 221 }
-
-let v_SENDER_ID_RANGE:Core_models.Ops.Range.t_Range usize =
-  { Core_models.Ops.Range.f_start = mk_usize 221;
-    Core_models.Ops.Range.f_end = mk_usize 229 }
-
-/// A proof-only name for the fixed-range update expression extracted from `build_commitment_transcript`.
+/// A proof-only name for the indexed array expression extracted from `build_commitment_transcript`.
 let commitment_transcript_bytes
     (key:t_Array u8 (mk_usize 32))
     (nonce:t_Array u8 (mk_usize 12))
@@ -130,19 +59,26 @@ let commitment_transcript_bytes
   : t_Array u8 (mk_usize 229) =
   let sequence_bytes = encode_u64_le sequence in
   let sender_id_bytes = encode_u64_le sender_id in
-  let b0 = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 229) in
-  let b1 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b0 v_KEY_RANGE key in
-  let b2 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b1 v_NONCE_RANGE nonce in
-  let b3 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b2 v_AD_RANGE associated_data in
-  let b4 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b3 v_TAG_RANGE tag in
-  let b5 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b4 v_SEQUENCE_RANGE sequence_bytes in
-  Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b5 v_SENDER_ID_RANGE sender_id_bytes
+  Core_models.Array.from_fn #u8
+    (mk_usize 229)
+    #(usize -> u8)
+    (fun i ->
+        let i:usize = i in
+        if i <. mk_usize 32 <: bool
+        then key.[ i ] <: u8
+        else
+          if i <. mk_usize 44 <: bool
+          then nonce.[ i -! mk_usize 32 <: usize ] <: u8
+          else
+            if i <. mk_usize 197 <: bool
+            then associated_data.[ i -! mk_usize 44 <: usize ] <: u8
+            else
+              if i <. mk_usize 213 <: bool
+              then tag.[ i -! mk_usize 197 <: usize ] <: u8
+              else
+                if i <. mk_usize 221 <: bool
+                then sequence_bytes.[ i -! mk_usize 213 <: usize ] <: u8
+                else sender_id_bytes.[ i -! mk_usize 221 <: usize ] <: u8)
 
 let production_commitment_transcript_uses_exact_bytes
     (key:t_Array u8 (mk_usize 32))
@@ -174,26 +110,7 @@ let commitment_transcript_byte_is_exact
        else if i < 213 then Seq.index tag (i - 197)
        else if i < 221 then Seq.index (encode_u64_le sequence) (i - 213)
        else Seq.index (encode_u64_le sender_id) (i - 221)))
-  =
-  let sequence_bytes = encode_u64_le sequence in
-  let sender_id_bytes = encode_u64_le sender_id in
-  let b0 = Rust_primitives.Hax.repeat (mk_u8 0) (mk_usize 229) in
-  let b1 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b0 v_KEY_RANGE key in
-  let b2 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b1 v_NONCE_RANGE nonce in
-  let b3 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b2 v_AD_RANGE associated_data in
-  let b4 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b3 v_TAG_RANGE tag in
-  let b5 = Rust_primitives.Hax.Monomorphized_update_at.update_at_range
-    b4 v_SEQUENCE_RANGE sequence_bytes in
-  update_at_range_byte_view b0 v_KEY_RANGE key;
-  update_at_range_byte_view b1 v_NONCE_RANGE nonce;
-  update_at_range_byte_view b2 v_AD_RANGE associated_data;
-  update_at_range_byte_view b3 v_TAG_RANGE tag;
-  update_at_range_byte_view b4 v_SEQUENCE_RANGE sequence_bytes;
-  update_at_range_byte_view b5 v_SENDER_ID_RANGE sender_id_bytes
+  = ()
 
 /// The extracted production helper preserves every field.
 /// It places the fields in the exact order consumed by BLAKE2b.

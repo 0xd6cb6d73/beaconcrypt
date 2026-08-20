@@ -607,6 +607,318 @@ let prepare_cached_receive
   | Core_models.Option.Option_None  ->
     Core_models.Option.Option_None <: Core_models.Option.t_Option t_PreparedCachedReceive
 
+/// Derive a future target into a private delta without assigning any live
+/// chain, slot, or logical control field.
+/// The traversal is iterative so its call-stack consumption is independent of
+/// the admitted receive gap. Exactly one derived chain and one material value
+/// are live for the current iteration, in addition to the caller-owned staging
+/// array.
+let prepare_future_receive_steps
+      (#v_ReceiveChain #v_Material: Type0)
+      (entry_chain: v_ReceiveChain)
+      (control: Beaconcrypt_core.Ratchet.Control.t_RatchetState)
+      (target: u64)
+      (step: (v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material))
+      (remaining first_slot skipped: u8)
+      (staged_slots:
+          t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+    : Prims.Tot
+      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+        Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
+  if remaining =. mk_u8 0
+  then
+    staged_slots,
+    (Core_models.Option.Option_None
+      <:
+      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+    <:
+    (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+  else
+    let result:Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material) =
+      Core_models.Option.Option_None
+      <:
+      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material)
+    in
+    let (current_chain: Core_models.Option.t_Option v_ReceiveChain):Core_models.Option.t_Option
+    v_ReceiveChain =
+      Core_models.Option.Option_None <: Core_models.Option.t_Option v_ReceiveChain
+    in
+    let current_control:Beaconcrypt_core.Ratchet.Control.t_RatchetState = control in
+    let left:u8 = remaining in
+    let skipped_count:u8 = skipped in
+    let
+    (current_chain: Core_models.Option.t_Option v_ReceiveChain),
+    (current_control: Beaconcrypt_core.Ratchet.Control.t_RatchetState),
+    (left: u8),
+    (result: Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material)),
+    (skipped_count: u8),
+    (staged_slots:
+      t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)) =
+      Rust_primitives.Hax.while_loop (fun temp_0_ ->
+            let
+            (current_chain: Core_models.Option.t_Option v_ReceiveChain),
+            (current_control: Beaconcrypt_core.Ratchet.Control.t_RatchetState),
+            (left: u8),
+            (result: Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material)),
+            (skipped_count: u8),
+            (staged_slots:
+              t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)) =
+              temp_0_
+            in
+            true)
+        (fun temp_0_ ->
+            let
+            (current_chain: Core_models.Option.t_Option v_ReceiveChain),
+            (current_control: Beaconcrypt_core.Ratchet.Control.t_RatchetState),
+            (left: u8),
+            (result: Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material)),
+            (skipped_count: u8),
+            (staged_slots:
+              t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)) =
+              temp_0_
+            in
+            left >. mk_u8 0 <: bool)
+        (fun temp_0_ ->
+            let
+            (current_chain: Core_models.Option.t_Option v_ReceiveChain),
+            (current_control: Beaconcrypt_core.Ratchet.Control.t_RatchetState),
+            (left: u8),
+            (result: Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material)),
+            (skipped_count: u8),
+            (staged_slots:
+              t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)) =
+              temp_0_
+            in
+            Rust_primitives.Hax.Int.from_machine (cast (left <: u8) <: usize) <: Hax_lib.Int.t_Int)
+        (current_chain, current_control, left, result, skipped_count, staged_slots
+          <:
+          (Core_models.Option.t_Option v_ReceiveChain &
+            Beaconcrypt_core.Ratchet.Control.t_RatchetState &
+            u8 &
+            Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material) &
+            u8 &
+            t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)))
+        (fun temp_0_ ->
+            let
+            (current_chain: Core_models.Option.t_Option v_ReceiveChain),
+            (current_control: Beaconcrypt_core.Ratchet.Control.t_RatchetState),
+            (left: u8),
+            (result: Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material)),
+            (skipped_count: u8),
+            (staged_slots:
+              t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)) =
+              temp_0_
+            in
+            let advanced:Beaconcrypt_core.Ratchet.Control.t_ReceiveAdvance =
+              Beaconcrypt_core.Ratchet.Control.advance_receive current_control
+            in
+            match
+              advanced.Beaconcrypt_core.Ratchet.Control.f_sequence,
+              advanced.Beaconcrypt_core.Ratchet.Control.f_slot
+              <:
+              (Core_models.Option.t_Option u64 & Core_models.Option.t_Option u8)
+            with
+            | Core_models.Option.Option_Some sequence, Core_models.Option.Option_Some slot ->
+              let slot_index:usize = cast (slot <: u8) <: usize in
+              if
+                (Beaconcrypt_core.Ratchet.Control.impl_RatchetState__receive_key_at advanced
+                      .Beaconcrypt_core.Ratchet.Control.f_state
+                    slot
+                  <:
+                  Core_models.Option.t_Option u64) <>.
+                (Core_models.Option.Option_Some sequence <: Core_models.Option.t_Option u64) ||
+                slot_index >=. Beaconcrypt_core.Ratchet.Control.v_RECEIVE_CACHE_CAPACITY ||
+                slot_index <>.
+                ((cast (first_slot <: u8) <: usize) +! (cast (skipped_count <: u8) <: usize)
+                  <:
+                  usize) ||
+                Core_models.Option.impl__is_some #(t_CachedReceiveKey v_Material)
+                  (staged_slots.[ slot_index ]
+                    <:
+                    Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+              then
+                let left:u8 = mk_u8 0 in
+                current_chain, current_control, left, result, skipped_count, staged_slots
+                <:
+                (Core_models.Option.t_Option v_ReceiveChain &
+                  Beaconcrypt_core.Ratchet.Control.t_RatchetState &
+                  u8 &
+                  Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material) &
+                  u8 &
+                  t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                    (mk_usize 50))
+              else
+                let stepped:t_RatchetStep v_ReceiveChain v_Material =
+                  match
+                    Core_models.Option.impl__as_ref #v_ReceiveChain current_chain
+                    <:
+                    Core_models.Option.t_Option v_ReceiveChain
+                  with
+                  | Core_models.Option.Option_Some chain -> step chain
+                  | Core_models.Option.Option_None  -> step entry_chain
+                in
+                let { f_chain = chain ; f_material = material }:t_RatchetStep v_ReceiveChain
+                  v_Material =
+                  stepped
+                in
+                if left =. mk_u8 1
+                then
+                  if sequence <>. target
+                  then
+                    let left:u8 = mk_u8 0 in
+                    current_chain, current_control, left, result, skipped_count, staged_slots
+                    <:
+                    (Core_models.Option.t_Option v_ReceiveChain &
+                      Beaconcrypt_core.Ratchet.Control.t_RatchetState &
+                      u8 &
+                      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material) &
+                      u8 &
+                      t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                        (mk_usize 50))
+                  else
+                    let finished:Beaconcrypt_core.Ratchet.Control.t_ReceiveFinishWithRemoval =
+                      Beaconcrypt_core.Ratchet.Control.finish_receive_with_removal advanced
+                          .Beaconcrypt_core.Ratchet.Control.f_state
+                        target
+                        slot
+                        true
+                    in
+                    match
+                      finished.Beaconcrypt_core.Ratchet.Control.f_removal
+                      <:
+                      Core_models.Option.t_Option Beaconcrypt_core.Ratchet.Control.t_ReceiveRemoval
+                    with
+                    | Core_models.Option.Option_Some removal ->
+                      if
+                        ~.(match
+                            finished.Beaconcrypt_core.Ratchet.Control.f_disposition
+                            <:
+                            Beaconcrypt_core.Ratchet.Control.t_ReceiveDisposition
+                          with
+                          | Beaconcrypt_core.Ratchet.Control.ReceiveDisposition_Consumed  -> true
+                          | _ -> false) ||
+                        removal.Beaconcrypt_core.Ratchet.Control.f_target_slot <>. slot ||
+                        removal.Beaconcrypt_core.Ratchet.Control.f_last_slot <>. slot
+                      then
+                        let left:u8 = mk_u8 0 in
+                        current_chain, current_control, left, result, skipped_count, staged_slots
+                        <:
+                        (Core_models.Option.t_Option v_ReceiveChain &
+                          Beaconcrypt_core.Ratchet.Control.t_RatchetState &
+                          u8 &
+                          Core_models.Option.t_Option
+                          (t_PreparedFutureTarget v_ReceiveChain v_Material) &
+                          u8 &
+                          t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                            (mk_usize 50))
+                      else
+                        let result:Core_models.Option.t_Option
+                        (t_PreparedFutureTarget v_ReceiveChain v_Material) =
+                          Core_models.Option.Option_Some
+                          ({
+                              f_committed_control
+                              =
+                              finished.Beaconcrypt_core.Ratchet.Control.f_state;
+                              f_final_receive_chain = chain;
+                              f_target_sequence = sequence;
+                              f_target_material = material;
+                              f_first_slot = first_slot;
+                              f_skipped = skipped_count
+                            }
+                            <:
+                            t_PreparedFutureTarget v_ReceiveChain v_Material)
+                          <:
+                          Core_models.Option.t_Option
+                          (t_PreparedFutureTarget v_ReceiveChain v_Material)
+                        in
+                        let left:u8 = mk_u8 0 in
+                        current_chain, current_control, left, result, skipped_count, staged_slots
+                        <:
+                        (Core_models.Option.t_Option v_ReceiveChain &
+                          Beaconcrypt_core.Ratchet.Control.t_RatchetState &
+                          u8 &
+                          Core_models.Option.t_Option
+                          (t_PreparedFutureTarget v_ReceiveChain v_Material) &
+                          u8 &
+                          t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                            (mk_usize 50))
+                    | Core_models.Option.Option_None  ->
+                      current_chain, current_control, mk_u8 0, result, skipped_count, staged_slots
+                      <:
+                      (Core_models.Option.t_Option v_ReceiveChain &
+                        Beaconcrypt_core.Ratchet.Control.t_RatchetState &
+                        u8 &
+                        Core_models.Option.t_Option
+                        (t_PreparedFutureTarget v_ReceiveChain v_Material) &
+                        u8 &
+                        t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                          (mk_usize 50))
+                else
+                  if sequence >=. target
+                  then
+                    let left:u8 = mk_u8 0 in
+                    current_chain, current_control, left, result, skipped_count, staged_slots
+                    <:
+                    (Core_models.Option.t_Option v_ReceiveChain &
+                      Beaconcrypt_core.Ratchet.Control.t_RatchetState &
+                      u8 &
+                      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material) &
+                      u8 &
+                      t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                        (mk_usize 50))
+                  else
+                    let staged_slots:t_Array
+                      (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) =
+                      Rust_primitives.Hax.Monomorphized_update_at.update_at_usize staged_slots
+                        slot_index
+                        (Core_models.Option.Option_Some
+                          ({ f_sequence = sequence; f_material = material }
+                            <:
+                            t_CachedReceiveKey v_Material)
+                          <:
+                          Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                    in
+                    let current_chain:Core_models.Option.t_Option v_ReceiveChain =
+                      Core_models.Option.Option_Some chain
+                      <:
+                      Core_models.Option.t_Option v_ReceiveChain
+                    in
+                    let current_control:Beaconcrypt_core.Ratchet.Control.t_RatchetState =
+                      advanced.Beaconcrypt_core.Ratchet.Control.f_state
+                    in
+                    let skipped_count:u8 = skipped_count +! mk_u8 1 in
+                    let left:u8 = left -! mk_u8 1 in
+                    current_chain, current_control, left, result, skipped_count, staged_slots
+                    <:
+                    (Core_models.Option.t_Option v_ReceiveChain &
+                      Beaconcrypt_core.Ratchet.Control.t_RatchetState &
+                      u8 &
+                      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material) &
+                      u8 &
+                      t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+                        (mk_usize 50))
+            | _ ->
+              current_chain, current_control, mk_u8 0, result, skipped_count, staged_slots
+              <:
+              (Core_models.Option.t_Option v_ReceiveChain &
+                Beaconcrypt_core.Ratchet.Control.t_RatchetState &
+                u8 &
+                Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material) &
+                u8 &
+                t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+        )
+    in
+    let hax_temp_output:Core_models.Option.t_Option
+    (t_PreparedFutureTarget v_ReceiveChain v_Material) =
+      result
+    in
+    staged_slots, hax_temp_output
+    <:
+    (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
+
 /// Publish a prevalidated cached removal with no remaining failure branch.
 let publish_cached_receive
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
@@ -685,6 +997,52 @@ let publish_cached_receive
       { state with f_control = prepared.f_committed_control }
       <:
       t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
+
+/// Commit an already-preflighted suffix of receive steps.
+/// Admission bounds the counter and cache.
+/// Preflight proves every append destination vacant.
+/// Each internal one-step result is successful.
+/// This helper exposes no fallible intermediate result.
+let refined_execute_receive_steps
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (step: (v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material))
+      (remaining: u8)
+    : Prims.Tot (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
+  let left:u8 = remaining in
+  let (left: u8), (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) =
+    Rust_primitives.Hax.while_loop (fun temp_0_ ->
+          let (left: u8), (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) =
+            temp_0_
+          in
+          true)
+      (fun temp_0_ ->
+          let (left: u8), (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) =
+            temp_0_
+          in
+          left >. mk_u8 0 <: bool)
+      (fun temp_0_ ->
+          let (left: u8), (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) =
+            temp_0_
+          in
+          Rust_primitives.Hax.Int.from_machine (cast (left <: u8) <: usize) <: Hax_lib.Int.t_Int)
+      (left, state <: (u8 & t_RefinedRatchet v_SendChain v_ReceiveChain v_Material))
+      (fun temp_0_ ->
+          let (left: u8), (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) =
+            temp_0_
+          in
+          let
+          (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
+          (out: Core_models.Option.t_Option u64) =
+            refined_advance_receive #v_SendChain #v_ReceiveChain #v_Material state step
+          in
+          let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
+          let _:Core_models.Option.t_Option u64 = out in
+          let left:u8 = left -! mk_u8 1 in
+          left, state <: (u8 & t_RefinedRatchet v_SendChain v_ReceiveChain v_Material))
+  in
+  state
 
 /// Look up concrete receive material only through the verified logical cache.
 let refined_receive_key
@@ -1052,7 +1410,7 @@ let finish_refined_restore
   <:
   t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
 
-let rec refined_receive_slots_are_empty
+let rec refined_receive_slots_are_empty_from
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
       (first_slot remaining: u8)
@@ -1070,284 +1428,14 @@ let rec refined_receive_slots_are_empty
           Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
     then false
     else
-      refined_receive_slots_are_empty #v_SendChain
+      refined_receive_slots_are_empty_from #v_SendChain
         #v_ReceiveChain
         #v_Material
         state
         (first_slot +! mk_u8 1 <: u8)
         (remaining -! mk_u8 1 <: u8)
 
-/// Derive a future target into a private delta without assigning any live
-/// chain, slot, or logical control field.
-let rec prepare_future_receive_steps
-      (#v_ReceiveChain #v_Material: Type0)
-      (current_chain: v_ReceiveChain)
-      (control: Beaconcrypt_core.Ratchet.Control.t_RatchetState)
-      (target: u64)
-      (step: (v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material))
-      (remaining first_slot skipped: u8)
-      (staged_slots:
-          t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
-    : Prims.Tot
-      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
-        Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
-  if remaining =. mk_u8 0
-  then
-    staged_slots,
-    (Core_models.Option.Option_None
-      <:
-      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-    <:
-    (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
-      Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-  else
-    let advanced:Beaconcrypt_core.Ratchet.Control.t_ReceiveAdvance =
-      Beaconcrypt_core.Ratchet.Control.advance_receive control
-    in
-    match
-      advanced.Beaconcrypt_core.Ratchet.Control.f_sequence <: Core_models.Option.t_Option u64
-    with
-    | Core_models.Option.Option_Some sequence ->
-      (match advanced.Beaconcrypt_core.Ratchet.Control.f_slot <: Core_models.Option.t_Option u8 with
-        | Core_models.Option.Option_Some slot ->
-          let slot_index:usize = cast (slot <: u8) <: usize in
-          if
-            (Beaconcrypt_core.Ratchet.Control.impl_RatchetState__receive_key_at advanced
-                  .Beaconcrypt_core.Ratchet.Control.f_state
-                slot
-              <:
-              Core_models.Option.t_Option u64) <>.
-            (Core_models.Option.Option_Some sequence <: Core_models.Option.t_Option u64)
-          then
-            staged_slots,
-            (Core_models.Option.Option_None
-              <:
-              Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-            <:
-            (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
-              Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-          else
-            if slot_index >=. Beaconcrypt_core.Ratchet.Control.v_RECEIVE_CACHE_CAPACITY
-            then
-              staged_slots,
-              (Core_models.Option.Option_None
-                <:
-                Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-              <:
-              (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
-                Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-            else
-              if
-                slot_index <>.
-                ((cast (first_slot <: u8) <: usize) +! (cast (skipped <: u8) <: usize) <: usize)
-              then
-                staged_slots,
-                (Core_models.Option.Option_None
-                  <:
-                  Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                <:
-                (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
-                  Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-              else
-                if
-                  Core_models.Option.impl__is_some #(t_CachedReceiveKey v_Material)
-                    (staged_slots.[ slot_index ]
-                      <:
-                      Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                then
-                  staged_slots,
-                  (Core_models.Option.Option_None
-                    <:
-                    Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                  <:
-                  (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                      (mk_usize 50) &
-                    Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                else
-                  let { f_chain = chain ; f_material = material }:t_RatchetStep v_ReceiveChain
-                    v_Material =
-                    step current_chain
-                  in
-                  if remaining =. mk_u8 1
-                  then
-                    if sequence <>. target
-                    then
-                      staged_slots,
-                      (Core_models.Option.Option_None
-                        <:
-                        Core_models.Option.t_Option
-                        (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                      <:
-                      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                          (mk_usize 50) &
-                        Core_models.Option.t_Option
-                        (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                    else
-                      let finished:Beaconcrypt_core.Ratchet.Control.t_ReceiveFinishWithRemoval =
-                        Beaconcrypt_core.Ratchet.Control.finish_receive_with_removal advanced
-                            .Beaconcrypt_core.Ratchet.Control.f_state
-                          target
-                          slot
-                          true
-                      in
-                      match
-                        finished.Beaconcrypt_core.Ratchet.Control.f_removal
-                        <:
-                        Core_models.Option.t_Option
-                        Beaconcrypt_core.Ratchet.Control.t_ReceiveRemoval
-                      with
-                      | Core_models.Option.Option_Some removal ->
-                        if
-                          ~.(match
-                              finished.Beaconcrypt_core.Ratchet.Control.f_disposition
-                              <:
-                              Beaconcrypt_core.Ratchet.Control.t_ReceiveDisposition
-                            with
-                            | Beaconcrypt_core.Ratchet.Control.ReceiveDisposition_Consumed  -> true
-                            | _ -> false)
-                        then
-                          staged_slots,
-                          (Core_models.Option.Option_None
-                            <:
-                            Core_models.Option.t_Option
-                            (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                          <:
-                          (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                              (mk_usize 50) &
-                            Core_models.Option.t_Option
-                            (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                        else
-                          if removal.Beaconcrypt_core.Ratchet.Control.f_target_slot <>. slot
-                          then
-                            staged_slots,
-                            (Core_models.Option.Option_None
-                              <:
-                              Core_models.Option.t_Option
-                              (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                            <:
-                            (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                                (mk_usize 50) &
-                              Core_models.Option.t_Option
-                              (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                          else
-                            if removal.Beaconcrypt_core.Ratchet.Control.f_last_slot <>. slot
-                            then
-                              staged_slots,
-                              (Core_models.Option.Option_None
-                                <:
-                                Core_models.Option.t_Option
-                                (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                              <:
-                              (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                                  (mk_usize 50) &
-                                Core_models.Option.t_Option
-                                (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                            else
-                              staged_slots,
-                              (Core_models.Option.Option_Some
-                                ({
-                                    f_committed_control
-                                    =
-                                    finished.Beaconcrypt_core.Ratchet.Control.f_state;
-                                    f_final_receive_chain = chain;
-                                    f_target_sequence = sequence;
-                                    f_target_material = material;
-                                    f_first_slot = first_slot;
-                                    f_skipped = skipped
-                                  }
-                                  <:
-                                  t_PreparedFutureTarget v_ReceiveChain v_Material)
-                                <:
-                                Core_models.Option.t_Option
-                                (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                              <:
-                              (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                                  (mk_usize 50) &
-                                Core_models.Option.t_Option
-                                (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                      | Core_models.Option.Option_None  ->
-                        staged_slots,
-                        (Core_models.Option.Option_None
-                          <:
-                          Core_models.Option.t_Option
-                          (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                        <:
-                        (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                            (mk_usize 50) &
-                          Core_models.Option.t_Option
-                          (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                  else
-                    if sequence >=. target
-                    then
-                      staged_slots,
-                      (Core_models.Option.Option_None
-                        <:
-                        Core_models.Option.t_Option
-                        (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                      <:
-                      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                          (mk_usize 50) &
-                        Core_models.Option.t_Option
-                        (t_PreparedFutureTarget v_ReceiveChain v_Material))
-                    else
-                      let staged_slots:t_Array
-                        (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)
-                      =
-                        Rust_primitives.Hax.Monomorphized_update_at.update_at_usize staged_slots
-                          slot_index
-                          (Core_models.Option.Option_Some
-                            ({ f_sequence = sequence; f_material = material }
-                              <:
-                              t_CachedReceiveKey v_Material)
-                            <:
-                            Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                      in
-                      let
-                      (tmp0:
-                        t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                          (mk_usize 50)),
-                      (out:
-                        Core_models.Option.t_Option
-                        (t_PreparedFutureTarget v_ReceiveChain v_Material)) =
-                        prepare_future_receive_steps #v_ReceiveChain #v_Material chain
-                          advanced.Beaconcrypt_core.Ratchet.Control.f_state target step
-                          (remaining -! mk_u8 1 <: u8) first_slot (skipped +! mk_u8 1 <: u8)
-                          staged_slots
-                      in
-                      let staged_slots:t_Array
-                        (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)
-                      =
-                        tmp0
-                      in
-                      let hax_temp_output:Core_models.Option.t_Option
-                      (t_PreparedFutureTarget v_ReceiveChain v_Material) =
-                        out
-                      in
-                      staged_slots, hax_temp_output
-                      <:
-                      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-                          (mk_usize 50) &
-                        Core_models.Option.t_Option
-                        (t_PreparedFutureTarget v_ReceiveChain v_Material))
-        | Core_models.Option.Option_None  ->
-          staged_slots,
-          (Core_models.Option.Option_None
-            <:
-            Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-          <:
-          (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
-            Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material)))
-    | Core_models.Option.Option_None  ->
-      staged_slots,
-      (Core_models.Option.Option_None
-        <:
-        Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-      <:
-      (t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
-        Core_models.Option.t_Option (t_PreparedFutureTarget v_ReceiveChain v_Material))
-
-let rec receive_control_prefix_matches
+let rec receive_control_prefix_matches_from
       (entry committed: Beaconcrypt_core.Ratchet.Control.t_RatchetState)
       (slot remaining: u8)
     : Prims.Tot bool
@@ -1367,12 +1455,12 @@ let rec receive_control_prefix_matches
           Core_models.Option.t_Option u64)
       then false
       else
-        receive_control_prefix_matches entry
+        receive_control_prefix_matches_from entry
           committed
           (slot +! mk_u8 1 <: u8)
           (remaining -! mk_u8 1 <: u8)
 
-let rec pending_receive_slots_are_valid
+let rec pending_receive_slots_are_valid_from
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
       (pending: t_PendingReceive v_ReceiveChain v_Material)
@@ -1423,7 +1511,7 @@ let rec pending_receive_slots_are_valid
                 if expected_sequence =. Core_models.Num.impl_u64__MAX
                 then false
                 else
-                  pending_receive_slots_are_valid #v_SendChain
+                  pending_receive_slots_are_valid_from #v_SendChain
                     #v_ReceiveChain
                     #v_Material
                     state
@@ -1433,7 +1521,7 @@ let rec pending_receive_slots_are_valid
                     (remaining -! mk_u8 1 <: u8)
         | Core_models.Option.Option_None  -> false
 
-let rec publish_future_receive_slots
+let rec publish_future_receive_slots_from
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
       (staged_slots:
@@ -1483,56 +1571,455 @@ let rec publish_future_receive_slots
         <:
         t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
       in
-      let
-      (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
-      (tmp1: t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)) =
-        publish_future_receive_slots #v_SendChain
-          #v_ReceiveChain
-          #v_Material
-          state
-          staged_slots
-          (slot +! mk_u8 1 <: u8)
-          (remaining -! mk_u8 1 <: u8)
-      in
-      let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
-      let staged_slots:t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
-        (mk_usize 50) =
-        tmp1
-      in
-      let _:Prims.unit = () in
-      state, staged_slots
-      <:
-      (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
-        t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+      publish_future_receive_slots_from #v_SendChain
+        #v_ReceiveChain
+        #v_Material
+        state
+        staged_slots
+        (slot +! mk_u8 1 <: u8)
+        (remaining -! mk_u8 1 <: u8)
 
-/// Commit an already-preflighted suffix of receive steps.
-/// Admission bounds the counter and cache.
-/// Preflight proves every append destination vacant.
-/// Each internal one-step result is successful.
-/// This helper exposes no fallible intermediate result.
-let rec refined_execute_receive_steps
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"
+
+let refined_receive_slots_are_empty
       (#v_SendChain #v_ReceiveChain #v_Material: Type0)
       (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-      (step: (v_ReceiveChain -> t_RatchetStep v_ReceiveChain v_Material))
+      (first_slot remaining: u8)
+    : Prims.Pure bool
+      Prims.l_True
+      (ensures
+        fun result ->
+          let result:bool = result in
+          result =.
+          (refined_receive_slots_are_empty_from #v_SendChain
+              #v_ReceiveChain
+              #v_Material
+              state
+              first_slot
+              remaining
+            <:
+            bool)) =
+  let slot:u8 = first_slot in
+  let left:u8 = remaining in
+  let empty:bool = true in
+  let (empty: bool), (left: u8), (slot: u8) =
+    Rust_primitives.Hax.while_loop (fun temp_0_ ->
+          let (empty: bool), (left: u8), (slot: u8) = temp_0_ in
+          b2t
+          (match empty <: bool with
+            | true ->
+              (refined_receive_slots_are_empty_from #v_SendChain
+                  #v_ReceiveChain
+                  #v_Material
+                  state
+                  slot
+                  left
+                <:
+                bool) =.
+              (refined_receive_slots_are_empty_from #v_SendChain
+                  #v_ReceiveChain
+                  #v_Material
+                  state
+                  first_slot
+                  remaining
+                <:
+                bool)
+              <:
+              bool
+            | false ->
+              ~.(refined_receive_slots_are_empty_from #v_SendChain
+                  #v_ReceiveChain
+                  #v_Material
+                  state
+                  first_slot
+                  remaining
+                <:
+                bool)
+              <:
+              bool))
+      (fun temp_0_ ->
+          let (empty: bool), (left: u8), (slot: u8) = temp_0_ in
+          left >. mk_u8 0 <: bool)
+      (fun temp_0_ ->
+          let (empty: bool), (left: u8), (slot: u8) = temp_0_ in
+          Rust_primitives.Hax.Int.from_machine (cast (left <: u8) <: usize) <: Hax_lib.Int.t_Int)
+      (empty, left, slot <: (bool & u8 & u8))
+      (fun temp_0_ ->
+          let (empty: bool), (left: u8), (slot: u8) = temp_0_ in
+          let slot_index:usize = cast (slot <: u8) <: usize in
+          if
+            slot_index >=. Beaconcrypt_core.Ratchet.Control.v_RECEIVE_CACHE_CAPACITY ||
+            Core_models.Option.impl__is_some #(t_CachedReceiveKey v_Material)
+              (state.f_receive_slots.[ slot_index ]
+                <:
+                Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+          then
+            let _:Prims.unit =
+              Hax_lib.v_assert (~.(refined_receive_slots_are_empty_from #v_SendChain
+                      #v_ReceiveChain
+                      #v_Material
+                      state
+                      slot
+                      left
+                    <:
+                    bool)
+                  <:
+                  bool)
+            in
+            let empty:bool = false in
+            let left:u8 = mk_u8 0 in
+            empty, left, slot <: (bool & u8 & u8)
+          else
+            let _:Prims.unit =
+              Hax_lib.v_assert ((refined_receive_slots_are_empty_from #v_SendChain
+                      #v_ReceiveChain
+                      #v_Material
+                      state
+                      slot
+                      left
+                    <:
+                    bool) =.
+                  (refined_receive_slots_are_empty_from #v_SendChain
+                      #v_ReceiveChain
+                      #v_Material
+                      state
+                      (slot +! mk_u8 1 <: u8)
+                      (left -! mk_u8 1 <: u8)
+                    <:
+                    bool)
+                  <:
+                  bool)
+            in
+            let slot:u8 = slot +! mk_u8 1 in
+            let left:u8 = left -! mk_u8 1 in
+            empty, left, slot <: (bool & u8 & u8))
+  in
+  empty
+
+#pop-options
+
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"
+
+let receive_control_prefix_matches
+      (entry committed: Beaconcrypt_core.Ratchet.Control.t_RatchetState)
+      (slot remaining: u8)
+    : Prims.Pure bool
+      Prims.l_True
+      (ensures
+        fun result ->
+          let result:bool = result in
+          result =. (receive_control_prefix_matches_from entry committed slot remaining <: bool)) =
+  let current_slot:u8 = slot in
+  let left:u8 = remaining in
+  let matches:bool = true in
+  let (current_slot: u8), (left: u8), (matches: bool) =
+    Rust_primitives.Hax.while_loop (fun temp_0_ ->
+          let (current_slot: u8), (left: u8), (matches: bool) = temp_0_ in
+          b2t
+          (match matches <: bool with
+            | true ->
+              (receive_control_prefix_matches_from entry committed current_slot left <: bool) =.
+              (receive_control_prefix_matches_from entry committed slot remaining <: bool)
+              <:
+              bool
+            | false ->
+              ~.(receive_control_prefix_matches_from entry committed slot remaining <: bool) <: bool
+          ))
+      (fun temp_0_ ->
+          let (current_slot: u8), (left: u8), (matches: bool) = temp_0_ in
+          left >. mk_u8 0 <: bool)
+      (fun temp_0_ ->
+          let (current_slot: u8), (left: u8), (matches: bool) = temp_0_ in
+          Rust_primitives.Hax.Int.from_machine (cast (left <: u8) <: usize) <: Hax_lib.Int.t_Int)
+      (current_slot, left, matches <: (u8 & u8 & bool))
+      (fun temp_0_ ->
+          let (current_slot: u8), (left: u8), (matches: bool) = temp_0_ in
+          if
+            ((cast (current_slot <: u8) <: usize) >=.
+              Beaconcrypt_core.Ratchet.Control.v_RECEIVE_CACHE_CAPACITY
+              <:
+              bool) ||
+            (~.((Beaconcrypt_core.Ratchet.Control.impl_RatchetState__receive_key_at entry
+                    current_slot
+                  <:
+                  Core_models.Option.t_Option u64) =.
+                (Beaconcrypt_core.Ratchet.Control.impl_RatchetState__receive_key_at committed
+                    current_slot
+                  <:
+                  Core_models.Option.t_Option u64)
+                <:
+                bool)
+              <:
+              bool)
+          then
+            let _:Prims.unit =
+              Hax_lib.v_assert (~.(receive_control_prefix_matches_from entry
+                      committed
+                      current_slot
+                      left
+                    <:
+                    bool)
+                  <:
+                  bool)
+            in
+            let matches:bool = false in
+            let left:u8 = mk_u8 0 in
+            current_slot, left, matches <: (u8 & u8 & bool)
+          else
+            let _:Prims.unit =
+              Hax_lib.v_assert ((receive_control_prefix_matches_from entry
+                      committed
+                      current_slot
+                      left
+                    <:
+                    bool) =.
+                  (receive_control_prefix_matches_from entry
+                      committed
+                      (current_slot +! mk_u8 1 <: u8)
+                      (left -! mk_u8 1 <: u8)
+                    <:
+                    bool)
+                  <:
+                  bool)
+            in
+            let current_slot:u8 = current_slot +! mk_u8 1 in
+            let left:u8 = left -! mk_u8 1 in
+            current_slot, left, matches <: (u8 & u8 & bool))
+  in
+  matches
+
+#pop-options
+
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"
+
+let pending_receive_slots_are_valid
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (pending: t_PendingReceive v_ReceiveChain v_Material)
+      (slot: u8)
+      (expected_sequence: u64)
       (remaining: u8)
-    : Prims.Tot (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
-      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
-  if remaining =. mk_u8 0
-  then state
-  else
-    let
-    (tmp0: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
-    (out: Core_models.Option.t_Option u64) =
-      refined_advance_receive #v_SendChain #v_ReceiveChain #v_Material state step
-    in
-    let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = tmp0 in
-    let _:Core_models.Option.t_Option u64 = out in
-    refined_execute_receive_steps #v_SendChain
-      #v_ReceiveChain
-      #v_Material
-      state
-      step
-      (remaining -! mk_u8 1 <: u8)
+    : Prims.Pure bool
+      Prims.l_True
+      (ensures
+        fun result ->
+          let result:bool = result in
+          result =.
+          (pending_receive_slots_are_valid_from #v_SendChain
+              #v_ReceiveChain
+              #v_Material
+              state
+              pending
+              slot
+              expected_sequence
+              remaining
+            <:
+            bool)) =
+  let current_slot:u8 = slot in
+  let expected:u64 = expected_sequence in
+  let left:u8 = remaining in
+  let valid:bool = true in
+  let (current_slot: u8), (expected: u64), (left: u8), (valid: bool) =
+    Rust_primitives.Hax.while_loop (fun temp_0_ ->
+          let (current_slot: u8), (expected: u64), (left: u8), (valid: bool) = temp_0_ in
+          b2t
+          (match valid <: bool with
+            | true ->
+              (pending_receive_slots_are_valid_from #v_SendChain
+                  #v_ReceiveChain
+                  #v_Material
+                  state
+                  pending
+                  current_slot
+                  expected
+                  left
+                <:
+                bool) =.
+              (pending_receive_slots_are_valid_from #v_SendChain
+                  #v_ReceiveChain
+                  #v_Material
+                  state
+                  pending
+                  slot
+                  expected_sequence
+                  remaining
+                <:
+                bool)
+              <:
+              bool
+            | false ->
+              ~.(pending_receive_slots_are_valid_from #v_SendChain
+                  #v_ReceiveChain
+                  #v_Material
+                  state
+                  pending
+                  slot
+                  expected_sequence
+                  remaining
+                <:
+                bool)
+              <:
+              bool))
+      (fun temp_0_ ->
+          let (current_slot: u8), (expected: u64), (left: u8), (valid: bool) = temp_0_ in
+          left >. mk_u8 0 <: bool)
+      (fun temp_0_ ->
+          let (current_slot: u8), (expected: u64), (left: u8), (valid: bool) = temp_0_ in
+          Rust_primitives.Hax.Int.from_machine (cast (left <: u8) <: usize) <: Hax_lib.Int.t_Int)
+      (current_slot, expected, left, valid <: (u8 & u64 & u8 & bool))
+      (fun temp_0_ ->
+          let (current_slot: u8), (expected: u64), (left: u8), (valid: bool) = temp_0_ in
+          let slot_index:usize = cast (current_slot <: u8) <: usize in
+          if
+            slot_index >=. Beaconcrypt_core.Ratchet.Control.v_RECEIVE_CACHE_CAPACITY ||
+            Core_models.Option.impl__is_some #(t_CachedReceiveKey v_Material)
+              (state.f_receive_slots.[ slot_index ]
+                <:
+                Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+          then
+            let _:Prims.unit =
+              Hax_lib.v_assert (~.(pending_receive_slots_are_valid_from #v_SendChain
+                      #v_ReceiveChain
+                      #v_Material
+                      state
+                      pending
+                      current_slot
+                      expected
+                      left
+                    <:
+                    bool)
+                  <:
+                  bool)
+            in
+            let valid:bool = false in
+            let left:u8 = mk_u8 0 in
+            current_slot, expected, left, valid <: (u8 & u64 & u8 & bool)
+          else
+            match
+              Core_models.Option.impl__as_ref #(t_CachedReceiveKey v_Material)
+                (pending.f_staged_slots.[ slot_index ]
+                  <:
+                  Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+              <:
+              Core_models.Option.t_Option (t_CachedReceiveKey v_Material)
+            with
+            | Core_models.Option.Option_Some staged ->
+              if
+                ~.(staged.f_sequence =. expected <: bool) ||
+                ~.((Beaconcrypt_core.Ratchet.Control.impl_RatchetState__receive_key_at pending
+                        .f_committed_control
+                      current_slot
+                    <:
+                    Core_models.Option.t_Option u64) =.
+                  (Core_models.Option.Option_Some expected <: Core_models.Option.t_Option u64)
+                  <:
+                  bool)
+              then
+                let _:Prims.unit =
+                  Hax_lib.v_assert (~.(pending_receive_slots_are_valid_from #v_SendChain
+                          #v_ReceiveChain
+                          #v_Material
+                          state
+                          pending
+                          current_slot
+                          expected
+                          left
+                        <:
+                        bool)
+                      <:
+                      bool)
+                in
+                let valid:bool = false in
+                let left:u8 = mk_u8 0 in
+                current_slot, expected, left, valid <: (u8 & u64 & u8 & bool)
+              else
+                if left =. mk_u8 1
+                then
+                  let _:Prims.unit =
+                    Hax_lib.v_assert (pending_receive_slots_are_valid_from #v_SendChain
+                          #v_ReceiveChain
+                          #v_Material
+                          state
+                          pending
+                          current_slot
+                          expected
+                          left
+                        <:
+                        bool)
+                  in
+                  let left:u8 = mk_u8 0 in
+                  current_slot, expected, left, valid <: (u8 & u64 & u8 & bool)
+                else
+                  if expected =. Core_models.Num.impl_u64__MAX
+                  then
+                    let _:Prims.unit =
+                      Hax_lib.v_assert (~.(pending_receive_slots_are_valid_from #v_SendChain
+                              #v_ReceiveChain
+                              #v_Material
+                              state
+                              pending
+                              current_slot
+                              expected
+                              left
+                            <:
+                            bool)
+                          <:
+                          bool)
+                    in
+                    let valid:bool = false in
+                    let left:u8 = mk_u8 0 in
+                    current_slot, expected, left, valid <: (u8 & u64 & u8 & bool)
+                  else
+                    let _:Prims.unit =
+                      Hax_lib.v_assert ((pending_receive_slots_are_valid_from #v_SendChain
+                              #v_ReceiveChain
+                              #v_Material
+                              state
+                              pending
+                              current_slot
+                              expected
+                              left
+                            <:
+                            bool) =.
+                          (pending_receive_slots_are_valid_from #v_SendChain
+                              #v_ReceiveChain
+                              #v_Material
+                              state
+                              pending
+                              (current_slot +! mk_u8 1 <: u8)
+                              (expected +! mk_u64 1 <: u64)
+                              (left -! mk_u8 1 <: u8)
+                            <:
+                            bool)
+                          <:
+                          bool)
+                    in
+                    let current_slot:u8 = current_slot +! mk_u8 1 in
+                    let expected:u64 = expected +! mk_u64 1 in
+                    let left:u8 = left -! mk_u8 1 in
+                    current_slot, expected, left, valid <: (u8 & u64 & u8 & bool)
+            | Core_models.Option.Option_None  ->
+              let _:Prims.unit =
+                Hax_lib.v_assert (~.(pending_receive_slots_are_valid_from #v_SendChain
+                        #v_ReceiveChain
+                        #v_Material
+                        state
+                        pending
+                        current_slot
+                        expected
+                        left
+                      <:
+                      bool)
+                    <:
+                    bool)
+              in
+              let valid:bool = false in
+              let left:u8 = mk_u8 0 in
+              current_slot, expected, left, valid <: (u8 & u64 & u8 & bool))
+  in
+  valid
+
+#pop-options
 
 /// Validate the complete private publication invariant before it can escape
 /// preparation. Publication itself can therefore be a total movement phase.
@@ -1752,6 +2239,158 @@ let prepare_receive
     Core_models.Option.Option_None
     <:
     Core_models.Option.t_Option (t_PreparedReceive v_ReceiveChain v_Material)
+
+#push-options "--fuel 1 --ifuel 1 --z3rlimit 60"
+
+let publish_future_receive_slots
+      (#v_SendChain #v_ReceiveChain #v_Material: Type0)
+      (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+      (staged_slots:
+          t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+      (slot remaining: u8)
+    : Prims.Pure
+      (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+        t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+      Prims.l_True
+      (ensures
+        fun temp_0_ ->
+          let
+          (state_future: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material),
+          (staged_slots_future:
+            t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)) =
+            temp_0_
+          in
+          let final_state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material = state_future in
+          let final_staged_slots:t_Array
+            (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) =
+            staged_slots_future
+          in
+          publish_future_receive_slots_from state staged_slots slot remaining ==
+          (final_state, final_staged_slots))
+      (decreases (Rust_primitives.Hax.Int.from_machine remaining <: Hax_lib.Int.t_Int)) =
+  let e_reference:
+      t_RefinedRatchet v_SendChain v_ReceiveChain v_Material ->
+      t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) ->
+      u8 ->
+      u8
+    -> (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+        t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)) =
+    publish_future_receive_slots_from
+  in
+  let (initial_state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material):t_RefinedRatchet
+    v_SendChain v_ReceiveChain v_Material =
+    state
+  in
+  let
+  (initial_staged_slots:
+    t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)):t_Array
+    (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) =
+    staged_slots
+  in
+  let current_slot:u8 = slot in
+  let left:u8 = remaining in
+  let
+  (current_slot: u8),
+  (left: u8),
+  (staged_slots:
+    t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)),
+  (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) =
+    Rust_primitives.Hax.while_loop (fun temp_0_ ->
+          let
+          (current_slot: u8),
+          (left: u8),
+          (staged_slots:
+            t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)),
+          (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) =
+            temp_0_
+          in
+          publish_future_receive_slots_from initial_state initial_staged_slots slot remaining ==
+          publish_future_receive_slots_from state staged_slots current_slot left)
+      (fun temp_0_ ->
+          let
+          (current_slot: u8),
+          (left: u8),
+          (staged_slots:
+            t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)),
+          (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) =
+            temp_0_
+          in
+          left >. mk_u8 0 <: bool)
+      (fun temp_0_ ->
+          let
+          (current_slot: u8),
+          (left: u8),
+          (staged_slots:
+            t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)),
+          (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) =
+            temp_0_
+          in
+          Rust_primitives.Hax.Int.from_machine (cast (left <: u8) <: usize) <: Hax_lib.Int.t_Int)
+      (current_slot, left, staged_slots, state
+        <:
+        (u8 & u8 &
+          t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+          t_RefinedRatchet v_SendChain v_ReceiveChain v_Material))
+      (fun temp_0_ ->
+          let
+          (current_slot: u8),
+          (left: u8),
+          (staged_slots:
+            t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50)),
+          (state: t_RefinedRatchet v_SendChain v_ReceiveChain v_Material) =
+            temp_0_
+          in
+          let slot_index:usize = cast (current_slot <: u8) <: usize in
+          if slot_index >=. Beaconcrypt_core.Ratchet.Control.v_RECEIVE_CACHE_CAPACITY
+          then
+            let left:u8 = mk_u8 0 in
+            current_slot, left, staged_slots, state
+            <:
+            (u8 & u8 &
+              t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+              t_RefinedRatchet v_SendChain v_ReceiveChain v_Material)
+          else
+            let
+            (tmp0: Core_models.Option.t_Option (t_CachedReceiveKey v_Material)),
+            (out: Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) =
+              Core_models.Option.impl__take #(t_CachedReceiveKey v_Material)
+                (staged_slots.[ slot_index ]
+                  <:
+                  Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+            in
+            let staged_slots:t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material))
+              (mk_usize 50) =
+              Rust_primitives.Hax.Monomorphized_update_at.update_at_usize staged_slots
+                slot_index
+                tmp0
+            in
+            let moved:Core_models.Option.t_Option (t_CachedReceiveKey v_Material) = out in
+            let state:t_RefinedRatchet v_SendChain v_ReceiveChain v_Material =
+              {
+                state with
+                f_receive_slots
+                =
+                Rust_primitives.Hax.Monomorphized_update_at.update_at_usize state.f_receive_slots
+                  slot_index
+                  moved
+              }
+              <:
+              t_RefinedRatchet v_SendChain v_ReceiveChain v_Material
+            in
+            let current_slot:u8 = current_slot +! mk_u8 1 in
+            let left:u8 = left -! mk_u8 1 in
+            current_slot, left, staged_slots, state
+            <:
+            (u8 & u8 &
+              t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50) &
+              t_RefinedRatchet v_SendChain v_ReceiveChain v_Material))
+  in
+  state, staged_slots
+  <:
+  (t_RefinedRatchet v_SendChain v_ReceiveChain v_Material &
+    t_Array (Core_models.Option.t_Option (t_CachedReceiveKey v_Material)) (mk_usize 50))
+
+#pop-options
 
 /// Publish a validated future delta. The target material remains in `pending`
 /// and is dropped instead of ever entering the live cache.

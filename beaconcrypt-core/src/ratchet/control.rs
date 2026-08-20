@@ -323,30 +323,132 @@ pub struct ReceiveFinishWithRemoval {
 /// The bounded scan is iterative so stack consumption is independent of
 /// `RECEIVE_CACHE_CAPACITY`. The explicit remaining counter is retained as the
 /// extraction-visible termination measure.
+#[cfg(feature = "proverif")]
+#[allow(dead_code)]
+#[hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))]
+fn lookup_receive_key_from(
+	state: RatchetState,
+	sequence: u64,
+	slot: u8,
+	remaining: u8,
+) -> Option<u8> {
+	if remaining == 0 {
+		return None;
+	}
+	let slot_index = slot as usize;
+	if slot_index >= RECEIVE_CACHE_CAPACITY || slot >= state.receive_cache.len {
+		return None;
+	}
+	if state.receive_cache.entries[slot_index] == sequence {
+		return Some(slot);
+	}
+	lookup_receive_key_from(state, sequence, slot + 1, remaining - 1)
+}
+
+#[cfg(feature = "proverif")]
+#[allow(dead_code, unused_variables)]
+#[hax_lib::requires(remaining > 0 && (slot as usize) >= RECEIVE_CACHE_CAPACITY)]
+#[hax_lib::ensures(|_| lookup_receive_key_from(state, sequence, slot, remaining) == None)]
+#[hax_lib::fstar::before("#push-options \"--fuel 1 --ifuel 1 --z3rlimit 60\"")]
+#[hax_lib::fstar::after("#pop-options")]
+fn lookup_receive_key_from_stops_at_capacity(
+	state: RatchetState,
+	sequence: u64,
+	slot: u8,
+	remaining: u8,
+) {
+}
+
+#[cfg(feature = "proverif")]
+#[allow(dead_code, unused_variables)]
+#[hax_lib::requires(remaining > 0
+	&& (slot as usize) < RECEIVE_CACHE_CAPACITY
+	&& slot >= state.receive_cache.len)]
+#[hax_lib::ensures(|_| lookup_receive_key_from(state, sequence, slot, remaining) == None)]
+#[hax_lib::fstar::before("#push-options \"--fuel 1 --ifuel 1 --z3rlimit 60\"")]
+#[hax_lib::fstar::after("#pop-options")]
+fn lookup_receive_key_from_stops_at_len(
+	state: RatchetState,
+	sequence: u64,
+	slot: u8,
+	remaining: u8,
+) {
+}
+
+#[cfg(feature = "proverif")]
+#[allow(dead_code, unused_variables)]
+#[hax_lib::requires(remaining > 0
+	&& (slot as usize) < RECEIVE_CACHE_CAPACITY
+	&& slot < state.receive_cache.len
+	&& state.receive_cache.entries[slot as usize] == sequence)]
+#[hax_lib::ensures(|_| lookup_receive_key_from(state, sequence, slot, remaining) == Some(slot))]
+#[hax_lib::fstar::before("#push-options \"--fuel 1 --ifuel 1 --z3rlimit 60\"")]
+#[hax_lib::fstar::after("#pop-options")]
+fn lookup_receive_key_from_matches(state: RatchetState, sequence: u64, slot: u8, remaining: u8) {}
+
+#[cfg(feature = "proverif")]
+#[allow(dead_code, unused_variables)]
+#[hax_lib::requires(remaining > 0
+	&& (slot as usize) < RECEIVE_CACHE_CAPACITY
+	&& slot < state.receive_cache.len
+	&& state.receive_cache.entries[slot as usize] != sequence)]
+#[hax_lib::ensures(|_| lookup_receive_key_from(state, sequence, slot, remaining)
+	== lookup_receive_key_from(state, sequence, slot + 1, remaining - 1))]
+#[hax_lib::fstar::before("#push-options \"--fuel 1 --ifuel 1 --z3rlimit 60\"")]
+#[hax_lib::fstar::after("#pop-options")]
+fn lookup_receive_key_from_advances(state: RatchetState, sequence: u64, slot: u8, remaining: u8) {}
+
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::ensures(|result| result
+		== lookup_receive_key_from(state, sequence, 0, RECEIVE_CACHE_CAPACITY as u8))
+)]
+#[cfg_attr(
+	feature = "proverif",
+	hax_lib::fstar::before("#push-options \"--fuel 1 --ifuel 1 --z3rlimit 60\"")
+)]
+#[cfg_attr(feature = "proverif", hax_lib::fstar::after("#pop-options"))]
 pub(crate) fn lookup_receive_key(state: RatchetState, sequence: u64) -> Option<u8> {
 	let mut slot = 0u8;
 	let mut remaining = RECEIVE_CACHE_CAPACITY as u8;
+	let mut found = None;
 
 	while remaining > 0 {
 		#[cfg(feature = "proverif")]
+		hax_lib::loop_invariant!(match found {
+			Some(found_slot) =>
+				remaining == 0
+					&& Some(found_slot)
+						== lookup_receive_key_from(state, sequence, 0, RECEIVE_CACHE_CAPACITY as u8,),
+			None =>
+				lookup_receive_key_from(state, sequence, slot, remaining)
+					== lookup_receive_key_from(state, sequence, 0, RECEIVE_CACHE_CAPACITY as u8,),
+		});
+		#[cfg(feature = "proverif")]
 		hax_lib::loop_decreases!(remaining as usize);
-
 		let slot_index = slot as usize;
 		if slot_index >= RECEIVE_CACHE_CAPACITY {
-			return None;
+			#[cfg(feature = "proverif")]
+			lookup_receive_key_from_stops_at_capacity(state, sequence, slot, remaining);
+			remaining = 0;
+		} else if slot >= state.receive_cache.len {
+			#[cfg(feature = "proverif")]
+			lookup_receive_key_from_stops_at_len(state, sequence, slot, remaining);
+			remaining = 0;
+		} else if state.receive_cache.entries[slot_index] == sequence {
+			#[cfg(feature = "proverif")]
+			lookup_receive_key_from_matches(state, sequence, slot, remaining);
+			found = Some(slot);
+			remaining = 0;
+		} else {
+			#[cfg(feature = "proverif")]
+			lookup_receive_key_from_advances(state, sequence, slot, remaining);
+			slot += 1;
+			remaining -= 1;
 		}
-		if slot >= state.receive_cache.len {
-			return None;
-		}
-		if state.receive_cache.entries[slot_index] == sequence {
-			return Some(slot);
-		}
-
-		slot += 1;
-		remaining -= 1;
 	}
 
-	None
+	found
 }
 
 /// Complete authentication for a receive key identified by both slot and
