@@ -2,9 +2,7 @@
 
 #[cfg(feature = "server")]
 use super::{EstablishedRemote, SignType, decode_sign};
-use crate::ratchet::{
-	AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager, ratchet_hkdf,
-};
+use crate::ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager};
 use crate::shared::{roles, systems};
 use beaconcrypt_core::ratchet as verified_ratchet;
 #[cfg(feature = "server")]
@@ -313,7 +311,6 @@ impl<'de> Deserialize<'de> for RatchetManager {
 			data.recv_ctr,
 			data.send_key.chain,
 			data.recv_key.chain,
-			ratchet_hkdf,
 		);
 		for (sequence, directed) in receive_entries {
 			if !verified_ratchet::concrete_restore_receive_key(
@@ -326,9 +323,7 @@ impl<'de> Deserialize<'de> for RatchetManager {
 				));
 			}
 		}
-		let manager = Self {
-			refined: verified_ratchet::finish_concrete_restore(restore),
-		};
+		let manager = Self::from_kernel(verified_ratchet::finish_concrete_restore(restore));
 		Ok(manager)
 	}
 }

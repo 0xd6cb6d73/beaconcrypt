@@ -31,13 +31,20 @@ proofs/lean/
 ├── lakefile.toml
 ├── lean-toolchain
 ├── BeaconcryptCore/
-│   └── Extraction/
-│       ├── Types.lean
-│       ├── Funs.lean
-│       ├── TypesExternal_Template.lean   # when required
-│       ├── TypesExternal.lean            # maintained, when required
-│       ├── FunsExternal_Template.lean
-│       └── FunsExternal.lean             # maintained
+│   ├── Extraction/
+│   │   ├── Types.lean
+│   │   ├── Funs.lean
+│   │   ├── TypesExternal_Template.lean   # when required
+│   │   ├── TypesExternal.lean            # maintained, when required
+│   │   ├── FunsExternal_Template.lean
+│   │   └── FunsExternal.lean             # maintained
+│   └── Model/
+│       ├── Ratchet.lean                  # handwritten ideal symmetric ratchet
+│       ├── RatchetControl.lean           # generated-control facts
+│       ├── RatchetControlRestore.lean    # restoration facts
+│       ├── RatchetRefinement.lean        # control-to-ideal refinement
+│       ├── RatchetEffect.lean            # exact first-order phase laws
+│       └── RatchetEffectRefinement.lean  # checked phase-to-ideal refinement
 └── llbc/
     └── beaconcrypt_core.llbc
 ```
@@ -48,34 +55,13 @@ proofs/lean/
 
 ### Extract the Lean model
 
-The current Lean proof boundary deliberately excludes code containing function pointers and higher-order ratchet machinery:
+The default production core is first-order at its cryptographic boundary and is translated without Charon module exclusions:
 
 ```bash
-cargo hax -C --locked ';' into lean --lakefile \
-  --charon-args="\
---exclude=beaconcrypt_core::ratchet::concrete::* \
---exclude=beaconcrypt_core::ratchet::refined::* \
---exclude=beaconcrypt_core::pqxdh::concrete::*"
+cargo hax -C --locked ';' into lean --lakefile
 ```
 
-The excluded modules contain production executor plumbing:
-
-```text
-ratchet::concrete
-    KDF function pointers
-    concrete ratchet kernel
-    concrete seal/open adapters
-    restore adapter
-
-ratchet::refined
-    higher-order generic ratchet machinery
-
-pqxdh::concrete
-    initial KDF executor
-    concrete ratchet-kernel construction
-```
-
-The extracted model retains the first-order protocol logic, including PQXDH state transitions, validation, transcript construction, initial ratchet-chain interpretation, ratchet data types, and ratchet control logic.
+This includes `ratchet::control`, `ratchet::refined`, the production `ratchet::concrete` effect phases, deterministic PQXDH logic, and the `pqxdh::concrete` initial-KDF phases. Translation coverage is not theorem coverage: successful extraction shows that Charon and Aeneas accepted the Rust source, while `lake build` checks the generated definitions and imported handwritten files. A refinement theorem is still needed before a newly translated transition can be called verified against the handwritten ideal model.
 
 ### Build the generated Lean project
 
@@ -88,6 +74,12 @@ lake build
 
 A successful build verifies that the generated Aeneas model is accepted by the pinned Lean toolchain.
 
+The imported `RatchetEffect.lean` layer proves structural laws directly against generated phase definitions: exact initial requests and role starts, core-owned response partitioning, exact send/receive requests, context preservation, entry-state recovery on cancellation/rejection/failed open, advanced-state return on either seal result, and publication of the same successful plaintext.
+
+The imported and checked `RatchetEffectRefinement.lean` adds a precise `KernelRefines` relation tying control, both counters/chains, and the live concrete cache bidirectionally to ideal send/receive states; `ResponseRefines` isolates the assumed law that a typed KDF response realizes the ideal chain and message-material step. It proves the non-exhausted send path from `begin_send` through response resume and successful `SendSeal::finish`, plus cancellation; receive KDF cancellation, open rejection, and failed open preserve refinement; and any supplied finite `ReceiveFailureTrace` witness returns the exact entry kernel. No theorem yet constructs such a witness from every `begin_receive` execution. `OpenReplyRefines` conditionally relates a successful reply to the phase-selected material and `cr.dec`. Given `KernelRefines`, the target/index equality, and an ideal skipped-key lookup, `begin_receive_cached_refines` proves that generated `begin_receive` returns the exact cached open satisfying `CachedOpenRefines`. That phase exposes the exact ideal skipped material and matches the cached branch of `Ratchet.recvStep`; concrete finish returns the same plaintext. `ratchet.control.Refines.finish_receive_with_removal_consumed_refines` proves the control-plane filtered-cache post-state, while preservation of the full `KernelRefines` relation remains conditional on the separately stated `CachedPublicationRefines` material-array publication relation. Separately, `RatchetRefinement.lean` proves that the generated control-plane receive driver refines `Ratchet.recvStep` directly, including success with exactly 50 retained skipped keys because the target is consumed without entering the cache.
+
+The remaining proof boundary is explicit: complete `CachedPublicationRefines` by proving that concrete material-array swap-removal preserves the bidirectional slot relation and empty suffix; prove the future-receive KDF staging induction and publication; compose initial role directions, restoration, and the synchronous adapter driver; and add an ideal send-exhaustion result. These gaps prevent a claim that the complete production effect lifecycle refines the ideal ratchet, but they do not erase the direct bound-50 control refinement or the checked non-exhausted send, supplied failed-trace, conditional open-reply, cached-open construction, control-plane cached consumption, and conditional cached-success results.
+
 ### Clean rebuild
 
 To check that the extraction is reproducible from generated state:
@@ -96,11 +88,7 @@ To check that the extraction is reproducible from generated state:
 rm -rf proofs/lean/llbc
 rm -rf proofs/lean/.lake/build
 
-cargo hax -C --locked ';' into lean --lakefile \
-  --charon-args="\
---exclude=beaconcrypt_core::ratchet::concrete::* \
---exclude=beaconcrypt_core::ratchet::refined::* \
---exclude=beaconcrypt_core::pqxdh::concrete::*"
+cargo hax -C --locked ';' into lean --lakefile
 
 cd proofs/lean
 lake build
@@ -112,22 +100,16 @@ directory, because it may contain maintained `FunsExternal.lean` or
 
 ### Makefile targets
 
-The extraction can be exposed through separate Lean verification targets:
+The Makefile exposes separate Lean verification targets:
 
 ```make
 LEAN_DIR := proofs/lean
-
-LEAN_CHARON_ARGS := \
-	--exclude=beaconcrypt_core::ratchet::concrete::* \
-	--exclude=beaconcrypt_core::ratchet::refined::* \
-	--exclude=beaconcrypt_core::pqxdh::concrete::*
 
 .PHONY: extract-lean check-lean verify-lean verify-lean-in-shell
 
 extract-lean:
 	rm -rf $(LEAN_DIR)/llbc
-	cargo hax -C --locked ';' into lean --lakefile \
-		--charon-args="$(LEAN_CHARON_ARGS)"
+	cargo hax -C --locked ';' into lean --lakefile
 
 check-lean:
 	cd $(LEAN_DIR) && lake build
@@ -143,8 +125,7 @@ verify-lean-in-shell:
 	$(MAKE) check-lean
 ```
 
-Keep Lean verification separate from the existing F*/ProVerif verification
-target until changes to the Lean proof boundary are intentional.
+The canonical `make verify` path regenerates and checks Lean after F* and ProVerif. `verify-lean` remains useful for an isolated pinned run, and `check-generated-lean` adds generated-drift checking for CI.
 
 ## Writing Aeneas-compatible Rust
 
@@ -270,41 +251,29 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(hax_compilation)'] }
 Merge this with an existing `[lints.rust]` table rather than creating a
 duplicate table.
 
-### Avoid higher-order values in the proof-visible boundary
+### Defunctionalize higher-order values at the proof boundary
 
-Aeneas currently rejects function-pointer and higher-order signatures such as:
+Lean can model functions, but the pinned Rust-to-Lean translation path does not support Rust function-pointer and callback signatures such as:
 
 ```rust
 fn(&Request) -> Output
 ```
 
-and callback-bearing generic APIs.
-
-Keep those values behind first-order module boundaries. `beaconcrypt-core`
-uses:
+and callback-bearing generic APIs. Keep those values out of `beaconcrypt-core` rather than excluding the production modules that contain them. The current core uses affine request/response continuations:
 
 ```text
-ratchet::concrete
-pqxdh::concrete
+begin operation and construct exact request
+        ↓
+adapter interprets external HKDF or AEAD effect
+        ↓
+typed fixed-width response or `Option` result
+        ↓
+consume continuation and resume/finish
 ```
 
-for executor binding and production adapter logic.
+`InitialRatchetKdfPending` accepts only an `InitialRatchetKdfResponse`; ratchet steps accept only `RatchetKdfResponse`; `SendSeal` and `ReceiveOpen` expose the core-selected material, sequence, and opaque context before consuming a seal/open result. No executor is stored in `ConcreteRatchetKernel`, and no callback crosses the extraction boundary. This is defunctionalization: the finite protocol of possible calls is represented by data constructors and consuming resume methods instead of higher-order Rust values.
 
-The proof-visible side should instead expose first-order operations such as:
-
-```text
-construct request
-        ↓
-external primitive
-        ↓
-fixed-width output
-        ↓
-interpret/split output
-```
-
-For example, `split_initial_ratchet_kdf_output` and
-`split_ratchet_kdf_output` remain proof-visible, while invocation of the KDF
-executor remains in the excluded concrete module.
+Do not infer semantic verification from this representation alone. The imported refinement files supply the checked direct bound-50 control refinement and `KernelRefines` invariant and cover non-exhausted send begin/resume/ideal success plus cancellation, rollback for supplied finite failed-trace witnesses, conditional open-reply consistency, generated cached-open construction from an ideal skipped-key lookup, the control-plane half of cached consumption, and conditional cached success. Structural equations separately cover exhaustion and either seal result. The proof still needs the cached material-array publication theorem, the future-receive staged invariant and publication, initial role composition, restoration, the adapter driver, and ideal send exhaustion, while HKDF/AEAD correctness remains an assumption about the external effect interpreter.
 
 ### Avoid `?` if `Try::branch` appears
 
@@ -389,20 +358,19 @@ cause of Lean extraction failures.
 
 ## Verification boundary
 
-The current successfully built Lean boundary is:
+The no-exclusion Lean translation boundary is:
 
 ```text
 beaconcrypt-core
 ├── commitment                 extracted
 ├── pqxdh                      extracted
-│   └── concrete               excluded
+│   └── concrete               extracted
 └── ratchet
     ├── control                extracted
-    ├── concrete               excluded
-    └── refined                excluded
+    ├── concrete               extracted
+    └── refined                extracted
 ```
 
-Any change that moves higher-order executor plumbing back into an extracted
-module, or introduces unsupported mutable array operations, should be expected
-to require either a source-level normalization or an intentional change to
-the Charon exclusion boundary.
+“Extracted” here means translated by Charon/Aeneas. `RatchetRefinement.lean` proves that the generated control-plane receive driver refines `Ratchet.recvStep` directly at its 50-skipped-key bound. `RatchetEffect.lean` proves exact structural laws for generated production phases, and imported `RatchetEffectRefinement.lean` checks non-exhausted send begin/resume/ideal success plus cancellation, rollback for supplied finite failed-receive traces, conditional open-reply consistency relative to `cr.dec`, generated cached-open construction from `KernelRefines` plus an ideal lookup, the control-plane half of cached consumption, and cached success directly against `recvStep` under its publication premise. Full verification still requires the cached material-array publication theorem, future-receive staging/publication, initial role composition, restoration, the adapter interpreter, and an ideal send-exhaustion result.
+
+Any change that reintroduces higher-order executor plumbing or unsupported mutable-array operations should be expected to require source-level normalization. Reintroducing exclusions would reduce production coverage and must be documented as a trust-boundary regression rather than treated as a routine extractor workaround.

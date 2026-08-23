@@ -1,6 +1,12 @@
-import BeaconcryptCore.Extraction.Types
-import BeaconcryptCore.Extraction.Funs
-import BeaconcryptCore.RatchetControl
-import BeaconcryptCore.RatchetControlRestore
-import BeaconcryptCore.Ratchet
-import BeaconcryptCore.RatchetRefinement
+import BeaconcryptCore.Model.RatchetControlRestore
+import BeaconcryptCore.Model.RatchetEffectRefinement
+
+/-!
+# Beaconcrypt-core verification root
+
+This is the maintained root of the Lean verification project.
+
+Hax creates this file only when it is absent; subsequent extraction leaves it unchanged.
+
+Keep every handwritten proof family reachable from this module so `import BeaconcryptCore` checks and exposes the complete reviewed proof surface.
+-/

@@ -10,14 +10,14 @@ use crate::pqxdh::{
 use crate::ratchet::KeyMaterial;
 use crate::ratchet::{
 	RatchetManager, RatchetStatus, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
-	initial_ratchet_hkdf, ratchet_hkdf,
+	finish_initial_ratchet_kdf,
 };
 use crate::shared::{
 	DhSecret, EstablishedRemote, KexDerivedSecret, REGISTRATION_WITNESS, deserialize_server_state,
 	roles, serialize_server_state,
 };
 use crate::{phase1_capnp, phase2_capnp};
-use beaconcrypt_core::pqxdh::{self as verified_pqxdh, derive_server_candidate_ratchet_kernel};
+use beaconcrypt_core::pqxdh::{self as verified_pqxdh, start_server_candidate_ratchet_kdf};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
 use std::vec;
@@ -442,12 +442,8 @@ impl ProviderServer for Server {
 			crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?;
 		debug_assert!(!self.known_ids.contains_key(&remote_kid));
 		self.known_ids.try_reserve(1).ok()?;
-		let mut ratchet = RatchetManager::from_kernel(derive_server_candidate_ratchet_kernel(
-			&candidate,
-			derived_secret.as_array(),
-			initial_ratchet_hkdf,
-			ratchet_hkdf,
-		));
+		let pending = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());
+		let mut ratchet = RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));
 		let associated_data = *candidate.associated_data();
 		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
 		if plaintext.is_empty() {

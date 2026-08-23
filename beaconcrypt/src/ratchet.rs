@@ -12,11 +12,12 @@ use beaconcrypt_core::pqxdh::{
 	ASSOCIATED_DATA_SIZE as AD_SIZE, INITIAL_RATCHET_KDF_OUTPUT_SIZE, RATCHET_CHAIN_SIZE,
 };
 #[cfg(test)]
-use beaconcrypt_core::pqxdh::{RatchetInitialization, derive_initial_ratchet_kernel};
+use beaconcrypt_core::pqxdh::{RatchetInitialization, start_initial_ratchet_kdf};
 use beaconcrypt_core::ratchet as verified_ratchet;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use libsodium_rs::utils::memcmp;
 use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
+use std::ops::{Deref, DerefMut};
 use std::vec;
 use zeroize::{Zeroize, Zeroizing};
 
@@ -94,8 +95,8 @@ fn symmetric_ratchet_hkdf<const OUTPUT_SIZE: usize>(
 
 pub(crate) fn ratchet_hkdf(
 	request: &verified_ratchet::SymmetricRatchetKdfRequest,
-) -> [u8; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE] {
-	symmetric_ratchet_hkdf(request)
+) -> verified_ratchet::RatchetKdfResponse {
+	verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))
 }
 
 pub(crate) fn initial_ratchet_hkdf(
@@ -104,36 +105,95 @@ pub(crate) fn initial_ratchet_hkdf(
 	symmetric_ratchet_hkdf(request)
 }
 
+pub(crate) fn finish_initial_ratchet_kdf(
+	pending: beaconcrypt_core::pqxdh::InitialRatchetKdfPending,
+) -> verified_ratchet::ConcreteRatchetKernel {
+	let response = beaconcrypt_core::pqxdh::InitialRatchetKdfResponse::from_bytes(
+		initial_ratchet_hkdf(pending.request()),
+	);
+	beaconcrypt_core::pqxdh::resume_initial_ratchet_kdf(pending, response)
+}
+
 #[cfg(any(feature = "server", test))]
 pub(crate) type KeyMaterial = verified_ratchet::RatchetMaterial;
 #[cfg(test)]
 pub(crate) type SendChain = verified_ratchet::RatchetChain;
 pub(crate) type RatchetKernel = verified_ratchet::ConcreteRatchetKernel;
 
+pub(crate) struct RatchetKernelSlot {
+	kernel: Option<RatchetKernel>,
+}
+
+impl RatchetKernelSlot {
+	pub(crate) const fn new(kernel: RatchetKernel) -> Self {
+		Self {
+			kernel: Some(kernel),
+		}
+	}
+
+	fn take(&mut self) -> RatchetKernel {
+		self.kernel
+			.take()
+			.expect("a ratchet kernel is absent only while its synchronous effect is running")
+	}
+
+	fn put(&mut self, kernel: RatchetKernel) {
+		assert!(
+			self.kernel.is_none(),
+			"a completed ratchet effect must return to an empty kernel slot"
+		);
+		self.kernel = Some(kernel);
+	}
+
+	#[cfg(test)]
+	pub(crate) fn replace(&mut self, kernel: RatchetKernel) {
+		self.kernel = Some(kernel);
+	}
+}
+
+impl Deref for RatchetKernelSlot {
+	type Target = RatchetKernel;
+
+	fn deref(&self) -> &Self::Target {
+		self.kernel
+			.as_ref()
+			.expect("a ratchet kernel is absent only while its synchronous effect is running")
+	}
+}
+
+impl DerefMut for RatchetKernelSlot {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		self.kernel
+			.as_mut()
+			.expect("a ratchet kernel is absent only while its synchronous effect is running")
+	}
+}
+
 #[cfg(test)]
 fn empty_ratchet_kernel() -> RatchetKernel {
 	RatchetKernel::new(
 		verified_ratchet::RatchetChain::from_bytes([0; KDF_STATE_SIZE]),
 		verified_ratchet::RatchetChain::from_bytes([0; KDF_STATE_SIZE]),
-		ratchet_hkdf,
 	)
 }
 
 pub(crate) struct RatchetManager {
 	/// Shared refined kernel owning counters, both KDF chains, and concrete receive slots.
-	pub(crate) refined: RatchetKernel,
+	pub(crate) refined: RatchetKernelSlot,
 }
 
 impl RatchetManager {
 	#[cfg(test)]
 	pub(crate) fn default() -> Self {
 		Self {
-			refined: empty_ratchet_kernel(),
+			refined: RatchetKernelSlot::new(empty_ratchet_kernel()),
 		}
 	}
 
 	pub(crate) const fn from_kernel(refined: RatchetKernel) -> Self {
-		Self { refined }
+		Self {
+			refined: RatchetKernelSlot::new(refined),
+		}
 	}
 
 	pub(crate) fn status(&self) -> RatchetStatus {
@@ -160,7 +220,27 @@ impl RatchetManager {
 
 	#[cfg(test)]
 	pub(crate) fn ratchet_recv_until(&mut self, until: u64) -> Option<u64> {
-		verified_ratchet::concrete_advance_receive_until(&mut self.refined, until)
+		let kernel = self.refined.take();
+		let mut effect = verified_ratchet::begin_receive_advance(kernel, until);
+		loop {
+			effect = match effect {
+				verified_ratchet::ReceiveAdvanceEffect::ReceiveAdvanceRejected(kernel) => {
+					self.refined.put(kernel);
+					return None;
+				}
+				verified_ratchet::ReceiveAdvanceEffect::ReceiveAdvanceKdfRequested(pending) => {
+					let response = ratchet_hkdf(pending.request());
+					pending.resume(response)
+				}
+				verified_ratchet::ReceiveAdvanceEffect::ReceiveAdvanceCompleted {
+					kernel,
+					target,
+				} => {
+					self.refined.put(kernel);
+					return Some(target);
+				}
+			};
+		}
 	}
 
 	#[cfg(test)]
@@ -169,8 +249,11 @@ impl RatchetManager {
 		root: &[u8; KDF_STATE_SIZE],
 		initialization: RatchetInitialization,
 	) {
-		self.refined =
-			derive_initial_ratchet_kernel(root, initialization, initial_ratchet_hkdf, ratchet_hkdf);
+		self.refined
+			.replace(finish_initial_ratchet_kdf(start_initial_ratchet_kdf(
+				root,
+				initialization,
+			)));
 	}
 
 	#[cfg(test)]
@@ -182,16 +265,33 @@ impl RatchetManager {
 		if self.recv_key(seq).is_none() {
 			return verified_ratchet::ReceiveDisposition::Missing;
 		}
-		let context = TestReceiveAttempt::new(authenticated);
-		let opened = verified_ratchet::concrete_open_and_finish(
-			&mut self.refined,
-			seq,
-			&context,
-			test_receive_attempt,
-		);
+		let kernel = self.refined.take();
+		let mut effect = verified_ratchet::begin_receive(kernel, seq, ());
+		let opened = loop {
+			effect = match effect {
+				verified_ratchet::ReceiveEffect::ReceiveRejected { kernel, .. } => {
+					self.refined.put(kernel);
+					return verified_ratchet::ReceiveDisposition::Missing;
+				}
+				verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending) => {
+					let response = ratchet_hkdf(pending.request());
+					pending.resume(response)
+				}
+				verified_ratchet::ReceiveEffect::ReceiveOpenRequested(open) => {
+					if open.material().is_none() {
+						let (kernel, _) = open.reject();
+						self.refined.put(kernel);
+						return verified_ratchet::ReceiveDisposition::Missing;
+					}
+					let (kernel, opened) = open.finish(authenticated.then_some(()));
+					self.refined.put(kernel);
+					break opened;
+				}
+			};
+		};
 		if authenticated && opened.is_some() {
 			verified_ratchet::ReceiveDisposition::Consumed
-		} else if !authenticated && context.seen.get() == Some(seq) {
+		} else if !authenticated {
 			verified_ratchet::ReceiveDisposition::Retained
 		} else {
 			verified_ratchet::ReceiveDisposition::Missing
@@ -205,7 +305,7 @@ impl RatchetManager {
 
 	#[cfg(test)]
 	pub(crate) fn reset(&mut self) {
-		self.refined = empty_ratchet_kernel();
+		self.refined.replace(empty_ratchet_kernel());
 	}
 
 	#[cfg(any(feature = "server", test))]
@@ -238,32 +338,6 @@ impl RatchetManager {
 	pub(crate) fn recv_state(&self) -> &[u8; KDF_STATE_SIZE] {
 		self.refined.receive_chain().as_bytes()
 	}
-}
-
-#[cfg(test)]
-struct TestReceiveAttempt {
-	seen: core::cell::Cell<Option<u64>>,
-	authenticated: bool,
-}
-
-#[cfg(test)]
-impl TestReceiveAttempt {
-	fn new(authenticated: bool) -> Self {
-		Self {
-			seen: core::cell::Cell::new(None),
-			authenticated,
-		}
-	}
-}
-
-#[cfg(test)]
-fn test_receive_attempt(
-	_material: &verified_ratchet::RatchetMaterial,
-	sequence: u64,
-	context: &TestReceiveAttempt,
-) -> Option<()> {
-	context.seen.set(Some(sequence));
-	context.authenticated.then_some(())
 }
 
 #[cfg(feature = "server")]
@@ -339,7 +413,20 @@ pub(crate) fn encrypt_message_with_ratchet(
 		sender_kid,
 		associated_data,
 	};
-	verified_ratchet::concrete_seal_next(&mut ratchet.refined, &context, seal_frame)
+	let kernel = ratchet.refined.take();
+	let pending = match verified_ratchet::begin_send(kernel, context) {
+		verified_ratchet::SendStart::SendExhausted { kernel, .. } => {
+			ratchet.refined.put(kernel);
+			return None;
+		}
+		verified_ratchet::SendStart::SendKdfRequested(pending) => pending,
+	};
+	let response = ratchet_hkdf(pending.request());
+	let seal = pending.resume(response);
+	let sealed = seal_frame(seal.material(), seal.sequence(), seal.context());
+	let (kernel, sealed) = seal.finish(sealed);
+	ratchet.refined.put(kernel);
+	sealed
 }
 
 struct OpenFrameContext<'a> {
@@ -382,8 +469,8 @@ fn open_frame(
 ///
 /// Every rejected frame preserves the complete entry ratchet state. Successful authentication
 /// atomically publishes the planned receive advance and consumes the selected key through the
-/// shared refined kernel. Production supplies one opaque AEAD callback and never receives material
-/// or reports an independent authentication Boolean.
+/// shared refined kernel. Production interprets each typed KDF request, then opens with the exact
+/// material and sequence exposed by the resulting one-use capability.
 pub(crate) fn decrypt_message_with_ratchet(
 	data: &[u8],
 	expected_sender_kid: u64,
@@ -411,12 +498,31 @@ pub(crate) fn decrypt_message_with_ratchet(
 		sender_kid: kid,
 	};
 	let key_seq = frame.get_seq();
-	let plaintext = verified_ratchet::concrete_open_and_finish(
-		&mut ratchet.refined,
-		key_seq,
-		&context,
-		open_frame,
-	)?;
+	let kernel = ratchet.refined.take();
+	let mut effect = verified_ratchet::begin_receive(kernel, key_seq, context);
+	let plaintext = loop {
+		effect = match effect {
+			verified_ratchet::ReceiveEffect::ReceiveRejected { kernel, .. } => {
+				ratchet.refined.put(kernel);
+				return None;
+			}
+			verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending) => {
+				let response = ratchet_hkdf(pending.request());
+				pending.resume(response)
+			}
+			verified_ratchet::ReceiveEffect::ReceiveOpenRequested(open) => {
+				let Some(material) = open.material() else {
+					let (kernel, _) = open.reject();
+					ratchet.refined.put(kernel);
+					return None;
+				};
+				let opened = open_frame(material, open.sequence(), open.context());
+				let (kernel, opened) = open.finish(opened);
+				ratchet.refined.put(kernel);
+				break opened?;
+			}
+		};
+	};
 	Some(Decrypted {
 		plaintext,
 		key_id: kid,

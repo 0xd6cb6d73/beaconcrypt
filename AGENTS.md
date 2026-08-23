@@ -16,7 +16,7 @@ cargo check -p beaconcrypt --no-default-features --features pqxdh,beacon --lib
 cargo check -p beaconcrypt --no-default-features --features pqxdh,server --lib
 ```
 
-For bindings, run `cargo build -p beaconcrypt --release --features gobinds` before `go test -race ./...`. Build the Python extension with `uv run maturin develop --uv`, then run `uv run pytest tests`. Core changes require `make -C beaconcrypt-core verify`; this uses the locked Nix proof environment and checks generated proofs. Run `make -C beaconcrypt-core check-inventory` separately for the trust-boundary inventory.
+For bindings, run `cargo build -p beaconcrypt --release --features gobinds` before `go test -race ./...`. Build the Python extension with `uv run maturin develop --uv`, then run `uv run pytest tests`. Core changes require `make -C beaconcrypt-core verify`; this uses the locked Nix proof environment and checks generated proofs. Run `make -C beaconcrypt-core check-inventory` separately for the trust-boundary inventory. After the final Nix-backed verification command completes and no other Nix build or shell for this repository is active, run `nix-collect-garbage` to release temporary proof-shell store paths and prevent disk exhaustion; never run it while another agent or process is still using Nix.
 
 ## Coding Style & Naming Conventions
 

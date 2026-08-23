@@ -2,9 +2,9 @@
 
 #[cfg(feature = "server")]
 use super::{EstablishedRemote, SignType, encode_sign};
-use crate::ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager};
 #[cfg(test)]
-use crate::ratchet::{RatchetKernel, ratchet_hkdf};
+use crate::ratchet::RatchetKernel;
+use crate::ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager};
 #[cfg(feature = "server")]
 use crate::server::{RatchetSnapshot, StateUpdate};
 use crate::shared::{roles, systems};
@@ -351,11 +351,10 @@ mod tests {
 	fn state_updates_include_an_inert_serialized_ratchet_snapshot() {
 		let send_bytes = [0x21; KDF_STATE_SIZE];
 		let mut send_state = RatchetManager::default();
-		send_state.refined = RatchetKernel::new(
+		send_state.refined.replace(RatchetKernel::new(
 			beaconcrypt_core::ratchet::RatchetChain::from_bytes(send_bytes),
 			beaconcrypt_core::ratchet::RatchetChain::from_bytes([0; KDF_STATE_SIZE]),
-			ratchet_hkdf,
-		);
+		));
 		let expected_send_state = serde_json::to_string(&send_state).unwrap();
 		let send_update = SendState {
 			kid: 7,
@@ -367,11 +366,10 @@ mod tests {
 
 		let recv_bytes = [0x41; KDF_STATE_SIZE];
 		let mut recv_state = RatchetManager::default();
-		recv_state.refined = RatchetKernel::new(
+		recv_state.refined.replace(RatchetKernel::new(
 			beaconcrypt_core::ratchet::RatchetChain::from_bytes([0; KDF_STATE_SIZE]),
 			beaconcrypt_core::ratchet::RatchetChain::from_bytes(recv_bytes),
-			ratchet_hkdf,
-		);
+		));
 		let expected_recv_state = serde_json::to_string(&recv_state).unwrap();
 		let recv_update = RecvState {
 			kid: 9,

@@ -18,21 +18,21 @@ The control plane tracks, for one symmetric ratchet:
 The properties proved here are:
 
 * **The bound of 50 skipped messages.**  The receive cache never holds more than 50
-  entries (`SequenceCache.append_len_le`, `advance_receive_wf`), a message that would
-  require more than 50 key derivations is refused by the planner
-  (`plan_receive_until_reject_of_gap_gt`, `plan_receive_until_reject_51`), and so is a
-  message whose derivations would push the number of outstanding skipped keys past 50
-  (`plan_receive_until_reject_of_cache_full`).
+  entries (`SequenceCache.append_len_le`, `advance_receive_wf`). The target derivation
+  is consumed directly by `advance_receive_target`, so the planner admits 50 skipped
+  keys plus that target step and refuses only when the number of retained skipped keys
+  would exceed 50 (`plan_receive_until_reject_of_gap_gt`,
+  `plan_receive_until_reject_of_cache_full`).
 * **State neutrality on authentication failure.**  `finish_receive` is the step that is
   told whether the authenticated decryption of the incoming message succeeded.  If it
   did not, the ratchet state is returned bit-for-bit unchanged and no cache entry is
   removed (`finish_receive_auth_fail_state_neutral`,
   `finish_receive_with_removal_auth_fail`).  The same holds for a message whose key is
   not (or no longer) in the cache (`finish_receive_missing_state_neutral`).
-* **Every rejection is state neutral.**  Whenever the planner or the key-derivation
+* **Every rejection is state neutral.**  Whenever the planner or a key-derivation
   step refuses a message, the state it returns is the state it was given
-  (`advance_receive_reject_state_neutral`); the planner itself carries no state and
-  schedules no key derivation when it refuses a message
+  (`advance_receive_reject_state_neutral`, `advance_receive_target_max`); the planner
+  itself carries no state and schedules no key derivation when it refuses a message
   (`plan_receive_until_reject_of_gap_gt`, `plan_receive_until_reject_of_cache_full`).
 * **Consumption.**  On successful authentication the key is removed from the cache by a
   swap-remove, decreasing the number of outstanding keys by exactly one
@@ -43,7 +43,7 @@ The properties proved here are:
   `finish_receive_with_removal_ok`, `lookup_receive_key_ok`, ...).
 
 The restore path and the per-peer wrappers are verified in
-`BeaconcryptCore/RatchetControlRestore.lean`.
+`BeaconcryptCore/Model/RatchetControlRestore.lean`.
 -/
 
 open CoreModels Aeneas
@@ -246,28 +246,31 @@ theorem plan_receive_until_replay (st : RatchetState) (target : Std.U64)
   have hle : target ≤ st.receive_sequence := by scalar_tac
   simp [plan_receive_until, hle]
 
-/-- A message more than 50 sequence numbers ahead of the receive counter is refused. -/
+/-- A future message that would retain more than 50 skipped keys is refused. The
+target step itself is not retained, so a distance of 51 is admitted and 52 is not. -/
 theorem plan_receive_until_reject_of_gap_gt (st : RatchetState) (target : Std.U64)
-    (h : st.receive_sequence.val + 50 < target.val) :
+    (h : st.receive_sequence.val + 51 < target.val) :
     plan_receive_until st target =
       ok { sequence := core.option.Option.None, derivations := 0#u64 } := by
   have hgt : ¬ (target ≤ st.receive_sequence) := by scalar_tac
   obtain ⟨d, hd, hdval⟩ := uscalar_sub_eq_ok target st.receive_sequence (by scalar_tac)
-  simp [plan_receive_until, hgt, hd, lift]
-  exact fun hcon => absurd hcon (by omega)
+  obtain ⟨skipped, hskipped, hskippedval⟩ := uscalar_sub_eq_ok d 1#u64 (by scalar_tac)
+  simp [plan_receive_until, hgt, hd, hskipped, lift]
+  scalar_tac
 
 /-- A message whose delivery would push the number of outstanding skipped keys past 50
 is refused. -/
 theorem plan_receive_until_reject_of_cache_full (st : RatchetState) (target : Std.U64)
     (hgt : st.receive_sequence.val < target.val)
-    (hgap : target.val ≤ st.receive_sequence.val + 50)
-    (hfull : 50 < st.receive_cache.len.val + (target.val - st.receive_sequence.val)) :
+    (hgap : target.val ≤ st.receive_sequence.val + 51)
+    (hfull : 50 < st.receive_cache.len.val + (target.val - st.receive_sequence.val - 1)) :
     plan_receive_until st target =
       ok { sequence := core.option.Option.None, derivations := 0#u64 } := by
   have hgt : ¬ (target ≤ st.receive_sequence) := by scalar_tac
   obtain ⟨d, hd, hdval⟩ := uscalar_sub_eq_ok target st.receive_sequence (by scalar_tac)
-  obtain ⟨i, hi, hival⟩ := uscalar_sub_eq_ok RATCHET_MAX_GAP d (by scalar_tac)
-  simp [plan_receive_until, hgt, hd, lift, hi]
+  obtain ⟨skipped, hskipped, hskippedval⟩ := uscalar_sub_eq_ok d 1#u64 (by scalar_tac)
+  obtain ⟨i, hi, hival⟩ := uscalar_sub_eq_ok RATCHET_MAX_GAP skipped (by scalar_tac)
+  simp [plan_receive_until, hgt, hd, hskipped, lift, hi]
   intro _
   scalar_tac
 
@@ -275,24 +278,25 @@ theorem plan_receive_until_reject_of_cache_full (st : RatchetState) (target : St
 key derivations. -/
 theorem plan_receive_until_accept (st : RatchetState) (target : Std.U64)
     (hgt : st.receive_sequence.val < target.val)
-    (hbound : st.receive_cache.len.val + (target.val - st.receive_sequence.val) ≤ 50) :
+    (hbound : st.receive_cache.len.val + (target.val - st.receive_sequence.val - 1) ≤ 50) :
     ∃ d : Std.U64, plan_receive_until st target =
       ok { sequence := core.option.Option.Some target, derivations := d } ∧
       d.val = target.val - st.receive_sequence.val := by
   have hgt : ¬ (target ≤ st.receive_sequence) := by scalar_tac
   obtain ⟨d, hd, hdval⟩ := uscalar_sub_eq_ok target st.receive_sequence (by scalar_tac)
-  obtain ⟨i, hi, hival⟩ := uscalar_sub_eq_ok RATCHET_MAX_GAP d (by scalar_tac)
+  obtain ⟨skipped, hskipped, hskippedval⟩ := uscalar_sub_eq_ok d 1#u64 (by scalar_tac)
+  obtain ⟨i, hi, hival⟩ := uscalar_sub_eq_ok RATCHET_MAX_GAP skipped (by scalar_tac)
   refine ⟨d, ?_, hdval⟩
-  simp [plan_receive_until, hgt, hd, lift, hi]
+  simp [plan_receive_until, hgt, hd, hskipped, lift, hi]
   rw [if_neg (by scalar_tac), if_neg (by scalar_tac)]
 
-/-- Planning never changes the ratchet state, and an accepted plan never asks for more
-derivations than the cache can hold: the outstanding skipped keys stay within 50. -/
+/-- Planning never changes the ratchet state. An accepted future plan asks for at most
+51 total derivations: at most 50 retained skipped keys and one uncached target step. -/
 theorem plan_receive_until_bound (st : RatchetState) (target : Std.U64) (p : ReceivePlan)
     (hst : st.Wf) (h : plan_receive_until st target = ok p)
     (hsome : p.sequence = core.option.Option.Some target) :
-    p.derivations.val ≤ 50 ∧
-      st.receive_cache.len.val + p.derivations.val ≤ 50 ∧
+    p.derivations.val ≤ 51 ∧
+      st.receive_cache.len.val + (p.derivations.val - 1) ≤ 50 ∧
       st.receive_sequence.val + p.derivations.val = max st.receive_sequence.val target.val := by
   simp only [RatchetState.Wf, SequenceCache.Wf] at hst
   by_cases hle : target.val ≤ st.receive_sequence.val
@@ -302,7 +306,8 @@ theorem plan_receive_until_bound (st : RatchetState) (target : Std.U64) (p : Rec
     refine ⟨by simp, by simpa using hst, ?_⟩
     simp
     omega
-  · by_cases hbound : st.receive_cache.len.val + (target.val - st.receive_sequence.val) ≤ 50
+  · by_cases hbound :
+        st.receive_cache.len.val + (target.val - st.receive_sequence.val - 1) ≤ 50
     · obtain ⟨d, hd, hdval⟩ := plan_receive_until_accept st target (by omega) hbound
       rw [hd] at h
       simp at h
@@ -310,7 +315,7 @@ theorem plan_receive_until_bound (st : RatchetState) (target : Std.U64) (p : Rec
       refine ⟨by simpa using by omega, by simpa using by omega, ?_⟩
       simp only []
       omega
-    · by_cases hgap : st.receive_sequence.val + 50 < target.val
+    · by_cases hgap : st.receive_sequence.val + 51 < target.val
       · rw [plan_receive_until_reject_of_gap_gt st target hgap] at h
         simp at h
         subst h
@@ -321,10 +326,20 @@ theorem plan_receive_until_bound (st : RatchetState) (target : Std.U64) (p : Rec
         subst h
         simp at hsome
 
-/-- The concrete bound: a message 51 ahead of the receive counter is always refused,
-whatever the state of the cache. -/
-theorem plan_receive_until_reject_51 (st : RatchetState) (target : Std.U64)
-    (h : target.val = st.receive_sequence.val + 51) :
+/-- The exact boundary is admitted when the cache is empty: 50 skipped keys are
+retained and the 51st derivation is the uncached target. -/
+theorem plan_receive_until_accept_51_of_empty (st : RatchetState) (target : Std.U64)
+    (htarget : target.val = st.receive_sequence.val + 51)
+    (hempty : st.receive_cache.len.val = 0) :
+    plan_receive_until st target =
+      ok { sequence := core.option.Option.Some target, derivations := 51#u64 } := by
+  obtain ⟨d, hd, hdval⟩ := plan_receive_until_accept st target (by omega) (by omega)
+  have hd51 : d = 51#u64 := by scalar_tac
+  simpa [hd51] using hd
+
+/-- A message 52 steps ahead would retain 51 skipped keys and is refused. -/
+theorem plan_receive_until_reject_52 (st : RatchetState) (target : Std.U64)
+    (h : target.val = st.receive_sequence.val + 52) :
     plan_receive_until st target =
       ok { sequence := core.option.Option.None, derivations := 0#u64 } := by
   exact plan_receive_until_reject_of_gap_gt st target (by omega)
@@ -340,6 +355,31 @@ theorem receive_next_ok (st : RatchetState) (hmax : st.receive_sequence ≠ core
   simp [core.num.U64.MAX, U64.rMax] at hval
   obtain ⟨z, hz, hzval⟩ := uscalar_add_eq_ok st.receive_sequence 1#u64 (by scalar_tac)
   exact ⟨z, hz, by simpa using hzval⟩
+
+/-- At the end of the sequence space the uncached target transition is state neutral. -/
+theorem advance_receive_target_max (st : RatchetState)
+    (hmax : st.receive_sequence = core.num.U64.MAX) :
+    advance_receive_target st =
+      ok { state := st, sequence := core.option.Option.None } := by
+  simp [advance_receive_target, hmax]
+
+/-- The target transition advances the receive sequence exactly once without changing
+the send sequence or receive cache. -/
+theorem advance_receive_target_ok (st : RatchetState)
+    (hmax : st.receive_sequence ≠ core.num.U64.MAX) :
+    ∃ adv, advance_receive_target st = ok adv ∧
+      adv.state.receive_sequence.val = st.receive_sequence.val + 1 ∧
+      adv.state.send_sequence = st.send_sequence ∧
+      adv.state.receive_cache = st.receive_cache ∧
+      adv.sequence = core.option.Option.Some adv.state.receive_sequence := by
+  obtain ⟨z, hz, hzval⟩ := receive_next_ok st hmax
+  let st' : RatchetState := { st with receive_sequence := z }
+  let adv : ReceiveTargetAdvance := {
+    state := st'
+    sequence := core.option.Option.Some z
+  }
+  refine ⟨adv, ?_, hzval, rfl, rfl, rfl⟩
+  simp [advance_receive_target, hmax, hz, adv, st']
 
 /-- At the end of the sequence space no further key is derived. -/
 theorem advance_receive_max (st : RatchetState) (hmax : st.receive_sequence = core.num.U64.MAX) :
@@ -469,9 +509,10 @@ theorem entries_index_eq_ok (c : SequenceCache) (i : Std.U8) (h : i.val < 50) :
 /-- The lookup loop, which scans the cache from `slot` upwards for at most `remaining`
 steps, always terminates successfully; a hit points at a live slot holding the requested
 sequence number, and a miss means no live slot in the scanned window holds it. -/
-theorem lookup_receive_key_from_spec (st : RatchetState) (sequence : Std.U64) (hst : st.Wf) :
+theorem lookup_receive_key_loop_spec (st : RatchetState) (sequence : Std.U64) (hst : st.Wf) :
     ∀ (n : Nat) (slot remaining : Std.U8), remaining.val = n →
-    ∃ r, lookup_receive_key_from st sequence slot remaining = ok r ∧
+    ∃ r, lookup_receive_key_loop (UScalar.cast UScalarTy.Usize 50#u64)
+        st sequence slot remaining = ok r ∧
       (∀ j, r = core.option.Option.Some j →
         slot.val ≤ j.val ∧ j.val < st.receive_cache.len.val ∧
         st.receive_cache.entries.val[j.val]! = sequence) ∧
@@ -483,16 +524,20 @@ theorem lookup_receive_key_from_spec (st : RatchetState) (sequence : Std.U64) (h
   induction n with
   | zero =>
     intro slot remaining hrem
-    have : remaining = 0#u8 := by scalar_tac
-    subst this
-    refine ⟨core.option.Option.None, ?_, by simp, ?_⟩
-    · rw [lookup_receive_key_from.eq_def]; simp
-    · intro _ i h1 _ h3; omega
+    have hzero : remaining = 0#u8 := by scalar_tac
+    subst remaining
+    rw [lookup_receive_key_loop]
+    rw [loop.eq_def]
+    simp [lookup_receive_key_loop.body]
+    intro i h1 _ h3
+    omega
   | succ m ih =>
     intro slot remaining hrem
     have hne : remaining ≠ 0#u8 := by scalar_tac
-    rw [lookup_receive_key_from.eq_def]
-    simp only [hne, if_false, capacity_eq_ok, lift, bind_tc_ok]
+    have hpos : remaining > 0#u8 := by scalar_tac
+    rw [lookup_receive_key_loop]
+    rw [loop.eq_def]
+    simp only [lookup_receive_key_loop.body, hpos, if_true, lift, bind_tc_ok]
     by_cases hcap : 50 ≤ slot.val
     · rw [if_pos (by scalar_tac)]
       exact ⟨_, rfl, by simp, by intro _ i h1 h2 h3; omega⟩
@@ -517,18 +562,28 @@ theorem lookup_receive_key_from_spec (st : RatchetState) (sequence : Std.U64) (h
           have hslot'v : slot'.val = slot.val + 1 := by simpa using hslot'val
           have hrem'v : rem'.val = m := by simp at hrem'val; omega
           obtain ⟨r, hr, hsound, hnone⟩ := ih slot' rem' hrem'v
-          refine ⟨r, hr, ?_, ?_⟩
+          have hr' : loop
+              (fun (slot1, remaining1) => lookup_receive_key_loop.body
+                (UScalar.cast UScalarTy.Usize 50#u64) st sequence slot1 remaining1)
+              (slot', rem') = ok r := by
+            simpa [lookup_receive_key_loop] using hr
+          simp only [lookup_receive_key_loop.body, lift, bind_tc_ok] at hr'
+          rw [hr']
+          refine ⟨r, rfl, ?_, ?_⟩
           · intro j hj
             obtain ⟨h1, h2, h3⟩ := hsound j hj
             exact ⟨by omega, h2, h3⟩
           · intro hrn i h1 h2 h3
             rcases Nat.eq_or_lt_of_le h1 with heq | hlt
-            · rw [← heq]; exact hhit
+            · rw [← heq]
+              exact hhit
             · exact hnone hrn i (by omega) h2 (by omega)
 
 /-- A lookup scans the whole cache: 50 slots starting at slot `0`. -/
 theorem lookup_receive_key_unfold (st : RatchetState) (sequence : Std.U64) :
-    lookup_receive_key st sequence = lookup_receive_key_from st sequence 0#u8 50#u8 := by
+    lookup_receive_key st sequence =
+      lookup_receive_key_loop (UScalar.cast UScalarTy.Usize 50#u64)
+        st sequence 0#u8 50#u8 := by
   have hcast : (UScalar.cast UScalarTy.U8 (UScalar.cast UScalarTy.Usize 50#u64)) = 50#u8 := by
     apply UScalar.eq_of_val_eq; simp_scalar
   simp [lookup_receive_key, capacity_eq_ok, lift, hcast]
@@ -536,7 +591,7 @@ theorem lookup_receive_key_unfold (st : RatchetState) (sequence : Std.U64) :
 /-- Looking up a key never fails. -/
 theorem lookup_receive_key_ok (st : RatchetState) (sequence : Std.U64) (hst : st.Wf) :
     ∃ r, lookup_receive_key st sequence = ok r := by
-  obtain ⟨r, hr, -, -⟩ := lookup_receive_key_from_spec st sequence hst 50 0#u8 50#u8 (by simp)
+  obtain ⟨r, hr, -, -⟩ := lookup_receive_key_loop_spec st sequence hst 50 0#u8 50#u8 (by simp)
   exact ⟨r, by rw [lookup_receive_key_unfold]; exact hr⟩
 
 /-- A lookup that succeeds points at a live cache slot that really holds the requested
@@ -546,7 +601,7 @@ theorem lookup_receive_key_sound (st : RatchetState) (sequence : Std.U64) (slot 
     (h : lookup_receive_key st sequence = ok (core.option.Option.Some slot)) :
     slot.val < st.receive_cache.len.val ∧
       st.receive_cache.entries.val[slot.val]! = sequence := by
-  obtain ⟨r, hr, hsound, -⟩ := lookup_receive_key_from_spec st sequence hst 50 0#u8 50#u8 (by simp)
+  obtain ⟨r, hr, hsound, -⟩ := lookup_receive_key_loop_spec st sequence hst 50 0#u8 50#u8 (by simp)
   rw [lookup_receive_key_unfold, hr] at h
   have : r = core.option.Option.Some slot := by simpa using h
   exact ⟨(hsound slot this).2.1, (hsound slot this).2.2⟩
@@ -560,7 +615,7 @@ theorem lookup_receive_key_complete (st : RatchetState) (sequence : Std.U64) (i 
       st.receive_cache.entries.val[slot.val]! = sequence := by
   have hst' : st.receive_cache.len.val ≤ 50 := hst
   obtain ⟨r, hr, hsound, hnone⟩ :=
-    lookup_receive_key_from_spec st sequence hst 50 0#u8 50#u8 (by simp)
+    lookup_receive_key_loop_spec st sequence hst 50 0#u8 50#u8 (by simp)
   cases r with
   | none => exact absurd hentry (hnone rfl i (by simp) hi (by simp; omega))
   | some j =>

@@ -231,7 +231,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	sender_target_kid: u64,
 	receiver_remote_kid: u64,
 ) {
-	let frames = (0..RECEIVE_GAP_LIMIT + 2)
+	let frames = (0..RECEIVE_GAP_LIMIT + 3)
 		.map(|index| {
 			let plaintext = format!("capacity-message-{index}").into_bytes();
 			let frame = sender
@@ -245,9 +245,9 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	let initial_state = receive_state(receiver, receiver_remote_kid);
 	assert_eq!(initial_state.receive_sequence(), current_seq);
 	assert_eq!(initial_state.receive_cache_len(), 0);
-	let boundary = &frames[RECEIVE_GAP_LIMIT as usize - 1];
+	let boundary = &frames[RECEIVE_GAP_LIMIT as usize];
 	let boundary_seq = crypto_frame_seq(&boundary.1);
-	assert_eq!(boundary_seq, current_seq + RECEIVE_GAP_LIMIT);
+	assert_eq!(boundary_seq, current_seq + RECEIVE_GAP_LIMIT + 1);
 	let corrupted = corrupt_crypto_frame_commitment(&frames[0].1);
 
 	for rejected_seq in [0, boundary_seq + 1, u64::MAX] {
@@ -282,12 +282,9 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	);
 	let boundary_state = receive_state(receiver, receiver_remote_kid);
 	assert_eq!(boundary_state.receive_sequence(), boundary_seq);
-	assert_eq!(
-		boundary_state.receive_cache_len(),
-		RECEIVE_GAP_LIMIT as u8 - 1
-	);
+	assert_eq!(boundary_state.receive_cache_len(), RECEIVE_GAP_LIMIT as u8);
 
-	let distance_two = &frames[RECEIVE_GAP_LIMIT as usize + 1];
+	let distance_two = &frames[RECEIVE_GAP_LIMIT as usize + 2];
 	assert_eq!(crypto_frame_seq(&distance_two.1), boundary_seq + 2);
 	assert!(receiver.decrypt_for_test(&distance_two.1).is_none());
 	assert_eq!(
@@ -304,7 +301,7 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	let after_cached_consumption = receive_state(receiver, receiver_remote_kid);
 	assert_eq!(
 		after_cached_consumption.receive_cache_len(),
-		RECEIVE_GAP_LIMIT as u8 - 2
+		RECEIVE_GAP_LIMIT as u8 - 1
 	);
 
 	assert_eq!(
@@ -316,12 +313,9 @@ fn assert_invalid_future_frames_cannot_grow_receive_cache(
 	);
 	let recovered_state = receive_state(receiver, receiver_remote_kid);
 	assert_eq!(recovered_state.receive_sequence(), boundary_seq + 2);
-	assert_eq!(
-		recovered_state.receive_cache_len(),
-		RECEIVE_GAP_LIMIT as u8 - 1
-	);
+	assert_eq!(recovered_state.receive_cache_len(), RECEIVE_GAP_LIMIT as u8);
 
-	let skipped = &frames[RECEIVE_GAP_LIMIT as usize];
+	let skipped = &frames[RECEIVE_GAP_LIMIT as usize + 1];
 	assert_eq!(
 		receiver.decrypt_for_test(&skipped.1).unwrap().plaintext,
 		skipped.0
@@ -436,7 +430,7 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 	sender_target_kid: u64,
 	receiver_remote_kid: u64,
 ) {
-	let frames = (0..RECEIVE_GAP_LIMIT)
+	let frames = (0..RECEIVE_GAP_LIMIT + 1)
 		.map(|index| {
 			let plaintext = format!("receive-window-message-{index}").into_bytes();
 			let frame = sender
@@ -448,7 +442,7 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 	let first_seq = crypto_frame_seq(&frames[0].1);
 	let boundary_seq = crypto_frame_seq(&frames.last().unwrap().1);
 	let sender_kid = crypto_frame_key_id(&frames[0].1);
-	assert_eq!(boundary_seq - first_seq + 1, RECEIVE_GAP_LIMIT);
+	assert_eq!(boundary_seq - first_seq, RECEIVE_GAP_LIMIT);
 
 	let initial_state = receive_state(receiver, receiver_remote_kid);
 	for len in 0..=CRYPTO_PAYLOAD_OVERHEAD {
@@ -506,10 +500,7 @@ fn assert_receive_window_boundary_survives_rejection_retry_and_replay(
 	);
 	let boundary_state = receive_state(receiver, receiver_remote_kid);
 	assert_eq!(boundary_state.receive_sequence(), boundary_seq);
-	assert_eq!(
-		boundary_state.receive_cache_len(),
-		RECEIVE_GAP_LIMIT as u8 - 1
-	);
+	assert_eq!(boundary_state.receive_cache_len(), RECEIVE_GAP_LIMIT as u8);
 	assert!(receiver.decrypt_for_test(boundary).is_none());
 	assert_eq!(receive_state(receiver, receiver_remote_kid), boundary_state);
 

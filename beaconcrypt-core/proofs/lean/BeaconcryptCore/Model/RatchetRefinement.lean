@@ -1,10 +1,10 @@
-import BeaconcryptCore.RatchetControl
-import BeaconcryptCore.Ratchet
+import BeaconcryptCore.Model.RatchetControl
+import BeaconcryptCore.Model.Ratchet
 
 /-!
 # The generated ratchet logic refines the handwritten bounded symmetric ratchet
 
-`BeaconcryptCore/Ratchet.lean` contains a handwritten, cryptography-aware model of a
+`BeaconcryptCore/Model/Ratchet.lean` contains a handwritten, cryptography-aware model of a
 symmetric single ratchet: a sender chain, a receiver chain, a store of skipped message
 keys bounded by `Ratchet.maxSkip`, authenticated decryption, and a receive step
 (`Ratchet.recvStep`) that is state neutral on every rejection.
@@ -32,15 +32,10 @@ This file connects the two.  It
   message, `receiveMessage` returns the outcome that the handwritten step returns, and
   the resulting concrete state again represents the resulting abstract state;
 * proves the corresponding statement for the send path (`advance_send_refines`);
-* makes the one difference between the two bounds precise.  The generated code
-  tolerates a *gap* of at most `RATCHET_MAX_GAP = 50` sequence numbers, and the gap
-  counts the incoming message itself, so the generated code accepts at most 49
-  outstanding skipped keys, whereas the handwritten model, whose bound counts only the
-  skipped messages, accepts 50.  The main theorem is therefore stated against
-  `Ratchet.recvStepGen 49`, the handwritten step with its bound instantiated to 49, and
-  `recvStepGen_49_eq_recvStep_of_ne_boundary` /
-  `recvStep_accepts_of_boundary` isolate the single boundary case in which the two
-  differ (there the generated code is the stricter of the two).
+* proves the exact bound-50 case: the generated planner charges only retained skipped
+  keys against the cache, while the incoming target is advanced without being cached.
+  Consequently the generated driver refines `Ratchet.recvStep` directly, including a
+  receive with exactly 50 outstanding skipped keys.
 -/
 
 open CoreModels Aeneas
@@ -51,36 +46,11 @@ set_option maxHeartbeats 1000000
 set_option relaxedAutoImplicit false
 set_option autoImplicit false
 
-/-! ## The handwritten step with an explicit bound -/
+/-! ## Handwritten-chain facts -/
 
 namespace Ratchet
 
 variable {CK MK AD PT CT : Type}
-
-/-- `Ratchet.recvStep` with the bound on the number of outstanding skipped keys left as
-a parameter.  For `bound = maxSkip` this is exactly `Ratchet.recvStep`
-(`recvStepGen_maxSkip`). -/
-def recvStepGen (bound : ℕ) (c : Crypto CK MK AD PT CT) (s : RecvState CK MK) (ad : AD)
-    (m : Msg CT) : Except RecvError PT × RecvState CK MK :=
-  match List.lookup m.idx s.skipped with
-  | some mk =>
-      match c.dec mk ad m.ct with
-      | some pt => (.ok pt, { s with skipped := s.skipped.filter (fun p => !(p.1 == m.idx)) })
-      | none => (.error .authFail, s)
-  | none =>
-      if m.idx < s.n then (.error .replay, s)
-      else if bound < (m.idx - s.n) + s.skipped.length then (.error .tooManySkipped, s)
-      else
-        match c.dec (msgKeyAt c s.ck (m.idx - s.n)) ad m.ct with
-        | some pt =>
-            (.ok pt,
-              { ck := chainAt c s.ck (m.idx - s.n + 1),
-                n := m.idx + 1,
-                skipped := s.skipped ++ skipKeys c s.ck s.n (m.idx - s.n) })
-        | none => (.error .authFail, s)
-
-theorem recvStepGen_maxSkip (c : Crypto CK MK AD PT CT) (s : RecvState CK MK) (ad : AD)
-    (m : Msg CT) : recvStepGen maxSkip c s ad m = recvStep c s ad m := rfl
 
 /-- The skipped keys derived from a chain key that is itself `base` steps along the
 session chain: index `base + j`, and the key of message `base + j`. -/
@@ -105,38 +75,6 @@ the session chain is the key of message `a + b`. -/
 theorem msgKeyAt_chainAt (c : Crypto CK MK AD PT CT) (ck : CK) (a b : ℕ) :
     msgKeyAt c (chainAt c ck a) b = msgKeyAt c ck (a + b) := by
   simp [msgKeyAt, chainAt_chainAt]
-
-/-- Away from the boundary case the bounds 49 and `maxSkip = 50` agree. -/
-theorem recvStepGen_49_eq_recvStep_of_ne_boundary (c : Crypto CK MK AD PT CT)
-    (s : RecvState CK MK) (ad : AD) (m : Msg CT)
-    (h : (m.idx - s.n) + s.skipped.length ≠ 50) :
-    recvStepGen 49 c s ad m = recvStep c s ad m := by
-  rw [← recvStepGen_maxSkip]
-  unfold recvStepGen
-  cases hl : List.lookup m.idx s.skipped with
-  | some mk => rfl
-  | none =>
-    by_cases hlt : m.idx < s.n
-    · simp [hlt]
-    · by_cases hb : 49 < (m.idx - s.n) + s.skipped.length
-      · rw [if_neg hlt, if_neg hlt, if_pos hb, if_pos (by simp [maxSkip]; omega)]
-      · rw [if_neg hlt, if_neg hlt, if_neg hb, if_neg (by simp [maxSkip]; omega)]
-
-/-- In the boundary case — exactly 50 keys to hold at once — the handwritten model still
-accepts the message while the generated code rejects it: the generated bound counts the
-incoming message itself, the handwritten one does not. -/
-theorem recvStepGen_49_boundary (c : Crypto CK MK AD PT CT) (s : RecvState CK MK) (ad : AD)
-    (m : Msg CT) (hl : List.lookup m.idx s.skipped = none) (hn : s.n ≤ m.idx)
-    (h : (m.idx - s.n) + s.skipped.length = 50) :
-    recvStepGen 49 c s ad m = (.error .tooManySkipped, s) ∧
-      (recvStep c s ad m).1 ≠ .error .tooManySkipped := by
-  constructor
-  · unfold recvStepGen
-    rw [hl, if_neg (by omega), if_pos (by omega)]
-  · rw [← recvStepGen_maxSkip]
-    unfold recvStepGen
-    rw [hl, if_neg (by omega), if_neg (by simp [maxSkip]; omega)]
-    cases c.dec (msgKeyAt c s.ck (m.idx - s.n)) ad m.ct <;> simp
 
 end Ratchet
 
@@ -166,29 +104,39 @@ def deriveKeys (state : RatchetState) : ℕ → Result (Option RatchetState)
       | core.option.Option.None => ok none
       | core.option.Option.Some _ => deriveKeys adv.state k
 
-/-- One receive step of the generated control plane: plan, derive the missing keys, look
-the key up, and finish with the result of the authenticated decryption.  The derived
-keys are committed only when the message is delivered; on every rejection the state the
-caller keeps is the state it started from. -/
+/-- One receive step of the generated control plane. Cached targets are looked up and
+removed. Future targets derive and cache only the preceding skipped keys, then use
+`advance_receive_target` for the uncached target itself. Private derivations are
+committed only when the message authenticates. -/
 def receiveMessage (state : RatchetState) (target : Std.U64) (authenticated : Bool) :
     Result (RecvOutcome × RatchetState) := do
   let plan ← plan_receive_until state target
   match plan.sequence with
   | core.option.Option.None => ok (RecvOutcome.tooManySkipped, state)
   | core.option.Option.Some tgt =>
-      let derived ← deriveKeys state plan.derivations.val
-      match derived with
-      | none => ok (RecvOutcome.tooManySkipped, state)
-      | some state1 =>
-          let found ← lookup_receive_key state1 tgt
-          match found with
-          | core.option.Option.None => ok (RecvOutcome.replay, state)
-          | core.option.Option.Some slot =>
-              let fin ← finish_receive state1 tgt slot authenticated
-              match fin.disposition with
-              | ReceiveDisposition.Consumed => ok (RecvOutcome.delivered, fin.state)
-              | ReceiveDisposition.Retained => ok (RecvOutcome.authFail, state)
-              | ReceiveDisposition.Missing => ok (RecvOutcome.replay, state)
+      if plan.derivations = 0#u64 then
+        let found ← lookup_receive_key state tgt
+        match found with
+        | core.option.Option.None => ok (RecvOutcome.replay, state)
+        | core.option.Option.Some slot =>
+            let fin ← finish_receive state tgt slot authenticated
+            match fin.disposition with
+            | ReceiveDisposition.Consumed => ok (RecvOutcome.delivered, fin.state)
+            | ReceiveDisposition.Retained => ok (RecvOutcome.authFail, state)
+            | ReceiveDisposition.Missing => ok (RecvOutcome.replay, state)
+      else
+        let derived ← deriveKeys state (plan.derivations.val - 1)
+        match derived with
+        | none => ok (RecvOutcome.tooManySkipped, state)
+        | some state1 =>
+            let advanced ← advance_receive_target state1
+            match advanced.sequence with
+            | core.option.Option.None => ok (RecvOutcome.tooManySkipped, state)
+            | core.option.Option.Some sequence =>
+                if sequence = tgt then
+                  if authenticated then ok (RecvOutcome.delivered, advanced.state)
+                  else ok (RecvOutcome.authFail, state)
+                else ok (RecvOutcome.tooManySkipped, state)
 
 /-! ## The sequence numbers held in the cache -/
 
@@ -485,8 +433,8 @@ theorem receiveMessage_refines (cr : Ratchet.Crypto CK MK AD PT CT) (ck0 : CK)
     (hauth : auth = (cr.dec (Ratchet.msgKeyAt cr ck0 (target.val - 1)) ad ct).isSome) :
     ∃ st',
       receiveMessage st target auth =
-        ok (absOutcome (Ratchet.recvStepGen 49 cr s ad ⟨target.val - 1, ct⟩).1, st') ∧
-      Refines cr ck0 (Ratchet.recvStepGen 49 cr s ad ⟨target.val - 1, ct⟩).2 st' := by
+        ok (absOutcome (Ratchet.recvStep cr s ad ⟨target.val - 1, ct⟩).1, st') ∧
+      Refines cr ck0 (Ratchet.recvStep cr s ad ⟨target.val - 1, ct⟩).2 st' := by
   obtain ⟨hwf, hseq, hlt, hchain, hkeys, hkeys_lt, hnodup, hcache⟩ := h
   have hwf50 : st.receive_cache.len.val ≤ 50 := hwf
   have hlencache : st.receive_cache.len.val = s.skipped.length := by
@@ -513,21 +461,23 @@ theorem receiveMessage_refines (cr : Ratchet.Crypto CK MK AD PT CT) (ck0 : CK)
           ok { state := st, disposition := ReceiveDisposition.Retained } := by
         simp [finish_receive,
           finish_receive_with_removal_retained st target slot hwf hslot hentry]
-      have habs : Ratchet.recvStepGen 49 cr s ad ⟨idx, ct⟩ = (.error .authFail, s) := by
-        simp only [Ratchet.recvStepGen, hl, hdec]
+      have habs : Ratchet.recvStep cr s ad ⟨idx, ct⟩ = (.error .authFail, s) := by
+        simp only [Ratchet.recvStep, hl, hdec]
       refine ⟨st, ?_, (by rw [habs]; exact ⟨hwf, hseq, hlt, hchain, hkeys, hkeys_lt, hnodup, hcache⟩)⟩
-      simp only [receiveMessage, hplan, bind_tc_ok, hzero, deriveKeys, hlook, hauthf, hfin,
+      simp only [receiveMessage, hplan, bind_tc_ok, hzero, hlook, hauthf, hfin,
         habs, absOutcome]
+      simp
     | some pt =>
       have hautht : auth = true := by rw [hauth, ← hkey, hdec]; rfl
       obtain ⟨r, hfin, hdisp, hss, hrs, hlen, hperm⟩ :=
         finish_receive_consumed_cacheSeqs st target slot hwf hslot hentry
-      have habs : Ratchet.recvStepGen 49 cr s ad ⟨idx, ct⟩ =
+      have habs : Ratchet.recvStep cr s ad ⟨idx, ct⟩ =
           (.ok pt, { s with skipped := s.skipped.filter (fun p => !(p.1 == idx)) }) := by
-        simp only [Ratchet.recvStepGen, hl, hdec]
+        simp only [Ratchet.recvStep, hl, hdec]
       refine ⟨r.state, ?_, ?_⟩
-      · simp only [receiveMessage, hplan, bind_tc_ok, hzero, deriveKeys, hlook, hautht, hfin,
+      · simp only [receiveMessage, hplan, bind_tc_ok, hzero, hlook, hautht, hfin,
           hdisp, habs, absOutcome]
+        simp
       · rw [habs]
         refine ⟨?_, ?_, hlt, hchain, ?_, ?_, ?_, ?_⟩
         · show r.state.receive_cache.len.val ≤ 50
@@ -552,41 +502,55 @@ theorem receiveMessage_refines (cr : Ratchet.Crypto CK MK AD PT CT) (ck0 : CK)
         simp at hb
       have hplan := plan_receive_until_replay st target (by omega)
       have hlook := lookup_receive_key_of_not_mem st target hwf hnotmem
-      have habs : Ratchet.recvStepGen 49 cr s ad ⟨idx, ct⟩ = (.error .replay, s) := by
-        simp only [Ratchet.recvStepGen, hl]
+      have habs : Ratchet.recvStep cr s ad ⟨idx, ct⟩ = (.error .replay, s) := by
+        simp only [Ratchet.recvStep, hl]
         rw [if_pos hidxlt]
       refine ⟨st, ?_, (by rw [habs]; exact ⟨hwf, hseq, hlt, hchain, hkeys, hkeys_lt, hnodup, hcache⟩)⟩
-      simp only [receiveMessage, hplan, bind_tc_ok, hzero, deriveKeys, hlook, habs, absOutcome]
+      simp only [receiveMessage, hplan, bind_tc_ok, hzero, hlook, habs, absOutcome]
+      simp
     · rw [Nat.not_lt] at hidxlt
       set gap := idx - s.n with hgapdef
-      by_cases hover : 49 < gap + s.skipped.length
+      by_cases hover : Ratchet.maxSkip < gap + s.skipped.length
       · have hplan : plan_receive_until st target =
             ok { sequence := core.option.Option.None, derivations := 0#u64 } := by
-          by_cases hg : 50 ≤ gap
+          have hover50 : 50 < gap + s.skipped.length := by
+            simpa [Ratchet.maxSkip] using hover
+          by_cases hg : 50 < gap
           · exact plan_receive_until_reject_of_gap_gt st target (by omega)
           · exact plan_receive_until_reject_of_cache_full st target (by omega) (by omega)
               (by omega)
-        have habs : Ratchet.recvStepGen 49 cr s ad ⟨idx, ct⟩ = (.error .tooManySkipped, s) := by
-          simp only [Ratchet.recvStepGen, hl]
+        have habs : Ratchet.recvStep cr s ad ⟨idx, ct⟩ = (.error .tooManySkipped, s) := by
+          simp only [Ratchet.recvStep, hl]
           rw [if_neg (by omega), if_pos (by omega)]
         refine ⟨st, ?_, (by rw [habs]; exact ⟨hwf, hseq, hlt, hchain, hkeys, hkeys_lt, hnodup, hcache⟩)⟩
         simp only [receiveMessage, hplan, bind_tc_ok, habs, absOutcome]
       · rw [Nat.not_lt] at hover
+        have hover50 : gap + s.skipped.length ≤ 50 := by
+          simpa [Ratchet.maxSkip] using hover
         obtain ⟨d, hplan, hdval⟩ :=
           plan_receive_until_accept st target (by omega) (by omega)
         have hdv : d.val = gap + 1 := by omega
-        obtain ⟨st1, hderive, hrs1, hss1, hlen1, hcache1⟩ :=
-          deriveKeys_spec st d.val (by omega) (by omega)
-        have hst1wf : st1.Wf := by
-          show st1.receive_cache.len.val ≤ 50
+        have hdne : d ≠ 0#u64 := by
+          intro hd0
+          have hd0val := congrArg UScalar.val hd0
+          simp at hd0val
           omega
-        have hmemc : target.val ∈ cacheSeqs st1.receive_cache := by
-          rw [hcache1]
-          refine List.mem_append_right _ (List.mem_map.2 ⟨gap, ?_, ?_⟩)
-          · simp only [List.mem_range]; omega
-          · omega
-        obtain ⟨slot, hlook, hslot, hentry⟩ :=
-          lookup_receive_key_of_mem st1 target hst1wf hmemc
+        have hdpred : d.val - 1 = gap := by omega
+        obtain ⟨st1, hderive, hrs1, hss1, hlen1, hcache1⟩ :=
+          deriveKeys_spec st gap (by omega) (by omega)
+        have hrs1idx : st1.receive_sequence.val = idx := by omega
+        have hst1max : st1.receive_sequence ≠ core.num.U64.MAX := by
+          intro hmax
+          have hmaxval := congrArg UScalar.val hmax
+          simp [core.num.U64.MAX, U64.rMax] at hmaxval
+          omega
+        obtain ⟨advanced, hadvance, hrsAdvanced, hssAdvanced, hcacheAdvanced,
+          hsequence⟩ := advance_receive_target_ok st1 hst1max
+        have hrsTarget : advanced.state.receive_sequence = target := by
+          apply UScalar.eq_of_val_eq
+          omega
+        have hsequenceTarget : advanced.sequence = core.option.Option.Some target := by
+          rw [hsequence, hrsTarget]
         have hmk : Ratchet.msgKeyAt cr s.ck gap = Ratchet.msgKeyAt cr ck0 idx := by
           rw [hchain, Ratchet.msgKeyAt_chainAt]
           congr 1
@@ -594,43 +558,39 @@ theorem receiveMessage_refines (cr : Ratchet.Crypto CK MK AD PT CT) (ck0 : CK)
         cases hdec : cr.dec (Ratchet.msgKeyAt cr s.ck gap) ad ct with
         | none =>
           have hauthf : auth = false := by rw [hauth, ← hmk, hdec]; rfl
-          have hfin : finish_receive st1 target slot false =
-              ok { state := st1, disposition := ReceiveDisposition.Retained } := by
-            simp [finish_receive,
-              finish_receive_with_removal_retained st1 target slot hst1wf hslot hentry]
-          have habs : Ratchet.recvStepGen 49 cr s ad ⟨idx, ct⟩ = (.error .authFail, s) := by
-            simp only [Ratchet.recvStepGen, hl]
+          have habs : Ratchet.recvStep cr s ad ⟨idx, ct⟩ = (.error .authFail, s) := by
+            simp only [Ratchet.recvStep, hl]
             rw [if_neg (by omega), if_neg (by omega), ← hgapdef, hdec]
           refine ⟨st, ?_, (by rw [habs]; exact ⟨hwf, hseq, hlt, hchain, hkeys, hkeys_lt, hnodup, hcache⟩)⟩
-          simp only [receiveMessage, hplan, bind_tc_ok, hderive, hlook, hauthf, hfin, habs,
-            absOutcome]
+          simp only [receiveMessage, hplan, bind_tc_ok, if_neg hdne, hdpred, hderive,
+            hadvance, hsequenceTarget, hauthf, habs, absOutcome]
+          simp
         | some pt =>
           have hautht : auth = true := by rw [hauth, ← hmk, hdec]; rfl
-          obtain ⟨r, hfin, hdisp, hss, hrs, hlen, hperm⟩ :=
-            finish_receive_consumed_cacheSeqs st1 target slot hst1wf hslot hentry
-          have habs : Ratchet.recvStepGen 49 cr s ad ⟨idx, ct⟩ =
+          have habs : Ratchet.recvStep cr s ad ⟨idx, ct⟩ =
               (.ok pt, { ck := Ratchet.chainAt cr s.ck (gap + 1), n := idx + 1,
                          skipped := s.skipped ++ Ratchet.skipKeys cr s.ck s.n gap }) := by
-            simp only [Ratchet.recvStepGen, hl]
+            simp only [Ratchet.recvStep, hl]
             rw [if_neg (by omega), if_neg (by omega), ← hgapdef, hdec]
-          refine ⟨r.state, ?_, ?_⟩
-          · simp only [receiveMessage, hplan, bind_tc_ok, hderive, hlook, hautht, hfin, hdisp,
-              habs, absOutcome]
+          refine ⟨advanced.state, ?_, ?_⟩
+          · simp only [receiveMessage, hplan, bind_tc_ok, if_neg hdne, hdpred, hderive,
+              hadvance, hsequenceTarget, hautht, habs, absOutcome]
+            simp
           · rw [habs]
-            have hlen1' : st1.receive_cache.len.val = st.receive_cache.len.val + (gap + 1) := by
-              rw [hlen1, hdv]
-            have hrlen : r.state.receive_cache.len.val = st.receive_cache.len.val + gap := by
-              rw [hlen, hlen1']; omega
-            have hrsv : r.state.receive_sequence.val = idx + 1 := by
-              rw [hrs, hrs1, hdv]; omega
+            have hlenAdvanced : advanced.state.receive_cache.len.val =
+                st.receive_cache.len.val + gap := by
+              rw [hcacheAdvanced, hlen1]
             have hsk : Ratchet.skipKeys cr s.ck s.n gap
                 = (List.range gap).map
                     (fun j => (s.n + j, Ratchet.msgKeyAt cr ck0 (s.n + j))) := by
               rw [hchain]
               exact Ratchet.skipKeys_eq_map_range cr ck0 s.n gap
-            refine ⟨?_, hrsv, ?_, ?_, ?_, ?_, ?_, ?_⟩
-            · show r.state.receive_cache.len.val ≤ 50
+            refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+            · show advanced.state.receive_cache.len.val ≤ 50
+              rw [hlenAdvanced, hlencache]
               omega
+            · have hrsTargetVal := congrArg UScalar.val hrsTarget
+              simpa only using hrsTargetVal.trans htv
             · show idx + 1 < 2 ^ 64
               omega
             · show Ratchet.chainAt cr s.ck (gap + 1) = Ratchet.chainAt cr ck0 (idx + 1)
@@ -665,23 +625,9 @@ theorem receiveMessage_refines (cr : Ratchet.Crypto CK MK AD PT CT) (ck0 : CK)
                 simp only [List.mem_range, Function.comp_apply] at hj hj2
                 have := hkeys_lt p hp
                 omega
-            · show (cacheSeqs r.state.receive_cache).Perm
+            · show (cacheSeqs advanced.state.receive_cache).Perm
                 ((s.skipped ++ Ratchet.skipKeys cr s.ck s.n gap).map (fun p => p.1 + 1))
-              rw [List.map_append, hsk, List.map_map]
-              set L := cacheSeqs st.receive_cache ++
-                (List.range gap).map (fun j => st.receive_sequence.val + 1 + j) with hL
-              have h1 : cacheSeqs st1.receive_cache = L ++ [target.val] := by
-                rw [hcache1, hdv, List.range_succ, List.map_append, hL, List.append_assoc]
-                congr 2
-                simp only [List.map_cons, List.map_nil]
-                congr 1
-                omega
-              have h2 : ((cacheSeqs st1.receive_cache).erase target.val).Perm L := by
-                rw [h1]
-                refine (List.Perm.erase target.val
-                  (List.perm_append_singleton target.val L)).trans ?_
-                simp
-              refine (hperm.trans h2).trans ?_
+              rw [hcacheAdvanced, hcache1, List.map_append, hsk, List.map_map]
               refine List.Perm.append hcache ?_
               apply List.Perm.of_eq
               apply List.map_congr_left
@@ -707,52 +653,59 @@ theorem receiveMessage_state_neutral (st : RatchetState) (target : Std.U64) (aut
     | some tgt =>
       rw [hsq] at h
       simp only at h
-      cases hd : deriveKeys st plan.derivations.val with
-      | fail e => rw [hd] at h; simp at h
-      | div => rw [hd] at h; simp at h
-      | ok derived =>
-        rw [hd] at h
-        simp only [bind_tc_ok] at h
-        cases hderived : derived with
-        | none => rw [hderived] at h; simp at h; exact h.2.symm
-        | some st1 =>
-          rw [hderived] at h
-          simp only at h
-          cases hlk : lookup_receive_key st1 tgt with
-          | fail e => rw [hlk] at h; simp at h
-          | div => rw [hlk] at h; simp at h
-          | ok found =>
-            rw [hlk] at h
-            simp only [bind_tc_ok] at h
-            cases hf : found with
-            | none => rw [hf] at h; simp at h; exact h.2.symm
-            | some slot =>
-              rw [hf] at h
-              simp only at h
-              cases hfin : finish_receive st1 tgt slot auth with
-              | fail e => rw [hfin] at h; simp at h
-              | div => rw [hfin] at h; simp at h
-              | ok fin =>
-                rw [hfin] at h
-                simp only [bind_tc_ok] at h
-                cases hdisp : fin.disposition with
-                | Consumed => rw [hdisp] at h; simp at h; exact absurd h.1.symm ho
-                | Retained => rw [hdisp] at h; simp at h; exact h.2.symm
-                | Missing => rw [hdisp] at h; simp at h; exact h.2.symm
-
-/-- **Refinement of the handwritten ratchet as stated, bound 50 included.**  Outside the
-single boundary case of `Ratchet.recvStepGen_49_boundary`, the generated driver agrees
-with `Ratchet.recvStep` itself. -/
-theorem receiveMessage_refines_recvStep (cr : Ratchet.Crypto CK MK AD PT CT) (ck0 : CK)
-    (s : Ratchet.RecvState CK MK) (st : RatchetState) (h : Refines cr ck0 s st)
-    (target : Std.U64) (htarget : 1 ≤ target.val) (ad : AD) (ct : CT) (auth : Bool)
-    (hauth : auth = (cr.dec (Ratchet.msgKeyAt cr ck0 (target.val - 1)) ad ct).isSome)
-    (hne : (target.val - 1 - s.n) + s.skipped.length ≠ 50) :
-    ∃ st',
-      receiveMessage st target auth =
-        ok (absOutcome (Ratchet.recvStep cr s ad ⟨target.val - 1, ct⟩).1, st') ∧
-      Refines cr ck0 (Ratchet.recvStep cr s ad ⟨target.val - 1, ct⟩).2 st' := by
-  rw [← Ratchet.recvStepGen_49_eq_recvStep_of_ne_boundary cr s ad ⟨target.val - 1, ct⟩ hne]
-  exact receiveMessage_refines cr ck0 s st h target htarget ad ct auth hauth
+      by_cases hzero : plan.derivations = 0#u64
+      · rw [if_pos hzero] at h
+        cases hlk : lookup_receive_key st tgt with
+        | fail e => rw [hlk] at h; simp at h
+        | div => rw [hlk] at h; simp at h
+        | ok found =>
+          rw [hlk] at h
+          simp only [bind_tc_ok] at h
+          cases hf : found with
+          | none => rw [hf] at h; simp at h; exact h.2.symm
+          | some slot =>
+            rw [hf] at h
+            simp only at h
+            cases hfin : finish_receive st tgt slot auth with
+            | fail e => rw [hfin] at h; simp at h
+            | div => rw [hfin] at h; simp at h
+            | ok fin =>
+              rw [hfin] at h
+              simp only [bind_tc_ok] at h
+              cases hdisp : fin.disposition with
+              | Consumed => rw [hdisp] at h; simp at h; exact absurd h.1.symm ho
+              | Retained => rw [hdisp] at h; simp at h; exact h.2.symm
+              | Missing => rw [hdisp] at h; simp at h; exact h.2.symm
+      · rw [if_neg hzero] at h
+        cases hd : deriveKeys st (plan.derivations.val - 1) with
+        | fail e => rw [hd] at h; simp at h
+        | div => rw [hd] at h; simp at h
+        | ok derived =>
+          rw [hd] at h
+          simp only [bind_tc_ok] at h
+          cases hderived : derived with
+          | none => rw [hderived] at h; simp at h; exact h.2.symm
+          | some st1 =>
+            rw [hderived] at h
+            simp only at h
+            cases hadv : advance_receive_target st1 with
+            | fail e => rw [hadv] at h; simp at h
+            | div => rw [hadv] at h; simp at h
+            | ok advanced =>
+              rw [hadv] at h
+              simp only [bind_tc_ok] at h
+              cases hsq' : advanced.sequence with
+              | none => rw [hsq'] at h; simp at h; exact h.2.symm
+              | some sequence =>
+                rw [hsq'] at h
+                simp only at h
+                by_cases heq : sequence = tgt
+                · rw [if_pos heq] at h
+                  cases hauth : auth
+                  · rw [hauth] at h; simp at h; exact h.2.symm
+                  · rw [hauth] at h; simp at h; exact absurd h.1.symm ho
+                · rw [if_neg heq] at h
+                  simp at h
+                  exact h.2.symm
 
 end beaconcrypt_core.ratchet.control

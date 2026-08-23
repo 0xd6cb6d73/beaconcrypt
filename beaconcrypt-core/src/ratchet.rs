@@ -8,10 +8,14 @@ mod control;
 mod refined;
 
 pub use concrete::{
-	ConcreteRatchetKernel, ConcreteRatchetRestore, RatchetKdfExecutor, concrete_open_and_finish,
-	concrete_restore_receive_key, concrete_seal_next, derive_ratchet_step, finish_concrete_restore,
-	start_concrete_restore,
+	ConcreteRatchetKernel, ConcreteRatchetRestore, ReceiveEffect, ReceiveKdf, ReceiveOpen, SendKdf,
+	SendSeal, SendStart, begin_receive, begin_send, concrete_restore_receive_key,
+	finish_concrete_restore, start_concrete_restore,
 };
+
+#[cfg(any(test, feature = "test-utils"))]
+#[doc(hidden)]
+pub use concrete::{ReceiveAdvanceEffect, ReceiveAdvanceKdf, begin_receive_advance};
 pub use control::{
 	PeerRatchetState, PeerSendAdvance, RATCHET_MAX_GAP, RECEIVE_CACHE_CAPACITY, RatchetRestore,
 	RatchetState, ReceiveAdvance, ReceiveDisposition, ReceiveFinish, ReceiveFinishWithRemoval,
@@ -21,23 +25,22 @@ pub use control::{
 };
 pub use refined::{
 	CachedReceiveKey, RatchetStep, RefinedRatchet, RefinedRatchetRestore, finish_refined_restore,
-	refined_open_and_finish, refined_restore_receive_key, refined_seal_next, start_refined_restore,
+	refined_restore_receive_key, start_refined_restore,
 };
 
 #[allow(unused_imports)]
 pub(crate) use control::{
-	advance_receive, advance_send, advance_send_for_peer, finish_receive,
+	advance_receive, advance_receive_target, advance_send, advance_send_for_peer, finish_receive,
 	finish_receive_with_removal, finish_send, lookup_receive_key, plan_receive_until,
 };
 #[allow(unused_imports)]
+pub(crate) use refined::refined_receive_key;
+
+#[cfg(test)]
 pub(crate) use refined::{
 	RefinedSendKey, refined_advance_receive, refined_advance_receive_until, refined_advance_send,
-	refined_finish_receive, refined_finish_send, refined_receive_key,
+	refined_finish_receive, refined_finish_send, refined_open_and_finish, refined_seal_next,
 };
-
-#[cfg(any(test, feature = "test-utils"))]
-#[doc(hidden)]
-pub use concrete::concrete_advance_receive_until;
 
 #[cfg(test)]
 use refined::{
@@ -182,6 +185,27 @@ impl SymmetricRatchetKdfRequest {
 	}
 }
 
+/// Fixed-width response to one core-owned symmetric-ratchet KDF request.
+///
+/// Keeping this response distinct from the initial 64-byte response prevents
+/// cross-phase width confusion. The type does not prove which pending request
+/// produced the bytes; request/response provenance and cryptographic correctness
+/// remain obligations of the external interpreter.
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
+pub struct RatchetKdfResponse {
+	bytes: [u8; RATCHET_KDF_OUTPUT_SIZE],
+}
+
+impl RatchetKdfResponse {
+	pub const fn from_bytes(bytes: [u8; RATCHET_KDF_OUTPUT_SIZE]) -> Self {
+		Self { bytes }
+	}
+
+	pub const fn as_bytes(&self) -> &[u8; RATCHET_KDF_OUTPUT_SIZE] {
+		&self.bytes
+	}
+}
+
 /// Proof-visible owned partition of one symmetric-ratchet HKDF expansion.
 pub struct RatchetKdfOutput {
 	key: RatchetKey,
@@ -229,19 +253,20 @@ mod tests {
 
 	use super::{
 		CachedReceiveKey, ConcreteRatchetKernel, PeerRatchetState, PendingReceive, PreparedReceive,
-		RATCHET_KDF_OUTPUT_SIZE, RATCHET_MAX_GAP, RECEIVE_CACHE_CAPACITY, RatchetChain, RatchetKey,
-		RatchetMaterial, RatchetNonce, RatchetState, RatchetStep, ReceiveDisposition,
-		RefinedRatchet, RefinedSendKey, SYM_RATCHET_INFO, SendKey, SequenceCache,
-		SymmetricRatchetKdfRequest, advance_receive, advance_send, advance_send_for_peer,
-		concrete_open_and_finish, derive_ratchet_step, empty_material_slots, finish_receive,
-		finish_receive_with_removal, finish_refined_restore, finish_restore, finish_send,
-		lookup_receive_key, pending_receive_is_valid, pending_receive_slots_are_valid,
-		plan_receive_until, prepare_receive, publish_future_receive, publish_future_receive_slots,
-		receive_control_prefix_matches, refined_advance_receive, refined_advance_receive_until,
-		refined_advance_send, refined_finish_receive, refined_finish_send, refined_open_and_finish,
-		refined_receive_key, refined_restore_receive_key, refined_seal_next,
-		replace_ratchet_for_peer, restore_receive_key, restore_receive_key_with_slot,
-		split_ratchet_kdf_output, start_refined_restore, start_restore,
+		RATCHET_KDF_OUTPUT_SIZE, RATCHET_MAX_GAP, RECEIVE_CACHE_CAPACITY, RatchetChain,
+		RatchetKdfResponse, RatchetKey, RatchetMaterial, RatchetNonce, RatchetState, RatchetStep,
+		ReceiveDisposition, ReceiveEffect, ReceiveOpen, RefinedRatchet, RefinedSendKey,
+		SYM_RATCHET_INFO, SendKey, SequenceCache, SymmetricRatchetKdfRequest, advance_receive,
+		advance_receive_target, advance_send, advance_send_for_peer, begin_receive, begin_send,
+		empty_material_slots, finish_receive, finish_receive_with_removal, finish_refined_restore,
+		finish_restore, finish_send, lookup_receive_key, pending_receive_is_valid,
+		pending_receive_slots_are_valid, plan_receive_until, prepare_receive,
+		publish_future_receive, publish_future_receive_slots, receive_control_prefix_matches,
+		refined_advance_receive, refined_advance_receive_until, refined_advance_send,
+		refined_finish_receive, refined_finish_send, refined_open_and_finish, refined_receive_key,
+		refined_restore_receive_key, refined_seal_next, replace_ratchet_for_peer,
+		restore_receive_key, restore_receive_key_with_slot, split_ratchet_kdf_output,
+		start_refined_restore, start_restore,
 	};
 
 	#[test]
@@ -411,11 +436,209 @@ mod tests {
 	#[test]
 	fn concrete_ratchet_step_passes_the_exact_old_chain_to_the_opaque_kdf() {
 		let old_chain = core::array::from_fn::<_, 32, _>(|index| index as u8);
-		let stepped = derive_ratchet_step(&RatchetChain::from_bytes(old_chain), test_ratchet_kdf);
+		let kernel = ConcreteRatchetKernel::new(
+			RatchetChain::from_bytes(old_chain),
+			RatchetChain::from_bytes([0; super::RATCHET_CHAIN_SIZE]),
+		);
+		let super::SendStart::SendKdfRequested(kdf) = begin_send(kernel, ()) else {
+			panic!("fresh send unexpectedly exhausted");
+		};
+		assert_eq!(kdf.request().input(), &old_chain);
+		let response = RatchetKdfResponse::from_bytes(test_ratchet_kdf(kdf.request()));
+		let seal = kdf.resume(response);
 
-		assert_eq!(stepped.chain.as_bytes(), &old_chain);
-		assert_eq!(stepped.material.key().as_bytes(), &old_chain);
-		assert_eq!(stepped.material.nonce().as_bytes(), &old_chain[0..12]);
+		assert_eq!(seal.material().key().as_bytes(), &old_chain);
+		assert_eq!(seal.material().nonce().as_bytes(), &old_chain[0..12]);
+		let (kernel, _) = seal.finish::<()>(None);
+		assert_eq!(kernel.send_chain().as_bytes(), &old_chain);
+	}
+
+	fn drive_receive_to_open<Context>(mut effect: ReceiveEffect<Context>) -> ReceiveOpen<Context> {
+		loop {
+			effect = match effect {
+				ReceiveEffect::ReceiveRejected { .. } => {
+					panic!("admitted receive unexpectedly rejected");
+				}
+				ReceiveEffect::ReceiveKdfRequested(kdf) => {
+					let response = RatchetKdfResponse::from_bytes(test_ratchet_kdf(kdf.request()));
+					kdf.resume(response)
+				}
+				ReceiveEffect::ReceiveOpenRequested(open) => return open,
+			};
+		}
+	}
+
+	#[test]
+	fn concrete_send_failure_keeps_the_advanced_kernel() {
+		let send_chain = [0x31; super::RATCHET_CHAIN_SIZE];
+		let receive_chain = [0x52; super::RATCHET_CHAIN_SIZE];
+		let kernel = ConcreteRatchetKernel::new(
+			RatchetChain::from_bytes(send_chain),
+			RatchetChain::from_bytes(receive_chain),
+		);
+		let super::SendStart::SendKdfRequested(kdf) = begin_send(kernel, 77u64) else {
+			panic!("fresh send unexpectedly exhausted");
+		};
+		assert_eq!(kdf.request().input(), &send_chain);
+		let response = RatchetKdfResponse::from_bytes(test_ratchet_kdf(kdf.request()));
+		let seal = kdf.resume(response);
+		assert_eq!(seal.sequence(), 1);
+		assert_eq!(seal.context(), &77);
+		let (kernel, output) = seal.finish::<()>(None);
+
+		assert!(output.is_none());
+		assert_eq!(kernel.send_sequence(), 1);
+		assert_eq!(kernel.receive_sequence(), 0);
+		assert_eq!(kernel.send_chain().as_bytes(), &send_chain);
+		assert_eq!(kernel.receive_chain().as_bytes(), &receive_chain);
+	}
+
+	#[test]
+	fn concrete_effect_cancellation_and_rejection_restore_the_entry_kernel() {
+		let send_chain = [0x31; super::RATCHET_CHAIN_SIZE];
+		let receive_chain = [0x52; super::RATCHET_CHAIN_SIZE];
+		let kernel = ConcreteRatchetKernel::new(
+			RatchetChain::from_bytes(send_chain),
+			RatchetChain::from_bytes(receive_chain),
+		);
+		let super::SendStart::SendKdfRequested(send) = begin_send(kernel, 71u64) else {
+			panic!("fresh send unexpectedly exhausted");
+		};
+		let (kernel, context) = send.cancel();
+		assert_eq!(context, 71);
+		assert_eq!(kernel.send_sequence(), 0);
+		assert_eq!(kernel.receive_sequence(), 0);
+		assert_eq!(kernel.send_chain().as_bytes(), &send_chain);
+		assert_eq!(kernel.receive_chain().as_bytes(), &receive_chain);
+
+		let ReceiveEffect::ReceiveKdfRequested(receive) = begin_receive(kernel, 3, 72u64) else {
+			panic!("future receive unexpectedly skipped its KDF phase");
+		};
+		let (kernel, context) = receive.cancel();
+		assert_eq!(context, 72);
+		assert_eq!(kernel.send_sequence(), 0);
+		assert_eq!(kernel.receive_sequence(), 0);
+		assert_eq!(kernel.receive_cache_len(), 0);
+		assert_eq!(kernel.send_chain().as_bytes(), &send_chain);
+		assert_eq!(kernel.receive_chain().as_bytes(), &receive_chain);
+
+		let open = drive_receive_to_open(begin_receive(kernel, 3, 73u64));
+		let (kernel, context) = open.reject();
+		assert_eq!(context, 73);
+		assert_eq!(kernel.send_sequence(), 0);
+		assert_eq!(kernel.receive_sequence(), 0);
+		assert_eq!(kernel.receive_cache_len(), 0);
+		assert_eq!(kernel.send_chain().as_bytes(), &send_chain);
+		assert_eq!(kernel.receive_chain().as_bytes(), &receive_chain);
+	}
+
+	#[test]
+	fn concrete_receive_effect_publishes_only_after_open_success() {
+		let send_chain = [0x31; super::RATCHET_CHAIN_SIZE];
+		let receive_chain = [0x52; super::RATCHET_CHAIN_SIZE];
+		let kernel = ConcreteRatchetKernel::new(
+			RatchetChain::from_bytes(send_chain),
+			RatchetChain::from_bytes(receive_chain),
+		);
+		let open = drive_receive_to_open(begin_receive(kernel, 3, 91u64));
+		assert_eq!(open.sequence(), 3);
+		assert_eq!(open.context(), &91);
+		assert!(open.material().is_some());
+		let (kernel, rejected) = open.finish::<u64>(None);
+
+		assert!(rejected.is_none());
+		assert_eq!(kernel.receive_sequence(), 0);
+		assert_eq!(kernel.receive_cache_len(), 0);
+		assert_eq!(kernel.receive_chain().as_bytes(), &receive_chain);
+
+		let open = drive_receive_to_open(begin_receive(kernel, 3, 92u64));
+		let (kernel, accepted) = open.finish(Some(123u64));
+		assert_eq!(accepted, Some(123));
+		assert_eq!(kernel.receive_sequence(), 3);
+		assert_eq!(kernel.receive_cache_len(), 2);
+		assert_eq!(kernel.receive_entry_at(0).map(|entry| entry.0), Some(1));
+		assert_eq!(kernel.receive_entry_at(1).map(|entry| entry.0), Some(2));
+
+		let cached = drive_receive_to_open(begin_receive(kernel, 1, 93u64));
+		assert_eq!(cached.sequence(), 1);
+		assert!(cached.material().is_some());
+		let (kernel, accepted) = cached.finish(Some(456u64));
+		assert_eq!(accepted, Some(456));
+		assert_eq!(kernel.receive_sequence(), 3);
+		assert_eq!(kernel.receive_cache_len(), 1);
+		assert_eq!(kernel.receive_entry_at(0).map(|entry| entry.0), Some(2));
+	}
+
+	#[test]
+	fn concrete_receive_accepts_fifty_skipped_keys_without_caching_the_target() {
+		let initial_chain = [0x52; super::RATCHET_CHAIN_SIZE];
+		let kernel = ConcreteRatchetKernel::new(
+			RatchetChain::from_bytes([0x31; super::RATCHET_CHAIN_SIZE]),
+			RatchetChain::from_bytes(initial_chain),
+		);
+		let boundary = RATCHET_MAX_GAP + 1;
+		let mut derivations = 0u64;
+		let mut effect = begin_receive(kernel, boundary, ());
+		let open = loop {
+			effect = match effect {
+				ReceiveEffect::ReceiveRejected { .. } => {
+					panic!("fifty skipped keys must be admitted")
+				}
+				ReceiveEffect::ReceiveKdfRequested(kdf) => {
+					derivations += 1;
+					let response = RatchetKdfResponse::from_bytes(test_ratchet_kdf(kdf.request()));
+					kdf.resume(response)
+				}
+				ReceiveEffect::ReceiveOpenRequested(open) => break open,
+			};
+		};
+
+		assert_eq!(derivations, RATCHET_MAX_GAP + 1);
+		assert_eq!(open.sequence(), boundary);
+		let (kernel, opened) = open.finish(Some(()));
+		assert_eq!(opened, Some(()));
+		assert_eq!(kernel.receive_sequence(), boundary);
+		assert_eq!(kernel.receive_cache_len() as usize, RECEIVE_CACHE_CAPACITY);
+		for slot in 0..RECEIVE_CACHE_CAPACITY as u8 {
+			assert_eq!(
+				kernel.receive_entry_at(slot).map(|entry| entry.0),
+				Some(slot as u64 + 1)
+			);
+		}
+		assert!(
+			(0..kernel.receive_cache_len())
+				.all(|slot| kernel.receive_entry_at(slot).unwrap().0 != boundary)
+		);
+
+		// A full skipped-key cache does not block the separately derived next target.
+		let next = drive_receive_to_open(begin_receive(kernel, boundary + 1, ()));
+		assert_eq!(next.sequence(), boundary + 1);
+		let (kernel, opened) = next.finish(Some(()));
+		assert_eq!(opened, Some(()));
+		assert_eq!(kernel.receive_sequence(), boundary + 1);
+		assert_eq!(kernel.receive_cache_len() as usize, RECEIVE_CACHE_CAPACITY);
+	}
+
+	#[test]
+	fn concrete_receive_accepts_fifty_skipped_keys_at_counter_exhaustion() {
+		let entry_sequence = u64::MAX - (RATCHET_MAX_GAP + 1);
+		let kernel = ConcreteRatchetKernel::from_counters(
+			0,
+			entry_sequence,
+			RatchetChain::from_bytes([0x31; super::RATCHET_CHAIN_SIZE]),
+			RatchetChain::from_bytes([0x52; super::RATCHET_CHAIN_SIZE]),
+		);
+		let open = drive_receive_to_open(begin_receive(kernel, u64::MAX, ()));
+		assert_eq!(open.sequence(), u64::MAX);
+		let (kernel, opened) = open.finish(Some(()));
+
+		assert_eq!(opened, Some(()));
+		assert_eq!(kernel.receive_sequence(), u64::MAX);
+		assert_eq!(kernel.receive_cache_len() as usize, RECEIVE_CACHE_CAPACITY);
+		assert!(
+			(0..kernel.receive_cache_len())
+				.all(|slot| kernel.receive_entry_at(slot).unwrap().0 != u64::MAX)
+		);
 	}
 
 	#[test]
@@ -425,10 +648,9 @@ mod tests {
 		let worker = thread::Builder::new()
 			.stack_size(STACK_SIZE)
 			.spawn(move || {
-				let mut state = ConcreteRatchetKernel::new(
+				let state = ConcreteRatchetKernel::new(
 					RatchetChain::from_bytes(initial_chain),
 					RatchetChain::from_bytes(initial_chain),
-					test_ratchet_kdf,
 				);
 
 				fn reject_open(
@@ -442,12 +664,26 @@ mod tests {
 				}
 
 				let context = (Cell::new(0), Cell::new(None));
-				assert_eq!(
-					concrete_open_and_finish(&mut state, RATCHET_MAX_GAP, &context, reject_open,),
-					None
-				);
+				let mut effect = begin_receive(state, RATCHET_MAX_GAP + 1, &context);
+				let state = loop {
+					effect = match effect {
+						ReceiveEffect::ReceiveRejected { kernel, .. } => break kernel,
+						ReceiveEffect::ReceiveKdfRequested(kdf) => {
+							let response =
+								RatchetKdfResponse::from_bytes(test_ratchet_kdf(kdf.request()));
+							kdf.resume(response)
+						}
+						ReceiveEffect::ReceiveOpenRequested(open) => {
+							let material = open.material().expect("prepared material");
+							let opened = reject_open(material, open.sequence(), open.context());
+							let (kernel, result) = open.finish(opened);
+							assert!(result.is_none());
+							break kernel;
+						}
+					};
+				};
 				assert_eq!(context.0.get(), 1);
-				assert_eq!(context.1.get(), Some(RATCHET_MAX_GAP));
+				assert_eq!(context.1.get(), Some(RATCHET_MAX_GAP + 1));
 				assert_eq!(state.send_sequence(), 0);
 				assert_eq!(state.receive_sequence(), 0);
 				assert_eq!(state.receive_cache_len(), 0);
@@ -581,14 +817,40 @@ mod tests {
 	#[test]
 	fn receive_plan_enforces_gap_and_capacity_without_mutation() {
 		let state = RatchetState::default();
-		let boundary = plan_receive_until(state, RATCHET_MAX_GAP);
-		let rejected = plan_receive_until(state, RATCHET_MAX_GAP + 1);
+		let boundary = plan_receive_until(state, RATCHET_MAX_GAP + 1);
+		let rejected = plan_receive_until(state, RATCHET_MAX_GAP + 2);
 
-		assert_eq!(boundary.sequence, Some(RATCHET_MAX_GAP));
-		assert_eq!(boundary.derivations, RATCHET_MAX_GAP);
+		assert_eq!(boundary.sequence, Some(RATCHET_MAX_GAP + 1));
+		assert_eq!(boundary.derivations, RATCHET_MAX_GAP + 1);
 		assert_eq!(rejected.sequence, None);
 		assert_eq!(rejected.derivations, 0);
 		assert_eq!(state, RatchetState::default());
+
+		let full = execute_receive_plan(state, RATCHET_MAX_GAP);
+		assert_eq!(
+			plan_receive_until(full, RATCHET_MAX_GAP + 1).sequence,
+			Some(RATCHET_MAX_GAP + 1)
+		);
+		assert_eq!(plan_receive_until(full, RATCHET_MAX_GAP + 2).sequence, None);
+	}
+
+	#[test]
+	fn receive_target_advance_does_not_allocate_a_cache_slot() {
+		let state = execute_receive_plan(RatchetState::default(), RATCHET_MAX_GAP);
+		let advanced = advance_receive_target(state);
+
+		assert_eq!(advanced.sequence, Some(RATCHET_MAX_GAP + 1));
+		assert_eq!(advanced.state.receive_sequence(), RATCHET_MAX_GAP + 1);
+		assert_eq!(advanced.state.receive_cache, state.receive_cache);
+		assert_eq!(
+			advanced.state.receive_cache_len() as usize,
+			RECEIVE_CACHE_CAPACITY
+		);
+
+		let exhausted_state = RatchetState::from_counters(7, u64::MAX);
+		let exhausted = advance_receive_target(exhausted_state);
+		assert_eq!(exhausted.sequence, None);
+		assert_eq!(exhausted.state, exhausted_state);
 	}
 
 	#[test]
@@ -983,7 +1245,7 @@ mod tests {
 	#[test]
 	fn pending_receive_validation_rejects_corrupted_private_delta_fields() {
 		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
-		let PreparedReceive::Future(mut pending) =
+		let PreparedReceive::PreparedReceiveFutureCase(mut pending) =
 			prepare_receive(&state, 3, test_step).expect("future receive should prepare")
 		else {
 			panic!("future target unexpectedly prepared as cached");
@@ -1081,18 +1343,16 @@ mod tests {
 	}
 
 	#[test]
-	fn future_publication_rejects_ranges_without_a_target_slot() {
-		for skipped in [1, 2] {
-			let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
-			let entry = test_snapshot(&state);
-			publish_future_receive(&mut state, malformed_range_pending(skipped));
-			assert_eq!(test_snapshot(&state), entry);
-		}
+	fn future_publication_rejects_ranges_beyond_the_cache() {
+		let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
+		let entry = test_snapshot(&state);
+		publish_future_receive(&mut state, malformed_range_pending(2));
+		assert_eq!(test_snapshot(&state), entry);
 	}
 
 	#[test]
 	fn rejected_future_opens_preserve_every_observable_field() {
-		for target in [1, 7, RATCHET_MAX_GAP] {
+		for target in [1, 7, RATCHET_MAX_GAP + 1] {
 			let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 			let entry = test_snapshot(&state);
 			let failed = TestAeadContext::new(target + 100, false);
@@ -1110,7 +1370,7 @@ mod tests {
 
 	#[test]
 	fn successful_future_opens_publish_only_skipped_material_and_replay_is_neutral() {
-		for target in [1, RATCHET_MAX_GAP] {
+		for target in [1, RATCHET_MAX_GAP + 1] {
 			let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 			let accepted = TestAeadContext::new(target + 200, true);
 
@@ -1176,7 +1436,7 @@ mod tests {
 
 	#[test]
 	fn rejected_receive_plans_do_not_invoke_kdf_or_open() {
-		for target in [0, RATCHET_MAX_GAP + 1, u64::MAX] {
+		for target in [0, RATCHET_MAX_GAP + 2, u64::MAX] {
 			let mut state = RefinedRatchet::<u64, u64, TestMaterial>::new(10, 20);
 			let entry = test_snapshot(&state);
 			let context = TestAeadContext::new(target, true);
@@ -1213,11 +1473,11 @@ mod tests {
 			Some(RATCHET_MAX_GAP)
 		);
 		let full_entry = test_snapshot(&full);
-		let context = TestAeadContext::new(51, true);
+		let context = TestAeadContext::new(RATCHET_MAX_GAP + 2, true);
 		assert_eq!(
 			refined_open_and_finish(
 				&mut full,
-				RATCHET_MAX_GAP + 1,
+				RATCHET_MAX_GAP + 2,
 				rejected_test_step,
 				&context,
 				test_aead,

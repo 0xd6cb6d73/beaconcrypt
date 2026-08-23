@@ -1,16 +1,24 @@
 // SPDX-License-Identifier: 0BSD
 
+// Pinned Aeneas does not translate the `Try::branch` emitted by `?` reliably.
+#![allow(clippy::question_mark)]
+
 use super::control::{
-	RATCHET_MAX_GAP, RECEIVE_CACHE_CAPACITY, RatchetRestore, RatchetState, ReceiveDisposition,
-	SendKey, advance_receive, advance_send, finish_receive_with_removal, finish_restore,
-	finish_send, lookup_receive_key, plan_receive_until, restore_receive_key_with_slot,
+	RECEIVE_CACHE_CAPACITY, RatchetRestore, RatchetState, ReceiveDisposition,
+	finish_receive_with_removal, finish_restore, lookup_receive_key, restore_receive_key_with_slot,
 	start_restore,
+};
+
+#[cfg(test)]
+use super::control::{
+	RATCHET_MAX_GAP, SendKey, advance_receive, advance_receive_target, advance_send, finish_send,
+	plan_receive_until,
 };
 
 /// One opaque ratchet-step result.
 ///
 /// The shared kernel treats both fields parametrically.
-/// [`crate::ratchet::derive_ratchet_step`] applies the concrete fixed-output KDF.
+/// The concrete effect continuations interpret fixed-output KDF replies into this partition.
 /// Logical tests may construct arbitrary values through this type.
 #[cfg_attr(
 	feature = "proverif",
@@ -60,16 +68,16 @@ pub struct RefinedRatchet<SendChain, ReceiveChain, Material> {
 /// Kernel-private receive preparation that owns only the delta needed for a
 /// successful publication. Neither variant is a live or serializable ratchet.
 pub(super) enum PreparedReceive<ReceiveChain, Material> {
-	Cached(PreparedCachedReceive),
-	Future(PendingReceive<ReceiveChain, Material>),
+	PreparedReceiveCachedCase(PreparedCachedReceive),
+	PreparedReceiveFutureCase(PendingReceive<ReceiveChain, Material>),
 }
 
 /// Prevalidated metadata for consuming an already cached receive key.
 pub(super) struct PreparedCachedReceive {
-	sequence: u64,
-	target_slot: u8,
-	last_slot: u8,
-	committed_control: RatchetState,
+	pub(super) sequence: u64,
+	pub(super) target_slot: u8,
+	pub(super) last_slot: u8,
+	pub(super) committed_control: RatchetState,
 }
 
 /// Final metadata produced while deriving a future receive into a caller-owned
@@ -77,6 +85,7 @@ pub(super) struct PreparedCachedReceive {
 ///
 /// Keeping the fixed-capacity buffer out of this recursive result ensures the
 /// Rust implementation has exactly one live staging array regardless of gap.
+#[cfg(test)]
 struct PreparedFutureTarget<ReceiveChain, Material> {
 	committed_control: RatchetState,
 	final_receive_chain: ReceiveChain,
@@ -146,13 +155,19 @@ impl<SendChain, ReceiveChain, Material> RefinedRatchet<SendChain, ReceiveChain, 
 	/// Return the logical sequence and concrete material paired in one active
 	/// physical slot.
 	pub fn receive_entry_at(&self, slot: u8) -> Option<(u64, &Material)> {
-		let sequence = self.control.receive_key_at(slot)?;
+		let sequence = match self.control.receive_key_at(slot) {
+			Some(sequence) => sequence,
+			None => return None,
+		};
 		let slot_index = slot as usize;
 		if slot_index >= RECEIVE_CACHE_CAPACITY {
 			return None;
 		}
-		let cached = self.receive_slots[slot_index].as_ref()?;
-		if cached.sequence != sequence {
+		let cached = match self.receive_slots[slot_index].as_ref() {
+			Some(cached) => cached,
+			None => return None,
+		};
+		if !(cached.sequence == sequence) {
 			return None;
 		}
 		Some((cached.sequence, &cached.material))
@@ -164,11 +179,13 @@ impl<SendChain, ReceiveChain, Material> RefinedRatchet<SendChain, ReceiveChain, 
 /// This token is deliberately neither `Copy` nor `Clone`, and it never crosses
 /// the public kernel boundary. [`refined_seal_next`] lends its material to the
 /// opaque sealing callback and consumes the complete token before returning.
+#[cfg(test)]
 pub(crate) struct RefinedSendKey<Material> {
 	pub(super) logical: SendKey,
 	pub(super) material: Material,
 }
 
+#[cfg(test)]
 impl<Material> RefinedSendKey<Material> {
 	pub const fn sequence(&self) -> Option<u64> {
 		self.logical.sequence()
@@ -184,6 +201,7 @@ impl<Material> RefinedSendKey<Material> {
 /// Exhaustion is neutral and does not invoke `step`. Success publishes the new
 /// chain and counter together and returns the exact step material beside the
 /// logical capability for the allocated sequence.
+#[cfg(test)]
 pub(crate) fn refined_advance_send<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	step: fn(&SendChain) -> RatchetStep<SendChain, Material>,
@@ -204,6 +222,7 @@ pub(crate) fn refined_advance_send<SendChain, ReceiveChain, Material>(
 }
 
 /// Consume a concrete/logical send token after its single permitted use.
+#[cfg(test)]
 pub(crate) fn refined_finish_send<Material>(key: RefinedSendKey<Material>) -> bool {
 	let finished = finish_send(key.logical);
 	finished.consumed && !finished.key.is_available()
@@ -216,7 +235,8 @@ pub(crate) fn refined_finish_send<Material>(key: RefinedSendKey<Material>) -> bo
 /// the sequence/material pair. The pair is borrowed only for that call and is
 /// consumed before this operation returns, regardless of whether sealing
 /// succeeds.
-pub fn refined_seal_next<SendChain, ReceiveChain, Material, Context, Output>(
+#[cfg(test)]
+pub(crate) fn refined_seal_next<SendChain, ReceiveChain, Material, Context, Output>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	step: fn(&SendChain) -> RatchetStep<SendChain, Material>,
 	context: &Context,
@@ -239,6 +259,7 @@ pub fn refined_seal_next<SendChain, ReceiveChain, Material, Context, Output>(
 /// Logical admission and slot validation happen before the sole opaque step.
 /// Rejection therefore leaves the concrete chain and slots untouched.
 #[allow(dead_code)]
+#[cfg(test)]
 pub(crate) fn refined_advance_receive<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
@@ -268,7 +289,7 @@ pub(crate) fn refined_advance_receive<SendChain, ReceiveChain, Material>(
 	feature = "proverif",
 	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
 )]
-fn refined_receive_slots_are_empty<SendChain, ReceiveChain, Material>(
+pub(super) fn refined_receive_slots_are_empty<SendChain, ReceiveChain, Material>(
 	state: &RefinedRatchet<SendChain, ReceiveChain, Material>,
 	first_slot: u8,
 	remaining: u8,
@@ -297,20 +318,26 @@ fn refined_receive_slots_are_empty<SendChain, ReceiveChain, Material>(
 
 /// Preflight an existing cached target and compute its successful logical
 /// removal without changing the live refined ratchet.
-fn prepare_cached_receive<SendChain, ReceiveChain, Material>(
+pub(super) fn prepare_cached_receive<SendChain, ReceiveChain, Material>(
 	state: &RefinedRatchet<SendChain, ReceiveChain, Material>,
 	sequence: u64,
 ) -> Option<PreparedCachedReceive> {
-	let target_slot = lookup_receive_key(state.control, sequence)?;
+	let target_slot = match lookup_receive_key(state.control, sequence) {
+		Some(target_slot) => target_slot,
+		None => return None,
+	};
 	let target_index = target_slot as usize;
 	if target_index >= RECEIVE_CACHE_CAPACITY {
 		return None;
 	}
-	if state.control.receive_key_at(target_slot) != Some(sequence) {
+	if !(state.control.receive_key_at(target_slot) == Some(sequence)) {
 		return None;
 	}
-	let target = state.receive_slots[target_index].as_ref()?;
-	if target.sequence != sequence {
+	let target = match state.receive_slots[target_index].as_ref() {
+		Some(target) => target,
+		None => return None,
+	};
+	if !(target.sequence == sequence) {
 		return None;
 	}
 
@@ -323,21 +350,31 @@ fn prepare_cached_receive<SendChain, ReceiveChain, Material>(
 	if last_index >= RECEIVE_CACHE_CAPACITY {
 		return None;
 	}
-	let last_sequence = state.control.receive_key_at(last_slot)?;
-	let last = state.receive_slots[last_index].as_ref()?;
-	if last.sequence != last_sequence {
+	let last_sequence = match state.control.receive_key_at(last_slot) {
+		Some(last_sequence) => last_sequence,
+		None => return None,
+	};
+	let last = match state.receive_slots[last_index].as_ref() {
+		Some(last) => last,
+		None => return None,
+	};
+	if !(last.sequence == last_sequence) {
 		return None;
 	}
 
 	let finished = finish_receive_with_removal(state.control, sequence, target_slot, true);
-	let removal = finished.removal?;
-	if !matches!(finished.disposition, ReceiveDisposition::Consumed) {
+	let removal = match finished.removal {
+		Some(removal) => removal,
+		None => return None,
+	};
+	match finished.disposition {
+		ReceiveDisposition::Consumed => {}
+		ReceiveDisposition::Missing | ReceiveDisposition::Retained => return None,
+	}
+	if !(removal.target_slot == target_slot) {
 		return None;
 	}
-	if removal.target_slot != target_slot {
-		return None;
-	}
-	if removal.last_slot != last_slot {
+	if !(removal.last_slot == last_slot) {
 		return None;
 	}
 	Some(PreparedCachedReceive {
@@ -352,6 +389,7 @@ fn prepare_cached_receive<SendChain, ReceiveChain, Material>(
 	feature = "proverif",
 	hax_lib::decreases(hax_lib::int::ToInt::to_int(remaining))
 )]
+#[cfg(test)]
 /// Derive a future target into a private delta without assigning any live
 /// chain, slot, or logical control field.
 ///
@@ -383,6 +421,31 @@ fn prepare_future_receive_steps<ReceiveChain, Material>(
 		#[cfg(feature = "proverif")]
 		hax_lib::loop_decreases!(left as usize);
 
+		if left == 1 {
+			let advanced = advance_receive_target(current_control);
+			let sequence = match advanced.sequence {
+				Some(sequence) => sequence,
+				None => return None,
+			};
+			if sequence != target {
+				return None;
+			}
+
+			let stepped = match current_chain.as_ref() {
+				Some(chain) => step(chain),
+				None => step(entry_chain),
+			};
+
+			return Some(PreparedFutureTarget {
+				committed_control: advanced.state,
+				final_receive_chain: stepped.chain,
+				target_sequence: sequence,
+				target_material: stepped.material,
+				first_slot,
+				skipped: skipped_count,
+			});
+		}
+
 		let advanced = advance_receive(current_control);
 		let sequence = match advanced.sequence {
 			Some(sequence) => sequence,
@@ -413,37 +476,6 @@ fn prepare_future_receive_steps<ReceiveChain, Material>(
 		};
 
 		let RatchetStep { chain, material } = stepped;
-
-		if left == 1 {
-			if sequence != target {
-				return None;
-			}
-
-			let finished = finish_receive_with_removal(advanced.state, target, slot, true);
-			let removal = match finished.removal {
-				Some(removal) => removal,
-				None => return None,
-			};
-
-			if !matches!(finished.disposition, ReceiveDisposition::Consumed) {
-				return None;
-			}
-			if removal.target_slot != slot {
-				return None;
-			}
-			if removal.last_slot != slot {
-				return None;
-			}
-
-			return Some(PreparedFutureTarget {
-				committed_control: finished.state,
-				final_receive_chain: chain,
-				target_sequence: sequence,
-				target_material: material,
-				first_slot,
-				skipped: skipped_count,
-			});
-		}
 
 		if sequence >= target {
 			return None;
@@ -555,22 +587,22 @@ pub(super) fn pending_receive_is_valid<SendChain, ReceiveChain, Material>(
 	requested: u64,
 ) -> bool {
 	let entry_receive_sequence = state.control.receive_sequence();
-	if pending.target_sequence != requested {
+	if !(pending.target_sequence == requested) {
 		return false;
 	}
 	if requested <= entry_receive_sequence {
 		return false;
 	}
-	if pending.first_slot != state.control.receive_cache_len() {
+	if !(pending.first_slot == state.control.receive_cache_len()) {
 		return false;
 	}
-	if pending.committed_control.send_sequence() != state.control.send_sequence() {
+	if !(pending.committed_control.send_sequence() == state.control.send_sequence()) {
 		return false;
 	}
-	if pending.committed_control.receive_sequence() != requested {
+	if !(pending.committed_control.receive_sequence() == requested) {
 		return false;
 	}
-	if requested - entry_receive_sequence != pending.skipped as u64 + 1 {
+	if !(requested - entry_receive_sequence == pending.skipped as u64 + 1) {
 		return false;
 	}
 	if lookup_receive_key(pending.committed_control, requested).is_some() {
@@ -578,10 +610,10 @@ pub(super) fn pending_receive_is_valid<SendChain, ReceiveChain, Material>(
 	}
 
 	let committed_len = pending.first_slot as usize + pending.skipped as usize;
-	if committed_len >= RECEIVE_CACHE_CAPACITY {
+	if committed_len > RECEIVE_CACHE_CAPACITY {
 		return false;
 	}
-	if pending.committed_control.receive_cache_len() as usize != committed_len {
+	if !(pending.committed_control.receive_cache_len() as usize == committed_len) {
 		return false;
 	}
 	if !receive_control_prefix_matches(
@@ -592,14 +624,15 @@ pub(super) fn pending_receive_is_valid<SendChain, ReceiveChain, Material>(
 	) {
 		return false;
 	}
+	if committed_len < RECEIVE_CACHE_CAPACITY {
+		if state.receive_slots[committed_len].is_some() {
+			return false;
+		}
+		if pending.staged_slots[committed_len].is_some() {
+			return false;
+		}
+	}
 
-	let target_index = committed_len;
-	if state.receive_slots[target_index].is_some() {
-		return false;
-	}
-	if pending.staged_slots[target_index].is_some() {
-		return false;
-	}
 	let expected_first = entry_receive_sequence + 1;
 	pending_receive_slots_are_valid(
 		state,
@@ -612,6 +645,7 @@ pub(super) fn pending_receive_is_valid<SendChain, ReceiveChain, Material>(
 
 /// Plan and privately prepare the complete target transaction while leaving
 /// the live refined ratchet unchanged.
+#[cfg(test)]
 pub(super) fn prepare_receive<SendChain, ReceiveChain, Material>(
 	state: &RefinedRatchet<SendChain, ReceiveChain, Material>,
 	target: u64,
@@ -620,15 +654,17 @@ pub(super) fn prepare_receive<SendChain, ReceiveChain, Material>(
 	let plan = plan_receive_until(state.control, target);
 	let sequence = plan.sequence?;
 	if plan.derivations == 0 {
-		return prepare_cached_receive(state, sequence).map(PreparedReceive::Cached);
+		return prepare_cached_receive(state, sequence)
+			.map(PreparedReceive::PreparedReceiveCachedCase);
 	}
-	if plan.derivations > RATCHET_MAX_GAP {
+	let skipped = plan.derivations - 1;
+	if skipped > RATCHET_MAX_GAP {
 		return None;
 	}
 
 	let remaining = plan.derivations as u8;
 	let first_slot = state.control.receive_cache_len();
-	if !refined_receive_slots_are_empty(state, first_slot, remaining) {
+	if !refined_receive_slots_are_empty(state, first_slot, skipped as u8) {
 		return None;
 	}
 	let mut staged_slots = empty_material_slots();
@@ -661,11 +697,11 @@ pub(super) fn prepare_receive<SendChain, ReceiveChain, Material>(
 	if !pending_receive_is_valid(state, &pending, target) {
 		return None;
 	}
-	Some(PreparedReceive::Future(pending))
+	Some(PreparedReceive::PreparedReceiveFutureCase(pending))
 }
 
 /// Publish a prevalidated cached removal with no remaining failure branch.
-fn publish_cached_receive<SendChain, ReceiveChain, Material>(
+pub(super) fn publish_cached_receive<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	prepared: PreparedCachedReceive,
 ) {
@@ -729,10 +765,10 @@ pub(super) fn publish_future_receive<SendChain, ReceiveChain, Material>(
 	// The private validator establishes this complete range before the open
 	// callback. Repeat the range check here before the first mutation so even a
 	// malformed internal value cannot publish a prefix.
-	if first_index >= RECEIVE_CACHE_CAPACITY {
+	if first_index > RECEIVE_CACHE_CAPACITY {
 		return;
 	}
-	if skipped >= RECEIVE_CACHE_CAPACITY - first_index {
+	if skipped > RECEIVE_CACHE_CAPACITY - first_index {
 		return;
 	}
 	publish_future_receive_slots(
@@ -756,6 +792,7 @@ pub(super) fn publish_future_receive<SendChain, ReceiveChain, Material>(
 /// Each internal one-step result is successful.
 /// This helper exposes no fallible intermediate result.
 #[allow(dead_code)]
+#[cfg(test)]
 fn refined_execute_receive_steps<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
@@ -779,6 +816,7 @@ fn refined_execute_receive_steps<SendChain, ReceiveChain, Material>(
 /// An accepted transaction has no intermediate failure branch.
 /// It cannot publish only a prefix of the planned refinement.
 #[allow(dead_code)]
+#[cfg(test)]
 pub(crate) fn refined_advance_receive_until<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	target: u64,
@@ -804,13 +842,19 @@ pub(crate) fn refined_receive_key<SendChain, ReceiveChain, Material>(
 	state: &RefinedRatchet<SendChain, ReceiveChain, Material>,
 	sequence: u64,
 ) -> Option<&Material> {
-	let slot = lookup_receive_key(state.control, sequence)?;
+	let slot = match lookup_receive_key(state.control, sequence) {
+		Some(slot) => slot,
+		None => return None,
+	};
 	let slot_index = slot as usize;
 	if slot_index >= RECEIVE_CACHE_CAPACITY {
 		return None;
 	}
-	let cached = state.receive_slots[slot_index].as_ref()?;
-	if cached.sequence != sequence {
+	let cached = match state.receive_slots[slot_index].as_ref() {
+		Some(cached) => cached,
+		None => return None,
+	};
+	if !(cached.sequence == sequence) {
 		return None;
 	}
 	Some(&cached.material)
@@ -822,6 +866,7 @@ pub(crate) fn refined_receive_key<SendChain, ReceiveChain, Material>(
 /// the core-selected target/last swap-removal internally before publishing the
 /// returned control state.
 #[allow(dead_code)]
+#[cfg(test)]
 pub(crate) fn refined_finish_receive<SendChain, ReceiveChain, Material>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	sequence: u64,
@@ -893,7 +938,8 @@ pub(crate) fn refined_finish_receive<SendChain, ReceiveChain, Material>(
 /// owned by a private pending delta and are published only after the callback
 /// succeeds. Neither raw material nor an independently supplied authentication
 /// Boolean crosses this public API.
-pub fn refined_open_and_finish<SendChain, ReceiveChain, Material, Context, Plaintext>(
+#[cfg(test)]
+pub(crate) fn refined_open_and_finish<SendChain, ReceiveChain, Material, Context, Plaintext>(
 	state: &mut RefinedRatchet<SendChain, ReceiveChain, Material>,
 	target: u64,
 	step: fn(&ReceiveChain) -> RatchetStep<ReceiveChain, Material>,
@@ -902,7 +948,7 @@ pub fn refined_open_and_finish<SendChain, ReceiveChain, Material, Context, Plain
 ) -> Option<Plaintext> {
 	let prepared = prepare_receive(state, target, step)?;
 	match prepared {
-		PreparedReceive::Cached(prepared) => {
+		PreparedReceive::PreparedReceiveCachedCase(prepared) => {
 			let opened = {
 				let slot_index = prepared.target_slot as usize;
 				if slot_index >= RECEIVE_CACHE_CAPACITY {
@@ -922,7 +968,7 @@ pub fn refined_open_and_finish<SendChain, ReceiveChain, Material, Context, Plain
 				}
 			}
 		}
-		PreparedReceive::Future(pending) => {
+		PreparedReceive::PreparedReceiveFutureCase(pending) => {
 			let opened = open(&pending.target_material, pending.target_sequence, context);
 			match opened {
 				None => None,

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: 0BSD
 
+// Pinned Aeneas does not translate the `Try::branch` emitted by `?` reliably.
+#![allow(clippy::question_mark)]
+
 //! Pure PQXDH composition and registration typestates.
 //!
 //! Cryptographic primitives, entropy acquisition, wire parsing, and storage
@@ -10,9 +13,9 @@
 mod concrete;
 
 pub use concrete::{
-	InitialRatchetKdfExecutor, derive_beacon_candidate_ratchet_kernel,
-	derive_beacon_ratchet_kernel, derive_initial_ratchet_chains, derive_initial_ratchet_kernel,
-	derive_server_candidate_ratchet_kernel, derive_server_ratchet_kernel,
+	InitialRatchetKdfPending, InitialRatchetKdfResponse, resume_initial_ratchet_kdf,
+	start_beacon_candidate_ratchet_kdf, start_beacon_ratchet_kdf, start_initial_ratchet_kdf,
+	start_server_candidate_ratchet_kdf, start_server_ratchet_kdf,
 };
 
 pub const SIGN_PUBLIC_KEY_SIZE: usize = 32;
@@ -1081,6 +1084,10 @@ mod tests {
 		assert_eq!(verified.beacon_prekey_public_key(), &prekey_public_key);
 		assert_eq!(verified.beacon_one_time_public_key(), &one_time_public_key);
 		assert_eq!(verified.beacon_pq_public_key(), &pq_public_key);
+		assert_eq!(
+			&verified.registration_id().as_bytes()[SIGN_PUBLIC_KEY_SIZE..],
+			&one_time_public_key
+		);
 	}
 
 	#[test]
@@ -1128,11 +1135,12 @@ mod tests {
 
 	#[test]
 	fn root_input_has_the_implemented_pqxdh_order() {
-		let secrets = shared_secrets();
+		let mut secrets = shared_secrets();
+		secrets.dh1 = core::array::from_fn(|index| index as u8);
 		let root = build_root_key_input(&secrets).unwrap();
 		let bytes = root.as_bytes();
 		assert_eq!(&bytes[..32], &[0xff; 32]);
-		assert_eq!(&bytes[32..64], &[0x11; 32]);
+		assert_eq!(&bytes[32..64], &secrets.dh1);
 		assert_eq!(&bytes[64..96], &[0x22; 32]);
 		assert_eq!(&bytes[96..128], &[0x33; 32]);
 		assert_eq!(&bytes[128..160], &[0x44; 32]);
@@ -1174,9 +1182,10 @@ mod tests {
 		assert_eq!(SERVER_RATCHETS.send_offset(), 0);
 	}
 
-	fn test_initial_ratchet_kdf(
-		request: &crate::ratchet::SymmetricRatchetKdfRequest,
-	) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE] {
+	fn test_initial_ratchet_response(
+		pending: &InitialRatchetKdfPending,
+	) -> InitialRatchetKdfResponse {
+		let request = pending.request();
 		assert_eq!(request.info(), SYM_RATCHET_INFO);
 		let root = request.input();
 		let mut output = [0u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE];
@@ -1184,12 +1193,12 @@ mod tests {
 		for index in 0..RATCHET_CHAIN_SIZE {
 			output[32 + index] = root[index] ^ 0xff;
 		}
-		output
+		InitialRatchetKdfResponse::from_bytes(output)
 	}
 
 	fn test_ratchet_kdf(
 		request: &crate::ratchet::SymmetricRatchetKdfRequest,
-	) -> [u8; crate::ratchet::RATCHET_KDF_OUTPUT_SIZE] {
+	) -> crate::ratchet::RatchetKdfResponse {
 		assert_eq!(request.info(), SYM_RATCHET_INFO);
 		let input = request.input();
 		let mut output = [0u8; crate::ratchet::RATCHET_KDF_OUTPUT_SIZE];
@@ -1198,7 +1207,7 @@ mod tests {
 			output[32 + index] = input[index].wrapping_add(1);
 		}
 		output[64..76].copy_from_slice(&input[0..12]);
-		output
+		crate::ratchet::RatchetKdfResponse::from_bytes(output)
 	}
 
 	type CapturedMaterial = (u64, [u8; 32], [u8; 12]);
@@ -1226,20 +1235,61 @@ mod tests {
 			.then_some(())
 	}
 
+	fn send_material(
+		kernel: crate::ratchet::ConcreteRatchetKernel,
+	) -> (crate::ratchet::ConcreteRatchetKernel, CapturedMaterial) {
+		let pending = match crate::ratchet::begin_send(kernel, ()) {
+			crate::ratchet::SendStart::SendKdfRequested(pending) => pending,
+			crate::ratchet::SendStart::SendExhausted { .. } => {
+				panic!("test send counter should not be exhausted")
+			}
+		};
+		let response = test_ratchet_kdf(pending.request());
+		let pending = pending.resume(response);
+		let sent = capture_material(pending.material(), pending.sequence(), &())
+			.expect("test seal should capture material");
+		let (kernel, sent) = pending.finish(Some(sent));
+		(kernel, sent.expect("test seal output should be retained"))
+	}
+
+	fn receive_material(
+		kernel: crate::ratchet::ConcreteRatchetKernel,
+		target: u64,
+		expected: CapturedMaterial,
+	) -> (crate::ratchet::ConcreteRatchetKernel, Option<()>) {
+		let mut effect = crate::ratchet::begin_receive(kernel, target, expected);
+		loop {
+			effect = match effect {
+				crate::ratchet::ReceiveEffect::ReceiveRejected { kernel, .. } => {
+					return (kernel, None);
+				}
+				crate::ratchet::ReceiveEffect::ReceiveKdfRequested(pending) => {
+					let response = test_ratchet_kdf(pending.request());
+					pending.resume(response)
+				}
+				crate::ratchet::ReceiveEffect::ReceiveOpenRequested(pending) => {
+					let opened = match pending.material() {
+						Some(material) => {
+							open_matching_material(material, pending.sequence(), pending.context())
+						}
+						None => None,
+					};
+					return pending.finish(opened);
+				}
+			};
+		}
+	}
+
 	#[test]
 	fn initial_ratchet_boundary_passes_the_exact_root_and_orders_fixed_chains() {
 		let root = core::array::from_fn::<_, RATCHET_CHAIN_SIZE, _>(|index| index as u8);
 		let right = core::array::from_fn::<_, RATCHET_CHAIN_SIZE, _>(|index| root[index] ^ 0xff);
-		let beacon = derive_initial_ratchet_chains(
-			&root,
-			beacon_ratchet_initialization(),
-			test_initial_ratchet_kdf,
-		);
-		let server = derive_initial_ratchet_chains(
-			&root,
-			server_ratchet_initialization(),
-			test_initial_ratchet_kdf,
-		);
+		let beacon_pending = start_beacon_ratchet_kdf(&root);
+		let beacon_response = test_initial_ratchet_response(&beacon_pending);
+		let beacon = resume_initial_ratchet_kdf(beacon_pending, beacon_response);
+		let server_pending = start_server_ratchet_kdf(&root);
+		let server_response = test_initial_ratchet_response(&server_pending);
+		let server = resume_initial_ratchet_kdf(server_pending, server_response);
 
 		assert_eq!(beacon.receive_chain().as_bytes(), &root);
 		assert_eq!(beacon.send_chain().as_bytes(), &right);
@@ -1250,10 +1300,12 @@ mod tests {
 	#[test]
 	fn concrete_role_kernels_share_material_through_public_seal_and_open() {
 		let root = core::array::from_fn::<_, RATCHET_CHAIN_SIZE, _>(|index| index as u8);
-		let mut beacon =
-			derive_beacon_ratchet_kernel(&root, test_initial_ratchet_kdf, test_ratchet_kdf);
-		let mut server =
-			derive_server_ratchet_kernel(&root, test_initial_ratchet_kdf, test_ratchet_kdf);
+		let beacon_pending = start_beacon_ratchet_kdf(&root);
+		let beacon_response = test_initial_ratchet_response(&beacon_pending);
+		let mut beacon = resume_initial_ratchet_kdf(beacon_pending, beacon_response);
+		let server_pending = start_server_ratchet_kdf(&root);
+		let server_response = test_initial_ratchet_response(&server_pending);
+		let mut server = resume_initial_ratchet_kdf(server_pending, server_response);
 
 		assert_eq!(
 			beacon.send_chain().as_bytes(),
@@ -1265,31 +1317,19 @@ mod tests {
 		);
 
 		for sequence in 1..=4 {
-			let sent = crate::ratchet::concrete_seal_next(&mut beacon, &(), capture_material)
-				.expect("beacon send should allocate concrete material");
+			let (next_beacon, sent) = send_material(beacon);
+			beacon = next_beacon;
 			assert_eq!(sent.0, sequence);
-			assert_eq!(
-				crate::ratchet::concrete_open_and_finish(
-					&mut server,
-					sequence,
-					&sent,
-					open_matching_material,
-				),
-				Some(())
-			);
+			let (next_server, opened) = receive_material(server, sequence, sent);
+			server = next_server;
+			assert_eq!(opened, Some(()));
 
-			let reply = crate::ratchet::concrete_seal_next(&mut server, &(), capture_material)
-				.expect("server send should allocate concrete material");
+			let (next_server, reply) = send_material(server);
+			server = next_server;
 			assert_eq!(reply.0, sequence);
-			assert_eq!(
-				crate::ratchet::concrete_open_and_finish(
-					&mut beacon,
-					sequence,
-					&reply,
-					open_matching_material,
-				),
-				Some(())
-			);
+			let (next_beacon, opened) = receive_material(beacon, sequence, reply);
+			beacon = next_beacon;
+			assert_eq!(opened, Some(()));
 		}
 	}
 

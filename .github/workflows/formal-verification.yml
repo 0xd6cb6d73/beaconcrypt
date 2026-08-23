@@ -22,6 +22,8 @@ jobs:
         include:
           - name: F*
             target: check-generated-fstar
+          - name: Lean
+            target: check-generated-lean
           - name: ProVerif CTX commitment
             target: check-generated-proverif-aead-commitment
           - name: ProVerif no-CTX control
@@ -63,6 +65,7 @@ jobs:
         run: make -C beaconcrypt-core ${{ matrix.target }}
 
   proofs:
+    # Preserve this required-check context; the matrix above also verifies Lean.
     name: Extract and verify F* and ProVerif
     if: ${{ always() }}
     needs: proof_components

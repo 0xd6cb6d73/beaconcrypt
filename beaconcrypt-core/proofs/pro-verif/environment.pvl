@@ -1384,8 +1384,8 @@ let StateNeutralFutureReceive() =
         )
     ).
 
-(* A separate exact capacity leg accepts sequence 51 from counter one, retaining 49 skipped keys and consuming the target. *)
-(* A distance-two future frame is then rejected because 49 + 2 exceeds capacity; consuming cached sequence 50 makes the same future distance admissible. *)
+(* A separate exact capacity leg accepts sequence 52 from counter one, retaining 50 skipped keys while consuming the target separately. *)
+(* A distance-two future frame is then rejected because the one new skipped key would exceed capacity; consuming cached sequence 51 makes the same future distance admissible. *)
 let StateNeutralCapacityReceive() =
   new capacity_root: bitstring;
   new capacity_associated_data: bitstring;
@@ -1446,6 +1446,7 @@ let StateNeutralCapacityReceive() =
   let capacity_sequence_51 = next_sequence(capacity_sequence_50) in
   let capacity_sequence_52 = next_sequence(capacity_sequence_51) in
   let capacity_sequence_53 = next_sequence(capacity_sequence_52) in
+  let capacity_sequence_54 = next_sequence(capacity_sequence_53) in
   let capacity_chain_1 = server_to_beacon_chain(capacity_root) in
   let capacity_chain_2 = ratchet_next(capacity_chain_1) in
   let capacity_chain_3 = ratchet_next(capacity_chain_2) in
@@ -1500,6 +1501,7 @@ let StateNeutralCapacityReceive() =
   let capacity_chain_52 = ratchet_next(capacity_chain_51) in
   let capacity_chain_53 = ratchet_next(capacity_chain_52) in
   let capacity_chain_54 = ratchet_next(capacity_chain_53) in
+  let capacity_chain_55 = ratchet_next(capacity_chain_54) in
   let capacity_material_1 = ratchet_material(capacity_chain_1) in
   let capacity_material_2 = ratchet_material(capacity_chain_2) in
   let capacity_material_3 = ratchet_material(capacity_chain_3) in
@@ -1553,6 +1555,7 @@ let StateNeutralCapacityReceive() =
   let capacity_material_51 = ratchet_material(capacity_chain_51) in
   let capacity_material_52 = ratchet_material(capacity_chain_52) in
   let capacity_material_53 = ratchet_material(capacity_chain_53) in
+  let capacity_material_54 = ratchet_material(capacity_chain_54) in
   let capacity_first_frame = seal_frame(
     capacity_material_1,
     capacity_associated_data,
@@ -1561,23 +1564,23 @@ let StateNeutralCapacityReceive() =
     capacity_first_plaintext
   ) in
   let maximum_gap_frame = seal_frame(
-    capacity_material_51,
+    capacity_material_52,
     capacity_associated_data,
-    capacity_sequence_51,
+    capacity_sequence_52,
     capacity_sender_id,
     RECEIVE_MAX_GAP_SECRET
   ) in
   let cached_frame = seal_frame(
-    capacity_material_50,
+    capacity_material_51,
     capacity_associated_data,
-    capacity_sequence_50,
+    capacity_sequence_51,
     capacity_sender_id,
     RECEIVE_CACHED_SECRET
   ) in
   let after_release_frame = seal_frame(
-    capacity_material_53,
+    capacity_material_54,
     capacity_associated_data,
-    capacity_sequence_53,
+    capacity_sequence_54,
     capacity_sender_id,
     RECEIVE_AFTER_RELEASE_SECRET
   ) in
@@ -1585,7 +1588,7 @@ let StateNeutralCapacityReceive() =
     forged_frame_component(),
     forged_frame_component(),
     forged_frame_component(),
-    capacity_sequence_53,
+    capacity_sequence_54,
     capacity_sender_id
   ) in
   event MessageSent(
@@ -1599,7 +1602,7 @@ let StateNeutralCapacityReceive() =
   event MessageSent(
     capacity_session,
     server_to_beacon(),
-    capacity_sequence_51,
+    capacity_sequence_52,
     capacity_sender_id,
     capacity_receiver_id,
     RECEIVE_MAX_GAP_SECRET
@@ -1607,7 +1610,7 @@ let StateNeutralCapacityReceive() =
   event MessageSent(
     capacity_session,
     server_to_beacon(),
-    capacity_sequence_50,
+    capacity_sequence_51,
     capacity_sender_id,
     capacity_receiver_id,
     RECEIVE_CACHED_SECRET
@@ -1615,7 +1618,7 @@ let StateNeutralCapacityReceive() =
   event MessageSent(
     capacity_session,
     server_to_beacon(),
-    capacity_sequence_53,
+    capacity_sequence_54,
     capacity_sender_id,
     capacity_receiver_id,
     RECEIVE_AFTER_RELEASE_SECRET
@@ -1659,9 +1662,9 @@ let StateNeutralCapacityReceive() =
 
   in(c, maximum_gap_candidate: bitstring);
   let maximum_gap_plaintext = open_frame(
-    capacity_material_51,
+    capacity_material_52,
     capacity_associated_data,
-    capacity_sequence_51,
+    capacity_sequence_52,
     capacity_sender_id,
     maximum_gap_candidate
   ) in
@@ -2253,15 +2256,27 @@ let StateNeutralCapacityReceive() =
     capacity_material_50,
     capacity_cache_49
   ) in
-  let maximum_gap_state = receive_state(
+  event MessageKeyCached(
+    capacity_session,
+    beacon_role(),
+    server_to_beacon(),
     capacity_sequence_51,
-    capacity_chain_52,
+    capacity_material_51
+  );
+  let capacity_cache_51 = receive_cache_entry(
+    capacity_sequence_51,
+    capacity_material_51,
     capacity_cache_50
+  ) in
+  let maximum_gap_state = receive_state(
+    capacity_sequence_52,
+    capacity_chain_53,
+    capacity_cache_51
   ) in
   event MessageReceived(
     capacity_session,
     server_to_beacon(),
-    capacity_sequence_51,
+    capacity_sequence_52,
     capacity_sender_id,
     capacity_receiver_id,
     maximum_gap_plaintext
@@ -2270,17 +2285,17 @@ let StateNeutralCapacityReceive() =
     capacity_session,
     beacon_role(),
     server_to_beacon(),
-    capacity_sequence_51,
-    capacity_material_51
+    capacity_sequence_52,
+    capacity_material_52
   );
   event ReceiveMaximumGapAccepted(
     capacity_session,
-    capacity_sequence_51,
+    capacity_sequence_52,
     capacity_sender_id,
     capacity_receiver_id,
     maximum_gap_plaintext,
     maximum_gap_candidate,
-    capacity_material_51,
+    capacity_material_52,
     capacity_ready_state,
     maximum_gap_state
   );
@@ -2290,27 +2305,27 @@ let StateNeutralCapacityReceive() =
   (
     event ReceiveCapacityRejected(
       capacity_session,
-      capacity_sequence_53,
+      capacity_sequence_54,
       capacity_rejected_frame,
       maximum_gap_state
     );
     in(c, cached_candidate: bitstring);
     let cached_plaintext = open_frame(
-      capacity_material_50,
+      capacity_material_51,
       capacity_associated_data,
-      capacity_sequence_50,
+      capacity_sequence_51,
       capacity_sender_id,
       cached_candidate
     ) in
     let released_state = receive_state(
-      capacity_sequence_51,
-      capacity_chain_52,
-      capacity_cache_49
+      capacity_sequence_52,
+      capacity_chain_53,
+      capacity_cache_50
     ) in
     event MessageReceived(
       capacity_session,
       server_to_beacon(),
-      capacity_sequence_50,
+      capacity_sequence_51,
       capacity_sender_id,
       capacity_receiver_id,
       cached_plaintext
@@ -2319,21 +2334,21 @@ let StateNeutralCapacityReceive() =
       capacity_session,
       beacon_role(),
       server_to_beacon(),
-      capacity_sequence_50,
-      capacity_material_50
+      capacity_sequence_51,
+      capacity_material_51
     );
     event ReceiveCachedKeyConsumed(
       capacity_session,
-      capacity_sequence_50,
-      capacity_material_50,
+      capacity_sequence_51,
+      capacity_material_51,
       maximum_gap_state,
       released_state
     );
     in(c, after_release_candidate: bitstring);
     let after_release_plaintext = open_frame(
-      capacity_material_53,
+      capacity_material_54,
       capacity_associated_data,
-      capacity_sequence_53,
+      capacity_sequence_54,
       capacity_sender_id,
       after_release_candidate
     ) in
@@ -2341,23 +2356,23 @@ let StateNeutralCapacityReceive() =
       capacity_session,
       beacon_role(),
       server_to_beacon(),
-      capacity_sequence_52,
-      capacity_material_52
+      capacity_sequence_53,
+      capacity_material_53
     );
     let after_release_cache = receive_cache_entry(
-      capacity_sequence_52,
-      capacity_material_52,
-      capacity_cache_49
+      capacity_sequence_53,
+      capacity_material_53,
+      capacity_cache_50
     ) in
     let after_release_state = receive_state(
-      capacity_sequence_53,
-      capacity_chain_54,
+      capacity_sequence_54,
+      capacity_chain_55,
       after_release_cache
     ) in
     event MessageReceived(
       capacity_session,
       server_to_beacon(),
-      capacity_sequence_53,
+      capacity_sequence_54,
       capacity_sender_id,
       capacity_receiver_id,
       after_release_plaintext
@@ -2366,17 +2381,17 @@ let StateNeutralCapacityReceive() =
       capacity_session,
       beacon_role(),
       server_to_beacon(),
-      capacity_sequence_53,
-      capacity_material_53
+      capacity_sequence_54,
+      capacity_material_54
     );
     event ReceiveAfterCapacityReleaseAccepted(
       capacity_session,
-      capacity_sequence_53,
+      capacity_sequence_54,
       capacity_sender_id,
       capacity_receiver_id,
       after_release_plaintext,
       after_release_candidate,
-      capacity_material_53,
+      capacity_material_54,
       maximum_gap_state,
       released_state,
       after_release_state

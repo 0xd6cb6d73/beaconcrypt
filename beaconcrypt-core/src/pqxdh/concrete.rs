@@ -1,113 +1,115 @@
 // SPDX-License-Identifier: 0BSD
 
 //! Production binding between proof-visible PQXDH state and concrete ratchet
-//! executors.
+//! initialization.
 //!
-//! This module owns function-pointer capabilities and concrete-kernel
-//! construction. The deterministic PQXDH protocol state and fixed-width KDF
-//! output interpretation remain in the parent module.
+//! The deterministic PQXDH protocol selects the exact initial KDF request and
+//! retains the role-ordering continuation in an owned phase. The production
+//! adapter performs only that request and resumes the phase with its fixed-size
+//! response. No function pointer or borrowed continuation is retained by the
+//! core state.
 
 use super::{
 	BEACON_RATCHETS, BeaconRegistrationCandidate, INITIAL_RATCHET_KDF_OUTPUT_SIZE,
-	InitialRatchetChains, RATCHET_CHAIN_SIZE, RatchetInitialization, SERVER_RATCHETS,
-	ServerRegistrationCandidate, split_initial_ratchet_kdf_output,
+	RATCHET_CHAIN_SIZE, RatchetInitialization, SERVER_RATCHETS, ServerRegistrationCandidate,
+	split_initial_ratchet_kdf_output,
 };
 
-use crate::ratchet::{ConcreteRatchetKernel, RatchetKdfExecutor, SymmetricRatchetKdfRequest};
+use crate::ratchet::{ConcreteRatchetKernel, SymmetricRatchetKdfRequest};
 
-/// Fixed-output executor for expanding one authenticated session root into
-/// the two initial directional chain values.
-pub type InitialRatchetKdfExecutor =
-	fn(&SymmetricRatchetKdfRequest) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE];
-
-/// Apply the sole opaque initial-chain primitive to the exact session root
-/// and order its output.
+/// Owned continuation for one initial symmetric-ratchet KDF request.
 ///
-/// The primitive's complete production-facing type is
-/// `32-byte root -> 64-byte output`.
-///
-/// Label selection and HKDF details are private to that domain-specific
-/// primitive. Input selection, output size, role ordering, partitioning, and
-/// fixed-width construction remain owned by the core.
-pub fn derive_initial_ratchet_chains(
-	root: &[u8; RATCHET_CHAIN_SIZE],
+/// The phase is deliberately neither `Clone` nor `Copy`. It owns the exact
+/// core-constructed request and can be resumed only once with an
+/// [`InitialRatchetKdfResponse`].
+#[must_use = "the initial ratchet KDF request must be performed or the phase explicitly dropped"]
+pub struct InitialRatchetKdfPending {
+	request: SymmetricRatchetKdfRequest,
 	initialization: RatchetInitialization,
-	kdf: InitialRatchetKdfExecutor,
-) -> InitialRatchetChains {
-	let request = SymmetricRatchetKdfRequest::new(*root);
-	let output = kdf(&request);
-
-	split_initial_ratchet_kdf_output(&output, initialization)
 }
 
-/// Construct a concrete kernel directly from one root, one role plan, and the
-/// executors for initial and subsequent core-owned KDF requests.
-pub fn derive_initial_ratchet_kernel(
+impl InitialRatchetKdfPending {
+	/// The exact fixed-domain request selected by the core.
+	pub const fn request(&self) -> &SymmetricRatchetKdfRequest {
+		&self.request
+	}
+}
+
+/// Distinct fixed-size response to an initial symmetric-ratchet KDF request.
+///
+/// Keeping this separate from subsequent 76-byte ratchet-step responses makes
+/// it impossible to resume the wrong phase class by type alone. It is not tied
+/// to one particular pending request; provenance remains an interpreter
+/// obligation.
+#[must_use = "the initial ratchet KDF response must resume its pending phase"]
+#[cfg_attr(not(hax_compilation), derive(zeroize::Zeroize, zeroize::ZeroizeOnDrop))]
+pub struct InitialRatchetKdfResponse {
+	bytes: [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE],
+}
+
+impl InitialRatchetKdfResponse {
+	pub const fn from_bytes(bytes: [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE]) -> Self {
+		Self { bytes }
+	}
+
+	pub const fn as_bytes(&self) -> &[u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE] {
+		&self.bytes
+	}
+}
+
+/// Start one initial-chain derivation for an explicit role-ordering plan.
+///
+/// The root is copied into the private fixed-domain request, so the returned
+/// phase has no borrowed lifetime.
+pub fn start_initial_ratchet_kdf(
 	root: &[u8; RATCHET_CHAIN_SIZE],
 	initialization: RatchetInitialization,
-	initial_kdf: InitialRatchetKdfExecutor,
-	ratchet_kdf: RatchetKdfExecutor,
+) -> InitialRatchetKdfPending {
+	InitialRatchetKdfPending {
+		request: SymmetricRatchetKdfRequest::new(*root),
+		initialization,
+	}
+}
+
+/// Resume one initial-chain derivation and construct its role-ordered kernel.
+///
+/// Input selection, output size, fixed-width partitioning, and send/receive
+/// ordering remain owned by the core. The adapter supplies only the opaque
+/// fixed-size primitive response.
+pub fn resume_initial_ratchet_kdf(
+	pending: InitialRatchetKdfPending,
+	response: InitialRatchetKdfResponse,
 ) -> ConcreteRatchetKernel {
-	let chains = derive_initial_ratchet_chains(root, initialization, initial_kdf);
+	let chains = split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization);
 	let (send_chain, receive_chain) = chains.into_parts();
 
-	ConcreteRatchetKernel::new(send_chain, receive_chain, ratchet_kdf)
+	ConcreteRatchetKernel::new(send_chain, receive_chain)
 }
 
-/// Construct the beacon role's complementary concrete kernel.
-pub fn derive_beacon_ratchet_kernel(
-	root: &[u8; RATCHET_CHAIN_SIZE],
-	initial_kdf: InitialRatchetKdfExecutor,
-	ratchet_kdf: RatchetKdfExecutor,
-) -> ConcreteRatchetKernel {
-	derive_initial_ratchet_kernel(root, BEACON_RATCHETS, initial_kdf, ratchet_kdf)
+/// Start the beacon role's complementary initial-chain derivation.
+pub fn start_beacon_ratchet_kdf(root: &[u8; RATCHET_CHAIN_SIZE]) -> InitialRatchetKdfPending {
+	start_initial_ratchet_kdf(root, BEACON_RATCHETS)
 }
 
-/// Construct the server role's complementary concrete kernel.
-pub fn derive_server_ratchet_kernel(
-	root: &[u8; RATCHET_CHAIN_SIZE],
-	initial_kdf: InitialRatchetKdfExecutor,
-	ratchet_kdf: RatchetKdfExecutor,
-) -> ConcreteRatchetKernel {
-	derive_initial_ratchet_kernel(root, SERVER_RATCHETS, initial_kdf, ratchet_kdf)
+/// Start the server role's complementary initial-chain derivation.
+pub fn start_server_ratchet_kdf(root: &[u8; RATCHET_CHAIN_SIZE]) -> InitialRatchetKdfPending {
+	start_initial_ratchet_kdf(root, SERVER_RATCHETS)
 }
 
-/// Bind an authenticated beacon registration candidate to its concrete
-/// ratchet kernel.
-///
-/// Keeping this as a free function, rather than an inherent method on
-/// `BeaconRegistrationCandidate`, ensures the proof-visible candidate type
-/// has no dependency on executor function pointers or `ConcreteRatchetKernel`.
-pub fn derive_beacon_candidate_ratchet_kernel(
+/// Bind an authenticated beacon registration candidate to the role selected
+/// by its proof-visible typestate.
+pub fn start_beacon_candidate_ratchet_kdf(
 	candidate: &BeaconRegistrationCandidate,
 	root: &[u8; RATCHET_CHAIN_SIZE],
-	initial_kdf: InitialRatchetKdfExecutor,
-	ratchet_kdf: RatchetKdfExecutor,
-) -> ConcreteRatchetKernel {
-	derive_initial_ratchet_kernel(
-		root,
-		candidate.ratchet_initialization(),
-		initial_kdf,
-		ratchet_kdf,
-	)
+) -> InitialRatchetKdfPending {
+	start_initial_ratchet_kdf(root, candidate.ratchet_initialization())
 }
 
-/// Bind an accepted server registration candidate to its concrete ratchet
-/// kernel.
-///
-/// Keeping this as a free function, rather than an inherent method on
-/// `ServerRegistrationCandidate`, ensures the proof-visible candidate type
-/// has no dependency on executor function pointers or `ConcreteRatchetKernel`.
-pub fn derive_server_candidate_ratchet_kernel(
+/// Bind an accepted server registration candidate to the role selected by its
+/// proof-visible typestate.
+pub fn start_server_candidate_ratchet_kdf(
 	candidate: &ServerRegistrationCandidate,
 	root: &[u8; RATCHET_CHAIN_SIZE],
-	initial_kdf: InitialRatchetKdfExecutor,
-	ratchet_kdf: RatchetKdfExecutor,
-) -> ConcreteRatchetKernel {
-	derive_initial_ratchet_kernel(
-		root,
-		candidate.ratchet_initialization(),
-		initial_kdf,
-		ratchet_kdf,
-	)
+) -> InitialRatchetKdfPending {
+	start_initial_ratchet_kdf(root, candidate.ratchet_initialization())
 }

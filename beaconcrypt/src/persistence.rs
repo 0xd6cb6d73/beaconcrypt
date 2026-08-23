@@ -953,13 +953,23 @@ mod tests {
 				.receive_cache_len(),
 			RATCHET_MAX_GAP as u8
 		);
-		assert!(
+		let future = &frames[RATCHET_MAX_GAP as usize];
+		assert_eq!(
 			restored
-				.decrypt_message(&frames[RATCHET_MAX_GAP as usize].1)
+				.decrypt_message(&future.1)
 				.unwrap()
-				.is_none()
+				.unwrap()
+				.plaintext,
+			future.0
 		);
-		assert_eq!(restored.head(), full_state);
+		assert_ne!(restored.head(), full_state);
+		assert_eq!(
+			restored
+				.ratchet_status(response.kid)
+				.unwrap()
+				.receive_cache_len(),
+			RATCHET_MAX_GAP as u8
+		);
 
 		let cached = &frames[RATCHET_MAX_GAP as usize - 1];
 		assert_eq!(
@@ -970,15 +980,9 @@ mod tests {
 				.plaintext,
 			cached.0
 		);
-		let future = &frames[RATCHET_MAX_GAP as usize];
-		assert_eq!(
-			restored
-				.decrypt_message(&future.1)
-				.unwrap()
-				.unwrap()
-				.plaintext,
-			future.0
-		);
+		let after_cached = restored.head();
+		assert!(restored.decrypt_message(&future.1).unwrap().is_none());
+		assert_eq!(restored.head(), after_cached);
 	}
 
 	#[cfg(feature = "beacon")]

@@ -595,13 +595,12 @@ mod tests {
 		let receive_chain = beaconcrypt_core::ratchet::RatchetChain::from_bytes(
 			*ratchet.refined.receive_chain().as_bytes(),
 		);
-		ratchet.refined = RatchetKernel::from_counters(
+		ratchet.refined.replace(RatchetKernel::from_counters(
 			send_sequence,
 			receive_sequence,
 			send_chain,
 			receive_chain,
-			ratchet_hkdf,
-		);
+		));
 	}
 
 	fn assert_receive_slots_aligned(ratchet: &RatchetManager) {
@@ -829,38 +828,57 @@ mod tests {
 		// Reproduced independently by `python scripts/generate_kat_vectors.py` and
 		// `go run scripts/generate_kat_vectors.go` (`[ratchet]`).
 		let ratchet = SendChain::from_bytes([0x24; KDF_STATE_SIZE]);
-
-		let first = verified_ratchet::derive_ratchet_step(&ratchet, ratchet_hkdf);
+		let receive = SendChain::from_bytes([0; KDF_STATE_SIZE]);
+		let kernel = RatchetKernel::new(ratchet, receive);
+		let first = match verified_ratchet::begin_send(kernel, ()) {
+			verified_ratchet::SendStart::SendExhausted { .. } => {
+				panic!("fresh send ratchet must not be exhausted")
+			}
+			verified_ratchet::SendStart::SendKdfRequested(pending) => {
+				let response = ratchet_hkdf(pending.request());
+				pending.resume(response)
+			}
+		};
 		assert_eq!(
-			key_bytes(first.material.key()),
+			key_bytes(first.material().key()),
 			decode_hex::<AEAD_KEY_LEN>(
 				"f57007f1b1c7a62a7d6cdfa5df07538c43d83656906764d607e627401906e42a"
 			)
 		);
 		assert_eq!(
-			nonce_bytes(first.material.nonce()),
+			nonce_bytes(first.material().nonce()),
 			decode_hex::<AEAD_NONCE_LEN>("43483e81091a393409afbf53")
 		);
+		let (kernel, _) = first.finish(None::<()>);
 		assert_eq!(
-			*first.chain.as_bytes(),
+			*kernel.send_chain().as_bytes(),
 			decode_hex::<KDF_STATE_SIZE>(
 				"5936897d8bd06b7daf70bd0d64b2f607a055fd843ddb779051cb975bbb02b1d3"
 			)
 		);
 
-		let second = verified_ratchet::derive_ratchet_step(&first.chain, ratchet_hkdf);
+		let second = match verified_ratchet::begin_send(kernel, ()) {
+			verified_ratchet::SendStart::SendExhausted { .. } => {
+				panic!("second send ratchet step must not be exhausted")
+			}
+			verified_ratchet::SendStart::SendKdfRequested(pending) => {
+				let response = ratchet_hkdf(pending.request());
+				pending.resume(response)
+			}
+		};
 		assert_eq!(
-			key_bytes(second.material.key()),
+			key_bytes(second.material().key()),
 			decode_hex::<AEAD_KEY_LEN>(
 				"f30ee97ccdc39577bb1320268d7fc10d55c53649e879e98a9670d58b9a1539d0"
 			)
 		);
 		assert_eq!(
-			nonce_bytes(second.material.nonce()),
+			nonce_bytes(second.material().nonce()),
 			decode_hex::<AEAD_NONCE_LEN>("d497a96123dfcbe5700b5cc0")
 		);
+		let (kernel, _) = second.finish(None::<()>);
 		assert_eq!(
-			*second.chain.as_bytes(),
+			*kernel.send_chain().as_bytes(),
 			decode_hex::<KDF_STATE_SIZE>(
 				"d11e3c43fa3bbfec95a41973521d7e1b4aacddfc96591fe40fa30e9581b5e4e2"
 			)

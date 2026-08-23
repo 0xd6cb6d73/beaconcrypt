@@ -160,21 +160,29 @@ PROVERIF_VERIFY_TARGETS := $(addprefix verify-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_GENERATED_TARGETS := $(addprefix check-generated-proverif-,$(PROVERIF_SCENARIOS))
 
 LEAN_DIR := proofs/lean
-LEAN_CHARON_ARGS := \
-	--exclude=beaconcrypt_core::ratchet::concrete::* \
-	--exclude=beaconcrypt_core::ratchet::refined::* \
-	--exclude=beaconcrypt_core::pqxdh::concrete::*
+LEAN_ROOT := $(LEAN_DIR)/BeaconcryptCore.lean
+LEAN_PROOF_PATHS := $(LEAN_DIR)/BeaconcryptCore $(LEAN_DIR)/BeaconcryptCore.lean
+LEAN_GENERATED_PATHS := \
+	$(LEAN_DIR)/BeaconcryptCore/Extraction/Funs.lean \
+	$(LEAN_DIR)/BeaconcryptCore/Extraction/FunsExternal_Template.lean \
+	$(LEAN_DIR)/BeaconcryptCore/Extraction/Types.lean \
+	$(LEAN_DIR)/BeaconcryptCore/Extraction/TypesExternal_Template.lean \
+	$(LEAN_DIR)/llbc
+
+# Hax creates the Lean project/root files only when they are absent.
+# The checked-in root and Lake configuration are maintained verification entry points.
+# Extraction preserves their proof imports and all-module build glob.
 
 .PHONY: verify verify-in-shell verify-fstar verify-fstar-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
-	check-toolchain check-fstar-policy check-inventory \
+	check-toolchain check-fstar-policy check-lean-policy check-lean-root check-inventory \
 	extract-fstar check-fstar extract-proverif check-proverif \
-	check-proverif-extraction check-generated check-generated-fstar \
+	check-proverif-extraction check-generated check-generated-fstar check-generated-lean \
 	$(PROVERIF_CHECK_TARGETS) $(PROVERIF_VERIFY_TARGETS) \
 	$(PROVERIF_GENERATED_TARGETS) extract-lean check-lean verify-lean \
 	verify-lean-in-shell
 
-# Enter the repository-locked proof shell, regenerate both backends, and check
+# Enter the repository-locked proof shell, regenerate every backend, and check
 # every proof. --no-update-lock-file makes a stale or incomplete lock fail.
 verify:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -189,6 +197,8 @@ verify-in-shell:
 	$(MAKE) check-fstar
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+	$(MAKE) extract-lean
+	$(MAKE) check-lean
 
 verify-fstar:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -372,16 +382,39 @@ check-proverif-failed-receive-compromise-reachability: check-proverif-extraction
 			-f '$(PROVERIF_CHECKER)'
 
 extract-lean:
+	@test -f '$(LEAN_ROOT)' || { \
+		echo 'missing maintained Lean verification root: $(LEAN_ROOT)' >&2; \
+		exit 1; \
+	}
 	rm -rf $(LEAN_DIR)/llbc
-	cargo hax -C --locked ';' into lean --lakefile \
-		--charon-args="$(LEAN_CHARON_ARGS)"
+	cargo hax -C --locked ';' into lean --lakefile
 
-check-lean:
+check-lean-policy:
+	@if rg -n --pcre2 '\b(?:sorry|admit|axiom)\b|sorryAx' $(LEAN_PROOF_PATHS) \
+		--glob '*.lean'; then \
+		echo 'unexpected sorry/admit/axiom in repository-owned Lean proof' >&2; \
+		exit 1; \
+	fi
+
+check-lean-root:
+	@for module in \
+		BeaconcryptCore.Model.RatchetControlRestore \
+		BeaconcryptCore.Model.RatchetEffectRefinement; do \
+		rg -Fqx "import $$module" '$(LEAN_ROOT)' || { \
+			echo "missing verification-root import: $$module" >&2; \
+			exit 1; \
+		}; \
+	done
+	@rg -Fqx 'globs = ["BeaconcryptCore", "BeaconcryptCore.+"]' \
+		$(LEAN_DIR)/lakefile.toml || { \
+		echo 'Lean library must build the root and every BeaconcryptCore submodule' >&2; \
+		exit 1; \
+	}
+
+check-lean: check-lean-policy check-lean-root
 	cd $(LEAN_DIR) && lake build
 
-# Aeneas Lean currently handles the first-order commitment/control layer.
-# Concrete/refined ratchet APIs contain higher-order fn-pointer signatures
-# that Aeneas does not support yet.
+# Regenerate and check the complete default beaconcrypt-core production surface.
 verify-lean:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
 		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
@@ -402,6 +435,16 @@ check-generated-fstar: verify-fstar
 			exit 1; \
 		fi
 
+check-generated-lean: verify-lean
+	git diff --exit-code -- $(LEAN_GENERATED_PATHS)
+	@untracked="$$(git ls-files --others --exclude-standard -- \
+		$(LEAN_GENERATED_PATHS))"; \
+	if [[ -n "$$untracked" ]]; then \
+		echo 'untracked generated Lean proof artifacts:' >&2; \
+		printf '%s\n' "$$untracked" >&2; \
+		exit 1; \
+	fi
+
 $(PROVERIF_GENERATED_TARGETS): check-generated-proverif-%: verify-proverif-%
 	git diff --exit-code -- proofs/pro-verif/extraction
 	@untracked="$$(git ls-files --others --exclude-standard -- \
@@ -414,9 +457,11 @@ $(PROVERIF_GENERATED_TARGETS): check-generated-proverif-%: verify-proverif-%
 
 # Run this after committing generated output to ensure extraction is stable.
 check-generated: verify
-	git diff --exit-code -- proofs/fstar/extraction proofs/pro-verif/extraction
+	git diff --exit-code -- proofs/fstar/extraction proofs/pro-verif/extraction \
+		$(LEAN_GENERATED_PATHS)
 	@untracked="$$(git ls-files --others --exclude-standard -- \
-		proofs/fstar/extraction proofs/pro-verif/extraction)"; \
+		proofs/fstar/extraction proofs/pro-verif/extraction \
+		$(LEAN_GENERATED_PATHS))"; \
 		if [[ -n "$$untracked" ]]; then \
 			echo 'untracked generated proof artifacts:' >&2; \
 			printf '%s\n' "$$untracked" >&2; \

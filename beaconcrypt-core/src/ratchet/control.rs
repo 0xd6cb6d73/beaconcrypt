@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: 0BSD
 
-/// Maximum number of outstanding receive keys admitted by the ratchet.
+// Pinned Aeneas does not translate the `Try::branch` emitted by `?` reliably.
+#![allow(clippy::question_mark)]
+
+/// Maximum number of skipped receive keys retained for out-of-order delivery.
 pub const RATCHET_MAX_GAP: u64 = 50;
 
 /// Physical capacity of the logical receive-key cache.
@@ -213,6 +216,10 @@ pub struct ReceivePlan {
 
 /// Decide whether `target` can be reached without exceeding the receive gap or
 /// the total outstanding-key capacity.
+///
+/// A future target is derived but never inserted into the receive cache. Thus
+/// `derivations` counts the target step in addition to the skipped keys, while
+/// admission charges only the preceding skipped keys against the gap and cache.
 pub(crate) fn plan_receive_until(state: RatchetState, target: u64) -> ReceivePlan {
 	if target <= state.receive_sequence {
 		return ReceivePlan {
@@ -222,8 +229,9 @@ pub(crate) fn plan_receive_until(state: RatchetState, target: u64) -> ReceivePla
 	}
 
 	let derivations = target - state.receive_sequence;
+	let skipped = derivations - 1;
 	let cached = state.receive_cache.len as u64;
-	if derivations > RATCHET_MAX_GAP || cached > RATCHET_MAX_GAP - derivations {
+	if skipped > RATCHET_MAX_GAP || cached > RATCHET_MAX_GAP - skipped {
 		ReceivePlan {
 			sequence: None,
 			derivations: 0,
@@ -232,6 +240,37 @@ pub(crate) fn plan_receive_until(state: RatchetState, target: u64) -> ReceivePla
 		ReceivePlan {
 			sequence: Some(target),
 			derivations,
+		}
+	}
+}
+
+/// Result of deriving a future target without inserting it into the cache.
+#[derive(Clone, Copy)]
+#[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
+pub struct ReceiveTargetAdvance {
+	pub state: RatchetState,
+	pub sequence: Option<u64>,
+}
+
+/// Advance the receive sequence for the target key itself.
+///
+/// Unlike [`advance_receive`], this transition does not allocate a cache slot:
+/// a successfully authenticated future target is consumed directly, while a
+/// failed open rolls back to the entry state that owns this private result.
+pub(crate) fn advance_receive_target(state: RatchetState) -> ReceiveTargetAdvance {
+	if state.receive_sequence == u64::MAX {
+		ReceiveTargetAdvance {
+			state,
+			sequence: None,
+		}
+	} else {
+		let next = state.receive_sequence + 1;
+		ReceiveTargetAdvance {
+			state: RatchetState {
+				receive_sequence: next,
+				..state
+			},
+			sequence: Some(next),
 		}
 	}
 }
@@ -245,11 +284,11 @@ pub struct ReceiveAdvance {
 	pub slot: Option<u8>,
 }
 
-/// Advance the receive chain by exactly one key.
+/// Advance the receive chain by one skipped key and allocate its cache slot.
 ///
-/// The refined executor calls this exactly `ReceivePlan::derivations` times and
-/// binds one opaque step output to each successful logical advance. Exhaustion
-/// and a full cache are state-neutral.
+/// A future receive calls this once per skipped message, then uses
+/// [`advance_receive_target`] for the uncached target. Exhaustion and a full
+/// cache are state-neutral.
 pub(crate) fn advance_receive(state: RatchetState) -> ReceiveAdvance {
 	if state.receive_sequence == u64::MAX {
 		return ReceiveAdvance {
