@@ -30,6 +30,14 @@ jobs:
             target: check-generated-proverif-aead-no-commitment
           - name: ProVerif baseline
             target: check-generated-proverif-baseline
+          - name: ProVerif active classical
+            target: check-generated-proverif-active-classical
+          - name: ProVerif passive classical
+            target: check-generated-proverif-passive-classical
+          - name: ProVerif passive quantum
+            target: check-generated-proverif-passive-quantum
+          - name: ProVerif active quantum attack
+            target: check-generated-proverif-active-quantum
           - name: ProVerif reachability
             target: check-generated-proverif-reachability
           - name: ProVerif compromise
@@ -42,6 +50,10 @@ jobs:
             target: check-generated-proverif-failed-receive-compromise
           - name: ProVerif failed-receive compromise reachability
             target: check-generated-proverif-failed-receive-compromise-reachability
+          - name: SSProve CTX reduction
+            target: verify-ssprove
+          - name: Formal proof inventory
+            target: check-inventory
 
     steps:
       - name: Checkout repository
@@ -66,7 +78,7 @@ jobs:
 
   proofs:
     # Preserve this required-check context; the matrix above also verifies Lean.
-    name: Extract and verify F* and ProVerif
+    name: Extract and verify formal proofs
     if: ${{ always() }}
     needs: proof_components
     runs-on: ubuntu-24.04

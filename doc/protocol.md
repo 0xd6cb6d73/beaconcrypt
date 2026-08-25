@@ -76,7 +76,7 @@ A canonicalization scheme would have to be used to encode the various elements b
 
 The commitment claim applies to the complete protected payload `CT || T || T*`, not to `T*` in isolation.
 The F* theorem `ctx_distinct_openings_imply_hash_collision` fixes the same `CT`, `T`, and `T*` for both openings and machine-checks that any semantic difference in key, nonce, associated data, sequence, sender ID, or accepted plaintext produces an explicit collision witness for the supplied pure hash function.
-The conventional computational lifting therefore bounds misattribution advantage by BLAKE2b-512 collision advantage, but its probability and runtime inequality is not mechanized.
+SSProve now mechanizes the same-execution event-probability inequality from misattribution to collision under the F*-backed pointwise contract. Constructing the complete adversary-facing CTX and hash-oracle games, connecting their advantages through the representation bridge, and checking query and runtime loss remain unmechanized.
 The ProVerif negative control independently demonstrates the ideal-hash CTX benefit with a deliberately multi-opening base AEAD; it is supplementary symbolic evidence rather than a proof of BLAKE2b.
 The exact game, proof connection, advantage bound, and assumptions are given in [ctx-commitment.md](ctx-commitment.md), and the [concrete negative-control fixture](multi-opening-fixture.md) supplies one real `CT || T` value with two distinct valid base-AEAD openings.
 

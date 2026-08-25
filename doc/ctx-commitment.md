@@ -54,15 +54,16 @@ Both successful outer checks imply `hash(X) = U = hash(X')`.
 If `X = X'`, `production_commitment_input_is_injective` gives equality of `K`, `N`, `A`, `T`, `S`, and `I`, while applying the same pure AEAD-open function to the same `K`, `N`, `A`, `C`, and `T` fixes its result and therefore gives `M = M'`.
 That contradicts distinctness, so F* constructs the explicit witness `X != X'` and `hash(X) = hash(X')` for every pair of accepted distinct explanations.
 
-Conventionally lifting this pointwise theorem to a probabilistic commitment game, a collision adversary `B` runs a commitment adversary `A` and returns the F*-proved witness from any successful misattribution.
-Its running time is essentially that of `A` plus parsing and two transcript evaluations, and the usual advantage inequality is:
+The repository-owned SSProve theorem [`ctx_misattribution_reduces_to_collision`](../beaconcrypt-core/proofs/ssprove/CtxEventReduction.v) mechanizes the probability part of this lifting over one joint subdistribution whose observations contain both the protocol-misattribution bit and the collision bit returned by the reduction.
+Given the F*-backed pointwise contract that every misattribution observation is also a collision observation, SSProve proves:
 
 ```text
-Adv_commit_beaconcrypt(A) <= Adv_collision_BLAKE2b-512(B)
+Pr_joint[CTX misattribution] <= Pr_joint[hash collision]
 ```
 
-The displayed probability and runtime lifting is conventional cryptographic reasoning, not a mechanized probability or complexity theorem in F*.
-The machine-checked result is the pointwise implication and explicit collision witness for arbitrary pure functions.
+This same-execution probability inequality is machine-checked in SSProve. Instantiating it as the conventional `Adv_commit_beaconcrypt(A) <= Adv_collision_BLAKE2b-512(B)` reduction still requires the complete adversary-facing CTX/hash-oracle packages, the F*/SSProve representation bridge, and query and runtime accounting.
+The SSProve theorem is deliberately parameterized by the deterministic implication; the intended cross-prover discharge is the F* pointwise collision witness plus a reviewed representation bridge between the two observations.
+The checked assumption report contains only the reviewed MathComp Boolean-predicate foundations and an abstract real-number carrier; it contains no repository admission, SSProve interchange admission, or hax `falso` dependency.
 There is no additive ChaCha20-Poly1305 term in this binding reduction, and unequal-key or unequal-context multi-openings by the base AEAD remain allowed.
 This is the same collision-reduction pattern as Theorem 2 of the CTX paper, extended by an injective encoding of `S` and `I` and simplified by the fact that beaconcrypt transmits the original `T`.
 
@@ -79,7 +80,7 @@ It is not a computational proof or a proof of BLAKE2b.
 
 ## Scope and remaining assumptions
 
-The F* theorem and its conventional computational lifting establish full misattribution resistance for the parsed protected payload, including key commitment and binding of the nonce, long-lived associated data, sequence, sender key identifier, and accepted plaintext, conditional on BLAKE2b-512 collision resistance and exact production use of the proved encoding.
+The F* collision witness and SSProve event-probability lifting establish the two mechanized ingredients of a misattribution reduction for the parsed protected payload, including key commitment and binding of the nonce, long-lived associated data, sequence, sender key identifier, and accepted plaintext. Completing that reduction remains conditional on the representation bridge, the adversary-facing packages and accounting, BLAKE2b-512 collision resistance, and exact production use of the proved encoding.
 They explain why a deliberately multi-opening base-AEAD example does not produce a multi-opening beaconcrypt record unless the adversary finds a BLAKE2b collision.
 The concrete fixture is documented in [multi-opening-fixture.md](multi-opening-fixture.md).
 

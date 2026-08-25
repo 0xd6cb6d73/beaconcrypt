@@ -6,7 +6,9 @@
 
 This is a proposed implementation plan written against the `proof` branch at commit `ff12e813a1f4b7ee6f6e86db573dc796eb1d7154`.
 
-Nothing in this document is a current security claim, a completed proof, or permission to change the protocol, wire format, persistence format, or public APIs.
+The maintained [integration evaluation](computational-security-proof-integration.md) records the implemented four-scenario ProVerif suite, the bounded active-quantum attack, the first checked SSProve CTX event reduction, and the remaining work.
+
+Except where that evaluation explicitly records a completed milestone, nothing in this planning document is a current security claim, a completed proof, or permission to change the protocol, wire format, persistence format, or public APIs.
 
 The implementation MUST stop at every decision gate identified below and obtain an explicit choice before taking a branch that changes the protocol or materially changes the assumptions or scope of the final theorem.
 
@@ -64,16 +66,13 @@ The existing proof assets are:
 - A ProVerif active-attacker model, compromise scenarios, failed-active-receive scenarios, reachability checks, and CTX/no-CTX negative controls.
 - A locked proof shell and proof entry points in the [`protocol-core` Makefile](../../beaconcrypt-core/Makefile).
 
-The present proof shell pins hax 0.3.7, F*, Z3, and ProVerif, but does not pin a Coq/Rocq kernel or SSProve.
-An exploratory planning probe made hax 0.3.7 emit SSProve `.v` files for selected commitment, PQXDH, and concrete-ratchet items, but those files were not compiled and the probe is not acceptance evidence.
-The feasibility phase MUST reproduce generation inside the locked repository shell and compile the result without hand-editing generated files.
+The implemented integration extends the locked proof shell with Rocq 9.0.0, SSProve 0.2.4, and MathComp 2.4.0 and checks the Rocq and SSProve identities alongside hax 0.3.7, F*, Z3, and ProVerif.
+The exploratory planning probe made hax 0.3.7 emit SSProve `.v` files for selected commitment, PQXDH, and concrete-ratchet items, but those generated files remain non-acceptance evidence because they were not compiled and import the unsafe hax prelude described in the integration evaluation.
+The remaining direct-extraction feasibility work MUST reproduce generation inside the locked repository shell and compile the result without hand-editing generated files.
 
-Before adding a backend, repair the existing standalone inventory baseline.
-At planning time, `make -C crates/protocol-core check-inventory` fails against a clean committed tree because seven reviewed hashes are stale: repository `build.rs`, `src/beacon.rs`, `src/cbinds.rs`, `src/deser.rs`, and `src/persistence.rs`; plus `crates/protocol-core/README.md` and `crates/protocol-core/src/ratchet.rs`.
-This drift predates the computational backend and MUST be reviewed and repaired in a separate prerequisite change so new proof files are not added on top of an already-failing trust-boundary gate.
-The current CI runs `check-generated` but not the deliberately separate `check-inventory` target; the final CI design MUST invoke both without falsely documenting that one currently implies the other.
-The current F* build also creates an ignored `.cache` inside the inventory-monitored `proofs/` tree, while the inventory checker enumerates every file there.
-Before making the inventory a post-proof CI gate, move F*, Coq/Rocq/SSProve, and other proof build outputs to a path such as repository `target/formal-verification/`; generated source artifacts remain under `proofs/` and stay inventoried.
+At planning time, the standalone inventory baseline had pre-existing reviewed-hash drift and CI did not invoke `check-inventory`; repairing that baseline and adding an explicit CI job were prerequisites for the computational backend.
+That prerequisite is now implemented: the reviewed inventory covers the four-modality ProVerif controls and all repository-owned SSProve sources, the standalone check passes, and the formal-verification matrix invokes `check-inventory` independently from generated-proof checks.
+The implemented SSProve target writes compiled output under repository `target/formal-verification/ssprove/`, while its handwritten source and generated proof sources remain under `proofs/` and stay inventoried. Future computational backends MUST preserve that source/output separation.
 
 ## Proof architecture
 

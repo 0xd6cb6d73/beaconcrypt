@@ -26,7 +26,10 @@
             fstar.packages.${system}.z3
             nixpkgs.legacyPackages.${system}.ripgrep
             nixpkgs.legacyPackages.${system}.elan
+            nixpkgs.legacyPackages.${system}.coqPackages_9_0.coq
+            nixpkgs.legacyPackages.${system}.coqPackages_9_0.ssprove
           ];
+          SSPROVE_VERSION = nixpkgs.legacyPackages.${system}.coqPackages_9_0.ssprove.version;
         });
       });
     };

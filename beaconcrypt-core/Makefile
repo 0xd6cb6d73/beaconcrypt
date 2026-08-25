@@ -10,6 +10,8 @@ EXPECTED_HAX := 0.3.7
 EXPECTED_FSTAR := F* 2025.10.06~dev
 EXPECTED_Z3 := Z3 version 4.15.3 - 64 bit
 EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
+EXPECTED_ROCQ := The Rocq Prover, version 9.0.0
+EXPECTED_SSPROVE := 0.2.4
 HAX_ITEMS := -** \
 	+beaconcrypt_core::commitment::build_commitment_transcript \
 	+beaconcrypt_core::ratchet::control::SequenceCache \
@@ -138,6 +140,11 @@ PROVERIF_COMMON_LIBS := \
 	-lib $(PROVERIF_DIR)/crypto.pvl \
 	-lib $(PROVERIF_EXTRACTION) \
 	-lib $(PROVERIF_DIR)/environment.pvl
+PROVERIF_QUANTUM_LIBS := \
+	-lib $(PROVERIF_DIR)/crypto.pvl \
+	-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+	-lib $(PROVERIF_EXTRACTION) \
+	-lib $(PROVERIF_DIR)/environment.pvl
 PROVERIF_AEAD_CONTROL_LIBS := \
 	-lib $(PROVERIF_DIR)/crypto.pvl \
 	-lib $(PROVERIF_DIR)/aead-commitment-negative-control.pvl \
@@ -148,6 +155,10 @@ override PROVERIF := proverif
 PROVERIF_SCENARIOS := \
 	aead-commitment \
 	aead-no-commitment \
+	active-classical \
+	passive-classical \
+	passive-quantum \
+	active-quantum \
 	baseline \
 	reachability \
 	compromise \
@@ -158,6 +169,8 @@ PROVERIF_SCENARIOS := \
 PROVERIF_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_VERIFY_TARGETS := $(addprefix verify-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_GENERATED_TARGETS := $(addprefix check-generated-proverif-,$(PROVERIF_SCENARIOS))
+
+SSPROVE_DIR := proofs/ssprove
 
 LEAN_DIR := proofs/lean
 LEAN_ROOT := $(LEAN_DIR)/BeaconcryptCore.lean
@@ -175,6 +188,8 @@ LEAN_GENERATED_PATHS := \
 
 .PHONY: verify verify-in-shell verify-fstar verify-fstar-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
+	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
+	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-toolchain check-fstar-policy check-lean-policy check-lean-root check-inventory \
 	extract-fstar check-fstar extract-proverif check-proverif \
 	check-proverif-extraction check-generated check-generated-fstar check-generated-lean \
@@ -197,6 +212,7 @@ verify-in-shell:
 	$(MAKE) check-fstar
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+	$(MAKE) check-ssprove
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 
@@ -219,6 +235,15 @@ verify-proverif-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+
+verify-ssprove:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-ssprove-in-shell
+
+verify-ssprove-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) check-ssprove
 
 $(PROVERIF_VERIFY_TARGETS): verify-proverif-%:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -259,7 +284,11 @@ check-toolchain:
 			"$$(fstar.exe --version | sed -n '1p')"; \
 		check_version Z3 '$(EXPECTED_Z3)' "$$(z3-4.15.3 -version)"; \
 		check_version ProVerif '$(EXPECTED_PROVERIF)' \
-			"$$(proverif -help 2>&1 | sed -n '1p')"
+			"$$(proverif -help 2>&1 | sed -n '1p')"; \
+		check_version Rocq '$(EXPECTED_ROCQ)' \
+			"$$(coqc --version | sed -n '1p')"; \
+		check_version SSProve '$(EXPECTED_SSPROVE)' \
+			"$${SSPROVE_VERSION:-missing}"
 
 extract-fstar:
 	# Enable hax-lib so the bounded recursive lookup carries its checked measure.
@@ -303,6 +332,12 @@ check-proverif-extraction:
 		}; \
 	done
 
+check-ssprove-policy:
+	$(MAKE) -C '$(SSPROVE_DIR)' check-policy
+
+check-ssprove:
+	$(MAKE) -C '$(SSPROVE_DIR)' check
+
 check-proverif:
 	+$(MAKE) --no-print-directory -j$(words $(PROVERIF_SCENARIOS)) \
 		$(PROVERIF_CHECK_TARGETS)
@@ -320,6 +355,62 @@ check-proverif-aead-no-commitment: check-proverif-extraction
 			$(PROVERIF_AEAD_CONTROL_LIBS) \
 			$(PROVERIF_DIR)/aead-no-commitment.pv | \
 		awk -v scenario=aead-no-commitment -f '$(PROVERIF_CHECKER)'
+
+check-proverif-active-classical: check-proverif-extraction \
+	check-proverif-reachability
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/queries.pvl \
+			$(PROVERIF_DIR)/baseline.pv | \
+		awk -v scenario=active-classical -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-reachability: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/passive-reachability-queries.pvl \
+			$(PROVERIF_DIR)/passive.pv | \
+		awk -v scenario=passive-reachability -f '$(PROVERIF_CHECKER)'
+
+check-proverif-quantum-capabilities:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-capability-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-capability-control-queries.pvl \
+			$(PROVERIF_DIR)/quantum-capability-control.pv | \
+		awk -v scenario=quantum-capabilities -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-classical: check-proverif-extraction \
+	check-proverif-passive-reachability
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/passive-queries.pvl \
+			$(PROVERIF_DIR)/passive.pv | \
+		awk -v scenario=passive-classical -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-quantum: check-proverif-extraction \
+	check-proverif-passive-reachability check-proverif-quantum-capabilities
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_QUANTUM_LIBS) \
+			-lib $(PROVERIF_DIR)/passive-queries.pvl \
+			$(PROVERIF_DIR)/passive.pv | \
+		awk -v scenario=passive-quantum -f '$(PROVERIF_CHECKER)'
+
+check-proverif-active-quantum: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/active-quantum-witness.pvl \
+			-lib $(PROVERIF_DIR)/active-quantum-queries.pvl \
+			$(PROVERIF_DIR)/active-quantum.pv | \
+		awk -v scenario=active-quantum -f '$(PROVERIF_CHECKER)'
 
 check-proverif-baseline: check-proverif-extraction
 	@set -o pipefail; \

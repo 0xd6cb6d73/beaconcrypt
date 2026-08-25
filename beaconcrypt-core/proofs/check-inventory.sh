@@ -27,7 +27,7 @@ while IFS=$'\t' read -r category expected path extra ||
 	[[ -n "${category:-}${expected:-}${path:-}${extra:-}" ]]; do
 	[[ -z "${category:-}" || "$category" == \#* ]] && continue
 	[[ -z "${extra:-}" ]] || fail "malformed manifest entry for $path"
-	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|historical-generated-fstar|historical-handwritten-fstar|inventory|lean-control|validation)$ ]] ||
+	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|handwritten-ssprove|historical-generated-fstar|historical-handwritten-fstar|inventory|lean-control|validation)$ ]] ||
 		fail "unknown manifest category: $category"
 	[[ "$expected" =~ ^[0-9a-f]{64}$ ]] || fail "invalid SHA-256 for $path"
 	[[ -n "$path" && -f "$path" ]] || fail "missing reviewed file: $path"
@@ -49,7 +49,8 @@ declare -A expected_category_counts=(
 	[generated-lean]=3
 	[generated-proverif]=1
 	[handwritten-lean]=9
-	[handwritten-proverif]=18
+	[handwritten-proverif]=28
+	[handwritten-ssprove]=5
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
@@ -148,6 +149,10 @@ find proofs/pro-verif -type f \
 	-printf '%p\n' > "$tmp_dir/handwritten-proverif"
 compare_set handwritten-proverif "$tmp_dir/handwritten-proverif"
 
+find proofs/ssprove -type f -printf '%p\n' \
+	> "$tmp_dir/handwritten-ssprove"
+compare_set handwritten-ssprove "$tmp_dir/handwritten-ssprove"
+
 find proofs/fstar/extraction -type f \
 	\( -name '*.fst' -o -name '*.fsti' \) \
 	-printf '%p\n' > "$tmp_dir/historical-generated-fstar"
@@ -168,6 +173,8 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/Extraction/FunsExternal.lean \
 	> "$tmp_dir/handwritten-lean"
 find proofs/lean/BeaconcryptCore/Model -maxdepth 1 -type f -name '*.lean' \
+	-printf '%p\n' >> "$tmp_dir/handwritten-lean"
+find proofs/lean/BeaconcryptCore/Refinement -maxdepth 1 -type f -name '*.lean' \
 	-printf '%p\n' >> "$tmp_dir/handwritten-lean"
 compare_set handwritten-lean "$tmp_dir/handwritten-lean"
 
@@ -300,10 +307,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 3 \
+require_occurrence_count 4 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 3 '_to_bitstring' \
+require_occurrence_count 4 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 require_line_count 31 '^fun ' proofs/pro-verif/crypto.pvl \
@@ -359,6 +366,45 @@ require_line_count 1 '^process$' proofs/pro-verif/aead-commitment.pv \
 	"AEAD with-commitment top-level process"
 require_line_count 1 '^process$' proofs/pro-verif/aead-no-commitment.pv \
 	"AEAD no-commitment top-level process"
+require_line_count 5 '^query ' proofs/pro-verif/passive-queries.pvl \
+	"passive secrecy query"
+require_line_count 2 '^query ' \
+	proofs/pro-verif/passive-reachability-queries.pvl \
+	"passive progress-control query"
+require_line_count 3 '^query ' proofs/pro-verif/active-quantum-queries.pvl \
+	"active-quantum attack query"
+require_line_count 2 '^reduc ' proofs/pro-verif/quantum-capabilities.pvl \
+	"public symbolic quantum recovery rule"
+require_line_count 2 '^query ' \
+	proofs/pro-verif/quantum-capability-control-queries.pvl \
+	"quantum capability-control query"
+require_line_count 2 '^fun .*\[private\]' \
+	proofs/pro-verif/active-quantum-witness.pvl \
+	"bounded private quantum recovery operation"
+require_line_count 2 '^equation ' \
+	proofs/pro-verif/active-quantum-witness.pvl \
+	"bounded quantum recovery equation"
+require_line_count 1 '^let ActiveQuantumMitm' \
+	proofs/pro-verif/active-quantum-witness.pvl \
+	"bounded active-quantum witness process"
+for scenario_process in \
+	passive \
+	active-quantum \
+	quantum-capability-control; do
+	require_line_count 1 '^process$' \
+		"proofs/pro-verif/${scenario_process}.pv" \
+		"${scenario_process} top-level process"
+done
+
+require_line_count 1 '^  Theorem ctx_misattribution_reduces_to_collision :' \
+	proofs/ssprove/CtxEventReduction.v \
+	"SSProve CTX event-reduction capstone"
+require_line_count 1 '^Print Assumptions ctx_misattribution_reduces_to_collision\.$' \
+	proofs/ssprove/CtxEventReduction.v \
+	"SSProve CTX assumption report"
+reject_matches "SSProve proof bypass or unsafe hax prelude" \
+	'(?i:\badmit(?:ted)?\b)|\b(?:Axiom|Conjecture|Parameters?|Abort)\b|__admitted__|falso|(?:exact|vm_cast|native_cast)_no_check|\bHacspec\b|Hacspec_|Beaconcrypt_core_|(?:Unset[[:space:]]+(?:Guard|Positivity|Universe)[[:space:]]+Checking|Set[[:space:]]+(?:Type[[:space:]]+in[[:space:]]+Type|Impredicative[[:space:]]+Set))' \
+	proofs/ssprove --glob '*.v'
 
 # Both invalid sequence-three attempts and the compromise handoff carry the exact same symbolic entry-state term.
 # No rejection-created cache is constructed or disclosed.
@@ -614,7 +660,7 @@ for theorem_name in \
 	ratchet.concrete.ReceiveOpen.finish_future_success_publishes_same_plaintext \
 	ratchet.concrete.ReceiveOpen.finish_cached_success_publishes_same_plaintext; do
 	require_line_count 1 "^theorem ${theorem_name//./\\.}( |$)" \
-		proofs/lean/BeaconcryptCore/Model/RatchetEffect.lean \
+		proofs/lean/BeaconcryptCore/Refinement/RatchetEffect.lean \
 		"current-production effect theorem ${theorem_name}"
 done
 
@@ -623,30 +669,31 @@ for theorem_name in \
 	plan_receive_until_reject_52 \
 	advance_receive_target_ok; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
-		proofs/lean/BeaconcryptCore/Model/RatchetControl.lean \
+		proofs/lean/BeaconcryptCore/Refinement/RatchetControl.lean \
 		"corrected receive-boundary theorem ${theorem_name}"
 done
 require_line_count 1 '^theorem receiveMessage_refines( |$)' \
-	proofs/lean/BeaconcryptCore/Model/RatchetRefinement.lean \
+	proofs/lean/BeaconcryptCore/Refinement/RatchetRefinement.lean \
 	"direct ideal receive refinement theorem"
 reject_matches "obsolete bound-49 Lean refinement remains" \
 	'\brecvStepGen\b|CachedOpenRefines\.(?:ideal_success_49|ideal_success_recvStep|finish_success_matches_ideal_49|finish_success_refines_49_of_publication)\b' \
-	proofs/lean/BeaconcryptCore/Model
+	proofs/lean/BeaconcryptCore/Model \
+	proofs/lean/BeaconcryptCore/Refinement
 
 # The imported phase-refinement layer covers the full kernel/cache relation, the KDF response law, non-exhausted successful-send refinement, all neutral exits, supplied finite failed-trace witnesses, and the conditional open reply/material relation.
 # Cached success additionally has generated open construction from KernelRefines plus an ideal lookup, exact material/reply, direct ideal outcome, concrete finish output, and the consumed control-cache refinement; its material-array post-state KernelRefines result remains conditional on CachedPublicationRefines, and future success remains unproved.
 for declaration in KernelRefines SendKdfRefines SendSealRefines; do
 	require_line_count 1 "^structure ${declaration}( |$)" \
-		proofs/lean/BeaconcryptCore/Model/RatchetEffectRefinement.lean \
+		proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean \
 		"effect-refinement relation ${declaration}"
 done
 for declaration in ResponseRefines idealOpenReply OpenReplyRefines CachedOpenRefines CachedPublicationRefines; do
 	require_line_count 1 "^def ${declaration}( |$)" \
-		proofs/lean/BeaconcryptCore/Model/RatchetEffectRefinement.lean \
+		proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean \
 		"effect-refinement relation ${declaration}"
 done
 require_line_count 1 '^inductive ReceiveFailureTrace( |\(|$)' \
-	proofs/lean/BeaconcryptCore/Model/RatchetEffectRefinement.lean \
+	proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean \
 	"represented finite failed receive trace relation"
 for theorem_name in \
 	SendKdf.cancel_preserves_refinement \
@@ -667,7 +714,7 @@ for theorem_name in \
 	CachedOpenRefines.finish_success_matches_ideal \
 	CachedOpenRefines.finish_success_refines_of_publication; do
 	require_line_count 1 "^theorem ${theorem_name//./\\.}( |$)" \
-		proofs/lean/BeaconcryptCore/Model/RatchetEffectRefinement.lean \
+		proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean \
 		"effect-refinement theorem ${theorem_name}"
 done
 
