@@ -6,3 +6,7 @@ CtxGame.v
 CtxPrivacy.v
 PqxdhRatchetGames.v
 PqxdhRatchetRom.v
+PqxdhHybridSecurity.v
+RatchetForwardSecrecy.v
+RecordIntegrity.v
+RecordIntegrityBound.v

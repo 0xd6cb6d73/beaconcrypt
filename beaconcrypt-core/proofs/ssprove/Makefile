@@ -7,7 +7,7 @@ NIX ?= nix
 REPOSITORY_ROOT := $(abspath ../../..)
 PROOF_SHELL := path:$(REPOSITORY_ROOT)\#proofs
 OUTPUT_DIR := $(REPOSITORY_ROOT)/target/formal-verification/ssprove
-MODULES := BoundedRom CtxEventReduction CtxGame CtxPrivacy PqxdhRatchetGames PqxdhRatchetRom
+MODULES := BoundedRom CtxEventReduction CtxGame CtxPrivacy PqxdhRatchetGames PqxdhRatchetRom PqxdhHybridSecurity RatchetForwardSecrecy RecordIntegrity RecordIntegrityBound
 
 .PHONY: verify check check-policy
 

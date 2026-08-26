@@ -50,7 +50,7 @@ declare -A expected_category_counts=(
 	[generated-proverif]=1
 	[handwritten-lean]=9
 	[handwritten-proverif]=28
-	[handwritten-ssprove]=10
+	[handwritten-ssprove]=14
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
@@ -496,6 +496,69 @@ require_line_count 1 '^  Lemma protocol_supported_scenario_root_hidden$' \
 require_line_count 1 '^Print Assumptions protocol_supported_scenario_root_hidden\.$' \
 	proofs/ssprove/PqxdhRatchetRom.v \
 	"SSProve supported-scenario bridge assumption report"
+for hybrid_capstone in \
+	pqxdh_hybrid_one_hidden_contribution_confidentiality \
+	active_classical_forward_hybrid_confidentiality \
+	passive_classical_forward_hybrid_confidentiality \
+	passive_quantum_forward_hybrid_confidentiality; do
+	require_line_count 1 "^  Theorem ${hybrid_capstone}\$" \
+		proofs/ssprove/PqxdhHybridSecurity.v \
+		"SSProve hybrid ${hybrid_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${hybrid_capstone}\\.\$" \
+		proofs/ssprove/PqxdhHybridSecurity.v \
+		"SSProve hybrid ${hybrid_capstone} assumption report"
+done
+require_line_count 1 '^Lemma pqxdh_hybrid_domains_are_separated$' \
+	proofs/ssprove/PqxdhHybridSecurity.v \
+	"SSProve hybrid domain-separation theorem"
+require_line_count 1 '^Lemma active_quantum_replace_has_no_hidden_hybrid_component$' \
+	proofs/ssprove/PqxdhHybridSecurity.v \
+	"SSProve active-quantum hybrid failure classification"
+require_line_count 1 '^Print Assumptions active_quantum_replace_has_no_hidden_hybrid_component\.$' \
+	proofs/ssprove/PqxdhHybridSecurity.v \
+	"SSProve active-quantum hybrid classification assumption report"
+for ratchet_capstone in \
+	ratchet_erasure_forward_secrecy_bad_query_bound \
+	ratchet_attacker_trace_query_count_bound; do
+	require_line_count 1 "^  Theorem ${ratchet_capstone}\$" \
+		proofs/ssprove/RatchetForwardSecrecy.v \
+		"SSProve ratchet ${ratchet_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${ratchet_capstone}\\.\$" \
+		proofs/ssprove/RatchetForwardSecrecy.v \
+		"SSProve ratchet ${ratchet_capstone} assumption report"
+done
+require_line_count 1 '^Theorem ratchet_other_domain_separation$' \
+	proofs/ssprove/RatchetForwardSecrecy.v \
+	"SSProve ratchet domain-separation theorem"
+for integrity_capstone in \
+	record_active_modification_query_or_guess_classification_bound \
+	record_fresh_input_integrity_probability_is_fresh_guess \
+	record_cross_context_reuse_reduces_to_collision \
+	record_cross_sequence_reuse_reduces_to_collision \
+	record_integrity_trace_size_bound; do
+	require_line_count 1 "^Theorem ${integrity_capstone}\$" \
+		proofs/ssprove/RecordIntegrity.v \
+		"SSProve record ${integrity_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${integrity_capstone}\\.\$" \
+		proofs/ssprove/RecordIntegrity.v \
+		"SSProve record ${integrity_capstone} assumption report"
+done
+for integrity_bound_capstone in \
+	record_runs_agree_after_unqueried_flip \
+	record_bound_table_flip_involutive \
+	record_bound_flip_toggles_success \
+	record_uniform_one_bit_fresh_tag_guess_bound; do
+	require_line_count 1 \
+		"^Print Assumptions ${integrity_bound_capstone}\\.\$" \
+		proofs/ssprove/RecordIntegrityBound.v \
+		"SSProve record-bound ${integrity_bound_capstone} assumption report"
+done
+require_line_count 1 '^  Theorem record_uniform_one_bit_fresh_tag_guess_bound :$' \
+	proofs/ssprove/RecordIntegrityBound.v \
+	"SSProve one-bit fresh-tag numerical bound"
 reject_matches "SSProve proof bypass or unsafe hax prelude" \
 	'(?i:\badmit(?:ted)?\b)|\b(?:Axiom|Conjecture|Parameters?|Abort)\b|__admitted__|falso|(?:exact|vm_cast|native_cast)_no_check|\bHacspec\b|Hacspec_|Beaconcrypt_core_|(?:Unset[[:space:]]+(?:Guard|Positivity|Universe)[[:space:]]+Checking|Set[[:space:]]+(?:Type[[:space:]]+in[[:space:]]+Type|Impredicative[[:space:]]+Set))' \
 	proofs/ssprove --glob '*.v'
