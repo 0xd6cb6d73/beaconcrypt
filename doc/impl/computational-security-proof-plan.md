@@ -6,7 +6,7 @@
 
 This is a proposed implementation plan written against the `proof` branch at commit `ff12e813a1f4b7ee6f6e86db573dc796eb1d7154`.
 
-The maintained [integration evaluation](computational-security-proof-integration.md) records the implemented four-scenario ProVerif suite, the bounded active-quantum attack, the first checked SSProve CTX event reduction, and the remaining work.
+The maintained [integration evaluation](computational-security-proof-integration.md) records the implemented four-scenario ProVerif suite, bounded hidden-ROM CTX binding and privacy hops, the one-session one-record SSProve ideal protocol games, the attacker-facing bounded protocol-ROM reduction, the active-quantum attacks, and the remaining work.
 
 Except where that evaluation explicitly records a completed milestone, nothing in this planning document is a current security claim, a completed proof, or permission to change the protocol, wire format, persistence format, or public APIs.
 

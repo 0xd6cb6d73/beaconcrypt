@@ -50,7 +50,7 @@ declare -A expected_category_counts=(
 	[generated-proverif]=1
 	[handwritten-lean]=9
 	[handwritten-proverif]=28
-	[handwritten-ssprove]=5
+	[handwritten-ssprove]=10
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
@@ -402,6 +402,100 @@ require_line_count 1 '^  Theorem ctx_misattribution_reduces_to_collision :' \
 require_line_count 1 '^Print Assumptions ctx_misattribution_reduces_to_collision\.$' \
 	proofs/ssprove/CtxEventReduction.v \
 	"SSProve CTX assumption report"
+require_line_count 1 '^  Theorem run_bounded_rom_query_count_bound$' \
+	proofs/ssprove/BoundedRom.v \
+	"SSProve bounded-ROM query-count theorem"
+require_line_count 1 '^  Theorem run_bounded_rom_trace_consistent$' \
+	proofs/ssprove/BoundedRom.v \
+	"SSProve bounded-ROM trace-consistency theorem"
+require_line_count 1 '^  Theorem bounded_rom_same_run_extractor_reduction$' \
+	proofs/ssprove/BoundedRom.v \
+	"SSProve bounded-ROM extractor reduction"
+require_line_count 1 '^Print Assumptions bounded_rom_same_run_extractor_reduction\.$' \
+	proofs/ssprove/BoundedRom.v \
+	"SSProve bounded-ROM assumption report"
+require_line_count 1 '^Theorem ctx_hidden_rom_extractor_reduction$' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve hidden-ROM CTX extractor reduction"
+require_line_count 1 '^Corollary ctx_uniform_hidden_rom_extractor_reduction$' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve uniform-ROM CTX extractor reduction"
+require_line_count 1 '^Theorem ctx_hidden_binding_trace_size_bound$' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve CTX query-count theorem"
+require_line_count 1 '^Theorem ctx_attach_verifier_completed_run$' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve CTX verifier-suffix theorem"
+require_line_count 1 '^Lemma ctx_hidden_misattribution_challenge_reachable :' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve CTX non-vacuity witness"
+require_line_count 1 '^Print Assumptions ctx_hidden_rom_extractor_reduction\.$' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve CTX extractor assumption report"
+require_line_count 1 '^  Theorem ctx_true_real_is_programmed_real$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX programming representation theorem"
+require_line_count 1 '^  Theorem ctx_same_run_mismatch_implies_secret_query$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX secret-query fundamental lemma"
+require_line_count 1 '^  Theorem ctx_hidden_uniform_key_privacy_hop$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX hidden-key privacy hop"
+require_line_count 1 '^  Theorem ctx_hidden_true_real_is_programmed_real$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX hidden-key programming representation"
+require_line_count 1 '^  Theorem ctx_hidden_true_programmed_decision_probability$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX true/programmed decision equality"
+require_line_count 1 '^  Theorem ctx_programmed_fresh_decision_advantage_bound$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX programmed/fresh advantage bound"
+require_line_count 1 '^  Theorem ctx_hidden_uniform_key_true_real_privacy_bound$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX true-real/fresh-ideal privacy bound"
+require_line_count 1 '^Print Assumptions ctx_hidden_uniform_key_true_real_privacy_bound\.$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX true-real privacy assumption report"
+for protocol_capstone in \
+	active_classical_confidentiality \
+	passive_classical_confidentiality \
+	passive_quantum_capability_confidentiality \
+	active_quantum_advantage_one; do
+	require_line_count 1 "^Theorem ${protocol_capstone} :" \
+		proofs/ssprove/PqxdhRatchetGames.v \
+		"SSProve protocol ${protocol_capstone} capstone"
+done
+for protocol_assumption_report in \
+	active_classical_confidentiality \
+	passive_classical_confidentiality \
+	passive_quantum_confidentiality \
+	active_quantum_advantage_one; do
+	require_line_count 1 \
+		"^Print Assumptions ${protocol_assumption_report}\\.\$" \
+		proofs/ssprove/PqxdhRatchetGames.v \
+		"SSProve protocol ${protocol_assumption_report} assumption report"
+done
+for protocol_rom_capstone in \
+	pqxdh_ratchet_bounded_rom_confidentiality_bound \
+	active_classical_forward_bounded_rom_confidentiality \
+	passive_classical_forward_bounded_rom_confidentiality \
+	passive_quantum_classical_query_forward_confidentiality \
+	active_classical_replace_fixed_failure_confidentiality \
+	active_classical_all_actions_bounded_rom_confidentiality; do
+	require_line_count 1 "^  Theorem ${protocol_rom_capstone}\$" \
+		proofs/ssprove/PqxdhRatchetRom.v \
+		"SSProve protocol-ROM ${protocol_rom_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${protocol_rom_capstone}\\.\$" \
+		proofs/ssprove/PqxdhRatchetRom.v \
+		"SSProve protocol-ROM ${protocol_rom_capstone} assumption report"
+done
+require_line_count 1 '^  Lemma protocol_supported_scenario_root_hidden$' \
+	proofs/ssprove/PqxdhRatchetRom.v \
+	"SSProve supported-scenario hidden-root bridge"
+require_line_count 1 '^Print Assumptions protocol_supported_scenario_root_hidden\.$' \
+	proofs/ssprove/PqxdhRatchetRom.v \
+	"SSProve supported-scenario bridge assumption report"
 reject_matches "SSProve proof bypass or unsafe hax prelude" \
 	'(?i:\badmit(?:ted)?\b)|\b(?:Axiom|Conjecture|Parameters?|Abort)\b|__admitted__|falso|(?:exact|vm_cast|native_cast)_no_check|\bHacspec\b|Hacspec_|Beaconcrypt_core_|(?:Unset[[:space:]]+(?:Guard|Positivity|Universe)[[:space:]]+Checking|Set[[:space:]]+(?:Type[[:space:]]+in[[:space:]]+Type|Impredicative[[:space:]]+Set))' \
 	proofs/ssprove --glob '*.v'

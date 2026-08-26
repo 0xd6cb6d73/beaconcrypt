@@ -2,13 +2,13 @@
 
 # Computational security proof integration evaluation
 
-Status on 2026-08-25: the ProVerif suite now names and checks the four required attacker scenarios, the active-quantum scenario produces the expected attack witness, and the SSProve work establishes the first CTX event-inclusion milestone. A complete computational proof of the beaconcrypt handshake, ratchet, and record protocol is not yet present and must not be inferred from these results.
+Status on 2026-08-26: the ProVerif suite names and checks the four required attacker scenarios, and the SSProve suite contains bounded hidden-ROM CTX binding/privacy hops, a closed one-session one-record ideal PQXDH-and-ratchet game, and an attacker-facing bounded classical-ROM extension. The closed game proves zero advantage for active classical, passive classical, and a passive-quantum classical-query capability model, while active quantum has the expected advantage-one attack. The extension reduces each positive forwarding case and all active-classical actions to the exact hidden-pad-query probability but supplies no negligible production-width bound. This is not yet a complete computational proof of arbitrary beaconcrypt executions or a QROM theorem.
 
 ## Decision and separation of concerns
 
 The computational proof must reason about protocol security games, adversarial advantage, reductions, and composition assumptions. It assumes that the Rust operations supplied to those games implement their stated deterministic contracts. Lean and F* own implementation correctness, extraction refinement, fixed-size layouts, and state-machine correctness; a temporary Lean or F* failure caused by implementation/extraction reorganization is therefore not a computational-model counterexample and is not repaired as part of this work.
 
-This separation does not permit an undocumented implementation assumption. Every deterministic fact consumed by a computational theorem must be a named contract with a representation bridge to a named Lean or F* result. The computational proof remains conditional when that bridge has not been reviewed against the current extraction snapshot.
+This separation does not permit an undocumented implementation assumption. Every deterministic fact consumed by a computational theorem must either be a named contract with a representation bridge to a named Lean or F* result or be identified explicitly as a handwritten model shape whose bridge remains open. The computational proof remains conditional when that bridge has not been reviewed against the current extraction snapshot.
 
 The integration has three deliberately different evidence layers:
 
@@ -64,11 +64,32 @@ The active witness uses private recovery functions inside one scripted process r
 
 ProVerif operates in a symbolic term algebra. Its positive results do not supply concrete advantage bounds, multi-user reduction losses, running-time bounds, quantum query semantics, random-oracle semantics, or proofs about the named primitive implementations. The four-scenario matrix is valuable because it fixes the intended security claims, finds symbolic dependency errors, checks correspondence structure, and provides the required active-quantum counterexample before the same claims are encoded as computational games.
 
-The active-classical symbolic result is the specification target for a classical computational protocol proof. The passive-classical result should follow as a restricted-adversary corollary rather than receive an unrelated reduction. The passive-quantum result requires a separate QPT or carefully justified post-quantum lifting theorem over classical transcripts. Standard SSProve packages are classical probabilistic programs and do not model quantum state, superposition oracle queries, or QROM access, so a classical SSProve theorem must not be renamed a passive-quantum theorem.
+The active-classical symbolic result is the specification target for a classical computational protocol proof. The passive-classical result should follow as a restricted-adversary corollary rather than receive an unrelated reduction. The checked SSProve passive-quantum capability game exposes the classical secret-recovery consequences while keeping honest ML-KEM decapsulation opaque, but a genuine passive-quantum result still requires a QPT or carefully justified post-quantum lifting theorem over classical transcripts. Standard SSProve packages are classical probabilistic programs and do not model quantum state, superposition oracle queries, or QROM access.
 
 The active-quantum result is a negative theorem and should remain an executable expected-failure test. Replacing Ed25519 or X25519 assumptions with quantum-secure names cannot make the current wire protocol actively post-quantum secure because the concrete attack substitutes an attacker-owned KEM key after breaking classical authentication.
 
-## Modified CTX commitment milestone
+## Bounded SSProve PQXDH and ratchet games
+
+[`PqxdhRatchetGames.v`](../../beaconcrypt-core/proofs/ssprove/PqxdhRatchetGames.v) defines network power and computation power independently and instantiates all four combinations. One Ed25519 seed jointly controls signing and the converted X25519 identity, so the quantum capability compromises those correlated uses together rather than sampling independent secrets.
+
+The modeled PQXDH root input contains exactly four ordered DH contributions followed by the ML-KEM contribution, corresponding to the production `build_root_key_input` contract after its fixed padding. Authentication metadata is deliberately absent from the root hash input. The symmetric KDF is one shared finite table for both initial expansion and later ratchet steps, and its abstract output has two common prefix components plus the later suffix so equal inputs enforce the production 64/76-byte prefix relation represented by `split_initial_ratchet_kdf_output` and `split_ratchet_kdf_output`.
+
+The closed confidentiality experiment samples a jointly uniform eight-bit finite random-oracle tape with distinct honest and substituted root entries, establishes one session, advances one symmetric-ratchet record at fixed sequence zero, and masks a Boolean challenge with the ideal record key. Public metadata is fixed and equal between challenge branches. For every deterministic Boolean distinguisher, a measure-preserving tape involution proves exact equality of the hidden-root games and therefore advantage zero.
+
+The checked modality results are:
+
+- Active classical has zero advantage for both statically selected network actions: forwarding reaches the hidden honest root, while replacement fails ideal authentication and returns a challenge-independent failure observation.
+- Passive classical is the forward-only restriction and has zero advantage.
+- Passive quantum capability has zero advantage after modeled recovery of the joint Ed25519/X25519 secret because the passive observer cannot replace the honest ML-KEM key and cannot decapsulate its ciphertext.
+- Active quantum has advantage one for the identity distinguisher on the replacement action because forged classical authentication permits an attacker-selected ML-KEM key. The proof indexes the root oracle separately at the honest and substituted inputs and derives the removed record pad by recomputing from the exact accepted substituted input.
+
+These are exact results for the closed finite ideal game, not reductions for the production primitive instances. The action is chosen outside the challenge game, and that closed game does not give the attacker a public-transcript API, direct KDF-random-oracle queries, record-tampering/decryption access, or a numerical hidden-input guessing bound. It covers neither multiple sessions nor arbitrary ratchet schedules, replay, compromise, forward secrecy, CTX composition, randomized interactive distinguishers, QPT computation, or QROM access. The executable SSProve package records the same bounded sampling computation, while the assumption-safe capstones use its direct finite pushforward to avoid a stronger admitted infinite-sum interchange dependency in the pinned high-level library.
+
+[`PqxdhRatchetRom.v`](../../beaconcrypt-core/proofs/ssprove/PqxdhRatchetRom.v) adds the missing bounded classical root/ratchet oracle interface for the positive cases. It fixes the four DH coordinates so the observer may guess them, samples only the honest ML-KEM atom and complete tagged table secretly, publishes the challenge ciphertext, and runs an arbitrary fuel-bounded adaptive query tree against that table. A table-dependent involution flips the pad without changing the hidden query that indexes it; any coupled decision mismatch therefore implies that the trace asked that exact query. The main capstone proves `Adv <= Pr[hidden-pad query]`, active-classical replacement is exactly zero, and `protocol_supported_scenario_root_hidden` checks that only active-classical forward/replace, passive-classical forward, and passive-quantum forward inhabit the wrapper. Active-quantum replacement remains exclusively the separate advantage-one theorem.
+
+This extension does not turn the abstract result into a negligible bound. The one-bit symmetric domain can be exhausted with two queries, so the bad-event probability can be one; production-width parameterization and a guessing bound remain open. The program receives only the fixed public shape and challenge ciphertext, not the actual registration transcript or a record-tampering/decryption interface, and its oracle queries remain classical.
+
+## Modified CTX commitment games
 
 For key `K`, nonce `N`, 153-byte associated data `A`, transmitted 16-byte AEAD tag `T`, sequence `S`, and sender identifier `I`, production builds the following 229-byte transcript and protected payload:
 
@@ -80,24 +101,30 @@ R = C || T || U
 
 A CTX misattribution event is one fixed protected payload `R` with two accepted explanations that differ in at least one of `K`, `N`, `A`, `S`, `I`, or accepted plaintext. The base AEAD is allowed to open the same `C || T` under distinct keys or contexts, so the binding claim does not smuggle in key commitment from ChaCha20-Poly1305.
 
-The repository-owned [`CtxEventReduction.v`](../../beaconcrypt-core/proofs/ssprove/CtxEventReduction.v) expresses a run as a joint observation containing a misattribution bit and the collision bit extracted by the reduction. Given the pointwise contract that every successful misattribution sets the collision bit, `ctx_misattribution_reduces_to_collision` proves the following inequality in SSProve's probability semantics:
+[`BoundedRom.v`](../../beaconcrypt-core/proofs/ssprove/BoundedRom.v) supplies a generic fuel-bounded adaptive classical random-oracle tree whose complete finite function table remains hidden from the program and observation. [`CtxGame.v`](../../beaconcrypt-core/proofs/ssprove/CtxGame.v) instantiates that runner with an adversary that can make at most `q` hash queries and return one protected payload with two explanations. The verifier performs exactly two additional hidden-table queries, checks both outer digests and both calls to an arbitrary deterministic multi-opening AEAD, and extracts the two transcript-and-digest pairs.
+
+The checked game proves:
 
 ```text
-Pr[CTX misattribution] <= Pr[hash collision].
+Pr_bounded-hidden-ROM[CTX misattribution] <= Pr_same-run[unequal-input, equal-output collision].
 ```
 
-This is the correct first computational event-inclusion step for CTX binding and needs no additive AEAD term. The theorem is an event-inclusion lifting inside a joint experiment; a full game-based deliverable must additionally define the adversary-facing CTX package, construct the collision adversary from that package, connect its output to the collision experiment, and account for oracle calls and reduction overhead.
+`ctx_hidden_rom_extractor_reduction` proves the generic inequality for any hidden-table distribution, and `ctx_uniform_hidden_rom_extractor_reduction` specializes it to a uniformly sampled finite random function. `ctx_hidden_binding_trace_size_bound` accounts for at most `q + 2` completed oracle queries, while `ctx_attach_verifier_completed_run` proves that a bounded completed adversary trace is preserved and followed by exactly the two verifier queries. A concrete deliberately multi-opening AEAD with a colliding constant table makes the misattribution event executable and non-vacuous. The earlier [`CtxEventReduction.v`](../../beaconcrypt-core/proofs/ssprove/CtxEventReduction.v) remains as the more generic same-execution event-inclusion lemma.
 
-The locked pilot uses Rocq 9.0.0, SSProve 0.2.4, and MathComp 2.4.0, and both `coqc` and `coqchk` pass. The dependency audit retains SSProve/MathComp's standard Boolean-predicate foundations of propositional extensionality, dependent functional extensionality, and constructive indefinite description, while the probability carrier is parameterized by an abstract `realType`; it finds no repository admission, SSProve interchange admission, or hax `falso` dependency.
+[`CtxPrivacy.v`](../../beaconcrypt-core/proofs/ssprove/CtxPrivacy.v) keeps confidentiality separate from binding. It represents the real digest by jointly sampling a uniform hidden key, finite random-oracle table, and fresh value and programming the table at the key-derived transcript. A key-preserving swap establishes the true-real/programmed-real representation, the same-run fundamental lemma makes every programmed/fresh decision mismatch imply a classical query for the secret transcript, and `ctx_hidden_uniform_key_true_real_privacy_bound` bounds the absolute true-real/fresh-ideal decision gap by that bad-query probability using direct finite-source reindexing.
+
+The CTX binding proof needs no additive AEAD-security term, but it supplies no numerical collision bound for BLAKE2b-512. The privacy hop is conditional on a hidden uniform record key and an independent ideal-AEAD confidentiality theorem; it supplies neither the probability of guessing a production-width key nor a complete transformed-AEAD composition theorem. Both files use one-bit finite atoms to make exhaustive random functions available to SSProve, so a representation and width-parameter bridge remains required before claiming the production game.
+
+The locked suite uses Rocq 9.0.0, SSProve 0.2.4, and MathComp 2.4.0. The build compiles and kernel-checks every repository-owned module, exact-diffs every assumption report, and rejects repository admissions, the unsafe hax prelude, and the pinned library's admitted infinite-sum interchange theorem. The accepted foundational assumptions are propositional extensionality, dependent functional extensionality, constructive indefinite description, and an abstract `realType`.
 
 ### Cross-prover deterministic contract
 
-The SSProve theorem deliberately takes the pointwise implication as a parameter instead of re-proving byte encoding or implementation correctness. Its intended discharge is the combination of these checked F* results in [`Beaconcrypt_core.Commitment.Lemmas.fst`](../../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst):
+The game-level CTX transcript is an injective product of its semantic bit fields, which lets SSProve prove the extractor soundness without assuming implementation correctness. Its intended connection to production is the combination of these checked F* results in [`Beaconcrypt_core.Commitment.Lemmas.fst`](../../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst):
 
 - `production_commitment_input_is_injective` establishes injectivity of the exact six-field 229-byte transcript, including both little-endian integers.
 - `ctx_distinct_openings_imply_hash_collision` constructs unequal transcripts with equal hash outputs from any two semantically distinct accepted explanations of one fixed payload, for arbitrary pure hash and AEAD-open functions.
 
-Cross-prover composition still requires a reviewed representation bridge showing that an SSProve misattribution observation contains exactly the two parsed explanations expected by the F* theorem, that both checks correspond to the modeled acceptance predicates, and that the collision bit denotes the unequal-input, equal-output witness returned by F*. The bridge is an integration obligation, not a request for SSProve to verify Rust correctness.
+Cross-prover composition still requires a reviewed representation bridge showing that the SSProve semantic fields represent the parsed production explanations expected by the F* theorem, that both checks correspond to the modeled acceptance predicates, and that the abstract transcript constructor corresponds to the proved fixed-width byte encoding. The bridge is an integration obligation, not a request for SSProve to verify Rust correctness.
 
 Collision resistance establishes only CTX binding or misattribution resistance. It does not by itself prove that publishing an unkeyed hash whose input includes secret `K` preserves record privacy or ordinary ciphertext integrity. Those composition claims need a separately stated transformed-AEAD, random-oracle, secret-input, or equivalent assumption that is suitable for the classical or quantum attacker class being claimed. Ordinary modifications to `C` remain covered by the base AEAD integrity argument rather than by the same-payload CTX collision reduction.
 
@@ -107,7 +134,7 @@ The ProVerif model uses the hax extraction boundary for six production PQXDH dat
 
 Direct hax-to-SSProve extraction was probed for `build_commitment_transcript` and related deterministic helpers, but it is not currently an admissible proof dependency. The generated module imports hax's bundled Hacspec prelude and aggregate library, and the pinned prelude exports `Axiom falso : False` for unchecked result unwrapping. Importing that axiom would make every proposition provable and invalidate the trusted computational proof. The selected generated commitment code also requires backend support for Rust array construction that is not yet emitted as a complete standalone SSProve definition.
 
-The SSProve pilot therefore imports neither hax-generated Rocq nor the Hacspec aggregate library. This is an explicit safety gate, not a decision to abandon extraction. Direct extracted code can replace a deterministic contract only after all of the following conditions hold:
+The SSProve suite therefore imports neither hax-generated Rocq nor the Hacspec aggregate library. This is an explicit safety gate, not a decision to abandon extraction. Direct extracted code can replace a deterministic contract only after all of the following conditions hold:
 
 1. The exact hax, Rocq, MathComp, and SSProve versions are pinned and version-checked.
 2. The deny-all hax selector emits only the reviewed production-used items and their necessary dependencies.
@@ -116,7 +143,7 @@ The SSProve pilot therefore imports neither hax-generated Rocq nor the Hacspec a
 5. Regeneration is deterministic and CI rejects generated drift.
 6. The generated representation is shown to match the game interface used by the computational theorem.
 
-Until this gate passes, the sound route is a generic SSProve theorem parameterized by explicit deterministic contracts, with F* or Lean discharging those contracts through a reviewed bridge. Handwriting an executable look-alike of production and silently calling it extracted is not acceptable.
+Until this gate passes, the sound route is to state the handwritten finite model explicitly, mirror only named production operation shapes, and keep the F*/Lean-to-SSProve representation bridge as a named open obligation. Handwriting an executable look-alike of production and silently calling it extracted is not acceptable.
 
 ## Assumption ledger
 
@@ -133,23 +160,23 @@ The eventual protocol theorem must state assumptions per attacker class rather t
 | Modified CTX/BLAKE2b-512 | Collision resistance for binding, plus an explicit CTX privacy and ordinary-integrity preservation assumption for record composition. | Quantum collision resistance for binding and a QROM or other quantum-suitable preservation assumption for privacy. | Collision resistance alone does not show that publishing `H(K || ...)` preserves secrecy or ordinary integrity. |
 | State and randomness | Fresh unbiased key generation, one authoritative state owner, atomic replay consumption, no rollback or fork, and correct peer routing. | Honest unmodified delivery and retained ML-KEM secret state. | Replication, rollback, compromise timing, erasure, and availability need separately scoped models. |
 
-Primitive correctness, primitive implementation verification, compiler correctness, side-channel resistance, and machine-code correspondence are outside the computational proof requested here. Primitive security properties remain explicit assumptions, while deterministic protocol and state facts are imported as Lean/F* contracts.
+Primitive correctness, primitive implementation verification, compiler correctness, side-channel resistance, and machine-code correspondence are outside the computational proof requested here. Primitive security properties remain explicit assumptions. Deterministic protocol and state facts must be supplied by named Lean/F* contracts when the representation bridge is complete; the present finite SSProve shapes keep that bridge open rather than claiming an import that has not occurred.
 
 ## Remaining computational protocol work
 
 The following work remains before beaconcrypt has a complete computational protocol proof:
 
-1. Define adversary-facing SSProve interfaces for registration, response, record sending, record receiving, compromise, replay, and bounded concurrency with the actual public transcript and failure leakage.
-2. Replace the CTX joint-observation pilot with an executable CTX game and collision reduction, record exact hash-query and running-time overhead, and complete the F*/SSProve representation bridge.
-3. Select and formalize one joint HKDF combiner assumption that covers the production input order, shared labels, variable output lengths, public or correlated classical inputs, and the remaining ML-KEM entropy.
-4. Prove active-classical handshake secrecy and one-way agreement under explicit multi-user Ed25519, X25519, ML-KEM, and HKDF assumptions, while retaining the dropped-response counterexample to converse agreement.
-5. Prove ratchet record privacy, authenticity, replay resistance, direction and peer separation, and the intended scoped forward-secrecy statements for arbitrary bounded schedules rather than only the current fixed ProVerif prefix.
-6. Compose CTX binding separately from CTX privacy and ordinary-integrity preservation so that a collision-resistance theorem is never used for the wrong property.
-7. Add an ML-KEM-removal or reveal negative control to the honest-only passive suite, then state passive-classical security as a restricted-adversary corollary and either use a quantum-aware framework or provide a reviewed external lifting theorem for passive quantum harvest-now-decrypt-later security.
-8. Retain the active-quantum ProVerif trace as a required negative control and state active post-quantum security as unsupported until the wire protocol authenticates all key-establishment material with a quantum-secure mechanism.
-9. Maintain the existing SSProve proof-policy, exact assumption report, out-of-tree object, `coqchk`, CI, and trust-boundary inventory gates, and extend them for every future full-game or admitted hax-extraction artifact.
+1. Extend the one-session, one-record game to adversary-facing registration, response, record sending, record receiving, compromise, replay, and bounded-concurrency interfaces with the actual public transcript and failure leakage.
+2. Generalize the finite CTX fields to production-width types, complete the F*/SSProve representation bridge, and connect the extracted collision to a named primitive collision game with exact hash-query and reduction-overhead accounting.
+3. Generalize the one-bit bounded root/ratchet random-oracle interface to production-width domains, prove a numerical hidden-input bad-query bound, and select one joint HKDF combiner assumption covering the production input order, shared labels, variable output lengths, public or correlated classical inputs, and remaining ML-KEM entropy.
+4. Lift the closed active-classical game to multi-user handshake secrecy and one-way agreement under explicit ideal or reduced Ed25519, X25519, ML-KEM, and HKDF interfaces, while retaining the dropped-response counterexample to converse agreement.
+5. Prove ratchet record privacy, authenticity, replay resistance, direction and peer separation, and intended scoped forward secrecy for arbitrary bounded schedules rather than one fixed sequence-zero record.
+6. Compose the CTX programming hop with ideal AEAD confidentiality, and prove ordinary-integrity preservation separately from CTX binding so collision resistance is never used for the wrong property.
+7. Add an ML-KEM-removal or reveal negative control to the honest-only passive suite, and use a quantum-aware framework or reviewed external lifting theorem before promoting the passive-quantum capability result to a QPT or QROM claim.
+8. Retain both active-quantum attack witnesses as required negative controls and state active post-quantum security as unsupported until the wire protocol authenticates all key-establishment material with a quantum-secure mechanism.
+9. Maintain the SSProve proof-policy, exact assumption reports, out-of-tree objects, `coqchk`, CI, and trust-boundary inventory gates for every future full-game or extraction artifact.
 
-Completion means checked games and reductions with named assumptions and losses, not merely four passing ProVerif scenario labels. Until the items above are complete, the supported summary is: beaconcrypt has an explicit four-way symbolic threat-model suite, an expected active-quantum break, and a mechanized first CTX event-inclusion result, while the end-to-end computational protocol theorem remains work in progress.
+Completion means checked games and reductions with named assumptions and losses, not merely four passing labels in a fixed ideal game. The supported summary is now: beaconcrypt has a four-way symbolic suite, bounded hidden-ROM CTX binding and privacy hops, a one-session one-record closed ideal game with three exact zero-advantage results and the expected active-quantum advantage-one break, and an adaptive classical-ROM reduction of the positive cases to an explicit bad-query event. Its numerical production-width bound, arbitrary-execution composition, and quantum-computational lifting remain work in progress.
 
 ## Maintenance and verification
 
