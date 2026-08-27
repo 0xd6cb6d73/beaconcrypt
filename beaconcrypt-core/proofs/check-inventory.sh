@@ -27,7 +27,7 @@ while IFS=$'\t' read -r category expected path extra ||
 	[[ -n "${category:-}${expected:-}${path:-}${extra:-}" ]]; do
 	[[ -z "${category:-}" || "$category" == \#* ]] && continue
 	[[ -z "${extra:-}" ]] || fail "malformed manifest entry for $path"
-	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|handwritten-ssprove|historical-generated-fstar|historical-handwritten-fstar|inventory|lean-control|validation)$ ]] ||
+	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-cryptoverif|handwritten-lean|handwritten-proverif|handwritten-ssprove|historical-generated-fstar|historical-handwritten-fstar|inventory|lean-control|validation)$ ]] ||
 		fail "unknown manifest category: $category"
 	[[ "$expected" =~ ^[0-9a-f]{64}$ ]] || fail "invalid SHA-256 for $path"
 	[[ -n "$path" && -f "$path" ]] || fail "missing reviewed file: $path"
@@ -48,6 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=3
 	[generated-proverif]=1
+	[handwritten-cryptoverif]=11
 	[handwritten-lean]=9
 	[handwritten-proverif]=28
 	[handwritten-ssprove]=14
@@ -152,6 +153,10 @@ compare_set handwritten-proverif "$tmp_dir/handwritten-proverif"
 find proofs/ssprove -type f -printf '%p\n' \
 	> "$tmp_dir/handwritten-ssprove"
 compare_set handwritten-ssprove "$tmp_dir/handwritten-ssprove"
+
+find proofs/crypto-verif -type f -printf '%p\n' \
+	> "$tmp_dir/handwritten-cryptoverif"
+compare_set handwritten-cryptoverif "$tmp_dir/handwritten-cryptoverif"
 
 find proofs/fstar/extraction -type f \
 	\( -name '*.fst' -o -name '*.fsti' \) \

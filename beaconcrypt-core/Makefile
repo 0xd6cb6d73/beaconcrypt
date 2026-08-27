@@ -4,6 +4,7 @@ SHELL := /bin/bash
 
 NIX ?= nix
 PROOF_SHELL := path:..\#proofs
+CRYPTOVERIF_SHELL := path:..\#cryptoverif
 EXPECTED_RUSTC := rustc 1.93.0-nightly (843f8ce2e 2025-11-07)
 EXPECTED_CARGO := cargo 1.93.0-nightly (636800288 2025-10-31)
 EXPECTED_HAX := 0.3.7
@@ -12,6 +13,11 @@ EXPECTED_Z3 := Z3 version 4.15.3 - 64 bit
 EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
 EXPECTED_ROCQ := The Rocq Prover, version 9.0.0
 EXPECTED_SSPROVE := 0.2.4
+EXPECTED_CRYPTOVERIF := Cryptoverif 2.12. Cryptographic protocol verifier, by Bruno Blanchet, Pierre Boutry, David Cadé, Christian Doczkal, Aymeric Fromherz, Charlie Jacomme, Benjamin Lipp, and Pierre-Yves Strub
+EXPECTED_CRYPTOVERIF_VERSION := 2.12
+export CRYPTOVERIF_PQ_LIB
+export CRYPTOVERIF_DEFAULT_LIB
+export CRYPTOVERIF_VERSION
 HAX_ITEMS := -** \
 	+beaconcrypt_core::commitment::build_commitment_transcript \
 	+beaconcrypt_core::ratchet::control::SequenceCache \
@@ -172,6 +178,8 @@ PROVERIF_GENERATED_TARGETS := $(addprefix check-generated-proverif-,$(PROVERIF_S
 
 SSPROVE_DIR := proofs/ssprove
 
+CRYPTOVERIF_DIR := proofs/crypto-verif
+
 LEAN_DIR := proofs/lean
 LEAN_ROOT := $(LEAN_DIR)/BeaconcryptCore.lean
 LEAN_PROOF_PATHS := $(LEAN_DIR)/BeaconcryptCore $(LEAN_DIR)/BeaconcryptCore.lean
@@ -189,6 +197,8 @@ LEAN_GENERATED_PATHS := \
 .PHONY: verify verify-in-shell verify-fstar verify-fstar-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
+	verify-cryptoverif verify-cryptoverif-in-shell check-cryptoverif \
+	check-cryptoverif-policy check-cryptoverif-toolchain \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-toolchain check-fstar-policy check-lean-policy check-lean-root check-inventory \
 	extract-fstar check-fstar extract-proverif check-proverif \
@@ -213,6 +223,7 @@ verify-in-shell:
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
 	$(MAKE) check-ssprove
+	$(MAKE) check-cryptoverif
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 
@@ -245,6 +256,15 @@ verify-ssprove-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) check-ssprove
 
+verify-cryptoverif:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(CRYPTOVERIF_SHELL)' -c \
+		$(MAKE) verify-cryptoverif-in-shell
+
+verify-cryptoverif-in-shell:
+	$(MAKE) check-cryptoverif-toolchain
+	$(MAKE) check-cryptoverif
+
 $(PROVERIF_VERIFY_TARGETS): verify-proverif-%:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
 		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
@@ -264,7 +284,7 @@ check-inventory:
 
 # Fail before extraction if PATH or a flake edit selected a tool other than the
 # reviewed proof bundle. F* uses this same exposed z3-4.15.3 executable.
-check-toolchain:
+check-toolchain: check-cryptoverif-toolchain
 	@set -euo pipefail; \
 		check_version() { \
 			local tool="$$1" expected="$$2" actual="$$3"; \
@@ -289,6 +309,29 @@ check-toolchain:
 			"$$(coqc --version | sed -n '1p')"; \
 		check_version SSProve '$(EXPECTED_SSPROVE)' \
 			"$${SSPROVE_VERSION:-missing}"
+
+check-cryptoverif-toolchain:
+	@set -euo pipefail; \
+		actual="$$(cryptoverif -help 2>&1 | sed -n '1p')"; \
+		if [[ "$$actual" != '$(EXPECTED_CRYPTOVERIF)' ]]; then \
+			echo 'unexpected CryptoVerif version' >&2; \
+			echo '  expected: $(EXPECTED_CRYPTOVERIF)' >&2; \
+			echo "  actual:   $$actual" >&2; \
+			exit 1; \
+		fi; \
+		if [[ "$${CRYPTOVERIF_VERSION:-missing}" != '$(EXPECTED_CRYPTOVERIF_VERSION)' ]]; then \
+			echo "unexpected CryptoVerif shell version: $${CRYPTOVERIF_VERSION:-missing}" >&2; \
+			exit 1; \
+		fi; \
+		test -r "$${CRYPTOVERIF_PQ_LIB:-}" || { \
+			echo 'CryptoVerif post-quantum library is missing' >&2; \
+			exit 1; \
+		}; \
+		test -r "$${CRYPTOVERIF_DEFAULT_LIB:-}" || { \
+			echo 'CryptoVerif default library is missing' >&2; \
+			exit 1; \
+		}; \
+		printf 'CryptoVerif: %s\n' "$$actual"
 
 extract-fstar:
 	# Enable hax-lib so the bounded recursive lookup carries its checked measure.
@@ -337,6 +380,12 @@ check-ssprove-policy:
 
 check-ssprove:
 	$(MAKE) -C '$(SSPROVE_DIR)' check
+
+check-cryptoverif-policy:
+	$(MAKE) -C '$(CRYPTOVERIF_DIR)' check-policy
+
+check-cryptoverif:
+	$(MAKE) -C '$(CRYPTOVERIF_DIR)' check
 
 check-proverif:
 	+$(MAKE) --no-print-directory -j$(words $(PROVERIF_SCENARIOS)) \

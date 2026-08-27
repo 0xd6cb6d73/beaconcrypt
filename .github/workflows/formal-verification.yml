@@ -52,6 +52,8 @@ jobs:
             target: check-generated-proverif-failed-receive-compromise-reachability
           - name: SSProve CTX reduction
             target: verify-ssprove
+          - name: CryptoVerif computational models
+            target: verify-cryptoverif
           - name: Formal proof inventory
             target: check-inventory
 

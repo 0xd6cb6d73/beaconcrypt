@@ -1,0 +1,284 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Automated active registration confidentiality model. The adversary schedules polynomially many honest Phase-1 publications and server registrations, chooses equal-length task pairs, and receives the complete Phase-2 response. The beacon finish oracle is deliberately absent because the current CryptoVerif proof does not automatically compose IND-CPA plus INT-CTXT into chosen-ciphertext privacy for that oracle. *)
+
+set casesInCorresp = false.
+set autoMergeBranches = false.
+set forgetOldGames = true.
+
+proof {
+  crypto uf_cma(sign) *;
+  crypto prf_odh(root_kdf) [variables: server_secret -> a, prekey_secret -> b .];
+  crypto splitter(split_session_key) **;
+  crypto ind_cpa(protect_registration) **;
+  success
+}
+
+type exponent [bounded, large, nonuniform].
+type group [bounded, large, nonuniform].
+expand DH_basic(group, exponent, generator, dh, dh_prime, multiply).
+
+type root_transcript [bounded].
+type session_keys [fixed, large].
+proba AdvRootOdh.
+proba DhPublicKeyCollision.
+expand msPRF_ODH(
+  group,
+  exponent,
+  root_transcript,
+  session_keys,
+  generator,
+  dh,
+  dh_prime,
+  multiply,
+  root_kdf,
+  AdvRootOdh,
+  DhPublicKeyCollision
+).
+
+type record_key [fixed, large].
+expand random_split_1(
+  session_keys,
+  record_key,
+  split_session_key
+).
+
+type signing_seed [fixed, large].
+type signing_public_key [bounded].
+type signing_secret_key [bounded].
+type signature [bounded].
+type signed_phase1_field [bounded].
+fun signed_phase1(bool, bool, group): signed_phase1_field [data].
+
+proba AdvSignatureForgery.
+proba SigningPublicKeyCollision.
+expand UF_CMA_proba_signature(
+  signing_seed,
+  signing_public_key,
+  signing_secret_key,
+  signed_phase1_field,
+  signature,
+  signing_secret,
+  signing_public,
+  sign,
+  verify_signature,
+  AdvSignatureForgery,
+  SigningPublicKeyCollision
+).
+
+fun bind_root_transcript(
+  group,
+  signing_public_key,
+  group,
+  group,
+  group,
+  group,
+  group
+): root_transcript [data].
+
+param HonestBeacons.
+param ServerRegistrations.
+
+type phase1_bundle [bounded].
+fun phase1_transcript(
+  signing_public_key,
+  group,
+  group,
+  group
+): phase1_bundle [data].
+
+type registration_id [bounded].
+fun registration_identifier(signing_public_key, group): registration_id [data].
+
+type key_id [fixed].
+type task [fixed].
+type registration_payload [fixed].
+fun registration_plaintext(key_id, task): registration_payload [data].
+
+type registration_context [bounded].
+fun bind_registration_context(group, signing_public_key): registration_context [data].
+
+type registration_frame [bounded].
+proba AdvRegistrationPrivacy.
+proba AdvRegistrationIntegrity.
+expand AEAD(
+  record_key,
+  registration_payload,
+  registration_frame,
+  registration_context,
+  protect_registration,
+  unprotect_registration,
+  some_registration_payload,
+  zero_registration_payload,
+  AdvRegistrationPrivacy,
+  AdvRegistrationIntegrity
+).
+
+table honest_bundle(phase1_bundle).
+table consumed_registration(registration_id).
+table allocated_key_id(key_id).
+
+query secret challenge_bit [cv_bit].
+
+process
+  Start() :=
+    challenge_bit <-R bool;
+    server_secret <-R exponent;
+    let server_public = dh(generator, server_secret) in
+    return(server_public);
+    (
+      (
+        foreach beacon_index <= HonestBeacons do
+        NewHonestBeacon() :=
+          identity_seed <-R signing_seed;
+          let identity_secret = signing_secret(identity_seed) in
+          let identity_public = signing_public(identity_seed) in
+          prekey_secret <-R exponent;
+          let prekey_public = dh(generator, prekey_secret) in
+          one_time_secret <-R exponent;
+          let one_time_public = dh(generator, one_time_secret) in
+          kem_public_secret <-R exponent;
+          let kem_public = dh(generator, kem_public_secret) in
+          let prekey_signature = sign(
+            signed_phase1(true, false, prekey_public),
+            identity_secret
+          ) in
+          let one_time_signature = sign(
+            signed_phase1(false, true, one_time_public),
+            identity_secret
+          ) in
+          let kem_signature = sign(
+            signed_phase1(false, false, kem_public),
+            identity_secret
+          ) in
+          let bundle = phase1_transcript(
+            identity_public,
+            prekey_public,
+            one_time_public,
+            kem_public
+          ) in
+          insert honest_bundle(bundle);
+          return(
+            identity_public,
+            prekey_public,
+            prekey_signature,
+            one_time_public,
+            one_time_signature,
+            kem_public,
+            kem_signature
+          )
+      ) |
+      (
+        foreach server_registration_index <= ServerRegistrations do
+        ServerRegister(
+          identity_public: signing_public_key,
+          prekey_public: group,
+          prekey_signature: signature,
+          one_time_public: group,
+          one_time_signature: signature,
+          kem_public: group,
+          kem_signature: signature,
+          requested_assigned_id: key_id,
+          untrusted_frame: registration_frame,
+          left_task: task,
+          right_task: task
+        ) :=
+          if verify_signature(
+            signed_phase1(true, false, prekey_public),
+            identity_public,
+            prekey_signature
+          ) then
+            if verify_signature(
+              signed_phase1(false, true, one_time_public),
+              identity_public,
+              one_time_signature
+            ) then
+              if verify_signature(
+                signed_phase1(false, false, kem_public),
+                identity_public,
+                kem_signature
+              ) then
+                let registration = registration_identifier(
+                  identity_public,
+                  one_time_public
+                ) in
+                get consumed_registration(=registration) in yield else
+                  insert consumed_registration(registration);
+                  get allocated_key_id(=requested_assigned_id) in yield else
+                    insert allocated_key_id(requested_assigned_id);
+                    ephemeral_secret <-R exponent;
+                    let ephemeral_public = dh(
+                      generator,
+                      ephemeral_secret
+                    ) in
+                    kem_ct_secret <-R exponent;
+                    let kem_ct = dh(generator, kem_ct_secret) in
+                    let bundle = phase1_transcript(
+                      identity_public,
+                      prekey_public,
+                      one_time_public,
+                      kem_public
+                    ) in
+                    get honest_bundle(=bundle) in
+                    (
+                      let shared = dh(prekey_public, server_secret) in
+                      let transcript = bind_root_transcript(
+                        server_public,
+                        identity_public,
+                        prekey_public,
+                        one_time_public,
+                        kem_public,
+                        ephemeral_public,
+                        kem_ct
+                      ) in
+                      let split_session_key(server_to_beacon_key) = root_kdf(
+                        shared,
+                        transcript
+                      ) in
+                      let left_payload = registration_plaintext(
+                        requested_assigned_id,
+                        left_task
+                      ) in
+                      let right_payload = registration_plaintext(
+                        requested_assigned_id,
+                        right_task
+                      ) in
+                      if zero_registration_payload(
+                        left_payload
+                      ) = zero_registration_payload(
+                        right_payload
+                      ) then
+                        let payload = if_fun(
+                          challenge_bit,
+                          left_payload,
+                          right_payload
+                        ) in
+                        let frame = protect_registration(
+                          payload,
+                          bind_registration_context(
+                            server_public,
+                            identity_public
+                          ),
+                          server_to_beacon_key
+                        ) in
+                        return(
+                          server_public,
+                          ephemeral_public,
+                          kem_ct,
+                          requested_assigned_id,
+                          frame
+                        )
+                      else yield
+                    )
+                    else return(
+                      server_public,
+                      ephemeral_public,
+                      kem_ct,
+                      requested_assigned_id,
+                      untrusted_frame
+                    )
+              else yield
+            else yield
+          else yield
+      )
+    )

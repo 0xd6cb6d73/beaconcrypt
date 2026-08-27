@@ -1,0 +1,91 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* One-record authenticity, metadata binding, and replay rejection. The protect/open interface denotes beaconcrypt's composed ChaCha20-Poly1305 + CTX record layer, not bare ChaCha20-Poly1305. Its INT-CTXT assumption is therefore an explicit protocol-primitive composition assumption. *)
+
+proof {
+  crypto int_ctxt(protect) *;
+  success
+}
+
+type record_key [fixed, large].
+type nonce [fixed, large].
+type sequence [fixed].
+type sender_id [fixed].
+type associated_data [fixed].
+
+type protected_context [bounded].
+fun bind_context(associated_data, sequence, sender_id): protected_context [data].
+
+proba AdvRecordPrivacy.
+proba AdvRecordIntegrity.
+expand AEAD_nonce(
+  record_key,
+  bitstring,
+  bitstring,
+  protected_context,
+  nonce,
+  protect,
+  unprotect,
+  some_plaintext,
+  zeroes,
+  AdvRecordPrivacy,
+  AdvRecordIntegrity
+).
+
+param ReceiveQueries.
+
+table accepted(bitstring, sequence, sender_id).
+
+event RecordSent(sequence, sender_id, bitstring, bitstring).
+event RecordAccepted(sequence, sender_id, bitstring, bitstring).
+
+query seq: sequence, sender: sender_id, plaintext: bitstring, frame: bitstring;
+  inj-event(RecordAccepted(seq, sender, plaintext, frame)) ==>
+  inj-event(RecordSent(seq, sender, plaintext, frame)).
+
+process
+  Start(
+    sent_sequence: sequence,
+    sent_sender: sender_id,
+    session_ad: associated_data,
+    plaintext: bitstring
+  ) :=
+    key <-R record_key;
+    record_nonce <-R nonce;
+    frame <- protect(
+      plaintext,
+      bind_context(session_ad, sent_sequence, sent_sender),
+      key,
+      record_nonce
+    );
+    event RecordSent(sent_sequence, sent_sender, plaintext, frame);
+    return(frame, record_nonce);
+    foreach receive_index <= ReceiveQueries do
+      Receive(
+        candidate_frame: bitstring,
+        candidate_sequence: sequence,
+        candidate_sender: sender_id
+      ) :=
+        let some_plaintext(candidate_plaintext) = unprotect(
+          candidate_frame,
+          bind_context(session_ad, candidate_sequence, candidate_sender),
+          key,
+          record_nonce
+        ) in
+        get accepted(
+          =candidate_frame,
+          =candidate_sequence,
+          =candidate_sender
+        ) in yield else
+          insert accepted(
+            candidate_frame,
+            candidate_sequence,
+            candidate_sender
+          );
+          event RecordAccepted(
+            candidate_sequence,
+            candidate_sender,
+            candidate_plaintext,
+            candidate_frame
+          );
+          return(candidate_plaintext)

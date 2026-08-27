@@ -1,0 +1,422 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Expected-failure control: this copy removes only the equality between the encrypted assigned ID and the attacker-controlled outer assigned ID. *)
+
+(* This copy preserves the base model's signed Phase-1 fields, pinned server identity, consumed-registration state, and adversarial Phase-2 delivery, but deliberately does not preserve encrypted assigned-ID binding. One static-DH PRF-ODH input stands for the authenticated classical key-establishment core; the other production DH inputs and ML-KEM shared secret remain outside this automation milestone. *)
+
+set casesInCorresp = false.
+set autoMergeBranches = false.
+set forgetOldGames = true.
+
+proof {
+  crypto uf_cma(sign) *;
+  crypto prf_odh(root_kdf) [variables: server_secret -> a, prekey_secret -> b .];
+  crypto splitter(split_session_key) **;
+  crypto int_ctxt(protect_registration) *;
+  success
+}
+
+type exponent [bounded, large, nonuniform].
+type group [bounded, large, nonuniform].
+expand DH_basic(group, exponent, generator, dh, dh_prime, multiply).
+
+type root_transcript [bounded].
+type session_keys [fixed, large].
+proba AdvRootOdh.
+proba DhPublicKeyCollision.
+expand msPRF_ODH(
+  group,
+  exponent,
+  root_transcript,
+  session_keys,
+  generator,
+  dh,
+  dh_prime,
+  multiply,
+  root_kdf,
+  AdvRootOdh,
+  DhPublicKeyCollision
+).
+
+type record_key [fixed, large].
+expand random_split_1(
+  session_keys,
+  record_key,
+  split_session_key
+).
+
+type signing_seed [fixed, large].
+type signing_public_key [bounded].
+type signing_secret_key [bounded].
+type signature [bounded].
+type signed_phase1_field [bounded].
+
+fun signed_phase1(bool, bool, group): signed_phase1_field [data].
+
+proba AdvSignatureForgery.
+proba SigningPublicKeyCollision.
+expand UF_CMA_proba_signature(
+  signing_seed,
+  signing_public_key,
+  signing_secret_key,
+  signed_phase1_field,
+  signature,
+  signing_secret,
+  signing_public,
+  sign,
+  verify_signature,
+  AdvSignatureForgery,
+  SigningPublicKeyCollision
+).
+
+fun bind_root_transcript(
+  group,
+  signing_public_key,
+  group,
+  group,
+  group,
+  group,
+  group
+): root_transcript [data].
+
+param HonestBeacons.
+param ServerRegistrations.
+
+type key_id [fixed].
+type registration_id [bounded].
+fun registration_identifier(signing_public_key, group): registration_id [data].
+
+type session_id [bounded].
+fun registration_session(
+  group,
+  signing_public_key,
+  group,
+  group,
+  group,
+  group,
+  group
+): session_id [data].
+
+type phase1_bundle [bounded].
+fun phase1_transcript(
+  signing_public_key,
+  group,
+  group,
+  group
+): phase1_bundle [data].
+
+type task [fixed].
+type registration_payload [fixed].
+fun registration_plaintext(key_id, task): registration_payload [data].
+
+type registration_context [bounded].
+fun bind_registration_context(group, signing_public_key): registration_context [data].
+
+proba AdvRegistrationPrivacy.
+proba AdvRegistrationIntegrity.
+type registration_frame [bounded].
+expand AEAD(
+  record_key,
+  registration_payload,
+  registration_frame,
+  registration_context,
+  protect_registration,
+  unprotect_registration,
+  some_registration_payload,
+  zero_registration_payload,
+  AdvRegistrationPrivacy,
+  AdvRegistrationIntegrity
+).
+
+type commit_data [bounded].
+fun commit_transcript(
+  session_id,
+  group,
+  signing_public_key,
+  group,
+  group,
+  group,
+  group,
+  group,
+  key_id,
+  task,
+  registration_frame
+): commit_data [data].
+
+table honest_bundle(phase1_bundle).
+table consumed_registration(registration_id).
+table allocated_key_id(key_id).
+
+event BeaconInitiated(phase1_bundle).
+event RegistrationConsumed(registration_id).
+event HonestServerCommitted(phase1_bundle, commit_data).
+event UntrustedServerCommitted(phase1_bundle, commit_data).
+event BeaconCommitted(phase1_bundle, commit_data).
+
+query bundle: phase1_bundle, commit: commit_data;
+  inj-event(BeaconCommitted(bundle, commit)) ==>
+  inj-event(HonestServerCommitted(bundle, commit)).
+
+query bundle: phase1_bundle, commit: commit_data;
+  inj-event(HonestServerCommitted(bundle, commit)) ==>
+  inj-event(BeaconInitiated(bundle)).
+
+process
+  Start() :=
+    server_secret <-R exponent;
+    let server_public = dh(generator, server_secret) in
+    return(server_public);
+    (
+      (
+        foreach beacon_index <= HonestBeacons do
+        NewHonestBeacon() :=
+          identity_seed <-R signing_seed;
+          let identity_secret = signing_secret(identity_seed) in
+          let identity_public = signing_public(identity_seed) in
+          prekey_secret <-R exponent;
+          let prekey_public = dh(generator, prekey_secret) in
+          one_time_secret <-R exponent;
+          let one_time_public = dh(generator, one_time_secret) in
+          kem_public_secret <-R exponent;
+          let kem_public = dh(generator, kem_public_secret) in
+          let prekey_signature = sign(
+            signed_phase1(true, false, prekey_public),
+            identity_secret
+          ) in
+          let one_time_signature = sign(
+            signed_phase1(false, true, one_time_public),
+            identity_secret
+          ) in
+          let kem_signature = sign(
+            signed_phase1(false, false, kem_public),
+            identity_secret
+          ) in
+          let bundle = phase1_transcript(
+            identity_public,
+            prekey_public,
+            one_time_public,
+            kem_public
+          ) in
+          insert honest_bundle(bundle);
+          event BeaconInitiated(bundle);
+          return(
+            identity_public,
+            prekey_public,
+            prekey_signature,
+            one_time_public,
+            one_time_signature,
+            kem_public,
+            kem_signature
+          );
+          BeaconFinish(
+            response_server_public: group,
+            response_ephemeral: group,
+            response_kem_ciphertext: group,
+            outer_assigned_id: key_id,
+            candidate_frame: registration_frame
+          ) :=
+            if response_server_public = server_public then
+            (
+              let shared = dh(
+                response_server_public,
+                prekey_secret
+              ) in
+              let transcript = bind_root_transcript(
+                response_server_public,
+                identity_public,
+                prekey_public,
+                one_time_public,
+                kem_public,
+                response_ephemeral,
+                response_kem_ciphertext
+              ) in
+              let split_session_key(server_to_beacon_key) = root_kdf(
+                shared,
+                transcript
+              ) in
+              let some_registration_payload(payload) =
+                unprotect_registration(
+                  candidate_frame,
+                  bind_registration_context(
+                    response_server_public,
+                    identity_public
+                  ),
+                      server_to_beacon_key
+                    ) in
+              (
+              let registration_plaintext(
+                inner_assigned_id,
+                accepted_task
+              ) = payload in
+              (
+              let sid = registration_session(
+                response_server_public,
+                identity_public,
+                prekey_public,
+                one_time_public,
+                kem_public,
+                response_ephemeral,
+                response_kem_ciphertext
+              ) in
+              let commit = commit_transcript(
+                sid,
+                response_server_public,
+                identity_public,
+                prekey_public,
+                one_time_public,
+                kem_public,
+                response_ephemeral,
+                response_kem_ciphertext,
+                outer_assigned_id,
+                accepted_task,
+                candidate_frame
+              ) in
+              event BeaconCommitted(bundle, commit);
+              return()
+              )
+              else return()
+              )
+              else return()
+            )
+            else return()
+      ) |
+      (
+        foreach server_registration_index <= ServerRegistrations do
+        ServerRegister(
+          identity_public: signing_public_key,
+          prekey_public: group,
+          prekey_signature: signature,
+          one_time_public: group,
+          one_time_signature: signature,
+          kem_public: group,
+          kem_signature: signature,
+          requested_assigned_id: key_id,
+          untrusted_frame: registration_frame,
+          selected_task: task
+        ) :=
+          if verify_signature(
+            signed_phase1(true, false, prekey_public),
+            identity_public,
+            prekey_signature
+          ) then
+            if verify_signature(
+              signed_phase1(false, true, one_time_public),
+              identity_public,
+              one_time_signature
+            ) then
+              if verify_signature(
+                signed_phase1(false, false, kem_public),
+                identity_public,
+                kem_signature
+              ) then
+                let registration = registration_identifier(
+                  identity_public,
+                  one_time_public
+                ) in
+                get consumed_registration(=registration) in yield else
+                  insert consumed_registration(registration);
+                  event RegistrationConsumed(registration);
+                  get allocated_key_id(=requested_assigned_id) in yield else
+                    insert allocated_key_id(requested_assigned_id);
+                    ephemeral_secret <-R exponent;
+                    let ephemeral_public = dh(
+                      generator,
+                      ephemeral_secret
+                    ) in
+                    kem_ct_secret <-R exponent;
+                    let kem_ct = dh(generator, kem_ct_secret) in
+                    let bundle = phase1_transcript(
+                      identity_public,
+                      prekey_public,
+                      one_time_public,
+                      kem_public
+                    ) in
+                    let assigned = requested_assigned_id in
+                    let sid = registration_session(
+                      server_public,
+                      identity_public,
+                      prekey_public,
+                      one_time_public,
+                      kem_public,
+                      ephemeral_public,
+                      kem_ct
+                    ) in
+                    get honest_bundle(=bundle) in
+                    (
+                      let shared = dh(prekey_public, server_secret) in
+                      let transcript = bind_root_transcript(
+                        server_public,
+                        identity_public,
+                        prekey_public,
+                        one_time_public,
+                        kem_public,
+                        ephemeral_public,
+                        kem_ct
+                      ) in
+                      let split_session_key(server_to_beacon_key) = root_kdf(
+                        shared,
+                        transcript
+                      ) in
+                      let payload = registration_plaintext(
+                        assigned,
+                        selected_task
+                      ) in
+                      let frame = protect_registration(
+                        payload,
+                        bind_registration_context(
+                          server_public,
+                          identity_public
+                        ),
+                        server_to_beacon_key
+                      ) in
+                      let commit = commit_transcript(
+                        sid,
+                        server_public,
+                        identity_public,
+                        prekey_public,
+                        one_time_public,
+                        kem_public,
+                        ephemeral_public,
+                        kem_ct,
+                        assigned,
+                        selected_task,
+                        frame
+                      ) in
+                      event HonestServerCommitted(bundle, commit);
+                      return(
+                        server_public,
+                        ephemeral_public,
+                        kem_ct,
+                        assigned,
+                        frame
+                      )
+                    )
+                    else
+                    (
+                      let commit = commit_transcript(
+                        sid,
+                        server_public,
+                        identity_public,
+                        prekey_public,
+                        one_time_public,
+                        kem_public,
+                        ephemeral_public,
+                        kem_ct,
+                        assigned,
+                        selected_task,
+                        untrusted_frame
+                      ) in
+                      event UntrustedServerCommitted(bundle, commit);
+                      return(
+                        server_public,
+                        ephemeral_public,
+                        kem_ct,
+                        assigned,
+                        untrusted_frame
+                      )
+                    )
+              else yield
+            else yield
+          else yield
+      )
+    )

@@ -1,0 +1,236 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Automated, polynomially multi-session security for beaconcrypt's established-channel abstraction. The adversary controls session creation parameters, chosen-message sends, delivery order, replay, modification, and cross-session routing. A fresh traffic secret represents the output of an already authenticated registration; the exact sequential ratchet and CTX construction are explicit composition boundaries. *)
+
+proof {
+  crypto int_ctxt(protect) *;
+  crypto ind_cpa(protect) **;
+  success
+}
+
+type session_id [fixed].
+type principal_id [fixed].
+type sequence [fixed].
+type associated_data [fixed].
+
+type record_key [fixed, large].
+
+type protected_context [bounded].
+fun server_context(
+  session_id,
+  principal_id,
+  principal_id,
+  associated_data,
+  sequence
+): protected_context [data].
+fun beacon_context(
+  session_id,
+  principal_id,
+  principal_id,
+  associated_data,
+  sequence
+): protected_context [data].
+
+proba AdvRecordPrivacy.
+proba AdvRecordIntegrity.
+expand AEAD(
+  record_key,
+  bitstring,
+  bitstring,
+  protected_context,
+  protect,
+  unprotect,
+  some_plaintext,
+  zeroes,
+  AdvRecordPrivacy,
+  AdvRecordIntegrity
+).
+
+param Sessions.
+param ServerSendQueries.
+param BeaconSendQueries.
+param BeaconReceiveQueries.
+param ServerReceiveQueries.
+
+table active_session(session_id).
+table server_sent_sequence(session_id, sequence).
+table beacon_sent_sequence(session_id, sequence).
+table beacon_accepted_sequence(session_id, sequence).
+table server_accepted_sequence(session_id, sequence).
+
+event SessionEstablished(
+  session_id,
+  principal_id,
+  principal_id,
+  associated_data
+).
+event ServerRecordSent(
+  session_id,
+  principal_id,
+  principal_id,
+  associated_data,
+  sequence,
+  bitstring,
+  bitstring
+).
+event BeaconRecordAccepted(
+  session_id,
+  principal_id,
+  principal_id,
+  associated_data,
+  sequence,
+  bitstring,
+  bitstring
+).
+event BeaconRecordSent(
+  session_id,
+  principal_id,
+  principal_id,
+  associated_data,
+  sequence,
+  bitstring,
+  bitstring
+).
+event ServerRecordAccepted(
+  session_id,
+  principal_id,
+  principal_id,
+  associated_data,
+  sequence,
+  bitstring,
+  bitstring
+).
+
+query secret challenge_bit [cv_bit].
+
+query sid: session_id, server: principal_id, beacon: principal_id,
+  ad: associated_data, seq: sequence, plaintext: bitstring, frame: bitstring;
+  inj-event(BeaconRecordAccepted(sid, server, beacon, ad, seq, plaintext, frame)) ==>
+  inj-event(ServerRecordSent(sid, server, beacon, ad, seq, plaintext, frame))
+  public_vars challenge_bit.
+
+query sid: session_id, server: principal_id, beacon: principal_id,
+  ad: associated_data, seq: sequence, plaintext: bitstring, frame: bitstring;
+  inj-event(ServerRecordAccepted(sid, server, beacon, ad, seq, plaintext, frame)) ==>
+  inj-event(BeaconRecordSent(sid, server, beacon, ad, seq, plaintext, frame))
+  public_vars challenge_bit.
+
+process
+  Start() :=
+    challenge_bit <-R bool;
+    return();
+    (
+      foreach session_index <= Sessions do
+      EstablishSession(
+        sid: session_id,
+        server: principal_id,
+        beacon: principal_id,
+        session_ad: associated_data
+      ) :=
+        get active_session(=sid) in yield else
+          insert active_session(sid);
+          server_record_key <-R record_key;
+          beacon_record_key <-R record_key;
+          event SessionEstablished(sid, server, beacon, session_ad);
+          return();
+          (
+            (
+              foreach server_send_index <= ServerSendQueries do
+              ServerSend(
+                seq: sequence,
+                left: bitstring,
+                right: bitstring
+              ) :=
+                get server_sent_sequence(=sid, =seq) in yield else
+                  if zeroes(left) = zeroes(right) then
+                    insert server_sent_sequence(sid, seq);
+                    let plaintext = if_fun(challenge_bit, left, right) in
+                    let frame = protect(
+                      plaintext,
+                      server_context(sid, server, beacon, session_ad, seq),
+                      server_record_key
+                    ) in
+                    event ServerRecordSent(
+                      sid,
+                      server,
+                      beacon,
+                      session_ad,
+                      seq,
+                      plaintext,
+                      frame
+                    );
+                    return(frame)
+                  else yield
+            ) |
+            (
+              foreach beacon_receive_index <= BeaconReceiveQueries do
+              BeaconReceive(seq: sequence, candidate_frame: bitstring) :=
+                get beacon_accepted_sequence(=sid, =seq) in yield else
+                  let some_plaintext(plaintext) = unprotect(
+                    candidate_frame,
+                    server_context(sid, server, beacon, session_ad, seq),
+                    server_record_key
+                  ) in
+                  insert beacon_accepted_sequence(sid, seq);
+                  event BeaconRecordAccepted(
+                    sid,
+                    server,
+                    beacon,
+                    session_ad,
+                    seq,
+                    plaintext,
+                    candidate_frame
+                  );
+                  return()
+            ) |
+            (
+              foreach beacon_send_index <= BeaconSendQueries do
+              BeaconSend(
+                seq: sequence,
+                left: bitstring,
+                right: bitstring
+              ) :=
+                get beacon_sent_sequence(=sid, =seq) in yield else
+                  if zeroes(left) = zeroes(right) then
+                    insert beacon_sent_sequence(sid, seq);
+                    let plaintext = if_fun(challenge_bit, left, right) in
+                    let frame = protect(
+                      plaintext,
+                      beacon_context(sid, server, beacon, session_ad, seq),
+                      beacon_record_key
+                    ) in
+                    event BeaconRecordSent(
+                      sid,
+                      server,
+                      beacon,
+                      session_ad,
+                      seq,
+                      plaintext,
+                      frame
+                    );
+                    return(frame)
+                  else yield
+            ) |
+            (
+              foreach server_receive_index <= ServerReceiveQueries do
+              ServerReceive(seq: sequence, candidate_frame: bitstring) :=
+                get server_accepted_sequence(=sid, =seq) in yield else
+                  let some_plaintext(plaintext) = unprotect(
+                    candidate_frame,
+                    beacon_context(sid, server, beacon, session_ad, seq),
+                    beacon_record_key
+                  ) in
+                  insert server_accepted_sequence(sid, seq);
+                  event ServerRecordAccepted(
+                    sid,
+                    server,
+                    beacon,
+                    session_ad,
+                    seq,
+                    plaintext,
+                    candidate_frame
+                  );
+                  return()
+            )
+          )
+    )

@@ -1,0 +1,144 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Passive post-quantum confidentiality of one abstracted beaconcrypt registration record. All four X25519 contributions are deliberately public; secrecy rests on ML-KEM, the hybrid-root PRF assumption, the symmetric ratchet PRF assumption, and nonce-based AEAD privacy. *)
+
+proof {
+  crypto ind_cca2(mlkem_encap);
+  crypto prf(hybrid_root_kdf) *;
+  crypto prf(symmetric_kdf) *;
+  crypto splitter(symmetric_parts) **;
+  crypto prf(symmetric_kdf) *;
+  crypto splitter(symmetric_parts) **;
+  crypto ind_cpa(seal) **;
+  success
+}
+
+type mlkem_seed [fixed, large].
+type mlkem_public_key [bounded].
+type mlkem_secret_key [bounded].
+type mlkem_shared_secret [fixed, large].
+type mlkem_ciphertext [bounded].
+type mlkem_encapsulation [bounded].
+
+proba AdvMlKemCca.
+proba MlKemPublicKeyCollision.
+proba MlKemCiphertextCollision.
+expand IND_CCA2_KEM(
+  mlkem_seed,
+  mlkem_public_key,
+  mlkem_secret_key,
+  mlkem_shared_secret,
+  mlkem_ciphertext,
+  mlkem_encapsulation,
+  mlkem_public,
+  mlkem_secret,
+  mlkem_encap,
+  mlkem_pair,
+  mlkem_decap,
+  some_mlkem_secret,
+  AdvMlKemCca,
+  MlKemPublicKeyCollision,
+  MlKemCiphertextCollision
+).
+
+type x25519_contribution [fixed, large].
+type root_input [bounded].
+fun ordered_root_input(
+  x25519_contribution,
+  x25519_contribution,
+  x25519_contribution,
+  x25519_contribution
+): root_input [data].
+
+type key_material [fixed, large].
+proba AdvHybridRootPrf.
+expand PRF_large(
+  mlkem_shared_secret,
+  root_input,
+  key_material,
+  hybrid_root_kdf,
+  AdvHybridRootPrf
+).
+
+type symmetric_label [fixed].
+type symmetric_output [fixed, large].
+type nonce [fixed, large].
+const symmetric_ratchet_label: symmetric_label.
+
+proba AdvSymmetricPrf.
+expand PRF_large(
+  key_material,
+  symmetric_label,
+  symmetric_output,
+  symmetric_kdf,
+  AdvSymmetricPrf
+).
+
+expand random_split_3(
+  symmetric_output,
+  key_material,
+  key_material,
+  nonce,
+  symmetric_parts
+).
+
+proba AdvAeadPrivacy.
+proba AdvAeadIntegrity.
+expand AEAD_nonce(
+  key_material,
+  bitstring,
+  bitstring,
+  bitstring,
+  nonce,
+  seal,
+  open,
+  some_plaintext,
+  zeroes,
+  AdvAeadPrivacy,
+  AdvAeadIntegrity
+).
+
+query secret challenge_bit [cv_bit].
+
+process
+  Start() :=
+    challenge_bit <-R bool;
+    mlkem_key_coins <-R mlkem_seed;
+    beacon_mlkem_public <- mlkem_public(mlkem_key_coins);
+    return(beacon_mlkem_public);
+    Transcript(
+      dh1: x25519_contribution,
+      dh2: x25519_contribution,
+      dh3: x25519_contribution,
+      dh4: x25519_contribution,
+      left: bitstring,
+      right: bitstring,
+      associated_data: bitstring
+    ) :=
+      if zeroes(left) = zeroes(right) then
+        let mlkem_pair(kem_shared, kem_ciphertext) =
+          mlkem_encap(beacon_mlkem_public) in
+        root <- hybrid_root_kdf(
+          kem_shared,
+          ordered_root_input(dh1, dh2, dh3, dh4)
+        );
+        let symmetric_parts(server_send_chain, beacon_send_chain, ignored) =
+          symmetric_kdf(root, symmetric_ratchet_label) in
+        let symmetric_parts(record_key_material, next_chain, record_nonce) =
+          symmetric_kdf(server_send_chain, symmetric_ratchet_label) in
+        ciphertext <- seal(
+          if_fun(challenge_bit, left, right),
+          associated_data,
+          record_key_material,
+          record_nonce
+        );
+        return(
+          dh1,
+          dh2,
+          dh3,
+          dh4,
+          kem_ciphertext,
+          ciphertext,
+          record_nonce
+        )
+      else yield

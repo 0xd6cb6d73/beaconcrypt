@@ -1,0 +1,67 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* One-step, erasure-conditioned forward secrecy for beaconcrypt's symmetric ratchet. Primitive security is assumed through CryptoVerif's PRF and nonce-based AEAD interfaces. *)
+
+proof {
+  crypto prf(ratchet_kdf) initial_chain;
+  crypto splitter(ratchet_parts) **;
+  crypto ind_cpa(seal) **;
+  success
+}
+
+type chain [fixed, large].
+type ratchet_label [fixed].
+type ratchet_output [fixed, large].
+type message_key [fixed, large].
+type nonce [fixed, large].
+
+const symmetric_ratchet_label: ratchet_label.
+
+proba AdvRatchetPrf.
+expand PRF_large(chain, ratchet_label, ratchet_output, ratchet_kdf, AdvRatchetPrf).
+
+expand random_split_3(
+  ratchet_output,
+  message_key,
+  chain,
+  nonce,
+  ratchet_parts
+).
+
+proba AdvAeadPrivacy.
+proba AdvAeadIntegrity.
+expand AEAD_nonce(
+  message_key,
+  bitstring,
+  bitstring,
+  bitstring,
+  nonce,
+  seal,
+  open,
+  some_plaintext,
+  zeroes,
+  AdvAeadPrivacy,
+  AdvAeadIntegrity
+).
+
+query secret challenge_bit [cv_bit].
+
+process
+  Start() :=
+  challenge_bit <-R bool;
+  initial_chain <-R chain;
+  return();
+  Challenge(left: bitstring, right: bitstring, associated_data: bitstring) :=
+    if zeroes(left) = zeroes(right) then (
+      let ratchet_parts(record_key, next_chain, record_nonce) =
+        ratchet_kdf(initial_chain, symmetric_ratchet_label) in
+      let ciphertext =
+        seal(
+          if_fun(challenge_bit, left, right),
+          associated_data,
+          record_key,
+          record_nonce
+        ) in
+      return(ciphertext, record_nonce);
+      RevealCurrentChain() := return(next_chain)
+    ) else yield
