@@ -3,7 +3,7 @@
 SHELL := /bin/bash
 
 NIX ?= nix
-PROOF_SHELL := path:..\#proofs
+PROOF_SHELL_RUNNER := ../scripts/run-proof-shell
 EXPECTED_RUSTC := rustc 1.93.0-nightly (843f8ce2e 2025-11-07)
 EXPECTED_CARGO := cargo 1.93.0-nightly (636800288 2025-10-31)
 EXPECTED_HAX := 0.3.7
@@ -186,7 +186,8 @@ LEAN_GENERATED_PATHS := \
 # The checked-in root and Lake configuration are maintained verification entry points.
 # Extraction preserves their proof imports and all-module build glob.
 
-.PHONY: verify verify-in-shell verify-fstar verify-fstar-in-shell \
+.PHONY: prepare-proof-shell proof-shell-profile check-proof-shell-runner \
+	verify verify-in-shell verify-fstar verify-fstar-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
@@ -197,12 +198,17 @@ LEAN_GENERATED_PATHS := \
 	$(PROVERIF_GENERATED_TARGETS) extract-lean check-lean verify-lean \
 	verify-lean-in-shell
 
-# Enter the repository-locked proof shell, regenerate every backend, and check
-# every proof. --no-update-lock-file makes a stale or incomplete lock fail.
+# Prepare the shared content-keyed shell once before a coordinator spawns agents.
+prepare-proof-shell:
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' prepare
+
+proof-shell-profile:
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' path
+
+# Reuse the repository-locked proof profile, regenerate every backend, and
+# check every proof. Profile preparation uses --no-update-lock-file.
 verify:
-	$(NIX) --extra-experimental-features 'nix-command flakes' \
-		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
-		$(MAKE) verify-in-shell
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' run -- $(MAKE) verify-in-shell
 
 # This target is split out so CI and developers can reuse the locked shell
 # without recursively starting Nix.
@@ -217,9 +223,7 @@ verify-in-shell:
 	$(MAKE) check-lean
 
 verify-fstar:
-	$(NIX) --extra-experimental-features 'nix-command flakes' \
-		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
-		$(MAKE) verify-fstar-in-shell
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' run -- $(MAKE) verify-fstar-in-shell
 
 verify-fstar-in-shell:
 	$(MAKE) check-toolchain
@@ -227,9 +231,7 @@ verify-fstar-in-shell:
 	$(MAKE) check-fstar
 
 verify-proverif:
-	$(NIX) --extra-experimental-features 'nix-command flakes' \
-		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
-		$(MAKE) verify-proverif-in-shell
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' run -- $(MAKE) verify-proverif-in-shell
 
 verify-proverif-in-shell:
 	$(MAKE) check-toolchain
@@ -237,17 +239,14 @@ verify-proverif-in-shell:
 	$(MAKE) check-proverif
 
 verify-ssprove:
-	$(NIX) --extra-experimental-features 'nix-command flakes' \
-		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
-		$(MAKE) verify-ssprove-in-shell
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' run -- $(MAKE) verify-ssprove-in-shell
 
 verify-ssprove-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) check-ssprove
 
 $(PROVERIF_VERIFY_TARGETS): verify-proverif-%:
-	$(NIX) --extra-experimental-features 'nix-command flakes' \
-		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' run -- \
 		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO='$*'
 
 verify-proverif-scenario-in-shell:
@@ -259,7 +258,10 @@ verify-proverif-scenario-in-shell:
 # extraction and proof checks so generated output is checked against the
 # reviewed baseline without preventing an intentional changed artifact from
 # first being analyzed.
-check-inventory:
+check-proof-shell-runner:
+	../scripts/test-run-proof-shell.sh
+
+check-inventory: check-proof-shell-runner
 	bash proofs/check-inventory.sh
 
 # Fail before extraction if PATH or a flake edit selected a tool other than the
@@ -507,9 +509,7 @@ check-lean: check-lean-policy check-lean-root
 
 # Regenerate and check the complete default beaconcrypt-core production surface.
 verify-lean:
-	$(NIX) --extra-experimental-features 'nix-command flakes' \
-		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
-		$(MAKE) verify-lean-in-shell
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' run -- $(MAKE) verify-lean-in-shell
 
 verify-lean-in-shell:
 	$(MAKE) check-toolchain

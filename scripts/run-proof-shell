@@ -1,0 +1,310 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: 0BSD
+
+set -euo pipefail
+umask 077
+
+fail() {
+	printf 'proof-shell profile error: %s\n' "$*" >&2
+	exit 1
+}
+
+usage() {
+	printf 'usage: %s {prepare|path|run -- COMMAND [ARG ...]}\n' "${0##*/}" >&2
+	exit 2
+}
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+script_path="$script_dir/${BASH_SOURCE[0]##*/}"
+repo_dir="$(cd -- "$script_dir/.." && pwd -P)"
+nix_bin="${NIX:-nix}"
+nix_features=(--extra-experimental-features 'nix-command flakes')
+lock_owned=0
+lock_kind=
+lock_path=
+lock_owner_pid=
+lock_owner_subshell=
+child_pid=0
+shell_cleanup_pending=0
+profile_path=
+ready_marker=
+flake_hash=
+profile_root=
+
+release_lock() {
+	((lock_owned)) || return 0
+	if [[ "${BASHPID:-$$}" != "$lock_owner_pid" || "${BASH_SUBSHELL:-0}" != "$lock_owner_subshell" ]]; then
+		return 0
+	fi
+	case "$lock_kind" in
+		fd)
+			exec 9>&-
+			;;
+	esac
+	lock_owned=0
+}
+
+handle_signal() {
+	local status="$2"
+	trap - HUP INT TERM
+	if ((child_pid > 0)); then
+		kill -TERM "$child_pid" 2>/dev/null || true
+		set +e
+		wait "$child_pid" 2>/dev/null
+		set -e
+		child_pid=0
+	fi
+	exit "$status"
+}
+
+finish() {
+	local status="$1"
+	trap - EXIT
+	set +e
+	if ((shell_cleanup_pending)); then
+		cleanup_shell_temp_dirs
+	fi
+	release_lock
+	exit "$status"
+}
+
+trap 'finish $?' EXIT
+trap 'handle_signal HUP 129' HUP
+trap 'handle_signal INT 130' INT
+trap 'handle_signal TERM 143' TERM
+
+compute_flake_hash() {
+	git -C "$repo_dir" hash-object -- flake.nix flake.lock |
+		git -C "$repo_dir" hash-object --stdin
+}
+
+select_profile() {
+	local system
+	system="$("$nix_bin" "${nix_features[@]}" eval --impure --raw \
+		--expr 'builtins.currentSystem')"
+	[[ "$system" =~ ^[A-Za-z0-9._+-]+$ ]] || fail "Nix returned an unsafe system name: $system"
+	flake_hash="$(compute_flake_hash)"
+	[[ "$flake_hash" =~ ^[0-9a-f]{40,64}$ ]] || fail "Git returned an invalid flake hash"
+	if [[ -n "${BEACONCRYPT_PROOF_PROFILE_ROOT:-}" ]]; then
+		profile_root="$BEACONCRYPT_PROOF_PROFILE_ROOT"
+	elif [[ -n "${XDG_STATE_HOME:-}" ]]; then
+		profile_root="$XDG_STATE_HOME/beaconcrypt/proof-shells"
+	elif [[ -n "${HOME:-}" ]]; then
+		profile_root="$HOME/.local/state/beaconcrypt/proof-shells"
+	else
+		fail 'HOME, XDG_STATE_HOME, or BEACONCRYPT_PROOF_PROFILE_ROOT must be set'
+	fi
+	while [[ "$profile_root" != / && "$profile_root" == */ ]]; do
+		profile_root="${profile_root%/}"
+	done
+	[[ -n "$profile_root" && "$profile_root" == /* ]] || fail 'the proof profile root must be an absolute path'
+	[[ "$profile_root" != / ]] || fail 'the proof profile root must not be the filesystem root'
+	if [[ -d "$profile_root" ]]; then
+		profile_root="$(cd -- "$profile_root" && pwd -P)"
+		[[ "$profile_root" != / ]] || fail 'the proof profile root must not resolve to the filesystem root'
+	fi
+	case "$profile_root/" in
+		"$repo_dir/"*) fail "the proof profile root must be outside the checkout: $profile_root" ;;
+	esac
+	profile_path="$profile_root/v1-$system-$flake_hash"
+	ready_marker="$profile_path.ready"
+	lock_path="$profile_path.lock"
+}
+
+ensure_profile_root() {
+	mkdir -p -- "$profile_root"
+	profile_root="$(cd -- "$profile_root" && pwd -P)"
+	[[ "$profile_root" != / ]] || fail 'the proof profile root must not resolve to the filesystem root'
+	case "$profile_root/" in
+		"$repo_dir/"*) fail "the proof profile root resolves inside the checkout: $profile_root" ;;
+	esac
+	[[ -O "$profile_root" ]] || fail "the proof profile root must be owned by the current user: $profile_root"
+	if [[ -n "$(find "$profile_root" -maxdepth 0 \( -perm -0020 -o -perm -0002 \) -print -quit)" ]]; then
+		fail "the proof profile root must not be group- or world-writable: $profile_root"
+	fi
+	profile_path="$profile_root/${profile_path##*/}"
+	ready_marker="$profile_path.ready"
+	lock_path="$profile_path.lock"
+}
+
+profile_is_ready() {
+	[[ -L "$profile_path" && -e "$profile_path" && -f "$ready_marker" && ! -L "$ready_marker" ]]
+}
+
+check_profile_paths() {
+	if [[ (-e "$profile_path" || -L "$profile_path") && ! -L "$profile_path" ]]; then
+		fail "refusing to replace non-symlink profile path: $profile_path"
+	fi
+	if [[ (-e "$ready_marker" || -L "$ready_marker") && (! -f "$ready_marker" || -L "$ready_marker") ]]; then
+		fail "refusing to replace invalid ready marker: $ready_marker"
+	fi
+}
+
+acquire_lock() {
+	local lock_style timeout
+	timeout="${BEACONCRYPT_PROOF_PROFILE_LOCK_TIMEOUT:-3600}"
+	[[ "$timeout" =~ ^[1-9][0-9]*$ ]] || fail 'BEACONCRYPT_PROOF_PROFILE_LOCK_TIMEOUT must be a positive integer'
+	lock_style="${BEACONCRYPT_PROOF_PROFILE_LOCK_STYLE:-auto}"
+	[[ "$lock_style" =~ ^(auto|flock|python)$ ]] || fail 'BEACONCRYPT_PROOF_PROFILE_LOCK_STYLE must be auto, flock, or python'
+	[[ ! -L "$lock_path" && (! -e "$lock_path" || -f "$lock_path") ]] || fail "invalid lock file: $lock_path"
+	exec 9>> "$lock_path"
+	if [[ "$lock_style" != python ]] && command -v flock >/dev/null 2>&1; then
+		flock -w "$timeout" 9 || fail "timed out waiting for proof profile lock: $lock_path"
+	elif [[ "$lock_style" != flock ]] && command -v python3 >/dev/null 2>&1; then
+		python3 - "$timeout" 9 <<'PY' || fail "timed out waiting for proof profile lock: $lock_path"
+import fcntl
+import sys
+import time
+
+deadline = time.monotonic() + int(sys.argv[1])
+descriptor = int(sys.argv[2])
+while True:
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        break
+    except BlockingIOError:
+        if time.monotonic() >= deadline:
+            raise SystemExit(1)
+        time.sleep(0.1)
+PY
+	elif [[ "$lock_style" == flock ]]; then
+		fail 'flock was requested but is not available'
+	elif [[ "$lock_style" == python ]]; then
+		fail 'the Python lock was requested but python3 is not available'
+	else
+		fail 'profile preparation requires flock or python3 with fcntl support'
+	fi
+	lock_kind=fd
+	lock_owner_pid="${BASHPID:-$$}"
+	lock_owner_subshell="${BASH_SUBSHELL:-0}"
+	lock_owned=1
+}
+
+wait_for_child() {
+	local status=0
+	wait "$child_pid" || status=$?
+	child_pid=0
+	return "$status"
+}
+
+prepare_selected_profile() {
+	local prepared_hash
+	ensure_profile_root
+	check_profile_paths
+	profile_is_ready && return 0
+	acquire_lock
+	check_profile_paths
+	if profile_is_ready; then
+		release_lock
+		return 0
+	fi
+	if [[ -L "$profile_path" && ! -e "$profile_path" ]]; then
+		rm -f -- "$profile_path"
+	fi
+	rm -f -- "$ready_marker"
+	(
+		trap - EXIT HUP INT TERM
+		lock_owned=0
+		cd -- "$repo_dir"
+		exec "$nix_bin" "${nix_features[@]}" develop --no-update-lock-file \
+			--profile "$profile_path" '.#proofs' -c \
+			"$script_path" _run_in_shell true
+	) <&0 &
+	child_pid=$!
+	wait_for_child
+	prepared_hash="$(compute_flake_hash)"
+	if [[ "$prepared_hash" != "$flake_hash" ]]; then
+		fail "flake.nix or flake.lock changed while preparing $profile_path; rerun prepare"
+	fi
+	[[ -L "$profile_path" && -e "$profile_path" ]] || fail "Nix did not create a live profile symlink: $profile_path"
+	: > "$ready_marker"
+	release_lock
+}
+
+prepare_current_profile() {
+	local attempt selected_hash
+	for attempt in 1 2 3; do
+		select_profile
+		selected_hash="$flake_hash"
+		prepare_selected_profile
+		[[ "$(compute_flake_hash)" == "$selected_hash" ]] && return 0
+	done
+	fail 'flake.nix or flake.lock kept changing while selecting the proof profile'
+}
+
+cleanup_shell_temp_dir() {
+	local label="$1" directory="$2" canonical_directory canonical_tmp
+	[[ -n "$directory" ]] || return 0
+	if [[ ! -d "$directory" || -L "$directory" || ! -O "$directory" ]]; then
+		printf 'proof-shell profile warning: refusing to remove unsafe %s=%s\n' "$label" "$directory" >&2
+		return 1
+	fi
+	canonical_directory="$(cd -- "$directory" && pwd -P)" || return 1
+	canonical_tmp="$(cd -- "${TMPDIR:-/tmp}" && pwd -P)" || return 1
+	if [[ "$canonical_directory" == / || "$(dirname -- "$canonical_directory")" != "$canonical_tmp" || "${canonical_directory##*/}" != tmp.* ]]; then
+		printf 'proof-shell profile warning: refusing to remove non-mktemp %s=%s\n' "$label" "$directory" >&2
+		return 1
+	fi
+	rm -rf -- "$canonical_directory"
+}
+
+cleanup_shell_temp_dirs() {
+	local cleanup_status=0
+	if [[ -n "${CACHE_DIR:-}" && -n "${HINT_DIR:-}" && "$CACHE_DIR" == "$HINT_DIR" ]]; then
+		cleanup_shell_temp_dir CACHE_DIR "$CACHE_DIR" || cleanup_status=$?
+	else
+		cleanup_shell_temp_dir CACHE_DIR "${CACHE_DIR:-}" || cleanup_status=$?
+		cleanup_shell_temp_dir HINT_DIR "${HINT_DIR:-}" || cleanup_status=$?
+	fi
+	return "$cleanup_status"
+}
+
+run_in_shell() {
+	local command_status=0 cleanup_status=0
+	(($# > 0)) || usage
+	shell_cleanup_pending=1
+	(
+		trap - EXIT HUP INT TERM
+		lock_owned=0
+		exec "$@"
+	) <&0 &
+	child_pid=$!
+	wait_for_child || command_status=$?
+	cleanup_shell_temp_dirs || cleanup_status=$?
+	shell_cleanup_pending=0
+	((command_status == 0)) || return "$command_status"
+	return "$cleanup_status"
+}
+
+case "${1:-}" in
+	prepare)
+		(($# == 1)) || usage
+		prepare_current_profile
+		printf '%s\n' "$profile_path"
+		;;
+	path)
+		(($# == 1)) || usage
+		select_profile
+		printf '%s\n' "$profile_path"
+		;;
+	run)
+		shift
+		[[ "${1:-}" == -- ]] || usage
+		shift
+		(($# > 0)) || usage
+		prepare_current_profile
+		(
+			trap - EXIT HUP INT TERM
+			lock_owned=0
+			exec "$nix_bin" "${nix_features[@]}" develop "$profile_path" -c \
+				"$script_path" _run_in_shell "$@"
+		) <&0 &
+		child_pid=$!
+		wait_for_child
+		;;
+	_run_in_shell)
+		shift
+		run_in_shell "$@"
+		;;
+	*) usage ;;
+esac

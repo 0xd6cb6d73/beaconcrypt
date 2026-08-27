@@ -5,15 +5,14 @@ SHELL := /bin/bash
 
 NIX ?= nix
 REPOSITORY_ROOT := $(abspath ../../..)
-PROOF_SHELL := path:$(REPOSITORY_ROOT)\#proofs
+PROOF_SHELL_RUNNER := $(REPOSITORY_ROOT)/scripts/run-proof-shell
 OUTPUT_DIR := $(REPOSITORY_ROOT)/target/formal-verification/ssprove
 MODULES := BoundedRom CtxEventReduction CtxGame CtxPrivacy PqxdhRatchetGames PqxdhRatchetRom PqxdhHybridSecurity RatchetForwardSecrecy RecordIntegrity RecordIntegrityBound
 
 .PHONY: verify check check-policy
 
 verify:
-	$(NIX) --extra-experimental-features 'nix-command flakes' develop \
-		--no-update-lock-file '$(PROOF_SHELL)' -c $(MAKE) check
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' run -- $(MAKE) check
 
 check: check-policy
 	mkdir -p '$(OUTPUT_DIR)'

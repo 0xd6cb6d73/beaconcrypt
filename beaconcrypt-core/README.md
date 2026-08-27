@@ -131,18 +131,28 @@ unreviewed boundary change fail CI. See the
 
 ## Strict hax/F*/ProVerif verification
 
-From this directory, run:
+Before an IDE-managed coordinator spawns agents that may run proof jobs, prepare the shared proof profile once:
+
+```sh
+make prepare-proof-shell
+```
+
+The command prints the profile path. It defaults to `${XDG_STATE_HOME:-$HOME/.local/state}/beaconcrypt/proof-shells/v1-<system>-<flake-hash>`, can be relocated with `BEACONCRYPT_PROOF_PROFILE_ROOT`, and is keyed only by the Nix system plus the working-tree bytes of `flake.nix` and `flake.lock`. A sandboxed IDE coordinator must create the default profile outside the sandbox once or give every participant the same writable external `BEACONCRYPT_PROOF_PROFILE_ROOT`; the runner rejects roots inside the checkout. Preparation changes to the repository root and realizes the environment with the literal Git-aware flake reference `.#proofs`; it never uses `path:.#proofs`, so ignored `.lake`, `target`, and `.git` data are not copied into a Nix source snapshot. Concurrent first use is serialized with the host `flock` command or Python 3's `fcntl` locking, with `BEACONCRYPT_PROOF_PROFILE_LOCK_TIMEOUT` controlling the default one-hour wait.
+
+Agents then use the normal targets from this directory:
 
 ```sh
 make verify
 ```
 
-The target enters the repository's locked Nix proof shell, checks the exact rustc, Cargo, hax, F*, Z3, and ProVerif identities, regenerates the F* commitment, ratchet, and PQXDH modules plus the ProVerif extraction, checks all three F* lemma modules without `--lax`, and runs the CTX differential, baseline, reachability, state-neutral receive, and compromise models.
+Each outer `verify*` target lazily prepares the same profile if the coordinator did not already do so, then enters the recorded profile without reevaluating the flake or realizing another environment. The runner removes the per-entry temporary Hax cache and hint directories after the requested command exits. The target checks the exact rustc, Cargo, hax, F*, Z3, and ProVerif identities, regenerates the F* commitment, ratchet, and PQXDH modules plus the ProVerif extraction, checks all three F* lemma modules without `--lax`, and runs the CTX differential, baseline, reachability, state-neutral receive, and compromise models.
 A policy gate rejects `assume` or `admit` in repository-owned F* modules and
 lax/admitted-query checker flags. The result gate rejects timeouts, missing
 queries, unexpected classifications, and every unproved or inconclusive
 security query. `make verify-proverif` runs only the ProVerif extraction and
 checks in the same locked shell, with the nine scenario targets running concurrently. Each scenario is also available independently as `make check-proverif-<scenario>`, `make verify-proverif-<scenario>`, or `make check-generated-proverif-<scenario>`; for example, `make verify-proverif-baseline` enters the locked shell, regenerates the extraction, and checks only the baseline model.
+
+`make proof-shell-profile` prints the profile selected for the current system and flake files without realizing it. `make check-proof-shell-runner` exercises profile selection, failure recovery, concurrent initialization through both lock implementations, command forwarding, interruption cleanup, and Makefile routing without realizing Nix. Profiles are garbage-collection roots, so normal `nix-collect-garbage` retains every keyed environment that still has a profile link. Retire an obsolete profile only after every coordinator and agent using that key has stopped; remove the selected profile symlink together with its same-basename `.ready`, `.lock`, and `-N-link` generation entries, then run garbage collection. Sharing the environment is concurrency-safe, but extraction and verification targets write common checkout and `target/` paths; serialize mutating proof jobs in one checkout or give agents separate worktrees.
 
 The inventory-only check does not require entering the proof shell:
 

@@ -19,9 +19,11 @@ Run Lean extraction inside the repository's proof environment so the pinned Hax,
 From `beaconcrypt-core`:
 
 ```bash
-nix --extra-experimental-features 'nix-command flakes' \
-  develop --no-update-lock-file 'path:..#proofs'
+make prepare-proof-shell
+../scripts/run-proof-shell run -- bash
 ```
+
+The first command realizes the shared, content-keyed profile with the Git-aware `.#proofs` flake reference. The second enters that recorded profile and cleans its per-entry Hax temporary directories when the shell exits. `make verify-lean` uses the same runner directly and normally does not require an interactive shell.
 
 The generated Lean project lives under:
 
@@ -115,9 +117,7 @@ check-lean:
 	cd $(LEAN_DIR) && lake build
 
 verify-lean:
-	$(NIX) --extra-experimental-features 'nix-command flakes' \
-		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
-		$(MAKE) verify-lean-in-shell
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' run -- $(MAKE) verify-lean-in-shell
 
 verify-lean-in-shell:
 	$(MAKE) check-toolchain
