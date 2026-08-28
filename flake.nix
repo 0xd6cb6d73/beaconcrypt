@@ -28,8 +28,14 @@
             nixpkgs.legacyPackages.${system}.elan
             nixpkgs.legacyPackages.${system}.coqPackages_9_0.coq
             nixpkgs.legacyPackages.${system}.coqPackages_9_0.ssprove
+            nixpkgs.legacyPackages.${system}.easycrypt
+            nixpkgs.legacyPackages.${system}.why3
+            nixpkgs.legacyPackages.${system}.cvc5
           ];
           SSPROVE_VERSION = nixpkgs.legacyPackages.${system}.coqPackages_9_0.ssprove.version;
+          EASYCRYPT_VERSION = nixpkgs.legacyPackages.${system}.easycrypt.version;
+          WHY3_VERSION = nixpkgs.legacyPackages.${system}.why3.version;
+          CVC5_VERSION = nixpkgs.legacyPackages.${system}.cvc5.version;
         });
       });
     };

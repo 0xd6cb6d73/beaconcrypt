@@ -1,0 +1,7 @@
+ActiveQuantum.ec:axiom assumption_quantum_recovers_ed25519 (sk : ed25519_secret) : quantum_recover_ed25519 (ed25519_public_of sk) = sk.
+ActiveQuantum.ec:axiom assumption_quantum_recovers_x25519 (sk : x25519_secret) : quantum_recover_x25519 (x25519_public_of sk) = sk.
+AdaptiveRom.ec:declare axiom assumption_adaptive_adversary_run_lossless (O <: ClassicalRomOracle {-A}) : islossless O.query => islossless A(O).run.
+Ctx.ec:axiom assumption_ctx_encoding_is_injective (key1 key2 : key) (nonce1 nonce2 : nonce) (ad1 ad2 : associated_data) (tag1 tag2 : aead_tag) (sequence1 sequence2 : sequence_number) (sender1 sender2 : sender_id) : ctx_encode key1 nonce1 ad1 tag1 sequence1 sender1 = ctx_encode key2 nonce2 ad2 tag2 sequence2 sender2 => key1 = key2 /\ nonce1 = nonce2 /\ ad1 = ad2 /\ tag1 = tag2 /\ sequence1 = sequence2 /\ sender1 = sender2.
+CtxAdaptiveFullRom.ec:declare axiom assumption_ctx_full_adversary_run_lossless (O <: CtxFullClassicalOracle {-A}) : islossless O.query => islossless A(O).run.
+HybridAdaptiveRom.ec:declare axiom assumption_hybrid_adversary_run_lossless (O <: HybridClassicalOracle {-A}) : islossless O.query => islossless A(O).run.
+RatchetAdaptiveRom.ec:declare axiom assumption_ratchet_adversary_run_lossless (O <: RatchetClassicalRomOracle {-A}) : islossless O.query => islossless A(O).run.

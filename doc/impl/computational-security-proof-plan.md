@@ -1,20 +1,18 @@
 <!-- SPDX-License-Identifier: 0BSD -->
 
-# Computational-security proof implementation plan
+# SSProve computational-security cross-check plan
 
 ## Status and decision policy
 
-This is a proposed implementation plan written against the `proof` branch at commit `ff12e813a1f4b7ee6f6e86db573dc796eb1d7154`.
+This is the preserved SSProve-specific implementation plan, originally written against the `proof` branch at commit `ff12e813a1f4b7ee6f6e86db573dc796eb1d7154`. The zero-migration-cost comparison has now selected EasyCrypt for primary computational-game development after EasyCrypt obtained reviewed counterparts in 30 selected bounded coverage areas from this tree. SSProve remains an independent Rocq-kernel-rechecked cross-check, and the backend-specific phases below remain useful for maintaining that cross-check; they are no longer the authoritative choice of primary proof infrastructure. The [EasyCrypt computational-proof evaluation](easycrypt-computational-security-proof-plan.md) records the current decision and its limitations.
 
-The maintained [integration evaluation](computational-security-proof-integration.md) records the implemented four-scenario ProVerif suite, bounded hidden-ROM CTX binding and privacy hops, the one-session one-record SSProve ideal protocol games, the attacker-facing bounded protocol-ROM reduction, standalone hybrid-combiner, one-step erasure-conditioned ratchet, record-integrity event/collision hops, the exact one-bit fresh-guess bound, the active-quantum attacks, and the remaining work.
+The maintained [integration evaluation](computational-security-proof-integration.md) records the implemented four-scenario ProVerif suite, the paired EasyCrypt and SSProve bounded computational capstones, the active-quantum attacks, and the remaining production-proof work.
 
 Except where that evaluation explicitly records a completed milestone, nothing in this planning document is a current security claim, a completed proof, or permission to change the protocol, wire format, persistence format, or public APIs.
 
 The implementation MUST stop at every decision gate identified below and obtain an explicit choice before taking a branch that changes the protocol or materially changes the assumptions or scope of the final theorem.
 
-The default proof architecture deliberately does not duplicate deterministic facts already proved from extracted Rust in F*.
-SSProve will prove probabilistic games, reductions, advantage bounds, and randomized package invariants, while F* remains authoritative for the existing exact byte-layout and deterministic state-transition facts.
-The result will therefore be a reviewed cross-prover composition unless a separate decision requires a closed theorem in one proof assistant.
+The architecture deliberately does not duplicate deterministic facts already proved from extracted Rust in Lean or F*. EasyCrypt owns the primary probabilistic games, reductions, advantage bounds, and adversarial protocol experiments; SSProve checks selected counterparts; Lean and F* remain authoritative for named deterministic implementation contracts. The result is a reviewed cross-prover composition unless a future proof-certificate bridge closes the theorem in one proof assistant.
 
 ## Objective
 
@@ -460,14 +458,9 @@ File responsibilities will be:
 - `NegativeControls.v`: executable counterexamples and deliberately false stronger claims, kept separate from positive results.
 - `AssumptionAudit.v` and `check-assumptions.sh`: `Print Assumptions` commands, exact output classification, and `coqchk` checks for every exported capstone.
 
-The [`protocol-core` Makefile](../../beaconcrypt-core/Makefile) will gain narrowly scoped variables and targets such as `HAX_SSPROVE_ITEMS`, `extract-ssprove`, `check-ssprove-extraction`, `check-ssprove-policy`, `check-ssprove`, `verify-ssprove`, and `verify-ssprove-in-shell`.
-The existing backend targets will remain independently runnable.
-The initial extraction target should preserve the current backend-enabling Cargo feature and use hax 0.3.7's supported command shape: `cargo hax -C --locked --features=proverif ';' into -i '$(HAX_SSPROVE_ITEMS)' --output-dir proofs/ssprove/extraction ssprove`.
-Renaming the currently backend-misnamed `proverif` feature is optional cleanup and SHOULD NOT be mixed into the feasibility change unless hax requires it.
+The [`beaconcrypt-core` Makefile](../../beaconcrypt-core/Makefile) exposes `check-ssprove-policy`, `check-ssprove`, `verify-ssprove`, and `verify-ssprove-in-shell`; the direct `extract-ssprove` route was deliberately not accepted because the pinned generated prelude exposes `False` and selected array extraction is incomplete. The existing backend targets remain independently runnable.
 
-`verify-in-shell` will regenerate and check all three proof backends after SSProve is accepted.
-`check-generated` will compare all three generated directories and reject untracked generated artifacts.
-CI will then run the generated/proof gate and the separate reviewed-inventory gate.
+`verify-in-shell` regenerates and checks the F*, ProVerif, and Lean extraction backends and checks the handwritten EasyCrypt and SSProve developments. `check-generated` compares the three generated trees and rejects untracked generated artifacts after the complete proof gate. CI runs the scoped proof jobs and the separate reviewed-inventory gate.
 
 ## Extraction coverage policy
 

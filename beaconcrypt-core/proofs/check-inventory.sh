@@ -27,7 +27,7 @@ while IFS=$'\t' read -r category expected path extra ||
 	[[ -n "${category:-}${expected:-}${path:-}${extra:-}" ]]; do
 	[[ -z "${category:-}" || "$category" == \#* ]] && continue
 	[[ -z "${extra:-}" ]] || fail "malformed manifest entry for $path"
-	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|handwritten-ssprove|historical-generated-fstar|historical-handwritten-fstar|inventory|lean-control|validation)$ ]] ||
+	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-easycrypt|handwritten-lean|handwritten-proverif|handwritten-ssprove|historical-generated-fstar|historical-handwritten-fstar|inventory|lean-control|validation)$ ]] ||
 		fail "unknown manifest category: $category"
 	[[ "$expected" =~ ^[0-9a-f]{64}$ ]] || fail "invalid SHA-256 for $path"
 	[[ -n "$path" && -f "$path" ]] || fail "missing reviewed file: $path"
@@ -48,8 +48,9 @@ declare -A expected_category_counts=(
 	[control]=14
 	[generated-lean]=3
 	[generated-proverif]=1
+	[handwritten-easycrypt]=21
 	[handwritten-lean]=9
-	[handwritten-proverif]=28
+	[handwritten-proverif]=33
 	[handwritten-ssprove]=14
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -150,6 +151,10 @@ find proofs/pro-verif -type f \
 	! -path 'proofs/pro-verif/extraction/*' \
 	-printf '%p\n' > "$tmp_dir/handwritten-proverif"
 compare_set handwritten-proverif "$tmp_dir/handwritten-proverif"
+
+find proofs/easycrypt -type f -printf '%p\n' \
+	> "$tmp_dir/handwritten-easycrypt"
+compare_set handwritten-easycrypt "$tmp_dir/handwritten-easycrypt"
 
 find proofs/ssprove -type f -printf '%p\n' \
 	> "$tmp_dir/handwritten-ssprove"
@@ -346,13 +351,13 @@ require_line_count 9 '^query ' \
 require_line_count 2 '^query ' \
 	proofs/pro-verif/failed-receive-compromise-reachability-queries.pvl \
 	"state-neutral receive compromise reachability query"
-require_line_count 1 '^query ' \
+require_line_count 7 '^query ' \
 	proofs/pro-verif/aead-commitment-negative-control-queries.pvl \
 	"AEAD commitment negative-control query"
-require_line_count 1 '^event ' \
+require_line_count 2 '^event ' \
 	proofs/pro-verif/aead-commitment-negative-control.pvl \
 	"AEAD commitment negative-control event"
-require_line_count 2 '^let [A-Z]' \
+require_line_count 3 '^let [A-Z]' \
 	proofs/pro-verif/aead-commitment-negative-control.pvl \
 	"AEAD commitment negative-control process"
 require_line_count 1 '^process$' proofs/pro-verif/baseline.pv \
@@ -370,7 +375,7 @@ require_line_count 1 '^process$' proofs/pro-verif/aead-no-commitment.pv \
 	"AEAD no-commitment top-level process"
 require_line_count 5 '^query ' proofs/pro-verif/passive-queries.pvl \
 	"passive secrecy query"
-require_line_count 2 '^query ' \
+require_line_count 6 '^query ' \
 	proofs/pro-verif/passive-reachability-queries.pvl \
 	"passive progress-control query"
 require_line_count 3 '^query ' proofs/pro-verif/active-quantum-queries.pvl \
@@ -380,6 +385,15 @@ require_line_count 2 '^reduc ' proofs/pro-verif/quantum-capabilities.pvl \
 require_line_count 2 '^query ' \
 	proofs/pro-verif/quantum-capability-control-queries.pvl \
 	"quantum capability-control query"
+require_line_count 1 '^reduc ' \
+	proofs/pro-verif/quantum-mlkem-recovery.pvl \
+	"public symbolic ML-KEM recovery rule"
+require_line_count 1 '^query ' \
+	proofs/pro-verif/quantum-mlkem-recovery-queries.pvl \
+	"ML-KEM capability-control query"
+require_line_count 5 'choice\[' \
+	proofs/pro-verif/passive-strong-secrecy.pv \
+	"passive strong-secrecy challenge"
 require_line_count 2 '^fun .*\[private\]' \
 	proofs/pro-verif/active-quantum-witness.pvl \
 	"bounded private quantum recovery operation"
@@ -391,8 +405,10 @@ require_line_count 1 '^let ActiveQuantumMitm' \
 	"bounded active-quantum witness process"
 for scenario_process in \
 	passive \
+	passive-strong-secrecy \
 	active-quantum \
-	quantum-capability-control; do
+	quantum-capability-control \
+	quantum-mlkem-control; do
 	require_line_count 1 '^process$' \
 		"proofs/pro-verif/${scenario_process}.pv" \
 		"${scenario_process} top-level process"

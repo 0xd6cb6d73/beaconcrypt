@@ -3,7 +3,7 @@
 process
   out(c, ed_public(SERVER_IDENTITY_SECRET));
   (
-    HonestBeacon()
-    | Server()
+    HonestBeacon(BEACON_RECORD_SECRET)
+    | Server(INITIAL_SECRET, CACHED_SECRET, ADVANCE_SECRET, FUTURE_SECRET)
     | ActiveQuantumMitm()
   )

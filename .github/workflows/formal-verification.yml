@@ -34,8 +34,16 @@ jobs:
             target: check-generated-proverif-active-classical
           - name: ProVerif passive classical
             target: check-generated-proverif-passive-classical
+          - name: ProVerif passive classical equivalence
+            target: check-generated-proverif-passive-classical-equivalence
           - name: ProVerif passive quantum
             target: check-generated-proverif-passive-quantum
+          - name: ProVerif passive quantum equivalence
+            target: check-generated-proverif-passive-quantum-equivalence
+          - name: ProVerif quantum ML-KEM opacity
+            target: check-generated-proverif-quantum-mlkem-opacity
+          - name: ProVerif quantum ML-KEM recovery control
+            target: check-generated-proverif-quantum-mlkem-recovery
           - name: ProVerif active quantum attack
             target: check-generated-proverif-active-quantum
           - name: ProVerif reachability
@@ -50,8 +58,10 @@ jobs:
             target: check-generated-proverif-failed-receive-compromise
           - name: ProVerif failed-receive compromise reachability
             target: check-generated-proverif-failed-receive-compromise-reachability
-          - name: SSProve CTX reduction
+          - name: SSProve bounded cross-check
             target: verify-ssprove
+          - name: EasyCrypt computational games
+            target: verify-easycrypt
           - name: Formal proof inventory
             target: check-inventory
 

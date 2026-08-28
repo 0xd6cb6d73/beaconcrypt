@@ -52,6 +52,50 @@ event WeakAeadMultiOpened(
   bitstring
 ).
 
+fun ctx_key_mutation(): bitstring [data].
+fun ctx_nonce_mutation(): bitstring [data].
+fun ctx_associated_data_mutation(): bitstring [data].
+fun ctx_tag_mutation(): bitstring [data].
+fun ctx_sequence_mutation(): bitstring [data].
+fun ctx_sender_mutation(): bitstring [data].
+event CtxMutationAccepted(bitstring).
+
+(* Each branch changes exactly one input to the commitment. Keeping these controls independent detects accidental omission of an individual transcript field. *)
+let CtxFieldMutationControls() =
+  new key: bitstring;
+  new changed_key: bitstring;
+  new nonce: bitstring;
+  new changed_nonce: bitstring;
+  new associated_data: bitstring;
+  new changed_associated_data: bitstring;
+  new tag: bitstring;
+  new changed_tag: bitstring;
+  new sender_id: key_id;
+  new changed_sender_id: key_id;
+  let message_sequence = first_sequence() in
+  let commitment = ctx_commitment(
+    key,
+    nonce,
+    associated_data,
+    tag,
+    message_sequence,
+    sender_id
+  ) in
+  (
+    if commitment = ctx_commitment(changed_key, nonce, associated_data, tag, message_sequence, sender_id) then
+      event CtxMutationAccepted(ctx_key_mutation())
+  | if commitment = ctx_commitment(key, changed_nonce, associated_data, tag, message_sequence, sender_id) then
+      event CtxMutationAccepted(ctx_nonce_mutation())
+  | if commitment = ctx_commitment(key, nonce, changed_associated_data, tag, message_sequence, sender_id) then
+      event CtxMutationAccepted(ctx_associated_data_mutation())
+  | if commitment = ctx_commitment(key, nonce, associated_data, changed_tag, message_sequence, sender_id) then
+      event CtxMutationAccepted(ctx_tag_mutation())
+  | if commitment = ctx_commitment(key, nonce, associated_data, tag, next_sequence(message_sequence), sender_id) then
+      event CtxMutationAccepted(ctx_sequence_mutation())
+  | if commitment = ctx_commitment(key, nonce, associated_data, tag, message_sequence, changed_sender_id) then
+      event CtxMutationAccepted(ctx_sender_mutation())
+  ).
+
 (* The commitment is constructed for the left opening.
    Revalidating that exact wire commitment for the right opening must fail because ctx_commitment is binding in the key, nonce, and associated data. *)
 let WithCtxNegativeControl() =

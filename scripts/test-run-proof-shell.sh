@@ -329,15 +329,17 @@ make_reuse_env=("${make_env[@]}" FAKE_NIX_FAIL_INIT=1)
 "${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-proverif
 "${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-proverif-baseline
 "${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-ssprove
+"${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-easycrypt
 "${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core/proofs/ssprove" verify
 "${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-lean
 assert_equal "$(count_matching_lines "$fake_log" $'\targ=--profile\t')" 1
 assert_equal "$(count_matching_lines "$fake_log" $'\targ=.#proofs\t')" 1
-assert_equal "$(count_matching_lines "$fake_log" $'\targ=develop\targ='"$make_profile"$'\targ=-c')" 7
+assert_equal "$(count_matching_lines "$fake_log" $'\targ=develop\targ='"$make_profile"$'\targ=-c')" 8
 assert_contains "$fake_log" $'\targ=verify-in-shell'
 assert_contains "$fake_log" $'\targ=verify-fstar-in-shell'
 assert_contains "$fake_log" $'\targ=verify-proverif-in-shell'
 assert_contains "$fake_log" $'\targ=verify-proverif-scenario-in-shell\targ=PROVERIF_SCENARIO=baseline'
+assert_contains "$fake_log" $'\targ=verify-easycrypt-in-shell'
 assert_contains "$fake_log" $'\targ=check'
 assert_contains "$fake_log" $'\targ=verify-lean-in-shell'
 

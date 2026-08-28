@@ -21,6 +21,15 @@ function require_exact(wanted, label, query_index, found) {
   print
 }
 
+/^RESULT Observational equivalence is / {
+  equivalence_count++
+  if ((scenario == "passive-classical-equivalence" ||
+       scenario == "passive-quantum-equivalence") &&
+      $0 != "RESULT Observational equivalence is true.") {
+    reject(scenario " was not proved: " $0)
+  }
+}
+
 /^Verification summary:$/ {
   in_summary = 1
   next
@@ -60,13 +69,14 @@ in_summary && /^Query / {
     reject(scenario " control witness was not found: " $0)
   }
 
-  if (scenario == "aead-commitment" && $0 !~ / is true\.$/) {
-    reject("CTX did not prevent the weak-AEAD multi-opening: " $0)
+  if (scenario == "quantum-mlkem-opacity" && $0 !~ / is true\.$/) {
+    reject("ML-KEM opacity control did not preserve secrecy: " $0)
   }
 
-  if (scenario == "aead-no-commitment" && $0 !~ / is false\.$/) {
-    reject("no-CTX negative control did not witness a multi-opening: " $0)
+  if (scenario == "quantum-mlkem-recovery" && $0 !~ / is false\.$/) {
+    reject("ML-KEM recovery control did not expose the canary: " $0)
   }
+
 }
 
 END {
@@ -77,8 +87,8 @@ END {
   registration_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,origin_1"
   accepted_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,root_input_3,root_3,origin_1"
   commit_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,assigned_key_id_3,root_input_3,root_3,associated_data_3,session_4,origin_1"
-  message_arguments = "session_4,message_direction,message_sequence_6,sender,receiver,plaintext_6"
-  malicious_commit_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,assigned_key_id_3,root_input_3,root_3,associated_data_3,session_4,plaintext_6"
+  message_arguments = "session_4,message_direction,message_sequence_6,sender,receiver,plaintext_2"
+  malicious_commit_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,assigned_key_id_3,root_input_3,root_3,associated_data_3,session_4,plaintext_2"
   receive_rejected_arguments = "session_3,target_sequence_2,forged_frame,entry_state"
   receive_future_arguments = "session_3,target_sequence_2,sender,receiver,plaintext_8,accepted_frame,target_material_1,forged_frame,entry_state,committed_state_1"
   receive_reachable_future_arguments = "session_3,target_sequence_2,sender,receiver,RECEIVE_TARGET_SECRET[],accepted_frame,target_material_1,forged_frame,entry_state,committed_state_1"
@@ -94,14 +104,36 @@ END {
   receive_malicious_commit_arguments = "server_identity_1,beacon_identity_2,init,registration_id_2,assigned_key_id_1,root_input_1,root_2,associated_data_9,session_3,plaintext_8"
   weak_aead_arguments = "left_key_1,right_key_1,left_context_1,right_context_1,left_plaintext_1,right_plaintext_1"
 
-  if (scenario == "aead-commitment" ||
+  equivalence_scenario = (scenario == "passive-classical-equivalence" || scenario == "passive-quantum-equivalence")
+  if (!equivalence_scenario && equivalence_count != 0) {
+    reject("unexpected observational-equivalence result in " scenario)
+  }
+
+  if (equivalence_scenario) {
+    if (equivalence_count != 1) {
+      reject("expected one " scenario " result, saw " equivalence_count)
+    }
+    if (query_count != 0) {
+      reject("expected no reachability queries in " scenario ", saw " query_count)
+    }
+  } else if (scenario == "aead-commitment" ||
       scenario == "aead-no-commitment") {
-    if (query_count != 1) {
-      reject("expected 1 " scenario " query, saw " query_count)
+    if (query_count != 7) {
+      reject("expected 7 " scenario " queries, saw " query_count)
     }
     expected_result = (scenario == "aead-commitment") ? "true" : "false"
     wanted = "Query not event(WeakAeadMultiOpened(" weak_aead_arguments ")) is " expected_result "."
     require_exact(wanted, scenario)
+    mutation[1] = "ctx_key_mutation"
+    mutation[2] = "ctx_nonce_mutation"
+    mutation[3] = "ctx_associated_data_mutation"
+    mutation[4] = "ctx_tag_mutation"
+    mutation[5] = "ctx_sequence_mutation"
+    mutation[6] = "ctx_sender_mutation"
+    for (mutation_index = 1; mutation_index <= 6; mutation_index++) {
+      wanted = "Query not event(CtxMutationAccepted(" mutation[mutation_index] ")) is true."
+      require_exact(wanted, "CTX independent field mutation")
+    }
   } else if (scenario == "passive-classical" ||
              scenario == "passive-quantum") {
     if (query_count != 5) {
@@ -131,15 +163,21 @@ END {
     wanted = "Query inj-event(ServerAccepted(" active_quantum_arguments ")) ==> inj-event(BeaconInitiated(" active_quantum_origin_arguments ")) is false."
     require_exact(wanted, "active-quantum agreement break")
   } else if (scenario == "passive-reachability") {
-    if (query_count != 2) {
-      reject("expected 2 passive reachability queries, saw " query_count)
+    if (query_count != 6) {
+      reject("expected 6 passive reachability queries, saw " query_count)
     }
     passive_commit_arguments = "server_identity_2,beacon_identity_2,init,registration_id_2,assigned_key_id_2,root_input_2,root_2,associated_data_2,session_3,origin_1"
     wanted = "Query not event(BeaconCommitted(" passive_commit_arguments ")) is false."
     require_exact(wanted, "passive registration completion")
-    passive_message_arguments = "session_3,message_direction,message_sequence_5,sender,receiver,plaintext_5"
-    wanted = "Query not event(MessageReceived(" passive_message_arguments ")) is false."
-    require_exact(wanted, "passive record delivery")
+    passive_delivery[1] = "server_to_beacon,first_sequence,sender,receiver,INITIAL_SECRET[]"
+    passive_delivery[2] = "server_to_beacon,next_sequence(first_sequence),sender,receiver,CACHED_SECRET[]"
+    passive_delivery[3] = "server_to_beacon,next_sequence(next_sequence(first_sequence)),sender,receiver,ADVANCE_SECRET[]"
+    passive_delivery[4] = "server_to_beacon,next_sequence(next_sequence(next_sequence(first_sequence))),sender,receiver,FUTURE_SECRET[]"
+    passive_delivery[5] = "beacon_to_server,first_sequence,sender,receiver,BEACON_RECORD_SECRET[]"
+    for (delivery_index = 1; delivery_index <= 5; delivery_index++) {
+      wanted = "Query not event(MessageReceived(session_3," passive_delivery[delivery_index] ")) is false."
+      require_exact(wanted, "passive exact canary delivery")
+    }
   } else if (scenario == "quantum-capabilities") {
     if (query_count != 2) {
       reject("expected 2 quantum capability queries, saw " query_count)
@@ -148,6 +186,14 @@ END {
     require_exact(wanted, "Ed25519 quantum recovery")
     wanted = "Query not attacker(QUANTUM_X25519_CAPABILITY_SECRET[]) is false."
     require_exact(wanted, "X25519 quantum recovery")
+  } else if (scenario == "quantum-mlkem-opacity" ||
+             scenario == "quantum-mlkem-recovery") {
+    if (query_count != 1) {
+      reject("expected 1 " scenario " query, saw " query_count)
+    }
+    expected_result = (scenario == "quantum-mlkem-opacity") ? "true" : "false"
+    wanted = "Query not attacker(QUANTUM_MLKEM_CONTROL_SECRET[]) is " expected_result "."
+    require_exact(wanted, scenario)
   } else if (scenario == "baseline" ||
              scenario == "active-classical") {
     if (query_count != 11) {

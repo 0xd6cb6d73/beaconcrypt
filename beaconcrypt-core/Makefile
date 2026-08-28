@@ -12,6 +12,9 @@ EXPECTED_Z3 := Z3 version 4.15.3 - 64 bit
 EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
 EXPECTED_ROCQ := The Rocq Prover, version 9.0.0
 EXPECTED_SSPROVE := 0.2.4
+EXPECTED_EASYCRYPT := 2025.08
+EXPECTED_WHY3 := 1.8.2
+EXPECTED_CVC5 := 1.2.1
 HAX_ITEMS := -** \
 	+beaconcrypt_core::commitment::build_commitment_transcript \
 	+beaconcrypt_core::ratchet::control::SequenceCache \
@@ -157,7 +160,11 @@ PROVERIF_SCENARIOS := \
 	aead-no-commitment \
 	active-classical \
 	passive-classical \
+	passive-classical-equivalence \
 	passive-quantum \
+	passive-quantum-equivalence \
+	quantum-mlkem-opacity \
+	quantum-mlkem-recovery \
 	active-quantum \
 	baseline \
 	reachability \
@@ -171,6 +178,7 @@ PROVERIF_VERIFY_TARGETS := $(addprefix verify-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_GENERATED_TARGETS := $(addprefix check-generated-proverif-,$(PROVERIF_SCENARIOS))
 
 SSPROVE_DIR := proofs/ssprove
+EASYCRYPT_DIR := proofs/easycrypt
 
 LEAN_DIR := proofs/lean
 LEAN_ROOT := $(LEAN_DIR)/BeaconcryptCore.lean
@@ -187,9 +195,12 @@ LEAN_GENERATED_PATHS := \
 # Extraction preserves their proof imports and all-module build glob.
 
 .PHONY: prepare-proof-shell proof-shell-profile check-proof-shell-runner \
-	verify verify-in-shell verify-fstar verify-fstar-in-shell \
+	verify verify-in-shell \
+	verify-fstar verify-fstar-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
+	verify-easycrypt verify-easycrypt-in-shell check-easycrypt \
+	check-easycrypt-policy \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-toolchain check-fstar-policy check-lean-policy check-lean-root check-inventory \
 	extract-fstar check-fstar extract-proverif check-proverif \
@@ -218,6 +229,7 @@ verify-in-shell:
 	$(MAKE) check-fstar
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+	$(MAKE) check-easycrypt
 	$(MAKE) check-ssprove
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
@@ -245,6 +257,13 @@ verify-ssprove-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) check-ssprove
 
+verify-easycrypt:
+	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' run -- $(MAKE) verify-easycrypt-in-shell
+
+verify-easycrypt-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) check-easycrypt
+
 $(PROVERIF_VERIFY_TARGETS): verify-proverif-%:
 	@NIX='$(NIX)' '$(PROOF_SHELL_RUNNER)' run -- \
 		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO='$*'
@@ -254,13 +273,13 @@ verify-proverif-scenario-in-shell:
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif-$(PROVERIF_SCENARIO)
 
+check-proof-shell-runner:
+	../scripts/test-run-proof-shell.sh
+
 # Review tripwire for the complete production/proof trust boundary. Run after
 # extraction and proof checks so generated output is checked against the
 # reviewed baseline without preventing an intentional changed artifact from
 # first being analyzed.
-check-proof-shell-runner:
-	../scripts/test-run-proof-shell.sh
-
 check-inventory: check-proof-shell-runner
 	bash proofs/check-inventory.sh
 
@@ -290,7 +309,13 @@ check-toolchain:
 		check_version Rocq '$(EXPECTED_ROCQ)' \
 			"$$(coqc --version | sed -n '1p')"; \
 		check_version SSProve '$(EXPECTED_SSPROVE)' \
-			"$${SSPROVE_VERSION:-missing}"
+			"$${SSPROVE_VERSION:-missing}"; \
+		check_version EasyCrypt '$(EXPECTED_EASYCRYPT)' \
+			"$${EASYCRYPT_VERSION:-missing}"; \
+		check_version Why3 '$(EXPECTED_WHY3)' \
+			"$${WHY3_VERSION:-missing}"; \
+		check_version CVC5 '$(EXPECTED_CVC5)' \
+			"$${CVC5_VERSION:-missing}"
 
 extract-fstar:
 	# Enable hax-lib so the bounded recursive lookup carries its checked measure.
@@ -340,6 +365,12 @@ check-ssprove-policy:
 check-ssprove:
 	$(MAKE) -C '$(SSPROVE_DIR)' check
 
+check-easycrypt-policy:
+	$(MAKE) -C '$(EASYCRYPT_DIR)' check-policy
+
+check-easycrypt: check-easycrypt-policy
+	$(MAKE) -C '$(EASYCRYPT_DIR)' check
+
 check-proverif:
 	+$(MAKE) --no-print-directory -j$(words $(PROVERIF_SCENARIOS)) \
 		$(PROVERIF_CHECK_TARGETS)
@@ -385,8 +416,46 @@ check-proverif-quantum-capabilities:
 			$(PROVERIF_DIR)/quantum-capability-control.pv | \
 		awk -v scenario=quantum-capabilities -f '$(PROVERIF_CHECKER)'
 
+check-proverif-quantum-mlkem-opacity:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
+			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
+		awk -v scenario=quantum-mlkem-opacity -f '$(PROVERIF_CHECKER)'
+
+check-proverif-quantum-mlkem-recovery:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
+			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
+		awk -v scenario=quantum-mlkem-recovery -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-classical-equivalence: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_COMMON_LIBS) \
+			$(PROVERIF_DIR)/passive-strong-secrecy.pv | \
+		awk -v scenario=passive-classical-equivalence -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-quantum-equivalence: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_QUANTUM_LIBS) \
+			$(PROVERIF_DIR)/passive-strong-secrecy.pv | \
+		awk -v scenario=passive-quantum-equivalence -f '$(PROVERIF_CHECKER)'
+
 check-proverif-passive-classical: check-proverif-extraction \
-	check-proverif-passive-reachability
+	check-proverif-passive-reachability \
+	check-proverif-passive-classical-equivalence
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			-set attacker passive \
@@ -396,7 +465,10 @@ check-proverif-passive-classical: check-proverif-extraction \
 		awk -v scenario=passive-classical -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-quantum: check-proverif-extraction \
-	check-proverif-passive-reachability check-proverif-quantum-capabilities
+	check-proverif-passive-reachability check-proverif-quantum-capabilities \
+	check-proverif-quantum-mlkem-opacity \
+	check-proverif-quantum-mlkem-recovery \
+	check-proverif-passive-quantum-equivalence
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			-set attacker passive \
