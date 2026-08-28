@@ -73,7 +73,16 @@ jobs:
           skipPush: true
           extraPullNames: fstar-nix-versions,z3-nix-versions
 
+      # Each proof-bearing matrix worker is its own coordinator because matrix jobs use isolated runners.
+      - name: Prepare shared proof shell
+        if: ${{ matrix.target != 'check-inventory' }}
+        env:
+          BEACONCRYPT_PROOF_PROFILE_ROOT: ${{ runner.temp }}/beaconcrypt-proof-shells
+        run: make -C beaconcrypt-core prepare-proof-shell
+
       - name: Regenerate and verify formal proof artifacts
+        env:
+          BEACONCRYPT_PROOF_PROFILE_ROOT: ${{ runner.temp }}/beaconcrypt-proof-shells
         run: make -C beaconcrypt-core ${{ matrix.target }}
 
   proofs:

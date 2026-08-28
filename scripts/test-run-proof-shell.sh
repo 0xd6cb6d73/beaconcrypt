@@ -312,13 +312,33 @@ make_env=(env \
 	NIX="$test_script" \
 	BEACONCRYPT_PROOF_PROFILE_ROOT="$profile_root")
 repository_root="$(cd -- "$script_dir/.." && pwd -P)"
-"${make_env[@]}" make -s -C "$repository_root/beaconcrypt-core" prepare-proof-shell >/dev/null
-"${make_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-fstar
-"${make_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-proverif-baseline
-"${make_env[@]}" make -s -C "$repository_root/beaconcrypt-core/proofs/ssprove" verify
+workflow="$repository_root/.github/workflows/formal-verification.yml"
+assert_contains "$workflow" "if: \${{ matrix.target != 'check-inventory' }}"
+assert_contains "$workflow" 'BEACONCRYPT_PROOF_PROFILE_ROOT: ${{ runner.temp }}/beaconcrypt-proof-shells'
+assert_equal "$(count_matching_lines "$workflow" 'BEACONCRYPT_PROOF_PROFILE_ROOT: ${{ runner.temp }}/beaconcrypt-proof-shells')" 2
+assert_contains "$workflow" 'run: make -C beaconcrypt-core prepare-proof-shell'
+assert_contains "$workflow" 'run: make -C beaconcrypt-core ${{ matrix.target }}'
+prepare_step_line="$(awk 'index($0, "run: make -C beaconcrypt-core prepare-proof-shell") { print NR; exit }' "$workflow")"
+proof_step_line="$(awk 'index($0, "run: make -C beaconcrypt-core ${{ matrix.target }}") { print NR; exit }' "$workflow")"
+((prepare_step_line < proof_step_line)) || fail 'CI proof target runs before shared profile preparation'
+make_profile="$("${make_env[@]}" make -s --no-print-directory -C "$repository_root/beaconcrypt-core" prepare-proof-shell)"
+[[ "$make_profile" == "$profile_root"/v1-* ]] || fail "Make prepared unexpected profile: $make_profile"
+make_reuse_env=("${make_env[@]}" FAKE_NIX_FAIL_INIT=1)
+"${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify
+"${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-fstar
+"${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-proverif
+"${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-proverif-baseline
+"${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-ssprove
+"${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core/proofs/ssprove" verify
+"${make_reuse_env[@]}" make -s -C "$repository_root/beaconcrypt-core" verify-lean
 assert_equal "$(count_matching_lines "$fake_log" $'\targ=--profile\t')" 1
+assert_equal "$(count_matching_lines "$fake_log" $'\targ=.#proofs\t')" 1
+assert_equal "$(count_matching_lines "$fake_log" $'\targ=develop\targ='"$make_profile"$'\targ=-c')" 7
+assert_contains "$fake_log" $'\targ=verify-in-shell'
 assert_contains "$fake_log" $'\targ=verify-fstar-in-shell'
+assert_contains "$fake_log" $'\targ=verify-proverif-in-shell'
 assert_contains "$fake_log" $'\targ=verify-proverif-scenario-in-shell\targ=PROVERIF_SCENARIO=baseline'
 assert_contains "$fake_log" $'\targ=check'
+assert_contains "$fake_log" $'\targ=verify-lean-in-shell'
 
 printf 'test-run-proof-shell: ok\n'
