@@ -509,6 +509,9 @@ for composition_capstone in \
 	separated_ckey_transfer_is_one_way_and_role_oriented \
 	separated_first_response_matches_monolithic \
 	separated_unauthenticated_response_rejects \
+	public_response_rejects_unauthenticated_provenance \
+	unauthenticated_public_responses_are_challenge_independent \
+	pure_public_response_observation_matches_monolithic \
 	separated_first_response_opens_sequence_one \
 	state_separated_composition_uses_production_kdf_domains \
 	failed_response_construction_consumes_only_replay_state \
@@ -525,7 +528,7 @@ for composition_capstone in \
 		proofs/ssprove/StateSeparatedComposition.v \
 		"SSProve state-separation ${composition_capstone} assumption report"
 done
-require_line_count 12 '^Print Assumptions ' \
+require_line_count 15 '^Print Assumptions ' \
 	proofs/ssprove/StateSeparatedComposition.v \
 	"complete SSProve state-separation assumption reports"
 require_line_count 1 '^Definition consuming_ckey :' \
@@ -537,6 +540,67 @@ require_line_count 1 '^#\[tactic=notac\] Equations\? composition_core$' \
 require_line_count 1 '^#\[tactic=notac\] Equations\? state_separated_response_package$' \
 	proofs/ssprove/StateSeparatedComposition.v \
 	"SSProve state-separated public package"
+require_line_count 1 '^Definition public_response_observation : Type := option bool\.$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve optional public response observation"
+require_line_count 1 '^Definition chPublicResponseObservation : choice_type := chOption chBool\.$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve optional package response observation"
+require_line_count 1 '^Definition uniform_response_sample_op : Op :=$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve private joint response sampler"
+require_line_count 1 '^  existT _ chRomSample uniform_rom_sample\.$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve exact pure/package sample source"
+require_line_count 1 "^    #val #\\[run_response_id\\] : 'unit → 'response$" \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve unit-input public response signature"
+require_occurrence_count 3 \
+	"#def #\\[run_response_id\\] \\(_ : 'unit\\) : 'response \\{" \
+	"SSProve unit-input response implementations" \
+	proofs/ssprove/StateSeparatedComposition.v
+require_occurrence_count 2 'sample <\$ uniform_response_sample_op ;;' \
+	"SSProve internal joint sample draws" \
+	proofs/ssprove/StateSeparatedComposition.v
+require_line_count 1 '^      opened_plaintext ← OPEN \(sample, ciphertext\) ;;$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve internal-only opened response"
+require_line_count 1 "^      @ret 'response \\(Some ciphertext\\)$" \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve successful public ciphertext observation"
+require_line_count 1 "^      @ret 'response None$" \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve explicit public rejection observation"
+require_line_count 1 '^Definition state_separated_response_games$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve challenge-indexed public game pair"
+require_line_count 1 '^  loc_GamePair response_interface :=$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve public game-pair interface"
+require_line_count 1 '^  fun challenge =>$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve hidden challenge world mapping"
+require_line_count 1 '^Definition state_separated_public_response_view_game$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve direct public-response view game"
+require_line_count 1 '^Definition state_separated_public_response_advantage$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve direct public-response advantage"
+require_occurrence_count 1 '\\P_\[uniform_rom_sample\]' \
+	"SSProve direct view uses joint finite source" \
+	proofs/ssprove/StateSeparatedComposition.v
+require_line_count 1 '^Definition composition_driver \(authenticated : bool\) :$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve provenance-indexed response driver"
+require_line_count 1 '^  if authenticated$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve response driver provenance branch"
+require_line_count 1 '^  then successful_composition_driver$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve authenticated response driver"
+require_line_count 1 '^  else rejected_composition_driver\.$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve rejected-provenance driver"
 require_line_count 1 '^Definition first_response_sequence : nat := 1%N\.$' \
 	proofs/ssprove/StateSeparatedComposition.v \
 	"SSProve production first-response sequence"

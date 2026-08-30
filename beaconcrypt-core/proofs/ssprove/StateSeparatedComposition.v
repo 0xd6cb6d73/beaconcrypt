@@ -1,6 +1,6 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(** This file mechanizes the first state-separating composition slice for beaconcrypt. It models one accepted registration, the server's sequence-one response, and the beacon's matching open. It is a single-call structural and key-correctness slice: it does not model the production record encoding, nonce, associated data, AEAD, CTX, or identifier checks, and it does not establish a package-interpreter contextual equivalence, the repeatable CKEY interface, or the computational theorem from the state-separation paper. *)
+(** This file mechanizes the first state-separating composition slice for beaconcrypt. It models one accepted registration, the server's sequence-one response, and the beacon's matching open. The public experiment samples its finite ROM tape internally and exports only an optional response ciphertext; neither the tape nor the opened plaintext crosses the public interface. It remains a single-call structural and key-correctness slice: it does not model the production record encoding, nonce, associated data, AEAD, CTX, or identifier checks, and it does not establish a package-interpreter contextual equivalence, the repeatable CKEY interface, or the computational theorem from the state-separation paper. *)
 
 From Stdlib Require Import Bool Utf8.
 
@@ -29,6 +29,7 @@ Import Num.Theory.
 Import PackageNotation.
 
 #[local] Open Scope package_scope.
+#[local] Open Scope ring_scope.
 
 (** Roles and session handles are finite ghost metadata. They are checked by CKEY but never passed to a KDF, associated-data builder, record, or CTX input. *)
 Definition server_role : bool := false.
@@ -269,6 +270,24 @@ Definition separated_first_response
   | None => (false, false)
   end.
 
+(** The public experiment exposes only the optional response ciphertext. [None] is the modeled rejection observation; the successful response's opened plaintext remains internal. [rom_sample] is proof-side bookkeeping for the deterministic body and is not an argument of the public package operation defined below. *)
+Definition public_response_observation : Type := option bool.
+
+Definition separated_public_response_observation
+  (session : bounded_session_handle) (authenticated challenge : bool)
+  (sample : rom_sample) (input : pqxdh_root_input) :
+  public_response_observation :=
+  if authenticated then
+    Some
+      (separated_first_response session authenticated challenge
+        (sample_to_tape sample) input).1
+  else None.
+
+Definition monolithic_public_response_observation
+  (challenge : bool) (sample : rom_sample) (input : pqxdh_root_input) :
+  public_response_observation :=
+  Some (monolithic_first_response challenge (sample_to_tape sample) input).1.
+
 Theorem separated_first_response_matches_monolithic :
   forall session authenticated challenge tape input,
     authenticated = true ->
@@ -295,6 +314,53 @@ Proof.
     session false left_chain right_chain) /=.
   reflexivity.
 Qed.
+
+Theorem public_response_rejects_unauthenticated_provenance :
+  forall session challenge sample input,
+    separated_public_response_observation session false challenge sample input =
+      None.
+Proof. reflexivity. Qed.
+
+Theorem unauthenticated_public_responses_are_challenge_independent :
+  forall session left_challenge right_challenge sample input,
+    separated_public_response_observation
+      session false left_challenge sample input =
+    separated_public_response_observation
+      session false right_challenge sample input.
+Proof. reflexivity. Qed.
+
+Theorem pure_public_response_observation_matches_monolithic :
+  forall session authenticated challenge sample input,
+    authenticated = true ->
+    separated_public_response_observation session authenticated challenge
+      sample input =
+    monolithic_public_response_observation challenge sample input.
+Proof.
+  move=> session authenticated challenge sample input ->.
+  rewrite /separated_public_response_observation
+    /monolithic_public_response_observation /=.
+  rewrite (separated_first_response_matches_monolithic
+    session true challenge (sample_to_tape sample) input erefl).
+  reflexivity.
+Qed.
+
+(** This direct finite pushforward has the security-shaped observation used by the redesigned package. It deliberately does not assert equality to the package interpreter's distribution. *)
+Definition state_separated_public_response_view_game
+  (session : bounded_session_handle) (input : pqxdh_root_input)
+  (challenge : bool) (distinguisher : pred public_response_observation) : R :=
+  \P_[uniform_rom_sample]
+    [pred sample |
+      distinguisher
+        (separated_public_response_observation
+          session true challenge sample input)].
+
+Definition state_separated_public_response_advantage
+  (session : bounded_session_handle) (input : pqxdh_root_input)
+  (distinguisher : pred public_response_observation) : R :=
+  `| state_separated_public_response_view_game
+       session input false distinguisher -
+     state_separated_public_response_view_game
+       session input true distinguisher |.
 
 Theorem separated_first_response_opens_sequence_one :
   forall session authenticated challenge tape input,
@@ -442,11 +508,20 @@ Definition chRomSample : choice_type :=
         (chProd chBool
           (chProd chBool
             (chProd chBool (chProd chBool chBool)))))).
+Definition chPublicResponseObservation : choice_type := chOption chBool.
+
+(** A single private operation samples the complete eight-bit finite tape from exactly the same joint distribution used by the pure pushforward above. This avoids exposing individual coins and avoids introducing a nested-bind/product-distribution bridge. *)
+Definition uniform_response_sample_op : Op :=
+  existT _ chRomSample uniform_rom_sample.
 
 Notation "'payload" := chCkeyPayload (in custom pack_type at level 2).
 Notation "'payload" := chCkeyPayload (at level 2) : package_scope.
 Notation "'sample" := chRomSample (in custom pack_type at level 2).
 Notation "'sample" := chRomSample (at level 2) : package_scope.
+Notation "'response" := chPublicResponseObservation
+  (in custom pack_type at level 2).
+Notation "'response" := chPublicResponseObservation
+  (at level 2) : package_scope.
 
 Definition put_server_id : nat := 80%N.
 Definition take_server_id : nat := 81%N.
@@ -554,7 +629,7 @@ Definition composition_core_interface : Interface :=
 
 Definition response_interface : Interface :=
   [interface
-    #val #[run_response_id] : 'sample → 'bool × 'bool
+    #val #[run_response_id] : 'unit → 'response
   ].
 
 (** CK derives complementary role-local states, but it can only install them into CKEY. The server install is called before sealing; the beacon install remains available for the later delivered-response path. *)
@@ -635,22 +710,38 @@ Proof.
   - apply fsubsetxx.
 Qed.
 
-(** The driver enforces the production success order: server install, sequence-one seal, beacon install after delivery, then beacon open. *)
-Definition composition_driver :
+(** The successful driver samples the complete finite tape internally, then enforces the production success order: server install, sequence-one seal, beacon install after delivery, and beacon open. The opened plaintext is discarded before returning the optional public ciphertext. *)
+Definition successful_composition_driver :
   package fset0 composition_core_interface response_interface :=
   [package
-    #def #[run_response_id] (sample : 'sample) : 'bool × 'bool {
+    #def #[run_response_id] (_ : 'unit) : 'response {
       #import {sig #[setup_server_id] : 'sample → 'unit } as SETUP_SERVER ;;
       #import {sig #[setup_beacon_id] : 'sample → 'unit } as SETUP_BEACON ;;
       #import {sig #[seal_response_id] : 'sample → 'bool } as SEAL ;;
       #import {sig #[open_response_id] : 'sample × 'bool → 'bool } as OPEN ;;
+      sample <$ uniform_response_sample_op ;;
       SETUP_SERVER sample ;;
       ciphertext ← SEAL sample ;;
       SETUP_BEACON sample ;;
-      plaintext ← OPEN (sample, ciphertext) ;;
-      ret (ciphertext, plaintext)
+      opened_plaintext ← OPEN (sample, ciphertext) ;;
+      @ret 'response (Some ciphertext)
     }
   ].
+
+(** Rejected provenance is represented by an explicit public [None] rather than by assertion mass loss. The cryptographic core is not invoked on this branch. *)
+Definition rejected_composition_driver :
+  package fset0 composition_core_interface response_interface :=
+  [package
+    #def #[run_response_id] (_ : 'unit) : 'response {
+      @ret 'response None
+    }
+  ].
+
+Definition composition_driver (authenticated : bool) :
+  package fset0 composition_core_interface response_interface :=
+  if authenticated
+  then successful_composition_driver
+  else rejected_composition_driver.
 
 (** This is the checked state-separated public package. Its type exposes only [run_response_id]; CKEY, raw role payloads, setup, seal, and open are all internal after linking. *)
 #[tactic=notac] Equations? state_separated_response_package
@@ -659,7 +750,7 @@ Definition composition_driver :
   package ckey_locs [interface] response_interface :=
   state_separated_response_package session authenticated challenge input :=
   {package
-    composition_driver ∘
+    composition_driver authenticated ∘
       composition_core session authenticated challenge input
   }.
 Proof.
@@ -673,10 +764,21 @@ Definition monolithic_response_package
   (challenge : bool) (input : pqxdh_root_input) :
   package fset0 [interface] response_interface :=
   [package
-    #def #[run_response_id] (sample : 'sample) : 'bool × 'bool {
-      ret (monolithic_first_response challenge (sample_to_tape sample) input)
+    #def #[run_response_id] (_ : 'unit) : 'response {
+      sample <$ uniform_response_sample_op ;;
+      @ret 'response
+        (monolithic_public_response_observation challenge sample input)
     }
   ].
+
+Definition state_separated_response_games
+  (session : bounded_session_handle) (authenticated : bool)
+  (input : pqxdh_root_input) :
+  loc_GamePair response_interface :=
+  fun challenge =>
+    {locpackage
+      state_separated_response_package
+        session authenticated challenge input}.
 
 Theorem pure_single_run_body_matches_monolithic :
   forall session authenticated challenge sample input,
@@ -694,6 +796,9 @@ Print Assumptions complementary_role_orientation.
 Print Assumptions separated_ckey_transfer_is_one_way_and_role_oriented.
 Print Assumptions separated_first_response_matches_monolithic.
 Print Assumptions separated_unauthenticated_response_rejects.
+Print Assumptions public_response_rejects_unauthenticated_provenance.
+Print Assumptions unauthenticated_public_responses_are_challenge_independent.
+Print Assumptions pure_public_response_observation_matches_monolithic.
 Print Assumptions separated_first_response_opens_sequence_one.
 Print Assumptions state_separated_composition_uses_production_kdf_domains.
 Print Assumptions failed_response_construction_consumes_only_replay_state.
