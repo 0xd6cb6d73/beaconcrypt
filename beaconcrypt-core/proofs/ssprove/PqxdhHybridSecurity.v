@@ -9,7 +9,7 @@
 From Stdlib Require Import Utf8 Arith.PeanoNat btauto.Btauto.
 From mathcomp Require Import ssreflect ssrfun ssrbool ssrnat ssrnum order eqtype choice fintype finfun seq all_algebra reals distr realsum.
 From SSProve.Crypt Require Import Axioms Casts SubDistr UniformDistrLemmas.
-From BeaconcryptSSProve Require Import BoundedRom PqxdhRatchetGames.
+From BeaconcryptSSProve Require Import ProtocolLabels BoundedRom PqxdhRatchetGames.
 
 Import Num.Theory.
 Import Order.POrderTheory.
@@ -79,7 +79,7 @@ Proof.
   case: component; case: public_input=> [] [] [] [] [] //.
 Qed.
 
-(** The first bit is a handwritten abstraction of the genuinely distinct [PQXDH_INFO] and [SYM_RATCHET_INFO] labels. It does not serialize those production strings or prove an extraction-linked domain-separation equality. Production session separation must arise from the root input itself, so this model adds no session tag. *)
+(** The first bit is the proved-injective finite encoding of the genuinely distinct exact [pqxdh_info] and [symmetric_ratchet_info] strings from [ProtocolLabels]. The literals remain handwritten rather than extraction-linked. Production session separation must arise from the root input itself, so this model adds no session tag. *)
 Definition pqxdh_hybrid_rom_query :=
   (bool * pqxdh_hybrid_root_atom)%type.
 
@@ -91,11 +91,12 @@ Definition pqxdh_hybrid_rom_trace :=
 
 Definition pqxdh_hybrid_root_query
     (input : pqxdh_hybrid_root_atom) : pqxdh_hybrid_rom_query :=
-  (false, input).
+  (kdf_domain_tag PqxdhRootDomain, input).
 
 Definition pqxdh_hybrid_ratchet_query
     (chain : bool) : pqxdh_hybrid_rom_query :=
-  (true, (chain, (false, (false, (false, false))))).
+  (kdf_domain_tag SymmetricRatchetDomain,
+    (chain, (false, (false, (false, false))))).
 
 Lemma pqxdh_hybrid_domains_are_separated
     (chain : bool)

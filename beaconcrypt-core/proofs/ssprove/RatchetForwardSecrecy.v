@@ -11,7 +11,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths,-notation-incompatible-forma
 From mathcomp Require Import ssreflect ssrfun ssrbool ssrnat ssrnum order eqtype choice fintype finfun seq all_algebra reals distr realsum.
 Set Warnings "notation-overridden,ambiguous-paths,notation-incompatible-format".
 From SSProve.Crypt Require Import Axioms Casts SubDistr UniformDistrLemmas.
-From BeaconcryptSSProve Require Import BoundedRom.
+From BeaconcryptSSProve Require Import ProtocolLabels BoundedRom.
 
 Import Num.Theory.
 Import Order.POrderTheory.
@@ -19,17 +19,17 @@ Import GRing.Theory.
 
 Local Open Scope ring_scope.
 
-(** The first query bit is handwritten domain bookkeeping. [false] models the symmetric-ratchet label and [true] represents only a genuinely distinct production label, such as the PQXDH root label. It must not be read as separating initial from per-record symmetric expansion, which use the same production label. *)
+(** The first query bit is the proved-injective finite encoding of the exact labels in [ProtocolLabels]. It must not be read as separating initial from per-record symmetric expansion, which use the same production label. *)
 Definition ratchet_rom_query := (bool * bool)%type.
 Definition ratchet_rom_answer := (bool * (bool * bool))%type.
 Definition ratchet_rom_table := rom_table ratchet_rom_query ratchet_rom_answer.
 Definition ratchet_rom_trace := rom_trace ratchet_rom_query ratchet_rom_answer.
 
 Definition ratchet_step_query (chain : bool) : ratchet_rom_query :=
-  (false, chain).
+  (kdf_domain_tag SymmetricRatchetDomain, chain).
 
 Definition ratchet_other_domain_query (input : bool) : ratchet_rom_query :=
-  (true, input).
+  (kdf_domain_tag PqxdhRootDomain, input).
 
 Lemma ratchet_domains_are_disjoint (chain input : bool) :
   ratchet_step_query chain != ratchet_other_domain_query input.

@@ -50,7 +50,7 @@ declare -A expected_category_counts=(
 	[generated-proverif]=1
 	[handwritten-lean]=9
 	[handwritten-proverif]=28
-	[handwritten-ssprove]=14
+	[handwritten-ssprove]=15
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
@@ -456,6 +456,20 @@ require_line_count 1 '^  Theorem ctx_hidden_uniform_key_true_real_privacy_bound$
 require_line_count 1 '^Print Assumptions ctx_hidden_uniform_key_true_real_privacy_bound\.$' \
 	proofs/ssprove/CtxPrivacy.v \
 	"SSProve CTX true-real privacy assumption report"
+for label_capstone in \
+	kdf_domain_tag_models_exact_info \
+	production_kdf_labels_are_exact \
+	initial_and_step_share_symmetric_domain \
+	production_kdf_output_sizes \
+	associated_data_label_suffix_is_exact; do
+	require_line_count 1 "^Theorem ${label_capstone} :" \
+		proofs/ssprove/ProtocolLabels.v \
+		"SSProve exact-label ${label_capstone} theorem"
+	require_line_count 1 \
+		"^Print Assumptions ${label_capstone}\\.\$" \
+		proofs/ssprove/ProtocolLabels.v \
+		"SSProve exact-label ${label_capstone} assumption report"
+done
 for protocol_capstone in \
 	active_classical_confidentiality \
 	passive_classical_confidentiality \
@@ -475,6 +489,21 @@ for protocol_assumption_report in \
 		proofs/ssprove/PqxdhRatchetGames.v \
 		"SSProve protocol ${protocol_assumption_report} assumption report"
 done
+require_line_count 1 '^Lemma pqxdh_ratchet_game_uses_production_kdf_domains :' \
+	proofs/ssprove/PqxdhRatchetGames.v \
+	"SSProve closed-game exact KDF-use theorem"
+require_line_count 1 '^Print Assumptions pqxdh_ratchet_game_uses_production_kdf_domains\.$' \
+	proofs/ssprove/PqxdhRatchetGames.v \
+	"SSProve closed-game exact KDF-use assumption report"
+require_line_count 2 '^  let root := ideal_pqxdh_root tape PqxdhRootDerivation input in$' \
+	proofs/ssprove/PqxdhRatchetGames.v \
+	"SSProve closed-game root exact KDF use"
+require_line_count 1 '^  let output := ideal_symmetric_hkdf tape InitialRatchetExpansion root in$' \
+	proofs/ssprove/PqxdhRatchetGames.v \
+	"SSProve closed-game initial exact KDF use"
+require_line_count 1 '^  let output := ideal_symmetric_hkdf tape RatchetStepExpansion chain in$' \
+	proofs/ssprove/PqxdhRatchetGames.v \
+	"SSProve closed-game step exact KDF use"
 for protocol_rom_capstone in \
 	pqxdh_ratchet_bounded_rom_confidentiality_bound \
 	active_classical_forward_bounded_rom_confidentiality \

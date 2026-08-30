@@ -7,7 +7,8 @@ NIX ?= nix
 REPOSITORY_ROOT := $(abspath ../../..)
 PROOF_SHELL := path:$(REPOSITORY_ROOT)\#proofs
 OUTPUT_DIR := $(REPOSITORY_ROOT)/target/formal-verification/ssprove
-MODULES := BoundedRom CtxEventReduction CtxGame CtxPrivacy PqxdhRatchetGames PqxdhRatchetRom PqxdhHybridSecurity RatchetForwardSecrecy RecordIntegrity RecordIntegrityBound
+STRUCTURAL_MODULES := ProtocolLabels
+MODULES := ProtocolLabels BoundedRom CtxEventReduction CtxGame CtxPrivacy PqxdhRatchetGames PqxdhRatchetRom PqxdhHybridSecurity RatchetForwardSecrecy RecordIntegrity RecordIntegrityBound
 
 .PHONY: verify check check-policy
 
@@ -23,7 +24,9 @@ check: check-policy
 			-Q . BeaconcryptSSProve \
 			-o "$(OUTPUT_DIR)/$$module.vo" "$$module.v" | \
 			tee "$(OUTPUT_DIR)/$$module.assumptions"; \
-		diff -u expected-assumptions.txt \
+		expected=expected-assumptions.txt; \
+		if [[ " $(STRUCTURAL_MODULES) " == *" $$module "* ]]; then expected=/dev/null; fi; \
+		diff -u "$$expected" \
 			<(awk '/^Axioms:/{report=1; next} report && /^[^[:space:]][^[:space:]]*[[:space:]]+:/{sub(/[[:space:]]+:.*/, ""); if (!seen[$$0]++) print}' \
 				"$(OUTPUT_DIR)/$$module.assumptions"); \
 	done

@@ -9,7 +9,7 @@
 From Stdlib Require Import Utf8 Arith.PeanoNat btauto.Btauto.
 From mathcomp Require Import ssreflect ssrfun ssrbool ssrnat ssrnum order eqtype choice fintype finfun seq all_algebra reals distr realsum.
 From SSProve.Crypt Require Import Axioms Casts SubDistr UniformDistrLemmas.
-From BeaconcryptSSProve Require Import BoundedRom PqxdhRatchetGames.
+From BeaconcryptSSProve Require Import ProtocolLabels BoundedRom PqxdhRatchetGames.
 
 Import Num.Theory.
 Import Order.POrderTheory.
@@ -17,7 +17,7 @@ Import GRing.Theory.
 
 Local Open Scope ring_scope.
 
-(** Five finite components stand for the complete ordered PQXDH root transcript. The extra leading bit in [protocol_rom_query] is the domain tag: [false] denotes a PQXDH-root query and [true] denotes a symmetric-ratchet query. A symmetric input occupies the first payload bit and has canonical zero padding. *)
+(** Five finite components stand for the complete ordered PQXDH root transcript. The extra leading bit in [protocol_rom_query] is the proved-injective encoding of the exact production info label from [ProtocolLabels]. A symmetric input occupies the first payload bit and has canonical zero padding. *)
 Definition protocol_root_atom :=
   (bool * (bool * (bool * (bool * bool))))%type.
 
@@ -63,11 +63,12 @@ Definition protocol_rom_trace :=
 
 Definition protocol_root_query
     (input : protocol_root_atom) : protocol_rom_query :=
-  (false, input).
+  (kdf_domain_tag PqxdhRootDomain, input).
 
 Definition protocol_symmetric_query
     (input : bool) : protocol_rom_query :=
-  (true, (input, (false, (false, (false, false))))).
+  (kdf_domain_tag SymmetricRatchetDomain,
+    (input, (false, (false, (false, false))))).
 
 Lemma protocol_root_query_differs_from_symmetric_query
     (root_input : protocol_root_atom)

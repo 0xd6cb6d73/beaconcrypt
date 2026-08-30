@@ -13,6 +13,7 @@ Set Warnings "notation-overridden,ambiguous-paths,notation-incompatible-format".
 From SSProve.Crypt Require Import Axioms Casts ChoiceAsOrd SubDistr Couplings
   UniformDistrLemmas FreeProbProg Theta_dens RulesStateProb UniformStateProb
   pkg_composition pkg_rhl Package Prelude.
+From BeaconcryptSSProve Require Import ProtocolLabels.
 From extructures Require Import ord fset fmap.
 From Equations Require Import Equations.
 Require Equations.Prop.DepElim.
@@ -193,7 +194,13 @@ Lemma active_classical_keeps_honest_bundle :
   accepted_pqxdh_input Forward = honest_pqxdh_input.
 Proof. repeat split. Qed.
 
-(** The PQXDH HKDF label is separate, but initial ratchet expansion and every later ratchet step use the same symmetric-ratchet HKDF label. The finite oracle table is therefore keyed only by the symmetric input bit, without a phase tag. Each full 76-byte-style answer is represented by its first prefix component, second prefix component, and final suffix component. Initial 64-byte-style expansion reads the first two components, making its output an exact prefix of the step expansion on an equal input. These are the computational counterparts of the deterministic [build_root_key_input], [split_initial_ratchet_kdf_output], and [split_ratchet_kdf_output] contracts checked through the hax/Lean/F* correctness boundary; this file does not re-prove those implementation contracts. *)
+(** [ProtocolLabels] records the exact production PQXDH and symmetric-ratchet info strings. Initial ratchet expansion and every later ratchet step use the same symmetric-ratchet domain, so the finite oracle table is keyed only by the symmetric input bit, without a phase tag. Each full 76-byte-style answer is represented by its first prefix component, second prefix component, and final suffix component. Initial 64-byte-style expansion reads the first two components, making its output an exact prefix of the step expansion on an equal input. These are the computational counterparts of the deterministic [build_root_key_input], [split_initial_ratchet_kdf_output], and [split_ratchet_kdf_output] contracts checked through the hax/Lean/F* correctness boundary; this file does not re-prove those implementation contracts. *)
+Lemma pqxdh_ratchet_game_uses_production_kdf_domains :
+  kdf_use_info PqxdhRootDerivation = pqxdh_info /\
+  kdf_use_info InitialRatchetExpansion = symmetric_ratchet_info /\
+  kdf_use_info RatchetStepExpansion = symmetric_ratchet_info.
+Proof. repeat split; reflexivity. Qed.
+
 Record symmetric_hkdf_output : Type := {
   hkdf_first_prefix : bool;
   hkdf_second_prefix : bool;
@@ -215,35 +222,46 @@ Definition is_substituted_pqxdh_input (input : pqxdh_root_input) : bool :=
   negb (mlkem_contribution input).
 
 Definition ideal_pqxdh_root
-  (tape : rom_tape) (input : pqxdh_root_input) : bool :=
-  if is_substituted_pqxdh_input input
-  then pqxdh_substituted_root_answer tape
-  else pqxdh_honest_root_answer tape.
+  (tape : rom_tape) (use : kdf_use) (input : pqxdh_root_input) : bool :=
+  match kdf_use_domain use with
+  | PqxdhRootDomain =>
+      if is_substituted_pqxdh_input input
+      then pqxdh_substituted_root_answer tape
+      else pqxdh_honest_root_answer tape
+  | SymmetricRatchetDomain => false
+  end.
 
 Lemma honest_root_query_uses_honest_entry :
   forall tape,
-    ideal_pqxdh_root tape honest_pqxdh_input =
+    ideal_pqxdh_root tape PqxdhRootDerivation honest_pqxdh_input =
     pqxdh_honest_root_answer tape.
 Proof. reflexivity. Qed.
 
 Lemma substituted_root_query_uses_substituted_entry :
   forall tape,
-    ideal_pqxdh_root tape substituted_pqxdh_input =
+    ideal_pqxdh_root tape PqxdhRootDerivation substituted_pqxdh_input =
     pqxdh_substituted_root_answer tape.
 Proof. reflexivity. Qed.
 
 Definition ideal_symmetric_hkdf
-  (tape : rom_tape) (input : bool) : symmetric_hkdf_output :=
-  if input then symmetric_answer_true tape else symmetric_answer_false tape.
+  (tape : rom_tape) (use : kdf_use) (input : bool) : symmetric_hkdf_output :=
+  match kdf_use_domain use with
+  | PqxdhRootDomain =>
+      {| hkdf_first_prefix := false;
+         hkdf_second_prefix := false;
+         hkdf_final_suffix := false |}
+  | SymmetricRatchetDomain =>
+      if input then symmetric_answer_true tape else symmetric_answer_false tape
+  end.
 
 Definition initial_ratchet_expansion
   (tape : rom_tape) (root : bool) : bool * bool :=
-  let output := ideal_symmetric_hkdf tape root in
+  let output := ideal_symmetric_hkdf tape InitialRatchetExpansion root in
   (hkdf_first_prefix output, hkdf_second_prefix output).
 
 Definition ratchet_step_expansion
   (tape : rom_tape) (chain : bool) : bool * bool * bool :=
-  let output := ideal_symmetric_hkdf tape chain in
+  let output := ideal_symmetric_hkdf tape RatchetStepExpansion chain in
   (hkdf_first_prefix output, hkdf_second_prefix output, hkdf_final_suffix output).
 
 Lemma shared_symmetric_label_has_prefix_consistency :
@@ -263,7 +281,7 @@ Record established_keys : Type := {
 
 Definition derive_keys_from_input
   (tape : rom_tape) (input : pqxdh_root_input) : established_keys :=
-  let root := ideal_pqxdh_root tape input in
+  let root := ideal_pqxdh_root tape PqxdhRootDerivation input in
   let '(_, chain) := initial_ratchet_expansion tape root in
   let '(record, next_chain, nonce) := ratchet_step_expansion tape chain in
   {| established_root_key := root;
@@ -294,7 +312,7 @@ Definition record_ciphertext
 
 Definition attacker_recompute_record_pad
   (tape : rom_tape) (input : pqxdh_root_input) : bool :=
-  let root := ideal_pqxdh_root tape input in
+  let root := ideal_pqxdh_root tape PqxdhRootDerivation input in
   let '(_, chain) := initial_ratchet_expansion tape root in
   let '(record, _, _) := ratchet_step_expansion tape chain in
   record.
@@ -772,6 +790,7 @@ Proof.
   by rewrite GRing.sub0r normrN normr1.
 Qed.
 
+Print Assumptions pqxdh_ratchet_game_uses_production_kdf_domains.
 Print Assumptions active_classical_confidentiality.
 Print Assumptions passive_classical_confidentiality.
 Print Assumptions passive_quantum_confidentiality.

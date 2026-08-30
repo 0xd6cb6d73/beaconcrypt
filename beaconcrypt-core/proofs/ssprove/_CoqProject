@@ -1,5 +1,6 @@
 -Q . BeaconcryptSSProve
 
+ProtocolLabels.v
 BoundedRom.v
 CtxEventReduction.v
 CtxGame.v

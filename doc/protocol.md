@@ -182,7 +182,7 @@ The server must use this message as follows:
   - dh2 = DH(`ephemeral_sk`, `beacon_id_pk_kex`)
   - dh3 = DH(`ephemeral_sk`, `beacon_prekey_pk`)
   - dh4 = DH(`ephemeral_sk`, `beacon_onetime_pk`)
-- Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
+- Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the exact 46-byte HKDF `info` string `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`
   - `Padding` is 32 `0xFF` bytes
 - Delete all Diffie Hellman output
 - Add the registration identifier to the consumed set before returning the
@@ -196,13 +196,13 @@ This message enables the beacon to obtain the elements it needs to derive the sh
   the counter is exhausted or the exact next ID is already occupied
 - Stage a new known cryptographic identity using the beacon's public key and
   newly created key ID without publishing it yet
-- Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
+- Initialize its side of the ratchets using the derived secret with the exact 41-byte HKDF `info` string `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
 - Delete the derived secret
 - Set the `keyId` field to the newly generate beacon's key ID
 - Set the `ephemeralKey` field to the X25519 ephemeral public key from the corresponding `InitKex`
 - Set the `identityKey` to the server's Ed25519 public key
 - Set the `kemCipherText` to the KEM ciphertext from the corresponding `InitKex`
-- Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
+- Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key, `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`, and `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
 - Encode the assigned beacon key ID as an eight-byte little-endian value and
   prepend it to the first message, or to a single `0xFF` byte when no message
   was supplied
@@ -224,14 +224,14 @@ Upon reception, the beacon must process this message as follows:
   - dh2 = DH(`beacon_id_sk_kex`, `server_ephemeral_pk`)
   - dh3 = DH(`beacon_prekey_sk`, `server_ephemeral_pk`)
   - dh4 = DH(`beacon_onetime_sk`, `server_ephemeral_pk`)
-- Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
+- Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the exact 46-byte HKDF `info` string `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`
   - `Padding` is 32 `0xFF` bytes
 - Delete its one-time keypair.
 - Delete its PQ keypair
 - Delete all Diffie Hellman output
 - Treat `keyId` as the proposed assigned identity, without publishing it yet
-- Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
-- Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
+- Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key, `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`, and `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
+- Initialize its side of the ratchets using the derived secret with the exact 41-byte HKDF `info` string `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
 - Delete the derived secret
 - Decrypt the `appCipherText` as a `CryptoFrame`, using its `recv` keychain
 - Require the successfully opened initial `CryptoFrame.keyId` sender field to equal the numeric server identity-key ID pinned with the compiled-in public key
