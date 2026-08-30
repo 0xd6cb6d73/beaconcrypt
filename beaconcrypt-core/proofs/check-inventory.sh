@@ -50,7 +50,7 @@ declare -A expected_category_counts=(
 	[generated-proverif]=1
 	[handwritten-lean]=9
 	[handwritten-proverif]=28
-	[handwritten-ssprove]=15
+	[handwritten-ssprove]=16
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
@@ -504,6 +504,46 @@ require_line_count 1 '^  let output := ideal_symmetric_hkdf tape InitialRatchetE
 require_line_count 1 '^  let output := ideal_symmetric_hkdf tape RatchetStepExpansion chain in$' \
 	proofs/ssprove/PqxdhRatchetGames.v \
 	"SSProve closed-game step exact KDF use"
+for composition_capstone in \
+	complementary_role_orientation \
+	separated_ckey_transfer_is_one_way_and_role_oriented \
+	separated_first_response_matches_monolithic \
+	separated_unauthenticated_response_rejects \
+	separated_first_response_opens_sequence_one \
+	state_separated_composition_uses_production_kdf_domains \
+	failed_response_construction_consumes_only_replay_state \
+	dropped_response_has_asymmetric_publication \
+	accepted_response_has_complementary_live_counters \
+	rejected_response_terminally_aborts_beacon \
+	component_locations_are_state_separated \
+	pure_single_run_body_matches_monolithic; do
+	require_line_count 1 "^(Theorem|Lemma) ${composition_capstone} :" \
+		proofs/ssprove/StateSeparatedComposition.v \
+		"SSProve state-separation ${composition_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${composition_capstone}\\.\$" \
+		proofs/ssprove/StateSeparatedComposition.v \
+		"SSProve state-separation ${composition_capstone} assumption report"
+done
+require_line_count 12 '^Print Assumptions ' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"complete SSProve state-separation assumption reports"
+require_line_count 1 '^Definition consuming_ckey :' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve consuming private CKEY package"
+require_line_count 1 '^#\[tactic=notac\] Equations\? composition_core$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve state-separated linked core"
+require_line_count 1 '^#\[tactic=notac\] Equations\? state_separated_response_package$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve state-separated public package"
+require_line_count 1 '^Definition first_response_sequence : nat := 1%N\.$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve production first-response sequence"
+require_occurrence_count 2 \
+	'#assert \(payload_authenticated (?:server|beacon) == true\)' \
+	"SSProve authenticated-provenance enforcement" \
+	proofs/ssprove/StateSeparatedComposition.v
 for protocol_rom_capstone in \
 	pqxdh_ratchet_bounded_rom_confidentiality_bound \
 	active_classical_forward_bounded_rom_confidentiality \

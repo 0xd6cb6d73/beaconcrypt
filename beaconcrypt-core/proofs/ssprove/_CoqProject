@@ -6,6 +6,7 @@ CtxEventReduction.v
 CtxGame.v
 CtxPrivacy.v
 PqxdhRatchetGames.v
+StateSeparatedComposition.v
 PqxdhRatchetRom.v
 PqxdhHybridSecurity.v
 RatchetForwardSecrecy.v
