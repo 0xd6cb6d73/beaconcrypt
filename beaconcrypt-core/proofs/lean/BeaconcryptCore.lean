@@ -1,5 +1,10 @@
-import BeaconcryptCore.Model.RatchetControlRestore
-import BeaconcryptCore.Model.RatchetEffectRefinement
+import BeaconcryptCore.Refinement.PqxdhSession
+import BeaconcryptCore.Refinement.RatchetControlRestore
+import BeaconcryptCore.Refinement.RatchetEffectRefinement
+import BeaconcryptCore.Model.Pqxdh.Instance
+import BeaconcryptCore.Model.Pqxdh.InstanceCommit
+import BeaconcryptCore.Model.Pqxdh.Acceptance
+import BeaconcryptCore.Model.Pqxdh.Runs
 
 /-!
 # Beaconcrypt-core verification root

@@ -6,7 +6,7 @@ defaultTargets = ["BeaconcryptCore"]
 name = "BeaconcryptCore"
 # Build the maintained root and every project module.
 # The explicit submodule glob prevents a new proof file from being silently omitted if its root import is missed.
-globs = ["BeaconcryptCore", "BeaconcryptCore.+"]
+globs = ["BeaconcryptCore", "BeaconcryptCore.*"]
 
 [[require]]
 name = "aeneas"

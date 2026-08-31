@@ -1,4 +1,4 @@
-import BeaconcryptCore.Model.RatchetControl
+import BeaconcryptCore.Refinement.RatchetControl
 import BeaconcryptCore.Model.Ratchet
 
 /-!

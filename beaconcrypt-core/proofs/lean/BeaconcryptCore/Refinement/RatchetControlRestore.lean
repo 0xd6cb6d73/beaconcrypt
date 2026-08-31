@@ -1,4 +1,4 @@
-import BeaconcryptCore.Model.RatchetControl
+import BeaconcryptCore.Refinement.RatchetControl
 
 /-!
 # Restore and per-peer wrappers of the symmetric single ratchet control plane
