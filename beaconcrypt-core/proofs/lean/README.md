@@ -38,13 +38,16 @@ proofs/lean/
 │   │   ├── TypesExternal.lean            # maintained, when required
 │   │   ├── FunsExternal_Template.lean
 │   │   └── FunsExternal.lean             # maintained
-│   └── Model/
-│       ├── Ratchet.lean                  # handwritten ideal symmetric ratchet
-│       ├── RatchetControl.lean           # generated-control facts
-│       ├── RatchetControlRestore.lean    # restoration facts
-│       ├── RatchetRefinement.lean        # control-to-ideal refinement
-│       ├── RatchetEffect.lean            # exact first-order phase laws
-│       └── RatchetEffectRefinement.lean  # checked phase-to-ideal refinement
+│   ├── Model/
+│   │   └── Ratchet.lean                  # handwritten ideal symmetric ratchet
+│   ├── Refinement/
+│   │   ├── RatchetControl.lean           # generated-control facts
+│   │   ├── RatchetControlRestore.lean    # restoration facts
+│   │   ├── RatchetRefinement.lean        # control-to-ideal refinement
+│   │   ├── RatchetEffect.lean            # exact first-order phase laws
+│   │   └── RatchetEffectRefinement.lean  # checked phase-to-ideal refinement
+│   └── Computational/
+│       └── VCVioFeasibility.lean         # bounded-ROM and private-state feasibility pilot
 └── llbc/
     └── beaconcrypt_core.llbc
 ```
@@ -73,6 +76,8 @@ lake build
 ```
 
 A successful build verifies that the generated Aeneas model is accepted by the pinned Lean toolchain.
+
+The imported `Computational/VCVioFeasibility.lean` pilot uses the immutable VCVio v4.31.0 commit recorded in `lakefile.toml` and the manifest. It specializes VCVio's tight and looser collision-resistance-chain bounded adaptive random-oracle binding theorems to the Aeneas-extracted 229-byte commitment-transcript type and a 512-bit digest, and it checks exact one- and two-call behavior for a linked private consuming-key store. It is feasibility evidence, not a checked embedding of beaconcrypt's CTX game, a complete state-separated composition, or a production security theorem; see [`../../../doc/impl/vcvio-feasibility.md`](../../../doc/impl/vcvio-feasibility.md).
 
 The imported `RatchetEffect.lean` layer proves structural laws directly against generated phase definitions: exact initial requests and role starts, core-owned response partitioning, exact send/receive requests, context preservation, entry-state recovery on cancellation/rejection/failed open, advanced-state return on either seal result, and publication of the same successful plaintext.
 

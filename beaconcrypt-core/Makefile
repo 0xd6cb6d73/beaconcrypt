@@ -398,8 +398,9 @@ check-lean-policy:
 
 check-lean-root:
 	@for module in \
-		BeaconcryptCore.Model.RatchetControlRestore \
-		BeaconcryptCore.Model.RatchetEffectRefinement; do \
+		BeaconcryptCore.Refinement.RatchetControlRestore \
+		BeaconcryptCore.Refinement.RatchetEffectRefinement \
+		BeaconcryptCore.Computational.VCVioFeasibility; do \
 		rg -Fqx "import $$module" '$(LEAN_ROOT)' || { \
 			echo "missing verification-root import: $$module" >&2; \
 			exit 1; \

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=3
 	[generated-proverif]=1
-	[handwritten-lean]=9
+	[handwritten-lean]=10
 	[handwritten-proverif]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -167,8 +167,10 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/Main.lean \
 	proofs/lean/BeaconcryptCore/Extraction/FunsExternal.lean \
 	> "$tmp_dir/handwritten-lean"
-find proofs/lean/BeaconcryptCore/Model -maxdepth 1 -type f -name '*.lean' \
-	-printf '%p\n' >> "$tmp_dir/handwritten-lean"
+for lean_proof_dir in Model Refinement Computational; do
+	find "proofs/lean/BeaconcryptCore/$lean_proof_dir" -maxdepth 1 -type f -name '*.lean' \
+		-printf '%p\n' >> "$tmp_dir/handwritten-lean"
+done
 compare_set handwritten-lean "$tmp_dir/handwritten-lean"
 
 printf '%s\n' \
@@ -573,12 +575,15 @@ reject_matches "handwritten Lean contains an unproved escape hatch" \
 	'\b(?:sorry|admit|axiom)\b|sorryAx' "${handwritten_lean[@]}"
 
 lean_root=proofs/lean/BeaconcryptCore.lean
-require_line_count 1 '^import BeaconcryptCore\.Model\.RatchetControlRestore$' \
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.RatchetControlRestore$' \
 	"$lean_root" \
 	"canonical control/restoration proof-root import"
-require_line_count 1 '^import BeaconcryptCore\.Model\.RatchetEffectRefinement$' \
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.RatchetEffectRefinement$' \
 	"$lean_root" \
 	"canonical phase-refinement proof import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$' \
+	"$lean_root" \
+	"canonical VCVio feasibility proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
@@ -614,7 +619,7 @@ for theorem_name in \
 	ratchet.concrete.ReceiveOpen.finish_future_success_publishes_same_plaintext \
 	ratchet.concrete.ReceiveOpen.finish_cached_success_publishes_same_plaintext; do
 	require_line_count 1 "^theorem ${theorem_name//./\\.}( |$)" \
-		proofs/lean/BeaconcryptCore/Model/RatchetEffect.lean \
+		proofs/lean/BeaconcryptCore/Refinement/RatchetEffect.lean \
 		"current-production effect theorem ${theorem_name}"
 done
 
@@ -623,30 +628,48 @@ for theorem_name in \
 	plan_receive_until_reject_52 \
 	advance_receive_target_ok; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
-		proofs/lean/BeaconcryptCore/Model/RatchetControl.lean \
+		proofs/lean/BeaconcryptCore/Refinement/RatchetControl.lean \
 		"corrected receive-boundary theorem ${theorem_name}"
 done
 require_line_count 1 '^theorem receiveMessage_refines( |$)' \
-	proofs/lean/BeaconcryptCore/Model/RatchetRefinement.lean \
+	proofs/lean/BeaconcryptCore/Refinement/RatchetRefinement.lean \
 	"direct ideal receive refinement theorem"
 reject_matches "obsolete bound-49 Lean refinement remains" \
 	'\brecvStepGen\b|CachedOpenRefines\.(?:ideal_success_49|ideal_success_recvStep|finish_success_matches_ideal_49|finish_success_refines_49_of_publication)\b' \
-	proofs/lean/BeaconcryptCore/Model
+	proofs/lean/BeaconcryptCore/Model proofs/lean/BeaconcryptCore/Refinement
+
+vcvio_pilot=proofs/lean/BeaconcryptCore/Computational/VCVioFeasibility.lean
+for theorem_name in \
+	ctx_binding_bound_tight \
+	ctx_binding_bound_tight_512 \
+	ctx_binding_bound \
+	ctx_binding_bound_512 \
+	extracted_aead_key_size \
+	linked_run_success_state \
+	linked_run_tombstoned_state \
+	linked_run_two_calls_consumes_once \
+	linked_run_success_public; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$vcvio_pilot" "VCVio feasibility theorem ${theorem_name}"
+done
+require_line_count 1 '^rev = "cbd4144b51d92da00dd50f05e068b2348fa6e529"$' \
+	proofs/lean/lakefile.toml \
+	"immutable VCVio v4.31 dependency pin"
 
 # The imported phase-refinement layer covers the full kernel/cache relation, the KDF response law, non-exhausted successful-send refinement, all neutral exits, supplied finite failed-trace witnesses, and the conditional open reply/material relation.
 # Cached success additionally has generated open construction from KernelRefines plus an ideal lookup, exact material/reply, direct ideal outcome, concrete finish output, and the consumed control-cache refinement; its material-array post-state KernelRefines result remains conditional on CachedPublicationRefines, and future success remains unproved.
 for declaration in KernelRefines SendKdfRefines SendSealRefines; do
 	require_line_count 1 "^structure ${declaration}( |$)" \
-		proofs/lean/BeaconcryptCore/Model/RatchetEffectRefinement.lean \
+		proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean \
 		"effect-refinement relation ${declaration}"
 done
 for declaration in ResponseRefines idealOpenReply OpenReplyRefines CachedOpenRefines CachedPublicationRefines; do
 	require_line_count 1 "^def ${declaration}( |$)" \
-		proofs/lean/BeaconcryptCore/Model/RatchetEffectRefinement.lean \
+		proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean \
 		"effect-refinement relation ${declaration}"
 done
 require_line_count 1 '^inductive ReceiveFailureTrace( |\(|$)' \
-	proofs/lean/BeaconcryptCore/Model/RatchetEffectRefinement.lean \
+	proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean \
 	"represented finite failed receive trace relation"
 for theorem_name in \
 	SendKdf.cancel_preserves_refinement \
@@ -667,7 +690,7 @@ for theorem_name in \
 	CachedOpenRefines.finish_success_matches_ideal \
 	CachedOpenRefines.finish_success_refines_of_publication; do
 	require_line_count 1 "^theorem ${theorem_name//./\\.}( |$)" \
-		proofs/lean/BeaconcryptCore/Model/RatchetEffectRefinement.lean \
+		proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean \
 		"effect-refinement theorem ${theorem_name}"
 done
 

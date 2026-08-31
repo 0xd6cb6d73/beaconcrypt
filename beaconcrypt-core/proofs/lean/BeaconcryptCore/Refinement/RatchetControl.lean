@@ -43,7 +43,7 @@ The properties proved here are:
   `finish_receive_with_removal_ok`, `lookup_receive_key_ok`, ...).
 
 The restore path and the per-peer wrappers are verified in
-`BeaconcryptCore/Model/RatchetControlRestore.lean`.
+`BeaconcryptCore/Refinement/RatchetControlRestore.lean`.
 -/
 
 open CoreModels Aeneas

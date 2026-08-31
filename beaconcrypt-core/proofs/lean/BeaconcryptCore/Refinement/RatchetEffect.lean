@@ -1,4 +1,4 @@
-import BeaconcryptCore.Model.RatchetRefinement
+import BeaconcryptCore.Refinement.RatchetRefinement
 
 /-!
 # First-order cryptographic effect phases
