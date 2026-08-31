@@ -50,7 +50,7 @@ declare -A expected_category_counts=(
 	[generated-proverif]=1
 	[handwritten-lean]=9
 	[handwritten-proverif]=28
-	[handwritten-ssprove]=16
+	[handwritten-ssprove]=17
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
@@ -608,6 +608,109 @@ require_occurrence_count 2 \
 	'#assert \(payload_authenticated (?:server|beacon) == true\)' \
 	"SSProve authenticated-provenance enforcement" \
 	proofs/ssprove/StateSeparatedComposition.v
+for package_semantics_capstone in \
+	authenticated_package_run_normalizes \
+	rejected_package_run_normalizes \
+	package_public_response_observation_matches_direct \
+	state_separated_package_response_view_matches_direct \
+	state_separated_package_response_advantage_matches_direct; do
+	require_line_count 1 "^Theorem ${package_semantics_capstone} :" \
+		proofs/ssprove/StateSeparatedPackageSemantics.v \
+		"SSProve package-semantics ${package_semantics_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${package_semantics_capstone}\\.\$" \
+		proofs/ssprove/StateSeparatedPackageSemantics.v \
+		"SSProve package-semantics ${package_semantics_capstone} assumption report"
+done
+require_line_count 5 '^Print Assumptions ' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"complete SSProve package-semantics assumption reports"
+require_line_count 1 '^Fixpoint run_response_code_with_sample$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve restricted response-code evaluator"
+require_line_count 1 '^Definition authenticated_linked_response_code$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve projected authenticated linked RUN"
+require_line_count 1 '^Definition rejected_linked_response_code :$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve projected rejected linked RUN"
+require_line_count 1 '^Local Lemma authenticated_linked_response_code_has_normal_form :$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated linked RUN bridge"
+require_line_count 1 '^Local Lemma rejected_linked_response_code_has_normal_form :$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected linked RUN bridge"
+require_line_count 1 '^Local Lemma authenticated_linked_response_code_is_checked_run :$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated raw projection bridge"
+require_line_count 1 '^Local Lemma rejected_linked_response_code_is_checked_run :$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected raw projection bridge"
+require_line_count 1 '^Record response_run_certificate$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve indexed response-run certificate"
+require_line_count 1 '^  \(execution : option \(public_response_observation \* heap\)\) := \{$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve full-execution certificate index"
+require_line_count 1 '^  certified_response_run : option \(public_response_observation \* heap\);$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve full-execution certificate witness"
+require_line_count 1 '^  response_run_certificate_sound : execution = certified_response_run$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve exact response-run certificate soundness field"
+require_line_count 1 '^Definition authenticated_package_run_certificate$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated package-run certificate"
+require_line_count 1 '^Definition rejected_package_run_certificate$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected package-run certificate"
+require_line_count 2 '^Defined\.$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"transparent SSProve package-run certificates"
+require_occurrence_count 1 \
+	'response_run_certificate\n    \(run_response_code_with_sample sample\n      \(authenticated_linked_response_code session challenge input\)\n      empty_heap\)\.' \
+	"SSProve authenticated certificate exact raw-execution index" \
+	proofs/ssprove/StateSeparatedPackageSemantics.v
+require_occurrence_count 1 \
+	'response_run_certificate\n    \(run_response_code_with_sample sample\n      rejected_linked_response_code empty_heap\)\.' \
+	"SSProve rejected certificate exact raw-execution index" \
+	proofs/ssprove/StateSeparatedPackageSemantics.v
+require_line_count 1 '^         authenticated_package_execution_normal_form$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated certificate full-heap witness"
+require_line_count 1 '^         rejected_package_execution_normal_form \|}\.$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected certificate full-heap witness"
+require_line_count 1 '^  apply authenticated_linked_response_code_has_normal_form\.$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated certificate soundness proof"
+require_line_count 1 '^  apply \(rejected_linked_response_code_has_normal_form$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected certificate soundness proof"
+require_line_count 1 '^Definition authenticated_package_run_normal_form$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated proof-erased normal form"
+require_line_count 1 '^Definition rejected_package_run_normal_form$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected proof-erased normal form"
+require_line_count 2 '^    @certified_response_run _$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve proof-erased certificate projections"
+require_line_count 1 '^      \(authenticated_package_run_certificate$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated normal-form certificate source"
+require_line_count 1 '^      \(rejected_package_run_certificate$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected normal-form certificate source"
+require_line_count 1 '^Definition package_public_response_observation$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve package-semantics public observation"
+require_line_count 1 '^Definition state_separated_package_response_view_game$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve package-semantics finite view"
+require_occurrence_count 1 '\\P_\[uniform_rom_sample\]' \
+	"SSProve package-semantics view uses joint finite source" \
+	proofs/ssprove/StateSeparatedPackageSemantics.v
 for protocol_rom_capstone in \
 	pqxdh_ratchet_bounded_rom_confidentiality_bound \
 	active_classical_forward_bounded_rom_confidentiality \

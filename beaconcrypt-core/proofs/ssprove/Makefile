@@ -8,7 +8,7 @@ REPOSITORY_ROOT := $(abspath ../../..)
 PROOF_SHELL := path:$(REPOSITORY_ROOT)\#proofs
 OUTPUT_DIR := $(REPOSITORY_ROOT)/target/formal-verification/ssprove
 STRUCTURAL_MODULES := ProtocolLabels StateSeparatedComposition
-MODULES := ProtocolLabels BoundedRom CtxEventReduction CtxGame CtxPrivacy PqxdhRatchetGames StateSeparatedComposition PqxdhRatchetRom PqxdhHybridSecurity RatchetForwardSecrecy RecordIntegrity RecordIntegrityBound
+MODULES := ProtocolLabels BoundedRom CtxEventReduction CtxGame CtxPrivacy PqxdhRatchetGames StateSeparatedComposition StateSeparatedPackageSemantics PqxdhRatchetRom PqxdhHybridSecurity RatchetForwardSecrecy RecordIntegrity RecordIntegrityBound
 
 .PHONY: verify check check-policy
 
