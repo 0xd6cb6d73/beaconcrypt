@@ -677,7 +677,9 @@ require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |
 pqxdh_commitment_refinement=proofs/lean/BeaconcryptCore/Refinement/PqxdhCommitment.lean
 for theorem_name in \
 	commitment_encode_u64_le_eq_registration \
-	commitment_encode_u64_le_abs; do
+	commitment_encode_u64_le_abs \
+	build_commitment_transcript_call_mut \
+	build_commitment_transcript_abs; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
 		"$pqxdh_commitment_refinement" "extracted commitment refinement theorem ${theorem_name}"
 done
