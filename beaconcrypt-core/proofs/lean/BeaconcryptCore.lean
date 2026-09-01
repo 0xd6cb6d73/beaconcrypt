@@ -12,6 +12,7 @@ import BeaconcryptCore.Computational.CtxRetainedTagProjection
 import BeaconcryptCore.Computational.CtxAuthClassification
 import BeaconcryptCore.Computational.CtxRomAuth
 import BeaconcryptCore.Computational.CtxPrefixIsolation
+import BeaconcryptCore.Computational.CtxSplitCache
 import BeaconcryptCore.Computational.CtxSealSampling
 import BeaconcryptCore.Computational.CtxTransitionReduction
 import BeaconcryptCore.Computational.VCVioFeasibility

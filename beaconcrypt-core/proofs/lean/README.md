@@ -70,6 +70,7 @@ proofs/lean/
 │   │   ├── CtxAuthClassification.lean    # complete-history authenticity event split
 │   │   ├── CtxRomAuth.lean               # scheme-specific lazy-ROM authenticity game
 │   │   ├── CtxPrefixIsolation.lean       # secret-prefix query isolation
+│   │   ├── CtxSplitCache.lean            # exact public/suffix ROM-cache projection
 │   │   ├── CtxSealSampling.lean          # honest-seal direct-sampling step
 │   │   ├── CtxTransitionReduction.lean   # ideal transition reductions
 │   │   └── VCVioFeasibility.lean         # bounded-ROM and private-state feasibility pilot
@@ -105,6 +106,8 @@ lake build
 A successful build verifies that the generated Aeneas model is accepted by the pinned Lean toolchain.
 
 The imported `Computational/CtxReduction.lean` theorem defines the modified-CTX misattribution event over the handwritten ideal PQXDH record model and reduces its probability losslessly to VCVio's standard collision-resistance advantage for the same `Crypto.blake2b` function. The adversary supplies one arbitrary raw payload and two well-formed explanations, and the reduction returns the exact unequal CTX preimages built from the shared parsed tag. Honest-seal specializations expose concrete collisions for wrong-sequence, wrong-sender, and cross-session acceptance. The proof assumes no AEAD security and makes no random-oracle replacement. It does not prove BLAKE2b collision resistance, track PPT cost, or connect the ideal transcript and hash call to the extracted production builder and adapter; see [`../../../doc/impl/vcvio-feasibility.md`](../../../doc/impl/vcvio-feasibility.md).
+
+The imported `Computational/CtxSplitCache.lean` module gives the canonical lazy-ROM cache an exact split representation. Non-prefix inputs remain complete in a public cache, while inputs beginning with the hidden 32-byte key are stored by the key-free suffix after that prefix. `merge_splitCtxCache` proves that merging a canonical projection returns the original cache extensionally, and `splitCtxCache_merge` proves the converse for normalized split caches. The module also proves that an honest modified-CTX outer input projects to exactly `N ‖ AD ‖ T ‖ LE64(seq) ‖ LE64(sid)`, whose retained-tag instance has 197 bytes. These are zero-loss representation equalities; the adaptive independent-tag game and its security reductions are proved in later modules.
 
 The imported `Computational/VCVioFeasibility.lean` pilot uses the immutable VCVio v4.31.0 commit recorded in `lakefile.toml` and the manifest. It specializes VCVio's tight and looser collision-resistance-chain bounded adaptive random-oracle binding theorems to the Aeneas-extracted 229-byte commitment-transcript type and a 512-bit digest, and it checks exact one- and two-call behavior for a linked private consuming-key store. It is feasibility evidence, not a checked embedding of beaconcrypt's CTX game, a complete state-separated composition, or a production security theorem; see [`../../../doc/impl/vcvio-feasibility.md`](../../../doc/impl/vcvio-feasibility.md).
 

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=32
+	[handwritten-lean]=33
 	[handwritten-proverif]=28
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1224,6 +1224,9 @@ require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxRomAuth$' \
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxPrefixIsolation$' \
 	"$lean_root" \
 	"canonical modified-CTX prefix-isolation proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxSplitCache$' \
+	"$lean_root" \
+	"canonical modified-CTX split-cache proof-root import"
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxSealSampling$' \
 	"$lean_root" \
 	"canonical modified-CTX seal-sampling proof-root import"
@@ -1515,6 +1518,34 @@ for declaration in ctxPrefixIsolatedPublic ctxRealWithPrefixFlagImpl \
 	ctxPrefixIsolatedGame; do
 	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
 		"$ctx_prefix_isolation" "modified CTX prefix-isolation game definition ${declaration}"
+done
+
+ctx_split_cache=proofs/lean/BeaconcryptCore/Computational/CtxSplitCache.lean
+for theorem_name in \
+	outerInput_eq_secretAddress_outerSuffix \
+	outerSuffix_length \
+	secretAddress_secretSuffix \
+	secretSuffix_outerInput \
+	splitCtxCache_normalized \
+	splitCtxCache_lookup \
+	merge_splitCtxCache \
+	splitCtxCache_merge; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_split_cache" "modified CTX split-cache theorem ${theorem_name}"
+done
+for theorem_name in secretPrefixQuery_secretAddress secretSuffix_secretAddress \
+	splitCtxCache_empty; do
+	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
+		"$ctx_split_cache" "modified CTX split-cache simplification theorem ${theorem_name}"
+done
+require_line_count 1 '^abbrev CtxSuffixRO( |$)' \
+	"$ctx_split_cache" "modified CTX suffix-oracle type"
+require_line_count 1 '^@\[ext\] structure SplitCache( |$)' \
+	"$ctx_split_cache" "modified CTX split-cache structure"
+for declaration in secretSuffix secretAddress outerSuffix SplitCache.lookup \
+	SplitCache.merge splitCtxCache SplitCache.Normalized; do
+	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
+		"$ctx_split_cache" "modified CTX split-cache definition ${declaration}"
 done
 
 ctx_seal_sampling=proofs/lean/BeaconcryptCore/Computational/CtxSealSampling.lean
