@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=3
 	[generated-proverif]=1
-	[handwritten-lean]=30
+	[handwritten-lean]=31
 	[handwritten-proverif]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -605,6 +605,9 @@ require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxRomAuth$' \
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxPrefixIsolation$' \
 	"$lean_root" \
 	"canonical modified-CTX prefix-isolation proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxSealSampling$' \
+	"$lean_root" \
+	"canonical modified-CTX seal-sampling proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
@@ -893,6 +896,15 @@ for declaration in ctxPrefixIsolatedPublic ctxRealWithPrefixFlagImpl \
 	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
 		"$ctx_prefix_isolation" "modified CTX prefix-isolation game definition ${declaration}"
 done
+
+ctx_seal_sampling=proofs/lean/BeaconcryptCore/Computational/CtxSealSampling.lean
+for theorem_name in ctxSeal_query_fresh_of_good_unused \
+	ctxSealOracle_eq_directSample_of_good; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_seal_sampling" "modified CTX fresh seal-sampling theorem ${theorem_name}"
+done
+require_line_count 1 '^noncomputable def ctxDirectSampleSealOracle( |$)' \
+	"$ctx_seal_sampling" "modified CTX direct-sampling seal transition"
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
