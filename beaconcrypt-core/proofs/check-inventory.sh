@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=3
 	[generated-proverif]=1
-	[handwritten-lean]=27
+	[handwritten-lean]=28
 	[handwritten-proverif]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -736,6 +736,33 @@ for declaration in fixedMaterialContextCtxFreshOpeningExp \
 	sameViewBaseFreshOpeningProbability; do
 	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
 		"$ctx_retained_tag_projection" "retained-tag probability definition ${declaration}"
+done
+
+ctx_auth_classification=proofs/lean/BeaconcryptCore/Computational/CtxAuthClassification.lean
+for theorem_name in \
+	acceptedFullFreshForgery_classification \
+	contextAliasReplay_has_distinct_ctxPreimages \
+	ctxAcceptedFullFreshForgeryProbability_le_projection_add_alias; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_auth_classification" "general CTX authenticity classification theorem ${theorem_name}"
+done
+for declaration in CtxSealHistoryEntry CtxAuthClassificationAttempt; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$ctx_auth_classification" "general CTX authenticity structure ${declaration}"
+done
+for declaration in CtxFullFresh CtxBaseProjectionMatch CtxBaseProjectionFresh \
+	CtxAcceptedFullFreshForgery CtxFreshAcceptedBaseProjection CtxContextAliasReplay; do
+	require_line_count 1 "^def ${declaration}( |$)" \
+		"$ctx_auth_classification" "general CTX authenticity definition ${declaration}"
+done
+for declaration in CtxSealHistoryEntry.ctxOutput CtxSealHistoryEntry.baseOutput; do
+	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
+		"$ctx_auth_classification" "general CTX authentication output ${declaration}"
+done
+for declaration in ctxAcceptedFullFreshForgeryProbability \
+	ctxFreshAcceptedBaseProjectionProbability ctxContextAliasReplayProbability; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_auth_classification" "general CTX authentication probability ${declaration}"
 done
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
