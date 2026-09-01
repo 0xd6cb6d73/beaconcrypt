@@ -1,4 +1,4 @@
-import BeaconcryptCore.Model.RatchetEffect
+import BeaconcryptCore.Refinement.RatchetEffect
 
 /-!
 # Refinement of the first-order ratchet effect phases
@@ -15,7 +15,7 @@ produces exactly the chain and message material selected by the ideal crypto mod
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open Result
+open RustM
 
 set_option maxHeartbeats 1000000
 set_option relaxedAutoImplicit false
@@ -773,7 +773,7 @@ theorem ratchet.control.Refines.finish_receive_with_removal_consumed_refines
     simp [ratchet.control.finish_receive, hfinish]
   rw [hresult'] at hresult
   have hstate : result.state = finished.state := by
-    simpa using congrArg (fun value => value.state) (Result.ok.inj hresult.symm)
+    simpa using congrArg (fun value => value.state) (RustM.ok.inj hresult.symm)
   rw [hstate] at hsend hreceive hlen hperm
   refine ⟨?_, ?_, h.lt, h.chain, ?_, ?_, ?_, ?_⟩
   · show finished.state.receive_cache.len.val ≤ 50

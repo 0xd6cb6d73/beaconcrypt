@@ -1,5 +1,7 @@
-import BeaconcryptCore.Model.RatchetControlRestore
-import BeaconcryptCore.Model.RatchetEffectRefinement
+import BeaconcryptCore.Extraction
+import BeaconcryptCore.Refinement.RatchetControlRestore
+import BeaconcryptCore.Refinement.RatchetEffectRefinement
+import BeaconcryptCore.Verification.ProofObligations
 
 /-!
 # Beaconcrypt-core verification root

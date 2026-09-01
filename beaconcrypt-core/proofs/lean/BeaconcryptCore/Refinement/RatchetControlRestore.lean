@@ -1,4 +1,4 @@
-import BeaconcryptCore.Model.RatchetControl
+import BeaconcryptCore.Refinement.RatchetControl
 
 /-!
 # Restore and per-peer wrappers of the symmetric single ratchet control plane
@@ -19,7 +19,7 @@ one (`replace_ratchet_for_peer_other`, `advance_send_for_peer_other`).
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open Result
+open RustM
 
 namespace beaconcrypt_core.ratchet.control
 

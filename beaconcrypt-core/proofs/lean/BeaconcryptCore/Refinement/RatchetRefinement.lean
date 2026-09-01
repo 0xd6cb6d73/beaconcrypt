@@ -1,4 +1,4 @@
-import BeaconcryptCore.Model.RatchetControl
+import BeaconcryptCore.Refinement.RatchetControl
 import BeaconcryptCore.Model.Ratchet
 
 /-!
@@ -40,7 +40,7 @@ This file connects the two.  It
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open Result
+open RustM
 
 set_option maxHeartbeats 1000000
 set_option relaxedAutoImplicit false
@@ -96,7 +96,7 @@ deriving DecidableEq, Repr
 
 /-- Perform `k` key derivations with the generated `advance_receive`, returning `none`
 if the control plane refuses one of them. -/
-def deriveKeys (state : RatchetState) : ℕ → Result (Option RatchetState)
+def deriveKeys (state : RatchetState) : ℕ → RustM (Option RatchetState)
   | 0 => ok (some state)
   | k + 1 => do
       let adv ← advance_receive state
@@ -109,7 +109,7 @@ removed. Future targets derive and cache only the preceding skipped keys, then u
 `advance_receive_target` for the uncached target itself. Private derivations are
 committed only when the message authenticates. -/
 def receiveMessage (state : RatchetState) (target : Std.U64) (authenticated : Bool) :
-    Result (RecvOutcome × RatchetState) := do
+    RustM (RecvOutcome × RatchetState) := do
   let plan ← plan_receive_until state target
   match plan.sequence with
   | core.option.Option.None => ok (RecvOutcome.tooManySkipped, state)

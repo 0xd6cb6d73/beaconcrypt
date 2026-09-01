@@ -6,7 +6,7 @@ NIX ?= nix
 PROOF_SHELL := path:..\#proofs
 EXPECTED_RUSTC := rustc 1.93.0-nightly (843f8ce2e 2025-11-07)
 EXPECTED_CARGO := cargo 1.93.0-nightly (636800288 2025-10-31)
-EXPECTED_HAX := 0.3.7
+EXPECTED_HAX := 0.4.0-rc.1
 EXPECTED_FSTAR := F* 2025.10.06~dev
 EXPECTED_Z3 := Z3 version 4.15.3 - 64 bit
 EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
@@ -478,7 +478,7 @@ extract-lean:
 		exit 1; \
 	}
 	rm -rf $(LEAN_DIR)/llbc
-	cargo hax -C --locked ';' into lean --lakefile
+	cargo hax -C --locked ';' into lean
 
 check-lean-policy:
 	@if rg -n --pcre2 '\b(?:sorry|admit|axiom)\b|sorryAx' $(LEAN_PROOF_PATHS) \
@@ -489,8 +489,8 @@ check-lean-policy:
 
 check-lean-root:
 	@for module in \
-		BeaconcryptCore.Model.RatchetControlRestore \
-		BeaconcryptCore.Model.RatchetEffectRefinement; do \
+		BeaconcryptCore.Refinement.RatchetControlRestore \
+		BeaconcryptCore.Refinement.RatchetEffectRefinement; do \
 		rg -Fqx "import $$module" '$(LEAN_ROOT)' || { \
 			echo "missing verification-root import: $$module" >&2; \
 			exit 1; \
