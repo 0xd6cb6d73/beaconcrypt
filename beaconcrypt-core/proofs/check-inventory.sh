@@ -50,7 +50,7 @@ declare -A expected_category_counts=(
 	[generated-proverif]=1
 	[handwritten-lean]=9
 	[handwritten-proverif]=28
-	[handwritten-ssprove]=17
+	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
@@ -711,6 +711,174 @@ require_line_count 1 '^Definition state_separated_package_response_view_game$' \
 require_occurrence_count 1 '\\P_\[uniform_rom_sample\]' \
 	"SSProve package-semantics view uses joint finite source" \
 	proofs/ssprove/StateSeparatedPackageSemantics.v
+indexed_sessions=proofs/ssprove/StateSeparatedIndexedSessions.v
+for indexed_session_capstone in \
+	indexed_role_session_locations_are_distinct \
+	indexed_cache_location_is_disjoint \
+	indexed_first_session_heap_summary \
+	indexed_both_sessions_heap_summary \
+	indexed_response_matches_monolithic \
+	indexed_package_trace_matches_reference \
+	indexed_package_context_matches_reference \
+	indexed_same_handle_trace_normalizes \
+	indexed_rejected_trace_is_neutral \
+	indexed_fresh_trace_underflow_is_explicit \
+	indexed_distinct_handle_trace_normalizes \
+	indexed_reverse_handle_trace_normalizes \
+	indexed_both_orders_have_same_private_summary \
+	indexed_session_handle_is_ghost \
+	indexed_sessions_use_production_kdf_domains \
+	indexed_package_context_single_sample_is_total \
+	indexed_public_context_view_matches_reference \
+	indexed_public_context_game_matches_reference; do
+	require_line_count 1 "^(Theorem|Lemma) ${indexed_session_capstone} :" \
+		"$indexed_sessions" \
+		"SSProve indexed-session ${indexed_session_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${indexed_session_capstone}\\.\$" \
+		"$indexed_sessions" \
+		"SSProve indexed-session ${indexed_session_capstone} assumption report"
+done
+require_line_count 18 '^Print Assumptions ' "$indexed_sessions" \
+	"complete SSProve indexed-session assumption reports"
+
+require_line_count 1 '^Definition indexed_consuming_ckey :' \
+	"$indexed_sessions" \
+	"SSProve indexed-session consuming private CKEY package"
+require_line_count 1 '^#\[tactic=notac\] Equations\? indexed_composition_core$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session linked core"
+require_line_count 1 \
+	'^#\[tactic=notac\] Equations\? indexed_state_separated_response_package$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session linked public package"
+require_occurrence_count 1 \
+	'Definition indexed_ckey_locs : \{fset Location\} :=\n  fset \[:: server_ckey_loc; beacon_ckey_loc;\n    server_session_one_loc; beacon_session_one_loc\]\.' \
+	"SSProve indexed-session four private CKEY slots" "$indexed_sessions"
+require_line_count 1 \
+	'^Definition chCachedRomSample : choice_type := chOption chRomSample\.$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session optional global ROM cache type"
+require_line_count 1 \
+	'^Definition indexed_rom_cache_loc : Location := \(chCachedRomSample; 84%N\)\.$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session global ROM cache location"
+require_occurrence_count 1 \
+	'Definition indexed_cache_locs : \{fset Location\} :=\n  fset \[:: indexed_rom_cache_loc\]\.' \
+	"SSProve indexed-session singleton global ROM cache" "$indexed_sessions"
+require_line_count 1 \
+	"^    #val #\\[indexed_run_response_id\\] : 'bool → 'response\$" \
+	"$indexed_sessions" \
+	"SSProve indexed-session Boolean RUN signature"
+require_line_count 1 \
+	"^    #def #\\[indexed_run_response_id\\] \\(session : 'bool\\) : 'response \\{\$" \
+	"$indexed_sessions" \
+	"SSProve indexed-session Boolean RUN implementation"
+require_line_count 1 '^          cached ← get indexed_rom_cache_loc ;;$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session sole global ROM cache read"
+require_line_count 1 \
+	'^              #put indexed_rom_cache_loc := Some sample ;;$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session sole global ROM cache fill"
+require_occurrence_count 1 'sample <\$ uniform_response_sample_op ;;' \
+	"SSProve indexed-session sole global ROM sample operation" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'if select_session session authentications then[\s\S]{0,2400}?cached ← get indexed_rom_cache_loc ;;[\s\S]{0,800}?sample <\$ uniform_response_sample_op ;;' \
+	"SSProve indexed-session authentication precedes cache and sampling" \
+	"$indexed_sessions"
+
+require_line_count 1 '^Fixpoint run_response_code_with_samples$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session sample-stream evaluator"
+require_occurrence_count 1 \
+	'Inductive indexed_reference_state : Type :=\n\| IndexedReferenceFresh\n\| IndexedReferenceOneUsed\n    \(first_session : bounded_session_handle\) \(sample : rom_sample\)\n\| IndexedReferenceBothUsed\n    \(first_session : bounded_session_handle\) \(sample : rom_sample\)\.' \
+	"SSProve indexed-session bounded reference state" "$indexed_sessions"
+require_line_count 1 '^Definition indexed_reference_step$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session reference transition"
+require_line_count 1 '^Fixpoint run_indexed_reference_trace$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session reference trace"
+require_line_count 1 '^Local Fixpoint run_indexed_package_trace$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session package trace"
+require_occurrence_count 1 \
+	'Inductive indexed_public_context : Type :=\n\| IndexedContextReturn \(result : bool\)\n\| IndexedContextCall\n    \(session : bounded_session_handle\)\n    \(continuation : public_response_observation -> indexed_public_context\)\.' \
+	"SSProve indexed-session adaptive public context" "$indexed_sessions"
+require_line_count 1 '^Fixpoint run_indexed_reference_context$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session reference context"
+require_line_count 1 '^Local Fixpoint run_indexed_package_context$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session package context"
+require_line_count 1 '^Local Lemma checked_indexed_trace_matches_reference :' \
+	"$indexed_sessions" \
+	"SSProve indexed-session checked trace bridge"
+require_line_count 1 '^Local Lemma checked_indexed_context_matches_reference :' \
+	"$indexed_sessions" \
+	"SSProve indexed-session checked context bridge"
+require_line_count 1 '^Record indexed_trace_run_certificate$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session trace certificate"
+require_line_count 1 '^  indexed_trace_run_certificate_sound :$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session exact trace certificate soundness field"
+require_occurrence_count 1 \
+	'indexed_trace_run_certificate\n      \(run_indexed_package_trace\n        authentications challenges inputs requests samples empty_heap\)\.' \
+	"SSProve indexed-session certificate exact raw-trace index" \
+	"$indexed_sessions"
+require_line_count 1 '^Record indexed_context_run_certificate$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session context certificate"
+require_line_count 1 '^  indexed_context_run_certificate_sound :$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session exact context certificate soundness field"
+require_occurrence_count 1 \
+	'indexed_context_run_certificate\n      \(run_indexed_package_context\n        authentications challenges inputs context samples empty_heap\)\.' \
+	"SSProve indexed-session certificate exact raw-context index" \
+	"$indexed_sessions"
+require_line_count 2 '^Defined\.$' "$indexed_sessions" \
+	"transparent SSProve indexed-session certificates"
+
+require_occurrence_count 1 \
+	'authentications challenges inputs \[:: session; session\] \[:: sample\] =\n    Some\n      \(\[:: indexed_reference_ciphertext\n             challenges inputs session sample; None\],\n       indexed_first_session_heap session sample,\n       \[::\]\)\.' \
+	"SSProve indexed-session fixed same-handle trace result" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'authentications challenges inputs \[:: session\] samples =\n    Some \(\[:: None\], empty_heap, samples\)\.' \
+	"SSProve indexed-session fixed rejected trace result" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'authentications challenges inputs \[:: session\] \[::\] = None\.' \
+	"SSProve indexed-session fixed sampler-underflow trace result" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'\[:: first_session; negb first_session\] \[:: sample\] =\n    Some\n      \(\[:: indexed_reference_ciphertext\n             challenges inputs first_session sample;\n           indexed_reference_ciphertext\n             challenges inputs \(negb first_session\) sample\],\n       indexed_both_sessions_heap first_session sample,\n       \[::\]\)\.' \
+	"SSProve indexed-session fixed distinct-handle trace result" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'\[:: negb first_session; first_session\] \[:: sample\] =\n    Some\n      \(\[:: indexed_reference_ciphertext\n             challenges inputs \(negb first_session\) sample;\n           indexed_reference_ciphertext\n             challenges inputs first_session sample\],\n       indexed_both_sessions_heap \(negb first_session\) sample,\n       \[::\]\)\.' \
+	"SSProve indexed-session fixed reverse-handle trace result" \
+	"$indexed_sessions"
+
+require_line_count 1 '^Theorem indexed_package_context_single_sample_is_total :' \
+	"$indexed_sessions" \
+	"SSProve indexed-session adaptive singleton-sample totality"
+require_line_count 1 '^Definition indexed_package_public_context_game$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session adaptive package game"
+require_line_count 1 '^Definition indexed_reference_public_context_game$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session adaptive reference game"
+require_occurrence_count 2 '\\P_\[uniform_rom_sample\]' \
+	"SSProve indexed-session adaptive games use the same finite source" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'Theorem indexed_sessions_use_production_kdf_domains :\n  kdf_use_info PqxdhRootDerivation = pqxdh_info /\\\n  kdf_use_info InitialRatchetExpansion = symmetric_ratchet_info /\\\n  kdf_use_info RatchetStepExpansion = symmetric_ratchet_info /\\\n  kdf_use_info InitialRatchetExpansion =\n    kdf_use_info RatchetStepExpansion /\\\n  kdf_output_size PqxdhRootDerivation = 32%N /\\\n  kdf_output_size InitialRatchetExpansion = 64%N /\\\n  kdf_output_size RatchetStepExpansion = 76%N\.' \
+	"SSProve indexed-session exact production KDF-domain theorem" \
+	"$indexed_sessions"
 for protocol_rom_capstone in \
 	pqxdh_ratchet_bounded_rom_confidentiality_bound \
 	active_classical_forward_bounded_rom_confidentiality \
