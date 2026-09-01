@@ -398,15 +398,21 @@ check-lean-policy:
 
 check-lean-root:
 	@for module in \
+		BeaconcryptCore.Refinement.PqxdhSession \
 		BeaconcryptCore.Refinement.RatchetControlRestore \
 		BeaconcryptCore.Refinement.RatchetEffectRefinement \
+		BeaconcryptCore.Model.Pqxdh.Instance \
+		BeaconcryptCore.Model.Pqxdh.InstanceCommit \
+		BeaconcryptCore.Model.Pqxdh.Acceptance \
+		BeaconcryptCore.Model.Pqxdh.Runs \
+		BeaconcryptCore.Computational.CtxReduction \
 		BeaconcryptCore.Computational.VCVioFeasibility; do \
 		rg -Fqx "import $$module" '$(LEAN_ROOT)' || { \
 			echo "missing verification-root import: $$module" >&2; \
 			exit 1; \
 		}; \
 	done
-	@rg -Fqx 'globs = ["BeaconcryptCore", "BeaconcryptCore.+"]' \
+	@rg -Fqx 'globs = ["BeaconcryptCore", "BeaconcryptCore.*"]' \
 		$(LEAN_DIR)/lakefile.toml || { \
 		echo 'Lean library must build the root and every BeaconcryptCore submodule' >&2; \
 		exit 1; \

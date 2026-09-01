@@ -68,9 +68,7 @@ and `Pqxdh.HonestRun.beaconStep`.
 
 ## The record layer
 
-Sealing and admitting the first server record is not part of the extracted PQXDH
-module: it is the symmetric ratchet, whose own refinement lives in
-`BeaconcryptCore/Refinement/RatchetRefinement.lean`,
-`RatchetControl.lean`, `RatchetControlRestore.lean`, `RatchetEffect.lean` and
-`RatchetEffectRefinement.lean`.  In the PQXDH refinement it appears through the
-plaintext and the receive state the caller feeds back into the beacon transition.
+Sealing and admitting the first server record is not part of the extracted PQXDH module: it is the symmetric ratchet, whose own refinement lives in `BeaconcryptCore/Refinement/RatchetRefinement.lean`, `RatchetControl.lean`, `RatchetControlRestore.lean`, `RatchetEffect.lean` and `RatchetEffectRefinement.lean`.
+In the PQXDH refinement it appears through the plaintext and the receive state the caller feeds back into the beacon transition.
+This exclusion is also why the native ideal-model CTX reduction in `BeaconcryptCore/Computational/CtxReduction.lean` is not yet a production-linked security theorem.
+A further refinement must identify extracted `commitment.build_commitment_transcript` bytes with `Pqxdh.ctxPreimage` and the adapter's BLAKE2b invocation with `Pqxdh.Crypto.blake2b`.

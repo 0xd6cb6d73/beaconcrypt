@@ -19,11 +19,9 @@ and is reachable from the maintained root `BeaconcryptCore.lean`.  The whole pro
 builds with no `sorry` and no added axioms; the results depend only on `propext`,
 `Classical.choice` and `Quot.sound`.
 
-The model is *ideal*: it is parametric in the cryptographic primitives
-(`Pqxdh.Crypto`), which are assumed only to be correct (signature verification,
-Ed25519→X25519 conversion agreement, X25519 agreement, ML-KEM correctness, AEAD
-correctness) and to have the stated output lengths.  It makes no computational
-security claim.
+The model is *ideal*: it is parametric in the cryptographic primitives (`Pqxdh.Crypto`), which are assumed only to be correct (signature verification, Ed25519→X25519 conversion agreement, X25519 agreement, ML-KEM correctness, AEAD correctness) and to have the stated output lengths.
+It makes no computational security claim by itself.
+The separately imported `Computational/CtxReduction.lean` module now proves a computational reduction for the model's CTX misattribution event, conditional on collision resistance of its abstract `blake2b` function.
 
 The record layer is not re-invented: it is an instance `Pqxdh.ratchetCrypto` of the
 project's already verified handwritten symmetric ratchet
@@ -48,7 +46,7 @@ valid admissible initial receive-ratchet record" in the sense of spec §16, not 
 | §11 | checked key-ID allocation | `serverEmit_exhausted`, `serverEmit_collision`, `ServerWf`, `serverEmit_no_collision_of_wf` |
 | §12 | `LE64(kid) ‖ M`, default `FF`, empty message rejected | `Pqxdh.LE64`, `LE64_inj`, `serverRespond_empty_app` |
 | §13 | `key ‖ next_chain ‖ nonce`, AEAD + CTX commitment, `CT ‖ T ‖ T*` | `Pqxdh.nextChain`, `Pqxdh.msgMaterial`, `Pqxdh.ctxCommit`, `Pqxdh.sealRecord`, `Pqxdh.openRecord`, `Pqxdh.ratchetCrypto` |
-| §13 | the commitment binds key, nonce, AD, tag, sequence and sender | `ctxCommit_context_eq`, `openRecord_committing`, `openRecord_relabelled`, `openRecord_wrong_seq`, `openRecord_wrong_sender` |
+| §13 | the commitment binds key, nonce, AD, tag, sequence and sender | `ctxCommit_context_eq`, `openRecord_committing`, `openRecord_double_opening_yields_ctx_collision`, `openRecord_relabelled`, `openRecord_wrong_seq`, `openRecord_wrong_sender`, `ctxMisattributionAdvantage_le_blake2b_cr` |
 | §14 | `KexResponse`, transactional commit | `Pqxdh.KexResponse`, `Pqxdh.serverEmit`, `serverEmit_ok`, `serverEmit_failure_state`, `serverRespond_peers_preserved`, `serverRun_peers_preserved` |
 | §15 | beacon decapsulation, pinning, role-reversed DHs | `Pqxdh.beaconFinish`, `Pqxdh.beaconDHs`, `beaconFinish_identity_mismatch` |
 | §16 | record admission, sender check, `LE64(kid)` binding | `Pqxdh.beaconFinish`, `beaconFinish_bad_sender`, `HonestRun.beaconStep`, `HonestRun.beacon_rejects_reordered_record`, `HonestRun.beacon_rejects_foreign_record` |
@@ -95,6 +93,8 @@ derived from it would be vacuous.  `InstanceCommit.lean` exhibits an instance
 (`Toy.tailCrypto`) in which `CtxDistinct` provably holds for contexts with different
 sequence numbers or different senders, and discharges every hypothesis of the beacon
 rejection result on a concrete run (`Toy.demoTail_rejects_reordered_record`).
+
+`Computational/CtxReduction.lean` replaces the universal local noncollision premise with an explicit game for actual attacks against this ideal record layer. An adversary supplies one arbitrary raw payload and two well-formed explanations, and the factor-one theorem maps every accepted distinct pair to VCVio's collision-resistance experiment for the same pure `Crypto.blake2b`. The relabelling specialization covers an honest `sealRecord` opened under a distinct context and proves that wrong-sequence, wrong-sender, and cross-session acceptance each expose the concrete collision. These theorems neither prove BLAKE2b collision resistance nor connect the ideal transcript/hash call to the extracted builder and production adapter.
 
 ## The server over a whole sequence of registrations (spec §11, §14, §20)
 

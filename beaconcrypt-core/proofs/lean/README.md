@@ -48,14 +48,21 @@ proofs/lean/
 │   │   ├── FunsExternal_Template.lean
 │   │   └── FunsExternal.lean             # maintained
 │   ├── Model/
-│   │   └── Ratchet.lean                  # handwritten ideal symmetric ratchet
+│   │   ├── Ratchet.lean                  # handwritten ideal symmetric ratchet
+│   │   └── Pqxdh/                       # handwritten ideal modified-PQXDH model
 │   ├── Refinement/
+│   │   ├── PqxdhBytes.lean              # extracted-byte representation bridge
+│   │   ├── PqxdhCore.lean               # extracted primitive/core refinement
+│   │   ├── PqxdhEncoding.lean           # extracted encoding refinement
+│   │   ├── PqxdhProtocol.lean           # extracted PQXDH protocol refinement
+│   │   ├── PqxdhSession.lean            # extracted session refinement
 │   │   ├── RatchetControl.lean           # generated-control facts
 │   │   ├── RatchetControlRestore.lean    # restoration facts
 │   │   ├── RatchetRefinement.lean        # control-to-ideal refinement
 │   │   ├── RatchetEffect.lean            # exact first-order phase laws
 │   │   └── RatchetEffectRefinement.lean  # checked phase-to-ideal refinement
 │   └── Computational/
+│       ├── CtxReduction.lean             # ideal CTX misattribution-to-collision reduction
 │       └── VCVioFeasibility.lean         # bounded-ROM and private-state feasibility pilot
 └── llbc/
     └── beaconcrypt_core.llbc
@@ -85,6 +92,8 @@ lake build
 ```
 
 A successful build verifies that the generated Aeneas model is accepted by the pinned Lean toolchain.
+
+The imported `Computational/CtxReduction.lean` theorem defines the modified-CTX misattribution event over the handwritten ideal PQXDH record model and reduces its probability losslessly to VCVio's standard collision-resistance advantage for the same `Crypto.blake2b` function. The adversary supplies one arbitrary raw payload and two well-formed explanations, and the reduction returns the exact unequal CTX preimages built from the shared parsed tag. Honest-seal specializations expose concrete collisions for wrong-sequence, wrong-sender, and cross-session acceptance. The proof assumes no AEAD security and makes no random-oracle replacement. It does not prove BLAKE2b collision resistance, track PPT cost, or connect the ideal transcript and hash call to the extracted production builder and adapter; see [`../../../doc/impl/vcvio-feasibility.md`](../../../doc/impl/vcvio-feasibility.md).
 
 The imported `Computational/VCVioFeasibility.lean` pilot uses the immutable VCVio v4.31.0 commit recorded in `lakefile.toml` and the manifest. It specializes VCVio's tight and looser collision-resistance-chain bounded adaptive random-oracle binding theorems to the Aeneas-extracted 229-byte commitment-transcript type and a 512-bit digest, and it checks exact one- and two-call behavior for a linked private consuming-key store. It is feasibility evidence, not a checked embedding of beaconcrypt's CTX game, a complete state-separated composition, or a production security theorem; see [`../../../doc/impl/vcvio-feasibility.md`](../../../doc/impl/vcvio-feasibility.md).
 

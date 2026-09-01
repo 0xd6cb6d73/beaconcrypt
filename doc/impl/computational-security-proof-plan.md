@@ -6,13 +6,13 @@
 
 This is a proposed implementation plan written against the `proof` branch at commit `ff12e813a1f4b7ee6f6e86db573dc796eb1d7154`.
 
-Nothing in this document is a current security claim, a completed proof, or permission to change the protocol, wire format, persistence format, or public APIs.
+The SSProve-specific implementation route in this document is superseded. Current work proves computational reductions directly over the maintained handwritten Lean ideal models with VCVio, beginning with the factor-one modified-CTX misattribution-to-collision theorem described in [`vcvio-feasibility.md`](vcvio-feasibility.md). The detailed SSProve design below is retained as historical planning and comparison evidence, not as a porting checklist or acceptance target.
+
+Except for this status section, the detailed plan below is historical and is not a current security claim or permission to change the protocol, wire format, persistence format, or public APIs.
 
 The implementation MUST stop at every decision gate identified below and obtain an explicit choice before taking a branch that changes the protocol or materially changes the assumptions or scope of the final theorem.
 
-The default proof architecture deliberately does not duplicate deterministic facts already proved from extracted Rust in F*.
-SSProve will prove probabilistic games, reductions, advantage bounds, and randomized package invariants, while F* remains authoritative for the existing exact byte-layout and deterministic state-transition facts.
-The result will therefore be a reviewed cross-prover composition unless a separate decision requires a closed theorem in one proof assistant.
+The current proof architecture states bad events and reductions directly over ideal Lean components, reuses their deterministic theorems, and adds explicit Lean refinement obligations to Aeneas-extracted production definitions. VCVio supplies probabilistic games, reductions, and advantage reasoning where those components need them, while historical F* results remain independent evidence until a named cross-model bridge composes them.
 
 ## Objective
 
@@ -22,7 +22,7 @@ The proof suite will establish properties of beaconcrypt's composition and state
 
 The intended positive results are:
 
-- Computational CTX misattribution resistance for the complete beaconcrypt protected payload, reduced to BLAKE2b-512 collision resistance through the existing F* collision-witness theorem.
+- Computational CTX misattribution resistance for the ideal Lean record component, reduced directly and losslessly to collision resistance of its BLAKE2b function, followed by an explicit extracted-transcript and adapter correspondence theorem for any production claim.
 - Computational pseudorandomness of the hidden registration channel initializer under an explicit collection of primitive assumptions and freshness conditions.
 - The correctly oriented registration agreement property: an honest beacon commit has one unique matching earlier server commit.
 - Established-session record confidentiality and injective authenticity for both directions under active network control, including public sequence numbers, sender identifiers, and lengths.
@@ -75,7 +75,7 @@ The current CI runs `check-generated` but not the deliberately separate `check-i
 The current F* build also creates an ignored `.cache` inside the inventory-monitored `proofs/` tree, while the inventory checker enumerates every file there.
 Before making the inventory a post-proof CI gate, move F*, Coq/Rocq/SSProve, and other proof build outputs to a path such as repository `target/formal-verification/`; generated source artifacts remain under `proofs/` and stay inventoried.
 
-## Proof architecture
+## Historical SSProve proof architecture
 
 The proof suite will use the following division of responsibility:
 
@@ -115,7 +115,7 @@ If a production-relevant deterministic operation cannot be used from hax-generat
 
 Handwriting a cleaner SSProve “real protocol” while merely asserting that it resembles production is not an acceptable fallback.
 
-## Cross-prover contract boundary
+## Historical cross-prover contract boundary
 
 F* theorems cannot be mechanically imported as Coq/Rocq proof terms.
 The baseline design will therefore make every reused deterministic result an explicit parameter to the SSProve theorem and record how the parameter is discharged outside the Coq/Rocq kernel.
@@ -538,6 +538,8 @@ The table MUST distinguish semantic wire fields from concrete Cap'n Proto bytes 
 
 ### Phase 2: implement the contract layer and CTX pilot
 
+Status: this SSProve phase is superseded. The native Lean `CtxReduction.lean` proof now completes the ideal-model pointwise witness and factor-one probability inequality directly; the extracted-transcript and adapter correspondence remains open.
+
 #### Work
 
 1. Implement `Contracts.v`, the first coverage table, and trust-inventory entries for `DC-CTX-ENCODING` and `DC-CTX-WITNESS`.
@@ -547,7 +549,7 @@ The table MUST distinguish semantic wire fields from concrete Cap'n Proto bytes 
 5. Prove the exact probability inequality and oracle-query relationship.
 6. Add an SSProve negative control using an abstract deliberately multi-opening AEAD package in which removing the outer commitment check makes the attack succeed; retain the existing concrete Rust multi-opening fixture as separate integration evidence unless its byte-level bridge is explicitly assumed.
 7. Keep the privacy- and integrity-preservation games in a separate module and mark them conditional until the CTX record-security assumption decision is resolved.
-8. Update [`ctx-commitment.md`](../ctx-commitment.md) and [`formal-verification-analysis.md`](../formal-verification-analysis.md) only after the mechanized result exists, replacing the current prose-only probability lifting with an exact account of what SSProve checks.
+8. Maintain [`ctx-commitment.md`](../ctx-commitment.md) and [`formal-verification-analysis.md`](../formal-verification-analysis.md) with the checked Lean ideal-model reduction and keep the missing production bridge explicit.
 
 #### Exit criteria
 

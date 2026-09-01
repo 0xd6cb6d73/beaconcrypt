@@ -54,15 +54,17 @@ Both successful outer checks imply `hash(X) = U = hash(X')`.
 If `X = X'`, `production_commitment_input_is_injective` gives equality of `K`, `N`, `A`, `T`, `S`, and `I`, while applying the same pure AEAD-open function to the same `K`, `N`, `A`, `C`, and `T` fixes its result and therefore gives `M = M'`.
 That contradicts distinctness, so F* constructs the explicit witness `X != X'` and `hash(X) = hash(X')` for every pair of accepted distinct explanations.
 
-Conventionally lifting this pointwise theorem to a probabilistic commitment game, a collision adversary `B` runs a commitment adversary `A` and returns the F*-proved witness from any successful misattribution.
-Its running time is essentially that of `A` plus parsing and two transcript evaluations, and the usual advantage inequality is:
+Lean now checks the probability lifting directly for the handwritten ideal PQXDH record model.
+[`CtxReduction.lean`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/CtxReduction.lean) lets an adversary return one arbitrary raw payload and two well-formed explanations, tests both with the model's real `openRecord` parser and verifier, and maps every winning attempt to the two exact `ctxPreimage` values built with the shared parsed tag.
+The resulting VCVio theorem is:
 
 ```text
 Adv_commit_beaconcrypt(A) <= Adv_collision_BLAKE2b-512(B)
 ```
 
-The displayed probability and runtime lifting is conventional cryptographic reasoning, not a mechanized probability or complexity theorem in F*.
-The machine-checked result is the pointwise implication and explicit collision witness for arbitrary pure functions.
+The displayed probability inequality is machine-checked and has factor one.
+VCVio's `CRAdversary` does not track PPT cost, so the statement that the reducer runs in the time of `A` plus deterministic parsing and transcript construction remains conventional complexity reasoning.
+The F* theorem separately checks the pointwise implication for the extracted fixed-width transcript, while the new Lean proof checks both a pointwise witness and the game-level inequality for the ideal record model.
 There is no additive ChaCha20-Poly1305 term in this binding reduction, and unequal-key or unequal-context multi-openings by the base AEAD remain allowed.
 This is the same collision-reduction pattern as Theorem 2 of the CTX paper, extended by an injective encoding of `S` and `I` and simplified by the fact that beaconcrypt transmits the original `T`.
 
@@ -79,11 +81,11 @@ It is not a computational proof or a proof of BLAKE2b.
 
 ## Scope and remaining assumptions
 
-The F* theorem and its conventional computational lifting establish full misattribution resistance for the parsed protected payload, including key commitment and binding of the nonce, long-lived associated data, sequence, sender key identifier, and accepted plaintext, conditional on BLAKE2b-512 collision resistance and exact production use of the proved encoding.
-They explain why a deliberately multi-opening base-AEAD example does not produce a multi-opening beaconcrypt record unless the adversary finds a BLAKE2b collision.
+The F* pointwise theorem and Lean computational reduction establish the corresponding misattribution-to-collision facts on their respective extracted and ideal-model surfaces, including key commitment and binding of the nonce, long-lived associated data, sequence, sender key identifier, and accepted plaintext.
+Together they explain why a deliberately multi-opening base-AEAD example does not produce a multi-opening beaconcrypt record unless the adversary finds a BLAKE2b collision, but an explicit Lean refinement theorem connecting the extracted transcript builder and adapter hash call to the ideal `ctxPreimage` and `Crypto.blake2b` remains necessary for a composed production claim.
 The concrete fixture is documented in [multi-opening-fixture.md](multi-opening-fixture.md).
 
-The proof does not establish BLAKE2b collision resistance, correctness of its implementation, or correspondence between the extracted helper and compiled machine code beyond the stated hax/compiler assumptions.
+The proofs do not establish BLAKE2b collision resistance, correctness of its implementation, or correspondence between the ideal model, extracted helper, and compiled machine code beyond the stated hax/compiler assumptions.
 It does not prove that production supplies the intended fields to the helper, that libsodium hashes exactly the returned bytes, or that parsing and serialization preserve the modeled payload.
 It does not make `U` a MAC: anyone who knows an opening key and context can compute it.
 It also does not establish secrecy, AEAD authenticity, nonce discipline, side-channel resistance, memory erasure, or origin authentication; those properties require their separate protocol and primitive assumptions.

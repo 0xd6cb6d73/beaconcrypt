@@ -48,12 +48,12 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=3
 	[generated-proverif]=1
-	[handwritten-lean]=10
+	[handwritten-lean]=24
 	[handwritten-proverif]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
-	[lean-control]=5
+	[lean-control]=8
 	[validation]=2
 )
 for category in "${!expected_category_counts[@]}"; do
@@ -164,21 +164,23 @@ compare_set generated-lean "$tmp_dir/generated-lean"
 
 printf '%s\n' \
 	proofs/lean/BeaconcryptCore.lean \
-	proofs/lean/BeaconcryptCore/Main.lean \
 	proofs/lean/BeaconcryptCore/Extraction/FunsExternal.lean \
 	> "$tmp_dir/handwritten-lean"
 for lean_proof_dir in Model Refinement Computational; do
-	find "proofs/lean/BeaconcryptCore/$lean_proof_dir" -maxdepth 1 -type f -name '*.lean' \
+	find "proofs/lean/BeaconcryptCore/$lean_proof_dir" -type f -name '*.lean' \
 		-printf '%p\n' >> "$tmp_dir/handwritten-lean"
 done
 compare_set handwritten-lean "$tmp_dir/handwritten-lean"
 
 printf '%s\n' \
 	proofs/lean/ARISTOTLE_SUMMARY.md \
+	proofs/lean/PQXDH_IDEAL_MODEL.md \
+	proofs/lean/PQXDH_REFINEMENT.md \
 	proofs/lean/README.md \
 	proofs/lean/lake-manifest.json \
 	proofs/lean/lakefile.toml \
-	proofs/lean/lean-toolchain > "$tmp_dir/lean-control"
+	proofs/lean/lean-toolchain \
+	proofs/lean/pqxdh_spec.md > "$tmp_dir/lean-control"
 compare_set lean-control "$tmp_dir/lean-control"
 
 require_line_count() {
@@ -581,16 +583,26 @@ require_line_count 1 '^import BeaconcryptCore\.Refinement\.RatchetControlRestore
 require_line_count 1 '^import BeaconcryptCore\.Refinement\.RatchetEffectRefinement$' \
 	"$lean_root" \
 	"canonical phase-refinement proof import"
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.PqxdhSession$' \
+	"$lean_root" \
+	"canonical PQXDH session-refinement proof import"
+for pqxdh_root_module in Instance InstanceCommit Acceptance Runs; do
+	require_line_count 1 "^import BeaconcryptCore\\.Model\\.Pqxdh\\.${pqxdh_root_module}$" \
+		"$lean_root" "canonical ideal PQXDH ${pqxdh_root_module} proof-root import"
+done
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$' \
 	"$lean_root" \
 	"canonical VCVio feasibility proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxReduction$' \
+	"$lean_root" \
+	"canonical CTX reduction proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"complete maintained Lean policy paths"
 require_line_count 1 '^check-lean-root:$' Makefile \
 	"maintained Lean root check target"
-require_line_count 1 '^globs = \["BeaconcryptCore", "BeaconcryptCore\.\+"\]$' \
+require_line_count 1 '^globs = \["BeaconcryptCore", "BeaconcryptCore\.\*"\]$' \
 	proofs/lean/lakefile.toml \
 	"Lean root and all-submodule build glob"
 for theorem_name in \
@@ -655,6 +667,42 @@ done
 require_line_count 1 '^rev = "cbd4144b51d92da00dd50f05e068b2348fa6e529"$' \
 	proofs/lean/lakefile.toml \
 	"immutable VCVio v4.31 dependency pin"
+
+require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |$)' \
+	proofs/lean/BeaconcryptCore/Model/Pqxdh/Commit.lean \
+	"ideal CTX collision-extraction theorem"
+ctx_reduction=proofs/lean/BeaconcryptCore/Computational/CtxReduction.lean
+for theorem_name in \
+	ctxMisattribution_implies_blake2b_collision \
+	ctxMisattributionAdvantage_le_blake2b_cr \
+	successful_wrong_sequence_open_yields_blake2b_collision \
+	successful_wrong_sender_open_yields_blake2b_collision \
+	successful_cross_session_open_yields_blake2b_collision \
+	ctxRelabelAdvantage_le_blake2b_cr; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_reduction" "native CTX computational theorem ${theorem_name}"
+done
+for declaration in CtxExplanation CtxAttempt CtxRelabelClaim; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$ctx_reduction" "native CTX game structure ${declaration}"
+done
+for declaration in CtxMisattribution ctxCollisionInputs ctxCollisionReduction; do
+	require_line_count 1 "^def ${declaration}( |$)" \
+		"$ctx_reduction" "native CTX game definition ${declaration}"
+done
+for declaration in ctxMisattributionExp ctxMisattributionAdvantage; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_reduction" "native CTX probability definition ${declaration}"
+done
+
+for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		proofs/lean/BeaconcryptCore/Refinement/PqxdhProtocol.lean \
+		"PQXDH protocol-refinement theorem ${theorem_name}"
+done
+require_line_count 1 '^theorem honest_run_refines( |$)' \
+	proofs/lean/BeaconcryptCore/Refinement/PqxdhSession.lean \
+	"PQXDH session-refinement theorem honest_run_refines"
 
 # The imported phase-refinement layer covers the full kernel/cache relation, the KDF response law, non-exhausted successful-send refinement, all neutral exits, supplied finite failed-trace witnesses, and the conditional open reply/material relation.
 # Cached success additionally has generated open construction from KernelRefines plus an ideal lookup, exact material/reply, direct ideal outcome, concrete finish output, and the consumed control-cache refinement; its material-array post-state KernelRefines result remains conditional on CachedPublicationRefines, and future success remains unproved.

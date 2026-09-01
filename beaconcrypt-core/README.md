@@ -116,7 +116,7 @@ The dedicated receive model uses two exact finite legs. The first consumes seque
 The production CTX transcript delegates to the core's fixed-size commitment builder.
 Hax extracts that helper, and the strict F* commitment lemmas prove the exact 229-byte order `key || nonce || associated data || tag || LE64(sequence) || LE64(sender ID)`, injectivity of both integer encodings and the complete input, and `ctx_distinct_openings_imply_hash_collision`.
 That theorem fixes one ciphertext, transmitted tag, and commitment and machine-checks an explicit collision witness for any two accepted explanations that differ in key, nonce, associated data, sequence, sender ID, or plaintext, while allowing the base AEAD to multi-open under unequal contexts.
-The conventional [computational lifting](../doc/ctx-commitment.md) bounds misattribution advantage by BLAKE2b-512 collision advantage, but the probability and runtime theorem is not mechanized.
+Lean's [computational lifting](../doc/ctx-commitment.md) machine-checks a factor-one bound from ideal-model misattribution advantage to BLAKE2b-512 collision advantage, while PPT/runtime preservation and the extracted-transcript/adapter bridge are not mechanized.
 A supplementary ProVerif differential control uses one deliberately multi-opening base-AEAD ciphertext/tag: the double-opening query is unreachable with CTX and deliberately reachable when only the CTX checks are removed.
 The real-world binding claim remains conditional on BLAKE2b collision resistance, correct libsodium and adapter behavior, and hax/compiler correspondence.
 

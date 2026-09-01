@@ -14,7 +14,7 @@ Authenticated encryption with associated data (AEAD) has the property that two p
 This may allow an attacker to exploit a confused deputy to get one principal to obtain a different message than other participants.
 This attack is often called `invisible salamanders`.
 Conditional on BLAKE2b-512 collision resistance and exact production use of the fixed-width transcript, beaconcrypt's complete protected payload provides strong commitment to the key, nonce, associated data, sender ID, encryption-key sequence number, and accepted plaintext through a modification of [Chan and Rogaway's `CTX` scheme](https://eprint.iacr.org/2022/1260).
-F* machine-checks that two distinct accepted explanations of one fixed `C || T || U` payload produce an explicit collision for an arbitrary pure hash function, while a supplementary ProVerif differential control permits a multi-opening base AEAD and makes the same double-open query unreachable with CTX and reachable without CTX.
+F* machine-checks the fixed-width extracted collision witness, and Lean reduces the probability of the corresponding double-opening event in the ideal PQXDH record model losslessly to BLAKE2b collision-resistance advantage; a supplementary ProVerif differential control permits a multi-opening base AEAD and makes the same double-open query unreachable with CTX and reachable without CTX.
 Beaconcrypt still transmits the original AEAD tag alongside the outer tag so that it can use the public libsodium interface; the [commitment proof and computational lifting](ctx-commitment.md) explain why retaining that tag does not weaken binding and state the claim's limits.
 
 The deterministic ChaCha20-Poly1305 multi-opening fixture used to test this property, including its Poly1305 derivation and independent verification procedure, is documented in [multi-opening-fixture.md](multi-opening-fixture.md).
@@ -76,7 +76,7 @@ A canonicalization scheme would have to be used to encode the various elements b
 
 The commitment claim applies to the complete protected payload `CT || T || T*`, not to `T*` in isolation.
 The F* theorem `ctx_distinct_openings_imply_hash_collision` fixes the same `CT`, `T`, and `T*` for both openings and machine-checks that any semantic difference in key, nonce, associated data, sequence, sender ID, or accepted plaintext produces an explicit collision witness for the supplied pure hash function.
-The conventional computational lifting therefore bounds misattribution advantage by BLAKE2b-512 collision advantage, but its probability and runtime inequality is not mechanized.
+Lean machine-checks the corresponding factor-one ideal-model probability reduction to BLAKE2b-512 collision advantage, while PPT/runtime preservation and the extracted-transcript/adapter bridge are not mechanized.
 The ProVerif negative control independently demonstrates the ideal-hash CTX benefit with a deliberately multi-opening base AEAD; it is supplementary symbolic evidence rather than a proof of BLAKE2b.
 The exact game, proof connection, advantage bound, and assumptions are given in [ctx-commitment.md](ctx-commitment.md), and the [concrete negative-control fixture](multi-opening-fixture.md) supplies one real `CT || T` value with two distinct valid base-AEAD openings.
 

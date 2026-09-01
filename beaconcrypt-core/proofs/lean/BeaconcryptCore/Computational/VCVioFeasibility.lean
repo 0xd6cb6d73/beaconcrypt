@@ -5,9 +5,9 @@ import VCVio.StateSeparating.Hybrid
 /-!
 # VCVio computational-proof feasibility probe
 
-This module checks two proof seams needed by beaconcrypt's computational-security plan. The first instantiates VCVio's tight and collision-resistance-chain bounded random-oracle commitment theorems with the exact 229-byte transcript width emitted by Aeneas and a 512-bit digest. The second links a public handler to a private consuming-key interface and checks exact one- and two-call observations and final states.
+This module records two framework feasibility probes. The first instantiates VCVio's tight and collision-resistance-chain bounded random-oracle commitment theorems with the exact 229-byte transcript width emitted by Aeneas and a 512-bit digest. The second links a public handler to a private consuming-key interface and checks exact one- and two-call observations and final states.
 
-The CTX theorems are a collision-layer pilot, not the complete modified-CTX theorem. A checked embedding of beaconcrypt's payload, explanations, distinctness predicate, and verifier into the generic binding game is still required. Connecting that game to distinct production values of `CtxTranscript` additionally requires the production transcript-injectivity and collision-witness contract. The compiled theorems are unconditional only inside the ideal random-function model; treating deployed BLAKE2b-512 as that oracle is an idealization, not a standard-model collision-resistance reduction.
+The CTX theorems here remain a generic numerical ROM pilot. `BeaconcryptCore.Computational.CtxReduction` separately defines the real ideal-model raw-payload event and proves its factor-one standard-model reduction without using this generic binding game. Connecting this ROM pilot to that event would require an oracle-parametric verifier, while connecting either ideal surface to production still requires the extracted transcript and adapter hash refinement. Treating deployed BLAKE2b-512 as the random oracle in this module is an idealization, not a proof about the primitive.
 -/
 
 open OracleSpec OracleComp ENNReal
