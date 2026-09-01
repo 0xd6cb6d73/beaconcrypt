@@ -1,4 +1,4 @@
-import Mathlib
+import Mathlib.Logic.Function.Iterate
 
 /-!
 # A symmetric single ratchet with authenticated encryption
@@ -36,9 +36,6 @@ Main results:
 * `Ratchet.RecvWf.recvStep`                – the receive state stays well formed,
   so the skipped-key store never exceeds 50 entries.
 -/
-
-open scoped BigOperators
-open scoped Nat
 
 set_option maxHeartbeats 1000000
 set_option relaxedAutoImplicit false
@@ -183,7 +180,7 @@ theorem mem_skipKeys_index (c : Crypto CK MK AD PT CT) (ck : CK) (base cnt : ℕ
   | succ n ih =>
     rw [skipKeys, List.mem_cons] at hp
     rcases hp with rfl | hp
-    · exact ⟨le_rfl, by omega⟩
+    · exact ⟨Nat.le_refl _, by omega⟩
     · have := ih (c.kdfChain ck) (base + 1) hp
       exact ⟨by omega, by omega⟩
 
@@ -334,8 +331,8 @@ theorem RecvWf.recvStep {c : Crypto CK MK AD PT CT} {s : RecvState CK MK}
   · rw [hr]
     dsimp only
     refine ⟨?_, ?_, ?_⟩
-    · exact le_trans (List.length_filter_le _ _) hs.bound
-    · exact fun p hp => hs.keys_lt p (List.mem_of_mem_filter hp)
+    · exact Nat.le_trans (List.length_filter_le _ _) hs.bound
+    · exact fun p hp => hs.keys_lt p (List.mem_filter.1 hp).1
     · exact List.Nodup.sublist (List.Sublist.map Prod.fst List.filter_sublist) hs.nodup
   · have hk : ¬ maxSkip < (m.idx - s.n) + s.skipped.length := by
       intro hcon
@@ -352,8 +349,8 @@ theorem RecvWf.recvStep {c : Crypto CK MK AD PT CT} {s : RecvState CK MK}
       · have := hs.keys_lt p hp; omega
       · have := mem_skipKeys_index c s.ck s.n (m.idx - s.n) hp; omega
     · simp only [List.map_append]
-      refine List.Nodup.append hs.nodup (nodup_skipKeys _ _ _ _) ?_
-      intro a ha hb
+      refine List.nodup_append.2 ⟨hs.nodup, nodup_skipKeys _ _ _ _, ?_⟩
+      rintro a ha b hb rfl
       obtain ⟨p, hp, rfl⟩ := List.mem_map.1 ha
       obtain ⟨q, hq, hq2⟩ := List.mem_map.1 hb
       have h3 := hs.keys_lt p hp
