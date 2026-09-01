@@ -377,4 +377,81 @@ theorem ctxWrongSequenceAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
     ctxRelabelAdvantage_le_blake2b_cr c
       (CtxWrongSequenceClaim.toRelabelClaim <$> adversary)
 
+/-! ## Sender-identifier relabelling -/
+
+/-- A sender-identifier relabelling claim honestly seals one source explanation and attempts to open it under a different sender identifier. -/
+structure CtxWrongSenderClaim where
+  /-- The explanation used to seal the record. -/
+  source : CtxExplanation
+  /-- The message material used for the target opening. -/
+  targetMaterial : Pqxdh.Bytes × Pqxdh.Bytes
+  /-- The plaintext claimed by the target opening. -/
+  targetPlaintext : Pqxdh.Bytes
+  /-- The sender identifier supplied to the target opening. -/
+  sender : ℕ
+  /-- The target context has every protocol-mandated field width. -/
+  targetWf : Pqxdh.RecordWf targetMaterial { source.ad with sid := sender }
+  /-- The target sender identifier differs from the honestly sealed sender identifier. -/
+  sender_ne : sender ≠ source.ad.sid
+
+/-- Interpret a wrong-sender claim as a generic relabelling claim. -/
+def CtxWrongSenderClaim.toRelabelClaim (claim : CtxWrongSenderClaim) :
+    CtxRelabelClaim :=
+  { source := claim.source
+    target :=
+      { material := claim.targetMaterial
+        ad := { claim.source.ad with sid := claim.sender }
+        plaintext := claim.targetPlaintext
+        wf := claim.targetWf }
+    context_ne := by
+      rintro ⟨_, had⟩
+      apply claim.sender_ne
+      exact (congrArg Pqxdh.RecordAD.sid had).symm }
+
+/-- A wrong-sender claim succeeds when the target opening accepts the honest source seal. -/
+def CtxWrongSenderSuccess (c : Pqxdh.Crypto) (claim : CtxWrongSenderClaim) : Prop :=
+  CtxRelabelSuccess c claim.toRelabelClaim
+
+/-- Every successful wrong-sender claim exposes the exact BLAKE2b collision used by its relabelling reduction. -/
+theorem ctxWrongSenderSuccess_implies_blake2b_collision (c : Pqxdh.Crypto)
+    (claim : CtxWrongSenderClaim) (hwin : CtxWrongSenderSuccess c claim) :
+    let sealedRecord := Pqxdh.sealRecord c claim.source.material claim.source.ad
+      claim.source.plaintext
+    Pqxdh.ctxPreimage claim.source.material claim.source.ad sealedRecord.tag ≠
+        Pqxdh.ctxPreimage claim.targetMaterial
+          { claim.source.ad with sid := claim.sender } sealedRecord.tag ∧
+      c.blake2b (Pqxdh.ctxPreimage claim.source.material claim.source.ad sealedRecord.tag) =
+        c.blake2b (Pqxdh.ctxPreimage claim.targetMaterial
+          { claim.source.ad with sid := claim.sender } sealedRecord.tag) := by
+  exact successful_wrong_sender_open_yields_blake2b_collision c
+    claim.source.wf claim.targetWf claim.sender_ne hwin
+
+/-- The ideal-model wrong-sender record-opening experiment. The protocol-level `beaconFinish` path separately rejects sender mismatches before it invokes CTX. -/
+noncomputable def ctxWrongSenderExp (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxWrongSenderClaim) : ProbComp Bool :=
+  ctxRelabelExp c (CtxWrongSenderClaim.toRelabelClaim <$> adversary)
+
+/-- Probability that an honest source seal opens under a different sender identifier at the record layer. -/
+noncomputable def ctxWrongSenderAdvantage (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxWrongSenderClaim) : ℝ≥0∞ :=
+  Pr[= true | ctxWrongSenderExp c adversary]
+
+/-- The collision adversary induced by a wrong-sender record-opening adversary. -/
+def ctxWrongSenderCollisionReduction (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxWrongSenderClaim) :
+    CollisionResistance.CRAdversary Pqxdh.Bytes :=
+  ctxCollisionReduction
+    (CtxRelabelClaim.toAttempt c <$> (CtxWrongSenderClaim.toRelabelClaim <$> adversary))
+
+/-- **Opening an honest seal under a different sender identifier at the record layer is no easier than BLAKE2b collision finding.** This specialization preserves the generic reduction's factor-one bound. -/
+theorem ctxWrongSenderAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxWrongSenderClaim) :
+    ctxWrongSenderAdvantage c adversary ≤
+      CollisionResistance.crAdvantage c.blake2b
+        (ctxWrongSenderCollisionReduction c adversary) := by
+  simpa only [ctxWrongSenderAdvantage, ctxWrongSenderExp,
+    ctxWrongSenderCollisionReduction, ctxRelabelAdvantage] using
+    ctxRelabelAdvantage_le_blake2b_cr c
+      (CtxWrongSenderClaim.toRelabelClaim <$> adversary)
+
 end BeaconcryptCore.Computational.CtxReduction
