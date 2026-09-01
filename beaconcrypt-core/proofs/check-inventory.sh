@@ -687,6 +687,9 @@ ctx_reduction=proofs/lean/BeaconcryptCore/Computational/CtxReduction.lean
 for theorem_name in \
 	ctxMisattribution_implies_blake2b_collision \
 	ctxMisattributionAdvantage_le_blake2b_cr \
+	ctxFullCommitment_implies_misattribution \
+	ctxFullCommitment_implies_blake2b_collision \
+	ctxFullCommitmentAdvantage_le_blake2b_cr \
 	successful_wrong_sequence_open_yields_blake2b_collision \
 	successful_wrong_sender_open_yields_blake2b_collision \
 	successful_cross_session_open_yields_blake2b_collision \
@@ -694,15 +697,18 @@ for theorem_name in \
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
 		"$ctx_reduction" "native CTX computational theorem ${theorem_name}"
 done
-for declaration in CtxExplanation CtxAttempt CtxRelabelClaim; do
+for declaration in CtxExplanation CtxAttempt CtxFullCommitmentAttempt CtxRelabelClaim; do
 	require_line_count 1 "^structure ${declaration}( |$)" \
 		"$ctx_reduction" "native CTX game structure ${declaration}"
 done
-for declaration in CtxMisattribution ctxCollisionInputs ctxCollisionReduction; do
+for declaration in CtxMisattribution ctxCollisionInputs ctxCollisionReduction \
+	CtxFullCommitment ctxFullCommitmentMisattributionAttempt \
+	ctxFullCommitmentCollisionInputs ctxFullCommitmentCollisionReduction; do
 	require_line_count 1 "^def ${declaration}( |$)" \
 		"$ctx_reduction" "native CTX game definition ${declaration}"
 done
-for declaration in ctxMisattributionExp ctxMisattributionAdvantage; do
+for declaration in ctxMisattributionExp ctxMisattributionAdvantage \
+	ctxFullCommitmentExp ctxFullCommitmentAdvantage; do
 	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
 		"$ctx_reduction" "native CTX probability definition ${declaration}"
 done

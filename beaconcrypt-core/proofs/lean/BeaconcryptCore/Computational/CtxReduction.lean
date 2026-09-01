@@ -4,14 +4,14 @@ import VCVio.CryptoFoundations.HardnessAssumptions.CollisionResistance
 /-!
 # Computational reduction for the modified CTX record layer
 
-This module defines the concrete misattribution game for the ideal PQXDH record model and reduces every winning attempt to a collision in that model's `Crypto.blake2b` function.
+This module defines direct computational commitment games for the modified CTX scheme in the ideal PQXDH record model and reduces every winning attempt to a collision in that model's `Crypto.blake2b` function.
 
-The adversary returns one raw wire payload and two well-formed explanations consisting of message material, associated data, and plaintext.
-It wins when the real `Pqxdh.openRecord` parser and verifier accept both distinct explanations.
+The one-shot equal-seal game gives the adversary full control of two well-formed keys, nonces, contexts, and plaintexts, and tests equality of the actual `Pqxdh.sealRecord` outputs.
+The stronger raw-payload game lets the adversary return one arbitrary wire payload and two well-formed explanations, and tests both with the real `Pqxdh.openRecord` parser and verifier.
 The reduction decodes the shared payload and returns the two exact CTX preimages containing its parsed Poly1305 tag.
 The reduction is lossless: every CTX win is a collision-resistance win, with no additive term and no AEAD-security assumption.
 
-This is a standard-model reduction to collision resistance, not a proof that deployed BLAKE2b-512 is collision resistant and not a random-oracle replacement of the pure hash in `Pqxdh.Crypto`.
+These are one-shot standard-model reductions, not a complete adaptive CAE oracle/history game, not a proof that deployed BLAKE2b-512 is collision resistant, and not a random-oracle replacement of the pure hash in `Pqxdh.Crypto`.
 -/
 
 open OracleComp ENNReal
@@ -103,6 +103,115 @@ theorem ctxMisattributionAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
   intro hwin
   simp only [decide_eq_true_eq] at hwin ⊢
   exact ctxMisattribution_implies_blake2b_collision c attempt hwin
+
+/-! ## Full commitment of the modified CTX scheme -/
+
+/-- Two complete, adversary-chosen inputs to the modified CTX sealing algorithm. -/
+structure CtxFullCommitmentAttempt where
+  /-- The first well-formed key, nonce, context, and plaintext explanation. -/
+  left : CtxExplanation
+  /-- The second well-formed key, nonce, context, and plaintext explanation. -/
+  right : CtxExplanation
+
+/-- The one-shot equal-seal full-commitment event for BeaconCrypt's modified CTX scheme: two distinct complete inputs produce the same protected payload. The record context includes the session associated data, sequence number, and sender identifier added by BeaconCrypt. -/
+def CtxFullCommitment (c : Pqxdh.Crypto) (attempt : CtxFullCommitmentAttempt) : Prop :=
+  (Pqxdh.sealRecord c attempt.left.material attempt.left.ad attempt.left.plaintext).encode =
+      (Pqxdh.sealRecord c attempt.right.material attempt.right.ad
+        attempt.right.plaintext).encode ∧
+    ¬ (attempt.left.material = attempt.right.material ∧
+      attempt.left.ad = attempt.right.ad ∧
+      attempt.left.plaintext = attempt.right.plaintext)
+
+/-- View a full-commitment attempt as the stronger raw-payload double-opening game. -/
+def ctxFullCommitmentMisattributionAttempt (c : Pqxdh.Crypto)
+    (attempt : CtxFullCommitmentAttempt) : CtxAttempt :=
+  { payload :=
+      (Pqxdh.sealRecord c attempt.left.material attempt.left.ad
+        attempt.left.plaintext).encode
+    left := attempt.left
+    right := attempt.right }
+
+/-- Equal modified-CTX ciphertexts under two distinct complete inputs give a raw-payload misattribution. -/
+theorem ctxFullCommitment_implies_misattribution (c : Pqxdh.Crypto)
+    (attempt : CtxFullCommitmentAttempt) (hwin : CtxFullCommitment c attempt) :
+    CtxMisattribution c (ctxFullCommitmentMisattributionAttempt c attempt) := by
+  rcases hwin with ⟨heq, hdistinct⟩
+  refine ⟨Pqxdh.openRecord_sealRecord c attempt.left.material attempt.left.ad
+    attempt.left.plaintext, ?_, hdistinct⟩
+  change Pqxdh.openRecord c attempt.right.material attempt.right.ad
+    (Pqxdh.sealRecord c attempt.left.material attempt.left.ad attempt.left.plaintext).encode =
+      some attempt.right.plaintext
+  rw [heq]
+  exact Pqxdh.openRecord_sealRecord c attempt.right.material attempt.right.ad
+    attempt.right.plaintext
+
+/-- The exact two BLAKE2b inputs returned by the full-commitment reduction. The executable reducer computes the left base-AEAD tag but does not evaluate BLAKE2b itself. -/
+def ctxFullCommitmentCollisionInputs (c : Pqxdh.Crypto)
+    (attempt : CtxFullCommitmentAttempt) : Pqxdh.Bytes × Pqxdh.Bytes :=
+  let tag := (c.aeadSeal attempt.left.material.1 attempt.left.material.2
+    attempt.left.ad.bytes attempt.left.plaintext).2
+  (Pqxdh.ctxPreimage attempt.left.material attempt.left.ad tag,
+    Pqxdh.ctxPreimage attempt.right.material attempt.right.ad tag)
+
+/-- Every pair of distinct complete inputs producing the same modified-CTX ciphertext exposes a BLAKE2b collision. -/
+theorem ctxFullCommitment_implies_blake2b_collision (c : Pqxdh.Crypto)
+    (attempt : CtxFullCommitmentAttempt) (hwin : CtxFullCommitment c attempt) :
+    let inputs := ctxFullCommitmentCollisionInputs c attempt
+    inputs.1 ≠ inputs.2 ∧ c.blake2b inputs.1 = c.blake2b inputs.2 := by
+  have hcollision := ctxMisattribution_implies_blake2b_collision c
+    (ctxFullCommitmentMisattributionAttempt c attempt)
+    (ctxFullCommitment_implies_misattribution c attempt hwin)
+  have htag :
+      (Pqxdh.sealRecord c attempt.left.material attempt.left.ad
+        attempt.left.plaintext).tag.length = 16 :=
+    c.aeadSeal_tag_length _ _ _ _
+  have hcommit :
+      (Pqxdh.sealRecord c attempt.left.material attempt.left.ad
+        attempt.left.plaintext).commit.length = 64 :=
+    c.blake2b_length _
+  have hdecode := Pqxdh.decodeRecord_encode
+    (Pqxdh.sealRecord c attempt.left.material attempt.left.ad
+      attempt.left.plaintext) htag hcommit
+  simp only [ctxCollisionInputs, ctxFullCommitmentMisattributionAttempt, hdecode]
+    at hcollision
+  simpa only [ctxFullCommitmentCollisionInputs, Pqxdh.sealRecord] using hcollision
+
+/-- The scheme-level full-commitment experiment runs the adversary once and tests whether its two complete inputs seal to the same protected payload. -/
+noncomputable def ctxFullCommitmentExp (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxFullCommitmentAttempt) : ProbComp Bool := by
+  classical
+  exact do
+    let attempt ← adversary
+    return decide (CtxFullCommitment c attempt)
+
+/-- Probability that two distinct, adversary-chosen complete inputs seal to the same protected payload. -/
+noncomputable def ctxFullCommitmentAdvantage (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxFullCommitmentAttempt) : ℝ≥0∞ :=
+  Pr[= true | ctxFullCommitmentExp c adversary]
+
+/-- The BLAKE2b collision adversary induced by a full-commitment adversary. -/
+def ctxFullCommitmentCollisionReduction (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxFullCommitmentAttempt) :
+    CollisionResistance.CRAdversary Pqxdh.Bytes :=
+  show ProbComp (Pqxdh.Bytes × Pqxdh.Bytes) from do
+    let attempt ← adversary
+    return ctxFullCommitmentCollisionInputs c attempt
+
+/-- **BeaconCrypt's modified CTX scheme satisfies one-shot equal-seal full commitment up to BLAKE2b collision resistance.** The black-box reduction has factor one, even when the adversary chooses both keys, nonces, associated-data contexts, sequence numbers, sender identifiers, and plaintexts. -/
+theorem ctxFullCommitmentAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxFullCommitmentAttempt) :
+    ctxFullCommitmentAdvantage c adversary ≤
+      CollisionResistance.crAdvantage c.blake2b
+        (ctxFullCommitmentCollisionReduction c adversary) := by
+  unfold ctxFullCommitmentAdvantage ctxFullCommitmentExp
+    CollisionResistance.crAdvantage CollisionResistance.crExp
+    ctxFullCommitmentCollisionReduction
+  simp only [monad_norm]
+  refine probOutput_bind_mono fun attempt _ => ?_
+  apply probOutput_pure_bool_le
+  intro hwin
+  simp only [decide_eq_true_eq] at hwin ⊢
+  exact ctxFullCommitment_implies_blake2b_collision c attempt hwin
 
 /-! ## Relabelling an honestly sealed record -/
 
