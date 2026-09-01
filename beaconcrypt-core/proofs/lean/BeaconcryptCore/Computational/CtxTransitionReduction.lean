@@ -115,4 +115,56 @@ theorem beaconWrongSequenceAdvantage_le_blake2b_cr
   simp only [decide_eq_true_eq] at hwin ⊢
   exact beaconWrongSequenceSuccess_implies_blake2b_collision h hok hsid claim hwin
 
+/-! ## Pinned-sender precheck -/
+
+/-- A frame whose sender identifier differs from the server identifier pinned in one fixed honest run. -/
+structure BeaconWrongSenderClaim (h : Pqxdh.HonestRun) where
+  /-- The frame substituted into the otherwise honest response. -/
+  frame : Pqxdh.CryptoFrame
+  /-- The substituted frame does not name the pinned server. -/
+  sender_ne : frame.keyId ≠ h.sid
+
+/-- A wrong-sender frame reaches a post-record outcome in the ideal beacon transition. -/
+def BeaconWrongSenderSuccess (h : Pqxdh.HonestRun)
+    (claim : BeaconWrongSenderClaim h) : Prop :=
+  Pqxdh.BeaconRecordAdmitted
+      (Pqxdh.beaconFinish h.c h.beaconInitSent
+        { h.response with appFrame := claim.frame }).1 = true
+
+/-- A wrong-sender frame cannot reach CTX: the ideal beacon rejects it at the pinned-sender precheck. -/
+theorem beaconWrongSenderSuccess_false (h : Pqxdh.HonestRun) (hok : h.Ok)
+    (claim : BeaconWrongSenderClaim h) :
+    ¬ BeaconWrongSenderSuccess h claim := by
+  intro hwin
+  have hadmitted := h.beaconRecordAdmitted_elim hok claim.frame hwin
+  exact claim.sender_ne hadmitted.1
+
+/-- The ideal-model wrong-sender admission experiment for one fixed honest run. -/
+noncomputable def beaconWrongSenderExp (h : Pqxdh.HonestRun)
+    (adversary : ProbComp (BeaconWrongSenderClaim h)) : ProbComp Bool := by
+  classical
+  exact do
+    let claim ← adversary
+    return decide (BeaconWrongSenderSuccess h claim)
+
+/-- Probability that a wrong-sender frame reaches a post-record beacon outcome. -/
+noncomputable def beaconWrongSenderAdvantage (h : Pqxdh.HonestRun)
+    (adversary : ProbComp (BeaconWrongSenderClaim h)) : ℝ≥0∞ :=
+  Pr[= true | beaconWrongSenderExp h adversary]
+
+/-- **Wrong-sender admission has exactly zero advantage.** This is an unconditional control-flow result for an honest run, not a reduction to BLAKE2b collision resistance. -/
+theorem beaconWrongSenderAdvantage_eq_zero (h : Pqxdh.HonestRun) (hok : h.Ok)
+    (adversary : ProbComp (BeaconWrongSenderClaim h)) :
+    beaconWrongSenderAdvantage h adversary = 0 := by
+  classical
+  unfold beaconWrongSenderAdvantage beaconWrongSenderExp
+  refine (probOutput_eq_zero_iff _ _).mpr ?_
+  intro hmem
+  rw [mem_support_bind_iff] at hmem
+  rcases hmem with ⟨claim, _, hclaim⟩
+  have hdecide : decide (BeaconWrongSenderSuccess h claim) = true := by
+    simpa only [support_pure, Set.mem_singleton_iff, eq_comm] using hclaim
+  simp only [decide_eq_true_eq] at hdecide
+  exact beaconWrongSenderSuccess_false h hok claim hdecide
+
 end BeaconcryptCore.Computational.CtxTransitionReduction
