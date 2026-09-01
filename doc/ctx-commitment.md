@@ -95,7 +95,8 @@ It also does not establish secrecy, AEAD authenticity, nonce discipline, side-ch
 
 Collision resistance supplies the remaining primitive assumption for the binding result above.
 A claim that publishing `U`, which hashes the secret key as data to an unkeyed hash, preserves all confidentiality and authenticity guarantees of the base AEAD needs additional assumptions such as the random-oracle treatment used for CTX's nAE-security analysis and the security of ChaCha20-Poly1305.
-No such preservation reduction for the concrete BLAKE2b instantiation is claimed here.
+Lean now checks the first retained-tag freshness-projection step: relative to one designated honest seal under fixed material and complete context, every accepted fresh `C || T || U` opening projects with factor one to an accepted fresh retained base `C || T` opening in the same augmented view. This is not standard AEAD authenticity because no hidden-key oracle interaction is modeled. Fixing the complete context is essential because `S` and `I` are absent from the base AEAD associated data; the general changed-context case needs a separate context-alias/secret-prefix-hash argument.
+No complete privacy or standard authenticity preservation reduction for the concrete BLAKE2b instantiation is claimed here.
 
 The bound fields are semantic parsed values, not a commitment to one unique Cap'n Proto byte serialization or to the external meaning of a numeric sender ID in a mutable database.
 The adapter must supply the intended associated data, sequence, and sender ID, and deployment state must preserve the mapping from that ID to the intended principal.

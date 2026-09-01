@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=3
 	[generated-proverif]=1
-	[handwritten-lean]=26
+	[handwritten-lean]=27
 	[handwritten-proverif]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -711,6 +711,31 @@ for declaration in ctxMisattributionExp ctxMisattributionAdvantage \
 	ctxFullCommitmentExp ctxFullCommitmentAdvantage; do
 	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
 		"$ctx_reduction" "native CTX probability definition ${declaration}"
+done
+
+ctx_retained_tag_projection=proofs/lean/BeaconcryptCore/Computational/CtxRetainedTagProjection.lean
+for theorem_name in \
+	encode_eq_of_decodeRecord_eq_some \
+	openRecord_success_implies_base_success \
+	valid_record_eq_honest_seal \
+	fixedMaterialContext_ctxFresh_implies_baseFresh \
+	fixedMaterialContext_ctxFreshOpening_implies_baseFreshOpening \
+	fixedMaterialContext_ctxFreshOpeningProbability_le_sameViewBaseFreshOpeningProbability; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_retained_tag_projection" "retained-tag authenticity projection theorem ${theorem_name}"
+done
+require_line_count 1 '^structure FixedMaterialContextAttempt( |$)' \
+	"$ctx_retained_tag_projection" "fixed-material/context authenticity attempt"
+for declaration in baseCipher honestCtxOutput honestBaseOutput \
+	FixedMaterialContextCtxFreshOpening SameViewBaseFreshOpening; do
+	require_line_count 1 "^def ${declaration}( |$)" \
+		"$ctx_retained_tag_projection" "retained-tag authenticity definition ${declaration}"
+done
+for declaration in fixedMaterialContextCtxFreshOpeningExp \
+	fixedMaterialContextCtxFreshOpeningProbability sameViewBaseFreshOpeningExp \
+	sameViewBaseFreshOpeningProbability; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_retained_tag_projection" "retained-tag probability definition ${declaration}"
 done
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
