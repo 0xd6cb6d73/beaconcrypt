@@ -454,4 +454,81 @@ theorem ctxWrongSenderAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
     ctxRelabelAdvantage_le_blake2b_cr c
       (CtxWrongSenderClaim.toRelabelClaim <$> adversary)
 
+/-! ## Cross-session relabelling -/
+
+/-- A cross-session relabelling claim honestly seals one source explanation and attempts to open it under different session associated data. -/
+structure CtxCrossSessionClaim where
+  /-- The explanation used to seal the record. -/
+  source : CtxExplanation
+  /-- The message material used for the target opening. -/
+  targetMaterial : Pqxdh.Bytes × Pqxdh.Bytes
+  /-- The plaintext claimed by the target opening. -/
+  targetPlaintext : Pqxdh.Bytes
+  /-- The session associated-data bytes supplied to the target opening. -/
+  sessionBytes : Pqxdh.Bytes
+  /-- The target context has every protocol-mandated field width. -/
+  targetWf : Pqxdh.RecordWf targetMaterial { source.ad with bytes := sessionBytes }
+  /-- The target session bytes differ from the honestly sealed session bytes. -/
+  session_ne : sessionBytes ≠ source.ad.bytes
+
+/-- Interpret a cross-session claim as a generic relabelling claim. -/
+def CtxCrossSessionClaim.toRelabelClaim (claim : CtxCrossSessionClaim) :
+    CtxRelabelClaim :=
+  { source := claim.source
+    target :=
+      { material := claim.targetMaterial
+        ad := { claim.source.ad with bytes := claim.sessionBytes }
+        plaintext := claim.targetPlaintext
+        wf := claim.targetWf }
+    context_ne := by
+      rintro ⟨_, had⟩
+      apply claim.session_ne
+      exact (congrArg Pqxdh.RecordAD.bytes had).symm }
+
+/-- A cross-session claim succeeds when the target opening accepts the honest source seal. -/
+def CtxCrossSessionSuccess (c : Pqxdh.Crypto) (claim : CtxCrossSessionClaim) : Prop :=
+  CtxRelabelSuccess c claim.toRelabelClaim
+
+/-- Every successful cross-session claim exposes the exact BLAKE2b collision used by its relabelling reduction. -/
+theorem ctxCrossSessionSuccess_implies_blake2b_collision (c : Pqxdh.Crypto)
+    (claim : CtxCrossSessionClaim) (hwin : CtxCrossSessionSuccess c claim) :
+    let sealedRecord := Pqxdh.sealRecord c claim.source.material claim.source.ad
+      claim.source.plaintext
+    Pqxdh.ctxPreimage claim.source.material claim.source.ad sealedRecord.tag ≠
+        Pqxdh.ctxPreimage claim.targetMaterial
+          { claim.source.ad with bytes := claim.sessionBytes } sealedRecord.tag ∧
+      c.blake2b (Pqxdh.ctxPreimage claim.source.material claim.source.ad sealedRecord.tag) =
+        c.blake2b (Pqxdh.ctxPreimage claim.targetMaterial
+          { claim.source.ad with bytes := claim.sessionBytes } sealedRecord.tag) := by
+  exact successful_cross_session_open_yields_blake2b_collision c
+    claim.source.wf claim.targetWf claim.session_ne hwin
+
+/-- The ideal-model cross-session record-opening experiment. -/
+noncomputable def ctxCrossSessionExp (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxCrossSessionClaim) : ProbComp Bool :=
+  ctxRelabelExp c (CtxCrossSessionClaim.toRelabelClaim <$> adversary)
+
+/-- Probability that an honest source seal opens under different session associated data. -/
+noncomputable def ctxCrossSessionAdvantage (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxCrossSessionClaim) : ℝ≥0∞ :=
+  Pr[= true | ctxCrossSessionExp c adversary]
+
+/-- The collision adversary induced by a cross-session record-opening adversary. -/
+def ctxCrossSessionCollisionReduction (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxCrossSessionClaim) :
+    CollisionResistance.CRAdversary Pqxdh.Bytes :=
+  ctxCollisionReduction
+    (CtxRelabelClaim.toAttempt c <$> (CtxCrossSessionClaim.toRelabelClaim <$> adversary))
+
+/-- **Opening an honest seal under different session associated data is no easier than BLAKE2b collision finding.** This specialization preserves the generic reduction's factor-one bound. -/
+theorem ctxCrossSessionAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxCrossSessionClaim) :
+    ctxCrossSessionAdvantage c adversary ≤
+      CollisionResistance.crAdvantage c.blake2b
+        (ctxCrossSessionCollisionReduction c adversary) := by
+  simpa only [ctxCrossSessionAdvantage, ctxCrossSessionExp,
+    ctxCrossSessionCollisionReduction, ctxRelabelAdvantage] using
+    ctxRelabelAdvantage_le_blake2b_cr c
+      (CtxCrossSessionClaim.toRelabelClaim <$> adversary)
+
 end BeaconcryptCore.Computational.CtxReduction
