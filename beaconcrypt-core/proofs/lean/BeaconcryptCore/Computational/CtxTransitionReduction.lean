@@ -167,4 +167,105 @@ theorem beaconWrongSenderAdvantage_eq_zero (h : Pqxdh.HonestRun) (hok : h.Ok)
   simp only [decide_eq_true_eq] at hdecide
   exact beaconWrongSenderSuccess_false h hok claim hdecide
 
+/-! ## Foreign-session ciphertext admission -/
+
+/-- A well-formed record sealed under session bytes different from one fixed honest run. -/
+structure BeaconCrossSessionClaim (h : Pqxdh.HonestRun) where
+  /-- The message key and nonce used for the foreign seal. -/
+  material : Pqxdh.Bytes × Pqxdh.Bytes
+  /-- The foreign session associated-data bytes. -/
+  sessionBytes : Pqxdh.Bytes
+  /-- The plaintext placed in the foreign record. -/
+  plaintext : Pqxdh.Bytes
+  /-- The foreign record context has every protocol-mandated field width. -/
+  wf : Pqxdh.RecordWf material ⟨sessionBytes, 1, h.sid⟩
+  /-- The honest session bytes differ from the foreign session bytes. -/
+  session_ne : h.ad ≠ sessionBytes
+
+/-- The foreign record substituted into an otherwise honest response frame. -/
+def BeaconCrossSessionClaim.frame (h : Pqxdh.HonestRun)
+    (claim : BeaconCrossSessionClaim h) : Pqxdh.CryptoFrame :=
+  { h.response.appFrame with
+    cipherText :=
+      (Pqxdh.sealRecord h.c claim.material ⟨claim.sessionBytes, 1, h.sid⟩
+        claim.plaintext).encode }
+
+/-- A foreign-session ciphertext reaches a post-record outcome in the ideal beacon transition. -/
+def BeaconCrossSessionSuccess (h : Pqxdh.HonestRun)
+    (claim : BeaconCrossSessionClaim h) : Prop :=
+  Pqxdh.BeaconRecordAdmitted
+      (Pqxdh.beaconFinish h.c h.beaconInitSent
+        { h.response with appFrame := claim.frame h }).1 = true
+
+/-- The exact foreign and honest CTX transcripts exposed by an admitted foreign-session record. -/
+def beaconCrossSessionCollisionInputs (h : Pqxdh.HonestRun)
+    (claim : BeaconCrossSessionClaim h) : Pqxdh.Bytes × Pqxdh.Bytes :=
+  let sourceAd : Pqxdh.RecordAD := ⟨claim.sessionBytes, 1, h.sid⟩
+  let targetMaterial := Ratchet.msgKeyAt (Pqxdh.ratchetCrypto h.c) h.chains.1 0
+  let tag := (Pqxdh.sealRecord h.c claim.material sourceAd claim.plaintext).tag
+  (Pqxdh.ctxPreimage claim.material sourceAd tag,
+    Pqxdh.ctxPreimage targetMaterial h.recordAD tag)
+
+/-- Every admitted foreign-session ciphertext yields a BLAKE2b collision. -/
+theorem beaconCrossSessionSuccess_implies_blake2b_collision
+    (h : Pqxdh.HonestRun) (hok : h.Ok) (claim : BeaconCrossSessionClaim h)
+    (hwin : BeaconCrossSessionSuccess h claim) :
+    let inputs := beaconCrossSessionCollisionInputs h claim
+    inputs.1 ≠ inputs.2 ∧ h.c.blake2b inputs.1 = h.c.blake2b inputs.2 := by
+  have hadmitted := h.beaconRecordAdmitted_elim hok (claim.frame h) hwin
+  rcases hadmitted with ⟨hkey, hnonzero, pt, hopen⟩
+  simp only [BeaconCrossSessionClaim.frame, Pqxdh.HonestRun.response,
+    Pqxdh.HonestRun.frame, Nat.reduceSub] at hkey hnonzero hopen
+  have hadLength : h.ad.length = 153 :=
+    Pqxdh.assocData_length (h.c.edPub_length h.ikSkS) (h.c.edPub_length h.ikSkB)
+  have htargetWf : Pqxdh.RecordWf
+      (Ratchet.msgKeyAt (Pqxdh.ratchetCrypto h.c) h.chains.1 0) h.recordAD := by
+    apply Pqxdh.recordWf_msgKeyAt
+    · simpa [Pqxdh.HonestRun.recordAD] using hadLength
+    · change 1 < 2 ^ 64
+      decide
+    · simpa [Pqxdh.HonestRun.recordAD] using claim.wf.sid
+  have hcollision :=
+    CtxReduction.successful_cross_session_open_yields_blake2b_collision h.c
+      claim.wf htargetWf claim.session_ne hopen
+  simpa only [beaconCrossSessionCollisionInputs, Pqxdh.HonestRun.recordAD] using hcollision
+
+/-- The ideal-model foreign-session admission experiment for one fixed honest run. -/
+noncomputable def beaconCrossSessionExp (h : Pqxdh.HonestRun)
+    (adversary : ProbComp (BeaconCrossSessionClaim h)) : ProbComp Bool := by
+  classical
+  exact do
+    let claim ← adversary
+    return decide (BeaconCrossSessionSuccess h claim)
+
+/-- Probability that a foreign-session ciphertext reaches a post-record beacon outcome. -/
+noncomputable def beaconCrossSessionAdvantage (h : Pqxdh.HonestRun)
+    (adversary : ProbComp (BeaconCrossSessionClaim h)) : ℝ≥0∞ :=
+  Pr[= true | beaconCrossSessionExp h adversary]
+
+/-- The BLAKE2b collision adversary induced by a foreign-session admission adversary. -/
+def beaconCrossSessionCollisionReduction (h : Pqxdh.HonestRun)
+    (adversary : ProbComp (BeaconCrossSessionClaim h)) :
+    CollisionResistance.CRAdversary Pqxdh.Bytes :=
+  show ProbComp (Pqxdh.Bytes × Pqxdh.Bytes) from do
+    let claim ← adversary
+    return beaconCrossSessionCollisionInputs h claim
+
+/-- **Admitting a record sealed under different session bytes is no easier than BLAKE2b collision finding.** The reduction is factor one for a fixed honest run. -/
+theorem beaconCrossSessionAdvantage_le_blake2b_cr
+    (h : Pqxdh.HonestRun) (hok : h.Ok)
+    (adversary : ProbComp (BeaconCrossSessionClaim h)) :
+    beaconCrossSessionAdvantage h adversary ≤
+      CollisionResistance.crAdvantage h.c.blake2b
+        (beaconCrossSessionCollisionReduction h adversary) := by
+  unfold beaconCrossSessionAdvantage beaconCrossSessionExp
+    CollisionResistance.crAdvantage CollisionResistance.crExp
+    beaconCrossSessionCollisionReduction
+  simp only [monad_norm]
+  refine probOutput_bind_mono fun claim _ => ?_
+  apply probOutput_pure_bool_le
+  intro hwin
+  simp only [decide_eq_true_eq] at hwin ⊢
+  exact beaconCrossSessionSuccess_implies_blake2b_collision h hok claim hwin
+
 end BeaconcryptCore.Computational.CtxTransitionReduction
