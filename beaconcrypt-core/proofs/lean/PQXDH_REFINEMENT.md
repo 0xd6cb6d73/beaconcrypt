@@ -35,6 +35,10 @@ data (`build_associated_data_abs`), the PQXDH transcript (`build_root_key_input_
 including the all-zero rejection), the registration identifier (`registration_id_abs`)
 and the key-identifier binding (`registration_key_id_binding_abs`).
 
+## Commitment transcript level — `BeaconcryptCore/Refinement/PqxdhCommitment.lean`
+
+`commitment_encode_u64_le_abs` proves that the generated commitment helper returns the ideal `Pqxdh.LE64` encoding. `build_commitment_transcript_abs` proves that the generated 229-byte builder returns exactly the ideal `Pqxdh.ctxPreimage` in key, nonce, associated-data, tag, sequence and sender order. `BeaconcryptCore/Verification/PqxdhCommitmentRefinement.lean` pins both public contracts and their checked trust dependencies.
+
 ## Transition level — `BeaconcryptCore/Refinement/PqxdhProtocol.lean`
 
 | Spec | Generated | Ideal | Theorem |
@@ -71,4 +75,4 @@ and `Pqxdh.HonestRun.beaconStep`.
 Sealing and admitting the first server record is not part of the extracted PQXDH module: it is the symmetric ratchet, whose own refinement lives in `BeaconcryptCore/Refinement/RatchetRefinement.lean`, `RatchetControl.lean`, `RatchetControlRestore.lean`, `RatchetEffect.lean` and `RatchetEffectRefinement.lean`.
 In the PQXDH refinement it appears through the plaintext and the receive state the caller feeds back into the beacon transition.
 This exclusion is also why the native ideal-model CTX reduction in `BeaconcryptCore/Computational/CtxReduction.lean` is not yet a production-linked security theorem.
-A further refinement must identify extracted `commitment.build_commitment_transcript` bytes with `Pqxdh.ctxPreimage` and the adapter's BLAKE2b invocation with `Pqxdh.Crypto.blake2b`.
+The extracted `commitment.build_commitment_transcript` bytes are identified with `Pqxdh.ctxPreimage` by `build_commitment_transcript_abs`. The remaining production-link boundary is the adapter's BLAKE2b invocation and its correspondence with `Pqxdh.Crypto.blake2b`.

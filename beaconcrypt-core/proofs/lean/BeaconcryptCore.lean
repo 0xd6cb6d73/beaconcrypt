@@ -1,6 +1,7 @@
 import BeaconcryptCore.Extraction
 import BeaconcryptCore.Refinement.PqxdhSession
 import BeaconcryptCore.Refinement.PqxdhCommitment
+import BeaconcryptCore.Verification.PqxdhCommitmentRefinement
 import BeaconcryptCore.Refinement.RatchetControlRestore
 import BeaconcryptCore.Refinement.RatchetEffectRefinement
 import BeaconcryptCore.Model.Pqxdh.Instance

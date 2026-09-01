@@ -494,6 +494,7 @@ check-lean-root:
 		BeaconcryptCore.Extraction \
 		BeaconcryptCore.Refinement.PqxdhSession \
 		BeaconcryptCore.Refinement.PqxdhCommitment \
+		BeaconcryptCore.Verification.PqxdhCommitmentRefinement \
 		BeaconcryptCore.Refinement.RatchetControlRestore \
 		BeaconcryptCore.Refinement.RatchetEffectRefinement \
 		BeaconcryptCore.Model.Pqxdh.Instance \
