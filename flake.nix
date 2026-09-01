@@ -24,6 +24,7 @@
         proofs = hax.devShells.${system}.ci-examples.overrideAttrs (old: {
           nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
             hax.packages.${system}.rustc
+            nixpkgs.legacyPackages.${system}.rustup
             fstar.packages.${system}.z3
             nixpkgs.legacyPackages.${system}.ripgrep
             nixpkgs.legacyPackages.${system}.elan
