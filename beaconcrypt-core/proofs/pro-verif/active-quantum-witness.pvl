@@ -1,0 +1,116 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Bounded active-quantum attack witness.
+   The recovery operations are private to this scripted adversary, which keeps ProVerif's search finite while demonstrating an executable attack.
+   They model classical-key recovery and leave ML-KEM opaque; they are not an algorithmic model of a quantum computer. *)
+fun quantum_ed_secret(bitstring): bitstring [private].
+equation forall private_key: bitstring;
+  quantum_ed_secret(ed_public(private_key)) = private_key.
+
+fun quantum_x25519_secret(bitstring): bitstring [private].
+equation forall private_key: bitstring;
+  quantum_x25519_secret(x25519_public(private_key)) = private_key.
+
+event QuantumInitialSecretRecovered(bitstring).
+
+let ActiveQuantumMitm() =
+  in(c, incoming_init: bitstring);
+  let signed_init_kex(
+    encoded_identity,
+    signed_prekey,
+    signed_one_time,
+    signed_pq
+  ) = incoming_init in
+  let tag_ed25519(beacon_identity: bitstring) = encoded_identity in
+  let beacon_identity_secret = quantum_ed_secret(beacon_identity) in
+  new forged_prekey_secret: bitstring;
+  new forged_one_time_secret: bitstring;
+  new forged_pq_secret: bitstring;
+  let forged_prekey = x25519_public(forged_prekey_secret) in
+  let forged_one_time = x25519_public(forged_one_time_secret) in
+  let forged_pq = mlkem_public(forged_pq_secret) in
+  let forged_verified_init = beaconcrypt_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    forged_prekey,
+    forged_one_time,
+    forged_pq
+  ) in
+  let forged_registration_id =
+    beaconcrypt_core__pqxdh__registration_id(forged_verified_init)
+  in
+  out(
+    c,
+    signed_init_kex(
+      tag_ed25519(beacon_identity),
+      sign(tag_x25519_prekey(forged_prekey), beacon_identity_secret),
+      sign(
+        tag_x25519_one_time(forged_one_time),
+        beacon_identity_secret
+      ),
+      sign(tag_mlkem768(forged_pq), beacon_identity_secret)
+    )
+  );
+  out(c, registration_continue(forged_registration_id));
+  in(c, response: bitstring);
+  let kex_response(
+    response_server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    assigned_key_id,
+    initial_frame
+  ) = response in
+  let server_identity_secret = quantum_x25519_secret(
+    x25519_public_from_ed(response_server_identity)
+  ) in
+  let dh1 = x25519_beacon_dh(
+    forged_prekey_secret,
+    x25519_public(server_identity_secret)
+  ) in
+  let dh2 = x25519_beacon_dh(
+    beacon_identity_secret,
+    server_ephemeral
+  ) in
+  let dh3 = x25519_beacon_dh(
+    forged_prekey_secret,
+    server_ephemeral
+  ) in
+  let dh4 = x25519_beacon_dh(
+    forged_one_time_secret,
+    server_ephemeral
+  ) in
+  let kem_secret = mlkem_decapsulate(kem_ciphertext, forged_pq_secret) in
+  let shared_secrets = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+    dh1,
+    dh2,
+    dh3,
+    dh4,
+    kem_secret
+  ) in
+  let root_input =
+    beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)
+  in
+  let root = pqxdh_root(
+    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+  ) in
+  let associated_data =
+    beaconcrypt_core__pqxdh__build_associated_data(
+      response_server_identity,
+      beacon_identity
+    )
+  in
+  let server_material = ratchet_material(server_to_beacon_chain(root)) in
+  let opened_initial = open_frame(
+    server_material,
+    associated_data,
+    first_sequence(),
+    SERVER_KEY_ID,
+    initial_frame
+  ) in
+  let expected_binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+    key_id_encoding(assigned_key_id)
+  ) in
+  let registration_payload(=expected_binding, stolen_plaintext) =
+    opened_initial
+  in
+  event QuantumInitialSecretRecovered(stolen_plaintext);
+  out(c, stolen_plaintext).

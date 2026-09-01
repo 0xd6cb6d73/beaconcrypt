@@ -1,7 +1,7 @@
 [tools]
-aeneas = "nightly-2026.08.04-8125bcf"
-charon = "nightly-2026.07.24"
+aeneas = "nightly-2026.08.24-f8a0eb8"
+charon = "nightly-2026.08.20"
 
 [versions]
 lean = "leanprover/lean4:v4.31.0"
-hax-lean-lib = "v0.2.0"
+hax-lean-lib = "v0.3.12"

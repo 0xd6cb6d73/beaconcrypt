@@ -12,7 +12,7 @@ seal/open results are returned without an independent authentication flag.
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open Result
+open RustM
 
 set_option maxHeartbeats 1000000
 set_option relaxedAutoImplicit false

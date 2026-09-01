@@ -17,7 +17,7 @@ updates its captured state) returns the array `(List.range N).map g`.
 open CoreModels Aeneas
 open beaconcrypt_core
 open Aeneas.Std hiding namespace core alloc
-open Result
+open RustM
 
 set_option maxHeartbeats 1000000
 set_option relaxedAutoImplicit false
@@ -67,6 +67,19 @@ private theorem foldlM_pure (inst : core.ops.function.FnMut F Std.Usize T) (f : 
     rw [ih (fun i hi => h i (by simp [hi]))]
     simp
 
+private theorem array_from_fn_go_pure (inst : core.ops.function.FnMut F Std.Usize T) (f : F)
+    (g : ℕ → T) (n : ℕ)
+    (h : ∀ i, i < n → inst.call_mut f ⟨BitVec.ofNat _ i⟩ = ok (g i, f)) :
+    rust_primitives.slice.array_from_fn_go inst f n = ok ((List.range n).map g, f) := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    simp only [rust_primitives.slice.array_from_fn_go]
+    rw [ih (fun i hi => h i (Nat.lt_succ_of_lt hi))]
+    simp only [bind_tc_ok]
+    rw [h n (Nat.lt_succ_self n)]
+    simp [List.range_succ]
+
 /-- `core::array::from_fn` applied to a closure that never fails and never changes its
 captured state produces the array of the values of that closure. -/
 theorem from_fn_pure (N : Std.Usize) (inst : core.ops.function.FnMut F Std.Usize T)
@@ -74,18 +87,11 @@ theorem from_fn_pure (N : Std.Usize) (inst : core.ops.function.FnMut F Std.Usize
     (h : ∀ i, i < N.val → inst.call_mut f ⟨BitVec.ofNat _ i⟩ = ok (g i, f)) :
     ∃ a : Std.Array T N,
       core.array.from_fn N inst f = ok a ∧ a.val = (List.range N.val).map g := by
-  have hfold := foldlM_pure inst f g (List.range N.val)
-    (fun i hi => h i (by simpa using hi)) []
+  have hgo := array_from_fn_go_pure inst f g N.val h
   refine ⟨⟨(List.range N.val).map g, by simp⟩, ?_, rfl⟩
   simp only [core.array.from_fn, rust_primitives.slice.array_from_fn]
-  simp only [List.nil_append] at hfold
-  split
-  · rename_i e he; rw [hfold] at he; exact absurd he (by simp)
-  · rename_i he; rw [hfold] at he; exact absurd he (by simp)
-  · rename_i r he
-    rw [hfold] at he
-    cases he
-    rfl
+  rw [hgo]
+  simp
 
 /-! ## Small scalar and array facts -/
 
@@ -169,7 +175,7 @@ theorem absBytes_inj_iff {n : Std.Usize} (a b : Std.Array Std.U8 n) :
 /-! ## Rust array equality -/
 
 /-- One unfolding of the generic Rust loop combinator. -/
-theorem loop_unfold {α β : Type} (body : α → Result (ControlFlow α β)) (x : α) :
+theorem loop_unfold {α β : Type} (body : α → RustM (ControlFlow α β)) (x : α) :
     Std.loop body x = (body x >>= fun r =>
       match r with
       | ControlFlow.cont y => Std.loop body y

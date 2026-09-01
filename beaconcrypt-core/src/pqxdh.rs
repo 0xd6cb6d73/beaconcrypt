@@ -882,13 +882,26 @@ pub fn server_prepare_commit(
 	})
 }
 
-#[derive(Clone, Eq, PartialEq)]
-
+#[derive(Clone)]
 pub struct EstablishedPeer {
 	pub key_id: u64,
 	pub identity_public_key: [u8; SIGN_PUBLIC_KEY_SIZE],
 	pub associated_data: [u8; ASSOCIATED_DATA_SIZE],
 }
+
+impl PartialEq for EstablishedPeer {
+	fn eq(&self, other: &Self) -> bool {
+		self.key_id == other.key_id
+			&& self.identity_public_key == other.identity_public_key
+			&& self.associated_data == other.associated_data
+	}
+
+	fn ne(&self, other: &Self) -> bool {
+		!self.eq(other)
+	}
+}
+
+impl Eq for EstablishedPeer {}
 
 pub fn server_commit(candidate: ServerRegistrationCandidate) -> (ServerState, EstablishedPeer) {
 	(
@@ -1517,6 +1530,34 @@ mod tests {
 		let (committed, peer) = server_commit(candidate);
 		assert_eq!(committed.last_key_id(), 5);
 		assert_eq!(peer.key_id, 5);
+	}
+
+	#[test]
+	fn established_peer_equality_compares_every_field() {
+		let peer = EstablishedPeer {
+			key_id: 5,
+			identity_public_key: [0x42; SIGN_PUBLIC_KEY_SIZE],
+			associated_data: [0x24; ASSOCIATED_DATA_SIZE],
+		};
+		let same = peer.clone();
+		assert!(peer == same);
+		assert!(!(peer != same));
+
+		let different_key_id = EstablishedPeer {
+			key_id: 6,
+			..peer.clone()
+		};
+		let different_identity = EstablishedPeer {
+			identity_public_key: [0x43; SIGN_PUBLIC_KEY_SIZE],
+			..peer.clone()
+		};
+		let different_associated_data = EstablishedPeer {
+			associated_data: [0x25; ASSOCIATED_DATA_SIZE],
+			..peer.clone()
+		};
+		assert!(peer != different_key_id);
+		assert!(peer != different_identity);
+		assert!(peer != different_associated_data);
 	}
 
 	#[test]

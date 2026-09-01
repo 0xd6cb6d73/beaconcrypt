@@ -27,7 +27,7 @@ while IFS=$'\t' read -r category expected path extra ||
 	[[ -n "${category:-}${expected:-}${path:-}${extra:-}" ]]; do
 	[[ -z "${category:-}" || "$category" == \#* ]] && continue
 	[[ -z "${extra:-}" ]] || fail "malformed manifest entry for $path"
-	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|historical-generated-fstar|historical-handwritten-fstar|inventory|lean-control|validation)$ ]] ||
+	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|handwritten-ssprove|historical-generated-fstar|historical-handwritten-fstar|inventory|lean-control|validation)$ ]] ||
 		fail "unknown manifest category: $category"
 	[[ "$expected" =~ ^[0-9a-f]{64}$ ]] || fail "invalid SHA-256 for $path"
 	[[ -n "$path" && -f "$path" ]] || fail "missing reviewed file: $path"
@@ -46,14 +46,15 @@ declare -A expected_category_counts=(
 	[adapter-schema]=3
 	[core-rust]=9
 	[control]=12
-	[generated-lean]=3
+	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=31
-	[handwritten-proverif]=18
+	[handwritten-lean]=32
+	[handwritten-proverif]=28
+	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
-	[lean-control]=8
+	[lean-control]=9
 	[validation]=2
 )
 for category in "${!expected_category_counts[@]}"; do
@@ -148,6 +149,10 @@ find proofs/pro-verif -type f \
 	-printf '%p\n' > "$tmp_dir/handwritten-proverif"
 compare_set handwritten-proverif "$tmp_dir/handwritten-proverif"
 
+find proofs/ssprove -type f -printf '%p\n' \
+	> "$tmp_dir/handwritten-ssprove"
+compare_set handwritten-ssprove "$tmp_dir/handwritten-ssprove"
+
 find proofs/fstar/extraction -type f \
 	\( -name '*.fst' -o -name '*.fsti' \) \
 	-printf '%p\n' > "$tmp_dir/historical-generated-fstar"
@@ -157,14 +162,19 @@ find proofs/pro-verif/extraction -type f \
 	\( -name '*.pv' -o -name '*.pvl' \) -printf '%p\n' > "$tmp_dir/generated-proverif"
 compare_set generated-proverif "$tmp_dir/generated-proverif"
 
-find proofs/lean/BeaconcryptCore/Extraction -maxdepth 1 -type f \
-	\( -name 'Funs.lean' -o -name 'Types.lean' -o -name '*_Template.lean' \) \
-	-printf '%p\n' > "$tmp_dir/generated-lean"
+printf '%s\n' \
+	proofs/lean/BeaconcryptCore/Extraction.lean \
+	proofs/lean/BeaconcryptCore/Extraction/Funs.lean \
+	proofs/lean/BeaconcryptCore/Extraction/FunsExternal.lean \
+	proofs/lean/BeaconcryptCore/Extraction/FunsExternal_Template.lean \
+	proofs/lean/BeaconcryptCore/Extraction/Types.lean \
+	> "$tmp_dir/generated-lean"
 compare_set generated-lean "$tmp_dir/generated-lean"
 
 printf '%s\n' \
 	proofs/lean/BeaconcryptCore.lean \
-	proofs/lean/BeaconcryptCore/Extraction/FunsExternal.lean \
+	proofs/lean/BeaconcryptCore/Assumptions/FunsExternal.lean \
+	proofs/lean/BeaconcryptCore/Verification/ProofObligations.lean \
 	> "$tmp_dir/handwritten-lean"
 for lean_proof_dir in Model Refinement Computational; do
 	find "proofs/lean/BeaconcryptCore/$lean_proof_dir" -type f -name '*.lean' \
@@ -173,6 +183,7 @@ done
 compare_set handwritten-lean "$tmp_dir/handwritten-lean"
 
 printf '%s\n' \
+	proofs/lean/.gitignore \
 	proofs/lean/ARISTOTLE_SUMMARY.md \
 	proofs/lean/PQXDH_IDEAL_MODEL.md \
 	proofs/lean/PQXDH_REFINEMENT.md \
@@ -304,10 +315,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 3 \
+require_occurrence_count 4 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 3 '_to_bitstring' \
+require_occurrence_count 4 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 require_line_count 31 '^fun ' proofs/pro-verif/crypto.pvl \
@@ -363,6 +374,606 @@ require_line_count 1 '^process$' proofs/pro-verif/aead-commitment.pv \
 	"AEAD with-commitment top-level process"
 require_line_count 1 '^process$' proofs/pro-verif/aead-no-commitment.pv \
 	"AEAD no-commitment top-level process"
+require_line_count 5 '^query ' proofs/pro-verif/passive-queries.pvl \
+	"passive secrecy query"
+require_line_count 2 '^query ' \
+	proofs/pro-verif/passive-reachability-queries.pvl \
+	"passive progress-control query"
+require_line_count 3 '^query ' proofs/pro-verif/active-quantum-queries.pvl \
+	"active-quantum attack query"
+require_line_count 2 '^reduc ' proofs/pro-verif/quantum-capabilities.pvl \
+	"public symbolic quantum recovery rule"
+require_line_count 2 '^query ' \
+	proofs/pro-verif/quantum-capability-control-queries.pvl \
+	"quantum capability-control query"
+require_line_count 2 '^fun .*\[private\]' \
+	proofs/pro-verif/active-quantum-witness.pvl \
+	"bounded private quantum recovery operation"
+require_line_count 2 '^equation ' \
+	proofs/pro-verif/active-quantum-witness.pvl \
+	"bounded quantum recovery equation"
+require_line_count 1 '^let ActiveQuantumMitm' \
+	proofs/pro-verif/active-quantum-witness.pvl \
+	"bounded active-quantum witness process"
+for scenario_process in \
+	passive \
+	active-quantum \
+	quantum-capability-control; do
+	require_line_count 1 '^process$' \
+		"proofs/pro-verif/${scenario_process}.pv" \
+		"${scenario_process} top-level process"
+done
+
+require_line_count 1 '^  Theorem ctx_misattribution_reduces_to_collision :' \
+	proofs/ssprove/CtxEventReduction.v \
+	"SSProve CTX event-reduction capstone"
+require_line_count 1 '^Print Assumptions ctx_misattribution_reduces_to_collision\.$' \
+	proofs/ssprove/CtxEventReduction.v \
+	"SSProve CTX assumption report"
+require_line_count 1 '^  Theorem run_bounded_rom_query_count_bound$' \
+	proofs/ssprove/BoundedRom.v \
+	"SSProve bounded-ROM query-count theorem"
+require_line_count 1 '^  Theorem run_bounded_rom_trace_consistent$' \
+	proofs/ssprove/BoundedRom.v \
+	"SSProve bounded-ROM trace-consistency theorem"
+require_line_count 1 '^  Theorem bounded_rom_same_run_extractor_reduction$' \
+	proofs/ssprove/BoundedRom.v \
+	"SSProve bounded-ROM extractor reduction"
+require_line_count 1 '^Print Assumptions bounded_rom_same_run_extractor_reduction\.$' \
+	proofs/ssprove/BoundedRom.v \
+	"SSProve bounded-ROM assumption report"
+require_line_count 1 '^Theorem ctx_hidden_rom_extractor_reduction$' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve hidden-ROM CTX extractor reduction"
+require_line_count 1 '^Corollary ctx_uniform_hidden_rom_extractor_reduction$' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve uniform-ROM CTX extractor reduction"
+require_line_count 1 '^Theorem ctx_hidden_binding_trace_size_bound$' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve CTX query-count theorem"
+require_line_count 1 '^Theorem ctx_attach_verifier_completed_run$' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve CTX verifier-suffix theorem"
+require_line_count 1 '^Lemma ctx_hidden_misattribution_challenge_reachable :' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve CTX non-vacuity witness"
+require_line_count 1 '^Print Assumptions ctx_hidden_rom_extractor_reduction\.$' \
+	proofs/ssprove/CtxGame.v \
+	"SSProve CTX extractor assumption report"
+require_line_count 1 '^  Theorem ctx_true_real_is_programmed_real$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX programming representation theorem"
+require_line_count 1 '^  Theorem ctx_same_run_mismatch_implies_secret_query$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX secret-query fundamental lemma"
+require_line_count 1 '^  Theorem ctx_hidden_uniform_key_privacy_hop$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX hidden-key privacy hop"
+require_line_count 1 '^  Theorem ctx_hidden_true_real_is_programmed_real$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX hidden-key programming representation"
+require_line_count 1 '^  Theorem ctx_hidden_true_programmed_decision_probability$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX true/programmed decision equality"
+require_line_count 1 '^  Theorem ctx_programmed_fresh_decision_advantage_bound$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX programmed/fresh advantage bound"
+require_line_count 1 '^  Theorem ctx_hidden_uniform_key_true_real_privacy_bound$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX true-real/fresh-ideal privacy bound"
+require_line_count 1 '^Print Assumptions ctx_hidden_uniform_key_true_real_privacy_bound\.$' \
+	proofs/ssprove/CtxPrivacy.v \
+	"SSProve CTX true-real privacy assumption report"
+for label_capstone in \
+	kdf_domain_tag_models_exact_info \
+	production_kdf_labels_are_exact \
+	initial_and_step_share_symmetric_domain \
+	production_kdf_output_sizes \
+	associated_data_label_suffix_is_exact; do
+	require_line_count 1 "^Theorem ${label_capstone} :" \
+		proofs/ssprove/ProtocolLabels.v \
+		"SSProve exact-label ${label_capstone} theorem"
+	require_line_count 1 \
+		"^Print Assumptions ${label_capstone}\\.\$" \
+		proofs/ssprove/ProtocolLabels.v \
+		"SSProve exact-label ${label_capstone} assumption report"
+done
+for protocol_capstone in \
+	active_classical_confidentiality \
+	passive_classical_confidentiality \
+	passive_quantum_capability_confidentiality \
+	active_quantum_advantage_one; do
+	require_line_count 1 "^Theorem ${protocol_capstone} :" \
+		proofs/ssprove/PqxdhRatchetGames.v \
+		"SSProve protocol ${protocol_capstone} capstone"
+done
+for protocol_assumption_report in \
+	active_classical_confidentiality \
+	passive_classical_confidentiality \
+	passive_quantum_confidentiality \
+	active_quantum_advantage_one; do
+	require_line_count 1 \
+		"^Print Assumptions ${protocol_assumption_report}\\.\$" \
+		proofs/ssprove/PqxdhRatchetGames.v \
+		"SSProve protocol ${protocol_assumption_report} assumption report"
+done
+require_line_count 1 '^Lemma pqxdh_ratchet_game_uses_production_kdf_domains :' \
+	proofs/ssprove/PqxdhRatchetGames.v \
+	"SSProve closed-game exact KDF-use theorem"
+require_line_count 1 '^Print Assumptions pqxdh_ratchet_game_uses_production_kdf_domains\.$' \
+	proofs/ssprove/PqxdhRatchetGames.v \
+	"SSProve closed-game exact KDF-use assumption report"
+require_line_count 2 '^  let root := ideal_pqxdh_root tape PqxdhRootDerivation input in$' \
+	proofs/ssprove/PqxdhRatchetGames.v \
+	"SSProve closed-game root exact KDF use"
+require_line_count 1 '^  let output := ideal_symmetric_hkdf tape InitialRatchetExpansion root in$' \
+	proofs/ssprove/PqxdhRatchetGames.v \
+	"SSProve closed-game initial exact KDF use"
+require_line_count 1 '^  let output := ideal_symmetric_hkdf tape RatchetStepExpansion chain in$' \
+	proofs/ssprove/PqxdhRatchetGames.v \
+	"SSProve closed-game step exact KDF use"
+for composition_capstone in \
+	complementary_role_orientation \
+	separated_ckey_transfer_is_one_way_and_role_oriented \
+	separated_first_response_matches_monolithic \
+	separated_unauthenticated_response_rejects \
+	public_response_rejects_unauthenticated_provenance \
+	unauthenticated_public_responses_are_challenge_independent \
+	pure_public_response_observation_matches_monolithic \
+	separated_first_response_opens_sequence_one \
+	state_separated_composition_uses_production_kdf_domains \
+	failed_response_construction_consumes_only_replay_state \
+	dropped_response_has_asymmetric_publication \
+	accepted_response_has_complementary_live_counters \
+	rejected_response_terminally_aborts_beacon \
+	component_locations_are_state_separated \
+	pure_single_run_body_matches_monolithic; do
+	require_line_count 1 "^(Theorem|Lemma) ${composition_capstone} :" \
+		proofs/ssprove/StateSeparatedComposition.v \
+		"SSProve state-separation ${composition_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${composition_capstone}\\.\$" \
+		proofs/ssprove/StateSeparatedComposition.v \
+		"SSProve state-separation ${composition_capstone} assumption report"
+done
+require_line_count 15 '^Print Assumptions ' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"complete SSProve state-separation assumption reports"
+require_line_count 1 '^Definition consuming_ckey :' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve consuming private CKEY package"
+require_line_count 1 '^#\[tactic=notac\] Equations\? composition_core$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve state-separated linked core"
+require_line_count 1 '^#\[tactic=notac\] Equations\? state_separated_response_package$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve state-separated public package"
+require_line_count 1 '^Definition public_response_observation : Type := option bool\.$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve optional public response observation"
+require_line_count 1 '^Definition chPublicResponseObservation : choice_type := chOption chBool\.$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve optional package response observation"
+require_line_count 1 '^Definition uniform_response_sample_op : Op :=$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve private joint response sampler"
+require_line_count 1 '^  existT _ chRomSample uniform_rom_sample\.$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve exact pure/package sample source"
+require_line_count 1 "^    #val #\\[run_response_id\\] : 'unit → 'response$" \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve unit-input public response signature"
+require_occurrence_count 3 \
+	"#def #\\[run_response_id\\] \\(_ : 'unit\\) : 'response \\{" \
+	"SSProve unit-input response implementations" \
+	proofs/ssprove/StateSeparatedComposition.v
+require_occurrence_count 2 'sample <\$ uniform_response_sample_op ;;' \
+	"SSProve internal joint sample draws" \
+	proofs/ssprove/StateSeparatedComposition.v
+require_line_count 1 '^      opened_plaintext ← OPEN \(sample, ciphertext\) ;;$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve internal-only opened response"
+require_line_count 1 "^      @ret 'response \\(Some ciphertext\\)$" \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve successful public ciphertext observation"
+require_line_count 1 "^      @ret 'response None$" \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve explicit public rejection observation"
+require_line_count 1 '^Definition state_separated_response_games$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve challenge-indexed public game pair"
+require_line_count 1 '^  loc_GamePair response_interface :=$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve public game-pair interface"
+require_line_count 1 '^  fun challenge =>$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve hidden challenge world mapping"
+require_line_count 1 '^Definition state_separated_public_response_view_game$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve direct public-response view game"
+require_line_count 1 '^Definition state_separated_public_response_advantage$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve direct public-response advantage"
+require_occurrence_count 1 '\\P_\[uniform_rom_sample\]' \
+	"SSProve direct view uses joint finite source" \
+	proofs/ssprove/StateSeparatedComposition.v
+require_line_count 1 '^Definition composition_driver \(authenticated : bool\) :$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve provenance-indexed response driver"
+require_line_count 1 '^  if authenticated$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve response driver provenance branch"
+require_line_count 1 '^  then successful_composition_driver$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve authenticated response driver"
+require_line_count 1 '^  else rejected_composition_driver\.$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve rejected-provenance driver"
+require_line_count 1 '^Definition first_response_sequence : nat := 1%N\.$' \
+	proofs/ssprove/StateSeparatedComposition.v \
+	"SSProve production first-response sequence"
+require_occurrence_count 2 \
+	'#assert \(payload_authenticated (?:server|beacon) == true\)' \
+	"SSProve authenticated-provenance enforcement" \
+	proofs/ssprove/StateSeparatedComposition.v
+for package_semantics_capstone in \
+	authenticated_package_run_normalizes \
+	rejected_package_run_normalizes \
+	package_public_response_observation_matches_direct \
+	state_separated_package_response_view_matches_direct \
+	state_separated_package_response_advantage_matches_direct; do
+	require_line_count 1 "^Theorem ${package_semantics_capstone} :" \
+		proofs/ssprove/StateSeparatedPackageSemantics.v \
+		"SSProve package-semantics ${package_semantics_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${package_semantics_capstone}\\.\$" \
+		proofs/ssprove/StateSeparatedPackageSemantics.v \
+		"SSProve package-semantics ${package_semantics_capstone} assumption report"
+done
+require_line_count 5 '^Print Assumptions ' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"complete SSProve package-semantics assumption reports"
+require_line_count 1 '^Fixpoint run_response_code_with_sample$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve restricted response-code evaluator"
+require_line_count 1 '^Definition authenticated_linked_response_code$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve projected authenticated linked RUN"
+require_line_count 1 '^Definition rejected_linked_response_code :$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve projected rejected linked RUN"
+require_line_count 1 '^Local Lemma authenticated_linked_response_code_has_normal_form :$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated linked RUN bridge"
+require_line_count 1 '^Local Lemma rejected_linked_response_code_has_normal_form :$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected linked RUN bridge"
+require_line_count 1 '^Local Lemma authenticated_linked_response_code_is_checked_run :$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated raw projection bridge"
+require_line_count 1 '^Local Lemma rejected_linked_response_code_is_checked_run :$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected raw projection bridge"
+require_line_count 1 '^Record response_run_certificate$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve indexed response-run certificate"
+require_line_count 1 '^  \(execution : option \(public_response_observation \* heap\)\) := \{$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve full-execution certificate index"
+require_line_count 1 '^  certified_response_run : option \(public_response_observation \* heap\);$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve full-execution certificate witness"
+require_line_count 1 '^  response_run_certificate_sound : execution = certified_response_run$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve exact response-run certificate soundness field"
+require_line_count 1 '^Definition authenticated_package_run_certificate$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated package-run certificate"
+require_line_count 1 '^Definition rejected_package_run_certificate$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected package-run certificate"
+require_line_count 2 '^Defined\.$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"transparent SSProve package-run certificates"
+require_occurrence_count 1 \
+	'response_run_certificate\n    \(run_response_code_with_sample sample\n      \(authenticated_linked_response_code session challenge input\)\n      empty_heap\)\.' \
+	"SSProve authenticated certificate exact raw-execution index" \
+	proofs/ssprove/StateSeparatedPackageSemantics.v
+require_occurrence_count 1 \
+	'response_run_certificate\n    \(run_response_code_with_sample sample\n      rejected_linked_response_code empty_heap\)\.' \
+	"SSProve rejected certificate exact raw-execution index" \
+	proofs/ssprove/StateSeparatedPackageSemantics.v
+require_line_count 1 '^         authenticated_package_execution_normal_form$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated certificate full-heap witness"
+require_line_count 1 '^         rejected_package_execution_normal_form \|}\.$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected certificate full-heap witness"
+require_line_count 1 '^  apply authenticated_linked_response_code_has_normal_form\.$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated certificate soundness proof"
+require_line_count 1 '^  apply \(rejected_linked_response_code_has_normal_form$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected certificate soundness proof"
+require_line_count 1 '^Definition authenticated_package_run_normal_form$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated proof-erased normal form"
+require_line_count 1 '^Definition rejected_package_run_normal_form$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected proof-erased normal form"
+require_line_count 2 '^    @certified_response_run _$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve proof-erased certificate projections"
+require_line_count 1 '^      \(authenticated_package_run_certificate$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve authenticated normal-form certificate source"
+require_line_count 1 '^      \(rejected_package_run_certificate$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve rejected normal-form certificate source"
+require_line_count 1 '^Definition package_public_response_observation$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve package-semantics public observation"
+require_line_count 1 '^Definition state_separated_package_response_view_game$' \
+	proofs/ssprove/StateSeparatedPackageSemantics.v \
+	"SSProve package-semantics finite view"
+require_occurrence_count 1 '\\P_\[uniform_rom_sample\]' \
+	"SSProve package-semantics view uses joint finite source" \
+	proofs/ssprove/StateSeparatedPackageSemantics.v
+indexed_sessions=proofs/ssprove/StateSeparatedIndexedSessions.v
+for indexed_session_capstone in \
+	indexed_role_session_locations_are_distinct \
+	indexed_cache_location_is_disjoint \
+	indexed_first_session_heap_summary \
+	indexed_both_sessions_heap_summary \
+	indexed_response_matches_monolithic \
+	indexed_package_trace_matches_reference \
+	indexed_package_context_matches_reference \
+	indexed_same_handle_trace_normalizes \
+	indexed_rejected_trace_is_neutral \
+	indexed_fresh_trace_underflow_is_explicit \
+	indexed_distinct_handle_trace_normalizes \
+	indexed_reverse_handle_trace_normalizes \
+	indexed_both_orders_have_same_private_summary \
+	indexed_session_handle_is_ghost \
+	indexed_sessions_use_production_kdf_domains \
+	indexed_package_context_single_sample_is_total \
+	indexed_public_context_view_matches_reference \
+	indexed_public_context_game_matches_reference; do
+	require_line_count 1 "^(Theorem|Lemma) ${indexed_session_capstone} :" \
+		"$indexed_sessions" \
+		"SSProve indexed-session ${indexed_session_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${indexed_session_capstone}\\.\$" \
+		"$indexed_sessions" \
+		"SSProve indexed-session ${indexed_session_capstone} assumption report"
+done
+require_line_count 18 '^Print Assumptions ' "$indexed_sessions" \
+	"complete SSProve indexed-session assumption reports"
+
+require_line_count 1 '^Definition indexed_consuming_ckey :' \
+	"$indexed_sessions" \
+	"SSProve indexed-session consuming private CKEY package"
+require_line_count 1 '^#\[tactic=notac\] Equations\? indexed_composition_core$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session linked core"
+require_line_count 1 \
+	'^#\[tactic=notac\] Equations\? indexed_state_separated_response_package$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session linked public package"
+require_occurrence_count 1 \
+	'Definition indexed_ckey_locs : \{fset Location\} :=\n  fset \[:: server_ckey_loc; beacon_ckey_loc;\n    server_session_one_loc; beacon_session_one_loc\]\.' \
+	"SSProve indexed-session four private CKEY slots" "$indexed_sessions"
+require_line_count 1 \
+	'^Definition chCachedRomSample : choice_type := chOption chRomSample\.$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session optional global ROM cache type"
+require_line_count 1 \
+	'^Definition indexed_rom_cache_loc : Location := \(chCachedRomSample; 84%N\)\.$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session global ROM cache location"
+require_occurrence_count 1 \
+	'Definition indexed_cache_locs : \{fset Location\} :=\n  fset \[:: indexed_rom_cache_loc\]\.' \
+	"SSProve indexed-session singleton global ROM cache" "$indexed_sessions"
+require_line_count 1 \
+	"^    #val #\\[indexed_run_response_id\\] : 'bool → 'response\$" \
+	"$indexed_sessions" \
+	"SSProve indexed-session Boolean RUN signature"
+require_line_count 1 \
+	"^    #def #\\[indexed_run_response_id\\] \\(session : 'bool\\) : 'response \\{\$" \
+	"$indexed_sessions" \
+	"SSProve indexed-session Boolean RUN implementation"
+require_line_count 1 '^          cached ← get indexed_rom_cache_loc ;;$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session sole global ROM cache read"
+require_line_count 1 \
+	'^              #put indexed_rom_cache_loc := Some sample ;;$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session sole global ROM cache fill"
+require_occurrence_count 1 'sample <\$ uniform_response_sample_op ;;' \
+	"SSProve indexed-session sole global ROM sample operation" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'if select_session session authentications then[\s\S]{0,2400}?cached ← get indexed_rom_cache_loc ;;[\s\S]{0,800}?sample <\$ uniform_response_sample_op ;;' \
+	"SSProve indexed-session authentication precedes cache and sampling" \
+	"$indexed_sessions"
+
+require_line_count 1 '^Fixpoint run_response_code_with_samples$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session sample-stream evaluator"
+require_occurrence_count 1 \
+	'Inductive indexed_reference_state : Type :=\n\| IndexedReferenceFresh\n\| IndexedReferenceOneUsed\n    \(first_session : bounded_session_handle\) \(sample : rom_sample\)\n\| IndexedReferenceBothUsed\n    \(first_session : bounded_session_handle\) \(sample : rom_sample\)\.' \
+	"SSProve indexed-session bounded reference state" "$indexed_sessions"
+require_line_count 1 '^Definition indexed_reference_step$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session reference transition"
+require_line_count 1 '^Fixpoint run_indexed_reference_trace$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session reference trace"
+require_line_count 1 '^Local Fixpoint run_indexed_package_trace$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session package trace"
+require_occurrence_count 1 \
+	'Inductive indexed_public_context : Type :=\n\| IndexedContextReturn \(result : bool\)\n\| IndexedContextCall\n    \(session : bounded_session_handle\)\n    \(continuation : public_response_observation -> indexed_public_context\)\.' \
+	"SSProve indexed-session adaptive public context" "$indexed_sessions"
+require_line_count 1 '^Fixpoint run_indexed_reference_context$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session reference context"
+require_line_count 1 '^Local Fixpoint run_indexed_package_context$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session package context"
+require_line_count 1 '^Local Lemma checked_indexed_trace_matches_reference :' \
+	"$indexed_sessions" \
+	"SSProve indexed-session checked trace bridge"
+require_line_count 1 '^Local Lemma checked_indexed_context_matches_reference :' \
+	"$indexed_sessions" \
+	"SSProve indexed-session checked context bridge"
+require_line_count 1 '^Record indexed_trace_run_certificate$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session trace certificate"
+require_line_count 1 '^  indexed_trace_run_certificate_sound :$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session exact trace certificate soundness field"
+require_occurrence_count 1 \
+	'indexed_trace_run_certificate\n      \(run_indexed_package_trace\n        authentications challenges inputs requests samples empty_heap\)\.' \
+	"SSProve indexed-session certificate exact raw-trace index" \
+	"$indexed_sessions"
+require_line_count 1 '^Record indexed_context_run_certificate$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session context certificate"
+require_line_count 1 '^  indexed_context_run_certificate_sound :$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session exact context certificate soundness field"
+require_occurrence_count 1 \
+	'indexed_context_run_certificate\n      \(run_indexed_package_context\n        authentications challenges inputs context samples empty_heap\)\.' \
+	"SSProve indexed-session certificate exact raw-context index" \
+	"$indexed_sessions"
+require_line_count 2 '^Defined\.$' "$indexed_sessions" \
+	"transparent SSProve indexed-session certificates"
+
+require_occurrence_count 1 \
+	'authentications challenges inputs \[:: session; session\] \[:: sample\] =\n    Some\n      \(\[:: indexed_reference_ciphertext\n             challenges inputs session sample; None\],\n       indexed_first_session_heap session sample,\n       \[::\]\)\.' \
+	"SSProve indexed-session fixed same-handle trace result" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'authentications challenges inputs \[:: session\] samples =\n    Some \(\[:: None\], empty_heap, samples\)\.' \
+	"SSProve indexed-session fixed rejected trace result" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'authentications challenges inputs \[:: session\] \[::\] = None\.' \
+	"SSProve indexed-session fixed sampler-underflow trace result" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'\[:: first_session; negb first_session\] \[:: sample\] =\n    Some\n      \(\[:: indexed_reference_ciphertext\n             challenges inputs first_session sample;\n           indexed_reference_ciphertext\n             challenges inputs \(negb first_session\) sample\],\n       indexed_both_sessions_heap first_session sample,\n       \[::\]\)\.' \
+	"SSProve indexed-session fixed distinct-handle trace result" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'\[:: negb first_session; first_session\] \[:: sample\] =\n    Some\n      \(\[:: indexed_reference_ciphertext\n             challenges inputs \(negb first_session\) sample;\n           indexed_reference_ciphertext\n             challenges inputs first_session sample\],\n       indexed_both_sessions_heap \(negb first_session\) sample,\n       \[::\]\)\.' \
+	"SSProve indexed-session fixed reverse-handle trace result" \
+	"$indexed_sessions"
+
+require_line_count 1 '^Theorem indexed_package_context_single_sample_is_total :' \
+	"$indexed_sessions" \
+	"SSProve indexed-session adaptive singleton-sample totality"
+require_line_count 1 '^Definition indexed_package_public_context_game$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session adaptive package game"
+require_line_count 1 '^Definition indexed_reference_public_context_game$' \
+	"$indexed_sessions" \
+	"SSProve indexed-session adaptive reference game"
+require_occurrence_count 2 '\\P_\[uniform_rom_sample\]' \
+	"SSProve indexed-session adaptive games use the same finite source" \
+	"$indexed_sessions"
+require_occurrence_count 1 \
+	'Theorem indexed_sessions_use_production_kdf_domains :\n  kdf_use_info PqxdhRootDerivation = pqxdh_info /\\\n  kdf_use_info InitialRatchetExpansion = symmetric_ratchet_info /\\\n  kdf_use_info RatchetStepExpansion = symmetric_ratchet_info /\\\n  kdf_use_info InitialRatchetExpansion =\n    kdf_use_info RatchetStepExpansion /\\\n  kdf_output_size PqxdhRootDerivation = 32%N /\\\n  kdf_output_size InitialRatchetExpansion = 64%N /\\\n  kdf_output_size RatchetStepExpansion = 76%N\.' \
+	"SSProve indexed-session exact production KDF-domain theorem" \
+	"$indexed_sessions"
+for protocol_rom_capstone in \
+	pqxdh_ratchet_bounded_rom_confidentiality_bound \
+	active_classical_forward_bounded_rom_confidentiality \
+	passive_classical_forward_bounded_rom_confidentiality \
+	passive_quantum_classical_query_forward_confidentiality \
+	active_classical_replace_fixed_failure_confidentiality \
+	active_classical_all_actions_bounded_rom_confidentiality; do
+	require_line_count 1 "^  Theorem ${protocol_rom_capstone}\$" \
+		proofs/ssprove/PqxdhRatchetRom.v \
+		"SSProve protocol-ROM ${protocol_rom_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${protocol_rom_capstone}\\.\$" \
+		proofs/ssprove/PqxdhRatchetRom.v \
+		"SSProve protocol-ROM ${protocol_rom_capstone} assumption report"
+done
+require_line_count 1 '^  Lemma protocol_supported_scenario_root_hidden$' \
+	proofs/ssprove/PqxdhRatchetRom.v \
+	"SSProve supported-scenario hidden-root bridge"
+require_line_count 1 '^Print Assumptions protocol_supported_scenario_root_hidden\.$' \
+	proofs/ssprove/PqxdhRatchetRom.v \
+	"SSProve supported-scenario bridge assumption report"
+for hybrid_capstone in \
+	pqxdh_hybrid_one_hidden_contribution_confidentiality \
+	active_classical_forward_hybrid_confidentiality \
+	passive_classical_forward_hybrid_confidentiality \
+	passive_quantum_forward_hybrid_confidentiality; do
+	require_line_count 1 "^  Theorem ${hybrid_capstone}\$" \
+		proofs/ssprove/PqxdhHybridSecurity.v \
+		"SSProve hybrid ${hybrid_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${hybrid_capstone}\\.\$" \
+		proofs/ssprove/PqxdhHybridSecurity.v \
+		"SSProve hybrid ${hybrid_capstone} assumption report"
+done
+require_line_count 1 '^Lemma pqxdh_hybrid_domains_are_separated$' \
+	proofs/ssprove/PqxdhHybridSecurity.v \
+	"SSProve hybrid domain-separation theorem"
+require_line_count 1 '^Lemma active_quantum_replace_has_no_hidden_hybrid_component$' \
+	proofs/ssprove/PqxdhHybridSecurity.v \
+	"SSProve active-quantum hybrid failure classification"
+require_line_count 1 '^Print Assumptions active_quantum_replace_has_no_hidden_hybrid_component\.$' \
+	proofs/ssprove/PqxdhHybridSecurity.v \
+	"SSProve active-quantum hybrid classification assumption report"
+for ratchet_capstone in \
+	ratchet_erasure_forward_secrecy_bad_query_bound \
+	ratchet_attacker_trace_query_count_bound; do
+	require_line_count 1 "^  Theorem ${ratchet_capstone}\$" \
+		proofs/ssprove/RatchetForwardSecrecy.v \
+		"SSProve ratchet ${ratchet_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${ratchet_capstone}\\.\$" \
+		proofs/ssprove/RatchetForwardSecrecy.v \
+		"SSProve ratchet ${ratchet_capstone} assumption report"
+done
+require_line_count 1 '^Theorem ratchet_other_domain_separation$' \
+	proofs/ssprove/RatchetForwardSecrecy.v \
+	"SSProve ratchet domain-separation theorem"
+for integrity_capstone in \
+	record_active_modification_query_or_guess_classification_bound \
+	record_fresh_input_integrity_probability_is_fresh_guess \
+	record_cross_context_reuse_reduces_to_collision \
+	record_cross_sequence_reuse_reduces_to_collision \
+	record_integrity_trace_size_bound; do
+	require_line_count 1 "^Theorem ${integrity_capstone}\$" \
+		proofs/ssprove/RecordIntegrity.v \
+		"SSProve record ${integrity_capstone} capstone"
+	require_line_count 1 \
+		"^Print Assumptions ${integrity_capstone}\\.\$" \
+		proofs/ssprove/RecordIntegrity.v \
+		"SSProve record ${integrity_capstone} assumption report"
+done
+for integrity_bound_capstone in \
+	record_runs_agree_after_unqueried_flip \
+	record_bound_table_flip_involutive \
+	record_bound_flip_toggles_success \
+	record_uniform_one_bit_fresh_tag_guess_bound; do
+	require_line_count 1 \
+		"^Print Assumptions ${integrity_bound_capstone}\\.\$" \
+		proofs/ssprove/RecordIntegrityBound.v \
+		"SSProve record-bound ${integrity_bound_capstone} assumption report"
+done
+require_line_count 1 '^  Theorem record_uniform_one_bit_fresh_tag_guess_bound :$' \
+	proofs/ssprove/RecordIntegrityBound.v \
+	"SSProve one-bit fresh-tag numerical bound"
+reject_matches "SSProve proof bypass or unsafe hax prelude" \
+	'(?i:\badmit(?:ted)?\b)|\b(?:Axiom|Conjecture|Parameters?|Abort)\b|__admitted__|falso|(?:exact|vm_cast|native_cast)_no_check|\bHacspec\b|Hacspec_|Beaconcrypt_core_|(?:Unset[[:space:]]+(?:Guard|Positivity|Universe)[[:space:]]+Checking|Set[[:space:]]+(?:Type[[:space:]]+in[[:space:]]+Type|Impredicative[[:space:]]+Set))' \
+	proofs/ssprove --glob '*.v'
 
 # Both invalid sequence-three attempts and the compromise handoff carry the exact same symbolic entry-state term.
 # No rejection-created cache is constructed or disclosed.
@@ -510,7 +1121,7 @@ done
 reject_matches "Lean extraction reintroduced a module exclusion" \
 	'(?:--exclude(?:[=[:space:]]|$)|LEAN_CHARON_ARGS)' Makefile
 require_occurrence_count 1 \
-	"cargo\\s+hax\\s+-C\\s+--locked\\s+';'\\s+into\\s+lean\\s+--lakefile" \
+	"cargo\\s+hax\\s+-C\\s+--locked\\s+';'\\s+into\\s+lean" \
 	"canonical no-exclusion Lean extraction command" Makefile
 
 lean_types=proofs/lean/BeaconcryptCore/Extraction/Types.lean
@@ -567,9 +1178,17 @@ reject_matches "predecessor executor/callback symbol remains in current Lean ext
 	'ConcreteRatchetChain|derive_ratchet_step|concrete_(?:seal_next|open_and_finish)' \
 	"$lean_types" "$lean_funs"
 
-cmp -s proofs/lean/BeaconcryptCore/Extraction/FunsExternal_Template.lean \
-	proofs/lean/BeaconcryptCore/Extraction/FunsExternal.lean ||
+sed -n '/^import Aeneas$/,$p' \
+	proofs/lean/BeaconcryptCore/Extraction/FunsExternal_Template.lean |
+	sed '/^[[:space:]]*$/d' > "$tmp_dir/generated-lean-externals"
+sed -n '/^import Aeneas$/,$p' \
+	proofs/lean/BeaconcryptCore/Assumptions/FunsExternal.lean |
+	sed '/^[[:space:]]*$/d' > "$tmp_dir/maintained-lean-externals"
+cmp -s "$tmp_dir/generated-lean-externals" "$tmp_dir/maintained-lean-externals" ||
 	fail "maintained Lean externals differ from the reviewed generated template"
+require_line_count 1 '^import BeaconcryptCore\.Assumptions\.FunsExternal$' \
+	proofs/lean/BeaconcryptCore/Extraction/FunsExternal.lean \
+	"generated Lean assumptions forwarding import"
 mapfile -t handwritten_lean < <(
 	awk -F '\t' '$1 == "handwritten-lean" { print $3 }' "$manifest"
 )
@@ -660,7 +1279,8 @@ require_line_count 1 '^theorem receiveMessage_refines( |$)' \
 	"direct ideal receive refinement theorem"
 reject_matches "obsolete bound-49 Lean refinement remains" \
 	'\brecvStepGen\b|CachedOpenRefines\.(?:ideal_success_49|ideal_success_recvStep|finish_success_matches_ideal_49|finish_success_refines_49_of_publication)\b' \
-	proofs/lean/BeaconcryptCore/Model proofs/lean/BeaconcryptCore/Refinement
+	proofs/lean/BeaconcryptCore/Model \
+	proofs/lean/BeaconcryptCore/Refinement
 
 vcvio_pilot=proofs/lean/BeaconcryptCore/Computational/VCVioFeasibility.lean
 for theorem_name in \

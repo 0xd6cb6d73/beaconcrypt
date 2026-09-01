@@ -1,3 +1,4 @@
+import BeaconcryptCore.Extraction
 import BeaconcryptCore.Refinement.PqxdhSession
 import BeaconcryptCore.Refinement.PqxdhCommitment
 import BeaconcryptCore.Refinement.RatchetControlRestore
@@ -14,6 +15,7 @@ import BeaconcryptCore.Computational.CtxPrefixIsolation
 import BeaconcryptCore.Computational.CtxSealSampling
 import BeaconcryptCore.Computational.CtxTransitionReduction
 import BeaconcryptCore.Computational.VCVioFeasibility
+import BeaconcryptCore.Verification.ProofObligations
 
 /-!
 # Beaconcrypt-core verification root

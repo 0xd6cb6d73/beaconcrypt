@@ -48,7 +48,7 @@ The restore path and the per-peer wrappers are verified in
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open Result
+open RustM
 
 namespace beaconcrypt_core.ratchet.control
 

@@ -10,7 +10,7 @@ PQXDH commitment representation.
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open Result
+open RustM
 open beaconcrypt_core
 
 set_option relaxedAutoImplicit false

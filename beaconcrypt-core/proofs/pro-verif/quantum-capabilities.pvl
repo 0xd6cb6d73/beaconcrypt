@@ -1,0 +1,11 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Symbolic capabilities representing a cryptographically relevant quantum computer.
+   These rules deliberately expose the classical secret behind Ed25519 and X25519 public keys while leaving ML-KEM opaque.
+   They are threat-model controls, not computational models of Shor's algorithm. *)
+
+reduc forall signing_key: bitstring;
+	quantum_recover_ed25519_secret(ed_public(signing_key)) = signing_key.
+
+reduc forall dh_key: bitstring;
+	quantum_recover_x25519_secret(x25519_public(dh_key)) = dh_key.

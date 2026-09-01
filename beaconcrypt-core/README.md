@@ -116,7 +116,7 @@ The dedicated receive model uses two exact finite legs. The first consumes seque
 The production CTX transcript delegates to the core's fixed-size commitment builder.
 Hax extracts that helper, and the strict F* commitment lemmas prove the exact 229-byte order `key || nonce || associated data || tag || LE64(sequence) || LE64(sender ID)`, injectivity of both integer encodings and the complete input, and `ctx_distinct_openings_imply_hash_collision`.
 That theorem fixes one ciphertext, transmitted tag, and commitment and machine-checks an explicit collision witness for any two accepted explanations that differ in key, nonce, associated data, sequence, sender ID, or plaintext, while allowing the base AEAD to multi-open under unequal contexts.
-Lean's [computational lifting](../doc/ctx-commitment.md) machine-checks a factor-one bound from ideal-model misattribution advantage to BLAKE2b-512 collision advantage, while PPT/runtime preservation and the extracted-transcript/adapter bridge are not mechanized.
+Lean's [computational lifting](../doc/ctx-commitment.md) machine-checks a factor-one bound from ideal-model misattribution advantage to BLAKE2b-512 collision advantage and proves that the current generated 229-byte builder equals the ideal preimage, while PPT/runtime preservation and the adapter hash-invocation and field-provenance bridge are not mechanized.
 A supplementary ProVerif differential control uses one deliberately multi-opening base-AEAD ciphertext/tag: the double-opening query is unreachable with CTX and deliberately reachable when only the CTX checks are removed.
 The real-world binding claim remains conditional on BLAKE2b collision resistance, correct libsodium and adapter behavior, and hax/compiler correspondence.
 
@@ -129,7 +129,7 @@ unreviewed boundary change fail CI. See the
 [canonical inventory](proofs/trusted-boundary.md) and
 [Stage 9 implementation record](../doc/impl/formal-verification-stage-9.md).
 
-## Strict hax/F*/ProVerif verification
+## Strict hax/F*/ProVerif/SSProve/Lean verification
 
 From this directory, run:
 
@@ -137,12 +137,11 @@ From this directory, run:
 make verify
 ```
 
-The target enters the repository's locked Nix proof shell, checks the exact rustc, Cargo, hax, F*, Z3, and ProVerif identities, regenerates the F* commitment, ratchet, and PQXDH modules plus the ProVerif extraction, checks all three F* lemma modules without `--lax`, and runs the CTX differential, baseline, reachability, state-neutral receive, and compromise models.
+The target enters the repository's locked Nix proof shell; checks the exact rustc, Cargo, hax, F*, Z3, ProVerif, Rocq, and SSProve identities; regenerates the F*, ProVerif, and Lean extractions; checks all three F* lemma modules without `--lax`; runs every ProVerif scenario; checks the SSProve suite; and builds the complete maintained Lean root.
 A policy gate rejects `assume` or `admit` in repository-owned F* modules and
 lax/admitted-query checker flags. The result gate rejects timeouts, missing
 queries, unexpected classifications, and every unproved or inconclusive
-security query. `make verify-proverif` runs only the ProVerif extraction and
-checks in the same locked shell, with the nine scenario targets running concurrently. Each scenario is also available independently as `make check-proverif-<scenario>`, `make verify-proverif-<scenario>`, or `make check-generated-proverif-<scenario>`; for example, `make verify-proverif-baseline` enters the locked shell, regenerates the extraction, and checks only the baseline model.
+security query. `make verify-proverif` runs only the ProVerif extraction and checks in the same locked shell, with the thirteen scenario targets running concurrently. Each scenario is also available independently as `make check-proverif-<scenario>`, `make verify-proverif-<scenario>`, or `make check-generated-proverif-<scenario>`; for example, `make verify-proverif-baseline` enters the locked shell, regenerates the extraction, and checks only the baseline model. `make verify-ssprove` and `make verify-lean` run their respective suites in the same locked environment.
 
 The inventory-only check does not require entering the proof shell:
 
@@ -161,13 +160,7 @@ after their production and proof diffs have been reviewed.
 The checked Lean control refinement covers counters, admission, cache behavior, and rollback by authentication verdict against the handwritten ideal receive model; separate control lemmas establish structural restoration well-formedness and bounds. The imported effect files additionally check current generated phase equations and the send, failed-receive, open-reply, and conditional cached-success refinements summarized above, including generated cached-open construction and the control-plane half of cached consumption. They do not yet prove the material-array half of `CachedPublicationRefines`, future-receive success, initial role composition, restoration of the concrete relation, or adapter interpretation. The finite ProVerif traces and Rust tests supply complementary cryptographic, compromise, schedule, and runtime witnesses. The tracked F* concrete reachability and paired-session results remain valid only for their predecessor executor/callback snapshot; generic proof structure may be ported, but those theorem names are not current production evidence.
 `make check-generated` reruns the complete claimed proof suite and additionally fails when extraction changes a tracked artifact or creates an untracked artifact. The formal-verification workflow checks F*, Lean, and every ProVerif scenario through their configured jobs; each claimed component must regenerate and check its relevant extraction before acceptance. Run the separate `make check-inventory` tripwire after reviewing intentional production/proof boundary changes.
 
-The checked-in `flake.lock` pins hax revision
-`5b0ba8be6da3c313fdfed1c19dd0f0721a29f4b3` (hax 0.3.7), its
-`nightly-2025-11-08` Rust toolchain (rustc 1.93.0-nightly, commit `843f8ce2e`),
-F* revision `7b347386330d0e5a331a220535b6f15288903234`
-(`2025.10.06~dev`), Z3 4.15.3, and ProVerif 2.05. Nix is invoked with
-`--no-update-lock-file`, and the version gate fails before extraction if a
-checked version banner differs. Z3 4.15.3 is the newest solver bundled by this
-F* release and was qualified against the complete corpus; later F* releases
-were tested and rejected by hax's proof libraries. See the
-[Stage 8 implementation record](../doc/impl/formal-verification-stage-8.md).
+The checked-in `flake.lock` pins hax revision `4c9e2b7c75ab1e2b645a4a8361ae86c4504f9800` (hax CLI 0.4.0-rc.1), its `nightly-2025-11-08` Rust toolchain (rustc 1.93.0-nightly, commit `843f8ce2e`), F* revision `7b347386330d0e5a331a220535b6f15288903234` (`2025.10.06~dev`), Z3 4.15.3, ProVerif 2.05, Rocq 9.0.0, SSProve 0.2.4, and MathComp 2.4.0.
+Nix is invoked with `--no-update-lock-file`, and the version gate fails before extraction if a checked version banner differs.
+Z3 4.15.3 is the newest solver bundled by this F* release and was qualified against the complete corpus; later F* releases were tested and rejected by hax's proof libraries.
+See the [Stage 8 implementation record](../doc/impl/formal-verification-stage-8.md) for the historical Stage 8 pinning decision and the current `flake.lock` and version gate for the maintained toolchain.

@@ -530,12 +530,12 @@ pub(crate) fn decrypt_message_with_ratchet(
 	})
 }
 
-/// implementation of the Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>
+/// Implementation of the modified Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>
 /// `CT, T = ENC(K, N, A, M)`
 ///
 /// `T* = H(K, N, A, T, LE64(seq), LE64(kid))`
 ///
-/// the paper omits the original tag from the output. It is included here so we can keep using the libsodium interface
+/// The paper omits the original tag from the output. It is included here so we can keep using the libsodium interface
 ///
 /// `CT* = CT || T || T*`
 /// This commitment scheme commits to:

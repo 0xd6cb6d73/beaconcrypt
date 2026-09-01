@@ -45,7 +45,7 @@ appears through the values the caller feeds back into the beacon transition.
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open Result
+open RustM
 
 set_option maxHeartbeats 1000000
 set_option relaxedAutoImplicit false
@@ -467,7 +467,7 @@ def serverRegister (state : pqxdh.ServerState) (reg : pqxdh.VerifiedInitKex)
     (status : pqxdh.RegistrationStatus) (binding : pqxdh.ServerBinding)
     (gcoins : pqxdh.ServerCoins) (secrets : pqxdh.PqxdhSharedSecrets)
     (availability : pqxdh.KeyIdAvailability) :
-    Result (core.result.Result (pqxdh.ServerState × pqxdh.EstablishedPeer)
+    RustM (core.result.Result (pqxdh.ServerState × pqxdh.EstablishedPeer)
       pqxdh.RegistrationError) := do
   let r ← pqxdh.server_accept state reg status binding gcoins secrets
   match r with
@@ -639,7 +639,7 @@ pinned identity and derive the PQXDH transcript and the associated data, then ch
 the authenticated sender and the authenticated key-identifier binding, then commit. -/
 def beaconFinishDriver (state : pqxdh.BeaconInitSent) (inputs : pqxdh.BeaconFinishInputs)
     (authSenderId : Std.U64) (authBinding : Std.Array Std.U8 8#usize) :
-    Result (core.result.Result pqxdh.BeaconEstablished pqxdh.RegistrationError) := do
+    RustM (core.result.Result pqxdh.BeaconEstablished pqxdh.RegistrationError) := do
   let r ← pqxdh.beacon_prepare_finish state inputs
   match r with
   | core.result.Result.Err e => ok (core.result.Result.Err e)
