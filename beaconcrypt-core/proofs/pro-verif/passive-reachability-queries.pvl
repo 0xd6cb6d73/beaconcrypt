@@ -1,0 +1,41 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* ProVerif does not classify positive reachability in passive-attacker mode.
+   These active-scheduler controls use the same bounded honest-only process and must find both the registration commit and record-delivery milestones. *)
+query server_identity: bitstring,
+      beacon_identity: bitstring,
+      init: beaconcrypt_core__pqxdh__t_InitKex,
+      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
+      assigned_key_id: key_id,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring,
+      associated_data: bitstring,
+      session: bitstring,
+      origin: bitstring;
+  event(BeaconCommitted(
+    server_identity,
+    beacon_identity,
+    init,
+    registration_id,
+    assigned_key_id,
+    root_input,
+    root,
+    associated_data,
+    session,
+    origin
+  )).
+
+query session: bitstring,
+      message_direction: direction,
+      message_sequence: sequence,
+      sender: key_id,
+      receiver: key_id,
+      plaintext: bitstring;
+  event(MessageReceived(
+    session,
+    message_direction,
+    message_sequence,
+    sender,
+    receiver,
+    plaintext
+  )).

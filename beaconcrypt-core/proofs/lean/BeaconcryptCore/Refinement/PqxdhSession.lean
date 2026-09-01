@@ -25,7 +25,7 @@ and `Pqxdh.HonestRun.beaconStep`.
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open Result
+open RustM
 
 set_option maxHeartbeats 1000000
 set_option relaxedAutoImplicit false

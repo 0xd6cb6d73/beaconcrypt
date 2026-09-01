@@ -76,9 +76,13 @@ A canonicalization scheme would have to be used to encode the various elements b
 
 The commitment claim applies to the complete protected payload `CT || T || T*`, not to `T*` in isolation.
 The F* theorem `ctx_distinct_openings_imply_hash_collision` fixes the same `CT`, `T`, and `T*` for both openings and machine-checks that any semantic difference in key, nonce, associated data, sequence, sender ID, or accepted plaintext produces an explicit collision witness for the supplied pure hash function.
-The conventional computational lifting therefore bounds misattribution advantage by BLAKE2b-512 collision advantage, but its probability and runtime inequality is not mechanized.
+SSProve now runs a bounded adaptive hidden-ROM CTX game, performs exactly two verifier queries after a completed `q`-query adversary, and extracts an unequal-input equal-output collision from every accepted distinct explanation pair. A separate random-oracle programming hop proves that a deterministic programmed-versus-fresh view can differ only after a query for the hidden key-containing transcript. Production-width representation, numerical collision and secret-query bounds, complete AEAD composition, and runtime loss remain unmechanized.
 The ProVerif negative control independently demonstrates the ideal-hash CTX benefit with a deliberately multi-opening base AEAD; it is supplementary symbolic evidence rather than a proof of BLAKE2b.
 The exact game, proof connection, advantage bound, and assumptions are given in [ctx-commitment.md](ctx-commitment.md), and the [concrete negative-control fixture](multi-opening-fixture.md) supplies one real `CT || T` value with two distinct valid base-AEAD openings.
+
+The companion SSProve protocol suite covers one ideal PQXDH establishment and one sequence-zero symmetric-ratchet record. Its closed game models the ordered four-DH-plus-KEM root input, joint Ed25519/X25519 compromise, and shared initial/step KDF prefix relation; active classical, passive classical, and passive-quantum classical-query capability cases have exact zero distinguishing advantage, while active-quantum substitution has advantage one. A second bounded-ROM game fixes the four DH atoms as public/guessable, hides only the honest ML-KEM atom and tagged root/ratchet table, gives a deterministic observer the challenge ciphertext and adaptive oracle access, and bounds the three positive forwarding cases plus active-classical replacement by the probability of querying the exact hidden pad input. This one-bit reduction shape has no negligible production bound—in fact querying both abstract symmetric inputs makes its bad event certain—and neither game provides a general registration transcript, record-tampering/decryption interface, arbitrary-session or arbitrary-ratchet-schedule theorem, QPT model, or QROM result.
+
+Standalone SSProve extensions now decompose three further protocol-core claims. A one-bit payload masked by an idealized hybrid-root output is confidential unless the classical-ROM trace queries the modeled five-coordinate PQXDH input containing one hidden contribution; the forwarding corollaries rely on the hidden honest ML-KEM contribution. One-step post-erasure ratchet confidentiality reduces to querying the erased predecessor chain while exposing the next chain, prior nonce, and prior challenge ciphertext. A one-record game assumes a combined ideal AEAD+CTX authenticator, partitions accepted modifications by prior-query status, extracts a same-run unequal-input/equal-output witness when the same payload is reused under a different context or sequence, and proves an exact `1/2` bound for a fresh guess against its uniform one-bit table. These finite reductions do not prove AEAD+CTX composition, production HKDF-output pseudorandomness, production-width negligible bounds, or a multi-session end-to-end theorem.
 
 ## Ratchet initialization
 Beaconcrypt uses a symmetric ratchet protocol for CKA. This provides forward, but not post-compromise, secrecy. There are two ratchets, one for encrypting messages to be sent (`send`), and one for decrypting received messages (`recv`). Both ratchets are initialized from a single 256 bit secret value derived from the `PQXDH` protocol run. Because of the `send`/`recv` division, the server and beacon have a slightly different initialization routine:
@@ -178,7 +182,7 @@ The server must use this message as follows:
   - dh2 = DH(`ephemeral_sk`, `beacon_id_pk_kex`)
   - dh3 = DH(`ephemeral_sk`, `beacon_prekey_pk`)
   - dh4 = DH(`ephemeral_sk`, `beacon_onetime_pk`)
-- Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
+- Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the exact 46-byte HKDF `info` string `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`
   - `Padding` is 32 `0xFF` bytes
 - Delete all Diffie Hellman output
 - Add the registration identifier to the consumed set before returning the
@@ -192,13 +196,13 @@ This message enables the beacon to obtain the elements it needs to derive the sh
   the counter is exhausted or the exact next ID is already occupied
 - Stage a new known cryptographic identity using the beacon's public key and
   newly created key ID without publishing it yet
-- Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
+- Initialize its side of the ratchets using the derived secret with the exact 41-byte HKDF `info` string `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
 - Delete the derived secret
 - Set the `keyId` field to the newly generate beacon's key ID
 - Set the `ephemeralKey` field to the X25519 ephemeral public key from the corresponding `InitKex`
 - Set the `identityKey` to the server's Ed25519 public key
 - Set the `kemCipherText` to the KEM ciphertext from the corresponding `InitKex`
-- Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
+- Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key, `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`, and `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
 - Encode the assigned beacon key ID as an eight-byte little-endian value and
   prepend it to the first message, or to a single `0xFF` byte when no message
   was supplied
@@ -220,14 +224,14 @@ Upon reception, the beacon must process this message as follows:
   - dh2 = DH(`beacon_id_sk_kex`, `server_ephemeral_pk`)
   - dh3 = DH(`beacon_prekey_sk`, `server_ephemeral_pk`)
   - dh4 = DH(`beacon_onetime_sk`, `server_ephemeral_pk`)
-- Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the PQXDH protocol string as HKDF `info`
+- Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the exact 46-byte HKDF `info` string `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`
   - `Padding` is 32 `0xFF` bytes
 - Delete its one-time keypair.
 - Delete its PQ keypair
 - Delete all Diffie Hellman output
 - Treat `keyId` as the proposed assigned identity, without publishing it yet
-- Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key and the PQXDH and symmetric ratchet protocol strings
-- Initialize its side of the ratchets using the derived secret with the symmetric ratchet protocol string as HKDF `info`
+- Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key, `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`, and `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
+- Initialize its side of the ratchets using the derived secret with the exact 41-byte HKDF `info` string `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
 - Delete the derived secret
 - Decrypt the `appCipherText` as a `CryptoFrame`, using its `recv` keychain
 - Require the successfully opened initial `CryptoFrame.keyId` sender field to equal the numeric server identity-key ID pinned with the compiled-in public key

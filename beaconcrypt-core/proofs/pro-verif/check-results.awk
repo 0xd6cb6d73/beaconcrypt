@@ -34,7 +34,11 @@ in_summary && /^Query / {
     reject($0)
   }
 
-  if ((scenario == "baseline" || scenario == "failed-receive") &&
+  if ((scenario == "baseline" ||
+       scenario == "active-classical" ||
+       scenario == "passive-classical" ||
+       scenario == "passive-quantum" ||
+       scenario == "failed-receive") &&
       $0 !~ / is true\.$/) {
     reject(scenario " query was not true: " $0)
   }
@@ -44,6 +48,16 @@ in_summary && /^Query / {
        scenario == "failed-receive-compromise-reachability") &&
       $0 !~ / is false\.$/) {
     reject(scenario " witness was not found: " $0)
+  }
+
+  if (scenario == "active-quantum" && $0 !~ / is false\.$/) {
+    reject("expected active-quantum break was not found: " $0)
+  }
+
+  if ((scenario == "passive-reachability" ||
+       scenario == "quantum-capabilities") &&
+      $0 !~ / is false\.$/) {
+    reject(scenario " control witness was not found: " $0)
   }
 
   if (scenario == "aead-commitment" && $0 !~ / is true\.$/) {
@@ -88,9 +102,56 @@ END {
     expected_result = (scenario == "aead-commitment") ? "true" : "false"
     wanted = "Query not event(WeakAeadMultiOpened(" weak_aead_arguments ")) is " expected_result "."
     require_exact(wanted, scenario)
-  } else if (scenario == "baseline") {
+  } else if (scenario == "passive-classical" ||
+             scenario == "passive-quantum") {
+    if (query_count != 5) {
+      reject("expected 5 " scenario " secrecy queries, saw " query_count)
+    }
+
+    passive_secret[1] = "INITIAL_SECRET"
+    passive_secret[2] = "CACHED_SECRET"
+    passive_secret[3] = "ADVANCE_SECRET"
+    passive_secret[4] = "FUTURE_SECRET"
+    passive_secret[5] = "BEACON_RECORD_SECRET"
+    for (secret_index = 1; secret_index <= 5; secret_index++) {
+      wanted = "Query not attacker(" passive_secret[secret_index] "[]) is true."
+      require_exact(wanted, scenario " secrecy")
+    }
+  } else if (scenario == "active-quantum") {
+    if (query_count != 3) {
+      reject("expected 3 active-quantum attack queries, saw " query_count)
+    }
+
+    wanted = "Query not attacker(INITIAL_SECRET[]) is false."
+    require_exact(wanted, "active-quantum confidentiality break")
+    wanted = "Query not event(QuantumInitialSecretRecovered(INITIAL_SECRET[])) is false."
+    require_exact(wanted, "active-quantum recovery witness")
+    active_quantum_arguments = "server_identity_2,beacon_identity_3,init,registration_id_2,root_input_3,root_3,origin_1"
+    active_quantum_origin_arguments = "server_identity_2,beacon_identity_3,init,registration_id_2,origin_1"
+    wanted = "Query inj-event(ServerAccepted(" active_quantum_arguments ")) ==> inj-event(BeaconInitiated(" active_quantum_origin_arguments ")) is false."
+    require_exact(wanted, "active-quantum agreement break")
+  } else if (scenario == "passive-reachability") {
+    if (query_count != 2) {
+      reject("expected 2 passive reachability queries, saw " query_count)
+    }
+    passive_commit_arguments = "server_identity_2,beacon_identity_2,init,registration_id_2,assigned_key_id_2,root_input_2,root_2,associated_data_2,session_3,origin_1"
+    wanted = "Query not event(BeaconCommitted(" passive_commit_arguments ")) is false."
+    require_exact(wanted, "passive registration completion")
+    passive_message_arguments = "session_3,message_direction,message_sequence_5,sender,receiver,plaintext_5"
+    wanted = "Query not event(MessageReceived(" passive_message_arguments ")) is false."
+    require_exact(wanted, "passive record delivery")
+  } else if (scenario == "quantum-capabilities") {
+    if (query_count != 2) {
+      reject("expected 2 quantum capability queries, saw " query_count)
+    }
+    wanted = "Query not attacker(QUANTUM_ED_CAPABILITY_SECRET[]) is false."
+    require_exact(wanted, "Ed25519 quantum recovery")
+    wanted = "Query not attacker(QUANTUM_X25519_CAPABILITY_SECRET[]) is false."
+    require_exact(wanted, "X25519 quantum recovery")
+  } else if (scenario == "baseline" ||
+             scenario == "active-classical") {
     if (query_count != 11) {
-      reject("expected 11 baseline queries, saw " query_count)
+      reject("expected 11 " scenario " queries, saw " query_count)
     }
 
     baseline_secret[1] = "INITIAL_SECRET"
@@ -107,7 +168,7 @@ END {
         }
       }
       if (!found) {
-        reject("missing baseline secrecy result: " wanted)
+        reject("missing " scenario " secrecy result: " wanted)
       }
     }
 
@@ -118,7 +179,7 @@ END {
     expected_correspondence[5] = "Query inj-event(BeaconCommitted(" commit_arguments ")) ==> inj-event(ServerCommitted(" commit_arguments ")) is true."
     expected_correspondence[6] = "Query inj-event(MessageReceived(" message_arguments ")) ==> inj-event(MessageSent(" message_arguments ")) is true."
     for (correspondence_index = 1; correspondence_index <= 6; correspondence_index++) {
-      require_exact(expected_correspondence[correspondence_index], "baseline correspondence")
+      require_exact(expected_correspondence[correspondence_index], scenario " correspondence")
     }
   } else if (scenario == "reachability") {
     if (query_count != 7) {

@@ -4,7 +4,7 @@ import Aeneas
 import CoreModels
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open Result ControlFlow Error
+open RustM ControlFlow Error
 open Std.Do
 set_option linter.dupNamespace false
 set_option linter.hashCommand false
@@ -266,31 +266,31 @@ structure pqxdh.BeaconStart where
   message : pqxdh.InitKex
 
 /-- [beaconcrypt_core::pqxdh::tag_mlkem768_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 961:29-961:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 974:29-974:83 -/
 @[reducible]
 def pqxdh.tag_mlkem768_key.closure := Array Std.U8 1184#usize
 
 /-- [beaconcrypt_core::pqxdh::tag_x25519_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 947:76-955:5 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 960:76-968:5 -/
 def pqxdh.tag_x25519_key.closure := Std.U8 × Array Std.U8 32#usize
 
 /-- [beaconcrypt_core::pqxdh::tag_sign_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 939:29-939:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 952:29-952:83 -/
 @[reducible]
 def pqxdh.tag_sign_key.closure := Array Std.U8 32#usize
 
 /-- [beaconcrypt_core::pqxdh::untag_mlkem768_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 992:67-992:85 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1005:67-1005:85 -/
 @[reducible]
 def pqxdh.untag_mlkem768_key.closure := Array Std.U8 1185#usize
 
 /-- [beaconcrypt_core::pqxdh::untag_x25519_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 982:65-982:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 995:65-995:83 -/
 @[reducible]
 def pqxdh.untag_x25519_key.closure := Array Std.U8 34#usize
 
 /-- [beaconcrypt_core::pqxdh::untag_sign_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 971:63-971:81 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 984:63-984:81 -/
 @[reducible]
 def pqxdh.untag_sign_key.closure := Array Std.U8 33#usize
 
@@ -324,7 +324,7 @@ structure pqxdh.BeaconFinishInputs where
   shared_secrets : pqxdh.PqxdhSharedSecrets
 
 /-- [beaconcrypt_core::pqxdh::build_associated_data::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 923:66-933:5 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 936:66-946:5 -/
 def pqxdh.build_associated_data.closure :=
   Array Std.U8 33#usize × Array Std.U8 33#usize
 
@@ -374,7 +374,7 @@ inductive pqxdh.KeyIdAvailability where
 | Occupied : pqxdh.KeyIdAvailability
 
 /-- [beaconcrypt_core::pqxdh::EstablishedPeer]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 887:0-891:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 886:0-890:1
     Visibility: public -/
 structure pqxdh.EstablishedPeer where
   key_id : Std.U64

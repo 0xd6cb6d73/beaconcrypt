@@ -11,7 +11,7 @@ globs = ["BeaconcryptCore", "BeaconcryptCore.*"]
 [[require]]
 name = "aeneas"
 git = "https://github.com/cryspen/aeneas"
-rev = "nightly-2026.08.04-8125bcf"
+rev = "nightly-2026.08.24-f8a0eb8"
 subDir = "backends/lean"
 
 [[require]]
@@ -22,4 +22,4 @@ rev = "v4.31.0"
 [[require]]
 name = "Hax"
 git = { url = "https://github.com/cryspen/hax-lean" }
-rev = "v0.2.0"
+rev = "v0.3.12"

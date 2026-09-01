@@ -4,12 +4,13 @@
   description = "Hermetic beaconcrypt formal-verification toolchain";
 
   inputs = {
-    hax.url = "github:cryspen/hax/4fad0ae6268bc0817cafcf4f0300e50a481e4d49";
+    hax.url = "github:cryspen/hax/4c9e2b7c75ab1e2b645a4a8361ae86c4504f9800";
     fstar.follows = "hax/fstar";
     nixpkgs.follows = "hax/nixpkgs";
+    proof-nixpkgs.url = "github:NixOS/nixpkgs/3de8f8d73e35724bf9abef41f1bdbedda1e14a31";
   };
 
-  outputs = { hax, fstar, nixpkgs, ... }:
+  outputs = { hax, fstar, nixpkgs, proof-nixpkgs, ... }:
     let
       systems = [
         "x86_64-linux"
@@ -26,7 +27,10 @@
             fstar.packages.${system}.z3
             nixpkgs.legacyPackages.${system}.ripgrep
             nixpkgs.legacyPackages.${system}.elan
+            proof-nixpkgs.legacyPackages.${system}.coqPackages_9_0.coq
+            proof-nixpkgs.legacyPackages.${system}.coqPackages_9_0.ssprove
           ];
+          SSPROVE_VERSION = proof-nixpkgs.legacyPackages.${system}.coqPackages_9_0.ssprove.version;
         });
       });
     };

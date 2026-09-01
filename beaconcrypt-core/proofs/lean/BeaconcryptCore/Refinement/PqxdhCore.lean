@@ -19,7 +19,7 @@ byte strings, and that the generated all-zero test decides the ideal one.
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
-open Result
+open RustM
 
 set_option maxHeartbeats 1000000
 set_option relaxedAutoImplicit false

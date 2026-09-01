@@ -16,12 +16,13 @@ The central rule is that there must not be a hand-written proof model that can s
 
 ## Verification architecture
 
-Use two complementary backends from one Rust protocol core:
+Use complementary verification layers around one Rust protocol core:
 
 - F* for functional correctness of state transitions, transcript construction, bounds, key lifecycle, error behaviour, and panic freedom.
-- ProVerif for trace properties in an active-attacker model: secrecy, authentication, identity binding, replay resistance, session separation, compromise scenarios, and forward secrecy.
+- ProVerif for symbolic trace properties under active and passive classical or quantum-capability threat models: secrecy, authentication, identity binding, replay resistance, session separation, compromise scenarios, and forward secrecy.
+- SSProve for probabilistic games, event reductions, and advantage reasoning under explicit deterministic and primitive-security contracts.
 
-F* is the primary extraction target. The hax ProVerif backend is experimental, so its models and generated output need closer review, but it addresses a different class of questions than functional verification. Neither backend is expected to prove the cryptographic primitives themselves.
+F* is the primary extraction target. The hax ProVerif backend is experimental, so its models and generated output need closer review, but it addresses a different class of questions than functional verification. Direct hax-to-SSProve extraction is currently rejected by the reviewed safety gate, so the checked finite games mirror named production operation shapes while the explicit representation bridges to F* and Lean remain open. None of these layers is expected to prove the cryptographic primitives themselves.
 
 The intended boundary is:
 
@@ -233,7 +234,7 @@ Do not assume general hash injectivity.
 The implemented proof extracts the production transcript helper, proves its exact 229-byte layout and both LE64 fields, proves both integer encodings and the complete six-field transcript injective, and machine-checks `ctx_distinct_openings_imply_hash_collision`.
 That theorem quantifies over arbitrary pure hash and AEAD-open functions and proves pointwise that two distinct accepted explanations of the same fixed ciphertext, transmitted tag, and commitment yield an explicit hash-collision witness.
 It deliberately allows unequal-key or unequal-context openings by the base AEAD.
-The displayed [computational advantage inequality](ctx-commitment.md) is the conventional probabilistic and runtime lifting of that theorem, not a mechanized probability theorem.
+SSProve machine-checks a bounded hidden-ROM CTX verifier, collision extractor, `q + 2` trace bound, separate true-real/fresh-ideal privacy hop, ideal PQXDH-plus-ratchet confidentiality games, a root-derived masked-bit hybrid-combiner reduction, a one-step erasure-conditioned ratchet hop, combined-authenticator record event/collision reductions, and an exact `1/2` fresh-guess bound for its one-bit ideal table. Completing the production-width representation bridges, production-width collision, guessing, and hidden-query bounds, primitive instantiation, composition, and runtime accounting remains conventional.
 BLAKE2b-512 collision resistance and correct production use of the proved helper remain explicit primitive and adapter assumptions.
 
 ### ProVerif model
@@ -376,9 +377,9 @@ explicit one-owner, non-rollback replay refinement described below.
 5. **Complete:** close the three-counterexample milestone with authenticated key-ID binding, persistent server registration replay rejection, collision-safe checked allocation, and mandatory regressions.
 6. **Complete:** add the F* PQXDH agreement, transcript, associated-data, initialization, and assigned-ID correspondence proofs.
 7. **Complete:** add ProVerif processes, events, primitive equations, compromise scenarios, strict result gates, and active-attacker queries.
-8. **Complete:** pin rustc, hax, F*, Z3, and ProVerif and run extraction plus proofs in CI.
-9. **Complete:** maintain a reviewed inventory of every opaque Rust function, assumed primitive law, adapter refinement, proof-library assumption, generated-code exception, and handwritten backend fragment, with a CI drift gate.
-10. **Complete:** extract and prove the production CTX transcript order and injectivity, machine-check the pointwise collision-witness theorem, add a deliberately multi-opening ProVerif negative control with an exact no-CTX failure witness, and document the conventional conditional computational lifting.
+8. **Complete:** pin rustc, hax, F*, Z3, ProVerif, Rocq, SSProve, and MathComp and run the applicable extraction plus proofs in CI.
+9. **Complete:** maintain a reviewed inventory of every opaque Rust function, assumed primitive law, adapter refinement, proof-library assumption, generated-code exception, and handwritten backend fragment, with a standalone drift gate.
+10. **Complete:** extract and prove the production CTX transcript order and injectivity, machine-check the pointwise collision-witness theorem and bounded hidden-ROM SSProve binding/privacy games, add a deliberately multi-opening ProVerif negative control with an exact no-CTX failure witness, and document the remaining production-width representation and primitive-reduction lifting.
 
 Each stage should leave the existing crate buildable and tested. Extraction output should be reproducible and generated directories should never contain hand-maintained lemmas.
 
@@ -619,10 +620,12 @@ The later commitment extension separates facts that the original ideal frame rul
 The ordinary record correspondence still assumes exact symbolic opening.
 The extracted F* helper is proved to emit `key || nonce || associated data || tag || LE64(sequence) || LE64(sender ID)` exactly, both integer encodings and the complete transcript are proved injective, and `ctx_distinct_openings_imply_hash_collision` machine-checks the pointwise collision witness for arbitrary pure hash and AEAD-open functions.
 The same payload fixes ciphertext, tag, and commitment, while distinct accepted explanations may differ in key, nonce, associated data, sequence, sender ID, or plaintext and the base AEAD remains free to multi-open under unequal contexts.
-The conventional probability and runtime lifting bounds commitment advantage by BLAKE2b-512 collision advantage, but that lifting is not mechanized and BLAKE2b collision resistance remains assumed.
+SSProve now runs a bounded adaptive hidden-ROM CTX game, verifies both candidate explanations with exactly two additional queries, extracts an unequal-input equal-output collision, and proves a `q + 2` trace bound. A separate table-programming game proves the true-real/programmed-real representation and bounds the absolute deterministic true-real/fresh-ideal decision gap by the probability of querying the secret transcript. The production-width representation bridge, numerical collision and hidden-query bounds, complete AEAD privacy/integrity composition, runtime accounting, and BLAKE2b collision resistance remain unmechanized or assumed.
 A dedicated weak-AEAD ProVerif library supplements this theorem with one explicit ideal-hash counterfactual: CTX makes its double-opening event unreachable, while the same query produces a trace when the CTX checks are removed.
 
-`make verify` now regenerates and checks both backends in the revision-pinned hax shell. Its result parser rejects timeouts, missing or substituted queries, unexpected true/false classifications, and every unproved or inconclusive security query. The aggregate ProVerif check runs its nine independent `check-proverif-<scenario>` targets concurrently, and the corresponding `verify-proverif-<scenario>` and `check-generated-proverif-<scenario>` targets support isolated locked-shell and generated-drift checks. `make check-generated` covers both generated directories.
+The SSProve suite also contains a closed one-session game for one ideal PQXDH establishment followed by one sequence-zero symmetric-ratchet record. It preserves the four-DH-plus-KEM root order, correlated Ed25519/X25519 compromise, and shared initial/step KDF prefix relation. The direct finite game proves advantage zero for active classical, passive classical, and passive-quantum classical-query capability models, while active quantum substitution has advantage one. A companion bounded adaptive classical-ROM game fixes the DH atoms as guessable, hides only the honest ML-KEM atom and root/ratchet table, and bounds positive-case advantage by the probability of querying the exact hidden pad input. Standalone extensions bound root-derived masked-bit confidentiality by querying a modeled input containing one hidden contribution, bound one-step post-erasure record confidentiality by querying the erased predecessor chain, partition combined-authenticator integrity attempts by prior-query status, extract a same-run table collision from cross-context or cross-sequence payload reuse, and prove an exact `1/2` fresh-guess bound for the one-bit ideal authenticator. These models give no negligible production estimates, and multi-session composition, general transcripts and schedules, adaptive corruption, complete AEAD/CTX composition, QPT adversaries, and QROM access remain outside the milestone.
+
+`make verify` now regenerates or checks every configured backend in the revision-pinned proof shell. Its ProVerif result parser rejects timeouts, missing or substituted queries, unexpected true/false classifications, and every unproved or inconclusive security query. The aggregate ProVerif check runs its thirteen `check-proverif-<scenario>` targets concurrently, and the corresponding `verify-proverif-<scenario>` and `check-generated-proverif-<scenario>` targets support isolated locked-shell and generated-drift checks. `make check-generated` covers the generated F*, ProVerif, and Lean artifacts, while SSProve objects are checked separately under `target/formal-verification/ssprove`.
 
 ### Step 8 implementation
 
@@ -667,13 +670,7 @@ The detailed implementation record is in
 canonical maintained inventory is
 [`beaconcrypt-core/proofs/trusted-boundary.md`](../beaconcrypt-core/proofs/trusted-boundary.md).
 
-Stage 9 inventories the repository-owned production wrappers around entropy,
-Ed25519, Ed25519/X25519 conversion, X25519, ML-KEM, HKDF,
-ChaCha20-Poly1305, BLAKE2b, wire translation, persistence, allocation, and
-zeroization. It separately records the primitive laws used by the conditional
-F* results and ideal ProVerif theory, every concrete-to-logical adapter
-refinement, the pinned hax/F*/ProVerif trust surface, all generated-code
-exceptions, and every handwritten F* or ProVerif review unit.
+Stage 9 inventories the repository-owned production wrappers around entropy, Ed25519, Ed25519/X25519 conversion, X25519, ML-KEM, HKDF, ChaCha20-Poly1305, BLAKE2b, wire translation, persistence, allocation, and zeroization. It separately records the primitive laws used by the conditional F* results and ideal ProVerif theory, every concrete-to-logical adapter refinement, the pinned hax/F*/ProVerif/Rocq/SSProve trust surface, all generated-code exceptions, and every handwritten F*, ProVerif, or SSProve review unit.
 
 `make check-inventory` validates a category/path/SHA-256 manifest and derives
 the complete production Rust/schema, beaconcrypt-core Rust, generated-backend,
@@ -684,13 +681,7 @@ handwritten primitive, event, process, and query counts; the absence of hax
 opaque annotations; and the absence of the previously rejected generated F*
 constructs.
 
-The inventory check runs after regeneration in both the complete and
-ProVerif-only locked-shell paths. The existing CI command therefore fails when
-a monitored production wrapper, extraction selector, handwritten proof/model,
-result classifier, generated artifact, tool control, or inventory policy
-changes without an explicit reviewed-baseline update. The hashes are
-deliberately conservative review tripwires; passing the mechanical gate does
-not itself prove that a human review was adequate.
+The inventory check is deliberately separate from the complete and ProVerif-only locked-shell proof paths and must be run after final proof regeneration. The formal-verification workflow includes it as an independent matrix job alongside the proof backends, and `make -C beaconcrypt-core check-inventory` fails when a monitored production wrapper, extraction selector, handwritten proof/model, result classifier, generated artifact, tool control, or inventory policy changes without an explicit reviewed-baseline update. The hashes are deliberately conservative review tripwires; passing the mechanical gate does not itself prove that a human review was adequate.
 
 Stage 9 does not add a theorem, change a symbolic equation or query, or alter
 production behavior. All limitations and conditional refinements recorded in
@@ -729,10 +720,10 @@ CI pins all proof tools together and fails on:
   proof-library, generated-exception, or handwritten-fragment inventory drift
   that lacks an explicit reviewed-baseline update.
 
-The proof artifact must state the exact versions of rustc, hax, F*, Z3, and ProVerif used to produce it.
+The proof artifact must state the exact versions of rustc, hax, F*, Z3, ProVerif, Rocq, SSProve, and MathComp used to produce it.
 The Stage 9 manifest also fingerprints the selectors and locked tool/CI
 controls that define that artifact.
 
 ## What a successful result means
 
-The completed production refactor and imported Lean refinements justify saying that the generated control-plane receive driver directly refines the ideal 50-skipped-key `Ratchet.recvStep`, that the core owns exact typed ratchet requests and commit/rollback phases, that a concrete kernel satisfying `KernelRefines` has a precise ideal meaning, that a response satisfying `ResponseRefines` drives a correct non-exhausted send, and that every supplied `ReceiveFailureTrace` witness returns the exact refining entry state. They also justify generated cached-open construction from an ideal skipped-key lookup, the control-plane filtered-cache result for cached consumption, and the conditional cached-success result described above. They do not yet justify saying that the complete effect-level receive lifecycle, send exhaustion, initial role construction, restoration, or synchronous adapter refines the ideal ratchet: the cached material-array publication, future-staging, ideal-send-exhaustion, composition, and driver obligations remain. The old concrete F* executor/callback theorems apply only to their predecessor snapshot. Production additionally enforces affine establishment-gated state, inert updates, canonical decoding, and generation/head CAS; `SnapshotStore` remains trusted, and snapshots have no cryptographic authentication or encryption. No current proof establishes concrete HKDF/AEAD/ML-KEM semantics, the adapter interpreter, output noncollision, serialization/store correctness, panic/crash behavior, bindings, compiler behavior, physical erasure, RNG behavior, or computational reductions.
+The completed production refactor and imported Lean refinements justify saying that the generated control-plane receive driver directly refines the ideal 50-skipped-key `Ratchet.recvStep`, that the core owns exact typed ratchet requests and commit/rollback phases, that a concrete kernel satisfying `KernelRefines` has a precise ideal meaning, that a response satisfying `ResponseRefines` drives a correct non-exhausted send, and that every supplied `ReceiveFailureTrace` witness returns the exact refining entry state. They also justify generated cached-open construction from an ideal skipped-key lookup, the control-plane filtered-cache result for cached consumption, and the conditional cached-success result described above. They do not yet justify saying that the complete effect-level receive lifecycle, send exhaustion, initial role construction, restoration, or synchronous adapter refines the ideal ratchet: the cached material-array publication, future-staging, ideal-send-exhaustion, composition, and driver obligations remain. The old concrete F* executor/callback theorems apply only to their predecessor snapshot. Production additionally enforces affine establishment-gated state, inert updates, canonical decoding, and generation/head CAS; `SnapshotStore` remains trusted, and snapshots have no cryptographic authentication or encryption. No current proof establishes concrete HKDF/AEAD/ML-KEM semantics, the adapter interpreter, output noncollision, serialization/store correctness, panic/crash behavior, bindings, compiler behavior, physical erasure, RNG behavior, or a complete computational protocol reduction. SSProve now checks bounded hidden-ROM CTX binding/privacy hops, closed and attacker-facing ideal PQXDH-plus-ratchet games, a root-derived masked-bit hybrid-combiner hop, a one-step erasure-conditioned confidentiality hop, combined-authenticator record event/collision reductions, and an exact one-bit fresh-guess bound. A closed structural module additionally checks the exact two production KDF labels and the intentional shared initial/step symmetric domain, while the [composition investigation](impl/ssprove-end-to-end-composition.md) specifies how keying and keyed packages could be connected. Production-width bridges and bounds, the actual state-separating composition theorem, multi-session registration and record-decryption interfaces, arbitrary schedules, and quantum-computational composition remain open.

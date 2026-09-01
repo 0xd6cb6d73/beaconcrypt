@@ -4,7 +4,7 @@ import BeaconcryptCore.Model.Pqxdh.Commit
 /-!
 # BeaconCrypt modified PQXDH — what the beacon's acceptance test rules out
 
-Spec §16 requires the beacon to admit the server's first record through the *general*
+Spec §16 requires the beacon to accept the server's first record through the *general*
 receive-ratchet transition, including the CTX commitment check, and to insist that
 the authenticated sender be the pinned `sid_S`.  This file draws the two
 consequences of the committing record layer of

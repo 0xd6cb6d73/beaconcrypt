@@ -54,21 +54,31 @@ Both successful outer checks imply `hash(X) = U = hash(X')`.
 If `X = X'`, `production_commitment_input_is_injective` gives equality of `K`, `N`, `A`, `T`, `S`, and `I`, while applying the same pure AEAD-open function to the same `K`, `N`, `A`, `C`, and `T` fixes its result and therefore gives `M = M'`.
 That contradicts distinctness, so F* constructs the explicit witness `X != X'` and `hash(X) = hash(X')` for every pair of accepted distinct explanations.
 
-Conventionally lifting this pointwise theorem to a probabilistic commitment game, a collision adversary `B` runs a commitment adversary `A` and returns the F*-proved witness from any successful misattribution.
-Its running time is essentially that of `A` plus parsing and two transcript evaluations, and the usual advantage inequality is:
+The repository-owned [`CtxGame.v`](../beaconcrypt-core/proofs/ssprove/CtxGame.v) defines a finite hidden-random-oracle game for this lifting. A deterministic adaptive adversary receives at most `q` classical oracle queries and returns one payload with two candidate explanations. The game then makes exactly the two transcript queries needed to verify the candidates, uses an arbitrary deterministic AEAD-open function that may multi-open, and exposes only the attempt, returned digests, and chronological query trace rather than the hidden function table.
+
+SSProve proves:
 
 ```text
-Adv_commit_beaconcrypt(A) <= Adv_collision_BLAKE2b-512(B)
+Pr_bounded-hidden-ROM[CTX misattribution] <= Pr_same-run[unequal-input, equal-output collision]
 ```
 
-The displayed probability and runtime lifting is conventional cryptographic reasoning, not a mechanized probability or complexity theorem in F*.
-The machine-checked result is the pointwise implication and explicit collision witness for arbitrary pure functions.
+`ctx_hidden_rom_extractor_reduction` proves this for every hidden-table distribution, and `ctx_uniform_hidden_rom_extractor_reduction` specializes it to a uniformly sampled finite random function. `ctx_hidden_binding_trace_size_bound` gives the `q + 2` upper bound, and `ctx_attach_verifier_completed_run` proves that any adversary completing within its budget is followed by exactly the two verifier query-answer pairs. `ctx_hidden_misattribution_challenge_reachable` supplies a concrete non-vacuity witness using a deliberately multi-opening AEAD and a colliding constant table.
+
+The game uses an injective product of one-bit semantic fields, so its extractor fact is proved directly in Rocq. Connecting those fields to the 229-byte production transcript still requires the reviewed representation bridge to the F* injectivity and collision-witness theorems. Instantiating the abstract collision event as `Adv_commit_beaconcrypt(A) <= Adv_collision_BLAKE2b-512(B)` also requires the production-width game, the concrete primitive premise, and runtime accounting.
+
+The checked assumption reports contain only the reviewed MathComp Boolean-predicate foundations and an abstract real-number carrier; they contain no repository admission, unaccepted SSProve interchange dependency, or unsafe hax prelude import.
 There is no additive ChaCha20-Poly1305 term in this binding reduction, and unequal-key or unequal-context multi-openings by the base AEAD remain allowed.
 This is the same collision-reduction pattern as Theorem 2 of the CTX paper, extended by an injective encoding of `S` and `I` and simplified by the fact that beaconcrypt transmits the original `T`.
 
 Collision resistance is the production assumption and does not provide a proved numerical advantage bound for BLAKE2b.
 Under the additional ideal-random-function heuristic, `Q` distinct transcript evaluations have collision probability at most `Q(Q - 1) / 2^513`, corresponding to generic classical birthday work on the order of `2^256` for the 512-bit output.
 This heuristic is not a proof about BLAKE2b and must not be reported as one.
+
+## Separate random-oracle privacy hop
+
+[`CtxPrivacy.v`](../beaconcrypt-core/proofs/ssprove/CtxPrivacy.v) addresses the fact that the published digest hashes the secret key as ordinary data. It samples a jointly uniform hidden key, finite random-oracle table, and fresh digest; programs the table at the key-derived secret transcript; and couples that representation to an unprogrammed ideal table that publishes the same fresh digest. A key-preserving table-entry swap gives the uniform finite representation, and `ctx_hidden_uniform_key_true_real_privacy_bound` proves that the absolute true-real versus fresh-ideal decision-probability gap is at most the probability that the ideal trace queried the hidden key-containing transcript.
+
+This is not a consequence of collision resistance and is intentionally separate from the binding result. It is conditional on an ideal AEAD supplying a hidden uniform record key, and a production theorem still needs the numerical probability of querying the production-width secret input plus composition with the base AEAD privacy game. The current classical one-bit model establishes the game hop and bad-event shape but neither a useful concrete bound nor a QROM result.
 
 ## Supplementary symbolic negative control
 
@@ -79,18 +89,18 @@ It is not a computational proof or a proof of BLAKE2b.
 
 ## Scope and remaining assumptions
 
-The F* theorem and its conventional computational lifting establish full misattribution resistance for the parsed protected payload, including key commitment and binding of the nonce, long-lived associated data, sequence, sender key identifier, and accepted plaintext, conditional on BLAKE2b-512 collision resistance and exact production use of the proved encoding.
+The F* collision witness and SSProve bounded hidden-ROM extractor establish complementary mechanized ingredients of a misattribution reduction for the parsed protected payload, including key commitment and binding of the nonce, long-lived associated data, sequence, sender key identifier, and accepted plaintext. Completing the production reduction remains conditional on the production-width representation bridge, the concrete collision game and numerical bound, BLAKE2b-512 collision resistance, and exact production use of the proved encoding.
 They explain why a deliberately multi-opening base-AEAD example does not produce a multi-opening beaconcrypt record unless the adversary finds a BLAKE2b collision.
 The concrete fixture is documented in [multi-opening-fixture.md](multi-opening-fixture.md).
 
 The proof does not establish BLAKE2b collision resistance, correctness of its implementation, or correspondence between the extracted helper and compiled machine code beyond the stated hax/compiler assumptions.
 It does not prove that production supplies the intended fields to the helper, that libsodium hashes exactly the returned bytes, or that parsing and serialization preserve the modeled payload.
 It does not make `U` a MAC: anyone who knows an opening key and context can compute it.
-It also does not establish secrecy, AEAD authenticity, nonce discipline, side-channel resistance, memory erasure, or origin authentication; those properties require their separate protocol and primitive assumptions.
+The separate programming hop identifies the precise secret-query event on which CTX can change a deterministic classical observer's view, but it does not by itself establish record secrecy, AEAD authenticity, nonce discipline, side-channel resistance, memory erasure, or origin authentication; those properties require their separate protocol and primitive assumptions.
 
 Collision resistance supplies the remaining primitive assumption for the binding result above.
-A claim that publishing `U`, which hashes the secret key as data to an unkeyed hash, preserves all confidentiality and authenticity guarantees of the base AEAD needs additional assumptions such as the random-oracle treatment used for CTX's nAE-security analysis and the security of ChaCha20-Poly1305.
-No such preservation reduction for the concrete BLAKE2b instantiation is claimed here.
+A claim that publishing `U`, which hashes the secret key as data to an unkeyed hash, preserves all confidentiality and authenticity guarantees of the base AEAD still needs the production-width random-oracle bound, the appropriate integrity hop, and the security of ChaCha20-Poly1305.
+No complete preservation reduction for the concrete BLAKE2b instantiation is claimed here.
 
 The bound fields are semantic parsed values, not a commitment to one unique Cap'n Proto byte serialization or to the external meaning of a numeric sender ID in a mutable database.
 The adapter must supply the intended associated data, sequence, and sender ID, and deployment state must preserve the mapping from that ID to the intended principal.
