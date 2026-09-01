@@ -783,21 +783,37 @@ done
 
 ctx_rom_auth=proofs/lean/BeaconcryptCore/Computational/CtxRomAuth.lean
 for theorem_name in \
+	ctxRandomOracle_cache_origin \
+	ctxPublicOracle_preserves_invariant \
+	ctxSealOracle_preserves_invariant \
+	ctxAdversaryImpl_preserves_invariant \
+	ctxAdversary_run_invariant \
+	ctxBeforeVerifyInner_invariant \
+	ctxBeforeVerifyGame_invariant \
+	publicTargetQueried_implies_secretPrefixQueried \
+	fullAliasShape_excludes_honestTarget \
+	aliasCacheHit_implies_publicTargetQueried \
+	generated_aliasCacheHit_implies_publicTargetQueried \
+	generated_aliasCacheHit_implies_secretPrefixQueried \
+	ctxAliasTargetCacheHitProbability_le_secretPrefixQueriedProbability \
 	ctxFreshAliasVerifier_le_inv \
 	ctxFreshAliasGame_le_inv \
 	ctxDigest_card \
 	ctxFreshAliasGame_le_inv_512 \
 	ctxAliasGameProbability_le_cacheHit_add_inv \
-	ctxAliasGameProbability_le_cacheHit_add_inv_512; do
+	ctxAliasGameProbability_le_cacheHit_add_inv_512 \
+	ctxAliasGameProbability_le_secretPrefix_add_inv \
+	ctxAliasGameProbability_le_secretPrefix_add_inv_512; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
 		"$ctx_rom_auth" "modified CTX ROM theorem ${theorem_name}"
 done
-for theorem_name in ctxDigest_toList_length decodeRecord_romRecord; do
+for theorem_name in ctxDigest_toList_length decodeRecord_romRecord \
+	outerInput_take_key emptyCtxHandlerState_invariant; do
 	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
 		"$ctx_rom_auth" "modified CTX ROM representation theorem ${theorem_name}"
 done
 for declaration in CtxRecordContext CtxSealInput CtxRomRecord CtxAliasTarget \
-	CtxAdversary CtxBeforeVerify; do
+	CtxAdversary CtxSuccessfulSeal CtxHandlerState CtxBeforeVerify; do
 	require_line_count 1 "^structure ${declaration}( |$)" \
 		"$ctx_rom_auth" "modified CTX ROM structure ${declaration}"
 done
@@ -809,15 +825,22 @@ done
 require_line_count 1 '^@\[inline, reducible\] def ctxRandomOracle( |$)' \
 	"$ctx_rom_auth" "modified CTX lazy random-oracle implementation"
 for declaration in CtxRomRecord.toRecordCipher CtxRomRecord.encode recordWf \
-	outerInput ctxSeal ctxSealOracle ctxAdversaryImpl \
-	CtxAliasTarget.matchesSealEntry CtxAliasTarget.sameFullTupleAsSealEntry \
-	CtxFullAliasShape CtxBeforeVerify.targetInput ctxBeforeVerifyInner \
+	outerInput ctxSeal emptyCtxHandlerState \
+	CtxHandlerState.SealsMarkedUsed CtxHandlerState.UniqueSealNonces \
+	CtxHandlerState.CacheProvenance CtxHandlerState.Invariant \
+	CtxHandlerState.addPublic CtxHandlerState.addSeal \
+	CtxAliasTarget.matchesSuccessfulSeal \
+	CtxAliasTarget.sameFullTupleAsSuccessfulSeal \
+	CtxFullAliasShape CtxBeforeVerify.targetInput CtxPublicTargetQueried \
+	CtxSecretPrefixQueried CtxBeforeVerify.Invariant \
 	CtxAcceptedFullAliasReplayAt; do
 	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
 		"$ctx_rom_auth" "modified CTX ROM definition ${declaration}"
 done
-for declaration in ctxBeforeVerifyGame ctxFreshAliasVerifier ctxFreshAliasGame \
-	ctxAliasGame ctxAliasTargetCacheHitProbability; do
+for declaration in ctxPublicOracle ctxSealOracle ctxAdversaryImpl \
+	ctxBeforeVerifyInner ctxBeforeVerifyGame ctxFreshAliasVerifier \
+	ctxFreshAliasGame ctxAliasGame ctxAliasTargetCacheHitProbability \
+	ctxSecretPrefixQueriedProbability; do
 	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
 		"$ctx_rom_auth" "modified CTX ROM probability definition ${declaration}"
 done
