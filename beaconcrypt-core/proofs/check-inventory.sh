@@ -742,7 +742,11 @@ ctx_auth_classification=proofs/lean/BeaconcryptCore/Computational/CtxAuthClassif
 for theorem_name in \
 	acceptedFullFreshForgery_classification \
 	contextAliasReplay_has_distinct_ctxPreimages \
-	ctxAcceptedFullFreshForgeryProbability_le_projection_add_alias; do
+	ctxAcceptedFullFreshForgeryProbability_le_projection_add_alias \
+	contextAliasReplay_target_outerHashPreimage_fresh \
+	nonceConsistentAcceptedFullFreshForgery_classification \
+	ctxNonceConsistentAliasReplayProbability_le_freshTargetOuterHashAliasReplay \
+	ctxNonceConsistentAcceptedFullFreshForgeryProbability_le_nonceConsistentProjection_add_freshAlias; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
 		"$ctx_auth_classification" "general CTX authenticity classification theorem ${theorem_name}"
 done
@@ -751,16 +755,25 @@ for declaration in CtxSealHistoryEntry CtxAuthClassificationAttempt; do
 		"$ctx_auth_classification" "general CTX authenticity structure ${declaration}"
 done
 for declaration in CtxFullFresh CtxBaseProjectionMatch CtxBaseProjectionFresh \
-	CtxAcceptedFullFreshForgery CtxFreshAcceptedBaseProjection CtxContextAliasReplay; do
+	CtxAcceptedFullFreshForgery CtxFreshAcceptedBaseProjection CtxContextAliasReplay \
+	CtxPerKeyNonceConsistent CtxTargetOuterHashPreimageFresh \
+	CtxFreshTargetOuterHashPreimage CtxFreshTargetOuterHashAliasReplay \
+	CtxNonceConsistentAcceptedFullFreshForgery \
+	CtxNonceConsistentFreshAcceptedBaseProjection; do
 	require_line_count 1 "^def ${declaration}( |$)" \
 		"$ctx_auth_classification" "general CTX authenticity definition ${declaration}"
 done
-for declaration in CtxSealHistoryEntry.ctxOutput CtxSealHistoryEntry.baseOutput; do
+for declaration in CtxSealHistoryEntry.ctxOutput CtxSealHistoryEntry.baseOutput \
+	CtxSealHistoryEntry.outerHashPreimage; do
 	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
 		"$ctx_auth_classification" "general CTX authentication output ${declaration}"
 done
 for declaration in ctxAcceptedFullFreshForgeryProbability \
-	ctxFreshAcceptedBaseProjectionProbability ctxContextAliasReplayProbability; do
+	ctxFreshAcceptedBaseProjectionProbability ctxContextAliasReplayProbability \
+	ctxNonceConsistentAliasReplayProbability \
+	ctxFreshTargetOuterHashAliasReplayProbability \
+	ctxNonceConsistentFreshAcceptedBaseProjectionProbability \
+	ctxNonceConsistentAcceptedFullFreshForgeryProbability; do
 	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
 		"$ctx_auth_classification" "general CTX authentication probability ${declaration}"
 done

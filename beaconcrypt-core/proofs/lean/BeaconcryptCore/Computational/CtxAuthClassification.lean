@@ -214,4 +214,158 @@ theorem ctxAcceptedFullFreshForgeryProbability_le_projection_add_alias
     (fun attempt => CtxFreshAcceptedBaseProjection c attempt)
     (fun attempt => CtxContextAliasReplay c attempt)
 
+/-! ## Nonce-consistent alias-input freshness -/
+
+/-- Extensional per-key nonce consistency for a designated honest sealing history.
+
+Repeated uses of one `(key, nonce)` pair are permitted only when the complete associated-data context and plaintext are unchanged.
+Exact duplicate entries therefore remain admissible. -/
+def CtxPerKeyNonceConsistent (history : List CtxSealHistoryEntry) : Prop :=
+  ∀ left ∈ history, ∀ right ∈ history,
+    left.material.1 = right.material.1 →
+    left.material.2 = right.material.2 →
+    left.ad = right.ad ∧ left.plaintext = right.plaintext
+
+/-- The actual BLAKE2b input used by one designated honest modified-CTX sealing entry. -/
+def CtxSealHistoryEntry.outerHashPreimage (c : Pqxdh.Crypto)
+    (query : CtxSealHistoryEntry) : Pqxdh.Bytes :=
+  Pqxdh.ctxPreimage query.material query.ad (query.baseOutput c).2
+
+/-- The parsed candidate's target BLAKE2b input is absent from every designated honest sealing entry's actual BLAKE2b input. -/
+def CtxTargetOuterHashPreimageFresh (c : Pqxdh.Crypto)
+    (attempt : CtxAuthClassificationAttempt) (record : Pqxdh.RecordCipher) : Prop :=
+  ∀ query ∈ attempt.history,
+    query.outerHashPreimage c ≠
+      Pqxdh.ctxPreimage attempt.targetMaterial attempt.targetAD record.tag
+
+/-- The candidate parses and its target BLAKE2b input is fresh from the designated honest history. -/
+def CtxFreshTargetOuterHashPreimage (c : Pqxdh.Crypto)
+    (attempt : CtxAuthClassificationAttempt) : Prop :=
+  ∃ record, Pqxdh.decodeRecord attempt.forgedPayload = some record ∧
+    CtxTargetOuterHashPreimageFresh c attempt record
+
+/-- A context-alias replay whose accepted target outer-hash input is fresh from the designated honest history. -/
+def CtxFreshTargetOuterHashAliasReplay (c : Pqxdh.Crypto)
+    (attempt : CtxAuthClassificationAttempt) : Prop :=
+  CtxContextAliasReplay c attempt ∧ CtxFreshTargetOuterHashPreimage c attempt
+
+/-- A full-fresh accepted forgery whose designated honest history is per-key nonce-consistent. -/
+def CtxNonceConsistentAcceptedFullFreshForgery (c : Pqxdh.Crypto)
+    (attempt : CtxAuthClassificationAttempt) : Prop :=
+  CtxPerKeyNonceConsistent attempt.history ∧
+    CtxAcceptedFullFreshForgery c attempt
+
+/-- A fresh accepted retained-base projection whose designated honest history is per-key nonce-consistent. -/
+def CtxNonceConsistentFreshAcceptedBaseProjection (c : Pqxdh.Crypto)
+    (attempt : CtxAuthClassificationAttempt) : Prop :=
+  CtxPerKeyNonceConsistent attempt.history ∧
+    CtxFreshAcceptedBaseProjection c attempt
+
+/-- A context-alias replay against a per-key nonce-consistent history necessarily uses a target outer-hash input fresh from every designated honest seal entry. -/
+theorem contextAliasReplay_target_outerHashPreimage_fresh
+    (c : Pqxdh.Crypto) (attempt : CtxAuthClassificationAttempt)
+    (hnonce : CtxPerKeyNonceConsistent attempt.history)
+    (hreplay : CtxContextAliasReplay c attempt) :
+    CtxFreshTargetOuterHashPreimage c attempt := by
+  rcases hreplay with
+    ⟨_, source, record, hsource, hdecode, _, _, hmatch, hcontextDifferent⟩
+  refine ⟨record, hdecode, ?_⟩
+  intro query hquery heq
+  have hrecordTag : record.tag.length = 16 := by
+    rw [Pqxdh.decodeRecord] at hdecode
+    split at hdecode
+    · cases hdecode
+      simp
+      omega
+    · exact absurd hdecode (by simp)
+  have hqueryTag : (query.baseOutput c).2.length = 16 := by
+    exact c.aeadSeal_tag_length _ _ _ _
+  have heq' :
+      Pqxdh.ctxPreimage query.material query.ad (query.baseOutput c).2 =
+        Pqxdh.ctxPreimage attempt.targetMaterial attempt.targetAD record.tag := by
+    simpa only [CtxSealHistoryEntry.outerHashPreimage] using heq
+  obtain ⟨hmaterial, had, _⟩ := Pqxdh.ctxPreimage_inj query.wf
+    attempt.targetWf hqueryTag hrecordTag heq'
+  rcases hmatch with ⟨hsourceMaterial, _, _⟩
+  have hquerySourceMaterial : query.material = source.material :=
+    hmaterial.trans hsourceMaterial.symm
+  have hsameInput := hnonce query hquery source hsource
+    (congrArg Prod.fst hquerySourceMaterial)
+    (congrArg Prod.snd hquerySourceMaterial)
+  apply hcontextDifferent
+  exact ⟨hsourceMaterial, hsameInput.1.symm.trans had⟩
+
+/-- The exhaustive classification retains nonce consistency on the base-projection branch and replaces the alias branch with an accepted replay at an honest-history-fresh outer-hash input. -/
+theorem nonceConsistentAcceptedFullFreshForgery_classification
+    (c : Pqxdh.Crypto) (attempt : CtxAuthClassificationAttempt)
+    (hwin : CtxNonceConsistentAcceptedFullFreshForgery c attempt) :
+    CtxNonceConsistentFreshAcceptedBaseProjection c attempt ∨
+      CtxFreshTargetOuterHashAliasReplay c attempt := by
+  rcases acceptedFullFreshForgery_classification c attempt hwin.2 with hbase | halias
+  · exact Or.inl ⟨hwin.1, hbase⟩
+  · exact Or.inr ⟨halias,
+      contextAliasReplay_target_outerHashPreimage_fresh c attempt hwin.1 halias⟩
+
+/-- Probability of a context-alias replay whose designated honest history is per-key nonce-consistent. -/
+noncomputable def ctxNonceConsistentAliasReplayProbability (c : Pqxdh.Crypto)
+    (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
+  Pr[fun attempt => CtxPerKeyNonceConsistent attempt.history ∧
+    CtxContextAliasReplay c attempt | attemptComputation]
+
+/-- Probability of an accepted alias replay with a target outer-hash input fresh from the designated honest history. -/
+noncomputable def ctxFreshTargetOuterHashAliasReplayProbability (c : Pqxdh.Crypto)
+    (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
+  Pr[fun attempt => CtxFreshTargetOuterHashAliasReplay c attempt |
+    attemptComputation]
+
+/-- Probability of a fresh accepted retained-base projection whose designated honest history is per-key nonce-consistent. -/
+noncomputable def ctxNonceConsistentFreshAcceptedBaseProjectionProbability
+    (c : Pqxdh.Crypto)
+    (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
+  Pr[fun attempt => CtxNonceConsistentFreshAcceptedBaseProjection c attempt |
+    attemptComputation]
+
+/-- Probability of an accepted full-fresh forgery whose designated honest history is per-key nonce-consistent. -/
+noncomputable def ctxNonceConsistentAcceptedFullFreshForgeryProbability
+    (c : Pqxdh.Crypto)
+    (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
+  Pr[fun attempt => CtxNonceConsistentAcceptedFullFreshForgery c attempt |
+    attemptComputation]
+
+/-- Same-view game hop retaining the complete accepted alias-replay event while replacing nonce consistency by freshness of its target outer-hash input. -/
+theorem ctxNonceConsistentAliasReplayProbability_le_freshTargetOuterHashAliasReplay
+    (c : Pqxdh.Crypto)
+    (attemptComputation : ProbComp CtxAuthClassificationAttempt) :
+    ctxNonceConsistentAliasReplayProbability c attemptComputation ≤
+      ctxFreshTargetOuterHashAliasReplayProbability c attemptComputation := by
+  unfold ctxNonceConsistentAliasReplayProbability
+    ctxFreshTargetOuterHashAliasReplayProbability
+  exact probEvent_mono'' (mx := attemptComputation)
+    (fun attempt hwin => ⟨hwin.2,
+      contextAliasReplay_target_outerHashPreimage_fresh c attempt hwin.1 hwin.2⟩)
+
+/-- A nonce-consistent full CTX forgery reduces with factor one to a nonce-consistent fresh retained-base projection or an accepted alias replay at a fresh outer-hash input. -/
+theorem ctxNonceConsistentAcceptedFullFreshForgeryProbability_le_nonceConsistentProjection_add_freshAlias
+    (c : Pqxdh.Crypto)
+    (attemptComputation : ProbComp CtxAuthClassificationAttempt) :
+    ctxNonceConsistentAcceptedFullFreshForgeryProbability c attemptComputation ≤
+      ctxNonceConsistentFreshAcceptedBaseProjectionProbability c attemptComputation +
+        ctxFreshTargetOuterHashAliasReplayProbability c attemptComputation := by
+  unfold ctxNonceConsistentAcceptedFullFreshForgeryProbability
+    CtxNonceConsistentAcceptedFullFreshForgery
+    ctxNonceConsistentFreshAcceptedBaseProjectionProbability
+    CtxNonceConsistentFreshAcceptedBaseProjection
+    ctxFreshTargetOuterHashAliasReplayProbability
+  refine (probEvent_mono'' (mx := attemptComputation)
+    (q := fun attempt =>
+      (CtxPerKeyNonceConsistent attempt.history ∧
+        CtxFreshAcceptedBaseProjection c attempt) ∨
+      CtxFreshTargetOuterHashAliasReplay c attempt)
+    (fun attempt hwin =>
+      nonceConsistentAcceptedFullFreshForgery_classification c attempt hwin)).trans ?_
+  · exact probEvent_or_le attemptComputation
+      (fun attempt => CtxPerKeyNonceConsistent attempt.history ∧
+        CtxFreshAcceptedBaseProjection c attempt)
+      (fun attempt => CtxFreshTargetOuterHashAliasReplay c attempt)
+
 end BeaconcryptCore.Computational.CtxAuthClassification
