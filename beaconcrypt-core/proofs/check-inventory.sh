@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=3
 	[generated-proverif]=1
-	[handwritten-lean]=29
+	[handwritten-lean]=30
 	[handwritten-proverif]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -602,6 +602,9 @@ require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxReduction$' \
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxRomAuth$' \
 	"$lean_root" \
 	"canonical modified-CTX ROM-authentication proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxPrefixIsolation$' \
+	"$lean_root" \
+	"canonical modified-CTX prefix-isolation proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
@@ -843,6 +846,52 @@ for declaration in ctxPublicOracle ctxSealOracle ctxAdversaryImpl \
 	ctxSecretPrefixQueriedProbability; do
 	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
 		"$ctx_rom_auth" "modified CTX ROM probability definition ${declaration}"
+done
+
+ctx_prefix_isolation=proofs/lean/BeaconcryptCore/Computational/CtxPrefixIsolation.lean
+for theorem_name in \
+	secretPrefixQuery_outerInput \
+	withStickyBad_fst_map_run \
+	withStickyBad_mono \
+	withStickyBad_true \
+	ctxRealWithPrefixFlagImpl_proj_step \
+	ctxRealWithPrefixFlagImpl_proj_run \
+	ctxReal_prefixIsolated_agree_good \
+	ctxRealWithPrefixFlagImpl_bad_mono \
+	ctxPrefixIsolatedImpl_bad_mono \
+	withStickyBad_result_state \
+	ctxPublicOracle_publicInputs \
+	ctxSealOracle_publicInputs \
+	ctxRealWithPrefixFlagImpl_preserves_prefix_flag \
+	fullAliasShape_toBeforeVerify \
+	secretPrefixQueried_toBeforeVerify \
+	ctxRealWithPrefixFlag_run_prefix_flag \
+	trackedProjection_realWithPrefixFlag_eq_ctxBeforeVerifyInner \
+	ctxPrefixBadProbability_eq_secretPrefixQueriedProbabilityInner \
+	tvDist_ctxReal_prefixIsolated_le_prefixBad \
+	tvDist_ctxReal_prefixIsolated_le_secretPrefixQueried \
+	tvDist_ctxBeforeVerifyInner_prefixIsolated_le_secretPrefixQueried \
+	ctxSecretPrefixQueriedProbability_toReal_eq_tsum \
+	tvDist_ctxBeforeVerifyGame_prefixIsolatedGame_le_secretPrefixQueried; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_prefix_isolation" "modified CTX prefix-isolation theorem ${theorem_name}"
+done
+require_line_count 1 '^@\[simp\] theorem emptyCtxPrefixFlagInvariant( |$)' \
+	"$ctx_prefix_isolation" "modified CTX prefix-isolation empty-state invariant"
+require_line_count 1 '^instance \(key : CtxKey\) : DecidablePred \(SecretPrefixQuery key\) :=$' \
+	"$ctx_prefix_isolation" "modified CTX prefix-query decidability instance"
+for declaration in SecretPrefixQuery withStickyBad CtxPrefixFlagInvariant \
+	handlerStateToBeforeVerify trackedProjection; do
+	require_line_count 1 "^def ${declaration}( |$)" \
+		"$ctx_prefix_isolation" "modified CTX prefix-isolation definition ${declaration}"
+done
+for declaration in ctxPrefixIsolatedPublic ctxRealWithPrefixFlagImpl \
+	ctxPrefixIsolatedImpl ctxRealWithPrefixFlagBeforeVerify \
+	ctxPrefixIsolatedFlaggedBeforeVerify ctxPrefixBadProbability \
+	ctxSecretPrefixQueriedProbabilityInner ctxPrefixIsolatedBeforeVerifyInner \
+	ctxPrefixIsolatedGame; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_prefix_isolation" "modified CTX prefix-isolation game definition ${declaration}"
 done
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
