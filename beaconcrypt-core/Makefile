@@ -406,6 +406,7 @@ check-lean-root:
 		BeaconcryptCore.Model.Pqxdh.Acceptance \
 		BeaconcryptCore.Model.Pqxdh.Runs \
 		BeaconcryptCore.Computational.CtxReduction \
+		BeaconcryptCore.Computational.CtxTransitionReduction \
 		BeaconcryptCore.Computational.VCVioFeasibility; do \
 		rg -Fqx "import $$module" '$(LEAN_ROOT)' || { \
 			echo "missing verification-root import: $$module" >&2; \
