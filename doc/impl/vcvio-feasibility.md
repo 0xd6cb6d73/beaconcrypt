@@ -39,9 +39,9 @@ ctxMisattributionAdvantage c A
 
 has factor one, no additive loss, and no random-oracle idealization. It is a standard-model reduction conditional on collision resistance of the ideal model's pure BLAKE2b function. VCVio's `CRAdversary` does not encode a PPT cost proof, so polynomial-time preservation is an external inspection obligation; the reducer adds only deterministic parsing and transcript construction.
 
-The checked relabelling specialization uses an honest `sealRecord` as the source payload and proves that acceptance under a distinct target context has the same factor-one reduction. Its pointwise wrong-sequence, wrong-sender, and cross-session corollaries return the exact two CTX transcripts that collide if a record is accepted under any of those changed fields.
+The checked relabelling specialization uses an honest `sealRecord` as the source payload and proves that acceptance under a distinct target context has the same factor-one reduction. Its pointwise wrong-sequence, wrong-sender, and cross-session corollaries return the exact two CTX transcripts that collide if a record is accepted under any of those changed fields. The first separately named field game now lets an adversary choose an honest source explanation, independent target material and plaintext, and a distinct well-formed target sequence; `ctxWrongSequenceAdvantage_le_blake2b_cr` maps that adversary through the relabelling reduction and preserves the factor-one bound.
 
-The native theorem closure is admission-free. `#print axioms` reports only `propext` and `Quot.sound` for collision extraction and the three pointwise field specializations, and additionally `Classical.choice` for the two probability inequalities; no audited theorem reports `sorryAx`.
+The native theorem closure is admission-free. `#print axioms` reports only `propext` and `Quot.sound` for collision extraction, the three pointwise field specializations, and the wrong-sequence game's pointwise implication, and additionally `Classical.choice` for the three probability inequalities; no audited theorem reports `sorryAx`.
 
 A numerical ROM birthday corollary cannot be obtained by rewriting this theorem. `Pqxdh.openRecord` calls a pure `Bytes → Bytes` hash, whereas VCVio's ROM experiment uses monadic oracle queries and a finite output type. Such a corollary requires a separate oracle-parametric record verifier plus a checked correspondence theorem; the generic pilot below does not supply that bridge.
 
@@ -107,7 +107,7 @@ The direct CTX reduction imports only VCVio's collision-resistance hardness-assu
 ## Acceptance path
 
 1. Prove the extracted-to-ideal CTX transcript bridge, including byte representation, `LE64`, the exact six-field order, and the adapter's BLAKE2b result representation.
-2. Lift the completed wrong-sequence, wrong-sender, and cross-session pointwise corollaries to any narrower protocol-transition games that need separately named advantages.
+2. Continue the field-specific and protocol-transition games: the wrong-sequence record-opening advantage is complete, while wrong-sender must distinguish the record-layer collision result from the ideal `beaconFinish` precheck that rejects a mismatched sender before CTX, and cross-session still needs its separately named advantage and transition lift.
 3. Define the next bad event directly over an ideal PQXDH or ratchet component, prioritizing root-input collisions, message-key/nonce reuse, or a one-step post-erasure disclosure game according to which model/refinement seam is already complete.
 4. Use VCVio's oracle and hybrid machinery only where the selected ideal component actually needs adaptive queries or game transitions; do not introduce a random oracle merely to restate a pure-function reduction.
 5. Record exact loss, query accounting, classical/PPT scope, primitive assumptions, and extracted-production correspondence for every new capstone, then audit its transitive Lean dependency closure.

@@ -300,4 +300,81 @@ theorem ctxRelabelAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
   simp only [decide_eq_true_eq] at hsuccess ⊢
   exact ctxRelabelAttempt_win_of_open c claim.source claim.target claim.context_ne hsuccess
 
+/-! ## Sequence-number relabelling -/
+
+/-- A sequence-number relabelling claim honestly seals one source explanation and attempts to open it at a different sequence number. -/
+structure CtxWrongSequenceClaim where
+  /-- The explanation used to seal the record. -/
+  source : CtxExplanation
+  /-- The message material used for the target opening. -/
+  targetMaterial : Pqxdh.Bytes × Pqxdh.Bytes
+  /-- The plaintext claimed by the target opening. -/
+  targetPlaintext : Pqxdh.Bytes
+  /-- The sequence number supplied to the target opening. -/
+  sequence : ℕ
+  /-- The target context has every protocol-mandated field width. -/
+  targetWf : Pqxdh.RecordWf targetMaterial { source.ad with seq := sequence }
+  /-- The target sequence differs from the honestly sealed sequence. -/
+  sequence_ne : sequence ≠ source.ad.seq
+
+/-- Interpret a wrong-sequence claim as a generic relabelling claim. -/
+def CtxWrongSequenceClaim.toRelabelClaim (claim : CtxWrongSequenceClaim) :
+    CtxRelabelClaim :=
+  { source := claim.source
+    target :=
+      { material := claim.targetMaterial
+        ad := { claim.source.ad with seq := claim.sequence }
+        plaintext := claim.targetPlaintext
+        wf := claim.targetWf }
+    context_ne := by
+      rintro ⟨_, had⟩
+      apply claim.sequence_ne
+      exact (congrArg Pqxdh.RecordAD.seq had).symm }
+
+/-- A wrong-sequence claim succeeds when the target opening accepts the honest source seal. -/
+def CtxWrongSequenceSuccess (c : Pqxdh.Crypto) (claim : CtxWrongSequenceClaim) : Prop :=
+  CtxRelabelSuccess c claim.toRelabelClaim
+
+/-- Every successful wrong-sequence claim exposes the exact BLAKE2b collision used by its relabelling reduction. -/
+theorem ctxWrongSequenceSuccess_implies_blake2b_collision (c : Pqxdh.Crypto)
+    (claim : CtxWrongSequenceClaim) (hwin : CtxWrongSequenceSuccess c claim) :
+    let sealedRecord := Pqxdh.sealRecord c claim.source.material claim.source.ad
+      claim.source.plaintext
+    Pqxdh.ctxPreimage claim.source.material claim.source.ad sealedRecord.tag ≠
+        Pqxdh.ctxPreimage claim.targetMaterial
+          { claim.source.ad with seq := claim.sequence } sealedRecord.tag ∧
+      c.blake2b (Pqxdh.ctxPreimage claim.source.material claim.source.ad sealedRecord.tag) =
+        c.blake2b (Pqxdh.ctxPreimage claim.targetMaterial
+          { claim.source.ad with seq := claim.sequence } sealedRecord.tag) := by
+  exact successful_wrong_sequence_open_yields_blake2b_collision c
+    claim.source.wf claim.targetWf claim.sequence_ne hwin
+
+/-- The ideal-model wrong-sequence experiment. -/
+noncomputable def ctxWrongSequenceExp (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxWrongSequenceClaim) : ProbComp Bool :=
+  ctxRelabelExp c (CtxWrongSequenceClaim.toRelabelClaim <$> adversary)
+
+/-- Probability that an honest source seal opens at a different sequence number. -/
+noncomputable def ctxWrongSequenceAdvantage (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxWrongSequenceClaim) : ℝ≥0∞ :=
+  Pr[= true | ctxWrongSequenceExp c adversary]
+
+/-- The collision adversary induced by a wrong-sequence adversary. -/
+def ctxWrongSequenceCollisionReduction (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxWrongSequenceClaim) :
+    CollisionResistance.CRAdversary Pqxdh.Bytes :=
+  ctxCollisionReduction
+    (CtxRelabelClaim.toAttempt c <$> (CtxWrongSequenceClaim.toRelabelClaim <$> adversary))
+
+/-- **Opening an honest seal at a different sequence number is no easier than BLAKE2b collision finding.** This specialization preserves the generic reduction's factor-one bound. -/
+theorem ctxWrongSequenceAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
+    (adversary : ProbComp CtxWrongSequenceClaim) :
+    ctxWrongSequenceAdvantage c adversary ≤
+      CollisionResistance.crAdvantage c.blake2b
+        (ctxWrongSequenceCollisionReduction c adversary) := by
+  simpa only [ctxWrongSequenceAdvantage, ctxWrongSequenceExp,
+    ctxWrongSequenceCollisionReduction, ctxRelabelAdvantage] using
+    ctxRelabelAdvantage_le_blake2b_cr c
+      (CtxWrongSequenceClaim.toRelabelClaim <$> adversary)
+
 end BeaconcryptCore.Computational.CtxReduction
