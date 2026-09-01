@@ -9,6 +9,7 @@ import BeaconcryptCore.Model.Pqxdh.Runs
 import BeaconcryptCore.Computational.CtxReduction
 import BeaconcryptCore.Computational.CtxRetainedTagProjection
 import BeaconcryptCore.Computational.CtxAuthClassification
+import BeaconcryptCore.Computational.CtxRomAuth
 import BeaconcryptCore.Computational.CtxTransitionReduction
 import BeaconcryptCore.Computational.VCVioFeasibility
 

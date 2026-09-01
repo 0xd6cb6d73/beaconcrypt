@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=3
 	[generated-proverif]=1
-	[handwritten-lean]=28
+	[handwritten-lean]=29
 	[handwritten-proverif]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -599,6 +599,9 @@ require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$'
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxReduction$' \
 	"$lean_root" \
 	"canonical CTX reduction proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxRomAuth$' \
+	"$lean_root" \
+	"canonical modified-CTX ROM-authentication proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
@@ -776,6 +779,47 @@ for declaration in ctxAcceptedFullFreshForgeryProbability \
 	ctxNonceConsistentAcceptedFullFreshForgeryProbability; do
 	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
 		"$ctx_auth_classification" "general CTX authentication probability ${declaration}"
+done
+
+ctx_rom_auth=proofs/lean/BeaconcryptCore/Computational/CtxRomAuth.lean
+for theorem_name in \
+	ctxFreshAliasVerifier_le_inv \
+	ctxFreshAliasGame_le_inv \
+	ctxDigest_card \
+	ctxFreshAliasGame_le_inv_512 \
+	ctxAliasGameProbability_le_cacheHit_add_inv \
+	ctxAliasGameProbability_le_cacheHit_add_inv_512; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_rom_auth" "modified CTX ROM theorem ${theorem_name}"
+done
+for theorem_name in ctxDigest_toList_length decodeRecord_romRecord; do
+	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
+		"$ctx_rom_auth" "modified CTX ROM representation theorem ${theorem_name}"
+done
+for declaration in CtxRecordContext CtxSealInput CtxRomRecord CtxAliasTarget \
+	CtxAdversary CtxBeforeVerify; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$ctx_rom_auth" "modified CTX ROM structure ${declaration}"
+done
+for declaration in FixedBytes CtxKey CtxNonce CtxDigest CtxRO CtxSealSpec \
+	CtxAdversarySpec; do
+	require_line_count 1 "^abbrev ${declaration}( |$)" \
+		"$ctx_rom_auth" "modified CTX ROM type ${declaration}"
+done
+require_line_count 1 '^@\[inline, reducible\] def ctxRandomOracle( |$)' \
+	"$ctx_rom_auth" "modified CTX lazy random-oracle implementation"
+for declaration in CtxRomRecord.toRecordCipher CtxRomRecord.encode recordWf \
+	outerInput ctxSeal ctxSealOracle ctxAdversaryImpl \
+	CtxAliasTarget.matchesSealEntry CtxAliasTarget.sameFullTupleAsSealEntry \
+	CtxFullAliasShape CtxBeforeVerify.targetInput ctxBeforeVerifyInner \
+	CtxAcceptedFullAliasReplayAt; do
+	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
+		"$ctx_rom_auth" "modified CTX ROM definition ${declaration}"
+done
+for declaration in ctxBeforeVerifyGame ctxFreshAliasVerifier ctxFreshAliasGame \
+	ctxAliasGame ctxAliasTargetCacheHitProbability; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_rom_auth" "modified CTX ROM probability definition ${declaration}"
 done
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
