@@ -399,6 +399,7 @@ check-lean-policy:
 check-lean-root:
 	@for module in \
 		BeaconcryptCore.Refinement.PqxdhSession \
+		BeaconcryptCore.Refinement.PqxdhCommitment \
 		BeaconcryptCore.Refinement.RatchetControlRestore \
 		BeaconcryptCore.Refinement.RatchetEffectRefinement \
 		BeaconcryptCore.Model.Pqxdh.Instance \

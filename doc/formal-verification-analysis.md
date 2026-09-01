@@ -238,6 +238,7 @@ Production parses the frame, checks the sender and minimum protected-payload len
 
 The production BLAKE2b wrapper delegates byte construction to the selected `no_std` [`build_commitment_transcript`](../beaconcrypt-core/src/commitment.rs) helper.
 The checked [`Commitment.Lemmas.fst`](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst) module proves that its 229 output bytes are exactly the 32-byte key, 12-byte nonce, 153-byte associated data, 16-byte AEAD tag, little-endian 64-bit sequence, and little-endian 64-bit sender ID in that order.
+The maintained Lean refinement now independently proves that the current Hax-extracted commitment integer helper returns the ideal model's `LE64` representation for every `u64`, reusing the separately checked registration-identifier encoder refinement; transcript assembly, adapter hashing and field provenance, Hax/Rust semantic preservation, and compiler correspondence remain separate obligations.
 It also proves `encode_u64_le_is_injective` and `production_commitment_input_is_injective`, so equality of two production transcript arrays implies equality of all six semantic inputs.
 
 The theorem `ctx_distinct_openings_imply_hash_collision` quantifies over arbitrary pure hash and AEAD-open functions and fixes one ciphertext core, transmitted tag, and outer commitment for both openings.

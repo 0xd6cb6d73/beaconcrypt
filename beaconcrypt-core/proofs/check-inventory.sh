@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=3
 	[generated-proverif]=1
-	[handwritten-lean]=25
+	[handwritten-lean]=26
 	[handwritten-proverif]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -586,6 +586,9 @@ require_line_count 1 '^import BeaconcryptCore\.Refinement\.RatchetEffectRefineme
 require_line_count 1 '^import BeaconcryptCore\.Refinement\.PqxdhSession$' \
 	"$lean_root" \
 	"canonical PQXDH session-refinement proof import"
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.PqxdhCommitment$' \
+	"$lean_root" \
+	"canonical PQXDH commitment-refinement proof import"
 for pqxdh_root_module in Instance InstanceCommit Acceptance Runs; do
 	require_line_count 1 "^import BeaconcryptCore\\.Model\\.Pqxdh\\.${pqxdh_root_module}$" \
 		"$lean_root" "canonical ideal PQXDH ${pqxdh_root_module} proof-root import"
@@ -671,6 +674,13 @@ require_line_count 1 '^rev = "cbd4144b51d92da00dd50f05e068b2348fa6e529"$' \
 require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |$)' \
 	proofs/lean/BeaconcryptCore/Model/Pqxdh/Commit.lean \
 	"ideal CTX collision-extraction theorem"
+pqxdh_commitment_refinement=proofs/lean/BeaconcryptCore/Refinement/PqxdhCommitment.lean
+for theorem_name in \
+	commitment_encode_u64_le_eq_registration \
+	commitment_encode_u64_le_abs; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$pqxdh_commitment_refinement" "extracted commitment refinement theorem ${theorem_name}"
+done
 ctx_reduction=proofs/lean/BeaconcryptCore/Computational/CtxReduction.lean
 for theorem_name in \
 	ctxMisattribution_implies_blake2b_collision \

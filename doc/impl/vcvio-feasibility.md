@@ -45,6 +45,8 @@ The protocol-transition seam is explicit in `Acceptance.lean`. `BeaconRecordAdmi
 
 The native theorem closure is admission-free. `#print axioms` reports only `propext` and `Quot.sound` for collision extraction, the three pointwise field specializations, the field-game pointwise implications, the beacon admission eliminator, both transition collision implications, and wrong-sender impossibility, and additionally `Classical.choice` for the seven probability inequalities and the exact-zero probability theorem; no audited theorem reports `sorryAx`.
 
+The first extracted-to-ideal bridge step is now checked in `PqxdhCommitment.lean`: `commitment_encode_u64_le_abs` proves that the current extracted commitment integer encoder returns exactly ideal `Pqxdh.LE64` bytes for every `u64`. This does not yet cover the six-field transcript assembly, the adapter's BLAKE2b call or field provenance, Hax/Rust semantic preservation, or compiler correspondence.
+
 A numerical ROM birthday corollary cannot be obtained by rewriting this theorem. `Pqxdh.openRecord` calls a pure `Bytes → Bytes` hash, whereas VCVio's ROM experiment uses monadic oracle queries and a finite output type. Such a corollary requires a separate oracle-parametric record verifier plus a checked correspondence theorem; the generic pilot below does not supply that bridge.
 
 The remaining production bridge is also explicit. The reduction is over the handwritten ideal model, not the Aeneas-extracted implementation. A later refinement theorem must connect the extracted `build_commitment_transcript` representation and adapter hash invocation to `Pqxdh.ctxPreimage` and `Crypto.blake2b` before this result supports a production-code claim.
