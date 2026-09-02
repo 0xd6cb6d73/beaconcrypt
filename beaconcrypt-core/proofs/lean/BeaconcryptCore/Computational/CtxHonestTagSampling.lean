@@ -263,6 +263,22 @@ theorem ctxIndependentTagImpl_eq_directSample_step_of_invariant
       c key input state hinvariant
 
 /-- Every reachable direct-sampling transcript retains nonce uniqueness and provenance. -/
+theorem ctxDirectSampleIndependentTag_run_invariant_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α)
+    (result : α × CtxIndependentTagState)
+    (hresult : result ∈ support
+      ((simulateQ (ctxDirectSampleIndependentTagImpl c key) main).run
+        emptyCtxIndependentTagState)) :
+    CtxIndependentTagStateInvariant result.2 := by
+  exact OracleComp.simulateQ_run_preservesInv
+    (ctxDirectSampleIndependentTagImpl c key)
+    CtxIndependentTagStateInvariant
+    (ctxDirectSampleIndependentTagImpl_preserves_invariant c key)
+    main emptyCtxIndependentTagState
+    emptyCtxIndependentTagState_invariant result hresult
+
+/-- Every reachable direct-sampling adversary transcript retains nonce uniqueness and provenance. -/
 theorem ctxDirectSampleIndependentTag_run_invariant
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary)
     (result : CtxAliasTarget × CtxIndependentTagState)
@@ -270,21 +286,18 @@ theorem ctxDirectSampleIndependentTag_run_invariant
       ((simulateQ (ctxDirectSampleIndependentTagImpl c key)
         adversary.main).run emptyCtxIndependentTagState)) :
     CtxIndependentTagStateInvariant result.2 := by
-  exact OracleComp.simulateQ_run_preservesInv
-    (ctxDirectSampleIndependentTagImpl c key)
-    CtxIndependentTagStateInvariant
-    (ctxDirectSampleIndependentTagImpl_preserves_invariant c key)
-    adversary.main emptyCtxIndependentTagState
-    emptyCtxIndependentTagState_invariant result hresult
+  exact ctxDirectSampleIndependentTag_run_invariant_of_main
+    c key adversary.main result hresult
 
-/-- Adaptive lazy-suffix and direct independent-sampling runs are exactly equal. -/
-theorem ctxIndependentTagImpl_run_eq_directSample
-    (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
-    (simulateQ (ctxIndependentTagImpl c key) adversary.main).run
+/-- Adaptive lazy-suffix and direct independent-sampling runs are exactly equal for any output. -/
+theorem ctxIndependentTagImpl_run_eq_directSample_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α) :
+    (simulateQ (ctxIndependentTagImpl c key) main).run
         emptyCtxIndependentTagState =
-      (simulateQ (ctxDirectSampleIndependentTagImpl c key)
-        adversary.main).run emptyCtxIndependentTagState := by
-  have hrun := OracleComp.map_run_simulateQ_eq_of_query_map_eq_inv'
+      (simulateQ (ctxDirectSampleIndependentTagImpl c key) main).run
+        emptyCtxIndependentTagState := by
+  simpa using (OracleComp.map_run_simulateQ_eq_of_query_map_eq_inv'
     (ctxDirectSampleIndependentTagImpl c key)
     (ctxIndependentTagImpl c key)
     CtxIndependentTagStateInvariant id
@@ -293,9 +306,18 @@ theorem ctxIndependentTagImpl_run_eq_directSample
       rw [← ctxIndependentTagImpl_eq_directSample_step_of_invariant
         c key query state hinvariant]
       simp)
-    adversary.main emptyCtxIndependentTagState
-    emptyCtxIndependentTagState_invariant
-  simpa using hrun.symm
+    main emptyCtxIndependentTagState
+    emptyCtxIndependentTagState_invariant).symm
+
+/-- Adaptive lazy-suffix and direct independent-sampling adversary runs are exactly equal. -/
+theorem ctxIndependentTagImpl_run_eq_directSample
+    (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
+    (simulateQ (ctxIndependentTagImpl c key) adversary.main).run
+        emptyCtxIndependentTagState =
+      (simulateQ (ctxDirectSampleIndependentTagImpl c key)
+        adversary.main).run emptyCtxIndependentTagState := by
+  exact ctxIndependentTagImpl_run_eq_directSample_of_main
+    c key adversary.main
 
 /-- Reachable successful direct-sampling seals have pairwise-unique nonces. -/
 theorem ctxDirectSampleIndependentTag_run_unique_seal_nonces

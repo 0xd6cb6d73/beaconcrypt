@@ -190,18 +190,31 @@ theorem ctxIndependentWithPrefixFlagImpl_preserves_prefix_flag
       rw [hpublic]
       simpa using hinvariant
 
+/-- The exact independent prefix-flag invariant holds after any adaptive computation. -/
+theorem ctxIndependentTagFlagged_run_prefix_flag_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {alpha : Type}
+    (main : OracleComp CtxAdversarySpec alpha)
+    (result : alpha × (CtxIndependentTagState × Bool))
+    (hresult : result ∈ support
+      ((simulateQ (ctxIndependentWithPrefixFlagImpl c key) main).run
+        (emptyCtxIndependentTagState, false))) :
+    CtxIndependentPrefixFlagInvariant key result.2 := by
+  exact OracleComp.simulateQ_run_preservesInv
+    (ctxIndependentWithPrefixFlagImpl c key)
+    (CtxIndependentPrefixFlagInvariant key)
+    (ctxIndependentWithPrefixFlagImpl_preserves_prefix_flag c key)
+    main (emptyCtxIndependentTagState, false)
+    (emptyCtxIndependentPrefixFlagInvariant key) result hresult
+
+/-- Compatibility wrapper for the authenticity adversary output. -/
 theorem ctxIndependentTagFlagged_run_prefix_flag
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary)
     (result : CtxAliasTarget × (CtxIndependentTagState × Bool))
     (hresult : result ∈ support
       (ctxIndependentTagFlaggedBeforeVerify c key adversary)) :
     CtxIndependentPrefixFlagInvariant key result.2 := by
-  exact OracleComp.simulateQ_run_preservesInv
-    (ctxIndependentWithPrefixFlagImpl c key)
-    (CtxIndependentPrefixFlagInvariant key)
-    (ctxIndependentWithPrefixFlagImpl_preserves_prefix_flag c key)
-    adversary.main (emptyCtxIndependentTagState, false)
-    (emptyCtxIndependentPrefixFlagInvariant key) result hresult
+  exact ctxIndependentTagFlagged_run_prefix_flag_of_main
+    c key adversary.main result hresult
 
 /-- Fixed-key secret-prefix probability read directly from the independent public-input trace. -/
 noncomputable def ctxIndependentPublicPrefixProbability
@@ -276,12 +289,13 @@ theorem ctxDirectSampleIndependentTagImpl_publicInputs_length_step
       c key input state result hresult
     simp [IsCtxPublicQuery, hpublic]
 
-theorem ctxDirectSampleIndependentTag_run_publicInputs_length_le
-    (c : Pqxdh.Crypto) (key : CtxKey)
-    {oa : OracleComp CtxAdversarySpec CtxAliasTarget} {n : ℕ}
+/-- A direct-sampling run with arbitrary output records at most one public input per public query. -/
+theorem ctxDirectSampleIndependentTag_run_publicInputs_length_le_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {alpha : Type}
+    {oa : OracleComp CtxAdversarySpec alpha} {n : ℕ}
     (hbound : oa.IsQueryBoundP IsCtxPublicQuery n)
     (state : CtxIndependentTagState)
-    (result : CtxAliasTarget × CtxIndependentTagState)
+    (result : alpha × CtxIndependentTagState)
     (hresult : result ∈ support
       ((simulateQ (ctxDirectSampleIndependentTagImpl c key) oa).run state)) :
     result.2.publicInputs.length ≤ state.publicInputs.length + n := by
@@ -307,6 +321,33 @@ theorem ctxDirectSampleIndependentTag_run_publicInputs_length_le
       · simp only [hpublic, if_false] at hstepLength hrec
         omega
 
+/-- Compatibility wrapper for the authenticity adversary output. -/
+theorem ctxDirectSampleIndependentTag_run_publicInputs_length_le
+    (c : Pqxdh.Crypto) (key : CtxKey)
+    {oa : OracleComp CtxAdversarySpec CtxAliasTarget} {n : ℕ}
+    (hbound : oa.IsQueryBoundP IsCtxPublicQuery n)
+    (state : CtxIndependentTagState)
+    (result : CtxAliasTarget × CtxIndependentTagState)
+    (hresult : result ∈ support
+      ((simulateQ (ctxDirectSampleIndependentTagImpl c key) oa).run state)) :
+    result.2.publicInputs.length ≤ state.publicInputs.length + n := by
+  exact ctxDirectSampleIndependentTag_run_publicInputs_length_le_of_main
+    c key hbound state result hresult
+
+/-- An arbitrary-output direct-sampling run satisfying the public-query bound records at most `qH` public inputs. -/
+theorem ctxDirectSampleIndependentTag_run_publicInputs_length_le_qH_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {alpha : Type} {qH : ℕ}
+    (main : OracleComp CtxAdversarySpec alpha)
+    (hbound : main.IsQueryBoundP IsCtxPublicQuery qH)
+    (result : alpha × CtxIndependentTagState)
+    (hresult : result ∈ support
+      ((simulateQ (ctxDirectSampleIndependentTagImpl c key)
+        main).run emptyCtxIndependentTagState)) :
+    result.2.publicInputs.length ≤ qH := by
+  simpa [emptyCtxIndependentTagState] using
+    ctxDirectSampleIndependentTag_run_publicInputs_length_le_of_main
+      c key hbound emptyCtxIndependentTagState result hresult
+
 theorem ctxDirectSampleIndependentTag_run_publicInputs_length_le_qH
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE)
@@ -315,9 +356,8 @@ theorem ctxDirectSampleIndependentTag_run_publicInputs_length_le_qH
       ((simulateQ (ctxDirectSampleIndependentTagImpl c key)
         adversary.main).run emptyCtxIndependentTagState)) :
     result.2.publicInputs.length ≤ qH := by
-  simpa [emptyCtxIndependentTagState] using
-    ctxDirectSampleIndependentTag_run_publicInputs_length_le
-      c key adversary.publicQueryBound emptyCtxIndependentTagState result hresult
+  exact ctxDirectSampleIndependentTag_run_publicInputs_length_le_qH_of_main
+    c key adversary.main adversary.publicQueryBound result hresult
 
 /-- Fixed-key public-prefix probability in the explicit honest-tag sampling game. -/
 noncomputable def ctxDirectSamplePublicPrefixProbability
@@ -335,6 +375,20 @@ theorem ctxIndependentPublicPrefixProbability_eq_directSample
   unfold ctxIndependentPublicPrefixProbability
     ctxDirectSamplePublicPrefixProbability
   rw [ctxIndependentTagImpl_run_eq_directSample]
+
+/-- Independent-tag and direct-sampling runs have the same public-prefix probability for any output type. -/
+theorem ctxIndependentPublicPrefixProbability_eq_directSample_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {alpha : Type}
+    (main : OracleComp CtxAdversarySpec alpha) :
+    Pr[fun result : alpha × CtxIndependentTagState =>
+        ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
+      (simulateQ (ctxIndependentTagImpl c key) main).run
+        emptyCtxIndependentTagState] =
+      Pr[fun result : alpha × CtxIndependentTagState =>
+          ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
+        (simulateQ (ctxDirectSampleIndependentTagImpl c key) main).run
+          emptyCtxIndependentTagState] := by
+  rw [ctxIndependentTagImpl_run_eq_directSample_of_main]
 
 /-- The canonical fixed-key bad event is exactly the direct game's public-prefix event. -/
 theorem ctxSecretPrefixQueriedProbabilityInner_eq_directSamplePublicPrefix
