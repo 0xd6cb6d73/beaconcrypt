@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=39
+	[handwritten-lean]=40
 	[handwritten-proverif]=28
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -174,6 +174,7 @@ compare_set generated-lean "$tmp_dir/generated-lean"
 printf '%s\n' \
 	proofs/lean/BeaconcryptCore.lean \
 	proofs/lean/BeaconcryptCore/Assumptions/FunsExternal.lean \
+	proofs/lean/BeaconcryptCore/Verification/PqxdhCommitmentRefinement.lean \
 	proofs/lean/BeaconcryptCore/Verification/ProofObligations.lean \
 	> "$tmp_dir/handwritten-lean"
 for lean_proof_dir in Model Refinement Computational; do
@@ -1208,6 +1209,9 @@ require_line_count 1 '^import BeaconcryptCore\.Refinement\.PqxdhSession$' \
 require_line_count 1 '^import BeaconcryptCore\.Refinement\.PqxdhCommitment$' \
 	"$lean_root" \
 	"canonical PQXDH commitment-refinement proof import"
+require_line_count 1 '^import BeaconcryptCore\.Verification\.PqxdhCommitmentRefinement$' \
+	"$lean_root" \
+	"canonical PQXDH commitment-refinement contract proof import"
 for pqxdh_root_module in Instance InstanceCommit Acceptance Runs; do
 	require_line_count 1 "^import BeaconcryptCore\\.Model\\.Pqxdh\\.${pqxdh_root_module}$" \
 		"$lean_root" "canonical ideal PQXDH ${pqxdh_root_module} proof-root import"
@@ -1332,6 +1336,18 @@ for theorem_name in \
 	build_commitment_transcript_abs; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
 		"$pqxdh_commitment_refinement" "extracted commitment refinement theorem ${theorem_name}"
+done
+pqxdh_commitment_refinement_contract=proofs/lean/BeaconcryptCore/Verification/PqxdhCommitmentRefinement.lean
+require_line_count 1 '^import BeaconcryptCore\.Refinement\.PqxdhCommitment$' \
+	"$pqxdh_commitment_refinement_contract" \
+	"PQXDH commitment-refinement contract source import"
+require_line_count 2 '^#guard_msgs in$' \
+	"$pqxdh_commitment_refinement_contract" \
+	"PQXDH commitment-refinement contract guarded axiom audits"
+for theorem_name in commitment_encode_u64_le_abs build_commitment_transcript_abs; do
+	require_line_count 1 "^#print axioms ${theorem_name}$" \
+		"$pqxdh_commitment_refinement_contract" \
+		"PQXDH commitment-refinement contract axiom audit ${theorem_name}"
 done
 ctx_reduction=proofs/lean/BeaconcryptCore/Computational/CtxReduction.lean
 for theorem_name in \
