@@ -141,7 +141,7 @@ The target enters the repository's locked Nix proof shell; checks the exact rust
 A policy gate rejects `assume` or `admit` in repository-owned F* modules and
 lax/admitted-query checker flags. The result gate rejects timeouts, missing
 queries, unexpected classifications, and every unproved or inconclusive
-security query. `make verify-proverif` runs only the ProVerif extraction and checks in the same locked shell, with the twenty-one scenario targets running concurrently, including shared-HKDF prefix, endpoint-domain, and distinct-versus-aliased-domain controls. Each scenario is also available independently as `make check-proverif-<scenario>`, `make verify-proverif-<scenario>`, or `make check-generated-proverif-<scenario>`; for example, `make verify-proverif-baseline` enters the locked shell, regenerates the extraction, and checks only the baseline model. `make verify-ssprove` and `make verify-lean` run their respective suites in the same locked environment.
+security query. `make verify-proverif` runs only the ProVerif extraction and checks in the same locked shell, with the twenty-three scenario targets running concurrently, including shared-HKDF prefix/domain controls and strong/weak public-key-confusion controls. Each scenario is also available independently as `make check-proverif-<scenario>`, `make verify-proverif-<scenario>`, or `make check-generated-proverif-<scenario>`; for example, `make verify-proverif-baseline` enters the locked shell, regenerates the extraction, and checks only the baseline model. `make verify-ssprove` and `make verify-lean` run their respective suites in the same locked environment.
 
 The inventory-only check does not require entering the proof shell:
 

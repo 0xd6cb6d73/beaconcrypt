@@ -410,6 +410,23 @@ ProVerif proves these controls only under its ideal deterministic symbolic HKDF-
 The remaining computational obligations include a production-width HKDF combiner reduction for the ordered padded PQXDH input, prefix-consistent 64/76-byte expansion semantics, primitive security under the two exact labels, and the adapter/extraction bridge from production requests and outputs to the symbolic projections.
 This remains a symbolic protocol proof rather than an implementation theorem or an end-to-end computational security theorem.
 
+### Exact associated data, encodings, and CTX structure
+
+The ProVerif associated-data term has exactly four ordered symbolic fields: `tag_ed25519(server_identity)`, `tag_ed25519(beacon_identity)`, `pqxdh_domain()`, and `symmetric_ratchet_domain()`.
+The final two fields are the same two domain values consumed by the shared HKDF model rather than duplicate unrelated label constants.
+Production serializes those fields as `0x01 || server_pk || 0x01 || beacon_pk || PQXDH_INFO || SYM_RATCHET_INFO` in server-first order for a total of 153 bytes; the ProVerif constructor models that field structure while the extracted F*/Lean results establish the current concrete layout.
+The authenticated public-key boundary keeps disjoint constructors for Ed25519 `0x01 || pk`, ML-KEM-768 `0x03 || pk`, X25519 prekeys `0x04 || 0x80 || pk`, and X25519 one-time keys `0x04 || 0x81 || pk`.
+Strong parsing controls witness legitimate encodings and attempted ML-KEM/X25519 algorithm confusion plus attempted X25519 prekey/one-time role confusion without accepting either mismatch, while deliberately weakened encoding theories must accept the corresponding confusion witnesses.
+These symbolic constructors model injective and disjoint fixed-width encodings; the later synchronization gate checks their marker values and production serialization rather than treating constructor names as byte-level extraction evidence.
+
+ChaCha20-Poly1305-IETF sealing receives exactly a 32-byte key, 12-byte nonce, the 153-byte associated data, and plaintext, and returns ciphertext with a detached 16-byte tag.
+Opening receives that same key, nonce, and associated data with the ciphertext and detached tag.
+Sequence and sender ID remain outside the base AEAD associated data, and the model invents no AEAD domain label.
+The CTX commitment is modeled as the ideal collision-free term `blake2b512(ctx_preimage(key, nonce, associated_data, retained_aead_tag, LE64(sequence), LE64(sender_id)))` over the exact six production fields.
+The corresponding concrete preimage is 229 bytes in the order `key[32] || nonce[12] || associated_data[153] || retained_aead_tag[16] || LE64(sequence)[8] || LE64(sender_id)[8]` and has no CTX prefix or label.
+The free `ctx_preimage` constructor assumes fixed-width serialization injectivity, while the free `blake2b512` constructor assumes ideal symbolic opacity and collision freedom.
+The six single-field CTX controls therefore test symbolic field retention, not compiled serialization or a computational BLAKE2b theorem.
+
 ### CTX commitment negative control
 
 The ordinary record model's [`open_frame`](../beaconcrypt-core/proofs/pro-verif/crypto.pvl) rule already requires an exact key, nonce-derived material, associated data, sequence, sender ID, tag, and ciphertext term.
@@ -718,9 +735,9 @@ equations in
 are unforgeable, matching DH and KEM always agree, constructors do not collide,
 secrets cannot be recovered by inversion, and a frame opens only with exactly
 matching material, associated data, sequence, and sender ID. The model uses
-separate ideal constructors for the root, both directional chains, ratchet
-advance, material, key, and nonce. That is finer domain separation than the two
-concrete HKDF labels above.
+one ideal no-salt HKDF stream indexed by exactly the two production domains, shared first-32/second-32/final-12 projections, and the intentional common symmetric-domain prefix relation between initialization and record steps.
+Direction comes only from selecting and reversing the two initial projections, while output length, direction, sequence, session, and phase introduce no additional KDF domain.
+The exact ordered associated-data and CTX constructors remain ideal symbolic serialization boundaries, and their injectivity plus the ideal opacity and collision freedom of the CTX hash are assumptions rather than byte-level conclusions of ProVerif.
 Real algorithms approximate these properties probabilistically, and the proof supplies no general computational reduction from all real algorithms to this ideal model.
 The modified CTX claim instead has a direct full-control scheme game and a stronger raw-payload ideal-model reduction to collision resistance, together with a separate F* fixed-width witness; it does not derive computational security from the ProVerif result or yet connect the ideal theorem to the production hash call.
 
@@ -959,6 +976,7 @@ The historical Stage 3 through Stage 9 documents describe how the predecessor bo
 The result gate requires exactly:
 
 - the shared weak-AEAD multi-opening query to be true (unreachable) with CTX and false (witnessed) without CTX, while all six one-field CTX mutation events remain unreachable in both runs;
+- legitimate production-style symbolic encoding paths and both public-key-confusion attempts to be witnessed, ML-KEM/X25519 algorithm confusion and X25519 prekey/one-time role confusion to remain rejected under the production constructors, and both confusion witnesses to become reachable under the deliberately weakened encodings;
 - all five secrecy and six injective correspondence queries to be true for active classical, with its seven reachability controls witnessed;
 - all five secrecy queries and the five-choice observational equivalence to be true for passive classical and passive quantum, with registration plus every exact canary-bearing receive path witnessed under the shared active scheduler, both classical quantum-recovery canaries exposed, the ML-KEM-derived control canary opaque under those capabilities, and the same canary exposed under deliberate total ML-KEM secret-key recovery;
 - both shared symmetric-HKDF prefix equalities and both correct endpoint commitments to be witnessed, every wrong-root-domain, wrong-symmetric-domain, and wrong-projection attempt to be witnessed without a corresponding commitment, and the domain-alias canary to remain secret under the two distinct production domains but be disclosed when the control theory aliases them;

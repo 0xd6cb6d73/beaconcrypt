@@ -344,5 +344,5 @@ reduc forall identity: bitstring, prekey: bitstring, one_time: bitstring, pq: bi
 reduc forall dh1: bitstring, dh2: bitstring, dh3: bitstring, dh4: bitstring, kem: bitstring;
   beaconcrypt_core__pqxdh__build_root_key_input(beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem)) = beaconcrypt_core__pqxdh__RootKeyInput(pqxdh_root_input(pqxdh_ff32_padding(), dh1, dh2, dh3, dh4, kem)).
 
-fun beaconcrypt_core__pqxdh__build_associated_data(bitstring, bitstring): bitstring [data].
-
+reduc forall server_identity: bitstring, beacon_identity: bitstring;
+  beaconcrypt_core__pqxdh__build_associated_data(server_identity, beacon_identity) = beaconcrypt_associated_data(tag_ed25519(server_identity), tag_ed25519(beacon_identity), pqxdh_domain(), symmetric_ratchet_domain()).

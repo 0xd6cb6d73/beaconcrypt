@@ -232,6 +232,28 @@ END {
     expected_result = (scenario == "hkdf-domain-distinct") ? "true" : "false"
     wanted = "Query not attacker(HKDF_DOMAIN_ALIAS_CANARY[]) is " expected_result "."
     require_exact(wanted, scenario " cross-domain disclosure")
+  } else if (scenario == "public-key-confusion-strong" ||
+             scenario == "public-key-confusion-weak") {
+    if (query_count != 8) {
+      reject("expected 8 " scenario " queries, saw " query_count)
+    }
+    wanted = "Query not event(PkAlgorithmMlkemLegitimateParsed(PK_ALGORITHM_MLKEM_PARSE_WITNESS[])) is false."
+    require_exact(wanted, scenario " legitimate ML-KEM parse")
+    wanted = "Query not event(PkAlgorithmX25519LegitimateParsed(PK_ALGORITHM_X25519_PARSE_WITNESS[])) is false."
+    require_exact(wanted, scenario " legitimate X25519 parse")
+    wanted = "Query not event(PkAlgorithmConfusionAttempted(PK_ALGORITHM_CONFUSION_WITNESS[])) is false."
+    require_exact(wanted, scenario " algorithm-confusion attempt")
+    acceptance_result = (scenario == "public-key-confusion-strong") ? "true" : "false"
+    wanted = "Query not event(PkAlgorithmConfusionAccepted(PK_ALGORITHM_CONFUSION_WITNESS[])) is " acceptance_result "."
+    require_exact(wanted, scenario " algorithm-confusion classification")
+    wanted = "Query not event(PkRolePrekeyLegitimateParsed(PK_ROLE_PREKEY_PARSE_WITNESS[])) is false."
+    require_exact(wanted, scenario " legitimate prekey parse")
+    wanted = "Query not event(PkRoleOneTimeLegitimateParsed(PK_ROLE_ONE_TIME_PARSE_WITNESS[])) is false."
+    require_exact(wanted, scenario " legitimate one-time parse")
+    wanted = "Query not event(PkRoleConfusionAttempted(PK_ROLE_CONFUSION_WITNESS[])) is false."
+    require_exact(wanted, scenario " role-confusion attempt")
+    wanted = "Query not event(PkRoleConfusionAccepted(PK_ROLE_CONFUSION_WITNESS[])) is " acceptance_result "."
+    require_exact(wanted, scenario " role-confusion classification")
   } else if (scenario == "baseline" ||
              scenario == "active-classical") {
     if (query_count != 11) {

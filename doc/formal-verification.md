@@ -314,6 +314,9 @@ Persistence is a separate boundary. `start_concrete_restore`, `concrete_restore_
 - ML-KEM opacity under the modeled classical-key recovery capabilities and a paired total ML-KEM secret-key-recovery canary; these controls do not model cross-key re-encapsulation.
 - One shared no-salt HKDF-SHA-512 stream indexed by exactly the PQXDH and symmetric-ratchet domains, with explicit padded root-input order and the intentional initialization/record-step 64/76-byte prefix relationship.
 - Positive prefix and endpoint reachability, rejection of wrong-domain and wrong-projection endpoint commitments, and a differential cross-domain disclosure when the two domains are deliberately aliased.
+- Exact server-first associated data over the two tagged Ed25519 identities and the same two KDF-domain values, plus disjoint production key-type and X25519-role encodings.
+- Strong/weak public-key-confusion differentials for ML-KEM versus X25519 algorithm tags and X25519 prekey versus one-time-key roles.
+- Exact unlabeled AEAD inputs and an unlabeled ideal BLAKE2b-512 commitment over the structured key, nonce, associated data, retained AEAD tag, LE64 sequence, and LE64 sender-ID preimage.
 - Injective agreement on server identity, beacon identity, assigned key ID, transcript, and derived root.
 - Accepted plaintext implies a preceding honest send for the same session, direction, sequence, sender, and plaintext.
 - Replay resistance.

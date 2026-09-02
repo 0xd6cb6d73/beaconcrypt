@@ -923,7 +923,7 @@ pub const fn server_abort_candidate(candidate: &ServerRegistrationCandidate) -> 
 #[cfg_attr(
 	feature = "proverif",
 	hax_lib::proverif::replace(
-		"fun ${build_associated_data}(bitstring, bitstring): bitstring [data]."
+		"reduc forall server_identity: bitstring, beacon_identity: bitstring;\n  ${build_associated_data}(server_identity, beacon_identity) = beaconcrypt_associated_data(tag_ed25519(server_identity), tag_ed25519(beacon_identity), pqxdh_domain(), symmetric_ratchet_domain())."
 	)
 )]
 pub fn build_associated_data(

@@ -166,6 +166,8 @@ PROVERIF_SCENARIOS := \
 	hkdf-endpoint-controls \
 	hkdf-domain-distinct \
 	hkdf-domain-alias \
+	public-key-confusion-strong \
+	public-key-confusion-weak \
 	active-quantum \
 	baseline \
 	reachability \
@@ -449,6 +451,27 @@ check-proverif-hkdf-domain-alias: check-proverif-extraction
 			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
 			$(PROVERIF_DIR)/hkdf-domain-alias-control.pv | \
 		awk -v scenario=hkdf-domain-alias -f '$(PROVERIF_CHECKER)'
+
+check-proverif-public-key-confusion-strong: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control-queries.pvl \
+			$(PROVERIF_DIR)/public-key-confusion-strong.pv | \
+		awk -v scenario=public-key-confusion-strong \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-public-key-confusion-weak: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control-queries.pvl \
+			$(PROVERIF_DIR)/public-key-confusion-weak.pv | \
+		awk -v scenario=public-key-confusion-weak \
+			-f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-classical-equivalence: check-proverif-extraction
 	@set -o pipefail; \

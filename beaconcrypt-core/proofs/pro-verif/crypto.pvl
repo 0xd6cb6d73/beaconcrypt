@@ -18,8 +18,12 @@ fun beacon_to_server(): direction [data].
 fun beacon_role(): role [data].
 fun server_role(): role [data].
 
-(* Fixed-width LE64 encoding is injective on the modeled key-ID sort. *)
-fun key_id_encoding(key_id): bitstring [data].
+(* Production serializes record sequences and sender key IDs as fixed-width
+   little-endian u64 values.  `key_id_encoding` remains the compatibility
+   name used by the authenticated registration key-ID binding. *)
+fun sequence_le64(sequence): bitstring [data].
+fun sender_id_le64(key_id): bitstring [data].
+letfun key_id_encoding(identifier: key_id) = sender_id_le64(identifier).
 
 (* Disjoint production key encodings.  The two X25519 constructors represent
    [4:u8, 128:u8, key] for a prekey and [4:u8, 129:u8, key] for a one-time
@@ -94,6 +98,16 @@ fun hkdf_first_32(hkdf_stream): bitstring.
 fun hkdf_second_32(hkdf_stream): bitstring.
 fun hkdf_final_12(hkdf_stream): bitstring.
 
+(* The exact 153-byte production associated data is the server Ed25519
+   encoding, the beacon Ed25519 encoding, and the same two domain values used
+   by HKDF, in that order. *)
+fun beaconcrypt_associated_data(
+  bitstring,
+  bitstring,
+  kdf_domain,
+  kdf_domain
+): bitstring [data].
+
 (* Stored record material contains only the projected key and nonce.  It does
    not retain the HKDF stream, so disclosing cached material cannot reveal the
    second projection that becomes the next chain. *)
@@ -133,11 +147,9 @@ letfun ratchet_material(chain: bitstring) =
     )
   ).
 
-(* Ideal ChaCha20-Poly1305 plus the CTX commitment.  The only opening
-   reduction below requires the same key material, ordered AD, sequence, and
-   sender ID.  `ctx_commitment` deliberately models the fixed-size BLAKE2b
-   use as a collision-free symbolic constructor; this is a symbolic primitive
-   assumption, not a computational proof of BLAKE2b. *)
+(* Ideal ChaCha20-Poly1305 receives exactly key, nonce, associated data, and
+   plaintext.  The detached tag is retained separately.  Sequence and sender
+   ID are not part of the base AEAD associated data. *)
 fun aead_cipher(
   bitstring,
   bitstring,
@@ -150,14 +162,40 @@ fun aead_tag(
   bitstring,
   bitstring
 ): bitstring.
-fun ctx_commitment(
+
+(* Production CTX has no domain label.  It is BLAKE2b-512 over the exact
+   fixed-width 229-byte serialization key || nonce || associated data ||
+   retained AEAD tag || LE64(sequence) || LE64(sender ID).  The structured
+   preimage is injective; BLAKE2b-512 is an ideal one-way, collision-free
+   symbolic constructor whose computational justification is external. *)
+fun ctx_preimage(
   bitstring,
   bitstring,
   bitstring,
   bitstring,
-  sequence,
-  key_id
-): bitstring.
+  bitstring,
+  bitstring
+): bitstring [data].
+fun blake2b512(bitstring): bitstring.
+
+letfun ctx_commitment(
+  key: bitstring,
+  nonce: bitstring,
+  associated_data: bitstring,
+  retained_aead_tag: bitstring,
+  message_sequence: sequence,
+  sender_id: key_id
+) =
+  blake2b512(
+    ctx_preimage(
+      key,
+      nonce,
+      associated_data,
+      retained_aead_tag,
+      sequence_le64(message_sequence),
+      sender_id_le64(sender_id)
+    )
+  ).
 fun crypto_frame(
   bitstring,
   bitstring,
@@ -227,18 +265,20 @@ reduc forall key: bitstring,
         associated_data,
         plaintext
       ),
-      ctx_commitment(
-        key,
-        nonce,
-        associated_data,
-        aead_tag(
+      blake2b512(
+        ctx_preimage(
           key,
           nonce,
           associated_data,
-          plaintext
-        ),
-        message_sequence,
-        sender_id
+          aead_tag(
+            key,
+            nonce,
+            associated_data,
+            plaintext
+          ),
+          sequence_le64(message_sequence),
+          sender_id_le64(sender_id)
+        )
       ),
       message_sequence,
       sender_id

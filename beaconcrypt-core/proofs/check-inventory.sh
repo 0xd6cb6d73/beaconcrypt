@@ -49,7 +49,7 @@ declare -A expected_category_counts=(
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=40
-	[handwritten-proverif]=43
+	[handwritten-proverif]=48
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -305,10 +305,15 @@ require_line_count 6 '^const beaconcrypt_core.*_default_value' "$generated_prove
 	"generated ProVerif record default"
 require_line_count 9 '^letfun .*_err\(\)' "$generated_proverif" \
 	"generated ProVerif error helper"
-require_line_count 19 '^reduc ' "$generated_proverif" \
+require_line_count 22 '^fun ' "$generated_proverif" \
+	"generated ProVerif constructor/function"
+require_line_count 20 '^reduc ' "$generated_proverif" \
 	"generated ProVerif reduction"
 require_occurrence_count 11 'construct_fail\(\)' \
 	"generated ProVerif construct_fail" "$generated_proverif"
+require_line_count 1 \
+	'^  beaconcrypt_core__pqxdh__build_associated_data\(server_identity, beacon_identity\) = beaconcrypt_associated_data\(tag_ed25519\(server_identity\), tag_ed25519\(beacon_identity\), pqxdh_domain\(\), symmetric_ratchet_domain\(\)\)\.$' \
+	"$generated_proverif" "generated exact associated-data replacement"
 
 mapfile -t handwritten_proverif < <(
 	awk -F '\t' '$1 == "handwritten-proverif" && $3 ~ /\.(pv|pvl)$/ { print $3 }' "$manifest"
@@ -322,11 +327,11 @@ require_occurrence_count 4 \
 require_occurrence_count 4 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
-require_line_count 32 '^fun ' proofs/pro-verif/crypto.pvl \
+require_line_count 35 '^fun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive constructor/function"
 require_line_count 8 '^reduc ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive reduction"
-require_line_count 6 '^letfun ' proofs/pro-verif/crypto.pvl \
+require_line_count 8 '^letfun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive helper"
 require_line_count 1 '^fun pqxdh_domain\(\): kdf_domain \[data\]\.$' \
 	proofs/pro-verif/crypto.pvl "PQXDH HKDF domain"
@@ -339,6 +344,33 @@ require_line_count 3 '^fun hkdf_(first_32|second_32|final_12)\(' \
 require_occurrence_count 2 \
 	'pqxdh_root_input\(pqxdh_ff32_padding\(\), dh1, dh2, dh3, dh4, kem\)' \
 	"explicit ordered ProVerif root transcript" src/pqxdh.rs "$generated_proverif"
+require_line_count 1 '^fun sequence_le64\(sequence\): bitstring \[data\]\.$' \
+	proofs/pro-verif/crypto.pvl "symbolic sequence LE64 encoding"
+require_line_count 1 '^fun sender_id_le64\(key_id\): bitstring \[data\]\.$' \
+	proofs/pro-verif/crypto.pvl "symbolic sender-ID LE64 encoding"
+require_line_count 1 \
+	'^letfun key_id_encoding\(identifier: key_id\) = sender_id_le64\(identifier\)\.$' \
+	proofs/pro-verif/crypto.pvl "registration key-ID encoding compatibility"
+require_line_count 4 \
+	'^fun tag_(ed25519|x25519_prekey|x25519_one_time|mlkem768)\(bitstring\): bitstring \[data\]\.$' \
+	proofs/pro-verif/crypto.pvl "symbolic production key encoding"
+require_occurrence_count 1 \
+	'fun beaconcrypt_associated_data\(\s*bitstring,\s*bitstring,\s*kdf_domain,\s*kdf_domain\s*\): bitstring \[data\]\.' \
+	"exact associated-data constructor arity" proofs/pro-verif/crypto.pvl
+require_occurrence_count 2 \
+	'fun aead_(?:cipher|tag)\(\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring\s*\): bitstring\.' \
+	"exact base AEAD input arity" proofs/pro-verif/crypto.pvl
+require_occurrence_count 1 \
+	'fun ctx_preimage\(\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring\s*\): bitstring \[data\]\.' \
+	"exact six-field CTX preimage" proofs/pro-verif/crypto.pvl
+require_line_count 1 '^fun blake2b512\(bitstring\): bitstring\.$' \
+	proofs/pro-verif/crypto.pvl "symbolic BLAKE2b-512 constructor"
+require_occurrence_count 1 \
+	'letfun ctx_commitment\(\s*key: bitstring,\s*nonce: bitstring,\s*associated_data: bitstring,\s*retained_aead_tag: bitstring,\s*message_sequence: sequence,\s*sender_id: key_id\s*\)\s*=\s*blake2b512\(\s*ctx_preimage\(\s*key,\s*nonce,\s*associated_data,\s*retained_aead_tag,\s*sequence_le64\(message_sequence\),\s*sender_id_le64\(sender_id\)\s*\)\s*\)\.' \
+	"exact ordered CTX commitment" proofs/pro-verif/crypto.pvl
+reject_matches "invented AEAD or CTX label constructor" \
+	'(?m)^(?:fun|letfun) (?:aead|ctx)_[A-Za-z0-9_]*(?:label|domain)\(' \
+	proofs/pro-verif/crypto.pvl
 require_line_count 24 '^event ' proofs/pro-verif/environment.pvl \
 	"handwritten event"
 require_line_count 2 '^table ' proofs/pro-verif/environment.pvl \
@@ -440,6 +472,33 @@ require_line_count 2 '^equation ' \
 require_line_count 1 '^let ActiveQuantumMitm' \
 	proofs/pro-verif/active-quantum-witness.pvl \
 	"bounded active-quantum witness process"
+require_line_count 3 '^reduc ' \
+	proofs/pro-verif/public-key-confusion-control.pvl \
+	"production key-confusion parser"
+require_line_count 6 '^free ' \
+	proofs/pro-verif/public-key-confusion-control.pvl \
+	"key-confusion witness"
+require_line_count 8 '^event ' \
+	proofs/pro-verif/public-key-confusion-control.pvl \
+	"key-confusion event"
+require_line_count 2 '^let Strong' \
+	proofs/pro-verif/public-key-confusion-control.pvl \
+	"strong key-confusion process"
+require_line_count 8 '^query ' \
+	proofs/pro-verif/public-key-confusion-control-queries.pvl \
+	"key-confusion query"
+require_line_count 2 '^fun ' \
+	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
+	"weak key-confusion encoding"
+require_line_count 4 '^reduc ' \
+	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
+	"weak key-confusion parser"
+require_line_count 4 '^letfun ' \
+	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
+	"weak key-confusion tag"
+require_line_count 2 '^let Weak' \
+	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
+	"weak key-confusion process"
 for scenario_process in \
 	passive \
 	passive-strong-secrecy \
@@ -449,7 +508,9 @@ for scenario_process in \
 	hkdf-domain-distinct-control \
 	active-quantum \
 	quantum-capability-control \
-	quantum-mlkem-control; do
+	quantum-mlkem-control \
+	public-key-confusion-strong \
+	public-key-confusion-weak; do
 	require_line_count 1 '^process$' \
 		"proofs/pro-verif/${scenario_process}.pv" \
 		"${scenario_process} top-level process"
