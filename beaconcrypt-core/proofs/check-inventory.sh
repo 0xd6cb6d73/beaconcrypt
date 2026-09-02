@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=34
+	[handwritten-lean]=35
 	[handwritten-proverif]=28
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1233,6 +1233,9 @@ require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxSealSampling$' 
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxIndependentTags$' \
 	"$lean_root" \
 	"canonical modified-CTX independent-tag proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxHonestTagSampling$' \
+	"$lean_root" \
+	"canonical modified-CTX honest-tag sampling proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
@@ -1620,6 +1623,45 @@ for declaration in ctxKeyFreeSuffixStep ctxSplitRandomOracle \
 done
 require_line_count 1 '^@\[inline, reducible\] noncomputable def ctxSuffixRandomOracle( |$)' \
 	"$ctx_independent_tags" "modified CTX suffix random-oracle implementation"
+
+ctx_honest_tag_sampling=proofs/lean/BeaconcryptCore/Computational/CtxHonestTagSampling.lean
+for theorem_name in \
+	outerSuffix_eq_implies_nonce_eq \
+	outerSuffix_fresh_of_unused \
+	ctxKeyFreeSeal_suffix_fresh_of_unused \
+	ctxKeyFreeSealOracle_eq_directSample_of_invariant \
+	cacheSuffix_origin \
+	ctxIndependentPublicOracle_preserves_invariant \
+	ctxDirectSampleKeyFreeSealOracle_preserves_invariant \
+	ctxDirectSampleIndependentTagImpl_preserves_invariant \
+	ctxIndependentTagImpl_eq_directSample_step_of_invariant \
+	ctxDirectSampleIndependentTag_run_invariant \
+	ctxIndependentTagImpl_run_eq_directSample \
+	ctxDirectSampleIndependentTag_run_unique_seal_nonces \
+	ctxIndependentTagBeforeVerifyInner_eq_directSample \
+	ctxIndependentTagGame_eq_directSampleIndependentTagGame \
+	tvDist_ctxSplitBeforeVerifyGame_directSampleIndependentTagGame_le_secretPrefixQueried; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_honest_tag_sampling" "modified CTX honest-tag sampling theorem ${theorem_name}"
+done
+for theorem_name in outerSuffix_take_nonce emptyCtxIndependentTagState_invariant; do
+	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
+		"$ctx_honest_tag_sampling" "modified CTX honest-tag simplification theorem ${theorem_name}"
+done
+for declaration in CtxIndependentTagStateSealsMarkedUsed \
+	CtxIndependentTagStateUniqueSealNonces \
+	CtxIndependentTagStateSuffixCacheProvenance \
+	CtxIndependentTagStateInvariant; do
+	require_line_count 1 "^def ${declaration}( |$)" \
+		"$ctx_honest_tag_sampling" "modified CTX honest-tag invariant ${declaration}"
+done
+for declaration in ctxDirectSampleKeyFreeSealOracle \
+	ctxDirectSampleIndependentTagImpl \
+	ctxDirectSampleIndependentTagBeforeVerifyInner \
+	ctxDirectSampleIndependentTagGame; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_honest_tag_sampling" "modified CTX direct honest-tag game ${declaration}"
+done
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
