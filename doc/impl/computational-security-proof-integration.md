@@ -50,6 +50,8 @@ The passive scenarios use `passive.pv`, which removes replicated malicious endpo
 
 The active-classical positive queries use the separately named reachability scenario as their non-vacuity control. Its expected reachable events and malicious-recipient canary exposure are checked independently rather than in the same ProVerif invocation.
 
+The shared ProVerif KDF boundary now has one ideal no-salt HKDF-SHA-512 stream indexed by exactly the distinct PQXDH and symmetric-ratchet domains, and the extracted root-input replacement supplies the explicit `FF^32` field before DH1, DH2, DH3, DH4, and the ML-KEM secret. Initialization and record steps select the same symmetric stream projections, making initial-left equal step-key and initial-right equal step-next-chain for equal inputs without inventing a phase or output-length domain. Focused controls witness those equalities and correct endpoint execution, block wrong-domain and wrong-projection commitments after reachable attempts, and disclose a canary only in a deliberately domain-aliased theory. `ProtocolLabels.v` and the prefix-consistent SSProve ratchet model are independent design references rather than extraction linkage; concrete HKDF security, production-width reductions, and byte-for-byte Rust/symbolic synchronization remain separate obligations.
+
 ## Active-quantum attack witness
 
 The bounded attack intercepts the honest beacon's signed initialization, obtains the signing secret through the modeled Ed25519 recovery capability, and signs a replacement bundle containing attacker-chosen X25519 prekey, X25519 one-time key, and ML-KEM public key. The server accepts the replacement under the honest beacon identity and encapsulates to the attacker-controlled ML-KEM key.
@@ -63,6 +65,8 @@ The active witness uses private recovery functions inside one scripted process r
 ## Computational meaning of the scenario matrix
 
 ProVerif operates in a symbolic term algebra. Its positive results do not supply concrete advantage bounds, multi-user reduction losses, running-time bounds, quantum query semantics, random-oracle semantics, or proofs about the named primitive implementations. The four-scenario matrix is valuable because it fixes the intended security claims, finds symbolic dependency errors, checks correspondence structure, and provides the required active-quantum counterexample before the same claims are encoded as computational games.
+
+In particular, the shared-stream equations faithfully remove the model's former extra KDF separation but do not prove HKDF-SHA-512 pseudorandomness, Extract/Expand correctness, projection noncollision, adapter fidelity, or compiler preservation. A computational treatment still needs the ordered padded combiner reduction, prefix-consistent 64/76-byte semantics under the shared symmetric label, and security under the exact two production labels.
 
 The active-classical symbolic result is the specification target for a classical computational protocol proof. The passive-classical result should follow as a restricted-adversary corollary rather than receive an unrelated reduction. The checked SSProve passive-quantum capability game exposes the classical secret-recovery consequences while keeping honest ML-KEM decapsulation opaque, but a genuine passive-quantum result still requires a QPT or carefully justified post-quantum lifting theorem over classical transcripts. Standard SSProve packages are classical probabilistic programs and do not model quantum state, superposition oracle queries, or QROM access.
 

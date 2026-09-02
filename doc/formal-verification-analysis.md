@@ -391,6 +391,25 @@ The maintained suite now gives the threat modalities explicit targets. `active-c
 
 The passive equivalence, exact-path reachability, CTX field-mutation, and ML-KEM opacity/recovery controls were semantically ported from the ProVerif portion of the mixed EasyCrypt commit `3d09022` and reconciled with the newer VCVio proof inventory and result gate; the EasyCrypt proof suite and its older infrastructure were not imported.
 
+### Exact HKDF transcript and prefix semantics
+
+The ProVerif model now uses one no-salt HKDF-SHA-512 stream constructor indexed by its input and exactly two symbolic production domains: the 46-byte PQXDH domain and the distinct 41-byte symmetric-ratchet domain.
+The PQXDH root is the first 32-byte projection of that stream over the canonical 192-byte input `FF^32 || DH1 || DH2 || DH3 || DH4 || SS` in exactly that order.
+The fixed 32 bytes of `0xff` are an explicit first field of the extraction-backed `build_root_key_input` replacement rather than an erased comment-only convention.
+Initialization and per-record expansion deliberately use the same symmetric-ratchet domain, so for equal inputs the 64-byte initialization output is exactly the first 64 bytes of the 76-byte step output.
+Consequently, initial-left equals step-key and initial-right equals step-next-chain for equal symmetric inputs, while the final 12-byte projection is used only as the record-step nonce.
+Output length is not a domain separator, and the model introduces no send, receive, direction, sequence, session, phase, or output-length HKDF label.
+Direction separation comes only from selecting the first or second 32-byte projection and reversing those roles between server and beacon.
+
+Focused reachability controls witness both shared-prefix equalities and correct endpoint derivation, require each wrong-domain or wrong-projection fixture to reach its attempt point, and prove that those wrong endpoints cannot commit.
+A separate differential keeps the production domains distinct in one run and deliberately aliases both to the symmetric domain in another; the checker requires the same cross-domain canary to remain secret in the former and become disclosed in the latter.
+`SSProve/ProtocolLabels.v` and the prefix-consistent ratchet games guided this symbolic structure, but agreement between the independently handwritten ProVerif and SSProve models is not extraction linkage or a refinement theorem.
+The two ProVerif domain constructors are symbolic representatives of the production byte strings; byte-for-byte synchronization with Rust remains the transcript-synchronization obligation.
+
+ProVerif proves these controls only under its ideal deterministic symbolic HKDF-stream theory and does not prove HKDF-SHA-512 pseudorandomness, Extract/Expand correctness, projected-output noncollision, implementation fidelity, compiler preservation, or numerical computational bounds.
+The remaining computational obligations include a production-width HKDF combiner reduction for the ordered padded PQXDH input, prefix-consistent 64/76-byte expansion semantics, primitive security under the two exact labels, and the adapter/extraction bridge from production requests and outputs to the symbolic projections.
+This remains a symbolic protocol proof rather than an implementation theorem or an end-to-end computational security theorem.
+
 ### CTX commitment negative control
 
 The ordinary record model's [`open_frame`](../beaconcrypt-core/proofs/pro-verif/crypto.pvl) rule already requires an exact key, nonce-derived material, associated data, sequence, sender ID, tag, and ciphertext term.
@@ -942,6 +961,7 @@ The result gate requires exactly:
 - the shared weak-AEAD multi-opening query to be true (unreachable) with CTX and false (witnessed) without CTX, while all six one-field CTX mutation events remain unreachable in both runs;
 - all five secrecy and six injective correspondence queries to be true for active classical, with its seven reachability controls witnessed;
 - all five secrecy queries and the five-choice observational equivalence to be true for passive classical and passive quantum, with registration plus every exact canary-bearing receive path witnessed under the shared active scheduler, both classical quantum-recovery canaries exposed, the ML-KEM-derived control canary opaque under those capabilities, and the same canary exposed under deliberate total ML-KEM secret-key recovery;
+- both shared symmetric-HKDF prefix equalities and both correct endpoint commitments to be witnessed, every wrong-root-domain, wrong-symmetric-domain, and wrong-projection attempt to be witnessed without a corresponding commitment, and the domain-alias canary to remain secret under the two distinct production domains but be disclosed when the control theory aliases them;
 - the three active-quantum queries to be false, witnessing initial-secret recovery and failure of honest registration-origin agreement;
 - all 11 baseline queries to be true: five secrecy and six correspondence results;
 - all seven negated reachability/non-vacuity queries to be false, including a committed attacker-owned registration and attacker recovery of its routed canary;

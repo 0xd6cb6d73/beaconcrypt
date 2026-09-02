@@ -374,7 +374,7 @@ impl RootKeyInput {
 #[cfg_attr(
 	feature = "proverif",
 	hax_lib::proverif::replace(
-		"reduc forall dh1: bitstring, dh2: bitstring, dh3: bitstring, dh4: bitstring, kem: bitstring;\n  ${build_root_key_input}(beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem)) = beaconcrypt_core__pqxdh__RootKeyInput(pqxdh_root_input(dh1, dh2, dh3, dh4, kem))."
+		"reduc forall dh1: bitstring, dh2: bitstring, dh3: bitstring, dh4: bitstring, kem: bitstring;\n  ${build_root_key_input}(beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem)) = beaconcrypt_core__pqxdh__RootKeyInput(pqxdh_root_input(pqxdh_ff32_padding(), dh1, dh2, dh3, dh4, kem))."
 	)
 )]
 pub fn build_root_key_input(

@@ -18,7 +18,7 @@ let QuantumMlkemControl() =
   out(
     c,
     seal_frame(
-      shared_secret,
+      ratchet_material(shared_secret),
       QUANTUM_MLKEM_CONTROL_AD,
       first_sequence(),
       QUANTUM_MLKEM_CONTROL_SENDER,

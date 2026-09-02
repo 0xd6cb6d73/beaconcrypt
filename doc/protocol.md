@@ -122,6 +122,8 @@ Where:
  - `S` is the new state of the ratchet
  - `N` is the message nonce
 
+Initial ratchet expansion uses the same symmetric-ratchet label and input convention with a 64-byte output, so for an equal input it is intentionally the first 64 bytes of the 76-byte record-step stream; output length is not domain separation.
+
 # Protocol message
 ## CryptoFrame
 This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../beaconcrypt/src/schema/cryptoframe.capnp). It carries a key identifier (`seq`), a key identifier `keyId`, and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:

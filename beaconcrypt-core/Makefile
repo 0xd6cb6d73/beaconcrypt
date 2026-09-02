@@ -162,6 +162,10 @@ PROVERIF_SCENARIOS := \
 	passive-quantum-equivalence \
 	quantum-mlkem-opacity \
 	quantum-mlkem-recovery \
+	hkdf-prefix-conformance \
+	hkdf-endpoint-controls \
+	hkdf-domain-distinct \
+	hkdf-domain-alias \
 	active-quantum \
 	baseline \
 	reachability \
@@ -409,6 +413,42 @@ check-proverif-quantum-mlkem-recovery:
 			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
 			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
 		awk -v scenario=quantum-mlkem-recovery -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-prefix-conformance: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-prefix-conformance.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-prefix-conformance-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-prefix-conformance.pv | \
+		awk -v scenario=hkdf-prefix-conformance -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-endpoint-controls: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-endpoint-controls.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-endpoint-controls-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-endpoint-controls.pv | \
+		awk -v scenario=hkdf-endpoint-controls -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-domain-distinct: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-domain-distinct-control.pv | \
+		awk -v scenario=hkdf-domain-distinct -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-domain-alias: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-domain-alias-control.pv | \
+		awk -v scenario=hkdf-domain-alias -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-classical-equivalence: check-proverif-extraction
 	@set -o pipefail; \

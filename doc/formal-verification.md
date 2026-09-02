@@ -228,7 +228,7 @@ Assume only laws needed by the protocol proof:
 - KEM encapsulation/decapsulation correctness;
 - honest signature verification;
 - AEAD open/seal correctness for the same key, nonce, plaintext, and associated data;
-- KDF determinism and separation between distinct protocol labels.
+- deterministic no-salt HKDF-SHA-512 streams under the two exact production labels, with shared prefix projections for equal symmetric inputs and separation between the distinct labels.
 
 Do not assume general hash injectivity.
 The implemented proof extracts the production transcript helper, proves its exact 229-byte layout and both LE64 fields, proves both integer encodings and the complete six-field transcript injective, and machine-checks `ctx_distinct_openings_imply_hash_collision`.
@@ -312,6 +312,8 @@ Persistence is a separate boundary. `start_concrete_restore`, `concrete_restore_
 - Passive observational equivalence for simultaneous alternatives at the initial, cached, advancing, future, and beacon-to-server plaintext sites, in both classical and modeled-quantum capability scenarios.
 - Exact active-scheduler reachability of all five passive challenge receive paths.
 - ML-KEM opacity under the modeled classical-key recovery capabilities and a paired total ML-KEM secret-key-recovery canary; these controls do not model cross-key re-encapsulation.
+- One shared no-salt HKDF-SHA-512 stream indexed by exactly the PQXDH and symmetric-ratchet domains, with explicit padded root-input order and the intentional initialization/record-step 64/76-byte prefix relationship.
+- Positive prefix and endpoint reachability, rejection of wrong-domain and wrong-projection endpoint commitments, and a differential cross-domain disclosure when the two domains are deliberately aliased.
 - Injective agreement on server identity, beacon identity, assigned key ID, transcript, and derived root.
 - Accepted plaintext implies a preceding honest send for the same session, direction, sequence, sender, and plaintext.
 - Replay resistance.
@@ -328,7 +330,7 @@ Forward secrecy needs a precise statement. Send keys are deleted immediately, bu
 
 The symmetric ratchet never mixes fresh entropy into an established chain, so it deliberately provides no post-compromise security. This should be recorded as a negative result, not formulated as an expected theorem.
 
-ProVerif establishes these results only in the stated symbolic model. It does not establish computational security of the cryptographic primitives.
+ProVerif establishes these results only in the stated ideal symbolic model. It does not establish concrete HKDF security, synchronization between symbolic constructor names and Rust byte strings, implementation fidelity, or computational security of the cryptographic primitives.
 
 The state-neutral receive ProVerif process is one exact finite witness, not an unbounded receive API. It starts after successful symbolic frame construction and models attacker-selected frames that have passed the production parser, sender lookup/check, and minimum payload-length gate. Cap'n Proto parsing, serialized byte lengths, and the handling of malformed, truncated, or wrong-sender inputs remain production-review and regression-test obligations. The short leg rejects a forged sequence-3 frame twice with the exact same receiver-state term, then accepts the honest target, publishes only skipped sequence 2, rejects replay, and accepts delayed sequence 2. The capacity leg advances from sequence 1 to sequence 52, caches sequences 2 through 51, consumes sequence 52 separately, rejects sequence 54 while those 50 slots remain occupied, consumes cached sequence 51, and then accepts sequence 54 while publishing skipped sequence 53. The predecessor F* lemmas provide general exact KDF-output partition, cached-tag invariant, fixed-origin derivational reachability, callback-`None` full-state equality, non-vacuous exact preparation for each then-admitted future plan and valid cached target, conditional callback-`Some` publication shape, replay neutrality, equality of an arbitrary retry before and after any finite repetition of one fixed rejected operation, and rejection capacity preservation for their old callback API. They do not prove the corrected current phase API's maximum-gap future success. The ProVerif traces and Rust tests additionally provide concrete cryptographic effect and exact-schedule witnesses. F* does not supply concrete HKDF semantics or output noncollision, cryptographic secrecy, or frame provenance.
 

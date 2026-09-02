@@ -49,7 +49,7 @@ declare -A expected_category_counts=(
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=40
-	[handwritten-proverif]=33
+	[handwritten-proverif]=43
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -322,12 +322,23 @@ require_occurrence_count 4 \
 require_occurrence_count 4 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
-require_line_count 31 '^fun ' proofs/pro-verif/crypto.pvl \
+require_line_count 32 '^fun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive constructor/function"
-require_line_count 6 '^reduc ' proofs/pro-verif/crypto.pvl \
+require_line_count 8 '^reduc ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive reduction"
-require_line_count 1 '^letfun ' proofs/pro-verif/crypto.pvl \
+require_line_count 6 '^letfun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive helper"
+require_line_count 1 '^fun pqxdh_domain\(\): kdf_domain \[data\]\.$' \
+	proofs/pro-verif/crypto.pvl "PQXDH HKDF domain"
+require_line_count 1 '^fun symmetric_ratchet_domain\(\): kdf_domain \[data\]\.$' \
+	proofs/pro-verif/crypto.pvl "symmetric-ratchet HKDF domain"
+require_line_count 1 '^fun hkdf_sha512_no_salt\(bitstring, kdf_domain\): hkdf_stream\.$' \
+	proofs/pro-verif/crypto.pvl "shared no-salt HKDF stream"
+require_line_count 3 '^fun hkdf_(first_32|second_32|final_12)\(' \
+	proofs/pro-verif/crypto.pvl "shared HKDF projection"
+require_occurrence_count 2 \
+	'pqxdh_root_input\(pqxdh_ff32_padding\(\), dh1, dh2, dh3, dh4, kem\)' \
+	"explicit ordered ProVerif root transcript" src/pqxdh.rs "$generated_proverif"
 require_line_count 24 '^event ' proofs/pro-verif/environment.pvl \
 	"handwritten event"
 require_line_count 2 '^table ' proofs/pro-verif/environment.pvl \
@@ -396,6 +407,30 @@ require_line_count 1 '^query ' \
 require_line_count 5 'choice\[' \
 	proofs/pro-verif/passive-strong-secrecy.pv \
 	"passive strong-secrecy challenge"
+require_line_count 2 '^query ' \
+	proofs/pro-verif/hkdf-prefix-conformance-queries.pvl \
+	"shared-HKDF prefix conformance query"
+require_line_count 2 '^event ' \
+	proofs/pro-verif/hkdf-prefix-conformance.pvl \
+	"shared-HKDF prefix conformance event"
+require_line_count 8 '^query ' \
+	proofs/pro-verif/hkdf-endpoint-controls-queries.pvl \
+	"HKDF endpoint-control query"
+require_line_count 8 '^event ' \
+	proofs/pro-verif/hkdf-endpoint-controls.pvl \
+	"HKDF endpoint-control event"
+require_line_count 5 '^let Hkdf' \
+	proofs/pro-verif/hkdf-endpoint-controls.pvl \
+	"HKDF endpoint-control process"
+require_line_count 2 '^query ' \
+	proofs/pro-verif/hkdf-domain-alias-control-queries.pvl \
+	"HKDF domain differential query"
+require_line_count 1 '^letfun deliberately_aliased_domain' \
+	proofs/pro-verif/hkdf-domain-alias-control.pvl \
+	"deliberate HKDF domain-alias helper"
+require_line_count 2 '^let Hkdf.*DomainControl' \
+	proofs/pro-verif/hkdf-domain-alias-control.pvl \
+	"HKDF domain differential process"
 require_line_count 2 '^fun .*\[private\]' \
 	proofs/pro-verif/active-quantum-witness.pvl \
 	"bounded private quantum recovery operation"
@@ -408,6 +443,10 @@ require_line_count 1 '^let ActiveQuantumMitm' \
 for scenario_process in \
 	passive \
 	passive-strong-secrecy \
+	hkdf-prefix-conformance \
+	hkdf-endpoint-controls \
+	hkdf-domain-alias-control \
+	hkdf-domain-distinct-control \
 	active-quantum \
 	quantum-capability-control \
 	quantum-mlkem-control; do

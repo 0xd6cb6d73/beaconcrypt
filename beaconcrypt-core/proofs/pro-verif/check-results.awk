@@ -100,7 +100,7 @@ END {
   receive_after_release_arguments = "session_3,target_sequence_2,sender,receiver,plaintext_8,accepted_frame,target_material_1,rejected_state,released_state_1,committed_state_1"
   receive_reachable_after_release_arguments = "session_3,target_sequence_2,sender,receiver,RECEIVE_AFTER_RELEASE_SECRET[],accepted_frame,target_material_1,rejected_state,released_state_1,committed_state_1"
   receive_message_arguments = "session_3,message_direction,message_sequence_1,sender,receiver,plaintext_8"
-  receive_malicious_commit_arguments = "server_identity_1,beacon_identity_2,init,registration_id_2,assigned_key_id_1,root_input_1,root_2,associated_data_9,session_3,plaintext_8"
+  receive_malicious_commit_arguments = "server_identity_1,beacon_identity_2,init,registration_id_2,assigned_key_id_1,root_input_1,root_4,associated_data_9,session_3,plaintext_8"
   weak_aead_arguments = "left_key_1,right_key_1,left_context_1,right_context_1,left_plaintext_1,right_plaintext_1"
 
   equivalence_scenario = (scenario == "passive-classical-equivalence" ||
@@ -194,6 +194,44 @@ END {
     expected_result = (scenario == "quantum-mlkem-opacity") ? "true" : "false"
     wanted = "Query not attacker(QUANTUM_MLKEM_CONTROL_SECRET[]) is " expected_result "."
     require_exact(wanted, scenario)
+  } else if (scenario == "hkdf-prefix-conformance") {
+    if (query_count != 2) {
+      reject("expected 2 HKDF prefix conformance queries, saw " query_count)
+    }
+    wanted = "Query not event(HkdfInitialLeftEqualsStepKey(HKDF_PREFIX_LEFT_WITNESS[])) is false."
+    require_exact(wanted, "initial-left/step-key prefix equality")
+    wanted = "Query not event(HkdfInitialRightEqualsStepNext(HKDF_PREFIX_RIGHT_WITNESS[])) is false."
+    require_exact(wanted, "initial-right/step-next prefix equality")
+  } else if (scenario == "hkdf-endpoint-controls") {
+    if (query_count != 8) {
+      reject("expected 8 HKDF endpoint-control queries, saw " query_count)
+    }
+    wanted = "Query not event(HkdfCorrectRootEndpointCommitted(HKDF_CORRECT_ROOT_COMMIT_WITNESS[])) is false."
+    require_exact(wanted, "correct root-domain endpoint")
+    wanted = "Query not event(HkdfWrongRootOpeningAttempted(HKDF_WRONG_ROOT_COMMIT_WITNESS[])) is false."
+    require_exact(wanted, "wrong root-domain attempt")
+    wanted = "Query not event(HkdfWrongRootEndpointCommitted(HKDF_WRONG_ROOT_COMMIT_WITNESS[])) is true."
+    require_exact(wanted, "wrong root-domain rejection")
+    wanted = "Query not event(HkdfCorrectSymmetricEndpointCommitted(HKDF_CORRECT_SYMMETRIC_COMMIT_WITNESS[])) is false."
+    require_exact(wanted, "correct symmetric-domain endpoint")
+    wanted = "Query not event(HkdfWrongSymmetricOpeningAttempted(HKDF_WRONG_SYMMETRIC_COMMIT_WITNESS[])) is false."
+    require_exact(wanted, "wrong symmetric-domain attempt")
+    wanted = "Query not event(HkdfWrongSymmetricEndpointCommitted(HKDF_WRONG_SYMMETRIC_COMMIT_WITNESS[])) is true."
+    require_exact(wanted, "wrong symmetric-domain rejection")
+    wanted = "Query not event(HkdfWrongProjectionOpeningAttempted(HKDF_WRONG_PROJECTION_COMMIT_WITNESS[])) is false."
+    require_exact(wanted, "wrong projection attempt")
+    wanted = "Query not event(HkdfWrongProjectionEndpointCommitted(HKDF_WRONG_PROJECTION_COMMIT_WITNESS[])) is true."
+    require_exact(wanted, "wrong projection rejection")
+  } else if (scenario == "hkdf-domain-distinct" ||
+             scenario == "hkdf-domain-alias") {
+    if (query_count != 2) {
+      reject("expected 2 " scenario " queries, saw " query_count)
+    }
+    wanted = "Query not event(HkdfDomainComparisonAttempted(HKDF_DOMAIN_COMPARISON_WITNESS[])) is false."
+    require_exact(wanted, scenario " non-vacuity")
+    expected_result = (scenario == "hkdf-domain-distinct") ? "true" : "false"
+    wanted = "Query not attacker(HKDF_DOMAIN_ALIAS_CANARY[]) is " expected_result "."
+    require_exact(wanted, scenario " cross-domain disclosure")
   } else if (scenario == "baseline" ||
              scenario == "active-classical") {
     if (query_count != 11) {
