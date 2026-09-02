@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=32
+	[handwritten-lean]=39
 	[handwritten-proverif]=28
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1224,9 +1224,30 @@ require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxRomAuth$' \
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxPrefixIsolation$' \
 	"$lean_root" \
 	"canonical modified-CTX prefix-isolation proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxSplitCache$' \
+	"$lean_root" \
+	"canonical modified-CTX split-cache proof-root import"
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxSealSampling$' \
 	"$lean_root" \
 	"canonical modified-CTX seal-sampling proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxIndependentTags$' \
+	"$lean_root" \
+	"canonical modified-CTX independent-tag proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxHonestTagSampling$' \
+	"$lean_root" \
+	"canonical modified-CTX honest-tag sampling proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxNonceAeadIntCtxt$' \
+	"$lean_root" \
+	"canonical modified-CTX nonce-AEAD INT-CTXT proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxNonceAeadIndDollar$' \
+	"$lean_root" \
+	"canonical modified-CTX nonce-AEAD key-probe IND-dollar proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxNonceAeadIndDollarValidation$' \
+	"$lean_root" \
+	"canonical modified-CTX conventional IND-dollar validation proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxComputationalSecurity$' \
+	"$lean_root" \
+	"canonical modified-CTX computational-security proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
@@ -1517,6 +1538,34 @@ for declaration in ctxPrefixIsolatedPublic ctxRealWithPrefixFlagImpl \
 		"$ctx_prefix_isolation" "modified CTX prefix-isolation game definition ${declaration}"
 done
 
+ctx_split_cache=proofs/lean/BeaconcryptCore/Computational/CtxSplitCache.lean
+for theorem_name in \
+	outerInput_eq_secretAddress_outerSuffix \
+	outerSuffix_length \
+	secretAddress_secretSuffix \
+	secretSuffix_outerInput \
+	splitCtxCache_normalized \
+	splitCtxCache_lookup \
+	merge_splitCtxCache \
+	splitCtxCache_merge; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_split_cache" "modified CTX split-cache theorem ${theorem_name}"
+done
+for theorem_name in secretPrefixQuery_secretAddress secretSuffix_secretAddress \
+	splitCtxCache_empty; do
+	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
+		"$ctx_split_cache" "modified CTX split-cache simplification theorem ${theorem_name}"
+done
+require_line_count 1 '^abbrev CtxSuffixRO( |$)' \
+	"$ctx_split_cache" "modified CTX suffix-oracle type"
+require_line_count 1 '^@\[ext\] structure SplitCache( |$)' \
+	"$ctx_split_cache" "modified CTX split-cache structure"
+for declaration in secretSuffix secretAddress outerSuffix SplitCache.lookup \
+	SplitCache.merge splitCtxCache SplitCache.Normalized; do
+	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
+		"$ctx_split_cache" "modified CTX split-cache definition ${declaration}"
+done
+
 ctx_seal_sampling=proofs/lean/BeaconcryptCore/Computational/CtxSealSampling.lean
 for theorem_name in ctxSeal_query_fresh_of_good_unused \
 	ctxSealOracle_eq_directSample_of_good; do
@@ -1525,6 +1574,287 @@ for theorem_name in ctxSeal_query_fresh_of_good_unused \
 done
 require_line_count 1 '^noncomputable def ctxDirectSampleSealOracle( |$)' \
 	"$ctx_seal_sampling" "modified CTX direct-sampling seal transition"
+
+ctx_independent_tags=proofs/lean/BeaconcryptCore/Computational/CtxIndependentTags.lean
+require_line_count 1 '^structure CtxIndependentTagState( |$)' \
+	"$ctx_independent_tags" "modified CTX independent-tag handler state"
+for theorem_name in \
+	splitCtxCache_cacheQuery_prefix \
+	splitCtxCache_cacheQuery_public \
+	splitCtxCache_cacheQuery \
+	ctxRandomOracle_split_projection \
+	ctxSplitRandomOracle_outerInput_eq_keyFreeSuffix \
+	ctxPublicOracle_split_projection \
+	ctxSealOracle_split_projection \
+	ctxAdversaryImpl_split_projection_step \
+	ctxAdversaryImpl_split_projection_run \
+	withStickyBad_projection \
+	ctxRealWithPrefixFlagImpl_split_projection_step \
+	ctxRealWithPrefixFlagImpl_split_projection_run \
+	ctxSplitRoutedPublicOracle_eq_independent_of_not_prefix \
+	ctxSplitRouted_independent_agree_good \
+	ctxSplitRoutedWithPrefixFlagImpl_bad_mono \
+	ctxIndependentWithPrefixFlagImpl_bad_mono \
+	ctxSplitRouted_badProbability_eq_prefixBad \
+	tvDist_ctxSplitRouted_independentTag_le_prefixBad \
+	ctxSplitRoutedWithPrefixFlagImpl_proj_step \
+	ctxIndependentWithPrefixFlagImpl_proj_step \
+	ctxSplitRoutedWithPrefixFlagImpl_proj_run \
+	ctxIndependentWithPrefixFlagImpl_proj_run \
+	independentFlaggedProjection_splitRouted \
+	independentFlaggedProjection_independent \
+	tvDist_ctxSplitRoutedBeforeVerifyInner_independentTag_le_secretPrefixQueried \
+	ctxSplitRoutedBeforeVerifyInner_eq_ctxSplitBeforeVerifyInner \
+	tvDist_ctxSplitBeforeVerifyInner_independentTag_le_secretPrefixQueried \
+	tvDist_ctxSplitBeforeVerifyGame_independentTagGame_le_secretPrefixQueried; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_independent_tags" "modified CTX independent-tag theorem ${theorem_name}"
+done
+for theorem_name in merge_splitHandlerState splitHandlerState_empty \
+	splitHandlerState_addPublic splitHandlerState_addSeal; do
+	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
+		"$ctx_independent_tags" "modified CTX independent-tag simplification theorem ${theorem_name}"
+done
+for declaration in splitHandlerState CtxIndependentTagState.merge \
+	emptyCtxIndependentTagState splitFlaggedHandlerState cachePublic cacheSuffix \
+	cacheCanonical CtxIndependentTagState.addPublic CtxIndependentTagState.addSeal \
+	independentHandlerStateToBeforeVerify independentTrackedProjection \
+	independentFlaggedProjection splitBeforeVerifyProjection; do
+	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
+		"$ctx_independent_tags" "modified CTX independent-tag definition ${declaration}"
+done
+for declaration in ctxKeyFreeSuffixStep ctxSplitRandomOracle \
+	ctxKeyFreeSuffixOracle ctxSplitRoutedPublicOracle ctxIndependentPublicOracle \
+	ctxKeyFreeSealOracle ctxSplitRoutedImpl ctxIndependentTagImpl \
+	ctxSplitRoutedWithPrefixFlagImpl ctxIndependentWithPrefixFlagImpl \
+	ctxSplitRoutedFlaggedBeforeVerify ctxIndependentTagFlaggedBeforeVerify \
+	ctxSplitRoutedBeforeVerifyInner ctxIndependentTagBeforeVerifyInner \
+	ctxSplitBeforeVerifyInner ctxSplitBeforeVerifyGame ctxIndependentTagGame; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_independent_tags" "modified CTX independent-tag game definition ${declaration}"
+done
+require_line_count 1 '^@\[inline, reducible\] noncomputable def ctxSuffixRandomOracle( |$)' \
+	"$ctx_independent_tags" "modified CTX suffix random-oracle implementation"
+
+ctx_honest_tag_sampling=proofs/lean/BeaconcryptCore/Computational/CtxHonestTagSampling.lean
+for theorem_name in \
+	outerSuffix_eq_implies_nonce_eq \
+	outerSuffix_fresh_of_unused \
+	ctxKeyFreeSeal_suffix_fresh_of_unused \
+	ctxKeyFreeSealOracle_eq_directSample_of_invariant \
+	cacheSuffix_origin \
+	ctxIndependentPublicOracle_preserves_invariant \
+	ctxDirectSampleKeyFreeSealOracle_preserves_invariant \
+	ctxDirectSampleIndependentTagImpl_preserves_invariant \
+	ctxIndependentTagImpl_eq_directSample_step_of_invariant \
+	ctxDirectSampleIndependentTag_run_invariant \
+	ctxIndependentTagImpl_run_eq_directSample \
+	ctxDirectSampleIndependentTag_run_unique_seal_nonces \
+	ctxIndependentTagBeforeVerifyInner_eq_directSample \
+	ctxIndependentTagGame_eq_directSampleIndependentTagGame \
+	tvDist_ctxSplitBeforeVerifyGame_directSampleIndependentTagGame_le_secretPrefixQueried; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_honest_tag_sampling" "modified CTX honest-tag sampling theorem ${theorem_name}"
+done
+for theorem_name in outerSuffix_take_nonce emptyCtxIndependentTagState_invariant; do
+	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
+		"$ctx_honest_tag_sampling" "modified CTX honest-tag simplification theorem ${theorem_name}"
+done
+for declaration in CtxIndependentTagStateSealsMarkedUsed \
+	CtxIndependentTagStateUniqueSealNonces \
+	CtxIndependentTagStateSuffixCacheProvenance \
+	CtxIndependentTagStateInvariant; do
+	require_line_count 1 "^def ${declaration}( |$)" \
+		"$ctx_honest_tag_sampling" "modified CTX honest-tag invariant ${declaration}"
+done
+for declaration in ctxDirectSampleKeyFreeSealOracle \
+	ctxDirectSampleIndependentTagImpl \
+	ctxDirectSampleIndependentTagBeforeVerifyInner \
+	ctxDirectSampleIndependentTagGame; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_honest_tag_sampling" "modified CTX direct honest-tag game ${declaration}"
+done
+
+ctx_nonce_aead_int_ctxt=proofs/lean/BeaconcryptCore/Computational/CtxNonceAeadIntCtxt.lean
+for declaration in ModifiedNonceAeadSealInput ModifiedNonceAeadCiphertext \
+	ModifiedNonceAeadSuccessfulSeal ModifiedNonceAeadForgery \
+	ModifiedNonceAeadAdversary ModifiedNonceAeadHandlerState \
+	ModifiedNonceAeadBeforeVerify; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT structure ${declaration}"
+done
+for declaration in ModifiedNonceAeadSealSpec ModifiedNonceAeadAdversarySpec; do
+	require_line_count 1 "^abbrev ${declaration}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT abbreviation ${declaration}"
+done
+for declaration in emptyModifiedNonceAeadHandlerState \
+	ModifiedNonceAeadHandlerState.addSeal ModifiedNonceAeadFresh \
+	ModifiedNonceAeadINTCTXTWin CtxSealInput.toModifiedNonceAeadSealInput \
+	CtxRomRecord.toModifiedNonceAeadCiphertext \
+	CtxSuccessfulSeal.toModifiedNonceAeadSuccessfulSeal \
+	CtxAliasTarget.toModifiedNonceAeadForgery ctxBeforeVerifyToModifiedNonceAead \
+	CtxFreshAcceptedRetainedBase ctxIndependentTagStateToModifiedNonceAead \
+	queryModifiedNonceAeadSeal IsCtxSealQuery IsModifiedNonceAeadSealQuery \
+	ModifiedNonceAeadAdversary.MakesAtMostSealQueries; do
+	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT definition ${declaration}"
+done
+for declaration in modifiedNonceAeadSealOracle modifiedNonceAeadINTCTXTImpl \
+	modifiedNonceAeadINTCTXTBeforeVerifyInner modifiedNonceAeadINTCTXTGame \
+	modifiedNonceAeadINTCTXTAdvantage modifiedNonceAeadDigest \
+	ctxRetainedBasePublicOracle ctxRetainedBaseSealOracle \
+	ctxRetainedBaseReductionImpl ctxRetainedBaseReduction \
+	ctxRetainedBaseCombinedImpl; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT game definition ${declaration}"
+done
+for theorem_name in modifiedNonceAeadSealOracle_run \
+	modifiedNonceAeadSealOracle_run_ctx \
+	ctxFreshAcceptedRetainedBase_implies_modifiedNonceAeadINTCTXTWin \
+	liftProbComp_no_modifiedNonceAeadSealQueries \
+	ctxRetainedBaseReductionImpl_seal_query_bound_step \
+	ctxRetainedBaseReduction_seal_query_bound \
+	simulateQ_queryModifiedNonceAeadSeal simulateQ_modifiedNonceAeadDigest \
+	map_lift_ctxDigest_run map_lift_ctxDigest_apply \
+	ctxRetainedBasePublicOracle_projection \
+	ctxRetainedBaseSealOracle_projection \
+	ctxRetainedBaseCombinedImpl_projection \
+	ctxRetainedBaseCombinedImpl_run_projection \
+	ctxRetainedBaseNestedRun_eq_direct ctxRetainedBaseReduction_run_eq_direct \
+	modifiedNonceAeadINTCTXTBeforeVerifyInner_reduction_eq_direct \
+	modifiedNonceAeadINTCTXTGame_reduction_eq_direct \
+	ctxFreshAcceptedRetainedBaseProbability_le_intCtxtAdvantage; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT theorem ${theorem_name}"
+done
+for theorem_name in toModifiedNonceAeadSealInput_nonce \
+	toModifiedNonceAeadSealInput_ad toModifiedNonceAeadSealInput_plaintext; do
+	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT simplification theorem ${theorem_name}"
+done
+
+ctx_nonce_aead_ind_dollar=proofs/lean/BeaconcryptCore/Computational/CtxNonceAeadIndDollar.lean
+require_line_count 1 '^abbrev CtxKeyProbes( |$)' \
+	"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe vector"
+for declaration in CtxQueryBoundedAdversary \
+	ModifiedNonceAeadINDDollarProbeAdversary; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe structure ${declaration}"
+done
+for declaration in CtxKeyProbeHit ctxPrefixProbeVector \
+	CtxIndependentPrefixFlagInvariant IsCtxPublicQuery \
+	ModifiedNonceAeadINDDollarProbeAdversary.MakesAtMostSealQueries; do
+	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
+		"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe definition ${declaration}"
+done
+require_line_count 1 '^def prefixCandidate\?( |$)' \
+	"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe prefix candidate definition"
+for declaration in ctxIndependentPublicPrefixProbability \
+	ctxDirectSamplePublicPrefixProbability \
+	ctxPrefixToModifiedNonceAeadINDDollarReduction \
+	modifiedNonceAeadINDDollarRandomSealOracle \
+	modifiedNonceAeadINDDollarRandomImpl \
+	modifiedNonceAeadINDDollarRealProbeExp \
+	modifiedNonceAeadINDDollarRandomProbeExp \
+	modifiedNonceAeadINDDollarProbeAdvantage \
+	ctxDirectSamplePrefixProbeExpInner \
+	modifiedNonceAeadINDDollarRealProbeExpInner \
+	ctxDirectSamplePrefixProbeExp; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe game definition ${declaration}"
+done
+for theorem_name in ctxPrefixProbeVector_hit_of_prefix \
+	ctxPrefixProbeVector_prefix_of_hit \
+	ctxPrefixProbeVector_hit_iff_of_length_le \
+	ctxIndependent_badProbability_eq_prefixBad \
+	ctxIndependentPublicOracle_publicInputs ctxKeyFreeSealOracle_publicInputs \
+	ctxIndependentWithPrefixFlagImpl_preserves_prefix_flag \
+	ctxIndependentTagFlagged_run_prefix_flag \
+	ctxIndependent_badProbability_eq_publicPrefix \
+	ctxDirectSampleKeyFreeSealOracle_publicInputs \
+	ctxDirectSampleIndependentTagImpl_publicInputs_length_step \
+	ctxDirectSampleIndependentTag_run_publicInputs_length_le \
+	ctxDirectSampleIndependentTag_run_publicInputs_length_le_qH \
+	ctxIndependentPublicPrefixProbability_eq_directSample \
+	ctxSecretPrefixQueriedProbabilityInner_eq_directSamplePublicPrefix \
+	ctxPrefixToModifiedNonceAeadINDDollarReduction_seal_query_bound \
+	isTotalQueryBound_of_ctx_public_and_seal_bounds \
+	CtxQueryBoundedAdversary.totalQueryBound ctxKey_card \
+	probEvent_uniformKey_probeHit_le modifiedNonceAeadINDDollarRandomProbe_le \
+	ctxDirectSamplePrefixProbeExpInner_probability \
+	ctxPrefixReduction_realProbeExpInner_eq_directSample \
+	ctxSecretPrefixQueriedProbability_eq_directSampleProbe \
+	modifiedNonceAeadINDDollarRealProbeExp_reduction_eq_directSample \
+	ctxSecretPrefixQueriedProbability_eq_realProbeReduction \
+	ctxSecretPrefixQueriedProbability_le_modifiedNonceAeadINDDollar; do
+	require_line_count 1 "^theorem ${theorem_name//./\\.}( |$)" \
+		"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe theorem ${theorem_name}"
+done
+require_line_count 1 '^theorem prefixCandidate\?_eq_some_iff( |$)' \
+	"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe prefix-candidate equivalence"
+require_line_count 1 '^@\[simp\] theorem emptyCtxIndependentPrefixFlagInvariant( |$)' \
+	"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe empty-state invariant"
+
+ctx_nonce_aead_ind_dollar_validation=proofs/lean/BeaconcryptCore/Computational/CtxNonceAeadIndDollarValidation.lean
+require_line_count 1 '^structure ModifiedNonceAeadINDDollarAdversary( |$)' \
+	"$ctx_nonce_aead_ind_dollar_validation" "conventional modified nonce-AEAD IND-dollar adversary"
+for declaration in ctxValidationInput ctxValidationTag \
+	ctxValidationTagProbeVector CtxValidationTagHit \
+	modifiedNonceAeadCiphertextTag CtxValidationCiphertextHit; do
+	require_line_count 1 "^def ${declaration}( |$)" \
+		"$ctx_nonce_aead_ind_dollar_validation" "conventional IND-dollar validation definition ${declaration}"
+done
+for declaration in modifiedNonceAeadINDDollarRealExp \
+	modifiedNonceAeadINDDollarRandomExp modifiedNonceAeadINDDollarAdvantage \
+	ctxValidationAccept ctxPrefixToBooleanINDDollarReduction \
+	modifiedNonceAeadINDDollarRealExpInner; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_nonce_aead_ind_dollar_validation" "conventional IND-dollar game definition ${declaration}"
+done
+for theorem_name in ctxNonce_card chooseFreshCtxNonce_not_mem \
+	ctxDirectSampleIndependentTag_run_usedNonces_length_le_qE \
+	chooseFreshCtxNonce_fresh_of_direct_support \
+	ctxPrefixToBooleanINDDollarReduction_seal_query_bound \
+	ctxPrefixBooleanReduction_random_le \
+	ctxSecretPrefixQueriedProbability_le_booleanReal \
+	ctxSecretPrefixQueriedProbability_le_booleanINDDollar; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_nonce_aead_ind_dollar_validation" "conventional IND-dollar theorem ${theorem_name}"
+done
+
+ctx_computational_security=proofs/lean/BeaconcryptCore/Computational/CtxComputationalSecurity.lean
+require_line_count 1 '^structure CtxComputationalQueryAccounting( |$)' \
+	"$ctx_computational_security" "modified-CTX composed query-accounting record"
+for declaration in CtxClassifiedForgeryAt CtxTypedFullFresh \
+	CtxAcceptedTypedFullFreshAt CtxHonestCommitmentsCached \
+	CtxIndependentTagStateCommitmentsCached IsModifiedNonceAeadUniformQuery; do
+	require_line_count 1 "^def ${declaration}( |$)" \
+		"$ctx_computational_security" "modified-CTX final definition ${declaration}"
+done
+for declaration in ctxClassifiedVerifier ctxClassifiedForgeryGame \
+	ctxDirectClassifiedForgeryGame ctxTypedFullFreshVerifier \
+	ctxTypedFullFreshForgeryGame ctxDirectTypedFullFreshForgeryGame; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_computational_security" "modified-CTX final game definition ${declaration}"
+done
+for theorem_name in ctxDirectSampleIndependentTagGame_commitmentsCached \
+	acceptedTypedFullFreshAt_implies_classified_of_cache_sound \
+	ctxDirectSample_alias_suffix_fresh \
+	ctxTypedFullFreshForgeryGame_le_direct_add_prefix \
+	ctxTypedFullFreshForgeryProbability_le_intCtxt_add_prefix_add_inv \
+	ctxTypedFullFreshForgeryProbability_le_intCtxt_add_indDollar_add_guesses \
+	ctxTypedFullFreshForgeryProbability_le_intCtxt_add_booleanIndDollar_add_guesses \
+	ctxRetainedBaseReduction_uniform_query_bound \
+	ctxRetainedBaseReduction_total_query_bound \
+	ctxPrefixToModifiedNonceAeadINDDollarReduction_uniform_query_bound \
+	ctxPrefixToModifiedNonceAeadINDDollarReduction_total_query_bound \
+	ctxPrefixToBooleanINDDollarReduction_uniform_query_bound \
+	ctxPrefixToBooleanINDDollarReduction_total_query_bound \
+	ctxDirectTypedFullFreshForgeryGame_total_query_bound \
+	ctxComputationalSecurity_query_accounting; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_computational_security" "modified-CTX final theorem ${theorem_name}"
+done
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
