@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=37
+	[handwritten-lean]=39
 	[handwritten-proverif]=28
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1242,6 +1242,12 @@ require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxNonceAeadIntCtx
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxNonceAeadIndDollar$' \
 	"$lean_root" \
 	"canonical modified-CTX nonce-AEAD key-probe IND-dollar proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxNonceAeadIndDollarValidation$' \
+	"$lean_root" \
+	"canonical modified-CTX conventional IND-dollar validation proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxComputationalSecurity$' \
+	"$lean_root" \
+	"canonical modified-CTX computational-security proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
@@ -1788,6 +1794,67 @@ require_line_count 1 '^theorem prefixCandidate\?_eq_some_iff( |$)' \
 	"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe prefix-candidate equivalence"
 require_line_count 1 '^@\[simp\] theorem emptyCtxIndependentPrefixFlagInvariant( |$)' \
 	"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe empty-state invariant"
+
+ctx_nonce_aead_ind_dollar_validation=proofs/lean/BeaconcryptCore/Computational/CtxNonceAeadIndDollarValidation.lean
+require_line_count 1 '^structure ModifiedNonceAeadINDDollarAdversary( |$)' \
+	"$ctx_nonce_aead_ind_dollar_validation" "conventional modified nonce-AEAD IND-dollar adversary"
+for declaration in ctxValidationInput ctxValidationTag \
+	ctxValidationTagProbeVector CtxValidationTagHit \
+	modifiedNonceAeadCiphertextTag CtxValidationCiphertextHit; do
+	require_line_count 1 "^def ${declaration}( |$)" \
+		"$ctx_nonce_aead_ind_dollar_validation" "conventional IND-dollar validation definition ${declaration}"
+done
+for declaration in modifiedNonceAeadINDDollarRealExp \
+	modifiedNonceAeadINDDollarRandomExp modifiedNonceAeadINDDollarAdvantage \
+	ctxValidationAccept ctxPrefixToBooleanINDDollarReduction \
+	modifiedNonceAeadINDDollarRealExpInner; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_nonce_aead_ind_dollar_validation" "conventional IND-dollar game definition ${declaration}"
+done
+for theorem_name in ctxNonce_card chooseFreshCtxNonce_not_mem \
+	ctxDirectSampleIndependentTag_run_usedNonces_length_le_qE \
+	chooseFreshCtxNonce_fresh_of_direct_support \
+	ctxPrefixToBooleanINDDollarReduction_seal_query_bound \
+	ctxPrefixBooleanReduction_random_le \
+	ctxSecretPrefixQueriedProbability_le_booleanReal \
+	ctxSecretPrefixQueriedProbability_le_booleanINDDollar; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_nonce_aead_ind_dollar_validation" "conventional IND-dollar theorem ${theorem_name}"
+done
+
+ctx_computational_security=proofs/lean/BeaconcryptCore/Computational/CtxComputationalSecurity.lean
+require_line_count 1 '^structure CtxComputationalQueryAccounting( |$)' \
+	"$ctx_computational_security" "modified-CTX composed query-accounting record"
+for declaration in CtxClassifiedForgeryAt CtxTypedFullFresh \
+	CtxAcceptedTypedFullFreshAt CtxHonestCommitmentsCached \
+	CtxIndependentTagStateCommitmentsCached IsModifiedNonceAeadUniformQuery; do
+	require_line_count 1 "^def ${declaration}( |$)" \
+		"$ctx_computational_security" "modified-CTX final definition ${declaration}"
+done
+for declaration in ctxClassifiedVerifier ctxClassifiedForgeryGame \
+	ctxDirectClassifiedForgeryGame ctxTypedFullFreshVerifier \
+	ctxTypedFullFreshForgeryGame ctxDirectTypedFullFreshForgeryGame; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_computational_security" "modified-CTX final game definition ${declaration}"
+done
+for theorem_name in ctxDirectSampleIndependentTagGame_commitmentsCached \
+	acceptedTypedFullFreshAt_implies_classified_of_cache_sound \
+	ctxDirectSample_alias_suffix_fresh \
+	ctxTypedFullFreshForgeryGame_le_direct_add_prefix \
+	ctxTypedFullFreshForgeryProbability_le_intCtxt_add_prefix_add_inv \
+	ctxTypedFullFreshForgeryProbability_le_intCtxt_add_indDollar_add_guesses \
+	ctxTypedFullFreshForgeryProbability_le_intCtxt_add_booleanIndDollar_add_guesses \
+	ctxRetainedBaseReduction_uniform_query_bound \
+	ctxRetainedBaseReduction_total_query_bound \
+	ctxPrefixToModifiedNonceAeadINDDollarReduction_uniform_query_bound \
+	ctxPrefixToModifiedNonceAeadINDDollarReduction_total_query_bound \
+	ctxPrefixToBooleanINDDollarReduction_uniform_query_bound \
+	ctxPrefixToBooleanINDDollarReduction_total_query_bound \
+	ctxDirectTypedFullFreshForgeryGame_total_query_bound \
+	ctxComputationalSecurity_query_accounting; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_computational_security" "modified-CTX final theorem ${theorem_name}"
+done
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \

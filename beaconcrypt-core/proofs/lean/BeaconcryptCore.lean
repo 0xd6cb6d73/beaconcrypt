@@ -18,6 +18,8 @@ import BeaconcryptCore.Computational.CtxIndependentTags
 import BeaconcryptCore.Computational.CtxHonestTagSampling
 import BeaconcryptCore.Computational.CtxNonceAeadIntCtxt
 import BeaconcryptCore.Computational.CtxNonceAeadIndDollar
+import BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation
+import BeaconcryptCore.Computational.CtxComputationalSecurity
 import BeaconcryptCore.Computational.CtxTransitionReduction
 import BeaconcryptCore.Computational.VCVioFeasibility
 import BeaconcryptCore.Verification.ProofObligations
