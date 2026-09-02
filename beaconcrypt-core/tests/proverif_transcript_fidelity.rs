@@ -15,6 +15,7 @@ use beaconcrypt_core::{
 const INTERFACE: &str = include_str!("../proofs/pro-verif/production-transcript-interface.pvl");
 const CRYPTO_MODEL: &str = include_str!("../proofs/pro-verif/crypto.pvl");
 const ENVIRONMENT_MODEL: &str = include_str!("../proofs/pro-verif/environment.pvl");
+const ACTIVE_QUANTUM_WITNESS: &str = include_str!("../proofs/pro-verif/active-quantum-witness.pvl");
 const EXTRACTION_MODEL: &str = include_str!("../proofs/pro-verif/extraction/lib.pvl");
 const CORE_MAKEFILE: &str = include_str!("../Makefile");
 const FORMAL_WORKFLOW: &str = include_str!("../../.github/workflows/formal-verification.yml");
@@ -101,6 +102,7 @@ struct Snapshot {
 	interface: String,
 	crypto: String,
 	environment: String,
+	active_quantum_witness: String,
 	makefile: String,
 	phase2_schema: String,
 	adapter_server: String,
@@ -113,6 +115,7 @@ impl Snapshot {
 			interface: INTERFACE.to_owned(),
 			crypto: CRYPTO_MODEL.to_owned(),
 			environment: ENVIRONMENT_MODEL.to_owned(),
+			active_quantum_witness: ACTIVE_QUANTUM_WITNESS.to_owned(),
 			makefile: CORE_MAKEFILE.to_owned(),
 			phase2_schema: PHASE2_SCHEMA.to_owned(),
 			adapter_server: ADAPTER_SERVER.to_owned(),
@@ -383,6 +386,17 @@ fn require_one_call(
 	}
 }
 
+fn require_once(source: &str, wanted: &str, label: &str) -> Result<(), String> {
+	let occurrences = count(source, wanted);
+	if occurrences == 1 {
+		Ok(())
+	} else {
+		Err(format!(
+			"{label} changed: expected one exact occurrence of {wanted}, found {occurrences}"
+		))
+	}
+}
+
 fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
 	let schema = compact(&uncommented_capnp(&snapshot.phase2_schema));
 	require(
@@ -450,7 +464,7 @@ fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
 			"Phase-2 beacon assigned-ID mapping",
 		),
 	] {
-		require(&beacon, wanted, label)?;
+		require_once(&beacon, wanted, label)?;
 	}
 	Ok(())
 }
@@ -459,6 +473,7 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 	let interface = compact(&uncommented_pv(&snapshot.interface)?);
 	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
 	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	let active_quantum_witness = compact(&uncommented_pv(&snapshot.active_quantum_witness)?);
 	for declaration in [
 		"typekey_id.",
 		"typesequence.",
@@ -574,6 +589,11 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 			count(&environment, response_construction)
 		));
 	}
+	require(
+		&active_quantum_witness,
+		"letkex_response(response_server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id)=responsein",
+		"active-quantum Phase-2 response destructuring order",
+	)?;
 
 	let constructor = "funestablishment_transcript(bitstring,bitstring,beaconcrypt_core__pqxdh__t_InitKex,beaconcrypt_core__pqxdh__t_RegistrationId,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,beaconcrypt_core__pqxdh__t_RootKeyInput,bitstring,bitstring,key_id,key_id,bitstring,bitstring):establishment_transcript_t[data].";
 	require(
@@ -1081,6 +1101,52 @@ fn requested_transcript_mutations_are_rejected() {
 			);
 		},
 	);
+	for (name, key, value) in [
+		(
+			"changed_phase2_manifest_constructor",
+			"phase2.response.constructor",
+			"legacy_kex_response",
+		),
+		(
+			"changed_phase2_manifest_field_count",
+			"phase2.response.field_count",
+			"4",
+		),
+		(
+			"changed_phase2_manifest_field_0",
+			"phase2.response.field.0",
+			"ephemeralKey@1:server_ephemeral",
+		),
+		(
+			"changed_phase2_manifest_field_1",
+			"phase2.response.field.1",
+			"identityKey@0:server_identity",
+		),
+		(
+			"changed_phase2_manifest_field_2",
+			"phase2.response.field.2",
+			"appCipherText@3:initial_frame",
+		),
+		(
+			"changed_phase2_manifest_field_4",
+			"phase2.response.field.4",
+			"appCipherText@3:initial_frame",
+		),
+		(
+			"changed_phase2_manifest_server_writes",
+			"phase2.response.server_writes",
+			"candidate.ephemeral_public_key,candidate.server_identity_public_key,candidate.kem_ciphertext,initial_encrypted_frame,candidate.key_id",
+		),
+		(
+			"changed_phase2_manifest_beacon_reads",
+			"phase2.response.beacon_reads",
+			"server_ephemeral,response_server_identity,kem_ciphertext,initial_frame,assigned_key_id",
+		),
+	] {
+		assert_rejected(name, key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, value);
+		});
+	}
 	assert_rejected(
 		"legacy_phase2_symbolic_order",
 		"Phase-2 response constructor",
@@ -1089,6 +1155,39 @@ fn requested_transcript_mutations_are_rejected() {
 				&mut snapshot.environment,
 				"fun kex_response(\n  bitstring,\n  bitstring,\n  bitstring,\n  bitstring,\n  key_id\n): bitstring [data].",
 				"fun kex_response(\n  bitstring,\n  bitstring,\n  bitstring,\n  key_id,\n  bitstring\n): bitstring [data].",
+			);
+		},
+	);
+	assert_rejected(
+		"permuted_phase2_beacon_destructure",
+		"Phase-2 response destructuring order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"    response_server_identity,\n    server_ephemeral,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+				"    server_ephemeral,\n    response_server_identity,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+			);
+		},
+	);
+	assert_rejected(
+		"permuted_phase2_response_construction",
+		"Phase-2 response construction order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"        server_identity,\n        server_ephemeral,\n        kem_ciphertext,\n        initial_frame,\n        assigned_key_id",
+				"        server_ephemeral,\n        server_identity,\n        kem_ciphertext,\n        initial_frame,\n        assigned_key_id",
+			);
+		},
+	);
+	assert_rejected(
+		"permuted_active_quantum_phase2_destructure",
+		"active-quantum Phase-2 response destructuring order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.active_quantum_witness,
+				"    response_server_identity,\n    server_ephemeral,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+				"    server_ephemeral,\n    response_server_identity,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
 			);
 		},
 	);
@@ -1125,68 +1224,76 @@ fn requested_transcript_mutations_are_rejected() {
 			);
 		},
 	);
-	for (name, method, label) in [
+	for (name, from, to, label) in [
 		(
-			"renamed_phase2_server_identity_setter",
-			"bundle.set_identity_key",
+			"swapped_phase2_server_identity_mapping",
+			"bundle.set_identity_key(candidate.server_identity_public_key());",
+			"bundle.set_identity_key(candidate.ephemeral_public_key());",
 			"Phase-2 server identity mapping",
 		),
 		(
-			"renamed_phase2_server_ephemeral_setter",
-			"bundle.set_ephemeral_key",
+			"swapped_phase2_server_ephemeral_mapping",
+			"bundle.set_ephemeral_key(candidate.ephemeral_public_key());",
+			"bundle.set_ephemeral_key(candidate.server_identity_public_key());",
 			"Phase-2 server ephemeral mapping",
 		),
 		(
-			"renamed_phase2_server_kem_setter",
-			"bundle.set_kem_cipher_text",
+			"swapped_phase2_server_kem_mapping",
+			"bundle.set_kem_cipher_text(candidate.kem_ciphertext());",
+			"bundle.set_kem_cipher_text(&encrypted.ciphertext);",
 			"Phase-2 server KEM-ciphertext mapping",
 		),
 		(
-			"renamed_phase2_server_frame_setter",
-			"bundle.set_app_cipher_text",
+			"swapped_phase2_server_frame_mapping",
+			"bundle.set_app_cipher_text(&encrypted.ciphertext);",
+			"bundle.set_app_cipher_text(candidate.kem_ciphertext());",
 			"Phase-2 server initial-frame mapping",
 		),
 		(
-			"renamed_phase2_server_key_id_setter",
-			"bundle.set_key_id",
+			"swapped_phase2_server_key_id_mapping",
+			"bundle.set_key_id(remote_kid);",
+			"bundle.set_key_id(candidate.server_identity_key_id());",
 			"Phase-2 server assigned-ID mapping",
 		),
 	] {
 		assert_rejected(name, label, |snapshot| {
-			let renamed = format!("{method}_changed");
-			replace_once(&mut snapshot.adapter_server, method, &renamed);
+			replace_once(&mut snapshot.adapter_server, from, to);
 		});
 	}
-	for (name, getter, label) in [
+	for (name, from, to, label) in [
 		(
-			"renamed_phase2_beacon_identity_getter",
-			"response.get_identity_key",
+			"swapped_phase2_beacon_identity_mapping",
+			"response.get_identity_key()",
+			"response.get_ephemeral_key()",
 			"Phase-2 beacon identity mapping",
 		),
 		(
-			"renamed_phase2_beacon_ephemeral_getter",
-			"response.get_ephemeral_key",
+			"swapped_phase2_beacon_ephemeral_mapping",
+			"response.get_ephemeral_key()",
+			"response.get_identity_key()",
 			"Phase-2 beacon ephemeral mapping",
 		),
 		(
-			"renamed_phase2_beacon_kem_getter",
-			"response.get_kem_cipher_text",
+			"swapped_phase2_beacon_kem_mapping",
+			"response.get_kem_cipher_text()",
+			"response.get_app_cipher_text()",
 			"Phase-2 beacon KEM-ciphertext mapping",
 		),
 		(
-			"renamed_phase2_beacon_frame_getter",
-			"response.get_app_cipher_text",
+			"swapped_phase2_beacon_frame_mapping",
+			"response.get_app_cipher_text()",
+			"response.get_kem_cipher_text()",
 			"Phase-2 beacon initial-frame mapping",
 		),
 		(
-			"renamed_phase2_beacon_key_id_getter",
-			"response.get_key_id",
+			"swapped_phase2_beacon_key_id_mapping",
+			"response.get_key_id()",
+			"candidate.server_key_id()",
 			"Phase-2 beacon assigned-ID mapping",
 		),
 	] {
 		assert_rejected(name, label, |snapshot| {
-			let renamed = format!("{getter}_changed");
-			replace_once(&mut snapshot.adapter_beacon, getter, &renamed);
+			replace_once(&mut snapshot.adapter_beacon, from, to);
 		});
 	}
 	assert_rejected(

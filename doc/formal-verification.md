@@ -320,8 +320,8 @@ Persistence is a separate boundary. `start_concrete_restore`, `concrete_restore_
 - Strong/weak public-key-confusion differentials for ML-KEM versus X25519 algorithm tags and X25519 prekey versus one-time-key roles.
 - Exact unlabeled AEAD inputs and an unlabeled ideal BLAKE2b-512 commitment over the structured key, nonce, associated data, retained AEAD tag, LE64 sequence, and LE64 sender-ID preimage.
 - Injective agreement on the complete 18-field establishment transcript, including the selected ML-KEM public key and exact KEM ciphertext rather than only the derived shared secret or root.
-- One canonical 66-fact production transcript interface consumed by every scenario and checked against compiled core builders, the exact Phase-2 schema ordinals and adapter mappings, and its ProVerif declarations.
-- Fidelity mutations for both label bytes, domain aliasing, separate initialization/step domains, associated-data identity order, X25519 roles, both KEM agreement fields, every individual CTX field, and the Phase-2 response manifest, schema, symbolic order, server setters, and beacon getters.
+- One canonical 66-fact production transcript interface consumed by every scenario and checked against compiled core builders, the exact Phase-2 schema ordinals and adapter mappings, and its ProVerif declaration, process, and active-quantum witness sites.
+- Fidelity mutations for both label bytes, domain aliasing, separate initialization/step domains, associated-data identity order, X25519 roles, both KEM agreement fields, every individual CTX field, and every Phase-2 response manifest fact, schema, process/witness order, server setter, and beacon consumer mapping.
 - Accepted plaintext implies a preceding honest send for the same session, direction, sequence, sender, and plaintext.
 - Replay resistance.
 - Unknown-key-share and cross-peer resistance.

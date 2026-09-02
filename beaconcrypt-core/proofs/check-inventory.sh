@@ -669,8 +669,8 @@ for scenario_process in \
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 10 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|PHASE2_SCHEMA): &str = include_str!' \
+require_line_count 11 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|PHASE2_SCHEMA): &str = include_str!' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
@@ -699,20 +699,31 @@ for mutation_name in \
 	reversed_ad_identities \
 	swapped_x25519_roles \
 	reordered_phase2_manifest_field \
+	changed_phase2_manifest_constructor \
+	changed_phase2_manifest_field_count \
+	changed_phase2_manifest_field_0 \
+	changed_phase2_manifest_field_1 \
+	changed_phase2_manifest_field_2 \
+	changed_phase2_manifest_field_4 \
+	changed_phase2_manifest_server_writes \
+	changed_phase2_manifest_beacon_reads \
 	legacy_phase2_symbolic_order \
+	permuted_phase2_beacon_destructure \
+	permuted_phase2_response_construction \
+	permuted_active_quantum_phase2_destructure \
 	reordered_phase2_schema_fields \
 	omitted_phase2_schema_field \
 	renamed_phase2_schema_field \
-	renamed_phase2_server_identity_setter \
-	renamed_phase2_server_ephemeral_setter \
-	renamed_phase2_server_kem_setter \
-	renamed_phase2_server_frame_setter \
-	renamed_phase2_server_key_id_setter \
-	renamed_phase2_beacon_identity_getter \
-	renamed_phase2_beacon_ephemeral_getter \
-	renamed_phase2_beacon_kem_getter \
-	renamed_phase2_beacon_frame_getter \
-	renamed_phase2_beacon_key_id_getter \
+	swapped_phase2_server_identity_mapping \
+	swapped_phase2_server_ephemeral_mapping \
+	swapped_phase2_server_kem_mapping \
+	swapped_phase2_server_frame_mapping \
+	swapped_phase2_server_key_id_mapping \
+	swapped_phase2_beacon_identity_mapping \
+	swapped_phase2_beacon_ephemeral_mapping \
+	swapped_phase2_beacon_kem_mapping \
+	swapped_phase2_beacon_frame_mapping \
+	swapped_phase2_beacon_key_id_mapping \
 	agreement_without_selected_pqpk \
 	agreement_without_kem_ciphertext \
 	ctx_without_key \
