@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=35
+	[handwritten-lean]=36
 	[handwritten-proverif]=28
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1236,6 +1236,9 @@ require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxIndependentTags
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxHonestTagSampling$' \
 	"$lean_root" \
 	"canonical modified-CTX honest-tag sampling proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxNonceAeadIntCtxt$' \
+	"$lean_root" \
+	"canonical modified-CTX nonce-AEAD INT-CTXT proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
@@ -1661,6 +1664,64 @@ for declaration in ctxDirectSampleKeyFreeSealOracle \
 	ctxDirectSampleIndependentTagGame; do
 	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
 		"$ctx_honest_tag_sampling" "modified CTX direct honest-tag game ${declaration}"
+done
+
+ctx_nonce_aead_int_ctxt=proofs/lean/BeaconcryptCore/Computational/CtxNonceAeadIntCtxt.lean
+for declaration in ModifiedNonceAeadSealInput ModifiedNonceAeadCiphertext \
+	ModifiedNonceAeadSuccessfulSeal ModifiedNonceAeadForgery \
+	ModifiedNonceAeadAdversary ModifiedNonceAeadHandlerState \
+	ModifiedNonceAeadBeforeVerify; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT structure ${declaration}"
+done
+for declaration in ModifiedNonceAeadSealSpec ModifiedNonceAeadAdversarySpec; do
+	require_line_count 1 "^abbrev ${declaration}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT abbreviation ${declaration}"
+done
+for declaration in emptyModifiedNonceAeadHandlerState \
+	ModifiedNonceAeadHandlerState.addSeal ModifiedNonceAeadFresh \
+	ModifiedNonceAeadINTCTXTWin CtxSealInput.toModifiedNonceAeadSealInput \
+	CtxRomRecord.toModifiedNonceAeadCiphertext \
+	CtxSuccessfulSeal.toModifiedNonceAeadSuccessfulSeal \
+	CtxAliasTarget.toModifiedNonceAeadForgery ctxBeforeVerifyToModifiedNonceAead \
+	CtxFreshAcceptedRetainedBase ctxIndependentTagStateToModifiedNonceAead \
+	queryModifiedNonceAeadSeal IsCtxSealQuery IsModifiedNonceAeadSealQuery \
+	ModifiedNonceAeadAdversary.MakesAtMostSealQueries; do
+	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT definition ${declaration}"
+done
+for declaration in modifiedNonceAeadSealOracle modifiedNonceAeadINTCTXTImpl \
+	modifiedNonceAeadINTCTXTBeforeVerifyInner modifiedNonceAeadINTCTXTGame \
+	modifiedNonceAeadINTCTXTAdvantage modifiedNonceAeadDigest \
+	ctxRetainedBasePublicOracle ctxRetainedBaseSealOracle \
+	ctxRetainedBaseReductionImpl ctxRetainedBaseReduction \
+	ctxRetainedBaseCombinedImpl; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT game definition ${declaration}"
+done
+for theorem_name in modifiedNonceAeadSealOracle_run \
+	modifiedNonceAeadSealOracle_run_ctx \
+	ctxFreshAcceptedRetainedBase_implies_modifiedNonceAeadINTCTXTWin \
+	liftProbComp_no_modifiedNonceAeadSealQueries \
+	ctxRetainedBaseReductionImpl_seal_query_bound_step \
+	ctxRetainedBaseReduction_seal_query_bound \
+	simulateQ_queryModifiedNonceAeadSeal simulateQ_modifiedNonceAeadDigest \
+	map_lift_ctxDigest_run map_lift_ctxDigest_apply \
+	ctxRetainedBasePublicOracle_projection \
+	ctxRetainedBaseSealOracle_projection \
+	ctxRetainedBaseCombinedImpl_projection \
+	ctxRetainedBaseCombinedImpl_run_projection \
+	ctxRetainedBaseNestedRun_eq_direct ctxRetainedBaseReduction_run_eq_direct \
+	modifiedNonceAeadINTCTXTBeforeVerifyInner_reduction_eq_direct \
+	modifiedNonceAeadINTCTXTGame_reduction_eq_direct \
+	ctxFreshAcceptedRetainedBaseProbability_le_intCtxtAdvantage; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT theorem ${theorem_name}"
+done
+for theorem_name in toModifiedNonceAeadSealInput_nonce \
+	toModifiedNonceAeadSealInput_ad toModifiedNonceAeadSealInput_plaintext; do
+	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
+		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT simplification theorem ${theorem_name}"
 done
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
