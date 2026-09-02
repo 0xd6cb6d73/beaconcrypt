@@ -157,7 +157,11 @@ PROVERIF_SCENARIOS := \
 	aead-no-commitment \
 	active-classical \
 	passive-classical \
+	passive-classical-equivalence \
 	passive-quantum \
+	passive-quantum-equivalence \
+	quantum-mlkem-opacity \
+	quantum-mlkem-recovery \
 	active-quantum \
 	baseline \
 	reachability \
@@ -385,8 +389,46 @@ check-proverif-quantum-capabilities:
 			$(PROVERIF_DIR)/quantum-capability-control.pv | \
 		awk -v scenario=quantum-capabilities -f '$(PROVERIF_CHECKER)'
 
+check-proverif-quantum-mlkem-opacity:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
+			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
+		awk -v scenario=quantum-mlkem-opacity -f '$(PROVERIF_CHECKER)'
+
+check-proverif-quantum-mlkem-recovery:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
+			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
+		awk -v scenario=quantum-mlkem-recovery -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-classical-equivalence: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_COMMON_LIBS) \
+			$(PROVERIF_DIR)/passive-strong-secrecy.pv | \
+		awk -v scenario=passive-classical-equivalence -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-quantum-equivalence: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_QUANTUM_LIBS) \
+			$(PROVERIF_DIR)/passive-strong-secrecy.pv | \
+		awk -v scenario=passive-quantum-equivalence -f '$(PROVERIF_CHECKER)'
+
 check-proverif-passive-classical: check-proverif-extraction \
-	check-proverif-passive-reachability
+	check-proverif-passive-reachability \
+	check-proverif-passive-classical-equivalence
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			-set attacker passive \
@@ -396,7 +438,10 @@ check-proverif-passive-classical: check-proverif-extraction \
 		awk -v scenario=passive-classical -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-quantum: check-proverif-extraction \
-	check-proverif-passive-reachability check-proverif-quantum-capabilities
+	check-proverif-passive-reachability check-proverif-quantum-capabilities \
+	check-proverif-quantum-mlkem-opacity \
+	check-proverif-quantum-mlkem-recovery \
+	check-proverif-passive-quantum-equivalence
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			-set attacker passive \

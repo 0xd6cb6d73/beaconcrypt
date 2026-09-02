@@ -346,7 +346,7 @@ let RegistrationReplayGuard(
 (* One honest beacon registration and its bounded record prefix            *)
 (**************************************************************************)
 
-let HonestBeacon() =
+let HonestBeacon(beacon_record_secret: bitstring) =
   new beacon_identity_secret: bitstring;
   new beacon_prekey_secret: bitstring;
   new beacon_one_time_secret: bitstring;
@@ -590,7 +590,7 @@ let HonestBeacon() =
       associated_data,
       first_sequence(),
       assigned_key_id,
-      BEACON_RECORD_SECRET
+      beacon_record_secret
     ) in
     event MessageSent(
       session,
@@ -598,7 +598,7 @@ let HonestBeacon() =
       first_sequence(),
       assigned_key_id,
       SERVER_KEY_ID,
-      BEACON_RECORD_SECRET
+      beacon_record_secret
     );
     event MessageKeyUnavailable(
       session,
@@ -658,7 +658,12 @@ let MaliciousBeacon() =
 (* Serialized, non-rollback server registration                            *)
 (**************************************************************************)
 
-let Server() =
+let Server(
+  initial_secret: bitstring,
+  cached_secret: bitstring,
+  advance_secret: bitstring,
+  future_secret: bitstring
+) =
   in(c, incoming_init: bitstring);
   let signed_init_kex(
     encoded_identity,
@@ -780,7 +785,7 @@ let Server() =
         associated_data,
         first_sequence(),
         SERVER_KEY_ID,
-        registration_payload(binding, INITIAL_SECRET)
+        registration_payload(binding, initial_secret)
       ) in
       event MessageSent(
         session,
@@ -788,7 +793,7 @@ let Server() =
         first_sequence(),
         SERVER_KEY_ID,
         assigned_key_id,
-        INITIAL_SECRET
+        initial_secret
       );
       event MessageKeyUnavailable(
         session,
@@ -831,7 +836,7 @@ let Server() =
         associated_data,
         next_sequence(first_sequence()),
         SERVER_KEY_ID,
-        CACHED_SECRET
+        cached_secret
       ) in
       event MessageSent(
         session,
@@ -839,7 +844,7 @@ let Server() =
         next_sequence(first_sequence()),
         SERVER_KEY_ID,
         assigned_key_id,
-        CACHED_SECRET
+        cached_secret
       );
       event MessageKeyUnavailable(
         session,
@@ -855,7 +860,7 @@ let Server() =
         associated_data,
         next_sequence(next_sequence(first_sequence())),
         SERVER_KEY_ID,
-        ADVANCE_SECRET
+        advance_secret
       ) in
       event MessageSent(
         session,
@@ -863,7 +868,7 @@ let Server() =
         next_sequence(next_sequence(first_sequence())),
         SERVER_KEY_ID,
         assigned_key_id,
-        ADVANCE_SECRET
+        advance_secret
       );
       event MessageKeyUnavailable(
         session,
@@ -879,7 +884,7 @@ let Server() =
         associated_data,
         next_sequence(next_sequence(next_sequence(first_sequence()))),
         SERVER_KEY_ID,
-        FUTURE_SECRET
+        future_secret
       ) in
       event MessageSent(
         session,
@@ -887,7 +892,7 @@ let Server() =
         next_sequence(next_sequence(next_sequence(first_sequence()))),
         SERVER_KEY_ID,
         assigned_key_id,
-        FUTURE_SECRET
+        future_secret
       );
       event MessageKeyUnavailable(
         session,

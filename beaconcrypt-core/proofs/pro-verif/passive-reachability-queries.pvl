@@ -1,7 +1,6 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(* ProVerif does not classify positive reachability in passive-attacker mode.
-   These active-scheduler controls use the same bounded honest-only process and must find both the registration commit and record-delivery milestones. *)
+(* ProVerif does not classify positive reachability in passive-attacker mode. These active-scheduler controls use the same bounded honest-only process. Every secrecy canary is named explicitly so an unreachable send/receive branch cannot make a passive secrecy result pass vacuously. *)
 query server_identity: bitstring,
       beacon_identity: bitstring,
       init: beaconcrypt_core__pqxdh__t_InitKex,
@@ -25,17 +24,52 @@ query server_identity: bitstring,
     origin
   )).
 
-query session: bitstring,
-      message_direction: direction,
-      message_sequence: sequence,
-      sender: key_id,
-      receiver: key_id,
-      plaintext: bitstring;
+query session: bitstring, sender: key_id, receiver: key_id;
   event(MessageReceived(
     session,
-    message_direction,
-    message_sequence,
+    server_to_beacon(),
+    first_sequence(),
     sender,
     receiver,
-    plaintext
+    INITIAL_SECRET
+  )).
+
+query session: bitstring, sender: key_id, receiver: key_id;
+  event(MessageReceived(
+    session,
+    server_to_beacon(),
+    next_sequence(first_sequence()),
+    sender,
+    receiver,
+    CACHED_SECRET
+  )).
+
+query session: bitstring, sender: key_id, receiver: key_id;
+  event(MessageReceived(
+    session,
+    server_to_beacon(),
+    next_sequence(next_sequence(first_sequence())),
+    sender,
+    receiver,
+    ADVANCE_SECRET
+  )).
+
+query session: bitstring, sender: key_id, receiver: key_id;
+  event(MessageReceived(
+    session,
+    server_to_beacon(),
+    next_sequence(next_sequence(next_sequence(first_sequence()))),
+    sender,
+    receiver,
+    FUTURE_SECRET
+  )).
+
+query session: bitstring, sender: key_id, receiver: key_id;
+  event(MessageReceived(
+    session,
+    beacon_to_server(),
+    first_sequence(),
+    sender,
+    receiver,
+    BEACON_RECORD_SECRET
   )).

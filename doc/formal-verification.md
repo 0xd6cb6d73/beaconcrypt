@@ -309,6 +309,9 @@ Persistence is a separate boundary. `start_concrete_restore`, `concrete_restore_
 ### ProVerif: protocol trace properties
 
 - Secrecy of the initial application message and subsequent application messages.
+- Passive observational equivalence for simultaneous alternatives at the initial, cached, advancing, future, and beacon-to-server plaintext sites, in both classical and modeled-quantum capability scenarios.
+- Exact active-scheduler reachability of all five passive challenge receive paths.
+- ML-KEM opacity under the modeled classical-key recovery capabilities and a paired total ML-KEM secret-key-recovery canary; these controls do not model cross-key re-encapsulation.
 - Injective agreement on server identity, beacon identity, assigned key ID, transcript, and derived root.
 - Accepted plaintext implies a preceding honest send for the same session, direction, sequence, sender, and plaintext.
 - Replay resistance.
@@ -319,6 +322,7 @@ Persistence is a separate boundary. `start_concrete_restore`, `concrete_restore_
 - Explicit negative results after disclosure of the unchanged post-rejection live chain: derivation of future skipped and target material and attacker forgery, without any claim that rejection enlarged the compromised state.
 - Reachability of two neutral rejected attempts from one exact entry-state term, later honest future delivery, skipped-key publication from success, replay rejection, delayed cached delivery, maximum-gap success with 50 skipped keys, capacity rejection, cached consumption, and forward progress after one slot is freed.
 - A differential negative control in which one deliberately non-key-committing base-AEAD ciphertext/tag has two distinct valid openings: the identical double-open query is unreachable with CTX and reachable when CTX is removed.
+- Six independent CTX constructor controls in which changing only key, nonce, associated data, retained AEAD tag, sequence, or sender ID must be rejected.
 
 Forward secrecy needs a precise statement. Send keys are deleted immediately, but skipped receive keys remain cached for out-of-order delivery. Compromise of a receiver can reveal cached skipped keys. The defensible theorem is secrecy of a message after its message key has become logically unavailable, not secrecy of every message whose sequence number is below the current counter.
 
