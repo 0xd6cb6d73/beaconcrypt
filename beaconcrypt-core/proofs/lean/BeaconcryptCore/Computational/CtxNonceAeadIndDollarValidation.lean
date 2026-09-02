@@ -140,12 +140,13 @@ theorem ctxDirectSampleIndependentTagImpl_usedNonces_length_step
       ctxDirectSampleKeyFreeSealOracle_usedNonces_length_le
         c key input state result hresult
 
-theorem ctxDirectSampleIndependentTag_run_usedNonces_length_le
-    (c : Pqxdh.Crypto) (key : CtxKey)
-    {oa : OracleComp CtxAdversarySpec CtxAliasTarget} {n : ℕ}
+/-- A direct-sampling run with arbitrary output records at most one nonce per sealing query. -/
+theorem ctxDirectSampleIndependentTag_run_usedNonces_length_le_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {alpha : Type}
+    {oa : OracleComp CtxAdversarySpec alpha} {n : ℕ}
     (hbound : oa.IsQueryBoundP IsCtxSealQuery n)
     (state : CtxIndependentTagState)
-    (result : CtxAliasTarget × CtxIndependentTagState)
+    (result : alpha × CtxIndependentTagState)
     (hresult : result ∈ support
       ((simulateQ (ctxDirectSampleIndependentTagImpl c key) oa).run state)) :
     result.2.usedNonces.length ≤ state.usedNonces.length + n := by
@@ -172,6 +173,33 @@ theorem ctxDirectSampleIndependentTag_run_usedNonces_length_le
       · simp only [hseal, if_false] at hstepLength hrec
         omega
 
+/-- Compatibility wrapper for the authenticity adversary output. -/
+theorem ctxDirectSampleIndependentTag_run_usedNonces_length_le
+    (c : Pqxdh.Crypto) (key : CtxKey)
+    {oa : OracleComp CtxAdversarySpec CtxAliasTarget} {n : ℕ}
+    (hbound : oa.IsQueryBoundP IsCtxSealQuery n)
+    (state : CtxIndependentTagState)
+    (result : CtxAliasTarget × CtxIndependentTagState)
+    (hresult : result ∈ support
+      ((simulateQ (ctxDirectSampleIndependentTagImpl c key) oa).run state)) :
+    result.2.usedNonces.length ≤ state.usedNonces.length + n := by
+  exact ctxDirectSampleIndependentTag_run_usedNonces_length_le_of_main
+    c key hbound state result hresult
+
+/-- An arbitrary-output direct-sampling run satisfying the sealing-query bound records at most `qE` nonces. -/
+theorem ctxDirectSampleIndependentTag_run_usedNonces_length_le_qE_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {alpha : Type} {qE : ℕ}
+    (main : OracleComp CtxAdversarySpec alpha)
+    (hbound : main.IsQueryBoundP IsCtxSealQuery qE)
+    (result : alpha × CtxIndependentTagState)
+    (hresult : result ∈ support
+      ((simulateQ (ctxDirectSampleIndependentTagImpl c key)
+        main).run emptyCtxIndependentTagState)) :
+    result.2.usedNonces.length ≤ qE := by
+  simpa [emptyCtxIndependentTagState] using
+    ctxDirectSampleIndependentTag_run_usedNonces_length_le_of_main
+      c key hbound emptyCtxIndependentTagState result hresult
+
 theorem ctxDirectSampleIndependentTag_run_usedNonces_length_le_qE
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE)
@@ -180,10 +208,26 @@ theorem ctxDirectSampleIndependentTag_run_usedNonces_length_le_qE
       ((simulateQ (ctxDirectSampleIndependentTagImpl c key)
         adversary.main).run emptyCtxIndependentTagState)) :
     result.2.usedNonces.length ≤ qE := by
-  simpa [emptyCtxIndependentTagState] using
-    ctxDirectSampleIndependentTag_run_usedNonces_length_le
-      c key adversary.sealQueryBound emptyCtxIndependentTagState
-      result hresult
+  exact ctxDirectSampleIndependentTag_run_usedNonces_length_le_qE_of_main
+    c key adversary.main adversary.sealQueryBound result hresult
+
+/-- If an arbitrary-output direct run uses fewer nonces than the nonce space, its chosen validation nonce is fresh. -/
+theorem chooseFreshCtxNonce_fresh_of_direct_support_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {alpha : Type} {qE : ℕ}
+    (main : OracleComp CtxAdversarySpec alpha)
+    (hbound : main.IsQueryBoundP IsCtxSealQuery qE)
+    (hqE : qE < 2 ^ 96)
+    (result : alpha × CtxIndependentTagState)
+    (hresult : result ∈ support
+      ((simulateQ (ctxDirectSampleIndependentTagImpl c key)
+        main).run emptyCtxIndependentTagState)) :
+    chooseFreshCtxNonce result.2.usedNonces ∉ result.2.usedNonces := by
+  apply chooseFreshCtxNonce_not_mem
+  apply exists_ctxNonce_not_mem
+  rw [ctxNonce_card]
+  exact lt_of_le_of_lt
+    (ctxDirectSampleIndependentTag_run_usedNonces_length_le_qE_of_main
+      c key main hbound result hresult) hqE
 
 theorem chooseFreshCtxNonce_fresh_of_direct_support
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
@@ -194,12 +238,8 @@ theorem chooseFreshCtxNonce_fresh_of_direct_support
       ((simulateQ (ctxDirectSampleIndependentTagImpl c key)
         adversary.main).run emptyCtxIndependentTagState)) :
     chooseFreshCtxNonce result.2.usedNonces ∉ result.2.usedNonces := by
-  apply chooseFreshCtxNonce_not_mem
-  apply exists_ctxNonce_not_mem
-  rw [ctxNonce_card]
-  exact lt_of_le_of_lt
-    (ctxDirectSampleIndependentTag_run_usedNonces_length_le_qE
-      c key adversary result hresult) hqE
+  exact chooseFreshCtxNonce_fresh_of_direct_support_of_main
+    c key adversary.main adversary.sealQueryBound hqE result hresult
 
 /-- Empty-message validation query used to test returned key candidates. -/
 def ctxValidationInput (nonce : CtxNonce) : ModifiedNonceAeadSealInput :=

@@ -425,4 +425,222 @@ theorem ctxPrivacyIdealGame_eq
           emptyCtxIndependentTagState := by
   simp [ctxPrivacyIdealGame, bind_pure_comp]
 
+/-- Boolean view reduction from the CTX interface to modified nonce-AEAD IND$.
+
+The reduction retains the adversary's Boolean decision and discards its private CTX bookkeeping.
+Public-ROM and outer-commitment randomness are generated inside the reduction, while every fresh seal is forwarded to the primitive challenger.
+-/
+noncomputable def ctxPrivacyViewReduction
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
+    ModifiedNonceAeadINDDollarAdversary where
+  main := Prod.fst <$>
+    (simulateQ ctxRetainedBaseReductionImpl adversary.main).run
+      emptyCtxIndependentTagState
+
+/-- Flatten the Boolean view reduction against the random nonce-AEAD challenger. -/
+noncomputable def ctxPrivacyRandomCombinedImpl :
+    QueryImpl CtxAdversarySpec
+      (StateT (CtxIndependentTagState × ModifiedNonceAeadHandlerState)
+        ProbComp) :=
+  (modifiedNonceAeadINDDollarRandomImpl.mapStateTBase
+    ctxRetainedBaseReductionImpl).flattenStateT
+
+/-- Interpreting the reduction's private digest sample in the IND$ random world leaves the primitive state unchanged. -/
+theorem simulateQ_modifiedNonceAeadDigest_random :
+    simulateQ modifiedNonceAeadINDDollarRandomImpl
+        modifiedNonceAeadDigest =
+      (liftM ($ᵗ CtxDigest) :
+        StateT ModifiedNonceAeadHandlerState ProbComp CtxDigest) := by
+  unfold modifiedNonceAeadINDDollarRandomImpl modifiedNonceAeadDigest
+  rw [QueryImpl.simulateQ_add_liftComp_left]
+  simp
+
+/-- Public CTX queries preserve the synchronized source and random-challenger histories. -/
+theorem ctxPrivacyRandomPublicOracle_projection
+    (query : CtxRO.Domain) (state : CtxIndependentTagState) :
+    Prod.map id
+        (fun next =>
+          (next, ctxIndependentTagStateToModifiedNonceAead next)) <$>
+        (ctxIndependentPublicOracle query).run state =
+      (ctxPrivacyRandomCombinedImpl (.inl query)).run
+        (state, ctxIndependentTagStateToModifiedNonceAead state) := by
+  unfold ctxPrivacyRandomCombinedImpl ctxRetainedBaseReductionImpl
+    ctxRetainedBasePublicOracle
+  change _ =
+    (fun result => (result.1.1, result.1.2, result.2)) <$>
+      (simulateQ modifiedNonceAeadINDDollarRandomImpl
+        (liftM ((ctxIndependentPublicOracle query).run state))).run
+          (ctxIndependentTagStateToModifiedNonceAead state)
+  unfold modifiedNonceAeadINDDollarRandomImpl
+  rw [QueryImpl.simulateQ_add_liftM_left]
+  unfold ctxIndependentPublicOracle
+  rw [simulateQ_liftTarget]
+  rw [simulateQ_ofLift_eq_self]
+  rw [OracleComp.liftM_run_StateT]
+  simp only [bind_pure_comp]
+  simp only [StateT.run, Functor.map_map]
+  change
+    (fun result : CtxDigest × CtxRO.QueryCache =>
+      let next := state.addPublic query.2
+        { state.cache with publicCache := result.2 }
+      (result.1, next,
+        ctxIndependentTagStateToModifiedNonceAead next)) <$>
+        (ctxRandomOracle query).run state.cache.publicCache =
+      (fun result : CtxDigest × CtxRO.QueryCache =>
+        let next := state.addPublic query.2
+          { state.cache with publicCache := result.2 }
+        (result.1, next,
+          ctxIndependentTagStateToModifiedNonceAead state)) <$>
+        (ctxRandomOracle query).run state.cache.publicCache
+  congr 1
+
+/-- An ideal CTX seal is exactly a random primitive body/tag followed by the reduction's private outer-commitment sample, with both nonce histories synchronized. -/
+theorem ctxPrivacyRandomSealOracle_projection
+    (input : CtxSealInput) (state : CtxIndependentTagState) :
+    Prod.map id
+        (fun next =>
+          (next, ctxIndependentTagStateToModifiedNonceAead next)) <$>
+        (ctxPrivacyIdealSealOracle input).run state =
+      (ctxPrivacyRandomCombinedImpl (.inr input)).run
+        (state, ctxIndependentTagStateToModifiedNonceAead state) := by
+  unfold ctxPrivacyRandomCombinedImpl ctxRetainedBaseReductionImpl
+  change _ =
+    (fun result => (result.1.1, result.1.2, result.2)) <$>
+      (simulateQ modifiedNonceAeadINDDollarRandomImpl
+        ((ctxRetainedBaseSealOracle input).run state)).run
+          (ctxIndependentTagStateToModifiedNonceAead state)
+  by_cases hused : input.nonce ∈ state.usedNonces
+  · unfold ctxPrivacyIdealSealOracle ctxRetainedBaseSealOracle
+    simp [StateT.run, hused]
+    rfl
+  · unfold ctxPrivacyIdealSealOracle ctxRetainedBaseSealOracle
+    simp only [StateT.run, hused, if_false]
+    rw [simulateQ_bind, simulateQ_queryModifiedNonceAeadSeal_random]
+    change _ = _ <$>
+      ((modifiedNonceAeadINDDollarRandomSealOracle
+        (CtxSealInput.toModifiedNonceAeadSealInput input)).run
+          (ctxIndependentTagStateToModifiedNonceAead state) >>= fun result => _)
+    unfold modifiedNonceAeadINDDollarRandomSealOracle
+    simp only [StateT.run, ctxIndependentTagStateToModifiedNonceAead,
+      toModifiedNonceAeadSealInput_nonce, hused, if_false]
+    simp only [bind_assoc, pure_bind]
+    simp_rw [simulateQ_bind, simulateQ_modifiedNonceAeadDigest_random]
+    simp_rw [simulateQ_pure]
+    simp only [bind_pure_comp]
+    simp_rw [map_lift_ctxDigest_apply]
+    simp only [map_bind, Functor.map_map]
+    apply bind_congr
+    intro body
+    apply bind_congr
+    intro tag
+    apply congrArg (fun f : CtxDigest →
+        Option CtxRomRecord ×
+          (CtxIndependentTagState × ModifiedNonceAeadHandlerState) =>
+      f <$> ($ᵗ CtxDigest))
+    funext commit
+    rfl
+
+/-- Every explicit ideal CTX query projects to the flattened random IND$ execution. -/
+theorem ctxPrivacyRandomCombinedImpl_projection
+    (query : CtxAdversarySpec.Domain)
+    (state : CtxIndependentTagState) :
+    Prod.map id
+        (fun next =>
+          (next, ctxIndependentTagStateToModifiedNonceAead next)) <$>
+        (ctxPrivacyIdealImpl query).run state =
+      (ctxPrivacyRandomCombinedImpl query).run
+        (state, ctxIndependentTagStateToModifiedNonceAead state) := by
+  rcases query with query | input
+  · exact ctxPrivacyRandomPublicOracle_projection query state
+  · exact ctxPrivacyRandomSealOracle_projection input state
+
+/-- The complete adaptive ideal execution is the exact source-state projection of the flattened random IND$ execution. -/
+theorem ctxPrivacyRandomCombinedImpl_run_projection_of_main
+    {output : Type} (main : OracleComp CtxAdversarySpec output) :
+    Prod.map id
+        (fun state =>
+          (state, ctxIndependentTagStateToModifiedNonceAead state)) <$>
+        (simulateQ ctxPrivacyIdealImpl main).run
+          emptyCtxIndependentTagState =
+      (simulateQ ctxPrivacyRandomCombinedImpl main).run
+        (emptyCtxIndependentTagState,
+          emptyModifiedNonceAeadHandlerState) := by
+  simpa [ctxIndependentTagStateToModifiedNonceAead,
+    emptyCtxIndependentTagState,
+    emptyModifiedNonceAeadHandlerState] using
+    OracleComp.map_run_simulateQ_eq_of_query_map_eq
+      ctxPrivacyIdealImpl
+      ctxPrivacyRandomCombinedImpl
+      (fun state =>
+        (state, ctxIndependentTagStateToModifiedNonceAead state))
+      ctxPrivacyRandomCombinedImpl_projection
+      main emptyCtxIndependentTagState
+
+/-- Interpreting the Boolean view reduction against random IND$ yields the exact explicit ideal CTX transcript, including both private handler states. -/
+theorem ctxPrivacyRandomNestedRun_eq_ideal_of_main
+    {output : Type} (main : OracleComp CtxAdversarySpec output) :
+    (simulateQ modifiedNonceAeadINDDollarRandomImpl
+      ((simulateQ ctxRetainedBaseReductionImpl main).run
+        emptyCtxIndependentTagState)).run
+        emptyModifiedNonceAeadHandlerState =
+      (fun result : output × CtxIndependentTagState =>
+        ((result.1, result.2),
+          ctxIndependentTagStateToModifiedNonceAead result.2)) <$>
+        (simulateQ ctxPrivacyIdealImpl main).run
+          emptyCtxIndependentTagState := by
+  calc
+    _ = (fun result : output ×
+          (CtxIndependentTagState × ModifiedNonceAeadHandlerState) =>
+          ((result.1, result.2.1), result.2.2)) <$>
+        (simulateQ ctxPrivacyRandomCombinedImpl main).run
+          (emptyCtxIndependentTagState,
+            emptyModifiedNonceAeadHandlerState) :=
+      OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT
+        modifiedNonceAeadINDDollarRandomImpl
+        ctxRetainedBaseReductionImpl main
+        emptyCtxIndependentTagState
+        emptyModifiedNonceAeadHandlerState
+    _ = _ := by
+      rw [← ctxPrivacyRandomCombinedImpl_run_projection_of_main main]
+      simp only [Functor.map_map]
+      apply congrArg (fun f :
+          (output × CtxIndependentTagState) →
+            ((output × CtxIndependentTagState) ×
+              ModifiedNonceAeadHandlerState) =>
+        f <$> (simulateQ ctxPrivacyIdealImpl main).run
+          emptyCtxIndependentTagState)
+      funext result
+      rfl
+
+/-- The view reduction's random IND$ experiment is definitionally the explicit ideal CTX privacy game after the exact nested-state projection. -/
+theorem modifiedNonceAeadINDDollarRandomExp_viewReduction_eq_idealGame
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
+    modifiedNonceAeadINDDollarRandomExp
+        (ctxPrivacyViewReduction adversary) =
+      ctxPrivacyIdealGame adversary := by
+  unfold modifiedNonceAeadINDDollarRandomExp
+    ctxPrivacyViewReduction ctxPrivacyIdealGame
+  simp only [simulateQ_map, StateT.run_map, bind_pure_comp,
+    Functor.map_map]
+  rw [ctxPrivacyRandomNestedRun_eq_ideal_of_main adversary.main]
+  simp only [Functor.map_map]
+
+/-- The view reduction's real IND$ experiment is exactly the direct independent-tag CTX privacy game. -/
+theorem modifiedNonceAeadINDDollarRealExp_viewReduction_eq_directSampleGame
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    modifiedNonceAeadINDDollarRealExp c
+        (ctxPrivacyViewReduction adversary) =
+      ctxPrivacyDirectSampleGame c adversary := by
+  unfold modifiedNonceAeadINDDollarRealExp
+    ctxPrivacyViewReduction ctxPrivacyDirectSampleGame
+    ctxPrivacyDirectSampleExpInner
+  apply bind_congr
+  intro key
+  simp only [simulateQ_map, StateT.run_map, bind_pure_comp,
+    Functor.map_map]
+  rw [ctxRetainedBaseNestedRun_eq_direct_of_main
+    c key adversary.main]
+  simp only [Functor.map_map]
+
 end BeaconcryptCore.Computational.CtxComputationalPrivacy
