@@ -556,6 +556,30 @@ theorem ctxRetainedBaseCombinedImpl_projection
   · exact ctxRetainedBasePublicOracle_projection c key query state
   · exact ctxRetainedBaseSealOracle_projection c key input state
 
+/-- Every complete adaptive reduction run is the exact projected direct-sampling CTX run. -/
+theorem ctxRetainedBaseCombinedImpl_run_projection_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α) :
+    Prod.map id
+        (fun state =>
+          (state, ctxIndependentTagStateToModifiedNonceAead state)) <$>
+        (simulateQ (ctxDirectSampleIndependentTagImpl c key)
+          main).run emptyCtxIndependentTagState =
+      (simulateQ (ctxRetainedBaseCombinedImpl c key)
+        main).run
+          (emptyCtxIndependentTagState,
+            emptyModifiedNonceAeadHandlerState) := by
+  simpa [ctxIndependentTagStateToModifiedNonceAead,
+    emptyCtxIndependentTagState,
+    emptyModifiedNonceAeadHandlerState] using
+    OracleComp.map_run_simulateQ_eq_of_query_map_eq
+      (ctxDirectSampleIndependentTagImpl c key)
+      (ctxRetainedBaseCombinedImpl c key)
+      (fun state =>
+        (state, ctxIndependentTagStateToModifiedNonceAead state))
+      (ctxRetainedBaseCombinedImpl_projection c key)
+      main emptyCtxIndependentTagState
+
 /-- The complete adaptive reduction run is the exact projected direct-sampling CTX run. -/
 theorem ctxRetainedBaseCombinedImpl_run_projection
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
@@ -568,16 +592,46 @@ theorem ctxRetainedBaseCombinedImpl_run_projection
         adversary.main).run
           (emptyCtxIndependentTagState,
             emptyModifiedNonceAeadHandlerState) := by
-  simpa [ctxIndependentTagStateToModifiedNonceAead,
-    emptyCtxIndependentTagState,
-    emptyModifiedNonceAeadHandlerState] using
-    OracleComp.map_run_simulateQ_eq_of_query_map_eq
-      (ctxDirectSampleIndependentTagImpl c key)
-      (ctxRetainedBaseCombinedImpl c key)
-      (fun state =>
-        (state, ctxIndependentTagStateToModifiedNonceAead state))
-      (ctxRetainedBaseCombinedImpl_projection c key)
-      adversary.main emptyCtxIndependentTagState
+  exact ctxRetainedBaseCombinedImpl_run_projection_of_main
+    c key adversary.main
+
+/-- Interpreting any nested reduction-side CTX run yields the exact direct CTX transcript. -/
+theorem ctxRetainedBaseNestedRun_eq_direct_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α) :
+    (simulateQ (modifiedNonceAeadINTCTXTImpl c key)
+      ((simulateQ ctxRetainedBaseReductionImpl main).run
+        emptyCtxIndependentTagState)).run
+        emptyModifiedNonceAeadHandlerState =
+      (fun result : α × CtxIndependentTagState =>
+        ((result.1, result.2),
+          ctxIndependentTagStateToModifiedNonceAead result.2)) <$>
+        (simulateQ (ctxDirectSampleIndependentTagImpl c key)
+          main).run emptyCtxIndependentTagState := by
+  calc
+    _ = (fun result : α ×
+          (CtxIndependentTagState × ModifiedNonceAeadHandlerState) =>
+          ((result.1, result.2.1), result.2.2)) <$>
+        (simulateQ (ctxRetainedBaseCombinedImpl c key)
+          main).run
+            (emptyCtxIndependentTagState,
+              emptyModifiedNonceAeadHandlerState) :=
+      OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT
+        (modifiedNonceAeadINTCTXTImpl c key)
+        ctxRetainedBaseReductionImpl main
+        emptyCtxIndependentTagState
+        emptyModifiedNonceAeadHandlerState
+    _ = _ := by
+      rw [← ctxRetainedBaseCombinedImpl_run_projection_of_main c key main]
+      simp only [Functor.map_map]
+      apply congrArg (fun f :
+          (α × CtxIndependentTagState) →
+            ((α × CtxIndependentTagState) ×
+              ModifiedNonceAeadHandlerState) =>
+        f <$> (simulateQ (ctxDirectSampleIndependentTagImpl c key)
+          main).run emptyCtxIndependentTagState)
+      funext result
+      rfl
 
 /-- Interpreting the reduction's nested CTX run yields the exact direct CTX transcript. -/
 theorem ctxRetainedBaseNestedRun_eq_direct
@@ -591,30 +645,8 @@ theorem ctxRetainedBaseNestedRun_eq_direct
           ctxIndependentTagStateToModifiedNonceAead result.2)) <$>
         (simulateQ (ctxDirectSampleIndependentTagImpl c key)
           adversary.main).run emptyCtxIndependentTagState := by
-  calc
-    _ = (fun result : CtxAliasTarget ×
-          (CtxIndependentTagState × ModifiedNonceAeadHandlerState) =>
-          ((result.1, result.2.1), result.2.2)) <$>
-        (simulateQ (ctxRetainedBaseCombinedImpl c key)
-          adversary.main).run
-            (emptyCtxIndependentTagState,
-              emptyModifiedNonceAeadHandlerState) :=
-      OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT
-        (modifiedNonceAeadINTCTXTImpl c key)
-        ctxRetainedBaseReductionImpl adversary.main
-        emptyCtxIndependentTagState
-        emptyModifiedNonceAeadHandlerState
-    _ = _ := by
-      rw [← ctxRetainedBaseCombinedImpl_run_projection c key adversary]
-      simp only [Functor.map_map]
-      apply congrArg (fun f :
-          (CtxAliasTarget × CtxIndependentTagState) →
-            ((CtxAliasTarget × CtxIndependentTagState) ×
-              ModifiedNonceAeadHandlerState) =>
-        f <$> (simulateQ (ctxDirectSampleIndependentTagImpl c key)
-          adversary.main).run emptyCtxIndependentTagState)
-      funext result
-      rfl
+  exact ctxRetainedBaseNestedRun_eq_direct_of_main
+    c key adversary.main
 
 /-- The primitive challenger sees exactly the retained target and projected seal history. -/
 theorem ctxRetainedBaseReduction_run_eq_direct

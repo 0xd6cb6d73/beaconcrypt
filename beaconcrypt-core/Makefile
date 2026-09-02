@@ -334,6 +334,8 @@ extract-proverif:
 	cargo hax -C --locked --features=proverif ';' into \
 		-i '$(HAX_PROVERIF_ITEMS)' \
 		--output-dir $(PROVERIF_DIR)/extraction pro-verif
+	# Hax emits one terminal empty line after replacement blocks; normalize it for the repository whitespace policy.
+	sed -i '$${/^$$/d;}' '$(PROVERIF_EXTRACTION)'
 
 check-proverif-extraction:
 	@if rg -n 'rust_primitives__hax__failure|REPLACE by|todo return|unimplemented' \
