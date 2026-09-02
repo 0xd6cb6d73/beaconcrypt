@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=36
+	[handwritten-lean]=37
 	[handwritten-proverif]=28
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1239,6 +1239,9 @@ require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxHonestTagSampli
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxNonceAeadIntCtxt$' \
 	"$lean_root" \
 	"canonical modified-CTX nonce-AEAD INT-CTXT proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxNonceAeadIndDollar$' \
+	"$lean_root" \
+	"canonical modified-CTX nonce-AEAD key-probe IND-dollar proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
@@ -1723,6 +1726,68 @@ for theorem_name in toModifiedNonceAeadSealInput_nonce \
 	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
 		"$ctx_nonce_aead_int_ctxt" "modified nonce-AEAD INT-CTXT simplification theorem ${theorem_name}"
 done
+
+ctx_nonce_aead_ind_dollar=proofs/lean/BeaconcryptCore/Computational/CtxNonceAeadIndDollar.lean
+require_line_count 1 '^abbrev CtxKeyProbes( |$)' \
+	"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe vector"
+for declaration in CtxQueryBoundedAdversary \
+	ModifiedNonceAeadINDDollarProbeAdversary; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe structure ${declaration}"
+done
+for declaration in CtxKeyProbeHit ctxPrefixProbeVector \
+	CtxIndependentPrefixFlagInvariant IsCtxPublicQuery \
+	ModifiedNonceAeadINDDollarProbeAdversary.MakesAtMostSealQueries; do
+	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
+		"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe definition ${declaration}"
+done
+require_line_count 1 '^def prefixCandidate\?( |$)' \
+	"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe prefix candidate definition"
+for declaration in ctxIndependentPublicPrefixProbability \
+	ctxDirectSamplePublicPrefixProbability \
+	ctxPrefixToModifiedNonceAeadINDDollarReduction \
+	modifiedNonceAeadINDDollarRandomSealOracle \
+	modifiedNonceAeadINDDollarRandomImpl \
+	modifiedNonceAeadINDDollarRealProbeExp \
+	modifiedNonceAeadINDDollarRandomProbeExp \
+	modifiedNonceAeadINDDollarProbeAdvantage \
+	ctxDirectSamplePrefixProbeExpInner \
+	modifiedNonceAeadINDDollarRealProbeExpInner \
+	ctxDirectSamplePrefixProbeExp; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe game definition ${declaration}"
+done
+for theorem_name in ctxPrefixProbeVector_hit_of_prefix \
+	ctxPrefixProbeVector_prefix_of_hit \
+	ctxPrefixProbeVector_hit_iff_of_length_le \
+	ctxIndependent_badProbability_eq_prefixBad \
+	ctxIndependentPublicOracle_publicInputs ctxKeyFreeSealOracle_publicInputs \
+	ctxIndependentWithPrefixFlagImpl_preserves_prefix_flag \
+	ctxIndependentTagFlagged_run_prefix_flag \
+	ctxIndependent_badProbability_eq_publicPrefix \
+	ctxDirectSampleKeyFreeSealOracle_publicInputs \
+	ctxDirectSampleIndependentTagImpl_publicInputs_length_step \
+	ctxDirectSampleIndependentTag_run_publicInputs_length_le \
+	ctxDirectSampleIndependentTag_run_publicInputs_length_le_qH \
+	ctxIndependentPublicPrefixProbability_eq_directSample \
+	ctxSecretPrefixQueriedProbabilityInner_eq_directSamplePublicPrefix \
+	ctxPrefixToModifiedNonceAeadINDDollarReduction_seal_query_bound \
+	isTotalQueryBound_of_ctx_public_and_seal_bounds \
+	CtxQueryBoundedAdversary.totalQueryBound ctxKey_card \
+	probEvent_uniformKey_probeHit_le modifiedNonceAeadINDDollarRandomProbe_le \
+	ctxDirectSamplePrefixProbeExpInner_probability \
+	ctxPrefixReduction_realProbeExpInner_eq_directSample \
+	ctxSecretPrefixQueriedProbability_eq_directSampleProbe \
+	modifiedNonceAeadINDDollarRealProbeExp_reduction_eq_directSample \
+	ctxSecretPrefixQueriedProbability_eq_realProbeReduction \
+	ctxSecretPrefixQueriedProbability_le_modifiedNonceAeadINDDollar; do
+	require_line_count 1 "^theorem ${theorem_name//./\\.}( |$)" \
+		"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe theorem ${theorem_name}"
+done
+require_line_count 1 '^theorem prefixCandidate\?_eq_some_iff( |$)' \
+	"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe prefix-candidate equivalence"
+require_line_count 1 '^@\[simp\] theorem emptyCtxIndependentPrefixFlagInvariant( |$)' \
+	"$ctx_nonce_aead_ind_dollar" "modified nonce-AEAD key-probe empty-state invariant"
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
