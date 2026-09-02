@@ -14,6 +14,7 @@ import BeaconcryptCore.Computational.CtxRomAuth
 import BeaconcryptCore.Computational.CtxPrefixIsolation
 import BeaconcryptCore.Computational.CtxSplitCache
 import BeaconcryptCore.Computational.CtxSealSampling
+import BeaconcryptCore.Computational.CtxIndependentTags
 import BeaconcryptCore.Computational.CtxTransitionReduction
 import BeaconcryptCore.Computational.VCVioFeasibility
 import BeaconcryptCore.Verification.ProofObligations

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=33
+	[handwritten-lean]=34
 	[handwritten-proverif]=28
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1230,6 +1230,9 @@ require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxSplitCache$' \
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxSealSampling$' \
 	"$lean_root" \
 	"canonical modified-CTX seal-sampling proof-root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxIndependentTags$' \
+	"$lean_root" \
+	"canonical modified-CTX independent-tag proof-root import"
 require_line_count 1 '^LEAN_ROOT := \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
 	"maintained Lean verification root"
 require_line_count 1 '^LEAN_PROOF_PATHS := \$\(LEAN_DIR\)/BeaconcryptCore \$\(LEAN_DIR\)/BeaconcryptCore\.lean$' Makefile \
@@ -1556,6 +1559,67 @@ for theorem_name in ctxSeal_query_fresh_of_good_unused \
 done
 require_line_count 1 '^noncomputable def ctxDirectSampleSealOracle( |$)' \
 	"$ctx_seal_sampling" "modified CTX direct-sampling seal transition"
+
+ctx_independent_tags=proofs/lean/BeaconcryptCore/Computational/CtxIndependentTags.lean
+require_line_count 1 '^structure CtxIndependentTagState( |$)' \
+	"$ctx_independent_tags" "modified CTX independent-tag handler state"
+for theorem_name in \
+	splitCtxCache_cacheQuery_prefix \
+	splitCtxCache_cacheQuery_public \
+	splitCtxCache_cacheQuery \
+	ctxRandomOracle_split_projection \
+	ctxSplitRandomOracle_outerInput_eq_keyFreeSuffix \
+	ctxPublicOracle_split_projection \
+	ctxSealOracle_split_projection \
+	ctxAdversaryImpl_split_projection_step \
+	ctxAdversaryImpl_split_projection_run \
+	withStickyBad_projection \
+	ctxRealWithPrefixFlagImpl_split_projection_step \
+	ctxRealWithPrefixFlagImpl_split_projection_run \
+	ctxSplitRoutedPublicOracle_eq_independent_of_not_prefix \
+	ctxSplitRouted_independent_agree_good \
+	ctxSplitRoutedWithPrefixFlagImpl_bad_mono \
+	ctxIndependentWithPrefixFlagImpl_bad_mono \
+	ctxSplitRouted_badProbability_eq_prefixBad \
+	tvDist_ctxSplitRouted_independentTag_le_prefixBad \
+	ctxSplitRoutedWithPrefixFlagImpl_proj_step \
+	ctxIndependentWithPrefixFlagImpl_proj_step \
+	ctxSplitRoutedWithPrefixFlagImpl_proj_run \
+	ctxIndependentWithPrefixFlagImpl_proj_run \
+	independentFlaggedProjection_splitRouted \
+	independentFlaggedProjection_independent \
+	tvDist_ctxSplitRoutedBeforeVerifyInner_independentTag_le_secretPrefixQueried \
+	ctxSplitRoutedBeforeVerifyInner_eq_ctxSplitBeforeVerifyInner \
+	tvDist_ctxSplitBeforeVerifyInner_independentTag_le_secretPrefixQueried \
+	tvDist_ctxSplitBeforeVerifyGame_independentTagGame_le_secretPrefixQueried; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_independent_tags" "modified CTX independent-tag theorem ${theorem_name}"
+done
+for theorem_name in merge_splitHandlerState splitHandlerState_empty \
+	splitHandlerState_addPublic splitHandlerState_addSeal; do
+	require_line_count 1 "^@\[simp\] theorem ${theorem_name}( |$)" \
+		"$ctx_independent_tags" "modified CTX independent-tag simplification theorem ${theorem_name}"
+done
+for declaration in splitHandlerState CtxIndependentTagState.merge \
+	emptyCtxIndependentTagState splitFlaggedHandlerState cachePublic cacheSuffix \
+	cacheCanonical CtxIndependentTagState.addPublic CtxIndependentTagState.addSeal \
+	independentHandlerStateToBeforeVerify independentTrackedProjection \
+	independentFlaggedProjection splitBeforeVerifyProjection; do
+	require_line_count 1 "^def ${declaration//./\\.}( |$)" \
+		"$ctx_independent_tags" "modified CTX independent-tag definition ${declaration}"
+done
+for declaration in ctxKeyFreeSuffixStep ctxSplitRandomOracle \
+	ctxKeyFreeSuffixOracle ctxSplitRoutedPublicOracle ctxIndependentPublicOracle \
+	ctxKeyFreeSealOracle ctxSplitRoutedImpl ctxIndependentTagImpl \
+	ctxSplitRoutedWithPrefixFlagImpl ctxIndependentWithPrefixFlagImpl \
+	ctxSplitRoutedFlaggedBeforeVerify ctxIndependentTagFlaggedBeforeVerify \
+	ctxSplitRoutedBeforeVerifyInner ctxIndependentTagBeforeVerifyInner \
+	ctxSplitBeforeVerifyInner ctxSplitBeforeVerifyGame ctxIndependentTagGame; do
+	require_line_count 1 "^noncomputable def ${declaration}( |$)" \
+		"$ctx_independent_tags" "modified CTX independent-tag game definition ${declaration}"
+done
+require_line_count 1 '^@\[inline, reducible\] noncomputable def ctxSuffixRandomOracle( |$)' \
+	"$ctx_independent_tags" "modified CTX suffix random-oracle implementation"
 
 for theorem_name in serverRegister_refines beaconFinishDriver_refines; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
