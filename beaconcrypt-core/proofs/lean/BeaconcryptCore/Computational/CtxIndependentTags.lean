@@ -436,6 +436,21 @@ theorem ctxAdversaryImpl_split_projection_run (c : Pqxdh.Crypto)
     (ctxAdversaryImpl_split_projection_step c key)
     adversary.main emptyCtxHandlerState
 
+/-- Every complete canonical run, for an arbitrary result type, projects exactly to the routed split game. -/
+theorem ctxAdversaryImpl_split_projection_run_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α) :
+    Prod.map id (splitHandlerState key) <$>
+        (simulateQ (ctxAdversaryImpl c key) main).run
+          emptyCtxHandlerState =
+      (simulateQ (ctxSplitRoutedImpl c key) main).run
+        emptyCtxIndependentTagState := by
+  simpa using OracleComp.map_run_simulateQ_eq_of_query_map_eq
+    (ctxAdversaryImpl c key) (ctxSplitRoutedImpl c key)
+    (splitHandlerState key)
+    (ctxAdversaryImpl_split_projection_step c key)
+    main emptyCtxHandlerState
+
 /-- Projecting an underlying stateful step commutes with the sticky-bad wrapper. -/
 theorem withStickyBad_projection {m : Type → Type} [Monad m] [LawfulMonad m]
     {α σ τ : Type} (fires : Bool) (source : StateT σ m α)
@@ -525,6 +540,23 @@ theorem ctxRealWithPrefixFlagImpl_split_projection_run
       (splitFlaggedHandlerState key)
       (ctxRealWithPrefixFlagImpl_split_projection_step c key)
       adversary.main (emptyCtxHandlerState, false)
+
+/-- Every complete flagged canonical run, for an arbitrary result type, projects exactly to the flagged routed split run. -/
+theorem ctxRealWithPrefixFlagImpl_split_projection_run_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α) :
+    Prod.map id (splitFlaggedHandlerState key) <$>
+        (simulateQ (ctxRealWithPrefixFlagImpl c key) main).run
+          (emptyCtxHandlerState, false) =
+      (simulateQ (ctxSplitRoutedWithPrefixFlagImpl c key) main).run
+        (emptyCtxIndependentTagState, false) := by
+  simpa [splitFlaggedHandlerState] using
+    OracleComp.map_run_simulateQ_eq_of_query_map_eq
+      (ctxRealWithPrefixFlagImpl c key)
+      (ctxSplitRoutedWithPrefixFlagImpl c key)
+      (splitFlaggedHandlerState key)
+      (ctxRealWithPrefixFlagImpl_split_projection_step c key)
+      main (emptyCtxHandlerState, false)
 
 /-- Away from the hidden prefix, routed and independent public ROM steps coincide. -/
 theorem ctxSplitRoutedPublicOracle_eq_independent_of_not_prefix
@@ -657,6 +689,22 @@ theorem ctxSplitRouted_badProbability_eq_prefixBad
     probEvent_map]
   rfl
 
+/-- Split-cache projection preserves the canonical bad-event probability for an arbitrary result type. -/
+theorem ctxSplitRouted_badProbability_eq_real_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α) :
+    Pr[fun result : α × (CtxIndependentTagState × Bool) =>
+        result.2.2 = true |
+      (simulateQ (ctxSplitRoutedWithPrefixFlagImpl c key) main).run
+        (emptyCtxIndependentTagState, false)] =
+      Pr[fun result : α × (CtxHandlerState × Bool) =>
+          result.2.2 = true |
+        (simulateQ (ctxRealWithPrefixFlagImpl c key) main).run
+          (emptyCtxHandlerState, false)] := by
+  rw [← ctxRealWithPrefixFlagImpl_split_projection_run_of_main c key main,
+    probEvent_map]
+  rfl
+
 /-- The routed and key-free independent-tag games differ only on prefix-bad. -/
 theorem tvDist_ctxSplitRouted_independentTag_le_prefixBad
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
@@ -678,6 +726,28 @@ theorem tvDist_ctxSplitRouted_independentTag_le_prefixBad
     _ = (ctxPrefixBadProbability c key adversary).toReal :=
       congrArg ENNReal.toReal
         (ctxSplitRouted_badProbability_eq_prefixBad c key adversary)
+
+/-- For an arbitrary result type, routed and key-free independent-tag full runs differ only on the single prefix-bad event. -/
+theorem tvDist_ctxSplitRouted_independentTag_le_prefixBad_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α) :
+    tvDist
+        ((simulateQ (ctxSplitRoutedWithPrefixFlagImpl c key) main).run
+          (emptyCtxIndependentTagState, false))
+        ((simulateQ (ctxIndependentWithPrefixFlagImpl c key) main).run
+          (emptyCtxIndependentTagState, false)) ≤
+      Pr[fun result : α × (CtxIndependentTagState × Bool) =>
+        result.2.2 = true |
+        (simulateQ (ctxSplitRoutedWithPrefixFlagImpl c key) main).run
+          (emptyCtxIndependentTagState, false)].toReal := by
+  exact
+    OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
+      (ctxSplitRoutedWithPrefixFlagImpl c key)
+      (ctxIndependentWithPrefixFlagImpl c key)
+      main emptyCtxIndependentTagState
+      (ctxSplitRouted_independent_agree_good c key)
+      (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
+      (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
 
 /-- Dropping the routed split flag recovers the unflagged routed handler. -/
 theorem ctxSplitRoutedWithPrefixFlagImpl_proj_step
@@ -716,6 +786,20 @@ theorem ctxSplitRoutedWithPrefixFlagImpl_proj_run
     Prod.fst (ctxSplitRoutedWithPrefixFlagImpl_proj_step c key)
     adversary.main (emptyCtxIndependentTagState, false)
 
+/-- Dropping the flag from an arbitrary-result routed run is exact. -/
+theorem ctxSplitRoutedWithPrefixFlagImpl_proj_run_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α) :
+    Prod.map id Prod.fst <$>
+        (simulateQ (ctxSplitRoutedWithPrefixFlagImpl c key) main).run
+          (emptyCtxIndependentTagState, false) =
+      (simulateQ (ctxSplitRoutedImpl c key) main).run
+        emptyCtxIndependentTagState := by
+  exact OracleComp.map_run_simulateQ_eq_of_query_map_eq
+    (ctxSplitRoutedWithPrefixFlagImpl c key) (ctxSplitRoutedImpl c key)
+    Prod.fst (ctxSplitRoutedWithPrefixFlagImpl_proj_step c key)
+    main (emptyCtxIndependentTagState, false)
+
 /-- Dropping the flag from the complete independent-tag run is exact. -/
 theorem ctxIndependentWithPrefixFlagImpl_proj_run
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
@@ -728,6 +812,21 @@ theorem ctxIndependentWithPrefixFlagImpl_proj_run
     (ctxIndependentWithPrefixFlagImpl c key) (ctxIndependentTagImpl c key)
     Prod.fst (ctxIndependentWithPrefixFlagImpl_proj_step c key)
     adversary.main (emptyCtxIndependentTagState, false)
+
+/-- Dropping the flag from an arbitrary-result independent-tag run is exact. -/
+theorem ctxIndependentWithPrefixFlagImpl_proj_run_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α) :
+    Prod.map id Prod.fst <$>
+        (simulateQ (ctxIndependentWithPrefixFlagImpl c key) main).run
+          (emptyCtxIndependentTagState, false) =
+      (simulateQ (ctxIndependentTagImpl c key) main).run
+        emptyCtxIndependentTagState := by
+  exact OracleComp.map_run_simulateQ_eq_of_query_map_eq
+    (ctxIndependentWithPrefixFlagImpl c key)
+    (ctxIndependentTagImpl c key)
+    Prod.fst (ctxIndependentWithPrefixFlagImpl_proj_step c key)
+    main (emptyCtxIndependentTagState, false)
 
 /-- Convert an independent-tag handler state to the common pre-verification view. -/
 def independentHandlerStateToBeforeVerify (key : CtxKey)

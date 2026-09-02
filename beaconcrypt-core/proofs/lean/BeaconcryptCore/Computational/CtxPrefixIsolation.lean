@@ -118,7 +118,21 @@ theorem ctxRealWithPrefixFlagImpl_proj_step (c : Pqxdh.Crypto) (key : CtxKey)
   · exact withStickyBad_fst_map_run _ _ state
   · exact withStickyBad_fst_map_run _ _ state
 
-/-- Dropping the flag from the full real run gives the tracked generated run exactly. -/
+/-- Dropping the flag from any full real run gives the canonical unflagged run exactly. -/
+theorem ctxRealWithPrefixFlagImpl_proj_run_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α) :
+    Prod.map id Prod.fst <$>
+        (simulateQ (ctxRealWithPrefixFlagImpl c key) main).run
+          (emptyCtxHandlerState, false) =
+      (simulateQ (ctxAdversaryImpl c key) main).run
+        emptyCtxHandlerState := by
+  exact OracleComp.map_run_simulateQ_eq_of_query_map_eq
+    (ctxRealWithPrefixFlagImpl c key) (ctxAdversaryImpl c key) Prod.fst
+    (ctxRealWithPrefixFlagImpl_proj_step c key) main
+    (emptyCtxHandlerState, false)
+
+/-- Dropping the flag from the full real adversary run gives the tracked generated run exactly. -/
 theorem ctxRealWithPrefixFlagImpl_proj_run (c : Pqxdh.Crypto) (key : CtxKey)
     (adversary : CtxAdversary) :
     Prod.map id Prod.fst <$>
@@ -126,10 +140,7 @@ theorem ctxRealWithPrefixFlagImpl_proj_run (c : Pqxdh.Crypto) (key : CtxKey)
           (emptyCtxHandlerState, false) =
       (simulateQ (ctxAdversaryImpl c key) adversary.main).run
         emptyCtxHandlerState := by
-  exact OracleComp.map_run_simulateQ_eq_of_query_map_eq
-    (ctxRealWithPrefixFlagImpl c key) (ctxAdversaryImpl c key) Prod.fst
-    (ctxRealWithPrefixFlagImpl_proj_step c key) adversary.main
-    (emptyCtxHandlerState, false)
+  exact ctxRealWithPrefixFlagImpl_proj_run_of_main c key adversary.main
 
 /-- The two handlers agree on every output transition that remains non-bad. -/
 theorem ctxReal_prefixIsolated_agree_good (c : Pqxdh.Crypto) (key : CtxKey)
@@ -331,18 +342,30 @@ noncomputable def ctxPrefixIsolatedFlaggedBeforeVerify (c : Pqxdh.Crypto) (key :
   (simulateQ (ctxPrefixIsolatedImpl c key) adversary.main).run
     (emptyCtxHandlerState, false)
 
-/-- The exact prefix-flag invariant holds after every adaptive real execution. -/
+/-- The exact prefix-flag invariant holds after every adaptive real computation. -/
+theorem ctxRealWithPrefixFlag_run_prefix_flag_of_main
+    (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
+    (main : OracleComp CtxAdversarySpec α)
+    (result : α × (CtxHandlerState × Bool))
+    (hresult : result ∈ support
+      ((simulateQ (ctxRealWithPrefixFlagImpl c key) main).run
+        (emptyCtxHandlerState, false))) :
+    CtxPrefixFlagInvariant key result.2 := by
+  exact OracleComp.simulateQ_run_preservesInv
+    (ctxRealWithPrefixFlagImpl c key) (CtxPrefixFlagInvariant key)
+    (ctxRealWithPrefixFlagImpl_preserves_prefix_flag c key)
+    main (emptyCtxHandlerState, false)
+    (emptyCtxPrefixFlagInvariant key) result hresult
+
+/-- The exact prefix-flag invariant holds after every adaptive real adversary execution. -/
 theorem ctxRealWithPrefixFlag_run_prefix_flag
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary)
     (result : CtxAliasTarget × (CtxHandlerState × Bool))
     (hresult : result ∈ support
       (ctxRealWithPrefixFlagBeforeVerify c key adversary)) :
     CtxPrefixFlagInvariant key result.2 := by
-  exact OracleComp.simulateQ_run_preservesInv
-    (ctxRealWithPrefixFlagImpl c key) (CtxPrefixFlagInvariant key)
-    (ctxRealWithPrefixFlagImpl_preserves_prefix_flag c key)
-    adversary.main (emptyCtxHandlerState, false)
-    (emptyCtxPrefixFlagInvariant key) result hresult
+  exact ctxRealWithPrefixFlag_run_prefix_flag_of_main
+    c key adversary.main result hresult
 
 /-- Mapping away the real flag recovers the tracked fixed-key game exactly. -/
 theorem trackedProjection_realWithPrefixFlag_eq_ctxBeforeVerifyInner
