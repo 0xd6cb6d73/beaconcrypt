@@ -522,6 +522,20 @@ The establishment constructor makes equality of the exact selected ML-KEM public
 The public-key and ciphertext fields remain absent from the production root KDF input and associated data, and this proof milestone changes neither production transcript.
 Constructor equality is symbolic agreement, not a byte-level extraction theorem for response parsing or serialization and not a computational proof of the handshake or its primitives.
 
+### ML-KEM public-key binding and same-identity re-encapsulation control
+
+The production ProVerif theory represents encapsulation secrets as the free constructor `mlkem_shared_secret(public_key, coins)`, so secrets constructed under distinct ML-KEM public keys cannot be equal unless the public-key arguments are equal. This is an explicit ML-KEM public-key-binding assumption, equivalently strong shared-secret collision resistance across distinct public keys in the symbolic theory; it is stronger than ordinary matching-key correctness and is not implied by generic IND-CCA security.
+
+Neither the production root input nor the 153-byte associated data contains the selected ML-KEM public key or KEM ciphertext. The 18-field commitment event compares those exact values for agreement, but a proof event does not cryptographically add them to the root or response, so re-encapsulation resistance still depends on the public-key-binding assumption and the supported one-bundle-per-fresh-identity lifecycle.
+
+The production `Beacon` API generates one Ed25519 identity and one ML-KEM keypair together in `Beacon::new`, permits `get_registration_bundle` only from a fresh state, and consumes that state into `InitSent` before ending in `Established` or terminal `Aborted`. It exposes no operation that rotates the ML-KEM key while retaining the existing identity; constructing another `Beacon` creates another fresh identity and keypair. This structural fact narrows the current supported API but is reviewed Rust behavior rather than a ProVerif or computational lifecycle theorem.
+
+The isolated [`mlkem-reencapsulation-control.pvl`](../beaconcrypt-core/proofs/pro-verif/mlkem-reencapsulation-control.pvl) fixture deliberately steps outside that supported lifecycle: one identity authenticates old and new bundles with reused classical identity and DH material, the ML-KEM public keys differ, only the old secret key is compromised, the server processes the old bundle, and the beacon awaits the new bundle while an attacker substitutes a ciphertext intended to carry the learned old shared secret under the new key. Both theories must reach the multi-epoch path, old-key compromise, exact ciphertext-substitution attempt, and ordinary one-shot completion, so blocking the attack is not credited to a dead fixture.
+
+Under [`mlkem-reencapsulation-strong-theory.pvl`](../beaconcrypt-core/proofs/pro-verif/mlkem-reencapsulation-strong-theory.pvl), only a genuine ciphertext for the matching public key and fresh coins decapsulates, the weak re-encapsulation and accepted-root-disclosure events are unreachable, the new-session canary remains secret, and exact public-key/ciphertext commitment agreement holds. Under the deliberately weakened [`mlkem-reencapsulation-weak-theory.pvl`](../beaconcrypt-core/proofs/pro-verif/mlkem-reencapsulation-weak-theory.pvl), anyone who learns a shared secret can construct a ciphertext that decapsulates to that same secret under a different public key; the weak attack and root disclosure become reachable, the canary becomes public, and the agreement query fails because the server committed the old bundle/ciphertext while the beacon accepted the new bundle/substituted ciphertext.
+
+These results establish three separate facts: the current safe API does not support same-identity ML-KEM rotation, the production symbolic proof assumes ML-KEM public-key binding, and a hypothetical rotation extension would need to preserve that assumption or cryptographically bind the selected KEM key into the authenticated handshake transcript. Adding the ML-KEM public key or ciphertext to the production root KDF or associated data would be a separate protocol change requiring authorization, implementation and known-answer-vector changes, and proof revision; this control makes no such change.
+
 The exact queries are in
 [`queries.pvl`](../beaconcrypt-core/proofs/pro-verif/queries.pvl#L13-L174).
 The last correspondence is the basis for the modeled record-authentication,
@@ -647,6 +661,7 @@ The corpus does not prove:
 
 - computational security, concrete attack probabilities, or reductions for
   Ed25519, X25519, ML-KEM-768, HKDF-SHA-512, ChaCha20-Poly1305, or BLAKE2b;
+- a computational theorem that ML-KEM-768 satisfies the symbolic public-key-binding or strong cross-key shared-secret collision-resistance assumption; generic IND-CCA does not by itself discharge that separate obligation;
 - correctness, constant-time behavior, side-channel resistance, fault
   resistance, or memory safety of the concrete primitive implementations;
 - constant-time or information-flow behavior of the selected pure core or its
@@ -700,11 +715,7 @@ There is no proof here for:
 - compromise at an arbitrary time, repeated compromise, server compromise,
   compromise of long-term identity/prekey/KEM secrets, key-compromise
   impersonation, or recovery after compromise;
-- compromise of an identity classified as honest, cross-bundle splicing if one
-  honest identity may create multiple independently signed bundles, exact
-  replay behavior or post-registration record traffic for attacker-owned
-  identities, or correctness of the application's task-routing/broadcast
-  policy;
+- compromise of an identity classified as honest, a supported same-identity ML-KEM rotation API, arbitrary multi-epoch bundle histories, exact replay behavior or post-registration record traffic for attacker-owned identities, or correctness of the application's task-routing/broadcast policy; the isolated weak re-encapsulation fixture is a counterfactual control rather than a current-API trace;
 - secrecy of metadata such as visible sequence and key-ID fields, anonymity,
   unlinkability, traffic analysis, or application headers outside beaconcrypt;
 - availability, liveness, eventual delivery, fairness, resource exhaustion, or
@@ -723,7 +734,7 @@ true:
 
 - honest X25519 computations agree for DH1 through DH4 in the exact modeled
   order, and invalid all-zero outputs are handled as expected;
-- ML-KEM encapsulation and decapsulation agree;
+- ML-KEM encapsulation and decapsulation agree for a matching keypair and ciphertext, and the production symbolic theory additionally assumes public-key binding or strong shared-secret collision resistance across distinct public keys; generic IND-CCA is insufficient to derive that stronger equality property;
 - Ed25519 verification authenticates the exact tagged bytes;
 - Ed25519-to-X25519 conversion and all primitive calls have the documented
   semantics;
@@ -809,10 +820,7 @@ The trace results additionally assume:
   simplified function definitions faithfully represent the corresponding
   production behavior.
 
-If production later permits multiple registration bundles under one identity,
-the one-owner replay refinement is no longer sufficient. The signed fields need
-an authenticated bundle nonce or an ordered whole-bundle signature before the
-current origin/replay argument can be extended.
+If production later permits multiple registration bundles or ML-KEM epochs under one identity, the one-owner replay refinement and current symbolic theorem are no longer sufficient. Such an extension must retain a justified public-key-binding property or cryptographically bind the selected KEM key into the authenticated handshake transcript, and it must separately define authenticated epoch ordering and replay behavior; the current signed bundles, proof-only commitment events, root input, and associated data do not establish that extension.
 
 ### Verification-tool assumptions
 
@@ -1041,6 +1049,7 @@ For an audit or security statement that needs exact scope, use:
 > non-rollback execution, and the stated replay-owner and compromise scope; the
 > complete application and primitive implementations are not formally verified.
 > Separate bounded honest-only passive-classical and passive-quantum scenarios preserve the five selected canaries and have explicit progress and Ed25519/X25519 recovery controls. The passive-quantum classification treats ML-KEM as opaque and is a symbolic dependency result, not a QPT or QROM theorem. A bounded active-quantum man-in-the-middle instead recovers the initial task, records the selected replacement ML-KEM public key and exact response ciphertext in its recovery witness, and violates both honest registration-origin and authenticated-bundle agreement, so active post-quantum security is explicitly refuted.
+> The production symbolic KEM theory assumes ML-KEM public-key binding or strong cross-key shared-secret collision resistance, which generic IND-CCA does not imply. The current API creates only one registration bundle per fresh identity and exposes no same-identity ML-KEM rotation. In an isolated non-production multi-epoch control, the strong theory preserves exact key/ciphertext agreement and the new-session canary after old-key compromise, while a deliberately weakened public re-encapsulation theory exposes the accepted root and canary and breaks agreement. A future same-identity rotation design would need to preserve the binding assumption or cryptographically bind the selected KEM key into the authenticated handshake transcript.
 > Complementary SSProve games check one ideal PQXDH establishment and one abstract sequence-zero symmetric-ratchet record. The closed finite-tape game preserves the four-DH-plus-KEM root order, correlated Ed25519/X25519 compromise, and shared initial/step KDF prefix behavior; every deterministic Boolean distinguisher has advantage zero in the fixed-identity active-classical, passive-classical, and passive-quantum classical-query capability cases, while active quantum substitution has advantage one. A bounded adaptive classical-ROM extension fixes the DH atoms as guessable, hides only the honest ML-KEM atom and table, and reduces positive-case distinguishing advantage to querying the exact hidden pad input. A separate structural module privately transfers complementary role chains once and proves authenticated pointwise opening of the production left-half sequence-one response plus lifecycle snapshots. A proof-carrying certificate checks that exact linked operation for one call: authenticated execution returns the same optional ciphertext and consumes both private slots, rejected provenance returns `None` with both slots empty, and the public finite view probability and advantage equal the direct calculation while preserving the exact distinct root and shared symmetric KDF domains. A bounded indexed extension allocates two private handle-specific role pairs, caches one complete finite sample globally, and proves equality with a stateful reference even when the first observation selects the second handle; the handle is ghost routing state and contributes no KDF label. This is not production registration-replay semantics, unrestricted SSProve contextual composition, or arbitrary multi-user computational composition. No numerical production bound is proved, and the results do not cover general transcripts, record schedules, AEAD/CTX composition, QPT adversaries, or the QROM.
 >
 > Standalone SSProve protocol-core hops additionally bound a root-derived masked-bit challenge by querying a modeled five-coordinate input containing one hidden contribution, bound one-step post-erasure ratchet confidentiality by querying the erased predecessor chain, extract a same-run ideal-table collision from cross-context or cross-sequence payload reuse, and prove probability at most `1/2` for a fresh accepted candidate against the uniform one-bit combined authenticator. These are direct finite-table theorems, not production HKDF/tag-width bounds or an AEAD+CTX composition.

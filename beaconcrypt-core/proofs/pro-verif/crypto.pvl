@@ -55,7 +55,12 @@ reduc forall beacon_secret: bitstring, server_secret: bitstring;
   x25519_shared(server_secret, beacon_secret).
 
 (* ML-KEM encapsulation/decapsulation correctness.  The encapsulator knows
-   both the ciphertext and shared secret for its fresh coins. *)
+   both the ciphertext and shared secret for its fresh coins.  Because
+   mlkem_shared_secret is a free constructor in both its public-key and coin
+   arguments, this exact production theory additionally assumes ML-KEM
+   public-key binding, equivalently strong shared-secret collision resistance
+   across distinct public keys in the symbolic model.  Generic IND-CCA alone
+   does not imply that extra property. *)
 fun mlkem_public(bitstring): bitstring.
 fun mlkem_ciphertext(bitstring, bitstring): bitstring.
 fun mlkem_shared_secret(bitstring, bitstring): bitstring.

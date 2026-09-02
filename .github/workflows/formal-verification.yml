@@ -44,6 +44,10 @@ jobs:
             target: check-generated-proverif-quantum-mlkem-opacity
           - name: ProVerif ML-KEM recovery control
             target: check-generated-proverif-quantum-mlkem-recovery
+          - name: ProVerif ML-KEM binding control
+            target: check-generated-proverif-mlkem-reencapsulation-strong
+          - name: ProVerif weak KEM re-encapsulation control
+            target: check-generated-proverif-mlkem-reencapsulation-weak
           - name: ProVerif HKDF prefix conformance
             target: check-generated-proverif-hkdf-prefix-conformance
           - name: ProVerif HKDF endpoint controls

@@ -162,6 +162,8 @@ PROVERIF_SCENARIOS := \
 	passive-quantum-equivalence \
 	quantum-mlkem-opacity \
 	quantum-mlkem-recovery \
+	mlkem-reencapsulation-strong \
+	mlkem-reencapsulation-weak \
 	hkdf-prefix-conformance \
 	hkdf-endpoint-controls \
 	hkdf-domain-distinct \
@@ -415,6 +417,28 @@ check-proverif-quantum-mlkem-recovery:
 			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
 			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
 		awk -v scenario=quantum-mlkem-recovery -f '$(PROVERIF_CHECKER)'
+
+check-proverif-mlkem-reencapsulation-strong: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-strong-theory.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control-queries.pvl \
+			$(PROVERIF_DIR)/mlkem-reencapsulation-control.pv | \
+		awk -v scenario=mlkem-reencapsulation-strong \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-mlkem-reencapsulation-weak: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-lib $(PROVERIF_DIR)/crypto.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control-queries.pvl \
+			$(PROVERIF_DIR)/mlkem-reencapsulation-control.pv | \
+		awk -v scenario=mlkem-reencapsulation-weak \
+			-f '$(PROVERIF_CHECKER)'
 
 check-proverif-hkdf-prefix-conformance: check-proverif-extraction
 	@set -o pipefail; \

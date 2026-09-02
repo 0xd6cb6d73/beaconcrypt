@@ -193,6 +193,28 @@ END {
     expected_result = (scenario == "quantum-mlkem-opacity") ? "true" : "false"
     wanted = "Query not attacker(QUANTUM_MLKEM_CONTROL_SECRET[]) is " expected_result "."
     require_exact(wanted, scenario)
+  } else if (scenario == "mlkem-reencapsulation-strong" ||
+             scenario == "mlkem-reencapsulation-weak") {
+    if (query_count != 8) {
+      reject("expected 8 " scenario " queries, saw " query_count)
+    }
+    wanted = "Query not event(KemMultiEpochPathReached(KEM_MULTI_EPOCH_PATH_WITNESS[])) is false."
+    require_exact(wanted, scenario " multi-epoch path")
+    wanted = "Query not event(KemOldKeyCompromised(KEM_OLD_KEY_COMPROMISE_WITNESS[])) is false."
+    require_exact(wanted, scenario " old-key compromise")
+    wanted = "Query not event(KemCiphertextSubstitutionAttempted(KEM_SUBSTITUTION_ATTEMPT_WITNESS[])) is false."
+    require_exact(wanted, scenario " ciphertext-substitution attempt")
+    attack_result = (scenario == "mlkem-reencapsulation-strong") ? "true" : "false"
+    wanted = "Query not event(KemWeakReencapsulationSucceeded(KEM_WEAK_ATTACK_WITNESS[])) is " attack_result "."
+    require_exact(wanted, scenario " re-encapsulation classification")
+    wanted = "Query not event(KemAcceptedRootDisclosed(KEM_ROOT_DISCLOSURE_WITNESS[])) is " attack_result "."
+    require_exact(wanted, scenario " accepted-root disclosure")
+    wanted = "Query not event(KemOrdinaryOneShotCompleted(KEM_ORDINARY_ONE_SHOT_WITNESS[])) is false."
+    require_exact(wanted, scenario " ordinary one-shot path")
+    wanted = "Query not attacker(KEM_NEW_SESSION_CANARY[]) is " attack_result "."
+    require_exact(wanted, scenario " new-session secrecy")
+    wanted = "Query inj-event(KemControlBeaconCommitted(transcript)) ==> inj-event(KemControlServerCommitted(transcript)) is " attack_result "."
+    require_exact(wanted, scenario " exact public-key/ciphertext agreement")
   } else if (scenario == "hkdf-prefix-conformance") {
     if (query_count != 2) {
       reject("expected 2 HKDF prefix conformance queries, saw " query_count)

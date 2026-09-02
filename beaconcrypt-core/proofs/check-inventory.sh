@@ -49,7 +49,7 @@ declare -A expected_category_counts=(
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=40
-	[handwritten-proverif]=48
+	[handwritten-proverif]=53
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -588,6 +588,51 @@ require_line_count 4 '^letfun ' \
 require_line_count 2 '^let Weak' \
 	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
 	"weak key-confusion process"
+require_line_count 8 '^query ' \
+	proofs/pro-verif/mlkem-reencapsulation-control-queries.pvl \
+	"ML-KEM re-encapsulation control query"
+require_line_count 7 '^free KEM_' \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl \
+	"ML-KEM re-encapsulation witness"
+require_line_count 8 '^event Kem' \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl \
+	"ML-KEM re-encapsulation event"
+require_line_count 2 '^let Kem' \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl \
+	"ML-KEM re-encapsulation process"
+require_occurrence_count 1 \
+	'fun kem_control_commit_transcript\(\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*key_id,\s*key_id,\s*bitstring,\s*bitstring\s*\): bitstring \[data\]\.' \
+	"exact ML-KEM control transcript arity" \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+require_occurrence_count 1 \
+	'out\(kem_multi_epoch_channel, pqsk_old\);\s*event KemOldKeyCompromised\(KEM_OLD_KEY_COMPROMISE_WITNESS\)' \
+	"old-only ML-KEM compromise emitter" \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+reject_matches "new ML-KEM secret key disclosed by re-encapsulation control" \
+	'out\([^\n]*pqsk_new' \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+require_occurrence_count 1 \
+	'candidate_ciphertext\s*=\s*reencapsulate\(\s*old_shared_secret,\s*pqpk_new\s*\)' \
+	"exact cross-key ciphertext substitution" \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+require_occurrence_count 1 \
+	'kem_control_commit_transcript\(\s*server_identity,\s*beacon_identity,\s*bundle_old,\s*beacon_prekey,\s*beacon_one_time,\s*pqpk_old,\s*old_ciphertext,' \
+	"old-bundle server control transcript" \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+require_occurrence_count 1 \
+	'kem_control_commit_transcript\(\s*server_identity,\s*beacon_identity,\s*bundle_new,\s*beacon_prekey,\s*beacon_one_time,\s*pqpk_new,\s*candidate_ciphertext,' \
+	"new-bundle beacon control transcript" \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+require_line_count 1 '^reduc ' \
+	proofs/pro-verif/mlkem-reencapsulation-strong-theory.pvl \
+	"strong ML-KEM control decapsulation rule"
+require_line_count 1 '^reduc ' \
+	proofs/pro-verif/mlkem-reencapsulation-weak-theory.pvl \
+	"weak ML-KEM control reduction block"
+require_occurrence_count 1 \
+	'otherwise\s+forall shared_secret: bitstring, new_secret_key: bitstring;\s*kem_control_decapsulate\(\s*reencapsulate\(shared_secret, mlkem_public\(new_secret_key\)\),\s*new_secret_key\s*\) = shared_secret\.' \
+	"public weak-KEM re-encapsulation rule" \
+	proofs/pro-verif/mlkem-reencapsulation-weak-theory.pvl
 for scenario_process in \
 	passive \
 	passive-strong-secrecy \
@@ -598,6 +643,7 @@ for scenario_process in \
 	active-quantum \
 	quantum-capability-control \
 	quantum-mlkem-control \
+	mlkem-reencapsulation-control \
 	public-key-confusion-strong \
 	public-key-confusion-weak; do
 	require_line_count 1 '^process$' \
