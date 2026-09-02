@@ -598,21 +598,19 @@ production ever permits multiple bundles under one honest beacon identity, the
 signed fields must additionally share an authenticated bundle nonce or
 ordered-bundle signature before extending this theorem.
 
-The baseline model reports all eleven security queries true: five honest-task
-secrecy queries; injective acceptance/origin, acceptance/consumption,
-consumption/origin, abort/consumption, and beacon/server commit
-correspondences; and bounded record send/receive correspondence with exact
-session, direction, sequence, sender, receiver, and plaintext. Seven separate
-non-vacuity queries deliberately report false negations. Five demonstrate the
-original honest acceptance, replay rejection, abort, beacon-commit, and
-record-receive traces. A sixth reaches a valid attacker-owned registration
-response, and the seventh finds the deliberate attack on its private task
-canary, proving that the malicious session is cryptographically usable rather
-than blocked by proof instrumentation. The honest and malicious server paths
-use private origin tables solely to model the threat model's recipient-specific
-task routing; those tables are not production authorization mechanisms. The
-malicious path treats every request as fresh, so no malicious-identity replay or
-availability result is claimed.
+The baseline model reports all twelve security queries true: five honest-task secrecy queries and seven injective correspondences for acceptance/origin, authenticated-bundle agreement, acceptance/consumption, consumption/origin, abort/consumption, complete beacon/server establishment agreement, and bounded record send/receive origin.
+The authenticated-bundle query compares the server and beacon identities, authenticated `InitKex`, registration ID, prekey, one-time X25519 key, selected ML-KEM public key, and registration origin before response commitment.
+The beacon/server commitment query compares one 18-field symbolic transcript containing those values plus the server ephemeral key, exact KEM ciphertext, initial frame, complete response, ordered root input, derived root, exact associated data, assigned beacon key ID, pinned server key ID, and session identifier.
+The bounded record correspondence still compares exact session, direction, sequence, sender, receiver, and plaintext.
+Eight separate non-vacuity queries deliberately report false negations.
+Five demonstrate the original honest acceptance, replay rejection, abort, exact beacon-commit, and record-receive traces.
+The sixth reaches the separate authenticated-bundle acceptance event.
+The seventh reaches a valid attacker-owned registration response, and the eighth finds the deliberate attack on its private task canary, proving that the malicious session is cryptographically usable rather than blocked by proof instrumentation.
+The active-quantum recovery event separately binds the selected replacement ML-KEM public key, server ephemeral key, exact KEM ciphertext, initial frame, complete response, ordered root input, root, and recovered plaintext, while its correspondence controls deliberately witness failure of both honest initiation and authenticated-bundle agreement.
+The honest and malicious server paths use private origin tables solely to model the threat model's recipient-specific task routing; those tables are not production authorization mechanisms.
+The malicious path treats every request as fresh, so no malicious-identity replay or availability result is claimed.
+These constructor equalities establish symbolic transcript agreement rather than byte-level response serialization or parsing, primitive computational security, Rust/extraction correspondence, or an end-to-end computational handshake theorem.
+The selected ML-KEM public key and KEM ciphertext remain absent from the production root KDF input and associated data, and this proof change does not alter the production wire protocol.
 
 The synchronized late-compromise model records the intended qualification.
 The initial message and an already-consumed advanced receive message remain

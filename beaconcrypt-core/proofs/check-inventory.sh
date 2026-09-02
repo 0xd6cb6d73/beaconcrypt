@@ -371,7 +371,52 @@ require_occurrence_count 1 \
 reject_matches "invented AEAD or CTX label constructor" \
 	'(?m)^(?:fun|letfun) (?:aead|ctx)_[A-Za-z0-9_]*(?:label|domain)\(' \
 	proofs/pro-verif/crypto.pvl
-require_line_count 24 '^event ' proofs/pro-verif/environment.pvl \
+require_line_count 4 '^type ' proofs/pro-verif/environment.pvl \
+	"handwritten protocol-state type"
+require_line_count 14 '^fun ' proofs/pro-verif/environment.pvl \
+	"handwritten protocol constructor/function"
+require_occurrence_count 1 \
+	'type establishment_transcript_t\.\s*fun establishment_transcript\(\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_InitKex,\s*beaconcrypt_core__pqxdh__t_RegistrationId,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_RootKeyInput,\s*bitstring,\s*bitstring,\s*key_id,\s*key_id,\s*bitstring,\s*bitstring\s*\): establishment_transcript_t \[data\]\.' \
+	"exact 18-field establishment transcript declaration" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'type authenticated_init_bundle_t\.\s*fun authenticated_init_bundle\(\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_InitKex,\s*beaconcrypt_core__pqxdh__t_RegistrationId,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring\s*\): authenticated_init_bundle_t \[data\]\.' \
+	"exact authenticated registration-bundle declaration" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 3 \
+	'let\s+(?:beacon|server|malicious)_establishment\s*=\s*establishment_transcript\(\s*server_identity,\s*beacon_identity,\s*core_init,\s*registration_id,\s*beacon_prekey,\s*beacon_one_time,\s*beacon_pq,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*response,\s*root_input,\s*root,\s*associated_data,\s*assigned_key_id,\s*SERVER_KEY_ID,\s*session,\s*registration_session\s*\)\s+in' \
+	"exact establishment transcript emitter argument order" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 2 \
+	'let\s+(?:initiated|accepted)_bundle\s*=\s*authenticated_init_bundle\(\s*server_identity,\s*beacon_identity,\s*core_init,\s*registration_id,\s*beacon_prekey,\s*beacon_one_time,\s*beacon_pq,\s*registration_session\s*\)\s+in' \
+	"exact authenticated registration-bundle emitter argument order" \
+	proofs/pro-verif/environment.pvl
+require_line_count 1 '^event ServerCommitted\(establishment_transcript_t\)\.$' \
+	proofs/pro-verif/environment.pvl "typed server commitment event"
+require_line_count 1 '^event BeaconCommitted\(establishment_transcript_t\)\.$' \
+	proofs/pro-verif/environment.pvl "typed beacon commitment event"
+require_line_count 1 \
+	'^event BeaconBundleInitiated\(authenticated_init_bundle_t\)\.$' \
+	proofs/pro-verif/environment.pvl "typed beacon bundle-initiation event"
+require_line_count 1 \
+	'^event ServerBundleAccepted\(authenticated_init_bundle_t\)\.$' \
+	proofs/pro-verif/environment.pvl "typed server bundle-acceptance event"
+require_occurrence_count 1 \
+	'event MaliciousRegistrationCommitted\(\s*establishment_transcript_t,\s*bitstring\s*\)\.' \
+	"typed malicious-registration commitment event" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 'event\s+BeaconCommitted\(beacon_establishment\)' \
+	"beacon establishment transcript emitter" proofs/pro-verif/environment.pvl
+require_occurrence_count 1 'event\s+ServerCommitted\(server_establishment\)' \
+	"server establishment transcript emitter" proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'event\s+MaliciousRegistrationCommitted\(\s*malicious_establishment,\s*MALICIOUS_TASK_SECRET\s*\)' \
+	"malicious establishment transcript emitter" proofs/pro-verif/environment.pvl
+require_occurrence_count 1 'event\s+BeaconBundleInitiated\(initiated_bundle\)' \
+	"beacon authenticated-bundle emitter" proofs/pro-verif/environment.pvl
+require_occurrence_count 1 'event\s+ServerBundleAccepted\(accepted_bundle\)' \
+	"server authenticated-bundle emitter" proofs/pro-verif/environment.pvl
+require_line_count 26 '^event ' proofs/pro-verif/environment.pvl \
 	"handwritten event"
 require_line_count 2 '^table ' proofs/pro-verif/environment.pvl \
 	"handwritten table"
@@ -379,10 +424,30 @@ require_line_count 17 '^free ' proofs/pro-verif/environment.pvl \
 	"handwritten free name/channel"
 require_line_count 12 '^let [A-Z]' proofs/pro-verif/environment.pvl \
 	"handwritten process"
-require_line_count 11 '^query ' proofs/pro-verif/queries.pvl \
+require_line_count 12 '^query ' proofs/pro-verif/queries.pvl \
 	"baseline query"
-require_line_count 7 '^query ' proofs/pro-verif/reachability-queries.pvl \
+require_occurrence_count 1 \
+	'query\s+transcript: establishment_transcript_t;\s*inj-event\(BeaconCommitted\(transcript\)\)\s*==>\s*inj-event\(ServerCommitted\(transcript\)\)\.' \
+	"complete establishment transcript correspondence query" \
+	proofs/pro-verif/queries.pvl
+require_occurrence_count 1 \
+	'query\s+bundle: authenticated_init_bundle_t;\s*inj-event\(ServerBundleAccepted\(bundle\)\)\s*==>\s*inj-event\(BeaconBundleInitiated\(bundle\)\)\.' \
+	"exact authenticated registration-bundle correspondence query" \
+	proofs/pro-verif/queries.pvl
+require_line_count 8 '^query ' proofs/pro-verif/reachability-queries.pvl \
 	"reachability query"
+require_occurrence_count 1 \
+	'query\s+bundle: authenticated_init_bundle_t;\s*event\(ServerBundleAccepted\(bundle\)\)\.' \
+	"authenticated registration-bundle reachability query" \
+	proofs/pro-verif/reachability-queries.pvl
+require_occurrence_count 1 \
+	'query\s+transcript: establishment_transcript_t;\s*event\(BeaconCommitted\(transcript\)\)\.' \
+	"establishment transcript reachability query" \
+	proofs/pro-verif/reachability-queries.pvl
+require_occurrence_count 1 \
+	'query\s+transcript: establishment_transcript_t,\s*plaintext: bitstring;\s*event\(MaliciousRegistrationCommitted\(transcript,\s*plaintext\)\)\.' \
+	"malicious establishment transcript reachability query" \
+	proofs/pro-verif/reachability-queries.pvl
 require_line_count 5 '^query ' proofs/pro-verif/compromise-queries.pvl \
 	"compromise query"
 require_line_count 17 '^query ' proofs/pro-verif/failed-receive-queries.pvl \
@@ -390,6 +455,10 @@ require_line_count 17 '^query ' proofs/pro-verif/failed-receive-queries.pvl \
 require_line_count 12 '^query ' \
 	proofs/pro-verif/failed-receive-reachability-queries.pvl \
 	"state-neutral receive reachability query"
+require_occurrence_count 1 \
+	'query\s+transcript: establishment_transcript_t,\s*plaintext: bitstring;\s*event\(MaliciousRegistrationCommitted\(transcript,\s*plaintext\)\)\.' \
+	"state-neutral malicious establishment reachability query" \
+	proofs/pro-verif/failed-receive-reachability-queries.pvl
 require_line_count 9 '^query ' \
 	proofs/pro-verif/failed-receive-compromise-queries.pvl \
 	"state-neutral receive compromise query"
@@ -423,8 +492,20 @@ require_line_count 5 '^query ' proofs/pro-verif/passive-queries.pvl \
 require_line_count 6 '^query ' \
 	proofs/pro-verif/passive-reachability-queries.pvl \
 	"passive progress-control query"
-require_line_count 3 '^query ' proofs/pro-verif/active-quantum-queries.pvl \
+require_occurrence_count 1 \
+	'query\s+transcript: establishment_transcript_t;\s*event\(BeaconCommitted\(transcript\)\)\.' \
+	"passive establishment transcript reachability query" \
+	proofs/pro-verif/passive-reachability-queries.pvl
+require_line_count 4 '^query ' proofs/pro-verif/active-quantum-queries.pvl \
 	"active-quantum attack query"
+require_occurrence_count 1 \
+	'query\s+selected_pq_public_key: bitstring,\s*server_ephemeral: bitstring,\s*kem_ciphertext: bitstring,\s*initial_frame: bitstring,\s*response: bitstring,\s*root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,\s*root: bitstring;\s*event\(QuantumInitialSecretRecovered\(\s*selected_pq_public_key,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*response,\s*root_input,\s*root,\s*INITIAL_SECRET\s*\)\)\.' \
+	"exact active-quantum transcript recovery query" \
+	proofs/pro-verif/active-quantum-queries.pvl
+require_occurrence_count 1 \
+	'query\s+bundle: authenticated_init_bundle_t;\s*inj-event\(ServerBundleAccepted\(bundle\)\)\s*==>\s*inj-event\(BeaconBundleInitiated\(bundle\)\)\.' \
+	"active-quantum authenticated-bundle failure query" \
+	proofs/pro-verif/active-quantum-queries.pvl
 require_line_count 2 '^reduc ' proofs/pro-verif/quantum-capabilities.pvl \
 	"public symbolic quantum recovery rule"
 require_line_count 2 '^query ' \
@@ -472,6 +553,14 @@ require_line_count 2 '^equation ' \
 require_line_count 1 '^let ActiveQuantumMitm' \
 	proofs/pro-verif/active-quantum-witness.pvl \
 	"bounded active-quantum witness process"
+require_occurrence_count 1 \
+	'event QuantumInitialSecretRecovered\(\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_RootKeyInput,\s*bitstring,\s*bitstring\s*\)\.' \
+	"exact active-quantum transcript recovery event" \
+	proofs/pro-verif/active-quantum-witness.pvl
+require_occurrence_count 1 \
+	'event\s+QuantumInitialSecretRecovered\(\s*forged_pq,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*response,\s*root_input,\s*root,\s*stolen_plaintext\s*\)' \
+	"exact active-quantum transcript recovery emitter" \
+	proofs/pro-verif/active-quantum-witness.pvl
 require_line_count 3 '^reduc ' \
 	proofs/pro-verif/public-key-confusion-control.pvl \
 	"production key-confusion parser"

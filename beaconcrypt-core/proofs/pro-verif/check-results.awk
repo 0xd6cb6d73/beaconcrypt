@@ -85,9 +85,7 @@ END {
 
   registration_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,origin_1"
   accepted_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,root_input_3,root_3,origin_1"
-  commit_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,assigned_key_id_3,root_input_3,root_3,associated_data_3,session_4,origin_1"
   message_arguments = "session_4,message_direction,message_sequence_6,sender,receiver,plaintext_2"
-  malicious_commit_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,assigned_key_id_3,root_input_3,root_3,associated_data_3,session_4,plaintext_2"
   receive_rejected_arguments = "session_3,target_sequence_2,forged_frame,entry_state"
   receive_future_arguments = "session_3,target_sequence_2,sender,receiver,plaintext_8,accepted_frame,target_material_1,forged_frame,entry_state,committed_state_1"
   receive_reachable_future_arguments = "session_3,target_sequence_2,sender,receiver,RECEIVE_TARGET_SECRET[],accepted_frame,target_material_1,forged_frame,entry_state,committed_state_1"
@@ -100,7 +98,7 @@ END {
   receive_after_release_arguments = "session_3,target_sequence_2,sender,receiver,plaintext_8,accepted_frame,target_material_1,rejected_state,released_state_1,committed_state_1"
   receive_reachable_after_release_arguments = "session_3,target_sequence_2,sender,receiver,RECEIVE_AFTER_RELEASE_SECRET[],accepted_frame,target_material_1,rejected_state,released_state_1,committed_state_1"
   receive_message_arguments = "session_3,message_direction,message_sequence_1,sender,receiver,plaintext_8"
-  receive_malicious_commit_arguments = "server_identity_1,beacon_identity_2,init,registration_id_2,assigned_key_id_1,root_input_1,root_4,associated_data_9,session_3,plaintext_8"
+  receive_malicious_commit_arguments = "transcript,plaintext_8"
   weak_aead_arguments = "left_key_1,right_key_1,left_context_1,right_context_1,left_plaintext_1,right_plaintext_1"
 
   equivalence_scenario = (scenario == "passive-classical-equivalence" ||
@@ -150,24 +148,25 @@ END {
       require_exact(wanted, scenario " secrecy")
     }
   } else if (scenario == "active-quantum") {
-    if (query_count != 3) {
-      reject("expected 3 active-quantum attack queries, saw " query_count)
+    if (query_count != 4) {
+      reject("expected 4 active-quantum attack queries, saw " query_count)
     }
 
     wanted = "Query not attacker(INITIAL_SECRET[]) is false."
     require_exact(wanted, "active-quantum confidentiality break")
-    wanted = "Query not event(QuantumInitialSecretRecovered(INITIAL_SECRET[])) is false."
+    wanted = "Query not event(QuantumInitialSecretRecovered(selected_pq_public_key,server_ephemeral_3,kem_ciphertext_3,initial_frame_3,response_3,root_input_3,root_3,INITIAL_SECRET[])) is false."
     require_exact(wanted, "active-quantum recovery witness")
     active_quantum_arguments = "server_identity_2,beacon_identity_3,init,registration_id_2,root_input_3,root_3,origin_1"
     active_quantum_origin_arguments = "server_identity_2,beacon_identity_3,init,registration_id_2,origin_1"
     wanted = "Query inj-event(ServerAccepted(" active_quantum_arguments ")) ==> inj-event(BeaconInitiated(" active_quantum_origin_arguments ")) is false."
     require_exact(wanted, "active-quantum agreement break")
+    wanted = "Query inj-event(ServerBundleAccepted(bundle)) ==> inj-event(BeaconBundleInitiated(bundle)) is false."
+    require_exact(wanted, "active-quantum authenticated-bundle agreement break")
   } else if (scenario == "passive-reachability") {
     if (query_count != 6) {
       reject("expected 6 passive reachability queries, saw " query_count)
     }
-    passive_commit_arguments = "server_identity_2,beacon_identity_2,init,registration_id_2,assigned_key_id_2,root_input_2,root_2,associated_data_2,session_3,origin_1"
-    wanted = "Query not event(BeaconCommitted(" passive_commit_arguments ")) is false."
+    wanted = "Query not event(BeaconCommitted(transcript)) is false."
     require_exact(wanted, "passive registration completion")
     passive_delivery[1] = "server_to_beacon,first_sequence,sender,receiver,INITIAL_SECRET[]"
     passive_delivery[2] = "server_to_beacon,next_sequence(first_sequence),sender,receiver,CACHED_SECRET[]"
@@ -256,8 +255,8 @@ END {
     require_exact(wanted, scenario " role-confusion classification")
   } else if (scenario == "baseline" ||
              scenario == "active-classical") {
-    if (query_count != 11) {
-      reject("expected 11 " scenario " queries, saw " query_count)
+    if (query_count != 12) {
+      reject("expected 12 " scenario " queries, saw " query_count)
     }
 
     baseline_secret[1] = "INITIAL_SECRET"
@@ -279,27 +278,29 @@ END {
     }
 
     expected_correspondence[1] = "Query inj-event(ServerAccepted(" accepted_arguments ")) ==> inj-event(BeaconInitiated(" registration_arguments ")) is true."
-    expected_correspondence[2] = "Query inj-event(ServerAccepted(" accepted_arguments ")) ==> inj-event(RegistrationConsumed(" registration_arguments ")) is true."
-    expected_correspondence[3] = "Query inj-event(RegistrationConsumed(" registration_arguments ")) ==> inj-event(BeaconInitiated(" registration_arguments ")) is true."
-    expected_correspondence[4] = "Query inj-event(ServerResponseAborted(" accepted_arguments ")) ==> inj-event(RegistrationConsumed(" registration_arguments ")) is true."
-    expected_correspondence[5] = "Query inj-event(BeaconCommitted(" commit_arguments ")) ==> inj-event(ServerCommitted(" commit_arguments ")) is true."
-    expected_correspondence[6] = "Query inj-event(MessageReceived(" message_arguments ")) ==> inj-event(MessageSent(" message_arguments ")) is true."
-    for (correspondence_index = 1; correspondence_index <= 6; correspondence_index++) {
+    expected_correspondence[2] = "Query inj-event(ServerBundleAccepted(bundle)) ==> inj-event(BeaconBundleInitiated(bundle)) is true."
+    expected_correspondence[3] = "Query inj-event(ServerAccepted(" accepted_arguments ")) ==> inj-event(RegistrationConsumed(" registration_arguments ")) is true."
+    expected_correspondence[4] = "Query inj-event(RegistrationConsumed(" registration_arguments ")) ==> inj-event(BeaconInitiated(" registration_arguments ")) is true."
+    expected_correspondence[5] = "Query inj-event(ServerResponseAborted(" accepted_arguments ")) ==> inj-event(RegistrationConsumed(" registration_arguments ")) is true."
+    expected_correspondence[6] = "Query inj-event(BeaconCommitted(transcript)) ==> inj-event(ServerCommitted(transcript)) is true."
+    expected_correspondence[7] = "Query inj-event(MessageReceived(" message_arguments ")) ==> inj-event(MessageSent(" message_arguments ")) is true."
+    for (correspondence_index = 1; correspondence_index <= 7; correspondence_index++) {
       require_exact(expected_correspondence[correspondence_index], scenario " correspondence")
     }
   } else if (scenario == "reachability") {
-    if (query_count != 7) {
-      reject("expected 7 reachability queries, saw " query_count)
+    if (query_count != 8) {
+      reject("expected 8 reachability queries, saw " query_count)
     }
 
     required[1] = "Query not event(ServerAccepted(" accepted_arguments ")) is false."
-    required[2] = "Query not event(RegistrationReplayRejected(" registration_arguments ")) is false."
-    required[3] = "Query not event(ServerResponseAborted(" accepted_arguments ")) is false."
-    required[4] = "Query not event(BeaconCommitted(" commit_arguments ")) is false."
-    required[5] = "Query not event(MessageReceived(" message_arguments ")) is false."
-    required[6] = "Query not event(MaliciousRegistrationCommitted(" malicious_commit_arguments ")) is false."
-    required[7] = "Query not attacker(MALICIOUS_TASK_SECRET[]) is false."
-    for (required_index = 1; required_index <= 7; required_index++) {
+    required[2] = "Query not event(ServerBundleAccepted(bundle)) is false."
+    required[3] = "Query not event(RegistrationReplayRejected(" registration_arguments ")) is false."
+    required[4] = "Query not event(ServerResponseAborted(" accepted_arguments ")) is false."
+    required[5] = "Query not event(BeaconCommitted(transcript)) is false."
+    required[6] = "Query not event(MessageReceived(" message_arguments ")) is false."
+    required[7] = "Query not event(MaliciousRegistrationCommitted(transcript,plaintext_2)) is false."
+    required[8] = "Query not attacker(MALICIOUS_TASK_SECRET[]) is false."
+    for (required_index = 1; required_index <= 8; required_index++) {
       require_exact(required[required_index], "reachability")
     }
   } else if (scenario == "compromise") {

@@ -1,28 +1,8 @@
 (* SPDX-License-Identifier: 0BSD *)
 
 (* ProVerif does not classify positive reachability in passive-attacker mode. These active-scheduler controls use the same bounded honest-only process. Every secrecy canary is named explicitly so an unreachable send/receive branch cannot make a passive secrecy result pass vacuously. *)
-query server_identity: bitstring,
-      beacon_identity: bitstring,
-      init: beaconcrypt_core__pqxdh__t_InitKex,
-      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
-      assigned_key_id: key_id,
-      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
-      root: bitstring,
-      associated_data: bitstring,
-      session: bitstring,
-      origin: bitstring;
-  event(BeaconCommitted(
-    server_identity,
-    beacon_identity,
-    init,
-    registration_id,
-    assigned_key_id,
-    root_input,
-    root,
-    associated_data,
-    session,
-    origin
-  )).
+query transcript: establishment_transcript_t;
+  event(BeaconCommitted(transcript)).
 
 query session: bitstring, sender: key_id, receiver: key_id;
   event(MessageReceived(

@@ -38,6 +38,11 @@ query server_identity: bitstring,
     origin
   )).
 
+(* The registration acceptance also agrees explicitly on the three selected public keys, not only their tagged InitKex representation. *)
+query bundle: authenticated_init_bundle_t;
+  inj-event(ServerBundleAccepted(bundle)) ==>
+  inj-event(BeaconBundleInitiated(bundle)).
+
 query server_identity: bitstring,
       beacon_identity: bitstring,
       init: beaconcrypt_core__pqxdh__t_InitKex,
@@ -110,42 +115,10 @@ query server_identity: bitstring,
     origin
   )).
 
-(* Beacon acceptance implies a unique committed response agreeing on both
-   identities, assigned ID, exact transcript/root, AD, and session label. *)
-query server_identity: bitstring,
-      beacon_identity: bitstring,
-      init: beaconcrypt_core__pqxdh__t_InitKex,
-      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
-      assigned_key_id: key_id,
-      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
-      root: bitstring,
-      associated_data: bitstring,
-      session: bitstring,
-      origin: bitstring;
-  inj-event(BeaconCommitted(
-    server_identity,
-    beacon_identity,
-    init,
-    registration_id,
-    assigned_key_id,
-    root_input,
-    root,
-    associated_data,
-    session,
-    origin
-  )) ==>
-  inj-event(ServerCommitted(
-    server_identity,
-    beacon_identity,
-    init,
-    registration_id,
-    assigned_key_id,
-    root_input,
-    root,
-    associated_data,
-    session,
-    origin
-  )).
+(* Beacon acceptance implies a unique committed response agreeing on the complete injective establishment transcript, including the exact selected ML-KEM public key and response ciphertext rather than only the resulting root. *)
+query transcript: establishment_transcript_t;
+  inj-event(BeaconCommitted(transcript)) ==>
+  inj-event(ServerCommitted(transcript)).
 
 (* Authentication, replay resistance, peer binding, direction separation,
    and sequence binding for every honest-role accepted record in the bounded

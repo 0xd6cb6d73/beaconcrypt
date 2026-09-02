@@ -95,21 +95,14 @@ wire hardening is intentionally not interoperable with the former 33-byte
 signed X25519 payloads. The regenerated F* lemmas prove both exact layouts,
 round trips, domain disjointness, and cross-role rejection.
 
-The ProVerif baseline proves five honest-session secrecy queries and six
-injective registration, replay, commit, and bounded-record correspondences
-while replicated attacker-owned beacons disclose all of their keys and submit
-valid self-signed registrations. Seven separate reachability controls exercise
-the five original honest traces, server commitment of a valid malicious
-registration response, and attacker recovery of the task canary routed to that
-response. The
-latter path assumes the surrounding application routes honest taskings only to
-their intended recipients; its private origin tables are proof instrumentation,
-not a production ACL. The late-compromise model proves secrecy for deleted
-initial and advanced keys while deliberately finding attacks on a cached
-skipped key and on future traffic in both directions, recording the absence of
-post-compromise security. See the
-[Stage 7 implementation record](../doc/impl/formal-verification-stage-7.md) and
-[current proof analysis](../doc/formal-verification-analysis.md).
+The ProVerif baseline proves five honest-session secrecy queries and seven injective registration, authenticated-bundle, replay, complete-establishment, and bounded-record correspondences while replicated attacker-owned beacons disclose all of their keys and submit valid self-signed registrations.
+The commitment correspondence compares one 18-field symbolic transcript containing both identities, the authenticated `InitKex`, registration ID, prekey, one-time X25519 key, selected ML-KEM public key, server ephemeral key, exact KEM ciphertext, initial frame, complete response, ordered root input, derived root, exact associated data, assigned beacon key ID, pinned server key ID, session identifier, and registration origin.
+Eight separate reachability controls exercise the five original honest traces, the new authenticated-bundle acceptance event, server commitment of a valid malicious registration response, and attacker recovery of the task canary routed to that response.
+The latter path assumes the surrounding application routes honest taskings only to their intended recipients; its private origin tables are proof instrumentation, not a production ACL.
+The late-compromise model proves secrecy for deleted initial and advanced keys while deliberately finding attacks on a cached skipped key and on future traffic in both directions, recording the absence of post-compromise security.
+The bounded active-quantum control binds its recovery witness to the selected replacement ML-KEM public key, server ephemeral key, exact KEM ciphertext, initial frame, complete response, ordered root input, root, and recovered plaintext, and it deliberately violates both honest initiation and authenticated-bundle agreement.
+These are symbolic constructor-equality and reachability results, not byte-level serialization/extraction linkage or a computational handshake theorem, and they do not change the production root KDF input, associated data, or wire protocol.
+See the [Stage 7 implementation record](../doc/impl/formal-verification-stage-7.md) and [current proof analysis](../doc/formal-verification-analysis.md).
 
 The dedicated receive model uses two exact finite legs. The first consumes sequence 1, rejects a forged sequence-3 frame twice while reusing the exact same receiver-state term, accepts the honest sequence-3 frame, publishes only skipped sequence 2, rejects replay, and accepts delayed sequence 2. The second advances from sequence 1 to sequence 52, caches sequences 2 through 51, and consumes sequence 52 without placing it in the cache. It rejects sequence 54 while all 50 skipped-key slots remain occupied, consumes cached sequence 51, and then accepts sequence 54 while caching sequence 53. Every rejection and success event has a required reachability witness. Its compromise variant discloses the same symbolic state immediately before and after rejection; disclosure of the unchanged live chain can still expose future material, so the result is rejection non-expansion rather than post-compromise secrecy.
 
