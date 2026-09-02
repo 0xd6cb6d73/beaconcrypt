@@ -28,8 +28,8 @@ fun kex_response(
   bitstring,
   bitstring,
   bitstring,
-  key_id,
-  bitstring
+  bitstring,
+  key_id
 ): bitstring [data].
 
 fun session_label(
@@ -420,8 +420,8 @@ let HonestBeacon(beacon_record_secret: bitstring) =
     response_server_identity,
     server_ephemeral,
     kem_ciphertext,
-    assigned_key_id,
-    initial_frame
+    initial_frame,
+    assigned_key_id
   ) = response in
   if response_server_identity = server_identity then
     let dh1 = x25519_beacon_dh(
@@ -829,8 +829,8 @@ let Server(
         server_identity,
         server_ephemeral,
         kem_ciphertext,
-        assigned_key_id,
-        initial_frame
+        initial_frame,
+        assigned_key_id
       ) in
       event MessageSent(
         session,
@@ -1082,8 +1082,8 @@ let MaliciousServer() =
     server_identity,
     server_ephemeral,
     kem_ciphertext,
-    assigned_key_id,
-    initial_frame
+    initial_frame,
+    assigned_key_id
   ) in
   let malicious_establishment = establishment_transcript(
     server_identity,

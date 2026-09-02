@@ -21,6 +21,9 @@ const FORMAL_WORKFLOW: &str = include_str!("../../.github/workflows/formal-verif
 const ADAPTER_PQXDH: &str = include_str!("../../beaconcrypt/src/pqxdh.rs");
 const ADAPTER_RATCHET: &str = include_str!("../../beaconcrypt/src/ratchet.rs");
 const ADAPTER_SHARED: &str = include_str!("../../beaconcrypt/src/shared.rs");
+const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
+const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
+const PHASE2_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase2.capnp");
 
 const FACT_PREFIX: &str = "(* @beaconcrypt-fidelity-v1 ";
 const FACT_SUFFIX: &str = " *)";
@@ -79,6 +82,15 @@ const EXPECTED_FACTS: &[&str] = &[
 	"ctx.sequence_encoding=le64",
 	"ctx.sender_id_encoding=le64",
 	"ctx.label=none",
+	"phase2.response.constructor=kex_response",
+	"phase2.response.field_count=5",
+	"phase2.response.field.0=identityKey@0:server_identity",
+	"phase2.response.field.1=ephemeralKey@1:server_ephemeral",
+	"phase2.response.field.2=kemCipherText@2:kem_ciphertext",
+	"phase2.response.field.3=appCipherText@3:initial_frame",
+	"phase2.response.field.4=keyId@4:assigned_key_id",
+	"phase2.response.server_writes=candidate.server_identity_public_key,candidate.ephemeral_public_key,candidate.kem_ciphertext,initial_encrypted_frame,candidate.key_id",
+	"phase2.response.beacon_reads=response_server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id",
 	"agreement.constructor=establishment_transcript",
 	"agreement.field_count=18",
 	"agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin",
@@ -90,6 +102,9 @@ struct Snapshot {
 	crypto: String,
 	environment: String,
 	makefile: String,
+	phase2_schema: String,
+	adapter_server: String,
+	adapter_beacon: String,
 }
 
 impl Snapshot {
@@ -99,6 +114,9 @@ impl Snapshot {
 			crypto: CRYPTO_MODEL.to_owned(),
 			environment: ENVIRONMENT_MODEL.to_owned(),
 			makefile: CORE_MAKEFILE.to_owned(),
+			phase2_schema: PHASE2_SCHEMA.to_owned(),
+			adapter_server: ADAPTER_SERVER.to_owned(),
+			adapter_beacon: ADAPTER_BEACON.to_owned(),
 		}
 	}
 }
@@ -200,6 +218,14 @@ fn uncommented_rust(source: &str) -> Result<String, String> {
 		.join("\n"))
 }
 
+fn uncommented_capnp(source: &str) -> String {
+	source
+		.lines()
+		.map(|line| line.split_once('#').map_or(line, |(code, _)| code))
+		.collect::<Vec<_>>()
+		.join("\n")
+}
+
 fn compact(source: &str) -> String {
 	source
 		.chars()
@@ -281,13 +307,43 @@ fn all_arguments(source: &str, function: &str) -> Result<Vec<Vec<String>>, Strin
 fn rust_body(source: &str, name: &str) -> Result<String, String> {
 	let source = uncommented_rust(source)?;
 	let marker = format!("fn {name}");
-	let Some(start) = source.find(&marker) else {
-		return Err(format!("missing Rust function: {name}"));
+	let mut search_start = 0;
+	let open = loop {
+		let Some(relative_start) = source[search_start..].find(&marker) else {
+			return Err(format!("missing Rust function body: {name}"));
+		};
+		let start = search_start + relative_start;
+		let tail = &source[start..];
+		let mut parentheses = 0usize;
+		let mut brackets = 0usize;
+		let mut relative_open = None;
+		let mut declaration = false;
+		for (offset, byte) in tail.bytes().enumerate() {
+			match byte {
+				b'(' => parentheses += 1,
+				b')' => parentheses = parentheses.saturating_sub(1),
+				b'[' => brackets += 1,
+				b']' => brackets = brackets.saturating_sub(1),
+				b'{' if parentheses == 0 && brackets == 0 => {
+					relative_open = Some(offset);
+					break;
+				}
+				b';' if parentheses == 0 && brackets == 0 => {
+					declaration = true;
+					break;
+				}
+				_ => {}
+			}
+		}
+		if let Some(relative_open) = relative_open {
+			break start + relative_open;
+		}
+		if declaration {
+			search_start = start + marker.len();
+			continue;
+		}
+		return Err(format!("missing body for Rust function: {name}"));
 	};
-	let open = start
-		+ source[start..]
-			.find('{')
-			.ok_or_else(|| format!("missing body for Rust function: {name}"))?;
 	let bytes = source.as_bytes();
 	let mut nesting = 1usize;
 	let mut index = open + 1;
@@ -305,6 +361,98 @@ fn rust_body(source: &str, name: &str) -> Result<String, String> {
 		index += 1;
 	}
 	Err(format!("unterminated Rust function: {name}"))
+}
+
+fn require_one_call(
+	source: &str,
+	function: &str,
+	expected: &[&str],
+	label: &str,
+) -> Result<(), String> {
+	let calls = all_arguments(source, function)?;
+	let expected = expected
+		.iter()
+		.map(|argument| (*argument).to_owned())
+		.collect::<Vec<_>>();
+	if calls == [expected.clone()] {
+		Ok(())
+	} else {
+		Err(format!(
+			"{label} changed: expected one {function} call with {expected:?}, found {calls:?}"
+		))
+	}
+}
+
+fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
+	let schema = compact(&uncommented_capnp(&snapshot.phase2_schema));
+	require(
+		&schema,
+		"structKexResponse{identityKey@0:Data;ephemeralKey@1:Data;kemCipherText@2:Data;appCipherText@3:Data;keyId@4:UInt64;}",
+		"Phase-2 response schema",
+	)?;
+
+	let server = rust_body(&snapshot.adapter_server, "build_registration_response")?;
+	require(
+		&server,
+		"letremote_kid=candidate.key_id();",
+		"Phase-2 assigned key-ID source",
+	)?;
+	for (function, expected, label) in [
+		(
+			"bundle.set_identity_key",
+			"candidate.server_identity_public_key()",
+			"Phase-2 server identity mapping",
+		),
+		(
+			"bundle.set_ephemeral_key",
+			"candidate.ephemeral_public_key()",
+			"Phase-2 server ephemeral mapping",
+		),
+		(
+			"bundle.set_kem_cipher_text",
+			"candidate.kem_ciphertext()",
+			"Phase-2 server KEM-ciphertext mapping",
+		),
+		(
+			"bundle.set_app_cipher_text",
+			"&encrypted.ciphertext",
+			"Phase-2 server initial-frame mapping",
+		),
+		(
+			"bundle.set_key_id",
+			"remote_kid",
+			"Phase-2 server assigned-ID mapping",
+		),
+	] {
+		require_one_call(&server, function, &[expected], label)?;
+	}
+
+	let beacon = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
+	for (wanted, label) in [
+		(
+			"crypto_sign::PublicKey::from_bytes(response.get_identity_key().ok()?).ok()?",
+			"Phase-2 beacon identity mapping",
+		),
+		(
+			"crypto_kx::PublicKey::from_bytes(response.get_ephemeral_key().ok()?).ok()?",
+			"Phase-2 beacon ephemeral mapping",
+		),
+		(
+			"crypto_kem::mlkem768::Ciphertext::from_bytes(response.get_kem_cipher_text().ok()?).ok()?",
+			"Phase-2 beacon KEM-ciphertext mapping",
+		),
+		(
+			"decrypt_message_with_ratchet(response.get_app_cipher_text().ok()?,candidate.server_key_id(),&associated_data,&mutratchet,)?",
+			"Phase-2 beacon initial-frame mapping",
+		),
+		(
+			"assigned_key_id:response.get_key_id(),",
+			"Phase-2 beacon assigned-ID mapping",
+		),
+	] {
+		require(&beacon, wanted, label)?;
+	}
+	Ok(())
 }
 
 fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
@@ -409,6 +557,23 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 		"ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id))",
 		"open CTX input",
 	)?;
+	require(
+		&environment,
+		"funkex_response(bitstring,bitstring,bitstring,bitstring,key_id):bitstring[data].",
+		"Phase-2 response constructor",
+	)?;
+	require(
+		&environment,
+		"letkex_response(response_server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id)=responsein",
+		"Phase-2 response destructuring order",
+	)?;
+	let response_construction = "letresponse=kex_response(server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id)in";
+	if count(&environment, response_construction) != 2 {
+		return Err(format!(
+			"Phase-2 response construction order changed: expected two exact constructions, found {}",
+			count(&environment, response_construction)
+		));
+	}
 
 	let constructor = "funestablishment_transcript(bitstring,bitstring,beaconcrypt_core__pqxdh__t_InitKex,beaconcrypt_core__pqxdh__t_RegistrationId,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,beaconcrypt_core__pqxdh__t_RootKeyInput,bitstring,bitstring,key_id,key_id,bitstring,bitstring):establishment_transcript_t[data].";
 	require(
@@ -638,6 +803,7 @@ fn validate_adapters() -> Result<(), String> {
 fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_manifest(&snapshot.interface)?;
 	validate_pv(snapshot)?;
+	validate_phase2_source(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
 
@@ -904,6 +1070,125 @@ fn requested_transcript_mutations_are_rejected() {
 			);
 		},
 	);
+	assert_rejected(
+		"reordered_phase2_manifest_field",
+		"phase2.response.field.3",
+		|snapshot| {
+			mutate_fact(
+				&mut snapshot.interface,
+				"phase2.response.field.3",
+				"keyId@4:assigned_key_id",
+			);
+		},
+	);
+	assert_rejected(
+		"legacy_phase2_symbolic_order",
+		"Phase-2 response constructor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"fun kex_response(\n  bitstring,\n  bitstring,\n  bitstring,\n  bitstring,\n  key_id\n): bitstring [data].",
+				"fun kex_response(\n  bitstring,\n  bitstring,\n  bitstring,\n  key_id,\n  bitstring\n): bitstring [data].",
+			);
+		},
+	);
+	assert_rejected(
+		"reordered_phase2_schema_fields",
+		"Phase-2 response schema",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.phase2_schema,
+				"    appCipherText @3 :Data;\n    # The ID assigned to this beacon instance's identity\n    keyId @4 :UInt64;",
+				"    keyId @4 :UInt64;\n    # The encrypted initial application frame\n    appCipherText @3 :Data;",
+			);
+		},
+	);
+	assert_rejected(
+		"omitted_phase2_schema_field",
+		"Phase-2 response schema",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.phase2_schema,
+				"    appCipherText @3 :Data;\n",
+				"",
+			);
+		},
+	);
+	assert_rejected(
+		"renamed_phase2_schema_field",
+		"Phase-2 response schema",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.phase2_schema,
+				"appCipherText @3",
+				"initialFrame @3",
+			);
+		},
+	);
+	for (name, method, label) in [
+		(
+			"renamed_phase2_server_identity_setter",
+			"bundle.set_identity_key",
+			"Phase-2 server identity mapping",
+		),
+		(
+			"renamed_phase2_server_ephemeral_setter",
+			"bundle.set_ephemeral_key",
+			"Phase-2 server ephemeral mapping",
+		),
+		(
+			"renamed_phase2_server_kem_setter",
+			"bundle.set_kem_cipher_text",
+			"Phase-2 server KEM-ciphertext mapping",
+		),
+		(
+			"renamed_phase2_server_frame_setter",
+			"bundle.set_app_cipher_text",
+			"Phase-2 server initial-frame mapping",
+		),
+		(
+			"renamed_phase2_server_key_id_setter",
+			"bundle.set_key_id",
+			"Phase-2 server assigned-ID mapping",
+		),
+	] {
+		assert_rejected(name, label, |snapshot| {
+			let renamed = format!("{method}_changed");
+			replace_once(&mut snapshot.adapter_server, method, &renamed);
+		});
+	}
+	for (name, getter, label) in [
+		(
+			"renamed_phase2_beacon_identity_getter",
+			"response.get_identity_key",
+			"Phase-2 beacon identity mapping",
+		),
+		(
+			"renamed_phase2_beacon_ephemeral_getter",
+			"response.get_ephemeral_key",
+			"Phase-2 beacon ephemeral mapping",
+		),
+		(
+			"renamed_phase2_beacon_kem_getter",
+			"response.get_kem_cipher_text",
+			"Phase-2 beacon KEM-ciphertext mapping",
+		),
+		(
+			"renamed_phase2_beacon_frame_getter",
+			"response.get_app_cipher_text",
+			"Phase-2 beacon initial-frame mapping",
+		),
+		(
+			"renamed_phase2_beacon_key_id_getter",
+			"response.get_key_id",
+			"Phase-2 beacon assigned-ID mapping",
+		),
+	] {
+		assert_rejected(name, label, |snapshot| {
+			let renamed = format!("{getter}_changed");
+			replace_once(&mut snapshot.adapter_beacon, getter, &renamed);
+		});
+	}
 	assert_rejected(
 		"agreement_without_selected_pqpk",
 		"beacon establishment emitter",

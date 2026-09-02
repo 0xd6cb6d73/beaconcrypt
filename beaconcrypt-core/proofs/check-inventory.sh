@@ -329,7 +329,7 @@ require_occurrence_count 4 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
-require_line_count 57 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+require_line_count 66 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
 	"canonical production transcript fact"
 require_line_count 5 '^type ' "$transcript_interface" \
 	"canonical ProVerif interface type"
@@ -669,8 +669,8 @@ for scenario_process in \
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 7 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED): &str = include_str!' \
+require_line_count 10 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|PHASE2_SCHEMA): &str = include_str!' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
@@ -689,7 +689,7 @@ require_occurrence_count 1 \
 	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
 	"transcript-fidelity model and adapter composition" "$fidelity_test"
 require_occurrence_count 1 \
-	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
+	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
 for mutation_name in \
 	pqxdh_label_byte \
@@ -698,6 +698,21 @@ for mutation_name in \
 	separate_initial_step_domain \
 	reversed_ad_identities \
 	swapped_x25519_roles \
+	reordered_phase2_manifest_field \
+	legacy_phase2_symbolic_order \
+	reordered_phase2_schema_fields \
+	omitted_phase2_schema_field \
+	renamed_phase2_schema_field \
+	renamed_phase2_server_identity_setter \
+	renamed_phase2_server_ephemeral_setter \
+	renamed_phase2_server_kem_setter \
+	renamed_phase2_server_frame_setter \
+	renamed_phase2_server_key_id_setter \
+	renamed_phase2_beacon_identity_getter \
+	renamed_phase2_beacon_ephemeral_getter \
+	renamed_phase2_beacon_kem_getter \
+	renamed_phase2_beacon_frame_getter \
+	renamed_phase2_beacon_key_id_getter \
 	agreement_without_selected_pqpk \
 	agreement_without_kem_ciphertext \
 	ctx_without_key \
