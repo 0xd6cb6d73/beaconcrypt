@@ -885,6 +885,32 @@ theorem ctxRetainedBaseReductionImpl_uniform_query_bound_step
   · exact ctxRetainedBasePublicOracle_uniform_query_bound publicQuery state
   · exact ctxRetainedBaseSealOracle_uniform_query_bound sealInput state
 
+/-- An arbitrary-output retained-base simulation forwards at most the source seal budget. -/
+theorem ctxRetainedBaseReduction_seal_query_bound_of_main
+    {alpha : Type} {main : OracleComp CtxAdversarySpec alpha} {qE : ℕ}
+    (hseal : main.IsQueryBoundP IsCtxSealQuery qE) :
+    ((simulateQ ctxRetainedBaseReductionImpl main).run
+      emptyCtxIndependentTagState).IsQueryBoundP
+        IsModifiedNonceAeadSealQuery qE := by
+  exact hseal.simulateQ_run_StateT_of_step
+    ctxRetainedBaseReductionImpl_seal_query_bound_step
+    emptyCtxIndependentTagState
+
+/-- An arbitrary-output retained-base simulation uses at most 64 uniform-byte calls per source query. -/
+theorem ctxRetainedBaseReduction_uniform_query_bound_of_main
+    {alpha : Type} {main : OracleComp CtxAdversarySpec alpha}
+    {qH qE : ℕ}
+    (hpublic : main.IsQueryBoundP IsCtxPublicQuery qH)
+    (hseal : main.IsQueryBoundP IsCtxSealQuery qE) :
+    ((simulateQ ctxRetainedBaseReductionImpl main).run
+      emptyCtxIndependentTagState).IsQueryBoundP
+        IsModifiedNonceAeadUniformQuery (64 * (qH + qE)) := by
+  simpa [Nat.mul_comm] using
+    OracleComp.IsQueryBoundP.simulateQ_run_StateT_of_step_le_total
+      (isTotalQueryBound_of_ctx_public_and_seal_bounds hpublic hseal)
+      ctxRetainedBaseReductionImpl_uniform_query_bound_step
+      emptyCtxIndependentTagState
+
 theorem ctxRetainedBaseReduction_uniform_query_bound
     {qH qE : ℕ} (adversary : CtxQueryBoundedAdversary qH qE) :
     (ctxRetainedBaseReduction adversary.toCtxAdversary).main.IsQueryBoundP
@@ -892,10 +918,9 @@ theorem ctxRetainedBaseReduction_uniform_query_bound
   unfold ctxRetainedBaseReduction
   simp only [bind_pure_comp]
   rw [OracleComp.isQueryBoundP_map_iff]
-  exact OracleComp.IsQueryBoundP.simulateQ_run_StateT_of_step_le_total
-    adversary.totalQueryBound
-    ctxRetainedBaseReductionImpl_uniform_query_bound_step
-    emptyCtxIndependentTagState
+  simpa [Nat.mul_comm] using
+    ctxRetainedBaseReduction_uniform_query_bound_of_main
+      adversary.publicQueryBound adversary.sealQueryBound
 
 theorem isTotalQueryBound_of_modified_uniform_and_seal_bounds
     {alpha : Type} {oa : OracleComp ModifiedNonceAeadAdversarySpec alpha}
@@ -920,19 +945,29 @@ theorem isTotalQueryBound_of_modified_uniform_and_seal_bounds
         exact (ih response (huniform response) (hseal.2 response)).mono
           (by omega)
 
+/-- An arbitrary-output retained-base simulation has the exact composed primitive-interface cap. -/
+theorem ctxRetainedBaseReduction_total_query_bound_of_main
+    {alpha : Type} {main : OracleComp CtxAdversarySpec alpha}
+    {qH qE : ℕ}
+    (hpublic : main.IsQueryBoundP IsCtxPublicQuery qH)
+    (hseal : main.IsQueryBoundP IsCtxSealQuery qE) :
+    ((simulateQ ctxRetainedBaseReductionImpl main).run
+      emptyCtxIndependentTagState).IsTotalQueryBound
+        (64 * qH + 65 * qE) := by
+  exact (isTotalQueryBound_of_modified_uniform_and_seal_bounds
+    (ctxRetainedBaseReduction_uniform_query_bound_of_main hpublic hseal)
+    (ctxRetainedBaseReduction_seal_query_bound_of_main hseal)).mono (by omega)
+
 theorem ctxRetainedBaseReduction_total_query_bound
     {qH qE : ℕ} (adversary : CtxQueryBoundedAdversary qH qE) :
     (ctxRetainedBaseReduction adversary.toCtxAdversary).main.IsTotalQueryBound
       (64 * qH + 65 * qE) := by
-  have huniform := ctxRetainedBaseReduction_uniform_query_bound adversary
-  have hseal :
-      (ctxRetainedBaseReduction adversary.toCtxAdversary).main.IsQueryBoundP
-        IsModifiedNonceAeadSealQuery qE :=
-    ctxRetainedBaseReduction_seal_query_bound
-      adversary.toCtxAdversary qE adversary.sealQueryBound
-  have htotal := isTotalQueryBound_of_modified_uniform_and_seal_bounds
-    huniform hseal
-  exact htotal.mono (by omega)
+  unfold ctxRetainedBaseReduction
+  simp only [bind_pure_comp]
+  unfold IsTotalQueryBound
+  rw [OracleComp.isQueryBound_map_iff]
+  exact ctxRetainedBaseReduction_total_query_bound_of_main
+    adversary.publicQueryBound adversary.sealQueryBound
 
 theorem ctxPrefixToModifiedNonceAeadINDDollarReduction_uniform_query_bound
     {qH qE : ℕ} (adversary : CtxQueryBoundedAdversary qH qE) :

@@ -1,4 +1,4 @@
-import BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation
+import BeaconcryptCore.Computational.CtxComputationalSecurity
 
 /-!
 # Computational privacy of modified CTX
@@ -21,7 +21,7 @@ namespace BeaconcryptCore.Computational.CtxComputationalPrivacy
 
 open CtxRomAuth CtxPrefixIsolation CtxSplitCache CtxIndependentTags
   CtxHonestTagSampling CtxNonceAeadIntCtxt CtxNonceAeadIndDollar
-  CtxNonceAeadIndDollarValidation
+  CtxNonceAeadIndDollarValidation CtxComputationalSecurity
 
 /-- A Boolean CTX privacy adversary with separate public-ROM and sealing-query bounds. -/
 structure CtxPrivacyAdversary (qH qE : ℕ) where
@@ -612,7 +612,7 @@ theorem ctxPrivacyRandomNestedRun_eq_ideal_of_main
       funext result
       rfl
 
-/-- The view reduction's random IND$ experiment is definitionally the explicit ideal CTX privacy game after the exact nested-state projection. -/
+/-- The view reduction's random IND$ experiment is exactly the explicit ideal CTX privacy game after the exact nested-state projection. -/
 theorem modifiedNonceAeadINDDollarRandomExp_viewReduction_eq_idealGame
     {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
     modifiedNonceAeadINDDollarRandomExp
@@ -642,5 +642,714 @@ theorem modifiedNonceAeadINDDollarRealExp_viewReduction_eq_directSampleGame
   rw [ctxRetainedBaseNestedRun_eq_direct_of_main
     c key adversary.main]
   simp only [Functor.map_map]
+
+/-- Fixed-key public-prefix probability in the Boolean direct-sampling privacy execution. -/
+noncomputable def ctxPrivacyDirectSamplePublicPrefixProbabilityInner
+    (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) : ℝ≥0∞ :=
+  Pr[fun result : Bool × CtxIndependentTagState =>
+      ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
+    (simulateQ (ctxDirectSampleIndependentTagImpl c key)
+      adversary.main).run emptyCtxIndependentTagState]
+
+/-- The independent Boolean privacy execution preserves the canonical prefix-event probability. -/
+theorem ctxPrivacyIndependent_badProbability_eq_secretPrefix
+    (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    Pr[fun result => result.2.2 = true |
+      ctxPrivacyIndependentTagFlaggedExpInner c key adversary] =
+      ctxPrivacySecretPrefixProbabilityInner c key adversary := by
+  calc
+    Pr[fun result => result.2.2 = true |
+        ctxPrivacyIndependentTagFlaggedExpInner c key adversary] =
+        Pr[fun result => result.2.2 = true |
+          ctxPrivacySplitRoutedFlaggedExpInner c key adversary] :=
+      (OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+        (ctxSplitRoutedWithPrefixFlagImpl c key)
+        (ctxIndependentWithPrefixFlagImpl c key)
+        (ctxSplitRouted_independent_agree_good c key)
+        (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
+        (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
+        adversary.main emptyCtxIndependentTagState).symm
+    _ = ctxPrivacySecretPrefixProbabilityInner c key adversary :=
+      ctxPrivacySplitRouted_badProbability_eq_secretPrefix
+        c key adversary
+
+/-- In the independent Boolean execution, the sticky flag is exactly the public trace event. -/
+theorem ctxPrivacyIndependent_badProbability_eq_publicPrefix
+    (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    Pr[fun result => result.2.2 = true |
+      ctxPrivacyIndependentTagFlaggedExpInner c key adversary] =
+      Pr[fun result : Bool × CtxIndependentTagState =>
+          ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
+        (simulateQ (ctxIndependentTagImpl c key)
+          adversary.main).run emptyCtxIndependentTagState] := by
+  unfold ctxPrivacyIndependentTagFlaggedExpInner
+  rw [← ctxIndependentWithPrefixFlagImpl_proj_run_of_main
+    c key adversary.main, probEvent_map]
+  apply OracleComp.probEvent_congr' _ rfl
+  intro result hresult
+  exact ctxIndependentTagFlagged_run_prefix_flag_of_main
+    c key adversary.main result hresult
+
+/-- The canonical fixed-key privacy prefix event is exactly the direct public-trace event. -/
+theorem ctxPrivacySecretPrefixProbabilityInner_eq_directSamplePublicPrefix
+    (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    ctxPrivacySecretPrefixProbabilityInner c key adversary =
+      ctxPrivacyDirectSamplePublicPrefixProbabilityInner
+        c key adversary := by
+  calc
+    ctxPrivacySecretPrefixProbabilityInner c key adversary =
+        Pr[fun result => result.2.2 = true |
+          ctxPrivacyIndependentTagFlaggedExpInner c key adversary] :=
+      (ctxPrivacyIndependent_badProbability_eq_secretPrefix
+        c key adversary).symm
+    _ = Pr[fun result : Bool × CtxIndependentTagState =>
+          ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
+        (simulateQ (ctxIndependentTagImpl c key)
+          adversary.main).run emptyCtxIndependentTagState] :=
+      ctxPrivacyIndependent_badProbability_eq_publicPrefix
+        c key adversary
+    _ = ctxPrivacyDirectSamplePublicPrefixProbabilityInner
+          c key adversary := by
+      unfold ctxPrivacyDirectSamplePublicPrefixProbabilityInner
+      exact ctxIndependentPublicPrefixProbability_eq_directSample_of_main
+        c key adversary.main
+
+/-- Fixed-key direct privacy experiment returning whether the bounded probe vector hits the key. -/
+noncomputable def ctxPrivacyDirectSamplePrefixProbeExpInner
+    (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) : ProbComp Bool := by
+  classical
+  exact do
+    let result ←
+      (simulateQ (ctxDirectSampleIndependentTagImpl c key)
+        adversary.main).run emptyCtxIndependentTagState
+    pure (decide (CtxKeyProbeHit key
+      (ctxPrefixProbeVector qH result.2.publicInputs)))
+
+/-- Under the public-query bound, direct privacy probe success is exactly the direct public-prefix event. -/
+theorem ctxPrivacyDirectSamplePrefixProbeExpInner_probability
+    (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    Pr[= true |
+      ctxPrivacyDirectSamplePrefixProbeExpInner c key adversary] =
+      ctxPrivacyDirectSamplePublicPrefixProbabilityInner
+        c key adversary := by
+  classical
+  unfold ctxPrivacyDirectSamplePrefixProbeExpInner
+    ctxPrivacyDirectSamplePublicPrefixProbabilityInner
+  rw [← probEvent_eq_eq_probOutput, bind_pure_comp, probEvent_map]
+  apply OracleComp.probEvent_congr' _ rfl
+  intro result hresult
+  simpa [Function.comp_def] using
+    (ctxPrefixProbeVector_hit_iff_of_length_le
+      result.2.publicInputs key
+      (ctxDirectSampleIndependentTag_run_publicInputs_length_le_qH_of_main
+        c key adversary.main adversary.publicQueryBound result hresult))
+
+/-- Uniform-key direct Boolean privacy prefix-probe experiment. -/
+noncomputable def ctxPrivacyDirectSamplePrefixProbeExp
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) : ProbComp Bool := do
+  let key ← $ᵗ CtxKey
+  ctxPrivacyDirectSamplePrefixProbeExpInner c key adversary
+
+/-- The canonical privacy prefix probability is exactly the direct bounded-probe experiment. -/
+theorem ctxPrivacySecretPrefixProbability_eq_directSampleProbe
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    ctxPrivacySecretPrefixProbability c adversary =
+      Pr[= true |
+        ctxPrivacyDirectSamplePrefixProbeExp c adversary] := by
+  classical
+  unfold ctxPrivacySecretPrefixProbability
+    ctxPrivacyRealFlaggedGame
+    ctxPrivacyDirectSamplePrefixProbeExp
+  rw [probEvent_bind_eq_tsum, probOutput_bind_eq_tsum]
+  apply tsum_congr
+  intro key
+  congr 1
+  rw [ctxPrivacyDirectSamplePrefixProbeExpInner_probability]
+  exact ctxPrivacySecretPrefixProbabilityInner_eq_directSamplePublicPrefix
+    c key adversary
+
+/-- Privacy-native key-probe reduction retaining only bounded public key candidates. -/
+noncomputable def ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
+    ModifiedNonceAeadINDDollarProbeAdversary qH where
+  main := (fun result =>
+      ctxPrefixProbeVector qH result.2.publicInputs) <$>
+    (simulateQ ctxRetainedBaseReductionImpl adversary.main).run
+      emptyCtxIndependentTagState
+
+/-- The privacy key-probe reduction forwards at most the source's `qE` primitive seals. -/
+theorem ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction_seal_query_bound
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
+    (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction adversary).MakesAtMostSealQueries
+      qE := by
+  unfold ModifiedNonceAeadINDDollarProbeAdversary.MakesAtMostSealQueries
+    ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+  rw [OracleComp.isQueryBoundP_map_iff]
+  exact adversary.sealQueryBound.simulateQ_run_StateT_of_step
+    ctxRetainedBaseReductionImpl_seal_query_bound_step
+    emptyCtxIndependentTagState
+
+/-- At fixed key, the real primitive probe reduction is exactly the direct Boolean privacy probe. -/
+theorem ctxPrivacyPrefixReduction_realProbeExpInner_eq_directSample
+    (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    modifiedNonceAeadINDDollarRealProbeExpInner c key
+        (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction adversary) =
+      ctxPrivacyDirectSamplePrefixProbeExpInner
+        c key adversary := by
+  classical
+  unfold modifiedNonceAeadINDDollarRealProbeExpInner
+    ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+    ctxPrivacyDirectSamplePrefixProbeExpInner
+  simp only [simulateQ_map, StateT.run_map, bind_pure_comp,
+    Functor.map_map]
+  rw [ctxRetainedBaseNestedRun_eq_direct_of_main
+    c key adversary.main]
+  rw [Functor.map_map]
+
+/-- The complete real privacy key-probe reduction equals the direct probe experiment. -/
+theorem modifiedNonceAeadINDDollarRealProbeExp_privacyReduction_eq_directSample
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    modifiedNonceAeadINDDollarRealProbeExp c
+        (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction adversary) =
+      ctxPrivacyDirectSamplePrefixProbeExp c adversary := by
+  classical
+  unfold modifiedNonceAeadINDDollarRealProbeExp
+    ctxPrivacyDirectSamplePrefixProbeExp
+  apply bind_congr
+  intro key
+  change modifiedNonceAeadINDDollarRealProbeExpInner c key
+      (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction adversary) = _
+  exact ctxPrivacyPrefixReduction_realProbeExpInner_eq_directSample
+    c key adversary
+
+/-- The canonical privacy prefix event is exactly real privacy key-probe success. -/
+theorem ctxPrivacySecretPrefixProbability_eq_realProbeReduction
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    ctxPrivacySecretPrefixProbability c adversary =
+      Pr[= true |
+        modifiedNonceAeadINDDollarRealProbeExp c
+          (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+            adversary)] := by
+  rw [ctxPrivacySecretPrefixProbability_eq_directSampleProbe]
+  rw [modifiedNonceAeadINDDollarRealProbeExp_privacyReduction_eq_directSample]
+
+/-- Privacy prefix bound with one specialized probe IND$ charge and exact `qH / 2^256` guessing loss. -/
+theorem ctxPrivacySecretPrefixProbability_le_probeINDDollar
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    ctxPrivacySecretPrefixProbability c adversary ≤
+      ENNReal.ofReal
+        (modifiedNonceAeadINDDollarProbeAdvantage c
+          (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+            adversary)) +
+      (qH : ℝ≥0∞) * (((2 ^ 256 : ℕ) : ℝ≥0∞))⁻¹ := by
+  let reduction :=
+    ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction adversary
+  calc
+    ctxPrivacySecretPrefixProbability c adversary =
+        Pr[= true |
+          modifiedNonceAeadINDDollarRealProbeExp c reduction] := by
+      exact ctxPrivacySecretPrefixProbability_eq_realProbeReduction
+        c adversary
+    _ ≤ Pr[= true |
+          modifiedNonceAeadINDDollarRandomProbeExp reduction] +
+        ENNReal.ofReal
+          (modifiedNonceAeadINDDollarProbeAdvantage c reduction) := by
+      exact ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage
+        (modifiedNonceAeadINDDollarRealProbeExp c reduction)
+        (modifiedNonceAeadINDDollarRandomProbeExp reduction)
+    _ ≤ (qH : ℝ≥0∞) * (Fintype.card CtxKey : ℝ≥0∞)⁻¹ +
+        ENNReal.ofReal
+          (modifiedNonceAeadINDDollarProbeAdvantage c reduction) := by
+      gcongr
+      exact modifiedNonceAeadINDDollarRandomProbe_le reduction
+    _ = ENNReal.ofReal
+          (modifiedNonceAeadINDDollarProbeAdvantage c reduction) +
+        (qH : ℝ≥0∞) * (((2 ^ 256 : ℕ) : ℝ≥0∞))⁻¹ := by
+      rw [ctxKey_card, add_comm]
+
+/-- Privacy-native conventional IND$ reduction validating bounded key candidates with one fresh seal. -/
+noncomputable def ctxPrivacyPrefixToBooleanINDDollarReduction
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    ModifiedNonceAeadINDDollarAdversary := by
+  classical
+  exact
+    { main := do
+        let result ←
+          (simulateQ ctxRetainedBaseReductionImpl adversary.main).run
+            emptyCtxIndependentTagState
+        let probes := ctxPrefixProbeVector qH result.2.publicInputs
+        let nonce := chooseFreshCtxNonce result.2.usedNonces
+        let response ← queryModifiedNonceAeadSeal (ctxValidationInput nonce)
+        pure (ctxValidationAccept c nonce probes response) }
+
+/-- The privacy validation reduction makes at most `qE + 1` primitive sealing queries. -/
+theorem ctxPrivacyPrefixToBooleanINDDollarReduction_seal_query_bound
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary).main.IsQueryBoundP
+      IsModifiedNonceAeadSealQuery (qE + 1) := by
+  unfold ctxPrivacyPrefixToBooleanINDDollarReduction
+  refine OracleComp.isQueryBoundP_bind (n := qE) (m := 1) ?_ ?_
+  · exact adversary.sealQueryBound.simulateQ_run_StateT_of_step
+      ctxRetainedBaseReductionImpl_seal_query_bound_step
+      emptyCtxIndependentTagState
+  · intro result _
+    simp only
+    unfold queryModifiedNonceAeadSeal
+    refine OracleComp.isQueryBoundP_bind (n := 1) (m := 0) ?_ ?_
+    · exact (OracleComp.isQueryBoundP_query_iff
+        (spec := ModifiedNonceAeadAdversarySpec)
+        (p := IsModifiedNonceAeadSealQuery)
+        (.inr (ctxValidationInput
+          (chooseFreshCtxNonce result.2.usedNonces))) 1).2
+          (fun _ => by omega)
+    · intro response _
+      cases response <;> simp
+
+/-- Random-world validation success for the privacy reduction costs at most `qH / 2^128`. -/
+theorem ctxPrivacyPrefixBooleanReduction_random_le
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    Pr[= true |
+      modifiedNonceAeadINDDollarRandomExp
+        (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary)] ≤
+      (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
+  unfold modifiedNonceAeadINDDollarRandomExp
+    ctxPrivacyPrefixToBooleanINDDollarReduction
+  simp only [simulateQ_bind, StateT.run_bind, bind_assoc]
+  rw [← probEvent_eq_eq_probOutput]
+  simp_rw [simulateQ_queryModifiedNonceAeadSeal_random]
+  simp_rw [simulateQ_pure, StateT.run_pure]
+  simp only [pure_bind]
+  refine probEvent_bind_le_of_forall_le
+    (mx := (simulateQ modifiedNonceAeadINDDollarRandomImpl
+      ((simulateQ ctxRetainedBaseReductionImpl adversary.main).run
+        emptyCtxIndependentTagState)).run
+          emptyModifiedNonceAeadHandlerState) ?_
+  rintro ⟨⟨decision, state⟩, primitiveState⟩ _
+  simpa [probEvent_eq_eq_probOutput] using
+    (randomValidationContinuation_le c
+      (chooseFreshCtxNonce state.usedNonces)
+      (ctxPrefixProbeVector qH state.publicInputs) primitiveState)
+
+/-- Fixed-key direct privacy probe success is contained in real validation success. -/
+theorem ctxPrivacyDirectProbe_le_booleanRealInner
+    (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE)
+    (hqE : qE < 2 ^ 96) :
+    Pr[= true |
+      ctxPrivacyDirectSamplePrefixProbeExpInner c key adversary] ≤
+      Pr[= true |
+        modifiedNonceAeadINDDollarRealExpInner c key
+          (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary)] := by
+  unfold ctxPrivacyDirectSamplePrefixProbeExpInner
+    modifiedNonceAeadINDDollarRealExpInner
+    ctxPrivacyPrefixToBooleanINDDollarReduction
+  simp only [simulateQ_bind, StateT.run_bind, bind_assoc]
+  rw [ctxRetainedBaseNestedRun_eq_direct_of_main
+    c key adversary.main]
+  simp_rw [simulateQ_queryModifiedNonceAeadSeal,
+    simulateQ_pure, StateT.run_pure]
+  simp only [pure_bind]
+  rw [← bind_pure_comp]
+  simp only [bind_assoc, pure_bind]
+  refine probOutput_bind_mono ?_
+  intro result hresult
+  by_cases hhit : CtxKeyProbeHit key
+      (ctxPrefixProbeVector qH result.2.publicInputs)
+  · have hfresh := chooseFreshCtxNonce_fresh_of_direct_support_of_main
+      c key adversary.main adversary.sealQueryBound hqE result hresult
+    rw [modifiedNonceAeadSealOracle_validation_run_of_fresh
+      c key (chooseFreshCtxNonce result.2.usedNonces)
+      (ctxIndependentTagStateToModifiedNonceAead result.2) hfresh]
+    simp only [pure_bind]
+    have haccept := keyProbeHit_implies_realValidationCiphertextHit
+      c key (chooseFreshCtxNonce result.2.usedNonces)
+      (ctxPrefixProbeVector qH result.2.publicInputs) hhit
+    simp [hhit, ctxValidationAccept, haccept]
+  · simp [hhit]
+
+/-- The canonical privacy prefix event is contained in real conventional validation success. -/
+theorem ctxPrivacySecretPrefixProbability_le_booleanReal
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE)
+    (hqE : qE < 2 ^ 96) :
+    ctxPrivacySecretPrefixProbability c adversary ≤
+      Pr[= true |
+        modifiedNonceAeadINDDollarRealExp c
+          (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary)] := by
+  rw [ctxPrivacySecretPrefixProbability_eq_directSampleProbe]
+  unfold ctxPrivacyDirectSamplePrefixProbeExp
+    modifiedNonceAeadINDDollarRealExp
+  refine probOutput_bind_mono ?_
+  intro key _
+  change Pr[= true |
+      ctxPrivacyDirectSamplePrefixProbeExpInner c key adversary] ≤
+    Pr[= true |
+      modifiedNonceAeadINDDollarRealExpInner c key
+        (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary)]
+  exact ctxPrivacyDirectProbe_le_booleanRealInner
+    c key adversary hqE
+
+/-- Conventional Boolean IND$ bound for the privacy prefix event with exact `qH / 2^128` validation loss. -/
+theorem ctxPrivacySecretPrefixProbability_le_booleanINDDollar
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE)
+    (hqE : qE < 2 ^ 96) :
+    ctxPrivacySecretPrefixProbability c adversary ≤
+      ENNReal.ofReal
+        (modifiedNonceAeadINDDollarAdvantage c
+          (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary)) +
+      (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
+  let reduction :=
+    ctxPrivacyPrefixToBooleanINDDollarReduction c adversary
+  calc
+    ctxPrivacySecretPrefixProbability c adversary ≤
+        Pr[= true |
+          modifiedNonceAeadINDDollarRealExp c reduction] := by
+      exact ctxPrivacySecretPrefixProbability_le_booleanReal
+        c adversary hqE
+    _ ≤ Pr[= true |
+          modifiedNonceAeadINDDollarRandomExp reduction] +
+        ENNReal.ofReal
+          (modifiedNonceAeadINDDollarAdvantage c reduction) := by
+      exact ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage
+        (modifiedNonceAeadINDDollarRealExp c reduction)
+        (modifiedNonceAeadINDDollarRandomExp reduction)
+    _ ≤ (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +
+        ENNReal.ofReal
+          (modifiedNonceAeadINDDollarAdvantage c reduction) := by
+      gcongr
+      exact ctxPrivacyPrefixBooleanReduction_random_le c adversary
+    _ = ENNReal.ofReal
+          (modifiedNonceAeadINDDollarAdvantage c reduction) +
+        (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
+      rw [add_comm]
+
+/-- Structural modified-CTX privacy bound: one view IND$ advantage plus one public-prefix event. -/
+theorem ofReal_ctxPrivacyAdvantage_le_viewAdvantage_add_secretPrefix
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    ENNReal.ofReal (ctxPrivacyAdvantage c adversary) ≤
+      ENNReal.ofReal
+          (modifiedNonceAeadINDDollarAdvantage c
+            (ctxPrivacyViewReduction adversary)) +
+        ctxPrivacySecretPrefixProbability c adversary := by
+  have hdirect :
+      (ctxPrivacyRealGame c adversary).boolDistAdvantage
+          (ctxPrivacyDirectSampleGame c adversary) ≤
+        (ctxPrivacySecretPrefixProbability c adversary).toReal := by
+    refine (show
+      |(Pr[= true | ctxPrivacyRealGame c adversary]).toReal -
+        (Pr[= true |
+          ctxPrivacyDirectSampleGame c adversary]).toReal| ≤
+          tvDist (ctxPrivacyRealGame c adversary)
+            (ctxPrivacyDirectSampleGame c adversary) from ?_).trans ?_
+    · exact abs_probOutput_toReal_sub_le_tvDist _ _
+    · exact tvDist_ctxPrivacyRealGame_directSample_le_secretPrefix
+        c adversary
+  have hview :
+      (ctxPrivacyDirectSampleGame c adversary).boolDistAdvantage
+          (ctxPrivacyIdealGame adversary) =
+        modifiedNonceAeadINDDollarAdvantage c
+          (ctxPrivacyViewReduction adversary) := by
+    unfold modifiedNonceAeadINDDollarAdvantage
+    rw [modifiedNonceAeadINDDollarRealExp_viewReduction_eq_directSampleGame,
+      modifiedNonceAeadINDDollarRandomExp_viewReduction_eq_idealGame]
+  have hreal :
+      ctxPrivacyAdvantage c adversary ≤
+        modifiedNonceAeadINDDollarAdvantage c
+            (ctxPrivacyViewReduction adversary) +
+          (ctxPrivacySecretPrefixProbability c adversary).toReal := by
+    unfold ctxPrivacyAdvantage
+    calc
+      _ ≤ (ctxPrivacyRealGame c adversary).boolDistAdvantage
+            (ctxPrivacyDirectSampleGame c adversary) +
+          (ctxPrivacyDirectSampleGame c adversary).boolDistAdvantage
+            (ctxPrivacyIdealGame adversary) :=
+        ProbComp.boolDistAdvantage_triangle _ _ _
+      _ ≤ (ctxPrivacySecretPrefixProbability c adversary).toReal +
+          (ctxPrivacyDirectSampleGame c adversary).boolDistAdvantage
+            (ctxPrivacyIdealGame adversary) :=
+        add_le_add hdirect (le_refl _)
+      _ = _ := by rw [hview, add_comm]
+  have hprefix_ne_top :
+      ctxPrivacySecretPrefixProbability c adversary ≠ ∞ := by
+    unfold ctxPrivacySecretPrefixProbability
+    exact probEvent_ne_top
+  calc
+    ENNReal.ofReal (ctxPrivacyAdvantage c adversary) ≤
+        ENNReal.ofReal
+          (modifiedNonceAeadINDDollarAdvantage c
+              (ctxPrivacyViewReduction adversary) +
+            (ctxPrivacySecretPrefixProbability c adversary).toReal) :=
+      ENNReal.ofReal_le_ofReal hreal
+    _ ≤ ENNReal.ofReal
+          (modifiedNonceAeadINDDollarAdvantage c
+            (ctxPrivacyViewReduction adversary)) +
+        ENNReal.ofReal
+          (ctxPrivacySecretPrefixProbability c adversary).toReal :=
+      ENNReal.ofReal_add_le
+    _ = _ := by
+      rw [ENNReal.ofReal_toReal hprefix_ne_top]
+
+/-- Specialized privacy capstone with distinct view and hidden-key-probe IND$ reductions. -/
+theorem ctxPrivacyAdvantage_le_viewINDDollar_add_probeINDDollar
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    ENNReal.ofReal (ctxPrivacyAdvantage c adversary) ≤
+      ENNReal.ofReal
+          (modifiedNonceAeadINDDollarAdvantage c
+            (ctxPrivacyViewReduction adversary)) +
+        ENNReal.ofReal
+          (modifiedNonceAeadINDDollarProbeAdvantage c
+            (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+              adversary)) +
+        (qH : ℝ≥0∞) * (((2 ^ 256 : ℕ) : ℝ≥0∞))⁻¹ := by
+  calc
+    ENNReal.ofReal (ctxPrivacyAdvantage c adversary) ≤
+        ENNReal.ofReal
+            (modifiedNonceAeadINDDollarAdvantage c
+              (ctxPrivacyViewReduction adversary)) +
+          ctxPrivacySecretPrefixProbability c adversary :=
+      ofReal_ctxPrivacyAdvantage_le_viewAdvantage_add_secretPrefix
+        c adversary
+    _ ≤ ENNReal.ofReal
+            (modifiedNonceAeadINDDollarAdvantage c
+              (ctxPrivacyViewReduction adversary)) +
+          (ENNReal.ofReal
+              (modifiedNonceAeadINDDollarProbeAdvantage c
+                (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+                  adversary)) +
+            (qH : ℝ≥0∞) * (((2 ^ 256 : ℕ) : ℝ≥0∞))⁻¹) :=
+      add_le_add_right
+        (ctxPrivacySecretPrefixProbability_le_probeINDDollar
+          c adversary) _
+    _ = _ := by ac_rfl
+
+/-- Conventional privacy capstone with distinct view and fresh-nonce validation IND$ reductions. -/
+theorem ctxPrivacyAdvantage_le_viewINDDollar_add_booleanINDDollar
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE)
+    (hqE : qE < 2 ^ 96) :
+    ENNReal.ofReal (ctxPrivacyAdvantage c adversary) ≤
+      ENNReal.ofReal
+          (modifiedNonceAeadINDDollarAdvantage c
+            (ctxPrivacyViewReduction adversary)) +
+        ENNReal.ofReal
+          (modifiedNonceAeadINDDollarAdvantage c
+            (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary)) +
+        (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
+  calc
+    ENNReal.ofReal (ctxPrivacyAdvantage c adversary) ≤
+        ENNReal.ofReal
+            (modifiedNonceAeadINDDollarAdvantage c
+              (ctxPrivacyViewReduction adversary)) +
+          ctxPrivacySecretPrefixProbability c adversary :=
+      ofReal_ctxPrivacyAdvantage_le_viewAdvantage_add_secretPrefix
+        c adversary
+    _ ≤ ENNReal.ofReal
+            (modifiedNonceAeadINDDollarAdvantage c
+              (ctxPrivacyViewReduction adversary)) +
+          (ENNReal.ofReal
+              (modifiedNonceAeadINDDollarAdvantage c
+                (ctxPrivacyPrefixToBooleanINDDollarReduction
+                  c adversary)) +
+            (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹) :=
+      add_le_add_right
+        (ctxPrivacySecretPrefixProbability_le_booleanINDDollar
+          c adversary hqE) _
+    _ = _ := by ac_rfl
+
+/-- Separate privacy query budgets give the exact combined source-query cap. -/
+theorem CtxPrivacyAdversary.totalQueryBound
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
+    adversary.main.IsTotalQueryBound (qH + qE) :=
+  isTotalQueryBound_of_ctx_public_and_seal_bounds
+    adversary.publicQueryBound adversary.sealQueryBound
+
+/-- The privacy view reduction forwards at most the source's `qE` primitive seals. -/
+theorem ctxPrivacyViewReduction_seal_query_bound
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
+    (ctxPrivacyViewReduction adversary).main.IsQueryBoundP
+      IsModifiedNonceAeadSealQuery qE := by
+  unfold ctxPrivacyViewReduction
+  rw [OracleComp.isQueryBoundP_map_iff]
+  exact ctxRetainedBaseReduction_seal_query_bound_of_main
+    adversary.sealQueryBound
+
+/-- The privacy view reduction uses at most 64 uniform-byte calls per source query. -/
+theorem ctxPrivacyViewReduction_uniform_query_bound
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
+    (ctxPrivacyViewReduction adversary).main.IsQueryBoundP
+      IsModifiedNonceAeadUniformQuery (64 * (qH + qE)) := by
+  unfold ctxPrivacyViewReduction
+  rw [OracleComp.isQueryBoundP_map_iff]
+  exact ctxRetainedBaseReduction_uniform_query_bound_of_main
+    adversary.publicQueryBound adversary.sealQueryBound
+
+/-- The privacy view reduction makes at most `64qH + 65qE` total primitive-interface calls. -/
+theorem ctxPrivacyViewReduction_total_query_bound
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
+    (ctxPrivacyViewReduction adversary).main.IsTotalQueryBound
+      (64 * qH + 65 * qE) := by
+  unfold ctxPrivacyViewReduction
+  unfold IsTotalQueryBound
+  rw [OracleComp.isQueryBound_map_iff]
+  exact ctxRetainedBaseReduction_total_query_bound_of_main
+    adversary.publicQueryBound adversary.sealQueryBound
+
+/-- The privacy key-probe reduction uses at most 64 uniform-byte calls per source query. -/
+theorem ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction_uniform_query_bound
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
+    (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction adversary).main.IsQueryBoundP
+      IsModifiedNonceAeadUniformQuery (64 * (qH + qE)) := by
+  unfold ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+  rw [OracleComp.isQueryBoundP_map_iff]
+  exact ctxRetainedBaseReduction_uniform_query_bound_of_main
+    adversary.publicQueryBound adversary.sealQueryBound
+
+/-- The privacy key-probe reduction makes at most `64qH + 65qE` total primitive-interface calls. -/
+theorem ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction_total_query_bound
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) :
+    (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction adversary).main.IsTotalQueryBound
+      (64 * qH + 65 * qE) := by
+  unfold ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+  unfold IsTotalQueryBound
+  rw [OracleComp.isQueryBound_map_iff]
+  exact ctxRetainedBaseReduction_total_query_bound_of_main
+    adversary.publicQueryBound adversary.sealQueryBound
+
+/-- The privacy validation reduction adds no uniform-byte calls beyond the retained-base simulation. -/
+theorem ctxPrivacyPrefixToBooleanINDDollarReduction_uniform_query_bound
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary).main.IsQueryBoundP
+      IsModifiedNonceAeadUniformQuery (64 * (qH + qE)) := by
+  unfold ctxPrivacyPrefixToBooleanINDDollarReduction
+  refine OracleComp.isQueryBoundP_bind
+    (n := 64 * (qH + qE)) (m := 0) ?_ ?_
+  · exact ctxRetainedBaseReduction_uniform_query_bound_of_main
+      adversary.publicQueryBound adversary.sealQueryBound
+  · intro result _
+    simp only
+    exact OracleComp.isQueryBoundP_bind (n := 0) (m := 0)
+      (queryModifiedNonceAeadSeal_no_uniform_queries
+        (ctxValidationInput (chooseFreshCtxNonce result.2.usedNonces)))
+      (fun _ _ => by trivial)
+
+/-- The extra validation seal gives the privacy validation reduction total `64qH + 65qE + 1`. -/
+theorem ctxPrivacyPrefixToBooleanINDDollarReduction_total_query_bound
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary).main.IsTotalQueryBound
+      (64 * qH + 65 * qE + 1) := by
+  have htotal := isTotalQueryBound_of_modified_uniform_and_seal_bounds
+    (ctxPrivacyPrefixToBooleanINDDollarReduction_uniform_query_bound
+      c adversary)
+    (ctxPrivacyPrefixToBooleanINDDollarReduction_seal_query_bound
+      c adversary)
+  exact htotal.mono (by omega)
+
+/-- Complete source and reduction-side privacy query accounting.
+The fixed reduction-side bounds count public-ROM and honest 64-byte outer-commitment randomness.
+They exclude challenger-private variable-length body and 16-byte tag samples; bounding the complete ideal experiment also requires a plaintext-byte budget.
+-/
+structure CtxPrivacyQueryAccounting (c : Pqxdh.Crypto)
+    {qH qE : ℕ} (adversary : CtxPrivacyAdversary qH qE) : Prop where
+  sourceTotal : adversary.main.IsTotalQueryBound (qH + qE)
+  viewSeals :
+    (ctxPrivacyViewReduction adversary).main.IsQueryBoundP
+      IsModifiedNonceAeadSealQuery qE
+  viewUniform :
+    (ctxPrivacyViewReduction adversary).main.IsQueryBoundP
+      IsModifiedNonceAeadUniformQuery (64 * (qH + qE))
+  viewTotal :
+    (ctxPrivacyViewReduction adversary).main.IsTotalQueryBound
+      (64 * qH + 65 * qE)
+  probeSeals :
+    (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+      adversary).MakesAtMostSealQueries qE
+  probeUniform :
+    (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+      adversary).main.IsQueryBoundP
+        IsModifiedNonceAeadUniformQuery (64 * (qH + qE))
+  probeTotal :
+    (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
+      adversary).main.IsTotalQueryBound (64 * qH + 65 * qE)
+  validationSeals :
+    (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary).main.IsQueryBoundP
+      IsModifiedNonceAeadSealQuery (qE + 1)
+  validationUniform :
+    (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary).main.IsQueryBoundP
+      IsModifiedNonceAeadUniformQuery (64 * (qH + qE))
+  validationTotal :
+    (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary).main.IsTotalQueryBound
+      (64 * qH + 65 * qE + 1)
+
+/-- Every bounded Boolean privacy adversary satisfies the complete reduction accounting record. -/
+theorem ctxPrivacy_query_accounting
+    (c : Pqxdh.Crypto) {qH qE : ℕ}
+    (adversary : CtxPrivacyAdversary qH qE) :
+    CtxPrivacyQueryAccounting c adversary where
+  sourceTotal := adversary.totalQueryBound
+  viewSeals := ctxPrivacyViewReduction_seal_query_bound adversary
+  viewUniform := ctxPrivacyViewReduction_uniform_query_bound adversary
+  viewTotal := ctxPrivacyViewReduction_total_query_bound adversary
+  probeSeals :=
+    ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction_seal_query_bound
+      adversary
+  probeUniform :=
+    ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction_uniform_query_bound
+      adversary
+  probeTotal :=
+    ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction_total_query_bound
+      adversary
+  validationSeals :=
+    ctxPrivacyPrefixToBooleanINDDollarReduction_seal_query_bound
+      c adversary
+  validationUniform :=
+    ctxPrivacyPrefixToBooleanINDDollarReduction_uniform_query_bound
+      c adversary
+  validationTotal :=
+    ctxPrivacyPrefixToBooleanINDDollarReduction_total_query_bound
+      c adversary
+
+/--
+info: 'BeaconcryptCore.Computational.CtxComputationalPrivacy.modifiedNonceAeadINDDollarRandomExp_viewReduction_eq_idealGame' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms modifiedNonceAeadINDDollarRandomExp_viewReduction_eq_idealGame
+
+/--
+info: 'BeaconcryptCore.Computational.CtxComputationalPrivacy.ctxPrivacyAdvantage_le_viewINDDollar_add_probeINDDollar' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms ctxPrivacyAdvantage_le_viewINDDollar_add_probeINDDollar
+
+/--
+info: 'BeaconcryptCore.Computational.CtxComputationalPrivacy.ctxPrivacyAdvantage_le_viewINDDollar_add_booleanINDDollar' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms ctxPrivacyAdvantage_le_viewINDDollar_add_booleanINDDollar
 
 end BeaconcryptCore.Computational.CtxComputationalPrivacy
