@@ -158,7 +158,7 @@ theorem cached_stream_unique (cache : JointKdfRO.QueryCache)
     left = right := by
   exact Option.some.inj (hleft.symm.trans hright)
 
-/-- Updating the canonical cache stores the one complete stream reused by every projection. -/
+/-- Updating the canonical cache installs one complete stream at the exact address. -/
 @[simp] theorem cacheQuery_same (cache : JointKdfRO.QueryCache)
     (address : JointKdfAddress) (stream : JointKdfStream) :
     (cache.cacheQuery address stream) address = some stream := by
