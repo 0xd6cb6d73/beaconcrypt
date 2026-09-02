@@ -136,17 +136,21 @@ HAX_PROVERIF_ITEMS := -** \
 
 PROVERIF_DIR := proofs/pro-verif
 PROVERIF_EXTRACTION := $(PROVERIF_DIR)/extraction/lib.pvl
+PROVERIF_INTERFACE := $(PROVERIF_DIR)/production-transcript-interface.pvl
+PROVERIF_CRYPTO_LIBS := \
+	-lib $(PROVERIF_INTERFACE) \
+	-lib $(PROVERIF_DIR)/crypto.pvl
 PROVERIF_COMMON_LIBS := \
-	-lib $(PROVERIF_DIR)/crypto.pvl \
+	$(PROVERIF_CRYPTO_LIBS) \
 	-lib $(PROVERIF_EXTRACTION) \
 	-lib $(PROVERIF_DIR)/environment.pvl
 PROVERIF_QUANTUM_LIBS := \
-	-lib $(PROVERIF_DIR)/crypto.pvl \
+	$(PROVERIF_CRYPTO_LIBS) \
 	-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
 	-lib $(PROVERIF_EXTRACTION) \
 	-lib $(PROVERIF_DIR)/environment.pvl
 PROVERIF_AEAD_CONTROL_LIBS := \
-	-lib $(PROVERIF_DIR)/crypto.pvl \
+	$(PROVERIF_CRYPTO_LIBS) \
 	-lib $(PROVERIF_DIR)/aead-commitment-negative-control.pvl \
 	-lib $(PROVERIF_DIR)/aead-commitment-negative-control-queries.pvl
 PROVERIF_CHECKER := $(PROVERIF_DIR)/check-results.awk
@@ -204,6 +208,7 @@ LEAN_GENERATED_PATHS := \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
+	check-proverif-transcript-fidelity \
 	check-toolchain check-fstar-policy check-lean-policy check-lean-root check-inventory \
 	extract-fstar check-fstar extract-proverif check-proverif \
 	check-proverif-extraction check-generated check-generated-fstar check-generated-lean \
@@ -352,7 +357,13 @@ check-ssprove-policy:
 check-ssprove:
 	$(MAKE) -C '$(SSPROVE_DIR)' check
 
-check-proverif:
+check-proverif-transcript-fidelity:
+	cargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity
+
+$(PROVERIF_CHECK_TARGETS): check-proverif-transcript-fidelity
+check-proverif-passive-reachability check-proverif-quantum-capabilities: check-proverif-transcript-fidelity
+
+check-proverif: check-proverif-transcript-fidelity
 	+$(MAKE) --no-print-directory -j$(words $(PROVERIF_SCENARIOS)) \
 		$(PROVERIF_CHECK_TARGETS)
 
@@ -390,7 +401,7 @@ check-proverif-passive-reachability: check-proverif-extraction
 check-proverif-quantum-capabilities:
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
 			-lib $(PROVERIF_DIR)/quantum-capability-control.pvl \
 			-lib $(PROVERIF_DIR)/quantum-capability-control-queries.pvl \
@@ -400,7 +411,7 @@ check-proverif-quantum-capabilities:
 check-proverif-quantum-mlkem-opacity:
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
 			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
 			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
@@ -410,7 +421,7 @@ check-proverif-quantum-mlkem-opacity:
 check-proverif-quantum-mlkem-recovery:
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
 			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
 			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery.pvl \
@@ -421,7 +432,7 @@ check-proverif-quantum-mlkem-recovery:
 check-proverif-mlkem-reencapsulation-strong: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-strong-theory.pvl \
 			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control.pvl \
 			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control-queries.pvl \
@@ -432,7 +443,7 @@ check-proverif-mlkem-reencapsulation-strong: check-proverif-extraction
 check-proverif-mlkem-reencapsulation-weak: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-weak-theory.pvl \
 			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control.pvl \
 			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control-queries.pvl \
@@ -443,7 +454,7 @@ check-proverif-mlkem-reencapsulation-weak: check-proverif-extraction
 check-proverif-hkdf-prefix-conformance: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/hkdf-prefix-conformance.pvl \
 			-lib $(PROVERIF_DIR)/hkdf-prefix-conformance-queries.pvl \
 			$(PROVERIF_DIR)/hkdf-prefix-conformance.pv | \
@@ -452,7 +463,7 @@ check-proverif-hkdf-prefix-conformance: check-proverif-extraction
 check-proverif-hkdf-endpoint-controls: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/hkdf-endpoint-controls.pvl \
 			-lib $(PROVERIF_DIR)/hkdf-endpoint-controls-queries.pvl \
 			$(PROVERIF_DIR)/hkdf-endpoint-controls.pv | \
@@ -461,7 +472,7 @@ check-proverif-hkdf-endpoint-controls: check-proverif-extraction
 check-proverif-hkdf-domain-distinct: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control.pvl \
 			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
 			$(PROVERIF_DIR)/hkdf-domain-distinct-control.pv | \
@@ -470,7 +481,7 @@ check-proverif-hkdf-domain-distinct: check-proverif-extraction
 check-proverif-hkdf-domain-alias: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control.pvl \
 			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
 			$(PROVERIF_DIR)/hkdf-domain-alias-control.pv | \
@@ -479,7 +490,7 @@ check-proverif-hkdf-domain-alias: check-proverif-extraction
 check-proverif-public-key-confusion-strong: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/public-key-confusion-control.pvl \
 			-lib $(PROVERIF_DIR)/public-key-confusion-control-queries.pvl \
 			$(PROVERIF_DIR)/public-key-confusion-strong.pv | \
@@ -489,7 +500,7 @@ check-proverif-public-key-confusion-strong: check-proverif-extraction
 check-proverif-public-key-confusion-weak: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/public-key-confusion-control.pvl \
 			-lib $(PROVERIF_DIR)/public-key-confusion-weak-theory.pvl \
 			-lib $(PROVERIF_DIR)/public-key-confusion-control-queries.pvl \

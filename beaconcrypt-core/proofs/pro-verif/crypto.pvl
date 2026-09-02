@@ -4,10 +4,8 @@
 (* Reviewed symbolic primitive boundary                                   *)
 (**************************************************************************)
 
-(* Rust uses u64 identifiers and counters.  Fresh values of these private
-   sorts model the checked, collision-free prefix of those finite spaces. *)
-type key_id.
-type sequence.
+(* Production-facing transcript sorts, domains, encodings, AEAD, and CTX
+   declarations come from production-transcript-interface.pvl. *)
 type direction.
 type role.
 
@@ -17,22 +15,6 @@ fun server_to_beacon(): direction [data].
 fun beacon_to_server(): direction [data].
 fun beacon_role(): role [data].
 fun server_role(): role [data].
-
-(* Production serializes record sequences and sender key IDs as fixed-width
-   little-endian u64 values.  `key_id_encoding` remains the compatibility
-   name used by the authenticated registration key-ID binding. *)
-fun sequence_le64(sequence): bitstring [data].
-fun sender_id_le64(key_id): bitstring [data].
-letfun key_id_encoding(identifier: key_id) = sender_id_le64(identifier).
-
-(* Disjoint production key encodings.  The two X25519 constructors represent
-   [4:u8, 128:u8, key] for a prekey and [4:u8, 129:u8, key] for a one-time
-   key. Rust reserves low marker bytes for types and high marker bytes for
-   roles, and the F* lemmas check the concrete values and byte positions. *)
-fun tag_ed25519(bitstring): bitstring [data].
-fun tag_x25519_prekey(bitstring): bitstring [data].
-fun tag_x25519_one_time(bitstring): bitstring [data].
-fun tag_mlkem768(bitstring): bitstring [data].
 
 (* Ed25519 and its authenticated verification equation. *)
 fun ed_public(bitstring): bitstring.
@@ -70,48 +52,8 @@ reduc forall secret_key: bitstring, coins: bitstring;
     secret_key
   ) = mlkem_shared_secret(mlkem_public(secret_key), coins).
 
-(* These constructors are referenced by the backend replacements attached to
-   production Rust functions.  Their argument order is the Stage 6 layout:
-   registration ID = identity || one-time key, and root input =
-   0xff^32 || DH1 || DH2 || DH3 || DH4 || KEM secret.  The fixed padding is
-   an explicit first field rather than an erased comment-only convention. *)
+(* This constructor is referenced by the registration-ID backend replacement. *)
 fun registration_identifier(bitstring, bitstring): bitstring [data].
-fun pqxdh_ff32_padding(): bitstring [data].
-fun pqxdh_root_input(
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring
-): bitstring [data].
-
-(* Production uses exactly two HKDF-SHA-512 domains, both without salt:
-   "BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768" (46 bytes) and
-   "SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305" (41 bytes).  A single public
-   one-way stream constructor models HKDF under those domains.  Its shared
-   projections make the first 64 bytes of the 76-byte per-record expansion
-   definitionally identical to the 64-byte initialization expansion when the
-   input is equal; output length is not modeled as a domain separator. *)
-type kdf_domain.
-type hkdf_stream.
-
-fun pqxdh_domain(): kdf_domain [data].
-fun symmetric_ratchet_domain(): kdf_domain [data].
-fun hkdf_sha512_no_salt(bitstring, kdf_domain): hkdf_stream.
-fun hkdf_first_32(hkdf_stream): bitstring.
-fun hkdf_second_32(hkdf_stream): bitstring.
-fun hkdf_final_12(hkdf_stream): bitstring.
-
-(* The exact 153-byte production associated data is the server Ed25519
-   encoding, the beacon Ed25519 encoding, and the same two domain values used
-   by HKDF, in that order. *)
-fun beaconcrypt_associated_data(
-  bitstring,
-  bitstring,
-  kdf_domain,
-  kdf_domain
-): bitstring [data].
 
 (* Stored record material contains only the projected key and nonce.  It does
    not retain the HKDF stream, so disclosing cached material cannot reveal the
@@ -152,55 +94,6 @@ letfun ratchet_material(chain: bitstring) =
     )
   ).
 
-(* Ideal ChaCha20-Poly1305 receives exactly key, nonce, associated data, and
-   plaintext.  The detached tag is retained separately.  Sequence and sender
-   ID are not part of the base AEAD associated data. *)
-fun aead_cipher(
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring
-): bitstring.
-fun aead_tag(
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring
-): bitstring.
-
-(* Production CTX has no domain label.  It is BLAKE2b-512 over the exact
-   fixed-width 229-byte serialization key || nonce || associated data ||
-   retained AEAD tag || LE64(sequence) || LE64(sender ID).  The structured
-   preimage is injective; BLAKE2b-512 is an ideal one-way, collision-free
-   symbolic constructor whose computational justification is external. *)
-fun ctx_preimage(
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring
-): bitstring [data].
-fun blake2b512(bitstring): bitstring.
-
-letfun ctx_commitment(
-  key: bitstring,
-  nonce: bitstring,
-  associated_data: bitstring,
-  retained_aead_tag: bitstring,
-  message_sequence: sequence,
-  sender_id: key_id
-) =
-  blake2b512(
-    ctx_preimage(
-      key,
-      nonce,
-      associated_data,
-      retained_aead_tag,
-      sequence_le64(message_sequence),
-      sender_id_le64(sender_id)
-    )
-  ).
 fun crypto_frame(
   bitstring,
   bitstring,

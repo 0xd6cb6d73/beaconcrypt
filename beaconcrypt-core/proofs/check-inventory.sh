@@ -49,13 +49,13 @@ declare -A expected_category_counts=(
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=40
-	[handwritten-proverif]=53
+	[handwritten-proverif]=54
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
 	[lean-control]=9
-	[validation]=2
+	[validation]=3
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -105,6 +105,7 @@ printf '%s\n' proofs/check-inventory.sh proofs/trusted-boundary.md \
 compare_set inventory "$tmp_dir/inventory"
 
 printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
+	tests/proverif_transcript_fidelity.rs \
 	> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
 
@@ -327,56 +328,72 @@ require_occurrence_count 4 \
 require_occurrence_count 4 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
-require_line_count 35 '^fun ' proofs/pro-verif/crypto.pvl \
+transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
+require_line_count 57 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+	"canonical production transcript fact"
+require_line_count 5 '^type ' "$transcript_interface" \
+	"canonical ProVerif interface type"
+require_line_count 19 '^fun ' "$transcript_interface" \
+	"canonical ProVerif interface constructor/function"
+require_line_count 2 '^letfun ' "$transcript_interface" \
+	"canonical ProVerif interface helper"
+require_line_count 2 '^type ' proofs/pro-verif/crypto.pvl \
+	"handwritten primitive internal type"
+require_line_count 16 '^fun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive constructor/function"
 require_line_count 8 '^reduc ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive reduction"
-require_line_count 8 '^letfun ' proofs/pro-verif/crypto.pvl \
+require_line_count 6 '^letfun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive helper"
 require_line_count 1 '^fun pqxdh_domain\(\): kdf_domain \[data\]\.$' \
-	proofs/pro-verif/crypto.pvl "PQXDH HKDF domain"
+	"$transcript_interface" "PQXDH HKDF domain"
 require_line_count 1 '^fun symmetric_ratchet_domain\(\): kdf_domain \[data\]\.$' \
-	proofs/pro-verif/crypto.pvl "symmetric-ratchet HKDF domain"
+	"$transcript_interface" "symmetric-ratchet HKDF domain"
 require_line_count 1 '^fun hkdf_sha512_no_salt\(bitstring, kdf_domain\): hkdf_stream\.$' \
-	proofs/pro-verif/crypto.pvl "shared no-salt HKDF stream"
+	"$transcript_interface" "shared no-salt HKDF stream"
 require_line_count 3 '^fun hkdf_(first_32|second_32|final_12)\(' \
-	proofs/pro-verif/crypto.pvl "shared HKDF projection"
+	"$transcript_interface" "shared HKDF projection"
 require_occurrence_count 2 \
 	'pqxdh_root_input\(pqxdh_ff32_padding\(\), dh1, dh2, dh3, dh4, kem\)' \
 	"explicit ordered ProVerif root transcript" src/pqxdh.rs "$generated_proverif"
 require_line_count 1 '^fun sequence_le64\(sequence\): bitstring \[data\]\.$' \
-	proofs/pro-verif/crypto.pvl "symbolic sequence LE64 encoding"
+	"$transcript_interface" "symbolic sequence LE64 encoding"
 require_line_count 1 '^fun sender_id_le64\(key_id\): bitstring \[data\]\.$' \
-	proofs/pro-verif/crypto.pvl "symbolic sender-ID LE64 encoding"
+	"$transcript_interface" "symbolic sender-ID LE64 encoding"
 require_line_count 1 \
 	'^letfun key_id_encoding\(identifier: key_id\) = sender_id_le64\(identifier\)\.$' \
-	proofs/pro-verif/crypto.pvl "registration key-ID encoding compatibility"
+	"$transcript_interface" "registration key-ID encoding compatibility"
 require_line_count 4 \
 	'^fun tag_(ed25519|x25519_prekey|x25519_one_time|mlkem768)\(bitstring\): bitstring \[data\]\.$' \
-	proofs/pro-verif/crypto.pvl "symbolic production key encoding"
+	"$transcript_interface" "symbolic production key encoding"
 require_occurrence_count 1 \
 	'fun beaconcrypt_associated_data\(\s*bitstring,\s*bitstring,\s*kdf_domain,\s*kdf_domain\s*\): bitstring \[data\]\.' \
-	"exact associated-data constructor arity" proofs/pro-verif/crypto.pvl
+	"exact associated-data constructor arity" "$transcript_interface"
 require_occurrence_count 2 \
 	'fun aead_(?:cipher|tag)\(\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring\s*\): bitstring\.' \
-	"exact base AEAD input arity" proofs/pro-verif/crypto.pvl
+	"exact base AEAD input arity" "$transcript_interface"
 require_occurrence_count 1 \
 	'fun ctx_preimage\(\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring\s*\): bitstring \[data\]\.' \
-	"exact six-field CTX preimage" proofs/pro-verif/crypto.pvl
+	"exact six-field CTX preimage" "$transcript_interface"
 require_line_count 1 '^fun blake2b512\(bitstring\): bitstring\.$' \
-	proofs/pro-verif/crypto.pvl "symbolic BLAKE2b-512 constructor"
+	"$transcript_interface" "symbolic BLAKE2b-512 constructor"
 require_occurrence_count 1 \
 	'letfun ctx_commitment\(\s*key: bitstring,\s*nonce: bitstring,\s*associated_data: bitstring,\s*retained_aead_tag: bitstring,\s*message_sequence: sequence,\s*sender_id: key_id\s*\)\s*=\s*blake2b512\(\s*ctx_preimage\(\s*key,\s*nonce,\s*associated_data,\s*retained_aead_tag,\s*sequence_le64\(message_sequence\),\s*sender_id_le64\(sender_id\)\s*\)\s*\)\.' \
-	"exact ordered CTX commitment" proofs/pro-verif/crypto.pvl
+	"exact ordered CTX commitment" "$transcript_interface"
 reject_matches "invented AEAD or CTX label constructor" \
 	'(?m)^(?:fun|letfun) (?:aead|ctx)_[A-Za-z0-9_]*(?:label|domain)\(' \
+	"$transcript_interface" proofs/pro-verif/crypto.pvl
+reject_matches "production transcript declaration duplicated outside canonical interface" \
+	'(?m)^(?:type (?:key_id|sequence|kdf_domain|hkdf_stream|establishment_transcript_t)|fun (?:sequence_le64|sender_id_le64|tag_ed25519|tag_x25519_prekey|tag_x25519_one_time|tag_mlkem768|pqxdh_ff32_padding|pqxdh_root_input|pqxdh_domain|symmetric_ratchet_domain|hkdf_sha512_no_salt|hkdf_first_32|hkdf_second_32|hkdf_final_12|beaconcrypt_associated_data|aead_cipher|aead_tag|ctx_preimage|blake2b512)\b|letfun (?:key_id_encoding|ctx_commitment)\b)' \
 	proofs/pro-verif/crypto.pvl
-require_line_count 4 '^type ' proofs/pro-verif/environment.pvl \
+require_line_count 3 '^type ' proofs/pro-verif/environment.pvl \
 	"handwritten protocol-state type"
 require_line_count 14 '^fun ' proofs/pro-verif/environment.pvl \
 	"handwritten protocol constructor/function"
+require_line_count 1 '^type establishment_transcript_t\.$' \
+	"$transcript_interface" "canonical establishment transcript type"
 require_occurrence_count 1 \
-	'type establishment_transcript_t\.\s*fun establishment_transcript\(\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_InitKex,\s*beaconcrypt_core__pqxdh__t_RegistrationId,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_RootKeyInput,\s*bitstring,\s*bitstring,\s*key_id,\s*key_id,\s*bitstring,\s*bitstring\s*\): establishment_transcript_t \[data\]\.' \
+	'fun establishment_transcript\(\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_InitKex,\s*beaconcrypt_core__pqxdh__t_RegistrationId,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_RootKeyInput,\s*bitstring,\s*bitstring,\s*key_id,\s*key_id,\s*bitstring,\s*bitstring\s*\): establishment_transcript_t \[data\]\.' \
 	"exact 18-field establishment transcript declaration" \
 	proofs/pro-verif/environment.pvl
 require_occurrence_count 1 \
@@ -648,8 +665,75 @@ for scenario_process in \
 	public-key-confusion-weak; do
 	require_line_count 1 '^process$' \
 		"proofs/pro-verif/${scenario_process}.pv" \
-		"${scenario_process} top-level process"
+			"${scenario_process} top-level process"
 done
+
+fidelity_test=tests/proverif_transcript_fidelity.rs
+require_line_count 7 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED): &str = include_str!' \
+	"$fidelity_test" "transcript-fidelity synchronized input"
+require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
+	"$fidelity_test" "transcript-fidelity exact fact allowlist"
+require_line_count 1 '^struct Snapshot \{$' \
+	"$fidelity_test" "transcript-fidelity mutable snapshot"
+require_line_count 3 '^#\[test\]$' \
+	"$fidelity_test" "transcript-fidelity test"
+for fidelity_test_name in \
+	production_manifest_symbolic_model_and_adapters_are_exact \
+	compiled_core_matches_the_canonical_transcript \
+	requested_transcript_mutations_are_rejected; do
+	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
+		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
+done
+require_occurrence_count 1 \
+	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
+	"transcript-fidelity model and adapter composition" "$fidelity_test"
+require_occurrence_count 1 \
+	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
+	"transcript-fidelity combined validator" "$fidelity_test"
+for mutation_name in \
+	pqxdh_label_byte \
+	symmetric_label_byte \
+	aliased_domains \
+	separate_initial_step_domain \
+	reversed_ad_identities \
+	swapped_x25519_roles \
+	agreement_without_selected_pqpk \
+	agreement_without_kem_ciphertext \
+	ctx_without_key \
+	ctx_without_nonce \
+	ctx_without_associated_data \
+	ctx_without_retained_aead_tag \
+	ctx_without_sequence \
+	ctx_without_sender_id; do
+	require_occurrence_count 1 "\"${mutation_name}\"" \
+		"transcript-fidelity ${mutation_name} mutation" "$fidelity_test"
+done
+require_line_count 1 \
+	'^exclude = \["Makefile", "proofs/\*\*", "tests/proverif_transcript_fidelity\.rs"\]$' \
+	Cargo.toml "transcript-fidelity publication exclusion"
+require_line_count 1 \
+	'^PROVERIF_INTERFACE := \$\(PROVERIF_DIR\)/production-transcript-interface\.pvl$' \
+	Makefile "canonical ProVerif transcript interface path"
+require_line_count 1 '^check-proverif-transcript-fidelity:$' \
+	Makefile "transcript-fidelity Make target"
+require_line_count 1 \
+	'^\tcargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity$' \
+	Makefile "transcript-fidelity test invocation"
+require_line_count 1 \
+	'^\$\(PROVERIF_CHECK_TARGETS\): check-proverif-transcript-fidelity$' \
+	Makefile "per-scenario transcript-fidelity prerequisite"
+require_line_count 1 \
+	'^check-proverif-passive-reachability check-proverif-quantum-capabilities: check-proverif-transcript-fidelity$' \
+	Makefile "auxiliary ProVerif transcript-fidelity prerequisite"
+require_line_count 1 '^check-proverif: check-proverif-transcript-fidelity$' \
+	Makefile "aggregate transcript-fidelity prerequisite"
+require_occurrence_count 1 \
+	'PROVERIF_CRYPTO_LIBS :=\s*\\\s*-lib \$\(PROVERIF_INTERFACE\)\s*\\\s*-lib \$\(PROVERIF_DIR\)/crypto\.pvl' \
+	"canonical interface loaded before cryptographic theory" Makefile
+require_line_count 1 '^            target: check-proverif-transcript-fidelity$' \
+	../.github/workflows/formal-verification.yml \
+	"dedicated transcript-fidelity CI target"
 
 require_line_count 1 '^  Theorem ctx_misattribution_reduces_to_collision :' \
 	proofs/ssprove/CtxEventReduction.v \

@@ -24,6 +24,8 @@ jobs:
             target: check-generated-fstar
           - name: Lean
             target: check-generated-lean
+          - name: ProVerif transcript fidelity
+            target: check-proverif-transcript-fidelity
           - name: ProVerif CTX commitment
             target: check-generated-proverif-aead-commitment
           - name: ProVerif no-CTX control

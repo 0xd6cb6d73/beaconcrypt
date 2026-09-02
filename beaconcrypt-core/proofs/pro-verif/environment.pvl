@@ -40,7 +40,6 @@ fun session_label(
 ): bitstring [data].
 
 (* This injective proof term carries, in order, the server identity, beacon identity, authenticated InitKex, registration ID, prekey, one-time X25519 key, selected ML-KEM public key, server ephemeral key, exact KEM ciphertext, initial frame, complete response, ordered root input, derived root, exact associated data, assigned beacon key ID, pinned server key ID, session identifier, and registration origin. *)
-type establishment_transcript_t.
 fun establishment_transcript(
   bitstring,
   bitstring,

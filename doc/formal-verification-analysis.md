@@ -404,7 +404,7 @@ Direction separation comes only from selecting the first or second 32-byte proje
 Focused reachability controls witness both shared-prefix equalities and correct endpoint derivation, require each wrong-domain or wrong-projection fixture to reach its attempt point, and prove that those wrong endpoints cannot commit.
 A separate differential keeps the production domains distinct in one run and deliberately aliases both to the symmetric domain in another; the checker requires the same cross-domain canary to remain secret in the former and become disclosed in the latter.
 `SSProve/ProtocolLabels.v` and the prefix-consistent ratchet games guided this symbolic structure, but agreement between the independently handwritten ProVerif and SSProve models is not extraction linkage or a refinement theorem.
-The two ProVerif domain constructors are symbolic representatives of the production byte strings; byte-for-byte synchronization with Rust remains the transcript-synchronization obligation.
+The two ProVerif domain constructors remain symbolic representatives, while the checked production transcript interface now synchronizes their exact byte-string interpretation and use sites with Rust.
 
 ProVerif proves these controls only under its ideal deterministic symbolic HKDF-stream theory and does not prove HKDF-SHA-512 pseudorandomness, Extract/Expand correctness, projected-output noncollision, implementation fidelity, compiler preservation, or numerical computational bounds.
 The remaining computational obligations include a production-width HKDF combiner reduction for the ordered padded PQXDH input, prefix-consistent 64/76-byte expansion semantics, primitive security under the two exact labels, and the adapter/extraction bridge from production requests and outputs to the symbolic projections.
@@ -417,7 +417,7 @@ The final two fields are the same two domain values consumed by the shared HKDF 
 Production serializes those fields as `0x01 || server_pk || 0x01 || beacon_pk || PQXDH_INFO || SYM_RATCHET_INFO` in server-first order for a total of 153 bytes; the ProVerif constructor models that field structure while the extracted F*/Lean results establish the current concrete layout.
 The authenticated public-key boundary keeps disjoint constructors for Ed25519 `0x01 || pk`, ML-KEM-768 `0x03 || pk`, X25519 prekeys `0x04 || 0x80 || pk`, and X25519 one-time keys `0x04 || 0x81 || pk`.
 Strong parsing controls witness legitimate encodings and attempted ML-KEM/X25519 algorithm confusion plus attempted X25519 prekey/one-time role confusion without accepting either mismatch, while deliberately weakened encoding theories must accept the corresponding confusion witnesses.
-These symbolic constructors model injective and disjoint fixed-width encodings; the later synchronization gate checks their marker values and production serialization rather than treating constructor names as byte-level extraction evidence.
+These symbolic constructors model injective and disjoint fixed-width encodings; the checked production transcript interface synchronizes their marker values and production serialization rather than treating constructor names as byte-level extraction evidence.
 
 ChaCha20-Poly1305-IETF sealing receives exactly a 32-byte key, 12-byte nonce, the 153-byte associated data, and plaintext, and returns ciphertext with a detached 16-byte tag.
 Opening receives that same key, nonce, and associated data with the ciphertext and detached tag.
@@ -426,6 +426,26 @@ The CTX commitment is modeled as the ideal collision-free term `blake2b512(ctx_p
 The corresponding concrete preimage is 229 bytes in the order `key[32] || nonce[12] || associated_data[153] || retained_aead_tag[16] || LE64(sequence)[8] || LE64(sender_id)[8]` and has no CTX prefix or label.
 The free `ctx_preimage` constructor assumes fixed-width serialization injectivity, while the free `blake2b512` constructor assumes ideal symbolic opacity and collision freedom.
 The six single-field CTX controls therefore test symbolic field retention, not compiled serialization or a computational BLAKE2b theorem.
+
+### CI-enforced production transcript synchronization
+
+[`production-transcript-interface.pvl`](../beaconcrypt-core/proofs/pro-verif/production-transcript-interface.pvl) is the canonical ProVerif cryptographic interface consumed by every scenario and contains 57 strictly ordered `@beaconcrypt-fidelity-v1` facts.
+The dependency-free [`proverif_transcript_fidelity.rs`](../beaconcrypt-core/tests/proverif_transcript_fidelity.rs) check parses that manifest, executes the corresponding compiled core builders, checks the adapter's no-salt HKDF and primitive wiring, and verifies that the ProVerif interface and complete establishment constructor retain the declared structure.
+`check-proverif-transcript-fidelity` runs before every ProVerif scenario and as a dedicated formal-verification CI job, so changing a covered Rust literal, size, offset, order, symbolic declaration, or adapter use without updating and reviewing the same canonical contract fails verification.
+
+The synchronized KDF facts are the exact 46-byte PQXDH and 41-byte symmetric-ratchet labels, their inequality, no salt, absence of an output-length domain, the 32/64/76-byte outputs, the initial and step splits, server send-left/receive-right and beacon send-right/receive-left orientation, reuse of the symmetric label for both initialization and record steps, and the resulting 64-byte prefix relationship.
+The synchronized root facts are 32 bytes of `0xff`, six 32-byte contributions in the order padding, DH1, DH2, DH3, DH4, ML-KEM shared secret, and the resulting 192-byte input.
+The synchronized encoding and associated-data facts are marker `0x01` for Ed25519, `0x03` for ML-KEM-768, `0x04 || 0x80` for X25519 prekeys, `0x04 || 0x81` for X25519 one-time keys, server identity before beacon identity, the two shared domain values after both identities, the exact offsets, and the 153-byte total.
+The synchronized AEAD facts are ChaCha20-Poly1305-IETF with a 32-byte key, 12-byte nonce, exact associated data, plaintext, and detached 16-byte tag, with sequence and sender ID absent and no AEAD label.
+The synchronized CTX facts are BLAKE2b-512 over key, nonce, associated data, retained AEAD tag, LE64 sequence, and LE64 sender ID at the six exact offsets in a 229-byte preimage, with no CTX label.
+The interface also records that no direction, sequence, session, or phase label exists and that `establishment_transcript` has all 18 ordered fields, including the selected ML-KEM public key and exact KEM ciphertext.
+
+The fidelity regression suite deliberately mutates one byte of each KDF label, aliases the two domains, assigns separate initialization and step domains, reverses the associated-data identities, swaps the X25519 role markers, removes either the selected ML-KEM public key or KEM ciphertext from agreement, and independently omits each of the six CTX fields.
+Those mutations are drift checks: every mutation must be rejected even when the altered representation might leave a secrecy query true.
+The HKDF domain-alias, endpoint, public-key-confusion, CTX/no-CTX, six CTX single-field, and ML-KEM re-encapsulation scenarios are security controls instead: their deliberately weakened theories must expose the required disclosure, failed correspondence, or attack witness, with separate non-vacuity events where applicable.
+
+This mechanism is synchronization, not generated ProVerif extraction, a Rust-to-ProVerif refinement theorem, proof of adapter or compiler semantics, or a computational theorem about HKDF, ChaCha20-Poly1305, BLAKE2b, ML-KEM, or the complete protocol.
+It covers the enumerated cryptographic transcript boundary and does not make every handwritten process, parser behavior, state transition, primitive assumption, or production execution equal to the symbolic model.
 
 ### CTX commitment negative control
 
@@ -991,6 +1011,8 @@ The result gate requires exactly:
 - all five secrecy and seven injective correspondence queries to be true for active classical, including exact authenticated-bundle and complete establishment-transcript agreement, with its eight reachability controls witnessed;
 - all five secrecy queries and the five-choice observational equivalence to be true for passive classical and passive quantum, with registration plus every exact canary-bearing receive path witnessed under the shared active scheduler, both classical quantum-recovery canaries exposed, the ML-KEM-derived control canary opaque under those capabilities, and the same canary exposed under deliberate total ML-KEM secret-key recovery;
 - both shared symmetric-HKDF prefix equalities and both correct endpoint commitments to be witnessed, every wrong-root-domain, wrong-symmetric-domain, and wrong-projection attempt to be witnessed without a corresponding commitment, and the domain-alias canary to remain secret under the two distinct production domains but be disclosed when the control theory aliases them;
+- both ML-KEM re-encapsulation theories to witness the multi-epoch path, old-key compromise, exact ciphertext-substitution attempt, and ordinary one-shot path; the strong theory must block re-encapsulation success and root disclosure, preserve the canary, and prove agreement, while the weak theory must witness both attacks, expose the canary, and break agreement;
+- the 57-fact transcript-fidelity manifest to match the compiled core, adapter wiring, and symbolic declarations, and all 14 in-memory mutations to be rejected: two single-byte label changes, domain aliasing, separate initial/step domains, reversed associated-data identities, swapped X25519 roles, removal of either KEM agreement field, and omission of each CTX field;
 - the four active-quantum queries to be false, witnessing initial-secret disclosure, reachability of the exact selected-key/ciphertext/root recovery event, and failure of both honest registration-origin agreement and authenticated-bundle agreement;
 - all 12 baseline queries to be true: five secrecy and seven correspondence results;
 - all eight negated reachability/non-vacuity queries to be false, including exact authenticated-bundle acceptance, a committed attacker-owned registration, and attacker recovery of its routed canary;
@@ -1017,12 +1039,13 @@ inconclusive results, and any changed classification
 For CI and reviewed generated artifacts, use:
 
 ```sh
+make -C beaconcrypt-core check-proverif-transcript-fidelity
 make -C beaconcrypt-core check-generated
 make -C beaconcrypt-core verify-ssprove
 make -C beaconcrypt-core check-inventory
 ```
 
-The generated check runs the extraction-backed suite and rejects tracked or untracked extraction drift; the SSProve target compiles every finite game module in the locked Rocq/SSProve shell, exact-checks each assumption report, and runs `coqchk`; and the standalone inventory command checks monitored trust-boundary membership and fingerprints. The dedicated formal-verification workflow distributes the equivalent F*, SSProve, per-scenario ProVerif, and inventory checks across independent matrix jobs, then reports the established aggregate status only when every component passes. Together, those commands make the proof reproducible and prevent a query, monitored trust-boundary file, or generated file from silently disappearing or changing without an explicit baseline update. They do not prove that the handwritten model is faithful to production or that the reviewed assumptions hold; those conclusions still require substantive review beyond the mechanical Stage 9 gate.
+The transcript-fidelity target checks the canonical interface against compiled core behavior, adapter wiring, symbolic structure, and all required mutations; the generated check runs the extraction-backed suite and rejects tracked or untracked extraction drift; the SSProve target compiles every finite game module in the locked Rocq/SSProve shell, exact-checks each assumption report, and runs `coqchk`; and the standalone inventory command checks monitored trust-boundary membership and fingerprints. The dedicated formal-verification workflow distributes the equivalent transcript-fidelity, F*, SSProve, per-scenario ProVerif, and inventory checks across independent jobs, then reports the established aggregate status only when every component passes. Together, those commands make the proof reproducible and prevent a covered transcript fact, query, monitored trust-boundary file, or generated file from silently disappearing or changing without an explicit baseline update. The synchronization gate establishes only its enumerated deterministic facts; it does not prove the complete handwritten process model faithful, discharge the reviewed symbolic assumptions, or establish primitive or protocol computational security.
 
 ## Safe summary wording
 
@@ -1033,6 +1056,8 @@ depends on real cryptography, surrounding code, storage, and deployment
 preserving the assumptions; those parts are not proved end to end.
 
 For an audit or security statement that needs exact scope, use:
+
+> ProVerif proves the modeled BeaconCrypt protocol using the exact two production HKDF domains, the intentional shared symmetric-HKDF prefix semantics, the exact authenticated-context structure, disjoint concrete key encodings, and an explicitly named ML-KEM public-key-binding assumption.
 
 > Beaconcrypt formally verifies selected extracted PQXDH and symmetric-ratchet
 > control functions for exact transcript construction, checked state
