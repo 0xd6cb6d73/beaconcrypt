@@ -49,7 +49,7 @@ declare -A expected_category_counts=(
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=50
-	[handwritten-proverif]=61
+	[handwritten-proverif]=64
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -322,15 +322,15 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 6 \
+require_occurrence_count 8 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 9 '_to_bitstring' \
+require_occurrence_count 11 '_to_bitstring' \
 	"all handwritten _to_bitstring tokens including three initial-ratchet manifest facts" \
 	"${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
-require_line_count 397 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+require_line_count 465 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
 	"canonical production transcript fact"
 require_line_count 18 '^\(\* @beaconcrypt-fidelity-v1 phase1\.' \
 	"$transcript_interface" "Phase-1 InitKex transcript fact"
@@ -346,6 +346,8 @@ require_line_count 60 '^\(\* @beaconcrypt-fidelity-v1 registration\.lifecycle\.'
 	"$transcript_interface" "registration lifecycle transcript fact"
 require_line_count 71 '^\(\* @beaconcrypt-fidelity-v1 initial_ratchet\.' \
 	"$transcript_interface" "initial-ratchet fidelity fact"
+require_line_count 68 '^\(\* @beaconcrypt-fidelity-v1 later_registration\.' \
+	"$transcript_interface" "later-sequence registration fidelity fact"
 require_line_count 5 '^type ' "$transcript_interface" \
 	"canonical ProVerif interface type"
 require_line_count 19 '^fun ' "$transcript_interface" \
@@ -812,21 +814,22 @@ for scenario_process in \
 	public-key-confusion-strong \
 	public-key-confusion-weak \
 	phase2-response-binding \
-	phase2-assigned-id-weak; do
+	phase2-assigned-id-weak \
+	later-sequence-registration; do
 	require_line_count 1 '^process$' \
 		"proofs/pro-verif/${scenario_process}.pv" \
 			"${scenario_process} top-level process"
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 28 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA|FAILED_RECEIVE_QUERIES): &str = include_str!|^const (MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES): &str =$' \
+require_line_count 34 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER): &str = include_str!|^const (MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable snapshot"
-require_line_count 11 '^#\[test\]$' \
+require_line_count 13 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -838,6 +841,8 @@ for fidelity_test_name in \
 	registration_lifecycle_mutation_matrix_is_complete_and_rejected \
 	initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous \
 	initial_ratchet_mutation_matrix_is_complete_and_rejected \
+	later_registration_sequence_three_poststate_is_exact_and_nonvacuous \
+	later_registration_mutation_matrix_is_complete_and_rejected \
 	phase1_registration_mutation_matrix_is_complete_and_rejected \
 	requested_transcript_mutations_are_rejected; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
@@ -847,7 +852,7 @@ require_occurrence_count 1 \
 	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
 	"transcript-fidelity model and adapter composition" "$fidelity_test"
 require_occurrence_count 1 \
-	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_finite_receive_state_fixture\(snapshot\)\?;\s*validate_registration_lifecycle\(snapshot\)\?;\s*validate_initial_ratchet_fidelity\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
+	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_finite_receive_state_fixture\(snapshot\)\?;\s*validate_registration_lifecycle\(snapshot\)\?;\s*validate_initial_ratchet_fidelity\(snapshot\)\?;\s*validate_later_registration_fidelity\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
 require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;$' \
 	"$fidelity_test" "CryptoFrame exact mutation count"
@@ -1055,6 +1060,45 @@ for initial_ratchet_mutation_family in \
 	require_occurrence_count 1 "$initial_ratchet_mutation_family" \
 		"initial-ratchet ${initial_ratchet_mutation_family} mutation family" "$fidelity_test"
 done
+require_line_count 1 '^const LATER_REGISTRATION_MUTATION_COUNT: usize = 409;$' \
+	"$fidelity_test" "later-sequence registration exact mutation count"
+require_occurrence_count 1 \
+	'(?s)fn later_registration_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, LATER_REGISTRATION_MUTATION_COUNT\);\s*\}' \
+	"later-sequence registration mutation matrix count assertion" "$fidelity_test"
+for later_registration_mutation_family in \
+	later_registration_fact_\{key\} \
+	later_registration_beacon_reads_decrypted_sequence \
+	later_registration_beacon_adds_first_sequence_gate \
+	later_registration_adapter_adds_first_sequence_gate \
+	later_registration_core_begin_entry_substituted \
+	later_registration_core_staged_sequence_substituted \
+	later_registration_refined_pending_target_substituted \
+	later_registration_staged_scan_accepts_live_slot \
+	later_registration_slot_mover_wrong_destination \
+	later_registration_publisher_inserts_target \
+	later_registration_pv_beacon_dh1_secret_substituted \
+	later_registration_pv_beacon_kem_ciphertext_substituted \
+	later_registration_pv_beacon_shared_dh_order_swapped \
+	later_registration_pv_server_dh1_secret_substituted \
+	later_registration_pv_server_kem_ciphertext_key_substituted \
+	later_registration_pv_server_shared_dh_order_swapped \
+	later_registration_pv_substitution_outer_identity_changed \
+	later_registration_pv_candidate_gate_bypassed \
+	later_registration_pv_faithful_adds_sequence_gate \
+	later_registration_pv_first_only_gate_moved_before_open_reply \
+	later_registration_poststate_query_cache_order_mutated \
+	later_registration_target_query_material3_mutated \
+	later_registration_query_\{\}_formula_mutated \
+	later_registration_checker_result_\{index\}_term_mutated \
+	later_registration_checker_result_\{index\}_polarity_mutated \
+	later_registration_checker_query_count_mutated; do
+	require_occurrence_count 1 "$later_registration_mutation_family" \
+		"later-sequence registration ${later_registration_mutation_family} mutation family" "$fidelity_test"
+done
+require_line_count 1 '^\s*"later_registration_make_scenario_removed",$' \
+	"$fidelity_test" "later-sequence registration scenario-removal mutation"
+require_line_count 1 '^\s*if name == "later_registration_make_scenario_removed" \{$' \
+	"$fidelity_test" "later-sequence registration scenario-removal mutation dispatch"
 for mutation_name in \
 	pqxdh_label_byte \
 	symmetric_label_byte \
@@ -1130,9 +1174,33 @@ require_occurrence_count 1 \
 	'check-proverif-phase2-assigned-id-weak:\s+check-proverif-extraction[\s\S]*?\$\(PROVERIF_COMMON_LIBS\)\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-weak-theory\.pvl\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-response-binding-control\.pvl\s+\\[\s\S]*?awk -v scenario=phase2-assigned-id-weak' \
 	"weak Phase-2 target loads only the weak assigned-ID gate" \
 	Makefile
-require_line_count 1 \
+require_occurrence_count 1 \
+	'check-proverif-later-sequence-registration:\s+check-proverif-extraction[\s\S]*?\$\(PROVERIF_COMMON_LIBS\)\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-strong-theory\.pvl\s+\\\s*-lib \$\(PROVERIF_DIR\)/later-sequence-registration-control\.pvl\s+\\\s*-lib \$\(PROVERIF_DIR\)/later-sequence-registration-queries\.pvl\s+\\[\s\S]*?awk -v scenario=later-sequence-registration' \
+	"later-sequence registration target loads the reviewed finite control and queries" \
+	Makefile
+require_line_count 8 '^free LATER_REGISTRATION_' \
+	proofs/pro-verif/later-sequence-registration-control.pvl \
+	"later-sequence registration private fixture value"
+require_line_count 12 '^event LaterRegistration' \
+	proofs/pro-verif/later-sequence-registration-control.pvl \
+	"later-sequence registration event declaration"
+require_line_count 5 '^let LaterSequenceRegistration' \
+	proofs/pro-verif/later-sequence-registration-control.pvl \
+	"later-sequence registration finite process"
+require_line_count 18 '^query ' \
+	proofs/pro-verif/later-sequence-registration-queries.pvl \
+	"later-sequence registration query"
+require_occurrence_count 1 \
+	'else if \(scenario == "later-sequence-registration"\) \{\s*if \(query_count != 18\)' \
+	"later-sequence registration exact result count" \
+	proofs/pro-verif/check-results.awk
+require_occurrence_count 1 \
+	'for \(later_index = 1; later_index <= 18; later_index\+\+\) \{\s*require_exact\(later_expected\[later_index\],' \
+	"later-sequence registration exact result loop" \
+	proofs/pro-verif/check-results.awk
+require_line_count 2 \
 	'^\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-strong-theory\.pvl \\$' \
-	Makefile "production Phase-2 assigned-ID gate loader"
+	Makefile "production Phase-2 and later-registration assigned-ID gate loaders"
 require_line_count 1 \
 	'^\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-weak-theory\.pvl \\$' \
 	Makefile "weak Phase-2 assigned-ID gate loader"
