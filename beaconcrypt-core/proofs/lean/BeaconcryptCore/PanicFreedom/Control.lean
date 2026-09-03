@@ -142,4 +142,19 @@ theorem array_index_mut_eq_ok {α : Type} {n : Std.Usize} (v : Std.Array α n)
     v.index_mut_usize i = ok (v.val[i.val], v.set i) := by
   simp only [Std.Array.index_mut_usize, array_index_eq_ok v i h, bind_tc_ok]
 
+/-- Logical entry lookup checks both the logical length and physical capacity. -/
+theorem SequenceCache.entry_total (cache : SequenceCache) (slot : Std.U8) :
+    ∃ result, SequenceCache.entry cache slot = ok result := by
+  simp only [SequenceCache.entry, capacity_eq_ok, lift, bind_tc_ok]
+  split_ifs with hlen hcap
+  · simp only [array_index_eq_ok cache.entries (UScalar.cast UScalarTy.Usize slot)
+      (by scalar_tac), bind_tc_ok, RustM.ok.injEq, exists_eq']
+  · exact ⟨_, rfl⟩
+  · exact ⟨_, rfl⟩
+
+/-- Logical slot lookup returns normally even for inconsistent slot and length values. -/
+theorem RatchetState.receive_key_at_total (state : RatchetState) (slot : Std.U8) :
+    ∃ result, RatchetState.receive_key_at state slot = ok result :=
+  SequenceCache.entry_total state.receive_cache slot
+
 end beaconcrypt_core.ratchet.control
