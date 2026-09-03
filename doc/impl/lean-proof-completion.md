@@ -28,8 +28,8 @@ The first parallel tasks own separate new modules: `PanicFreedom/Control.lean` a
 
 - Created isolated integration and three agent worktrees from `27ff282`.
 - Verified access to `ssh://git@git.mschn.fr/amn/beaconcrypt` and confirmed the baseline `vcvio` head.
-- The tracked baseline and integrated foundation build pass (`lake build`, 3,107 jobs).
+- The tracked baseline and integrated foundation build passed; the final panic-freedom build now checks 3,110 jobs.
 - Checked foundation modules are imported by the maintained root and included in the trust-boundary inventory. The inventory and formatting checks pass; core unit and transcript-fidelity tests pass.
-- Full workspace mutation testing is running (1,164 mutants). No completed run is claimed yet.
-- Locked aggregate verification currently fails at regenerated F* initial-output arithmetic before Lean; historical artifacts remain intact.
-- Complete receive effect composition and the generated API coverage gate remain in progress.
+- Full workspace mutation testing passed all 1,164 mutants: 814 caught, 350 unviable, zero missed and zero timed out.
+- Locked aggregate verification currently fails at regenerated F* initial-output arithmetic before Lean; historical artifacts remain intact. Fresh locked Lean extraction reproduced all generated files without changes.
+- Panic-freedom milestones 1 and 2 are complete: all 269 unconditional contracts compile, the locked complete Lean build passes (3,110 jobs), all nine checker regressions pass, and the reviewed inventory passes. The full dependency audit found only standard Lean axioms (19 axiom-free contracts; 250 with propext/Classical.choice/Quot.sound).

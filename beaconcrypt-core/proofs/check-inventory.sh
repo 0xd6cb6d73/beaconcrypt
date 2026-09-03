@@ -48,13 +48,13 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=59
+	[handwritten-lean]=62
 	[handwritten-proverif]=64
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
-	[lean-control]=9
+	[lean-control]=12
 	[validation]=3
 )
 for category in "${!expected_category_counts[@]}"; do
@@ -185,6 +185,9 @@ done
 compare_set handwritten-lean "$tmp_dir/handwritten-lean"
 
 printf '%s\n' \
+	../scripts/check_lean_panic_freedom.py \
+	../scripts/test_check_lean_panic_freedom.py \
+	proofs/lean/panic-freedom.json \
 	proofs/lean/.gitignore \
 	proofs/lean/ARISTOTLE_SUMMARY.md \
 	proofs/lean/PQXDH_IDEAL_MODEL.md \

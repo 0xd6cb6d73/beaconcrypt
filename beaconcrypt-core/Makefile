@@ -212,7 +212,7 @@ LEAN_GENERATED_PATHS := \
 	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity \
-	check-toolchain check-fstar-policy check-lean-policy check-lean-root check-inventory \
+	check-toolchain check-fstar-policy check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-fstar check-fstar extract-proverif check-proverif \
 	check-proverif-extraction check-generated check-generated-fstar check-generated-lean \
 	$(PROVERIF_CHECK_TARGETS) $(PROVERIF_VERIFY_TARGETS) \
@@ -671,6 +671,7 @@ check-lean-policy:
 check-lean-root:
 	@for module in \
 		BeaconcryptCore.Extraction \
+		BeaconcryptCore.PanicFreedom.API \
 		BeaconcryptCore.Refinement.PqxdhSession \
 		BeaconcryptCore.Refinement.PqxdhCommitment \
 		BeaconcryptCore.Verification.PqxdhCommitmentRefinement \
@@ -695,7 +696,13 @@ check-lean-root:
 		exit 1; \
 	}
 
-check-lean: check-lean-policy check-lean-root
+# Reconstruct unconditional contracts from every current extracted operation.
+# The following Lake build checks each certificate against that exact signature.
+check-lean-panic-freedom:
+	python3 ../scripts/test_check_lean_panic_freedom.py
+	python3 ../scripts/check_lean_panic_freedom.py
+
+check-lean: check-lean-policy check-lean-root check-lean-panic-freedom
 	cd $(LEAN_DIR) && lake build
 
 # Regenerate and check the complete default beaconcrypt-core production surface.
