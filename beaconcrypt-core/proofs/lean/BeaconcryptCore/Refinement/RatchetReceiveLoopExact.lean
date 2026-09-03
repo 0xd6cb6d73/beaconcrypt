@@ -183,4 +183,89 @@ theorem pending_receive_slots_are_valid_true
   pending_receive_slots_are_valid_loop_true state pending left.val slot expected left rfl
     hcap hlen hseq hempty hstaged
 
+/-- A bounded empty material window passes destination validation. -/
+theorem refined_receive_slots_are_empty_loop_true
+    (state : RefinedRatchet SendChain ReceiveChain Material) (n : Nat) :
+    ∀ (slot left : Std.U8), left.val = n → slot.val + left.val ≤ 50 →
+      (∀ i, slot.val ≤ i → i < slot.val + left.val →
+        state.receive_slots.val[i]! = core.option.Option.None) →
+      refined_receive_slots_are_empty_loop state slot left = ok true := by
+  induction n with
+  | zero =>
+    intro slot left hleft hcap hempty
+    simp only [refined_receive_slots_are_empty_loop, loop.eq_def,
+      refined_receive_slots_are_empty_loop.body, if_neg (by scalar_tac : ¬left > 0#u8)]
+  | succ n ih =>
+    intro slot left hleft hcap hempty
+    rw [refined_receive_slots_are_empty_loop, loop.eq_def]
+    simp only [refined_receive_slots_are_empty_loop.body, if_pos (by scalar_tac : left > 0#u8),
+      lift, capacity_eq_ok, bind_tc_ok,
+      if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
+      array_index_bang state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
+      show (UScalar.cast UScalarTy.Usize slot).val = slot.val by simp_scalar,
+      hempty slot.val (by omega) (by omega), core.option.Option.is_some,
+      Std.core.option.Option.is_some, Option.isSome, core.option.Option.None, Bool.false_eq_true, if_false]
+    obtain ⟨slot', hslot, hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
+    obtain ⟨left', hnext, hnextval⟩ := uscalar_sub_eq_ok left 1#u8 (by scalar_tac)
+    have hrun := ih slot' left' (by scalar_tac) (by scalar_tac)
+      (fun i hi hj => hempty i (by scalar_tac) (by scalar_tac))
+    simp only [refined_receive_slots_are_empty_loop, refined_receive_slots_are_empty_loop.body,
+      lift, capacity_eq_ok, core.option.Option.is_some, Std.core.option.Option.is_some, Option.isSome,
+      bind_tc_ok] at hrun
+    simpa only [hslot, hnext, bind_tc_ok] using hrun
+
+/-- The public destination validator accepts bounded empty windows. -/
+theorem refined_receive_slots_are_empty_true
+    (state : RefinedRatchet SendChain ReceiveChain Material) (slot left : Std.U8)
+    (hcap : slot.val + left.val ≤ 50)
+    (hempty : ∀ i, slot.val ≤ i → i < slot.val + left.val →
+      state.receive_slots.val[i]! = core.option.Option.None) :
+    refined_receive_slots_are_empty state slot left = ok true :=
+  refined_receive_slots_are_empty_loop_true state left.val slot left rfl hcap hempty
+
+/-- Equal bounded logical cache windows pass prefix validation. -/
+theorem receive_control_prefix_matches_loop_true
+    (entry committed : ratchet.control.RatchetState) (n : Nat) :
+    ∀ (slot left : Std.U8), left.val = n → slot.val + left.val ≤ 50 →
+      slot.val + left.val ≤ entry.receive_cache.len.val →
+      slot.val + left.val ≤ committed.receive_cache.len.val →
+      (∀ i, slot.val ≤ i → i < slot.val + left.val →
+        entry.receive_cache.entries.val[i]! = committed.receive_cache.entries.val[i]!) →
+      receive_control_prefix_matches_loop entry committed slot left = ok true := by
+  induction n with
+  | zero =>
+    intro slot left hleft hcap hentry hcommitted hmatch
+    simp only [receive_control_prefix_matches_loop, loop.eq_def,
+      receive_control_prefix_matches_loop.body, if_neg (by scalar_tac : ¬left > 0#u8)]
+  | succ n ih =>
+    intro slot left hleft hcap hentry hcommitted hmatch
+    rw [receive_control_prefix_matches_loop, loop.eq_def]
+    simp only [receive_control_prefix_matches_loop.body, if_pos (by scalar_tac : left > 0#u8),
+      lift, capacity_eq_ok, bind_tc_ok,
+      if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
+      receive_key_at_exact entry slot (by omega) (by omega),
+      receive_key_at_exact committed slot (by omega) (by omega),
+      hmatch slot.val (by omega) (by omega), core.option.Option.Insts.CoreCmpPartialEqOption.eq,
+      core.U64.Insts.CoreCmpPartialEqU64, beq_self_eq_true, if_true]
+    obtain ⟨slot', hslot, hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
+    obtain ⟨left', hnext, hnextval⟩ := uscalar_sub_eq_ok left 1#u8 (by scalar_tac)
+    have hrun := ih slot' left' (by scalar_tac) (by scalar_tac) (by scalar_tac) (by scalar_tac)
+      (fun i hi hj => hmatch i (by scalar_tac) (by scalar_tac))
+    simp only [receive_control_prefix_matches_loop, receive_control_prefix_matches_loop.body,
+      lift, capacity_eq_ok, bind_tc_ok, core.option.Option.Insts.CoreCmpPartialEqOption.eq,
+      core.U64.Insts.CoreCmpPartialEqU64] at hrun
+    simpa only [hslot, hnext, bind_tc_ok] using hrun
+
+/-- The public prefix validator accepts equal bounded logical cache windows. -/
+theorem receive_control_prefix_matches_true
+    (entry committed : ratchet.control.RatchetState) (slot left : Std.U8)
+    (hcap : slot.val + left.val ≤ 50)
+    (hentry : slot.val + left.val ≤ entry.receive_cache.len.val)
+    (hcommitted : slot.val + left.val ≤ committed.receive_cache.len.val)
+    (hmatch : ∀ i, slot.val ≤ i → i < slot.val + left.val →
+      entry.receive_cache.entries.val[i]! = committed.receive_cache.entries.val[i]!) :
+    receive_control_prefix_matches entry committed slot left = ok true :=
+  receive_control_prefix_matches_loop_true entry committed left.val slot left rfl
+    hcap hentry hcommitted hmatch
+
 end beaconcrypt_core.ratchet.refined
