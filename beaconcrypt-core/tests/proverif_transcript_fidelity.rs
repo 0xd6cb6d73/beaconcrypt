@@ -156,6 +156,62 @@ const EXPECTED_FACTS: &[&str] = &[
 	"cryptoframe.symbolic.open=ideal_exact_constructor_rule",
 	"cryptoframe.symbolic.retained_tag=shared_by_aead_and_commitment",
 	"cryptoframe.symbolic.absent=frame_and_seal_arguments:target_id,direction,session,phase,aead_label,ctx_label",
+	"endpoint.server.send.target=peer_key_id",
+	"endpoint.server.send.sender=local_identity_key_id",
+	"endpoint.server.send.associated_data=server_identity,peer_identity",
+	"endpoint.server.send.ratchet=peer_key_id",
+	"endpoint.server.receive.sender_source=parsed_wire_key_id",
+	"endpoint.server.receive.lookup_id.trust=untrusted_before_open",
+	"endpoint.server.receive.peer_lookup=parsed_wire_key_id",
+	"endpoint.server.receive.associated_data=server_identity,selected_peer_identity",
+	"endpoint.server.receive.ratchet=parsed_wire_key_id",
+	"endpoint.server.receive.expected_sender=parsed_wire_key_id",
+	"endpoint.server.receive.acceptance_control=open_returns_some",
+	"endpoint.server.receive.order=parsed_sender,peer_associated_data,peer_ratchet,open,accept",
+	"endpoint.server.established.associated_data=recomputed_server_identity,stored_selected_peer_identity",
+	"endpoint.beacon.send.target=control.server_key_id",
+	"endpoint.beacon.send.sender=assigned_identity_key_id",
+	"endpoint.beacon.send.associated_data=stored_establishment",
+	"endpoint.beacon.send.ratchet=single_established",
+	"endpoint.beacon.receive.expected_sender=control.server_key_id",
+	"endpoint.beacon.receive.associated_data=stored_establishment",
+	"endpoint.beacon.receive.ratchet=single_established",
+	"endpoint.registration.server.initial.target=assigned_remote_key_id",
+	"endpoint.registration.server.initial.sender=candidate.server_identity_key_id",
+	"endpoint.registration.server.initial.associated_data=candidate.associated_data",
+	"endpoint.registration.server.initial.ratchet=candidate_initial",
+	"endpoint.registration.server.initial.returned_target_metadata=assigned_remote_key_id",
+	"endpoint.registration.server.commit.peer_map=assigned_remote_key_id,peer_identity,candidate_ratchet_after_initial_send",
+	"endpoint.registration.server.order=initial_seal,serialize_response,commit_candidate,insert_peer,publish_control,return",
+	"endpoint.registration.beacon.initial.expected_sender=candidate.server_key_id",
+	"endpoint.registration.beacon.initial.associated_data=candidate.associated_data",
+	"endpoint.registration.beacon.initial.ratchet=candidate_initial",
+	"endpoint.registration.beacon.commit.associated_data=same_candidate_value",
+	"endpoint.registration.beacon.commit.ratchet=candidate_ratchet_after_successful_initial_open",
+	"endpoint.registration.beacon.commit.local_sender=authenticated_assigned_key_id",
+	"endpoint.registration.beacon.order=initial_open,key_id_binding_authentication,pinned_server_id,pinned_server_identity,assign_local_id,store_established",
+	"endpoint.symbolic.main_honest.server_to_beacon.sender=SERVER_KEY_ID",
+	"endpoint.symbolic.main_honest.server_to_beacon.event_receiver=assigned_key_id",
+	"endpoint.symbolic.main_honest.beacon_to_server.sender=assigned_key_id",
+	"endpoint.symbolic.main_honest.beacon_to_server.event_receiver=SERVER_KEY_ID",
+	"endpoint.symbolic.main_honest.associated_data=server_identity,beacon_identity",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.server_open.count=4",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.server_open.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,initial_frame;server_material_3,associated_data,next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,third_frame;server_material_2,associated_data,next_sequence(first_sequence()),SERVER_KEY_ID,second_frame;ratchet_material(ratchet_next(server_chain_3)),associated_data,next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,fourth_frame",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.beacon_seal.count=1",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.beacon_seal.calls=beacon_material_1,associated_data,first_sequence(),assigned_key_id,beacon_record_secret",
+	"endpoint.symbolic.main_honest.fixture.server.server_seal.count=4",
+	"endpoint.symbolic.main_honest.fixture.server.server_seal.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,registration_payload(binding,initial_secret);server_material_2,associated_data,next_sequence(first_sequence()),SERVER_KEY_ID,cached_secret;server_material_3,associated_data,next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,advance_secret;server_material_4,associated_data,next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,future_secret",
+	"endpoint.symbolic.main_honest.fixture.server.beacon_open.count=1",
+	"endpoint.symbolic.main_honest.fixture.server.beacon_open.calls=beacon_material_1,associated_data,first_sequence(),assigned_key_id,beacon_frame",
+	"endpoint.symbolic.main_honest.fixture.events.fields=session,direction,sequence,sender,event_receiver,plaintext",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.received_events.calls=session,server_to_beacon(),first_sequence(),SERVER_KEY_ID,assigned_key_id,initial_plaintext;session,server_to_beacon(),next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,assigned_key_id,third_plaintext;session,server_to_beacon(),next_sequence(first_sequence()),SERVER_KEY_ID,assigned_key_id,second_plaintext;session,server_to_beacon(),next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,assigned_key_id,fourth_plaintext",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.sent_events.calls=session,beacon_to_server(),first_sequence(),assigned_key_id,SERVER_KEY_ID,beacon_record_secret",
+	"endpoint.symbolic.main_honest.fixture.server.sent_events.calls=session,server_to_beacon(),first_sequence(),SERVER_KEY_ID,assigned_key_id,initial_secret;session,server_to_beacon(),next_sequence(first_sequence()),SERVER_KEY_ID,assigned_key_id,cached_secret;session,server_to_beacon(),next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,assigned_key_id,advance_secret;session,server_to_beacon(),next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,assigned_key_id,future_secret",
+	"endpoint.symbolic.main_honest.fixture.server.received_events.calls=session,beacon_to_server(),first_sequence(),assigned_key_id,SERVER_KEY_ID,beacon_plaintext",
+	"endpoint.symbolic.malicious_registration.initial.sender=SERVER_KEY_ID",
+	"endpoint.symbolic.malicious_registration.associated_data=server_identity,beacon_identity",
+	"endpoint.symbolic.malicious_registration.fixture.initial_seal.count=1",
+	"endpoint.symbolic.malicious_registration.fixture.initial_seal.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,registration_payload(binding,MALICIOUS_TASK_SECRET)",
 	"agreement.constructor=establishment_transcript",
 	"agreement.field_count=18",
 	"agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin",
@@ -484,6 +540,35 @@ fn require_ordered_once(source: &str, wanted: &[&str], label: &str) -> Result<()
 			.find(item)
 			.ok_or_else(|| format!("{label} changed: {item} is out of order"))?;
 		cursor += relative + item.len();
+	}
+	Ok(())
+}
+
+fn section_between<'a>(
+	source: &'a str,
+	start_marker: &str,
+	end_marker: &str,
+	label: &str,
+) -> Result<&'a str, String> {
+	let start = source
+		.find(start_marker)
+		.ok_or_else(|| format!("missing {label} start: {start_marker}"))?;
+	let relative_end = source[start + start_marker.len()..]
+		.find(end_marker)
+		.ok_or_else(|| format!("missing {label} end: {end_marker}"))?;
+	let end = start + start_marker.len() + relative_end;
+	Ok(&source[start..end])
+}
+
+fn require_exact_calls(
+	source: &str,
+	function: &str,
+	expected: &[Vec<String>],
+	label: &str,
+) -> Result<(), String> {
+	let calls = all_arguments(source, function)?;
+	if calls != expected {
+		return Err(format!("{label} changed: {calls:?}"));
 	}
 	Ok(())
 }
@@ -1266,6 +1351,515 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 	Ok(())
 }
 
+fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), String> {
+	let parsed_sender = rust_body(&snapshot.adapter_ratchet, "encrypted_frame_sender")?;
+	require_once(
+		&parsed_sender,
+		"letreader=capnp::serialize::read_message(data,ReaderOptions::new()).ok()?;",
+		"endpoint Server wire-sender Cap'n Proto read",
+	)?;
+	require_once(
+		&parsed_sender,
+		"lettyped_reader=TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader);",
+		"endpoint Server wire-sender typed CryptoFrame reader",
+	)?;
+	require_once(
+		&parsed_sender,
+		"Some(typed_reader.get().ok()?.get_key_id())",
+		"endpoint Server wire-sender keyId getter",
+	)?;
+	require_ordered_once(
+		&parsed_sender,
+		&[
+			"capnp::serialize::read_message(data,ReaderOptions::new())",
+			"TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"typed_reader.get().ok()?.get_key_id()",
+		],
+		"endpoint Server wire-sender parse source order",
+	)?;
+
+	let server_associated_data = rust_body(&snapshot.adapter_server, "associated_data")?;
+	require_one_call(
+		&server_associated_data,
+		"build_associated_data",
+		&[
+			"self.identity_pk().clone()",
+			"self.pk_by_kid(k)?.clone()",
+			"",
+		],
+		"endpoint Server server-first associated-data mapping",
+	)?;
+
+	let server_send = rust_body(&snapshot.adapter_server, "encrypt_message")?;
+	require_once(
+		&server_send,
+		"letad=self.associated_data(k)?;",
+		"endpoint Server send peer-associated data",
+	)?;
+	require_once(
+		&server_send,
+		"letsender=self.identity_key_kid;",
+		"endpoint Server send local sender",
+	)?;
+	require_one_call(
+		&server_send,
+		"encrypt_message_with_ratchet",
+		&["b", "k", "sender", "&ad", "self.ratchet_manager_mut(k)?"],
+		"endpoint Server send target/sender/context/ratchet mapping",
+	)?;
+	let server_receive = rust_body(&snapshot.adapter_server, "decrypt_message_transition")?;
+	require_once(
+		&server_receive,
+		"letSome(k)=crate::ratchet::encrypted_frame_sender(b)else{returnReceiveTransition::Rejected;};",
+		"endpoint Server parsed sender selector",
+	)?;
+	require_once(
+		&server_receive,
+		"letSome(ad)=self.associated_data(k)else{returnReceiveTransition::Rejected;};",
+		"endpoint Server receive selected-peer associated data",
+	)?;
+	require_once(
+		&server_receive,
+		"letSome(ratchet)=self.ratchet_manager_mut(k)else{returnReceiveTransition::Rejected;};",
+		"endpoint Server receive selected-peer ratchet",
+	)?;
+	require_one_call(
+		&server_receive,
+		"decrypt_message_with_ratchet",
+		&["b", "k", "&ad", "ratchet"],
+		"endpoint Server receive expected-sender/context/ratchet mapping",
+	)?;
+	require_once(
+		&server_receive,
+		"Some(decrypted)=>ReceiveTransition::Accepted(decrypted),None=>ReceiveTransition::Rejected,",
+		"endpoint Server acceptance only after successful open",
+	)?;
+	require_ordered_once(
+		&server_receive,
+		&[
+			"crate::ratchet::encrypted_frame_sender(b)",
+			"self.associated_data(k)",
+			"self.ratchet_manager_mut(k)",
+			"decrypt_message_with_ratchet(b,k,&ad,ratchet)",
+			"Some(decrypted)=>ReceiveTransition::Accepted(decrypted)",
+		],
+		"endpoint Server receive source order",
+	)?;
+
+	let beacon_send = rust_body(&snapshot.adapter_beacon, "encrypt_message")?;
+	require_once(
+		&beacon_send,
+		"letsender=self.identity_key_kid;",
+		"endpoint Beacon assigned sender snapshot",
+	)?;
+	require_once(
+		&beacon_send,
+		"letBeaconState::Established{control,associated_data,ratchet,}=&mutself.stateelse{returnNone;};",
+		"endpoint Beacon send stored establishment state",
+	)?;
+	require_one_call(
+		&beacon_send,
+		"encrypt_message_with_ratchet",
+		&[
+			"b",
+			"control.server_key_id()",
+			"sender",
+			"associated_data",
+			"ratchet",
+		],
+		"endpoint Beacon send target/sender/stored context mapping",
+	)?;
+	let beacon_receive = rust_body(&snapshot.adapter_beacon, "decrypt_message")?;
+	require_once(
+		&beacon_receive,
+		"letBeaconState::Established{control,associated_data,ratchet,}=&mutself.stateelse{returnNone;};",
+		"endpoint Beacon receive stored establishment state",
+	)?;
+	require_one_call(
+		&beacon_receive,
+		"decrypt_message_with_ratchet",
+		&["b", "control.server_key_id()", "associated_data", "ratchet"],
+		"endpoint Beacon receive expected-sender/stored context mapping",
+	)?;
+
+	let server_initial = rust_body(&snapshot.adapter_server, "build_registration_response")?;
+	require_once(
+		&server_initial,
+		"letremote_kid=candidate.key_id();",
+		"endpoint registration assigned remote key ID",
+	)?;
+	require_one_call(
+		&server_initial,
+		"start_server_candidate_ratchet_kdf",
+		&["&candidate", "derived_secret.as_array()"],
+		"endpoint registration Server candidate ratchet",
+	)?;
+	require_once(
+		&server_initial,
+		"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
+		"endpoint registration Server initial ratchet materialization",
+	)?;
+	require_once(
+		&server_initial,
+		"letassociated_data=*candidate.associated_data();",
+		"endpoint registration Server candidate associated data",
+	)?;
+	require_once(
+		&server_initial,
+		"letpublic_key=crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?;",
+		"endpoint registration Server candidate peer identity",
+	)?;
+	require_one_call(
+		&server_initial,
+		"encrypt_message_with_ratchet",
+		&[
+			"&authenticated_plaintext",
+			"remote_kid",
+			"candidate.server_identity_key_id()",
+			"&associated_data",
+			"&mutratchet",
+			"",
+		],
+		"endpoint registration Server initial target/sender/context/ratchet mapping",
+	)?;
+	require_once(
+		&server_initial,
+		"Some(RegResponse{serialized:buffer,kid:remote_kid,})",
+		"endpoint registration Server returned target metadata",
+	)?;
+	require_once(
+		&server_initial,
+		"letold=self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,ratchet));",
+		"endpoint registration Server committed peer identity and candidate ratchet",
+	)?;
+	require_ordered_once(
+		&server_initial,
+		&[
+			"crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key())",
+			"start_server_candidate_ratchet_kdf(&candidate,derived_secret.as_array())",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"letassociated_data=*candidate.associated_data();",
+			"encrypt_message_with_ratchet(",
+			"letencrypted=encrypted?;",
+			"bundle.set_key_id(remote_kid)",
+			"capnp::serialize_packed::write_message(&mutbuffer,msg.borrow_inner()).ok()?;",
+			"let(next_control,established_peer)=verified_pqxdh::server_commit(candidate);",
+			"self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,ratchet))",
+			"self.control=next_control;",
+			"Some(RegResponse{serialized:buffer,kid:remote_kid,})",
+		],
+		"endpoint registration Server initial source order",
+	)?;
+
+	let beacon_initial = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
+	require_one_call(
+		&beacon_initial,
+		"start_beacon_candidate_ratchet_kdf",
+		&["&candidate", "derived_secret.as_array()"],
+		"endpoint registration Beacon candidate ratchet",
+	)?;
+	require_once(
+		&beacon_initial,
+		"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
+		"endpoint registration Beacon initial ratchet materialization",
+	)?;
+	require_once(
+		&beacon_initial,
+		"letassociated_data=*candidate.associated_data();",
+		"endpoint registration Beacon candidate associated data",
+	)?;
+	require_one_call(
+		&beacon_initial,
+		"decrypt_message_with_ratchet",
+		&[
+			"response.get_app_cipher_text().ok()?",
+			"candidate.server_key_id()",
+			"&associated_data",
+			"&mutratchet",
+			"",
+		],
+		"endpoint registration Beacon initial expected-sender/context/ratchet mapping",
+	)?;
+	require_once(
+		&beacon_initial,
+		"Some((authenticated,associated_data,ratchet,plaintext))})();",
+		"endpoint registration Beacon candidate context handoff",
+	)?;
+	require_once(
+		&beacon_initial,
+		"self.identity_key_kid=authenticated.assigned_key_id();",
+		"endpoint registration Beacon assigned local sender",
+	)?;
+	require_once(
+		&beacon_initial,
+		"self.state=BeaconState::Established{control:verified_pqxdh::beacon_commit(authenticated),associated_data,ratchet,};",
+		"endpoint registration Beacon stores candidate context",
+	)?;
+	require_ordered_once(
+		&beacon_initial,
+		&[
+			"start_beacon_candidate_ratchet_kdf(&candidate,derived_secret.as_array())",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"letassociated_data=*candidate.associated_data();",
+			"decrypt_message_with_ratchet(",
+			"verified_pqxdh::authenticate_registration_key_id_binding(",
+			"Some((authenticated,associated_data,ratchet,plaintext))})();",
+			"letserver_binding=authenticated.server_binding();",
+			"ifself.server_kid()!=server_kid",
+			"ifself.server_id.as_bytes()!=&server_binding.identity_public_key",
+			"self.identity_key_kid=authenticated.assigned_key_id();",
+			"self.state=BeaconState::Established",
+		],
+		"endpoint registration Beacon initial source order",
+	)?;
+
+	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	let honest_beacon = section_between(
+		&environment,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"symbolic HonestBeacon endpoint",
+	)?;
+	let server = section_between(
+		&environment,
+		"letServer(",
+		"letMaliciousServer(",
+		"symbolic Server endpoint",
+	)?;
+	let malicious_server = section_between(
+		&environment,
+		"letMaliciousServer(",
+		"letKeepBeaconStatePrivate(",
+		"symbolic MaliciousServer endpoint",
+	)?;
+
+	let honest_open_calls = all_arguments(honest_beacon, "open_frame")?;
+	let expected_honest_open_calls = [
+		[
+			"server_material_1",
+			"associated_data",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"initial_frame",
+		],
+		[
+			"server_material_3",
+			"associated_data",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"third_frame",
+		],
+		[
+			"server_material_2",
+			"associated_data",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"second_frame",
+		],
+		[
+			"ratchet_material(ratchet_next(server_chain_3))",
+			"associated_data",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"fourth_frame",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	if honest_open_calls != expected_honest_open_calls {
+		return Err(format!(
+			"symbolic server-to-Beacon open wiring changed: {honest_open_calls:?}"
+		));
+	}
+	require_one_call(
+		honest_beacon,
+		"seal_frame",
+		&[
+			"beacon_material_1",
+			"associated_data",
+			"first_sequence()",
+			"assigned_key_id",
+			"beacon_record_secret",
+		],
+		"symbolic Beacon-to-Server seal wiring",
+	)?;
+
+	let server_seal_calls = all_arguments(server, "seal_frame")?;
+	let expected_server_seal_calls = [
+		[
+			"server_material_1",
+			"associated_data",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"registration_payload(binding,initial_secret)",
+		],
+		[
+			"server_material_2",
+			"associated_data",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"cached_secret",
+		],
+		[
+			"server_material_3",
+			"associated_data",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"advance_secret",
+		],
+		[
+			"server_material_4",
+			"associated_data",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"future_secret",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	if server_seal_calls != expected_server_seal_calls {
+		return Err(format!(
+			"symbolic Server-to-Beacon seal wiring changed: {server_seal_calls:?}"
+		));
+	}
+	require_one_call(
+		server,
+		"open_frame",
+		&[
+			"beacon_material_1",
+			"associated_data",
+			"first_sequence()",
+			"assigned_key_id",
+			"beacon_frame",
+		],
+		"symbolic Server Beacon-frame open wiring",
+	)?;
+	require_one_call(
+		malicious_server,
+		"seal_frame",
+		&[
+			"server_material_1",
+			"associated_data",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"registration_payload(binding,MALICIOUS_TASK_SECRET)",
+		],
+		"symbolic malicious-registration initial-frame wiring",
+	)?;
+
+	let honest_received_events = [
+		[
+			"session",
+			"server_to_beacon()",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"initial_plaintext",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"third_plaintext",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"second_plaintext",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"fourth_plaintext",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		honest_beacon,
+		"MessageReceived",
+		&honest_received_events,
+		"symbolic HonestBeacon received-event fixture",
+	)?;
+	let honest_sent_events = [[
+		"session",
+		"beacon_to_server()",
+		"first_sequence()",
+		"assigned_key_id",
+		"SERVER_KEY_ID",
+		"beacon_record_secret",
+	]]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		honest_beacon,
+		"MessageSent",
+		&honest_sent_events,
+		"symbolic HonestBeacon sent-event fixture",
+	)?;
+	let server_sent_events = [
+		[
+			"session",
+			"server_to_beacon()",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"initial_secret",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"cached_secret",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"advance_secret",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"future_secret",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		server,
+		"MessageSent",
+		&server_sent_events,
+		"symbolic Server sent-event fixture",
+	)?;
+	let server_received_events = [[
+		"session",
+		"beacon_to_server()",
+		"first_sequence()",
+		"assigned_key_id",
+		"SERVER_KEY_ID",
+		"beacon_plaintext",
+	]]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		server,
+		"MessageReceived",
+		&server_received_events,
+		"symbolic Server received-event fixture",
+	)?;
+	Ok(())
+}
+
 fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 	let interface = compact(&uncommented_pv(&snapshot.interface)?);
 	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
@@ -1715,6 +2309,7 @@ fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_phase1_source(snapshot)?;
 	validate_phase2_source(snapshot)?;
 	validate_cryptoframe_source(snapshot)?;
+	validate_endpoint_frame_context_wiring(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
 
@@ -1734,6 +2329,40 @@ fn replace_once_after(source: &mut String, marker: &str, from: &str, to: &str) {
 		.unwrap_or_else(|| panic!("mutation anchor missing after {marker}: {from}"));
 	let start = marker_start + relative;
 	source.replace_range(start..start + from.len(), to);
+}
+
+fn replace_nth_call_argument_after(
+	source: &mut String,
+	scope_marker: &str,
+	function: &str,
+	call_index: usize,
+	argument_index: usize,
+	replacement: &str,
+) {
+	let scope_start = source
+		.find(scope_marker)
+		.unwrap_or_else(|| panic!("mutation scope missing: {scope_marker}"));
+	let call_marker = format!("{function}(");
+	let mut search_start = scope_start;
+	for current in 0..=call_index {
+		let relative = source[search_start..]
+			.find(&call_marker)
+			.unwrap_or_else(|| panic!("mutation call missing: {function} #{call_index}"));
+		let call_start = search_start + relative;
+		let open = call_start + call_marker.len() - 1;
+		let (mut arguments, end) = parse_call(source, open).unwrap();
+		if current == call_index {
+			assert!(
+				argument_index < arguments.len(),
+				"mutation argument missing: {function} #{call_index} argument #{argument_index}"
+			);
+			arguments[argument_index] = replacement.to_owned();
+			source.replace_range(open + 1..end - 1, &arguments.join(","));
+			return;
+		}
+		search_start = end;
+	}
+	unreachable!();
 }
 
 fn mutate_fact(source: &mut String, key: &str, value: &str) {
@@ -3773,6 +4402,842 @@ fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
 	mutation_count += 1;
 
 	assert_eq!(mutation_count, PHASE1_REGISTRATION_MUTATION_COUNT);
+}
+
+const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 242;
+
+#[test]
+fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let endpoint_facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("endpoint."))
+		.collect::<Vec<_>>();
+	assert_eq!(endpoint_facts.len(), 56);
+	for fact in endpoint_facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_rejected(&format!("endpoint_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_sender_parser_ignores_wire",
+			"capnp::serialize::read_message(data, ReaderOptions::new())",
+			"capnp::serialize::read_message(&[], ReaderOptions::new())",
+			"endpoint Server wire-sender Cap'n Proto read",
+		),
+		(
+			"endpoint_sender_parser_uses_phase2_type",
+			"TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"TypedReader::<_, crate::phase2_capnp::kex_response::Owned>::new(reader)",
+			"endpoint Server wire-sender typed CryptoFrame reader",
+		),
+		(
+			"endpoint_sender_parser_returns_sequence",
+			"Some(typed_reader.get().ok()?.get_key_id())",
+			"Some(typed_reader.get().ok()?.get_seq())",
+			"endpoint Server wire-sender keyId getter",
+		),
+		(
+			"endpoint_sender_parser_returns_constant",
+			"Some(typed_reader.get().ok()?.get_key_id())",
+			"Some(0)",
+			"endpoint Server wire-sender keyId getter",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn encrypted_frame_sender",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"endpoint_server_ad_reverses_identities",
+			"build_associated_data(\n\t\t\tself.identity_pk().clone(),\n\t\t\tself.pk_by_kid(k)?.clone(),\n\t\t)",
+			"build_associated_data(\n\t\t\tself.pk_by_kid(k)?.clone(),\n\t\t\tself.identity_pk().clone(),\n\t\t)",
+		),
+		(
+			"endpoint_server_ad_selects_local_id",
+			"self.pk_by_kid(k)?.clone()",
+			"self.pk_by_kid(self.identity_key_kid)?.clone()",
+		),
+		(
+			"endpoint_server_ad_uses_peer_twice",
+			"self.identity_pk().clone()",
+			"self.pk_by_kid(k)?.clone()",
+		),
+	] {
+		assert_rejected(
+			name,
+			"endpoint Server server-first associated-data mapping",
+			move |snapshot| {
+				replace_once_after(&mut snapshot.adapter_server, "fn associated_data", from, to);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_server_send_ad_uses_local_id",
+			"let ad = self.associated_data(k)?;",
+			"let ad = self.associated_data(self.identity_key_kid)?;",
+			"endpoint Server send peer-associated data",
+		),
+		(
+			"endpoint_server_send_sender_uses_peer_id",
+			"let sender = self.identity_key_kid;",
+			"let sender = k;",
+			"endpoint Server send local sender",
+		),
+		(
+			"endpoint_server_send_target_uses_local_sender",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"encrypt_message_with_ratchet(b, sender, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"endpoint Server send target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_send_wire_sender_uses_peer",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"encrypt_message_with_ratchet(b, k, k, &ad, self.ratchet_manager_mut(k)?)",
+			"endpoint Server send target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_send_ratchet_uses_local_sender",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(sender)?)",
+			"endpoint Server send target/sender/context/ratchet mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"pub fn encrypt_message(&mut self, b: &[u8], k: u64)",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_server_receive_ignores_parsed_sender",
+			"let Some(k) = crate::ratchet::encrypted_frame_sender(b) else {\n\t\t\treturn ReceiveTransition::Rejected;\n\t\t};",
+			"let Some(_k) = crate::ratchet::encrypted_frame_sender(b) else {\n\t\t\treturn ReceiveTransition::Rejected;\n\t\t};\n\t\tlet k = self.identity_key_kid;",
+			"endpoint Server parsed sender selector",
+		),
+		(
+			"endpoint_server_receive_ad_uses_local_id",
+			"self.associated_data(k)",
+			"self.associated_data(self.identity_key_kid)",
+			"endpoint Server receive selected-peer associated data",
+		),
+		(
+			"endpoint_server_receive_ratchet_uses_local_id",
+			"self.ratchet_manager_mut(k)",
+			"self.ratchet_manager_mut(self.identity_key_kid)",
+			"endpoint Server receive selected-peer ratchet",
+		),
+		(
+			"endpoint_server_receive_expected_sender_uses_local_id",
+			"decrypt_message_with_ratchet(b, k, &ad, ratchet)",
+			"decrypt_message_with_ratchet(b, self.identity_key_kid, &ad, ratchet)",
+			"endpoint Server receive expected-sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_receive_uses_zero_ad",
+			"decrypt_message_with_ratchet(b, k, &ad, ratchet)",
+			"decrypt_message_with_ratchet(b, k, &[0; AD_SIZE], ratchet)",
+			"endpoint Server receive expected-sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_receive_rejects_successful_open",
+			"Some(decrypted) => ReceiveTransition::Accepted(decrypted)",
+			"Some(_decrypted) => ReceiveTransition::Rejected",
+			"endpoint Server acceptance only after successful open",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn decrypt_message_transition",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"endpoint_beacon_send_sender_uses_server_id",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"let sender = self.identity_key_kid;",
+			"let sender = self.server_kid();",
+			"endpoint Beacon assigned sender snapshot",
+		),
+		(
+			"endpoint_beacon_send_target_uses_assigned_id",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, ratchet)",
+			"encrypt_message_with_ratchet(b, sender, sender, associated_data, ratchet)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_send_wire_sender_uses_server_id",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, ratchet)",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), control.server_key_id(), associated_data, ratchet)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_send_replaces_stored_ad",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, ratchet)",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, &[0; AD_SIZE], ratchet)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_receive_expected_sender_uses_assigned_id",
+			"pub fn decrypt_message(&mut self, b: &[u8])",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, ratchet)",
+			"decrypt_message_with_ratchet(b, self.identity_key_kid, associated_data, ratchet)",
+			"endpoint Beacon receive expected-sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_receive_replaces_stored_ad",
+			"pub fn decrypt_message(&mut self, b: &[u8])",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, ratchet)",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), &[0; AD_SIZE], ratchet)",
+			"endpoint Beacon receive expected-sender/stored context mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.adapter_beacon, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_registration_server_peer_identity_uses_local_identity",
+			"crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?",
+			"crypto_sign::PublicKey::from_bytes(candidate.server_identity_public_key()).ok()?",
+			"endpoint registration Server candidate peer identity",
+		),
+		(
+			"endpoint_registration_server_ratchet_uses_zero_root",
+			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"start_server_candidate_ratchet_kdf(&candidate, &[0; 32])",
+			"endpoint registration Server candidate ratchet",
+		),
+		(
+			"endpoint_registration_server_rebuilds_candidate_ad",
+			"let associated_data = *candidate.associated_data();",
+			"let associated_data = self.associated_data(remote_kid)?;",
+			"endpoint registration Server candidate associated data",
+		),
+		(
+			"endpoint_registration_server_target_uses_local_id",
+			"&authenticated_plaintext,\n\t\t\tremote_kid,\n\t\t\tcandidate.server_identity_key_id(),",
+			"&authenticated_plaintext,\n\t\t\tcandidate.server_identity_key_id(),\n\t\t\tcandidate.server_identity_key_id(),",
+			"endpoint registration Server initial target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_registration_server_sender_uses_assigned_id",
+			"&authenticated_plaintext,\n\t\t\tremote_kid,\n\t\t\tcandidate.server_identity_key_id(),",
+			"&authenticated_plaintext,\n\t\t\tremote_kid,\n\t\t\tremote_kid,",
+			"endpoint registration Server initial target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_registration_server_initial_uses_zero_ad",
+			"&associated_data,\n\t\t\t&mut ratchet,",
+			"&[0; AD_SIZE],\n\t\t\t&mut ratchet,",
+			"endpoint registration Server initial target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_registration_server_initial_uses_committed_ratchet",
+			"&associated_data,\n\t\t\t&mut ratchet,",
+			"&associated_data,\n\t\t\tself.ratchet_manager_mut(remote_kid)?,",
+			"endpoint registration Server initial target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_registration_server_return_metadata_uses_local_id",
+			"kid: remote_kid,",
+			"kid: self.identity_key_kid,",
+			"endpoint registration Server returned target metadata",
+		),
+		(
+			"endpoint_registration_server_map_uses_local_id",
+			".insert(remote_kid, EstablishedRemote::new(public_key, ratchet))",
+			".insert(self.identity_key_kid, EstablishedRemote::new(public_key, ratchet))",
+			"endpoint registration Server committed peer identity and candidate ratchet",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn build_registration_response",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"endpoint_registration_server_outer_key_id_uses_local_id",
+		"Phase-2 server assigned-ID mapping",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn build_registration_response",
+				"bundle.set_key_id(remote_kid);",
+				"bundle.set_key_id(candidate.server_identity_key_id());",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_registration_beacon_ratchet_uses_zero_root",
+			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"start_beacon_candidate_ratchet_kdf(&candidate, &[0; 32])",
+			"endpoint registration Beacon candidate ratchet",
+		),
+		(
+			"endpoint_registration_beacon_replaces_candidate_ad",
+			"let associated_data = *candidate.associated_data();",
+			"let associated_data = [0; AD_SIZE];",
+			"endpoint registration Beacon candidate associated data",
+		),
+		(
+			"endpoint_registration_beacon_expected_sender_uses_outer_id",
+			"candidate.server_key_id(),\n\t\t\t\t&associated_data,",
+			"response.get_key_id(),\n\t\t\t\t&associated_data,",
+			"Phase-2 beacon initial-frame mapping",
+		),
+		(
+			"endpoint_registration_beacon_open_uses_zero_ad",
+			"&associated_data,\n\t\t\t\t&mut ratchet,",
+			"&[0; AD_SIZE],\n\t\t\t\t&mut ratchet,",
+			"Phase-2 beacon initial-frame mapping",
+		),
+		(
+			"endpoint_registration_beacon_open_discards_candidate_ratchet",
+			"&associated_data,\n\t\t\t\t&mut ratchet,",
+			"&associated_data,\n\t\t\t\tpanic!(),",
+			"Phase-2 beacon initial-frame mapping",
+		),
+		(
+			"endpoint_registration_beacon_handoff_replaces_ad",
+			"Some((authenticated, associated_data, ratchet, plaintext))",
+			"Some((authenticated, [0; AD_SIZE], ratchet, plaintext))",
+			"endpoint registration Beacon candidate context handoff",
+		),
+		(
+			"endpoint_registration_beacon_handoff_discards_ratchet",
+			"Some((authenticated, associated_data, ratchet, plaintext))",
+			"Some((authenticated, associated_data, panic!(), plaintext))",
+			"endpoint registration Beacon candidate context handoff",
+		),
+		(
+			"endpoint_registration_beacon_local_sender_uses_server_id",
+			"self.identity_key_kid = authenticated.assigned_key_id();",
+			"self.identity_key_kid = server_kid;",
+			"endpoint registration Beacon assigned local sender",
+		),
+		(
+			"endpoint_registration_beacon_state_replaces_ad",
+			"associated_data,\n\t\t\tratchet,",
+			"associated_data: [0; AD_SIZE],\n\t\t\tratchet,",
+			"endpoint registration Beacon stores candidate context",
+		),
+		(
+			"endpoint_registration_beacon_state_discards_ratchet",
+			"associated_data,\n\t\t\tratchet,",
+			"associated_data,\n\t\t\tratchet: panic!(),",
+			"endpoint registration Beacon stores candidate context",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"endpoint_server_receive_fail_open",
+		"endpoint Server acceptance only after successful open",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn decrypt_message_transition",
+				"None => ReceiveTransition::Rejected",
+				"None => ReceiveTransition::Accepted(panic!())",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"endpoint_beacon_send_discards_stored_ratchet",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, ratchet)",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, return None)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_receive_discards_stored_ratchet",
+			"pub fn decrypt_message(&mut self, b: &[u8])",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, ratchet)",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, return None)",
+			"endpoint Beacon receive expected-sender/stored context mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.adapter_beacon, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"endpoint_registration_server_remote_id_uses_local_id",
+		"Phase-2 assigned key-ID source",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn build_registration_response",
+				"let remote_kid = candidate.key_id();",
+				"let remote_kid = candidate.server_identity_key_id();",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_registration_server_materialization_discards_pending",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(panic!()))",
+			"endpoint registration Server initial ratchet materialization",
+		),
+		(
+			"endpoint_registration_server_map_discards_peer_identity",
+			"EstablishedRemote::new(public_key, ratchet)",
+			"EstablishedRemote::new(panic!(), ratchet)",
+			"endpoint registration Server committed peer identity and candidate ratchet",
+		),
+		(
+			"endpoint_registration_server_map_discards_post_send_ratchet",
+			"EstablishedRemote::new(public_key, ratchet)",
+			"EstablishedRemote::new(public_key, panic!())",
+			"endpoint registration Server committed peer identity and candidate ratchet",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn build_registration_response",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_registration_beacon_materialization_discards_pending",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(panic!()))",
+			"endpoint registration Beacon initial ratchet materialization",
+		),
+		(
+			"endpoint_registration_beacon_state_discards_authenticated_control",
+			"control: verified_pqxdh::beacon_commit(authenticated),",
+			"control: panic!(),",
+			"endpoint registration Beacon stores candidate context",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"endpoint_registration_beacon_assigns_local_id_before_server_binding_checks",
+		"endpoint registration Beacon initial source order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {",
+				"let server_binding = authenticated.server_binding();",
+				"self.identity_key_kid = authenticated.assigned_key_id();\n\t\tlet server_binding = authenticated.server_binding();",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"if self.server_id.as_bytes() != &server_binding.identity_public_key",
+				"self.identity_key_kid = authenticated.assigned_key_id();",
+				"let _assigned_id_checked_above = authenticated.assigned_key_id();",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	assert_rejected(
+		"endpoint_registration_server_publishes_control_before_peer_insert",
+		"endpoint registration Server initial source order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn build_registration_response",
+				"let old = self\n\t\t\t.known_ids\n\t\t\t.insert(remote_kid, EstablishedRemote::new(public_key, ratchet));\n\t\tdebug_assert!(old.is_none());\n\t\tself.control = next_control;",
+				"self.control = next_control;\n\t\tlet old = self\n\t\t\t.known_ids\n\t\t\t.insert(remote_kid, EstablishedRemote::new(public_key, ratchet));\n\t\tdebug_assert!(old.is_none());",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (family, scope, function, calls, replacement, diagnostic) in [
+		(
+			"honest_beacon_server_open",
+			"let HonestBeacon(",
+			"open_frame",
+			4usize,
+			"assigned_key_id",
+			"symbolic server-to-Beacon open wiring changed",
+		),
+		(
+			"honest_beacon_send",
+			"let HonestBeacon(",
+			"seal_frame",
+			1usize,
+			"SERVER_KEY_ID",
+			"symbolic Beacon-to-Server seal wiring",
+		),
+		(
+			"server_send",
+			"let Server(",
+			"seal_frame",
+			4usize,
+			"assigned_key_id",
+			"symbolic Server-to-Beacon seal wiring changed",
+		),
+		(
+			"server_beacon_open",
+			"let Server(",
+			"open_frame",
+			1usize,
+			"SERVER_KEY_ID",
+			"symbolic Server Beacon-frame open wiring",
+		),
+		(
+			"malicious_registration_server_send",
+			"let MaliciousServer(",
+			"seal_frame",
+			1usize,
+			"assigned_key_id",
+			"symbolic malicious-registration initial-frame wiring",
+		),
+	] {
+		for call_index in 0..calls {
+			for (argument_index, field, wrong_value) in [
+				(0usize, "material", "server_identity"),
+				(1usize, "associated_data", "server_identity"),
+				(
+					2usize,
+					"sequence",
+					"next_sequence(next_sequence(next_sequence(next_sequence(first_sequence()))))",
+				),
+				(3usize, "sender", replacement),
+				(4usize, "payload", "server_identity"),
+			] {
+				assert_rejected(
+					&format!("endpoint_symbolic_{family}_{field}_{call_index}"),
+					diagnostic,
+					move |snapshot| {
+						replace_nth_call_argument_after(
+							&mut snapshot.environment,
+							scope,
+							function,
+							call_index,
+							argument_index,
+							wrong_value,
+						);
+					},
+				);
+				mutation_count += 1;
+			}
+		}
+	}
+
+	for (name, scope, marker, replacement, diagnostic) in [
+		(
+			"endpoint_symbolic_honest_server_open_count_increases",
+			"let HonestBeacon(",
+			"let opened_initial = open_frame(",
+			"let endpoint_extra_open = open_frame(server_material_1, associated_data, first_sequence(), SERVER_KEY_ID, initial_frame) in\n    let opened_initial = open_frame(",
+			"symbolic server-to-Beacon open wiring changed",
+		),
+		(
+			"endpoint_symbolic_honest_beacon_seal_count_increases",
+			"let HonestBeacon(",
+			"let beacon_frame = seal_frame(",
+			"let endpoint_extra_beacon_frame = seal_frame(beacon_material_1, associated_data, first_sequence(), assigned_key_id, beacon_record_secret) in\n    let beacon_frame = seal_frame(",
+			"symbolic Beacon-to-Server seal wiring",
+		),
+		(
+			"endpoint_symbolic_server_seal_count_increases",
+			"let Server(",
+			"let initial_frame = seal_frame(",
+			"let endpoint_extra_initial_frame = seal_frame(server_material_1, associated_data, first_sequence(), SERVER_KEY_ID, registration_payload(binding, initial_secret)) in\n      let initial_frame = seal_frame(",
+			"symbolic Server-to-Beacon seal wiring changed",
+		),
+		(
+			"endpoint_symbolic_server_open_count_increases",
+			"let Server(",
+			"let beacon_plaintext = open_frame(",
+			"let endpoint_extra_beacon_plaintext = open_frame(beacon_material_1, associated_data, first_sequence(), assigned_key_id, beacon_frame) in\n      let beacon_plaintext = open_frame(",
+			"symbolic Server Beacon-frame open wiring",
+		),
+		(
+			"endpoint_symbolic_malicious_initial_seal_count_increases",
+			"let MaliciousServer(",
+			"let initial_frame = seal_frame(",
+			"let endpoint_extra_malicious_frame = seal_frame(server_material_1, associated_data, first_sequence(), SERVER_KEY_ID, registration_payload(binding, MALICIOUS_TASK_SECRET)) in\n  let initial_frame = seal_frame(",
+			"symbolic malicious-registration initial-frame wiring",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, scope, marker, replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (family, scope, event, calls, direction, sender, receiver, diagnostic) in [
+		(
+			"honest_beacon_receive",
+			"let HonestBeacon(",
+			"MessageReceived",
+			4usize,
+			"server_to_beacon()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"symbolic HonestBeacon received-event fixture",
+		),
+		(
+			"honest_beacon_send",
+			"let HonestBeacon(",
+			"MessageSent",
+			1usize,
+			"beacon_to_server()",
+			"assigned_key_id",
+			"SERVER_KEY_ID",
+			"symbolic HonestBeacon sent-event fixture",
+		),
+		(
+			"server_send",
+			"let Server(",
+			"MessageSent",
+			4usize,
+			"server_to_beacon()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"symbolic Server sent-event fixture",
+		),
+		(
+			"server_receive",
+			"let Server(",
+			"MessageReceived",
+			1usize,
+			"beacon_to_server()",
+			"assigned_key_id",
+			"SERVER_KEY_ID",
+			"symbolic Server received-event fixture",
+		),
+	] {
+		for call_index in 0..calls {
+			let wrong_direction = if direction == "server_to_beacon()" {
+				"beacon_to_server()"
+			} else {
+				"server_to_beacon()"
+			};
+			let wrong_sender = if sender == "SERVER_KEY_ID" {
+				"assigned_key_id"
+			} else {
+				"SERVER_KEY_ID"
+			};
+			let wrong_receiver = if receiver == "SERVER_KEY_ID" {
+				"assigned_key_id"
+			} else {
+				"SERVER_KEY_ID"
+			};
+			for (argument_index, field, wrong_value) in [
+				(0usize, "session", "server_identity"),
+				(1usize, "direction", wrong_direction),
+				(
+					2usize,
+					"sequence",
+					"next_sequence(next_sequence(next_sequence(next_sequence(first_sequence()))))",
+				),
+				(3usize, "sender", wrong_sender),
+				(4usize, "receiver", wrong_receiver),
+				(5usize, "plaintext", "server_identity"),
+			] {
+				assert_rejected(
+					&format!("endpoint_symbolic_{family}_event_{field}_{call_index}"),
+					diagnostic,
+					move |snapshot| {
+						replace_nth_call_argument_after(
+							&mut snapshot.environment,
+							scope,
+							event,
+							call_index,
+							argument_index,
+							wrong_value,
+						);
+					},
+				);
+				mutation_count += 1;
+			}
+		}
+	}
+
+	for (name, scope, marker, replacement, diagnostic) in [
+		(
+			"endpoint_symbolic_honest_received_event_count_increases",
+			"let HonestBeacon(",
+			"event MessageReceived(",
+			"event MessageReceived(session, server_to_beacon(), first_sequence(), SERVER_KEY_ID, assigned_key_id, initial_plaintext);\n    event MessageReceived(",
+			"symbolic HonestBeacon received-event fixture",
+		),
+		(
+			"endpoint_symbolic_honest_sent_event_count_increases",
+			"let HonestBeacon(",
+			"event MessageSent(",
+			"event MessageSent(session, beacon_to_server(), first_sequence(), assigned_key_id, SERVER_KEY_ID, beacon_record_secret);\n    event MessageSent(",
+			"symbolic HonestBeacon sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_sent_event_count_increases",
+			"let Server(",
+			"event MessageSent(",
+			"event MessageSent(session, server_to_beacon(), first_sequence(), SERVER_KEY_ID, assigned_key_id, initial_secret);\n      event MessageSent(",
+			"symbolic Server sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_received_event_count_increases",
+			"let Server(",
+			"event MessageReceived(",
+			"event MessageReceived(session, beacon_to_server(), first_sequence(), assigned_key_id, SERVER_KEY_ID, beacon_plaintext);\n      event MessageReceived(",
+			"symbolic Server received-event fixture",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, scope, marker, replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, scope, marker, replacement, diagnostic) in [
+		(
+			"endpoint_symbolic_honest_received_event_arity_increases",
+			"let HonestBeacon(",
+			"assigned_key_id,\n      initial_plaintext\n    );",
+			"assigned_key_id,\n      initial_plaintext,\n      server_identity\n    );",
+			"symbolic HonestBeacon received-event fixture",
+		),
+		(
+			"endpoint_symbolic_honest_sent_event_arity_increases",
+			"let HonestBeacon(",
+			"SERVER_KEY_ID,\n      beacon_record_secret\n    );",
+			"SERVER_KEY_ID,\n      beacon_record_secret,\n      server_identity\n    );",
+			"symbolic HonestBeacon sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_sent_event_arity_increases",
+			"let Server(",
+			"assigned_key_id,\n        initial_secret\n      );",
+			"assigned_key_id,\n        initial_secret,\n        server_identity\n      );",
+			"symbolic Server sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_received_event_arity_increases",
+			"let Server(",
+			"SERVER_KEY_ID,\n        beacon_plaintext\n      );",
+			"SERVER_KEY_ID,\n        beacon_plaintext,\n        server_identity\n      );",
+			"symbolic Server received-event fixture",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, scope, marker, replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, scope) in [
+		(
+			"endpoint_symbolic_honest_ad_reverses_identities",
+			"let HonestBeacon(",
+		),
+		(
+			"endpoint_symbolic_server_ad_reverses_identities",
+			"let Server(",
+		),
+		(
+			"endpoint_symbolic_malicious_server_ad_reverses_identities",
+			"let MaliciousServer(",
+		),
+	] {
+		assert_rejected(
+			name,
+			"associated-data identity order changed",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					scope,
+					"beaconcrypt_core__pqxdh__build_associated_data",
+					0,
+					0,
+					"beacon_identity",
+				);
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					scope,
+					"beaconcrypt_core__pqxdh__build_associated_data",
+					0,
+					1,
+					"server_identity",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT);
 }
 
 #[test]

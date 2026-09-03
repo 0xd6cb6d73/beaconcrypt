@@ -329,12 +329,14 @@ require_occurrence_count 6 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
-require_line_count 126 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+require_line_count 182 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
 	"canonical production transcript fact"
 require_line_count 18 '^\(\* @beaconcrypt-fidelity-v1 phase1\.' \
 	"$transcript_interface" "Phase-1 InitKex transcript fact"
 require_line_count 42 '^\(\* @beaconcrypt-fidelity-v1 cryptoframe\.' \
 	"$transcript_interface" "CryptoFrame wire transcript fact"
+require_line_count 56 '^\(\* @beaconcrypt-fidelity-v1 endpoint\.' \
+	"$transcript_interface" "endpoint frame-context transcript fact"
 require_line_count 5 '^type ' "$transcript_interface" \
 	"canonical ProVerif interface type"
 require_line_count 19 '^fun ' "$transcript_interface" \
@@ -815,12 +817,13 @@ require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable snapshot"
-require_line_count 5 '^#\[test\]$' \
+require_line_count 6 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
 	compiled_core_matches_the_canonical_transcript \
 	cryptoframe_wire_mutation_matrix_is_complete_and_rejected \
+	endpoint_frame_context_mutation_matrix_is_complete_and_rejected \
 	phase1_registration_mutation_matrix_is_complete_and_rejected \
 	requested_transcript_mutations_are_rejected; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
@@ -830,7 +833,7 @@ require_occurrence_count 1 \
 	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
 	"transcript-fidelity model and adapter composition" "$fidelity_test"
 require_occurrence_count 1 \
-	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
+	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
 require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;$' \
 	"$fidelity_test" "CryptoFrame exact mutation count"
@@ -891,6 +894,38 @@ for phase1_mutation_family in \
 	phase1_core_reorders_prekey_and_one_time_validation; do
 	require_occurrence_count 1 "$phase1_mutation_family" \
 		"Phase-1 ${phase1_mutation_family} mutation family" "$fidelity_test"
+done
+require_line_count 1 '^const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 242;$' \
+	"$fidelity_test" "endpoint frame-context exact mutation count"
+require_occurrence_count 1 \
+	'(?s)fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT\);\s*\}' \
+	"endpoint frame-context mutation matrix count assertion" "$fidelity_test"
+for endpoint_mutation_family in \
+	endpoint_fact_\{key\} \
+	endpoint_sender_parser_ignores_wire \
+	endpoint_server_ad_reverses_identities \
+	endpoint_server_send_target_uses_local_sender \
+	endpoint_server_receive_ignores_parsed_sender \
+	endpoint_server_receive_fail_open \
+	endpoint_beacon_send_target_uses_assigned_id \
+	endpoint_beacon_receive_expected_sender_uses_assigned_id \
+	endpoint_registration_server_map_discards_peer_identity \
+	endpoint_registration_server_publishes_control_before_peer_insert \
+	endpoint_registration_beacon_expected_sender_uses_outer_id \
+	endpoint_registration_beacon_assigns_local_id_before_server_binding_checks \
+	endpoint_symbolic_\{family\}_\{field\}_\{call_index\} \
+	endpoint_symbolic_honest_server_open_count_increases \
+	endpoint_symbolic_server_seal_count_increases \
+	endpoint_symbolic_malicious_initial_seal_count_increases \
+	endpoint_symbolic_\{family\}_event_\{field\}_\{call_index\} \
+	endpoint_symbolic_honest_received_event_count_increases \
+	endpoint_symbolic_server_received_event_count_increases \
+	endpoint_symbolic_honest_received_event_arity_increases \
+	endpoint_symbolic_server_received_event_arity_increases \
+	endpoint_symbolic_honest_ad_reverses_identities \
+	endpoint_symbolic_malicious_server_ad_reverses_identities; do
+	require_occurrence_count 1 "$endpoint_mutation_family" \
+		"endpoint frame-context ${endpoint_mutation_family} mutation family" "$fidelity_test"
 done
 for mutation_name in \
 	pqxdh_label_byte \
