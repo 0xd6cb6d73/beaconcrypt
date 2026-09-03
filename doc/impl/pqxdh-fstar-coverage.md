@@ -1,0 +1,82 @@
+# PQXDH F* surface migration audit
+
+This inventory records every top-level declaration in `beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst` against the current Lean extraction. It distinguishes complete correspondence from a proof ingredient and from remaining work; totality alone does not discharge semantic obligations. No files under `BeaconcryptCore/Model/` are changed.
+
+The new `Refinement/RatchetInterpreter.lean` binds one fixed pure request interpreter to the existing ratchet model through the checked extracted 76-byte decoder. `withInterpreter` retains the supplied AEAD operations and their existing correctness law while setting only the KDF fields. `interpreter_request_refines` derives response refinement from the extracted request's input and label invariants; it does not assume a successful decoder equation or a cryptographic response law.
+
+The new `Refinement/PqxdhConcreteSession.lean` executes the actual extracted start/resume phases for both roles with one shared pure 64-byte interpreter. It proves exact initial byte halves, complete zero-state kernel correspondence, opposing directional chain and material equality, and session establishment from authenticated root-input equality under any fixed root derivation. The ongoing paired lifecycle is recorded as pending until the receive preservation proofs are complete.
+
+“Existing” denotes an existing checked semantic result; “New checked” denotes a result added during this migration. “Direct corollary pending” deliberately does not count a stronger-premise protocol theorem as equivalent to the weaker-premise F* statement. Source-specific range-update helpers are superseded because the current extraction uses bounded array-building closures.
+
+| F* declaration | Status | Lean correspondence or remaining obligation |
+| --- | --- | --- |
+| `update_at_range_byte_view` | Superseded helper | The current extraction builds arrays with `from_fn`; `PqxdhRefinement.from_fn_pure`, `index_usize_eq`, and the complete byte-layout theorems replace the old range-update proof obligations. |
+| `honest_shared_secrets` | Premise definition | `PqxdhRefinement.absDHs` and `Pqxdh.dhNonZero` represent these byte-data premises. Primitive agreement remains an interpreter obligation. |
+| `key_type_and_role_markers_are_disjoint` | Direct corollary pending | The generated constants and branches compute these results; add explicit extracted semantic corollaries without primitive assumptions. |
+| `sign_key_tag_is_exact` | Existing | `PqxdhRefinement.tag_sign_key_abs` proves the complete encoding. |
+| `x25519_key_tag_is_exact` | Existing | `PqxdhRefinement.tag_x25519_key_abs` proves the complete encoding for every role byte. |
+| `mlkem768_key_tag_is_exact` | Existing | `PqxdhRefinement.tag_mlkem768_key_abs` proves the complete encoding. |
+| `sign_key_tag_round_trip` | Direct corollary pending | Compose existing exact encoding/decoding theorems with the immutable model parser round-trip and role-separation theorems; no cryptographic premise is needed. |
+| `x25519_key_tag_round_trip` | Direct corollary pending | Compose existing exact encoding/decoding theorems with the immutable model parser round-trip and role-separation theorems; no cryptographic premise is needed. |
+| `x25519_key_roles_are_enforced` | Direct corollary pending | Compose existing exact encoding/decoding theorems with the immutable model parser round-trip and role-separation theorems; no cryptographic premise is needed. |
+| `mlkem768_key_tag_round_trip` | Direct corollary pending | Compose existing exact encoding/decoding theorems with the immutable model parser round-trip and role-separation theorems; no cryptographic premise is needed. |
+| `beacon_start_validates` | Direct corollary pending | Existing `beacon_start_refines` and `honest_bundle_validates` include primitive representation premises. The raw-byte F* statement should receive an unconditional extracted corollary. |
+| `beacon_start_preserves_expected_server_binding` | Direct corollary pending | Existing `beacon_start_refines` and `honest_bundle_validates` include primitive representation premises. The raw-byte F* statement should receive an unconditional extracted corollary. |
+| `registration_id_is_exact` | Existing | `PqxdhRefinement.registration_id_abs` proves the complete identity/one-time-key concatenation. |
+| `valid_shared_secrets` | Premise definition | `PqxdhRefinement.absDHs` and `Pqxdh.dhNonZero` represent these byte-data premises. Primitive agreement remains an interpreter obligation. |
+| `v_ROOT_RANGE_1` | Superseded helper | The generated `build_root_key_input` closure and `Pqxdh.pqxdhIKM`; complete correspondence is `PqxdhRefinement.build_root_key_input_abs`. |
+| `v_ROOT_RANGE_2` | Superseded helper | The generated `build_root_key_input` closure and `Pqxdh.pqxdhIKM`; complete correspondence is `PqxdhRefinement.build_root_key_input_abs`. |
+| `v_ROOT_RANGE_3` | Superseded helper | The generated `build_root_key_input` closure and `Pqxdh.pqxdhIKM`; complete correspondence is `PqxdhRefinement.build_root_key_input_abs`. |
+| `v_ROOT_RANGE_4` | Superseded helper | The generated `build_root_key_input` closure and `Pqxdh.pqxdhIKM`; complete correspondence is `PqxdhRefinement.build_root_key_input_abs`. |
+| `v_ROOT_RANGE_5` | Superseded helper | The generated `build_root_key_input` closure and `Pqxdh.pqxdhIKM`; complete correspondence is `PqxdhRefinement.build_root_key_input_abs`. |
+| `root_transcript_bytes` | Superseded helper | The generated `build_root_key_input` closure and `Pqxdh.pqxdhIKM`; complete correspondence is `PqxdhRefinement.build_root_key_input_abs`. |
+| `root_transcript_byte_is_exact` | Existing | `PqxdhRefinement.build_root_key_input_abs` covers both the exact nonzero transcript and all-zero-DH rejection. |
+| `valid_root_build_uses_exact_bytes` | Existing | `PqxdhRefinement.build_root_key_input_abs` covers both the exact nonzero transcript and all-zero-DH rejection. |
+| `root_key_transcript_is_exact` | Existing | `PqxdhRefinement.build_root_key_input_abs` covers both the exact nonzero transcript and all-zero-DH rejection. |
+| `all_zero_dh_is_rejected` | Existing | `PqxdhRefinement.build_root_key_input_abs` covers both the exact nonzero transcript and all-zero-DH rejection. |
+| `honest_roles_build_the_same_root` | Direct corollary pending | Compose equal input bytes with the complete root/AD builder equations, retaining ordinary root rejection. |
+| `equal_root_inputs_derive_same_fixed_root` | New checked | `PqxdhConcreteSession.authenticated_roots_agree` uses equality under the supplied pure root derivation; general equal-input congruence is `congrArg`. |
+| `authenticated_registration_derives_common_fixed_root` | New checked | `PqxdhConcreteSession.authenticated_roots_agree` uses equality under the supplied pure root derivation; general equal-input congruence is `congrArg`. |
+| `v_AD_RANGE_1` | Superseded helper | The generated associated-data closure and `Pqxdh.assocData`; complete correspondence is `PqxdhRefinement.build_associated_data_abs`. |
+| `v_AD_RANGE_2` | Superseded helper | The generated associated-data closure and `Pqxdh.assocData`; complete correspondence is `PqxdhRefinement.build_associated_data_abs`. |
+| `v_AD_RANGE_3` | Superseded helper | The generated associated-data closure and `Pqxdh.assocData`; complete correspondence is `PqxdhRefinement.build_associated_data_abs`. |
+| `v_AD_RANGE_4` | Superseded helper | The generated associated-data closure and `Pqxdh.assocData`; complete correspondence is `PqxdhRefinement.build_associated_data_abs`. |
+| `associated_data_bytes` | Superseded helper | The generated associated-data closure and `Pqxdh.assocData`; complete correspondence is `PqxdhRefinement.build_associated_data_abs`. |
+| `ad_range_to_byte` | Superseded helper | The current extraction builds arrays with `from_fn`; `PqxdhRefinement.from_fn_pure`, `index_usize_eq`, and the complete byte-layout theorems replace the old range-update proof obligations. |
+| `ad_range_from_byte` | Superseded helper | The current extraction builds arrays with `from_fn`; `PqxdhRefinement.from_fn_pure`, `index_usize_eq`, and the complete byte-layout theorems replace the old range-update proof obligations. |
+| `associated_data_byte_is_exact` | Existing | `PqxdhRefinement.build_associated_data_abs` proves the complete transcript. |
+| `associated_data_build_uses_exact_bytes` | Existing | `PqxdhRefinement.build_associated_data_abs` proves the complete transcript. |
+| `associated_data_is_exact` | Existing | `PqxdhRefinement.build_associated_data_abs` proves the complete transcript. |
+| `honest_roles_build_the_same_associated_data` | Direct corollary pending | Compose equal input bytes with the complete root/AD builder equations, retaining ordinary root rejection. |
+| `beacon_response_identity_mismatch_is_rejected` | Direct corollary pending | Existing `beaconFinishDriver_refines` covers modeled execution under additional primitive/interpreter premises. Add direct raw-byte result-shape and rejection theorems for the extracted operations. |
+| `beacon_successful_finish_preserves_binding_and_ad` | Direct corollary pending | Existing `beaconFinishDriver_refines` covers modeled execution under additional primitive/interpreter premises. Add direct raw-byte result-shape and rejection theorems for the extracted operations. |
+| `ratchet_initializations_are_complementary` | Direct corollary pending | The generated constants and branches compute these results; add explicit extracted semantic corollaries without primitive assumptions. |
+| `initial_ratchet_chains_use_exact_root_and_directions` | New checked | `initializeBeacon_eq`, `initializeServer_eq`, and `initial_kernels_refine` in `PqxdhConcreteSession` prove exact request fields and complementary byte halves for every pure initial interpreter. |
+| `concrete_session` | New relation | `PqxdhConcreteSession.ConcreteSession` combines both `KernelRefines` relations with send-origin derivational reachability. Receive-origin and cache-material reachability are already included in `KernelRefines`. |
+| `concrete_initial_kernels_are_complementary` | New checked | `PqxdhConcreteSession.initialize_establishes_concrete_session` proves both initialization executions, initial reachability, cross-role chain equality, and material equality at every position. |
+| `concrete_initial_kernels_are_reachable` | New checked | `PqxdhConcreteSession.initialize_establishes_concrete_session` proves both initialization executions, initial reachability, cross-role chain equality, and material equality at every position. |
+| `concrete_directional_materials_agree` | New checked | `PqxdhConcreteSession.initialize_establishes_concrete_session` proves both initialization executions, initial reachability, cross-role chain equality, and material equality at every position. |
+| `authenticated_registrations_establish_concrete_session` | New checked | `PqxdhConcreteSession.authenticated_registrations_establish_concrete_session` connects authenticated root agreement to candidate-bound beacon initialization, server initialization, and fixed-interpreter material streams. |
+| `beacon_seal_server_open_preserves_concrete_session` | Lifecycle pending | Compose individual extracted send/receive reachability-preservation results into `ConcreteSession` once complete receive preservation is available. No theorem in the new initialization module assumes those missing results. |
+| `server_seal_beacon_open_preserves_concrete_session` | Lifecycle pending | Compose individual extracted send/receive reachability-preservation results into `ConcreteSession` once complete receive preservation is available. No theorem in the new initialization module assumes those missing results. |
+| `candidate_ratchet_initializations_are_complementary` | Direct corollary pending | The generated constants and branches compute these results; add explicit extracted semantic corollaries without primitive assumptions. |
+| `registration_key_id_binding_is_exact` | Existing | `PqxdhRefinement.registration_key_id_binding_abs` proves exact `Pqxdh.LE64`; its proof handles every shift and byte conversion. |
+| `registration_key_id_binding_has_le64_values` | Existing | `PqxdhRefinement.registration_key_id_binding_abs` proves exact `Pqxdh.LE64`; its proof handles every shift and byte conversion. |
+| `exact_key_id_binding_authenticates` | Direct corollary pending | Existing `beaconFinishDriver_refines` covers modeled execution under additional primitive/interpreter premises. Add direct raw-byte result-shape and rejection theorems for the extracted operations. |
+| `mismatched_authenticated_server_key_id_is_rejected` | Direct corollary pending | Existing `beaconFinishDriver_refines` covers modeled execution under additional primitive/interpreter premises. Add direct raw-byte result-shape and rejection theorems for the extracted operations. |
+| `mismatched_key_id_binding_is_rejected` | Direct corollary pending | Existing `beaconFinishDriver_refines` covers modeled execution under additional primitive/interpreter premises. Add direct raw-byte result-shape and rejection theorems for the extracted operations. |
+| `beacon_commit_preserves_authenticated_ids` | Direct corollary pending | Existing `beaconFinishDriver_refines` covers modeled execution under additional primitive/interpreter premises. Add direct raw-byte result-shape and rejection theorems for the extracted operations. |
+| `fresh_registration_status_is_accepted` | Direct corollary pending | The generated constants and branches compute these results; add explicit extracted semantic corollaries without primitive assumptions. |
+| `consumed_registration_status_is_rejected` | Direct corollary pending | The generated constants and branches compute these results; add explicit extracted semantic corollaries without primitive assumptions. |
+| `server_rejects_consumed_registration` | Direct corollary pending | Existing protocol refinements and unconditional totality provide the ingredients; add the direct extracted result-shape theorems with only the F* data premises. |
+| `server_fresh_acceptance_shape` | Direct corollary pending | Existing protocol refinements and unconditional totality provide the ingredients; add the direct extracted result-shape theorems with only the F* data premises. |
+| `next_server_key_id_is_checked` | Existing | `PqxdhRefinement.server_next_key_id_refines` permits the ideal counter to be instantiated with the concrete counter; `server_next_key_id_ok` additionally packages totality. |
+| `server_binding_mismatch_is_rejected` | Direct corollary pending | Existing protocol refinements and unconditional totality provide the ingredients; add the direct extracted result-shape theorems with only the F* data premises. |
+| `occupied_server_key_id_is_rejected` | Direct corollary pending | Existing protocol refinements and unconditional totality provide the ingredients; add the direct extracted result-shape theorems with only the F* data premises. |
+| `available_server_key_id_candidate_shape` | Direct corollary pending | Existing protocol refinements and unconditional totality provide the ingredients; add the direct extracted result-shape theorems with only the F* data premises. |
+| `server_commit_shape` | Existing | `PqxdhRefinement.server_commit_refines` is unconditional on the candidate. |
+| `server_abort_is_state_neutral` | Direct corollary pending | Existing protocol refinements and unconditional totality provide the ingredients; add the direct extracted result-shape theorems with only the F* data premises. |
+| `successful_beacon_acceptance_implies_server_binding_agreement` | Direct corollary pending | Existing `beaconFinishDriver_refines` covers modeled execution under additional primitive/interpreter premises. Add direct raw-byte result-shape and rejection theorems for the extracted operations. |
+| `conditional_honest_run_correspondence` | Existing conditional model result | `PqxdhRefinement.honest_run_refines` supplies an end-to-end honest model run. Preserve and explicitly compare its primitive agreement premises when declaring full raw-surface parity. |
+
+Validation: `lake build BeaconcryptCore.Refinement.RatchetInterpreter BeaconcryptCore.Refinement.PqxdhConcreteSession`. The new proof units contain no `sorry`, admitted lemma, or additional axiom. Aggregate locked verification and mutation-suite results are recorded by the integration milestone.
