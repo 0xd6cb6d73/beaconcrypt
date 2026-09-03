@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=47
+	[handwritten-lean]=48
 	[handwritten-proverif]=61
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1927,7 +1927,7 @@ done
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$' \
 	"$lean_root" \
 	"canonical VCVio feasibility proof-root import"
-for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca PqxdhEd25519EufCma; do
+for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca PqxdhEd25519EufCma PqxdhInitializerSecrecy; do
 	require_line_count 1 "^import BeaconcryptCore\\.Computational\\.${pqxdh_computational_module}$" \
 		"$lean_root" "canonical PQXDH computational ${pqxdh_computational_module} proof-root import"
 done
@@ -2284,6 +2284,117 @@ require_line_count 1 '^#print axioms phase1FieldSubstitutionAdvantage_le_eufCma$
 	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 EUF-CMA capstone axiom audit"
 require_line_count 1 '^#print axioms ed25519AttachedSignatureCorrectness_opens_supported$' \
 	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 correctness axiom audit"
+
+pqxdh_initializer_secrecy=proofs/lean/BeaconcryptCore/Computational/PqxdhInitializerSecrecy.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhKemIndCca$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer one-key KEM dependency"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhHiddenRoot$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer hidden-root dependency"
+reject_matches "PQXDH initializer module imports the maintained proof root" \
+	'^import BeaconcryptCore$' "$pqxdh_initializer_secrecy"
+require_line_count 1 '^abbrev InitializerPostSpec \(baseSpec : OracleSpec iota\) :=$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer exact post-challenge surface"
+require_occurrence_count 1 \
+	'^structure InitializerPublicTranscript \(Context : Type\) where\n  publicKey : MlKem768PublicKey\n  ciphertext : MlKem768Ciphertext\n  context : Context\n\n' \
+	"PQXDH initializer exact secret-free public transcript surface" \
+	"$pqxdh_initializer_secrecy"
+require_occurrence_count 1 \
+	'^structure InitializerAdversary\n    \(kem : MlKemScheme \(baseSpec := baseSpec\) \(SK := SK\)\) where\n  State : Type\n  Context : Type\n  preChallenge : MlKem768PublicKey → OracleComp kem\.IND_CCA_oracleSpec State\n  knownCoordinates : State → MlKem768PublicKey → MlKem768Ciphertext →\n    KnownPqxdhRootCoordinates\n  publicContext : State → MlKem768PublicKey → MlKem768Ciphertext → Context\n  main : InitializerPublicTranscript Context → KnownPqxdhRootCoordinates →\n    HiddenRootCoordinate → OracleComp \(InitializerPostSpec baseSpec\) Bool\n\n' \
+	"PQXDH initializer exact adversary public-prefix and private-root interface" \
+	"$pqxdh_initializer_secrecy"
+for declaration in InitializerPublicTranscript InitializerAdversary InitializerKdfPrefix \
+	InitializerKdfReductionBounds InitializerExplicitReductionBounds; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$pqxdh_initializer_secrecy" "PQXDH initializer structure ${declaration}"
+done
+for definition in runtimeOfImpl initializerPostRealImpl toKemOneKeyAdversary \
+	initializerKemBranch kemAmbientImpl initializerKdfPrefixProb \
+	ambientToJointKdfViewImpl initializerPostToJointKdfViewImpl \
+	toHiddenRootAdversary sampledHiddenRootAdversary initializerKdfReductionMain \
+	initializerUniformKemCore initializerUniformKemGame initializerSharedRootGame \
+	initializerIndependentRootGame initializerKdfReduction initializerRealGame \
+	initializerSecrecyAdvantage; do
+	require_line_count 1 "^(noncomputable )?def ${definition}( |$)" \
+		"$pqxdh_initializer_secrecy" "PQXDH initializer definition ${definition}"
+done
+for definition in IsInitializerUniformQuery IsInitializerBaseQuery \
+	IsInitializerLogicalDecapsulationQuery IsInitializerRootQuery \
+	IsInitializerSymmetricQuery; do
+	require_line_count 1 "^def ${definition}( |$)" \
+		"$pqxdh_initializer_secrecy" "PQXDH initializer query predicate ${definition}"
+done
+for theorem_name in initializerUniformKemGame_eq_core \
+	initializerKdfReduction_real_eq_uniformKem \
+	initializerKdfReduction_random_eq_sharedRoot \
+	simulateQ_initializerOneKeyFalse_eq_falseCore \
+	initializerKemFalseCore_eq_uniformKemCore \
+	initializerKemBranch_false_eq_uniformKemCore \
+	initializerPostToJointKdfViewImpl_challenge \
+	initializerPostToJointKdfViewImpl_nonchallenge \
+	initializerPostRealImpl_uniform_query_bound \
+	initializerPostRealImpl_base_query_bound \
+	initializerPostRealImpl_decapsulation_query_bound \
+	toKemOneKeyAdversary_makesAtMostQueries \
+	initializerKdfReduction_uniform_query_bound \
+	initializerKdfReduction_root_query_bound \
+	initializerKdfReduction_symmetric_query_bound \
+	initializerKdfReduction_stream_query_bound \
+	initializerKdfReduction_totalQueryBound \
+	initializerKdfReduction_no_untyped_stream_queries \
+	runtimeOfImpl_evalDist_pure runtimeOfImpl_evalDist_bind \
+	runtimeOfImpl_evalDist_liftProbComp runtimeOfImpl_noFail_bool \
+	initializerKemBranch_true_eq_real \
+	initializerKemBranch_false_eq_uniformKemGame \
+	initializerReal_uniformKem_advantage_eq_indCCA \
+	tvDist_initializerSharedRoot_independentRoot_le \
+	initializerSharedRoot_independentRoot_advantage_le \
+	initializerUniformKem_sharedRoot_advantage_eq_fixedHkdf \
+	initializerKemReduction_makesAtMostQueries \
+	initializerKemReduction_post_unblockedDecapsulationQueryBound \
+	initializerSecrecyAdvantage_le; do
+	require_line_count 1 "^(@\[simp\] )?theorem ${theorem_name}( |$)" \
+		"$pqxdh_initializer_secrecy" "PQXDH initializer theorem ${theorem_name}"
+done
+require_line_count 2 '^  let \(cStar, _kReal\) ← simulateQ \(kemAmbientImpl baseImpl\) \(kem\.encaps pk\)$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer KDF-prefix and normalized false branch discard the real secret"
+require_line_count 1 '^  let hidden ← \$ᵗ HiddenRootCoordinate$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer single uniform KEM replacement sample"
+require_occurrence_count 1 \
+	'^  let kRand ← \$ᵗ MlKemSharedSecret\n  simulateQ \(kemAmbientImpl baseImpl\)[\s\S]{0,700}\(productionHiddenRoot source\n            \(adversary\.knownCoordinates state pk cStar\) kRand\)\)\)\)$' \
+	"PQXDH initializer false core samples and uses exactly one uniform replacement secret" \
+	"$pqxdh_initializer_secrecy"
+require_line_count 1 '^        \(\.inl \(\.inr cStar\)\) =$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer exact challenge-ciphertext block"
+require_line_count 1 '^    FixedHkdfSha512JointStreamAdversary$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer fixed-HKDF reduction endpoint"
+require_line_count 1 '^      \(qKemAmbient \+ qUPre \+ qUPost \+ 32\) \(qRoot \+ qSym \+ 1\) where$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer uniform and stream reduction caps"
+require_line_count 1 '^  ambientTotal : qKemPrefix \+ qKemPost ≤ qKemAmbient$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer caller-supplied ambient slack relation"
+require_line_count 1 '^        IsFixedHkdfSha512UniformQuery \(qKemPrefix \+ qUPre\)$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer direct transformed-prefix uniform obligation"
+require_line_count 1 '^      IsJointKdfViewUniformQuery \(qKemPost \+ qUPost\)$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer direct transformed-post uniform obligation"
+require_line_count 1 '^      IsFixedHkdfRootStreamQuery \(qRoot \+ 1\) :=$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer root-domain upper bound"
+require_line_count 1 '^      IsFixedHkdfSymmetricStreamQuery qSym :=$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer symmetric-domain upper bound"
+require_line_count 1 '^      IsFixedHkdfSha512UntypedStreamQuery 0 :=$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer zero-untyped-stream invariant"
+require_line_count 2 '^      kem\.IND_CCA_Advantage \(runtimeOfImpl \(kemAmbientImpl baseImpl\)\)$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer coefficient-one KEM endpoint"
+require_line_count 2 '^        fixedHkdfSha512JointStreamAdvantage source$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer coefficient-one fixed-HKDF endpoint"
+require_line_count 2 '^        \(\(qRoot : ℝ≥0∞\) / \(2 \^ 256 : ℝ≥0∞\)\)\.toReal := by$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer single hidden-root guess term"
+require_line_count 3 '^#guard_msgs in$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer guarded axiom audits"
+require_line_count 1 '^#print axioms initializerSecrecyAdvantage_le$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer capstone axiom audit"
+require_line_count 1 '^#print axioms initializerKdfReduction_no_untyped_stream_queries$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer untyped-query axiom audit"
+require_line_count 1 '^#print axioms initializerPostToJointKdfViewImpl_challenge$' \
+	"$pqxdh_initializer_secrecy" "PQXDH initializer challenge-block axiom audit"
 
 require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |$)' \
 	proofs/lean/BeaconcryptCore/Model/Pqxdh/Commit.lean \
