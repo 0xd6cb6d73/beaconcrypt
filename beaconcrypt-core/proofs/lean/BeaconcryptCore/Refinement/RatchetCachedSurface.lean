@@ -116,4 +116,38 @@ theorem begin_receive_cached_result_shape {Context : Type}
         RatchetChain.as_bytes, SymmetricRatchetKdfRequest.new, refined.empty_material_slots,
         bind_tc_ok, Bool.false_eq_true, if_false, if_true, RustM.ok.injEq, reduceCtorEq] at hbegin
 
+/-- A cached helper rejection returns the original complete entry through the synchronous driver. -/
+theorem receiveNext_cached_rejected {Context Output : Type}
+    (execute : KdfInterpreter) (kernel : ConcreteRatchetKernel) (target : Std.U64) (context : Context)
+    (openReply : ReceiveOpen Context → core.option.Option Output)
+    (hplan : control.plan_receive_until kernel.refined.control target = ok { sequence := core.option.Option.Some target, derivations := 0#u64 })
+    (hprepare : refined.prepare_cached_receive kernel.refined target = ok core.option.Option.None) :
+    begin_receive kernel target context = ok (.ReceiveRejected kernel context) ∧
+      receiveNext execute kernel target context openReply = ok (kernel, core.option.Option.None) := by
+  have hbegin : begin_receive kernel target context = ok (.ReceiveRejected kernel context) := by
+    simp only [begin_receive, hplan, hprepare, bind_tc_ok, if_true, receive_rejected]
+  exact ⟨hbegin, (show ReceiveRun execute openReply kernel target context kernel core.option.Option.None from
+    ⟨_, hbegin, .rejected kernel context⟩).driver_eq⟩
+
+/-- Rejected admission is independent of every KDF interpreter and open callback. -/
+theorem receiveNext_rejected_admission {Context Output : Type}
+    (execute : KdfInterpreter) (kernel : ConcreteRatchetKernel) (target : Std.U64) (context : Context)
+    (openReply : ReceiveOpen Context → core.option.Option Output) (derivations : Std.U64)
+    (hplan : control.plan_receive_until kernel.refined.control target = ok { sequence := core.option.Option.None, derivations := derivations }) :
+    begin_receive kernel target context = ok (.ReceiveRejected kernel context) ∧
+      receiveNext execute kernel target context openReply = ok (kernel, core.option.Option.None) := by
+  have hbegin := begin_receive_rejected_plan_restores_entry kernel target context derivations hplan
+  exact ⟨hbegin, (show ReceiveRun execute openReply kernel target context kernel core.option.Option.None from
+    ⟨_, hbegin, .rejected kernel context⟩).driver_eq⟩
+
+/-- A valid cached phase publishes precisely its prepared removal on any successful callback result. -/
+theorem ReceiveOpen.finish_cached_publication {Context Output : Type}
+    (opened : ReceiveOpen Context) (sequence : Std.U64) (prepared : refined.PreparedCachedReceive)
+    (hphase : opened.prepared = .PreparedReceiveCachedCase prepared)
+    (h : refined.CachedPreparationFacts opened.entry.refined sequence prepared) (plaintext : Output) :
+    ∃ published, refined.publish_cached_receive opened.entry.refined prepared = ok published ∧
+      opened.finish (core.option.Option.Some plaintext) = ok ({ refined := published }, core.option.Option.Some plaintext) := by
+  obtain ⟨published, hpublish, _, _, _, _⟩ := refined.publish_cached_receive_exact opened.entry.refined prepared h.target_bound h.last_bound
+  exact ⟨published, hpublish, by simp only [ReceiveOpen.finish, hphase, hpublish, bind_tc_ok]⟩
+
 end beaconcrypt_core.ratchet.concrete
