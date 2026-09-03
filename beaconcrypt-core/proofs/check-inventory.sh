@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=48
+	[handwritten-lean]=49
 	[handwritten-proverif]=61
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1966,7 +1966,7 @@ done
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$' \
 	"$lean_root" \
 	"canonical VCVio feasibility proof-root import"
-for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca PqxdhEd25519EufCma PqxdhInitializerSecrecy; do
+for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca PqxdhEd25519EufCma PqxdhInitializerSecrecy PqxdhInitialRatchetComplementarity; do
 	require_line_count 1 "^import BeaconcryptCore\\.Computational\\.${pqxdh_computational_module}$" \
 		"$lean_root" "canonical PQXDH computational ${pqxdh_computational_module} proof-root import"
 done
@@ -2434,6 +2434,70 @@ require_line_count 1 '^#print axioms initializerKdfReduction_no_untyped_stream_q
 	"$pqxdh_initializer_secrecy" "PQXDH initializer untyped-query axiom audit"
 require_line_count 1 '^#print axioms initializerPostToJointKdfViewImpl_challenge$' \
 	"$pqxdh_initializer_secrecy" "PQXDH initializer challenge-block axiom audit"
+
+pqxdh_initial_ratchet=proofs/lean/BeaconcryptCore/Computational/PqxdhInitialRatchetComplementarity.lean
+for import_name in \
+	BeaconcryptCore.Computational.PqxdhJointKdf \
+	BeaconcryptCore.Refinement.PqxdhCore \
+	BeaconcryptCore.Refinement.RatchetEffectRefinement; do
+	require_line_count 1 "^import ${import_name//./\\.}$" \
+		"$pqxdh_initial_ratchet" "PQXDH initial-ratchet narrow import ${import_name}"
+done
+reject_matches "PQXDH initial-ratchet module imports the maintained proof root" \
+	'^import BeaconcryptCore$' "$pqxdh_initial_ratchet"
+for definition in firstHalf secondHalf ChainBytesRefines RootArrayRefines \
+	InitialResponseRefines serverPending beaconPending InitialKernelResult InitialKernelWitness; do
+	require_line_count 1 "^def ${definition}( |$)" \
+		"$pqxdh_initial_ratchet" "PQXDH initial-ratchet definition ${definition}"
+done
+for theorem_name in chain_eq_of_refines InitialResponseRefines.modelOutput \
+	absBytes_ratchetSymmetricInfo serverStartRequest_refines beaconStartRequest_refines \
+	initialHalves_exact splitInitialServer_exact splitInitialBeacon_exact \
+	concreteKernelNew_exact concreteKernelNew_refines_initial serverStartResume_refines \
+	beaconStartResume_refines initialRatchetComplementarity \
+	initialRatchetComplementarity_jointStream; do
+	require_line_count 1 "^(@\[simp\] )?theorem ${theorem_name//./\\.}( |$)" \
+		"$pqxdh_initial_ratchet" "PQXDH initial-ratchet theorem ${theorem_name}"
+done
+require_line_count 1 '^def InitialResponseRefines \(c : Pqxdh\.Crypto\)$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial response external equation"
+require_line_count 1 '^    c\.hkdf \(PqxdhRefinement\.absBytes pending\.request\.input\)$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial response exact pending input"
+require_line_count 1 '^      \(PqxdhRefinement\.absBytes pending\.request\.info\) 64$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial response exact pending label and width"
+require_line_count 2 '^  initialization := \{ send_offset := (0|32)#u8, receive_offset := (32|0)#u8 \}$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial canonical opposite role offsets"
+require_line_count 1 '^def firstHalf \(output : Std\.Array Std\.U8 64#usize\) : Pqxdh\.Bytes :=$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial first-half width"
+require_line_count 1 '^  \(PqxdhRefinement\.absBytes output\)\.take 32$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial first-half projection"
+require_line_count 1 '^  \(PqxdhRefinement\.absBytes output\)\.drop 32$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial second-half projection"
+require_line_count 1 '^      kernel\.refined\.control\.send_sequence\.val = 0 ∧$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial zero send counter"
+require_line_count 1 '^      kernel\.refined\.control\.receive_sequence\.val = 0 ∧$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial zero receive counter"
+require_line_count 1 '^      kernel\.refined\.control\.receive_cache\.len\.val = 0 ∧$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial empty receive cache"
+require_line_count 1 '^        kernel\.refined\.receive_slots\.val\[i\]! = core\.option\.Option\.None\) := by$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial empty material slots"
+require_line_count 2 '^        serverKernel\.refined\.send_chain = beaconKernel\.refined\.receive_chain ∧$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial Server-send Beacon-receive complementarity"
+require_line_count 2 '^        serverKernel\.refined\.receive_chain = beaconKernel\.refined\.send_chain := by$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial Server-receive Beacon-send complementarity"
+require_line_count 1 '^    \(hprefix : BeaconcryptCore\.Computational\.PqxdhJointKdf\.ProductionHkdfPrefixConsistent c\)$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial explicit production-prefix premise"
+require_line_count 1 '^      \(BeaconcryptCore\.Computational\.PqxdhJointKdf\.productionStream c$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial canonical joint stream"
+require_line_count 1 '^        \(BeaconcryptCore\.Computational\.PqxdhJointKdf\.ratchetAddress root\)\)$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial canonical ratchet address"
+require_line_count 3 '^#guard_msgs in$' \
+	"$pqxdh_initial_ratchet" "PQXDH initial-ratchet guarded axiom audits"
+for theorem_name in concreteKernelNew_refines_initial initialRatchetComplementarity \
+	initialRatchetComplementarity_jointStream; do
+	require_line_count 1 "^#print axioms ${theorem_name}$" \
+		"$pqxdh_initial_ratchet" "PQXDH initial-ratchet axiom audit ${theorem_name}"
+done
 
 require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |$)' \
 	proofs/lean/BeaconcryptCore/Model/Pqxdh/Commit.lean \
