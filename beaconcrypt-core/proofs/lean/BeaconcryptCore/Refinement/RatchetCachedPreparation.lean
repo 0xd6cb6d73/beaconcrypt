@@ -28,6 +28,10 @@ structure CachedPreparationFacts {SendChain ReceiveChain Material : Type}
   finish : control.finish_receive_with_removal state.control sequence prepared.target_slot true =
     ok { state := prepared.committed_control, disposition := control.ReceiveDisposition.Consumed, removal := core.option.Option.Some { target_slot := prepared.target_slot, last_slot := prepared.last_slot } }
 
+  lookup : control.lookup_receive_key state.control sequence = ok (core.option.Option.Some prepared.target_slot)
+  last_material : ∃ cached, state.receive_slots.val[prepared.last_slot.val]! = core.option.Option.Some cached ∧
+    control.RatchetState.receive_key_at state.control prepared.last_slot = ok (core.option.Option.Some cached.sequence)
+
 theorem receive_key_at_some_inv (state : control.RatchetState) (slot : Std.U8) (sequence : Std.U64)
     (h : control.RatchetState.receive_key_at state slot = ok (core.option.Option.Some sequence)) :
     slot.val < state.receive_cache.len.val ∧ slot.val < 50 ∧
@@ -80,12 +84,14 @@ theorem prepare_cached_receive_success_inv {SendChain ReceiveChain Material : Ty
   subst prepared
   have htargetLogical := receive_key_at_some_inv state.control targetSlot sequence (by simpa only [hlogicalEq] using hlogical)
   refine ⟨rfl, htargetLogical.1, htargetLogical.2.1, htargetLogical.2.2, ?_,
-    by simpa using hlastValue, by scalar_tac, ?_⟩
+    by simpa using hlastValue, by scalar_tac, ?_, hlookup, ?_⟩
   · exact ⟨cached.material, by simpa only [← hcachedSequence] using htarget⟩
   · cases finished
     simp_all
     cases_type control.ReceiveRemoval
     simp_all
+  · refine ⟨_, by assumption, ?_⟩
+    simp_all only []
 
 /-- Every cached target in a structurally valid state admits successful preparation. -/
 theorem ValidRefined.prepare_cached_receive {SendChain ReceiveChain Material : Type}
