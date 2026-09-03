@@ -13,6 +13,7 @@ import BeaconcryptCore.Computational.PqxdhJointKdfGame
 import BeaconcryptCore.Computational.PqxdhHiddenRoot
 import BeaconcryptCore.Computational.PqxdhProjectionCollisions
 import BeaconcryptCore.Computational.PqxdhKemIndCca
+import BeaconcryptCore.Computational.PqxdhEd25519EufCma
 import BeaconcryptCore.Computational.CtxReduction
 import BeaconcryptCore.Computational.CtxRetainedTagProjection
 import BeaconcryptCore.Computational.CtxAuthClassification
