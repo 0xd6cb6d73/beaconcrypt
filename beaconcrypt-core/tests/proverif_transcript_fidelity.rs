@@ -429,6 +429,9 @@ const EXPECTED_FACTS: &[&str] = &[
 	"initial_ratchet.lean.scope=checked_interpretation_anchors_and_ideal_model:text_link_only",
 	"initial_ratchet.proverif.definition.server_to_beacon=first32(HKDF(root,SYM))",
 	"initial_ratchet.proverif.definition.beacon_to_server=second32(HKDF(root,SYM))",
+	"initial_ratchet.proverif.honest_beacon.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
+	"initial_ratchet.proverif.server.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
+	"initial_ratchet.proverif.malicious_server.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
 	"initial_ratchet.proverif.server.initial_seal=server_to_beacon_chain(root)",
 	"initial_ratchet.proverif.server.initial_open=beacon_to_server_chain(root)",
 	"initial_ratchet.proverif.honest_beacon.initial_open=server_to_beacon_chain(root)",
@@ -4738,6 +4741,17 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 		"letKeepBeaconStatePrivate()",
 		"initial ratchet ProVerif MaliciousServer role",
 	)?;
+	for (role, label) in [
+		(honest_beacon, "HonestBeacon"),
+		(server, "Server"),
+		(malicious_server, "MaliciousServer"),
+	] {
+		require_once(
+			role,
+			"letroot=pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input))in",
+			&format!("initial ratchet ProVerif {label} exact root derivation"),
+		)?;
+	}
 	for (role, server_calls, beacon_calls, label) in [
 		(honest_beacon, 1, 1, "HonestBeacon"),
 		(server, 1, 1, "Server"),
@@ -5298,7 +5312,7 @@ fn initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous() {
 			.iter()
 			.filter(|fact| fact.starts_with("initial_ratchet."))
 			.count(),
-		68
+		71
 	);
 
 	let root = core::array::from_fn::<_, 32, _>(|index| index as u8);
@@ -11849,7 +11863,7 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 
 	assert_eq!(mutation_count, REGISTRATION_LIFECYCLE_MUTATION_COUNT);
 }
-const INITIAL_RATCHET_MUTATION_COUNT: usize = 214;
+const INITIAL_RATCHET_MUTATION_COUNT: usize = 223;
 
 #[test]
 fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
@@ -11859,7 +11873,7 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		.into_iter()
 		.filter(|fact| fact.starts_with("initial_ratchet."))
 		.collect::<Vec<_>>();
-	assert_eq!(facts.len(), 68);
+	assert_eq!(facts.len(), 71);
 	for fact in facts {
 		let (key, _) = fact.split_once('=').unwrap();
 		assert_initial_ratchet_rejected(&format!("initial_ratchet_fact_{key}"), key, |snapshot| {
@@ -12874,6 +12888,56 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 	] {
 		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
 			replace_once_after(&mut snapshot.crypto, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pv_honest_beacon_root_constructor_drifts",
+			"let HonestBeacon(",
+			"let root = pqxdh_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n    ) in",
+			"let root = replacement_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n    ) in",
+			"HonestBeacon exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_root_input_drifts",
+			"let HonestBeacon(",
+			"let root = pqxdh_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n    ) in",
+			"let root = pqxdh_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(replacement_input)\n    ) in",
+			"HonestBeacon exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_server_root_constructor_drifts",
+			"let Server(",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = replacement_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"Server exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_server_root_input_drifts",
+			"let Server(",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(replacement_input)\n  ) in",
+			"Server exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_root_constructor_drifts",
+			"let MaliciousServer()",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = replacement_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"MaliciousServer exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_root_input_drifts",
+			"let MaliciousServer()",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(replacement_input)\n  ) in",
+			"MaliciousServer exact root derivation",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, marker, from, to);
 		});
 		mutation_count += 1;
 	}
