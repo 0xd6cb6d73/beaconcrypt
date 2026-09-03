@@ -7,122 +7,9 @@ PROOF_SHELL := path:..\#proofs
 EXPECTED_RUSTC := rustc 1.93.0-nightly (843f8ce2e 2025-11-07)
 EXPECTED_CARGO := cargo 1.93.0-nightly (636800288 2025-10-31)
 EXPECTED_HAX := 0.4.0-rc.1
-EXPECTED_FSTAR := F* 2025.10.06~dev
-EXPECTED_Z3 := Z3 version 4.15.3 - 64 bit
 EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
 EXPECTED_ROCQ := The Rocq Prover, version 9.0.0
 EXPECTED_SSPROVE := 0.2.4
-HAX_ITEMS := -** \
-	+beaconcrypt_core::commitment::build_commitment_transcript \
-	+beaconcrypt_core::ratchet::control::SequenceCache \
-	+beaconcrypt_core::ratchet::RatchetChain \
-	+beaconcrypt_core::ratchet::RatchetKey \
-	+beaconcrypt_core::ratchet::RatchetNonce \
-	+beaconcrypt_core::ratchet::RatchetMaterial \
-	+beaconcrypt_core::ratchet::SymmetricRatchetKdfRequest \
-	+beaconcrypt_core::ratchet::RatchetKdfOutput \
-	+beaconcrypt_core::ratchet::split_ratchet_kdf_output \
-	+beaconcrypt_core::ratchet::derive_ratchet_step \
-	+beaconcrypt_core::ratchet::ConcreteRatchetChain \
-	+beaconcrypt_core::ratchet::concrete_ratchet_step \
-	+beaconcrypt_core::ratchet::refined::RatchetStep \
-	+beaconcrypt_core::ratchet::refined::CachedReceiveKey \
-	+beaconcrypt_core::ratchet::refined::RefinedRatchet \
-	+beaconcrypt_core::ratchet::ConcreteRatchetKernel \
-	+beaconcrypt_core::ratchet::refined::RefinedSendKey \
-	+beaconcrypt_core::ratchet::refined::RefinedRatchetRestore \
-	+beaconcrypt_core::ratchet::ConcreteRatchetRestore \
-	+beaconcrypt_core::ratchet::**::new \
-	+beaconcrypt_core::ratchet::**::from_counters \
-	+beaconcrypt_core::ratchet::**::send_sequence \
-	+beaconcrypt_core::ratchet::**::receive_sequence \
-	+beaconcrypt_core::ratchet::**::receive_cache_len \
-	+beaconcrypt_core::ratchet::**::send_chain \
-	+beaconcrypt_core::ratchet::**::receive_chain \
-	+beaconcrypt_core::ratchet::**::receive_entry_at \
-	+beaconcrypt_core::ratchet::**::sequence \
-	+beaconcrypt_core::ratchet::**::material \
-	+beaconcrypt_core::ratchet::**::key \
-	+beaconcrypt_core::ratchet::**::next_chain \
-	+beaconcrypt_core::ratchet::**::nonce \
-	+beaconcrypt_core::ratchet::**::as_bytes \
-	+beaconcrypt_core::ratchet::**::into_bytes \
-	+beaconcrypt_core::ratchet::**::into_parts \
-	+beaconcrypt_core::ratchet::**::into_step \
-	+beaconcrypt_core::ratchet::refined::refined_advance_send \
-	+beaconcrypt_core::ratchet::refined::refined_finish_send \
-	+beaconcrypt_core::ratchet::refined::refined_seal_next \
-	+beaconcrypt_core::ratchet::refined::refined_advance_receive \
-	+beaconcrypt_core::ratchet::refined::refined_advance_receive_until \
-	+beaconcrypt_core::ratchet::refined::refined_receive_key \
-	+beaconcrypt_core::ratchet::refined::refined_finish_receive \
-	+beaconcrypt_core::ratchet::refined::PreparedReceive \
-	+beaconcrypt_core::ratchet::refined::PreparedCachedReceive \
-	+beaconcrypt_core::ratchet::refined::PreparedFutureTarget \
-	+beaconcrypt_core::ratchet::refined::PendingReceive \
-	+beaconcrypt_core::ratchet::refined::prepare_cached_receive \
-	+beaconcrypt_core::ratchet::refined::prepare_future_receive_steps \
-	+beaconcrypt_core::ratchet::refined::receive_control_prefix_matches \
-	+beaconcrypt_core::ratchet::refined::pending_receive_slots_are_valid \
-	+beaconcrypt_core::ratchet::refined::pending_receive_is_valid \
-	+beaconcrypt_core::ratchet::refined::prepare_receive \
-	+beaconcrypt_core::ratchet::refined::publish_cached_receive \
-	+beaconcrypt_core::ratchet::refined::publish_future_receive_slots \
-	+beaconcrypt_core::ratchet::refined::publish_future_receive \
-	+beaconcrypt_core::ratchet::refined::refined_open_and_finish \
-	+beaconcrypt_core::ratchet::concrete_seal_next \
-	+beaconcrypt_core::ratchet::concrete_open_and_finish \
-	+beaconcrypt_core::ratchet::refined::start_refined_restore \
-	+beaconcrypt_core::ratchet::refined::refined_restore_receive_key \
-	+beaconcrypt_core::ratchet::refined::finish_refined_restore \
-	+beaconcrypt_core::ratchet::start_concrete_restore \
-	+beaconcrypt_core::ratchet::concrete_restore_receive_key \
-	+beaconcrypt_core::ratchet::finish_concrete_restore \
-	+beaconcrypt_core::ratchet::control::advance_send \
-	+beaconcrypt_core::ratchet::control::finish_send \
-	+beaconcrypt_core::ratchet::control::plan_receive_until \
-	+beaconcrypt_core::ratchet::control::advance_receive \
-	+beaconcrypt_core::ratchet::control::lookup_receive_key \
-	+beaconcrypt_core::ratchet::control::ReceiveRemoval \
-	+beaconcrypt_core::ratchet::control::ReceiveFinishWithRemoval \
-	+beaconcrypt_core::ratchet::control::finish_receive_with_removal \
-	+beaconcrypt_core::ratchet::control::finish_receive \
-	+beaconcrypt_core::ratchet::control::start_restore \
-	+beaconcrypt_core::ratchet::control::ReceiveRestoreStep \
-	+beaconcrypt_core::ratchet::control::restore_receive_key_with_slot \
-	+beaconcrypt_core::ratchet::control::restore_receive_key \
-	+beaconcrypt_core::ratchet::control::finish_restore \
-	+beaconcrypt_core::ratchet::control::replace_ratchet_for_peer \
-	+beaconcrypt_core::ratchet::control::advance_send_for_peer \
-	+beaconcrypt_core::pqxdh::beacon_start \
-	+beaconcrypt_core::pqxdh::validate_init_kex \
-	+beaconcrypt_core::pqxdh::build_root_key_input \
-	+beaconcrypt_core::pqxdh::beacon_ratchet_initialization \
-	+beaconcrypt_core::pqxdh::server_ratchet_initialization \
-	+beaconcrypt_core::pqxdh::InitialRatchetChains \
-	+beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output \
-	+beaconcrypt_core::pqxdh::derive_initial_ratchet_chains \
-	+beaconcrypt_core::pqxdh::derive_initial_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::derive_beacon_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::derive_server_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::**::derive_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::**::ratchet_initialization \
-	+beaconcrypt_core::pqxdh::**::key_id_binding \
-	+beaconcrypt_core::pqxdh::beacon_prepare_finish \
-	+beaconcrypt_core::pqxdh::registration_key_id_binding \
-	+beaconcrypt_core::pqxdh::authenticate_registration_key_id_binding \
-	+beaconcrypt_core::pqxdh::beacon_commit \
-	+beaconcrypt_core::pqxdh::beacon_abort_candidate \
-	+beaconcrypt_core::pqxdh::beacon_abort_init \
-	+beaconcrypt_core::pqxdh::beacon_abort_fresh \
-	+beaconcrypt_core::pqxdh::server_accept \
-	+beaconcrypt_core::pqxdh::validate_registration_status \
-	+beaconcrypt_core::pqxdh::server_next_key_id \
-	+beaconcrypt_core::pqxdh::server_prepare_commit \
-	+beaconcrypt_core::pqxdh::server_commit \
-	+beaconcrypt_core::pqxdh::server_abort_candidate \
-	+beaconcrypt_core::pqxdh::build_associated_data
-
 HAX_PROVERIF_ITEMS := -** \
 	+!beaconcrypt_core::pqxdh::InitKex \
 	+!beaconcrypt_core::pqxdh::VerifiedInitKex \
@@ -207,14 +94,14 @@ LEAN_GENERATED_PATHS := \
 # The checked-in root and Lake configuration are maintained verification entry points.
 # Extraction preserves their proof imports and all-module build glob.
 
-.PHONY: verify verify-in-shell verify-fstar verify-fstar-in-shell \
+.PHONY: verify verify-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity \
-	check-toolchain check-fstar-policy check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
-	extract-fstar check-fstar extract-proverif check-proverif \
-	check-proverif-extraction check-generated check-generated-fstar check-generated-lean \
+	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
+	extract-proverif check-proverif \
+	check-proverif-extraction check-generated check-generated-lean \
 	$(PROVERIF_CHECK_TARGETS) $(PROVERIF_VERIFY_TARGETS) \
 	$(PROVERIF_GENERATED_TARGETS) extract-lean check-lean verify-lean \
 	verify-lean-in-shell
@@ -230,23 +117,11 @@ verify:
 # without recursively starting Nix.
 verify-in-shell:
 	$(MAKE) check-toolchain
-	$(MAKE) extract-fstar
-	$(MAKE) check-fstar
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
 	$(MAKE) check-ssprove
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
-
-verify-fstar:
-	$(NIX) --extra-experimental-features 'nix-command flakes' \
-		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
-		$(MAKE) verify-fstar-in-shell
-
-verify-fstar-in-shell:
-	$(MAKE) check-toolchain
-	$(MAKE) extract-fstar
-	$(MAKE) check-fstar
 
 verify-proverif:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -285,7 +160,7 @@ check-inventory:
 	bash proofs/check-inventory.sh
 
 # Fail before extraction if PATH or a flake edit selected a tool other than the
-# reviewed proof bundle. F* uses this same exposed z3-4.15.3 executable.
+# reviewed proof bundle.
 check-toolchain:
 	@set -euo pipefail; \
 		check_version() { \
@@ -302,36 +177,12 @@ check-toolchain:
 		check_version cargo '$(EXPECTED_CARGO)' "$$(cargo --version)"; \
 		check_version hax '$(EXPECTED_HAX)' \
 			"$$(cargo hax --version | awk -F= '$$1 == "version" { print $$2 }')"; \
-		check_version Fstar '$(EXPECTED_FSTAR)' \
-			"$$(fstar.exe --version | sed -n '1p')"; \
-		check_version Z3 '$(EXPECTED_Z3)' "$$(z3-4.15.3 -version)"; \
 		check_version ProVerif '$(EXPECTED_PROVERIF)' \
 			"$$(proverif -help 2>&1 | sed -n '1p')"; \
 		check_version Rocq '$(EXPECTED_ROCQ)' \
 			"$$(coqc --version | sed -n '1p')"; \
 		check_version SSProve '$(EXPECTED_SSPROVE)' \
 			"$${SSPROVE_VERSION:-missing}"
-
-extract-fstar:
-	# Enable hax-lib so the bounded recursive lookup carries its checked measure.
-	cargo hax -C --locked --features=proverif ';' into -i '$(HAX_ITEMS)' fstar
-
-# F* accepts explicit assumptions and lax/admit flags, so strict typechecking
-# alone is not a sufficient policy gate for repository-owned proof modules.
-check-fstar-policy:
-	@if rg -n --pcre2 '\b(?:assume|admit)\b' proofs/fstar \
-		--glob '*.fst' --glob '*.fsti'; then \
-		echo 'unexpected assume/admit in repository-owned F* proof' >&2; \
-		exit 1; \
-	fi
-	@if rg -n -- '--(lax|admit_smt_queries|admit_except|use_hint_hashes)' \
-		proofs/fstar/Makefile; then \
-		echo 'unexpected lax/admit flag in the F* checker' >&2; \
-		exit 1; \
-	fi
-
-check-fstar: check-fstar-policy
-	$(MAKE) -C proofs/fstar/extraction -f ../Makefile verify
 
 extract-proverif:
 	cargo hax -C --locked --features=proverif ';' into \
@@ -716,16 +567,6 @@ verify-lean-in-shell:
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 
-check-generated-fstar: verify-fstar
-	git diff --exit-code -- proofs/fstar/extraction
-	@untracked="$$(git ls-files --others --exclude-standard -- \
-		proofs/fstar/extraction)"; \
-		if [[ -n "$$untracked" ]]; then \
-			echo 'untracked generated F* proof artifacts:' >&2; \
-			printf '%s\n' "$$untracked" >&2; \
-			exit 1; \
-		fi
-
 check-generated-lean: verify-lean
 	git diff --exit-code -- $(LEAN_GENERATED_PATHS)
 	@untracked="$$(git ls-files --others --exclude-standard -- \
@@ -748,10 +589,10 @@ $(PROVERIF_GENERATED_TARGETS): check-generated-proverif-%: verify-proverif-%
 
 # Run this after committing generated output to ensure extraction is stable.
 check-generated: verify
-	git diff --exit-code -- proofs/fstar/extraction proofs/pro-verif/extraction \
+	git diff --exit-code -- proofs/pro-verif/extraction \
 		$(LEAN_GENERATED_PATHS)
 	@untracked="$$(git ls-files --others --exclude-standard -- \
-		proofs/fstar/extraction proofs/pro-verif/extraction \
+		proofs/pro-verif/extraction \
 		$(LEAN_GENERATED_PATHS))"; \
 		if [[ -n "$$untracked" ]]; then \
 			echo 'untracked generated proof artifacts:' >&2; \

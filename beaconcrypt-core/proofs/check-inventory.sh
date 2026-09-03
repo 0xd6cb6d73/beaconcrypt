@@ -27,7 +27,7 @@ while IFS=$'\t' read -r category expected path extra ||
 	[[ -n "${category:-}${expected:-}${path:-}${extra:-}" ]]; do
 	[[ -z "${category:-}" || "$category" == \#* ]] && continue
 	[[ -z "${extra:-}" ]] || fail "malformed manifest entry for $path"
-	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|handwritten-ssprove|historical-generated-fstar|historical-handwritten-fstar|inventory|lean-control|validation)$ ]] ||
+	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|handwritten-ssprove|inventory|lean-control|validation)$ ]] ||
 		fail "unknown manifest category: $category"
 	[[ "$expected" =~ ^[0-9a-f]{64}$ ]] || fail "invalid SHA-256 for $path"
 	[[ -n "$path" && -f "$path" ]] || fail "missing reviewed file: $path"
@@ -45,14 +45,12 @@ declare -A expected_category_counts=(
 	[adapter-rust]=13
 	[adapter-schema]=3
 	[core-rust]=9
-	[control]=12
+	[control]=11
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=106
 	[handwritten-proverif]=64
 	[handwritten-ssprove]=18
-	[historical-generated-fstar]=5
-	[historical-handwritten-fstar]=8
 	[inventory]=2
 	[lean-control]=12
 	[validation]=3
@@ -96,8 +94,7 @@ printf '%s\n' \
 	../flake.nix \
 	Cargo.toml \
 	Makefile \
-	README.md \
-	proofs/fstar/Makefile > "$tmp_dir/control"
+	README.md > "$tmp_dir/control"
 compare_set control "$tmp_dir/control"
 
 printf '%s\n' proofs/check-inventory.sh proofs/trusted-boundary.md \
@@ -139,11 +136,6 @@ compare_set adapter-schema "$tmp_dir/adapter-schema"
 find src -type f -name '*.rs' -printf '%p\n' > "$tmp_dir/core-rust"
 compare_set core-rust "$tmp_dir/core-rust"
 
-find proofs/fstar -type f \( -name '*.fst' -o -name '*.fsti' \) \
-	! -path 'proofs/fstar/extraction/*' ! -path '*/.cache/*' \
-	-printf '%p\n' > "$tmp_dir/historical-handwritten-fstar"
-compare_set historical-handwritten-fstar "$tmp_dir/historical-handwritten-fstar"
-
 find proofs/pro-verif -type f \
 	\( -name '*.pv' -o -name '*.pvl' -o -name '*.awk' \) \
 	! -path 'proofs/pro-verif/extraction/*' \
@@ -153,11 +145,6 @@ compare_set handwritten-proverif "$tmp_dir/handwritten-proverif"
 find proofs/ssprove -type f -printf '%p\n' \
 	> "$tmp_dir/handwritten-ssprove"
 compare_set handwritten-ssprove "$tmp_dir/handwritten-ssprove"
-
-find proofs/fstar/extraction -type f \
-	\( -name '*.fst' -o -name '*.fsti' \) \
-	-printf '%p\n' > "$tmp_dir/historical-generated-fstar"
-compare_set historical-generated-fstar "$tmp_dir/historical-generated-fstar"
 
 find proofs/pro-verif/extraction -type f \
 	\( -name '*.pv' -o -name '*.pvl' \) -printf '%p\n' > "$tmp_dir/generated-proverif"
@@ -254,34 +241,6 @@ reject_matches() {
 
 reject_matches "new hax opaque annotation requires inventory review" \
 	'hax_lib\s*::\s*(?:opaque|opaque_type)\b' src
-require_occurrence_count 1 \
-	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)' \
-	"reviewed F* noeq insertion" src
-require_occurrence_count 3 \
-	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(' \
-	"complete F* before-annotation allowlist" src
-require_occurrence_count 1 \
-	'#\[cfg_attr\(feature\s*=\s*"proverif",\s*hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)\)\]\s*pub\s+struct\s+InitialRatchetChains\b' \
-	"reviewed noeq target InitialRatchetChains" src/pqxdh.rs
-require_occurrence_count 1 \
-	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"friend Beaconcrypt_core\.Ratchet\.Refined"\s*\)' \
-	"reviewed Ratchet-to-Refined friend edge" src/ratchet.rs
-require_occurrence_count 1 \
-	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"friend Beaconcrypt_core\.Ratchet\.Control"\s*\)' \
-	"reviewed Refined-to-Control friend edge" src/ratchet/refined.rs
-
-# The checked-in F* files intentionally archive the predecessor executor/callback implementation.
-# They are reviewed historical evidence from a previously checked snapshot, but canonical regeneration does not currently verify them or establish correspondence with the current Rust effect machine.
-# These markers make that migration gap explicit and force an inventory review when the six-module current extraction replaces it.
-[[ ! -e proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Concrete.fst ]] ||
-	fail "current-effect F* extraction appeared; reclassify the historical F* inventory"
-require_line_count 1 '^type t_ConcreteRatchetChain = ' \
-	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
-	"historical executor-bearing F* snapshot marker"
-require_line_count 1 '^let concrete_ratchet_step ' \
-	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
-	"historical callback-era F* snapshot marker"
-
 replacement_pattern='hax_lib\s*::\s*proverif\s*::\s*replace\s*\('
 require_occurrence_count 3 "$replacement_pattern" \
 	"ProVerif Rust replacement" src
@@ -3293,27 +3252,20 @@ for theorem_name in \
 		"effect-refinement theorem ${theorem_name}"
 done
 
-require_line_count 1 '^let commitment_transcript_is_exact' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
-	"exact production commitment transcript lemma"
-require_line_count 1 '^let commitment_transcript_integer_fields_are_le64' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
-	"production commitment integer-encoding lemma"
-require_line_count 1 '^let encode_u64_le_is_injective' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
-	"injective production LE64 encoding lemma"
-require_line_count 1 '^let production_commitment_input_is_injective' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
-	"injective six-field production commitment lemma"
-require_line_count 1 '^type t_HashCollisionWitness' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
+# Checked Lean contracts now carry the complete concrete commitment proof surface.
+for theorem_name in \
+	productionInput_spec \
+	productionInput_abs \
+	decode_encode_u64_le \
+	encode_u64_le_is_injective \
+	production_commitment_input_is_injective \
+	ctx_distinct_openings_imply_hash_collision; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean \
+		"concrete commitment theorem ${theorem_name}"
+done
+require_line_count 1 '^structure HashCollisionWitness( |$)' \
+	proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean \
 	"CTX hash-collision witness type"
-require_line_count 1 '^let ctx_distinct_openings_imply_hash_collision' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
-	"CTX distinct-opening collision extractor"
-
-reject_matches "unreviewed generated F* exception" \
-	'\b(?:while_loop_return|to_le_bytes|assume|admit)\b' \
-	proofs/fstar/extraction --glob '*.fst' --glob '*.fsti'
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
