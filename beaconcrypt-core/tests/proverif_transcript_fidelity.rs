@@ -27,6 +27,8 @@ const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
 const CORE_COMMITMENT: &str = include_str!("../src/commitment.rs");
 const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
 const CORE_RATCHET_CONCRETE: &str = include_str!("../src/ratchet/concrete.rs");
+const CORE_RATCHET_CONTROL: &str = include_str!("../src/ratchet/control.rs");
+const CORE_RATCHET_REFINED: &str = include_str!("../src/ratchet/refined.rs");
 const LEAN_RATCHET_EFFECT: &str =
 	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetEffect.lean");
 const LEAN_RATCHET_EFFECT_REFINEMENT: &str =
@@ -34,6 +36,9 @@ const LEAN_RATCHET_EFFECT_REFINEMENT: &str =
 const CRYPTOFRAME_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/cryptoframe.capnp");
 const PHASE1_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase1.capnp");
 const PHASE2_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase2.capnp");
+const FAILED_RECEIVE_QUERIES: &str = include_str!("../proofs/pro-verif/failed-receive-queries.pvl");
+const FAILED_RECEIVE_REACHABILITY_QUERIES: &str =
+	include_str!("../proofs/pro-verif/failed-receive-reachability-queries.pvl");
 
 const FACT_PREFIX: &str = "(* @beaconcrypt-fidelity-v1 ";
 const FACT_SUFFIX: &str = " *)";
@@ -255,6 +260,52 @@ const EXPECTED_FACTS: &[&str] = &[
 	"ratchet.driver.lean.refinement_anchors=conditional:ResponseRefines,begin_send_refines,SendKdf.resume_refines,SendSeal.finish_refines_ideal_send,ReceiveOpen.failure_preserves_refinement,ReceiveFailureTrace.preserves_refinement,OpenReplyRefines,begin_receive_cached_refines,CachedOpenRefines.finish_success_matches_ideal,CachedOpenRefines.finish_success_refines_of_publication",
 	"ratchet.driver.proverif.abstraction=atomic_seal_frame,ideal_exact_open_frame",
 	"ratchet.driver.bridge=text_checker_only:not_semantic_Rust_to_Lean_or_ProVerif_refinement",
+	"ratchet.receive_fixture.scope=finite_StateNeutralFutureReceive_and_StateNeutralCapacityReceive",
+	"ratchet.receive_fixture.bridge=deterministic_text_synchronization:not_semantic_Rust_to_Lean_or_ProVerif_refinement",
+	"ratchet.receive_fixture.schedule=two_nonreplicated_fixed_server_to_beacon_legs:not_arbitrary_schedule",
+	"ratchet.receive_fixture.cache.representation=core_slots_oldest_first,proverif_nested_newest_first:membership_and_count_only",
+	"ratchet.receive_fixture.core.max_gap=50",
+	"ratchet.receive_fixture.core.cache_capacity=50:max_gap",
+	"ratchet.receive_fixture.core.plan.future.derivations=target-receive_sequence",
+	"ratchet.receive_fixture.core.plan.future.skipped=derivations-1",
+	"ratchet.receive_fixture.core.plan.future.admission=skipped<=50,cached<=50-skipped",
+	"ratchet.receive_fixture.core.plan.future.rejection=over_gap_or_capacity:none,zero_derivations",
+	"ratchet.receive_fixture.core.target_advance=increment_counter_without_cache_append",
+	"ratchet.receive_fixture.core.future.pending=skipped_in_staged_slots,target_material_separate",
+	"ratchet.receive_fixture.core.future.validity=target_not_in_committed_cache,committed_len=first_slot+skipped",
+	"ratchet.receive_fixture.core.future.failure=ReceiveOpen.finish(None):exact_entry",
+	"ratchet.receive_fixture.core.future.success=publish_staged_skipped,final_receive_chain,committed_control",
+	"ratchet.receive_fixture.core.cached.prepare=lookup_target,preflight_target_and_last,successful_removal_plan",
+	"ratchet.receive_fixture.core.cached.failure=ReceiveOpen.finish(None):exact_entry_no_swap",
+	"ratchet.receive_fixture.core.cached.success=swap_remove_whole_target_with_last,publish_committed_control",
+	"ratchet.receive_fixture.core.replay=old_or_equal_target_missing_from_cache:entry_rejected",
+	"ratchet.receive_fixture.proverif.state=receive_state(counter,chain,cache)",
+	"ratchet.receive_fixture.proverif.cache=receive_cache_entry(sequence,material,tail):newest_first",
+	"ratchet.receive_fixture.proverif.short.rejection=exact_candidate_equality_then_open_frame_destructor_failure",
+	"ratchet.receive_fixture.short.sequences=first:1,skipped:2,target:3",
+	"ratchet.receive_fixture.short.ready_state=receive_state(1,chain_2,empty_cache)",
+	"ratchet.receive_fixture.short.rejections=2:same_forged_target_frame,same_ready_state",
+	"ratchet.receive_fixture.short.success.cache=sequence_2_only:target_3_absent",
+	"ratchet.receive_fixture.short.success.state=receive_state(3,chain_4,cache_2)",
+	"ratchet.receive_fixture.short.replay=accepted_target_3_rejected_from_committed_state",
+	"ratchet.receive_fixture.short.cached_consume=sequence_2:last_slot_case,empty_cache_after",
+	"ratchet.receive_fixture.short.sent=sequence_1:past,sequence_2:skipped,sequence_3:target",
+	"ratchet.receive_fixture.short.received=sequence_1:first_plaintext,sequence_3:accepted_plaintext,sequence_2:delayed_plaintext",
+	"ratchet.receive_fixture.capacity.sequences=entry:1,boundary:52,cached_release:51,overflow:54,postrelease_skipped:53",
+	"ratchet.receive_fixture.capacity.ready_state=receive_state(1,chain_2,empty_cache)",
+	"ratchet.receive_fixture.capacity.boundary=target_52:51_derivations,50_skipped",
+	"ratchet.receive_fixture.capacity.boundary.cache=sequences_2_through_51:length_50,target_52_absent",
+	"ratchet.receive_fixture.capacity.boundary.state=receive_state(52,chain_53,cache_2_through_51)",
+	"ratchet.receive_fixture.capacity.overflow=target_54:one_skipped_plus_full_cache,reject_same_state",
+	"ratchet.receive_fixture.capacity.release=consume_cached_51:last_slot_case,length_49",
+	"ratchet.receive_fixture.capacity.released_state=receive_state(52,chain_53,cache_2_through_50)",
+	"ratchet.receive_fixture.capacity.after_release=target_54:2_derivations,cache_53,length_50,target_54_absent",
+	"ratchet.receive_fixture.capacity.after_release.state=receive_state(54,chain_55,cache_2_through_50_plus_53)",
+	"ratchet.receive_fixture.capacity.sent=sequence_1:first,sequence_52:maximum_gap,sequence_51:cached,sequence_54:after_release",
+	"ratchet.receive_fixture.capacity.received=sequence_1:first,sequence_52:maximum_gap,sequence_51:cached,sequence_54:after_release",
+	"ratchet.receive_fixture.queries.secrecy=6_application_canaries",
+	"ratchet.receive_fixture.queries.correspondence=11_state_and_origin_queries",
+	"ratchet.receive_fixture.queries.reachability=10_receive_state_events",
 	"agreement.constructor=establishment_transcript",
 	"agreement.field_count=18",
 	"agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin",
@@ -271,6 +322,8 @@ struct Snapshot {
 	core_commitment: String,
 	core_pqxdh: String,
 	core_ratchet_concrete: String,
+	core_ratchet_control: String,
+	core_ratchet_refined: String,
 	lean_ratchet_effect: String,
 	lean_ratchet_effect_refinement: String,
 	cryptoframe_schema: String,
@@ -278,6 +331,8 @@ struct Snapshot {
 	phase2_schema: String,
 	adapter_server: String,
 	adapter_beacon: String,
+	failed_receive_queries: String,
+	failed_receive_reachability_queries: String,
 }
 
 impl Snapshot {
@@ -292,6 +347,8 @@ impl Snapshot {
 			core_commitment: CORE_COMMITMENT.to_owned(),
 			core_pqxdh: CORE_PQXDH.to_owned(),
 			core_ratchet_concrete: CORE_RATCHET_CONCRETE.to_owned(),
+			core_ratchet_control: CORE_RATCHET_CONTROL.to_owned(),
+			core_ratchet_refined: CORE_RATCHET_REFINED.to_owned(),
 			lean_ratchet_effect: LEAN_RATCHET_EFFECT.to_owned(),
 			lean_ratchet_effect_refinement: LEAN_RATCHET_EFFECT_REFINEMENT.to_owned(),
 			cryptoframe_schema: CRYPTOFRAME_SCHEMA.to_owned(),
@@ -299,6 +356,8 @@ impl Snapshot {
 			phase2_schema: PHASE2_SCHEMA.to_owned(),
 			adapter_server: ADAPTER_SERVER.to_owned(),
 			adapter_beacon: ADAPTER_BEACON.to_owned(),
+			failed_receive_queries: FAILED_RECEIVE_QUERIES.to_owned(),
+			failed_receive_reachability_queries: FAILED_RECEIVE_REACHABILITY_QUERIES.to_owned(),
 		}
 	}
 }
@@ -2766,6 +2825,690 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 	Ok(())
 }
 
+fn validate_finite_receive_state_fixture(snapshot: &Snapshot) -> Result<(), String> {
+	let control = compact(&uncommented_rust(&snapshot.core_ratchet_control)?);
+	require_once(
+		&control,
+		"pubconstRATCHET_MAX_GAP:u64=50;",
+		"finite receive core maximum gap",
+	)?;
+	require_once(
+		&control,
+		"pubconstRECEIVE_CACHE_CAPACITY:usize=RATCHET_MAX_GAPasusize;",
+		"finite receive core cache capacity",
+	)?;
+
+	let plan = rust_body(&snapshot.core_ratchet_control, "plan_receive_until")?;
+	require_ordered_once(
+		&plan,
+		&[
+			"iftarget<=state.receive_sequence{returnReceivePlan{sequence:Some(target),derivations:0,};}",
+			"letderivations=target-state.receive_sequence;",
+			"letskipped=derivations-1;",
+			"letcached=state.receive_cache.lenasu64;",
+			"ifskipped>RATCHET_MAX_GAP||cached>RATCHET_MAX_GAP-skipped",
+			"ReceivePlan{sequence:None,derivations:0,}",
+			"ReceivePlan{sequence:Some(target),derivations,}",
+		],
+		"finite receive core admission plan",
+	)?;
+
+	let advance_target = rust_body(&snapshot.core_ratchet_control, "advance_receive_target")?;
+	require_once(
+		&advance_target,
+		"letnext=state.receive_sequence+1;",
+		"finite receive target counter advance",
+	)?;
+	require_once(
+		&advance_target,
+		"state:RatchetState{receive_sequence:next,..state},sequence:Some(next)",
+		"finite receive target result",
+	)?;
+	forbid(
+		&advance_target,
+		".append(",
+		"finite receive target cache allocation",
+	)?;
+
+	let advance_skipped_source = section_between(
+		&snapshot.core_ratchet_control,
+		"pub(crate) fn advance_receive(",
+		"/// Outcome of authenticating a cached receive key.",
+		"finite receive skipped-key advance",
+	)?;
+	let advance_skipped = rust_body(advance_skipped_source, "advance_receive")?;
+	require_one_call(
+		&advance_skipped,
+		"state.receive_cache.append",
+		&["next"],
+		"finite receive skipped-key cache append",
+	)?;
+	require_once(
+		&advance_skipped,
+		"receive_sequence:next,receive_cache,..state",
+		"finite receive skipped-key control update",
+	)?;
+
+	let finish_control = rust_body(
+		&snapshot.core_ratchet_control,
+		"finish_receive_with_removal",
+	)?;
+	require_once(
+		&finish_control,
+		"if!authenticated{returnReceiveFinishWithRemoval{state,disposition:ReceiveDisposition::Retained,removal:None,};}",
+		"finite receive cached authentication failure neutrality",
+	)?;
+	require_ordered_once(
+		&finish_control,
+		&[
+			"letlast_slot=len-1;",
+			"entries[slot_index]=entries[last_slotasusize];",
+			"entries[last_slotasusize]=0;",
+			"len:last_slot",
+			"disposition:ReceiveDisposition::Consumed",
+			"target_slot:slot,last_slot",
+		],
+		"finite receive cached swap removal",
+	)?;
+
+	let begin_receive = rust_body(&snapshot.core_ratchet_concrete, "begin_receive")?;
+	require_once(
+		&begin_receive,
+		"ifplan.derivations==0{letprepared=matchprepare_cached_receive(&kernel.refined,sequence){Some(prepared)=>prepared,None=>returnreceive_rejected(kernel,context),};returnReceiveEffect::ReceiveOpenRequested(ReceiveOpen{entry:kernel,context,prepared:PreparedReceive::PreparedReceiveCachedCase(prepared),});}",
+		"finite receive replay and cached lookup branch",
+	)?;
+	require_once(
+		&begin_receive,
+		"letskipped=plan.derivations-1;",
+		"finite receive future skipped count",
+	)?;
+	require_once(
+		&begin_receive,
+		"staged_slots:empty_material_slots(),first_slot,skipped:0,remaining,request",
+		"finite receive private future staging start",
+	)?;
+
+	let receive_kdf = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveKdf<Context>",
+		"impl<Context> ReceiveOpen<Context>",
+		"finite receive KDF phase",
+	)?;
+	let resume_receive = rust_body(receive_kdf, "resume")?;
+	require_once(
+		&resume_receive,
+		"staged_slots:self.staged_slots,target_sequence:sequence,target_material:stepped.material,first_slot:self.first_slot,skipped:self.skipped",
+		"finite receive separate future target",
+	)?;
+	require_once(
+		&resume_receive,
+		"self.staged_slots[slot_index]=Some(CachedReceiveKey{sequence,material:stepped.material,});",
+		"finite receive staged skipped material",
+	)?;
+
+	let pending_valid = rust_body(&snapshot.core_ratchet_refined, "pending_receive_is_valid")?;
+	require_once(
+		&pending_valid,
+		"iflookup_receive_key(pending.committed_control,requested).is_some(){returnfalse;}",
+		"finite receive target absent from committed cache",
+	)?;
+	require_once(
+		&pending_valid,
+		"letcommitted_len=pending.first_slotasusize+pending.skippedasusize;",
+		"finite receive committed skipped-cache length",
+	)?;
+	require_once(
+		&pending_valid,
+		"if!(pending.committed_control.receive_cache_len()asusize==committed_len){returnfalse;}",
+		"finite receive committed cache length check",
+	)?;
+
+	let prepare_cached = rust_body(&snapshot.core_ratchet_refined, "prepare_cached_receive")?;
+	require_ordered_once(
+		&prepare_cached,
+		&[
+			"lettarget_slot=matchlookup_receive_key(state.control,sequence)",
+			"letlast_slot=len-1;",
+			"letfinished=finish_receive_with_removal(state.control,sequence,target_slot,true);",
+			"if!(removal.target_slot==target_slot){returnNone;}",
+			"if!(removal.last_slot==last_slot){returnNone;}",
+			"Some(PreparedCachedReceive{sequence,target_slot,last_slot,committed_control:finished.state,})",
+		],
+		"finite receive cached preflight",
+	)?;
+
+	let receive_open = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveOpen<Context>",
+		"/// Checked restoration builder",
+		"finite receive open phase",
+	)?;
+	let finish_open = rust_body(receive_open, "finish")?;
+	require_ordered_once(
+		&finish_open,
+		&[
+			"None=>return(self.entry,None)",
+			"letmutentry=self.entry;",
+			"publish_cached_receive(&mutentry.refined,prepared);",
+			"publish_future_receive(&mutentry.refined,pending);",
+			"(entry,Some(plaintext))",
+		],
+		"finite receive success-only publication",
+	)?;
+
+	let publish_cached = rust_body(&snapshot.core_ratchet_refined, "publish_cached_receive")?;
+	require_ordered_once(
+		&publish_cached,
+		&[
+			"iftarget_index==last_index{let_=state.receive_slots[last_index].take();}else{letmoved=state.receive_slots[last_index].take();state.receive_slots[target_index]=moved;}",
+			"state.control=prepared.committed_control;",
+		],
+		"finite receive cached whole-entry publication",
+	)?;
+
+	let publish_future_source = section_between(
+		&snapshot.core_ratchet_refined,
+		"pub(super) fn publish_future_receive<",
+		"/// Commit an already-preflighted suffix of receive steps.",
+		"finite receive future publisher",
+	)?;
+	let publish_future = rust_body(publish_future_source, "publish_future_receive")?;
+	require_ordered_once(
+		&publish_future,
+		&[
+			"publish_future_receive_slots(state,&mutpending.staged_slots,pending.first_slot,pending.skipped,);",
+			"state.receive_chain=pending.final_receive_chain;",
+			"state.control=pending.committed_control;",
+		],
+		"finite receive future publication",
+	)?;
+	forbid(
+		&publish_future,
+		"target_material",
+		"finite receive target publication",
+	)?;
+
+	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	require_once(
+		&environment,
+		"funreceive_cache_empty():receive_cache[data].",
+		"finite receive ProVerif empty cache constructor",
+	)?;
+	require_once(
+		&environment,
+		"funreceive_cache_entry(sequence,bitstring,receive_cache):receive_cache[data].",
+		"finite receive ProVerif cache-entry constructor",
+	)?;
+	require_once(
+		&environment,
+		"funreceive_state(sequence,bitstring,receive_cache):bitstring[data].",
+		"finite receive ProVerif state constructor",
+	)?;
+	let short = section_between(
+		&environment,
+		"letStateNeutralFutureReceive()=",
+		"letStateNeutralCapacityReceive()=",
+		"finite receive short fixture",
+	)?;
+	let capacity = section_between(
+		&environment,
+		"letStateNeutralCapacityReceive()=",
+		"letFailedReceiveScenario()=",
+		"finite receive capacity fixture",
+	)?;
+	require_once(
+		&environment,
+		"letFailedReceiveScenario()=(StateNeutralFutureReceive()|StateNeutralCapacityReceive()).",
+		"finite receive two-leg scenario composition",
+	)?;
+
+	require_once(
+		short,
+		"letfirst=first_sequence()inletskipped_sequence=next_sequence(first)inlettarget_sequence=next_sequence(skipped_sequence)in",
+		"finite receive short sequence prefix",
+	)?;
+	require_once(
+		short,
+		"letchain_1=server_to_beacon_chain(root)inletchain_2=ratchet_next(chain_1)inletchain_3=ratchet_next(chain_2)inletchain_4=ratchet_next(chain_3)in",
+		"finite receive short ratchet chain",
+	)?;
+	require_once(
+		short,
+		"letmaterial_1=ratchet_material(chain_1)inletskipped_material=ratchet_material(chain_2)inlettarget_material=ratchet_material(chain_3)in",
+		"finite receive short material chain",
+	)?;
+	for (frame, material, sequence, plaintext) in [
+		("first_frame", "material_1", "first", "RECEIVE_PAST_SECRET"),
+		(
+			"skipped_frame",
+			"skipped_material",
+			"skipped_sequence",
+			"RECEIVE_SKIPPED_SECRET",
+		),
+		(
+			"target_frame",
+			"target_material",
+			"target_sequence",
+			"RECEIVE_TARGET_SECRET",
+		),
+	] {
+		require_once(
+			short,
+			&format!(
+				"let{frame}=seal_frame({material},associated_data,{sequence},sender_id,{plaintext})in"
+			),
+			"finite receive short honest frame",
+		)?;
+	}
+	require_once(
+		short,
+		"letready_state=receive_state(first,chain_2,empty_cache)in",
+		"finite receive short entry state",
+	)?;
+	require_once(
+		short,
+		"letforged_target_frame=crypto_frame(forged_frame_component(),forged_frame_component(),forged_frame_component(),target_sequence,sender_id)in",
+		"finite receive short forged target frame",
+	)?;
+	for (sequence, plaintext) in [
+		("first", "RECEIVE_PAST_SECRET"),
+		("skipped_sequence", "RECEIVE_SKIPPED_SECRET"),
+		("target_sequence", "RECEIVE_TARGET_SECRET"),
+	] {
+		require_once(
+			short,
+			&format!(
+				"eventMessageSent(session,server_to_beacon(),{sequence},sender_id,receiver_id,{plaintext});"
+			),
+			"finite receive short sent message",
+		)?;
+	}
+	require_once(
+		short,
+		"eventMessageReceived(session,server_to_beacon(),first,sender_id,receiver_id,first_plaintext);",
+		"finite receive short first delivery",
+	)?;
+	require_once(
+		short,
+		"letfirst_plaintext=open_frame(material_1,associated_data,first,sender_id,first_candidate)in",
+		"finite receive short initial open",
+	)?;
+	require_once(
+		short,
+		"ifforged_candidate=forged_target_framethen(letforged_plaintext=open_frame(target_material,associated_data,target_sequence,sender_id,forged_candidate)ineventMessageReceived(session,server_to_beacon(),target_sequence,sender_id,receiver_id,forged_plaintext)else(eventReceiveRejectedNeutral(session,target_sequence,forged_target_frame,ready_state);",
+		"finite receive first exact-frame destructor rejection",
+	)?;
+	require_once(
+		short,
+		"ifrepeated_candidate=forged_target_framethen(letrepeated_plaintext=open_frame(target_material,associated_data,target_sequence,sender_id,repeated_candidate)ineventMessageReceived(session,server_to_beacon(),target_sequence,sender_id,receiver_id,repeated_plaintext)else(eventReceiveRejectionRetried(session,target_sequence,forged_target_frame,ready_state);",
+		"finite receive repeated exact-frame destructor rejection",
+	)?;
+	require_once(
+		short,
+		"out(receive_snapshots,(session,target_sequence,ready_state,ready_state,chain_2,empty_cache,compromise_ack))",
+		"finite receive unchanged rejection snapshot",
+	)?;
+	require_once(
+		short,
+		"letaccepted_plaintext=open_frame(target_material,associated_data,target_sequence,sender_id,accepted_candidate)in",
+		"finite receive short future open",
+	)?;
+	require_once(
+		short,
+		"letcommitted_cache=receive_cache_entry(skipped_sequence,skipped_material,empty_cache)inletcommitted_state=receive_state(target_sequence,chain_4,committed_cache)in",
+		"finite receive short successful skipped publication",
+	)?;
+	require_once(
+		short,
+		"eventMessageKeyCached(session,beacon_role(),server_to_beacon(),skipped_sequence,skipped_material);",
+		"finite receive short skipped-key cache event",
+	)?;
+	require_once(
+		short,
+		"eventMessageReceived(session,server_to_beacon(),target_sequence,sender_id,receiver_id,accepted_plaintext);",
+		"finite receive short future delivery",
+	)?;
+	require_once(
+		short,
+		"eventMessageKeyUnavailable(session,beacon_role(),server_to_beacon(),target_sequence,target_material);",
+		"finite receive short target consumption",
+	)?;
+	require_once(
+		short,
+		"eventReceiveFutureAccepted(session,target_sequence,sender_id,receiver_id,accepted_plaintext,accepted_candidate,target_material,forged_target_frame,ready_state,committed_state);",
+		"finite receive future acceptance",
+	)?;
+	require_once(
+		short,
+		"ifaccepted_candidate=target_framethen(eventReceiveHonestFutureDelivered(session,target_sequence,sender_id,receiver_id,accepted_plaintext,accepted_candidate,target_material,forged_target_frame,ready_state,committed_state);",
+		"finite receive honest future selection and delivery",
+	)?;
+	require_once(
+		short,
+		"ifreplay_candidate=accepted_candidatethen(eventReceiveReplayRejected(session,target_sequence,sender_id,receiver_id,accepted_plaintext,accepted_candidate,target_material,forged_target_frame,ready_state,committed_state);",
+		"finite receive exact accepted-frame replay",
+	)?;
+	require_once(
+		short,
+		"letdelayed_plaintext=open_frame(skipped_material,associated_data,skipped_sequence,sender_id,delayed_candidate)inletdelayed_state=receive_state(target_sequence,chain_4,empty_cache)in",
+		"finite receive delayed cached-key consumption",
+	)?;
+	require_once(
+		short,
+		"eventMessageKeyUnavailable(session,beacon_role(),server_to_beacon(),skipped_sequence,skipped_material);",
+		"finite receive delayed key unavailability",
+	)?;
+	require_once(
+		short,
+		"eventMessageReceived(session,server_to_beacon(),skipped_sequence,sender_id,receiver_id,delayed_plaintext);",
+		"finite receive delayed delivery",
+	)?;
+	require_once(
+		short,
+		"eventReceiveDelayedCachedAccepted(session,skipped_sequence,sender_id,receiver_id,delayed_plaintext,delayed_candidate,skipped_material,committed_state,delayed_state)",
+		"finite receive delayed cached acceptance",
+	)?;
+	forbid(
+		short,
+		"receive_cache_entry(target_sequence,",
+		"finite receive short target retained in cache",
+	)?;
+
+	for sequence in 2..=54 {
+		let previous = sequence - 1;
+		require_once(
+			capacity,
+			&format!(
+				"letcapacity_sequence_{sequence}=next_sequence(capacity_sequence_{previous})in"
+			),
+			"finite receive capacity sequence chain",
+		)?;
+	}
+	for chain in 2..=55 {
+		let previous = chain - 1;
+		require_once(
+			capacity,
+			&format!("letcapacity_chain_{chain}=ratchet_next(capacity_chain_{previous})in"),
+			"finite receive capacity ratchet chain",
+		)?;
+	}
+	for material in 1..=54 {
+		require_once(
+			capacity,
+			&format!(
+				"letcapacity_material_{material}=ratchet_material(capacity_chain_{material})in"
+			),
+			"finite receive capacity material chain",
+		)?;
+	}
+	for (frame, material, sequence, plaintext) in [
+		(
+			"capacity_first_frame",
+			"capacity_material_1",
+			"capacity_sequence_1",
+			"capacity_first_plaintext",
+		),
+		(
+			"maximum_gap_frame",
+			"capacity_material_52",
+			"capacity_sequence_52",
+			"RECEIVE_MAX_GAP_SECRET",
+		),
+		(
+			"cached_frame",
+			"capacity_material_51",
+			"capacity_sequence_51",
+			"RECEIVE_CACHED_SECRET",
+		),
+		(
+			"after_release_frame",
+			"capacity_material_54",
+			"capacity_sequence_54",
+			"RECEIVE_AFTER_RELEASE_SECRET",
+		),
+	] {
+		require_once(
+			capacity,
+			&format!(
+				"let{frame}=seal_frame({material},capacity_associated_data,{sequence},capacity_sender_id,{plaintext})in"
+			),
+			"finite receive capacity honest frame",
+		)?;
+	}
+	for (sequence, plaintext) in [
+		("capacity_sequence_1", "capacity_first_plaintext"),
+		("capacity_sequence_52", "RECEIVE_MAX_GAP_SECRET"),
+		("capacity_sequence_51", "RECEIVE_CACHED_SECRET"),
+		("capacity_sequence_54", "RECEIVE_AFTER_RELEASE_SECRET"),
+	] {
+		require_once(
+			capacity,
+			&format!(
+				"eventMessageSent(capacity_session,server_to_beacon(),{sequence},capacity_sender_id,capacity_receiver_id,{plaintext});"
+			),
+			"finite receive capacity sent message",
+		)?;
+	}
+	require_once(
+		capacity,
+		"letcapacity_rejected_frame=crypto_frame(forged_frame_component(),forged_frame_component(),forged_frame_component(),capacity_sequence_54,capacity_sender_id)in",
+		"finite receive capacity rejected frame",
+	)?;
+	require_once(
+		capacity,
+		"letcapacity_first_opened=open_frame(capacity_material_1,capacity_associated_data,capacity_sequence_1,capacity_sender_id,capacity_first_candidate)in",
+		"finite receive capacity initial open",
+	)?;
+	require_once(
+		capacity,
+		"letcapacity_ready_state=receive_state(capacity_sequence_1,capacity_chain_2,capacity_cache_empty)in",
+		"finite receive capacity entry state",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageReceived(capacity_session,server_to_beacon(),capacity_sequence_1,capacity_sender_id,capacity_receiver_id,capacity_first_opened);",
+		"finite receive capacity first delivery",
+	)?;
+	require_once(
+		capacity,
+		"letmaximum_gap_plaintext=open_frame(capacity_material_52,capacity_associated_data,capacity_sequence_52,capacity_sender_id,maximum_gap_candidate)in",
+		"finite receive maximum-gap open",
+	)?;
+	for skipped in 2..=51 {
+		let previous_cache = if skipped == 2 {
+			"capacity_cache_empty".to_owned()
+		} else {
+			format!("capacity_cache_{}", skipped - 1)
+		};
+		require_once(
+			capacity,
+			&format!(
+				"eventMessageKeyCached(capacity_session,beacon_role(),server_to_beacon(),capacity_sequence_{skipped},capacity_material_{skipped});"
+			),
+			"finite receive maximum-gap cached-key event",
+		)?;
+		require_once(
+			capacity,
+			&format!(
+				"letcapacity_cache_{skipped}=receive_cache_entry(capacity_sequence_{skipped},capacity_material_{skipped},{previous_cache})in"
+			),
+			"finite receive maximum-gap cache construction",
+		)?;
+	}
+	require_once(
+		capacity,
+		"letmaximum_gap_state=receive_state(capacity_sequence_52,capacity_chain_53,capacity_cache_51)in",
+		"finite receive maximum-gap state",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageKeyUnavailable(capacity_session,beacon_role(),server_to_beacon(),capacity_sequence_52,capacity_material_52);",
+		"finite receive maximum-gap target consumption",
+	)?;
+	require_once(
+		capacity,
+		"eventReceiveMaximumGapAccepted(capacity_session,capacity_sequence_52,capacity_sender_id,capacity_receiver_id,maximum_gap_plaintext,maximum_gap_candidate,capacity_material_52,capacity_ready_state,maximum_gap_state);",
+		"finite receive maximum-gap acceptance",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageReceived(capacity_session,server_to_beacon(),capacity_sequence_52,capacity_sender_id,capacity_receiver_id,maximum_gap_plaintext);",
+		"finite receive maximum-gap delivery",
+	)?;
+	require_once(
+		capacity,
+		"eventReceiveCapacityRejected(capacity_session,capacity_sequence_54,capacity_rejected_frame,maximum_gap_state);",
+		"finite receive full-cache rejection",
+	)?;
+	require_once(
+		capacity,
+		"ifcapacity_rejected_candidate=capacity_rejected_framethen(eventReceiveCapacityRejected",
+		"finite receive full-cache exact-frame gate",
+	)?;
+	require_once(
+		capacity,
+		"letcached_plaintext=open_frame(capacity_material_51,capacity_associated_data,capacity_sequence_51,capacity_sender_id,cached_candidate)in",
+		"finite receive cached release open",
+	)?;
+	require_once(
+		capacity,
+		"letreleased_state=receive_state(capacity_sequence_52,capacity_chain_53,capacity_cache_50)in",
+		"finite receive cached capacity release",
+	)?;
+	require_once(
+		capacity,
+		"eventReceiveCachedKeyConsumed(capacity_session,capacity_sequence_51,capacity_material_51,maximum_gap_state,released_state);",
+		"finite receive cached last-slot consumption event",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageKeyUnavailable(capacity_session,beacon_role(),server_to_beacon(),capacity_sequence_51,capacity_material_51);",
+		"finite receive cached key unavailability",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageReceived(capacity_session,server_to_beacon(),capacity_sequence_51,capacity_sender_id,capacity_receiver_id,cached_plaintext);",
+		"finite receive cached delivery",
+	)?;
+	require_once(
+		capacity,
+		"letafter_release_plaintext=open_frame(capacity_material_54,capacity_associated_data,capacity_sequence_54,capacity_sender_id,after_release_candidate)in",
+		"finite receive after-release open",
+	)?;
+	require_once(
+		capacity,
+		"letafter_release_cache=receive_cache_entry(capacity_sequence_53,capacity_material_53,capacity_cache_50)inletafter_release_state=receive_state(capacity_sequence_54,capacity_chain_55,after_release_cache)in",
+		"finite receive after-release state",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageKeyCached(capacity_session,beacon_role(),server_to_beacon(),capacity_sequence_53,capacity_material_53);",
+		"finite receive after-release skipped-key event",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageKeyUnavailable(capacity_session,beacon_role(),server_to_beacon(),capacity_sequence_54,capacity_material_54);",
+		"finite receive after-release target consumption",
+	)?;
+	require_once(
+		capacity,
+		"eventReceiveAfterCapacityReleaseAccepted(capacity_session,capacity_sequence_54,capacity_sender_id,capacity_receiver_id,after_release_plaintext,after_release_candidate,capacity_material_54,maximum_gap_state,released_state,after_release_state)",
+		"finite receive after-release acceptance",
+	)?;
+	require_once(
+		capacity,
+		"eventMessageReceived(capacity_session,server_to_beacon(),capacity_sequence_54,capacity_sender_id,capacity_receiver_id,after_release_plaintext);",
+		"finite receive after-release delivery",
+	)?;
+	for forbidden_target in ["capacity_sequence_52", "capacity_sequence_54"] {
+		forbid(
+			capacity,
+			&format!("receive_cache_entry({forbidden_target},"),
+			"finite receive target retained in capacity cache",
+		)?;
+	}
+
+	let queries = compact(&uncommented_pv(&snapshot.failed_receive_queries)?);
+	if snapshot
+		.failed_receive_queries
+		.lines()
+		.filter(|line| line.trim_start().starts_with("query "))
+		.count()
+		!= 17
+	{
+		return Err("finite receive query count changed".to_owned());
+	}
+	for secret in [
+		"RECEIVE_PAST_SECRET",
+		"RECEIVE_SKIPPED_SECRET",
+		"RECEIVE_TARGET_SECRET",
+		"RECEIVE_MAX_GAP_SECRET",
+		"RECEIVE_CACHED_SECRET",
+		"RECEIVE_AFTER_RELEASE_SECRET",
+	] {
+		require_once(
+			&queries,
+			&format!("queryattacker({secret})."),
+			"finite receive secrecy query",
+		)?;
+	}
+	if count(&queries, "==>inj-event(") != 11 {
+		return Err("finite receive correspondence query count changed".to_owned());
+	}
+	for correspondence in [
+		"inj-event(ReceiveRejectionRetried(session,target_sequence,forged_frame,entry_state))==>inj-event(ReceiveRejectedNeutral(session,target_sequence,forged_frame,entry_state)).",
+		"inj-event(ReceiveFutureAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state))==>inj-event(ReceiveRejectionRetried(session,target_sequence,forged_frame,entry_state)).",
+		"inj-event(ReceiveHonestFutureDelivered(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state))==>inj-event(ReceiveFutureAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state)).",
+		"inj-event(ReceiveFutureAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state))==>inj-event(MessageKeyUnavailable(session,beacon_role(),server_to_beacon(),target_sequence,target_material)).",
+		"inj-event(ReceiveReplayRejected(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state))==>inj-event(ReceiveFutureAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,forged_frame,entry_state,committed_state)).",
+		"inj-event(ReceiveDelayedCachedAccepted(session,delayed_sequence,sender,receiver,plaintext,delayed_frame,delayed_material,committed_state,final_state))==>inj-event(MessageKeyCached(session,beacon_role(),server_to_beacon(),delayed_sequence,delayed_material)).",
+		"inj-event(ReceiveDelayedCachedAccepted(session,delayed_sequence,sender,receiver,plaintext,delayed_frame,delayed_material,committed_state,final_state))==>inj-event(MessageKeyUnavailable(session,beacon_role(),server_to_beacon(),delayed_sequence,delayed_material)).",
+		"inj-event(ReceiveMaximumGapAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,entry_state,committed_state))==>inj-event(MessageKeyUnavailable(session,beacon_role(),server_to_beacon(),target_sequence,target_material)).",
+		"inj-event(ReceiveCachedKeyConsumed(session,cached_sequence,cached_material,full_state,released_state))==>inj-event(MessageKeyUnavailable(session,beacon_role(),server_to_beacon(),cached_sequence,cached_material)).",
+		"inj-event(ReceiveAfterCapacityReleaseAccepted(session,target_sequence,sender,receiver,plaintext,accepted_frame,target_material,rejected_state,released_state,committed_state))==>inj-event(MessageKeyUnavailable(session,beacon_role(),server_to_beacon(),target_sequence,target_material)).",
+		"inj-event(MessageReceived(session,message_direction,message_sequence,sender,receiver,plaintext))==>inj-event(MessageSent(session,message_direction,message_sequence,sender,receiver,plaintext)).",
+	] {
+		require_once(
+			&queries,
+			correspondence,
+			"finite receive exact correspondence query",
+		)?;
+	}
+
+	let reachability = compact(&uncommented_pv(
+		&snapshot.failed_receive_reachability_queries,
+	)?);
+	if snapshot
+		.failed_receive_reachability_queries
+		.lines()
+		.filter(|line| line.trim_start().starts_with("query "))
+		.count()
+		!= 12
+	{
+		return Err("finite receive reachability query count changed".to_owned());
+	}
+	for event in [
+		"event(ReceiveRejectedNeutral(session,target_sequence,forged_frame,entry_state)).",
+		"event(ReceiveRejectionRetried(session,target_sequence,forged_frame,entry_state)).",
+		"event(ReceiveFutureAccepted(session,target_sequence,sender,receiver,RECEIVE_TARGET_SECRET,accepted_frame,target_material,forged_frame,entry_state,committed_state)).",
+		"event(ReceiveHonestFutureDelivered(session,target_sequence,sender,receiver,RECEIVE_TARGET_SECRET,accepted_frame,target_material,forged_frame,entry_state,committed_state)).",
+		"event(ReceiveReplayRejected(session,target_sequence,sender,receiver,RECEIVE_TARGET_SECRET,accepted_frame,target_material,forged_frame,entry_state,committed_state)).",
+		"event(ReceiveDelayedCachedAccepted(session,delayed_sequence,sender,receiver,RECEIVE_SKIPPED_SECRET,delayed_frame,delayed_material,committed_state,final_state)).",
+		"event(ReceiveMaximumGapAccepted(session,target_sequence,sender,receiver,RECEIVE_MAX_GAP_SECRET,accepted_frame,target_material,entry_state,committed_state)).",
+		"event(ReceiveCapacityRejected(session,target_sequence,rejected_frame,rejected_state)).",
+		"event(ReceiveCachedKeyConsumed(session,cached_sequence,cached_material,full_state,released_state)).",
+		"event(ReceiveAfterCapacityReleaseAccepted(session,target_sequence,sender,receiver,RECEIVE_AFTER_RELEASE_SECRET,accepted_frame,target_material,rejected_state,released_state,committed_state)).",
+	] {
+		require_once(
+			&reachability,
+			event,
+			"finite receive exact event reachability query",
+		)?;
+	}
+
+	Ok(())
+}
+
 fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_manifest(&snapshot.interface)?;
 	validate_pv(snapshot)?;
@@ -2774,6 +3517,7 @@ fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_cryptoframe_source(snapshot)?;
 	validate_endpoint_frame_context_wiring(snapshot)?;
 	validate_ratchet_effect_driver(snapshot)?;
+	validate_finite_receive_state_fixture(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
 
@@ -2978,6 +3722,23 @@ fn assert_ratchet_driver_rejected(
 	assert!(
 		error.contains(diagnostic),
 		"ratchet driver mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn assert_finite_receive_fixture_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_finite_receive_state_fixture(&snapshot) {
+		Ok(()) => panic!("finite receive-state fixture mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"finite receive-state fixture mutation {name} produced wrong diagnostic: {error}"
 	);
 }
 
@@ -6524,6 +7285,2074 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 	}
 
 	assert_eq!(mutation_count, RATCHET_EFFECT_DRIVER_MUTATION_COUNT);
+}
+
+const FINITE_RECEIVE_STATE_FIXTURE_MUTATION_COUNT: usize = 1_230;
+
+#[test]
+fn finite_receive_state_fixture_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let fixture_facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("ratchet.receive_fixture."))
+		.collect::<Vec<_>>();
+	assert_eq!(fixture_facts.len(), 46);
+	for fact in fixture_facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_rejected(
+			&format!("finite_receive_fixture_fact_{key}"),
+			key,
+			|snapshot| {
+				mutate_fact(&mut snapshot.interface, key, "mutated");
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_core_changes_max_gap",
+			"pub const RATCHET_MAX_GAP",
+			"pub const RATCHET_MAX_GAP: u64 = 50;",
+			"pub const RATCHET_MAX_GAP: u64 = 49;",
+			"finite receive core maximum gap",
+		),
+		(
+			"finite_receive_core_decouples_cache_capacity",
+			"pub const RECEIVE_CACHE_CAPACITY",
+			"pub const RECEIVE_CACHE_CAPACITY: usize = RATCHET_MAX_GAP as usize;",
+			"pub const RECEIVE_CACHE_CAPACITY: usize = 49;",
+			"finite receive core cache capacity",
+		),
+		(
+			"finite_receive_core_plan_derives_from_zero",
+			"pub(crate) fn plan_receive_until",
+			"let derivations = target - state.receive_sequence;",
+			"let derivations = target;",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_caches_target_step",
+			"pub(crate) fn plan_receive_until",
+			"let skipped = derivations - 1;",
+			"let skipped = derivations;",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_ignores_existing_cache",
+			"pub(crate) fn plan_receive_until",
+			"let cached = state.receive_cache.len as u64;",
+			"let cached = 0u64;",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_rejects_boundary_gap",
+			"pub(crate) fn plan_receive_until",
+			"skipped > RATCHET_MAX_GAP",
+			"skipped >= RATCHET_MAX_GAP",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_rejects_full_exact_capacity",
+			"pub(crate) fn plan_receive_until",
+			"cached > RATCHET_MAX_GAP - skipped",
+			"cached >= RATCHET_MAX_GAP - skipped",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_rejection_returns_target",
+			"if skipped > RATCHET_MAX_GAP",
+			"sequence: None,",
+			"sequence: Some(target),",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_rejection_requests_work",
+			"if skipped > RATCHET_MAX_GAP",
+			"derivations: 0,",
+			"derivations: 1,",
+			"finite receive core admission plan",
+		),
+		(
+			"finite_receive_core_plan_old_target_requests_work",
+			"if target <= state.receive_sequence",
+			"derivations: 0,",
+			"derivations: 1,",
+			"finite receive core admission plan",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_core_target_advances_two",
+			"pub(crate) fn advance_receive_target",
+			"let next = state.receive_sequence + 1;",
+			"let next = state.receive_sequence + 2;",
+			"finite receive target counter advance",
+		),
+		(
+			"finite_receive_core_target_returns_entry_state",
+			"pub(crate) fn advance_receive_target",
+			"receive_sequence: next,",
+			"receive_sequence: state.receive_sequence,",
+			"finite receive target result",
+		),
+		(
+			"finite_receive_core_target_allocates_cache_slot",
+			"pub(crate) fn advance_receive_target",
+			"let next = state.receive_sequence + 1;",
+			"let _ = state.receive_cache.append(1);\n\t\tlet next = state.receive_sequence + 1;",
+			"finite receive target cache allocation",
+		),
+		(
+			"finite_receive_core_skipped_appends_wrong_sequence",
+			"pub(crate) fn advance_receive(",
+			"state.receive_cache.append(next)",
+			"state.receive_cache.append(next + 1)",
+			"finite receive skipped-key cache append",
+		),
+		(
+			"finite_receive_core_skipped_drops_new_cache",
+			"pub(crate) fn advance_receive(",
+			"\t\t\t\treceive_cache,\n\t\t\t\t..state",
+			"\t\t\t\treceive_cache: state.receive_cache,\n\t\t\t\t..state",
+			"finite receive skipped-key control update",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"finite_receive_core_cached_failure_changes_state",
+			"state,\n\t\t\tdisposition: ReceiveDisposition::Retained,",
+			"state: RatchetState::default(),\n\t\t\tdisposition: ReceiveDisposition::Retained,",
+			"finite receive cached authentication failure neutrality",
+		),
+		(
+			"finite_receive_core_cached_removal_keeps_target",
+			"entries[slot_index] = entries[last_slot as usize];",
+			"entries[slot_index] = entries[slot_index];",
+			"finite receive cached swap removal",
+		),
+		(
+			"finite_receive_core_cached_removal_keeps_last_slot",
+			"entries[last_slot as usize] = 0;",
+			"entries[last_slot as usize] = entries[last_slot as usize];",
+			"finite receive cached swap removal",
+		),
+		(
+			"finite_receive_core_cached_removal_keeps_length",
+			"len: last_slot,",
+			"len,",
+			"finite receive cached swap removal",
+		),
+		(
+			"finite_receive_core_cached_removal_reports_wrong_target",
+			"target_slot: slot,",
+			"target_slot: last_slot,",
+			"finite receive cached swap removal",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet_control,
+				"pub(crate) fn finish_receive_with_removal",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_core_replay_looks_up_next_sequence",
+			"pub fn begin_receive<Context>",
+			"prepare_cached_receive(&kernel.refined, sequence)",
+			"prepare_cached_receive(&kernel.refined, sequence + 1)",
+			"finite receive replay and cached lookup branch",
+		),
+		(
+			"finite_receive_core_future_counts_target_as_skipped",
+			"pub fn begin_receive<Context>",
+			"let skipped = plan.derivations - 1;",
+			"let skipped = plan.derivations;",
+			"finite receive future skipped count",
+		),
+		(
+			"finite_receive_core_future_reuses_live_slots",
+			"pub fn begin_receive<Context>",
+			"staged_slots: empty_material_slots(),",
+			"staged_slots: kernel.refined.receive_slots,",
+			"finite receive private future staging start",
+		),
+		(
+			"finite_receive_core_future_pending_uses_wrong_target_material",
+			"impl<Context> ReceiveKdf<Context>",
+			"target_material: stepped.material,",
+			"target_material: panic!(\"wrong target material\"),",
+			"finite receive separate future target",
+		),
+		(
+			"finite_receive_core_future_stages_wrong_material",
+			"impl<Context> ReceiveKdf<Context>",
+			"self.staged_slots[slot_index] = Some(CachedReceiveKey {\n\t\t\tsequence,\n\t\t\tmaterial: stepped.material,",
+			"self.staged_slots[slot_index] = Some(CachedReceiveKey {\n\t\t\tsequence,\n\t\t\tmaterial: panic!(\"wrong skipped material\"),",
+			"finite receive staged skipped material",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_core_pending_allows_cached_target",
+			"pub(super) fn pending_receive_is_valid",
+			"if lookup_receive_key(pending.committed_control, requested).is_some() {\n\t\treturn false;\n\t}",
+			"if false {\n\t\treturn false;\n\t}",
+			"finite receive target absent from committed cache",
+		),
+		(
+			"finite_receive_core_pending_counts_target_in_cache",
+			"pub(super) fn pending_receive_is_valid",
+			"pending.first_slot as usize + pending.skipped as usize",
+			"pending.first_slot as usize + pending.skipped as usize + 1",
+			"finite receive committed skipped-cache length",
+		),
+		(
+			"finite_receive_core_pending_accepts_wrong_cache_length",
+			"pub(super) fn pending_receive_is_valid",
+			"pending.committed_control.receive_cache_len() as usize == committed_len",
+			"pending.committed_control.receive_cache_len() as usize + 1 == committed_len",
+			"finite receive committed cache length check",
+		),
+		(
+			"finite_receive_core_cached_preflight_looks_up_wrong_sequence",
+			"pub(super) fn prepare_cached_receive",
+			"lookup_receive_key(state.control, sequence)",
+			"lookup_receive_key(state.control, sequence + 1)",
+			"finite receive cached preflight",
+		),
+		(
+			"finite_receive_core_cached_preflight_uses_first_as_last",
+			"pub(super) fn prepare_cached_receive",
+			"let last_slot = len - 1;",
+			"let last_slot = 0;",
+			"finite receive cached preflight",
+		),
+		(
+			"finite_receive_core_cached_preflight_marks_failure",
+			"pub(super) fn prepare_cached_receive",
+			"finish_receive_with_removal(state.control, sequence, target_slot, true)",
+			"finish_receive_with_removal(state.control, sequence, target_slot, false)",
+			"finite receive cached preflight",
+		),
+		(
+			"finite_receive_core_cached_preflight_ignores_target_slot",
+			"pub(super) fn prepare_cached_receive",
+			"if !(removal.target_slot == target_slot) {\n\t\treturn None;\n\t}",
+			"if false {\n\t\treturn None;\n\t}",
+			"finite receive cached preflight",
+		),
+		(
+			"finite_receive_core_cached_preflight_ignores_last_slot",
+			"pub(super) fn prepare_cached_receive",
+			"if !(removal.last_slot == last_slot) {\n\t\treturn None;\n\t}",
+			"if false {\n\t\treturn None;\n\t}",
+			"finite receive cached preflight",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_refined, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, source, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_core_finish_failure_drops_entry",
+			"concrete",
+			"impl<Context> ReceiveOpen<Context>",
+			"None => return (self.entry, None)",
+			"None => return (panic!(\"entry dropped\"), None)",
+			"finite receive success-only publication",
+		),
+		(
+			"finite_receive_core_finish_omits_cached_publication",
+			"concrete",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_cached_receive(&mut entry.refined, prepared);",
+			"drop(prepared);",
+			"finite receive success-only publication",
+		),
+		(
+			"finite_receive_core_finish_omits_future_publication",
+			"concrete",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_future_receive(&mut entry.refined, pending);",
+			"drop(pending);",
+			"finite receive success-only publication",
+		),
+		(
+			"finite_receive_core_cached_publication_keeps_last",
+			"refined",
+			"pub(super) fn publish_cached_receive",
+			"let _ = state.receive_slots[last_index].take();",
+			"let _ = state.receive_slots[last_index].as_ref();",
+			"finite receive cached whole-entry publication",
+		),
+		(
+			"finite_receive_core_cached_publication_copies_last",
+			"refined",
+			"pub(super) fn publish_cached_receive",
+			"let moved = state.receive_slots[last_index].take();",
+			"let moved = None;",
+			"finite receive cached whole-entry publication",
+		),
+		(
+			"finite_receive_core_cached_publication_omits_control",
+			"refined",
+			"pub(super) fn publish_cached_receive",
+			"state.control = prepared.committed_control;",
+			"drop(prepared.committed_control);",
+			"finite receive cached whole-entry publication",
+		),
+		(
+			"finite_receive_core_future_publication_omits_slots",
+			"refined",
+			"pub(super) fn publish_future_receive<",
+			"publish_future_receive_slots(\n\t\tstate,\n\t\t&mut pending.staged_slots,\n\t\tpending.first_slot,\n\t\tpending.skipped,\n\t);",
+			"drop(pending.staged_slots);",
+			"finite receive future publication",
+		),
+		(
+			"finite_receive_core_future_publication_omits_chain",
+			"refined",
+			"pub(super) fn publish_future_receive<",
+			"state.receive_chain = pending.final_receive_chain;",
+			"drop(pending.final_receive_chain);",
+			"finite receive future publication",
+		),
+		(
+			"finite_receive_core_future_publication_reorders_control",
+			"refined",
+			"pub(super) fn publish_future_receive<",
+			"state.receive_chain = pending.final_receive_chain;\n\tstate.control = pending.committed_control;",
+			"state.control = pending.committed_control;\n\tstate.receive_chain = pending.final_receive_chain;",
+			"finite receive future publication",
+		),
+		(
+			"finite_receive_core_future_publication_mentions_target",
+			"refined",
+			"pub(super) fn publish_future_receive<",
+			"let first_index = pending.first_slot as usize;",
+			"let _ = &pending.target_material;\n\tlet first_index = pending.first_slot as usize;",
+			"finite receive target publication",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			let target = if source == "concrete" {
+				&mut snapshot.core_ratchet_concrete
+			} else {
+				&mut snapshot.core_ratchet_refined
+			};
+			replace_once_after(target, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"finite_receive_proverif_renames_empty_cache",
+			"fun receive_cache_empty(): receive_cache [data].",
+			"fun renamed_receive_cache_empty(): receive_cache [data].",
+			"finite receive ProVerif empty cache constructor",
+		),
+		(
+			"finite_receive_proverif_renames_cache_entry",
+			"fun receive_cache_entry(",
+			"fun renamed_receive_cache_entry(",
+			"finite receive ProVerif cache-entry constructor",
+		),
+		(
+			"finite_receive_proverif_renames_state",
+			"fun receive_state(",
+			"fun renamed_receive_state(",
+			"finite receive ProVerif state constructor",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once(&mut snapshot.environment, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"finite_receive_proverif_omits_short_leg",
+			"StateNeutralFutureReceive()\n    | StateNeutralCapacityReceive()",
+			"StateNeutralCapacityReceive()",
+		),
+		(
+			"finite_receive_proverif_omits_capacity_leg",
+			"StateNeutralFutureReceive()\n    | StateNeutralCapacityReceive()",
+			"StateNeutralFutureReceive()",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(
+			name,
+			"finite receive two-leg scenario composition",
+			move |snapshot| replace_once(&mut snapshot.environment, from, to),
+		);
+		mutation_count += 1;
+	}
+
+	let short_scope = "let StateNeutralFutureReceive() =";
+	for (name, from, to, diagnostic) in [
+		(
+			"finite_receive_short_skipped_sequence_skips_a_step",
+			"let skipped_sequence = next_sequence(first) in",
+			"let skipped_sequence = next_sequence(next_sequence(first)) in",
+			"finite receive short sequence prefix",
+		),
+		(
+			"finite_receive_short_target_sequence_reuses_first",
+			"let target_sequence = next_sequence(skipped_sequence) in",
+			"let target_sequence = next_sequence(first) in",
+			"finite receive short sequence prefix",
+		),
+		(
+			"finite_receive_short_chain_2_skips_a_step",
+			"let chain_2 = ratchet_next(chain_1) in",
+			"let chain_2 = ratchet_next(ratchet_next(chain_1)) in",
+			"finite receive short ratchet chain",
+		),
+		(
+			"finite_receive_short_chain_3_reuses_chain_1",
+			"let chain_3 = ratchet_next(chain_2) in",
+			"let chain_3 = ratchet_next(chain_1) in",
+			"finite receive short ratchet chain",
+		),
+		(
+			"finite_receive_short_chain_4_reuses_chain_2",
+			"let chain_4 = ratchet_next(chain_3) in",
+			"let chain_4 = ratchet_next(chain_2) in",
+			"finite receive short ratchet chain",
+		),
+		(
+			"finite_receive_short_material_1_uses_chain_2",
+			"let material_1 = ratchet_material(chain_1) in",
+			"let material_1 = ratchet_material(chain_2) in",
+			"finite receive short material chain",
+		),
+		(
+			"finite_receive_short_skipped_material_uses_chain_3",
+			"let skipped_material = ratchet_material(chain_2) in",
+			"let skipped_material = ratchet_material(chain_3) in",
+			"finite receive short material chain",
+		),
+		(
+			"finite_receive_short_target_material_uses_chain_2",
+			"let target_material = ratchet_material(chain_3) in",
+			"let target_material = ratchet_material(chain_2) in",
+			"finite receive short material chain",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, short_scope, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	let short_seal_replacements = [
+		"root",
+		"root",
+		"next_sequence(target_sequence)",
+		"receiver_id",
+		"root",
+	];
+	for call_index in 0..3 {
+		for (argument_index, replacement) in short_seal_replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_seal_{call_index}_argument_{argument_index}"),
+				"finite receive short honest frame",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						"seal_frame",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (argument_index, replacement) in [
+		"root",
+		"target_frame",
+		"skipped_frame",
+		"skipped_sequence",
+		"receiver_id",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_forged_frame_argument_{argument_index}"),
+			"finite receive short forged target frame",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"crypto_frame",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let short_message_sent_replacements = [
+		"root",
+		"beacon_to_server()",
+		"next_sequence(target_sequence)",
+		"receiver_id",
+		"sender_id",
+		"root",
+	];
+	for call_index in 0..3 {
+		for (argument_index, replacement) in short_message_sent_replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_sent_{call_index}_argument_{argument_index}"),
+				"finite receive short sent message",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						"MessageSent",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	let short_open_replacements = [
+		"root",
+		"root",
+		"next_sequence(target_sequence)",
+		"receiver_id",
+		"root",
+	];
+	for (call_index, diagnostic) in [
+		(0, "finite receive short initial open"),
+		(1, "finite receive first exact-frame destructor rejection"),
+		(
+			2,
+			"finite receive repeated exact-frame destructor rejection",
+		),
+		(3, "finite receive short future open"),
+		(4, "finite receive delayed cached-key consumption"),
+	] {
+		for (argument_index, replacement) in short_open_replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_open_{call_index}_argument_{argument_index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						"open_frame",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (call_index, diagnostic) in [
+		(0, "finite receive short first delivery"),
+		(3, "finite receive short future delivery"),
+		(4, "finite receive delayed delivery"),
+	] {
+		for (argument_index, replacement) in [
+			"root",
+			"beacon_to_server()",
+			"next_sequence(target_sequence)",
+			"receiver_id",
+			"sender_id",
+			"root",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_received_{call_index}_argument_{argument_index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						"MessageReceived",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (argument_index, replacement) in ["target_sequence", "root", "receive_cache_empty()"]
+		.into_iter()
+		.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_ready_state_argument_{argument_index}"),
+			"finite receive short entry state",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"receive_state",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to) in [
+		(
+			"finite_receive_short_first_equality_uses_honest_target",
+			"in(c, forged_candidate: bitstring);",
+			"if forged_candidate = forged_target_frame then",
+			"if forged_candidate = target_frame then",
+		),
+		(
+			"finite_receive_short_retry_equality_uses_first_candidate",
+			"in(c, repeated_candidate: bitstring);",
+			"if repeated_candidate = forged_target_frame then",
+			"if repeated_candidate = forged_candidate then",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(
+			name,
+			if name.contains("retry") {
+				"finite receive repeated exact-frame destructor rejection"
+			} else {
+				"finite receive first exact-frame destructor rejection"
+			},
+			move |snapshot| replace_once_after(&mut snapshot.environment, marker, from, to),
+		);
+		mutation_count += 1;
+	}
+	for (name, marker, diagnostic) in [
+		(
+			"finite_receive_short_first_bypasses_destructor_failure",
+			"in(c, forged_candidate: bitstring);",
+			"finite receive first exact-frame destructor rejection",
+		),
+		(
+			"finite_receive_short_retry_bypasses_destructor_failure",
+			"in(c, repeated_candidate: bitstring);",
+			"finite receive repeated exact-frame destructor rejection",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				marker,
+				"open_frame(",
+				"seal_frame(",
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (event, diagnostic, replacements) in [
+		(
+			"ReceiveRejectedNeutral",
+			"finite receive first exact-frame destructor rejection",
+			["root", "first", "target_frame", "root"],
+		),
+		(
+			"ReceiveRejectionRetried",
+			"finite receive repeated exact-frame destructor rejection",
+			["root", "first", "target_frame", "root"],
+		),
+	] {
+		for (argument_index, replacement) in replacements.into_iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_{event}_argument_{argument_index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						event,
+						0,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (index, (from, to)) in [
+		("session,\n              target_sequence,", "root,\n              target_sequence,"),
+		("target_sequence,\n              ready_state,", "first,\n              ready_state,"),
+		("ready_state,\n              ready_state,", "root,\n              ready_state,"),
+		("ready_state,\n              chain_2,", "root,\n              chain_2,"),
+		("chain_2,\n              empty_cache,", "root,\n              empty_cache,"),
+		(
+			"empty_cache,\n              compromise_ack",
+			"receive_cache_entry(skipped_sequence, skipped_material, empty_cache),\n              compromise_ack",
+		),
+		("compromise_ack\n            )", "c\n            )"),
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_rejection_snapshot_field_{index}"),
+			"finite receive unchanged rejection snapshot",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.environment,
+					"out(\n            receive_snapshots",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in ["first", "root", "receive_cache_empty()"]
+		.into_iter()
+		.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_committed_state_argument_{argument_index}"),
+			"finite receive short successful skipped publication",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"receive_state",
+					1,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"first",
+		"root",
+		"receive_cache_entry(first,material_1,empty_cache)",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_cache_entry_argument_{argument_index}"),
+			"finite receive short successful skipped publication",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"receive_cache_entry",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in [
+		"root",
+		"server_role()",
+		"beacon_to_server()",
+		"first",
+		"root",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_cached_event_argument_{argument_index}"),
+			"finite receive short skipped-key cache event",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"MessageKeyCached",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (event, diagnostic, replacements) in [
+		(
+			"ReceiveFutureAccepted",
+			"finite receive future acceptance",
+			[
+				"root",
+				"first",
+				"receiver_id",
+				"sender_id",
+				"root",
+				"target_frame",
+				"skipped_material",
+				"target_frame",
+				"committed_state",
+				"ready_state",
+			],
+		),
+		(
+			"ReceiveHonestFutureDelivered",
+			"finite receive honest future selection and delivery",
+			[
+				"root",
+				"first",
+				"receiver_id",
+				"sender_id",
+				"root",
+				"target_frame",
+				"skipped_material",
+				"target_frame",
+				"committed_state",
+				"ready_state",
+			],
+		),
+		(
+			"ReceiveReplayRejected",
+			"finite receive exact accepted-frame replay",
+			[
+				"root",
+				"first",
+				"receiver_id",
+				"sender_id",
+				"root",
+				"target_frame",
+				"skipped_material",
+				"target_frame",
+				"committed_state",
+				"ready_state",
+			],
+		),
+	] {
+		for (argument_index, replacement) in replacements.into_iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_short_{event}_argument_{argument_index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						short_scope,
+						event,
+						0,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"finite_receive_short_honest_gate_uses_forgery",
+			"event ReceiveFutureAccepted(",
+			"if accepted_candidate = target_frame then",
+			"if accepted_candidate = forged_target_frame then",
+			"finite receive honest future selection and delivery",
+		),
+		(
+			"finite_receive_short_replay_gate_uses_honest_frame",
+			"in(c, replay_candidate: bitstring);",
+			"if replay_candidate = accepted_candidate then",
+			"if replay_candidate = target_frame then",
+			"finite receive exact accepted-frame replay",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in [
+		"root",
+		"server_role()",
+		"beacon_to_server()",
+		"first",
+		"root",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_target_unavailable_argument_{argument_index}"),
+			"finite receive short target consumption",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"MessageKeyUnavailable",
+					1,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in
+		["first", "root", "committed_cache"].into_iter().enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_delayed_state_argument_{argument_index}"),
+			"finite receive delayed cached-key consumption",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"receive_state",
+					2,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"root",
+		"server_role()",
+		"beacon_to_server()",
+		"first",
+		"root",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_delayed_unavailable_argument_{argument_index}"),
+			"finite receive delayed key unavailability",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"MessageKeyUnavailable",
+					2,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"root",
+		"first",
+		"receiver_id",
+		"sender_id",
+		"root",
+		"skipped_frame",
+		"target_material",
+		"delayed_state",
+		"committed_state",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_short_delayed_event_argument_{argument_index}"),
+			"finite receive delayed cached acceptance",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					short_scope,
+					"ReceiveDelayedCachedAccepted",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_finite_receive_fixture_rejected(
+		"finite_receive_short_retains_target_in_cache",
+		"finite receive short target retained in cache",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				short_scope,
+				"let committed_cache = receive_cache_entry(",
+				"let forbidden_target_cache = receive_cache_entry(target_sequence, target_material, empty_cache) in\n          let committed_cache = receive_cache_entry(",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	let capacity_scope = "let StateNeutralCapacityReceive() =";
+	for sequence in 2..=54 {
+		let previous = sequence - 1;
+		let from = format!(
+			"let capacity_sequence_{sequence} = next_sequence(capacity_sequence_{previous}) in"
+		);
+		let to = format!(
+			"let capacity_sequence_{sequence} = next_sequence(next_sequence(capacity_sequence_{previous})) in"
+		);
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_sequence_{sequence}_drifts"),
+			"finite receive capacity sequence chain",
+			move |snapshot| {
+				replace_once_after(&mut snapshot.environment, capacity_scope, &from, &to);
+			},
+		);
+		mutation_count += 1;
+	}
+	for chain in 2..=55 {
+		let previous = chain - 1;
+		let from =
+			format!("let capacity_chain_{chain} = ratchet_next(capacity_chain_{previous}) in");
+		let to = format!(
+			"let capacity_chain_{chain} = ratchet_next(ratchet_next(capacity_chain_{previous})) in"
+		);
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_chain_{chain}_drifts"),
+			"finite receive capacity ratchet chain",
+			move |snapshot| {
+				replace_once_after(&mut snapshot.environment, capacity_scope, &from, &to);
+			},
+		);
+		mutation_count += 1;
+	}
+	for material in 1..=54 {
+		let from = format!(
+			"let capacity_material_{material} = ratchet_material(capacity_chain_{material}) in"
+		);
+		let to =
+			format!("let capacity_material_{material} = ratchet_material(capacity_chain_55) in");
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_material_{material}_drifts"),
+			"finite receive capacity material chain",
+			move |snapshot| {
+				replace_once_after(&mut snapshot.environment, capacity_scope, &from, &to);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let capacity_frame_replacements = [
+		"capacity_root",
+		"capacity_root",
+		"next_sequence(capacity_sequence_54)",
+		"capacity_receiver_id",
+		"capacity_root",
+	];
+	for call_index in 0..4 {
+		for (argument_index, replacement) in capacity_frame_replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_capacity_seal_{call_index}_argument_{argument_index}"),
+				"finite receive capacity honest frame",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"seal_frame",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	for call_index in 0..4 {
+		for (argument_index, replacement) in [
+			"capacity_root",
+			"beacon_to_server()",
+			"next_sequence(capacity_sequence_54)",
+			"capacity_receiver_id",
+			"capacity_sender_id",
+			"capacity_root",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_capacity_sent_{call_index}_argument_{argument_index}"),
+				"finite receive capacity sent message",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"MessageSent",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"maximum_gap_frame",
+		"cached_frame",
+		"capacity_sequence_53",
+		"capacity_receiver_id",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_rejected_frame_argument_{argument_index}"),
+			"finite receive capacity rejected frame",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"crypto_frame",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for call_index in 0..4 {
+		for (argument_index, replacement) in capacity_frame_replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_capacity_open_{call_index}_argument_{argument_index}"),
+				match call_index {
+					0 => "finite receive capacity initial open",
+					1 => "finite receive maximum-gap open",
+					2 => "finite receive cached release open",
+					_ => "finite receive after-release open",
+				},
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"open_frame",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	for call_index in 0..4 {
+		for (argument_index, replacement) in [
+			"capacity_root",
+			"beacon_to_server()",
+			"next_sequence(capacity_sequence_54)",
+			"capacity_receiver_id",
+			"capacity_sender_id",
+			"capacity_root",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_capacity_received_{call_index}_argument_{argument_index}"),
+				match call_index {
+					0 => "finite receive capacity first delivery",
+					1 => "finite receive maximum-gap delivery",
+					2 => "finite receive cached delivery",
+					_ => "finite receive after-release delivery",
+				},
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"MessageReceived",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (argument_index, replacement) in [
+		"capacity_sequence_54",
+		"capacity_root",
+		"receive_cache_entry(capacity_sequence_1,capacity_material_1,capacity_cache_empty)",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_ready_state_argument_{argument_index}"),
+			"finite receive capacity entry state",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"receive_state",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for skipped in 2..=51 {
+		let event_index = skipped - 2;
+		for (argument_index, replacement) in [
+			"capacity_root",
+			"server_role()",
+			"beacon_to_server()",
+			"capacity_sequence_1",
+			"capacity_material_1",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			assert_finite_receive_fixture_rejected(
+				&format!(
+					"finite_receive_capacity_cached_event_{event_index}_argument_{argument_index}"
+				),
+				"finite receive maximum-gap cached-key event",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"MessageKeyCached",
+						event_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+		for (argument_index, replacement) in [
+			"capacity_sequence_1",
+			"capacity_material_1",
+			"receive_cache_entry(capacity_sequence_1,capacity_material_1,capacity_cache_empty)",
+		]
+		.into_iter()
+		.enumerate()
+		{
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_capacity_cache_{skipped}_argument_{argument_index}"),
+				"finite receive maximum-gap cache construction",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.environment,
+						capacity_scope,
+						"receive_cache_entry",
+						event_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (argument_index, replacement) in
+		["capacity_sequence_51", "capacity_root", "capacity_cache_50"]
+			.into_iter()
+			.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_max_state_argument_{argument_index}"),
+			"finite receive maximum-gap state",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"receive_state",
+					1,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"server_role()",
+		"beacon_to_server()",
+		"capacity_sequence_51",
+		"capacity_material_51",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_max_unavailable_argument_{argument_index}"),
+			"finite receive maximum-gap target consumption",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"MessageKeyUnavailable",
+					1,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"capacity_sequence_51",
+		"capacity_receiver_id",
+		"capacity_sender_id",
+		"capacity_root",
+		"maximum_gap_frame",
+		"capacity_material_51",
+		"maximum_gap_state",
+		"capacity_ready_state",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_max_event_argument_{argument_index}"),
+			"finite receive maximum-gap acceptance",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"ReceiveMaximumGapAccepted",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_finite_receive_fixture_rejected(
+		"finite_receive_capacity_gate_uses_honest_after_release_frame",
+		"finite receive full-cache exact-frame gate",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"in(c, capacity_rejected_candidate: bitstring);",
+				"if capacity_rejected_candidate = capacity_rejected_frame then",
+				"if capacity_rejected_candidate = after_release_frame then",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"capacity_sequence_53",
+		"after_release_frame",
+		"capacity_ready_state",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_rejected_event_argument_{argument_index}"),
+			"finite receive full-cache rejection",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"ReceiveCapacityRejected",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in
+		["capacity_sequence_51", "capacity_root", "capacity_cache_51"]
+			.into_iter()
+			.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_released_state_argument_{argument_index}"),
+			"finite receive cached capacity release",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"receive_state",
+					2,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"server_role()",
+		"beacon_to_server()",
+		"capacity_sequence_52",
+		"capacity_material_52",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_cached_unavailable_argument_{argument_index}"),
+			"finite receive cached key unavailability",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"MessageKeyUnavailable",
+					2,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"capacity_sequence_52",
+		"capacity_material_52",
+		"released_state",
+		"maximum_gap_state",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_cached_consumed_argument_{argument_index}"),
+			"finite receive cached last-slot consumption event",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"ReceiveCachedKeyConsumed",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (argument_index, replacement) in [
+		"capacity_sequence_52",
+		"capacity_material_52",
+		"capacity_cache_51",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_after_cache_argument_{argument_index}"),
+			"finite receive after-release state",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"receive_cache_entry",
+					50,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in
+		["capacity_sequence_52", "capacity_root", "capacity_cache_50"]
+			.into_iter()
+			.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_after_state_argument_{argument_index}"),
+			"finite receive after-release state",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"receive_state",
+					3,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"server_role()",
+		"beacon_to_server()",
+		"capacity_sequence_52",
+		"capacity_material_52",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_after_cached_event_argument_{argument_index}"),
+			"finite receive after-release skipped-key event",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"MessageKeyCached",
+					50,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"server_role()",
+		"beacon_to_server()",
+		"capacity_sequence_53",
+		"capacity_material_53",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_after_unavailable_argument_{argument_index}"),
+			"finite receive after-release target consumption",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"MessageKeyUnavailable",
+					3,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for (argument_index, replacement) in [
+		"capacity_root",
+		"capacity_sequence_53",
+		"capacity_receiver_id",
+		"capacity_sender_id",
+		"capacity_root",
+		"after_release_frame",
+		"capacity_material_53",
+		"released_state",
+		"maximum_gap_state",
+		"released_state",
+	]
+	.into_iter()
+	.enumerate()
+	{
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_after_event_argument_{argument_index}"),
+			"finite receive after-release acceptance",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					capacity_scope,
+					"ReceiveAfterCapacityReleaseAccepted",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (target, scope_anchor, insertion_anchor) in [
+		(
+			"capacity_sequence_52",
+			capacity_scope,
+			"let maximum_gap_state = receive_state(",
+		),
+		(
+			"capacity_sequence_54",
+			"let after_release_state = receive_state(",
+			"event MessageReceived(",
+		),
+	] {
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_capacity_retains_target_{target}"),
+			"finite receive target retained in capacity cache",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.environment,
+					scope_anchor,
+					insertion_anchor,
+					&format!(
+						"let forbidden_target_cache = receive_cache_entry({target}, capacity_material_54, capacity_cache_empty) in\n  {insertion_anchor}"
+					),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for secret in [
+		"RECEIVE_PAST_SECRET",
+		"RECEIVE_SKIPPED_SECRET",
+		"RECEIVE_TARGET_SECRET",
+		"RECEIVE_MAX_GAP_SECRET",
+		"RECEIVE_CACHED_SECRET",
+		"RECEIVE_AFTER_RELEASE_SECRET",
+	] {
+		assert_finite_receive_fixture_rejected(
+			&format!("finite_receive_secrecy_query_{secret}_drifts"),
+			"finite receive secrecy query",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.failed_receive_queries,
+					&format!("query attacker({secret})."),
+					"query attacker(forged_frame_component()).",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let correspondence_event_shapes: &[(&str, usize, &[&str])] = &[
+		(
+			"ReceiveRejectionRetried",
+			2,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveRejectedNeutral",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveFutureAccepted",
+			4,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveHonestFutureDelivered",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveReplayRejected",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveDelayedCachedAccepted",
+			2,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveMaximumGapAccepted",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveCachedKeyConsumed",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveAfterCapacityReleaseAccepted",
+			1,
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"MessageKeyCached",
+			1,
+			&[
+				"forged_frame_component()",
+				"server_role()",
+				"beacon_to_server()",
+				"first_sequence()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"MessageKeyUnavailable",
+			5,
+			&[
+				"forged_frame_component()",
+				"server_role()",
+				"beacon_to_server()",
+				"first_sequence()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"MessageReceived",
+			1,
+			&[
+				"forged_frame_component()",
+				"beacon_to_server()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"MessageSent",
+			1,
+			&[
+				"forged_frame_component()",
+				"beacon_to_server()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+			],
+		),
+	];
+	for &(event, occurrences, replacements) in correspondence_event_shapes {
+		for occurrence in 0..occurrences {
+			for (argument_index, replacement) in replacements.iter().enumerate() {
+				assert_finite_receive_fixture_rejected(
+					&format!(
+						"finite_receive_correspondence_{event}_{occurrence}_argument_{argument_index}"
+					),
+					"finite receive exact correspondence query",
+					move |snapshot| {
+						replace_nth_call_argument_after(
+							&mut snapshot.failed_receive_queries,
+							"query ",
+							event,
+							occurrence,
+							argument_index,
+							replacement,
+						);
+					},
+				);
+				mutation_count += 1;
+			}
+		}
+	}
+	assert_finite_receive_fixture_rejected(
+		"finite_receive_correspondence_count_drops",
+		"finite receive correspondence query count changed",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.failed_receive_queries,
+				")) ==>\n  inj-event(",
+				")) &&\n  inj-event(",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	let reachability_event_shapes: &[(&str, &[&str])] = &[
+		(
+			"ReceiveRejectedNeutral",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveRejectionRetried",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveFutureAccepted",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveHonestFutureDelivered",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveReplayRejected",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveDelayedCachedAccepted",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveMaximumGapAccepted",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveCapacityRejected",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveCachedKeyConsumed",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+		(
+			"ReceiveAfterCapacityReleaseAccepted",
+			&[
+				"forged_frame_component()",
+				"first_sequence()",
+				"SERVER_KEY_ID",
+				"SERVER_KEY_ID",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+				"forged_frame_component()",
+			],
+		),
+	];
+	for &(event, replacements) in reachability_event_shapes {
+		for (argument_index, replacement) in replacements.iter().enumerate() {
+			assert_finite_receive_fixture_rejected(
+				&format!("finite_receive_reachability_{event}_argument_{argument_index}"),
+				"finite receive exact event reachability query",
+				move |snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.failed_receive_reachability_queries,
+						"query ",
+						event,
+						0,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	assert_finite_receive_fixture_rejected(
+		"finite_receive_reachability_query_count_drops",
+		"finite receive reachability query count changed",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.failed_receive_reachability_queries,
+				"query attacker(MALICIOUS_TASK_SECRET).",
+				"event(MaliciousRegistrationCommitted(transcript, plaintext)).",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	assert_eq!(mutation_count, FINITE_RECEIVE_STATE_FIXTURE_MUTATION_COUNT);
 }
 
 #[test]
