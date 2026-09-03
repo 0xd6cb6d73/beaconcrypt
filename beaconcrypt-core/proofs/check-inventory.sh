@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=46
+	[handwritten-lean]=47
 	[handwritten-proverif]=61
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1927,7 +1927,7 @@ done
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$' \
 	"$lean_root" \
 	"canonical VCVio feasibility proof-root import"
-for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca; do
+for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca PqxdhEd25519EufCma; do
 	require_line_count 1 "^import BeaconcryptCore\\.Computational\\.${pqxdh_computational_module}$" \
 		"$lean_root" "canonical PQXDH computational ${pqxdh_computational_module} proof-root import"
 done
@@ -2198,6 +2198,92 @@ require_line_count 1 '^#print axioms oneKey_indCCAAdvantage_eq_branchDist$' \
 	"$pqxdh_kem_indcca" "PQXDH ML-KEM IND-CCA capstone axiom audit"
 require_line_count 1 '^#print axioms mlKem768RecipientCorrectness_recovered_eq$' \
 	"$pqxdh_kem_indcca" "PQXDH ML-KEM recipient-correctness axiom audit"
+
+pqxdh_ed25519_eufcma=proofs/lean/BeaconcryptCore/Computational/PqxdhEd25519EufCma.lean
+require_line_count 1 '^import BeaconcryptCore\.Model\.Pqxdh\.Primitives$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 exact-encoding dependency"
+require_line_count 1 '^import VCVio\.CryptoFoundations\.SignatureAlg$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 generic EUF-CMA dependency"
+reject_matches "PQXDH Ed25519 module imports the maintained proof root" \
+	'^import BeaconcryptCore$' "$pqxdh_ed25519_eufcma"
+require_line_count 1 '^abbrev Ed25519PublicKey := List\.Vector UInt8 32$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 exact raw public-key width"
+require_line_count 1 '^abbrev Ed25519Signature := List\.Vector UInt8 64$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 exact raw signature width"
+require_line_count 1 '^abbrev MlKem768PublicKey := List\.Vector UInt8 1184$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 exact raw ML-KEM public-key width"
+require_line_count 1 '^  signature\.toList \+\+ message$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 attached signature-prefix shape"
+require_line_count 1 '^  if h : 64 ≤ buffer\.length then$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 exact attached split width"
+for definition in encodedIdentity prekeyMessage oneTimeMessage pqMessage; do
+	require_line_count 1 "^def ${definition}( |$)" \
+		"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 canonical encoding ${definition}"
+done
+require_line_count 1 '^  Pqxdh\.tagSig pk\.toList$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 identity marker encoding"
+require_line_count 1 '^  Pqxdh\.tagX Pqxdh\.rolePre prekey\.toList$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 prekey role encoding"
+require_line_count 1 '^  Pqxdh\.tagX Pqxdh\.roleOtk oneTime\.toList$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 one-time role encoding"
+require_line_count 1 '^  Pqxdh\.tagPQ pqKey\.toList$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 PQ marker encoding"
+for declaration in Phase1Material Phase1KeyTuple Phase1Candidate Phase1PublicTranscript \
+	Phase1MaterialGenerator Phase1Adversary Phase1ClientResult Phase1SharedResult; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 structure ${declaration}"
+done
+for theorem_name in splitAttachedSignature_attach splitAttachedSignature_eq_none_iff \
+	splitAttachedSignature_eq_some_iff attachSignature_injective \
+	parseIdentity_eq_some_iff parsePrekeyMessage_eq_some_iff \
+	parseOneTimeMessage_eq_some_iff parsePqMessage_eq_some_iff \
+	prekeyMessage_ne_oneTimeMessage prekeyMessage_ne_pqMessage \
+	oneTimeMessage_ne_pqMessage phase1FieldSubstitutionBit_eq_true_iff \
+	phase1FieldSubstitution_selects_fresh_valid phase1ClientMain_logged_messages \
+	phase1ClientMain_signingQueryBound phase1ClientMain_baseQueryBound \
+	phase1ToEUFCMA_signingQueryBound phase1ToEUFCMA_baseQueryBound \
+	ed25519AttachedSignatureCorrectness_iff_perfectlyComplete \
+	ed25519AttachedSignatureCorrectness_opens_supported \
+	attachedVerificationAdapter_opens_honest \
+	phase1FieldSubstitutionAdvantage_le_eufCma; do
+	require_line_count 1 "^(@\[simp\] )?theorem ${theorem_name}( |$)" \
+		"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 theorem ${theorem_name}"
+done
+for definition in attachSignature splitAttachedSignature openAttached \
+	decodePhase1Candidate acceptPhase1Candidate phase1FieldSubstitutionBit \
+	selectPhase1Forgery HasDeterministicVerification honestPhase1Transcript \
+	phase1ClientMain phase1ToEUFCMA Phase1FieldSubstitutionAdvantage \
+	IsPhase1BaseQuery IsPhase1SigningQuery HasAttachedVerificationAdapter \
+	Ed25519AttachedSignatureCorrectness; do
+	require_line_count 1 "^(noncomputable )?def ${definition}( |$)" \
+		"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 definition ${definition}"
+done
+require_line_count 1 '^  let pqPayload ← openAttached verifyFn candidatePk candidate\.pqKey$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 server-first PQ verification"
+require_line_count 1 '^  let prePayload ← openAttached verifyFn candidatePk candidate\.preKey$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 server-second prekey verification"
+require_line_count 1 '^  let onePayload ← openAttached verifyFn candidatePk candidate\.oneTimeKey$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 server-third one-time verification"
+require_line_count 1 '^      decide \(candidatePk = targetPk ∧ decoded ≠ material\.keyTuple\)$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 honest-target bad-event filter"
+require_line_count 1 '^  let preSignature ← liftM$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 first prekey signing call"
+require_line_count 1 '^  let oneTimeSignature ← liftM$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 second one-time signing call"
+require_line_count 1 '^  let pqSignature ← liftM$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 third PQ signing call"
+require_line_count 1 '^      \(phase1ToEUFCMA sigAlg materialGenerator adversary\)\.advantage runtime := by$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 coefficient-one generic EUF-CMA endpoint"
+require_line_count 2 '^      IsPhase1SigningQuery 3 := by$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 three-query client and reduction bounds"
+require_line_count 2 '^      IsPhase1BaseQuery \(qMaterial \+ qAdversary\) := by$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 additive base-query bounds"
+require_line_count 2 '^#guard_msgs in$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 guarded axiom audits"
+require_line_count 1 '^#print axioms phase1FieldSubstitutionAdvantage_le_eufCma$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 EUF-CMA capstone axiom audit"
+require_line_count 1 '^#print axioms ed25519AttachedSignatureCorrectness_opens_supported$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 correctness axiom audit"
 
 require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |$)' \
 	proofs/lean/BeaconcryptCore/Model/Pqxdh/Commit.lean \
