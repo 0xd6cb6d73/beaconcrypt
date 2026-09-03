@@ -1,5 +1,6 @@
 import BeaconcryptCore.Refinement.PqxdhConcreteSession
 import BeaconcryptCore.Refinement.RatchetCachedLifecycle
+import BeaconcryptCore.Refinement.RatchetReceiveReachability
 
 /-! Composition of concrete lifetime reachability into the paired PQXDH session. -/
 
@@ -104,5 +105,44 @@ theorem ConcreteSession.finish_cached_beacon_preserves {AD PT CT Context Output 
   (ConcreteSession.finish_cached_server_preserves cr serverOrigin beaconOrigin server send receive index material
     pending (ConcreteSession.swap _ _ _ _ _ h) hpending opened).elim fun next hn =>
       ⟨next, hn.1, ConcreteSession.swap _ _ _ _ _ hn.2⟩
+
+/-- A complete beacon send followed by any complete server receive attempt preserves the session, for every target and both callback outcomes. -/
+theorem beacon_seal_server_open_preserves_concrete_session {AD PT CT SealContext Ciphertext OpenContext Plaintext : Type}
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (execute : KdfInterpreter) (beaconOrigin serverOrigin : ratchet.RatchetChain)
+    (beacon server : ConcreteRatchetKernel)
+    (h : ConcreteSession (withInterpreter cr execute) beaconOrigin serverOrigin beacon server)
+    (target : Std.U64) (sealContext : SealContext)
+    (sealCallback : ratchet.RatchetMaterial → Std.U64 → SealContext → core.option.Option Ciphertext)
+    (openContext : OpenContext) (openReply : ReceiveOpen OpenContext → core.option.Option Plaintext) :
+    ∃ nextBeacon ciphertext nextServer plaintext,
+      sealNext execute beacon sealContext sealCallback = ok (nextBeacon, ciphertext) ∧
+      receiveNext execute server target openContext openReply = ok (nextServer, plaintext) ∧
+      ConcreteSession (withInterpreter cr execute) beaconOrigin serverOrigin nextBeacon nextServer :=
+  let roles := (concreteSession_iff_roles _ _ _ _ _).mp h
+  (sealNext_preserves_reachability cr execute beaconOrigin serverOrigin beacon roles.1 sealContext sealCallback).elim
+    fun nextBeacon hs => hs.elim fun ciphertext hseal =>
+  (receiveNext_preserves_reachability cr execute serverOrigin beaconOrigin server target openContext openReply roles.2).elim
+    fun nextServer hr => hr.elim fun plaintext hopen =>
+      ⟨nextBeacon, ciphertext, nextServer, plaintext, hseal.1, hopen.1,
+        (concreteSession_iff_roles _ _ _ _ _).mpr ⟨hseal.2, hopen.2⟩⟩
+
+/-- The reverse role direction preserves the same paired session for every complete callback-driven send and receive attempt. -/
+theorem server_seal_beacon_open_preserves_concrete_session {AD PT CT SealContext Ciphertext OpenContext Plaintext : Type}
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (execute : KdfInterpreter) (beaconOrigin serverOrigin : ratchet.RatchetChain)
+    (beacon server : ConcreteRatchetKernel)
+    (h : ConcreteSession (withInterpreter cr execute) beaconOrigin serverOrigin beacon server)
+    (target : Std.U64) (sealContext : SealContext)
+    (sealCallback : ratchet.RatchetMaterial → Std.U64 → SealContext → core.option.Option Ciphertext)
+    (openContext : OpenContext) (openReply : ReceiveOpen OpenContext → core.option.Option Plaintext) :
+    ∃ nextServer ciphertext nextBeacon plaintext,
+      sealNext execute server sealContext sealCallback = ok (nextServer, ciphertext) ∧
+      receiveNext execute beacon target openContext openReply = ok (nextBeacon, plaintext) ∧
+      ConcreteSession (withInterpreter cr execute) beaconOrigin serverOrigin nextBeacon nextServer :=
+  (beacon_seal_server_open_preserves_concrete_session cr execute serverOrigin beaconOrigin server beacon
+    (ConcreteSession.swap _ _ _ _ _ h) target sealContext sealCallback openContext openReply).elim
+    fun nextServer hs => hs.elim fun ciphertext hb => hb.elim fun nextBeacon hp => hp.elim fun plaintext hout =>
+      ⟨nextServer, ciphertext, nextBeacon, plaintext, hout.1, hout.2.1, ConcreteSession.swap _ _ _ _ _ hout.2.2⟩
 
 end BeaconcryptCore.Refinement.PqxdhConcreteSession
