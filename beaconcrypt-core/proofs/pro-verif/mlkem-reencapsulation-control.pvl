@@ -4,10 +4,8 @@
 (* Same-identity, multi-epoch ML-KEM re-encapsulation differential        *)
 (**************************************************************************)
 
-(* This is an isolated regression fixture for an unsupported lifecycle: one
-   identity authenticates old and new ML-KEM bundles while reusing all
-   classical material.  It does not alter the production root input,
-   associated data, wire protocol, or one-bundle-per-fresh-identity model. *)
+(* This is an isolated regression fixture for an unsupported lifecycle: one identity authenticates old and new ML-KEM bundles while reusing all classical material. *)
+(* It does not alter the production root input, associated data, or wire protocol, and production would consume the unchanged identity-plus-one-time replay ID after the first successful get_shared_secret. *)
 
 free kem_multi_epoch_channel: channel.
 free kem_one_shot_channel: channel.

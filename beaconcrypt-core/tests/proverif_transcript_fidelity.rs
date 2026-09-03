@@ -17,6 +17,8 @@ const CRYPTO_MODEL: &str = include_str!("../proofs/pro-verif/crypto.pvl");
 const ENVIRONMENT_MODEL: &str = include_str!("../proofs/pro-verif/environment.pvl");
 const ACTIVE_QUANTUM_WITNESS: &str = include_str!("../proofs/pro-verif/active-quantum-witness.pvl");
 const EXTRACTION_MODEL: &str = include_str!("../proofs/pro-verif/extraction/lib.pvl");
+const MLKEM_REENCAPSULATION_CONTROL: &str =
+	include_str!("../proofs/pro-verif/mlkem-reencapsulation-control.pvl");
 const CORE_MAKEFILE: &str = include_str!("../Makefile");
 const FORMAL_WORKFLOW: &str = include_str!("../../.github/workflows/formal-verification.yml");
 const ADAPTER_PQXDH: &str = include_str!("../../beaconcrypt/src/pqxdh.rs");
@@ -306,6 +308,66 @@ const EXPECTED_FACTS: &[&str] = &[
 	"ratchet.receive_fixture.queries.secrecy=6_application_canaries",
 	"ratchet.receive_fixture.queries.correspondence=11_state_and_origin_queries",
 	"ratchet.receive_fixture.queries.reachability=10_receive_state_events",
+	"registration.lifecycle.scope=deterministic_source_and_finite_symbolic_synchronization:not_semantic_Rust_to_ProVerif_refinement",
+	"registration.lifecycle.claim=at_most_one_Some_return_from_get_registration_bundle_per_live_honest_Beacon_object",
+	"registration.lifecycle.randomness=key_generation_and_public_key_uniqueness_not_proved",
+	"registration.lifecycle.beacon.object.new=Fresh",
+	"registration.lifecycle.beacon.object.materials=generated_identity,generated_prekey,generated_mlkem768_keypair",
+	"registration.lifecycle.beacon.bundle.eligible=Fresh,FreshWithCoins",
+	"registration.lifecycle.beacon.bundle.ineligible=InitSent,Established,Aborted:return_None",
+	"registration.lifecycle.beacon.bundle.fresh.one_time=generated_for_current_attempt",
+	"registration.lifecycle.beacon.bundle.fresh_with_coins.one_time=stored_current_key",
+	"registration.lifecycle.beacon.bundle.start=beacon_start(control,identity,prekey,pq,one_time)",
+	"registration.lifecycle.beacon.bundle.serialization=typed_InitKex,four_fields,write_message",
+	"registration.lifecycle.beacon.bundle.transition_order=successful_write_message_before_state_replace",
+	"registration.lifecycle.beacon.bundle.success.fresh=InitSent(started_state,same_prekey,generated_one_time,same_pq)",
+	"registration.lifecycle.beacon.bundle.success.fresh_with_coins=InitSent(started_state,same_prekey,same_one_time,same_pq)",
+	"registration.lifecycle.beacon.bundle.success.return=Some(serialized_buffer)",
+	"registration.lifecycle.beacon.bundle.post_success=InitSent_subsequent_call_returns_None",
+	"registration.lifecycle.beacon.post_init.finish=Established_or_Aborted:not_eligible",
+	"registration.lifecycle.beacon.post_init.delete_one_time=Aborted",
+	"registration.lifecycle.beacon.post_init.delete_pq=Aborted",
+	"registration.lifecycle.beacon.post_init.new_one_time=None",
+	"registration.lifecycle.beacon.bundle.pretransition_failure=eligible_state_unchanged,retry_possible,no_retry_byte_equality_claim",
+	"registration.lifecycle.beacon.bundle.fresh_retry=may_regenerate_one_time_key",
+	"registration.lifecycle.beacon.bundle.generated_take_failure=restore_Fresh_then_return_None",
+	"registration.lifecycle.core.beacon_start=BeaconFresh_input_to_BeaconInitSent_output",
+	"registration.lifecycle.core.beacon_start.scope=structural_typestate_not_runtime_affinity_or_uniqueness",
+	"registration.lifecycle.replay_id.size=64:32_byte_identity_plus_32_byte_one_time",
+	"registration.lifecycle.replay_id.layout=bytes_0_31_identity,bytes_32_63_one_time",
+	"registration.lifecycle.replay_id.fields=identity,one_time",
+	"registration.lifecycle.replay_id.excludes=prekey,pq",
+	"registration.lifecycle.replay_id.equality=exact_bytes:not_hash_or_collision_assumption",
+	"registration.lifecycle.replay_id.wrapper=registration_id_calls_VerifiedInitKex.registration_id",
+	"registration.lifecycle.replay_id.proverif=RegistrationId(registration_identifier(identity,one_time))",
+	"registration.lifecycle.server.storage=consumed_registrations:HashSet_of_64_byte_registration_ids",
+	"registration.lifecycle.server.id_source=validated_InitKex_registration_id",
+	"registration.lifecycle.server.status=contains_true:Consumed,contains_false:Fresh",
+	"registration.lifecycle.server.status_gate=validate_before_ephemeral_generation,MLKEM_encapsulation,and_DH_work",
+	"registration.lifecycle.server.reserve=consumed_set_try_reserve_before_ephemeral_generation,MLKEM_encapsulation,and_DH_work",
+	"registration.lifecycle.server.accept=server_accept_same_verified_registration_and_status",
+	"registration.lifecycle.server.order=post_validation_PQXDH_response_crypto,server_accept,derive_root,insert_consumed,return_output",
+	"registration.lifecycle.server.insert=exact_registration_id_after_root_derivation",
+	"registration.lifecycle.server.output=RegistrationOutput_after_successful_insert",
+	"registration.lifecycle.server.preinsert_failure=not_consumed_and_may_retry",
+	"registration.lifecycle.server.response=separate_later_build_registration_response_call",
+	"registration.lifecycle.server.response_failure=consumed_id_not_removed",
+	"registration.lifecycle.server.known_ids=assigned_numeric_peer_map:not_registration_identity_uniqueness",
+	"registration.lifecycle.proverif.honest_guard.scope=one_nonreplicated_owner_for_one_fresh_honest_identity",
+	"registration.lifecycle.proverif.honest_guard.first_input=public_parsed_identity,InitKex,registration_id",
+	"registration.lifecycle.proverif.honest_guard.first_transition=RegistrationConsumed_event_before_replay_fresh_reply",
+	"registration.lifecycle.proverif.honest_guard.replay=replicated_same_identity_inputs_reply_consumed",
+	"registration.lifecycle.proverif.server.order=root_derivation_before_guard_fresh_before_accept_or_abort",
+	"registration.lifecycle.proverif.server.accept=only_after_replay_fresh",
+	"registration.lifecycle.proverif.server.abort=consumption_precedes_ServerResponseAborted",
+	"registration.lifecycle.proverif.honest_beacon=bundle_and_guard_once_in_finite_role",
+	"registration.lifecycle.proverif.malicious_server=bypasses_honest_replay_guard",
+	"registration.lifecycle.proverif.malicious_scope=every_attacker_owned_request_fresh:deliberate_overapproximation",
+	"registration.lifecycle.proverif.scope=not_global_replay,persistence,multi_owner,rollback_or_crash",
+	"registration.lifecycle.hb49.bundles=same_identity,same_prekey,same_one_time,different_mlkem_keys",
+	"registration.lifecycle.hb49.replay_id=same_identity_and_one_time_imply_equal_source_id",
+	"registration.lifecycle.hb49.production=second_registration_consumed_after_first_successful_get_shared_secret",
+	"registration.lifecycle.hb49.scope=isolated_unsupported_control:not_production_rotation_or_attack",
 	"agreement.constructor=establishment_transcript",
 	"agreement.field_count=18",
 	"agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin",
@@ -317,6 +379,8 @@ struct Snapshot {
 	crypto: String,
 	environment: String,
 	active_quantum_witness: String,
+	extraction: String,
+	mlkem_reencapsulation_control: String,
 	makefile: String,
 	adapter_ratchet: String,
 	core_commitment: String,
@@ -342,6 +406,8 @@ impl Snapshot {
 			crypto: CRYPTO_MODEL.to_owned(),
 			environment: ENVIRONMENT_MODEL.to_owned(),
 			active_quantum_witness: ACTIVE_QUANTUM_WITNESS.to_owned(),
+			extraction: EXTRACTION_MODEL.to_owned(),
+			mlkem_reencapsulation_control: MLKEM_REENCAPSULATION_CONTROL.to_owned(),
 			makefile: CORE_MAKEFILE.to_owned(),
 			adapter_ratchet: ADAPTER_RATCHET.to_owned(),
 			core_commitment: CORE_COMMITMENT.to_owned(),
@@ -2256,7 +2322,7 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 		));
 	}
 
-	let extraction = compact(&uncommented_pv(EXTRACTION_MODEL)?);
+	let extraction = compact(&uncommented_pv(&snapshot.extraction)?);
 	for reduction in [
 		"reducforallidentity:bitstring,prekey:bitstring,one_time:bitstring,pq:bitstring;beaconcrypt_core__pqxdh__registration_id(beaconcrypt_core__pqxdh__VerifiedInitKex(identity,prekey,one_time,pq))=beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(identity,one_time)).",
 		"reducforalldh1:bitstring,dh2:bitstring,dh3:bitstring,dh4:bitstring,kem:bitstring;beaconcrypt_core__pqxdh__build_root_key_input(beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1,dh2,dh3,dh4,kem))=beaconcrypt_core__pqxdh__RootKeyInput(pqxdh_root_input(pqxdh_ff32_padding(),dh1,dh2,dh3,dh4,kem)).",
@@ -3509,6 +3575,503 @@ fn validate_finite_receive_state_fixture(snapshot: &Snapshot) -> Result<(), Stri
 	Ok(())
 }
 
+fn validate_registration_lifecycle(snapshot: &Snapshot) -> Result<(), String> {
+	let core = compact(&uncommented_rust(&snapshot.core_pqxdh)?);
+	for (wanted, label) in [
+		(
+			"pubconstSIGN_PUBLIC_KEY_SIZE:usize=32;",
+			"registration replay identity width",
+		),
+		(
+			"pubconstX25519_PUBLIC_KEY_SIZE:usize=32;",
+			"registration replay one-time-key width",
+		),
+		(
+			"pubconstREGISTRATION_ID_SIZE:usize=SIGN_PUBLIC_KEY_SIZE+X25519_PUBLIC_KEY_SIZE;",
+			"registration replay identifier width expression",
+		),
+		(
+			"const_:()=assert!(REGISTRATION_ID_SIZE==64);",
+			"registration replay identifier 64-byte assertion",
+		),
+		(
+			"pubfnregistration_id(&self)->RegistrationId{letbytes:[u8;REGISTRATION_ID_SIZE]=core::array::from_fn(|i|{ifi<SIGN_PUBLIC_KEY_SIZE{self.beacon_identity_public_key[i]}else{self.beacon_one_time_public_key[i-SIGN_PUBLIC_KEY_SIZE]}});RegistrationId{bytes}}",
+			"registration replay identity-then-one-time layout",
+		),
+		(
+			"pubfnregistration_id(registration:&VerifiedInitKex)->RegistrationId{registration.registration_id()}",
+			"registration replay identifier wrapper",
+		),
+		(
+			"pubstructBeaconStart{pubstate:BeaconInitSent,pubmessage:InitKex,}",
+			"registration beacon-start result typestate",
+		),
+	] {
+		require_once(&core, wanted, label)?;
+	}
+	let core_start = rust_body(&snapshot.core_pqxdh, "beacon_start")?;
+	require_once(
+		&core_start,
+		"state:BeaconInitSent{expected_server_binding:state.expected_server_binding,beacon_identity_public_key:inputs.identity_public_key,}",
+		"registration beacon-start Fresh-to-InitSent mapping",
+	)?;
+
+	let extraction = compact(&uncommented_pv(&snapshot.extraction)?);
+	require_once(
+		&extraction,
+		"reducforallidentity:bitstring,prekey:bitstring,one_time:bitstring,pq:bitstring;beaconcrypt_core__pqxdh__registration_id(beaconcrypt_core__pqxdh__VerifiedInitKex(identity,prekey,one_time,pq))=beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(identity,one_time)).",
+		"registration replay ProVerif identity/one-time projection",
+	)?;
+
+	let beacon_source = compact(&uncommented_rust(&snapshot.adapter_beacon)?);
+	let beacon_new = rust_body(&snapshot.adapter_beacon, "new")?;
+	for (wanted, label) in [
+		(
+			"identity_key:crypto_sign::KeyPair::generate().unwrap()",
+			"registration Beacon identity generation",
+		),
+		(
+			"state:BeaconState::Fresh{control:verified_pqxdh::BeaconFresh::new(verified_pqxdh::ServerBinding{identity_public_key:*id.as_bytes(),identity_key_id:server_kid,}),prekey:crypto_kx::KeyPair::generate().unwrap(),pq_key:crypto_kem::mlkem768::KeyPair::generate().unwrap(),}",
+			"registration Beacon Fresh material co-location",
+		),
+	] {
+		require_once(&beacon_new, wanted, label)?;
+	}
+	for variant in [
+		"Fresh",
+		"FreshWithCoins",
+		"InitSent",
+		"Established",
+		"Aborted",
+	] {
+		require(
+			&beacon_source,
+			&format!("{variant}{{"),
+			"registration Beacon state variant",
+		)?;
+	}
+
+	let bundle = rust_body(&snapshot.adapter_beacon, "get_registration_bundle")?;
+	for (wanted, label) in [
+		(
+			"letmutgenerated_onetime=ifmatches!(&self.state,BeaconState::Fresh{..}){Some(crypto_kx::KeyPair::generate().ok()?)}else{None};",
+			"registration Fresh one-time generation",
+		),
+		(
+			"BeaconState::Fresh{control,prekey,pq_key,}=>(*control,prekey.public_key.as_bytes().try_into().ok()?,*pq_key.public_key.as_bytes(),generated_onetime.as_ref()?.public_key.as_bytes().try_into().ok()?,)",
+			"registration Fresh material selection",
+		),
+		(
+			"BeaconState::FreshWithCoins{control,prekey,onetime_key,pq_key,}=>(*control,prekey.public_key.as_bytes().try_into().ok()?,*pq_key.public_key.as_bytes(),onetime_key.public_key.as_bytes().try_into().ok()?,)",
+			"registration FreshWithCoins material selection",
+		),
+		("_=>returnNone,", "registration ineligible-state rejection"),
+		(
+			"letstarted=verified_pqxdh::beacon_start(control,verified_pqxdh::BeaconStartInputs{identity_public_key:*self.identity_pk().as_bytes(),prekey_public_key:prekey_public,pq_public_key:pq_public,},verified_pqxdh::BeaconCoins{one_time_public_key:onetime_public,},);",
+			"registration Beacon-start input mapping",
+		),
+		(
+			"letmutmsg=TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();",
+			"registration typed InitKex builder",
+		),
+		(
+			"bundle.set_identity_key(started.message.identity_key());",
+			"registration serialized identity field",
+		),
+		(
+			"bundle.set_pre_key(&prekey_sig);",
+			"registration serialized prekey field",
+		),
+		(
+			"bundle.set_one_time_key(&onetime_sig);",
+			"registration serialized one-time field",
+		),
+		(
+			"bundle.set_pq_key(&pq_sig);",
+			"registration serialized PQ field",
+		),
+		(
+			"capnp::serialize::write_message(&mutbuffer,msg.borrow_inner()).ok()?;",
+			"registration completed InitKex serialization",
+		),
+		(
+			"BeaconState::Fresh{prekey,pq_key,..}=>{letSome(onetime_key)=generated_onetime.take()else{self.state=BeaconState::Fresh{control,prekey,pq_key,};returnNone;};self.state=BeaconState::InitSent{control:started.state,prekey,onetime_key,pq_key,};}",
+			"registration Fresh success transition and restoration",
+		),
+		(
+			"BeaconState::FreshWithCoins{prekey,onetime_key,pq_key,..}=>{self.state=BeaconState::InitSent{control:started.state,prekey,onetime_key,pq_key,};}",
+			"registration FreshWithCoins success transition",
+		),
+		("Some(buffer)", "registration serialized bundle return"),
+	] {
+		require_once(&bundle, wanted, label)?;
+	}
+	require_ordered(
+		&bundle,
+		&[
+			"capnp::serialize::write_message(&mutbuffer,msg.borrow_inner()).ok()?;",
+			"letprevious=std::mem::replace(&mutself.state,fallback);",
+			"self.state=BeaconState::InitSent{",
+			"Some(buffer)",
+		],
+		"registration serialization-to-InitSent order",
+	)?;
+	let replace = bundle
+		.find("letprevious=std::mem::replace(&mutself.state,fallback);")
+		.ok_or_else(|| "missing registration Beacon state replacement".to_owned())?;
+	if bundle[..replace].contains("self.state=BeaconState::") {
+		return Err("registration Beacon state changed before successful serialization".to_owned());
+	}
+	if bundle[replace..].contains('?') {
+		return Err("registration fallible work moved after state replacement".to_owned());
+	}
+	for (constructor, expected) in [
+		("self.state=BeaconState::Fresh{", 1),
+		("self.state=BeaconState::FreshWithCoins{", 1),
+		("self.state=BeaconState::InitSent{", 2),
+		("self.state=BeaconState::Established{", 1),
+	] {
+		if count(&beacon_source, constructor) != expected {
+			return Err(format!(
+				"registration Beacon eligible-state publication graph changed: {constructor}"
+			));
+		}
+	}
+	let new_one_time = rust_body(&snapshot.adapter_beacon, "new_onetime_keypair")?;
+	require_once(
+		&new_one_time,
+		"letcontrol=match&self.state{BeaconState::Fresh{control,..}=>*control,_=>returnNone,};",
+		"registration post-Init one-time regeneration rejection",
+	)?;
+	let abort = rust_body(&snapshot.adapter_beacon, "abort_registration")?;
+	require_once(
+		&abort,
+		"self.state=BeaconState::Aborted{control:verified_pqxdh::beacon_abort_init(control),};",
+		"registration InitSent abort transition",
+	)?;
+	let delete_one_time = rust_body(&snapshot.adapter_beacon, "delete_onetime_keypair")?;
+	require_once(
+		&delete_one_time,
+		"BeaconState::InitSent{control,..}=>BeaconState::Aborted{control:verified_pqxdh::beacon_abort_init(control),}",
+		"registration InitSent one-time deletion transition",
+	)?;
+	let delete_pq = rust_body(&snapshot.adapter_beacon, "delete_pq_keypair")?;
+	require_once(
+		&delete_pq,
+		"BeaconState::InitSent{control,..}=>{Some(verified_pqxdh::beacon_abort_init(*control))}",
+		"registration InitSent PQ deletion transition",
+	)?;
+	require_once(
+		&delete_pq,
+		"self.state=BeaconState::Aborted{control};",
+		"registration PQ deletion terminal state",
+	)?;
+	let finish = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
+	for (wanted, label) in [
+		(
+			"letcontrol=match&self.state{BeaconState::InitSent{control,..}=>*control,_=>returnNone,};",
+			"registration finish InitSent gate",
+		),
+		(
+			"letSome((authenticated,associated_data,ratchet,plaintext))=stagedelse{self.abort_registration(control);returnNone;};",
+			"registration failed finish abort",
+		),
+		(
+			"ifself.server_kid()!=server_kid{self.abort_registration(control);returnNone;}",
+			"registration server-key-ID mismatch abort",
+		),
+		(
+			"ifself.server_id.as_bytes()!=&server_binding.identity_public_key{self.abort_registration(control);returnNone;}",
+			"registration server-identity mismatch abort",
+		),
+		(
+			"self.state=BeaconState::Established{control:verified_pqxdh::beacon_commit(authenticated),associated_data,ratchet,};",
+			"registration successful finish Established transition",
+		),
+	] {
+		require_once(&finish, wanted, label)?;
+	}
+	forbid(
+		&finish,
+		"self.state=BeaconState::Fresh",
+		"registration finish reset to eligible state",
+	)?;
+
+	let server_source = compact(&uncommented_rust(&snapshot.adapter_server)?);
+	for (wanted, label) in [
+		(
+			"known_ids:HashMap<u64,EstablishedRemote<crypto_sign::PublicKey>>",
+			"registration numeric peer map",
+		),
+		(
+			"consumed_registrations:HashSet<[u8;verified_pqxdh::REGISTRATION_ID_SIZE]>",
+			"registration consumed-ID set",
+		),
+	] {
+		require_once(&server_source, wanted, label)?;
+	}
+	let server = rust_body(&snapshot.adapter_server, "get_shared_secret")?;
+	for (wanted, label) in [
+		(
+			"letregistration_id=*verified_pqxdh::registration_id(&verified_registration).as_bytes();",
+			"registration Server ID source",
+		),
+		(
+			"letregistration_status=ifself.consumed_registrations.contains(&registration_id){verified_pqxdh::RegistrationStatus::Consumed}else{verified_pqxdh::RegistrationStatus::Fresh};",
+			"registration Server replay-status polarity",
+		),
+		(
+			"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
+			"registration Server replay-status gate",
+		),
+		(
+			"self.consumed_registrations.try_reserve(1).ok()?;",
+			"registration Server consumed-set reservation",
+		),
+		(
+			"letinserted=self.consumed_registrations.insert(registration_id);",
+			"registration Server exact-ID consumption",
+		),
+		(
+			"letmutsecrets=shared_secrets(dh1,dh2,dh3,dh4,&kem_shared)?;",
+			"registration Server complete post-validation PQXDH inputs",
+		),
+		(
+			"Some(RegistrationOutput{derived_secret,control:pending,})",
+			"registration Server pending output",
+		),
+	] {
+		require_once(&server, wanted, label)?;
+	}
+	require_ordered_once(
+		&server,
+		&[
+			"letregistration_id=*verified_pqxdh::registration_id(&verified_registration).as_bytes();",
+			"letregistration_status=ifself.consumed_registrations.contains(&registration_id)",
+			"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
+			"self.consumed_registrations.try_reserve(1).ok()?;",
+			"letephemeral=crypto_kx::KeyPair::generate().ok()?;",
+			"let(kem_ciphertext,kem_shared)=crypto_kem::mlkem768::encapsulate(&pq_pub).ok()?;",
+			"letdh1:DhSecret=crypto_scalarmult::scalarmult(",
+			"letdh2:DhSecret=crypto_scalarmult::scalarmult(",
+			"letdh3:DhSecret=crypto_scalarmult::scalarmult(",
+			"letdh4:DhSecret=crypto_scalarmult::scalarmult(",
+			"letmutsecrets=shared_secrets(dh1,dh2,dh3,dh4,&kem_shared)?;",
+			"letaccepted=verified_pqxdh::server_accept(",
+			"letderived_secret=derive_root_key_input(pending.root_key_input_mut())?;",
+			"letinserted=self.consumed_registrations.insert(registration_id);",
+			"Some(RegistrationOutput{",
+		],
+		"registration Server validate-reserve-derive-consume order",
+	)?;
+	let accept_calls = all_arguments(&server, "verified_pqxdh::server_accept")?;
+	if accept_calls.len() != 1
+		|| accept_calls[0].get(1).map(String::as_str) != Some("verified_registration")
+		|| accept_calls[0].get(2).map(String::as_str) != Some("registration_status")
+	{
+		return Err(format!(
+			"registration Server accepted registration/status mapping changed: {accept_calls:?}"
+		));
+	}
+	let insert = server
+		.find("letinserted=self.consumed_registrations.insert(registration_id);")
+		.ok_or_else(|| "missing registration Server consumption insertion".to_owned())?;
+	if count(&server, "self.consumed_registrations.insert(") != 1 {
+		return Err("registration Server consumed-ID insertion family count changed".to_owned());
+	}
+	if server[insert..].contains('?') {
+		return Err("registration fallible work moved after consumption insertion".to_owned());
+	}
+	if server[insert..].contains("returnNone") {
+		return Err("registration explicit failure moved after consumption insertion".to_owned());
+	}
+	let response = rust_body(&snapshot.adapter_server, "build_registration_response")?;
+	forbid(
+		&response,
+		"consumed_registrations",
+		"registration replay-set mutation during later response construction",
+	)?;
+
+	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	let guard = section_between(
+		&environment,
+		"letRegistrationReplayGuard(",
+		"letHonestBeacon(",
+		"registration replay guard",
+	)?;
+	for (wanted, label) in [
+		(
+			"in(replay_requests,(=beacon_identity,accepted_init:beaconcrypt_core__pqxdh__t_InitKex,accepted_registration_id:beaconcrypt_core__pqxdh__t_RegistrationId,first_reply:channel));",
+			"registration replay first public input",
+		),
+		(
+			"eventRegistrationConsumed(server_identity,beacon_identity,accepted_init,accepted_registration_id,origin);",
+			"registration replay consumed event",
+		),
+		(
+			"out(first_reply,replay_fresh());",
+			"registration replay first Fresh reply",
+		),
+		(
+			"!in(replay_requests,(=beacon_identity,replay_init:beaconcrypt_core__pqxdh__t_InitKex,replay_registration_id:beaconcrypt_core__pqxdh__t_RegistrationId,replay_reply:channel));",
+			"registration replay replicated later input",
+		),
+		(
+			"out(replay_reply,replay_consumed()).",
+			"registration replay later Consumed reply",
+		),
+	] {
+		require_once(guard, wanted, label)?;
+	}
+	forbid(
+		guard,
+		"!in(replay_requests,(=beacon_identity,accepted_init",
+		"registration replay first input replication",
+	)?;
+	require_ordered(
+		guard,
+		&[
+			"in(replay_requests,(",
+			"eventRegistrationConsumed(",
+			"out(first_reply,replay_fresh());",
+			"!in(replay_requests,(",
+			"out(replay_reply,replay_consumed()).",
+		],
+		"registration replay Fresh-to-Consumed owner order",
+	)?;
+
+	let honest = section_between(
+		&environment,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"registration honest Beacon role",
+	)?;
+	require_once(
+		honest,
+		"RegistrationReplayGuard(server_identity,beacon_identity,registration_session)",
+		"registration honest replay owner",
+	)?;
+	forbid(
+		honest,
+		"!RegistrationReplayGuard",
+		"registration replicated honest replay owner",
+	)?;
+	require_once(
+		honest,
+		"out(c,signed_init_kex(tag_ed25519(beacon_identity),sign(tag_x25519_prekey(beacon_prekey),beacon_identity_secret),sign(tag_x25519_one_time(beacon_one_time),beacon_identity_secret),sign(tag_mlkem768(beacon_pq),beacon_identity_secret)));",
+		"registration honest single signed bundle",
+	)?;
+	forbid(
+		honest,
+		"!out(c,signed_init_kex(",
+		"registration replicated honest signed bundle",
+	)?;
+	require_once(
+		honest,
+		"RegistrationReplayGuard(server_identity,beacon_identity,registration_session)|out(c,signed_init_kex(",
+		"registration honest parallel bundle-and-guard topology",
+	)?;
+	if count(honest, "RegistrationReplayGuard(") != 1 {
+		return Err("registration honest replay-owner family count changed".to_owned());
+	}
+	if count(honest, "out(c,signed_init_kex(") != 1 {
+		return Err("registration honest signed-bundle family count changed".to_owned());
+	}
+
+	let server_role = section_between(
+		&environment,
+		"letServer(",
+		"letMaliciousServer()",
+		"registration honest Server role",
+	)?;
+	require_once(
+		server_role,
+		"out(replay_requests,(beacon_identity,core_init,registration_id,replay_reply));",
+		"registration Server public replay request",
+	)?;
+	require_ordered_once(
+		server_role,
+		&[
+			"letroot=pqxdh_root(",
+			"out(replay_requests,(beacon_identity,core_init,registration_id,replay_reply));",
+			"in(replay_reply,replay_result:replay_status);",
+			"ifreplay_result=replay_fresh()then",
+			"eventServerAccepted(",
+			"in(c,registration_control:bitstring);",
+			"ifregistration_control=registration_abort(registration_id)then",
+			"eventServerResponseAborted(",
+		],
+		"registration symbolic derive-consume-accept-abort order",
+	)?;
+
+	let malicious_server = section_between(
+		&environment,
+		"letMaliciousServer()",
+		"letKeepBeaconStatePrivate()",
+		"registration malicious Server role",
+	)?;
+	for forbidden in [
+		"replay_requests",
+		"RegistrationReplayGuard",
+		"replay_fresh",
+		"replay_consumed",
+		"RegistrationConsumed",
+	] {
+		forbid(
+			malicious_server,
+			forbidden,
+			"registration malicious replay guard",
+		)?;
+	}
+	require_once(
+		malicious_server,
+		"letregistration_continue(=registration_id)=registration_controlin",
+		"registration malicious direct response path",
+	)?;
+
+	let hb49 = compact(&uncommented_pv(&snapshot.mlkem_reencapsulation_control)?);
+	let epoch_calls = [
+		(
+			"letbundle_old=kem_epoch_bundle(",
+			"pqpk_old",
+			"registration HB-49 old bundle",
+		),
+		(
+			"letbundle_new=kem_epoch_bundle(",
+			"pqpk_new",
+			"registration HB-49 new bundle",
+		),
+	];
+	for (marker, pq_key, label) in epoch_calls {
+		let arguments = arguments_after(&hb49, marker)?;
+		let expected = [
+			"tag_ed25519(beacon_identity)".to_owned(),
+			"sign(tag_x25519_prekey(beacon_prekey),beacon_identity_secret)".to_owned(),
+			"sign(tag_x25519_one_time(beacon_one_time),beacon_identity_secret)".to_owned(),
+			format!("sign(tag_mlkem768({pq_key}),beacon_identity_secret)"),
+		];
+		if arguments != expected {
+			return Err(format!("{label} changed: {arguments:?}"));
+		}
+	}
+	require_ordered_once(
+		&hb49,
+		&[
+			"newpqsk_old:bitstring;",
+			"newpqsk_new:bitstring;",
+			"letpqpk_old=mlkem_public(pqsk_old)in",
+			"letpqpk_new=mlkem_public(pqsk_new)in",
+			"letbundle_old=kem_epoch_bundle(",
+			"letbundle_new=kem_epoch_bundle(",
+			"out(kem_multi_epoch_channel,bundle_old);",
+			"out(kem_multi_epoch_channel,bundle_new);",
+		],
+		"registration HB-49 same-classical-material PQ-only rotation fixture",
+	)?;
+
+	Ok(())
+}
+
 fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_manifest(&snapshot.interface)?;
 	validate_pv(snapshot)?;
@@ -3518,6 +4081,7 @@ fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_endpoint_frame_context_wiring(snapshot)?;
 	validate_ratchet_effect_driver(snapshot)?;
 	validate_finite_receive_state_fixture(snapshot)?;
+	validate_registration_lifecycle(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
 
@@ -3739,6 +4303,25 @@ fn assert_finite_receive_fixture_rejected(
 	assert!(
 		error.contains(diagnostic),
 		"finite receive-state fixture mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn assert_registration_lifecycle_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_manifest(&snapshot.interface)
+		.and_then(|()| validate_registration_lifecycle(&snapshot))
+	{
+		Ok(()) => panic!("registration lifecycle mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"registration lifecycle mutation {name} produced wrong diagnostic: {error}"
 	);
 }
 
@@ -9353,6 +9936,1095 @@ fn finite_receive_state_fixture_mutation_matrix_is_complete_and_rejected() {
 	mutation_count += 1;
 
 	assert_eq!(mutation_count, FINITE_RECEIVE_STATE_FIXTURE_MUTATION_COUNT);
+}
+
+const REGISTRATION_LIFECYCLE_MUTATION_COUNT: usize = 177;
+
+#[test]
+fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let lifecycle_facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("registration.lifecycle."))
+		.collect::<Vec<_>>();
+	assert_eq!(lifecycle_facts.len(), 60);
+	for fact in lifecycle_facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_registration_lifecycle_rejected(
+			&format!("registration_lifecycle_fact_{key}"),
+			key,
+			|snapshot| mutate_fact(&mut snapshot.interface, key, "mutated"),
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_identity_width_drifts",
+			"pub const SIGN_PUBLIC_KEY_SIZE: usize = 32;",
+			"pub const SIGN_PUBLIC_KEY_SIZE: usize = 31;",
+			"registration replay identity width",
+		),
+		(
+			"registration_one_time_width_drifts",
+			"pub const X25519_PUBLIC_KEY_SIZE: usize = 32;",
+			"pub const X25519_PUBLIC_KEY_SIZE: usize = 31;",
+			"registration replay one-time-key width",
+		),
+		(
+			"registration_identifier_width_uses_pq",
+			"pub const REGISTRATION_ID_SIZE: usize = SIGN_PUBLIC_KEY_SIZE + X25519_PUBLIC_KEY_SIZE;",
+			"pub const REGISTRATION_ID_SIZE: usize = SIGN_PUBLIC_KEY_SIZE + MLKEM768_PUBLIC_KEY_SIZE;",
+			"registration replay identifier width expression",
+		),
+		(
+			"registration_identifier_assertion_drifts",
+			"const _: () = assert!(REGISTRATION_ID_SIZE == 64);",
+			"const _: () = assert!(REGISTRATION_ID_SIZE == 63);",
+			"registration replay identifier 64-byte assertion",
+		),
+		(
+			"registration_identifier_first_half_uses_prekey",
+			"self.beacon_identity_public_key[i]",
+			"self.beacon_prekey_public_key[i]",
+			"registration replay identity-then-one-time layout",
+		),
+		(
+			"registration_identifier_second_half_uses_prekey",
+			"self.beacon_one_time_public_key[i - SIGN_PUBLIC_KEY_SIZE]",
+			"self.beacon_prekey_public_key[i - SIGN_PUBLIC_KEY_SIZE]",
+			"registration replay identity-then-one-time layout",
+		),
+		(
+			"registration_identifier_second_half_offset_drifts",
+			"i - SIGN_PUBLIC_KEY_SIZE",
+			"i - X25519_PUBLIC_KEY_SIZE",
+			"registration replay identity-then-one-time layout",
+		),
+		(
+			"registration_identifier_wrapper_bypasses_method",
+			"registration.registration_id()",
+			"RegistrationId { bytes: [0; REGISTRATION_ID_SIZE] }",
+			"registration replay identifier wrapper",
+		),
+		(
+			"registration_beacon_start_result_stays_fresh",
+			"pub state: BeaconInitSent,",
+			"pub state: BeaconFresh,",
+			"registration beacon-start result typestate",
+		),
+		(
+			"registration_beacon_start_maps_fresh_state",
+			"state: BeaconInitSent {",
+			"state: BeaconFresh {",
+			"registration beacon-start Fresh-to-InitSent mapping",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_pqxdh, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, replacement) in [
+		(
+			"registration_proverif_projection_swaps_halves",
+			"registration_identifier(one_time, identity)",
+		),
+		(
+			"registration_proverif_projection_uses_prekey",
+			"registration_identifier(identity, prekey)",
+		),
+		(
+			"registration_proverif_projection_uses_pq",
+			"registration_identifier(identity, pq)",
+		),
+	] {
+		assert_registration_lifecycle_rejected(
+			name,
+			"registration replay ProVerif identity/one-time projection",
+			|snapshot| {
+				replace_once(
+					&mut snapshot.extraction,
+					"registration_identifier(identity, one_time)",
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_beacon_identity_generation_changes",
+			"identity_key: crypto_sign::KeyPair::generate().unwrap(),",
+			"identity_key: crypto_kx::KeyPair::generate().unwrap(),",
+			"registration Beacon identity generation",
+		),
+		(
+			"registration_beacon_new_state_changes",
+			"state: BeaconState::Fresh {",
+			"state: BeaconState::InitSent {",
+			"registration Beacon Fresh material co-location",
+		),
+		(
+			"registration_beacon_prekey_generation_changes",
+			"prekey: crypto_kx::KeyPair::generate().unwrap(),",
+			"prekey: crypto_kem::mlkem768::KeyPair::generate().unwrap(),",
+			"registration Beacon Fresh material co-location",
+		),
+		(
+			"registration_beacon_pq_generation_changes",
+			"pq_key: crypto_kem::mlkem768::KeyPair::generate().unwrap(),",
+			"pq_key: crypto_kx::KeyPair::generate().unwrap(),",
+			"registration Beacon Fresh material co-location",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.adapter_beacon, "pub fn new(", from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_fresh_coin_condition_changes",
+			"matches!(&self.state, BeaconState::Fresh { .. })",
+			"matches!(&self.state, BeaconState::FreshWithCoins { .. })",
+			"registration Fresh one-time generation",
+		),
+		(
+			"registration_fresh_coin_generation_removed",
+			"Some(crypto_kx::KeyPair::generate().ok()?)",
+			"None",
+			"registration Fresh one-time generation",
+		),
+		(
+			"registration_fresh_arm_accepts_init_sent",
+			"BeaconState::Fresh {\n\t\t\t\tcontrol,\n\t\t\t\tprekey,\n\t\t\t\tpq_key,\n\t\t\t}",
+			"BeaconState::InitSent {\n\t\t\t\tcontrol,\n\t\t\t\tprekey,\n\t\t\t\tpq_key,\n\t\t\t}",
+			"registration Fresh material selection",
+		),
+		(
+			"registration_fresh_with_coins_arm_accepts_established",
+			"BeaconState::FreshWithCoins {\n\t\t\t\tcontrol,\n\t\t\t\tprekey,\n\t\t\t\tonetime_key,\n\t\t\t\tpq_key,\n\t\t\t}",
+			"BeaconState::Established {\n\t\t\t\tcontrol,\n\t\t\t\tprekey,\n\t\t\t\tonetime_key,\n\t\t\t\tpq_key,\n\t\t\t}",
+			"registration FreshWithCoins material selection",
+		),
+		(
+			"registration_ineligible_state_falls_through",
+			"_ => return None,",
+			"_ => unreachable!(),",
+			"registration ineligible-state rejection",
+		),
+		(
+			"registration_fresh_prekey_uses_pq",
+			"prekey.public_key.as_bytes().try_into().ok()?,",
+			"pq_key.public_key.as_bytes().try_into().ok()?,",
+			"registration Fresh material selection",
+		),
+		(
+			"registration_fresh_pq_uses_prekey",
+			"*pq_key.public_key.as_bytes(),",
+			"*prekey.public_key.as_bytes(),",
+			"registration Fresh material selection",
+		),
+		(
+			"registration_fresh_one_time_uses_prekey",
+			"generated_onetime\n\t\t\t\t\t.as_ref()?",
+			"Some(prekey)\n\t\t\t\t\t.as_ref()?",
+			"registration Fresh material selection",
+		),
+		(
+			"registration_stored_one_time_uses_prekey",
+			"onetime_key.public_key.as_bytes().try_into().ok()?,",
+			"prekey.public_key.as_bytes().try_into().ok()?,",
+			"registration FreshWithCoins material selection",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"impl ProviderBeacon for Beacon",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"registration_start_identity_uses_server",
+			"identity_public_key: *self.identity_pk().as_bytes(),",
+			"identity_public_key: *self.server_id().as_bytes(),",
+		),
+		(
+			"registration_start_prekey_uses_one_time",
+			"prekey_public_key: prekey_public,",
+			"prekey_public_key: onetime_public,",
+		),
+		(
+			"registration_start_pq_uses_prekey",
+			"pq_public_key: pq_public,",
+			"pq_public_key: prekey_public,",
+		),
+		(
+			"registration_start_one_time_uses_prekey",
+			"one_time_public_key: onetime_public,",
+			"one_time_public_key: prekey_public,",
+		),
+	] {
+		assert_registration_lifecycle_rejected(
+			name,
+			"registration Beacon-start input mapping",
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.adapter_beacon,
+					"impl ProviderBeacon for Beacon",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_builder_type_changes",
+			"TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default()",
+			"TypedBuilder::<phase2_capnp::kex_response::Owned>::new_default()",
+			"registration typed InitKex builder",
+		),
+		(
+			"registration_identity_setter_uses_prekey",
+			"bundle.set_identity_key(started.message.identity_key());",
+			"bundle.set_identity_key(started.message.prekey());",
+			"registration serialized identity field",
+		),
+		(
+			"registration_prekey_setter_uses_one_time",
+			"bundle.set_pre_key(&prekey_sig);",
+			"bundle.set_pre_key(&onetime_sig);",
+			"registration serialized prekey field",
+		),
+		(
+			"registration_one_time_setter_uses_prekey",
+			"bundle.set_one_time_key(&onetime_sig);",
+			"bundle.set_one_time_key(&prekey_sig);",
+			"registration serialized one-time field",
+		),
+		(
+			"registration_pq_setter_uses_prekey",
+			"bundle.set_pq_key(&pq_sig);",
+			"bundle.set_pq_key(&prekey_sig);",
+			"registration serialized PQ field",
+		),
+		(
+			"registration_serialization_call_removed",
+			"capnp::serialize::write_message(&mut buffer, msg.borrow_inner()).ok()?;",
+			"let _ = (&mut buffer, msg.borrow_inner());",
+			"registration completed InitKex serialization",
+		),
+		(
+			"registration_success_returns_none",
+			"Some(buffer)\n\t}",
+			"None\n\t}",
+			"registration serialized bundle return",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"impl ProviderBeacon for Beacon",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+	assert_registration_lifecycle_rejected(
+		"registration_state_transition_precedes_serialization",
+		"registration serialization-to-InitSent order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"impl ProviderBeacon for Beacon",
+				"\t\tlet mut buffer = vec![];\n\t\tcapnp::serialize::write_message(&mut buffer, msg.borrow_inner()).ok()?;\n\n\t\tlet fallback = BeaconState::Aborted {\n\t\t\tcontrol: verified_pqxdh::beacon_abort_fresh(control),\n\t\t};\n\t\tlet previous = std::mem::replace(&mut self.state, fallback);",
+				"\t\tlet mut buffer = vec![];\n\n\t\tlet fallback = BeaconState::Aborted {\n\t\t\tcontrol: verified_pqxdh::beacon_abort_fresh(control),\n\t\t};\n\t\tlet previous = std::mem::replace(&mut self.state, fallback);\n\t\tcapnp::serialize::write_message(&mut buffer, msg.borrow_inner()).ok()?;",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_pretransition_failure_changes_state",
+		"registration Beacon state changed before successful serialization",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"impl ProviderBeacon for Beacon",
+				"let mut msg = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();",
+				"self.state = BeaconState::Aborted { control: verified_pqxdh::beacon_abort_fresh(control) };\n\t\tlet mut msg = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"registration_fresh_success_reopens_fresh",
+			"capnp::serialize::write_message",
+			"self.state = BeaconState::InitSent {",
+			"self.state = BeaconState::Fresh {",
+			"registration Fresh success transition and restoration",
+		),
+		(
+			"registration_fresh_success_uses_old_control",
+			"capnp::serialize::write_message",
+			"control: started.state,",
+			"control,",
+			"registration Fresh success transition and restoration",
+		),
+		(
+			"registration_fresh_success_drops_generated_one_time",
+			"capnp::serialize::write_message",
+			"onetime_key,\n\t\t\t\t\tpq_key,",
+			"onetime_key: crypto_kx::KeyPair::generate().unwrap(),\n\t\t\t\t\tpq_key,",
+			"registration Fresh success transition and restoration",
+		),
+		(
+			"registration_fresh_take_failure_aborts",
+			"let Some(onetime_key) = generated_onetime.take() else {",
+			"self.state = BeaconState::Fresh {",
+			"self.state = BeaconState::Aborted {",
+			"registration Fresh success transition and restoration",
+		),
+		(
+			"registration_stored_success_reopens_fresh_with_coins",
+			"BeaconState::FreshWithCoins {\n\t\t\t\tprekey,",
+			"self.state = BeaconState::InitSent {",
+			"self.state = BeaconState::FreshWithCoins {",
+			"registration FreshWithCoins success transition",
+		),
+		(
+			"registration_stored_success_uses_old_control",
+			"BeaconState::FreshWithCoins {\n\t\t\t\tprekey,",
+			"control: started.state,",
+			"control,",
+			"registration FreshWithCoins success transition",
+		),
+		(
+			"registration_stored_success_swaps_one_time_and_prekey",
+			"BeaconState::FreshWithCoins {\n\t\t\t\tprekey,",
+			"prekey,\n\t\t\t\t\tonetime_key,",
+			"prekey: onetime_key,\n\t\t\t\t\tonetime_key: prekey,",
+			"registration FreshWithCoins success transition",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.adapter_beacon, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"registration_new_one_time_accepts_init_sent",
+			"pub fn new_onetime_keypair",
+			"BeaconState::Fresh { control, .. } => *control,",
+			"BeaconState::InitSent { control, .. } => *control,",
+			"registration post-Init one-time regeneration rejection",
+		),
+		(
+			"registration_abort_reopens_fresh",
+			"fn abort_registration",
+			"self.state = BeaconState::Aborted {",
+			"self.state = BeaconState::Fresh {",
+			"registration Beacon eligible-state publication graph",
+		),
+		(
+			"registration_delete_one_time_reopens_init",
+			"pub fn delete_onetime_keypair",
+			"BeaconState::InitSent { control, .. } => BeaconState::Aborted {",
+			"BeaconState::InitSent { control, .. } => BeaconState::Fresh {",
+			"registration InitSent one-time deletion transition",
+		),
+		(
+			"registration_delete_pq_uses_fresh_abort",
+			"pub fn delete_pq_keypair",
+			"Some(verified_pqxdh::beacon_abort_init(*control))",
+			"Some(verified_pqxdh::beacon_abort_fresh(*control))",
+			"registration InitSent PQ deletion transition",
+		),
+		(
+			"registration_finish_accepts_fresh",
+			"impl ProviderBeacon for Beacon",
+			"BeaconState::InitSent { control, .. } => *control,",
+			"BeaconState::Fresh { control, .. } => *control,",
+			"registration finish InitSent gate",
+		),
+		(
+			"registration_finish_failure_keeps_init",
+			"impl ProviderBeacon for Beacon",
+			"self.abort_registration(control);\n\t\t\treturn None;",
+			"return None;",
+			"registration failed finish abort",
+		),
+		(
+			"registration_finish_success_reopens_fresh",
+			"impl ProviderBeacon for Beacon",
+			"self.state = BeaconState::Established {",
+			"self.state = BeaconState::Fresh {",
+			"registration Beacon eligible-state publication graph",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.adapter_beacon, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, from, diagnostic) in [
+		(
+			"registration_finish_server_key_id_mismatch_keeps_init",
+			"if self.server_kid() != server_kid {\n\t\t\tself.abort_registration(control);\n\t\t\treturn None;\n\t\t}",
+			"registration server-key-ID mismatch abort",
+		),
+		(
+			"registration_finish_server_identity_mismatch_keeps_init",
+			"if self.server_id.as_bytes() != &server_binding.identity_public_key {\n\t\t\tself.abort_registration(control);\n\t\t\treturn None;\n\t\t}",
+			"registration server-identity mismatch abort",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			let to = from.replace("\n\t\t\tself.abort_registration(control);", "");
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"impl ProviderBeacon for Beacon",
+				from,
+				&to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_server_peer_map_replaced_by_replay_set",
+			"known_ids: HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>",
+			"known_ids: HashSet<[u8; verified_pqxdh::REGISTRATION_ID_SIZE]>",
+			"registration numeric peer map",
+		),
+		(
+			"registration_server_replay_set_uses_numeric_ids",
+			"consumed_registrations: HashSet<[u8; verified_pqxdh::REGISTRATION_ID_SIZE]>",
+			"consumed_registrations: HashSet<u64>",
+			"registration consumed-ID set",
+		),
+		(
+			"registration_server_id_uses_peer_key_id",
+			"*verified_pqxdh::registration_id(&verified_registration).as_bytes()",
+			"self.identity_key_kid.to_le_bytes()",
+			"registration Server ID source",
+		),
+		(
+			"registration_server_status_uses_peer_map",
+			"self.consumed_registrations.contains(&registration_id)",
+			"self.known_ids.contains_key(&self.identity_key_kid)",
+			"registration Server replay-status polarity",
+		),
+		(
+			"registration_server_status_polarity_reverses_consumed",
+			"verified_pqxdh::RegistrationStatus::Consumed\n\t\t} else {\n\t\t\tverified_pqxdh::RegistrationStatus::Fresh",
+			"verified_pqxdh::RegistrationStatus::Fresh\n\t\t} else {\n\t\t\tverified_pqxdh::RegistrationStatus::Consumed",
+			"registration Server replay-status polarity",
+		),
+		(
+			"registration_server_status_gate_removed",
+			"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
+			"let _ = registration_status;",
+			"registration Server replay-status gate",
+		),
+		(
+			"registration_server_reservation_removed",
+			"self.consumed_registrations.try_reserve(1).ok()?;",
+			"let _ = self.consumed_registrations.capacity();",
+			"registration Server consumed-set reservation",
+		),
+		(
+			"registration_server_shared_secrets_reuses_dh3",
+			"shared_secrets(dh1, dh2, dh3, dh4, &kem_shared)?",
+			"shared_secrets(dh1, dh2, dh3, dh3, &kem_shared)?",
+			"registration Server complete post-validation PQXDH inputs",
+		),
+		(
+			"registration_server_insert_uses_derived_secret",
+			"self.consumed_registrations.insert(registration_id)",
+			"self.consumed_registrations.insert(*derived_secret.as_array())",
+			"registration Server exact-ID consumption",
+		),
+		(
+			"registration_server_output_removed",
+			"Some(RegistrationOutput {",
+			"Ok(RegistrationOutput {",
+			"registration Server pending output",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.adapter_server, "pub struct Server", from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, argument_index, replacement) in [
+		(
+			"registration_server_accept_uses_unvalidated_init",
+			1,
+			"init_kex",
+		),
+		(
+			"registration_server_accept_forces_fresh",
+			2,
+			"verified_pqxdh::RegistrationStatus::Fresh",
+		),
+	] {
+		assert_registration_lifecycle_rejected(
+			name,
+			"registration Server accepted registration/status mapping changed",
+			|snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.adapter_server,
+					"fn get_shared_secret",
+					"verified_pqxdh::server_accept",
+					0,
+					argument_index,
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_registration_lifecycle_rejected(
+		"registration_server_status_gate_moves_after_ephemeral_generation",
+		"registration Server validate-reserve-derive-consume order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn get_shared_secret",
+				"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
+				"let _status_gate_moved = registration_status;",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"let ephemeral = crypto_kx::KeyPair::generate().ok()?;",
+				"let pq_pub =",
+				"verified_pqxdh::validate_registration_status(registration_status).ok()?;\n\t\tlet pq_pub =",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_server_reservation_moves_after_ephemeral_generation",
+		"registration Server validate-reserve-derive-consume order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn get_shared_secret",
+				"self.consumed_registrations.try_reserve(1).ok()?;",
+				"let _reservation_moved = self.consumed_registrations.capacity();",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"let ephemeral = crypto_kx::KeyPair::generate().ok()?;",
+				"let pq_pub =",
+				"self.consumed_registrations.try_reserve(1).ok()?;\n\t\tlet pq_pub =",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, binding, expression) in [
+		(
+			"registration_server_dh2_moves_before_status_gate",
+			"dh2",
+			"crypto_scalarmult::scalarmult(&id_kex_sk, beacon_prekey.as_bytes()).ok()?.into()",
+		),
+		(
+			"registration_server_dh3_moves_before_status_gate",
+			"dh3",
+			"crypto_scalarmult::scalarmult(&id_kex_sk, beacon_prekey.as_bytes()).ok()?.into()",
+		),
+		(
+			"registration_server_dh4_moves_before_status_gate",
+			"dh4",
+			"crypto_scalarmult::scalarmult(&id_kex_sk, beacon_onetime.as_bytes()).ok()?.into()",
+		),
+	] {
+		assert_registration_lifecycle_rejected(
+			name,
+			"registration Server validate-reserve-derive-consume order",
+			|snapshot| {
+				let original = if binding == "dh2" {
+					format!("let {binding}: DhSecret =")
+				} else {
+					format!("let {binding}: DhSecret = crypto_scalarmult::scalarmult(")
+				};
+				let renamed = original.replacen(binding, &format!("{binding}_after_gate"), 1);
+				replace_once_after(
+					&mut snapshot.adapter_server,
+					"fn get_shared_secret",
+					&original,
+					&renamed,
+				);
+				replace_once_after(
+					&mut snapshot.adapter_server,
+					"fn get_shared_secret",
+					"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
+					&format!(
+						"let {binding}: DhSecret = {expression};\n\t\tverified_pqxdh::validate_registration_status(registration_status).ok()?;"
+					),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_registration_lifecycle_rejected(
+		"registration_server_root_derivation_uses_registration_id",
+		"registration Server validate-reserve-derive-consume order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn get_shared_secret",
+				"derive_root_key_input(pending.root_key_input_mut())?",
+				"derive_root_key_input(&mut registration_id)?",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_server_consumes_before_root_derivation",
+		"registration Server validate-reserve-derive-consume order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn get_shared_secret",
+				"let inserted = self.consumed_registrations.insert(registration_id);\n\t\tdebug_assert!(inserted);",
+				"let _insert_moved = inserted;",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"let derived_secret = derive_root_key_input(pending.root_key_input_mut())?;",
+				"let derived_secret = derive_root_key_input(pending.root_key_input_mut())?;",
+				"let inserted = self.consumed_registrations.insert(registration_id);\n\t\tdebug_assert!(inserted);\n\t\tlet derived_secret = derive_root_key_input(pending.root_key_input_mut())?;",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_server_consumes_different_id_before_crypto",
+		"registration Server consumed-ID insertion family count changed",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn get_shared_secret",
+				"verified_pqxdh::validate_registration_status(registration_status).ok()?;",
+				"self.consumed_registrations.insert([0; verified_pqxdh::REGISTRATION_ID_SIZE]);\n\t\tverified_pqxdh::validate_registration_status(registration_status).ok()?;",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_server_explicit_failure_after_consumption",
+		"registration explicit failure moved after consumption insertion",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"let inserted = self.consumed_registrations.insert(registration_id);",
+				"debug_assert!(inserted);",
+				"debug_assert!(inserted);\n\t\tif !inserted { return None; }",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_server_fallible_work_after_consumption",
+		"registration fallible work moved after consumption insertion",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"let inserted = self.consumed_registrations.insert(registration_id);",
+				"debug_assert!(inserted);",
+				"debug_assert!(inserted);\n\t\tlet _late = Some(())?;",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_response_failure_removes_consumed_id",
+		"registration replay-set mutation during later response construction",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"Some(RegistrationOutput {",
+				"let control = self.control;",
+				"self.consumed_registrations.clear();\n\t\tlet control = self.control;",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_guard_first_identity_not_publicly_bound",
+			"=beacon_identity,\n      accepted_init:",
+			"accepted_identity: bitstring,\n      accepted_init:",
+			"registration replay first public input",
+		),
+		(
+			"registration_guard_first_init_type_changes",
+			"accepted_init: beaconcrypt_core__pqxdh__t_InitKex",
+			"accepted_init: bitstring",
+			"registration replay first public input",
+		),
+		(
+			"registration_guard_consumed_event_uses_replay_init",
+			"accepted_init,\n    accepted_registration_id,",
+			"replay_init,\n    accepted_registration_id,",
+			"registration replay consumed event",
+		),
+		(
+			"registration_guard_first_reply_is_consumed",
+			"out(first_reply, replay_fresh());",
+			"out(first_reply, replay_consumed());",
+			"registration replay first Fresh reply",
+		),
+		(
+			"registration_guard_later_identity_not_bound",
+			"=beacon_identity,\n      replay_init:",
+			"replay_identity: bitstring,\n      replay_init:",
+			"registration replay replicated later input",
+		),
+		(
+			"registration_guard_later_reply_is_fresh",
+			"out(replay_reply, replay_consumed()).",
+			"out(replay_reply, replay_fresh()).",
+			"registration replay later Consumed reply",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let RegistrationReplayGuard(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+	assert_registration_lifecycle_rejected(
+		"registration_guard_first_input_is_replicated",
+		"registration replay first input replication",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let RegistrationReplayGuard(",
+				"  in(\n    replay_requests,",
+				"  !in(\n    replay_requests,",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_guard_later_input_loses_replication",
+		"registration replay replicated later input",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"out(first_reply, replay_fresh());",
+				"  !in(\n    replay_requests,",
+				"  in(\n    replay_requests,",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_guard_consumed_event_moves_after_fresh_reply",
+		"registration replay Fresh-to-Consumed owner order",
+		|snapshot| {
+			let event = "  event RegistrationConsumed(\n    server_identity,\n    beacon_identity,\n    accepted_init,\n    accepted_registration_id,\n    origin\n  );\n";
+			replace_once_after(
+				&mut snapshot.environment,
+				"let RegistrationReplayGuard(",
+				event,
+				"",
+			);
+			replace_once_after(
+				&mut snapshot.environment,
+				"out(first_reply, replay_fresh());",
+				"out(first_reply, replay_fresh());",
+				&format!("out(first_reply, replay_fresh());\n{event}"),
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_honest_guard_uses_wrong_identity",
+			"RegistrationReplayGuard(\n    server_identity,\n    beacon_identity,",
+			"RegistrationReplayGuard(\n    server_identity,\n    beacon_prekey,",
+			"registration honest replay owner",
+		),
+		(
+			"registration_honest_guard_is_replicated",
+			"  RegistrationReplayGuard(\n",
+			"  !RegistrationReplayGuard(\n",
+			"registration replicated honest replay owner",
+		),
+		(
+			"registration_honest_bundle_is_replicated",
+			"  out(\n    c,\n    signed_init_kex(",
+			"  !out(\n    c,\n    signed_init_kex(",
+			"registration replicated honest signed bundle",
+		),
+		(
+			"registration_honest_guard_and_bundle_are_sequential",
+			"  )\n  |\n  out(\n    c,\n    signed_init_kex(",
+			"  );\n  out(\n    c,\n    signed_init_kex(",
+			"registration honest parallel bundle-and-guard topology",
+		),
+		(
+			"registration_honest_bundle_identity_uses_prekey",
+			"tag_ed25519(beacon_identity),",
+			"tag_ed25519(beacon_prekey),",
+			"registration honest single signed bundle",
+		),
+		(
+			"registration_honest_bundle_prekey_uses_one_time",
+			"sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),",
+			"sign(tag_x25519_prekey(beacon_one_time), beacon_identity_secret),",
+			"registration honest single signed bundle",
+		),
+		(
+			"registration_honest_bundle_one_time_uses_prekey",
+			"sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),",
+			"sign(tag_x25519_one_time(beacon_prekey), beacon_identity_secret),",
+			"registration honest single signed bundle",
+		),
+		(
+			"registration_honest_bundle_pq_uses_one_time",
+			"sign(tag_mlkem768(beacon_pq), beacon_identity_secret)",
+			"sign(tag_mlkem768(beacon_one_time), beacon_identity_secret)",
+			"registration honest single signed bundle",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			let marker = if name.starts_with("registration_honest_bundle_") {
+				"  out(\n    c,\n    signed_init_kex("
+			} else {
+				"let HonestBeacon("
+			};
+			replace_once_after(&mut snapshot.environment, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_registration_lifecycle_rejected(
+		"registration_honest_bundle_is_duplicated",
+		"registration honest single signed bundle",
+		|snapshot| {
+			let output = "  out(\n    c,\n    signed_init_kex(\n      tag_ed25519(beacon_identity),\n      sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),\n      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),\n      sign(tag_mlkem768(beacon_pq), beacon_identity_secret)\n    )\n  );";
+			replace_once_after(
+				&mut snapshot.environment,
+				"let HonestBeacon(",
+				output,
+				&format!("{output}\n{output}"),
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_honest_different_guard_is_duplicated",
+		"registration honest replay-owner family count changed",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let HonestBeacon(",
+				"  RegistrationReplayGuard(\n    server_identity,",
+				"  RegistrationReplayGuard(server_identity, beacon_prekey, registration_session)\n  |\n  RegistrationReplayGuard(\n    server_identity,",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_honest_different_bundle_is_duplicated",
+		"registration honest signed-bundle family count changed",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let HonestBeacon(",
+				"  out(\n    c,\n    signed_init_kex(",
+				"  out(c, signed_init_kex(tag_ed25519(beacon_prekey), signed_prekey, signed_one_time, signed_pq));\n  out(\n    c,\n    signed_init_kex(",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_server_role_replay_request_uses_prekey",
+			"(beacon_identity, core_init, registration_id, replay_reply)",
+			"(beacon_prekey, core_init, registration_id, replay_reply)",
+			"registration Server public replay request",
+		),
+		(
+			"registration_server_role_replay_request_uses_wire_init",
+			"(beacon_identity, core_init, registration_id, replay_reply)",
+			"(beacon_identity, incoming_init, registration_id, replay_reply)",
+			"registration Server public replay request",
+		),
+		(
+			"registration_server_role_replay_request_uses_root",
+			"(beacon_identity, core_init, registration_id, replay_reply)",
+			"(beacon_identity, core_init, root, replay_reply)",
+			"registration Server public replay request",
+		),
+		(
+			"registration_server_role_accepts_consumed",
+			"if replay_result = replay_fresh() then",
+			"if replay_result = replay_consumed() then",
+			"registration symbolic derive-consume-accept-abort order",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, "let Server(", from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_registration_lifecycle_rejected(
+		"registration_server_role_root_moves_after_guard",
+		"registration symbolic derive-consume-accept-abort order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let Server(",
+				"let root = pqxdh_root(",
+				"let root_before_guard = pqxdh_root(",
+			);
+			replace_once_after(
+				&mut snapshot.environment,
+				"if replay_result = replay_fresh() then",
+				"if replay_result = replay_fresh() then",
+				"if replay_result = replay_fresh() then\n  let root = pqxdh_root(root_input) in",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_registration_lifecycle_rejected(
+		"registration_server_role_abort_moves_before_guard",
+		"registration symbolic derive-consume-accept-abort order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.environment,
+				"let Server(",
+				"event ServerResponseAborted(",
+				"event ServerResponseAbortedAfterGuard(",
+			);
+			replace_once_after(
+				&mut snapshot.environment,
+				"out(\n    replay_requests,",
+				"out(\n    replay_requests,",
+				"event ServerResponseAborted(\n    server_identity,\n    beacon_identity,\n    core_init,\n    registration_id,\n    root_input,\n    root,\n    registration_session\n  );\n  out(\n    replay_requests,",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"registration_malicious_server_adds_replay_guard",
+			"  in(c, registration_control: bitstring);",
+			"  RegistrationReplayGuard(server_identity, beacon_identity, registration_session) |\n  in(c, registration_control: bitstring);",
+			"registration malicious replay guard",
+		),
+		(
+			"registration_malicious_server_requires_replay_fresh",
+			"  in(c, registration_control: bitstring);",
+			"  if replay_fresh() = replay_consumed() then\n  in(c, registration_control: bitstring);",
+			"registration malicious replay guard",
+		),
+		(
+			"registration_malicious_server_drops_direct_continue",
+			"let registration_continue(=registration_id) = registration_control in",
+			"let registration_continue(replayed_registration_id) = registration_control in",
+			"registration malicious direct response path",
+		),
+	] {
+		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, "let MaliciousServer()", from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (call_index, label) in [(0usize, "old"), (1usize, "new")] {
+		for (argument_index, replacement) in [
+			(0usize, "tag_ed25519(MALICIOUS_TASK_SECRET)"),
+			(
+				1usize,
+				"sign(tag_x25519_prekey(MALICIOUS_TASK_SECRET), beacon_identity_secret)",
+			),
+			(
+				2usize,
+				"sign(tag_x25519_one_time(MALICIOUS_TASK_SECRET), beacon_identity_secret)",
+			),
+			(
+				3usize,
+				"sign(tag_mlkem768(MALICIOUS_TASK_SECRET), beacon_identity_secret)",
+			),
+		] {
+			assert_registration_lifecycle_rejected(
+				&format!("registration_hb49_{label}_bundle_argument_{argument_index}"),
+				&format!("registration HB-49 {label} bundle"),
+				|snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.mlkem_reencapsulation_control,
+						"let KemSameIdentityMultiEpoch()",
+						"kem_epoch_bundle",
+						call_index,
+						argument_index,
+						replacement,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	for (name, from, to) in [
+		(
+			"registration_hb49_new_pq_reuses_old_key",
+			"let pqpk_new = mlkem_public(pqsk_new) in",
+			"let pqpk_new = mlkem_public(pqsk_old) in",
+		),
+		(
+			"registration_hb49_bundle_publication_order_reverses",
+			"out(kem_multi_epoch_channel, bundle_old);\n  out(kem_multi_epoch_channel, bundle_new);",
+			"out(kem_multi_epoch_channel, bundle_new);\n  out(kem_multi_epoch_channel, bundle_old);",
+		),
+	] {
+		assert_registration_lifecycle_rejected(
+			name,
+			"registration HB-49 same-classical-material PQ-only rotation fixture",
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.mlkem_reencapsulation_control,
+					"let KemSameIdentityMultiEpoch()",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, REGISTRATION_LIFECYCLE_MUTATION_COUNT);
 }
 
 #[test]
