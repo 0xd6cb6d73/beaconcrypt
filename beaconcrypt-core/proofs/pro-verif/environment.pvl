@@ -5,6 +5,7 @@
 (* Wire adapters and event vocabulary                                     *)
 (**************************************************************************)
 
+(* @beaconcrypt-phase1-v1 signed_init_kex.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq *)
 fun signed_init_kex(
   bitstring,
   bitstring,

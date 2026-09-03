@@ -24,6 +24,8 @@ const ADAPTER_RATCHET: &str = include_str!("../../beaconcrypt/src/ratchet.rs");
 const ADAPTER_SHARED: &str = include_str!("../../beaconcrypt/src/shared.rs");
 const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
 const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
+const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
+const PHASE1_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase1.capnp");
 const PHASE2_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase2.capnp");
 
 const FACT_PREFIX: &str = "(* @beaconcrypt-fidelity-v1 ";
@@ -83,6 +85,24 @@ const EXPECTED_FACTS: &[&str] = &[
 	"ctx.sequence_encoding=le64",
 	"ctx.sender_id_encoding=le64",
 	"ctx.label=none",
+	"phase1.init_kex.constructor=signed_init_kex",
+	"phase1.init_kex.field_count=4",
+	"phase1.init_kex.field.0=identityKey@0:encoded_ed25519_identity",
+	"phase1.init_kex.field.1=preKey@1:signed_tagged_x25519_prekey",
+	"phase1.init_kex.field.2=oneTimeKey@2:signed_tagged_x25519_one_time",
+	"phase1.init_kex.field.3=pqKey@3:signed_tagged_mlkem768_public_key",
+	"phase1.signature.primitive=ed25519",
+	"phase1.signature.format=attached(signature||encoded_key)",
+	"phase1.init_kex.beacon_writes=identityKey:identity,preKey:signed_prekey,oneTimeKey:signed_one_time,pqKey:signed_pq",
+	"phase1.init_kex.beacon_signs=preKey:tag_x25519_prekey,oneTimeKey:tag_x25519_one_time,pqKey:tag_mlkem768",
+	"phase1.init_kex.server_reads=identityKey,pqKey,preKey,oneTimeKey",
+	"phase1.init_kex.server.verifies=pqKey:pq_verified,preKey:prekey_verified,oneTimeKey:onetime_verified;identity:remote_id",
+	"phase1.init_kex.server.from_encoded=encoded_identity,prekey_verified,onetime_verified,pq_verified",
+	"phase1.init_kex.server.validates=tag_ed25519,tag_x25519_prekey,tag_x25519_one_time,tag_mlkem768",
+	"phase1.init_kex.symbolic.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq",
+	"phase1.init_kex.symbolic.producers=honest,malicious,active_quantum",
+	"phase1.init_kex.symbolic.consumers=server,malicious_server,active_quantum",
+	"phase1.init_kex.symbolic.validation=identity,prekey,one_time,pq",
 	"phase2.response.constructor=kex_response",
 	"phase2.response.field_count=5",
 	"phase2.response.field.0=identityKey@0:server_identity",
@@ -104,6 +124,8 @@ struct Snapshot {
 	environment: String,
 	active_quantum_witness: String,
 	makefile: String,
+	core_pqxdh: String,
+	phase1_schema: String,
 	phase2_schema: String,
 	adapter_server: String,
 	adapter_beacon: String,
@@ -117,6 +139,8 @@ impl Snapshot {
 			environment: ENVIRONMENT_MODEL.to_owned(),
 			active_quantum_witness: ACTIVE_QUANTUM_WITNESS.to_owned(),
 			makefile: CORE_MAKEFILE.to_owned(),
+			core_pqxdh: CORE_PQXDH.to_owned(),
+			phase1_schema: PHASE1_SCHEMA.to_owned(),
 			phase2_schema: PHASE2_SCHEMA.to_owned(),
 			adapter_server: ADAPTER_SERVER.to_owned(),
 			adapter_beacon: ADAPTER_BEACON.to_owned(),
@@ -397,6 +421,209 @@ fn require_once(source: &str, wanted: &str, label: &str) -> Result<(), String> {
 	}
 }
 
+fn require_ordered_once(source: &str, wanted: &[&str], label: &str) -> Result<(), String> {
+	let mut cursor = 0usize;
+	for item in wanted {
+		let occurrences = count(source, item);
+		if occurrences != 1 {
+			return Err(format!(
+				"{label} changed: expected one exact occurrence of {item}, found {occurrences}"
+			));
+		}
+		let relative = source[cursor..]
+			.find(item)
+			.ok_or_else(|| format!("{label} changed: {item} is out of order"))?;
+		cursor += relative + item.len();
+	}
+	Ok(())
+}
+
+fn validate_phase1_source(snapshot: &Snapshot) -> Result<(), String> {
+	let schema = compact(&uncommented_capnp(&snapshot.phase1_schema));
+	let expected_schema = "@0xd840dedb1017061a;structInitKex{identityKey@0:Data;preKey@1:Data;oneTimeKey@2:Data;pqKey@3:Data;}";
+	if schema != expected_schema {
+		return Err(format!(
+			"Phase-1 InitKex schema changed: expected {expected_schema}, found {schema}"
+		));
+	}
+
+	let core_start = rust_body(&snapshot.core_pqxdh, "beacon_start")?;
+	for (wanted, label) in [
+		(
+			"identity_key:tag_sign_key(inputs.identity_public_key)",
+			"Phase-1 core identity encoding",
+		),
+		(
+			"prekey:tag_x25519_key(KEY_ROLE_PREKEY,inputs.prekey_public_key)",
+			"Phase-1 core prekey encoding",
+		),
+		(
+			"one_time_key:tag_x25519_key(KEY_ROLE_ONE_TIME,coins.one_time_public_key)",
+			"Phase-1 core one-time encoding",
+		),
+		(
+			"pq_key:tag_mlkem768_key(inputs.pq_public_key)",
+			"Phase-1 core ML-KEM encoding",
+		),
+	] {
+		require_once(&core_start, wanted, label)?;
+	}
+	require_ordered_once(
+		&core_start,
+		&[
+			"identity_key:tag_sign_key(inputs.identity_public_key)",
+			"prekey:tag_x25519_key(KEY_ROLE_PREKEY,inputs.prekey_public_key)",
+			"one_time_key:tag_x25519_key(KEY_ROLE_ONE_TIME,coins.one_time_public_key)",
+			"pq_key:tag_mlkem768_key(inputs.pq_public_key)",
+		],
+		"Phase-1 core InitKex field order",
+	)?;
+
+	let beacon = rust_body(&snapshot.adapter_beacon, "get_registration_bundle")?;
+	for (function, expected, label) in [
+		(
+			"bundle.set_identity_key",
+			"started.message.identity_key()",
+			"Phase-1 Beacon identity setter mapping",
+		),
+		(
+			"bundle.set_pre_key",
+			"&prekey_sig",
+			"Phase-1 Beacon prekey setter mapping",
+		),
+		(
+			"bundle.set_one_time_key",
+			"&onetime_sig",
+			"Phase-1 Beacon one-time setter mapping",
+		),
+		(
+			"bundle.set_pq_key",
+			"&pq_sig",
+			"Phase-1 Beacon ML-KEM setter mapping",
+		),
+	] {
+		require_one_call(&beacon, function, &[expected], label)?;
+	}
+	let sign_calls = all_arguments(&beacon, "crypto_sign::sign")?;
+	let expected_sign_calls = [
+		["started.message.prekey()", "self.identity_sk()"],
+		["started.message.one_time_key()", "self.identity_sk()"],
+		["started.message.pq_key()", "self.identity_sk()"],
+	]
+	.map(|arguments| arguments.map(str::to_owned).to_vec());
+	if sign_calls != expected_sign_calls {
+		return Err(format!(
+			"Phase-1 Beacon attached-signature inputs changed: {sign_calls:?}"
+		));
+	}
+	require_ordered_once(
+		&beacon,
+		&[
+			"bundle.set_identity_key(started.message.identity_key())",
+			"crypto_sign::sign(started.message.prekey(),self.identity_sk())",
+			"bundle.set_pre_key(&prekey_sig)",
+			"crypto_sign::sign(started.message.one_time_key(),self.identity_sk())",
+			"bundle.set_one_time_key(&onetime_sig)",
+			"crypto_sign::sign(started.message.pq_key(),self.identity_sk())",
+			"bundle.set_pq_key(&pq_sig)",
+		],
+		"Phase-1 Beacon serialization order",
+	)?;
+
+	let server = rust_body(&snapshot.adapter_server, "get_shared_secret")?;
+	for (wanted, label) in [
+		(
+			"letencoded_identity:[u8;verified_pqxdh::ENCODED_SIGN_PUBLIC_KEY_SIZE]=registration.get_identity_key().ok()?.try_into().ok()?;",
+			"Phase-1 Server identity consumer",
+		),
+		(
+			"ifencoded_identity[0]!=verified_pqxdh::SIGN_TYPE_ED25519{returnNone;}",
+			"Phase-1 Server Ed25519 identity tag gate",
+		),
+		(
+			"letremote_id=crypto_sign::PublicKey::from_bytes(&encoded_identity[1..]).ok()?;",
+			"Phase-1 Server identity decoder",
+		),
+		(
+			"letpq_verified=crypto_sign::verify(registration.get_pq_key().ok()?,&remote_id)?;",
+			"Phase-1 Server ML-KEM signature consumer",
+		),
+		(
+			"letprekey_verified=crypto_sign::verify(registration.get_pre_key().ok()?,&remote_id)?;",
+			"Phase-1 Server prekey signature consumer",
+		),
+		(
+			"letonetime_verified=crypto_sign::verify(registration.get_one_time_key().ok()?,&remote_id)?;",
+			"Phase-1 Server one-time signature consumer",
+		),
+		(
+			"letverified_registration=verified_pqxdh::validate_init_kex(init_kex).ok()?;",
+			"Phase-1 Server typed tag validation",
+		),
+	] {
+		require_once(&server, wanted, label)?;
+	}
+	require_one_call(
+		&server,
+		"verified_pqxdh::InitKex::from_encoded",
+		&[
+			"encoded_identity",
+			"prekey_verified.as_slice().try_into().ok()?",
+			"onetime_verified.as_slice().try_into().ok()?",
+			"pq_verified.as_slice().try_into().ok()?",
+			"",
+		],
+		"Phase-1 Server from_encoded mapping",
+	)?;
+	require_ordered_once(
+		&server,
+		&[
+			"registration.get_identity_key()",
+			"encoded_identity[0]!=verified_pqxdh::SIGN_TYPE_ED25519",
+			"crypto_sign::PublicKey::from_bytes(&encoded_identity[1..])",
+			"registration.get_pq_key()",
+			"registration.get_pre_key()",
+			"registration.get_one_time_key()",
+			"verified_pqxdh::InitKex::from_encoded(",
+			"verified_pqxdh::validate_init_kex(init_kex)",
+		],
+		"Phase-1 Server source evaluation order",
+	)?;
+
+	let core_validation = rust_body(&snapshot.core_pqxdh, "validate_init_kex")?;
+	for (wanted, label) in [
+		(
+			"untag_sign_key(message.identity_key)",
+			"Phase-1 core Ed25519 tag validation",
+		),
+		(
+			"untag_x25519_key(message.prekey,KEY_ROLE_PREKEY)",
+			"Phase-1 core X25519 prekey role validation",
+		),
+		(
+			"untag_x25519_key(message.one_time_key,KEY_ROLE_ONE_TIME)",
+			"Phase-1 core X25519 one-time role validation",
+		),
+		(
+			"untag_mlkem768_key(message.pq_key)",
+			"Phase-1 core ML-KEM tag validation",
+		),
+	] {
+		require_once(&core_validation, wanted, label)?;
+	}
+	require_ordered_once(
+		&core_validation,
+		&[
+			"untag_sign_key(message.identity_key)",
+			"untag_x25519_key(message.prekey,KEY_ROLE_PREKEY)",
+			"untag_x25519_key(message.one_time_key,KEY_ROLE_ONE_TIME)",
+			"untag_mlkem768_key(message.pq_key)",
+		],
+		"Phase-1 core tag-validation order",
+	)?;
+	Ok(())
+}
+
 fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
 	let schema = compact(&uncommented_capnp(&snapshot.phase2_schema));
 	require(
@@ -474,6 +701,98 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
 	let environment = compact(&uncommented_pv(&snapshot.environment)?);
 	let active_quantum_witness = compact(&uncommented_pv(&snapshot.active_quantum_witness)?);
+	require_once(
+		&snapshot.environment,
+		"(* @beaconcrypt-phase1-v1 signed_init_kex.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq *)\nfun signed_init_kex(",
+		"Phase-1 symbolic constructor semantic order",
+	)?;
+	require_once(
+		&environment,
+		"funsigned_init_kex(bitstring,bitstring,bitstring,bitstring):bitstring[data].",
+		"Phase-1 symbolic constructor declaration",
+	)?;
+	require_once(
+		&crypto,
+		"funsign(bitstring,bitstring):bitstring.",
+		"Phase-1 symbolic Ed25519 signature declaration",
+	)?;
+	require_once(
+		&crypto,
+		"reducforallmessage:bitstring,signing_key:bitstring;verify_signature(sign(message,signing_key),ed_public(signing_key))=message.",
+		"Phase-1 symbolic attached-signature verification",
+	)?;
+
+	let honest_producer = "signed_init_kex(tag_ed25519(beacon_identity),sign(tag_x25519_prekey(beacon_prekey),beacon_identity_secret),sign(tag_x25519_one_time(beacon_one_time),beacon_identity_secret),sign(tag_mlkem768(beacon_pq),beacon_identity_secret))";
+	if count(&environment, honest_producer) != 2 {
+		return Err(format!(
+			"Phase-1 symbolic honest/malicious producer order changed: expected two exact producers, found {}",
+			count(&environment, honest_producer)
+		));
+	}
+	let server_consumer = "letsigned_init_kex(encoded_identity,signed_prekey,signed_one_time,signed_pq)=incoming_initin";
+	if count(&environment, server_consumer) != 2 {
+		return Err(format!(
+			"Phase-1 symbolic Server consumer order changed: expected two exact consumers, found {}",
+			count(&environment, server_consumer)
+		));
+	}
+	require_once(
+		&active_quantum_witness,
+		server_consumer,
+		"Phase-1 active-quantum consumer order",
+	)?;
+	require_once(
+		&active_quantum_witness,
+		"signed_init_kex(tag_ed25519(beacon_identity),sign(tag_x25519_prekey(forged_prekey),beacon_identity_secret),sign(tag_x25519_one_time(forged_one_time),beacon_identity_secret),sign(tag_mlkem768(forged_pq),beacon_identity_secret))",
+		"Phase-1 active-quantum producer order",
+	)?;
+
+	for (wanted, expected_count, label) in [
+		(
+			"lettag_ed25519(beacon_identity:bitstring)=encoded_identityin",
+			2,
+			"Phase-1 symbolic identity validation",
+		),
+		(
+			"lettag_x25519_prekey(beacon_prekey:bitstring)=verify_signature(signed_prekey,beacon_identity)in",
+			2,
+			"Phase-1 symbolic prekey validation",
+		),
+		(
+			"lettag_x25519_one_time(beacon_one_time:bitstring)=verify_signature(signed_one_time,beacon_identity)in",
+			2,
+			"Phase-1 symbolic one-time validation",
+		),
+		(
+			"lettag_mlkem768(beacon_pq:bitstring)=verify_signature(signed_pq,beacon_identity)in",
+			2,
+			"Phase-1 symbolic ML-KEM validation",
+		),
+		(
+			"letcore_init=beaconcrypt_core__pqxdh__InitKex(encoded_identity,tag_x25519_prekey(beacon_prekey),tag_x25519_one_time(beacon_one_time),tag_mlkem768(beacon_pq))in",
+			2,
+			"Phase-1 symbolic Server core mapping",
+		),
+		(
+			"letcore_init=beaconcrypt_core__pqxdh__InitKex(tag_ed25519(beacon_identity),tag_x25519_prekey(beacon_prekey),tag_x25519_one_time(beacon_one_time),tag_mlkem768(beacon_pq))in",
+			1,
+			"Phase-1 symbolic honest core mapping",
+		),
+	] {
+		let actual = count(&environment, wanted);
+		if actual != expected_count {
+			return Err(format!(
+				"{label} changed: expected {expected_count} exact occurrence(s), found {actual}"
+			));
+		}
+	}
+	let symbolic_gate_order = "lettag_ed25519(beacon_identity:bitstring)=encoded_identityinlettag_x25519_prekey(beacon_prekey:bitstring)=verify_signature(signed_prekey,beacon_identity)inlettag_x25519_one_time(beacon_one_time:bitstring)=verify_signature(signed_one_time,beacon_identity)inlettag_mlkem768(beacon_pq:bitstring)=verify_signature(signed_pq,beacon_identity)inletcore_init=beaconcrypt_core__pqxdh__InitKex(encoded_identity,tag_x25519_prekey(beacon_prekey),tag_x25519_one_time(beacon_one_time),tag_mlkem768(beacon_pq))in";
+	if count(&environment, symbolic_gate_order) != 2 {
+		return Err(format!(
+			"Phase-1 symbolic pure-gate evaluation order changed: expected two exact blocks, found {}",
+			count(&environment, symbolic_gate_order)
+		));
+	}
 	for declaration in [
 		"typekey_id.",
 		"typesequence.",
@@ -823,6 +1142,7 @@ fn validate_adapters() -> Result<(), String> {
 fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_manifest(&snapshot.interface)?;
 	validate_pv(snapshot)?;
+	validate_phase1_source(snapshot)?;
 	validate_phase2_source(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
@@ -842,6 +1162,82 @@ fn mutate_fact(source: &mut String, key: &str, value: &str) {
 	let value_start = start + marker.len();
 	let value_end = value_start + source[value_start..].find(FACT_SUFFIX).unwrap();
 	source.replace_range(value_start..value_end, value);
+}
+
+fn replace_call(source: &mut String, function: &str, occurrence: usize, arguments: &[String]) {
+	let marker = format!("{function}(");
+	let mut offset = 0usize;
+	let mut found = None;
+	for index in 0..=occurrence {
+		let relative = source[offset..]
+			.find(&marker)
+			.unwrap_or_else(|| panic!("mutation call missing: {function} occurrence {occurrence}"));
+		let start = offset + relative;
+		if index == occurrence {
+			found = Some(start);
+			break;
+		}
+		let (_, end) = parse_call(source, start + marker.len() - 1).unwrap();
+		offset = end;
+	}
+	let start = found.unwrap();
+	let (_, end) = parse_call(source, start + marker.len() - 1).unwrap();
+	source.replace_range(start..end, &format!("{function}({})", arguments.join(",")));
+}
+
+fn phase1_permutations() -> Vec<[usize; 4]> {
+	let mut permutations = Vec::new();
+	for first in 0..4 {
+		for second in 0..4 {
+			for third in 0..4 {
+				for fourth in 0..4 {
+					let candidate = [first, second, third, fourth];
+					if candidate
+						.iter()
+						.enumerate()
+						.all(|(index, value)| !candidate[..index].contains(value))
+					{
+						permutations.push(candidate);
+					}
+				}
+			}
+		}
+	}
+	permutations
+}
+
+fn phase1_transpositions() -> Vec<[usize; 4]> {
+	let mut transpositions = Vec::new();
+	for left in 0..4 {
+		for right in left + 1..4 {
+			let mut permutation = [0, 1, 2, 3];
+			permutation.swap(left, right);
+			transpositions.push(permutation);
+		}
+	}
+	transpositions
+}
+
+fn permute_phase1(arguments: &[&str; 4], permutation: [usize; 4]) -> Vec<String> {
+	permutation
+		.into_iter()
+		.map(|index| arguments[index].to_owned())
+		.collect()
+}
+
+fn replace_phase1_schema(snapshot: &mut Snapshot, fields: &[(&str, usize)]) {
+	let start = snapshot.phase1_schema.find("struct InitKex {").unwrap();
+	let relative_end = snapshot.phase1_schema[start..].find("\n}").unwrap();
+	let end = start + relative_end + 2;
+	let declarations = fields
+		.iter()
+		.map(|(name, ordinal)| format!("    {name} @{ordinal} :Data;"))
+		.collect::<Vec<_>>()
+		.join("\n");
+	snapshot.phase1_schema.replace_range(
+		start..end,
+		&format!("struct InitKex {{\n{declarations}\n}}"),
+	);
 }
 
 fn assert_rejected(name: &str, diagnostic: &str, mutate: impl FnOnce(&mut Snapshot)) {
@@ -1028,6 +1424,552 @@ fn compiled_core_matches_the_canonical_transcript() {
 	assert_eq!(&bytes[197..213], &tag);
 	assert_eq!(&bytes[213..221], &sequence.to_le_bytes());
 	assert_eq!(&bytes[221..229], &sender_id.to_le_bytes());
+}
+
+const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 163;
+
+#[test]
+fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	for key in [
+		"phase1.init_kex.constructor",
+		"phase1.init_kex.field_count",
+		"phase1.init_kex.field.0",
+		"phase1.init_kex.field.1",
+		"phase1.init_kex.field.2",
+		"phase1.init_kex.field.3",
+		"phase1.signature.primitive",
+		"phase1.signature.format",
+		"phase1.init_kex.beacon_writes",
+		"phase1.init_kex.beacon_signs",
+		"phase1.init_kex.server_reads",
+		"phase1.init_kex.server.verifies",
+		"phase1.init_kex.server.from_encoded",
+		"phase1.init_kex.server.validates",
+		"phase1.init_kex.symbolic.fields",
+		"phase1.init_kex.symbolic.producers",
+		"phase1.init_kex.symbolic.consumers",
+		"phase1.init_kex.symbolic.validation",
+	] {
+		let name = format!("changed_{key}");
+		assert_rejected(&name, key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	const SCHEMA_FIELDS: [(&str, usize); 4] = [
+		("identityKey", 0),
+		("preKey", 1),
+		("oneTimeKey", 2),
+		("pqKey", 3),
+	];
+	let permutations = phase1_permutations();
+	assert_eq!(permutations.len(), 24);
+	for (index, permutation) in permutations
+		.iter()
+		.copied()
+		.filter(|permutation| permutation != &[0, 1, 2, 3])
+		.enumerate()
+	{
+		let fields = permutation.map(|field| SCHEMA_FIELDS[field]);
+		let name = format!("phase1_schema_same_typed_permutation_{index}");
+		assert_rejected(&name, "Phase-1 InitKex schema", move |snapshot| {
+			replace_phase1_schema(snapshot, &fields);
+		});
+		mutation_count += 1;
+	}
+	for omitted in 0..4 {
+		let fields = SCHEMA_FIELDS
+			.iter()
+			.enumerate()
+			.filter(|(index, _)| *index != omitted)
+			.enumerate()
+			.map(|(ordinal, (_, (name, _)))| (*name, ordinal))
+			.collect::<Vec<_>>();
+		let name = format!("phase1_schema_omits_field_{omitted}");
+		assert_rejected(&name, "Phase-1 InitKex schema", move |snapshot| {
+			replace_phase1_schema(snapshot, &fields);
+		});
+		mutation_count += 1;
+	}
+	for (original, renamed) in [
+		("identityKey", "renamedIdentityKey"),
+		("preKey", "renamedPreKey"),
+		("oneTimeKey", "renamedOneTimeKey"),
+		("pqKey", "renamedPqKey"),
+	] {
+		let name = format!("phase1_schema_renames_{original}");
+		assert_rejected(&name, "Phase-1 InitKex schema", |snapshot| {
+			replace_once(&mut snapshot.phase1_schema, original, renamed);
+		});
+		mutation_count += 1;
+	}
+	for (index, permutation) in phase1_transpositions().into_iter().enumerate() {
+		let fields = SCHEMA_FIELDS.map(|(name, _)| {
+			(
+				name,
+				permutation[SCHEMA_FIELDS
+					.iter()
+					.position(|(candidate, _)| candidate == &name)
+					.unwrap()],
+			)
+		});
+		let name = format!("phase1_schema_ordinal_drift_{index}");
+		assert_rejected(&name, "Phase-1 InitKex schema", move |snapshot| {
+			replace_phase1_schema(snapshot, &fields);
+		});
+		mutation_count += 1;
+	}
+
+	let beacon_setters = [
+		(
+			"bundle.set_identity_key",
+			"started.message.identity_key()",
+			"Phase-1 Beacon identity setter mapping",
+		),
+		(
+			"bundle.set_pre_key",
+			"&prekey_sig",
+			"Phase-1 Beacon prekey setter mapping",
+		),
+		(
+			"bundle.set_one_time_key",
+			"&onetime_sig",
+			"Phase-1 Beacon one-time setter mapping",
+		),
+		(
+			"bundle.set_pq_key",
+			"&pq_sig",
+			"Phase-1 Beacon ML-KEM setter mapping",
+		),
+	];
+	let beacon_payloads = [
+		"started.message.identity_key()",
+		"&crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?",
+		"&crypto_sign::sign(started.message.one_time_key(), self.identity_sk()).ok()?",
+		"&crypto_sign::sign(started.message.pq_key(), self.identity_sk()).ok()?",
+	];
+	for (setter_index, (function, canonical, diagnostic)) in beacon_setters.iter().enumerate() {
+		for (payload_index, payload) in beacon_payloads.iter().enumerate() {
+			if setter_index == payload_index {
+				continue;
+			}
+			let name = format!("phase1_beacon_setter_{setter_index}_uses_{payload_index}");
+			let from = format!("{function}({canonical});");
+			let to = format!("{function}({payload});");
+			assert_rejected(&name, diagnostic, |snapshot| {
+				replace_once(&mut snapshot.adapter_beacon, &from, &to);
+			});
+			mutation_count += 1;
+		}
+	}
+	let signed_inputs = [
+		"started.message.prekey()",
+		"started.message.one_time_key()",
+		"started.message.pq_key()",
+	];
+	for (signature_index, canonical) in signed_inputs.iter().enumerate() {
+		for (input_index, replacement) in signed_inputs.iter().enumerate() {
+			if signature_index == input_index {
+				continue;
+			}
+			let name = format!("phase1_beacon_signature_{signature_index}_uses_{input_index}");
+			let from = format!("crypto_sign::sign({canonical}, self.identity_sk())");
+			let to = format!("crypto_sign::sign({replacement}, self.identity_sk())");
+			assert_rejected(
+				&name,
+				"Phase-1 Beacon attached-signature inputs",
+				|snapshot| {
+					replace_once(&mut snapshot.adapter_beacon, &from, &to);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	let server_consumers = [
+		(
+			"registration.get_identity_key()",
+			"Phase-1 Server identity consumer",
+		),
+		(
+			"registration.get_pre_key()",
+			"Phase-1 Server prekey signature consumer",
+		),
+		(
+			"registration.get_one_time_key()",
+			"Phase-1 Server one-time signature consumer",
+		),
+		(
+			"registration.get_pq_key()",
+			"Phase-1 Server ML-KEM signature consumer",
+		),
+	];
+	for (consumer_index, (canonical, diagnostic)) in server_consumers.iter().enumerate() {
+		for (field_index, (replacement, _)) in server_consumers.iter().enumerate() {
+			if consumer_index == field_index {
+				continue;
+			}
+			let name = format!("phase1_server_consumer_{consumer_index}_uses_{field_index}");
+			assert_rejected(&name, diagnostic, |snapshot| {
+				replace_once(&mut snapshot.adapter_server, canonical, replacement);
+			});
+			mutation_count += 1;
+		}
+	}
+	for (name, getter, diagnostic) in [
+		(
+			"phase1_server_pq_verifies_under_local_identity",
+			"registration.get_pq_key().ok()?",
+			"Phase-1 Server ML-KEM signature consumer",
+		),
+		(
+			"phase1_server_prekey_verifies_under_local_identity",
+			"registration.get_pre_key().ok()?",
+			"Phase-1 Server prekey signature consumer",
+		),
+		(
+			"phase1_server_one_time_verifies_under_local_identity",
+			"registration.get_one_time_key().ok()?",
+			"Phase-1 Server one-time signature consumer",
+		),
+	] {
+		let from = format!("crypto_sign::verify({getter}, &remote_id)");
+		let to = format!("crypto_sign::verify({getter}, self.identity_pk())");
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_server, &from, &to);
+		});
+		mutation_count += 1;
+	}
+	let encoded_identity = "encoded_identity";
+	let prekey_verified = "prekey_verified.as_slice().try_into().ok()?";
+	let onetime_verified = "onetime_verified.as_slice().try_into().ok()?";
+	let pq_verified = "pq_verified.as_slice().try_into().ok()?";
+	for (name, arguments) in [
+		(
+			"phase1_from_encoded_duplicates_one_time",
+			[
+				encoded_identity,
+				onetime_verified,
+				onetime_verified,
+				pq_verified,
+			],
+		),
+		(
+			"phase1_from_encoded_duplicates_prekey",
+			[
+				encoded_identity,
+				prekey_verified,
+				prekey_verified,
+				pq_verified,
+			],
+		),
+		(
+			"phase1_from_encoded_swaps_x25519_roles",
+			[
+				encoded_identity,
+				onetime_verified,
+				prekey_verified,
+				pq_verified,
+			],
+		),
+	] {
+		let arguments = arguments.map(str::to_owned);
+		assert_rejected(
+			name,
+			"Phase-1 Server from_encoded mapping",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.adapter_server,
+					"verified_pqxdh::InitKex::from_encoded",
+					0,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let declaration_arguments = [
+		"encoded_identity",
+		"signed_prekey",
+		"signed_one_time",
+		"signed_pq",
+	];
+	let producer_arguments = [
+		"tag_ed25519(beacon_identity)",
+		"sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret)",
+		"sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret)",
+		"sign(tag_mlkem768(beacon_pq), beacon_identity_secret)",
+	];
+	let forged_producer_arguments = [
+		"tag_ed25519(beacon_identity)",
+		"sign(tag_x25519_prekey(forged_prekey), beacon_identity_secret)",
+		"sign(tag_x25519_one_time(forged_one_time), beacon_identity_secret)",
+		"sign(tag_mlkem768(forged_pq), beacon_identity_secret)",
+	];
+	let server_core_arguments = [
+		"encoded_identity",
+		"tag_x25519_prekey(beacon_prekey)",
+		"tag_x25519_one_time(beacon_one_time)",
+		"tag_mlkem768(beacon_pq)",
+	];
+	let honest_core_arguments = [
+		"tag_ed25519(beacon_identity)",
+		"tag_x25519_prekey(beacon_prekey)",
+		"tag_x25519_one_time(beacon_one_time)",
+		"tag_mlkem768(beacon_pq)",
+	];
+	for (index, permutation) in phase1_transpositions().into_iter().enumerate() {
+		let declaration = permute_phase1(&declaration_arguments, permutation);
+		let declaration_value = declaration.join(",");
+		let annotation =
+			"signed_init_kex.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq";
+		let mutated_annotation = format!("signed_init_kex.fields={declaration_value}");
+		assert_rejected(
+			&format!("phase1_symbolic_declaration_transposition_{index}"),
+			"Phase-1 symbolic constructor semantic order",
+			|snapshot| {
+				replace_once(&mut snapshot.environment, annotation, &mutated_annotation);
+			},
+		);
+		mutation_count += 1;
+
+		for (name, occurrence, diagnostic) in [
+			(
+				"honest_producer",
+				1,
+				"Phase-1 symbolic honest/malicious producer order",
+			),
+			(
+				"malicious_producer",
+				2,
+				"Phase-1 symbolic honest/malicious producer order",
+			),
+		] {
+			let arguments = permute_phase1(&producer_arguments, permutation);
+			assert_rejected(
+				&format!("phase1_symbolic_{name}_transposition_{index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_call(
+						&mut snapshot.environment,
+						"signed_init_kex",
+						occurrence,
+						&arguments,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+		let arguments = permute_phase1(&forged_producer_arguments, permutation);
+		assert_rejected(
+			&format!("phase1_symbolic_active_quantum_producer_transposition_{index}"),
+			"Phase-1 active-quantum producer order",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.active_quantum_witness,
+					"signed_init_kex",
+					1,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+
+		for (name, occurrence) in [("server_consumer", 3), ("malicious_server_consumer", 4)] {
+			let arguments = permute_phase1(&declaration_arguments, permutation);
+			assert_rejected(
+				&format!("phase1_symbolic_{name}_transposition_{index}"),
+				"Phase-1 symbolic Server consumer order",
+				move |snapshot| {
+					replace_call(
+						&mut snapshot.environment,
+						"signed_init_kex",
+						occurrence,
+						&arguments,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+		let arguments = permute_phase1(&declaration_arguments, permutation);
+		assert_rejected(
+			&format!("phase1_symbolic_active_quantum_consumer_transposition_{index}"),
+			"Phase-1 active-quantum consumer order",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.active_quantum_witness,
+					"signed_init_kex",
+					0,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+
+		let arguments = permute_phase1(&honest_core_arguments, permutation);
+		assert_rejected(
+			&format!("phase1_symbolic_honest_core_transposition_{index}"),
+			"Phase-1 symbolic honest core mapping",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.environment,
+					"beaconcrypt_core__pqxdh__InitKex",
+					0,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+		for (name, occurrence) in [("server_core", 1), ("malicious_server_core", 2)] {
+			let arguments = permute_phase1(&server_core_arguments, permutation);
+			assert_rejected(
+				&format!("phase1_symbolic_{name}_transposition_{index}"),
+				"Phase-1 symbolic Server core mapping",
+				move |snapshot| {
+					replace_call(
+						&mut snapshot.environment,
+						"beaconcrypt_core__pqxdh__InitKex",
+						occurrence,
+						&arguments,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"phase1_core_prekey_uses_one_time_role",
+			"prekey: tag_x25519_key(KEY_ROLE_PREKEY, inputs.prekey_public_key)",
+			"prekey: tag_x25519_key(KEY_ROLE_ONE_TIME, inputs.prekey_public_key)",
+			"Phase-1 core prekey encoding",
+		),
+		(
+			"phase1_core_one_time_uses_prekey_role",
+			"one_time_key: tag_x25519_key(KEY_ROLE_ONE_TIME, coins.one_time_public_key)",
+			"one_time_key: tag_x25519_key(KEY_ROLE_PREKEY, coins.one_time_public_key)",
+			"Phase-1 core one-time encoding",
+		),
+		(
+			"phase1_core_prekey_validates_one_time_role",
+			"untag_x25519_key(message.prekey, KEY_ROLE_PREKEY)",
+			"untag_x25519_key(message.prekey, KEY_ROLE_ONE_TIME)",
+			"Phase-1 core X25519 prekey role validation",
+		),
+		(
+			"phase1_core_one_time_validates_prekey_role",
+			"untag_x25519_key(message.one_time_key, KEY_ROLE_ONE_TIME)",
+			"untag_x25519_key(message.one_time_key, KEY_ROLE_PREKEY)",
+			"Phase-1 core X25519 one-time role validation",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_pqxdh, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"phase1_server_accepts_mlkem_identity_tag",
+		"Phase-1 Server Ed25519 identity tag gate",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.adapter_server,
+				"encoded_identity[0] != verified_pqxdh::SIGN_TYPE_ED25519",
+				"encoded_identity[0] != verified_pqxdh::KEM_TYPE_MLKEM768",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_server_decodes_identity_with_tag",
+		"Phase-1 Server identity decoder",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.adapter_server,
+				"crypto_sign::PublicKey::from_bytes(&encoded_identity[1..])",
+				"crypto_sign::PublicKey::from_bytes(&encoded_identity[..32])",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_symbolic_signature_verifies_under_x25519_key",
+		"Phase-1 symbolic attached-signature verification",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.crypto,
+				"ed_public(signing_key)) = message",
+				"x25519_public(signing_key)) = message",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_server_reorders_pq_and_prekey_verification",
+		"Phase-1 Server source evaluation order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.adapter_server,
+				"\t\tlet pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id)?;\n\t\tlet prekey_verified = crypto_sign::verify(registration.get_pre_key().ok()?, &remote_id)?;",
+				"\t\tlet prekey_verified = crypto_sign::verify(registration.get_pre_key().ok()?, &remote_id)?;\n\t\tlet pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id)?;",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_symbolic_reorders_prekey_and_one_time_gates",
+		"Phase-1 symbolic pure-gate evaluation order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"  let tag_x25519_prekey(beacon_prekey: bitstring) =\n    verify_signature(signed_prekey, beacon_identity)\n  in\n  let tag_x25519_one_time(beacon_one_time: bitstring) =\n    verify_signature(signed_one_time, beacon_identity)\n  in",
+				"  let tag_x25519_one_time(beacon_one_time: bitstring) =\n    verify_signature(signed_one_time, beacon_identity)\n  in\n  let tag_x25519_prekey(beacon_prekey: bitstring) =\n    verify_signature(signed_prekey, beacon_identity)\n  in",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_beacon_serializes_identity_after_prekey_signature",
+		"Phase-1 Beacon serialization order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.adapter_beacon,
+				"\t\tbundle.set_identity_key(started.message.identity_key());\n\t\tlet prekey_sig = crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?;\n\t\tbundle.set_pre_key(&prekey_sig);",
+				"\t\tlet prekey_sig = crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?;\n\t\tbundle.set_identity_key(started.message.identity_key());\n\t\tbundle.set_pre_key(&prekey_sig);",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_core_reorders_prekey_and_one_time_fields",
+		"Phase-1 core InitKex field order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				"\t\t\tprekey: tag_x25519_key(KEY_ROLE_PREKEY, inputs.prekey_public_key),\n\t\t\tone_time_key: tag_x25519_key(KEY_ROLE_ONE_TIME, coins.one_time_public_key),",
+				"\t\t\tone_time_key: tag_x25519_key(KEY_ROLE_ONE_TIME, coins.one_time_public_key),\n\t\t\tprekey: tag_x25519_key(KEY_ROLE_PREKEY, inputs.prekey_public_key),",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_core_reorders_prekey_and_one_time_validation",
+		"Phase-1 core tag-validation order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				"\tlet Some(prekey) = untag_x25519_key(message.prekey, KEY_ROLE_PREKEY) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};\n\tlet Some(one_time) = untag_x25519_key(message.one_time_key, KEY_ROLE_ONE_TIME) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};",
+				"\tlet Some(one_time) = untag_x25519_key(message.one_time_key, KEY_ROLE_ONE_TIME) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};\n\tlet Some(prekey) = untag_x25519_key(message.prekey, KEY_ROLE_PREKEY) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	assert_eq!(mutation_count, PHASE1_REGISTRATION_MUTATION_COUNT);
 }
 
 #[test]

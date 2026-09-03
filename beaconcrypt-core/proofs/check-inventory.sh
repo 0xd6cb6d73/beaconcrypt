@@ -329,8 +329,10 @@ require_occurrence_count 6 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
-require_line_count 66 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+require_line_count 84 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
 	"canonical production transcript fact"
+require_line_count 18 '^\(\* @beaconcrypt-fidelity-v1 phase1\.' \
+	"$transcript_interface" "Phase-1 InitKex transcript fact"
 require_line_count 5 '^type ' "$transcript_interface" \
 	"canonical ProVerif interface type"
 require_line_count 19 '^fun ' "$transcript_interface" \
@@ -390,6 +392,10 @@ require_line_count 3 '^type ' proofs/pro-verif/environment.pvl \
 	"handwritten protocol-state type"
 require_line_count 14 '^fun ' proofs/pro-verif/environment.pvl \
 	"handwritten protocol constructor/function"
+require_line_count 1 \
+	'^\(\* @beaconcrypt-phase1-v1 signed_init_kex\.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq \*\)$' \
+	proofs/pro-verif/environment.pvl \
+	"Phase-1 symbolic signed InitKex semantic order"
 require_line_count 1 '^type establishment_transcript_t\.$' \
 	"$transcript_interface" "canonical establishment transcript type"
 require_occurrence_count 1 \
@@ -798,18 +804,19 @@ for scenario_process in \
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 11 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|PHASE2_SCHEMA): &str = include_str!' \
+require_line_count 13 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_PQXDH|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = include_str!' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable snapshot"
-require_line_count 3 '^#\[test\]$' \
+require_line_count 4 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
 	compiled_core_matches_the_canonical_transcript \
+	phase1_registration_mutation_matrix_is_complete_and_rejected \
 	requested_transcript_mutations_are_rejected; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
 		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
@@ -818,8 +825,38 @@ require_occurrence_count 1 \
 	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
 	"transcript-fidelity model and adapter composition" "$fidelity_test"
 require_occurrence_count 1 \
-	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
+	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
+require_line_count 1 '^const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 163;$' \
+	"$fidelity_test" "Phase-1 exact mutation count"
+require_occurrence_count 1 \
+	'(?s)fn phase1_registration_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, PHASE1_REGISTRATION_MUTATION_COUNT\);\s*\}' \
+	"Phase-1 mutation matrix count assertion" "$fidelity_test"
+for phase1_mutation_family in \
+	phase1_schema_same_typed_permutation_ \
+	phase1_schema_omits_field_ \
+	phase1_schema_renames_ \
+	phase1_schema_ordinal_drift_ \
+	phase1_beacon_setter_ \
+	phase1_beacon_signature_ \
+	phase1_server_consumer_ \
+	phase1_from_encoded_swaps_x25519_roles \
+	phase1_symbolic_declaration_transposition_ \
+	phase1_symbolic_active_quantum_producer_transposition_ \
+	phase1_symbolic_active_quantum_consumer_transposition_ \
+	phase1_core_prekey_uses_one_time_role \
+	phase1_core_prekey_validates_one_time_role \
+	phase1_server_accepts_mlkem_identity_tag \
+	phase1_server_decodes_identity_with_tag \
+	phase1_symbolic_signature_verifies_under_x25519_key \
+	phase1_server_reorders_pq_and_prekey_verification \
+	phase1_symbolic_reorders_prekey_and_one_time_gates \
+	phase1_beacon_serializes_identity_after_prekey_signature \
+	phase1_core_reorders_prekey_and_one_time_fields \
+	phase1_core_reorders_prekey_and_one_time_validation; do
+	require_occurrence_count 1 "$phase1_mutation_family" \
+		"Phase-1 ${phase1_mutation_family} mutation family" "$fidelity_test"
+done
 for mutation_name in \
 	pqxdh_label_byte \
 	symmetric_label_byte \
