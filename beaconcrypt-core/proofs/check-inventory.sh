@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=49
+	[handwritten-lean]=50
 	[handwritten-proverif]=64
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -2034,7 +2034,7 @@ done
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$' \
 	"$lean_root" \
 	"canonical VCVio feasibility proof-root import"
-for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca PqxdhEd25519EufCma PqxdhInitializerSecrecy PqxdhInitialRatchetComplementarity; do
+for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca PqxdhEd25519EufCma PqxdhInitializerSecrecy PqxdhInitialRatchetComplementarity PqxdhInitializedChainsSecrecy; do
 	require_line_count 1 "^import BeaconcryptCore\\.Computational\\.${pqxdh_computational_module}$" \
 		"$lean_root" "canonical PQXDH computational ${pqxdh_computational_module} proof-root import"
 done
@@ -2565,6 +2565,102 @@ for theorem_name in concreteKernelNew_refines_initial initialRatchetComplementar
 	initialRatchetComplementarity_jointStream; do
 	require_line_count 1 "^#print axioms ${theorem_name}$" \
 		"$pqxdh_initial_ratchet" "PQXDH initial-ratchet axiom audit ${theorem_name}"
+done
+
+pqxdh_initialized_chains=proofs/lean/BeaconcryptCore/Computational/PqxdhInitializedChainsSecrecy.lean
+for import_name in \
+	BeaconcryptCore.Computational.PqxdhInitializerSecrecy \
+	BeaconcryptCore.Computational.PqxdhInitialRatchetComplementarity; do
+	require_line_count 1 "^import ${import_name//./\\.}$" \
+		"$pqxdh_initialized_chains" "PQXDH initialized-chain narrow import ${import_name}"
+done
+require_line_count 2 '^import ' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain exact import count"
+for structure_name in InitializedDirectionalChains InitializedChainsObserver \
+	InitializedChainsExplicitReductionBounds; do
+	require_line_count 1 "^structure ${structure_name}( |$)" \
+		"$pqxdh_initialized_chains" "PQXDH initialized-chain structure ${structure_name}"
+done
+for definition in initializedFirstQuery initializedSecondQuery \
+	initializedChainsWrapperMain toInitializerAdversary \
+	InitializedChainsObserver.MakesAtMostQueries \
+	toProductionInitializedChainsOneKeyAdversary productionInitializedChainsGame \
+	independentRootInitializedChainsGame \
+	InitializedChainsExplicitReductionBounds.toInitializerBounds \
+	initializedChainsKemReduction initializedChainsKdfReduction \
+	initializedChainsSecrecyAdvantage productionDirectionalChains; do
+	require_line_count 1 "^(noncomputable )?def ${definition//./\\.}( |$)" \
+		"$pqxdh_initialized_chains" "PQXDH initialized-chain definition ${definition}"
+done
+for theorem_name in initializedFirstQuery_address initializedSecondQuery_address \
+	initializedQueries_same_address initializedFirstQuery_width initializedSecondQuery_width \
+	initializedChainsWrapperMain_query_normal_form \
+	simulateQ_initializedChainsWrapperMain_real \
+	initializedChainsWrapperMain_uniform_query_bound \
+	initializedChainsWrapperMain_base_query_bound \
+	initializedChainsWrapperMain_decapsulation_query_bound \
+	initializedChainsWrapperMain_root_query_bound \
+	initializedChainsWrapperMain_symmetric_query_bound \
+	toInitializerAdversary_makesAtMostQueries \
+	simulateQ_initializedChainsWrapperMain_toJointKdfView \
+	jointKdfViewRandomImpl_inr_run_miss jointKdfViewRandomImpl_inr_run_hit \
+	run_initializedChainsWrapperMain_random_empty \
+	"run'_initializedChainsWrapperMain_random_empty" \
+	toKemOneKeyAdversary_initializedChains_postChallenge \
+	initializerRealGame_initializedChains_eq_production \
+	initializerIndependentRootGame_initializedChains_eq \
+	initializedChainsKdfReduction_uniform_query_bound \
+	initializedChainsKdfReduction_stream_query_bound \
+	initializedChainsKdfReduction_root_query_bound \
+	initializedChainsKdfReduction_symmetric_query_bound \
+	initializedChainsKdfReduction_no_untyped_stream_queries \
+	initializedChainsKdfReduction_totalQueryBound \
+	initializedChainsKemReduction_makesAtMostQueries \
+	initializedChainsKemReduction_post_unblockedDecapsulationQueryBound \
+	initializedChainsSecrecyAdvantage_le \
+	productionDirectionalChains_serverToBeacon productionDirectionalChains_beaconToServer \
+	productionInitializedChains_to_concreteKernels; do
+	require_line_count 1 "^(@\[simp\] )?theorem ${theorem_name}( |$)" \
+		"$pqxdh_initialized_chains" "PQXDH initialized-chain theorem ${theorem_name}"
+done
+require_line_count 1 '^  main : InitializerPublicTranscript Context → KnownPqxdhRootCoordinates →$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain observer public inputs"
+require_line_count 1 '^    InitializedDirectionalChains → OracleComp \(InitializerPostSpec baseSpec\) Bool$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain observer chain-only argument"
+require_line_count 1 '^  serverToBeacon : Pqxdh\.Bytes$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain Server-to-Beacon model bytes"
+require_line_count 1 '^  beaconToServer : Pqxdh\.Bytes$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain Beacon-to-Server model bytes"
+require_line_count 1 '^  ⟨root\.toList, \.ratchet, \.first32⟩$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain first typed same-root query"
+require_line_count 1 '^  ⟨root\.toList, \.ratchet, \.second32⟩$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain second typed same-root query"
+require_line_count 1 '^      kem\.IND_CCA_Advantage \(runtimeOfImpl \(kemAmbientImpl baseImpl\)\)$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain one KEM advantage"
+require_line_count 1 '^        fixedHkdfSha512JointStreamAdvantage source$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain one fixed-HKDF advantage"
+require_line_count 1 '^        \(\(qRoot : ℝ≥0∞\) / \(2 \^ 256 : ℝ≥0∞\)\)\.toReal := by$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain one root-guess term"
+require_line_count 1 '^      IsFixedHkdfSymmetricStreamQuery \(qSym \+ 2\) :=$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain two added symmetric calls"
+require_line_count 1 '^      IsFixedHkdfSha512StreamQuery \(qRoot \+ \(qSym \+ 2\) \+ 1\) :=$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain complete-stream accounting"
+require_line_count 1 '^      IsFixedHkdfSha512UntypedStreamQuery 0 :=$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain no untyped calls"
+require_line_count 1 '^    \(hserverRoot : RootArrayRefines serverRoot root\)$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain separate Server root premise"
+require_line_count 1 '^    \(hbeaconRoot : RootArrayRefines beaconRoot root\)$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain separate Beacon root premise"
+require_line_count 1 '^      \(serverPending serverRoot\) serverResponse\)$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain pending-indexed Server response"
+require_line_count 1 '^      \(beaconPending beaconRoot\) beaconResponse\) :$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain pending-indexed Beacon response"
+require_line_count 3 '^#guard_msgs in$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain guarded axiom audits"
+for theorem_name in run_initializedChainsWrapperMain_random_empty \
+	initializedChainsSecrecyAdvantage_le productionInitializedChains_to_concreteKernels; do
+	require_line_count 1 "^#print axioms ${theorem_name}$" \
+		"$pqxdh_initialized_chains" "PQXDH initialized-chain axiom audit ${theorem_name}"
 done
 
 require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |$)' \
