@@ -101,6 +101,23 @@ END {
   receive_malicious_commit_arguments = "transcript,plaintext_8"
   weak_aead_arguments = "left_key_1,right_key_1,left_context_1,right_context_1,left_plaintext_1,right_plaintext_1"
 
+  later_root = "root_5"
+  later_domain = "symmetric_ratchet_domain"
+  later_seq1 = "first_sequence"
+  later_seq2 = "next_sequence(" later_seq1 ")"
+  later_seq3 = "next_sequence(" later_seq2 ")"
+  later_chain1 = "hkdf_first_32(hkdf_sha512_no_salt(" later_root "," later_domain "))"
+  later_chain2 = "hkdf_second_32(hkdf_sha512_no_salt(" later_chain1 "," later_domain "))"
+  later_chain3 = "hkdf_second_32(hkdf_sha512_no_salt(" later_chain2 "," later_domain "))"
+  later_chain4 = "hkdf_second_32(hkdf_sha512_no_salt(" later_chain3 "," later_domain "))"
+  later_send_chain = "hkdf_second_32(hkdf_sha512_no_salt(" later_root "," later_domain "))"
+  later_material1 = "ratchet_key_nonce(hkdf_first_32(hkdf_sha512_no_salt(" later_chain1 "," later_domain ")),hkdf_final_12(hkdf_sha512_no_salt(" later_chain1 "," later_domain ")))"
+  later_material2 = "ratchet_key_nonce(hkdf_first_32(hkdf_sha512_no_salt(" later_chain2 "," later_domain ")),hkdf_final_12(hkdf_sha512_no_salt(" later_chain2 "," later_domain ")))"
+  later_material3 = "ratchet_key_nonce(hkdf_first_32(hkdf_sha512_no_salt(" later_chain3 "," later_domain ")),hkdf_final_12(hkdf_sha512_no_salt(" later_chain3 "," later_domain ")))"
+  later_cache = "receive_cache_entry(" later_seq2 "," later_material2 ",receive_cache_entry(" later_seq1 "," later_material1 ",receive_cache_empty))"
+  later_receive_state = "receive_state(" later_seq3 "," later_chain4 "," later_cache ")"
+  later_ratchet = "later_registration_ratchet_state(zero_sequence," later_send_chain "," later_receive_state ")"
+
   equivalence_scenario = (scenario == "passive-classical-equivalence" ||
                           scenario == "passive-quantum-equivalence")
   if (!equivalence_scenario && equivalence_count != 0) {
@@ -345,6 +362,39 @@ END {
     require_exact(wanted, "weak Phase-2 broken assigned-ID correspondence")
     wanted = "Query inj-event(Phase2AcceptedInnerSender(binding)) ==> inj-event(Phase2PinnedInnerSender(binding)) is true."
     require_exact(wanted, "weak Phase-2 retained inner-sender correspondence")
+  } else if (scenario == "later-sequence-registration") {
+    if (query_count != 18) {
+      reject("expected 18 later-sequence registration queries, saw " query_count)
+    }
+
+    later_first_response = "kex_response(server_identity_1,server_ephemeral_3,kem_ciphertext_3,first_frame_1,assigned_key_id_5)"
+    later_third_response = "kex_response(server_identity_1,server_ephemeral_3,kem_ciphertext_3,third_frame_1,assigned_key_id_5)"
+    later_binding = "beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(receiver))"
+    later_opened_payload = "registration_payload(" later_binding ",LATER_REGISTRATION_SEQ3_PAYLOAD[])"
+    later_commit_arguments = "LATER_REGISTRATION_FAITHFUL_WITNESS[],session_5,root_5," later_third_response "," later_seq3 ",sender,assigned_key_id_5,opened_payload_2,LATER_REGISTRATION_SEQ3_PAYLOAD[],third_frame_1,material,receive_state_term,committed_ratchet_4"
+
+    later_expected[1] = "Query not event(LaterRegistrationOriginalResponseIssued(LATER_REGISTRATION_ORIGINAL_WITNESS[],session_5,root_5,first_frame_1," later_first_response ")) is false."
+    later_expected[2] = "Query not event(LaterRegistrationSubstitutionSelected(LATER_REGISTRATION_SUBSTITUTION_WITNESS[],session_5,root_5," later_first_response "," later_third_response ")) is false."
+    later_expected[3] = "Query not event(LaterRegistrationFaithfulAttempted(LATER_REGISTRATION_FAITHFUL_WITNESS[],candidate_1)) is false."
+    later_expected[4] = "Query not event(LaterRegistrationGeneralReceiveOpened(LATER_REGISTRATION_FAITHFUL_WITNESS[],session_5," later_seq3 ",sender," later_binding ",LATER_REGISTRATION_SEQ3_PAYLOAD[]," later_opened_payload ",frame)) is false."
+    later_expected[5] = "Query not event(LaterRegistrationCommitted(LATER_REGISTRATION_FAITHFUL_WITNESS[],session_5,root_5,kex_response(server_identity_1,server_ephemeral_3,kem_ciphertext_3,frame,receiver)," later_seq3 ",sender,receiver," later_opened_payload ",LATER_REGISTRATION_SEQ3_PAYLOAD[],frame,material,receive_state_term,committed_ratchet_4)) is false."
+    later_expected[6] = "Query not event(LaterRegistrationReturned(LATER_REGISTRATION_FAITHFUL_WITNESS[],LATER_REGISTRATION_SEQ3_PAYLOAD[])) is false."
+    later_expected[7] = "Query not event(LaterRegistrationPoststatePublished(LATER_REGISTRATION_FAITHFUL_WITNESS[],session_5,root_5,zero_sequence," later_send_chain "," later_seq3 "," later_chain4 "," later_cache "," later_ratchet ")) is false."
+    later_expected[8] = "Query not event(LaterRegistrationTargetUnavailable(LATER_REGISTRATION_FAITHFUL_WITNESS[],session_5," later_seq3 "," later_material3 "," later_cache "," later_ratchet ")) is false."
+    later_expected[9] = "Query not event(LaterRegistrationFirstOnlyAttempted(LATER_REGISTRATION_FIRST_ONLY_WITNESS[],candidate_1)) is false."
+    later_expected[10] = "Query not event(LaterRegistrationFirstOnlyGateReached(LATER_REGISTRATION_FIRST_ONLY_WITNESS[]," later_seq3 ",candidate_1)) is false."
+    later_expected[11] = "Query not event(LaterRegistrationFirstOnlyGatePassed(LATER_REGISTRATION_FIRST_ONLY_WITNESS[]," later_seq3 ",candidate_1)) is true."
+    later_expected[12] = "Query not event(LaterRegistrationCommitted(LATER_REGISTRATION_FIRST_ONLY_WITNESS[],session_5,root_5,candidate_1,message_sequence_3,sender,receiver,opened_payload_2,plaintext_3,frame,material,receive_state_term,committed_ratchet_4)) is true."
+    later_expected[13] = "Query not attacker(LATER_REGISTRATION_FIRST_ONLY_CANARY[]) is true."
+    later_expected[14] = "Query inj-event(LaterRegistrationCommitted(" later_commit_arguments ")) ==> inj-event(LaterRegistrationSubstitutionSelected(LATER_REGISTRATION_SUBSTITUTION_WITNESS[],session_5,root_5," later_first_response "," later_third_response ")) is true."
+    later_expected[15] = "Query inj-event(LaterRegistrationCommitted(" later_commit_arguments ")) ==> inj-event(LaterRegistrationServerFrameSent(session_5,root_5,original_response_1," later_seq3 ",sender,assigned_key_id_5,LATER_REGISTRATION_SEQ3_PAYLOAD[],third_frame_1,material)) is true."
+    later_expected[16] = "Query inj-event(LaterRegistrationServerFrameSent(session_5,root_5," later_first_response "," later_seq3 ",sender,assigned_key_id_5,LATER_REGISTRATION_SEQ3_PAYLOAD[],third_frame_1,material)) ==> inj-event(LaterRegistrationOriginalResponseIssued(LATER_REGISTRATION_ORIGINAL_WITNESS[],session_5,root_5,first_frame_1," later_first_response ")) is true."
+    later_expected[17] = "Query inj-event(LaterRegistrationFaithfulAttempted(LATER_REGISTRATION_FAITHFUL_WITNESS[],candidate_1)) ==> inj-event(LaterRegistrationSubstitutionSelected(LATER_REGISTRATION_SUBSTITUTION_WITNESS[],session_5,root_5,original_response_1,candidate_1)) is true."
+    later_expected[18] = "Query inj-event(LaterRegistrationFirstOnlyAttempted(LATER_REGISTRATION_FIRST_ONLY_WITNESS[],candidate_1)) ==> inj-event(LaterRegistrationSubstitutionSelected(LATER_REGISTRATION_SUBSTITUTION_WITNESS[],session_5,root_5,original_response_1,candidate_1)) is true."
+    for (later_index = 1; later_index <= 18; later_index++) {
+      require_exact(later_expected[later_index],
+                    "later-sequence registration result")
+    }
   } else if (scenario == "baseline" ||
              scenario == "active-classical") {
     if (query_count != 12) {

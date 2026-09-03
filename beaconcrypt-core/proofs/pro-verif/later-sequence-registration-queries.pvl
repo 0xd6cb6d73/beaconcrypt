@@ -1,0 +1,615 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The original response and accepted substitution have identical outer fields; only the application frame changes. *)
+query session: bitstring, root: bitstring, server_identity: bitstring, server_ephemeral: bitstring, kem_ciphertext: bitstring, assigned_key_id: key_id, first_frame: bitstring;
+  event(LaterRegistrationOriginalResponseIssued(
+    LATER_REGISTRATION_ORIGINAL_WITNESS,
+    session,
+    root,
+    first_frame,
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      first_frame,
+      assigned_key_id
+    )
+  )).
+
+query session: bitstring, root: bitstring, server_identity: bitstring, server_ephemeral: bitstring, kem_ciphertext: bitstring, assigned_key_id: key_id, first_frame: bitstring, third_frame: bitstring;
+  event(LaterRegistrationSubstitutionSelected(
+    LATER_REGISTRATION_SUBSTITUTION_WITNESS,
+    session,
+    root,
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      first_frame,
+      assigned_key_id
+    ),
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      third_frame,
+      assigned_key_id
+    )
+  )).
+
+query candidate: bitstring;
+  event(LaterRegistrationFaithfulAttempted(
+    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    candidate
+  )).
+
+(* Opening exposes the complete authenticated registration payload; returning exposes only its application remainder. *)
+query session: bitstring, sender: key_id, receiver: key_id, frame: bitstring;
+  event(LaterRegistrationGeneralReceiveOpened(
+    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    session,
+    next_sequence(next_sequence(first_sequence())),
+    sender,
+    beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+      sender_id_le64(receiver)
+    ),
+    LATER_REGISTRATION_SEQ3_PAYLOAD,
+    registration_payload(
+      beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+        sender_id_le64(receiver)
+      ),
+      LATER_REGISTRATION_SEQ3_PAYLOAD
+    ),
+    frame
+  )).
+
+query session: bitstring, root: bitstring, server_identity: bitstring, server_ephemeral: bitstring, kem_ciphertext: bitstring, sender: key_id, receiver: key_id, frame: bitstring, material: bitstring, receive_state_term: bitstring, committed_ratchet: bitstring;
+  event(LaterRegistrationCommitted(
+    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    session,
+    root,
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      frame,
+      receiver
+    ),
+    next_sequence(next_sequence(first_sequence())),
+    sender,
+    receiver,
+    registration_payload(
+      beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+        sender_id_le64(receiver)
+      ),
+      LATER_REGISTRATION_SEQ3_PAYLOAD
+    ),
+    LATER_REGISTRATION_SEQ3_PAYLOAD,
+    frame,
+    material,
+    receive_state_term,
+    committed_ratchet
+  )).
+
+query event(LaterRegistrationReturned(
+  LATER_REGISTRATION_FAITHFUL_WITNESS,
+  LATER_REGISTRATION_SEQ3_PAYLOAD
+)).
+
+(* These expanded terms are the query-legal forms of the crypto.pvl letfun definitions. *)
+query session: bitstring, root: bitstring;
+  event(LaterRegistrationPoststatePublished(
+    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    session,
+    root,
+    zero_sequence(),
+    hkdf_second_32(
+      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+    ),
+    next_sequence(next_sequence(first_sequence())),
+    hkdf_second_32(
+      hkdf_sha512_no_salt(
+        hkdf_second_32(
+          hkdf_sha512_no_salt(
+            hkdf_second_32(
+              hkdf_sha512_no_salt(
+                hkdf_first_32(
+                  hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                ),
+                symmetric_ratchet_domain()
+              )
+            ),
+            symmetric_ratchet_domain()
+          )
+        ),
+        symmetric_ratchet_domain()
+      )
+    ),
+    receive_cache_entry(
+      next_sequence(first_sequence()),
+      ratchet_key_nonce(
+        hkdf_first_32(
+          hkdf_sha512_no_salt(
+            hkdf_second_32(
+              hkdf_sha512_no_salt(
+                hkdf_first_32(
+                  hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                ),
+                symmetric_ratchet_domain()
+              )
+            ),
+            symmetric_ratchet_domain()
+          )
+        ),
+        hkdf_final_12(
+          hkdf_sha512_no_salt(
+            hkdf_second_32(
+              hkdf_sha512_no_salt(
+                hkdf_first_32(
+                  hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                ),
+                symmetric_ratchet_domain()
+              )
+            ),
+            symmetric_ratchet_domain()
+          )
+        )
+      ),
+      receive_cache_entry(
+        first_sequence(),
+        ratchet_key_nonce(
+          hkdf_first_32(
+            hkdf_sha512_no_salt(
+              hkdf_first_32(
+                hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+              ),
+              symmetric_ratchet_domain()
+            )
+          ),
+          hkdf_final_12(
+            hkdf_sha512_no_salt(
+              hkdf_first_32(
+                hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+              ),
+              symmetric_ratchet_domain()
+            )
+          )
+        ),
+        receive_cache_empty()
+      )
+    ),
+    later_registration_ratchet_state(
+      zero_sequence(),
+      hkdf_second_32(
+        hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+      ),
+      receive_state(
+        next_sequence(next_sequence(first_sequence())),
+        hkdf_second_32(
+          hkdf_sha512_no_salt(
+            hkdf_second_32(
+              hkdf_sha512_no_salt(
+                hkdf_second_32(
+                  hkdf_sha512_no_salt(
+                    hkdf_first_32(
+                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    ),
+                    symmetric_ratchet_domain()
+                  )
+                ),
+                symmetric_ratchet_domain()
+              )
+            ),
+            symmetric_ratchet_domain()
+          )
+        ),
+        receive_cache_entry(
+          next_sequence(first_sequence()),
+          ratchet_key_nonce(
+            hkdf_first_32(
+              hkdf_sha512_no_salt(
+                hkdf_second_32(
+                  hkdf_sha512_no_salt(
+                    hkdf_first_32(
+                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    ),
+                    symmetric_ratchet_domain()
+                  )
+                ),
+                symmetric_ratchet_domain()
+              )
+            ),
+            hkdf_final_12(
+              hkdf_sha512_no_salt(
+                hkdf_second_32(
+                  hkdf_sha512_no_salt(
+                    hkdf_first_32(
+                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    ),
+                    symmetric_ratchet_domain()
+                  )
+                ),
+                symmetric_ratchet_domain()
+              )
+            )
+          ),
+          receive_cache_entry(
+            first_sequence(),
+            ratchet_key_nonce(
+              hkdf_first_32(
+                hkdf_sha512_no_salt(
+                  hkdf_first_32(
+                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  ),
+                  symmetric_ratchet_domain()
+                )
+              ),
+              hkdf_final_12(
+                hkdf_sha512_no_salt(
+                  hkdf_first_32(
+                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  ),
+                  symmetric_ratchet_domain()
+                )
+              )
+            ),
+            receive_cache_empty()
+          )
+        )
+      )
+    )
+  )).
+
+(* The exact committed cache is newest-first seq2 then seq1; it has no seq3/material3 entry. *)
+query session: bitstring, root: bitstring;
+  event(LaterRegistrationTargetUnavailable(
+    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    session,
+    next_sequence(next_sequence(first_sequence())),
+    ratchet_key_nonce(
+      hkdf_first_32(
+        hkdf_sha512_no_salt(
+          hkdf_second_32(
+            hkdf_sha512_no_salt(
+              hkdf_second_32(
+                hkdf_sha512_no_salt(
+                  hkdf_first_32(
+                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  ),
+                  symmetric_ratchet_domain()
+                )
+              ),
+              symmetric_ratchet_domain()
+            )
+          ),
+          symmetric_ratchet_domain()
+        )
+      ),
+      hkdf_final_12(
+        hkdf_sha512_no_salt(
+          hkdf_second_32(
+            hkdf_sha512_no_salt(
+              hkdf_second_32(
+                hkdf_sha512_no_salt(
+                  hkdf_first_32(
+                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  ),
+                  symmetric_ratchet_domain()
+                )
+              ),
+              symmetric_ratchet_domain()
+            )
+          ),
+          symmetric_ratchet_domain()
+        )
+      )
+    ),
+    receive_cache_entry(
+      next_sequence(first_sequence()),
+      ratchet_key_nonce(
+        hkdf_first_32(
+          hkdf_sha512_no_salt(
+            hkdf_second_32(
+              hkdf_sha512_no_salt(
+                hkdf_first_32(
+                  hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                ),
+                symmetric_ratchet_domain()
+              )
+            ),
+            symmetric_ratchet_domain()
+          )
+        ),
+        hkdf_final_12(
+          hkdf_sha512_no_salt(
+            hkdf_second_32(
+              hkdf_sha512_no_salt(
+                hkdf_first_32(
+                  hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                ),
+                symmetric_ratchet_domain()
+              )
+            ),
+            symmetric_ratchet_domain()
+          )
+        )
+      ),
+      receive_cache_entry(
+        first_sequence(),
+        ratchet_key_nonce(
+          hkdf_first_32(
+            hkdf_sha512_no_salt(
+              hkdf_first_32(
+                hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+              ),
+              symmetric_ratchet_domain()
+            )
+          ),
+          hkdf_final_12(
+            hkdf_sha512_no_salt(
+              hkdf_first_32(
+                hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+              ),
+              symmetric_ratchet_domain()
+            )
+          )
+        ),
+        receive_cache_empty()
+      )
+    ),
+    later_registration_ratchet_state(
+      zero_sequence(),
+      hkdf_second_32(
+        hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+      ),
+      receive_state(
+        next_sequence(next_sequence(first_sequence())),
+        hkdf_second_32(
+          hkdf_sha512_no_salt(
+            hkdf_second_32(
+              hkdf_sha512_no_salt(
+                hkdf_second_32(
+                  hkdf_sha512_no_salt(
+                    hkdf_first_32(
+                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    ),
+                    symmetric_ratchet_domain()
+                  )
+                ),
+                symmetric_ratchet_domain()
+              )
+            ),
+            symmetric_ratchet_domain()
+          )
+        ),
+        receive_cache_entry(
+          next_sequence(first_sequence()),
+          ratchet_key_nonce(
+            hkdf_first_32(
+              hkdf_sha512_no_salt(
+                hkdf_second_32(
+                  hkdf_sha512_no_salt(
+                    hkdf_first_32(
+                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    ),
+                    symmetric_ratchet_domain()
+                  )
+                ),
+                symmetric_ratchet_domain()
+              )
+            ),
+            hkdf_final_12(
+              hkdf_sha512_no_salt(
+                hkdf_second_32(
+                  hkdf_sha512_no_salt(
+                    hkdf_first_32(
+                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    ),
+                    symmetric_ratchet_domain()
+                  )
+                ),
+                symmetric_ratchet_domain()
+              )
+            )
+          ),
+          receive_cache_entry(
+            first_sequence(),
+            ratchet_key_nonce(
+              hkdf_first_32(
+                hkdf_sha512_no_salt(
+                  hkdf_first_32(
+                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  ),
+                  symmetric_ratchet_domain()
+                )
+              ),
+              hkdf_final_12(
+                hkdf_sha512_no_salt(
+                  hkdf_first_32(
+                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  ),
+                  symmetric_ratchet_domain()
+                )
+              )
+            ),
+            receive_cache_empty()
+          )
+        )
+      )
+    )
+  )).
+
+(* The identical candidate reaches the counterfactual first-sequence gate but cannot pass it or commit. *)
+query candidate: bitstring;
+  event(LaterRegistrationFirstOnlyAttempted(
+    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+    candidate
+  )).
+
+query candidate: bitstring;
+  event(LaterRegistrationFirstOnlyGateReached(
+    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+    next_sequence(next_sequence(first_sequence())),
+    candidate
+  )).
+
+query candidate: bitstring;
+  event(LaterRegistrationFirstOnlyGatePassed(
+    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+    next_sequence(next_sequence(first_sequence())),
+    candidate
+  )).
+
+query session: bitstring, root: bitstring, candidate: bitstring, message_sequence: sequence, sender: key_id, receiver: key_id, opened_payload: bitstring, plaintext: bitstring, frame: bitstring, material: bitstring, receive_state_term: bitstring, committed_ratchet: bitstring;
+  event(LaterRegistrationCommitted(
+    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+    session,
+    root,
+    candidate,
+    message_sequence,
+    sender,
+    receiver,
+    opened_payload,
+    plaintext,
+    frame,
+    material,
+    receive_state_term,
+    committed_ratchet
+  )).
+
+query attacker(LATER_REGISTRATION_FIRST_ONLY_CANARY).
+
+(* Every branch consumes the coordinator's one exact candidate, and every faithful commit has genuine same-session Server-send origin. *)
+query session: bitstring, root: bitstring, server_identity: bitstring, server_ephemeral: bitstring, kem_ciphertext: bitstring, assigned_key_id: key_id, first_frame: bitstring, third_frame: bitstring, sender: key_id, opened_payload: bitstring, material: bitstring, receive_state_term: bitstring, committed_ratchet: bitstring;
+  inj-event(LaterRegistrationCommitted(
+    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    session,
+    root,
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      third_frame,
+      assigned_key_id
+    ),
+    next_sequence(next_sequence(first_sequence())),
+    sender,
+    assigned_key_id,
+    opened_payload,
+    LATER_REGISTRATION_SEQ3_PAYLOAD,
+    third_frame,
+    material,
+    receive_state_term,
+    committed_ratchet
+  )) ==>
+  inj-event(LaterRegistrationSubstitutionSelected(
+    LATER_REGISTRATION_SUBSTITUTION_WITNESS,
+    session,
+    root,
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      first_frame,
+      assigned_key_id
+    ),
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      third_frame,
+      assigned_key_id
+    )
+  )).
+
+query session: bitstring, root: bitstring, server_identity: bitstring, server_ephemeral: bitstring, kem_ciphertext: bitstring, assigned_key_id: key_id, third_frame: bitstring, sender: key_id, opened_payload: bitstring, material: bitstring, receive_state_term: bitstring, committed_ratchet: bitstring, original_response: bitstring;
+  inj-event(LaterRegistrationCommitted(
+    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    session,
+    root,
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      third_frame,
+      assigned_key_id
+    ),
+    next_sequence(next_sequence(first_sequence())),
+    sender,
+    assigned_key_id,
+    opened_payload,
+    LATER_REGISTRATION_SEQ3_PAYLOAD,
+    third_frame,
+    material,
+    receive_state_term,
+    committed_ratchet
+  )) ==>
+  inj-event(LaterRegistrationServerFrameSent(
+    session,
+    root,
+    original_response,
+    next_sequence(next_sequence(first_sequence())),
+    sender,
+    assigned_key_id,
+    LATER_REGISTRATION_SEQ3_PAYLOAD,
+    third_frame,
+    material
+  )).
+
+query session: bitstring, root: bitstring, server_identity: bitstring, server_ephemeral: bitstring, kem_ciphertext: bitstring, sender: key_id, assigned_key_id: key_id, third_frame: bitstring, material: bitstring, first_frame: bitstring;
+  inj-event(LaterRegistrationServerFrameSent(
+    session,
+    root,
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      first_frame,
+      assigned_key_id
+    ),
+    next_sequence(next_sequence(first_sequence())),
+    sender,
+    assigned_key_id,
+    LATER_REGISTRATION_SEQ3_PAYLOAD,
+    third_frame,
+    material
+  )) ==>
+  inj-event(LaterRegistrationOriginalResponseIssued(
+    LATER_REGISTRATION_ORIGINAL_WITNESS,
+    session,
+    root,
+    first_frame,
+    kex_response(
+      server_identity,
+      server_ephemeral,
+      kem_ciphertext,
+      first_frame,
+      assigned_key_id
+    )
+  )).
+
+query candidate: bitstring, session: bitstring, root: bitstring, original_response: bitstring;
+  inj-event(LaterRegistrationFaithfulAttempted(
+    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    candidate
+  )) ==>
+  inj-event(LaterRegistrationSubstitutionSelected(
+    LATER_REGISTRATION_SUBSTITUTION_WITNESS,
+    session,
+    root,
+    original_response,
+    candidate
+  )).
+
+query candidate: bitstring, session: bitstring, root: bitstring, original_response: bitstring;
+  inj-event(LaterRegistrationFirstOnlyAttempted(
+    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+    candidate
+  )) ==>
+  inj-event(LaterRegistrationSubstitutionSelected(
+    LATER_REGISTRATION_SUBSTITUTION_WITNESS,
+    session,
+    root,
+    original_response,
+    candidate
+  )).

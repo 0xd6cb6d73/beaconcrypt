@@ -1,0 +1,655 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* Finite later-sequence registration-completion control                  *)
+(**************************************************************************)
+
+(* This control is a finite source-fidelity witness, not a model of arbitrary scheduling or a semantic Rust refinement. *)
+fun zero_sequence(): sequence [data].
+fun later_registration_ratchet_state(
+  sequence,
+  bitstring,
+  bitstring
+): bitstring [data].
+fun later_registration_return(bitstring, bitstring): bitstring [data].
+
+free LATER_REGISTRATION_ORIGINAL_WITNESS: bitstring [private].
+free LATER_REGISTRATION_SUBSTITUTION_WITNESS: bitstring [private].
+free LATER_REGISTRATION_FAITHFUL_WITNESS: bitstring [private].
+free LATER_REGISTRATION_FIRST_ONLY_WITNESS: bitstring [private].
+free LATER_REGISTRATION_FIRST_ONLY_CANARY: bitstring [private].
+free LATER_REGISTRATION_SEQ1_PAYLOAD: bitstring [private].
+free LATER_REGISTRATION_SEQ2_PAYLOAD: bitstring [private].
+free LATER_REGISTRATION_SEQ3_PAYLOAD: bitstring [private].
+
+event LaterRegistrationOriginalResponseIssued(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event LaterRegistrationServerFrameSent(
+  bitstring,
+  bitstring,
+  bitstring,
+  sequence,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event LaterRegistrationSubstitutionSelected(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event LaterRegistrationFaithfulAttempted(bitstring, bitstring).
+event LaterRegistrationFirstOnlyAttempted(bitstring, bitstring).
+event LaterRegistrationGeneralReceiveOpened(
+  bitstring,
+  bitstring,
+  sequence,
+  key_id,
+  beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event LaterRegistrationFirstOnlyGateReached(
+  bitstring,
+  sequence,
+  bitstring
+).
+event LaterRegistrationFirstOnlyGatePassed(
+  bitstring,
+  sequence,
+  bitstring
+).
+event LaterRegistrationPoststatePublished(
+  bitstring,
+  bitstring,
+  bitstring,
+  sequence,
+  bitstring,
+  sequence,
+  bitstring,
+  receive_cache,
+  bitstring
+).
+event LaterRegistrationTargetUnavailable(
+  bitstring,
+  bitstring,
+  sequence,
+  bitstring,
+  receive_cache,
+  bitstring
+).
+event LaterRegistrationCommitted(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  sequence,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+).
+event LaterRegistrationReturned(bitstring, bitstring).
+
+(* Both branches use this one finite expansion of the production general receive path. *)
+let LaterSequenceRegistrationOpen(
+  witness: bitstring,
+  expected_server_identity: bitstring,
+  expected_server_key_id: key_id,
+  beacon_identity_secret: bitstring,
+  beacon_prekey_secret: bitstring,
+  beacon_one_time_secret: bitstring,
+  beacon_pq_secret: bitstring,
+  response: bitstring,
+  reply: channel
+) =
+  let kex_response(
+    response_server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    app_ciphertext,
+    assigned_key_id
+  ) = response in
+  let response_server_kex = x25519_public_from_ed(
+    response_server_identity
+  ) in
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let dh1 = x25519_beacon_dh(
+    beacon_prekey_secret,
+    response_server_kex
+  ) in
+  let dh2 = x25519_beacon_dh(
+    beacon_identity_secret,
+    server_ephemeral
+  ) in
+  let dh3 = x25519_beacon_dh(
+    beacon_prekey_secret,
+    server_ephemeral
+  ) in
+  let dh4 = x25519_beacon_dh(
+    beacon_one_time_secret,
+    server_ephemeral
+  ) in
+  let kem_secret = mlkem_decapsulate(
+    kem_ciphertext,
+    beacon_pq_secret
+  ) in
+  let shared_secrets = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+    dh1,
+    dh2,
+    dh3,
+    dh4,
+    kem_secret
+  ) in
+  if response_server_identity = expected_server_identity then
+    let root_input =
+      beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)
+    in
+    let root = pqxdh_root(
+      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+    ) in
+    let associated_data =
+      beaconcrypt_core__pqxdh__build_associated_data(
+        expected_server_identity,
+        beacon_identity
+      )
+    in
+    let session = session_label(
+      expected_server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root_input
+    ) in
+    let server_chain_1 = server_to_beacon_chain(root) in
+    let server_chain_2 = ratchet_next(server_chain_1) in
+    let server_chain_3 = ratchet_next(server_chain_2) in
+    let server_chain_4 = ratchet_next(server_chain_3) in
+    let server_material_1 = ratchet_material(server_chain_1) in
+    let server_material_2 = ratchet_material(server_chain_2) in
+    let server_material_3 = ratchet_material(server_chain_3) in
+    let crypto_frame(
+      frame_ciphertext,
+      frame_tag,
+      frame_commitment,
+      frame_sequence,
+      authenticated_server_key_id
+    ) = app_ciphertext in
+    if authenticated_server_key_id = expected_server_key_id then
+      let opened = open_frame(
+        server_material_3,
+        associated_data,
+        frame_sequence,
+        expected_server_key_id,
+        app_ciphertext
+      ) in
+      let registration_payload(
+        authenticated_binding,
+        registration_plaintext
+      ) = opened in
+      let cache_1 = receive_cache_entry(
+        first_sequence(),
+        server_material_1,
+        receive_cache_empty()
+      ) in
+      let cache_2 = receive_cache_entry(
+        next_sequence(first_sequence()),
+        server_material_2,
+        cache_1
+      ) in
+      let receive_poststate = receive_state(
+        frame_sequence,
+        server_chain_4,
+        cache_2
+      ) in
+      let committed_ratchet = later_registration_ratchet_state(
+        zero_sequence(),
+        beacon_to_server_chain(root),
+        receive_poststate
+      ) in
+      event LaterRegistrationGeneralReceiveOpened(
+        witness,
+        session,
+        frame_sequence,
+        authenticated_server_key_id,
+        authenticated_binding,
+        registration_plaintext,
+        opened,
+        app_ciphertext
+      );
+      out(
+        reply,
+        (
+          session,
+          root,
+          assigned_key_id,
+          frame_sequence,
+          authenticated_server_key_id,
+          authenticated_binding,
+          registration_plaintext,
+          opened,
+          app_ciphertext,
+          server_chain_4,
+          server_material_1,
+          server_material_2,
+          server_material_3,
+          cache_2,
+          receive_poststate,
+          committed_ratchet
+        )
+      ).
+
+(* This suffix is shared so the counterfactual differs only by its first-sequence gate. *)
+let LaterSequenceRegistrationCommit(
+  witness: bitstring,
+  response: bitstring,
+  session: bitstring,
+  root: bitstring,
+  assigned_key_id: key_id,
+  frame_sequence: sequence,
+  authenticated_server_key_id: key_id,
+  authenticated_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+  registration_plaintext: bitstring,
+  opened_payload: bitstring,
+  app_ciphertext: bitstring,
+  server_chain_4: bitstring,
+  server_material_1: bitstring,
+  server_material_2: bitstring,
+  server_material_3: bitstring,
+  cache_2: receive_cache,
+  receive_poststate: bitstring,
+  committed_ratchet: bitstring
+) =
+  let expected_binding =
+    beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+      key_id_encoding(assigned_key_id)
+    )
+  in
+  let admitted_binding = phase2_assigned_id_binding_gate(
+    authenticated_binding,
+    expected_binding
+  ) in
+  event LaterRegistrationPoststatePublished(
+    witness,
+    session,
+    root,
+    zero_sequence(),
+    beacon_to_server_chain(root),
+    frame_sequence,
+    server_chain_4,
+    cache_2,
+    committed_ratchet
+  );
+  event LaterRegistrationTargetUnavailable(
+    witness,
+    session,
+    frame_sequence,
+    server_material_3,
+    cache_2,
+    committed_ratchet
+  );
+  event LaterRegistrationCommitted(
+    witness,
+    session,
+    root,
+    response,
+    frame_sequence,
+    authenticated_server_key_id,
+    assigned_key_id,
+    opened_payload,
+    registration_plaintext,
+    app_ciphertext,
+    server_material_3,
+    receive_poststate,
+    committed_ratchet
+  );
+  event LaterRegistrationReturned(witness, registration_plaintext);
+  out(c, later_registration_return(witness, registration_plaintext));
+  if witness = LATER_REGISTRATION_FIRST_ONLY_WITNESS then
+    out(c, LATER_REGISTRATION_FIRST_ONLY_CANARY).
+
+let LaterSequenceRegistrationFaithfulFinish(
+  expected_server_identity: bitstring,
+  expected_server_key_id: key_id,
+  beacon_identity_secret: bitstring,
+  beacon_prekey_secret: bitstring,
+  beacon_one_time_secret: bitstring,
+  beacon_pq_secret: bitstring,
+  response: bitstring
+) =
+  event LaterRegistrationFaithfulAttempted(
+    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    response
+  );
+  new reply: channel;
+  (
+    LaterSequenceRegistrationOpen(
+      LATER_REGISTRATION_FAITHFUL_WITNESS,
+      expected_server_identity,
+      expected_server_key_id,
+      beacon_identity_secret,
+      beacon_prekey_secret,
+      beacon_one_time_secret,
+      beacon_pq_secret,
+      response,
+      reply
+    )
+  |
+    in(
+      reply,
+      (
+        session: bitstring,
+        root: bitstring,
+        assigned_key_id: key_id,
+        frame_sequence: sequence,
+        authenticated_server_key_id: key_id,
+        authenticated_binding:
+          beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+        registration_plaintext: bitstring,
+        opened_payload: bitstring,
+        app_ciphertext: bitstring,
+        server_chain_4: bitstring,
+        server_material_1: bitstring,
+        server_material_2: bitstring,
+        server_material_3: bitstring,
+        cache_2: receive_cache,
+        receive_poststate: bitstring,
+        committed_ratchet: bitstring
+      )
+    );
+    LaterSequenceRegistrationCommit(
+      LATER_REGISTRATION_FAITHFUL_WITNESS,
+      response,
+      session,
+      root,
+      assigned_key_id,
+      frame_sequence,
+      authenticated_server_key_id,
+      authenticated_binding,
+      registration_plaintext,
+      opened_payload,
+      app_ciphertext,
+      server_chain_4,
+      server_material_1,
+      server_material_2,
+      server_material_3,
+      cache_2,
+      receive_poststate,
+      committed_ratchet
+    )
+  ).
+
+let LaterSequenceRegistrationFirstOnlyFinish(
+  expected_server_identity: bitstring,
+  expected_server_key_id: key_id,
+  beacon_identity_secret: bitstring,
+  beacon_prekey_secret: bitstring,
+  beacon_one_time_secret: bitstring,
+  beacon_pq_secret: bitstring,
+  response: bitstring
+) =
+  event LaterRegistrationFirstOnlyAttempted(
+    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+    response
+  );
+  new reply: channel;
+  (
+    LaterSequenceRegistrationOpen(
+      LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+      expected_server_identity,
+      expected_server_key_id,
+      beacon_identity_secret,
+      beacon_prekey_secret,
+      beacon_one_time_secret,
+      beacon_pq_secret,
+      response,
+      reply
+    )
+  |
+    in(
+      reply,
+      (
+        session: bitstring,
+        root: bitstring,
+        assigned_key_id: key_id,
+        frame_sequence: sequence,
+        authenticated_server_key_id: key_id,
+        authenticated_binding:
+          beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+        registration_plaintext: bitstring,
+        opened_payload: bitstring,
+        app_ciphertext: bitstring,
+        server_chain_4: bitstring,
+        server_material_1: bitstring,
+        server_material_2: bitstring,
+        server_material_3: bitstring,
+        cache_2: receive_cache,
+        receive_poststate: bitstring,
+        committed_ratchet: bitstring
+      )
+    );
+    event LaterRegistrationFirstOnlyGateReached(
+      LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+      frame_sequence,
+      response
+    );
+    if frame_sequence = first_sequence() then
+      event LaterRegistrationFirstOnlyGatePassed(
+        LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+        frame_sequence,
+        response
+      );
+      LaterSequenceRegistrationCommit(
+        LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+        response,
+        session,
+        root,
+        assigned_key_id,
+        frame_sequence,
+        authenticated_server_key_id,
+        authenticated_binding,
+        registration_plaintext,
+        opened_payload,
+        app_ciphertext,
+        server_chain_4,
+        server_material_1,
+        server_material_2,
+        server_material_3,
+        cache_2,
+        receive_poststate,
+        committed_ratchet
+      )
+  ).
+
+(* One genuine Server session emits its sequence-one response before producing the sequence-two and sequence-three frames. *)
+let LaterSequenceRegistrationControl() =
+  new server_identity_secret: bitstring;
+  new beacon_identity_secret: bitstring;
+  new beacon_prekey_secret: bitstring;
+  new beacon_one_time_secret: bitstring;
+  new beacon_pq_secret: bitstring;
+  new server_ephemeral_secret: bitstring;
+  new kem_coins: bitstring;
+  new server_key_id: key_id;
+  new assigned_key_id: key_id;
+  let server_identity = ed_public(server_identity_secret) in
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let beacon_prekey = x25519_public(beacon_prekey_secret) in
+  let beacon_one_time = x25519_public(beacon_one_time_secret) in
+  let beacon_pq = mlkem_public(beacon_pq_secret) in
+  let server_ephemeral = x25519_public(server_ephemeral_secret) in
+  let kem_ciphertext = mlkem_ciphertext(beacon_pq, kem_coins) in
+  let kem_secret = mlkem_shared_secret(beacon_pq, kem_coins) in
+  let dh1 = x25519_server_dh(server_identity_secret, beacon_prekey) in
+  let dh2 = x25519_server_dh(
+    server_ephemeral_secret,
+    x25519_public_from_ed(beacon_identity)
+  ) in
+  let dh3 = x25519_server_dh(server_ephemeral_secret, beacon_prekey) in
+  let dh4 = x25519_server_dh(server_ephemeral_secret, beacon_one_time) in
+  let shared_secrets = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+    dh1,
+    dh2,
+    dh3,
+    dh4,
+    kem_secret
+  ) in
+  let root_input =
+    beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)
+  in
+  let root = pqxdh_root(
+    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+  ) in
+  let associated_data =
+    beaconcrypt_core__pqxdh__build_associated_data(
+      server_identity,
+      beacon_identity
+    )
+  in
+  let session = session_label(
+    server_identity,
+    beacon_identity,
+    assigned_key_id,
+    root_input
+  ) in
+  let server_chain_1 = server_to_beacon_chain(root) in
+  let server_material_1 = ratchet_material(server_chain_1) in
+  let assigned_binding =
+    beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+      key_id_encoding(assigned_key_id)
+    )
+  in
+  let first_frame = seal_frame(
+    server_material_1,
+    associated_data,
+    first_sequence(),
+    server_key_id,
+    registration_payload(
+      assigned_binding,
+      LATER_REGISTRATION_SEQ1_PAYLOAD
+    )
+  ) in
+  let original_response = kex_response(
+    server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    first_frame,
+    assigned_key_id
+  ) in
+  event LaterRegistrationServerFrameSent(
+    session,
+    root,
+    original_response,
+    first_sequence(),
+    server_key_id,
+    assigned_key_id,
+    LATER_REGISTRATION_SEQ1_PAYLOAD,
+    first_frame,
+    server_material_1
+  );
+  event LaterRegistrationOriginalResponseIssued(
+    LATER_REGISTRATION_ORIGINAL_WITNESS,
+    session,
+    root,
+    first_frame,
+    original_response
+  );
+  out(c, original_response);
+
+  let server_chain_2 = ratchet_next(server_chain_1) in
+  let server_material_2 = ratchet_material(server_chain_2) in
+  let second_frame = seal_frame(
+    server_material_2,
+    associated_data,
+    next_sequence(first_sequence()),
+    server_key_id,
+    LATER_REGISTRATION_SEQ2_PAYLOAD
+  ) in
+  event LaterRegistrationServerFrameSent(
+    session,
+    root,
+    original_response,
+    next_sequence(first_sequence()),
+    server_key_id,
+    assigned_key_id,
+    LATER_REGISTRATION_SEQ2_PAYLOAD,
+    second_frame,
+    server_material_2
+  );
+  out(c, second_frame);
+
+  let server_chain_3 = ratchet_next(server_chain_2) in
+  let server_material_3 = ratchet_material(server_chain_3) in
+  let third_frame = seal_frame(
+    server_material_3,
+    associated_data,
+    next_sequence(next_sequence(first_sequence())),
+    server_key_id,
+    registration_payload(
+      assigned_binding,
+      LATER_REGISTRATION_SEQ3_PAYLOAD
+    )
+  ) in
+  event LaterRegistrationServerFrameSent(
+    session,
+    root,
+    original_response,
+    next_sequence(next_sequence(first_sequence())),
+    server_key_id,
+    assigned_key_id,
+    LATER_REGISTRATION_SEQ3_PAYLOAD,
+    third_frame,
+    server_material_3
+  );
+  out(c, third_frame);
+
+  let substituted_response = kex_response(
+    server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    third_frame,
+    assigned_key_id
+  ) in
+  in(c, candidate: bitstring);
+  if candidate = substituted_response then
+    event LaterRegistrationSubstitutionSelected(
+      LATER_REGISTRATION_SUBSTITUTION_WITNESS,
+      session,
+      root,
+      original_response,
+      candidate
+    );
+    (
+      LaterSequenceRegistrationFaithfulFinish(
+        server_identity,
+        server_key_id,
+        beacon_identity_secret,
+        beacon_prekey_secret,
+        beacon_one_time_secret,
+        beacon_pq_secret,
+        candidate
+      )
+    |
+      LaterSequenceRegistrationFirstOnlyFinish(
+        server_identity,
+        server_key_id,
+        beacon_identity_secret,
+        beacon_prekey_secret,
+        beacon_one_time_secret,
+        beacon_pq_secret,
+        candidate
+      )
+    ).
