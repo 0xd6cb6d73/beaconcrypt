@@ -66,6 +66,17 @@ import BeaconcryptCore.Refinement.RatchetReceiveDriver
 import BeaconcryptCore.Refinement.RatchetReceiveReachability
 import BeaconcryptCore.Refinement.RatchetLifetime
 
+import BeaconcryptCore.Refinement.RatchetAccessors
+import BeaconcryptCore.Refinement.RatchetByteSurface
+import BeaconcryptCore.Refinement.RatchetMaterialRestore
+import BeaconcryptCore.Refinement.RatchetReceiveBehavior
+import BeaconcryptCore.Refinement.RatchetReceiveIdeal
+import BeaconcryptCore.Refinement.RatchetReceiveRollback
+import BeaconcryptCore.Refinement.RatchetRestoreAtomic
+import BeaconcryptCore.Refinement.RatchetStructural
+import BeaconcryptCore.Refinement.RatchetStructuralFuture
+import BeaconcryptCore.Refinement.RatchetStructuralSend
+
 /-!
 # Beaconcrypt-core verification root
 
