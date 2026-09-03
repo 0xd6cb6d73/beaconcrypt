@@ -31,7 +31,7 @@ def commitment.build_commitment_transcript.closure :=
   Array Std.U8 16#usize × Array Std.U8 8#usize × Array Std.U8 8#usize
 
 /-- [beaconcrypt_core::ratchet::SymmetricRatchetKdfRequest]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 166:0-169:1
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 162:0-165:1
     Visibility: public -/
 structure ratchet.SymmetricRatchetKdfRequest where
   input : Array Std.U8 32#usize
@@ -58,32 +58,32 @@ structure pqxdh.concrete.InitialRatchetKdfResponse where
   bytes : Array Std.U8 64#usize
 
 /-- [beaconcrypt_core::ratchet::RatchetChain]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 72:0-74:1
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 68:0-70:1
     Visibility: public -/
 structure ratchet.RatchetChain where
   bytes : Array Std.U8 32#usize
 
 /-- [beaconcrypt_core::ratchet::RatchetNonce]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 112:0-114:1
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 108:0-110:1
     Visibility: public -/
 structure ratchet.RatchetNonce where
   bytes : Array Std.U8 12#usize
 
 /-- [beaconcrypt_core::ratchet::RatchetKey]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 92:0-94:1
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 88:0-90:1
     Visibility: public -/
 structure ratchet.RatchetKey where
   bytes : Array Std.U8 32#usize
 
 /-- [beaconcrypt_core::ratchet::RatchetMaterial]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 132:0-135:1
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 128:0-131:1
     Visibility: public -/
 structure ratchet.RatchetMaterial where
   key : ratchet.RatchetKey
   nonce : ratchet.RatchetNonce
 
 /-- [beaconcrypt_core::ratchet::refined::CachedReceiveKey]
-    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 37:0-40:1
+    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 33:0-36:1
     Visibility: public -/
 structure ratchet.refined.CachedReceiveKey (Material : Type) where
   sequence : Std.U64
@@ -105,7 +105,7 @@ structure ratchet.control.RatchetState where
   receive_cache : ratchet.control.SequenceCache
 
 /-- [beaconcrypt_core::ratchet::refined::RefinedRatchet]
-    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 61:0-66:1
+    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 57:0-62:1
     Visibility: public -/
 structure ratchet.refined.RefinedRatchet (SendChain : Type) (ReceiveChain :
   Type) (Material : Type) where
@@ -123,17 +123,17 @@ structure ratchet.concrete.ConcreteRatchetKernel where
     ratchet.RatchetChain ratchet.RatchetMaterial
 
 /-- [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure#1]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 476:37-476:71 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 475:37-475:71 -/
 @[reducible]
 def pqxdh.split_initial_ratchet_kdf_output.closure_1 := Array Std.U8 64#usize
 
 /-- [beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 475:36-475:49 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 474:36-474:49 -/
 @[reducible]
 def pqxdh.split_initial_ratchet_kdf_output.closure := Array Std.U8 64#usize
 
 /-- [beaconcrypt_core::pqxdh::InitialRatchetChains]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 451:0-454:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 450:0-453:1
     Visibility: public -/
 structure pqxdh.InitialRatchetChains where
   send_chain : ratchet.RatchetChain
@@ -153,7 +153,7 @@ structure pqxdh.ServerBinding where
   identity_key_id : Std.U64
 
 /-- [beaconcrypt_core::pqxdh::BeaconRegistrationCandidate]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 495:0-500:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 494:0-499:1
     Visibility: public -/
 structure pqxdh.BeaconRegistrationCandidate where
   server_binding : pqxdh.ServerBinding
@@ -162,13 +162,13 @@ structure pqxdh.BeaconRegistrationCandidate where
   associated_data : Array Std.U8 153#usize
 
 /-- [beaconcrypt_core::pqxdh::ServerState]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 697:0-699:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 696:0-698:1
     Visibility: public -/
 structure pqxdh.ServerState where
   last_key_id : Std.U64
 
 /-- [beaconcrypt_core::pqxdh::ServerRegistrationCandidate]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 781:0-791:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 780:0-790:1
     Visibility: public -/
 structure pqxdh.ServerRegistrationCandidate where
   previous_state : pqxdh.ServerState
@@ -266,31 +266,31 @@ structure pqxdh.BeaconStart where
   message : pqxdh.InitKex
 
 /-- [beaconcrypt_core::pqxdh::tag_mlkem768_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 974:29-974:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 973:29-973:83 -/
 @[reducible]
 def pqxdh.tag_mlkem768_key.closure := Array Std.U8 1184#usize
 
 /-- [beaconcrypt_core::pqxdh::tag_x25519_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 960:76-968:5 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 959:76-967:5 -/
 def pqxdh.tag_x25519_key.closure := Std.U8 × Array Std.U8 32#usize
 
 /-- [beaconcrypt_core::pqxdh::tag_sign_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 952:29-952:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 951:29-951:83 -/
 @[reducible]
 def pqxdh.tag_sign_key.closure := Array Std.U8 32#usize
 
 /-- [beaconcrypt_core::pqxdh::untag_mlkem768_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1005:67-1005:85 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 1004:67-1004:85 -/
 @[reducible]
 def pqxdh.untag_mlkem768_key.closure := Array Std.U8 1185#usize
 
 /-- [beaconcrypt_core::pqxdh::untag_x25519_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 995:65-995:83 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 994:65-994:83 -/
 @[reducible]
 def pqxdh.untag_x25519_key.closure := Array Std.U8 34#usize
 
 /-- [beaconcrypt_core::pqxdh::untag_sign_key::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 984:63-984:81 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 983:63-983:81 -/
 @[reducible]
 def pqxdh.untag_sign_key.closure := Array Std.U8 33#usize
 
@@ -310,13 +310,13 @@ structure pqxdh.PqxdhSharedSecrets where
 def pqxdh.build_root_key_input.closure := pqxdh.PqxdhSharedSecrets
 
 /-- [beaconcrypt_core::pqxdh::RegistrationKeyIdBinding]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 570:0-572:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 569:0-571:1
     Visibility: public -/
 structure pqxdh.RegistrationKeyIdBinding where
   bytes : Array Std.U8 8#usize
 
 /-- [beaconcrypt_core::pqxdh::BeaconFinishInputs]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 536:0-540:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 535:0-539:1
     Visibility: public -/
 structure pqxdh.BeaconFinishInputs where
   response_server_identity : Array Std.U8 32#usize
@@ -324,38 +324,38 @@ structure pqxdh.BeaconFinishInputs where
   shared_secrets : pqxdh.PqxdhSharedSecrets
 
 /-- [beaconcrypt_core::pqxdh::build_associated_data::closure]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 936:66-946:5 -/
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 935:66-945:5 -/
 def pqxdh.build_associated_data.closure :=
   Array Std.U8 33#usize × Array Std.U8 33#usize
 
 /-- [beaconcrypt_core::pqxdh::AuthenticatedBeaconRegistration]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 597:0-599:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 596:0-598:1
     Visibility: public -/
 structure pqxdh.AuthenticatedBeaconRegistration where
   candidate : pqxdh.BeaconRegistrationCandidate
 
 /-- [beaconcrypt_core::pqxdh::BeaconEstablished]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 633:0-636:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 632:0-635:1
     Visibility: public -/
 structure pqxdh.BeaconEstablished where
   server_binding : pqxdh.ServerBinding
   assigned_key_id : Std.U64
 
 /-- [beaconcrypt_core::pqxdh::BeaconAborted]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 654:0-656:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 653:0-655:1
     Visibility: public -/
 structure pqxdh.BeaconAborted where
   server_key_id : Std.U64
 
 /-- [beaconcrypt_core::pqxdh::ServerCoins]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 714:0-717:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 713:0-716:1
     Visibility: public -/
 structure pqxdh.ServerCoins where
   ephemeral_public_key : Array Std.U8 32#usize
   kem_ciphertext : Array Std.U8 1088#usize
 
 /-- [beaconcrypt_core::pqxdh::PendingServerRegistration]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 721:0-728:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 720:0-727:1
     Visibility: public -/
 structure pqxdh.PendingServerRegistration where
   server_binding : pqxdh.ServerBinding
@@ -366,7 +366,7 @@ structure pqxdh.PendingServerRegistration where
   root_key_input : pqxdh.RootKeyInput
 
 /-- [beaconcrypt_core::pqxdh::KeyIdAvailability]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 833:0-836:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 832:0-835:1
     Visibility: public -/
 @[discriminant isize]
 inductive pqxdh.KeyIdAvailability where
@@ -374,7 +374,7 @@ inductive pqxdh.KeyIdAvailability where
 | Occupied : pqxdh.KeyIdAvailability
 
 /-- [beaconcrypt_core::pqxdh::EstablishedPeer]
-    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 886:0-890:1
+    Source: 'beaconcrypt-core/src/pqxdh.rs', lines 885:0-889:1
     Visibility: public -/
 structure pqxdh.EstablishedPeer where
   key_id : Std.U64
@@ -382,22 +382,22 @@ structure pqxdh.EstablishedPeer where
   associated_data : Array Std.U8 153#usize
 
 /-- [beaconcrypt_core::ratchet::split_ratchet_kdf_output::closure#2]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 237:29-237:98 -/
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 233:29-233:98 -/
 @[reducible]
 def ratchet.split_ratchet_kdf_output.closure_2 := Array Std.U8 76#usize
 
 /-- [beaconcrypt_core::ratchet::split_ratchet_kdf_output::closure#1]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 234:42-234:90 -/
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 230:42-230:90 -/
 @[reducible]
 def ratchet.split_ratchet_kdf_output.closure_1 := Array Std.U8 76#usize
 
 /-- [beaconcrypt_core::ratchet::split_ratchet_kdf_output::closure]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 232:35-232:48 -/
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 228:35-228:48 -/
 @[reducible]
 def ratchet.split_ratchet_kdf_output.closure := Array Std.U8 76#usize
 
 /-- [beaconcrypt_core::ratchet::RatchetKdfOutput]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 210:0-214:1
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 206:0-210:1
     Visibility: public -/
 structure ratchet.RatchetKdfOutput where
   key : ratchet.RatchetKey
@@ -405,13 +405,13 @@ structure ratchet.RatchetKdfOutput where
   nonce : ratchet.RatchetNonce
 
 /-- [beaconcrypt_core::ratchet::RatchetKdfResponse]
-    Source: 'beaconcrypt-core/src/ratchet.rs', lines 195:0-197:1
+    Source: 'beaconcrypt-core/src/ratchet.rs', lines 191:0-193:1
     Visibility: public -/
 structure ratchet.RatchetKdfResponse where
   bytes : Array Std.U8 76#usize
 
 /-- [beaconcrypt_core::ratchet::refined::RatchetStep]
-    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 27:0-30:1
+    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 23:0-26:1
     Visibility: public -/
 structure ratchet.refined.RatchetStep (Chain : Type) (Material : Type) where
   chain : Chain
@@ -474,7 +474,7 @@ structure ratchet.control.SendFinish where
   consumed : Bool
 
 /-- [beaconcrypt_core::ratchet::refined::PendingReceive]
-    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 103:0-111:1 -/
+    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 99:0-107:1 -/
 structure ratchet.refined.PendingReceive (ReceiveChain : Type) (Material :
   Type) where
   committed_control : ratchet.control.RatchetState
@@ -487,7 +487,7 @@ structure ratchet.refined.PendingReceive (ReceiveChain : Type) (Material :
   skipped : Std.U8
 
 /-- [beaconcrypt_core::ratchet::refined::PreparedCachedReceive]
-    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 76:0-81:1 -/
+    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 72:0-77:1 -/
 structure ratchet.refined.PreparedCachedReceive where
   sequence : Std.U64
   target_slot : Std.U8
@@ -495,7 +495,7 @@ structure ratchet.refined.PreparedCachedReceive where
   committed_control : ratchet.control.RatchetState
 
 /-- [beaconcrypt_core::ratchet::refined::PreparedReceive]
-    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 70:0-73:1 -/
+    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 66:0-69:1 -/
 @[discriminant isize]
 inductive ratchet.refined.PreparedReceive (ReceiveChain : Type) (Material :
   Type) where
@@ -600,7 +600,7 @@ structure ratchet.control.RatchetRestore where
   last_sequence : Std.U64
 
 /-- [beaconcrypt_core::ratchet::refined::RefinedRatchetRestore]
-    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 984:0-989:1
+    Source: 'beaconcrypt-core/src/ratchet/refined.rs', lines 980:0-985:1
     Visibility: public -/
 structure ratchet.refined.RefinedRatchetRestore (SendChain : Type)
   (ReceiveChain : Type) (Material : Type) where

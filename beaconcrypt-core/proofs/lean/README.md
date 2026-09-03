@@ -183,7 +183,7 @@ HB-60 adds a separate deterministic comparison between current core receive plan
 
 HB-62 adds deterministic source and finite-ProVerif synchronization for registration lifecycle and replay-key scope. It checks that the core replay identifier is the exact 64-byte identity-plus-one-time concatenation, excluding prekey and ML-KEM key; that the adapter returns at most one successful `Some` from `get_registration_bundle` per live Beacon object; that Server consumption follows successful root derivation and precedes any later response-building failure; and that the finite honest replay owner, malicious fresh overapproximation, and unsupported HB-49 rotation fixture retain those meanings. This is not a new Lean theorem or a semantic Rust-to-ProVerif refinement, does not prove key uniqueness or primitive security, and does not cover caller-constructed bundles made through public secret-key accessors, persistence, rollback, crash behavior, or multiple owners.
 
-The remaining implementation boundary is external to the extracted core: production primitive correctness/security and response provenance; authentication, parser/serializer, FFI, and adapter interpretation; compiler correspondence; trusted persistence and ownership across processes; panic/crash recovery outside the core; and physical erasure. The checked synchronous Lean driver is a semantic composition of extracted phases, while the Rust adapter's source-fidelity checks establish reviewed call order only. Equal-root and authentication provenance remain premises of session initialization. These deterministic refinements do not complete the separate computational, multi-user, or quantum compositions discussed above. The historical F* artifacts and gates remain retained until explicit retirement; the statement-level comparison is recorded in [`../../../doc/impl/ratchet-fstar-coverage.md`](../../../doc/impl/ratchet-fstar-coverage.md).
+The remaining implementation boundary is external to the extracted core: production primitive correctness/security and response provenance; authentication, parser/serializer, FFI, and adapter interpretation; compiler correspondence; trusted persistence and ownership across processes; panic/crash recovery outside the core; and physical erasure. The checked synchronous Lean driver is a semantic composition of extracted phases, while the Rust adapter's source-fidelity checks establish reviewed call order only. Equal-root and authentication provenance remain premises of session initialization. These deterministic refinements do not complete the separate computational, multi-user, or quantum compositions discussed above. The historical F* artifacts are archived in Git at `a79817c` and their gates are retired; the statement-level comparison is recorded in [`../../../doc/impl/ratchet-fstar-coverage.md`](../../../doc/impl/ratchet-fstar-coverage.md).
 
 ### Clean rebuild
 
@@ -228,13 +228,11 @@ verify-lean-in-shell:
 	$(MAKE) check-lean
 ```
 
-The canonical `make verify` path regenerates and checks Lean after F* and ProVerif. `verify-lean` remains useful for an isolated pinned run, and `check-generated-lean` adds generated-drift checking for CI.
+The canonical `make verify` path checks Lean, ProVerif, and SSProve; the F* backend has been retired. `verify-lean` remains useful for an isolated pinned run, and `check-generated-lean` adds generated-drift checking for CI.
 
 ## Writing Aeneas-compatible Rust
 
-The Aeneas Lean backend currently supports a smaller Rust surface than normal
-Rust or the existing F* extraction. Code inside the Lean-visible boundary
-should follow the conventions below.
+The Aeneas Lean backend supports a restricted Rust surface. Code inside the extraction boundary should follow the conventions below.
 
 ### Construct fixed arrays functionally
 

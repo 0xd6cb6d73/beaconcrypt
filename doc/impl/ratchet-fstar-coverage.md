@@ -1,5 +1,7 @@
 # Ratchet F* behavioral coverage ledger
 
+The historical F* sources referenced here are archived at Git commit `a79817c` under their original `beaconcrypt-core/proofs/fstar/` paths. The active proof backend is Lean.
+
 This ledger inventories every lemma declaration in `beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Ratchet.Lemmas.fst`. Its `.fsti` deliberately exports no declarations: the implementation is private and is friended by the PQXDH proof. The inventory therefore includes proof-internal array, arithmetic, and logical lemmas as well as protocol guarantees.
 
 The panic-freedom boundary is complete independently of this behavioral ledger: all 269 extracted non-helper `RustM` operations have checked unconditional normal-return contracts. Normal return includes explicit protocol rejection. Those contracts alone do not establish the semantic claims listed here.

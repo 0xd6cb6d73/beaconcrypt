@@ -1,5 +1,7 @@
 # PQXDH F* surface migration audit
 
+The historical F* sources referenced here are archived at Git commit `a79817c` under their original `beaconcrypt-core/proofs/fstar/` paths. The active proof backend is Lean.
+
 This inventory records every top-level declaration in `beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Pqxdh.Lemmas.fst` against the current Lean extraction. It distinguishes complete correspondence from a proof ingredient and from remaining work; totality alone does not discharge semantic obligations. No files under `BeaconcryptCore/Model/` are changed.
 
 The new `Refinement/RatchetInterpreter.lean` binds one fixed pure request interpreter to the existing ratchet model through the checked extracted 76-byte decoder. `withInterpreter` retains the supplied AEAD operations and their existing correctness law while setting only the KDF fields. `interpreter_request_refines` derives response refinement from the extracted request's input and label invariants; it does not assume a successful decoder equation or a cryptographic response law.

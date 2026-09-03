@@ -1,5 +1,7 @@
 # Commitment F* surface migration audit
 
+The historical F* sources referenced here are archived at Git commit `a79817c` under their original `beaconcrypt-core/proofs/fstar/` paths. The active proof backend is Lean.
+
 This inventory covers every top-level declaration in `beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst`. The production transcript and integer encodings are already refined to their complete byte layouts. `Refinement/CommitmentSurface.lean` now proves direct concrete-input injectivity, complete u64 decoding, and the raw collision witness theorem. The immutable ideal PQXDH model is unchanged.
 
 `productionInput_spec` connects the pure production-input view to the exact extracted builder result for every raw field tuple. `production_commitment_input_is_injective` derives all six raw field equalities using existing ideal preimage injectivity, discharging every length and integer-range premise from the concrete array and u64 types. The collision theorem returns those actual two extracted transcript byte arrays as an explicit witness. It assumes two accepted explanations of one ciphertext and hash output and that their key, nonce, associated data, sequence, sender, or plaintext differ. It uses only the deterministic supplied AEAD-open function; it assumes neither hash injectivity nor AEAD security. Its statement permits different tags as well, and specializes directly to the F* common-tag statement.

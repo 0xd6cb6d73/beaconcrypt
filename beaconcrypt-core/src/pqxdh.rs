@@ -56,7 +56,7 @@ pub const ROOT_KEY_INPUT_SIZE: usize =
 pub const ASSOCIATED_DATA_SIZE: usize = crate::constants::ASSOCIATED_DATA_SIZE;
 
 // The fixed ranges below are deliberately literal so hax exposes exact slice
-// boundaries to F*. Keep those proof-visible bounds tied to the public sizes.
+// boundaries to Lean. Keep those proof-visible bounds tied to the public sizes.
 const _: () = assert!(SIGN_PUBLIC_KEY_SIZE == 32);
 const _: () = assert!(X25519_PUBLIC_KEY_SIZE == 32);
 const _: () = assert!(MLKEM768_PUBLIC_KEY_SIZE == 1_184);
@@ -207,7 +207,7 @@ impl VerifiedInitKex {
 /// Production abstraction used by the replay adapter and the ProVerif model.
 ///
 /// The backend replacement below is deliberately limited to the exact
-/// identity/one-time-key projection proved by the Stage 6 F* lemmas. It does
+/// identity/one-time-key projection proved by the Lean PQXDH refinement. It does
 /// not replace the Rust implementation on ordinary builds.
 #[cfg_attr(
 	feature = "proverif",

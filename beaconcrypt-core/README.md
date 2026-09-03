@@ -20,7 +20,7 @@ The behavioral proofs cover the complete extracted send and receive phase lifecy
 
 The concrete PQXDH phase drivers establish complementary initial role kernels and preserve their paired session through both directional send/receive lifecycles, under the stated transcript agreement and fixed interpreter assumptions. Restoration proves generic ordering, capacity, tag alignment, exact append, and rejection neutrality. Additional conditional theorems preserve supplied chain/material provenance and construct the full concrete `KernelRefines` relation; they do not authenticate snapshots or establish that imported values have that provenance.
 
-The ideal PQXDH and ratchet models are unchanged. The tracked F* concrete artifacts are retained historical evidence for the preceding callback implementation, while [the ratchet declaration ledger](../doc/impl/ratchet-fstar-coverage.md) records checked Lean replacements, superseded internal helpers, and the changed capacity bound. The source-fidelity checks tie adapter call order and transcripts to the extracted interface, but do not prove semantic execution of the Rust adapter. Primitive correctness/security, response and authentication provenance, parser/serializer and FFI behavior, compiler correspondence, durable single-owner persistence, panic/crash recovery outside the core, and physical erasure remain external boundaries. See [the proof analysis](../doc/formal-verification-analysis.md) for the maintained claims and validation.
+The ideal PQXDH and ratchet models are unchanged. The predecessor F* concrete artifacts are archived at Git commit `a79817c`, while [the ratchet declaration ledger](../doc/impl/ratchet-fstar-coverage.md) records checked Lean replacements, superseded internal helpers, and the changed capacity bound. The source-fidelity checks tie adapter call order and transcripts to the extracted interface, but do not prove semantic execution of the Rust adapter. Primitive correctness/security, response and authentication provenance, parser/serializer and FFI behavior, compiler correspondence, durable single-owner persistence, panic/crash recovery outside the core, and physical erasure remain external boundaries. See [the proof analysis](../doc/formal-verification-analysis.md) for the maintained claims and validation.
 
 ## Ratchet module and interface layout
 
@@ -32,7 +32,7 @@ The Rust implementation keeps the flat `beaconcrypt_core::ratchet` API through s
 - [`src/ratchet/concrete.rs`](src/ratchet/concrete.rs) defines the direct-chain kernel, affine send/receive effects, and concrete restoration.
 - [`src/pqxdh/concrete.rs`](src/pqxdh/concrete.rs) defines the affine initial-KDF effect and role/candidate starts.
 
-The source dependency direction is `ratchet::control` → `ratchet::refined` → `ratchet::concrete`, with PQXDH's concrete initial phase depending on the ratchet facade. The tracked F* Control/Refined/root module split and narrow `.fsti` interfaces describe the predecessor generated snapshot; the no-exclusion Lean extraction follows the current Rust module definitions directly.
+The source dependency direction is `ratchet::control` → `ratchet::refined` → `ratchet::concrete`, with PQXDH's concrete initial phase depending on the ratchet facade. The archived F* module split and interfaces describe the predecessor snapshot; the no-exclusion Lean extraction follows the current Rust module definitions directly.
 
 ## PQXDH typestates and transactional adapter
 
@@ -53,7 +53,7 @@ Secret-bearing transcript and candidate values are not `Copy`, `Clone`, or
 `Debug`; the adapter zeroizes its shared-secret copy and the concrete root
 transcript after use, while physical erasure remains outside the formal claim.
 
-The beacon emits one registration bundle and treats every finish failure as a terminal abort. `BeaconFresh` stores the configured server public key and numeric identity-key ID as one `ServerBinding`; `beacon_start` preserves both fields in `BeaconInitSent`, and finish compares the response public key and authenticated sender ID with that retained binding. Only `BeaconState::Established` owns the committed associated data and operational ratchet, while fresh, pending, and aborted states cannot process application records. The server initializes a fresh peer ratchet off-map, encrypts and serializes the initial response, and only then commits an `EstablishedRemote` entry and counter. Manual peer insertion, reset, mutable ratchet access, and associated-data mutation are test-only or crate-private. These visibility and runtime-state facts support the verified transitions but are not themselves proved by F*.
+The beacon emits one registration bundle and treats every finish failure as a terminal abort. `BeaconFresh` stores the configured server public key and numeric identity-key ID as one `ServerBinding`; `beacon_start` preserves both fields in `BeaconInitSent`, and finish compares the response public key and authenticated sender ID with that retained binding. Only `BeaconState::Established` owns the committed associated data and operational ratchet, while fresh, pending, and aborted states cannot process application records. The server initializes a fresh peer ratchet off-map, encrypts and serializes the initial response, and only then commits an `EstablishedRemote` entry and counter. Manual peer insertion, reset, mutable ratchet access, and associated-data mutation are test-only or crate-private. These visibility and runtime-state facts support the verified transitions but are not themselves proved by Lean.
 
 The production pending-registration token is opaque and non-clonable, and the
 response public material is read from the core candidate. The token records the
@@ -80,26 +80,9 @@ registration path nor the compatibility allocator can wrap or overwrite a
 peer. See the
 [Stage 5 implementation record](../doc/impl/formal-verification-stage-5.md).
 
-Stage 6 makes every proof-relevant byte layout visible to F* and adds the
-handwritten PQXDH semantic lemmas. They prove exact tagged-key round trips,
-registration-ID and root-input construction, associated-data ordering,
-complementary role ratchet offsets, authenticated assigned-ID correspondence,
-and checked server commit/abort behavior. The post-validation composed result is
-conditional on pairwise X25519/ML-KEM agreement, authenticated role identities,
-truthful replay and availability classifications, AEAD provenance for the
-assigned-ID prefix, deterministic adapter KDFs, and non-rollback single-owner
-server state. See the
-[Stage 6 implementation record](../doc/impl/formal-verification-stage-6.md).
+Stage 6 originally made every proof-relevant byte layout visible to F* and added the handwritten PQXDH semantic lemmas; their current Lean replacements prove exact tagged-key round trips, registration-ID and root-input construction, associated-data ordering, complementary role ratchet offsets, authenticated assigned-ID correspondence, and checked server commit/abort behavior. The post-validation composed result is conditional on pairwise X25519/ML-KEM agreement, authenticated role identities, truthful replay and availability classifications, AEAD provenance for the assigned-ID prefix, deterministic adapter KDFs, and non-rollback single-owner server state. See the [Stage 6 implementation record](../doc/impl/formal-verification-stage-6.md).
 
-Stage 7 adds an active-attacker ProVerif model. Its review found that the
-prekey and one-time key previously shared the same signed X25519 tag, permitting
-valid signed fields to be exchanged or duplicated. They are now encoded as
-`[type, role, key]`, using low-domain type byte `0x04` and disjoint high-domain
-role bytes `0x80` (prekey) and `0x81` (one-time). The adapter signs the complete
-34-byte encoding, and core validation requires the field-specific role. This
-wire hardening is intentionally not interoperable with the former 33-byte
-signed X25519 payloads. The regenerated F* lemmas prove both exact layouts,
-round trips, domain disjointness, and cross-role rejection.
+Stage 7 adds an active-attacker ProVerif model. Its review found that the prekey and one-time key previously shared the same signed X25519 tag, permitting valid signed fields to be exchanged or duplicated. They are now encoded as `[type, role, key]`, using low-domain type byte `0x04` and disjoint high-domain role bytes `0x80` (prekey) and `0x81` (one-time). The adapter signs the complete 34-byte encoding, and core validation requires the field-specific role. This wire hardening is intentionally not interoperable with the former 33-byte signed X25519 payloads. The corresponding Lean lemmas now prove both exact layouts, round trips, domain disjointness, and cross-role rejection.
 
 The ProVerif baseline proves five honest-session secrecy queries and seven injective registration, authenticated-bundle, replay, complete-establishment, and bounded-record correspondences while replicated attacker-owned beacons disclose all of their keys and submit valid self-signed registrations.
 The commitment correspondence compares one 18-field symbolic transcript containing both identities, the authenticated `InitKex`, registration ID, prekey, one-time X25519 key, selected ML-KEM public key, server ephemeral key, exact KEM ciphertext, initial frame, complete response, ordered root input, derived root, exact associated data, assigned beacon key ID, pinned server key ID, session identifier, and registration origin.
@@ -137,7 +120,7 @@ The supported milestone claim is: “ProVerif proves the modeled BeaconCrypt pro
 The dedicated receive model uses two exact finite legs. The first consumes sequence 1, rejects a forged sequence-3 frame twice while reusing the exact same receiver-state term, accepts the honest sequence-3 frame, publishes only skipped sequence 2, rejects replay, and accepts delayed sequence 2. The second advances from sequence 1 to sequence 52, caches sequences 2 through 51, and consumes sequence 52 without placing it in the cache. It rejects sequence 54 while all 50 skipped-key slots remain occupied, consumes cached sequence 51, and then accepts sequence 54 while caching sequence 53. Every rejection and success event has a required reachability witness. HB-60 now locks these finite state, membership, event, and query records against the current core control/publication source, but it does not prove arbitrary schedules or semantic Rust-to-ProVerif refinement. Its compromise variant discloses the same symbolic state immediately before and after rejection; disclosure of the unchanged live chain can still expose future material, so the result is rejection non-expansion rather than post-compromise secrecy.
 
 The production CTX transcript delegates to the core's fixed-size commitment builder.
-Hax extracts that helper, and the strict F* commitment lemmas prove the exact 229-byte order `key || nonce || associated data || tag || LE64(sequence) || LE64(sender ID)`, injectivity of both integer encodings and the complete input, and `ctx_distinct_openings_imply_hash_collision`.
+Hax extracts that helper, and Lean `CommitmentSurface` proves the exact 229-byte order `key || nonce || associated data || tag || LE64(sequence) || LE64(sender ID)`, injectivity of both integer encodings and the complete input, and `ctx_distinct_openings_imply_hash_collision`.
 That theorem fixes one ciphertext, transmitted tag, and commitment and machine-checks an explicit collision witness for any two accepted explanations that differ in key, nonce, associated data, sequence, sender ID, or plaintext, while allowing the base AEAD to multi-open under unequal contexts.
 Lean's [computational lifting](../doc/ctx-commitment.md) machine-checks a factor-one bound from ideal-model misattribution advantage to BLAKE2b-512 collision advantage and proves that the current generated 229-byte builder equals the ideal preimage, while PPT/runtime preservation and the adapter hash-invocation and field-provenance bridge are not mechanized.
 A supplementary ProVerif differential control uses one deliberately multi-opening base-AEAD ciphertext/tag: the double-opening query is unreachable with CTX and deliberately reachable when only the CTX checks are removed.
@@ -152,7 +135,7 @@ unreviewed boundary change fail CI. See the
 [canonical inventory](proofs/trusted-boundary.md) and
 [Stage 9 implementation record](../doc/impl/formal-verification-stage-9.md).
 
-## Strict hax/F*/ProVerif/SSProve/Lean verification
+## Locked Lean, ProVerif, and SSProve verification
 
 From this directory, run:
 
@@ -160,8 +143,7 @@ From this directory, run:
 make verify
 ```
 
-The target enters the repository's locked Nix proof shell; checks the exact rustc, Cargo, hax, F*, Z3, ProVerif, Rocq, and SSProve identities; checks the production transcript interface; regenerates the F*, ProVerif, and Lean extractions; checks all three F* lemma modules without `--lax`; runs every ProVerif scenario; checks the SSProve suite; and builds the complete maintained Lean root.
-A policy gate rejects `assume` or `admit` in repository-owned F* modules and lax/admitted-query checker flags. The result gate rejects timeouts, missing queries, unexpected classifications, and every unproved or inconclusive security query. `make verify-proverif` runs only the ProVerif extraction and checks in the same locked shell, with the twenty-eight scenario targets running concurrently, including shared-HKDF prefix/domain controls, strong/weak public-key-confusion controls, strong/weak ML-KEM re-encapsulation controls, the strong/weak Phase-2 assigned-ID binding pair, and the finite later-sequence registration control. Each scenario is also available independently as `make check-proverif-<scenario>`, `make verify-proverif-<scenario>`, or `make check-generated-proverif-<scenario>`; for example, `make verify-proverif-baseline` enters the locked shell, regenerates the extraction, and checks only the baseline model. `make verify-ssprove` and `make verify-lean` run their respective suites in the same locked environment.
+The target enters the locked Nix proof shell, checks the exact Rust/Hax/ProVerif/Rocq/SSProve identities, verifies the production transcript interface, regenerates the ProVerif and Lean extractions, runs every ProVerif scenario and SSProve kernel check, and compiles the complete maintained Lean root and all modules. Lean policy rejects unfinished proofs and custom axioms; the signature-derived panic gate covers every extracted operation. ProVerif rejects timeouts, missing or substituted queries, unexpected classifications, and inconclusive results. `verify-proverif`, `verify-ssprove`, and `verify-lean` run the corresponding suite independently in the same locked environment. The twenty-eight named ProVerif scenarios retain their individual `check-proverif-<scenario>`, `verify-proverif-<scenario>`, and `check-generated-proverif-<scenario>` targets.
 
 Run `make check-proverif-transcript-fidelity` for only the canonical interface, production/core synchronization, and mutation suite.
 
@@ -171,19 +153,10 @@ The inventory-only check does not require entering the proof shell:
 make check-inventory
 ```
 
-It checks exact monitored file membership and fingerprints, the three embedded
-ProVerif replacements, generated default/converter exceptions and their
-permitted use, handwritten theory/process/query counts, prohibited hax opaque
-annotations, and prohibited generated F* constructs. The full proof target
-separately enforces the handwritten F* assumption policy. Intentional boundary
-changes must update the prose inventory and only the affected manifest hashes
-after their production and proof diffs have been reviewed.
+The separate inventory gate checks complete monitored source/proof file sets and reviewed fingerprints, generated placeholders, external-library boundaries, and the reviewed ProVerif replacements. The Lean policy and signature-derived panic certificates remain mandatory. Intentional boundary changes require reviewing the concrete diff before refreshing the corresponding fingerprints.
 
-The maintained Lean suite checks the complete extracted core's panic freedom, structural state preservation, exact staged/cached publication, conditional ideal ratchet and paired-session lifecycles, and generic plus conditional canonical restoration. The finite ProVerif traces and Rust tests supply complementary symbolic, compromise, schedule, and runtime evidence; they do not replace the semantic Lean proofs or discharge the external primitive, adapter, compiler, and persistence assumptions. The tracked F* artifacts remain historical evidence for the predecessor callback API, and the aggregate F* regeneration/check status is recorded separately in the proof analysis.
+The maintained Lean suite checks the complete extracted core's panic freedom, structural state preservation, exact staged/cached publication, conditional ideal ratchet and paired-session lifecycles, and generic plus conditional canonical restoration. The finite ProVerif traces and Rust tests supply complementary symbolic, compromise, schedule, and runtime evidence; they do not replace the semantic Lean proofs or discharge the external primitive, adapter, compiler, and persistence assumptions. The retired F* artifacts remain available in Git history; all current extracted-core proof claims are checked in Lean.
 
-`make check-generated` reruns the configured proof suite and additionally fails when extraction changes a tracked artifact or creates an untracked artifact. The formal-verification workflow retains F* alongside the Lean and ProVerif gates until F* retirement is explicitly completed. Each claimed current component must regenerate and check its relevant extraction before acceptance. Run the separate `make check-inventory` tripwire after reviewing intentional production/proof boundary changes.
+`make check-generated` reruns the configured proof suite and additionally fails when extraction changes a tracked artifact or creates an untracked artifact. The formal-verification workflow checks Lean, ProVerif, SSProve, and the reviewed inventory; its F* job is retired. Each claimed current component must regenerate and check its relevant extraction before acceptance. Run the separate `make check-inventory` tripwire after reviewing intentional production/proof boundary changes.
 
-The checked-in `flake.lock` pins hax revision `4c9e2b7c75ab1e2b645a4a8361ae86c4504f9800` (hax CLI 0.4.0-rc.1), its `nightly-2025-11-08` Rust toolchain (rustc 1.93.0-nightly, commit `843f8ce2e`), F* revision `7b347386330d0e5a331a220535b6f15288903234` (`2025.10.06~dev`), Z3 4.15.3, ProVerif 2.05, Rocq 9.0.0, SSProve 0.2.4, and MathComp 2.4.0.
-Nix is invoked with `--no-update-lock-file`, and the version gate fails before extraction if a checked version banner differs.
-Z3 4.15.3 is the newest solver bundled by this F* release and was qualified against the complete corpus; later F* releases were tested and rejected by hax's proof libraries.
-See the [Stage 8 implementation record](../doc/impl/formal-verification-stage-8.md) for the historical Stage 8 pinning decision and the current `flake.lock` and version gate for the maintained toolchain.
+The checked-in `flake.lock` pins Hax revision `4c9e2b7c75ab1e2b645a4a8361ae86c4504f9800` (CLI 0.4.0-rc.1), the extraction Rust toolchain `nightly-2025-11-08` (rustc 1.93.0-nightly, commit `843f8ce2e`), ProVerif 2.05, Rocq 9.0.0, SSProve 0.2.4, and MathComp 2.4.0. The Lean project additionally locks its toolchain and library dependencies. Upstream Hax may retain transitive F* tooling, but this repository no longer has an F* proof target, dedicated F*/Z3 version gate, or F*-only source annotation.

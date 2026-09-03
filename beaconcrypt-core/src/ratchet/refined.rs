@@ -50,7 +50,7 @@ pub(super) fn empty_material_slots<Material>()
 /// Ratchet control state refined by the concrete chain states and receive-key
 /// material governed by that control state.
 ///
-/// The concrete types remain generic so hax/F* can prove the bookkeeping for
+/// The concrete types remain generic so Hax/Lean can prove the bookkeeping for
 /// arbitrary opaque HKDF inputs and outputs. Each concrete receive value is
 /// sealed with its sequence, and private fields ensure Rust callers can only
 /// construct and mutate that correspondence through this kernel.
