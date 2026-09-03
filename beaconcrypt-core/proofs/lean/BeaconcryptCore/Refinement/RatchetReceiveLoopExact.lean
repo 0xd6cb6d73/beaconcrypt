@@ -98,4 +98,89 @@ theorem publish_future_receive_slots_exact
         if slot.val ≤ i ∧ i < slot.val + left.val then core.option.Option.None else staged.val[i]!) :=
   publish_future_receive_slots_loop_exact left.val state staged slot left rfl hbound
 
+private theorem receive_key_at_exact (state : ratchet.control.RatchetState) (slot : Std.U8)
+    (hlen : slot.val < state.receive_cache.len.val) (hcap : slot.val < 50) :
+    ratchet.control.RatchetState.receive_key_at state slot =
+      ok (core.option.Option.Some state.receive_cache.entries.val[slot.val]!) := by
+  simp only [ratchet.control.RatchetState.receive_key_at, SequenceCache.entry, lift, capacity_eq_ok,
+    bind_tc_ok, if_pos (by scalar_tac : slot < state.receive_cache.len),
+    if_pos (by scalar_tac : UScalar.cast UScalarTy.Usize slot < UScalar.cast UScalarTy.Usize 50#u64),
+    entries_index_eq_ok _ _ hcap]
+
+/-- Exact staged sequence matches and empty destination slots make validation succeed. -/
+theorem pending_receive_slots_are_valid_loop_true
+    (state : RefinedRatchet SendChain ReceiveChain Material)
+    (pending : PendingReceive ReceiveChain Material) (n : Nat) :
+    ∀ (slot : Std.U8) (expected : Std.U64) (left : Std.U8), left.val = n →
+      slot.val + left.val ≤ 50 →
+      slot.val + left.val ≤ pending.committed_control.receive_cache.len.val →
+      expected.val + left.val ≤ 2 ^ 64 →
+      (∀ i, slot.val ≤ i → i < slot.val + left.val →
+        state.receive_slots.val[i]! = core.option.Option.None) →
+      (∀ j, j < left.val → ∃ cached,
+        pending.staged_slots.val[slot.val + j]! = core.option.Option.Some cached ∧
+        cached.sequence.val = expected.val + j ∧
+        pending.committed_control.receive_cache.entries.val[slot.val + j]! = cached.sequence) →
+      pending_receive_slots_are_valid_loop state pending slot expected left = ok true := by
+  induction n with
+  | zero =>
+    intro slot expected left hleft hcap hlen hseq hempty hstaged
+    simp only [pending_receive_slots_are_valid_loop, loop.eq_def,
+      pending_receive_slots_are_valid_loop.body, if_neg (by scalar_tac : ¬left > 0#u8)]
+  | succ n ih =>
+    intro slot expected left hleft hcap hlen hseq hempty hstaged
+    obtain ⟨cached, hcached, hcachedseq, hkey⟩ := hstaged 0 (by omega)
+    have heq : cached.sequence = expected := by scalar_tac
+    simp only [Nat.add_zero] at hcached hcachedseq hkey
+    have hcast : (UScalar.cast UScalarTy.Usize slot).val = slot.val := by simp_scalar
+    rw [pending_receive_slots_are_valid_loop, loop.eq_def]
+    simp only [pending_receive_slots_are_valid_loop.body,
+      if_pos (by scalar_tac : left > 0#u8), lift, capacity_eq_ok, bind_tc_ok,
+      if_neg (by scalar_tac : ¬ UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
+      array_index_bang state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
+      array_index_bang pending.staged_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
+      hcast, hempty slot.val (by omega) (by omega), core.option.Option.is_some,
+      Std.core.option.Option.is_some, hcached, core.option.Option.as_ref]
+    simp only [Option.isSome, core.option.Option.None, Bool.false_eq_true, if_false, heq, if_true,
+      receive_key_at_exact pending.committed_control slot (by omega) (by omega), hkey,
+      core.option.Option.Insts.CoreCmpPartialEqOption.eq, core.U64.Insts.CoreCmpPartialEqU64,
+      bind_tc_ok, beq_self_eq_true]
+    obtain ⟨left', hnext, hnextval⟩ := uscalar_sub_eq_ok left 1#u8 (by scalar_tac)
+    by_cases hz : left' = 0#u8
+    · simp only [hnext, bind_tc_ok, hz, if_true]
+    · have hmax : expected ≠ core.num.U64.MAX := by simp only [core.num.U64.MAX, U64.rMax]; scalar_tac
+      obtain ⟨slot', hslot, hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
+      obtain ⟨expected', hexpected, hexpectedval⟩ := uscalar_add_eq_ok expected 1#u64 (by scalar_tac)
+      have hrun := ih slot' expected' left' (by scalar_tac) (by scalar_tac) (by scalar_tac) (by scalar_tac)
+        (fun i hi hj => hempty i (by scalar_tac) (by scalar_tac)) (by
+          intro j hj
+          obtain ⟨next, hnextcached, hnextseq, hnextkey⟩ := hstaged (j + 1) (by scalar_tac)
+          exact ⟨next, by convert hnextcached using 2; scalar_tac,
+            by scalar_tac, by convert hnextkey using 2; scalar_tac⟩)
+      simp! only [pending_receive_slots_are_valid_loop, pending_receive_slots_are_valid_loop.body,
+        lift, capacity_eq_ok, bind_tc_ok, core.option.Option.is_some, Std.core.option.Option.is_some,
+        Option.isSome, core.option.Option.as_ref, core.option.Option.Insts.CoreCmpPartialEqOption.eq,
+        core.U64.Insts.CoreCmpPartialEqU64] at hrun
+      simp only [Option.isSome, core.option.Option.as_ref,
+        core.option.Option.Insts.CoreCmpPartialEqOption.eq] at hrun
+      simpa only [hnext, hslot, hexpected, bind_tc_ok, if_neg hz, if_neg hmax] using hrun
+
+/-- Staged validation accepts a bounded consecutive sequence window with empty destinations. -/
+theorem pending_receive_slots_are_valid_true
+    (state : RefinedRatchet SendChain ReceiveChain Material)
+    (pending : PendingReceive ReceiveChain Material)
+    (slot : Std.U8) (expected : Std.U64) (left : Std.U8)
+    (hcap : slot.val + left.val ≤ 50)
+    (hlen : slot.val + left.val ≤ pending.committed_control.receive_cache.len.val)
+    (hseq : expected.val + left.val ≤ 2 ^ 64)
+    (hempty : ∀ i, slot.val ≤ i → i < slot.val + left.val →
+      state.receive_slots.val[i]! = core.option.Option.None)
+    (hstaged : ∀ j, j < left.val → ∃ cached,
+      pending.staged_slots.val[slot.val + j]! = core.option.Option.Some cached ∧
+      cached.sequence.val = expected.val + j ∧
+      pending.committed_control.receive_cache.entries.val[slot.val + j]! = cached.sequence) :
+    pending_receive_slots_are_valid state pending slot expected left = ok true :=
+  pending_receive_slots_are_valid_loop_true state pending left.val slot expected left rfl
+    hcap hlen hseq hempty hstaged
+
 end beaconcrypt_core.ratchet.refined
