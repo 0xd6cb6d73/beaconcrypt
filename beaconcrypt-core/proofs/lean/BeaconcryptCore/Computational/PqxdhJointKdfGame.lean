@@ -417,6 +417,67 @@ instance : DecidablePred IsFixedHkdfSha512StreamQuery
   | .inl _ => isFalse id
   | .inr _ => isTrue trivial
 
+/-- Select raw stream requests outside both exact production-domain address images. -/
+def IsFixedHkdfSha512UntypedStreamQuery :
+    FixedHkdfSha512JointStreamSpec.Domain → Prop
+  | .inl _ => False
+  | .inr address =>
+      address ≠ FixedHkdfDomain.pqxdh.address address.input ∧
+        address ≠ FixedHkdfDomain.ratchet.address address.input
+
+instance : DecidablePred IsFixedHkdfSha512UntypedStreamQuery
+  | .inl _ => isFalse id
+  | .inr address => inferInstanceAs (Decidable
+      (address ≠ FixedHkdfDomain.pqxdh.address address.input ∧
+        address ≠ FixedHkdfDomain.ratchet.address address.input))
+
+/-- One forwarding step emits no raw address outside the two typed source domains. -/
+theorem jointKdfViewForwardImpl_no_untyped_query_step
+    (query : JointKdfViewAdversarySpec.Domain) :
+    (jointKdfViewForwardImpl query).IsQueryBoundP
+      IsFixedHkdfSha512UntypedStreamQuery 0 := by
+  rcases query with randomQuery | viewQuery
+  · simp only [jointKdfViewForwardImpl_uniform]
+    change (liftM
+      (FixedHkdfSha512JointStreamSpec.query (.inl randomQuery)) :
+        OracleComp FixedHkdfSha512JointStreamSpec
+          (FixedHkdfSha512JointStreamSpec.Range (.inl randomQuery))).IsQueryBoundP
+      IsFixedHkdfSha512UntypedStreamQuery 0
+    rw [OracleComp.isQueryBoundP_query_iff]
+    simp [IsFixedHkdfSha512UntypedStreamQuery]
+  · simp only [jointKdfViewForwardImpl_projection, bind_pure_comp]
+    change (viewQuery.project <$> (liftM
+      (FixedHkdfSha512JointStreamSpec.query (.inr viewQuery.address)) :
+        OracleComp FixedHkdfSha512JointStreamSpec
+          (FixedHkdfSha512JointStreamSpec.Range
+            (.inr viewQuery.address)))).IsQueryBoundP
+      IsFixedHkdfSha512UntypedStreamQuery 0
+    rw [OracleComp.isQueryBoundP_map_iff]
+    exact (OracleComp.isQueryBoundP_query_iff
+      (p := IsFixedHkdfSha512UntypedStreamQuery)
+      (.inr viewQuery.address) 0).2 (by
+        intro outside
+        exfalso
+        rcases viewQuery with ⟨input, domain, projection⟩
+        cases domain with
+        | pqxdh => exact outside.1 (by
+            simp [JointKdfViewQuery.address, FixedHkdfDomain.address])
+        | ratchet => exact outside.2 (by
+            simp [JointKdfViewQuery.address, FixedHkdfDomain.address]))
+
+/-- Every complete-stream query emitted while forwarding an arbitrary public computation is typed. -/
+theorem jointKdfViewForwardImpl_no_untyped_queries {alpha : Type}
+    (computation : OracleComp JointKdfViewAdversarySpec alpha) :
+    (simulateQ jointKdfViewForwardImpl computation).IsQueryBoundP
+      IsFixedHkdfSha512UntypedStreamQuery 0 := by
+  have hfalse : computation.IsQueryBoundP (fun _ => False) 0 :=
+    OracleComp.isQueryBoundP_false computation 0
+  refine hfalse.simulateQ_of_step ?_ ?_
+  · intro query hquery
+    exact hquery.elim
+  · intro query hquery
+    exact jointKdfViewForwardImpl_no_untyped_query_step query
+
 /-- A bounded adaptive Boolean distinguisher for the exact public projection surface. -/
 structure JointKdfViewAdversary (qU qKdf : ℕ) where
   main : OracleComp JointKdfViewAdversarySpec Bool
@@ -597,6 +658,13 @@ theorem jointKdfViewReduction_stream_query_bound {qU qKdf : ℕ}
     (jointKdfViewReduction adversary).main.IsQueryBoundP
       IsFixedHkdfSha512StreamQuery qKdf :=
   (jointKdfViewReduction adversary).streamQueryBound
+
+/-- The constructed primitive distinguisher uses only `INFO_PQ` and `INFO_R` stream addresses. -/
+theorem jointKdfViewReduction_no_untyped_stream_queries {qU qKdf : ℕ}
+    (adversary : JointKdfViewAdversary qU qKdf) :
+    (jointKdfViewReduction adversary).main.IsQueryBoundP
+      IsFixedHkdfSha512UntypedStreamQuery 0 := by
+  exact jointKdfViewForwardImpl_no_untyped_queries adversary.main
 
 /-- The forwarding reduction retains the explicit factor-one total cap `qU + qKdf`. -/
 theorem jointKdfViewReduction_totalQueryBound {qU qKdf : ℕ}

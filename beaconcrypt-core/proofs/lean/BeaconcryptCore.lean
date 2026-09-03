@@ -8,6 +8,9 @@ import BeaconcryptCore.Model.Pqxdh.Instance
 import BeaconcryptCore.Model.Pqxdh.InstanceCommit
 import BeaconcryptCore.Model.Pqxdh.Acceptance
 import BeaconcryptCore.Model.Pqxdh.Runs
+import BeaconcryptCore.Computational.PqxdhJointKdf
+import BeaconcryptCore.Computational.PqxdhJointKdfGame
+import BeaconcryptCore.Computational.PqxdhHiddenRoot
 import BeaconcryptCore.Computational.CtxReduction
 import BeaconcryptCore.Computational.CtxRetainedTagProjection
 import BeaconcryptCore.Computational.CtxAuthClassification
