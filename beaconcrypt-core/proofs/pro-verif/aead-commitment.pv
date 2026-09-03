@@ -1,4 +1,4 @@
 (* SPDX-License-Identifier: 0BSD *)
 
 process
-  WithCtxNegativeControl()
+  (WithCtxNegativeControl() | CtxFieldMutationControls())

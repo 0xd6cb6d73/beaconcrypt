@@ -24,6 +24,8 @@ jobs:
             target: check-generated-fstar
           - name: Lean
             target: check-generated-lean
+          - name: ProVerif transcript fidelity
+            target: check-proverif-transcript-fidelity
           - name: ProVerif CTX commitment
             target: check-generated-proverif-aead-commitment
           - name: ProVerif no-CTX control
@@ -34,8 +36,32 @@ jobs:
             target: check-generated-proverif-active-classical
           - name: ProVerif passive classical
             target: check-generated-proverif-passive-classical
+          - name: ProVerif passive classical equivalence
+            target: check-generated-proverif-passive-classical-equivalence
           - name: ProVerif passive quantum
             target: check-generated-proverif-passive-quantum
+          - name: ProVerif passive quantum equivalence
+            target: check-generated-proverif-passive-quantum-equivalence
+          - name: ProVerif ML-KEM opacity
+            target: check-generated-proverif-quantum-mlkem-opacity
+          - name: ProVerif ML-KEM recovery control
+            target: check-generated-proverif-quantum-mlkem-recovery
+          - name: ProVerif ML-KEM binding control
+            target: check-generated-proverif-mlkem-reencapsulation-strong
+          - name: ProVerif weak KEM re-encapsulation control
+            target: check-generated-proverif-mlkem-reencapsulation-weak
+          - name: ProVerif HKDF prefix conformance
+            target: check-generated-proverif-hkdf-prefix-conformance
+          - name: ProVerif HKDF endpoint controls
+            target: check-generated-proverif-hkdf-endpoint-controls
+          - name: ProVerif distinct HKDF domains
+            target: check-generated-proverif-hkdf-domain-distinct
+          - name: ProVerif aliased HKDF-domain control
+            target: check-generated-proverif-hkdf-domain-alias
+          - name: ProVerif production key encodings
+            target: check-generated-proverif-public-key-confusion-strong
+          - name: ProVerif weakened key encodings
+            target: check-generated-proverif-public-key-confusion-weak
           - name: ProVerif active quantum attack
             target: check-generated-proverif-active-quantum
           - name: ProVerif reachability

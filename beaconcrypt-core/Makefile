@@ -136,17 +136,21 @@ HAX_PROVERIF_ITEMS := -** \
 
 PROVERIF_DIR := proofs/pro-verif
 PROVERIF_EXTRACTION := $(PROVERIF_DIR)/extraction/lib.pvl
+PROVERIF_INTERFACE := $(PROVERIF_DIR)/production-transcript-interface.pvl
+PROVERIF_CRYPTO_LIBS := \
+	-lib $(PROVERIF_INTERFACE) \
+	-lib $(PROVERIF_DIR)/crypto.pvl
 PROVERIF_COMMON_LIBS := \
-	-lib $(PROVERIF_DIR)/crypto.pvl \
+	$(PROVERIF_CRYPTO_LIBS) \
 	-lib $(PROVERIF_EXTRACTION) \
 	-lib $(PROVERIF_DIR)/environment.pvl
 PROVERIF_QUANTUM_LIBS := \
-	-lib $(PROVERIF_DIR)/crypto.pvl \
+	$(PROVERIF_CRYPTO_LIBS) \
 	-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
 	-lib $(PROVERIF_EXTRACTION) \
 	-lib $(PROVERIF_DIR)/environment.pvl
 PROVERIF_AEAD_CONTROL_LIBS := \
-	-lib $(PROVERIF_DIR)/crypto.pvl \
+	$(PROVERIF_CRYPTO_LIBS) \
 	-lib $(PROVERIF_DIR)/aead-commitment-negative-control.pvl \
 	-lib $(PROVERIF_DIR)/aead-commitment-negative-control-queries.pvl
 PROVERIF_CHECKER := $(PROVERIF_DIR)/check-results.awk
@@ -157,7 +161,19 @@ PROVERIF_SCENARIOS := \
 	aead-no-commitment \
 	active-classical \
 	passive-classical \
+	passive-classical-equivalence \
 	passive-quantum \
+	passive-quantum-equivalence \
+	quantum-mlkem-opacity \
+	quantum-mlkem-recovery \
+	mlkem-reencapsulation-strong \
+	mlkem-reencapsulation-weak \
+	hkdf-prefix-conformance \
+	hkdf-endpoint-controls \
+	hkdf-domain-distinct \
+	hkdf-domain-alias \
+	public-key-confusion-strong \
+	public-key-confusion-weak \
 	active-quantum \
 	baseline \
 	reachability \
@@ -192,6 +208,7 @@ LEAN_GENERATED_PATHS := \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
+	check-proverif-transcript-fidelity \
 	check-toolchain check-fstar-policy check-lean-policy check-lean-root check-inventory \
 	extract-fstar check-fstar extract-proverif check-proverif \
 	check-proverif-extraction check-generated check-generated-fstar check-generated-lean \
@@ -317,6 +334,8 @@ extract-proverif:
 	cargo hax -C --locked --features=proverif ';' into \
 		-i '$(HAX_PROVERIF_ITEMS)' \
 		--output-dir $(PROVERIF_DIR)/extraction pro-verif
+	# Hax emits one terminal empty line after replacement blocks; normalize it for the repository whitespace policy.
+	sed -i '$${/^$$/d;}' '$(PROVERIF_EXTRACTION)'
 
 check-proverif-extraction:
 	@if rg -n 'rust_primitives__hax__failure|REPLACE by|todo return|unimplemented' \
@@ -340,7 +359,13 @@ check-ssprove-policy:
 check-ssprove:
 	$(MAKE) -C '$(SSPROVE_DIR)' check
 
-check-proverif:
+check-proverif-transcript-fidelity:
+	cargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity
+
+$(PROVERIF_CHECK_TARGETS): check-proverif-transcript-fidelity
+check-proverif-passive-reachability check-proverif-quantum-capabilities: check-proverif-transcript-fidelity
+
+check-proverif: check-proverif-transcript-fidelity
 	+$(MAKE) --no-print-directory -j$(words $(PROVERIF_SCENARIOS)) \
 		$(PROVERIF_CHECK_TARGETS)
 
@@ -378,15 +403,132 @@ check-proverif-passive-reachability: check-proverif-extraction
 check-proverif-quantum-capabilities:
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
 			-lib $(PROVERIF_DIR)/quantum-capability-control.pvl \
 			-lib $(PROVERIF_DIR)/quantum-capability-control-queries.pvl \
 			$(PROVERIF_DIR)/quantum-capability-control.pv | \
 		awk -v scenario=quantum-capabilities -f '$(PROVERIF_CHECKER)'
 
+check-proverif-quantum-mlkem-opacity:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
+			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
+		awk -v scenario=quantum-mlkem-opacity -f '$(PROVERIF_CHECKER)'
+
+check-proverif-quantum-mlkem-recovery:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
+			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
+		awk -v scenario=quantum-mlkem-recovery -f '$(PROVERIF_CHECKER)'
+
+check-proverif-mlkem-reencapsulation-strong: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-strong-theory.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control-queries.pvl \
+			$(PROVERIF_DIR)/mlkem-reencapsulation-control.pv | \
+		awk -v scenario=mlkem-reencapsulation-strong \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-mlkem-reencapsulation-weak: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control-queries.pvl \
+			$(PROVERIF_DIR)/mlkem-reencapsulation-control.pv | \
+		awk -v scenario=mlkem-reencapsulation-weak \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-prefix-conformance: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-prefix-conformance.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-prefix-conformance-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-prefix-conformance.pv | \
+		awk -v scenario=hkdf-prefix-conformance -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-endpoint-controls: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-endpoint-controls.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-endpoint-controls-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-endpoint-controls.pv | \
+		awk -v scenario=hkdf-endpoint-controls -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-domain-distinct: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-domain-distinct-control.pv | \
+		awk -v scenario=hkdf-domain-distinct -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-domain-alias: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-domain-alias-control.pv | \
+		awk -v scenario=hkdf-domain-alias -f '$(PROVERIF_CHECKER)'
+
+check-proverif-public-key-confusion-strong: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control-queries.pvl \
+			$(PROVERIF_DIR)/public-key-confusion-strong.pv | \
+		awk -v scenario=public-key-confusion-strong \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-public-key-confusion-weak: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control-queries.pvl \
+			$(PROVERIF_DIR)/public-key-confusion-weak.pv | \
+		awk -v scenario=public-key-confusion-weak \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-classical-equivalence: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_COMMON_LIBS) \
+			$(PROVERIF_DIR)/passive-strong-secrecy.pv | \
+		awk -v scenario=passive-classical-equivalence -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-quantum-equivalence: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_QUANTUM_LIBS) \
+			$(PROVERIF_DIR)/passive-strong-secrecy.pv | \
+		awk -v scenario=passive-quantum-equivalence -f '$(PROVERIF_CHECKER)'
+
 check-proverif-passive-classical: check-proverif-extraction \
-	check-proverif-passive-reachability
+	check-proverif-passive-reachability \
+	check-proverif-passive-classical-equivalence
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			-set attacker passive \
@@ -396,7 +538,10 @@ check-proverif-passive-classical: check-proverif-extraction \
 		awk -v scenario=passive-classical -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-quantum: check-proverif-extraction \
-	check-proverif-passive-reachability check-proverif-quantum-capabilities
+	check-proverif-passive-reachability check-proverif-quantum-capabilities \
+	check-proverif-quantum-mlkem-opacity \
+	check-proverif-quantum-mlkem-recovery \
+	check-proverif-passive-quantum-equivalence
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			-set attacker passive \

@@ -1,0 +1,408 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* Same-identity, multi-epoch ML-KEM re-encapsulation differential        *)
+(**************************************************************************)
+
+(* This is an isolated regression fixture for an unsupported lifecycle: one
+   identity authenticates old and new ML-KEM bundles while reusing all
+   classical material.  It does not alter the production root input,
+   associated data, wire protocol, or one-bundle-per-fresh-identity model. *)
+
+free kem_multi_epoch_channel: channel.
+free kem_one_shot_channel: channel.
+
+fun kem_epoch_bundle(bitstring, bitstring, bitstring, bitstring): bitstring [data].
+fun kem_select_bundle(bitstring): bitstring [data].
+fun kem_control_response(bitstring, bitstring, bitstring, key_id, bitstring): bitstring [data].
+fun kem_control_payload(key_id, bitstring): bitstring [data].
+fun kem_control_session(bitstring, bitstring, key_id, bitstring): bitstring [data].
+(* The control commitment carries, in order, both identities, the selected
+   authenticated bundle, prekey, one-time key, selected ML-KEM public key,
+   exact KEM ciphertext, ordered root input, root, exact associated data,
+   assigned and pinned key IDs, session, and registration origin.  Thus the
+   correspondence cannot be satisfied merely by equal roots. *)
+fun kem_control_commit_transcript(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring
+): bitstring [data].
+
+free KEM_MULTI_EPOCH_PATH_WITNESS: bitstring [private].
+free KEM_OLD_KEY_COMPROMISE_WITNESS: bitstring [private].
+free KEM_SUBSTITUTION_ATTEMPT_WITNESS: bitstring [private].
+free KEM_WEAK_ATTACK_WITNESS: bitstring [private].
+free KEM_ROOT_DISCLOSURE_WITNESS: bitstring [private].
+free KEM_ORDINARY_ONE_SHOT_WITNESS: bitstring [private].
+free KEM_NEW_SESSION_CANARY: bitstring [private].
+
+event KemMultiEpochPathReached(bitstring).
+event KemOldKeyCompromised(bitstring).
+event KemCiphertextSubstitutionAttempted(bitstring).
+event KemWeakReencapsulationSucceeded(bitstring).
+event KemAcceptedRootDisclosed(bitstring).
+event KemOrdinaryOneShotCompleted(bitstring).
+event KemControlServerCommitted(bitstring).
+event KemControlBeaconCommitted(bitstring).
+
+let KemSameIdentityMultiEpoch() =
+  new server_identity_secret: bitstring;
+  new beacon_identity_secret: bitstring;
+  new beacon_prekey_secret: bitstring;
+  new beacon_one_time_secret: bitstring;
+  new pqsk_old: bitstring;
+  new pqsk_new: bitstring;
+  new server_ephemeral_secret: bitstring;
+  new old_coins: bitstring;
+  new assigned_key_id: key_id;
+  new server_key_id: key_id;
+  new registration_origin: bitstring;
+  let server_identity = ed_public(server_identity_secret) in
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let beacon_prekey = x25519_public(beacon_prekey_secret) in
+  let beacon_one_time = x25519_public(beacon_one_time_secret) in
+  let pqpk_old = mlkem_public(pqsk_old) in
+  let pqpk_new = mlkem_public(pqsk_new) in
+  let bundle_old = kem_epoch_bundle(
+    tag_ed25519(beacon_identity),
+    sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+    sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+    sign(tag_mlkem768(pqpk_old), beacon_identity_secret)
+  ) in
+  let bundle_new = kem_epoch_bundle(
+    tag_ed25519(beacon_identity),
+    sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+    sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+    sign(tag_mlkem768(pqpk_new), beacon_identity_secret)
+  ) in
+  out(kem_multi_epoch_channel, bundle_old);
+  out(kem_multi_epoch_channel, bundle_new);
+  in(kem_multi_epoch_channel, selected: bitstring);
+  let kem_select_bundle(selected_bundle) = selected in
+  let kem_epoch_bundle(
+    encoded_identity,
+    signed_prekey,
+    signed_one_time,
+    signed_pq
+  ) = selected_bundle in
+  let tag_ed25519(=beacon_identity) = encoded_identity in
+  let tag_x25519_prekey(selected_prekey) =
+    verify_signature(signed_prekey, beacon_identity)
+  in
+  let tag_x25519_one_time(selected_one_time) =
+    verify_signature(signed_one_time, beacon_identity)
+  in
+  let tag_mlkem768(selected_pqpk) =
+    verify_signature(signed_pq, beacon_identity)
+  in
+  if selected_prekey = beacon_prekey then
+  if selected_one_time = beacon_one_time then
+  if selected_pqpk = pqpk_old then
+    let server_ephemeral = x25519_public(server_ephemeral_secret) in
+    let old_ciphertext = mlkem_ciphertext(pqpk_old, old_coins) in
+    let old_shared_secret = mlkem_shared_secret(pqpk_old, old_coins) in
+    let server_dh1 = x25519_server_dh(
+      server_identity_secret,
+      beacon_prekey
+    ) in
+    let server_dh2 = x25519_server_dh(
+      server_ephemeral_secret,
+      x25519_public_from_ed(beacon_identity)
+    ) in
+    let server_dh3 = x25519_server_dh(
+      server_ephemeral_secret,
+      beacon_prekey
+    ) in
+    let server_dh4 = x25519_server_dh(
+      server_ephemeral_secret,
+      beacon_one_time
+    ) in
+    let server_root_input = pqxdh_root_input(
+      pqxdh_ff32_padding(),
+      server_dh1,
+      server_dh2,
+      server_dh3,
+      server_dh4,
+      old_shared_secret
+    ) in
+    let server_root = pqxdh_root(server_root_input) in
+    let associated_data = beaconcrypt_associated_data(
+      tag_ed25519(server_identity),
+      tag_ed25519(beacon_identity),
+      pqxdh_domain(),
+      symmetric_ratchet_domain()
+    ) in
+    let server_session = kem_control_session(
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      server_root_input
+    ) in
+    let initial_frame = seal_frame(
+      ratchet_material(server_to_beacon_chain(server_root)),
+      associated_data,
+      first_sequence(),
+      server_key_id,
+      kem_control_payload(assigned_key_id, KEM_NEW_SESSION_CANARY)
+    ) in
+    event KemMultiEpochPathReached(KEM_MULTI_EPOCH_PATH_WITNESS);
+    event KemControlServerCommitted(
+      kem_control_commit_transcript(
+        server_identity,
+        beacon_identity,
+        bundle_old,
+        beacon_prekey,
+        beacon_one_time,
+        pqpk_old,
+        old_ciphertext,
+        server_root_input,
+        server_root,
+        associated_data,
+        assigned_key_id,
+        server_key_id,
+        server_session,
+        registration_origin
+      )
+    );
+    out(
+      kem_multi_epoch_channel,
+      kem_control_response(
+        server_identity,
+        server_ephemeral,
+        old_ciphertext,
+        assigned_key_id,
+        initial_frame
+      )
+    );
+    out(kem_multi_epoch_channel, pqsk_old);
+    event KemOldKeyCompromised(KEM_OLD_KEY_COMPROMISE_WITNESS);
+    in(kem_multi_epoch_channel, candidate_response: bitstring);
+    let kem_control_response(
+      =server_identity,
+      =server_ephemeral,
+      candidate_ciphertext,
+      =assigned_key_id,
+      =initial_frame
+    ) = candidate_response in
+    if candidate_ciphertext = reencapsulate(
+      old_shared_secret,
+      pqpk_new
+    ) then
+      event KemCiphertextSubstitutionAttempted(
+        KEM_SUBSTITUTION_ATTEMPT_WITNESS
+      );
+      let accepted_shared_secret = kem_control_decapsulate(
+        candidate_ciphertext,
+        pqsk_new
+      ) in
+      let beacon_dh1 = x25519_beacon_dh(
+        beacon_prekey_secret,
+        x25519_public(server_identity_secret)
+      ) in
+      let beacon_dh2 = x25519_beacon_dh(
+        beacon_identity_secret,
+        server_ephemeral
+      ) in
+      let beacon_dh3 = x25519_beacon_dh(
+        beacon_prekey_secret,
+        server_ephemeral
+      ) in
+      let beacon_dh4 = x25519_beacon_dh(
+        beacon_one_time_secret,
+        server_ephemeral
+      ) in
+      let beacon_root_input = pqxdh_root_input(
+        pqxdh_ff32_padding(),
+        beacon_dh1,
+        beacon_dh2,
+        beacon_dh3,
+        beacon_dh4,
+        accepted_shared_secret
+      ) in
+      let beacon_root = pqxdh_root(beacon_root_input) in
+      let beacon_associated_data = beaconcrypt_associated_data(
+        tag_ed25519(server_identity),
+        tag_ed25519(beacon_identity),
+        pqxdh_domain(),
+        symmetric_ratchet_domain()
+      ) in
+      let opened = open_frame(
+        ratchet_material(server_to_beacon_chain(beacon_root)),
+        beacon_associated_data,
+        first_sequence(),
+        server_key_id,
+        initial_frame
+      ) in
+      let kem_control_payload(
+        =assigned_key_id,
+        =KEM_NEW_SESSION_CANARY
+      ) = opened in
+      let beacon_session = kem_control_session(
+        server_identity,
+        beacon_identity,
+        assigned_key_id,
+        beacon_root_input
+      ) in
+      event KemControlBeaconCommitted(
+        kem_control_commit_transcript(
+          server_identity,
+          beacon_identity,
+          bundle_new,
+          beacon_prekey,
+          beacon_one_time,
+          pqpk_new,
+          candidate_ciphertext,
+          beacon_root_input,
+          beacon_root,
+          beacon_associated_data,
+          assigned_key_id,
+          server_key_id,
+          beacon_session,
+          registration_origin
+        )
+      );
+      out(kem_multi_epoch_channel, beacon_root);
+      event KemAcceptedRootDisclosed(KEM_ROOT_DISCLOSURE_WITNESS);
+      event KemWeakReencapsulationSucceeded(KEM_WEAK_ATTACK_WITNESS).
+
+let KemOrdinaryOneShot() =
+  new server_identity_secret: bitstring;
+  new beacon_identity_secret: bitstring;
+  new beacon_prekey_secret: bitstring;
+  new beacon_one_time_secret: bitstring;
+  new pqsk: bitstring;
+  new server_ephemeral_secret: bitstring;
+  new kem_coins: bitstring;
+  new assigned_key_id: key_id;
+  new server_key_id: key_id;
+  new registration_origin: bitstring;
+  let server_identity = ed_public(server_identity_secret) in
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let beacon_prekey = x25519_public(beacon_prekey_secret) in
+  let beacon_one_time = x25519_public(beacon_one_time_secret) in
+  let pqpk = mlkem_public(pqsk) in
+  let bundle = kem_epoch_bundle(
+    tag_ed25519(beacon_identity),
+    sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+    sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+    sign(tag_mlkem768(pqpk), beacon_identity_secret)
+  ) in
+  let server_ephemeral = x25519_public(server_ephemeral_secret) in
+  let ciphertext = mlkem_ciphertext(pqpk, kem_coins) in
+  let server_shared_secret = mlkem_shared_secret(pqpk, kem_coins) in
+  let server_root_input = pqxdh_root_input(
+    pqxdh_ff32_padding(),
+    x25519_server_dh(server_identity_secret, beacon_prekey),
+    x25519_server_dh(
+      server_ephemeral_secret,
+      x25519_public_from_ed(beacon_identity)
+    ),
+    x25519_server_dh(server_ephemeral_secret, beacon_prekey),
+    x25519_server_dh(server_ephemeral_secret, beacon_one_time),
+    server_shared_secret
+  ) in
+  let server_root = pqxdh_root(server_root_input) in
+  let associated_data = beaconcrypt_associated_data(
+    tag_ed25519(server_identity),
+    tag_ed25519(beacon_identity),
+    pqxdh_domain(),
+    symmetric_ratchet_domain()
+  ) in
+  let server_session = kem_control_session(
+    server_identity,
+    beacon_identity,
+    assigned_key_id,
+    server_root_input
+  ) in
+  let initial_frame = seal_frame(
+    ratchet_material(server_to_beacon_chain(server_root)),
+    associated_data,
+    first_sequence(),
+    server_key_id,
+    kem_control_payload(assigned_key_id, KEM_NEW_SESSION_CANARY)
+  ) in
+  event KemControlServerCommitted(
+    kem_control_commit_transcript(
+      server_identity,
+      beacon_identity,
+      bundle,
+      beacon_prekey,
+      beacon_one_time,
+      pqpk,
+      ciphertext,
+      server_root_input,
+      server_root,
+      associated_data,
+      assigned_key_id,
+      server_key_id,
+      server_session,
+      registration_origin
+    )
+  );
+  out(
+    kem_one_shot_channel,
+    kem_control_response(
+      server_identity,
+      server_ephemeral,
+      ciphertext,
+      assigned_key_id,
+      initial_frame
+    )
+  );
+  let beacon_shared_secret = kem_control_decapsulate(ciphertext, pqsk) in
+  let beacon_root_input = pqxdh_root_input(
+    pqxdh_ff32_padding(),
+    x25519_beacon_dh(
+      beacon_prekey_secret,
+      x25519_public(server_identity_secret)
+    ),
+    x25519_beacon_dh(beacon_identity_secret, server_ephemeral),
+    x25519_beacon_dh(beacon_prekey_secret, server_ephemeral),
+    x25519_beacon_dh(beacon_one_time_secret, server_ephemeral),
+    beacon_shared_secret
+  ) in
+  let beacon_root = pqxdh_root(beacon_root_input) in
+  let opened = open_frame(
+    ratchet_material(server_to_beacon_chain(beacon_root)),
+    associated_data,
+    first_sequence(),
+    server_key_id,
+    initial_frame
+  ) in
+  let kem_control_payload(=assigned_key_id, =KEM_NEW_SESSION_CANARY) = opened in
+  let beacon_session = kem_control_session(
+    server_identity,
+    beacon_identity,
+    assigned_key_id,
+    beacon_root_input
+  ) in
+  event KemControlBeaconCommitted(
+    kem_control_commit_transcript(
+      server_identity,
+      beacon_identity,
+      bundle,
+      beacon_prekey,
+      beacon_one_time,
+      pqpk,
+      ciphertext,
+      beacon_root_input,
+      beacon_root,
+      associated_data,
+      assigned_key_id,
+      server_key_id,
+      beacon_session,
+      registration_origin
+    )
+  );
+  event KemOrdinaryOneShotCompleted(KEM_ORDINARY_ONE_SHOT_WITNESS).

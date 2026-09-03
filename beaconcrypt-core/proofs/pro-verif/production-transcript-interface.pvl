@@ -1,0 +1,162 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* CI-checked production cryptographic transcript interface               *)
+(**************************************************************************)
+
+(* The versioned records below are a strict machine-readable manifest checked
+   against compiled core builders, adapter wiring, and the symbolic
+   declarations in this file.  They are synchronization metadata, not an
+   extraction or refinement theorem. *)
+(* @beaconcrypt-fidelity-v1 schema=1 *)
+(* @beaconcrypt-fidelity-v1 domain.count=2 *)
+(* @beaconcrypt-fidelity-v1 domain.pqxdh.hex=426561636f6e637279707450717864685f435552564532353531395f5348412d3531325f4d4c2d4b454d2d373638 *)
+(* @beaconcrypt-fidelity-v1 domain.pqxdh.length=46 *)
+(* @beaconcrypt-fidelity-v1 domain.symmetric.hex=53796d526174636865745f484b44465f5348412d3531325f43484143484132305f504f4c5931333035 *)
+(* @beaconcrypt-fidelity-v1 domain.symmetric.length=41 *)
+(* @beaconcrypt-fidelity-v1 domain.distinct=true *)
+(* @beaconcrypt-fidelity-v1 labels.absent=aead,ctx,direction,sequence,session,phase *)
+(* @beaconcrypt-fidelity-v1 hkdf.hash=sha512 *)
+(* @beaconcrypt-fidelity-v1 hkdf.salt=none *)
+(* @beaconcrypt-fidelity-v1 hkdf.output_length_domain=absent *)
+(* @beaconcrypt-fidelity-v1 hkdf.root.domain=pqxdh *)
+(* @beaconcrypt-fidelity-v1 hkdf.root.output=32 *)
+(* @beaconcrypt-fidelity-v1 hkdf.initial.domain=symmetric *)
+(* @beaconcrypt-fidelity-v1 hkdf.initial.output=64 *)
+(* @beaconcrypt-fidelity-v1 hkdf.initial.left=0..32 *)
+(* @beaconcrypt-fidelity-v1 hkdf.initial.right=32..64 *)
+(* @beaconcrypt-fidelity-v1 hkdf.initial.server=send:left,receive:right *)
+(* @beaconcrypt-fidelity-v1 hkdf.initial.beacon=send:right,receive:left *)
+(* @beaconcrypt-fidelity-v1 hkdf.step.domain=symmetric *)
+(* @beaconcrypt-fidelity-v1 hkdf.step.output=76 *)
+(* @beaconcrypt-fidelity-v1 hkdf.step.key=0..32 *)
+(* @beaconcrypt-fidelity-v1 hkdf.step.next_chain=32..64 *)
+(* @beaconcrypt-fidelity-v1 hkdf.step.nonce=64..76 *)
+(* @beaconcrypt-fidelity-v1 hkdf.symmetric.prefix=initial[0..64]=step[0..64] *)
+(* @beaconcrypt-fidelity-v1 root.padding.byte=ff *)
+(* @beaconcrypt-fidelity-v1 root.padding.length=32 *)
+(* @beaconcrypt-fidelity-v1 root.fields=padding,dh1,dh2,dh3,dh4,kem_shared_secret *)
+(* @beaconcrypt-fidelity-v1 root.field_lengths=32,32,32,32,32,32 *)
+(* @beaconcrypt-fidelity-v1 root.length=192 *)
+(* @beaconcrypt-fidelity-v1 encoding.ed25519=01,pk *)
+(* @beaconcrypt-fidelity-v1 encoding.mlkem768=03,pk *)
+(* @beaconcrypt-fidelity-v1 encoding.x25519_prekey=04,80,pk *)
+(* @beaconcrypt-fidelity-v1 encoding.x25519_one_time=04,81,pk *)
+(* @beaconcrypt-fidelity-v1 associated_data.fields=tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain,symmetric_ratchet_domain *)
+(* @beaconcrypt-fidelity-v1 associated_data.offsets=0..33,33..66,66..112,112..153 *)
+(* @beaconcrypt-fidelity-v1 associated_data.length=153 *)
+(* @beaconcrypt-fidelity-v1 associated_data.domains=hkdf_domain_values *)
+(* @beaconcrypt-fidelity-v1 aead.primitive=chacha20poly1305_ietf *)
+(* @beaconcrypt-fidelity-v1 aead.fields=key,nonce,associated_data,plaintext *)
+(* @beaconcrypt-fidelity-v1 aead.key_length=32 *)
+(* @beaconcrypt-fidelity-v1 aead.nonce_length=12 *)
+(* @beaconcrypt-fidelity-v1 aead.tag_length=16 *)
+(* @beaconcrypt-fidelity-v1 aead.tag=detached *)
+(* @beaconcrypt-fidelity-v1 aead.sequence=absent *)
+(* @beaconcrypt-fidelity-v1 aead.sender_id=absent *)
+(* @beaconcrypt-fidelity-v1 aead.label=none *)
+(* @beaconcrypt-fidelity-v1 ctx.hash=blake2b512 *)
+(* @beaconcrypt-fidelity-v1 ctx.fields=key,nonce,associated_data,retained_aead_tag,le64(sequence),le64(sender_id) *)
+(* @beaconcrypt-fidelity-v1 ctx.offsets=0..32,32..44,44..197,197..213,213..221,221..229 *)
+(* @beaconcrypt-fidelity-v1 ctx.length=229 *)
+(* @beaconcrypt-fidelity-v1 ctx.sequence_encoding=le64 *)
+(* @beaconcrypt-fidelity-v1 ctx.sender_id_encoding=le64 *)
+(* @beaconcrypt-fidelity-v1 ctx.label=none *)
+(* @beaconcrypt-fidelity-v1 agreement.constructor=establishment_transcript *)
+(* @beaconcrypt-fidelity-v1 agreement.field_count=18 *)
+(* @beaconcrypt-fidelity-v1 agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin *)
+
+(* Checked finite-prefix symbolic sorts for production u64 values. *)
+type key_id.
+type sequence.
+
+fun sequence_le64(sequence): bitstring [data].
+fun sender_id_le64(key_id): bitstring [data].
+letfun key_id_encoding(identifier: key_id) = sender_id_le64(identifier).
+
+(* Exact disjoint production key encodings: 01 || Ed25519, 03 || ML-KEM-768,
+   04 || 80 || X25519 prekey, and 04 || 81 || X25519 one-time key. *)
+fun tag_ed25519(bitstring): bitstring [data].
+fun tag_x25519_prekey(bitstring): bitstring [data].
+fun tag_x25519_one_time(bitstring): bitstring [data].
+fun tag_mlkem768(bitstring): bitstring [data].
+
+(* Exact ordered 192-byte root-input serialization boundary. *)
+fun pqxdh_ff32_padding(): bitstring [data].
+fun pqxdh_root_input(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+): bitstring [data].
+
+(* Exactly two no-salt HKDF-SHA-512 domains and shared stream projections. *)
+type kdf_domain.
+type hkdf_stream.
+
+fun pqxdh_domain(): kdf_domain [data].
+fun symmetric_ratchet_domain(): kdf_domain [data].
+fun hkdf_sha512_no_salt(bitstring, kdf_domain): hkdf_stream.
+fun hkdf_first_32(hkdf_stream): bitstring.
+fun hkdf_second_32(hkdf_stream): bitstring.
+fun hkdf_final_12(hkdf_stream): bitstring.
+
+(* Exact server-first 153-byte associated-data structure using those same
+   symbolic domain values. *)
+fun beaconcrypt_associated_data(
+  bitstring,
+  bitstring,
+  kdf_domain,
+  kdf_domain
+): bitstring [data].
+
+(* Unlabeled production AEAD boundary with a detached tag. *)
+fun aead_cipher(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+): bitstring.
+fun aead_tag(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+): bitstring.
+
+(* Unlabeled six-field production CTX preimage and ideal BLAKE2b-512 boundary. *)
+fun ctx_preimage(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+): bitstring [data].
+fun blake2b512(bitstring): bitstring.
+
+letfun ctx_commitment(
+  key: bitstring,
+  nonce: bitstring,
+  associated_data: bitstring,
+  retained_aead_tag: bitstring,
+  message_sequence: sequence,
+  sender_id: key_id
+) =
+  blake2b512(
+    ctx_preimage(
+      key,
+      nonce,
+      associated_data,
+      retained_aead_tag,
+      sequence_le64(message_sequence),
+      sender_id_le64(sender_id)
+    )
+  ).
+
+(* The fully typed 18-field constructor is declared after generated extraction
+   types in environment.pvl; this shared result type is consumed by every
+   production protocol scenario. *)
+type establishment_transcript_t.

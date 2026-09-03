@@ -9,7 +9,7 @@ description = "Extractable protocol state transitions for beaconcrypt"
 repository = "https://github.com/0xd6cb6d73/beaconcrypt"
 keywords = ["cryptography", "protocol", "state-machine", "no-std"]
 categories = ["cryptography", "no-std"]
-exclude = ["Makefile", "proofs/**"]
+exclude = ["Makefile", "proofs/**", "tests/proverif_transcript_fidelity.rs"]
 
 [features]
 proverif = ["dep:hax-lib"]

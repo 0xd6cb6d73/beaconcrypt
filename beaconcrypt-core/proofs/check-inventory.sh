@@ -49,13 +49,13 @@ declare -A expected_category_counts=(
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=44
-	[handwritten-proverif]=28
+	[handwritten-proverif]=54
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
 	[inventory]=2
 	[lean-control]=9
-	[validation]=2
+	[validation]=3
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -105,6 +105,7 @@ printf '%s\n' proofs/check-inventory.sh proofs/trusted-boundary.md \
 compare_set inventory "$tmp_dir/inventory"
 
 printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
+	tests/proverif_transcript_fidelity.rs \
 	> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
 
@@ -305,10 +306,15 @@ require_line_count 6 '^const beaconcrypt_core.*_default_value' "$generated_prove
 	"generated ProVerif record default"
 require_line_count 9 '^letfun .*_err\(\)' "$generated_proverif" \
 	"generated ProVerif error helper"
-require_line_count 19 '^reduc ' "$generated_proverif" \
+require_line_count 22 '^fun ' "$generated_proverif" \
+	"generated ProVerif constructor/function"
+require_line_count 20 '^reduc ' "$generated_proverif" \
 	"generated ProVerif reduction"
 require_occurrence_count 11 'construct_fail\(\)' \
 	"generated ProVerif construct_fail" "$generated_proverif"
+require_line_count 1 \
+	'^  beaconcrypt_core__pqxdh__build_associated_data\(server_identity, beacon_identity\) = beaconcrypt_associated_data\(tag_ed25519\(server_identity\), tag_ed25519\(beacon_identity\), pqxdh_domain\(\), symmetric_ratchet_domain\(\)\)\.$' \
+	"$generated_proverif" "generated exact associated-data replacement"
 
 mapfile -t handwritten_proverif < <(
 	awk -F '\t' '$1 == "handwritten-proverif" && $3 ~ /\.(pv|pvl)$/ { print $3 }' "$manifest"
@@ -322,13 +328,112 @@ require_occurrence_count 4 \
 require_occurrence_count 4 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
-require_line_count 31 '^fun ' proofs/pro-verif/crypto.pvl \
+transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
+require_line_count 57 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+	"canonical production transcript fact"
+require_line_count 5 '^type ' "$transcript_interface" \
+	"canonical ProVerif interface type"
+require_line_count 19 '^fun ' "$transcript_interface" \
+	"canonical ProVerif interface constructor/function"
+require_line_count 2 '^letfun ' "$transcript_interface" \
+	"canonical ProVerif interface helper"
+require_line_count 2 '^type ' proofs/pro-verif/crypto.pvl \
+	"handwritten primitive internal type"
+require_line_count 16 '^fun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive constructor/function"
-require_line_count 6 '^reduc ' proofs/pro-verif/crypto.pvl \
+require_line_count 8 '^reduc ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive reduction"
-require_line_count 1 '^letfun ' proofs/pro-verif/crypto.pvl \
+require_line_count 6 '^letfun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive helper"
-require_line_count 24 '^event ' proofs/pro-verif/environment.pvl \
+require_line_count 1 '^fun pqxdh_domain\(\): kdf_domain \[data\]\.$' \
+	"$transcript_interface" "PQXDH HKDF domain"
+require_line_count 1 '^fun symmetric_ratchet_domain\(\): kdf_domain \[data\]\.$' \
+	"$transcript_interface" "symmetric-ratchet HKDF domain"
+require_line_count 1 '^fun hkdf_sha512_no_salt\(bitstring, kdf_domain\): hkdf_stream\.$' \
+	"$transcript_interface" "shared no-salt HKDF stream"
+require_line_count 3 '^fun hkdf_(first_32|second_32|final_12)\(' \
+	"$transcript_interface" "shared HKDF projection"
+require_occurrence_count 2 \
+	'pqxdh_root_input\(pqxdh_ff32_padding\(\), dh1, dh2, dh3, dh4, kem\)' \
+	"explicit ordered ProVerif root transcript" src/pqxdh.rs "$generated_proverif"
+require_line_count 1 '^fun sequence_le64\(sequence\): bitstring \[data\]\.$' \
+	"$transcript_interface" "symbolic sequence LE64 encoding"
+require_line_count 1 '^fun sender_id_le64\(key_id\): bitstring \[data\]\.$' \
+	"$transcript_interface" "symbolic sender-ID LE64 encoding"
+require_line_count 1 \
+	'^letfun key_id_encoding\(identifier: key_id\) = sender_id_le64\(identifier\)\.$' \
+	"$transcript_interface" "registration key-ID encoding compatibility"
+require_line_count 4 \
+	'^fun tag_(ed25519|x25519_prekey|x25519_one_time|mlkem768)\(bitstring\): bitstring \[data\]\.$' \
+	"$transcript_interface" "symbolic production key encoding"
+require_occurrence_count 1 \
+	'fun beaconcrypt_associated_data\(\s*bitstring,\s*bitstring,\s*kdf_domain,\s*kdf_domain\s*\): bitstring \[data\]\.' \
+	"exact associated-data constructor arity" "$transcript_interface"
+require_occurrence_count 2 \
+	'fun aead_(?:cipher|tag)\(\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring\s*\): bitstring\.' \
+	"exact base AEAD input arity" "$transcript_interface"
+require_occurrence_count 1 \
+	'fun ctx_preimage\(\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring\s*\): bitstring \[data\]\.' \
+	"exact six-field CTX preimage" "$transcript_interface"
+require_line_count 1 '^fun blake2b512\(bitstring\): bitstring\.$' \
+	"$transcript_interface" "symbolic BLAKE2b-512 constructor"
+require_occurrence_count 1 \
+	'letfun ctx_commitment\(\s*key: bitstring,\s*nonce: bitstring,\s*associated_data: bitstring,\s*retained_aead_tag: bitstring,\s*message_sequence: sequence,\s*sender_id: key_id\s*\)\s*=\s*blake2b512\(\s*ctx_preimage\(\s*key,\s*nonce,\s*associated_data,\s*retained_aead_tag,\s*sequence_le64\(message_sequence\),\s*sender_id_le64\(sender_id\)\s*\)\s*\)\.' \
+	"exact ordered CTX commitment" "$transcript_interface"
+reject_matches "invented AEAD or CTX label constructor" \
+	'(?m)^(?:fun|letfun) (?:aead|ctx)_[A-Za-z0-9_]*(?:label|domain)\(' \
+	"$transcript_interface" proofs/pro-verif/crypto.pvl
+reject_matches "production transcript declaration duplicated outside canonical interface" \
+	'(?m)^(?:type (?:key_id|sequence|kdf_domain|hkdf_stream|establishment_transcript_t)|fun (?:sequence_le64|sender_id_le64|tag_ed25519|tag_x25519_prekey|tag_x25519_one_time|tag_mlkem768|pqxdh_ff32_padding|pqxdh_root_input|pqxdh_domain|symmetric_ratchet_domain|hkdf_sha512_no_salt|hkdf_first_32|hkdf_second_32|hkdf_final_12|beaconcrypt_associated_data|aead_cipher|aead_tag|ctx_preimage|blake2b512)\b|letfun (?:key_id_encoding|ctx_commitment)\b)' \
+	proofs/pro-verif/crypto.pvl
+require_line_count 3 '^type ' proofs/pro-verif/environment.pvl \
+	"handwritten protocol-state type"
+require_line_count 14 '^fun ' proofs/pro-verif/environment.pvl \
+	"handwritten protocol constructor/function"
+require_line_count 1 '^type establishment_transcript_t\.$' \
+	"$transcript_interface" "canonical establishment transcript type"
+require_occurrence_count 1 \
+	'fun establishment_transcript\(\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_InitKex,\s*beaconcrypt_core__pqxdh__t_RegistrationId,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_RootKeyInput,\s*bitstring,\s*bitstring,\s*key_id,\s*key_id,\s*bitstring,\s*bitstring\s*\): establishment_transcript_t \[data\]\.' \
+	"exact 18-field establishment transcript declaration" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'type authenticated_init_bundle_t\.\s*fun authenticated_init_bundle\(\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_InitKex,\s*beaconcrypt_core__pqxdh__t_RegistrationId,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring\s*\): authenticated_init_bundle_t \[data\]\.' \
+	"exact authenticated registration-bundle declaration" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 3 \
+	'let\s+(?:beacon|server|malicious)_establishment\s*=\s*establishment_transcript\(\s*server_identity,\s*beacon_identity,\s*core_init,\s*registration_id,\s*beacon_prekey,\s*beacon_one_time,\s*beacon_pq,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*response,\s*root_input,\s*root,\s*associated_data,\s*assigned_key_id,\s*SERVER_KEY_ID,\s*session,\s*registration_session\s*\)\s+in' \
+	"exact establishment transcript emitter argument order" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 2 \
+	'let\s+(?:initiated|accepted)_bundle\s*=\s*authenticated_init_bundle\(\s*server_identity,\s*beacon_identity,\s*core_init,\s*registration_id,\s*beacon_prekey,\s*beacon_one_time,\s*beacon_pq,\s*registration_session\s*\)\s+in' \
+	"exact authenticated registration-bundle emitter argument order" \
+	proofs/pro-verif/environment.pvl
+require_line_count 1 '^event ServerCommitted\(establishment_transcript_t\)\.$' \
+	proofs/pro-verif/environment.pvl "typed server commitment event"
+require_line_count 1 '^event BeaconCommitted\(establishment_transcript_t\)\.$' \
+	proofs/pro-verif/environment.pvl "typed beacon commitment event"
+require_line_count 1 \
+	'^event BeaconBundleInitiated\(authenticated_init_bundle_t\)\.$' \
+	proofs/pro-verif/environment.pvl "typed beacon bundle-initiation event"
+require_line_count 1 \
+	'^event ServerBundleAccepted\(authenticated_init_bundle_t\)\.$' \
+	proofs/pro-verif/environment.pvl "typed server bundle-acceptance event"
+require_occurrence_count 1 \
+	'event MaliciousRegistrationCommitted\(\s*establishment_transcript_t,\s*bitstring\s*\)\.' \
+	"typed malicious-registration commitment event" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 'event\s+BeaconCommitted\(beacon_establishment\)' \
+	"beacon establishment transcript emitter" proofs/pro-verif/environment.pvl
+require_occurrence_count 1 'event\s+ServerCommitted\(server_establishment\)' \
+	"server establishment transcript emitter" proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'event\s+MaliciousRegistrationCommitted\(\s*malicious_establishment,\s*MALICIOUS_TASK_SECRET\s*\)' \
+	"malicious establishment transcript emitter" proofs/pro-verif/environment.pvl
+require_occurrence_count 1 'event\s+BeaconBundleInitiated\(initiated_bundle\)' \
+	"beacon authenticated-bundle emitter" proofs/pro-verif/environment.pvl
+require_occurrence_count 1 'event\s+ServerBundleAccepted\(accepted_bundle\)' \
+	"server authenticated-bundle emitter" proofs/pro-verif/environment.pvl
+require_line_count 26 '^event ' proofs/pro-verif/environment.pvl \
 	"handwritten event"
 require_line_count 2 '^table ' proofs/pro-verif/environment.pvl \
 	"handwritten table"
@@ -336,10 +441,30 @@ require_line_count 17 '^free ' proofs/pro-verif/environment.pvl \
 	"handwritten free name/channel"
 require_line_count 12 '^let [A-Z]' proofs/pro-verif/environment.pvl \
 	"handwritten process"
-require_line_count 11 '^query ' proofs/pro-verif/queries.pvl \
+require_line_count 12 '^query ' proofs/pro-verif/queries.pvl \
 	"baseline query"
-require_line_count 7 '^query ' proofs/pro-verif/reachability-queries.pvl \
+require_occurrence_count 1 \
+	'query\s+transcript: establishment_transcript_t;\s*inj-event\(BeaconCommitted\(transcript\)\)\s*==>\s*inj-event\(ServerCommitted\(transcript\)\)\.' \
+	"complete establishment transcript correspondence query" \
+	proofs/pro-verif/queries.pvl
+require_occurrence_count 1 \
+	'query\s+bundle: authenticated_init_bundle_t;\s*inj-event\(ServerBundleAccepted\(bundle\)\)\s*==>\s*inj-event\(BeaconBundleInitiated\(bundle\)\)\.' \
+	"exact authenticated registration-bundle correspondence query" \
+	proofs/pro-verif/queries.pvl
+require_line_count 8 '^query ' proofs/pro-verif/reachability-queries.pvl \
 	"reachability query"
+require_occurrence_count 1 \
+	'query\s+bundle: authenticated_init_bundle_t;\s*event\(ServerBundleAccepted\(bundle\)\)\.' \
+	"authenticated registration-bundle reachability query" \
+	proofs/pro-verif/reachability-queries.pvl
+require_occurrence_count 1 \
+	'query\s+transcript: establishment_transcript_t;\s*event\(BeaconCommitted\(transcript\)\)\.' \
+	"establishment transcript reachability query" \
+	proofs/pro-verif/reachability-queries.pvl
+require_occurrence_count 1 \
+	'query\s+transcript: establishment_transcript_t,\s*plaintext: bitstring;\s*event\(MaliciousRegistrationCommitted\(transcript,\s*plaintext\)\)\.' \
+	"malicious establishment transcript reachability query" \
+	proofs/pro-verif/reachability-queries.pvl
 require_line_count 5 '^query ' proofs/pro-verif/compromise-queries.pvl \
 	"compromise query"
 require_line_count 17 '^query ' proofs/pro-verif/failed-receive-queries.pvl \
@@ -347,19 +472,23 @@ require_line_count 17 '^query ' proofs/pro-verif/failed-receive-queries.pvl \
 require_line_count 12 '^query ' \
 	proofs/pro-verif/failed-receive-reachability-queries.pvl \
 	"state-neutral receive reachability query"
+require_occurrence_count 1 \
+	'query\s+transcript: establishment_transcript_t,\s*plaintext: bitstring;\s*event\(MaliciousRegistrationCommitted\(transcript,\s*plaintext\)\)\.' \
+	"state-neutral malicious establishment reachability query" \
+	proofs/pro-verif/failed-receive-reachability-queries.pvl
 require_line_count 9 '^query ' \
 	proofs/pro-verif/failed-receive-compromise-queries.pvl \
 	"state-neutral receive compromise query"
 require_line_count 2 '^query ' \
 	proofs/pro-verif/failed-receive-compromise-reachability-queries.pvl \
 	"state-neutral receive compromise reachability query"
-require_line_count 1 '^query ' \
+require_line_count 7 '^query ' \
 	proofs/pro-verif/aead-commitment-negative-control-queries.pvl \
 	"AEAD commitment negative-control query"
-require_line_count 1 '^event ' \
+require_line_count 2 '^event ' \
 	proofs/pro-verif/aead-commitment-negative-control.pvl \
 	"AEAD commitment negative-control event"
-require_line_count 2 '^let [A-Z]' \
+require_line_count 3 '^let [A-Z]' \
 	proofs/pro-verif/aead-commitment-negative-control.pvl \
 	"AEAD commitment negative-control process"
 require_line_count 1 '^process$' proofs/pro-verif/baseline.pv \
@@ -377,16 +506,61 @@ require_line_count 1 '^process$' proofs/pro-verif/aead-no-commitment.pv \
 	"AEAD no-commitment top-level process"
 require_line_count 5 '^query ' proofs/pro-verif/passive-queries.pvl \
 	"passive secrecy query"
-require_line_count 2 '^query ' \
+require_line_count 6 '^query ' \
 	proofs/pro-verif/passive-reachability-queries.pvl \
 	"passive progress-control query"
-require_line_count 3 '^query ' proofs/pro-verif/active-quantum-queries.pvl \
+require_occurrence_count 1 \
+	'query\s+transcript: establishment_transcript_t;\s*event\(BeaconCommitted\(transcript\)\)\.' \
+	"passive establishment transcript reachability query" \
+	proofs/pro-verif/passive-reachability-queries.pvl
+require_line_count 4 '^query ' proofs/pro-verif/active-quantum-queries.pvl \
 	"active-quantum attack query"
+require_occurrence_count 1 \
+	'query\s+selected_pq_public_key: bitstring,\s*server_ephemeral: bitstring,\s*kem_ciphertext: bitstring,\s*initial_frame: bitstring,\s*response: bitstring,\s*root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,\s*root: bitstring;\s*event\(QuantumInitialSecretRecovered\(\s*selected_pq_public_key,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*response,\s*root_input,\s*root,\s*INITIAL_SECRET\s*\)\)\.' \
+	"exact active-quantum transcript recovery query" \
+	proofs/pro-verif/active-quantum-queries.pvl
+require_occurrence_count 1 \
+	'query\s+bundle: authenticated_init_bundle_t;\s*inj-event\(ServerBundleAccepted\(bundle\)\)\s*==>\s*inj-event\(BeaconBundleInitiated\(bundle\)\)\.' \
+	"active-quantum authenticated-bundle failure query" \
+	proofs/pro-verif/active-quantum-queries.pvl
 require_line_count 2 '^reduc ' proofs/pro-verif/quantum-capabilities.pvl \
 	"public symbolic quantum recovery rule"
 require_line_count 2 '^query ' \
 	proofs/pro-verif/quantum-capability-control-queries.pvl \
 	"quantum capability-control query"
+require_line_count 1 '^reduc ' \
+	proofs/pro-verif/quantum-mlkem-recovery.pvl \
+	"public symbolic ML-KEM recovery rule"
+require_line_count 1 '^query ' \
+	proofs/pro-verif/quantum-mlkem-recovery-queries.pvl \
+	"ML-KEM capability-control query"
+require_line_count 5 'choice\[' \
+	proofs/pro-verif/passive-strong-secrecy.pv \
+	"passive strong-secrecy challenge"
+require_line_count 2 '^query ' \
+	proofs/pro-verif/hkdf-prefix-conformance-queries.pvl \
+	"shared-HKDF prefix conformance query"
+require_line_count 2 '^event ' \
+	proofs/pro-verif/hkdf-prefix-conformance.pvl \
+	"shared-HKDF prefix conformance event"
+require_line_count 8 '^query ' \
+	proofs/pro-verif/hkdf-endpoint-controls-queries.pvl \
+	"HKDF endpoint-control query"
+require_line_count 8 '^event ' \
+	proofs/pro-verif/hkdf-endpoint-controls.pvl \
+	"HKDF endpoint-control event"
+require_line_count 5 '^let Hkdf' \
+	proofs/pro-verif/hkdf-endpoint-controls.pvl \
+	"HKDF endpoint-control process"
+require_line_count 2 '^query ' \
+	proofs/pro-verif/hkdf-domain-alias-control-queries.pvl \
+	"HKDF domain differential query"
+require_line_count 1 '^letfun deliberately_aliased_domain' \
+	proofs/pro-verif/hkdf-domain-alias-control.pvl \
+	"deliberate HKDF domain-alias helper"
+require_line_count 2 '^let Hkdf.*DomainControl' \
+	proofs/pro-verif/hkdf-domain-alias-control.pvl \
+	"HKDF domain differential process"
 require_line_count 2 '^fun .*\[private\]' \
 	proofs/pro-verif/active-quantum-witness.pvl \
 	"bounded private quantum recovery operation"
@@ -396,14 +570,170 @@ require_line_count 2 '^equation ' \
 require_line_count 1 '^let ActiveQuantumMitm' \
 	proofs/pro-verif/active-quantum-witness.pvl \
 	"bounded active-quantum witness process"
+require_occurrence_count 1 \
+	'event QuantumInitialSecretRecovered\(\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_RootKeyInput,\s*bitstring,\s*bitstring\s*\)\.' \
+	"exact active-quantum transcript recovery event" \
+	proofs/pro-verif/active-quantum-witness.pvl
+require_occurrence_count 1 \
+	'event\s+QuantumInitialSecretRecovered\(\s*forged_pq,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*response,\s*root_input,\s*root,\s*stolen_plaintext\s*\)' \
+	"exact active-quantum transcript recovery emitter" \
+	proofs/pro-verif/active-quantum-witness.pvl
+require_line_count 3 '^reduc ' \
+	proofs/pro-verif/public-key-confusion-control.pvl \
+	"production key-confusion parser"
+require_line_count 6 '^free ' \
+	proofs/pro-verif/public-key-confusion-control.pvl \
+	"key-confusion witness"
+require_line_count 8 '^event ' \
+	proofs/pro-verif/public-key-confusion-control.pvl \
+	"key-confusion event"
+require_line_count 2 '^let Strong' \
+	proofs/pro-verif/public-key-confusion-control.pvl \
+	"strong key-confusion process"
+require_line_count 8 '^query ' \
+	proofs/pro-verif/public-key-confusion-control-queries.pvl \
+	"key-confusion query"
+require_line_count 2 '^fun ' \
+	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
+	"weak key-confusion encoding"
+require_line_count 4 '^reduc ' \
+	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
+	"weak key-confusion parser"
+require_line_count 4 '^letfun ' \
+	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
+	"weak key-confusion tag"
+require_line_count 2 '^let Weak' \
+	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
+	"weak key-confusion process"
+require_line_count 8 '^query ' \
+	proofs/pro-verif/mlkem-reencapsulation-control-queries.pvl \
+	"ML-KEM re-encapsulation control query"
+require_line_count 7 '^free KEM_' \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl \
+	"ML-KEM re-encapsulation witness"
+require_line_count 8 '^event Kem' \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl \
+	"ML-KEM re-encapsulation event"
+require_line_count 2 '^let Kem' \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl \
+	"ML-KEM re-encapsulation process"
+require_occurrence_count 1 \
+	'fun kem_control_commit_transcript\(\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*key_id,\s*key_id,\s*bitstring,\s*bitstring\s*\): bitstring \[data\]\.' \
+	"exact ML-KEM control transcript arity" \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+require_occurrence_count 1 \
+	'out\(kem_multi_epoch_channel, pqsk_old\);\s*event KemOldKeyCompromised\(KEM_OLD_KEY_COMPROMISE_WITNESS\)' \
+	"old-only ML-KEM compromise emitter" \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+reject_matches "new ML-KEM secret key disclosed by re-encapsulation control" \
+	'out\([^\n]*pqsk_new' \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+require_occurrence_count 1 \
+	'candidate_ciphertext\s*=\s*reencapsulate\(\s*old_shared_secret,\s*pqpk_new\s*\)' \
+	"exact cross-key ciphertext substitution" \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+require_occurrence_count 1 \
+	'kem_control_commit_transcript\(\s*server_identity,\s*beacon_identity,\s*bundle_old,\s*beacon_prekey,\s*beacon_one_time,\s*pqpk_old,\s*old_ciphertext,' \
+	"old-bundle server control transcript" \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+require_occurrence_count 1 \
+	'kem_control_commit_transcript\(\s*server_identity,\s*beacon_identity,\s*bundle_new,\s*beacon_prekey,\s*beacon_one_time,\s*pqpk_new,\s*candidate_ciphertext,' \
+	"new-bundle beacon control transcript" \
+	proofs/pro-verif/mlkem-reencapsulation-control.pvl
+require_line_count 1 '^reduc ' \
+	proofs/pro-verif/mlkem-reencapsulation-strong-theory.pvl \
+	"strong ML-KEM control decapsulation rule"
+require_line_count 1 '^reduc ' \
+	proofs/pro-verif/mlkem-reencapsulation-weak-theory.pvl \
+	"weak ML-KEM control reduction block"
+require_occurrence_count 1 \
+	'otherwise\s+forall shared_secret: bitstring, new_secret_key: bitstring;\s*kem_control_decapsulate\(\s*reencapsulate\(shared_secret, mlkem_public\(new_secret_key\)\),\s*new_secret_key\s*\) = shared_secret\.' \
+	"public weak-KEM re-encapsulation rule" \
+	proofs/pro-verif/mlkem-reencapsulation-weak-theory.pvl
 for scenario_process in \
 	passive \
+	passive-strong-secrecy \
+	hkdf-prefix-conformance \
+	hkdf-endpoint-controls \
+	hkdf-domain-alias-control \
+	hkdf-domain-distinct-control \
 	active-quantum \
-	quantum-capability-control; do
+	quantum-capability-control \
+	quantum-mlkem-control \
+	mlkem-reencapsulation-control \
+	public-key-confusion-strong \
+	public-key-confusion-weak; do
 	require_line_count 1 '^process$' \
 		"proofs/pro-verif/${scenario_process}.pv" \
-		"${scenario_process} top-level process"
+			"${scenario_process} top-level process"
 done
+
+fidelity_test=tests/proverif_transcript_fidelity.rs
+require_line_count 7 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED): &str = include_str!' \
+	"$fidelity_test" "transcript-fidelity synchronized input"
+require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
+	"$fidelity_test" "transcript-fidelity exact fact allowlist"
+require_line_count 1 '^struct Snapshot \{$' \
+	"$fidelity_test" "transcript-fidelity mutable snapshot"
+require_line_count 3 '^#\[test\]$' \
+	"$fidelity_test" "transcript-fidelity test"
+for fidelity_test_name in \
+	production_manifest_symbolic_model_and_adapters_are_exact \
+	compiled_core_matches_the_canonical_transcript \
+	requested_transcript_mutations_are_rejected; do
+	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
+		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
+done
+require_occurrence_count 1 \
+	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
+	"transcript-fidelity model and adapter composition" "$fidelity_test"
+require_occurrence_count 1 \
+	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
+	"transcript-fidelity combined validator" "$fidelity_test"
+for mutation_name in \
+	pqxdh_label_byte \
+	symmetric_label_byte \
+	aliased_domains \
+	separate_initial_step_domain \
+	reversed_ad_identities \
+	swapped_x25519_roles \
+	agreement_without_selected_pqpk \
+	agreement_without_kem_ciphertext \
+	ctx_without_key \
+	ctx_without_nonce \
+	ctx_without_associated_data \
+	ctx_without_retained_aead_tag \
+	ctx_without_sequence \
+	ctx_without_sender_id; do
+	require_occurrence_count 1 "\"${mutation_name}\"" \
+		"transcript-fidelity ${mutation_name} mutation" "$fidelity_test"
+done
+require_line_count 1 \
+	'^exclude = \["Makefile", "proofs/\*\*", "tests/proverif_transcript_fidelity\.rs"\]$' \
+	Cargo.toml "transcript-fidelity publication exclusion"
+require_line_count 1 \
+	'^PROVERIF_INTERFACE := \$\(PROVERIF_DIR\)/production-transcript-interface\.pvl$' \
+	Makefile "canonical ProVerif transcript interface path"
+require_line_count 1 '^check-proverif-transcript-fidelity:$' \
+	Makefile "transcript-fidelity Make target"
+require_line_count 1 \
+	'^\tcargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity$' \
+	Makefile "transcript-fidelity test invocation"
+require_line_count 1 \
+	'^\$\(PROVERIF_CHECK_TARGETS\): check-proverif-transcript-fidelity$' \
+	Makefile "per-scenario transcript-fidelity prerequisite"
+require_line_count 1 \
+	'^check-proverif-passive-reachability check-proverif-quantum-capabilities: check-proverif-transcript-fidelity$' \
+	Makefile "auxiliary ProVerif transcript-fidelity prerequisite"
+require_line_count 1 '^check-proverif: check-proverif-transcript-fidelity$' \
+	Makefile "aggregate transcript-fidelity prerequisite"
+require_occurrence_count 1 \
+	'PROVERIF_CRYPTO_LIBS :=\s*\\\s*-lib \$\(PROVERIF_INTERFACE\)\s*\\\s*-lib \$\(PROVERIF_DIR\)/crypto\.pvl' \
+	"canonical interface loaded before cryptographic theory" Makefile
+require_line_count 1 '^            target: check-proverif-transcript-fidelity$' \
+	../.github/workflows/formal-verification.yml \
+	"dedicated transcript-fidelity CI target"
 
 require_line_count 1 '^  Theorem ctx_misattribution_reduces_to_collision :' \
 	proofs/ssprove/CtxEventReduction.v \

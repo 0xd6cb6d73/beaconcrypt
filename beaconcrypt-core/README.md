@@ -95,21 +95,28 @@ wire hardening is intentionally not interoperable with the former 33-byte
 signed X25519 payloads. The regenerated F* lemmas prove both exact layouts,
 round trips, domain disjointness, and cross-role rejection.
 
-The ProVerif baseline proves five honest-session secrecy queries and six
-injective registration, replay, commit, and bounded-record correspondences
-while replicated attacker-owned beacons disclose all of their keys and submit
-valid self-signed registrations. Seven separate reachability controls exercise
-the five original honest traces, server commitment of a valid malicious
-registration response, and attacker recovery of the task canary routed to that
-response. The
-latter path assumes the surrounding application routes honest taskings only to
-their intended recipients; its private origin tables are proof instrumentation,
-not a production ACL. The late-compromise model proves secrecy for deleted
-initial and advanced keys while deliberately finding attacks on a cached
-skipped key and on future traffic in both directions, recording the absence of
-post-compromise security. See the
-[Stage 7 implementation record](../doc/impl/formal-verification-stage-7.md) and
-[current proof analysis](../doc/formal-verification-analysis.md).
+The ProVerif baseline proves five honest-session secrecy queries and seven injective registration, authenticated-bundle, replay, complete-establishment, and bounded-record correspondences while replicated attacker-owned beacons disclose all of their keys and submit valid self-signed registrations.
+The commitment correspondence compares one 18-field symbolic transcript containing both identities, the authenticated `InitKex`, registration ID, prekey, one-time X25519 key, selected ML-KEM public key, server ephemeral key, exact KEM ciphertext, initial frame, complete response, ordered root input, derived root, exact associated data, assigned beacon key ID, pinned server key ID, session identifier, and registration origin.
+Eight separate reachability controls exercise the five original honest traces, the new authenticated-bundle acceptance event, server commitment of a valid malicious registration response, and attacker recovery of the task canary routed to that response.
+The latter path assumes the surrounding application routes honest taskings only to their intended recipients; its private origin tables are proof instrumentation, not a production ACL.
+The late-compromise model proves secrecy for deleted initial and advanced keys while deliberately finding attacks on a cached skipped key and on future traffic in both directions, recording the absence of post-compromise security.
+The bounded active-quantum control binds its recovery witness to the selected replacement ML-KEM public key, server ephemeral key, exact KEM ciphertext, initial frame, complete response, ordered root input, root, and recovered plaintext, and it deliberately violates both honest initiation and authenticated-bundle agreement.
+The production ProVerif KEM constructor additionally assumes ML-KEM public-key binding, or strong shared-secret collision resistance across distinct public keys; this assumption is stronger than generic IND-CCA and is not derived from it.
+An isolated non-production same-identity multi-epoch fixture compromises only an old ML-KEM key and reaches an exact cross-key ciphertext-substitution attempt: the strong production-style theory preserves agreement and the new-session canary, while a deliberately weakened public re-encapsulation theory breaks both.
+The supported `Beacon` API creates one identity and ML-KEM keypair together, consumes its fresh state after one registration bundle, and exposes no same-identity key-rotation operation; a hypothetical rotation extension would need to retain the binding assumption or cryptographically bind the selected KEM key into the authenticated handshake transcript.
+These are symbolic constructor-equality and reachability results, not byte-level serialization/extraction linkage or a computational handshake theorem, and they do not change the production root KDF input, associated data, or wire protocol.
+See the [Stage 7 implementation record](../doc/impl/formal-verification-stage-7.md) and [current proof analysis](../doc/formal-verification-analysis.md).
+
+### ProVerif cryptographic transcript fidelity
+
+[`proofs/pro-verif/production-transcript-interface.pvl`](proofs/pro-verif/production-transcript-interface.pvl) is one canonical interface consumed by every ProVerif scenario and carries 57 ordered machine-readable facts about the exact two HKDF domains, shared symmetric prefix, padded root input, key encodings, associated data, unlabeled AEAD and CTX structures, and complete 18-field agreement transcript.
+[`tests/proverif_transcript_fidelity.rs`](tests/proverif_transcript_fidelity.rs) checks those facts against compiled dependency-free core builders, adapter wiring, and the symbolic declarations, including the exact sizes, offsets, field order, shared-domain uses, and absence of invented AEAD, CTX, direction, sequence, session, or phase labels.
+The same check runs 14 in-memory drift mutations covering one byte of either label, aliased domains, separate initial and step domains, reversed associated-data identities, swapped X25519 roles, either missing KEM agreement field, and each individually omitted CTX field.
+These are fidelity checks that must reject drift even if a secrecy theorem would remain true; the separate weakened-theory ProVerif scenarios are security controls that must produce their required disclosure, confusion, correspondence failure, or multi-opening witness.
+Every ProVerif scenario depends on `check-proverif-transcript-fidelity`, and the formal-verification workflow also runs it as a dedicated job.
+The mechanism is CI-enforced synchronization, not generated model extraction, a Rust-to-ProVerif refinement theorem, primitive verification, or an end-to-end computational security theorem.
+
+The supported milestone claim is: “ProVerif proves the modeled BeaconCrypt protocol using the exact two production HKDF domains, the intentional shared symmetric-HKDF prefix semantics, the exact authenticated-context structure, disjoint concrete key encodings, and an explicitly named ML-KEM public-key-binding assumption.”
 
 The dedicated receive model uses two exact finite legs. The first consumes sequence 1, rejects a forged sequence-3 frame twice while reusing the exact same receiver-state term, accepts the honest sequence-3 frame, publishes only skipped sequence 2, rejects replay, and accepts delayed sequence 2. The second advances from sequence 1 to sequence 52, caches sequences 2 through 51, and consumes sequence 52 without placing it in the cache. It rejects sequence 54 while all 50 skipped-key slots remain occupied, consumes cached sequence 51, and then accepts sequence 54 while caching sequence 53. Every rejection and success event has a required reachability witness. Its compromise variant discloses the same symbolic state immediately before and after rejection; disclosure of the unchanged live chain can still expose future material, so the result is rejection non-expansion rather than post-compromise secrecy.
 
@@ -137,11 +144,10 @@ From this directory, run:
 make verify
 ```
 
-The target enters the repository's locked Nix proof shell; checks the exact rustc, Cargo, hax, F*, Z3, ProVerif, Rocq, and SSProve identities; regenerates the F*, ProVerif, and Lean extractions; checks all three F* lemma modules without `--lax`; runs every ProVerif scenario; checks the SSProve suite; and builds the complete maintained Lean root.
-A policy gate rejects `assume` or `admit` in repository-owned F* modules and
-lax/admitted-query checker flags. The result gate rejects timeouts, missing
-queries, unexpected classifications, and every unproved or inconclusive
-security query. `make verify-proverif` runs only the ProVerif extraction and checks in the same locked shell, with the thirteen scenario targets running concurrently. Each scenario is also available independently as `make check-proverif-<scenario>`, `make verify-proverif-<scenario>`, or `make check-generated-proverif-<scenario>`; for example, `make verify-proverif-baseline` enters the locked shell, regenerates the extraction, and checks only the baseline model. `make verify-ssprove` and `make verify-lean` run their respective suites in the same locked environment.
+The target enters the repository's locked Nix proof shell; checks the exact rustc, Cargo, hax, F*, Z3, ProVerif, Rocq, and SSProve identities; checks the production transcript interface; regenerates the F*, ProVerif, and Lean extractions; checks all three F* lemma modules without `--lax`; runs every ProVerif scenario; checks the SSProve suite; and builds the complete maintained Lean root.
+A policy gate rejects `assume` or `admit` in repository-owned F* modules and lax/admitted-query checker flags. The result gate rejects timeouts, missing queries, unexpected classifications, and every unproved or inconclusive security query. `make verify-proverif` runs only the ProVerif extraction and checks in the same locked shell, with the twenty-five scenario targets running concurrently, including shared-HKDF prefix/domain controls, strong/weak public-key-confusion controls, and strong/weak ML-KEM re-encapsulation controls. Each scenario is also available independently as `make check-proverif-<scenario>`, `make verify-proverif-<scenario>`, or `make check-generated-proverif-<scenario>`; for example, `make verify-proverif-baseline` enters the locked shell, regenerates the extraction, and checks only the baseline model. `make verify-ssprove` and `make verify-lean` run their respective suites in the same locked environment.
+
+Run `make check-proverif-transcript-fidelity` for only the canonical interface, production/core synchronization, and mutation suite.
 
 The inventory-only check does not require entering the proof shell:
 
