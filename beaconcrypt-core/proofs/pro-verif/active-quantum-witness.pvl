@@ -65,8 +65,8 @@ let ActiveQuantumMitm() =
     response_server_identity,
     server_ephemeral,
     kem_ciphertext,
-    assigned_key_id,
-    initial_frame
+    initial_frame,
+    assigned_key_id
   ) = response in
   let server_identity_secret = quantum_x25519_secret(
     x25519_public_from_ed(response_server_identity)
