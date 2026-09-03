@@ -76,4 +76,24 @@ theorem refined_restore_receive_key_rejected {SendChain ReceiveChain Material : 
       | some cached => simpa only [hslot, Option.isSome, if_true, RustM.ok.injEq,
           Prod.mk.injEq, true_and] using hrun.symm
 
+/-- Logical restoration rejects exactly when a required order, counter, or capacity condition fails. -/
+theorem restore_logical_rejects (r : RatchetRestore) (sequence : Std.U64)
+    (hbad : ¬(0 < sequence.val ∧ sequence.val ≤ r.state.receive_sequence.val ∧
+      r.last_sequence.val < sequence.val ∧ r.state.receive_cache.len.val < 50)) :
+    restore_receive_key_with_slot r sequence = ok core.option.Option.None := by
+  simp only [restore_receive_key_with_slot]
+  split_ifs with hzero hahead hlast
+  · rfl
+  · rfl
+  · rfl
+  · have hfull : 50 ≤ r.state.receive_cache.len.val := by scalar_tac
+    simp only [SequenceCache.append_eq_none_of_full _ sequence hfull, bind_tc_ok]
+
+/-- A rejected logical restoration changes no material state. -/
+theorem refined_restore_receive_key_logical_rejection {SendChain ReceiveChain Material : Type}
+    (r : RefinedRatchetRestore SendChain ReceiveChain Material) (sequence : Std.U64) (material : Material)
+    (hreject : restore_receive_key_with_slot r.logical sequence = ok core.option.Option.None) :
+    refined_restore_receive_key r sequence material = ok (false, r) := by
+  simp only [refined_restore_receive_key, hreject, bind_tc_ok]
+
 end beaconcrypt_core.ratchet.refined

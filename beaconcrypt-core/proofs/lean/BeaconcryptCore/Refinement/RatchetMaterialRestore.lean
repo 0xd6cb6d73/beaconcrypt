@@ -1,5 +1,5 @@
 import BeaconcryptCore.Refinement.RatchetEffectRefinement
-import BeaconcryptCore.PanicFreedom.Restore
+import BeaconcryptCore.Refinement.RatchetRestoreAtomic
 
 /-!
 # Conditional refinement of material restoration
@@ -261,5 +261,38 @@ theorem RestoreRefines.finish
     (r : ConcreteRatchetRestore) (h : RestoreRefines cr origin send receive r) :
     finish_concrete_restore r = ok (restoreKernel r) ∧
       KernelRefines cr origin send receive (restoreKernel r) := ⟨rfl, h.kernel⟩
+
+/-- Concrete restoration preserves the complete builder on every rejected result. -/
+theorem concrete_restore_receive_key_rejected
+    (r next : ConcreteRatchetRestore) (sequence : Std.U64) (material : RatchetMaterial)
+    (hrun : concrete_restore_receive_key r sequence material = ok (false, next)) : next = r := by
+  obtain ⟨⟨accepted, inner⟩, hinner⟩ := refined.refined_restore_receive_key_total r.refined sequence material
+  simp only [concrete_restore_receive_key, hinner, bind_tc_ok] at hrun
+  dsimp! only at hrun
+  obtain ⟨rfl, rfl⟩ := Prod.mk.inj (RustM.ok.inj hrun)
+  exact congrArg ConcreteRatchetRestore.mk
+    (refined.refined_restore_receive_key_rejected r.refined inner sequence material hinner)
+
+/-- Every restoration attempt preserves canonical reachability: accepted keys extend the ideal store, rejected attempts retain the exact entry state. -/
+theorem RestoreRefines.restore
+    (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
+    (origin : RatchetChain) (send : Ratchet.SendState RatchetChain)
+    (receive : Ratchet.RecvState RatchetChain RatchetMaterial)
+    (r : ConcreteRatchetRestore) (h : RestoreRefines cr origin send receive r)
+    (sequence : Std.U64) (material : RatchetMaterial)
+    (hmaterial : material = Ratchet.msgKeyAt cr origin (sequence.val - 1)) :
+    ∃ accepted next, concrete_restore_receive_key r sequence material = ok (accepted, next) ∧
+      RestoreRefines cr origin send
+        (if accepted then { receive with skipped := receive.skipped ++ [(sequence.val - 1, material)] }
+          else receive) next := by
+  by_cases hadmit : 0 < sequence.val ∧ sequence.val ≤ r.refined.logical.state.receive_sequence.val ∧
+      r.refined.logical.last_sequence.val < sequence.val ∧ r.refined.logical.state.receive_cache.len.val < 50
+  · obtain ⟨next, hrun, hnext, _⟩ := h.append cr origin send receive r sequence material
+      hadmit.1 hadmit.2.1 hadmit.2.2.1 hadmit.2.2.2 hmaterial
+    exact ⟨true, next, hrun, hnext⟩
+  · refine ⟨false, r, ?_, h⟩
+    simp only [concrete_restore_receive_key, refined.refined_restore_receive_key_logical_rejection
+      r.refined sequence material (refined.restore_logical_rejects r.refined.logical sequence hadmit), bind_tc_ok]
+    rfl
 
 end beaconcrypt_core.ratchet.concrete
