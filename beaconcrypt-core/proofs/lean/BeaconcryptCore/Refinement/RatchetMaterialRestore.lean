@@ -175,4 +175,91 @@ theorem KernelRefines.append_restored
     rw [array_set_bang _ _ _ _ (by scalar_tac), if_neg (by scalar_tac)]
     exact h.slotsAboveLenEmpty i (by omega) hbound
 
+/-- A canonical persisted key within the receive frontier is restored exactly once in increasing order. -/
+theorem RestoreRefines.append
+    (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
+    (origin : RatchetChain) (send : Ratchet.SendState RatchetChain)
+    (receive : Ratchet.RecvState RatchetChain RatchetMaterial)
+    (r : ConcreteRatchetRestore) (h : RestoreRefines cr origin send receive r)
+    (sequence : Std.U64) (material : RatchetMaterial)
+    (hpositive : 0 < sequence.val)
+    (hbelow : sequence.val ≤ r.refined.logical.state.receive_sequence.val)
+    (hfrontier : r.refined.logical.last_sequence.val < sequence.val)
+    (hcap : r.refined.logical.state.receive_cache.len.val < 50)
+    (hmaterial : material = Ratchet.msgKeyAt cr origin (sequence.val - 1)) :
+    ∃ next, concrete_restore_receive_key r sequence material = ok (true, next) ∧
+      RestoreRefines cr origin send
+        { receive with skipped := receive.skipped ++ [(sequence.val - 1, material)] } next ∧
+      next.refined.logical.last_sequence = sequence := by
+  obtain ⟨cache, happend, hlen, hentries⟩ :=
+    SequenceCache.append_ok r.refined.logical.state.receive_cache sequence (by omega) hcap
+  let step : ReceiveRestoreStep := {
+    restore := { state := { r.refined.logical.state with receive_cache := cache }, last_sequence := sequence }
+    slot := r.refined.logical.state.receive_cache.len }
+  have hstep : restore_receive_key_with_slot r.refined.logical sequence = ok (core.option.Option.Some step) := by
+    simp only [restore_receive_key_with_slot, if_neg (by scalar_tac : sequence ≠ 0#u64),
+      if_neg (by scalar_tac : ¬sequence > r.refined.logical.state.receive_sequence),
+      if_neg (by scalar_tac : ¬sequence ≤ r.refined.logical.last_sequence), happend, bind_tc_ok, step]
+    rfl
+  have hrun := concrete_restore_receive_key_of_append r sequence material step hstep hcap
+    (h.kernel.slotsAboveLenEmpty r.refined.logical.state.receive_cache.len.val (by rfl) hcap)
+  have hseq : r.refined.logical.state.receive_sequence.val = receive.n := h.kernel.receiveControl.seq
+  have hkernel := h.kernel.append_restored cr origin send receive (restoreKernel r) sequence material cache
+    hpositive (by omega) (by
+      intro p hp heq
+      have hpast := h.frontier p hp
+      omega) hmaterial hcap hlen hentries
+  refine ⟨_, hrun, ⟨?_, ?_⟩, rfl⟩
+  · exact hkernel
+  · simpa only [List.mem_append, List.mem_singleton, or_imp, forall_and, forall_eq] using
+      And.intro (fun p hp => Nat.le_trans (h.frontier p hp) (Nat.le_of_lt hfrontier))
+        (show sequence.val - 1 + 1 ≤ sequence.val by omega)
+
+/-- Trusted canonical persisted chains initialize an empty restoration with its exact ideal state. -/
+theorem start_concrete_restore_refines
+    (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
+    (sendOrigin receiveOrigin : RatchetChain) (sendSequence receiveSequence : Std.U64)
+    (sendChain receiveChain : RatchetChain)
+    (hsend : sendChain = Ratchet.chainAt cr sendOrigin sendSequence.val)
+    (hreceive : receiveChain = Ratchet.chainAt cr receiveOrigin receiveSequence.val) :
+    ∃ restore, start_concrete_restore sendSequence receiveSequence sendChain receiveChain = ok restore ∧
+      RestoreRefines cr receiveOrigin
+        { ck := Ratchet.chainAt cr sendOrigin sendSequence.val, n := sendSequence.val }
+        { ck := Ratchet.chainAt cr receiveOrigin receiveSequence.val, n := receiveSequence.val, skipped := [] }
+        restore := by
+  refine ⟨_, rfl, ⟨?_, by simp⟩⟩
+  refine {
+    receiveControl := ?_
+    sendSequence := rfl
+    sendLt := by scalar_tac
+    sendChain := hsend
+    receiveChain := hreceive
+    slotSound := by simp [restoreKernel]
+    slotComplete := by simp
+    slotsAboveLenEmpty := ?_ }
+  · refine {
+      wf := by simp [restoreKernel, RatchetState.Wf, SequenceCache.Wf]
+      seq := rfl
+      lt := by scalar_tac
+      chain := rfl
+      keys := by simp
+      keys_lt := by simp
+      nodup := by simp
+      cache := ?_ }
+    simp [restoreKernel, cacheSeqs]
+  · intro i hi hbound
+    change (List.replicate 50 (core.option.Option.None : core.option.Option (refined.CachedReceiveKey RatchetMaterial)))[i]! = core.option.Option.None
+    simp only [List.getElem!_eq_getElem?_getD,
+      List.getElem?_eq_getElem (show i < (List.replicate 50 (core.option.Option.None : core.option.Option (refined.CachedReceiveKey RatchetMaterial))).length by simpa using hbound),
+      List.getElem_replicate, Option.getD_some]
+
+/-- Finishing restoration publishes the same chains, counters, and skipped material together. -/
+theorem RestoreRefines.finish
+    (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
+    (origin : RatchetChain) (send : Ratchet.SendState RatchetChain)
+    (receive : Ratchet.RecvState RatchetChain RatchetMaterial)
+    (r : ConcreteRatchetRestore) (h : RestoreRefines cr origin send receive r) :
+    finish_concrete_restore r = ok (restoreKernel r) ∧
+      KernelRefines cr origin send receive (restoreKernel r) := ⟨rfl, h.kernel⟩
+
 end beaconcrypt_core.ratchet.concrete
