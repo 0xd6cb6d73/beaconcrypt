@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=45
+	[handwritten-lean]=46
 	[handwritten-proverif]=61
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1902,7 +1902,7 @@ done
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$' \
 	"$lean_root" \
 	"canonical VCVio feasibility proof-root import"
-for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions; do
+for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca; do
 	require_line_count 1 "^import BeaconcryptCore\\.Computational\\.${pqxdh_computational_module}$" \
 		"$lean_root" "canonical PQXDH computational ${pqxdh_computational_module} proof-root import"
 done
@@ -2101,6 +2101,78 @@ require_line_count 1 '^#guard_msgs in$' \
 	"$pqxdh_projection_collisions" "PQXDH projection-collision capstone guarded axiom audit"
 require_line_count 1 '^#print axioms sourceProjectionCollision_real_le$' \
 	"$pqxdh_projection_collisions" "PQXDH projection-collision capstone axiom audit"
+
+pqxdh_kem_indcca=proofs/lean/BeaconcryptCore/Computational/PqxdhKemIndCca.lean
+require_line_count 1 '^import BeaconcryptCore\.Model\.Pqxdh\.Primitives$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM source-shape dependency"
+require_line_count 1 '^import VCVio\.CryptoFoundations\.KeyEncapMech$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM generic IND-CCA dependency"
+reject_matches "PQXDH ML-KEM module imports the maintained proof root" \
+	'^import BeaconcryptCore$' "$pqxdh_kem_indcca"
+require_line_count 1 '^abbrev MlKem768PublicKey := List\.Vector UInt8 1184$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM exact untagged public-key width"
+require_line_count 1 '^abbrev MlKem768Ciphertext := List\.Vector UInt8 1088$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM exact ciphertext width"
+require_line_count 1 '^abbrev MlKemSharedSecret := List\.Vector UInt8 32$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM exact shared-secret width"
+for declaration in MlKemChallengeTranscript OneKeyAdversary; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$pqxdh_kem_indcca" "PQXDH ML-KEM IND-CCA structure ${declaration}"
+done
+for transcript_field in \
+	'  publicKey : MlKem768PublicKey' \
+	'  ciphertext : MlKem768Ciphertext' \
+	'  context : Context'; do
+	require_line_count 1 "^${transcript_field}$" \
+		"$pqxdh_kem_indcca" "PQXDH ML-KEM public challenge-transcript field ${transcript_field}"
+done
+require_line_count 1 '^  postChallenge : MlKemChallengeTranscript Context → MlKemSharedSecret →$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM private candidate-secret argument"
+for definition in oneKeyPrefix oneKeyFinish oneKeyBranchMain oneKeyBranch \
+	IsMlKemUniformQuery IsMlKemBaseQuery IsMlKemLogicalDecapsulationQuery \
+	IsMlKemUnblockedDecapsulationQuery INDCCAAdversaryMakesAtMostQueries \
+	mlKem768RecipientCorrectnessExp MlKem768RecipientCorrectness; do
+	require_line_count 1 "^(noncomputable )?def ${definition}( |$)" \
+		"$pqxdh_kem_indcca" "PQXDH ML-KEM IND-CCA definition ${definition}"
+done
+for namespaced_definition in toINDCCA MakesAtMostQueries logicalClientMain; do
+	require_line_count 1 "^def OneKeyAdversary\.${namespaced_definition}( |$)" \
+		"$pqxdh_kem_indcca" "PQXDH ML-KEM adversary definition ${namespaced_definition}"
+done
+for theorem_name in boolBias_sharedPrefix_eq_branchDist \
+	oneKey_indCCAAdvantage_eq_branchDist \
+	OneKeyAdversary.toINDCCA_pre_queryBound_iff \
+	OneKeyAdversary.toINDCCA_post_queryBound_iff \
+	OneKeyAdversary.toINDCCA_makesAtMostQueries_iff \
+	unblockedDecapsulationQueryBound_of_logical \
+	OneKeyAdversary.post_unblockedDecapsulationQueryBound \
+	OneKeyAdversary.logicalClient_uniformQueryBound \
+	OneKeyAdversary.logicalClient_baseQueryBound \
+	OneKeyAdversary.logicalClient_decapsulationQueryBound \
+	indCCA_preChallengeImpl_decapsulation \
+	indCCA_postChallengeImpl_challenge \
+	indCCA_postChallengeImpl_nonchallenge \
+	mlKem768RecipientCorrectness_iff_perfectlyCorrect \
+	mlKem768RecipientCorrectness_recovered_eq; do
+	require_line_count 1 "^theorem ${theorem_name//./\.}( |$)" \
+		"$pqxdh_kem_indcca" "PQXDH ML-KEM IND-CCA theorem ${theorem_name}"
+done
+require_line_count 1 '^    kem\.IND_CCA_Advantage runtime adversary\.toINDCCA =$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM factor-one generic IND-CCA endpoint"
+require_line_count 1 '^        \(oneKeyBranch kem runtime adversary true\)$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM real branch orientation"
+require_line_count 1 '^        \(oneKeyBranch kem runtime adversary false\) := by$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM uniform branch orientation"
+require_line_count 1 '^  let kRand ← runtime\.liftProbComp \(\$ᵗ MlKemSharedSecret\)$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM branch-independent ghost secret draw"
+require_line_count 1 '^    \(adversary\.postChallenge .* \(if b then kReal else kRand\)\)$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM true-real false-uniform branch mapping"
+require_line_count 2 '^#guard_msgs in$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM guarded axiom audits"
+require_line_count 1 '^#print axioms oneKey_indCCAAdvantage_eq_branchDist$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM IND-CCA capstone axiom audit"
+require_line_count 1 '^#print axioms mlKem768RecipientCorrectness_recovered_eq$' \
+	"$pqxdh_kem_indcca" "PQXDH ML-KEM recipient-correctness axiom audit"
 
 require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |$)' \
 	proofs/lean/BeaconcryptCore/Model/Pqxdh/Commit.lean \
