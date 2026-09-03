@@ -329,10 +329,12 @@ require_occurrence_count 6 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
-require_line_count 84 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+require_line_count 126 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
 	"canonical production transcript fact"
 require_line_count 18 '^\(\* @beaconcrypt-fidelity-v1 phase1\.' \
 	"$transcript_interface" "Phase-1 InitKex transcript fact"
+require_line_count 42 '^\(\* @beaconcrypt-fidelity-v1 cryptoframe\.' \
+	"$transcript_interface" "CryptoFrame wire transcript fact"
 require_line_count 5 '^type ' "$transcript_interface" \
 	"canonical ProVerif interface type"
 require_line_count 19 '^fun ' "$transcript_interface" \
@@ -347,6 +349,8 @@ require_line_count 8 '^reduc ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive reduction"
 require_line_count 6 '^letfun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive helper"
+require_line_count 1 '^\(\* @beaconcrypt-cryptoframe-v1 crypto_frame\.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id \*\)$' \
+	proofs/pro-verif/crypto.pvl "CryptoFrame symbolic semantic order"
 require_line_count 1 '^fun pqxdh_domain\(\): kdf_domain \[data\]\.$' \
 	"$transcript_interface" "PQXDH HKDF domain"
 require_line_count 1 '^fun symmetric_ratchet_domain\(\): kdf_domain \[data\]\.$' \
@@ -804,18 +808,19 @@ for scenario_process in \
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 13 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_PQXDH|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = include_str!' \
+require_line_count 15 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_COMMITMENT|CORE_PQXDH|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = include_str!' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable snapshot"
-require_line_count 4 '^#\[test\]$' \
+require_line_count 5 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
 	compiled_core_matches_the_canonical_transcript \
+	cryptoframe_wire_mutation_matrix_is_complete_and_rejected \
 	phase1_registration_mutation_matrix_is_complete_and_rejected \
 	requested_transcript_mutations_are_rejected; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
@@ -825,8 +830,38 @@ require_occurrence_count 1 \
 	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
 	"transcript-fidelity model and adapter composition" "$fidelity_test"
 require_occurrence_count 1 \
-	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
+	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
+require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;$' \
+	"$fidelity_test" "CryptoFrame exact mutation count"
+require_occurrence_count 1 \
+	'(?s)fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, CRYPTOFRAME_WIRE_MUTATION_COUNT\);\s*\}' \
+	"CryptoFrame mutation matrix count assertion" "$fidelity_test"
+for cryptoframe_mutation_family in \
+	cryptoframe_schema_declaration_permutation_ \
+	cryptoframe_schema_ordinal_permutation_ \
+	cryptoframe_schema_omits_field_ \
+	cryptoframe_schema_renames_field_ \
+	cryptoframe_payload_permutation_ \
+	cryptoframe_payload_omits_field_ \
+	cryptoframe_payload_duplicate_ \
+	cryptoframe_builder_order_permutation_ \
+	cryptoframe_getter_permutation_ \
+	cryptoframe_open_tag_slice_starts_late \
+	cryptoframe_open_commitment_slice_starts_late \
+	cryptoframe_open_decrypts_before_commitment_equality \
+	cryptoframe_core_le64_uses_big_endian_order \
+	cryptoframe_core_reorders_tag_and_sequence_branches \
+	cryptoframe_symbolic_annotation_permutation_ \
+	cryptoframe_symbolic_seal_argument_permutation_ \
+	cryptoframe_symbolic_seal_field_permutation_ \
+	cryptoframe_symbolic_open_field_permutation_ \
+	cryptoframe_symbolic_open_argument_permutation_ \
+	cryptoframe_ctx_pair_transposition_ \
+	cryptoframe_ctx_omits_and_duplicates_field_; do
+	require_occurrence_count 1 "$cryptoframe_mutation_family" \
+		"CryptoFrame ${cryptoframe_mutation_family} mutation family" "$fidelity_test"
+done
 require_line_count 1 '^const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 163;$' \
 	"$fidelity_test" "Phase-1 exact mutation count"
 require_occurrence_count 1 \

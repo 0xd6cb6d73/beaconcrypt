@@ -24,7 +24,9 @@ const ADAPTER_RATCHET: &str = include_str!("../../beaconcrypt/src/ratchet.rs");
 const ADAPTER_SHARED: &str = include_str!("../../beaconcrypt/src/shared.rs");
 const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
 const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
+const CORE_COMMITMENT: &str = include_str!("../src/commitment.rs");
 const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
+const CRYPTOFRAME_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/cryptoframe.capnp");
 const PHASE1_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase1.capnp");
 const PHASE2_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase2.capnp");
 
@@ -112,6 +114,48 @@ const EXPECTED_FACTS: &[&str] = &[
 	"phase2.response.field.4=keyId@4:assigned_key_id",
 	"phase2.response.server_writes=candidate.server_identity_public_key,candidate.ephemeral_public_key,candidate.kem_ciphertext,initial_encrypted_frame,candidate.key_id",
 	"phase2.response.beacon_reads=response_server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id",
+	"cryptoframe.schema.constructor=CryptoFrame",
+	"cryptoframe.schema.id=ef858976d7f7863b",
+	"cryptoframe.schema.field_count=3",
+	"cryptoframe.schema.field.0=seq@0:sequence",
+	"cryptoframe.schema.field.1=keyId@1:sender_id",
+	"cryptoframe.schema.field.2=cipherText@2:ciphertext||retained_aead_tag||commitment",
+	"cryptoframe.wire.key_id=sender_kid",
+	"cryptoframe.local.encrypted.key_id=target_kid:not_serialized",
+	"cryptoframe.seal.inputs=key:32,nonce:12,associated_data:153,plaintext",
+	"cryptoframe.seal.detached_outputs=ciphertext,retained_aead_tag:16",
+	"cryptoframe.seal.commitment.output=blake2b512_unkeyed_unlabeled:64",
+	"cryptoframe.seal.commitment.input=existing_ctx_transcript",
+	"cryptoframe.seal.commitment.context=selected_material,associated_data,retained_aead_tag,selected_sequence,sender_kid",
+	"cryptoframe.seal.payload=ciphertext||retained_aead_tag||commitment",
+	"cryptoframe.seal.payload.overhead=80",
+	"cryptoframe.seal.setter_order=cipherText,seq,keyId",
+	"cryptoframe.seal.serialize=TypedBuilder<CryptoFrame>,write_message(buffer)",
+	"cryptoframe.seal.empty_plaintext=caller_rejects_before_ratchet",
+	"cryptoframe.seal.one_use=returned_material,returned_sequence,frame_context,finish",
+	"cryptoframe.open.empty_wire=rejected_before_parse",
+	"cryptoframe.open.parse=capnp_typed_reader<CryptoFrame>",
+	"cryptoframe.open.getter_order=keyId,cipherText,seq",
+	"cryptoframe.open.sender_gate=parsed_sender_kid==expected_sender_kid:before_ratchet",
+	"cryptoframe.open.length_gate=payload_length>80:before_ratchet",
+	"cryptoframe.open.ratchet=begin_receive(parsed_sequence,frame_context)",
+	"cryptoframe.open.one_use=returned_material,returned_sequence,frame_context,finish",
+	"cryptoframe.open.commitment_slice=payload[last64..]",
+	"cryptoframe.open.tag_slice=payload[len-80..len-64]",
+	"cryptoframe.open.ciphertext_slice=payload[..len-80]",
+	"cryptoframe.open.commitment.context=selected_material,associated_data,parsed_retained_aead_tag,selected_sequence,parsed_sender_kid",
+	"cryptoframe.open.commitment.compare=libsodium_memcmp_call",
+	"cryptoframe.open.order=commitment_equality_before_aead_decrypt",
+	"cryptoframe.open.decrypt.input=ciphertext||retained_aead_tag",
+	"cryptoframe.open.decrypt.excludes=commitment",
+	"cryptoframe.open.decrypt.context=selected_material_key,selected_material_nonce,same_associated_data",
+	"cryptoframe.open.result.metadata=parsed_sender_kid,parsed_sequence",
+	"cryptoframe.symbolic.constructor=crypto_frame",
+	"cryptoframe.symbolic.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id",
+	"cryptoframe.symbolic.seal=exact_production_fields",
+	"cryptoframe.symbolic.open=ideal_exact_constructor_rule",
+	"cryptoframe.symbolic.retained_tag=shared_by_aead_and_commitment",
+	"cryptoframe.symbolic.absent=frame_and_seal_arguments:target_id,direction,session,phase,aead_label,ctx_label",
 	"agreement.constructor=establishment_transcript",
 	"agreement.field_count=18",
 	"agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin",
@@ -124,7 +168,10 @@ struct Snapshot {
 	environment: String,
 	active_quantum_witness: String,
 	makefile: String,
+	adapter_ratchet: String,
+	core_commitment: String,
 	core_pqxdh: String,
+	cryptoframe_schema: String,
 	phase1_schema: String,
 	phase2_schema: String,
 	adapter_server: String,
@@ -139,7 +186,10 @@ impl Snapshot {
 			environment: ENVIRONMENT_MODEL.to_owned(),
 			active_quantum_witness: ACTIVE_QUANTUM_WITNESS.to_owned(),
 			makefile: CORE_MAKEFILE.to_owned(),
+			adapter_ratchet: ADAPTER_RATCHET.to_owned(),
+			core_commitment: CORE_COMMITMENT.to_owned(),
 			core_pqxdh: CORE_PQXDH.to_owned(),
+			cryptoframe_schema: CRYPTOFRAME_SCHEMA.to_owned(),
 			phase1_schema: PHASE1_SCHEMA.to_owned(),
 			phase2_schema: PHASE2_SCHEMA.to_owned(),
 			adapter_server: ADAPTER_SERVER.to_owned(),
@@ -696,6 +746,526 @@ fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
 	Ok(())
 }
 
+fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
+	let schema = compact(&uncommented_capnp(&snapshot.cryptoframe_schema));
+	let expected_schema =
+		"@0xef858976d7f7863b;structCryptoFrame{seq@0:UInt64;keyId@1:UInt64;cipherText@2:Data;}";
+	if schema != expected_schema {
+		return Err(format!(
+			"CryptoFrame schema changed: expected {expected_schema}, found {schema}"
+		));
+	}
+
+	let ratchet = compact(&uncommented_rust(&snapshot.adapter_ratchet)?);
+	for (wanted, label) in [
+		(
+			"pubconstAEAD_KEY_LEN:usize=32;",
+			"CryptoFrame AEAD key length",
+		),
+		(
+			"pubconstAEAD_NONCE_LEN:usize=12;",
+			"CryptoFrame AEAD nonce length",
+		),
+		(
+			"pubconstAEAD_TAG_LEN:usize=16;",
+			"CryptoFrame AEAD tag length",
+		),
+		(
+			"pubconstCOMMITMENT_SIZE:usize=64;",
+			"CryptoFrame commitment length",
+		),
+		(
+			"pubconstMESSAGE_OVERHEAD:usize=COMMITMENT_SIZE+AEAD_TAG_LEN;",
+			"CryptoFrame payload overhead",
+		),
+	] {
+		require_once(&ratchet, wanted, label)?;
+	}
+
+	let seal = rust_body(&snapshot.adapter_ratchet, "seal_frame")?;
+	for (wanted, label) in [
+		(
+			"letkey:AeadKey=(*material.key().as_bytes()).into();",
+			"CryptoFrame seal selected key",
+		),
+		(
+			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into();",
+			"CryptoFrame seal selected nonce",
+		),
+	] {
+		require_once(&seal, wanted, label)?;
+	}
+	require_one_call(
+		&seal,
+		"crypto_aead::chacha20poly1305_ietf::encrypt_detached",
+		&[
+			"context.bytes",
+			"Some(context.associated_data.as_slice())",
+			"&nonce",
+			"&key",
+			"",
+		],
+		"CryptoFrame detached AEAD seal",
+	)?;
+	require_one_call(
+		&seal,
+		"build_commitment",
+		&[
+			"material",
+			"context.associated_data.as_slice()",
+			"tag.as_slice()",
+			"key_seq",
+			"context.sender_kid",
+			"",
+		],
+		"CryptoFrame seal commitment mapping",
+	)?;
+	require_ordered_once(
+		&seal,
+		&[
+			"plaintext.append(&muttag)",
+			"plaintext.append(&mutcommitment)",
+		],
+		"CryptoFrame seal payload order",
+	)?;
+	for (function, expected, label) in [
+		(
+			"builder.set_cipher_text",
+			"&plaintext",
+			"CryptoFrame payload setter mapping",
+		),
+		(
+			"builder.set_seq",
+			"key_seq",
+			"CryptoFrame sequence setter mapping",
+		),
+		(
+			"builder.set_key_id",
+			"context.sender_kid",
+			"CryptoFrame sender-ID setter mapping",
+		),
+	] {
+		require_one_call(&seal, function, &[expected], label)?;
+	}
+	require_ordered_once(
+		&seal,
+		&[
+			"letmutt_builder=TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default()",
+			"letmutbuilder:cryptoframe_capnp::crypto_frame::Builder<'_>=t_builder.init_root()",
+			"builder.set_cipher_text(&plaintext)",
+			"builder.set_seq(key_seq)",
+			"builder.set_key_id(context.sender_kid)",
+			"letmutbuffer=vec![]",
+			"capnp::serialize::write_message(&mutbuffer,t_builder.borrow_inner()).ok()?",
+		],
+		"CryptoFrame builder serialization order",
+	)?;
+	require_once(
+		&seal,
+		"Some(Encrypted{ciphertext:buffer,key_id:context.target_kid,seq:key_seq,})",
+		"CryptoFrame local target metadata",
+	)?;
+	forbid(
+		&seal,
+		"builder.set_key_id(context.target_kid)",
+		"serialized local target ID",
+	)?;
+
+	let encrypt = rust_body(&snapshot.adapter_ratchet, "encrypt_message_with_ratchet")?;
+	require_once(
+		&encrypt,
+		"ifbytes.is_empty(){returnNone;}",
+		"CryptoFrame empty-plaintext rejection",
+	)?;
+	require_once(
+		&encrypt,
+		"letcontext=SealFrameContext{bytes,target_kid,sender_kid,associated_data,};",
+		"CryptoFrame seal context mapping",
+	)?;
+	require_once(
+		&encrypt,
+		"letsealed=seal_frame(seal.material(),seal.sequence(),seal.context());",
+		"CryptoFrame selected send material and sequence",
+	)?;
+	require_once(
+		&encrypt,
+		"let(kernel,sealed)=seal.finish(sealed);",
+		"CryptoFrame one-use send completion",
+	)?;
+	require_ordered_once(
+		&encrypt,
+		&[
+			"ifbytes.is_empty()",
+			"verified_ratchet::begin_send(kernel,context)",
+			"seal_frame(seal.material(),seal.sequence(),seal.context())",
+			"seal.finish(sealed)",
+		],
+		"CryptoFrame empty-input and send ordering",
+	)?;
+
+	let open = rust_body(&snapshot.adapter_ratchet, "open_frame")?;
+	require_once(
+		&open,
+		"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
+		"CryptoFrame open length gate",
+	)?;
+	for (wanted, label) in [
+		(
+			"letkey:AeadKey=(*material.key().as_bytes()).into();",
+			"CryptoFrame open selected key",
+		),
+		(
+			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into();",
+			"CryptoFrame open selected nonce",
+		),
+	] {
+		require_once(&open, wanted, label)?;
+	}
+	require_one_call(
+		&open,
+		"build_commitment",
+		&[
+			"material",
+			"context.associated_data.as_slice()",
+			"&context.ciphertext[ct_len-COMMITMENT_SIZE-AEAD_TAG_LEN..ct_len-COMMITMENT_SIZE]",
+			"key_seq",
+			"context.sender_kid",
+			"",
+		],
+		"CryptoFrame open commitment mapping",
+	)?;
+	require_once(
+		&open,
+		"if!memcmp(&commitment,&context.ciphertext[ct_len-COMMITMENT_SIZE..]){returnNone;}",
+		"CryptoFrame libsodium memcmp commitment comparison",
+	)?;
+	require_one_call(
+		&open,
+		"crypto_aead::chacha20poly1305_ietf::decrypt",
+		&[
+			"&context.ciphertext[..ct_len-COMMITMENT_SIZE]",
+			"Some(context.associated_data.as_slice())",
+			"&nonce",
+			"&key",
+			"",
+		],
+		"CryptoFrame C-and-tag AEAD open",
+	)?;
+	require_ordered_once(
+		&open,
+		&[
+			"letcommitment=build_commitment(",
+			"memcmp(&commitment,&context.ciphertext[ct_len-COMMITMENT_SIZE..])",
+			"letkey:AeadKey=(*material.key().as_bytes()).into()",
+			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into()",
+			"crypto_aead::chacha20poly1305_ietf::decrypt(",
+		],
+		"CryptoFrame commitment-before-AEAD order",
+	)?;
+
+	let decrypt = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	for (wanted, label) in [
+		(
+			"ifdata.is_empty(){returnNone;}",
+			"CryptoFrame empty-wire rejection",
+		),
+		(
+			"letreader=capnp::serialize::read_message(data,ReaderOptions::new()).ok()?;",
+			"CryptoFrame Cap'n Proto parse",
+		),
+		(
+			"lettyped_reader=TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader);",
+			"CryptoFrame typed reader",
+		),
+		(
+			"letframe=typed_reader.get().ok()?;",
+			"CryptoFrame typed root",
+		),
+		("letkid=frame.get_key_id();", "CryptoFrame parsed sender ID"),
+		(
+			"ifkid!=expected_sender_kid{returnNone;}",
+			"CryptoFrame expected-sender gate",
+		),
+		(
+			"letciphertext=frame.get_cipher_text().ok()?;",
+			"CryptoFrame payload getter",
+		),
+		(
+			"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
+			"CryptoFrame pre-ratchet length gate",
+		),
+		(
+			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,};",
+			"CryptoFrame open context mapping",
+		),
+		("letkey_seq=frame.get_seq();", "CryptoFrame parsed sequence"),
+		(
+			"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);",
+			"CryptoFrame parsed-sequence ratchet selection",
+		),
+		(
+			"letopened=open_frame(material,open.sequence(),open.context());",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"let(kernel,opened)=open.finish(opened);",
+			"CryptoFrame one-use receive completion",
+		),
+	] {
+		require_once(&decrypt, wanted, label)?;
+	}
+	require_ordered_once(
+		&decrypt,
+		&[
+			"ifdata.is_empty()",
+			"capnp::serialize::read_message(data,ReaderOptions::new())",
+			"letkid=frame.get_key_id()",
+			"ifkid!=expected_sender_kid",
+			"letciphertext=frame.get_cipher_text().ok()?",
+			"ifct_len<=MESSAGE_OVERHEAD",
+			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,}",
+			"letkey_seq=frame.get_seq()",
+			"letkernel=ratchet.refined.take()",
+			"verified_ratchet::begin_receive(kernel,key_seq,context)",
+			"verified_ratchet::ReceiveEffect::ReceiveOpenRequested",
+			"open.material()",
+			"open_frame(material,open.sequence(),open.context())",
+			"open.finish(opened)",
+		],
+		"CryptoFrame parser and gate evaluation order",
+	)?;
+	require_once(
+		&decrypt,
+		"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
+		"CryptoFrame returned parsed metadata",
+	)?;
+
+	let adapter_commitment = rust_body(&snapshot.adapter_ratchet, "build_commitment")?;
+	for (wanted, label) in [
+		(
+			"letkey=material.key().as_bytes();",
+			"CryptoFrame commitment selected key",
+		),
+		(
+			"letnonce=material.nonce().as_bytes();",
+			"CryptoFrame commitment selected nonce",
+		),
+		(
+			"letad=ad.try_into().ok()?;",
+			"CryptoFrame commitment fixed-width AD",
+		),
+		(
+			"lettag=tag.try_into().ok()?;",
+			"CryptoFrame commitment fixed-width retained tag",
+		),
+	] {
+		require_once(&adapter_commitment, wanted, label)?;
+	}
+	require_one_call(
+		&adapter_commitment,
+		"build_commitment_transcript",
+		&["key", "nonce", "ad", "tag", "seq", "kid"],
+		"CryptoFrame adapter-to-core commitment mapping",
+	)?;
+	require_one_call(
+		&adapter_commitment,
+		"crypto_generichash::generichash",
+		&["input.as_bytes()", "None", "COMMITMENT_SIZE"],
+		"CryptoFrame unkeyed commitment hash",
+	)?;
+
+	let core_source = compact(&uncommented_rust(&snapshot.core_commitment)?);
+	for (wanted, label) in [
+		(
+			"pubconstAEAD_KEY_SIZE:usize=32;",
+			"CryptoFrame core key size",
+		),
+		(
+			"pubconstAEAD_NONCE_SIZE:usize=12;",
+			"CryptoFrame core nonce size",
+		),
+		(
+			"pubconstASSOCIATED_DATA_SIZE:usize=crate::constants::ASSOCIATED_DATA_SIZE;",
+			"CryptoFrame core associated-data size source",
+		),
+		(
+			"pubconstAEAD_TAG_SIZE:usize=16;",
+			"CryptoFrame core tag size",
+		),
+		(
+			"pubconstENCODED_U64_SIZE:usize=8;",
+			"CryptoFrame core integer size",
+		),
+		(
+			"pubconstCOMMITMENT_TRANSCRIPT_SIZE:usize=AEAD_KEY_SIZE+AEAD_NONCE_SIZE+ASSOCIATED_DATA_SIZE+AEAD_TAG_SIZE+(2*ENCODED_U64_SIZE);",
+			"CryptoFrame core transcript-size formula",
+		),
+		(
+			"const_:()=assert!(ASSOCIATED_DATA_SIZE==153);",
+			"CryptoFrame core associated-data length",
+		),
+		(
+			"const_:()=assert!(COMMITMENT_TRANSCRIPT_SIZE==229);",
+			"CryptoFrame core transcript length",
+		),
+		(
+			"pubstructCommitmentTranscript{bytes:[u8;COMMITMENT_TRANSCRIPT_SIZE],}",
+			"CryptoFrame core fixed-width result",
+		),
+		(
+			"pubfnbuild_commitment_transcript(key:&[u8;AEAD_KEY_SIZE],nonce:&[u8;AEAD_NONCE_SIZE],associated_data:&[u8;ASSOCIATED_DATA_SIZE],tag:&[u8;AEAD_TAG_SIZE],sequence:u64,sender_id:u64,)->CommitmentTranscript",
+			"CryptoFrame core transcript signature",
+		),
+	] {
+		require_once(&core_source, wanted, label)?;
+	}
+	let core_commitment = rust_body(&snapshot.core_commitment, "build_commitment_transcript")?;
+	let encode_u64 = rust_body(&snapshot.core_commitment, "encode_u64_le")?;
+	require_once(
+		&encode_u64,
+		"[valueasu8,(value>>8)asu8,(value>>16)asu8,(value>>24)asu8,(value>>32)asu8,(value>>40)asu8,(value>>48)asu8,(value>>56)asu8,]",
+		"CryptoFrame core LE64 encoding",
+	)?;
+	let encoded = all_arguments(&core_commitment, "encode_u64_le")?;
+	if encoded != [vec!["sequence".to_owned()], vec!["sender_id".to_owned()]] {
+		return Err(format!(
+			"CryptoFrame core integer mapping changed: {encoded:?}"
+		));
+	}
+	for (wanted, label) in [
+		("ifi<32{key[i]}", "CryptoFrame core key field"),
+		("elseifi<44{nonce[i-32]}", "CryptoFrame core nonce field"),
+		(
+			"elseifi<197{associated_data[i-44]}",
+			"CryptoFrame core associated-data field",
+		),
+		(
+			"elseifi<213{tag[i-197]}",
+			"CryptoFrame core retained-tag field",
+		),
+		(
+			"elseifi<221{sequence[i-213]}",
+			"CryptoFrame core sequence field",
+		),
+		("else{sender_id[i-221]}", "CryptoFrame core sender-ID field"),
+	] {
+		require_once(&core_commitment, wanted, label)?;
+	}
+	require_ordered_once(
+		&core_commitment,
+		&[
+			"ifi<32{key[i]}",
+			"elseifi<44{nonce[i-32]}",
+			"elseifi<197{associated_data[i-44]}",
+			"elseifi<213{tag[i-197]}",
+			"elseifi<221{sequence[i-213]}",
+			"else{sender_id[i-221]}",
+		],
+		"CryptoFrame core transcript field order",
+	)?;
+	require_once(
+		&core_commitment,
+		"letbytes=core::array::from_fn(|i|",
+		"CryptoFrame core fixed-width construction",
+	)?;
+	require_once(
+		&core_commitment,
+		"CommitmentTranscript{bytes}",
+		"CryptoFrame core transcript result",
+	)?;
+
+	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
+	require_once(
+		&snapshot.crypto,
+		"(* @beaconcrypt-cryptoframe-v1 crypto_frame.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id *)\nfun crypto_frame(",
+		"CryptoFrame symbolic semantic field order",
+	)?;
+	require_once(
+		&crypto,
+		"funcrypto_frame(bitstring,bitstring,bitstring,sequence,key_id):bitstring[data].",
+		"CryptoFrame symbolic constructor declaration",
+	)?;
+	let seal_start = crypto
+		.find("letfunseal_frame(")
+		.ok_or_else(|| "missing symbolic seal_frame".to_owned())?;
+	let symbolic_seal = &crypto[seal_start..];
+	let seal_arguments = arguments_after(symbolic_seal, "letfunseal_frame(")?;
+	let expected_seal_arguments = [
+		"material:bitstring",
+		"associated_data:bitstring",
+		"message_sequence:sequence",
+		"sender_id:key_id",
+		"plaintext:bitstring",
+	];
+	if seal_arguments != expected_seal_arguments {
+		return Err(format!(
+			"CryptoFrame symbolic seal arguments changed: {seal_arguments:?}"
+		));
+	}
+	let seal_fields = arguments_after(symbolic_seal, ")=crypto_frame(")?;
+	let expected_seal_fields = [
+		"aead_cipher(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"aead_tag(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"ctx_commitment(material_key(material),material_nonce(material),associated_data,aead_tag(material_key(material),material_nonce(material),associated_data,plaintext),message_sequence,sender_id)",
+		"message_sequence",
+		"sender_id",
+	];
+	if seal_fields != expected_seal_fields {
+		return Err(format!(
+			"CryptoFrame symbolic seal fields changed: {seal_fields:?}"
+		));
+	}
+	let open_start = crypto
+		.find("reducforallkey:bitstring,nonce:bitstring,associated_data:bitstring,message_sequence:sequence,sender_id:key_id,plaintext:bitstring;open_frame(")
+		.ok_or_else(|| "missing symbolic open_frame reduction".to_owned())?;
+	let symbolic_open = &crypto[open_start..];
+	let open_fields = arguments_after(symbolic_open, "crypto_frame(")?;
+	let expected_open_fields = [
+		"aead_cipher(key,nonce,associated_data,plaintext)",
+		"aead_tag(key,nonce,associated_data,plaintext)",
+		"blake2b512(ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id)))",
+		"message_sequence",
+		"sender_id",
+	];
+	if open_fields != expected_open_fields {
+		return Err(format!(
+			"CryptoFrame symbolic open fields changed: {open_fields:?}"
+		));
+	}
+	let open_arguments = arguments_after(symbolic_open, "open_frame(")?;
+	let expected_open_arguments = vec![
+		"ratchet_key_nonce(key,nonce)".to_owned(),
+		"associated_data".to_owned(),
+		"message_sequence".to_owned(),
+		"sender_id".to_owned(),
+		format!("crypto_frame({})", expected_open_fields.join(",")),
+	];
+	if open_arguments != expected_open_arguments {
+		return Err(format!(
+			"CryptoFrame symbolic open acceptance changed: {open_arguments:?}"
+		));
+	}
+	if !symbolic_open.ends_with(")=plaintext.") {
+		return Err("CryptoFrame symbolic open result changed".to_owned());
+	}
+	let symbolic_boundary = &crypto[seal_start..];
+	for absent in [
+		"target_id",
+		"direction",
+		"session",
+		"phase",
+		"aead_label",
+		"ctx_label",
+	] {
+		forbid(
+			symbolic_boundary,
+			absent,
+			"invented CryptoFrame symbolic field",
+		)?;
+	}
+	Ok(())
+}
+
 fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 	let interface = compact(&uncommented_pv(&snapshot.interface)?);
 	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
@@ -1144,6 +1714,7 @@ fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_pv(snapshot)?;
 	validate_phase1_source(snapshot)?;
 	validate_phase2_source(snapshot)?;
+	validate_cryptoframe_source(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
 
@@ -1151,6 +1722,17 @@ fn replace_once(source: &mut String, from: &str, to: &str) {
 	let start = source
 		.find(from)
 		.unwrap_or_else(|| panic!("mutation anchor missing: {from}"));
+	source.replace_range(start..start + from.len(), to);
+}
+
+fn replace_once_after(source: &mut String, marker: &str, from: &str, to: &str) {
+	let marker_start = source
+		.find(marker)
+		.unwrap_or_else(|| panic!("mutation scope missing: {marker}"));
+	let relative = source[marker_start..]
+		.find(from)
+		.unwrap_or_else(|| panic!("mutation anchor missing after {marker}: {from}"));
+	let start = marker_start + relative;
 	source.replace_range(start..start + from.len(), to);
 }
 
@@ -1216,6 +1798,42 @@ fn phase1_transpositions() -> Vec<[usize; 4]> {
 		}
 	}
 	transpositions
+}
+
+fn cryptoframe_permutations() -> [[usize; 3]; 6] {
+	[
+		[0, 1, 2],
+		[0, 2, 1],
+		[1, 0, 2],
+		[1, 2, 0],
+		[2, 0, 1],
+		[2, 1, 0],
+	]
+}
+
+fn permute_cryptoframe(arguments: &[&str; 3], permutation: [usize; 3]) -> Vec<String> {
+	permutation
+		.into_iter()
+		.map(|index| arguments[index].to_owned())
+		.collect()
+}
+
+fn replace_cryptoframe_schema(snapshot: &mut Snapshot, fields: &[(&str, usize, &str)]) {
+	let start = snapshot
+		.cryptoframe_schema
+		.find("struct CryptoFrame {")
+		.unwrap();
+	let relative_end = snapshot.cryptoframe_schema[start..].find("\n}").unwrap();
+	let end = start + relative_end + 2;
+	let declarations = fields
+		.iter()
+		.map(|(name, ordinal, field_type)| format!("    {name} @{ordinal} :{field_type};"))
+		.collect::<Vec<_>>()
+		.join("\n");
+	snapshot.cryptoframe_schema.replace_range(
+		start..end,
+		&format!("struct CryptoFrame {{\n{declarations}\n}}"),
+	);
 }
 
 fn permute_phase1(arguments: &[&str; 4], permutation: [usize; 4]) -> Vec<String> {
@@ -1424,6 +2042,1191 @@ fn compiled_core_matches_the_canonical_transcript() {
 	assert_eq!(&bytes[197..213], &tag);
 	assert_eq!(&bytes[213..221], &sequence.to_le_bytes());
 	assert_eq!(&bytes[221..229], &sender_id.to_le_bytes());
+}
+
+const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;
+
+#[test]
+fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+
+	for fact in EXPECTED_FACTS
+		.iter()
+		.filter(|fact| fact.starts_with("cryptoframe."))
+	{
+		let key = fact.split_once('=').unwrap().0;
+		assert_rejected(&format!("cryptoframe_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	let schema_fields = [
+		("seq", 0, "UInt64"),
+		("keyId", 1, "UInt64"),
+		("cipherText", 2, "Data"),
+	];
+	assert_rejected(
+		"cryptoframe_schema_id_drift",
+		"CryptoFrame schema changed",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.cryptoframe_schema,
+				"@0xef858976d7f7863b;",
+				"@0xef858976d7f7863c;",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let fields = permutation.map(|field| schema_fields[field]);
+		assert_rejected(
+			&format!("cryptoframe_schema_declaration_permutation_{index}"),
+			"CryptoFrame schema changed",
+			move |snapshot| replace_cryptoframe_schema(snapshot, &fields),
+		);
+		mutation_count += 1;
+	}
+	for omitted in 0..3 {
+		let fields = schema_fields
+			.iter()
+			.copied()
+			.filter(|(name, _, _)| *name != schema_fields[omitted].0)
+			.collect::<Vec<_>>();
+		assert_rejected(
+			&format!("cryptoframe_schema_omits_field_{omitted}"),
+			"CryptoFrame schema changed",
+			move |snapshot| replace_cryptoframe_schema(snapshot, &fields),
+		);
+		mutation_count += 1;
+	}
+	for (index, renamed) in ["messageSeq", "senderKeyId", "payload"]
+		.into_iter()
+		.enumerate()
+	{
+		let mut fields = schema_fields;
+		fields[index].0 = renamed;
+		assert_rejected(
+			&format!("cryptoframe_schema_renames_field_{index}"),
+			"CryptoFrame schema changed",
+			move |snapshot| replace_cryptoframe_schema(snapshot, &fields),
+		);
+		mutation_count += 1;
+	}
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let fields: [(&str, usize, &str); 3] = core::array::from_fn(|field| {
+			let (name, _, field_type) = schema_fields[field];
+			(name, permutation[field], field_type)
+		});
+		assert_rejected(
+			&format!("cryptoframe_schema_ordinal_permutation_{index}"),
+			"CryptoFrame schema changed",
+			move |snapshot| replace_cryptoframe_schema(snapshot, &fields),
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_adapter_key_length_drift",
+			"pub const AEAD_KEY_LEN: usize = 32;",
+			"pub const AEAD_KEY_LEN: usize = 31;",
+			"CryptoFrame AEAD key length",
+		),
+		(
+			"cryptoframe_adapter_nonce_length_drift",
+			"pub const AEAD_NONCE_LEN: usize = 12;",
+			"pub const AEAD_NONCE_LEN: usize = 11;",
+			"CryptoFrame AEAD nonce length",
+		),
+		(
+			"cryptoframe_adapter_tag_length_drift",
+			"pub const AEAD_TAG_LEN: usize = 16;",
+			"pub const AEAD_TAG_LEN: usize = 15;",
+			"CryptoFrame AEAD tag length",
+		),
+		(
+			"cryptoframe_adapter_commitment_length_drift",
+			"pub const COMMITMENT_SIZE: usize = 64;",
+			"pub const COMMITMENT_SIZE: usize = 63;",
+			"CryptoFrame commitment length",
+		),
+		(
+			"cryptoframe_adapter_overhead_formula_drift",
+			"pub const MESSAGE_OVERHEAD: usize = COMMITMENT_SIZE + AEAD_TAG_LEN;",
+			"pub const MESSAGE_OVERHEAD: usize = COMMITMENT_SIZE;",
+			"CryptoFrame payload overhead",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_seal_uses_zero_key",
+			"let key: AeadKey = (*material.key().as_bytes()).into();",
+			"let key: AeadKey = [0u8; AEAD_KEY_LEN].into();",
+			"CryptoFrame seal selected key",
+		),
+		(
+			"cryptoframe_seal_uses_zero_nonce",
+			"let nonce: AeadNonce = (*material.nonce().as_bytes()).into();",
+			"let nonce: AeadNonce = [0u8; AEAD_NONCE_LEN].into();",
+			"CryptoFrame seal selected nonce",
+		),
+		(
+			"cryptoframe_seal_encrypts_associated_data",
+			"\t\tcontext.bytes,\n\t\tSome(context.associated_data.as_slice()),",
+			"\t\tcontext.associated_data.as_slice(),\n\t\tSome(context.associated_data.as_slice()),",
+			"CryptoFrame detached AEAD seal",
+		),
+		(
+			"cryptoframe_seal_omits_associated_data",
+			"Some(context.associated_data.as_slice()),",
+			"None,",
+			"CryptoFrame detached AEAD seal",
+		),
+		(
+			"cryptoframe_seal_commitment_swaps_ad_and_tag",
+			"\t\tcontext.associated_data.as_slice(),\n\t\ttag.as_slice(),",
+			"\t\ttag.as_slice(),\n\t\tcontext.associated_data.as_slice(),",
+			"CryptoFrame seal commitment mapping",
+		),
+		(
+			"cryptoframe_seal_commitment_swaps_sequence_sender",
+			"\t\tkey_seq,\n\t\tcontext.sender_kid,",
+			"\t\tcontext.sender_kid,\n\t\tkey_seq,",
+			"CryptoFrame seal commitment mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	let payload_fields = ["plaintext", "tag", "commitment"];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let ordered = permutation.map(|field| payload_fields[field]);
+		let replacement = format!(
+			"\tlet mut payload = vec![];\n\tpayload.append(&mut {});\n\tpayload.append(&mut {});\n\tpayload.append(&mut {});",
+			ordered[0], ordered[1], ordered[2]
+		);
+		assert_rejected(
+			&format!("cryptoframe_payload_permutation_{index}"),
+			"CryptoFrame seal payload order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"\tplaintext.append(&mut tag);\n\tplaintext.append(&mut commitment);",
+					&replacement,
+				);
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"builder.set_cipher_text(&plaintext)",
+					"builder.set_cipher_text(&payload)",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for omitted in 0..3 {
+		let retained = (0..3)
+			.filter(|field| *field != omitted)
+			.map(|field| payload_fields[field])
+			.collect::<Vec<_>>();
+		let replacement = format!(
+			"\tlet mut payload = vec![];\n\tpayload.append(&mut {});\n\tpayload.append(&mut {});",
+			retained[0], retained[1]
+		);
+		assert_rejected(
+			&format!("cryptoframe_payload_omits_field_{omitted}"),
+			"CryptoFrame seal payload order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"\tplaintext.append(&mut tag);\n\tplaintext.append(&mut commitment);",
+					&replacement,
+				);
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"builder.set_cipher_text(&plaintext)",
+					"builder.set_cipher_text(&payload)",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_payload_setter_uses_tag",
+			"builder.set_cipher_text(&plaintext)",
+			"builder.set_cipher_text(&tag)",
+			"CryptoFrame payload setter mapping",
+		),
+		(
+			"cryptoframe_sequence_setter_uses_sender",
+			"builder.set_seq(key_seq)",
+			"builder.set_seq(context.sender_kid)",
+			"CryptoFrame sequence setter mapping",
+		),
+		(
+			"cryptoframe_sender_setter_uses_sequence",
+			"builder.set_key_id(context.sender_kid)",
+			"builder.set_key_id(key_seq)",
+			"CryptoFrame sender-ID setter mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	let setters = [
+		"builder.set_cipher_text(&plaintext);",
+		"builder.set_seq(key_seq);",
+		"builder.set_key_id(context.sender_kid);",
+	];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let replacement = permutation.map(|setter| setters[setter]).join("\n\t");
+		assert_rejected(
+			&format!("cryptoframe_builder_order_permutation_{index}"),
+			"CryptoFrame builder serialization order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"builder.set_cipher_text(&plaintext);\n\tbuilder.set_seq(key_seq);\n\tbuilder.set_key_id(context.sender_kid);",
+					&replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"cryptoframe_builder_type_drift",
+			"TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default()",
+			"TypedBuilder::<crate::cryptoframe_capnp::crypto_frame::Owned>::new_default()",
+		),
+		(
+			"cryptoframe_builder_root_drift",
+			"t_builder.init_root()",
+			"t_builder.get_root().ok()?",
+		),
+		(
+			"cryptoframe_output_buffer_prefixed",
+			"let mut buffer = vec![];",
+			"let mut buffer = vec![0u8];",
+		),
+		(
+			"cryptoframe_serializes_into_payload",
+			"write_message(&mut buffer, t_builder.borrow_inner())",
+			"write_message(&mut plaintext, t_builder.borrow_inner())",
+		),
+	] {
+		assert_rejected(
+			name,
+			"CryptoFrame builder serialization order",
+			|snapshot| {
+				replace_once(&mut snapshot.adapter_ratchet, from, to);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_local_metadata_uses_sender",
+			"key_id: context.target_kid,",
+			"key_id: context.sender_kid,",
+			"CryptoFrame local target metadata",
+		),
+		(
+			"cryptoframe_seal_context_target_uses_sender",
+			"\t\ttarget_kid,\n\t\tsender_kid,",
+			"\t\ttarget_kid: sender_kid,\n\t\tsender_kid,",
+			"CryptoFrame seal context mapping",
+		),
+		(
+			"cryptoframe_seal_context_sender_uses_target",
+			"\t\ttarget_kid,\n\t\tsender_kid,",
+			"\t\ttarget_kid,\n\t\tsender_kid: target_kid,",
+			"CryptoFrame seal context mapping",
+		),
+		(
+			"cryptoframe_empty_plaintext_gate_removed",
+			"\tif bytes.is_empty() {\n\t\treturn None;\n\t}\n",
+			"",
+			"CryptoFrame empty-plaintext rejection",
+		),
+		(
+			"cryptoframe_seal_uses_unallocated_sequence",
+			"seal_frame(seal.material(), seal.sequence(), seal.context())",
+			"seal_frame(seal.material(), sender_kid, seal.context())",
+			"CryptoFrame selected send material and sequence",
+		),
+		(
+			"cryptoframe_seal_skips_one_use_finish",
+			"let (kernel, sealed) = seal.finish(sealed);",
+			"let (kernel, sealed) = (kernel, sealed);",
+			"CryptoFrame one-use send completion",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_empty_wire_gate_removed",
+			"\tif data.is_empty() {\n\t\treturn None;\n\t}\n",
+			"",
+			"CryptoFrame empty-wire rejection",
+		),
+		(
+			"cryptoframe_parse_uses_unbounded_options",
+			"read_message(data, ReaderOptions::new())",
+			"read_message(data, Default::default())",
+			"CryptoFrame Cap'n Proto parse",
+		),
+		(
+			"cryptoframe_parse_typed_reader_path_drift",
+			"TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"CryptoFrame typed reader",
+		),
+		(
+			"cryptoframe_parse_typed_root_unwraps",
+			"let frame = typed_reader.get().ok()?;",
+			"let frame = typed_reader.get().unwrap();",
+			"CryptoFrame typed root",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn decrypt_message_with_ratchet(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	let getter_declarations = [
+		"let kid = frame.get_key_id();",
+		"let ciphertext = frame.get_cipher_text().ok()?;",
+		"let key_seq = frame.get_seq();",
+	];
+	let getter_block = "\tlet kid = frame.get_key_id();\n\tif kid != expected_sender_kid {\n\t\treturn None;\n\t}\n\tlet ciphertext = frame.get_cipher_text().ok()?;\n\tlet ct_len = ciphertext.len();\n\tif ct_len <= MESSAGE_OVERHEAD {\n\t\treturn None;\n\t}\n\tlet context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};\n\tlet key_seq = frame.get_seq();";
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let getters = permutation
+			.map(|getter| getter_declarations[getter])
+			.join("\n\t");
+		let replacement = format!(
+			"\t{getters}\n\tif kid != expected_sender_kid {{\n\t\treturn None;\n\t}}\n\tlet ct_len = ciphertext.len();\n\tif ct_len <= MESSAGE_OVERHEAD {{\n\t\treturn None;\n\t}}\n\tlet context = OpenFrameContext {{\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t}};"
+		);
+		assert_rejected(
+			&format!("cryptoframe_getter_permutation_{index}"),
+			"CryptoFrame parser and gate evaluation order",
+			move |snapshot| {
+				replace_once(&mut snapshot.adapter_ratchet, getter_block, &replacement);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"cryptoframe_sender_gate_compares_wire_to_itself",
+		"CryptoFrame expected-sender gate",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn decrypt_message_with_ratchet(",
+				"if kid != expected_sender_kid {",
+				"if kid != frame.get_key_id() {",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_open_length_accepts_exact_overhead",
+		"CryptoFrame open length gate",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn open_frame(",
+				"if ct_len <= MESSAGE_OVERHEAD",
+				"if ct_len < MESSAGE_OVERHEAD",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_parser_length_accepts_exact_overhead",
+		"CryptoFrame pre-ratchet length gate",
+		|snapshot| {
+			let start = snapshot
+				.adapter_ratchet
+				.find("fn decrypt_message_with_ratchet(")
+				.unwrap();
+			let relative = snapshot.adapter_ratchet[start..]
+				.find("if ct_len <= MESSAGE_OVERHEAD")
+				.unwrap();
+			let gate = start + relative;
+			snapshot.adapter_ratchet.replace_range(
+				gate..gate + "if ct_len <= MESSAGE_OVERHEAD".len(),
+				"if ct_len < MESSAGE_OVERHEAD",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_open_context_payload_is_wire_data",
+			"\t\tciphertext,\n\t\tassociated_data,",
+			"\t\tciphertext: data,\n\t\tassociated_data,",
+			"CryptoFrame open context mapping",
+		),
+		(
+			"cryptoframe_open_context_ad_is_ciphertext",
+			"\t\tciphertext,\n\t\tassociated_data,",
+			"\t\tciphertext,\n\t\tassociated_data: ciphertext.try_into().ok()?,",
+			"CryptoFrame open context mapping",
+		),
+		(
+			"cryptoframe_open_context_sender_is_expected",
+			"sender_kid: kid,",
+			"sender_kid: expected_sender_kid,",
+			"CryptoFrame open context mapping",
+		),
+		(
+			"cryptoframe_ratchet_selects_sender_as_sequence",
+			"begin_receive(kernel, key_seq, context)",
+			"begin_receive(kernel, kid, context)",
+			"CryptoFrame parsed-sequence ratchet selection",
+		),
+		(
+			"cryptoframe_open_capability_pattern_is_mutable",
+			"verified_ratchet::ReceiveEffect::ReceiveOpenRequested(open) =>",
+			"beaconcrypt_core::ratchet::ReceiveEffect::ReceiveOpenRequested(open) =>",
+			"CryptoFrame parser and gate evaluation order",
+		),
+		(
+			"cryptoframe_open_uses_parsed_not_returned_sequence",
+			"open_frame(material, open.sequence(), open.context())",
+			"open_frame(material, key_seq, open.context())",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"cryptoframe_open_uses_rebuilt_context",
+			"open_frame(material, open.sequence(), open.context())",
+			"open_frame(material, open.sequence(), &context)",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"cryptoframe_open_finish_discards_plaintext",
+			"open.finish(opened)",
+			"open.finish(None)",
+			"CryptoFrame one-use receive completion",
+		),
+		(
+			"cryptoframe_result_swaps_sender_sequence",
+			"key_id: kid,\n\t\tseq: key_seq,",
+			"key_id: key_seq,\n\t\tseq: kid,",
+			"CryptoFrame returned parsed metadata",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn decrypt_message_with_ratchet(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"cryptoframe_open_renames_returned_material",
+		"CryptoFrame selected receive material and sequence",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.adapter_ratchet,
+				"let Some(material) = open.material() else {",
+				"let Some(selected_material) = open.material() else {",
+			);
+			replace_once(
+				&mut snapshot.adapter_ratchet,
+				"open_frame(material, open.sequence(), open.context())",
+				"open_frame(selected_material, open.sequence(), open.context())",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, fields) in [
+		(
+			"cryptoframe_schema_seq_type_drift",
+			[
+				("seq", 0, "Data"),
+				("keyId", 1, "UInt64"),
+				("cipherText", 2, "Data"),
+			],
+		),
+		(
+			"cryptoframe_schema_sender_type_drift",
+			[
+				("seq", 0, "UInt64"),
+				("keyId", 1, "Data"),
+				("cipherText", 2, "Data"),
+			],
+		),
+		(
+			"cryptoframe_schema_payload_type_drift",
+			[
+				("seq", 0, "UInt64"),
+				("keyId", 1, "UInt64"),
+				("cipherText", 2, "UInt64"),
+			],
+		),
+	] {
+		assert_rejected(name, "CryptoFrame schema changed", move |snapshot| {
+			replace_cryptoframe_schema(snapshot, &fields);
+		});
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_schema_extra_field",
+		"CryptoFrame schema changed",
+		|snapshot| {
+			replace_cryptoframe_schema(
+				snapshot,
+				&[
+					("seq", 0, "UInt64"),
+					("keyId", 1, "UInt64"),
+					("cipherText", 2, "Data"),
+					("targetId", 3, "UInt64"),
+				],
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (index, duplicated) in [
+		["plaintext", "plaintext", "commitment"],
+		["plaintext", "tag", "tag"],
+		["commitment", "tag", "commitment"],
+	]
+	.into_iter()
+	.enumerate()
+	{
+		let replacement = format!(
+			"\tlet mut payload = vec![];\n\tpayload.append(&mut {});\n\tpayload.append(&mut {});\n\tpayload.append(&mut {});",
+			duplicated[0], duplicated[1], duplicated[2]
+		);
+		assert_rejected(
+			&format!("cryptoframe_payload_duplicate_{index}"),
+			"CryptoFrame seal payload order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"\tplaintext.append(&mut tag);\n\tplaintext.append(&mut commitment);",
+					&replacement,
+				);
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"builder.set_cipher_text(&plaintext)",
+					"builder.set_cipher_text(&payload)",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_open_uses_zero_key",
+			"let key: AeadKey = (*material.key().as_bytes()).into();",
+			"let key: AeadKey = [0u8; AEAD_KEY_LEN].into();",
+			"CryptoFrame open selected key",
+		),
+		(
+			"cryptoframe_open_uses_zero_nonce",
+			"let nonce: AeadNonce = (*material.nonce().as_bytes()).into();",
+			"let nonce: AeadNonce = [0u8; AEAD_NONCE_LEN].into();",
+			"CryptoFrame open selected nonce",
+		),
+		(
+			"cryptoframe_open_tag_slice_starts_late",
+			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE",
+			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN + 1..ct_len - COMMITMENT_SIZE",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"cryptoframe_open_tag_slice_ends_late",
+			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE",
+			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE + 1",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"cryptoframe_open_tag_uses_commitment_suffix",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE]",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"cryptoframe_open_commitment_slice_starts_late",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE + 1..]",
+			"CryptoFrame libsodium memcmp commitment comparison",
+		),
+		(
+			"cryptoframe_open_commitment_slice_ends_early",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE..ct_len - 1]",
+			"CryptoFrame libsodium memcmp commitment comparison",
+		),
+		(
+			"cryptoframe_open_decrypts_ciphertext_without_tag",
+			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
+			"&context.ciphertext[..ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN]",
+			"CryptoFrame C-and-tag AEAD open",
+		),
+		(
+			"cryptoframe_open_decrypts_commitment_too",
+			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
+			"context.ciphertext",
+			"CryptoFrame C-and-tag AEAD open",
+		),
+		(
+			"cryptoframe_open_decrypt_prefix_boundary_late",
+			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
+			"&context.ciphertext[..ct_len - COMMITMENT_SIZE + 1]",
+			"CryptoFrame C-and-tag AEAD open",
+		),
+		(
+			"cryptoframe_open_omits_associated_data",
+			"Some(context.associated_data.as_slice()),",
+			"None,",
+			"CryptoFrame C-and-tag AEAD open",
+		),
+		(
+			"cryptoframe_open_commitment_swaps_sequence_sender",
+			"\t\tkey_seq,\n\t\tcontext.sender_kid,",
+			"\t\tcontext.sender_kid,\n\t\tkey_seq,",
+			"CryptoFrame open commitment mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.adapter_ratchet, "fn open_frame(", from, to);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"cryptoframe_open_decrypts_before_commitment_equality",
+		"CryptoFrame commitment-before-AEAD order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn open_frame(",
+				"\tif !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {\n\t\treturn None;\n\t}\n\tlet key: AeadKey = (*material.key().as_bytes()).into();\n\tlet nonce: AeadNonce = (*material.nonce().as_bytes()).into();\n\tcrypto_aead::chacha20poly1305_ietf::decrypt(\n\t\t&context.ciphertext[..ct_len - COMMITMENT_SIZE],\n\t\tSome(context.associated_data.as_slice()),\n\t\t&nonce,\n\t\t&key,\n\t)\n\t.ok()",
+				"\tlet key: AeadKey = (*material.key().as_bytes()).into();\n\tlet nonce: AeadNonce = (*material.nonce().as_bytes()).into();\n\tlet opened = crypto_aead::chacha20poly1305_ietf::decrypt(\n\t\t&context.ciphertext[..ct_len - COMMITMENT_SIZE],\n\t\tSome(context.associated_data.as_slice()),\n\t\t&nonce,\n\t\t&key,\n\t)\n\t.ok();\n\tif !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {\n\t\treturn None;\n\t}\n\topened",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_commitment_extracts_zero_key",
+			"let key = material.key().as_bytes();",
+			"let key = &[0u8; AEAD_KEY_LEN];",
+			"CryptoFrame commitment selected key",
+		),
+		(
+			"cryptoframe_commitment_extracts_zero_nonce",
+			"let nonce = material.nonce().as_bytes();",
+			"let nonce = &[0u8; AEAD_NONCE_LEN];",
+			"CryptoFrame commitment selected nonce",
+		),
+		(
+			"cryptoframe_commitment_converts_tag_as_ad",
+			"let ad = ad.try_into().ok()?;",
+			"let ad = tag.try_into().ok()?;",
+			"CryptoFrame commitment fixed-width AD",
+		),
+		(
+			"cryptoframe_commitment_uses_ad_prefix_as_tag",
+			"let tag = tag.try_into().ok()?;",
+			"let tag = ad[..AEAD_TAG_LEN].try_into().ok()?;",
+			"CryptoFrame commitment fixed-width retained tag",
+		),
+		(
+			"cryptoframe_commitment_core_call_swaps_sequence_sender",
+			"build_commitment_transcript(key, nonce, ad, tag, seq, kid)",
+			"build_commitment_transcript(key, nonce, ad, tag, kid, seq)",
+			"CryptoFrame adapter-to-core commitment mapping",
+		),
+		(
+			"cryptoframe_commitment_hash_output_shortened",
+			"generichash(input.as_bytes(), None, COMMITMENT_SIZE)",
+			"generichash(input.as_bytes(), None, COMMITMENT_SIZE - 1)",
+			"CryptoFrame unkeyed commitment hash",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn build_commitment(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_core_key_size_drift",
+			"pub const AEAD_KEY_SIZE: usize = 32;",
+			"pub const AEAD_KEY_SIZE: usize = 31;",
+			"CryptoFrame core key size",
+		),
+		(
+			"cryptoframe_core_nonce_size_drift",
+			"pub const AEAD_NONCE_SIZE: usize = 12;",
+			"pub const AEAD_NONCE_SIZE: usize = 11;",
+			"CryptoFrame core nonce size",
+		),
+		(
+			"cryptoframe_core_ad_size_source_drift",
+			"pub const ASSOCIATED_DATA_SIZE: usize = crate::constants::ASSOCIATED_DATA_SIZE;",
+			"pub const ASSOCIATED_DATA_SIZE: usize = 152;",
+			"CryptoFrame core associated-data size source",
+		),
+		(
+			"cryptoframe_core_tag_size_drift",
+			"pub const AEAD_TAG_SIZE: usize = 16;",
+			"pub const AEAD_TAG_SIZE: usize = 15;",
+			"CryptoFrame core tag size",
+		),
+		(
+			"cryptoframe_core_integer_size_drift",
+			"pub const ENCODED_U64_SIZE: usize = 8;",
+			"pub const ENCODED_U64_SIZE: usize = 7;",
+			"CryptoFrame core integer size",
+		),
+		(
+			"cryptoframe_core_transcript_formula_omits_sender",
+			"AEAD_TAG_SIZE + (2 * ENCODED_U64_SIZE)",
+			"AEAD_TAG_SIZE + ENCODED_U64_SIZE",
+			"CryptoFrame core transcript-size formula",
+		),
+		(
+			"cryptoframe_core_ad_length_assertion_drift",
+			"assert!(ASSOCIATED_DATA_SIZE == 153)",
+			"assert!(ASSOCIATED_DATA_SIZE == 152)",
+			"CryptoFrame core associated-data length",
+		),
+		(
+			"cryptoframe_core_transcript_length_assertion_drift",
+			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 229)",
+			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 228)",
+			"CryptoFrame core transcript length",
+		),
+		(
+			"cryptoframe_core_result_uses_literal_size",
+			"bytes: [u8; COMMITMENT_TRANSCRIPT_SIZE]",
+			"bytes: [u8; 229]",
+			"CryptoFrame core fixed-width result",
+		),
+		(
+			"cryptoframe_core_sequence_parameter_narrows",
+			"sequence: u64,\n\tsender_id: u64,",
+			"sequence: u32,\n\tsender_id: u64,",
+			"CryptoFrame core transcript signature",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_commitment, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"cryptoframe_core_le64_uses_big_endian_order",
+		"CryptoFrame core LE64 encoding",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"\t\tvalue as u8,\n\t\t(value >> 8) as u8,\n\t\t(value >> 16) as u8,\n\t\t(value >> 24) as u8,\n\t\t(value >> 32) as u8,\n\t\t(value >> 40) as u8,\n\t\t(value >> 48) as u8,\n\t\t(value >> 56) as u8,",
+				"\t\t(value >> 56) as u8,\n\t\t(value >> 48) as u8,\n\t\t(value >> 40) as u8,\n\t\t(value >> 32) as u8,\n\t\t(value >> 24) as u8,\n\t\t(value >> 16) as u8,\n\t\t(value >> 8) as u8,\n\t\tvalue as u8,",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_core_swaps_encoded_sequence_sender",
+		"CryptoFrame core integer mapping",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"\tlet sequence = encode_u64_le(sequence);\n\tlet sender_id = encode_u64_le(sender_id);",
+				"\tlet sequence = encode_u64_le(sender_id);\n\tlet sender_id = encode_u64_le(sequence);",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_core_key_bytes_reversed",
+			"key[i]",
+			"key[31 - i]",
+			"CryptoFrame core key field",
+		),
+		(
+			"cryptoframe_core_nonce_offset_drift",
+			"nonce[i - 32]",
+			"nonce[i - 31]",
+			"CryptoFrame core nonce field",
+		),
+		(
+			"cryptoframe_core_ad_offset_drift",
+			"associated_data[i - 44]",
+			"associated_data[i - 43]",
+			"CryptoFrame core associated-data field",
+		),
+		(
+			"cryptoframe_core_tag_offset_drift",
+			"tag[i - 197]",
+			"tag[i - 196]",
+			"CryptoFrame core retained-tag field",
+		),
+		(
+			"cryptoframe_core_sequence_offset_drift",
+			"sequence[i - 213]",
+			"sequence[i - 212]",
+			"CryptoFrame core sequence field",
+		),
+		(
+			"cryptoframe_core_sender_offset_drift",
+			"sender_id[i - 221]",
+			"sender_id[i - 220]",
+			"CryptoFrame core sender-ID field",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_commitment, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_core_array_builder_spelling_drift",
+		"CryptoFrame core fixed-width construction",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"core::array::from_fn(|i|",
+				"core::array::from_fn::<_, COMMITMENT_TRANSCRIPT_SIZE, _>(|i|",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_core_result_clones_bytes",
+		"CryptoFrame core transcript result",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"CommitmentTranscript { bytes }",
+				"CommitmentTranscript { bytes: bytes.clone() }",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_core_reorders_tag_and_sequence_branches",
+		"CryptoFrame core transcript field order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"\t\t} else if i < 213 {\n\t\t\ttag[i - 197]\n\t\t} else if i < 221 {\n\t\t\tsequence[i - 213]",
+				"\t\t} else if i < 221 {\n\t\t\tsequence[i - 213]\n\t\t} else if i < 213 {\n\t\t\ttag[i - 197]",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	let symbolic_fields = ["ciphertext", "retained_aead_tag", "commitment"];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let fields = permutation.map(|field| symbolic_fields[field]);
+		let mutated = format!(
+			"crypto_frame.fields={},sequence,sender_id",
+			fields.join(",")
+		);
+		assert_rejected(
+			&format!("cryptoframe_symbolic_annotation_permutation_{index}"),
+			"CryptoFrame symbolic semantic field order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.crypto,
+					"crypto_frame.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id",
+					&mutated,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_symbolic_annotation_uses_target_id",
+		"CryptoFrame symbolic semantic field order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.crypto,
+				"commitment,sequence,sender_id *)",
+				"commitment,sequence,target_id *)",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, from, to) in [
+		(
+			"cryptoframe_symbolic_sequence_type_drift",
+			"  sequence,\n  key_id\n): bitstring [data].",
+			"  key_id,\n  key_id\n): bitstring [data].",
+		),
+		(
+			"cryptoframe_symbolic_sender_type_drift",
+			"  sequence,\n  key_id\n): bitstring [data].",
+			"  sequence,\n  bitstring\n): bitstring [data].",
+		),
+	] {
+		assert_rejected(
+			name,
+			"CryptoFrame symbolic constructor declaration",
+			|snapshot| {
+				replace_once(&mut snapshot.crypto, from, to);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let seal_formals = [
+		"material: bitstring",
+		"associated_data: bitstring",
+		"message_sequence: sequence",
+		"sender_id: key_id",
+		"plaintext: bitstring",
+	];
+	let seal_bitstrings = [seal_formals[0], seal_formals[1], seal_formals[4]];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let permuted = permute_cryptoframe(&seal_bitstrings, permutation);
+		let mut arguments = seal_formals.map(str::to_owned).to_vec();
+		arguments[0] = permuted[0].clone();
+		arguments[1] = permuted[1].clone();
+		arguments[4] = permuted[2].clone();
+		assert_rejected(
+			&format!("cryptoframe_symbolic_seal_argument_permutation_{index}"),
+			"CryptoFrame symbolic seal arguments",
+			move |snapshot| replace_call(&mut snapshot.crypto, "seal_frame", 0, &arguments),
+		);
+		mutation_count += 1;
+	}
+
+	let seal_fields = [
+		"aead_cipher(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"aead_tag(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"ctx_commitment(material_key(material),material_nonce(material),associated_data,aead_tag(material_key(material),material_nonce(material),associated_data,plaintext),message_sequence,sender_id)",
+	];
+	let seal_tail = ["message_sequence", "sender_id"];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let mut arguments = permute_cryptoframe(&seal_fields, permutation);
+		arguments.extend(seal_tail.map(str::to_owned));
+		assert_rejected(
+			&format!("cryptoframe_symbolic_seal_field_permutation_{index}"),
+			"CryptoFrame symbolic seal fields",
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 1, &arguments),
+		);
+		mutation_count += 1;
+	}
+	for (index, duplicated) in [
+		[seal_fields[0], seal_fields[0], seal_fields[2]],
+		[seal_fields[0], seal_fields[1], seal_fields[1]],
+		[seal_fields[2], seal_fields[1], seal_fields[2]],
+	]
+	.into_iter()
+	.enumerate()
+	{
+		let mut arguments = duplicated.map(str::to_owned).to_vec();
+		arguments.extend(seal_tail.map(str::to_owned));
+		let diagnostic = match index {
+			1 => "seal CTX input",
+			2 => "seal AEAD input",
+			_ => "CryptoFrame symbolic seal fields",
+		};
+		assert_rejected(
+			&format!("cryptoframe_symbolic_seal_field_duplicate_{index}"),
+			diagnostic,
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 1, &arguments),
+		);
+		mutation_count += 1;
+	}
+
+	let open_fields = [
+		"aead_cipher(key,nonce,associated_data,plaintext)",
+		"aead_tag(key,nonce,associated_data,plaintext)",
+		"blake2b512(ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id)))",
+	];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let mut arguments = permute_cryptoframe(&open_fields, permutation);
+		arguments.extend(seal_tail.map(str::to_owned));
+		assert_rejected(
+			&format!("cryptoframe_symbolic_open_field_permutation_{index}"),
+			"CryptoFrame symbolic open fields",
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 2, &arguments),
+		);
+		mutation_count += 1;
+	}
+	for (index, duplicated) in [
+		[open_fields[0], open_fields[0], open_fields[2]],
+		[open_fields[0], open_fields[1], open_fields[1]],
+		[open_fields[2], open_fields[1], open_fields[2]],
+	]
+	.into_iter()
+	.enumerate()
+	{
+		let mut arguments = duplicated.map(str::to_owned).to_vec();
+		arguments.extend(seal_tail.map(str::to_owned));
+		let diagnostic = if index == 1 {
+			"open CTX input"
+		} else {
+			"CryptoFrame symbolic open fields"
+		};
+		assert_rejected(
+			&format!("cryptoframe_symbolic_open_field_duplicate_{index}"),
+			diagnostic,
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 2, &arguments),
+		);
+		mutation_count += 1;
+	}
+
+	let open_frame_arguments = [
+		"ratchet_key_nonce(key,nonce)",
+		"associated_data",
+		"message_sequence",
+		"sender_id",
+		"crypto_frame(aead_cipher(key,nonce,associated_data,plaintext),aead_tag(key,nonce,associated_data,plaintext),blake2b512(ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id))),message_sequence,sender_id)",
+	];
+	let open_bitstrings = [
+		open_frame_arguments[0],
+		open_frame_arguments[1],
+		open_frame_arguments[4],
+	];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let permuted = permute_cryptoframe(&open_bitstrings, permutation);
+		let mut arguments = open_frame_arguments.map(str::to_owned).to_vec();
+		arguments[0] = permuted[0].clone();
+		arguments[1] = permuted[1].clone();
+		arguments[4] = permuted[2].clone();
+		assert_rejected(
+			&format!("cryptoframe_symbolic_open_argument_permutation_{index}"),
+			"CryptoFrame symbolic open acceptance",
+			move |snapshot| replace_call(&mut snapshot.crypto, "open_frame", 0, &arguments),
+		);
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_symbolic_open_returns_associated_data",
+		"CryptoFrame symbolic open result",
+		|snapshot| {
+			let end = snapshot.crypto.rfind(") = plaintext.").unwrap();
+			snapshot
+				.crypto
+				.replace_range(end..end + ") = plaintext.".len(), ") = associated_data.");
+		},
+	);
+	mutation_count += 1;
+
+	for (name, occurrence, seal_context, diagnostic) in [
+		(
+			"cryptoframe_symbolic_seal_commitment_uses_different_tag",
+			1,
+			true,
+			"seal CTX input",
+		),
+		(
+			"cryptoframe_symbolic_open_commitment_uses_different_tag",
+			3,
+			false,
+			"open CTX input",
+		),
+	] {
+		let arguments = if seal_context {
+			[
+				"material_key(material)",
+				"material_nonce(material)",
+				"associated_data",
+				"associated_data",
+			]
+			.map(str::to_owned)
+		} else {
+			["key", "nonce", "associated_data", "associated_data"].map(str::to_owned)
+		};
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_call(&mut snapshot.crypto, "aead_tag", occurrence, &arguments);
+		});
+		mutation_count += 1;
+	}
+
+	let ctx_fields = [
+		"key",
+		"nonce",
+		"associated_data",
+		"retained_aead_tag",
+		"sequence_le64(message_sequence)",
+		"sender_id_le64(sender_id)",
+	];
+	for left in 0..6 {
+		for right in left + 1..6 {
+			let mut arguments = ctx_fields.map(str::to_owned);
+			arguments.swap(left, right);
+			assert_rejected(
+				&format!("cryptoframe_ctx_pair_transposition_{left}_{right}"),
+				"CTX preimage field order",
+				move |snapshot| {
+					replace_call(&mut snapshot.interface, "ctx_preimage", 1, &arguments);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	for omitted in 0..6 {
+		let mut arguments = ctx_fields.map(str::to_owned);
+		arguments[omitted] = ctx_fields[(omitted + 1) % 6].to_owned();
+		assert_rejected(
+			&format!("cryptoframe_ctx_omits_and_duplicates_field_{omitted}"),
+			"CTX preimage field order",
+			move |snapshot| {
+				replace_call(&mut snapshot.interface, "ctx_preimage", 1, &arguments);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, CRYPTOFRAME_WIRE_MUTATION_COUNT);
 }
 
 const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 163;
