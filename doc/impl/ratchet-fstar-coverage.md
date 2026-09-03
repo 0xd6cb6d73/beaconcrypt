@@ -14,18 +14,18 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 
 | F* declaration | Source line | Status | Lean evidence or remaining obligation |
 | --- | ---: | --- | --- |
-| `ratchet_kdf_output_split_is_exact` | 18 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `symmetric_ratchet_kdf_request_is_exact` | 34 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `ratchet_step_uses_exact_chain_and_partition` | 43 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `concrete_ratchet_step_preserves_executor` | 64 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `ratchet_chain_bytes_extensionality` | 70 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `concrete_ratchet_chain_extensionality` | 77 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `u64_value_extensionality` | 87 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `u8_value_extensionality` | 96 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `positive_at_most_one_is_one` | 105 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `u64_below_max_is_not_max` | 110 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `u64_successor_value` | 115 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `u64_value_is_bounded` | 120 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `ratchet_kdf_output_split_is_exact` | 18 | Matched | `RatchetByteSurface.ratchet_kdf_output_split_is_exact` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
+| `symmetric_ratchet_kdf_request_is_exact` | 34 | Matched | `RatchetByteSurface.symmetric_ratchet_kdf_request_is_exact` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
+| `ratchet_step_uses_exact_chain_and_partition` | 43 | Matched | `RatchetByteSurface.ratchet_step_uses_exact_chain_and_partition` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
+| `concrete_ratchet_step_preserves_executor` | 64 | Matched | The embedded-executor record is replaced by first-order phases. `RatchetInterpreter.interpretedStep` and `withInterpreter` use one fixed executor; `RatchetRoleReachability.sealNext_preserves_reachability` and `RatchetReceiveReachability.receiveNext_preserves_reachability` prove every full execution uses that same parameter. |
+| `ratchet_chain_bytes_extensionality` | 70 | Matched | `RatchetByteSurface.ratchet_chain_bytes_extensionality` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
+| `concrete_ratchet_chain_extensionality` | 77 | Matched | The old chain-plus-executor record no longer exists in the extraction. `RatchetByteSurface.ratchet_chain_bytes_extensionality` covers the production chain field; interpreter identity is the unchanged explicit argument of `RatchetInterpreter.withInterpreter` and both checked lifetime drivers. |
+| `u64_value_extensionality` | 87 | Matched | `RatchetByteSurface.u64_value_extensionality` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
+| `u8_value_extensionality` | 96 | Matched | `RatchetByteSurface.u8_value_extensionality` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
+| `positive_at_most_one_is_one` | 105 | Matched | `RatchetByteSurface.positive_at_most_one_is_one` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
+| `u64_below_max_is_not_max` | 110 | Matched | `RatchetByteSurface.u64_below_max_is_not_max` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
+| `u64_successor_value` | 115 | Matched | `RatchetByteSurface.u64_successor_value` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
+| `u64_value_is_bounded` | 120 | Matched | `RatchetByteSurface.u64_value_is_bounded` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
 | `receive_key_at_matches_cache_slot` | 170 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `lookup_receive_key_from_sound` | 180 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `lookup_receive_key_from_none_excludes_range` | 202 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -116,11 +116,11 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `refined_advance_receive_until_rejection_is_neutral` | 2062 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_advance_receive_until_is_ordered` | 2078 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_advance_receive_until_old_is_neutral` | 2098 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_receive_entry_is_associated` | 2110 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_receive_entry_mismatched_tag_is_rejected` | 2125 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_receive_key_mismatched_tag_is_rejected` | 2143 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_receive_key_is_associated` | 2160 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_receive_key_is_derived` | 2208 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `refined_receive_entry_is_associated` | 2110 | Matched | `RatchetAccessors.refined_receive_entry_is_associated_valid` uses the exact structural `ValidRefined` premise. `slotsAligned_of_valid` discharges the weaker active-slot alignment premise; no canonical chain/material premise is required. |
+| `refined_receive_entry_mismatched_tag_is_rejected` | 2125 | Matched | `RatchetAccessors.refined_receive_entry_mismatched_tag_is_rejected` is an exact generic raw-accessor or peer-wrapper result; its normal return is derived internally. |
+| `refined_receive_key_mismatched_tag_is_rejected` | 2143 | Matched | `RatchetAccessors.refined_receive_key_mismatched_tag_is_rejected` is an exact generic raw-accessor or peer-wrapper result; its normal return is derived internally. |
+| `refined_receive_key_is_associated` | 2160 | Matched | `RatchetAccessors.refined_receive_key_is_associated_valid` proves both successful aligned-slot exposure and exclusion of every aligned live slot on None, under exact structural validity. |
+| `refined_receive_key_is_derived` | 2208 | Matched | `RatchetAccessors.refined_receive_key_is_derived` derives positive wire sequence and equality with `Ratchet.msgKeyAt` at sequence minus one from the complete production `KernelRefines` lifetime relation; `kernel_slots_aligned` supplies raw association. |
 | `refined_finish_receive_neutral_outcomes_preserve_full_state` | 2238 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_finish_receive_mismatched_target_is_neutral` | 2252 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_finish_receive_mismatched_last_is_neutral` | 2271 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -205,6 +205,6 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `replace_ratchet_for_other_peer_is_neutral` | 6086 | Matched | `RatchetControlRestore.replace_ratchet_for_peer_other`. |
 | `replace_ratchet_for_selected_peer` | 6093 | Matched | `RatchetControlRestore.replace_ratchet_for_peer_match`. |
 | `advance_send_for_other_peer_is_neutral` | 6104 | Matched | `RatchetControlRestore.advance_send_for_peer_other`. |
-| `advance_send_for_selected_peer_matches` | 6114 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `advance_send_for_selected_peer_matches` | 6114 | Matched | `RatchetAccessors.advance_send_for_selected_peer_matches` is an exact generic raw-accessor or peer-wrapper result; its normal return is derived internally. |
 
 The inventory contains 192 declarations: 47 matched, 12 in progress, and 133 unmatched in this draft.
