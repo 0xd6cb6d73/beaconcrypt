@@ -24,6 +24,7 @@ query binding: bitstring;
 query event(Phase2ResponseCommitted(PHASE2_WRONG_OUTER_IDENTITY_WITNESS)).
 query event(Phase2ResponseCommitted(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
 query event(Phase2ResponseCommitted(PHASE2_WRONG_INNER_SENDER_WITNESS)).
+query attacker(PHASE2_ASSIGNED_ID_BINDING_CANARY).
 
 (* Every commit carries the exact pinned outer identity, authenticated assigned-ID prefix, and pinned inner sender that preceded it. *)
 query binding: bitstring;

@@ -16,12 +16,18 @@ free PHASE2_CORRECT_RESPONSE_WITNESS: bitstring [private].
 free PHASE2_WRONG_OUTER_IDENTITY_WITNESS: bitstring [private].
 free PHASE2_RELABELED_ASSIGNED_ID_WITNESS: bitstring [private].
 free PHASE2_WRONG_INNER_SENDER_WITNESS: bitstring [private].
+free PHASE2_ASSIGNED_ID_BINDING_CANARY: bitstring [private].
 
 event Phase2ResponseAttempted(bitstring).
 event Phase2OuterIdentityGateReached(bitstring).
 event Phase2InnerSenderGateReached(bitstring).
 event Phase2AuthenticatedFrameOpened(bitstring).
 event Phase2GenuineAssignedPrefixObserved(bitstring).
+event Phase2RelabeledAssignedIdCommitted(
+  bitstring,
+  beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+  beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding
+).
 event Phase2ResponseCommitted(bitstring).
 event Phase2PinnedOuterIdentity(bitstring).
 event Phase2AcceptedOuterIdentity(bitstring).
@@ -132,23 +138,33 @@ let Phase2BeaconFinishControl(
           key_id_encoding(assigned_key_id)
         )
       in
-      if authenticated_binding = expected_binding then
-        event Phase2AcceptedOuterIdentity(
-          phase2_outer_identity_binding(
-            witness,
-            response_server_identity
-          )
+      let admitted_binding = phase2_assigned_id_binding_gate(
+        authenticated_binding,
+        expected_binding
+      ) in
+      event Phase2AcceptedOuterIdentity(
+        phase2_outer_identity_binding(
+          witness,
+          response_server_identity
+        )
+      );
+      event Phase2AcceptedAssignedPrefix(
+        phase2_assigned_prefix_binding(witness, expected_binding)
+      );
+      event Phase2AcceptedInnerSender(
+        phase2_inner_sender_binding(
+          witness,
+          authenticated_server_key_id
+        )
+      );
+      event Phase2ResponseCommitted(witness);
+      if witness = PHASE2_RELABELED_ASSIGNED_ID_WITNESS then
+        event Phase2RelabeledAssignedIdCommitted(
+          witness,
+          authenticated_binding,
+          expected_binding
         );
-        event Phase2AcceptedAssignedPrefix(
-          phase2_assigned_prefix_binding(witness, expected_binding)
-        );
-        event Phase2AcceptedInnerSender(
-          phase2_inner_sender_binding(
-            witness,
-            authenticated_server_key_id
-          )
-        );
-        event Phase2ResponseCommitted(witness).
+        out(c, PHASE2_ASSIGNED_ID_BINDING_CANARY).
 
 (* The fixture makes one genuine response and then changes exactly one required binding for each malformed branch. The wrong outer identity branch retains the genuine ephemeral key, KEM ciphertext, frame, and assigned ID. The assigned-ID branch retains the genuine authenticated frame and changes only the outer proposed ID. The inner-sender branch seals an otherwise genuine frame under a different sender ID. *)
 let Phase2ResponseBindingControl() =

@@ -49,7 +49,7 @@ declare -A expected_category_counts=(
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=41
-	[handwritten-proverif]=57
+	[handwritten-proverif]=61
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -611,18 +611,43 @@ require_line_count 3 '^fun phase2_.*_binding' \
 require_line_count 4 '^free PHASE2_.*_WITNESS' \
 	proofs/pro-verif/phase2-response-binding-control.pvl \
 	"Phase-2 response-binding witness"
-require_line_count 12 '^event Phase2' \
+require_line_count 13 '^event Phase2' \
 	proofs/pro-verif/phase2-response-binding-control.pvl \
 	"Phase-2 response-binding event"
 require_line_count 2 '^let Phase2' \
 	proofs/pro-verif/phase2-response-binding-control.pvl \
 	"Phase-2 response-binding process"
-require_line_count 17 '^query ' \
+require_line_count 18 '^query ' \
 	proofs/pro-verif/phase2-response-binding-queries.pvl \
 	"Phase-2 response-binding query"
+require_line_count 13 '^query ' \
+	proofs/pro-verif/phase2-assigned-id-weak-queries.pvl \
+	"weak Phase-2 assigned-ID query"
+require_line_count 1 '^free PHASE2_ASSIGNED_ID_BINDING_CANARY: bitstring \[private\]\.$' \
+	proofs/pro-verif/phase2-response-binding-control.pvl \
+	"Phase-2 assigned-ID differential canary"
 reject_matches "primitive rule in Phase-2 response-binding control" \
 	'(?m)^(?:reduc|equation) ' \
 	proofs/pro-verif/phase2-response-binding-control.pvl
+for assigned_id_theory in strong weak; do
+	require_line_count 1 '^fun phase2_assigned_id_binding_gate' \
+		"proofs/pro-verif/phase2-assigned-id-${assigned_id_theory}-theory.pvl" \
+		"${assigned_id_theory} Phase-2 assigned-ID gate declaration"
+	require_line_count 1 '^reduc ' \
+		"proofs/pro-verif/phase2-assigned-id-${assigned_id_theory}-theory.pvl" \
+		"${assigned_id_theory} Phase-2 assigned-ID gate rule"
+	reject_matches "extra declaration in ${assigned_id_theory} Phase-2 assigned-ID theory" \
+		'(?m)^(?:equation|event|free|let|letfun|process|table|type)\b' \
+		"proofs/pro-verif/phase2-assigned-id-${assigned_id_theory}-theory.pvl"
+done
+require_occurrence_count 1 \
+	'phase2_assigned_id_binding_gate\(\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding\s*\):\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding\s+reduc\s+forall\s+binding:\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding;\s*phase2_assigned_id_binding_gate\(binding,\s*binding\)\s*=\s*binding\.' \
+	"exact production Phase-2 assigned-ID equality gate" \
+	proofs/pro-verif/phase2-assigned-id-strong-theory.pvl
+require_occurrence_count 1 \
+	'phase2_assigned_id_binding_gate\(\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding\s*\):\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding\s+reduc\s+forall\s+authenticated_binding:\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,\s*outer_binding:\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding;\s*phase2_assigned_id_binding_gate\(\s*authenticated_binding,\s*outer_binding\s*\)\s*=\s*authenticated_binding\.' \
+	"exact weakened Phase-2 assigned-ID-only gate" \
+	proofs/pro-verif/phase2-assigned-id-weak-theory.pvl
 require_occurrence_count 1 \
 	'let\s+kex_response\(\s*response_server_identity,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*assigned_key_id\s*\)\s*=\s*response\s+in' \
 	"exact Phase-2 response-binding destructure order" \
@@ -636,11 +661,15 @@ require_occurrence_count 1 \
 	"relabeled Phase-2 assigned ID retains the genuine frame" \
 	proofs/pro-verif/phase2-response-binding-control.pvl
 require_occurrence_count 1 \
+	'new\s+assigned_key_id:\s*key_id;\s*new\s+relabeled_assigned_key_id:\s*key_id;' \
+	"fresh distinct original and relabeled Phase-2 assigned IDs" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
 	'let\s+wrong_inner_sender_frame\s*=\s*seal_frame\(\s*server_material,\s*associated_data,\s*first_sequence\(\),\s*wrong_inner_sender_key_id,\s*initial_payload\s*\)\s+in' \
 	"wrong inner sender seals an otherwise genuine frame" \
 	proofs/pro-verif/phase2-response-binding-control.pvl
 require_occurrence_count 1 \
-	'if\s+response_server_identity\s*=\s*expected_server_identity\s+then[\s\S]*?beaconcrypt_core__pqxdh__build_associated_data\(\s*expected_server_identity,\s*beacon_identity\s*\)[\s\S]*?if\s+authenticated_server_key_id\s*=\s*expected_server_key_id\s+then[\s\S]*?open_frame\(\s*server_material,\s*associated_data,\s*frame_sequence,\s*expected_server_key_id,\s*initial_frame\s*\)[\s\S]*?beaconcrypt_core__pqxdh__RegistrationKeyIdBinding\(\s*key_id_encoding\(assigned_key_id\)\s*\)[\s\S]*?if\s+authenticated_binding\s*=\s*expected_binding\s+then[\s\S]*?event Phase2ResponseCommitted\(witness\)' \
+	'if\s+response_server_identity\s*=\s*expected_server_identity\s+then[\s\S]*?beaconcrypt_core__pqxdh__build_associated_data\(\s*expected_server_identity,\s*beacon_identity\s*\)[\s\S]*?if\s+authenticated_server_key_id\s*=\s*expected_server_key_id\s+then[\s\S]*?open_frame\(\s*server_material,\s*associated_data,\s*frame_sequence,\s*expected_server_key_id,\s*initial_frame\s*\)[\s\S]*?beaconcrypt_core__pqxdh__RegistrationKeyIdBinding\(\s*key_id_encoding\(assigned_key_id\)\s*\)[\s\S]*?phase2_assigned_id_binding_gate\(\s*authenticated_binding,\s*expected_binding\s*\)[\s\S]*?event Phase2ResponseCommitted\(witness\)' \
 	"ordered production Phase-2 acceptance gates" \
 	proofs/pro-verif/phase2-response-binding-control.pvl
 require_occurrence_count 1 \
@@ -656,7 +685,7 @@ require_occurrence_count 1 \
 	"internal Phase-2 original authenticated-prefix witness" \
 	proofs/pro-verif/phase2-response-binding-control.pvl
 require_occurrence_count 1 \
-	'if\s+authenticated_binding\s*=\s*expected_binding\s+then\s*event\s+Phase2AcceptedOuterIdentity\([\s\S]*?\);\s*event\s+Phase2AcceptedAssignedPrefix\([\s\S]*?\);\s*event\s+Phase2AcceptedInnerSender\([\s\S]*?\);\s*event\s+Phase2ResponseCommitted\(witness\)\.' \
+	'let\s+admitted_binding\s*=\s*phase2_assigned_id_binding_gate\(\s*authenticated_binding,\s*expected_binding\s*\)\s+in\s*event\s+Phase2AcceptedOuterIdentity\([\s\S]*?\);\s*event\s+Phase2AcceptedAssignedPrefix\([\s\S]*?\);\s*event\s+Phase2AcceptedInnerSender\([\s\S]*?\);\s*event\s+Phase2ResponseCommitted\(witness\);' \
 	"sole Phase-2 commit follows all binding antecedents" \
 	proofs/pro-verif/phase2-response-binding-control.pvl
 require_occurrence_count 2 \
@@ -687,6 +716,22 @@ require_occurrence_count 3 \
 	'query\s+binding: bitstring;\s*inj-event\(Phase2Accepted(?:OuterIdentity|AssignedPrefix|InnerSender)\(binding\)\)\s*==>\s*inj-event\(Phase2(?:PinnedOuterIdentity|AuthenticatedAssignedPrefix|PinnedInnerSender)\(binding\)\)\.' \
 	"Phase-2 response binding correspondence" \
 	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 1 \
+	'query\s+attacker\(PHASE2_ASSIGNED_ID_BINDING_CANARY\)\.' \
+	"production Phase-2 assigned-ID canary secrecy query" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 1 \
+	'query\s+queried_authenticated_binding:\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,\s*queried_outer_binding:\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding;\s*event\(Phase2RelabeledAssignedIdCommitted\(\s*PHASE2_RELABELED_ASSIGNED_ID_WITNESS,\s*queried_authenticated_binding,\s*queried_outer_binding\s*\)\)\.' \
+	"weak Phase-2 relabeled-ID commit witness" \
+	proofs/pro-verif/phase2-assigned-id-weak-queries.pvl
+require_occurrence_count 1 \
+	'query\s+attacker\(PHASE2_ASSIGNED_ID_BINDING_CANARY\)\.' \
+	"weak Phase-2 assigned-ID canary disclosure query" \
+	proofs/pro-verif/phase2-assigned-id-weak-queries.pvl
+require_occurrence_count 1 \
+	'event\s+Phase2ResponseCommitted\(witness\);\s*if\s+witness\s*=\s*PHASE2_RELABELED_ASSIGNED_ID_WITNESS\s+then\s*event\s+Phase2RelabeledAssignedIdCommitted\(\s*witness,\s*authenticated_binding,\s*expected_binding\s*\);\s*out\(c,\s*PHASE2_ASSIGNED_ID_BINDING_CANARY\)\.' \
+	"relabeled Phase-2 commit canary release" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
 require_line_count 8 '^query ' \
 	proofs/pro-verif/mlkem-reencapsulation-control-queries.pvl \
 	"ML-KEM re-encapsulation control query"
@@ -745,7 +790,8 @@ for scenario_process in \
 	mlkem-reencapsulation-control \
 	public-key-confusion-strong \
 	public-key-confusion-weak \
-	phase2-response-binding; do
+	phase2-response-binding \
+	phase2-assigned-id-weak; do
 	require_line_count 1 '^process$' \
 		"proofs/pro-verif/${scenario_process}.pv" \
 			"${scenario_process} top-level process"
@@ -838,6 +884,27 @@ require_line_count 1 \
 require_line_count 1 '^check-proverif: check-proverif-transcript-fidelity$' \
 	Makefile "aggregate transcript-fidelity prerequisite"
 require_occurrence_count 1 \
+	'check-proverif-phase2-assigned-id-weak:\s+check-proverif-extraction\s+\\\s*check-proverif-phase2-response-binding' \
+	"weak Phase-2 target paired with production response binding" \
+	Makefile
+require_occurrence_count 1 \
+	'check-proverif-phase2-response-binding:\s+check-proverif-extraction[\s\S]*?\$\(PROVERIF_COMMON_LIBS\)\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-strong-theory\.pvl\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-response-binding-control\.pvl\s+\\[\s\S]*?awk -v scenario=phase2-response-binding' \
+	"production Phase-2 target loads only the strong assigned-ID gate" \
+	Makefile
+require_occurrence_count 1 \
+	'check-proverif-phase2-assigned-id-weak:\s+check-proverif-extraction[\s\S]*?\$\(PROVERIF_COMMON_LIBS\)\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-weak-theory\.pvl\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-response-binding-control\.pvl\s+\\[\s\S]*?awk -v scenario=phase2-assigned-id-weak' \
+	"weak Phase-2 target loads only the weak assigned-ID gate" \
+	Makefile
+require_line_count 1 \
+	'^\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-strong-theory\.pvl \\$' \
+	Makefile "production Phase-2 assigned-ID gate loader"
+require_line_count 1 \
+	'^\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-weak-theory\.pvl \\$' \
+	Makefile "weak Phase-2 assigned-ID gate loader"
+require_line_count 2 \
+	'^\s*-lib \$\(PROVERIF_DIR\)/phase2-response-binding-control\.pvl \\$' \
+	Makefile "shared strong/weak Phase-2 control loader"
+require_occurrence_count 1 \
 	'PROVERIF_CRYPTO_LIBS :=\s*\\\s*-lib \$\(PROVERIF_INTERFACE\)\s*\\\s*-lib \$\(PROVERIF_DIR\)/crypto\.pvl' \
 	"canonical interface loaded before cryptographic theory" Makefile
 require_line_count 1 '^            target: check-proverif-transcript-fidelity$' \
@@ -846,6 +913,9 @@ require_line_count 1 '^            target: check-proverif-transcript-fidelity$' 
 require_line_count 1 '^            target: check-generated-proverif-phase2-response-binding$' \
 	../.github/workflows/formal-verification.yml \
 	"dedicated Phase-2 response-binding CI target"
+require_line_count 1 '^            target: check-generated-proverif-phase2-assigned-id-weak$' \
+	../.github/workflows/formal-verification.yml \
+	"dedicated weak Phase-2 assigned-ID CI target"
 
 require_line_count 1 '^  Theorem ctx_misattribution_reduces_to_collision :' \
 	proofs/ssprove/CtxEventReduction.v \

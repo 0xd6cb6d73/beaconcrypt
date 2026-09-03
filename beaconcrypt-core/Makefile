@@ -175,6 +175,7 @@ PROVERIF_SCENARIOS := \
 	public-key-confusion-strong \
 	public-key-confusion-weak \
 	phase2-response-binding \
+	phase2-assigned-id-weak \
 	active-quantum \
 	baseline \
 	reachability \
@@ -515,10 +516,22 @@ check-proverif-phase2-response-binding: check-proverif-extraction
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl \
 			-lib $(PROVERIF_DIR)/phase2-response-binding-control.pvl \
 			-lib $(PROVERIF_DIR)/phase2-response-binding-queries.pvl \
 			$(PROVERIF_DIR)/phase2-response-binding.pv | \
 		awk -v scenario=phase2-response-binding -f '$(PROVERIF_CHECKER)'
+
+check-proverif-phase2-assigned-id-weak: check-proverif-extraction \
+	check-proverif-phase2-response-binding
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/phase2-response-binding-control.pvl \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-queries.pvl \
+			$(PROVERIF_DIR)/phase2-assigned-id-weak.pv | \
+		awk -v scenario=phase2-assigned-id-weak -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-classical-equivalence: check-proverif-extraction
 	@set -o pipefail; \

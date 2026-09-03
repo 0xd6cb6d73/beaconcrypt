@@ -276,8 +276,8 @@ END {
     wanted = "Query not event(PkRoleConfusionAccepted(PK_ROLE_CONFUSION_WITNESS[])) is " acceptance_result "."
     require_exact(wanted, scenario " role-confusion classification")
   } else if (scenario == "phase2-response-binding") {
-    if (query_count != 17) {
-      reject("expected 17 Phase-2 response-binding queries, saw " query_count)
+    if (query_count != 18) {
+      reject("expected 18 Phase-2 response-binding queries, saw " query_count)
     }
     wanted = "Query not event(Phase2ResponseCommitted(PHASE2_CORRECT_RESPONSE_WITNESS[])) is false."
     require_exact(wanted, "Phase-2 correct response commit")
@@ -307,12 +307,44 @@ END {
     require_exact(wanted, "Phase-2 relabeled assigned-ID rejection")
     wanted = "Query not event(Phase2ResponseCommitted(PHASE2_WRONG_INNER_SENDER_WITNESS[])) is true."
     require_exact(wanted, "Phase-2 wrong inner-sender rejection")
+    wanted = "Query not attacker(PHASE2_ASSIGNED_ID_BINDING_CANARY[]) is true."
+    require_exact(wanted, "Phase-2 assigned-ID binding canary secrecy")
     wanted = "Query inj-event(Phase2AcceptedOuterIdentity(binding)) ==> inj-event(Phase2PinnedOuterIdentity(binding)) is true."
     require_exact(wanted, "Phase-2 outer-identity binding correspondence")
     wanted = "Query inj-event(Phase2AcceptedAssignedPrefix(binding)) ==> inj-event(Phase2AuthenticatedAssignedPrefix(binding)) is true."
     require_exact(wanted, "Phase-2 assigned-ID prefix correspondence")
     wanted = "Query inj-event(Phase2AcceptedInnerSender(binding)) ==> inj-event(Phase2PinnedInnerSender(binding)) is true."
     require_exact(wanted, "Phase-2 inner-sender binding correspondence")
+  } else if (scenario == "phase2-assigned-id-weak") {
+    if (query_count != 13) {
+      reject("expected 13 weak Phase-2 assigned-ID queries, saw " query_count)
+    }
+    wanted = "Query not event(Phase2ResponseAttempted(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[])) is false."
+    require_exact(wanted, "weak Phase-2 relabeled assigned-ID attempt")
+    wanted = "Query not event(Phase2OuterIdentityGateReached(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[])) is false."
+    require_exact(wanted, "weak Phase-2 retained outer-identity gate")
+    wanted = "Query not event(Phase2InnerSenderGateReached(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[])) is false."
+    require_exact(wanted, "weak Phase-2 retained inner-sender gate")
+    wanted = "Query not event(Phase2AuthenticatedFrameOpened(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[])) is false."
+    require_exact(wanted, "weak Phase-2 genuine frame opening")
+    wanted = "Query not event(Phase2GenuineAssignedPrefixObserved(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[])) is false."
+    require_exact(wanted, "weak Phase-2 original authenticated prefix")
+    wanted = "Query not event(Phase2ResponseCommitted(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[])) is false."
+    require_exact(wanted, "weak Phase-2 relabeled assigned-ID commit")
+    wanted = "Query not event(Phase2RelabeledAssignedIdCommitted(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[],queried_authenticated_binding,queried_outer_binding)) is false."
+    require_exact(wanted, "weak Phase-2 explicit mismatched commit")
+    wanted = "Query not attacker(PHASE2_ASSIGNED_ID_BINDING_CANARY[]) is false."
+    require_exact(wanted, "weak Phase-2 observable commit canary")
+    wanted = "Query not event(Phase2ResponseCommitted(PHASE2_WRONG_OUTER_IDENTITY_WITNESS[])) is true."
+    require_exact(wanted, "weak Phase-2 retained outer-identity rejection")
+    wanted = "Query not event(Phase2ResponseCommitted(PHASE2_WRONG_INNER_SENDER_WITNESS[])) is true."
+    require_exact(wanted, "weak Phase-2 retained inner-sender rejection")
+    wanted = "Query inj-event(Phase2AcceptedOuterIdentity(binding)) ==> inj-event(Phase2PinnedOuterIdentity(binding)) is true."
+    require_exact(wanted, "weak Phase-2 retained outer-identity correspondence")
+    wanted = "Query inj-event(Phase2AcceptedAssignedPrefix(binding)) ==> inj-event(Phase2AuthenticatedAssignedPrefix(binding)) is false."
+    require_exact(wanted, "weak Phase-2 broken assigned-ID correspondence")
+    wanted = "Query inj-event(Phase2AcceptedInnerSender(binding)) ==> inj-event(Phase2PinnedInnerSender(binding)) is true."
+    require_exact(wanted, "weak Phase-2 retained inner-sender correspondence")
   } else if (scenario == "baseline" ||
              scenario == "active-classical") {
     if (query_count != 12) {

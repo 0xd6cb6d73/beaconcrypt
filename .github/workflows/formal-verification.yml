@@ -64,6 +64,8 @@ jobs:
             target: check-generated-proverif-public-key-confusion-weak
           - name: ProVerif Phase 2 response binding
             target: check-generated-proverif-phase2-response-binding
+          - name: ProVerif weakened Phase 2 assigned ID binding
+            target: check-generated-proverif-phase2-assigned-id-weak
           - name: ProVerif active quantum attack
             target: check-generated-proverif-active-quantum
           - name: ProVerif reachability
