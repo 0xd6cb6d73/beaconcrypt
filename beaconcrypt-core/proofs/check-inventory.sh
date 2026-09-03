@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=62
+	[handwritten-lean]=70
 	[handwritten-proverif]=64
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -3256,7 +3256,7 @@ require_line_count 1 '^theorem honest_run_refines( |$)' \
 	"PQXDH session-refinement theorem honest_run_refines"
 
 # The imported phase-refinement layer covers the full kernel/cache relation, the KDF response law, non-exhausted successful-send refinement, all neutral exits, supplied finite failed-trace witnesses, and the conditional open reply/material relation.
-# Cached success additionally has generated open construction from KernelRefines plus an ideal lookup, exact material/reply, direct ideal outcome, concrete finish output, and the consumed control-cache refinement; its material-array post-state KernelRefines result remains conditional on CachedPublicationRefines, and future success remains unproved.
+# Cached success has generated open construction, exact material/reply, ideal outcome, and control refinement. RatchetCachedPublication now discharges its material publication premise; complete future success remains in progress.
 for declaration in KernelRefines SendKdfRefines SendSealRefines; do
 	require_line_count 1 "^structure ${declaration}( |$)" \
 		proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean \
