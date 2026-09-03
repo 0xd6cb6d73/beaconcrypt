@@ -329,7 +329,7 @@ require_occurrence_count 6 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
-require_line_count 266 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+require_line_count 326 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
 	"canonical production transcript fact"
 require_line_count 18 '^\(\* @beaconcrypt-fidelity-v1 phase1\.' \
 	"$transcript_interface" "Phase-1 InitKex transcript fact"
@@ -341,6 +341,8 @@ require_line_count 38 '^\(\* @beaconcrypt-fidelity-v1 ratchet\.driver\.' \
 	"$transcript_interface" "ratchet effect-driver transcript fact"
 require_line_count 46 '^\(\* @beaconcrypt-fidelity-v1 ratchet\.receive_fixture\.' \
 	"$transcript_interface" "finite receive-state fixture transcript fact"
+require_line_count 60 '^\(\* @beaconcrypt-fidelity-v1 registration\.lifecycle\.' \
+	"$transcript_interface" "registration lifecycle transcript fact"
 require_line_count 5 '^type ' "$transcript_interface" \
 	"canonical ProVerif interface type"
 require_line_count 19 '^fun ' "$transcript_interface" \
@@ -814,14 +816,14 @@ for scenario_process in \
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 22 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_COMMITMENT|CORE_PQXDH|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA|FAILED_RECEIVE_QUERIES): &str = include_str!|^const (LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|FAILED_RECEIVE_REACHABILITY_QUERIES): &str =$' \
+require_line_count 24 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_COMMITMENT|CORE_PQXDH|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA|FAILED_RECEIVE_QUERIES): &str = include_str!|^const (MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|FAILED_RECEIVE_REACHABILITY_QUERIES): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable snapshot"
-require_line_count 8 '^#\[test\]$' \
+require_line_count 9 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -830,6 +832,7 @@ for fidelity_test_name in \
 	endpoint_frame_context_mutation_matrix_is_complete_and_rejected \
 	ratchet_effect_driver_mutation_matrix_is_complete_and_rejected \
 	finite_receive_state_fixture_mutation_matrix_is_complete_and_rejected \
+	registration_lifecycle_mutation_matrix_is_complete_and_rejected \
 	phase1_registration_mutation_matrix_is_complete_and_rejected \
 	requested_transcript_mutations_are_rejected; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
@@ -839,7 +842,7 @@ require_occurrence_count 1 \
 	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
 	"transcript-fidelity model and adapter composition" "$fidelity_test"
 require_occurrence_count 1 \
-	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_finite_receive_state_fixture\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
+	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_finite_receive_state_fixture\(snapshot\)\?;\s*validate_registration_lifecycle\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
 require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;$' \
 	"$fidelity_test" "CryptoFrame exact mutation count"
@@ -990,6 +993,28 @@ for receive_fixture_mutation_family in \
 	finite_receive_reachability_query_count_drops; do
 	require_occurrence_count 1 "$receive_fixture_mutation_family" \
 		"finite receive-state ${receive_fixture_mutation_family} mutation family" "$fidelity_test"
+done
+require_line_count 1 '^const REGISTRATION_LIFECYCLE_MUTATION_COUNT: usize = 177;$' \
+	"$fidelity_test" "registration lifecycle exact mutation count"
+require_occurrence_count 1 \
+	'(?s)fn registration_lifecycle_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, REGISTRATION_LIFECYCLE_MUTATION_COUNT\);\s*\}' \
+	"registration lifecycle mutation matrix count assertion" "$fidelity_test"
+for registration_lifecycle_mutation_family in \
+	registration_lifecycle_fact_\{key\} \
+	registration_identifier_first_half_uses_prekey \
+	registration_proverif_projection_uses_pq \
+	registration_pretransition_failure_changes_state \
+	registration_finish_server_key_id_mismatch_keeps_init \
+	registration_finish_server_identity_mismatch_keeps_init \
+	registration_server_dh4_moves_before_status_gate \
+	registration_server_consumes_different_id_before_crypto \
+	registration_server_explicit_failure_after_consumption \
+	registration_honest_different_guard_is_duplicated \
+	registration_honest_guard_and_bundle_are_sequential \
+	registration_malicious_server_adds_replay_guard \
+	registration_hb49_\{label\}_bundle_argument_\{argument_index\}; do
+	require_occurrence_count 1 "$registration_lifecycle_mutation_family" \
+		"registration lifecycle ${registration_lifecycle_mutation_family} mutation family" "$fidelity_test"
 done
 for mutation_name in \
 	pqxdh_label_byte \
