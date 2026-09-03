@@ -156,7 +156,7 @@ theorem mismatched_authenticated_server_key_id_is_rejected
     pqxdh.authenticate_registration_key_id_binding candidate sender binding = ok (.Err .IdentityMismatch) := by
   simp [pqxdh.authenticate_registration_key_id_binding, hne]
 
-theorem mismatched_key_id_binding_is_rejected (candidate : pqxdh.BeaconRegistrationCandidate)
+theorem mismatched_key_id_binding_is_rejected_of_expected (candidate : pqxdh.BeaconRegistrationCandidate)
     (authenticatedBinding : Std.Array Std.U8 8#usize) (expected : pqxdh.RegistrationKeyIdBinding)
     (hexpected : pqxdh.BeaconRegistrationCandidate.key_id_binding candidate = ok expected)
     (hne : authenticatedBinding ≠ expected.bytes) :
@@ -262,14 +262,14 @@ theorem candidate_ratchet_initializations_are_complementary
     ratchet.RATCHET_CHAIN_SIZE, lift, chain_size_cast]
 
 /-- Equality of all five raw shared secrets implies identical construction, including rejection. -/
-theorem honest_roles_build_the_same_root (beacon server : pqxdh.PqxdhSharedSecrets)
+theorem honest_roles_build_the_same_root_eq (beacon server : pqxdh.PqxdhSharedSecrets)
     (h1 : beacon.dh1 = server.dh1) (h2 : beacon.dh2 = server.dh2)
     (h3 : beacon.dh3 = server.dh3) (h4 : beacon.dh4 = server.dh4)
     (hpq : beacon.kem_shared_secret = server.kem_shared_secret) :
     pqxdh.build_root_key_input beacon = pqxdh.build_root_key_input server :=
   congrArg pqxdh.build_root_key_input (by cases beacon; cases server; simp_all)
 
-theorem honest_roles_build_the_same_associated_data
+theorem honest_roles_build_the_same_associated_data_eq
     (serverKey serverKey' beaconKey beaconKey' : Std.Array Std.U8 32#usize)
     (hserver : serverKey = serverKey') (hbeacon : beaconKey = beaconKey') :
     pqxdh.build_associated_data serverKey beaconKey = pqxdh.build_associated_data serverKey' beaconKey' := by
@@ -406,5 +406,32 @@ theorem conditional_honest_run_correspondence
         array_eq_abs, pqxdh.BeaconRegistrationCandidate.ratchet_initialization,
         pqxdh.ServerRegistrationCandidate.ratchet_initialization, pqxdh.BEACON_RATCHETS, pqxdh.SERVER_RATCHETS,
         pqxdh.RATCHET_CHAIN_SIZE, ratchet.RATCHET_CHAIN_SIZE, lift, chain_size_cast]⟩
+
+/-- Honest raw secret equality yields one shared returned result, including any ordinary root rejection. -/
+theorem honest_roles_build_the_same_root (beacon server : pqxdh.PqxdhSharedSecrets)
+    (h1 : beacon.dh1 = server.dh1) (h2 : beacon.dh2 = server.dh2)
+    (h3 : beacon.dh3 = server.dh3) (h4 : beacon.dh4 = server.dh4)
+    (hpq : beacon.kem_shared_secret = server.kem_shared_secret) :
+    ∃ result, pqxdh.build_root_key_input beacon = ok result ∧ pqxdh.build_root_key_input server = ok result :=
+  (PanicFreedom.build_root_key_input_ok beacon).elim fun result hr =>
+    ⟨result, hr, (honest_roles_build_the_same_root_eq beacon server h1 h2 h3 h4 hpq).symm.trans hr⟩
+
+theorem honest_roles_build_the_same_associated_data
+    (serverKey serverKey' beaconKey beaconKey' : Std.Array Std.U8 32#usize)
+    (hserver : serverKey = serverKey') (hbeacon : beaconKey = beaconKey') :
+    ∃ ad, pqxdh.build_associated_data serverKey beaconKey = ok ad ∧
+      pqxdh.build_associated_data serverKey' beaconKey' = ok ad :=
+  (PanicFreedom.build_associated_data_ok serverKey beaconKey).elim fun ad had =>
+    ⟨ad, had, (honest_roles_build_the_same_associated_data_eq _ _ _ _ hserver hbeacon).symm.trans had⟩
+
+/-- The expected prefix is produced internally; every different authenticated byte prefix is rejected. -/
+theorem mismatched_key_id_binding_is_rejected (candidate : pqxdh.BeaconRegistrationCandidate)
+    (authenticatedBinding : Std.Array Std.U8 8#usize) :
+    ∃ expected, pqxdh.BeaconRegistrationCandidate.key_id_binding candidate = ok expected ∧
+      (authenticatedBinding ≠ expected.bytes →
+        pqxdh.authenticate_registration_key_id_binding candidate
+          candidate.server_binding.identity_key_id authenticatedBinding = ok (.Err .KeyIdMismatch)) :=
+  (PanicFreedom.registration_key_id_binding_ok candidate.assigned_key_id).elim fun expected he =>
+    ⟨expected, he, mismatched_key_id_binding_is_rejected_of_expected candidate authenticatedBinding expected he⟩
 
 end BeaconcryptCore.Refinement.PqxdhSurface
