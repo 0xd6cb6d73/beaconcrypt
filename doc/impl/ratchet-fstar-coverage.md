@@ -6,6 +6,7 @@ The panic-freedom boundary is complete independently of this behavioral ledger: 
 
 `Matched` identifies checked Lean evidence for the same behavioral clause, sometimes through a stronger theorem or a renamed first-order effect API. A match is not a mechanical translation of the F* statement: Lean's `KernelRefines` expresses canonical chains and a bidirectional correspondence with the ideal skipped store, whereas the historical F* `valid_state` and `reachable` predicates package those clauses differently. `In progress` identifies an assigned proof. `Unmatched` is an open statement-level audit item; it may be a corollary of a checked capstone or a proof-internal fact unnecessary in the new proof, and must not be counted as covered until that judgment is recorded.
 
+`Superseded helper` records an internal proof artifact replaced by a named checked operation or standard Lean rule. `Adapted bound` records a numerical statement that changed with the existing target-outside-cache refactor; it is not literal statement parity. The maintained invariant remains at most 50 retained skipped keys, and the ideal models are unchanged.
 The ideal files under `BeaconcryptCore/Model/` are unchanged. The historical callback-based F* functions are represented by the extracted first-order Lean request/response phases; semantic equivalence must include the driver composition and external response laws. Restored chains and keys require trusted canonical persistence provenance in both proof surfaces.
 
 The most important unmatched behavioral groups are constructor reachability; tagged material access; successful consumption and replay; rejection retry equivalence and capacity preservation; and the exact 49-skipped-key corollary for a receive gap of 50. The newer Lean planner additionally proves admission of 50 retained skipped keys by deriving the target outside the cache. Restoration and receive-driver composition are active work.
@@ -27,8 +28,8 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `u64_successor_value` | 115 | Matched | `RatchetByteSurface.u64_successor_value` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
 | `u64_value_is_bounded` | 120 | Matched | `RatchetByteSurface.u64_value_is_bounded` directly proves the exact raw byte/arithmetic clause, including successful extraction returns where applicable. |
 | `receive_key_at_matches_cache_slot` | 170 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `lookup_receive_key_from_sound` | 180 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `lookup_receive_key_from_none_excludes_range` | 202 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `lookup_receive_key_from_sound` | 180 | Superseded helper | The historical private recursive-helper lemma is replaced by RatchetControl.lookup_receive_key_loop_spec, which proves soundness for every searched suffix; lookup_receive_key_sound exposes the complete-operation result. |
+| `lookup_receive_key_from_none_excludes_range` | 202 | Superseded helper | RatchetControl.lookup_receive_key_loop_spec proves the no-match suffix clause, and lookup_receive_key_complete rules out a missing result for any live matching index. |
 | `lookup_receive_key_sound` | 226 | Matched | `RatchetControl.lookup_receive_key_sound`. |
 | `lookup_receive_key_none_is_absent` | 237 | Matched | `RatchetRefinement.lookup_receive_key_of_not_mem and RatchetControl.lookup_receive_key_complete`. |
 | `lookup_receive_key_is_complete` | 247 | Matched | `RatchetControl.lookup_receive_key_complete`. |
@@ -41,30 +42,30 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `advance_send_key_matches_sequence` | 313 | Matched | `RatchetControl.advance_send_ok`. |
 | `finish_send_consumes_available` | 324 | Matched | `RatchetControl.finish_send_available`. |
 | `finish_send_rejects_reuse` | 334 | Matched | `RatchetControl.finish_send_unavailable`. |
-| `finish_send_is_one_use` | 343 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `finish_send_is_one_use` | 343 | Matched | RatchetControl.finish_send_available returns an unavailable key, and finish_send_unavailable rejects that exact returned key; composition preserves the original sequence. |
 | `plan_old_receive_is_zero_cost` | 351 | Matched | `RatchetControl.plan_receive_until_replay`. |
-| `plan_future_receive_is_bounded` | 362 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `plan_receive_derivations_are_bounded` | 380 | Matched | `RatchetControl.plan_receive_until_bound`. |
-| `plan_receive_shape` | 398 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `plan_receive_rejects_large_gap` | 426 | Matched | `RatchetControl.plan_receive_until_reject_of_gap_gt`. |
-| `plan_receive_rejects_capacity_overflow` | 436 | Matched | `RatchetControl.plan_receive_until_reject_of_cache_full`. |
+| `plan_future_receive_is_bounded` | 362 | Adapted bound | The pre-existing refactor separates the uncached target from retained skipped keys. RatchetPlannerSurface.plan_receive_shape proves at most 51 total steps and 50 retained skips; RatchetControl.plan_receive_until_reject_of_gap_gt/reject_of_cache_full prove the corresponding current rejection boundaries. The historical 50-total-step clause is not claimed for the changed implementation. |
+| `plan_receive_derivations_are_bounded` | 380 | Adapted bound | The pre-existing refactor separates the uncached target from retained skipped keys. RatchetPlannerSurface.plan_receive_shape proves at most 51 total steps and 50 retained skips; RatchetControl.plan_receive_until_reject_of_gap_gt/reject_of_cache_full prove the corresponding current rejection boundaries. The historical 50-total-step clause is not claimed for the changed implementation. |
+| `plan_receive_shape` | 398 | Adapted bound | The pre-existing refactor separates the uncached target from retained skipped keys. RatchetPlannerSurface.plan_receive_shape proves at most 51 total steps and 50 retained skips; RatchetControl.plan_receive_until_reject_of_gap_gt/reject_of_cache_full prove the corresponding current rejection boundaries. The historical 50-total-step clause is not claimed for the changed implementation. |
+| `plan_receive_rejects_large_gap` | 426 | Adapted bound | The pre-existing refactor separates the uncached target from retained skipped keys. RatchetPlannerSurface.plan_receive_shape proves at most 51 total steps and 50 retained skips; RatchetControl.plan_receive_until_reject_of_gap_gt/reject_of_cache_full prove the corresponding current rejection boundaries. The historical 50-total-step clause is not claimed for the changed implementation. |
+| `plan_receive_rejects_capacity_overflow` | 436 | Adapted bound | The pre-existing refactor separates the uncached target from retained skipped keys. RatchetPlannerSurface.plan_receive_shape proves at most 51 total steps and 50 retained skips; RatchetControl.plan_receive_until_reject_of_gap_gt/reject_of_cache_full prove the corresponding current rejection boundaries. The historical 50-total-step clause is not claimed for the changed implementation. |
 | `advance_receive_success_shape` | 450 | Matched | `RatchetControl.advance_receive_step`. |
 | `advance_receive_exhaustion_is_neutral` | 469 | Matched | `RatchetControl.advance_receive_max`. |
 | `advance_receive_full_cache_is_neutral` | 478 | Matched | `RatchetControl.advance_receive_full`. |
 | `advance_receive_preserves_validity` | 489 | Matched | `RatchetStructural.ValidControl.advance_receive`. |
 | `finish_receive_missing_is_neutral` | 495 | Matched | `RatchetControl.finish_receive_missing_state_neutral`. |
 | `finish_receive_failure_retains_key` | 508 | Matched | `RatchetControl.finish_receive_auth_fail_state_neutral`. |
-| `finish_receive_success_shape` | 524 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `finish_receive_success_shape` | 524 | Matched | RatchetControl.finish_receive_consumed gives exact counter/cache changes and removal descriptor; RatchetRefinement.finish_receive_consumed_cacheSeqs proves the wrapper projection and permutation. |
 | `finish_receive_preserves_validity` | 540 | Matched | `RatchetStructural.ValidControl.finish_receive`. |
 | `finish_receive_consumes_target` | 551 | Matched | `RatchetControl.lookup_receive_key_consumed_absent`. |
 | `finish_receive_preserves_other_key` | 562 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `finish_receive_replay_is_rejected` | 575 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `finish_receive_wrapper_matches_detailed` | 588 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `finish_receive_wrapper_matches_detailed` | 588 | Matched | The extracted control.finish_receive definition is exactly the monadic projection of finish_receive_with_removal; RatchetStructural.ValidControl.finish_receive checks this composition. |
 | `finish_receive_with_removal_missing_result_is_neutral` | 601 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `finish_receive_with_removal_retained_result_is_neutral` | 614 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `finish_receive_with_removal_missing_is_neutral` | 627 | Matched | `RatchetControl.finish_receive_with_removal_out_of_range and finish_receive_with_removal_mismatch`. |
 | `finish_receive_with_removal_failure_retains_key` | 641 | Matched | `RatchetControl.finish_receive_with_removal_auth_fail`. |
-| `finish_receive_with_removal_success_shape` | 658 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `finish_receive_with_removal_success_shape` | 658 | Matched | RatchetControl.finish_receive_consumed states the exact successful detailed result, preserved counters, last slot, new length, and every surviving control entry. |
 | `finish_receive_with_removal_preserves_validity` | 680 | Matched | `RatchetStructural.ValidControl.finish_receive_with_removal`. |
 | `finish_receive_with_removal_consumes_target` | 693 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `finish_receive_with_removal_preserves_other_key` | 706 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -76,30 +77,30 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `restore_receive_key_with_slot_success_shape` | 817 | In progress | Conditional material restoration in `RatchetMaterialRestore`; existing control restoration bounds do not alone establish canonical material provenance. |
 | `restore_receive_key_with_slot_preserves_validity` | 831 | In progress | Conditional material restoration in `RatchetMaterialRestore`; existing control restoration bounds do not alone establish canonical material provenance. |
 | `finish_restore_is_valid` | 842 | In progress | Conditional material restoration in `RatchetMaterialRestore`; existing control restoration bounds do not alone establish canonical material provenance. |
-| `refined_slot_value_is_index` | 857 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `none_material_list_index` | 898 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `empty_material_slot_is_none` | 913 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `empty_material_slots_are_none` | 934 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `chain_after_successor` | 1030 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `refined_slot_value_is_index` | 857 | Superseded helper | The old proof-only projection is replaced directly by typed slots.val[i]! in all structural and exact publication contracts. |
+| `none_material_list_index` | 898 | Superseded helper | Lean List.getElem_replicate and Option.getD_some prove the generic empty-array constructor in RatchetStructural.from_counters_valid. |
+| `empty_material_slot_is_none` | 913 | Matched | RatchetStructural.from_counters_valid establishes length-zero MaterialSlotsMatch for arbitrary material types; MaterialSlotsMatch.empty exposes every empty slot. |
+| `empty_material_slots_are_none` | 934 | Matched | RatchetStructural.from_counters_valid and MaterialSlotsMatch.empty cover arbitrary generic material types; RatchetFutureAdmission.empty_material_slots_exact exposes the concrete array directly. |
+| `chain_after_successor` | 1030 | Matched | RatchetRoleReachability.send_successor_reachable, using Function.iterate_succ_apply', proves the fixed-step successor law used by complete send lifetimes. |
 | `chain_after_compose` | 1042 | Matched | `RatchetRefinement.Ratchet.chainAt_chainAt`. |
 | `material_at_shift` | 1061 | Matched | `RatchetRefinement.Ratchet.msgKeyAt_chainAt`. |
-| `material_at_successor` | 1080 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `empty_material_slots_are_derived` | 1092 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `packed_prefix_unchanged_refl` | 1145 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `packed_prefix_unchanged_transitive` | 1162 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `cached_materials_after_append_are_derived` | 1196 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `material_at_successor` | 1080 | Superseded helper | Ratchet.msgKeyAt is defined from the iterated chain; RatchetFutureRefinement.FutureKdfRefines.resume_more and RatchetFutureTrace.resume_last establish the exact next material under the current phase API. |
+| `empty_material_slots_are_derived` | 1092 | Superseded helper | Canonical construction in RatchetInitialization.from_counters_reachable establishes the full KernelRefines cache relation with no live material; all inactive slots are empty. |
+| `packed_prefix_unchanged_refl` | 1145 | Superseded helper | Pointwise Eq.refl initializes the exact prefix field in RatchetFutureAdmission.KernelRefines.begin_receive_future. |
+| `packed_prefix_unchanged_transitive` | 1162 | Superseded helper | Pointwise Eq.trans composes unchanged prefixes in RatchetFutureRefinement.FutureControlRefines.advance; no separate packed-prefix relation remains. |
+| `cached_materials_after_append_are_derived` | 1196 | Matched | RatchetMaterialRestore.KernelRefines.append_restored proves exact canonical appended material and all preserved old slots; future staging has the relative counterpart in RatchetFutureRefinement. |
 | `refined_from_counters_is_valid` | 1342 | Matched | `RatchetStructural.refined.from_counters_valid`. |
 | `refined_new_is_valid` | 1354 | Matched | `RatchetStructural.refined.new_valid`. |
-| `refined_from_counters_is_reachable` | 1366 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_new_is_reachable` | 1396 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `concrete_kernel_new_is_reachable` | 1415 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_advance_send_rejection_is_neutral` | 1433 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_advance_send_success_uses_step` | 1443 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_advance_send_preserves_validity` | 1471 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_advance_send_preserves_reachability` | 1483 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_seal_next_uses_exact_step_material` | 1517 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_seal_next_preserves_validity` | 1541 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_seal_next_preserves_reachability` | 1556 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `refined_from_counters_is_reachable` | 1366 | Matched | RatchetInitialization.from_counters_reachable proves the current production constructor under the same canonical persisted-chain premises; the obsolete polymorphic callback implementation is specialized by the first-order kernel API. |
+| `refined_new_is_reachable` | 1396 | Matched | RatchetInitialization.new_reachable proves fresh production initialization under any fixed crypto model, from the supplied directional chains with empty skipped store. |
+| `concrete_kernel_new_is_reachable` | 1415 | Matched | RatchetInitialization.new_reachable; fixed execution is supplied explicitly through withInterpreter rather than embedded in a chain record. |
+| `refined_advance_send_rejection_is_neutral` | 1433 | Matched | RatchetEffect.begin_send_exhausted_restores_entry and SendKdf.cancel_exact return the complete original entry before any committed send. |
+| `refined_advance_send_success_uses_step` | 1443 | Matched | RatchetEffect.SendKdf.resume_exact gives the exact committed control, decoded next chain, key material, sequence, context, and logical key for the current phase API. |
+| `refined_advance_send_preserves_validity` | 1471 | Matched | RatchetStructuralSend.ValidRefined.send_update and begin_send_receive_structure prove structural preservation without canonical provenance. |
+| `refined_advance_send_preserves_reachability` | 1483 | Matched | RatchetEffectRefinement.SendKdf.resume_refines and RatchetRoleReachability.send_successor_reachable establish both directional lifetime provenance for the admitted phase. |
+| `refined_seal_next_uses_exact_step_material` | 1517 | Matched | RatchetEffect.SendKdf.resume_exact and SendSeal.finish_returns_interpreter_result establish exact decoded material and the callback result consumed by sealNext. |
+| `refined_seal_next_preserves_validity` | 1541 | Matched | RatchetStructuralSend.sealNext_preserves_validity proves the complete first-order driver on arbitrary structurally valid kernels and every optional callback result. |
+| `refined_seal_next_preserves_reachability` | 1556 | Matched | RatchetRoleReachability.sealNext_preserves_reachability composes actual begin/resume/finish and all rejection/exhaustion cases. |
 | `concrete_seal_next_preserves_reachability` | 1578 | Matched | `RatchetRoleReachability.sealNext_preserves_reachability; actual first-order send driver with arbitrary optional callback`. |
 | `refined_advance_receive_rejection_is_step_independent` | 1596 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_advance_receive_success_uses_step` | 1609 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -207,4 +208,4 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `advance_send_for_other_peer_is_neutral` | 6104 | Matched | `RatchetControlRestore.advance_send_for_peer_other`. |
 | `advance_send_for_selected_peer_matches` | 6114 | Matched | `RatchetAccessors.advance_send_for_selected_peer_matches` is an exact generic raw-accessor or peer-wrapper result; its normal return is derived internally. |
 
-The inventory contains 192 declarations: 73 matched, 13 in progress, and 106 unmatched in this draft.
+The inventory contains 192 declarations: 88 matched, 8 superseded helper, 5 adapted bound, 13 in progress, 78 unmatched.
