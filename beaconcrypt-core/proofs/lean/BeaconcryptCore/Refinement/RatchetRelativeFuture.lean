@@ -336,4 +336,124 @@ theorem relative_begin_receive_future_trace
   obtain ⟨opened, htrace, hopen⟩ := hpending.trace cr execute entry context target 0 pending
   exact ⟨pending, opened, hbegin, by simpa only [hpending.remaining, Nat.sub_zero] using htrace, hopen⟩
 
+/-- The completed private control cache is the old cache followed by exactly the skipped sequences. -/
+theorem RelativeFuturePending.cache_sequences
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (entry : ConcreteRatchetKernel) (target : Std.U64)
+    (pending : ratchet.refined.PendingReceive ratchet.RatchetChain ratchet.RatchetMaterial)
+    (h : RelativeFuturePending cr entry target pending) :
+    cacheSeqs pending.committed_control.receive_cache = cacheSeqs entry.refined.control.receive_cache ++
+      (List.range (target.val - entry.refined.control.receive_sequence.val - 1)).map (fun j => entry.refined.control.receive_sequence.val + j + 1) := by
+  simp only [cacheSeqs, h.committedLength, List.range_add, List.map_append, List.map_map]
+  congr 1
+  · apply List.map_congr_left
+    intro i hi
+    rw [h.cachePrefix i (List.mem_range.mp hi)]
+  · apply List.map_congr_left
+    intro j hj
+    exact h.cacheAppended j (List.mem_range.mp hj)
+
+
+/-- The completed relative derivation preserves structural control validity. -/
+theorem RelativeFuturePending.control_valid
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (entry : ConcreteRatchetKernel) (target : Std.U64)
+    (pending : ratchet.refined.PendingReceive ratchet.RatchetChain ratchet.RatchetMaterial)
+    (h : RelativeFuturePending cr entry target pending) : ValidControl pending.committed_control := by
+  apply h.entryValid.control.extend (target.val - entry.refined.control.receive_sequence.val - 1)
+  · change pending.committed_control.receive_cache.len.val ≤ 50
+    rw [h.committedLength]
+    exact h.capacity
+  · rw [h.committedReceive]
+    have hf := h.future
+    omega
+  · exact h.cache_sequences cr entry target pending
+
+/-- A future result preserves old material and publishes exactly the relative skipped derivations. -/
+structure RelativeFutureResult
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (entry : ConcreteRatchetKernel) (target : Std.U64)
+    (published : ratchet.refined.RefinedRatchet ratchet.RatchetChain ratchet.RatchetChain ratchet.RatchetMaterial) : Prop where
+  valid : ratchet.refined.ValidRefined published
+  sendSequence : published.control.send_sequence = entry.refined.control.send_sequence
+  receiveSequence : published.control.receive_sequence = target
+  sendChain : published.send_chain = entry.refined.send_chain
+  receiveChain : published.receive_chain = Ratchet.chainAt cr entry.refined.receive_chain
+    (target.val - entry.refined.control.receive_sequence.val)
+  length : published.control.receive_cache.len.val = entry.refined.control.receive_cache.len.val +
+    (target.val - entry.refined.control.receive_sequence.val - 1)
+  materialPrefix : ∀ i, i < entry.refined.control.receive_cache.len.val →
+    published.receive_slots.val[i]! = entry.refined.receive_slots.val[i]!
+  staged : ∀ j, j < target.val - entry.refined.control.receive_sequence.val - 1 →
+    ∃ cached : ratchet.refined.CachedReceiveKey ratchet.RatchetMaterial,
+      published.receive_slots.val[entry.refined.control.receive_cache.len.val + j]! = core.option.Option.Some cached ∧
+      cached.sequence.val = entry.refined.control.receive_sequence.val + j + 1 ∧
+      cached.material = Ratchet.msgKeyAt cr entry.refined.receive_chain j
+  targetAbsent : lookup_receive_key published.control target = ok core.option.Option.None
+
+/-- Publishing a relative transaction establishes its full structural and material result. -/
+theorem RelativeFuturePending.publication
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (entry : ConcreteRatchetKernel) (target : Std.U64)
+    (pending : ratchet.refined.PendingReceive ratchet.RatchetChain ratchet.RatchetMaterial)
+    (h : RelativeFuturePending cr entry target pending) :
+    ∃ published, ratchet.refined.publish_future_receive entry.refined pending = ok published ∧
+      RelativeFutureResult cr entry target published ∧ published.control = pending.committed_control := by
+  obtain ⟨published, hpublish, hcontrol, hsend, hreceive, hslots⟩ :=
+    ratchet.refined.publish_future_receive_exact entry.refined pending (by simpa only [h.firstSlot, h.skipped] using h.capacity)
+  obtain ⟨out, hout, hvalid⟩ := h.entryValid.future_publication entry.refined pending
+    (h.control_valid cr entry target pending) h.firstSlot
+    (by simpa only [h.firstSlot, h.skipped] using h.committedLength) h.cachePrefix (by
+      intro j hj
+      obtain ⟨cached, hcached, hsequence, _⟩ := h.staging.staged j (by simpa only [h.skipped] using hj)
+      refine ⟨cached, by simpa only [h.firstSlot] using hcached, UScalar.eq_of_val_eq ?_⟩
+      simpa only [h.firstSlot, hsequence] using
+        (h.cacheAppended j (by simpa only [h.skipped] using hj)).symm)
+  have hout_eq : out = published := RustM.ok.inj (hout.symm.trans hpublish)
+  refine ⟨published, hpublish, {
+    valid := hout_eq ▸ hvalid
+    sendSequence := by simpa only [hcontrol] using h.committedSend
+    receiveSequence := by simpa only [hcontrol] using h.committedReceive
+    sendChain := hsend
+    receiveChain := hreceive.trans h.finalChain
+    length := by simpa only [hcontrol] using h.committedLength
+    materialPrefix := ?_
+    staged := ?_
+    targetAbsent := by simpa only [hcontrol] using h.target_absent cr entry target pending }, hcontrol⟩
+  · intro i hi
+    rw [hslots _ (by have hc := h.capacity; omega),
+      if_neg (by simp only [h.firstSlot]; omega)]
+  · intro j hj
+    obtain ⟨cached, hcached, hsequence, hmaterial⟩ := h.staging.staged j hj
+    refine ⟨cached, ?_, hsequence, hmaterial⟩
+    rw [hslots _ (by have hc := h.capacity; omega),
+      if_pos (by simp only [h.firstSlot, h.skipped]; omega)]
+    exact hcached
+
+/-- Any successful callback publishes the exact structurally valid relative future result. -/
+theorem RelativeFutureOpen.finish_some {Context Plaintext : Type}
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (entry : ConcreteRatchetKernel) (context : Context) (target : Std.U64)
+    (opened : ReceiveOpen Context)
+    (h : RelativeFutureOpen cr entry context target opened)
+    (plaintext : Plaintext) :
+    ∃ published, opened.finish (core.option.Option.Some plaintext) =
+        ok ({ refined := published }, core.option.Option.Some plaintext) ∧
+      RelativeFutureResult cr entry target published := by
+  obtain ⟨pending, hentry, _, hphase, hpending⟩ := h
+  obtain ⟨published, hpublish, hkernel, _⟩ := hpending.publication cr entry target pending
+  refine ⟨published, ?_, hkernel⟩
+  simp only [ReceiveOpen.finish, hphase, hentry, hpublish, bind_tc_ok]
+
+/-- Authentication receives exactly the ideal target material. -/
+theorem RelativeFutureOpen.material_exact {Context : Type}
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (entry : ConcreteRatchetKernel) (context : Context) (target : Std.U64)
+    (opened : ReceiveOpen Context)
+    (h : RelativeFutureOpen cr entry context target opened) :
+    opened.material = ok (core.option.Option.Some (Ratchet.msgKeyAt cr entry.refined.receive_chain (target.val - entry.refined.control.receive_sequence.val - 1))) := by
+  obtain ⟨pending, _, _, hphase, hpending⟩ := h
+  simp only [ReceiveOpen.material, hphase, hpending.targetMaterial]
+
+
 end beaconcrypt_core.ratchet.concrete
