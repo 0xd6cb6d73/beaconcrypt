@@ -79,6 +79,7 @@ import BeaconcryptCore.Refinement.RatchetStructuralSend
 
 import BeaconcryptCore.Refinement.RatchetCachedPreparation
 import BeaconcryptCore.Refinement.RatchetCachedStructural
+import BeaconcryptCore.Refinement.RatchetCachedSurface
 import BeaconcryptCore.Refinement.RatchetControlSurface
 import BeaconcryptCore.Refinement.RatchetInitialization
 import BeaconcryptCore.Refinement.RatchetPlannerSurface
@@ -86,6 +87,7 @@ import BeaconcryptCore.Refinement.RatchetReceiveBoundary
 import BeaconcryptCore.Refinement.RatchetReceiveCompatibility
 import BeaconcryptCore.Refinement.RatchetReceiveStructural
 import BeaconcryptCore.Refinement.RatchetRelativeFuture
+import BeaconcryptCore.Refinement.RatchetFutureSurface
 import BeaconcryptCore.Refinement.RatchetRestoreSlots
 import BeaconcryptCore.Refinement.RatchetRestoreStructural
 import BeaconcryptCore.Refinement.RatchetRestoreSurface

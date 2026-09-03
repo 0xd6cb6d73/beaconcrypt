@@ -16,7 +16,7 @@ R = C || T || U
 The transcript `X` is exactly 229 bytes: 32 bytes of key, 12 bytes of nonce, 153 bytes of associated data, 16 bytes of AEAD tag, and two eight-byte integers.
 The fixed-width builder is [`build_commitment_transcript`](../beaconcrypt-core/src/commitment.rs#L55-L75), and the production wrapper checks input lengths and passes those bytes to unkeyed 64-byte `generichash` in [`build_commitment`](../beaconcrypt/src/ratchet.rs#L466-L481).
 The seal and open paths place and parse `C || T || U` in [`encrypt_message_with_ratchet`](../beaconcrypt/src/ratchet.rs#L350-L372) and [`decrypt_message_with_ratchet`](../beaconcrypt/src/ratchet.rs#L410-L449).
-The checked F* [`Commitment.Lemmas`](../beaconcrypt-core/proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst) module proves the exact per-byte layout, proves `encode_u64_le_is_injective`, and proves `production_commitment_input_is_injective`, so equality of two extracted production transcripts implies equality of all six semantic fields `(K, N, A, T, S, I)`.
+The checked Lean [`CommitmentSurface`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean) module proves the exact per-byte layout, proves `encode_u64_le_is_injective`, and proves `production_commitment_input_is_injective`, so equality of two extracted production transcripts implies equality of all six semantic fields `(K, N, A, T, S, I)`.
 
 This is a modification of Chan and Rogaway's [CTX transform](https://eprint.iacr.org/2022/1260.pdf).
 CTX replaces the base tag `T` with `U`; beaconcrypt retains `T` so that it can call libsodium's public AEAD open interface, adds `S` and `I` to the hash transcript, and transmits `C || T || U`.
@@ -43,7 +43,7 @@ This is sufficient for misattribution resistance because one fixed `R` fixes `C`
 
 ## Machine-checked collision witness and computational lifting
 
-The F* theorem `ctx_distinct_openings_imply_hash_collision` quantifies over arbitrary pure 229-to-64-byte `hash` and AEAD-open functions.
+The Lean extracted-code theorem `ctx_distinct_openings_imply_hash_collision` quantifies over arbitrary pure 229-to-64-byte `hash` and AEAD-open functions.
 It fixes the same ciphertext core `C`, transmitted tag `T`, and outer value `U` for both accepted openings, allows the base AEAD to open that payload under unequal keys or contexts, and treats semantic differences in `K`, `N`, `A`, `S`, `I`, or `M` as a distinct explanation.
 For two such accepted explanations, let:
 
@@ -54,7 +54,7 @@ X' = K' || N' || A' || T || LE64(S') || LE64(I')
 
 Both successful outer checks imply `hash(X) = U = hash(X')`.
 If `X = X'`, `production_commitment_input_is_injective` gives equality of `K`, `N`, `A`, `T`, `S`, and `I`, while applying the same pure AEAD-open function to the same `K`, `N`, `A`, `C`, and `T` fixes its result and therefore gives `M = M'`.
-That contradicts distinctness, so F* constructs the explicit witness `X != X'` and `hash(X) = hash(X')` for every pair of accepted distinct explanations.
+That contradicts distinctness, so Lean constructs the explicit witness `X != X'` and `hash(X) = hash(X')` for every pair of accepted distinct explanations.
 
 Lean now checks both the direct scheme-level full-commitment game and the stronger raw-payload game for the handwritten ideal PQXDH record model.
 [`CtxReduction.lean`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/CtxReduction.lean) defines `CtxFullCommitmentAttempt` as two complete explanations and `CtxFullCommitment` as equality of their actual `sealRecord` encodings plus semantic distinctness. `ctxFullCommitment_implies_misattribution` proves that any such encryption collision is a win in the raw-payload game: correctness opens the left seal under the left explanation, equality rewrites it to the right seal, and correctness opens that under the right explanation. The existing raw game lets an adversary return one arbitrary payload and two well-formed explanations, tests both with the model's real `openRecord` parser and verifier, and maps every winning attempt to the two exact `ctxPreimage` values built with the shared parsed tag.
@@ -67,7 +67,7 @@ ctxFullCommitmentAdvantage(c, A)
 
 The displayed probability inequality and the analogous raw-misattribution inequality are machine-checked and have factor one.
 VCVio's `CRAdversary` does not track PPT cost, so runtime preservation remains conventional complexity reasoning. The direct equal-seal reducer runs `A`, computes the left base-AEAD tag, and constructs two transcripts without evaluating BLAKE2b; the raw-payload reducer instead adds deterministic parsing and transcript construction.
-The F* theorem separately checks the pointwise implication for the extracted fixed-width transcript, while the new Lean proof checks both a pointwise witness and the game-level inequality for the ideal record model.
+The Lean extracted-code theorem separately checks the pointwise implication for the extracted fixed-width transcript, while the new Lean proof checks both a pointwise witness and the game-level inequality for the ideal record model.
 
 In parallel, the repository-owned SSProve development supplies a finite hidden-random-oracle formulation of the lifting.
 The repository-owned [`CtxGame.v`](../beaconcrypt-core/proofs/ssprove/CtxGame.v) defines a finite hidden-random-oracle game for this lifting. A deterministic adaptive adversary receives at most `q` classical oracle queries and returns one payload with two candidate explanations. The game then makes exactly the two transcript queries needed to verify the candidates, uses an arbitrary deterministic AEAD-open function that may multi-open, and exposes only the attempt, returned digests, and chronological query trace rather than the hidden function table.
@@ -80,7 +80,7 @@ Pr_bounded-hidden-ROM[CTX misattribution] <= Pr_same-run[unequal-input, equal-ou
 
 `ctx_hidden_rom_extractor_reduction` proves this for every hidden-table distribution, and `ctx_uniform_hidden_rom_extractor_reduction` specializes it to a uniformly sampled finite random function. `ctx_hidden_binding_trace_size_bound` gives the `q + 2` upper bound, and `ctx_attach_verifier_completed_run` proves that any adversary completing within its budget is followed by exactly the two verifier query-answer pairs. `ctx_hidden_misattribution_challenge_reachable` supplies a concrete non-vacuity witness using a deliberately multi-opening AEAD and a colliding constant table.
 
-The game uses an injective product of one-bit semantic fields, so its extractor fact is proved directly in Rocq. Connecting those fields to the 229-byte production transcript still requires the reviewed representation bridge to the F* injectivity and collision-witness theorems. Instantiating the abstract collision event as `Adv_commit_beaconcrypt(A) <= Adv_collision_BLAKE2b-512(B)` also requires the production-width game, the concrete primitive premise, and runtime accounting.
+The game uses an injective product of one-bit semantic fields, so its extractor fact is proved directly in Rocq. Connecting those fields to the 229-byte production transcript still requires the reviewed representation bridge to the Lean extracted-transcript injectivity and collision-witness theorems. Instantiating the abstract collision event as `Adv_commit_beaconcrypt(A) <= Adv_collision_BLAKE2b-512(B)` also requires the production-width game, the concrete primitive premise, and runtime accounting.
 
 The checked assumption reports contain only the reviewed MathComp Boolean-predicate foundations and an abstract real-number carrier; they contain no repository admission, unaccepted SSProve interchange dependency, or unsafe hax prelude import.
 There is no additive ChaCha20-Poly1305 term in this binding reduction, and unequal-key or unequal-context multi-openings by the base AEAD remain allowed.
@@ -100,12 +100,12 @@ This is not a consequence of collision resistance and is intentionally separate 
 
 The ProVerif [`aead-commitment-negative-control.pvl`](../beaconcrypt-core/proofs/pro-verif/aead-commitment-negative-control.pvl) theory deliberately permits the same ciphertext and tag to open to different plaintexts under distinct keys, nonces, and associated-data contexts.
 The shared query is unreachable in [`aead-commitment.pv`](../beaconcrypt-core/proofs/pro-verif/aead-commitment.pv) and reachable when only the CTX checks are removed in [`aead-no-commitment.pv`](../beaconcrypt-core/proofs/pro-verif/aead-no-commitment.pv).
-This differential control supplements the F* theorem with an explicit ideal-hash counterfactual and demonstrates that the ordinary exact-opening AEAD rule is not being used as evidence for CTX's added benefit.
+This differential control supplements the Lean extracted-code theorem with an explicit ideal-hash counterfactual and demonstrates that the ordinary exact-opening AEAD rule is not being used as evidence for CTX's added benefit.
 It is not a computational proof or a proof of BLAKE2b.
 
 ## Scope and remaining assumptions
 
-The F* pointwise theorem, Lean computational reductions, and SSProve bounded hidden-ROM extractor establish complementary full-commitment and misattribution-to-collision facts on their respective extracted, ideal-model, and finite-game surfaces, including key commitment and binding of the nonce, long-lived associated data, sequence, sender key identifier, and accepted plaintext.
+The Lean extracted-code pointwise theorem, Lean computational reductions, and SSProve bounded hidden-ROM extractor establish complementary full-commitment and misattribution-to-collision facts on their respective extracted, ideal-model, and finite-game surfaces, including key commitment and binding of the nonce, long-lived associated data, sequence, sender key identifier, and accepted plaintext.
 They explain why a deliberately multi-opening base-AEAD example does not produce a multi-opening beaconcrypt record unless the adversary finds a BLAKE2b collision.
 The maintained Lean refinement now equates the current generated transcript builder with ideal `ctxPreimage`, but completing the production reduction remains conditional on an adapter and production-width representation bridge connecting authenticated production fields and returned bytes to the actual BLAKE2b call and ideal `Crypto.blake2b`, the concrete collision game and numerical bound, BLAKE2b-512 collision resistance, and exact production use of the proved encoding.
 The concrete fixture is documented in [multi-opening-fixture.md](multi-opening-fixture.md).
