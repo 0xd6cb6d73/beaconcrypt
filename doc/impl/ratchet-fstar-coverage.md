@@ -121,7 +121,7 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `refined_receive_key_mismatched_tag_is_rejected` | 2143 | Matched | `RatchetAccessors.refined_receive_key_mismatched_tag_is_rejected` is an exact generic raw-accessor or peer-wrapper result; its normal return is derived internally. |
 | `refined_receive_key_is_associated` | 2160 | Matched | `RatchetAccessors.refined_receive_key_is_associated_valid` proves both successful aligned-slot exposure and exclusion of every aligned live slot on None, under exact structural validity. |
 | `refined_receive_key_is_derived` | 2208 | Matched | `RatchetAccessors.refined_receive_key_is_derived` derives positive wire sequence and equality with `Ratchet.msgKeyAt` at sequence minus one from the complete production `KernelRefines` lifetime relation; `kernel_slots_aligned` supplies raw association. |
-| `refined_finish_receive_neutral_outcomes_preserve_full_state` | 2238 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `refined_finish_receive_neutral_outcomes_preserve_full_state` | 2238 | Matched | `RatchetReceiveRollback.receiveNext_failure_entry and RatchetControl.finish_receive_with_removal_auth_fail; the old monolithic helper is replaced by prepared completion`. |
 | `refined_finish_receive_mismatched_target_is_neutral` | 2252 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_finish_receive_mismatched_last_is_neutral` | 2271 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `material_slots_after_swap_remove_is_exact` | 2325 | Matched | `RatchetCachedPublication.publish_cached_receive_exact for arbitrary chain and material types`. |
@@ -131,7 +131,7 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `finish_receive_with_removal_preserves_other_physical_slot` | 2522 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `material_slots_after_swap_remove_matches` | 2550 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_finish_receive_success_is_exact_swap_removal` | 2606 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_finish_receive_preserves_validity` | 2710 | Matched | `RatchetStructural.ValidRefined.cached_publication plus exact entry preservation on rejection; the historical monolithic helper is replaced by prepare/finish phases`. |
+| `refined_finish_receive_preserves_validity` | 2710 | In progress | Generic cached publication is checked in RatchetStructural; composing the successful preparation guards for arbitrary structurally valid entry is still in progress. |
 | `refined_finish_receive_preserves_reachability` | 2736 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `receive_control_extension_refl` | 2814 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `receive_control_extension_advance` | 2833 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -151,15 +151,15 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `prepared_future_trace_passes_validator` | 3433 | Matched | `RatchetFutureFinalization.FuturePendingRefines.valid`. |
 | `prepare_future_receive_steps_last_computes` | 3519 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `prepare_future_receive_steps_next_computes` | 3574 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `exists3_intro` | 3618 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `exists3_intro` | 3618 | Matched | `Internal existential introduction, supplied directly by Lean Exists.intro in constructive future trace/publication capstones`. |
 | `prepare_future_receive_steps_is_total_and_exact` | 3638 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `prepare_receive_future_computes` | 3821 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `prepare_receive_future_result_shape` | 3852 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `exact_future_helper_result_is_published_by_prepare` | 3882 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `admitted_future_plan_prepares_exact_trace` | 3941 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `publish_future_receive_slots_is_exact` | 4033 | Matched | `RatchetReceiveLoopExact.publish_future_receive_slots_exact`. |
-| `material_slots_match_after_future_move` | 4120 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `publish_future_receive_computes` | 4197 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `material_slots_match_after_future_move` | 4120 | Matched | `RatchetStructuralFuture.ValidRefined.future_publication; structural tag matching without canonical provenance`. |
+| `publish_future_receive_computes` | 4197 | Matched | `RatchetFuturePublication.publish_future_receive_exact for arbitrary generic types and every bounded window`. |
 | `cache_has_preserved_by_exact_prefix` | 4216 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `prepared_future_publication_is_exact` | 4310 | Matched | `RatchetFuturePublication.FuturePendingRefines.publication`. |
 | `prepare_cached_receive_establishes_valid_cached` | 4476 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -175,22 +175,22 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `prepare_receive_future_establishes_valid_pending` | 4932 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `admitted_future_plan_prepares_valid_pending` | 5003 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `pending_target_material_is_canonical` | 5058 | Matched | `RatchetFuturePublication.FutureOpenRefines.material_exact`. |
-| `refined_open_and_finish_rejection_is_neutral` | 5075 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `refined_open_and_finish_rejection_is_neutral` | 5075 | Matched | `RatchetReceiveRollback.receiveNext_failure_entry; arbitrary represented entries and callbacks, with no validity premise`. |
 | `refined_open_cached_success_publishes_removal` | 5115 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_open_future_success_publishes_pending` | 5151 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `cached_publication_establishes_successful_receive` | 5181 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `future_publication_establishes_successful_receive` | 5214 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_open_and_finish_preserves_validity` | 5241 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_open_and_finish_success_result` | 5288 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `option_payload_property_is_pointwise` | 5391 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `option_payload_property_is_pointwise` | 5391 | Matched | `Internal propositional elimination, supplied by cases on Option in ReceiveRollback.finish_result_exact and the complete receive proofs`. |
 | `refined_open_and_finish_is_state_neutral_or_successful` | 5438 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `successful_receive_consumes_target` | 5474 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `missing_old_target_is_neutral` | 5496 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `successful_open_replay_is_neutral` | 5518 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_open_success_replay_is_neutral` | 5550 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `rejected_open_attempts_preserve_entry` | 5603 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `retry_after_rejected_open_attempts_equals_direct` | 5631 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_open_rejection_preserves_cache_capacity` | 5666 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `rejected_open_attempts_preserve_entry` | 5603 | Matched | `RatchetReceiveRollback.repeated_rejection_preserves_entry; induction over actual complete operations`. |
+| `retry_after_rejected_open_attempts_equals_direct` | 5631 | Matched | `RatchetReceiveRollback.retry_after_rejection_eq_direct; arbitrary different retry interpreters, contexts, targets, and result types`. |
+| `refined_open_rejection_preserves_cache_capacity` | 5666 | Matched | `RatchetReceiveRollback.receiveNext_failure_preserves_capacity`. |
 | `fresh_maximum_gap_success_publishes_exactly_49` | 5686 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `valid_cached_publication_preserves_reachability` | 5764 | Matched | `RatchetCachedPublication.CachedOpenRefines.finish_success_refines`. |
 | `valid_pending_publication_preserves_reachability` | 5789 | Matched | `RatchetFuturePublication.FutureOpenRefines.finish_success_refines`. |
@@ -207,4 +207,4 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `advance_send_for_other_peer_is_neutral` | 6104 | Matched | `RatchetControlRestore.advance_send_for_peer_other`. |
 | `advance_send_for_selected_peer_matches` | 6114 | Matched | `RatchetAccessors.advance_send_for_selected_peer_matches` is an exact generic raw-accessor or peer-wrapper result; its normal return is derived internally. |
 
-The inventory contains 192 declarations: 47 matched, 12 in progress, and 133 unmatched in this draft.
+The inventory contains 192 declarations: 73 matched, 13 in progress, and 106 unmatched in this draft.
