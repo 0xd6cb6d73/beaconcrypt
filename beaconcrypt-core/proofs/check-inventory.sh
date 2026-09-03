@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=44
+	[handwritten-lean]=45
 	[handwritten-proverif]=61
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1873,7 +1873,7 @@ done
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$' \
 	"$lean_root" \
 	"canonical VCVio feasibility proof-root import"
-for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot; do
+for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions; do
 	require_line_count 1 "^import BeaconcryptCore\\.Computational\\.${pqxdh_computational_module}$" \
 		"$lean_root" "canonical PQXDH computational ${pqxdh_computational_module} proof-root import"
 done
@@ -2039,6 +2039,39 @@ require_line_count 1 '^#guard_msgs in$' \
 	"$pqxdh_hidden_root" "hidden PQXDH root capstone guarded axiom audit"
 require_line_count 1 '^#print axioms hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add$' \
 	"$pqxdh_hidden_root" "hidden PQXDH root capstone axiom audit"
+
+pqxdh_projection_collisions=proofs/lean/BeaconcryptCore/Computational/PqxdhProjectionCollisions.lean
+for declaration in Coord32 Observation32 Observation12 SourceProjectionLog SourceKdfAdversary \
+	ProjectionObservationState; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$pqxdh_projection_collisions" "PQXDH projection-collision structure ${declaration}"
+done
+for definition in sourceQF sourceQS sourceQN sourceQStream sourceQ32; do
+	require_line_count 1 "^def ${definition}( |$)" \
+		"$pqxdh_projection_collisions" "PQXDH projection-collision accounting ${definition}"
+done
+for theorem_name in firstCoord_ne_secondCoord evalDist_split_uniformJointKdfStream \
+	initial_firstCoord_eq_step_firstCoord initial_secondCoord_eq_step_secondCoord \
+	bad32_iff_projectionCacheBad32 bad12_iff_projectionCacheBad12 \
+	projectionCoordCachingLoggingImpl_simulateQ_invariant \
+	projectionCoordCachingLoggingImpl_simulateQ_cache_marginal \
+	probEvent_projectionCacheBad32_le_birthday probEvent_projectionCacheBad12_le_birthday \
+	sourceProjectionCollision_random_le evalDist_fixedJointStreamRandom_eq_eagerCoordinates \
+	evalDist_projectionCoordUnifiedRandom_prefetch_irrelevant \
+	evalDist_sourceKdfEagerCoordinate_eq_deferred \
+	evalDist_sourceProjectionObservedFullRandom_eq_deferred \
+	probEvent_sourceProjectionCollision_fullRandom_eq_cache \
+	sourceProjectionCollisionReduction_uniform_query_bound \
+	sourceProjectionCollisionReduction_stream_query_bound \
+	sourceProjectionCollisionReduction_no_untyped_stream_queries \
+	sourceProjectionCollisionReduction_totalQueryBound sourceProjectionCollision_real_le; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$pqxdh_projection_collisions" "PQXDH projection-collision theorem ${theorem_name}"
+done
+require_line_count 1 '^#guard_msgs in$' \
+	"$pqxdh_projection_collisions" "PQXDH projection-collision capstone guarded axiom audit"
+require_line_count 1 '^#print axioms sourceProjectionCollision_real_le$' \
+	"$pqxdh_projection_collisions" "PQXDH projection-collision capstone axiom audit"
 
 require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |$)' \
 	proofs/lean/BeaconcryptCore/Model/Pqxdh/Commit.lean \
