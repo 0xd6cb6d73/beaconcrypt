@@ -87,4 +87,36 @@ theorem prepare_cached_receive_success_inv {SendChain ReceiveChain Material : Ty
     cases_type control.ReceiveRemoval
     simp_all
 
+/-- Every cached target in a structurally valid state admits successful preparation. -/
+theorem ValidRefined.prepare_cached_receive {SendChain ReceiveChain Material : Type}
+    (state : RefinedRatchet SendChain ReceiveChain Material) (h : ValidRefined state)
+    (sequence : Std.U64) (targetSlot : Std.U8)
+    (hlookup : control.lookup_receive_key state.control sequence = ok (core.option.Option.Some targetSlot)) :
+    ∃ prepared, prepare_cached_receive state sequence = ok (core.option.Option.Some prepared) ∧
+      CachedPreparationFacts state sequence prepared := by
+  obtain ⟨htargetLive, htargetEntry⟩ := control.lookup_receive_key_sound state.control sequence targetSlot h.control.capacity hlookup
+  obtain ⟨cached, hcached, hcachedSequence⟩ := h.slots.live h.control.capacity targetSlot.val htargetLive
+  have hcap : state.control.receive_cache.len.val ≤ 50 := h.control.capacity
+  obtain ⟨lastSlot, hlastSub, hlastValue⟩ := control.uscalar_sub_eq_ok state.control.receive_cache.len 1#u8 (by scalar_tac)
+  have hlastLive : lastSlot.val < state.control.receive_cache.len.val := by scalar_tac
+  obtain ⟨lastCached, hlastCached, hlastSequence⟩ := h.slots.live h.control.capacity lastSlot.val hlastLive
+  have htargetKey : control.RatchetState.receive_key_at state.control targetSlot = ok (core.option.Option.Some sequence) := by
+    simpa only [htargetEntry] using receive_key_at_live state.control targetSlot htargetLive (by omega)
+  have hlastKey := receive_key_at_live state.control lastSlot hlastLive (by omega)
+  obtain ⟨finished, hfinish, hdisposition, hfinishedLen, _, _, hremoval, _⟩ :=
+    control.finish_receive_consumed state.control sequence targetSlot h.control.capacity htargetLive htargetEntry
+  have hlastControl : finished.state.receive_cache.len = lastSlot := UScalar.eq_of_val_eq (by scalar_tac)
+  suffices hexact : refined.prepare_cached_receive state sequence =
+      ok (core.option.Option.Some (⟨sequence, targetSlot, lastSlot, finished.state⟩ : PreparedCachedReceive)) from
+    ⟨_, hexact, prepare_cached_receive_success_inv state sequence _ hexact⟩
+  have hlenNe : state.control.receive_cache.len ≠ 0#u8 := by scalar_tac
+  simp [refined.prepare_cached_receive, hlookup, lift, control.capacity_eq_ok,
+    show ¬50 ≤ targetSlot.val by omega, show ¬50 ≤ lastSlot.val by omega,
+    htargetKey, hlastKey, material_slots_index state.receive_slots targetSlot (by omega),
+    material_slots_index state.receive_slots lastSlot (by omega), hcached, hlastCached,
+    hcachedSequence, htargetEntry, hlastSequence, control.RatchetState.receive_cache_len,
+    hlenNe, hlastSub, hfinish, hdisposition, hremoval, hlastControl,
+    core.option.Option.as_ref, core.option.Option.Insts.CoreCmpPartialEqOption.eq,
+    core.U64.Insts.CoreCmpPartialEqU64]
+
 end beaconcrypt_core.ratchet.refined
