@@ -275,6 +275,44 @@ END {
     require_exact(wanted, scenario " role-confusion attempt")
     wanted = "Query not event(PkRoleConfusionAccepted(PK_ROLE_CONFUSION_WITNESS[])) is " acceptance_result "."
     require_exact(wanted, scenario " role-confusion classification")
+  } else if (scenario == "phase2-response-binding") {
+    if (query_count != 17) {
+      reject("expected 17 Phase-2 response-binding queries, saw " query_count)
+    }
+    wanted = "Query not event(Phase2ResponseCommitted(PHASE2_CORRECT_RESPONSE_WITNESS[])) is false."
+    require_exact(wanted, "Phase-2 correct response commit")
+    wanted = "Query not event(Phase2ResponseAttempted(PHASE2_WRONG_OUTER_IDENTITY_WITNESS[])) is false."
+    require_exact(wanted, "Phase-2 wrong outer-identity attempt")
+    wanted = "Query not event(Phase2OuterIdentityGateReached(PHASE2_WRONG_OUTER_IDENTITY_WITNESS[])) is false."
+    require_exact(wanted, "Phase-2 wrong outer-identity internal gate")
+    wanted = "Query not event(Phase2ResponseAttempted(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[])) is false."
+    require_exact(wanted, "Phase-2 relabeled assigned-ID attempt")
+    wanted = "Query not event(Phase2AuthenticatedFrameOpened(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[])) is false."
+    require_exact(wanted, "Phase-2 relabeled assigned-ID authenticated frame")
+    wanted = "Query not event(Phase2GenuineAssignedPrefixObserved(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[])) is false."
+    require_exact(wanted, "Phase-2 relabeled assigned-ID original authenticated prefix")
+    wanted = "Query not event(Phase2ResponseAttempted(PHASE2_WRONG_INNER_SENDER_WITNESS[])) is false."
+    require_exact(wanted, "Phase-2 wrong inner-sender attempt")
+    wanted = "Query not event(Phase2InnerSenderGateReached(PHASE2_WRONG_INNER_SENDER_WITNESS[])) is false."
+    require_exact(wanted, "Phase-2 wrong inner-sender internal gate")
+    wanted = "Query not event(Phase2AcceptedOuterIdentity(binding)) is false."
+    require_exact(wanted, "Phase-2 non-vacuous outer-identity binding")
+    wanted = "Query not event(Phase2AcceptedAssignedPrefix(binding)) is false."
+    require_exact(wanted, "Phase-2 non-vacuous assigned-ID prefix binding")
+    wanted = "Query not event(Phase2AcceptedInnerSender(binding)) is false."
+    require_exact(wanted, "Phase-2 non-vacuous inner-sender binding")
+    wanted = "Query not event(Phase2ResponseCommitted(PHASE2_WRONG_OUTER_IDENTITY_WITNESS[])) is true."
+    require_exact(wanted, "Phase-2 wrong outer-identity rejection")
+    wanted = "Query not event(Phase2ResponseCommitted(PHASE2_RELABELED_ASSIGNED_ID_WITNESS[])) is true."
+    require_exact(wanted, "Phase-2 relabeled assigned-ID rejection")
+    wanted = "Query not event(Phase2ResponseCommitted(PHASE2_WRONG_INNER_SENDER_WITNESS[])) is true."
+    require_exact(wanted, "Phase-2 wrong inner-sender rejection")
+    wanted = "Query inj-event(Phase2AcceptedOuterIdentity(binding)) ==> inj-event(Phase2PinnedOuterIdentity(binding)) is true."
+    require_exact(wanted, "Phase-2 outer-identity binding correspondence")
+    wanted = "Query inj-event(Phase2AcceptedAssignedPrefix(binding)) ==> inj-event(Phase2AuthenticatedAssignedPrefix(binding)) is true."
+    require_exact(wanted, "Phase-2 assigned-ID prefix correspondence")
+    wanted = "Query inj-event(Phase2AcceptedInnerSender(binding)) ==> inj-event(Phase2PinnedInnerSender(binding)) is true."
+    require_exact(wanted, "Phase-2 inner-sender binding correspondence")
   } else if (scenario == "baseline" ||
              scenario == "active-classical") {
     if (query_count != 12) {

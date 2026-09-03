@@ -62,6 +62,8 @@ jobs:
             target: check-generated-proverif-public-key-confusion-strong
           - name: ProVerif weakened key encodings
             target: check-generated-proverif-public-key-confusion-weak
+          - name: ProVerif Phase 2 response binding
+            target: check-generated-proverif-phase2-response-binding
           - name: ProVerif active quantum attack
             target: check-generated-proverif-active-quantum
           - name: ProVerif reachability

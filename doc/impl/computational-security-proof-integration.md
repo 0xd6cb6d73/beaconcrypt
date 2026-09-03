@@ -66,6 +66,12 @@ The 40-case in-memory mutation suite rejects either label-byte change, label ali
 These are deterministic fidelity checks that fail even if a modified security model could still prove secrecy; the weakened HKDF, public-key-encoding, CTX, and KEM theories remain distinct security controls whose success condition is an explicit attack or failed correspondence.
 The gate does not generate the protocol model, prove a semantic refinement from Rust to ProVerif, connect the handwritten SSProve games to extraction, or supply any primitive advantage bound, asymptotic result, computational composition, compiler theorem, or end-to-end implementation claim.
 
+## Phase-2 response binding control
+
+The isolated [`phase2-response-binding`](../../beaconcrypt-core/proofs/pro-verif/phase2-response-binding.pv) scenario reuses the canonical five-field response, extraction-backed root and associated-data builders, production KDF projections, and exact symbolic frame construction. A genuine response reaches commit; independently reachable variants with only a wrong outer server identity, only a relabeled outer assigned ID, or only a wrong sender ID in an otherwise genuine sealed inner frame do not. The wrong-identity and wrong-sender variants additionally reach their internal verifier comparison gates.
+
+The assigned-ID variant must first open the unchanged genuine frame and observe its original authenticated prefix. Separate reachability queries exercise all three correspondence antecedents, while three injective correspondences link the accepted markers to the pinned outer identity, opened assigned-ID prefix, and pinned inner sender; the inventory fixes the sole commit immediately after those markers. This closes a symbolic source-shape gap between the canonical Phase-2 field mapping and the existing protocol correspondences, but it does not prove Cap'n Proto parsing, Rust-to-ProVerif refinement, concrete primitive security, arbitrary schedules, or computational composition; the deliberately weakened assigned-ID theory remains a separate later control.
+
 ## Active-quantum attack witness
 
 The bounded attack intercepts the honest beacon's signed initialization, obtains the signing secret through the modeled Ed25519 recovery capability, and signs a replacement bundle containing attacker-chosen X25519 prekey, X25519 one-time key, and ML-KEM public key. The server accepts the replacement under the honest beacon identity and encapsulates to the attacker-controlled ML-KEM key.

@@ -174,6 +174,7 @@ PROVERIF_SCENARIOS := \
 	hkdf-domain-alias \
 	public-key-confusion-strong \
 	public-key-confusion-weak \
+	phase2-response-binding \
 	active-quantum \
 	baseline \
 	reachability \
@@ -509,6 +510,15 @@ check-proverif-public-key-confusion-weak: check-proverif-extraction
 			$(PROVERIF_DIR)/public-key-confusion-weak.pv | \
 		awk -v scenario=public-key-confusion-weak \
 			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-phase2-response-binding: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-response-binding-control.pvl \
+			-lib $(PROVERIF_DIR)/phase2-response-binding-queries.pvl \
+			$(PROVERIF_DIR)/phase2-response-binding.pv | \
+		awk -v scenario=phase2-response-binding -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-classical-equivalence: check-proverif-extraction
 	@set -o pipefail; \

@@ -49,7 +49,7 @@ declare -A expected_category_counts=(
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=41
-	[handwritten-proverif]=54
+	[handwritten-proverif]=57
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -322,10 +322,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 4 \
+require_occurrence_count 6 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 4 '_to_bitstring' \
+require_occurrence_count 6 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
@@ -605,6 +605,88 @@ require_line_count 4 '^letfun ' \
 require_line_count 2 '^let Weak' \
 	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
 	"weak key-confusion process"
+require_line_count 3 '^fun phase2_.*_binding' \
+	proofs/pro-verif/phase2-response-binding-control.pvl \
+	"Phase-2 response-binding comparison term"
+require_line_count 4 '^free PHASE2_.*_WITNESS' \
+	proofs/pro-verif/phase2-response-binding-control.pvl \
+	"Phase-2 response-binding witness"
+require_line_count 12 '^event Phase2' \
+	proofs/pro-verif/phase2-response-binding-control.pvl \
+	"Phase-2 response-binding event"
+require_line_count 2 '^let Phase2' \
+	proofs/pro-verif/phase2-response-binding-control.pvl \
+	"Phase-2 response-binding process"
+require_line_count 17 '^query ' \
+	proofs/pro-verif/phase2-response-binding-queries.pvl \
+	"Phase-2 response-binding query"
+reject_matches "primitive rule in Phase-2 response-binding control" \
+	'(?m)^(?:reduc|equation) ' \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'let\s+kex_response\(\s*response_server_identity,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*assigned_key_id\s*\)\s*=\s*response\s+in' \
+	"exact Phase-2 response-binding destructure order" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'let\s+wrong_outer_identity_response\s*=\s*kex_response\(\s*wrong_outer_identity,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*assigned_key_id\s*\)\s+in' \
+	"wrong outer identity changes only the Phase-2 identity field" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'let\s+relabeled_assigned_id_response\s*=\s*kex_response\(\s*server_identity,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*relabeled_assigned_key_id\s*\)\s+in' \
+	"relabeled Phase-2 assigned ID retains the genuine frame" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'let\s+wrong_inner_sender_frame\s*=\s*seal_frame\(\s*server_material,\s*associated_data,\s*first_sequence\(\),\s*wrong_inner_sender_key_id,\s*initial_payload\s*\)\s+in' \
+	"wrong inner sender seals an otherwise genuine frame" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'if\s+response_server_identity\s*=\s*expected_server_identity\s+then[\s\S]*?beaconcrypt_core__pqxdh__build_associated_data\(\s*expected_server_identity,\s*beacon_identity\s*\)[\s\S]*?if\s+authenticated_server_key_id\s*=\s*expected_server_key_id\s+then[\s\S]*?open_frame\(\s*server_material,\s*associated_data,\s*frame_sequence,\s*expected_server_key_id,\s*initial_frame\s*\)[\s\S]*?beaconcrypt_core__pqxdh__RegistrationKeyIdBinding\(\s*key_id_encoding\(assigned_key_id\)\s*\)[\s\S]*?if\s+authenticated_binding\s*=\s*expected_binding\s+then[\s\S]*?event Phase2ResponseCommitted\(witness\)' \
+	"ordered production Phase-2 acceptance gates" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'event\s+Phase2OuterIdentityGateReached\(witness\);\s*if\s+response_server_identity\s*=\s*expected_server_identity\s+then' \
+	"internal Phase-2 outer-identity gate witness" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'event\s+Phase2InnerSenderGateReached\(witness\);\s*if\s+authenticated_server_key_id\s*=\s*expected_server_key_id\s+then' \
+	"internal Phase-2 inner-sender gate witness" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'let\s+registration_payload\(\s*authenticated_binding,\s*initial_plaintext\s*\)\s*=\s*opened_initial\s+in[\s\S]*?if\s+authenticated_binding\s*=\s*genuine_assigned_binding\s+then\s*event\s+Phase2GenuineAssignedPrefixObserved\(witness\)' \
+	"internal Phase-2 original authenticated-prefix witness" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'if\s+authenticated_binding\s*=\s*expected_binding\s+then\s*event\s+Phase2AcceptedOuterIdentity\([\s\S]*?\);\s*event\s+Phase2AcceptedAssignedPrefix\([\s\S]*?\);\s*event\s+Phase2AcceptedInnerSender\([\s\S]*?\);\s*event\s+Phase2ResponseCommitted\(witness\)\.' \
+	"sole Phase-2 commit follows all binding antecedents" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 2 \
+	'event\s+Phase2ResponseCommitted\(' \
+	"one Phase-2 commit declaration and one emission" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'query\s+event\(Phase2OuterIdentityGateReached\(PHASE2_WRONG_OUTER_IDENTITY_WITNESS\)\)\.' \
+	"wrong outer-identity internal-gate witness" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 1 \
+	'query\s+event\(Phase2InnerSenderGateReached\(PHASE2_WRONG_INNER_SENDER_WITNESS\)\)\.' \
+	"wrong inner-sender internal-gate witness" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 1 \
+	'query\s+event\(Phase2AuthenticatedFrameOpened\(PHASE2_RELABELED_ASSIGNED_ID_WITNESS\)\)\.' \
+	"relabeled assigned-ID genuine-frame opening witness" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 1 \
+	'query\s+event\(Phase2GenuineAssignedPrefixObserved\(PHASE2_RELABELED_ASSIGNED_ID_WITNESS\)\)\.' \
+	"relabeled assigned-ID original authenticated-prefix witness" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 3 \
+	'query\s+binding: bitstring;\s*event\(Phase2Accepted(?:OuterIdentity|AssignedPrefix|InnerSender)\(binding\)\)\.' \
+	"non-vacuous Phase-2 binding antecedent" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 3 \
+	'query\s+binding: bitstring;\s*inj-event\(Phase2Accepted(?:OuterIdentity|AssignedPrefix|InnerSender)\(binding\)\)\s*==>\s*inj-event\(Phase2(?:PinnedOuterIdentity|AuthenticatedAssignedPrefix|PinnedInnerSender)\(binding\)\)\.' \
+	"Phase-2 response binding correspondence" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
 require_line_count 8 '^query ' \
 	proofs/pro-verif/mlkem-reencapsulation-control-queries.pvl \
 	"ML-KEM re-encapsulation control query"
@@ -662,7 +744,8 @@ for scenario_process in \
 	quantum-mlkem-control \
 	mlkem-reencapsulation-control \
 	public-key-confusion-strong \
-	public-key-confusion-weak; do
+	public-key-confusion-weak \
+	phase2-response-binding; do
 	require_line_count 1 '^process$' \
 		"proofs/pro-verif/${scenario_process}.pv" \
 			"${scenario_process} top-level process"
@@ -760,6 +843,9 @@ require_occurrence_count 1 \
 require_line_count 1 '^            target: check-proverif-transcript-fidelity$' \
 	../.github/workflows/formal-verification.yml \
 	"dedicated transcript-fidelity CI target"
+require_line_count 1 '^            target: check-generated-proverif-phase2-response-binding$' \
+	../.github/workflows/formal-verification.yml \
+	"dedicated Phase-2 response-binding CI target"
 
 require_line_count 1 '^  Theorem ctx_misattribution_reduces_to_collision :' \
 	proofs/ssprove/CtxEventReduction.v \

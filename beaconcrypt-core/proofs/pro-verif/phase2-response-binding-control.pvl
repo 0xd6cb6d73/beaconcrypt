@@ -1,0 +1,312 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* Production-strength Phase-2 response binding control                   *)
+(**************************************************************************)
+
+(* The three typed binding terms let the correspondence queries compare the value admitted at commit with the pinned or authenticated value that preceded it. *)
+fun phase2_outer_identity_binding(bitstring, bitstring): bitstring [data].
+fun phase2_assigned_prefix_binding(
+  bitstring,
+  beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding
+): bitstring [data].
+fun phase2_inner_sender_binding(bitstring, key_id): bitstring [data].
+
+free PHASE2_CORRECT_RESPONSE_WITNESS: bitstring [private].
+free PHASE2_WRONG_OUTER_IDENTITY_WITNESS: bitstring [private].
+free PHASE2_RELABELED_ASSIGNED_ID_WITNESS: bitstring [private].
+free PHASE2_WRONG_INNER_SENDER_WITNESS: bitstring [private].
+
+event Phase2ResponseAttempted(bitstring).
+event Phase2OuterIdentityGateReached(bitstring).
+event Phase2InnerSenderGateReached(bitstring).
+event Phase2AuthenticatedFrameOpened(bitstring).
+event Phase2GenuineAssignedPrefixObserved(bitstring).
+event Phase2ResponseCommitted(bitstring).
+event Phase2PinnedOuterIdentity(bitstring).
+event Phase2AcceptedOuterIdentity(bitstring).
+event Phase2AuthenticatedAssignedPrefix(bitstring).
+event Phase2AcceptedAssignedPrefix(bitstring).
+event Phase2PinnedInnerSender(bitstring).
+event Phase2AcceptedInnerSender(bitstring).
+
+(* This is the common beacon-side gate for all four fixtures. It follows the production order: parse the five response fields, calculate the response-selected DH/KEM contributions, reject a different outer identity before constructing the root, build server-first associated data from the retained identities, check the nested frame sender, open the frame, authenticate the assigned-ID prefix, and only then commit. *)
+let Phase2BeaconFinishControl(
+  witness: bitstring,
+  expected_server_identity: bitstring,
+  expected_server_key_id: key_id,
+  genuine_assigned_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+  beacon_identity_secret: bitstring,
+  beacon_prekey_secret: bitstring,
+  beacon_one_time_secret: bitstring,
+  beacon_pq_secret: bitstring,
+  response: bitstring
+) =
+  event Phase2PinnedOuterIdentity(
+    phase2_outer_identity_binding(witness, expected_server_identity)
+  );
+  event Phase2PinnedInnerSender(
+    phase2_inner_sender_binding(witness, expected_server_key_id)
+  );
+  let kex_response(
+    response_server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    initial_frame,
+    assigned_key_id
+  ) = response in
+  let response_server_kex = x25519_public_from_ed(
+    response_server_identity
+  ) in
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let dh1 = x25519_beacon_dh(
+    beacon_prekey_secret,
+    response_server_kex
+  ) in
+  let dh2 = x25519_beacon_dh(
+    beacon_identity_secret,
+    server_ephemeral
+  ) in
+  let dh3 = x25519_beacon_dh(
+    beacon_prekey_secret,
+    server_ephemeral
+  ) in
+  let dh4 = x25519_beacon_dh(
+    beacon_one_time_secret,
+    server_ephemeral
+  ) in
+  let kem_secret = mlkem_decapsulate(
+    kem_ciphertext,
+    beacon_pq_secret
+  ) in
+  let shared_secrets = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+    dh1,
+    dh2,
+    dh3,
+    dh4,
+    kem_secret
+  ) in
+  event Phase2OuterIdentityGateReached(witness);
+  if response_server_identity = expected_server_identity then
+    let root_input =
+      beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)
+    in
+    let root = pqxdh_root(
+      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+    ) in
+    let associated_data =
+      beaconcrypt_core__pqxdh__build_associated_data(
+        expected_server_identity,
+        beacon_identity
+      )
+    in
+    let server_material = ratchet_material(server_to_beacon_chain(root)) in
+    let crypto_frame(
+      frame_ciphertext,
+      frame_tag,
+      frame_commitment,
+      frame_sequence,
+      authenticated_server_key_id
+    ) = initial_frame in
+    event Phase2InnerSenderGateReached(witness);
+    if authenticated_server_key_id = expected_server_key_id then
+      let opened_initial = open_frame(
+        server_material,
+        associated_data,
+        frame_sequence,
+        expected_server_key_id,
+        initial_frame
+      ) in
+      event Phase2AuthenticatedFrameOpened(witness);
+      let registration_payload(
+        authenticated_binding,
+        initial_plaintext
+      ) = opened_initial in
+      event Phase2AuthenticatedAssignedPrefix(
+        phase2_assigned_prefix_binding(witness, authenticated_binding)
+      );
+      if authenticated_binding = genuine_assigned_binding then
+        event Phase2GenuineAssignedPrefixObserved(witness);
+      let expected_binding =
+        beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+          key_id_encoding(assigned_key_id)
+        )
+      in
+      if authenticated_binding = expected_binding then
+        event Phase2AcceptedOuterIdentity(
+          phase2_outer_identity_binding(
+            witness,
+            response_server_identity
+          )
+        );
+        event Phase2AcceptedAssignedPrefix(
+          phase2_assigned_prefix_binding(witness, expected_binding)
+        );
+        event Phase2AcceptedInnerSender(
+          phase2_inner_sender_binding(
+            witness,
+            authenticated_server_key_id
+          )
+        );
+        event Phase2ResponseCommitted(witness).
+
+(* The fixture makes one genuine response and then changes exactly one required binding for each malformed branch. The wrong outer identity branch retains the genuine ephemeral key, KEM ciphertext, frame, and assigned ID. The assigned-ID branch retains the genuine authenticated frame and changes only the outer proposed ID. The inner-sender branch seals an otherwise genuine frame under a different sender ID. *)
+let Phase2ResponseBindingControl() =
+  new server_identity_secret: bitstring;
+  new beacon_identity_secret: bitstring;
+  new beacon_prekey_secret: bitstring;
+  new beacon_one_time_secret: bitstring;
+  new beacon_pq_secret: bitstring;
+  new server_ephemeral_secret: bitstring;
+  new kem_coins: bitstring;
+  new expected_server_key_id: key_id;
+  new assigned_key_id: key_id;
+  new relabeled_assigned_key_id: key_id;
+  new wrong_inner_sender_key_id: key_id;
+  new wrong_outer_identity_secret: bitstring;
+  new initial_plaintext: bitstring;
+  let server_identity = ed_public(server_identity_secret) in
+  let wrong_outer_identity = ed_public(wrong_outer_identity_secret) in
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let beacon_prekey = x25519_public(beacon_prekey_secret) in
+  let beacon_one_time = x25519_public(beacon_one_time_secret) in
+  let beacon_pq = mlkem_public(beacon_pq_secret) in
+  let server_ephemeral = x25519_public(server_ephemeral_secret) in
+  let kem_ciphertext = mlkem_ciphertext(beacon_pq, kem_coins) in
+  let kem_secret = mlkem_shared_secret(beacon_pq, kem_coins) in
+  let dh1 = x25519_server_dh(server_identity_secret, beacon_prekey) in
+  let dh2 = x25519_server_dh(
+    server_ephemeral_secret,
+    x25519_public_from_ed(beacon_identity)
+  ) in
+  let dh3 = x25519_server_dh(server_ephemeral_secret, beacon_prekey) in
+  let dh4 = x25519_server_dh(server_ephemeral_secret, beacon_one_time) in
+  let shared_secrets = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+    dh1,
+    dh2,
+    dh3,
+    dh4,
+    kem_secret
+  ) in
+  let root_input =
+    beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)
+  in
+  let root = pqxdh_root(
+    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+  ) in
+  let associated_data =
+    beaconcrypt_core__pqxdh__build_associated_data(
+      server_identity,
+      beacon_identity
+    )
+  in
+  let server_material = ratchet_material(server_to_beacon_chain(root)) in
+  let assigned_binding =
+    beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+      key_id_encoding(assigned_key_id)
+    )
+  in
+  let initial_payload = registration_payload(
+    assigned_binding,
+    initial_plaintext
+  ) in
+  let initial_frame = seal_frame(
+    server_material,
+    associated_data,
+    first_sequence(),
+    expected_server_key_id,
+    initial_payload
+  ) in
+  let correct_response = kex_response(
+    server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    initial_frame,
+    assigned_key_id
+  ) in
+  let wrong_outer_identity_response = kex_response(
+    wrong_outer_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    initial_frame,
+    assigned_key_id
+  ) in
+  let relabeled_assigned_id_response = kex_response(
+    server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    initial_frame,
+    relabeled_assigned_key_id
+  ) in
+  let wrong_inner_sender_frame = seal_frame(
+    server_material,
+    associated_data,
+    first_sequence(),
+    wrong_inner_sender_key_id,
+    initial_payload
+  ) in
+  let wrong_inner_sender_response = kex_response(
+    server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    wrong_inner_sender_frame,
+    assigned_key_id
+  ) in
+  (
+    Phase2BeaconFinishControl(
+      PHASE2_CORRECT_RESPONSE_WITNESS,
+      server_identity,
+      expected_server_key_id,
+      assigned_binding,
+      beacon_identity_secret,
+      beacon_prekey_secret,
+      beacon_one_time_secret,
+      beacon_pq_secret,
+      correct_response
+    )
+  |
+    event Phase2ResponseAttempted(
+      PHASE2_WRONG_OUTER_IDENTITY_WITNESS
+    );
+    Phase2BeaconFinishControl(
+      PHASE2_WRONG_OUTER_IDENTITY_WITNESS,
+      server_identity,
+      expected_server_key_id,
+      assigned_binding,
+      beacon_identity_secret,
+      beacon_prekey_secret,
+      beacon_one_time_secret,
+      beacon_pq_secret,
+      wrong_outer_identity_response
+    )
+  |
+    event Phase2ResponseAttempted(
+      PHASE2_RELABELED_ASSIGNED_ID_WITNESS
+    );
+    Phase2BeaconFinishControl(
+      PHASE2_RELABELED_ASSIGNED_ID_WITNESS,
+      server_identity,
+      expected_server_key_id,
+      assigned_binding,
+      beacon_identity_secret,
+      beacon_prekey_secret,
+      beacon_one_time_secret,
+      beacon_pq_secret,
+      relabeled_assigned_id_response
+    )
+  |
+    event Phase2ResponseAttempted(
+      PHASE2_WRONG_INNER_SENDER_WITNESS
+    );
+    Phase2BeaconFinishControl(
+      PHASE2_WRONG_INNER_SENDER_WITNESS,
+      server_identity,
+      expected_server_key_id,
+      assigned_binding,
+      beacon_identity_secret,
+      beacon_prekey_secret,
+      beacon_one_time_secret,
+      beacon_pq_secret,
+      wrong_inner_sender_response
+    )
+  ).

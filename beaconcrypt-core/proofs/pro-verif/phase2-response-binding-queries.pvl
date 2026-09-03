@@ -1,0 +1,39 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The genuine commit and all three malformed constructions must be reachable. The wrong outer-identity and inner-sender branches must reach their verifier-side comparisons, and the relabeled assigned-ID branch must open the unchanged authenticated frame and observe its original prefix before the prefix comparison rejects it. *)
+query event(Phase2ResponseCommitted(PHASE2_CORRECT_RESPONSE_WITNESS)).
+query event(Phase2ResponseAttempted(PHASE2_WRONG_OUTER_IDENTITY_WITNESS)).
+query event(Phase2OuterIdentityGateReached(PHASE2_WRONG_OUTER_IDENTITY_WITNESS)).
+query event(Phase2ResponseAttempted(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
+query event(Phase2AuthenticatedFrameOpened(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
+query event(Phase2GenuineAssignedPrefixObserved(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
+query event(Phase2ResponseAttempted(PHASE2_WRONG_INNER_SENDER_WITNESS)).
+query event(Phase2InnerSenderGateReached(PHASE2_WRONG_INNER_SENDER_WITNESS)).
+
+(* The antecedent of each binding correspondence must occur on the genuine commit path, so none of the three implications is accepted vacuously. *)
+query binding: bitstring;
+  event(Phase2AcceptedOuterIdentity(binding)).
+
+query binding: bitstring;
+  event(Phase2AcceptedAssignedPrefix(binding)).
+
+query binding: bitstring;
+  event(Phase2AcceptedInnerSender(binding)).
+
+(* None of the three malformed responses may pass every production binding gate and commit. *)
+query event(Phase2ResponseCommitted(PHASE2_WRONG_OUTER_IDENTITY_WITNESS)).
+query event(Phase2ResponseCommitted(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
+query event(Phase2ResponseCommitted(PHASE2_WRONG_INNER_SENDER_WITNESS)).
+
+(* Every commit carries the exact pinned outer identity, authenticated assigned-ID prefix, and pinned inner sender that preceded it. *)
+query binding: bitstring;
+  inj-event(Phase2AcceptedOuterIdentity(binding)) ==>
+  inj-event(Phase2PinnedOuterIdentity(binding)).
+
+query binding: bitstring;
+  inj-event(Phase2AcceptedAssignedPrefix(binding)) ==>
+  inj-event(Phase2AuthenticatedAssignedPrefix(binding)).
+
+query binding: bitstring;
+  inj-event(Phase2AcceptedInnerSender(binding)) ==>
+  inj-event(Phase2PinnedInnerSender(binding)).

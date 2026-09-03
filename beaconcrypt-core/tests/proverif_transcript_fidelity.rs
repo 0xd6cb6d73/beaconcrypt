@@ -699,9 +699,9 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"auxiliary ProVerif fidelity prerequisite",
 	)?;
 	let scenarios = scenario_names(makefile)?;
-	if scenarios.len() != 25 {
+	if scenarios.len() != 26 {
 		return Err(format!(
-			"expected 25 ProVerif scenarios, found {}",
+			"expected 26 ProVerif scenarios, found {}",
 			scenarios.len()
 		));
 	}
