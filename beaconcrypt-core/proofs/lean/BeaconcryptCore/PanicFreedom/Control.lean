@@ -136,4 +136,10 @@ theorem advance_send_for_peer_total (requested_peer : Std.U64) (peer : PeerRatch
   by_cases h : requested_peer = peer.peer_id <;>
     simp [advance_send_for_peer, replace_ratchet_for_peer, SendKey.unavailable, hr, h]
 
+/-- A bounded mutable array access returns a value and its update continuation. -/
+theorem array_index_mut_eq_ok {α : Type} {n : Std.Usize} (v : Std.Array α n)
+    (i : Std.Usize) (h : i.val < v.length) :
+    v.index_mut_usize i = ok (v.val[i.val], v.set i) := by
+  simp only [Std.Array.index_mut_usize, array_index_eq_ok v i h, bind_tc_ok]
+
 end beaconcrypt_core.ratchet.control
