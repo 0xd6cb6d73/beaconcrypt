@@ -282,3 +282,8 @@ There is deliberately no automatic refresh target. For an intentional change:
 Hash churn is intentionally conservative. A comment-only edit to a monitored
 file still requires an explicit baseline update, because the gate cannot
 reliably distinguish semantic from non-semantic proof-boundary changes.
+
+
+### Lean panic-freedom foundation
+
+The imported `PanicFreedom` proof modules add unconditional normal-return certificates for control, byte partitioning, deterministic PQXDH registration, restoration, material queries, selected receive loops and effects, and simple structural operations. These certificates remove representation-invariant premises where the generated defensive checks suffice, but do not yet constitute full API coverage or complete receive semantic refinement. The ideal model files remain fixed at the `27ff282` baseline. The maintained proof analysis records the exact milestone scope and the existing regenerated F* aggregate-verification failure.

@@ -34,6 +34,15 @@ import BeaconcryptCore.Computational.CtxComputationalSecurity
 import BeaconcryptCore.Computational.CtxTransitionReduction
 import BeaconcryptCore.Computational.VCVioFeasibility
 import BeaconcryptCore.Verification.ProofObligations
+import BeaconcryptCore.PanicFreedom.Bytes
+import BeaconcryptCore.PanicFreedom.Control
+import BeaconcryptCore.PanicFreedom.Effects
+import BeaconcryptCore.PanicFreedom.Lookup
+import BeaconcryptCore.PanicFreedom.Pqxdh
+import BeaconcryptCore.PanicFreedom.RatchetLoops
+import BeaconcryptCore.PanicFreedom.Restore
+import BeaconcryptCore.PanicFreedom.Static
+import BeaconcryptCore.PanicFreedom.Trivial
 
 /-!
 # Beaconcrypt-core verification root

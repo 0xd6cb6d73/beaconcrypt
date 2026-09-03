@@ -1,0 +1,35 @@
+# Lean proof completion and F* retirement
+
+## Objective
+
+Complete panic-freedom coverage for the default production `beaconcrypt-core` Lean extraction, then replace every maintained F* guarantee with a checked Lean theorem. Each completed milestone is committed and pushed to the private `origin` remote. The integration branch is `codex/lean-proof-completion`; agent worktrees live under `/home/user/worktrees`.
+
+## Acceptance criteria
+
+The ideal PQXDH and ratchet models are immutable for this work. No file under `beaconcrypt-core/proofs/lean/BeaconcryptCore/Model/` may change from starting commit `27ff282`; improvements belong in extracted-code proofs, refinements, and verification tooling.
+
+Panic freedom means that each covered extracted production API returns `RustM.ok`, including ordinary `Err`, `None`, cancellation, and exhaustion results. Internal generated closure and loop helpers may require the bounds established by their callers. Any representation invariant required by an exported API must have checked constructor and preservation theorems. Merely assuming a helper returns `ok`, assuming a failure-trace witness exists, or assuming correct cryptographic responses does not discharge totality. Successful extraction and a compiling `RustM` definition alone do not establish panic freedom.
+
+F* replacement requires a declaration-level coverage ledger with checked Lean counterparts or documented equivalent composition for every maintained F* guarantee. It includes material-slot correspondence, complete future preparation and publication, complete receive outcome classification, repeated rejection/retry and replay, derivational reachability, conditional restoration, paired-session composition, exact byte layouts, registration transitions, and commitment collision witnesses. Cryptographic implementations, compiler behavior, adapter execution, persistence provenance, and physical erasure remain explicit external assumptions. Existing F* artifacts and gates remain until their proof surface has replacements; no theorem is silently weakened to retire a backend.
+
+## Milestones
+
+1. Establish a reproducible Lean baseline and a complete panic-freedom API inventory. Repair any baseline compilation issues without weakening theorem statements.
+2. Prove byte/initialization, control, bounded-loop, restoration, and effect API totality. Add a checked aggregate surface and a drift gate. Run the locked proof verification, policy and trust-boundary checks, relevant mutation suite, and required formatting/lint checks; commit and push the completed panic-freedom milestone.
+3. Prove cached material-array publication and exact future staging/publication, then complete receive outcome and derivational preservation. Validate, document, commit, and push completed proof units.
+4. Compose arbitrary finite operation traces, replay/retry, restoration, and paired-session preservation; close the remaining declaration-level F* coverage ledger. Validate, document, commit, and push.
+5. Retire the F* proof surface and backend-specific build/CI/inventory requirements only after all equivalent Lean guarantees are checked. Run the complete replacement verification and mutation gates, update maintained documentation, commit, and push.
+
+## Coordination and verification
+
+The first parallel tasks own separate new modules: `PanicFreedom/Control.lean` and `Restore.lean`; `PanicFreedom/Bytes.lean` and `Pqxdh.lean`; and `PanicFreedom/RatchetLoops.lean`. The coordinator owns effect composition, the aggregate coverage gate, shared documentation, and integration. Agents check proof changes incrementally with the pinned Lean 4.31.0 toolchain. No agent runs Nix garbage collection; the coordinator collects only after all repository Nix activity ends. Existing build caches are copied, never shared for mutable proof outputs.
+
+## Progress
+
+- Created isolated integration and three agent worktrees from `27ff282`.
+- Verified access to `ssh://git@git.mschn.fr/amn/beaconcrypt` and confirmed the baseline `vcvio` head.
+- The tracked baseline and integrated foundation build pass (`lake build`, 3,107 jobs).
+- Checked foundation modules are imported by the maintained root and included in the trust-boundary inventory. The inventory and formatting checks pass; core unit and transcript-fidelity tests pass.
+- Full workspace mutation testing is running (1,164 mutants). No completed run is claimed yet.
+- Locked aggregate verification currently fails at regenerated F* initial-output arithmetic before Lean; historical artifacts remain intact.
+- Complete receive effect composition and the generated API coverage gate remain in progress.

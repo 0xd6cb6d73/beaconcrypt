@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=50
+	[handwritten-lean]=59
 	[handwritten-proverif]=64
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -178,7 +178,7 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/Verification/PqxdhCommitmentRefinement.lean \
 	proofs/lean/BeaconcryptCore/Verification/ProofObligations.lean \
 	> "$tmp_dir/handwritten-lean"
-for lean_proof_dir in Model Refinement Computational; do
+for lean_proof_dir in Model Refinement Computational PanicFreedom; do
 	find "proofs/lean/BeaconcryptCore/$lean_proof_dir" -type f -name '*.lean' \
 		-printf '%p\n' >> "$tmp_dir/handwritten-lean"
 done
