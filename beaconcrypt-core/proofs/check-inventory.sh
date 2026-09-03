@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=41
+	[handwritten-lean]=44
 	[handwritten-proverif]=61
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
@@ -1838,6 +1838,10 @@ done
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$' \
 	"$lean_root" \
 	"canonical VCVio feasibility proof-root import"
+for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot; do
+	require_line_count 1 "^import BeaconcryptCore\\.Computational\\.${pqxdh_computational_module}$" \
+		"$lean_root" "canonical PQXDH computational ${pqxdh_computational_module} proof-root import"
+done
 require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxReduction$' \
 	"$lean_root" \
 	"canonical CTX reduction proof-root import"
@@ -1946,6 +1950,60 @@ done
 require_line_count 1 '^rev = "cbd4144b51d92da00dd50f05e068b2348fa6e529"$' \
 	proofs/lean/lakefile.toml \
 	"immutable VCVio v4.31 dependency pin"
+
+pqxdh_joint_kdf=proofs/lean/BeaconcryptCore/Computational/PqxdhJointKdf.lean
+for declaration in JointKdfAddress ProductionHkdfPrefixConsistent; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$pqxdh_joint_kdf" "joint PQXDH KDF structure ${declaration}"
+done
+for theorem_name in rootAddress_ne_ratchetAddress first64_eq_first32_append_second32 \
+	first64_append_final12 rootSecret_eq_rootProjection rootChains_eq_initialProjection \
+	initialOutput_eq_ratchetOut_prefix rootChains_left_eq_msgMaterial_key \
+	rootChains_right_eq_nextChain; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$pqxdh_joint_kdf" "joint PQXDH KDF theorem ${theorem_name}"
+done
+
+pqxdh_joint_kdf_game=proofs/lean/BeaconcryptCore/Computational/PqxdhJointKdfGame.lean
+for declaration in JointKdfViewQuery FixedHkdfSha512NoSaltSource \
+	JointKdfViewAdversary FixedHkdfSha512JointStreamAdversary; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$pqxdh_joint_kdf_game" "joint KDF game structure ${declaration}"
+done
+for theorem_name in jointKdfLazyRandomStreamImpl_run_hit \
+	jointKdfLazyRandomStreamImpl_run_miss jointKdfLazyRandomStreamImpl_hit_query_bound \
+	jointKdfLazyRandomStreamImpl_miss_query_bound \
+	jointKdfViewReduction_no_untyped_stream_queries \
+	jointKdfViewAdvantage_eq_fixedHkdfSha512JointStreamAdvantage; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$pqxdh_joint_kdf_game" "joint KDF game theorem ${theorem_name}"
+done
+
+pqxdh_hidden_root=proofs/lean/BeaconcryptCore/Computational/PqxdhHiddenRoot.lean
+for declaration in KnownPqxdhRootCoordinates HiddenRootSourceAdversary; do
+	require_line_count 1 "^structure ${declaration}( |$)" \
+		"$pqxdh_hidden_root" "hidden PQXDH root structure ${declaration}"
+done
+for theorem_name in hiddenRootIKM_length hiddenRootIKM_injective \
+	hiddenRootAddress_injective \
+	hiddenRootReductionMain_uniform_query_bound hiddenRootReductionMain_root_query_bound \
+	hiddenRootReductionMain_symmetric_query_bound hiddenRootReductionMain_stream_query_bound \
+	hiddenRootReductionMain_no_untyped_stream_queries \
+	hiddenRootReduction_no_untyped_stream_queries \
+	evalDist_first32_uniformJointKdfStream \
+	jointKdfSingletonProgrammed_tracking_tvDist_le_bad \
+	hiddenRootStreamCandidates_length_le probEvent_uniformHiddenRoot_candidateHit_le \
+	tvDist_hiddenRootSharedRandomGame_independentGame_le \
+	hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add; do
+	require_line_count 1 "^(@\\[[^]]+\\] )?theorem ${theorem_name}( |$)" \
+		"$pqxdh_hidden_root" "hidden PQXDH root theorem ${theorem_name}"
+done
+require_line_count 1 '^theorem parseHiddenRootCoordinate\?_eq_some_iff( |$)' \
+	"$pqxdh_hidden_root" "hidden PQXDH root exact parser theorem"
+require_line_count 1 '^#guard_msgs in$' \
+	"$pqxdh_hidden_root" "hidden PQXDH root capstone guarded axiom audit"
+require_line_count 1 '^#print axioms hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add$' \
+	"$pqxdh_hidden_root" "hidden PQXDH root capstone axiom audit"
 
 require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |$)' \
 	proofs/lean/BeaconcryptCore/Model/Pqxdh/Commit.lean \
