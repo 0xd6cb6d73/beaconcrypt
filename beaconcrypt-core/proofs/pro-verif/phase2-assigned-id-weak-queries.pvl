@@ -1,0 +1,34 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The exact relabeled fixture reaches every unchanged internal gate, opens the genuine frame, observes its original prefix, and commits under the deliberately weakened assigned-ID comparison. *)
+query event(Phase2ResponseAttempted(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
+query event(Phase2OuterIdentityGateReached(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
+query event(Phase2InnerSenderGateReached(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
+query event(Phase2AuthenticatedFrameOpened(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
+query event(Phase2GenuineAssignedPrefixObserved(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
+query event(Phase2ResponseCommitted(PHASE2_RELABELED_ASSIGNED_ID_WITNESS)).
+query queried_authenticated_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+      queried_outer_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding;
+  event(Phase2RelabeledAssignedIdCommitted(
+    PHASE2_RELABELED_ASSIGNED_ID_WITNESS,
+    queried_authenticated_binding,
+    queried_outer_binding
+  )).
+query attacker(PHASE2_ASSIGNED_ID_BINDING_CANARY).
+
+(* The unchanged outer-identity and authenticated inner-sender gates still reject their respective one-field mutations. *)
+query event(Phase2ResponseCommitted(PHASE2_WRONG_OUTER_IDENTITY_WITNESS)).
+query event(Phase2ResponseCommitted(PHASE2_WRONG_INNER_SENDER_WITNESS)).
+
+(* Only assigned-ID agreement fails: the unchanged outer-identity and inner-sender correspondences still hold. *)
+query binding: bitstring;
+  inj-event(Phase2AcceptedOuterIdentity(binding)) ==>
+  inj-event(Phase2PinnedOuterIdentity(binding)).
+
+query binding: bitstring;
+  inj-event(Phase2AcceptedAssignedPrefix(binding)) ==>
+  inj-event(Phase2AuthenticatedAssignedPrefix(binding)).
+
+query binding: bitstring;
+  inj-event(Phase2AcceptedInnerSender(binding)) ==>
+  inj-event(Phase2PinnedInnerSender(binding)).

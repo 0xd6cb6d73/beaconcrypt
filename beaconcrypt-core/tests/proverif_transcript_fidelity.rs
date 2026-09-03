@@ -15,12 +15,25 @@ use beaconcrypt_core::{
 const INTERFACE: &str = include_str!("../proofs/pro-verif/production-transcript-interface.pvl");
 const CRYPTO_MODEL: &str = include_str!("../proofs/pro-verif/crypto.pvl");
 const ENVIRONMENT_MODEL: &str = include_str!("../proofs/pro-verif/environment.pvl");
+const ACTIVE_QUANTUM_WITNESS: &str = include_str!("../proofs/pro-verif/active-quantum-witness.pvl");
 const EXTRACTION_MODEL: &str = include_str!("../proofs/pro-verif/extraction/lib.pvl");
 const CORE_MAKEFILE: &str = include_str!("../Makefile");
 const FORMAL_WORKFLOW: &str = include_str!("../../.github/workflows/formal-verification.yml");
 const ADAPTER_PQXDH: &str = include_str!("../../beaconcrypt/src/pqxdh.rs");
 const ADAPTER_RATCHET: &str = include_str!("../../beaconcrypt/src/ratchet.rs");
 const ADAPTER_SHARED: &str = include_str!("../../beaconcrypt/src/shared.rs");
+const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
+const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
+const CORE_COMMITMENT: &str = include_str!("../src/commitment.rs");
+const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
+const CORE_RATCHET_CONCRETE: &str = include_str!("../src/ratchet/concrete.rs");
+const LEAN_RATCHET_EFFECT: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetEffect.lean");
+const LEAN_RATCHET_EFFECT_REFINEMENT: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean");
+const CRYPTOFRAME_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/cryptoframe.capnp");
+const PHASE1_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase1.capnp");
+const PHASE2_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase2.capnp");
 
 const FACT_PREFIX: &str = "(* @beaconcrypt-fidelity-v1 ";
 const FACT_SUFFIX: &str = " *)";
@@ -79,6 +92,169 @@ const EXPECTED_FACTS: &[&str] = &[
 	"ctx.sequence_encoding=le64",
 	"ctx.sender_id_encoding=le64",
 	"ctx.label=none",
+	"phase1.init_kex.constructor=signed_init_kex",
+	"phase1.init_kex.field_count=4",
+	"phase1.init_kex.field.0=identityKey@0:encoded_ed25519_identity",
+	"phase1.init_kex.field.1=preKey@1:signed_tagged_x25519_prekey",
+	"phase1.init_kex.field.2=oneTimeKey@2:signed_tagged_x25519_one_time",
+	"phase1.init_kex.field.3=pqKey@3:signed_tagged_mlkem768_public_key",
+	"phase1.signature.primitive=ed25519",
+	"phase1.signature.format=attached(signature||encoded_key)",
+	"phase1.init_kex.beacon_writes=identityKey:identity,preKey:signed_prekey,oneTimeKey:signed_one_time,pqKey:signed_pq",
+	"phase1.init_kex.beacon_signs=preKey:tag_x25519_prekey,oneTimeKey:tag_x25519_one_time,pqKey:tag_mlkem768",
+	"phase1.init_kex.server_reads=identityKey,pqKey,preKey,oneTimeKey",
+	"phase1.init_kex.server.verifies=pqKey:pq_verified,preKey:prekey_verified,oneTimeKey:onetime_verified;identity:remote_id",
+	"phase1.init_kex.server.from_encoded=encoded_identity,prekey_verified,onetime_verified,pq_verified",
+	"phase1.init_kex.server.validates=tag_ed25519,tag_x25519_prekey,tag_x25519_one_time,tag_mlkem768",
+	"phase1.init_kex.symbolic.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq",
+	"phase1.init_kex.symbolic.producers=honest,malicious,active_quantum",
+	"phase1.init_kex.symbolic.consumers=server,malicious_server,active_quantum",
+	"phase1.init_kex.symbolic.validation=identity,prekey,one_time,pq",
+	"phase2.response.constructor=kex_response",
+	"phase2.response.field_count=5",
+	"phase2.response.field.0=identityKey@0:server_identity",
+	"phase2.response.field.1=ephemeralKey@1:server_ephemeral",
+	"phase2.response.field.2=kemCipherText@2:kem_ciphertext",
+	"phase2.response.field.3=appCipherText@3:initial_frame",
+	"phase2.response.field.4=keyId@4:assigned_key_id",
+	"phase2.response.server_writes=candidate.server_identity_public_key,candidate.ephemeral_public_key,candidate.kem_ciphertext,initial_encrypted_frame,candidate.key_id",
+	"phase2.response.beacon_reads=response_server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id",
+	"cryptoframe.schema.constructor=CryptoFrame",
+	"cryptoframe.schema.id=ef858976d7f7863b",
+	"cryptoframe.schema.field_count=3",
+	"cryptoframe.schema.field.0=seq@0:sequence",
+	"cryptoframe.schema.field.1=keyId@1:sender_id",
+	"cryptoframe.schema.field.2=cipherText@2:ciphertext||retained_aead_tag||commitment",
+	"cryptoframe.wire.key_id=sender_kid",
+	"cryptoframe.local.encrypted.key_id=target_kid:not_serialized",
+	"cryptoframe.seal.inputs=key:32,nonce:12,associated_data:153,plaintext",
+	"cryptoframe.seal.detached_outputs=ciphertext,retained_aead_tag:16",
+	"cryptoframe.seal.commitment.output=blake2b512_unkeyed_unlabeled:64",
+	"cryptoframe.seal.commitment.input=existing_ctx_transcript",
+	"cryptoframe.seal.commitment.context=selected_material,associated_data,retained_aead_tag,selected_sequence,sender_kid",
+	"cryptoframe.seal.payload=ciphertext||retained_aead_tag||commitment",
+	"cryptoframe.seal.payload.overhead=80",
+	"cryptoframe.seal.setter_order=cipherText,seq,keyId",
+	"cryptoframe.seal.serialize=TypedBuilder<CryptoFrame>,write_message(buffer)",
+	"cryptoframe.seal.empty_plaintext=caller_rejects_before_ratchet",
+	"cryptoframe.seal.one_use=returned_material,returned_sequence,frame_context,finish",
+	"cryptoframe.open.empty_wire=rejected_before_parse",
+	"cryptoframe.open.parse=capnp_typed_reader<CryptoFrame>",
+	"cryptoframe.open.getter_order=keyId,cipherText,seq",
+	"cryptoframe.open.sender_gate=parsed_sender_kid==expected_sender_kid:before_ratchet",
+	"cryptoframe.open.length_gate=payload_length>80:before_ratchet",
+	"cryptoframe.open.ratchet=begin_receive(parsed_sequence,frame_context)",
+	"cryptoframe.open.one_use=returned_material,returned_sequence,frame_context,finish",
+	"cryptoframe.open.commitment_slice=payload[last64..]",
+	"cryptoframe.open.tag_slice=payload[len-80..len-64]",
+	"cryptoframe.open.ciphertext_slice=payload[..len-80]",
+	"cryptoframe.open.commitment.context=selected_material,associated_data,parsed_retained_aead_tag,selected_sequence,parsed_sender_kid",
+	"cryptoframe.open.commitment.compare=libsodium_memcmp_call",
+	"cryptoframe.open.order=commitment_equality_before_aead_decrypt",
+	"cryptoframe.open.decrypt.input=ciphertext||retained_aead_tag",
+	"cryptoframe.open.decrypt.excludes=commitment",
+	"cryptoframe.open.decrypt.context=selected_material_key,selected_material_nonce,same_associated_data",
+	"cryptoframe.open.result.metadata=parsed_sender_kid,parsed_sequence",
+	"cryptoframe.symbolic.constructor=crypto_frame",
+	"cryptoframe.symbolic.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id",
+	"cryptoframe.symbolic.seal=exact_production_fields",
+	"cryptoframe.symbolic.open=ideal_exact_constructor_rule",
+	"cryptoframe.symbolic.retained_tag=shared_by_aead_and_commitment",
+	"cryptoframe.symbolic.absent=frame_and_seal_arguments:target_id,direction,session,phase,aead_label,ctx_label",
+	"endpoint.server.send.target=peer_key_id",
+	"endpoint.server.send.sender=local_identity_key_id",
+	"endpoint.server.send.associated_data=server_identity,peer_identity",
+	"endpoint.server.send.ratchet=peer_key_id",
+	"endpoint.server.receive.sender_source=parsed_wire_key_id",
+	"endpoint.server.receive.lookup_id.trust=untrusted_before_open",
+	"endpoint.server.receive.peer_lookup=parsed_wire_key_id",
+	"endpoint.server.receive.associated_data=server_identity,selected_peer_identity",
+	"endpoint.server.receive.ratchet=parsed_wire_key_id",
+	"endpoint.server.receive.expected_sender=parsed_wire_key_id",
+	"endpoint.server.receive.acceptance_control=open_returns_some",
+	"endpoint.server.receive.order=parsed_sender,peer_associated_data,peer_ratchet,open,accept",
+	"endpoint.server.established.associated_data=recomputed_server_identity,stored_selected_peer_identity",
+	"endpoint.beacon.send.target=control.server_key_id",
+	"endpoint.beacon.send.sender=assigned_identity_key_id",
+	"endpoint.beacon.send.associated_data=stored_establishment",
+	"endpoint.beacon.send.ratchet=single_established",
+	"endpoint.beacon.receive.expected_sender=control.server_key_id",
+	"endpoint.beacon.receive.associated_data=stored_establishment",
+	"endpoint.beacon.receive.ratchet=single_established",
+	"endpoint.registration.server.initial.target=assigned_remote_key_id",
+	"endpoint.registration.server.initial.sender=candidate.server_identity_key_id",
+	"endpoint.registration.server.initial.associated_data=candidate.associated_data",
+	"endpoint.registration.server.initial.ratchet=candidate_initial",
+	"endpoint.registration.server.initial.returned_target_metadata=assigned_remote_key_id",
+	"endpoint.registration.server.commit.peer_map=assigned_remote_key_id,peer_identity,candidate_ratchet_after_initial_send",
+	"endpoint.registration.server.order=initial_seal,serialize_response,commit_candidate,insert_peer,publish_control,return",
+	"endpoint.registration.beacon.initial.expected_sender=candidate.server_key_id",
+	"endpoint.registration.beacon.initial.associated_data=candidate.associated_data",
+	"endpoint.registration.beacon.initial.ratchet=candidate_initial",
+	"endpoint.registration.beacon.commit.associated_data=same_candidate_value",
+	"endpoint.registration.beacon.commit.ratchet=candidate_ratchet_after_successful_initial_open",
+	"endpoint.registration.beacon.commit.local_sender=authenticated_assigned_key_id",
+	"endpoint.registration.beacon.order=initial_open,key_id_binding_authentication,pinned_server_id,pinned_server_identity,assign_local_id,store_established",
+	"endpoint.symbolic.main_honest.server_to_beacon.sender=SERVER_KEY_ID",
+	"endpoint.symbolic.main_honest.server_to_beacon.event_receiver=assigned_key_id",
+	"endpoint.symbolic.main_honest.beacon_to_server.sender=assigned_key_id",
+	"endpoint.symbolic.main_honest.beacon_to_server.event_receiver=SERVER_KEY_ID",
+	"endpoint.symbolic.main_honest.associated_data=server_identity,beacon_identity",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.server_open.count=4",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.server_open.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,initial_frame;server_material_3,associated_data,next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,third_frame;server_material_2,associated_data,next_sequence(first_sequence()),SERVER_KEY_ID,second_frame;ratchet_material(ratchet_next(server_chain_3)),associated_data,next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,fourth_frame",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.beacon_seal.count=1",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.beacon_seal.calls=beacon_material_1,associated_data,first_sequence(),assigned_key_id,beacon_record_secret",
+	"endpoint.symbolic.main_honest.fixture.server.server_seal.count=4",
+	"endpoint.symbolic.main_honest.fixture.server.server_seal.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,registration_payload(binding,initial_secret);server_material_2,associated_data,next_sequence(first_sequence()),SERVER_KEY_ID,cached_secret;server_material_3,associated_data,next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,advance_secret;server_material_4,associated_data,next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,future_secret",
+	"endpoint.symbolic.main_honest.fixture.server.beacon_open.count=1",
+	"endpoint.symbolic.main_honest.fixture.server.beacon_open.calls=beacon_material_1,associated_data,first_sequence(),assigned_key_id,beacon_frame",
+	"endpoint.symbolic.main_honest.fixture.events.fields=session,direction,sequence,sender,event_receiver,plaintext",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.received_events.calls=session,server_to_beacon(),first_sequence(),SERVER_KEY_ID,assigned_key_id,initial_plaintext;session,server_to_beacon(),next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,assigned_key_id,third_plaintext;session,server_to_beacon(),next_sequence(first_sequence()),SERVER_KEY_ID,assigned_key_id,second_plaintext;session,server_to_beacon(),next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,assigned_key_id,fourth_plaintext",
+	"endpoint.symbolic.main_honest.fixture.honest_beacon.sent_events.calls=session,beacon_to_server(),first_sequence(),assigned_key_id,SERVER_KEY_ID,beacon_record_secret",
+	"endpoint.symbolic.main_honest.fixture.server.sent_events.calls=session,server_to_beacon(),first_sequence(),SERVER_KEY_ID,assigned_key_id,initial_secret;session,server_to_beacon(),next_sequence(first_sequence()),SERVER_KEY_ID,assigned_key_id,cached_secret;session,server_to_beacon(),next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,assigned_key_id,advance_secret;session,server_to_beacon(),next_sequence(next_sequence(next_sequence(first_sequence()))),SERVER_KEY_ID,assigned_key_id,future_secret",
+	"endpoint.symbolic.main_honest.fixture.server.received_events.calls=session,beacon_to_server(),first_sequence(),assigned_key_id,SERVER_KEY_ID,beacon_plaintext",
+	"endpoint.symbolic.malicious_registration.initial.sender=SERVER_KEY_ID",
+	"endpoint.symbolic.malicious_registration.associated_data=server_identity,beacon_identity",
+	"endpoint.symbolic.malicious_registration.fixture.initial_seal.count=1",
+	"endpoint.symbolic.malicious_registration.fixture.initial_seal.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,registration_payload(binding,MALICIOUS_TASK_SECRET)",
+	"ratchet.driver.kind=synchronous_affine_interpreter",
+	"ratchet.driver.slot.take=Option::take:once_per_encrypt_or_decrypt_helper_after_prechecks",
+	"ratchet.driver.slot.put=assert_empty_then_store_returned_kernel",
+	"ratchet.driver.kdf.reply=ratchet_hkdf(SymmetricRatchetKdfRequest)->RatchetKdfResponse",
+	"ratchet.driver.send.precheck=empty_input_rejected_before_take",
+	"ratchet.driver.send.context=SealFrameContext(bytes,target_kid,sender_kid,associated_data)",
+	"ratchet.driver.send.take=ratchet.refined.take():once",
+	"ratchet.driver.send.begin=begin_send(kernel,same_context):once",
+	"ratchet.driver.send.exhausted=put(returned_kernel),return_none",
+	"ratchet.driver.send.kdf.request=ratchet_hkdf(same_pending.request()):once",
+	"ratchet.driver.send.kdf.resume=same_pending.resume(same_response)",
+	"ratchet.driver.send.seal=seal_frame(seal.material(),seal.sequence(),seal.context())",
+	"ratchet.driver.send.finish=seal.finish(sealed)",
+	"ratchet.driver.send.put=finish_returned_kernel_before_returned_sealed",
+	"ratchet.driver.send.failure=seal.finish(None):advanced_kernel_then_slot_put",
+	"ratchet.driver.send.cancel=not_invoked_in_encrypt_helper",
+	"ratchet.driver.receive.prechecks=empty,typed_parse,sender_match,payload_length:before_take",
+	"ratchet.driver.receive.context=OpenFrameContext(ciphertext,associated_data,parsed_sender)",
+	"ratchet.driver.receive.take=ratchet.refined.take():once",
+	"ratchet.driver.receive.begin=begin_receive(kernel,parsed_sequence,same_context):once",
+	"ratchet.driver.receive.loop=effect_match_without_fixed_iteration_count",
+	"ratchet.driver.receive.rejected=put(returned_kernel),return_none",
+	"ratchet.driver.receive.kdf.request=ratchet_hkdf(same_pending.request()):per_arm",
+	"ratchet.driver.receive.kdf.resume=same_pending.resume(same_response)",
+	"ratchet.driver.receive.kdf.slot_put=none_in_ReceiveKdfRequested_arm",
+	"ratchet.driver.receive.no_material=open.reject(),put(returned_kernel),return_none",
+	"ratchet.driver.receive.open=open_frame(material,open.sequence(),open.context())",
+	"ratchet.driver.receive.finish=open.finish(opened)",
+	"ratchet.driver.receive.put=finish_returned_kernel_before_opened_question",
+	"ratchet.driver.receive.success=plaintext,parsed_sender,parsed_sequence",
+	"ratchet.driver.receive.failure=open.finish(None):entry_kernel_then_slot_put",
+	"ratchet.driver.receive.cancel=not_invoked_in_decrypt_helper",
+	"ratchet.driver.core.phase_api=SendStart,SendKdf,SendSeal,ReceiveEffect,ReceiveKdf,ReceiveOpen",
+	"ratchet.driver.core.receive.publication=staged_until_ReceiveOpen.finish(Some)",
+	"ratchet.driver.lean.structural=begin_send_nonexhausted_exact,begin_send_exhausted_restores_entry,SendKdf.request_exact,SendKdf.resume_exact,SendSeal.finish_returns_interpreter_result,begin_receive_rejected_plan_restores_entry,begin_receive_cached_exact,begin_receive_future_request_exact,ReceiveKdf.request_exact,ReceiveOpen.reject_exact,ReceiveOpen.context_exact,ReceiveOpen.future_sequence_exact,ReceiveOpen.future_material_exact,ReceiveOpen.finish_failure_restores_entry,ReceiveOpen.finish_future_success_publishes_same_plaintext,ReceiveOpen.finish_cached_success_publishes_same_plaintext,ReceiveFailureTrace.result_eq_entry",
+	"ratchet.driver.lean.refinement_anchors=conditional:ResponseRefines,begin_send_refines,SendKdf.resume_refines,SendSeal.finish_refines_ideal_send,ReceiveOpen.failure_preserves_refinement,ReceiveFailureTrace.preserves_refinement,OpenReplyRefines,begin_receive_cached_refines,CachedOpenRefines.finish_success_matches_ideal,CachedOpenRefines.finish_success_refines_of_publication",
+	"ratchet.driver.proverif.abstraction=atomic_seal_frame,ideal_exact_open_frame",
+	"ratchet.driver.bridge=text_checker_only:not_semantic_Rust_to_Lean_or_ProVerif_refinement",
 	"agreement.constructor=establishment_transcript",
 	"agreement.field_count=18",
 	"agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin",
@@ -89,7 +265,19 @@ struct Snapshot {
 	interface: String,
 	crypto: String,
 	environment: String,
+	active_quantum_witness: String,
 	makefile: String,
+	adapter_ratchet: String,
+	core_commitment: String,
+	core_pqxdh: String,
+	core_ratchet_concrete: String,
+	lean_ratchet_effect: String,
+	lean_ratchet_effect_refinement: String,
+	cryptoframe_schema: String,
+	phase1_schema: String,
+	phase2_schema: String,
+	adapter_server: String,
+	adapter_beacon: String,
 }
 
 impl Snapshot {
@@ -98,7 +286,19 @@ impl Snapshot {
 			interface: INTERFACE.to_owned(),
 			crypto: CRYPTO_MODEL.to_owned(),
 			environment: ENVIRONMENT_MODEL.to_owned(),
+			active_quantum_witness: ACTIVE_QUANTUM_WITNESS.to_owned(),
 			makefile: CORE_MAKEFILE.to_owned(),
+			adapter_ratchet: ADAPTER_RATCHET.to_owned(),
+			core_commitment: CORE_COMMITMENT.to_owned(),
+			core_pqxdh: CORE_PQXDH.to_owned(),
+			core_ratchet_concrete: CORE_RATCHET_CONCRETE.to_owned(),
+			lean_ratchet_effect: LEAN_RATCHET_EFFECT.to_owned(),
+			lean_ratchet_effect_refinement: LEAN_RATCHET_EFFECT_REFINEMENT.to_owned(),
+			cryptoframe_schema: CRYPTOFRAME_SCHEMA.to_owned(),
+			phase1_schema: PHASE1_SCHEMA.to_owned(),
+			phase2_schema: PHASE2_SCHEMA.to_owned(),
+			adapter_server: ADAPTER_SERVER.to_owned(),
+			adapter_beacon: ADAPTER_BEACON.to_owned(),
 		}
 	}
 }
@@ -200,6 +400,14 @@ fn uncommented_rust(source: &str) -> Result<String, String> {
 		.join("\n"))
 }
 
+fn uncommented_capnp(source: &str) -> String {
+	source
+		.lines()
+		.map(|line| line.split_once('#').map_or(line, |(code, _)| code))
+		.collect::<Vec<_>>()
+		.join("\n")
+}
+
 fn compact(source: &str) -> String {
 	source
 		.chars()
@@ -281,13 +489,43 @@ fn all_arguments(source: &str, function: &str) -> Result<Vec<Vec<String>>, Strin
 fn rust_body(source: &str, name: &str) -> Result<String, String> {
 	let source = uncommented_rust(source)?;
 	let marker = format!("fn {name}");
-	let Some(start) = source.find(&marker) else {
-		return Err(format!("missing Rust function: {name}"));
+	let mut search_start = 0;
+	let open = loop {
+		let Some(relative_start) = source[search_start..].find(&marker) else {
+			return Err(format!("missing Rust function body: {name}"));
+		};
+		let start = search_start + relative_start;
+		let tail = &source[start..];
+		let mut parentheses = 0usize;
+		let mut brackets = 0usize;
+		let mut relative_open = None;
+		let mut declaration = false;
+		for (offset, byte) in tail.bytes().enumerate() {
+			match byte {
+				b'(' => parentheses += 1,
+				b')' => parentheses = parentheses.saturating_sub(1),
+				b'[' => brackets += 1,
+				b']' => brackets = brackets.saturating_sub(1),
+				b'{' if parentheses == 0 && brackets == 0 => {
+					relative_open = Some(offset);
+					break;
+				}
+				b';' if parentheses == 0 && brackets == 0 => {
+					declaration = true;
+					break;
+				}
+				_ => {}
+			}
+		}
+		if let Some(relative_open) = relative_open {
+			break start + relative_open;
+		}
+		if declaration {
+			search_start = start + marker.len();
+			continue;
+		}
+		return Err(format!("missing body for Rust function: {name}"));
 	};
-	let open = start
-		+ source[start..]
-			.find('{')
-			.ok_or_else(|| format!("missing body for Rust function: {name}"))?;
 	let bytes = source.as_bytes();
 	let mut nesting = 1usize;
 	let mut index = open + 1;
@@ -307,10 +545,1478 @@ fn rust_body(source: &str, name: &str) -> Result<String, String> {
 	Err(format!("unterminated Rust function: {name}"))
 }
 
+fn require_one_call(
+	source: &str,
+	function: &str,
+	expected: &[&str],
+	label: &str,
+) -> Result<(), String> {
+	let calls = all_arguments(source, function)?;
+	let expected = expected
+		.iter()
+		.map(|argument| (*argument).to_owned())
+		.collect::<Vec<_>>();
+	if calls == [expected.clone()] {
+		Ok(())
+	} else {
+		Err(format!(
+			"{label} changed: expected one {function} call with {expected:?}, found {calls:?}"
+		))
+	}
+}
+
+fn require_once(source: &str, wanted: &str, label: &str) -> Result<(), String> {
+	let occurrences = count(source, wanted);
+	if occurrences == 1 {
+		Ok(())
+	} else {
+		Err(format!(
+			"{label} changed: expected one exact occurrence of {wanted}, found {occurrences}"
+		))
+	}
+}
+
+fn require_ordered_once(source: &str, wanted: &[&str], label: &str) -> Result<(), String> {
+	let mut cursor = 0usize;
+	for item in wanted {
+		let occurrences = count(source, item);
+		if occurrences != 1 {
+			return Err(format!(
+				"{label} changed: expected one exact occurrence of {item}, found {occurrences}"
+			));
+		}
+		let relative = source[cursor..]
+			.find(item)
+			.ok_or_else(|| format!("{label} changed: {item} is out of order"))?;
+		cursor += relative + item.len();
+	}
+	Ok(())
+}
+
+fn require_ordered(source: &str, wanted: &[&str], label: &str) -> Result<(), String> {
+	let mut cursor = 0usize;
+	for item in wanted {
+		let relative = source[cursor..]
+			.find(item)
+			.ok_or_else(|| format!("{label} changed: {item} is missing or out of order"))?;
+		cursor += relative + item.len();
+	}
+	Ok(())
+}
+
+fn section_between<'a>(
+	source: &'a str,
+	start_marker: &str,
+	end_marker: &str,
+	label: &str,
+) -> Result<&'a str, String> {
+	let start = source
+		.find(start_marker)
+		.ok_or_else(|| format!("missing {label} start: {start_marker}"))?;
+	let relative_end = source[start + start_marker.len()..]
+		.find(end_marker)
+		.ok_or_else(|| format!("missing {label} end: {end_marker}"))?;
+	let end = start + start_marker.len() + relative_end;
+	Ok(&source[start..end])
+}
+
+fn require_exact_calls(
+	source: &str,
+	function: &str,
+	expected: &[Vec<String>],
+	label: &str,
+) -> Result<(), String> {
+	let calls = all_arguments(source, function)?;
+	if calls != expected {
+		return Err(format!("{label} changed: {calls:?}"));
+	}
+	Ok(())
+}
+
+fn validate_phase1_source(snapshot: &Snapshot) -> Result<(), String> {
+	let schema = compact(&uncommented_capnp(&snapshot.phase1_schema));
+	let expected_schema = "@0xd840dedb1017061a;structInitKex{identityKey@0:Data;preKey@1:Data;oneTimeKey@2:Data;pqKey@3:Data;}";
+	if schema != expected_schema {
+		return Err(format!(
+			"Phase-1 InitKex schema changed: expected {expected_schema}, found {schema}"
+		));
+	}
+
+	let core_start = rust_body(&snapshot.core_pqxdh, "beacon_start")?;
+	for (wanted, label) in [
+		(
+			"identity_key:tag_sign_key(inputs.identity_public_key)",
+			"Phase-1 core identity encoding",
+		),
+		(
+			"prekey:tag_x25519_key(KEY_ROLE_PREKEY,inputs.prekey_public_key)",
+			"Phase-1 core prekey encoding",
+		),
+		(
+			"one_time_key:tag_x25519_key(KEY_ROLE_ONE_TIME,coins.one_time_public_key)",
+			"Phase-1 core one-time encoding",
+		),
+		(
+			"pq_key:tag_mlkem768_key(inputs.pq_public_key)",
+			"Phase-1 core ML-KEM encoding",
+		),
+	] {
+		require_once(&core_start, wanted, label)?;
+	}
+	require_ordered_once(
+		&core_start,
+		&[
+			"identity_key:tag_sign_key(inputs.identity_public_key)",
+			"prekey:tag_x25519_key(KEY_ROLE_PREKEY,inputs.prekey_public_key)",
+			"one_time_key:tag_x25519_key(KEY_ROLE_ONE_TIME,coins.one_time_public_key)",
+			"pq_key:tag_mlkem768_key(inputs.pq_public_key)",
+		],
+		"Phase-1 core InitKex field order",
+	)?;
+
+	let beacon = rust_body(&snapshot.adapter_beacon, "get_registration_bundle")?;
+	for (function, expected, label) in [
+		(
+			"bundle.set_identity_key",
+			"started.message.identity_key()",
+			"Phase-1 Beacon identity setter mapping",
+		),
+		(
+			"bundle.set_pre_key",
+			"&prekey_sig",
+			"Phase-1 Beacon prekey setter mapping",
+		),
+		(
+			"bundle.set_one_time_key",
+			"&onetime_sig",
+			"Phase-1 Beacon one-time setter mapping",
+		),
+		(
+			"bundle.set_pq_key",
+			"&pq_sig",
+			"Phase-1 Beacon ML-KEM setter mapping",
+		),
+	] {
+		require_one_call(&beacon, function, &[expected], label)?;
+	}
+	let sign_calls = all_arguments(&beacon, "crypto_sign::sign")?;
+	let expected_sign_calls = [
+		["started.message.prekey()", "self.identity_sk()"],
+		["started.message.one_time_key()", "self.identity_sk()"],
+		["started.message.pq_key()", "self.identity_sk()"],
+	]
+	.map(|arguments| arguments.map(str::to_owned).to_vec());
+	if sign_calls != expected_sign_calls {
+		return Err(format!(
+			"Phase-1 Beacon attached-signature inputs changed: {sign_calls:?}"
+		));
+	}
+	require_ordered_once(
+		&beacon,
+		&[
+			"bundle.set_identity_key(started.message.identity_key())",
+			"crypto_sign::sign(started.message.prekey(),self.identity_sk())",
+			"bundle.set_pre_key(&prekey_sig)",
+			"crypto_sign::sign(started.message.one_time_key(),self.identity_sk())",
+			"bundle.set_one_time_key(&onetime_sig)",
+			"crypto_sign::sign(started.message.pq_key(),self.identity_sk())",
+			"bundle.set_pq_key(&pq_sig)",
+		],
+		"Phase-1 Beacon serialization order",
+	)?;
+
+	let server = rust_body(&snapshot.adapter_server, "get_shared_secret")?;
+	for (wanted, label) in [
+		(
+			"letencoded_identity:[u8;verified_pqxdh::ENCODED_SIGN_PUBLIC_KEY_SIZE]=registration.get_identity_key().ok()?.try_into().ok()?;",
+			"Phase-1 Server identity consumer",
+		),
+		(
+			"ifencoded_identity[0]!=verified_pqxdh::SIGN_TYPE_ED25519{returnNone;}",
+			"Phase-1 Server Ed25519 identity tag gate",
+		),
+		(
+			"letremote_id=crypto_sign::PublicKey::from_bytes(&encoded_identity[1..]).ok()?;",
+			"Phase-1 Server identity decoder",
+		),
+		(
+			"letpq_verified=crypto_sign::verify(registration.get_pq_key().ok()?,&remote_id)?;",
+			"Phase-1 Server ML-KEM signature consumer",
+		),
+		(
+			"letprekey_verified=crypto_sign::verify(registration.get_pre_key().ok()?,&remote_id)?;",
+			"Phase-1 Server prekey signature consumer",
+		),
+		(
+			"letonetime_verified=crypto_sign::verify(registration.get_one_time_key().ok()?,&remote_id)?;",
+			"Phase-1 Server one-time signature consumer",
+		),
+		(
+			"letverified_registration=verified_pqxdh::validate_init_kex(init_kex).ok()?;",
+			"Phase-1 Server typed tag validation",
+		),
+	] {
+		require_once(&server, wanted, label)?;
+	}
+	require_one_call(
+		&server,
+		"verified_pqxdh::InitKex::from_encoded",
+		&[
+			"encoded_identity",
+			"prekey_verified.as_slice().try_into().ok()?",
+			"onetime_verified.as_slice().try_into().ok()?",
+			"pq_verified.as_slice().try_into().ok()?",
+			"",
+		],
+		"Phase-1 Server from_encoded mapping",
+	)?;
+	require_ordered_once(
+		&server,
+		&[
+			"registration.get_identity_key()",
+			"encoded_identity[0]!=verified_pqxdh::SIGN_TYPE_ED25519",
+			"crypto_sign::PublicKey::from_bytes(&encoded_identity[1..])",
+			"registration.get_pq_key()",
+			"registration.get_pre_key()",
+			"registration.get_one_time_key()",
+			"verified_pqxdh::InitKex::from_encoded(",
+			"verified_pqxdh::validate_init_kex(init_kex)",
+		],
+		"Phase-1 Server source evaluation order",
+	)?;
+
+	let core_validation = rust_body(&snapshot.core_pqxdh, "validate_init_kex")?;
+	for (wanted, label) in [
+		(
+			"untag_sign_key(message.identity_key)",
+			"Phase-1 core Ed25519 tag validation",
+		),
+		(
+			"untag_x25519_key(message.prekey,KEY_ROLE_PREKEY)",
+			"Phase-1 core X25519 prekey role validation",
+		),
+		(
+			"untag_x25519_key(message.one_time_key,KEY_ROLE_ONE_TIME)",
+			"Phase-1 core X25519 one-time role validation",
+		),
+		(
+			"untag_mlkem768_key(message.pq_key)",
+			"Phase-1 core ML-KEM tag validation",
+		),
+	] {
+		require_once(&core_validation, wanted, label)?;
+	}
+	require_ordered_once(
+		&core_validation,
+		&[
+			"untag_sign_key(message.identity_key)",
+			"untag_x25519_key(message.prekey,KEY_ROLE_PREKEY)",
+			"untag_x25519_key(message.one_time_key,KEY_ROLE_ONE_TIME)",
+			"untag_mlkem768_key(message.pq_key)",
+		],
+		"Phase-1 core tag-validation order",
+	)?;
+	Ok(())
+}
+
+fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
+	let schema = compact(&uncommented_capnp(&snapshot.phase2_schema));
+	require(
+		&schema,
+		"structKexResponse{identityKey@0:Data;ephemeralKey@1:Data;kemCipherText@2:Data;appCipherText@3:Data;keyId@4:UInt64;}",
+		"Phase-2 response schema",
+	)?;
+
+	let server = rust_body(&snapshot.adapter_server, "build_registration_response")?;
+	require(
+		&server,
+		"letremote_kid=candidate.key_id();",
+		"Phase-2 assigned key-ID source",
+	)?;
+	for (function, expected, label) in [
+		(
+			"bundle.set_identity_key",
+			"candidate.server_identity_public_key()",
+			"Phase-2 server identity mapping",
+		),
+		(
+			"bundle.set_ephemeral_key",
+			"candidate.ephemeral_public_key()",
+			"Phase-2 server ephemeral mapping",
+		),
+		(
+			"bundle.set_kem_cipher_text",
+			"candidate.kem_ciphertext()",
+			"Phase-2 server KEM-ciphertext mapping",
+		),
+		(
+			"bundle.set_app_cipher_text",
+			"&encrypted.ciphertext",
+			"Phase-2 server initial-frame mapping",
+		),
+		(
+			"bundle.set_key_id",
+			"remote_kid",
+			"Phase-2 server assigned-ID mapping",
+		),
+	] {
+		require_one_call(&server, function, &[expected], label)?;
+	}
+
+	let beacon = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
+	for (wanted, label) in [
+		(
+			"crypto_sign::PublicKey::from_bytes(response.get_identity_key().ok()?).ok()?",
+			"Phase-2 beacon identity mapping",
+		),
+		(
+			"crypto_kx::PublicKey::from_bytes(response.get_ephemeral_key().ok()?).ok()?",
+			"Phase-2 beacon ephemeral mapping",
+		),
+		(
+			"crypto_kem::mlkem768::Ciphertext::from_bytes(response.get_kem_cipher_text().ok()?).ok()?",
+			"Phase-2 beacon KEM-ciphertext mapping",
+		),
+		(
+			"decrypt_message_with_ratchet(response.get_app_cipher_text().ok()?,candidate.server_key_id(),&associated_data,&mutratchet,)?",
+			"Phase-2 beacon initial-frame mapping",
+		),
+		(
+			"assigned_key_id:response.get_key_id(),",
+			"Phase-2 beacon assigned-ID mapping",
+		),
+	] {
+		require_once(&beacon, wanted, label)?;
+	}
+	Ok(())
+}
+
+fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
+	let schema = compact(&uncommented_capnp(&snapshot.cryptoframe_schema));
+	let expected_schema =
+		"@0xef858976d7f7863b;structCryptoFrame{seq@0:UInt64;keyId@1:UInt64;cipherText@2:Data;}";
+	if schema != expected_schema {
+		return Err(format!(
+			"CryptoFrame schema changed: expected {expected_schema}, found {schema}"
+		));
+	}
+
+	let ratchet = compact(&uncommented_rust(&snapshot.adapter_ratchet)?);
+	for (wanted, label) in [
+		(
+			"pubconstAEAD_KEY_LEN:usize=32;",
+			"CryptoFrame AEAD key length",
+		),
+		(
+			"pubconstAEAD_NONCE_LEN:usize=12;",
+			"CryptoFrame AEAD nonce length",
+		),
+		(
+			"pubconstAEAD_TAG_LEN:usize=16;",
+			"CryptoFrame AEAD tag length",
+		),
+		(
+			"pubconstCOMMITMENT_SIZE:usize=64;",
+			"CryptoFrame commitment length",
+		),
+		(
+			"pubconstMESSAGE_OVERHEAD:usize=COMMITMENT_SIZE+AEAD_TAG_LEN;",
+			"CryptoFrame payload overhead",
+		),
+	] {
+		require_once(&ratchet, wanted, label)?;
+	}
+
+	let seal = rust_body(&snapshot.adapter_ratchet, "seal_frame")?;
+	for (wanted, label) in [
+		(
+			"letkey:AeadKey=(*material.key().as_bytes()).into();",
+			"CryptoFrame seal selected key",
+		),
+		(
+			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into();",
+			"CryptoFrame seal selected nonce",
+		),
+	] {
+		require_once(&seal, wanted, label)?;
+	}
+	require_one_call(
+		&seal,
+		"crypto_aead::chacha20poly1305_ietf::encrypt_detached",
+		&[
+			"context.bytes",
+			"Some(context.associated_data.as_slice())",
+			"&nonce",
+			"&key",
+			"",
+		],
+		"CryptoFrame detached AEAD seal",
+	)?;
+	require_one_call(
+		&seal,
+		"build_commitment",
+		&[
+			"material",
+			"context.associated_data.as_slice()",
+			"tag.as_slice()",
+			"key_seq",
+			"context.sender_kid",
+			"",
+		],
+		"CryptoFrame seal commitment mapping",
+	)?;
+	require_ordered_once(
+		&seal,
+		&[
+			"plaintext.append(&muttag)",
+			"plaintext.append(&mutcommitment)",
+		],
+		"CryptoFrame seal payload order",
+	)?;
+	for (function, expected, label) in [
+		(
+			"builder.set_cipher_text",
+			"&plaintext",
+			"CryptoFrame payload setter mapping",
+		),
+		(
+			"builder.set_seq",
+			"key_seq",
+			"CryptoFrame sequence setter mapping",
+		),
+		(
+			"builder.set_key_id",
+			"context.sender_kid",
+			"CryptoFrame sender-ID setter mapping",
+		),
+	] {
+		require_one_call(&seal, function, &[expected], label)?;
+	}
+	require_ordered_once(
+		&seal,
+		&[
+			"letmutt_builder=TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default()",
+			"letmutbuilder:cryptoframe_capnp::crypto_frame::Builder<'_>=t_builder.init_root()",
+			"builder.set_cipher_text(&plaintext)",
+			"builder.set_seq(key_seq)",
+			"builder.set_key_id(context.sender_kid)",
+			"letmutbuffer=vec![]",
+			"capnp::serialize::write_message(&mutbuffer,t_builder.borrow_inner()).ok()?",
+		],
+		"CryptoFrame builder serialization order",
+	)?;
+	require_once(
+		&seal,
+		"Some(Encrypted{ciphertext:buffer,key_id:context.target_kid,seq:key_seq,})",
+		"CryptoFrame local target metadata",
+	)?;
+	forbid(
+		&seal,
+		"builder.set_key_id(context.target_kid)",
+		"serialized local target ID",
+	)?;
+
+	let encrypt = rust_body(&snapshot.adapter_ratchet, "encrypt_message_with_ratchet")?;
+	require_once(
+		&encrypt,
+		"ifbytes.is_empty(){returnNone;}",
+		"CryptoFrame empty-plaintext rejection",
+	)?;
+	require_once(
+		&encrypt,
+		"letcontext=SealFrameContext{bytes,target_kid,sender_kid,associated_data,};",
+		"CryptoFrame seal context mapping",
+	)?;
+	require_once(
+		&encrypt,
+		"letsealed=seal_frame(seal.material(),seal.sequence(),seal.context());",
+		"CryptoFrame selected send material and sequence",
+	)?;
+	require_once(
+		&encrypt,
+		"let(kernel,sealed)=seal.finish(sealed);",
+		"CryptoFrame one-use send completion",
+	)?;
+	require_ordered_once(
+		&encrypt,
+		&[
+			"ifbytes.is_empty()",
+			"verified_ratchet::begin_send(kernel,context)",
+			"seal_frame(seal.material(),seal.sequence(),seal.context())",
+			"seal.finish(sealed)",
+		],
+		"CryptoFrame empty-input and send ordering",
+	)?;
+
+	let open = rust_body(&snapshot.adapter_ratchet, "open_frame")?;
+	require_once(
+		&open,
+		"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
+		"CryptoFrame open length gate",
+	)?;
+	for (wanted, label) in [
+		(
+			"letkey:AeadKey=(*material.key().as_bytes()).into();",
+			"CryptoFrame open selected key",
+		),
+		(
+			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into();",
+			"CryptoFrame open selected nonce",
+		),
+	] {
+		require_once(&open, wanted, label)?;
+	}
+	require_one_call(
+		&open,
+		"build_commitment",
+		&[
+			"material",
+			"context.associated_data.as_slice()",
+			"&context.ciphertext[ct_len-COMMITMENT_SIZE-AEAD_TAG_LEN..ct_len-COMMITMENT_SIZE]",
+			"key_seq",
+			"context.sender_kid",
+			"",
+		],
+		"CryptoFrame open commitment mapping",
+	)?;
+	require_once(
+		&open,
+		"if!memcmp(&commitment,&context.ciphertext[ct_len-COMMITMENT_SIZE..]){returnNone;}",
+		"CryptoFrame libsodium memcmp commitment comparison",
+	)?;
+	require_one_call(
+		&open,
+		"crypto_aead::chacha20poly1305_ietf::decrypt",
+		&[
+			"&context.ciphertext[..ct_len-COMMITMENT_SIZE]",
+			"Some(context.associated_data.as_slice())",
+			"&nonce",
+			"&key",
+			"",
+		],
+		"CryptoFrame C-and-tag AEAD open",
+	)?;
+	require_ordered_once(
+		&open,
+		&[
+			"letcommitment=build_commitment(",
+			"memcmp(&commitment,&context.ciphertext[ct_len-COMMITMENT_SIZE..])",
+			"letkey:AeadKey=(*material.key().as_bytes()).into()",
+			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into()",
+			"crypto_aead::chacha20poly1305_ietf::decrypt(",
+		],
+		"CryptoFrame commitment-before-AEAD order",
+	)?;
+
+	let decrypt = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	for (wanted, label) in [
+		(
+			"ifdata.is_empty(){returnNone;}",
+			"CryptoFrame empty-wire rejection",
+		),
+		(
+			"letreader=capnp::serialize::read_message(data,ReaderOptions::new()).ok()?;",
+			"CryptoFrame Cap'n Proto parse",
+		),
+		(
+			"lettyped_reader=TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader);",
+			"CryptoFrame typed reader",
+		),
+		(
+			"letframe=typed_reader.get().ok()?;",
+			"CryptoFrame typed root",
+		),
+		("letkid=frame.get_key_id();", "CryptoFrame parsed sender ID"),
+		(
+			"ifkid!=expected_sender_kid{returnNone;}",
+			"CryptoFrame expected-sender gate",
+		),
+		(
+			"letciphertext=frame.get_cipher_text().ok()?;",
+			"CryptoFrame payload getter",
+		),
+		(
+			"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
+			"CryptoFrame pre-ratchet length gate",
+		),
+		(
+			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,};",
+			"CryptoFrame open context mapping",
+		),
+		("letkey_seq=frame.get_seq();", "CryptoFrame parsed sequence"),
+		(
+			"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);",
+			"CryptoFrame parsed-sequence ratchet selection",
+		),
+		(
+			"letopened=open_frame(material,open.sequence(),open.context());",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"let(kernel,opened)=open.finish(opened);",
+			"CryptoFrame one-use receive completion",
+		),
+	] {
+		require_once(&decrypt, wanted, label)?;
+	}
+	require_ordered_once(
+		&decrypt,
+		&[
+			"ifdata.is_empty()",
+			"capnp::serialize::read_message(data,ReaderOptions::new())",
+			"letkid=frame.get_key_id()",
+			"ifkid!=expected_sender_kid",
+			"letciphertext=frame.get_cipher_text().ok()?",
+			"ifct_len<=MESSAGE_OVERHEAD",
+			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,}",
+			"letkey_seq=frame.get_seq()",
+			"letkernel=ratchet.refined.take()",
+			"verified_ratchet::begin_receive(kernel,key_seq,context)",
+			"verified_ratchet::ReceiveEffect::ReceiveOpenRequested",
+			"open.material()",
+			"open_frame(material,open.sequence(),open.context())",
+			"open.finish(opened)",
+		],
+		"CryptoFrame parser and gate evaluation order",
+	)?;
+	require_once(
+		&decrypt,
+		"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
+		"CryptoFrame returned parsed metadata",
+	)?;
+
+	let adapter_commitment = rust_body(&snapshot.adapter_ratchet, "build_commitment")?;
+	for (wanted, label) in [
+		(
+			"letkey=material.key().as_bytes();",
+			"CryptoFrame commitment selected key",
+		),
+		(
+			"letnonce=material.nonce().as_bytes();",
+			"CryptoFrame commitment selected nonce",
+		),
+		(
+			"letad=ad.try_into().ok()?;",
+			"CryptoFrame commitment fixed-width AD",
+		),
+		(
+			"lettag=tag.try_into().ok()?;",
+			"CryptoFrame commitment fixed-width retained tag",
+		),
+	] {
+		require_once(&adapter_commitment, wanted, label)?;
+	}
+	require_one_call(
+		&adapter_commitment,
+		"build_commitment_transcript",
+		&["key", "nonce", "ad", "tag", "seq", "kid"],
+		"CryptoFrame adapter-to-core commitment mapping",
+	)?;
+	require_one_call(
+		&adapter_commitment,
+		"crypto_generichash::generichash",
+		&["input.as_bytes()", "None", "COMMITMENT_SIZE"],
+		"CryptoFrame unkeyed commitment hash",
+	)?;
+
+	let core_source = compact(&uncommented_rust(&snapshot.core_commitment)?);
+	for (wanted, label) in [
+		(
+			"pubconstAEAD_KEY_SIZE:usize=32;",
+			"CryptoFrame core key size",
+		),
+		(
+			"pubconstAEAD_NONCE_SIZE:usize=12;",
+			"CryptoFrame core nonce size",
+		),
+		(
+			"pubconstASSOCIATED_DATA_SIZE:usize=crate::constants::ASSOCIATED_DATA_SIZE;",
+			"CryptoFrame core associated-data size source",
+		),
+		(
+			"pubconstAEAD_TAG_SIZE:usize=16;",
+			"CryptoFrame core tag size",
+		),
+		(
+			"pubconstENCODED_U64_SIZE:usize=8;",
+			"CryptoFrame core integer size",
+		),
+		(
+			"pubconstCOMMITMENT_TRANSCRIPT_SIZE:usize=AEAD_KEY_SIZE+AEAD_NONCE_SIZE+ASSOCIATED_DATA_SIZE+AEAD_TAG_SIZE+(2*ENCODED_U64_SIZE);",
+			"CryptoFrame core transcript-size formula",
+		),
+		(
+			"const_:()=assert!(ASSOCIATED_DATA_SIZE==153);",
+			"CryptoFrame core associated-data length",
+		),
+		(
+			"const_:()=assert!(COMMITMENT_TRANSCRIPT_SIZE==229);",
+			"CryptoFrame core transcript length",
+		),
+		(
+			"pubstructCommitmentTranscript{bytes:[u8;COMMITMENT_TRANSCRIPT_SIZE],}",
+			"CryptoFrame core fixed-width result",
+		),
+		(
+			"pubfnbuild_commitment_transcript(key:&[u8;AEAD_KEY_SIZE],nonce:&[u8;AEAD_NONCE_SIZE],associated_data:&[u8;ASSOCIATED_DATA_SIZE],tag:&[u8;AEAD_TAG_SIZE],sequence:u64,sender_id:u64,)->CommitmentTranscript",
+			"CryptoFrame core transcript signature",
+		),
+	] {
+		require_once(&core_source, wanted, label)?;
+	}
+	let core_commitment = rust_body(&snapshot.core_commitment, "build_commitment_transcript")?;
+	let encode_u64 = rust_body(&snapshot.core_commitment, "encode_u64_le")?;
+	require_once(
+		&encode_u64,
+		"[valueasu8,(value>>8)asu8,(value>>16)asu8,(value>>24)asu8,(value>>32)asu8,(value>>40)asu8,(value>>48)asu8,(value>>56)asu8,]",
+		"CryptoFrame core LE64 encoding",
+	)?;
+	let encoded = all_arguments(&core_commitment, "encode_u64_le")?;
+	if encoded != [vec!["sequence".to_owned()], vec!["sender_id".to_owned()]] {
+		return Err(format!(
+			"CryptoFrame core integer mapping changed: {encoded:?}"
+		));
+	}
+	for (wanted, label) in [
+		("ifi<32{key[i]}", "CryptoFrame core key field"),
+		("elseifi<44{nonce[i-32]}", "CryptoFrame core nonce field"),
+		(
+			"elseifi<197{associated_data[i-44]}",
+			"CryptoFrame core associated-data field",
+		),
+		(
+			"elseifi<213{tag[i-197]}",
+			"CryptoFrame core retained-tag field",
+		),
+		(
+			"elseifi<221{sequence[i-213]}",
+			"CryptoFrame core sequence field",
+		),
+		("else{sender_id[i-221]}", "CryptoFrame core sender-ID field"),
+	] {
+		require_once(&core_commitment, wanted, label)?;
+	}
+	require_ordered_once(
+		&core_commitment,
+		&[
+			"ifi<32{key[i]}",
+			"elseifi<44{nonce[i-32]}",
+			"elseifi<197{associated_data[i-44]}",
+			"elseifi<213{tag[i-197]}",
+			"elseifi<221{sequence[i-213]}",
+			"else{sender_id[i-221]}",
+		],
+		"CryptoFrame core transcript field order",
+	)?;
+	require_once(
+		&core_commitment,
+		"letbytes=core::array::from_fn(|i|",
+		"CryptoFrame core fixed-width construction",
+	)?;
+	require_once(
+		&core_commitment,
+		"CommitmentTranscript{bytes}",
+		"CryptoFrame core transcript result",
+	)?;
+
+	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
+	require_once(
+		&snapshot.crypto,
+		"(* @beaconcrypt-cryptoframe-v1 crypto_frame.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id *)\nfun crypto_frame(",
+		"CryptoFrame symbolic semantic field order",
+	)?;
+	require_once(
+		&crypto,
+		"funcrypto_frame(bitstring,bitstring,bitstring,sequence,key_id):bitstring[data].",
+		"CryptoFrame symbolic constructor declaration",
+	)?;
+	let seal_start = crypto
+		.find("letfunseal_frame(")
+		.ok_or_else(|| "missing symbolic seal_frame".to_owned())?;
+	let symbolic_seal = &crypto[seal_start..];
+	let seal_arguments = arguments_after(symbolic_seal, "letfunseal_frame(")?;
+	let expected_seal_arguments = [
+		"material:bitstring",
+		"associated_data:bitstring",
+		"message_sequence:sequence",
+		"sender_id:key_id",
+		"plaintext:bitstring",
+	];
+	if seal_arguments != expected_seal_arguments {
+		return Err(format!(
+			"CryptoFrame symbolic seal arguments changed: {seal_arguments:?}"
+		));
+	}
+	let seal_fields = arguments_after(symbolic_seal, ")=crypto_frame(")?;
+	let expected_seal_fields = [
+		"aead_cipher(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"aead_tag(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"ctx_commitment(material_key(material),material_nonce(material),associated_data,aead_tag(material_key(material),material_nonce(material),associated_data,plaintext),message_sequence,sender_id)",
+		"message_sequence",
+		"sender_id",
+	];
+	if seal_fields != expected_seal_fields {
+		return Err(format!(
+			"CryptoFrame symbolic seal fields changed: {seal_fields:?}"
+		));
+	}
+	let open_start = crypto
+		.find("reducforallkey:bitstring,nonce:bitstring,associated_data:bitstring,message_sequence:sequence,sender_id:key_id,plaintext:bitstring;open_frame(")
+		.ok_or_else(|| "missing symbolic open_frame reduction".to_owned())?;
+	let symbolic_open = &crypto[open_start..];
+	let open_fields = arguments_after(symbolic_open, "crypto_frame(")?;
+	let expected_open_fields = [
+		"aead_cipher(key,nonce,associated_data,plaintext)",
+		"aead_tag(key,nonce,associated_data,plaintext)",
+		"blake2b512(ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id)))",
+		"message_sequence",
+		"sender_id",
+	];
+	if open_fields != expected_open_fields {
+		return Err(format!(
+			"CryptoFrame symbolic open fields changed: {open_fields:?}"
+		));
+	}
+	let open_arguments = arguments_after(symbolic_open, "open_frame(")?;
+	let expected_open_arguments = vec![
+		"ratchet_key_nonce(key,nonce)".to_owned(),
+		"associated_data".to_owned(),
+		"message_sequence".to_owned(),
+		"sender_id".to_owned(),
+		format!("crypto_frame({})", expected_open_fields.join(",")),
+	];
+	if open_arguments != expected_open_arguments {
+		return Err(format!(
+			"CryptoFrame symbolic open acceptance changed: {open_arguments:?}"
+		));
+	}
+	if !symbolic_open.ends_with(")=plaintext.") {
+		return Err("CryptoFrame symbolic open result changed".to_owned());
+	}
+	let symbolic_boundary = &crypto[seal_start..];
+	for absent in [
+		"target_id",
+		"direction",
+		"session",
+		"phase",
+		"aead_label",
+		"ctx_label",
+	] {
+		forbid(
+			symbolic_boundary,
+			absent,
+			"invented CryptoFrame symbolic field",
+		)?;
+	}
+	Ok(())
+}
+
+fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), String> {
+	let parsed_sender = rust_body(&snapshot.adapter_ratchet, "encrypted_frame_sender")?;
+	require_once(
+		&parsed_sender,
+		"letreader=capnp::serialize::read_message(data,ReaderOptions::new()).ok()?;",
+		"endpoint Server wire-sender Cap'n Proto read",
+	)?;
+	require_once(
+		&parsed_sender,
+		"lettyped_reader=TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader);",
+		"endpoint Server wire-sender typed CryptoFrame reader",
+	)?;
+	require_once(
+		&parsed_sender,
+		"Some(typed_reader.get().ok()?.get_key_id())",
+		"endpoint Server wire-sender keyId getter",
+	)?;
+	require_ordered_once(
+		&parsed_sender,
+		&[
+			"capnp::serialize::read_message(data,ReaderOptions::new())",
+			"TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"typed_reader.get().ok()?.get_key_id()",
+		],
+		"endpoint Server wire-sender parse source order",
+	)?;
+
+	let server_associated_data = rust_body(&snapshot.adapter_server, "associated_data")?;
+	require_one_call(
+		&server_associated_data,
+		"build_associated_data",
+		&[
+			"self.identity_pk().clone()",
+			"self.pk_by_kid(k)?.clone()",
+			"",
+		],
+		"endpoint Server server-first associated-data mapping",
+	)?;
+
+	let server_send = rust_body(&snapshot.adapter_server, "encrypt_message")?;
+	require_once(
+		&server_send,
+		"letad=self.associated_data(k)?;",
+		"endpoint Server send peer-associated data",
+	)?;
+	require_once(
+		&server_send,
+		"letsender=self.identity_key_kid;",
+		"endpoint Server send local sender",
+	)?;
+	require_one_call(
+		&server_send,
+		"encrypt_message_with_ratchet",
+		&["b", "k", "sender", "&ad", "self.ratchet_manager_mut(k)?"],
+		"endpoint Server send target/sender/context/ratchet mapping",
+	)?;
+	let server_receive = rust_body(&snapshot.adapter_server, "decrypt_message_transition")?;
+	require_once(
+		&server_receive,
+		"letSome(k)=crate::ratchet::encrypted_frame_sender(b)else{returnReceiveTransition::Rejected;};",
+		"endpoint Server parsed sender selector",
+	)?;
+	require_once(
+		&server_receive,
+		"letSome(ad)=self.associated_data(k)else{returnReceiveTransition::Rejected;};",
+		"endpoint Server receive selected-peer associated data",
+	)?;
+	require_once(
+		&server_receive,
+		"letSome(ratchet)=self.ratchet_manager_mut(k)else{returnReceiveTransition::Rejected;};",
+		"endpoint Server receive selected-peer ratchet",
+	)?;
+	require_one_call(
+		&server_receive,
+		"decrypt_message_with_ratchet",
+		&["b", "k", "&ad", "ratchet"],
+		"endpoint Server receive expected-sender/context/ratchet mapping",
+	)?;
+	require_once(
+		&server_receive,
+		"Some(decrypted)=>ReceiveTransition::Accepted(decrypted),None=>ReceiveTransition::Rejected,",
+		"endpoint Server acceptance only after successful open",
+	)?;
+	require_ordered_once(
+		&server_receive,
+		&[
+			"crate::ratchet::encrypted_frame_sender(b)",
+			"self.associated_data(k)",
+			"self.ratchet_manager_mut(k)",
+			"decrypt_message_with_ratchet(b,k,&ad,ratchet)",
+			"Some(decrypted)=>ReceiveTransition::Accepted(decrypted)",
+		],
+		"endpoint Server receive source order",
+	)?;
+
+	let beacon_send = rust_body(&snapshot.adapter_beacon, "encrypt_message")?;
+	require_once(
+		&beacon_send,
+		"letsender=self.identity_key_kid;",
+		"endpoint Beacon assigned sender snapshot",
+	)?;
+	require_once(
+		&beacon_send,
+		"letBeaconState::Established{control,associated_data,ratchet,}=&mutself.stateelse{returnNone;};",
+		"endpoint Beacon send stored establishment state",
+	)?;
+	require_one_call(
+		&beacon_send,
+		"encrypt_message_with_ratchet",
+		&[
+			"b",
+			"control.server_key_id()",
+			"sender",
+			"associated_data",
+			"ratchet",
+		],
+		"endpoint Beacon send target/sender/stored context mapping",
+	)?;
+	let beacon_receive = rust_body(&snapshot.adapter_beacon, "decrypt_message")?;
+	require_once(
+		&beacon_receive,
+		"letBeaconState::Established{control,associated_data,ratchet,}=&mutself.stateelse{returnNone;};",
+		"endpoint Beacon receive stored establishment state",
+	)?;
+	require_one_call(
+		&beacon_receive,
+		"decrypt_message_with_ratchet",
+		&["b", "control.server_key_id()", "associated_data", "ratchet"],
+		"endpoint Beacon receive expected-sender/stored context mapping",
+	)?;
+
+	let server_initial = rust_body(&snapshot.adapter_server, "build_registration_response")?;
+	require_once(
+		&server_initial,
+		"letremote_kid=candidate.key_id();",
+		"endpoint registration assigned remote key ID",
+	)?;
+	require_one_call(
+		&server_initial,
+		"start_server_candidate_ratchet_kdf",
+		&["&candidate", "derived_secret.as_array()"],
+		"endpoint registration Server candidate ratchet",
+	)?;
+	require_once(
+		&server_initial,
+		"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
+		"endpoint registration Server initial ratchet materialization",
+	)?;
+	require_once(
+		&server_initial,
+		"letassociated_data=*candidate.associated_data();",
+		"endpoint registration Server candidate associated data",
+	)?;
+	require_once(
+		&server_initial,
+		"letpublic_key=crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?;",
+		"endpoint registration Server candidate peer identity",
+	)?;
+	require_one_call(
+		&server_initial,
+		"encrypt_message_with_ratchet",
+		&[
+			"&authenticated_plaintext",
+			"remote_kid",
+			"candidate.server_identity_key_id()",
+			"&associated_data",
+			"&mutratchet",
+			"",
+		],
+		"endpoint registration Server initial target/sender/context/ratchet mapping",
+	)?;
+	require_once(
+		&server_initial,
+		"Some(RegResponse{serialized:buffer,kid:remote_kid,})",
+		"endpoint registration Server returned target metadata",
+	)?;
+	require_once(
+		&server_initial,
+		"letold=self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,ratchet));",
+		"endpoint registration Server committed peer identity and candidate ratchet",
+	)?;
+	require_ordered_once(
+		&server_initial,
+		&[
+			"crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key())",
+			"start_server_candidate_ratchet_kdf(&candidate,derived_secret.as_array())",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"letassociated_data=*candidate.associated_data();",
+			"encrypt_message_with_ratchet(",
+			"letencrypted=encrypted?;",
+			"bundle.set_key_id(remote_kid)",
+			"capnp::serialize_packed::write_message(&mutbuffer,msg.borrow_inner()).ok()?;",
+			"let(next_control,established_peer)=verified_pqxdh::server_commit(candidate);",
+			"self.known_ids.insert(remote_kid,EstablishedRemote::new(public_key,ratchet))",
+			"self.control=next_control;",
+			"Some(RegResponse{serialized:buffer,kid:remote_kid,})",
+		],
+		"endpoint registration Server initial source order",
+	)?;
+
+	let beacon_initial = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
+	require_one_call(
+		&beacon_initial,
+		"start_beacon_candidate_ratchet_kdf",
+		&["&candidate", "derived_secret.as_array()"],
+		"endpoint registration Beacon candidate ratchet",
+	)?;
+	require_once(
+		&beacon_initial,
+		"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
+		"endpoint registration Beacon initial ratchet materialization",
+	)?;
+	require_once(
+		&beacon_initial,
+		"letassociated_data=*candidate.associated_data();",
+		"endpoint registration Beacon candidate associated data",
+	)?;
+	require_one_call(
+		&beacon_initial,
+		"decrypt_message_with_ratchet",
+		&[
+			"response.get_app_cipher_text().ok()?",
+			"candidate.server_key_id()",
+			"&associated_data",
+			"&mutratchet",
+			"",
+		],
+		"endpoint registration Beacon initial expected-sender/context/ratchet mapping",
+	)?;
+	require_once(
+		&beacon_initial,
+		"Some((authenticated,associated_data,ratchet,plaintext))})();",
+		"endpoint registration Beacon candidate context handoff",
+	)?;
+	require_once(
+		&beacon_initial,
+		"self.identity_key_kid=authenticated.assigned_key_id();",
+		"endpoint registration Beacon assigned local sender",
+	)?;
+	require_once(
+		&beacon_initial,
+		"self.state=BeaconState::Established{control:verified_pqxdh::beacon_commit(authenticated),associated_data,ratchet,};",
+		"endpoint registration Beacon stores candidate context",
+	)?;
+	require_ordered_once(
+		&beacon_initial,
+		&[
+			"start_beacon_candidate_ratchet_kdf(&candidate,derived_secret.as_array())",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"letassociated_data=*candidate.associated_data();",
+			"decrypt_message_with_ratchet(",
+			"verified_pqxdh::authenticate_registration_key_id_binding(",
+			"Some((authenticated,associated_data,ratchet,plaintext))})();",
+			"letserver_binding=authenticated.server_binding();",
+			"ifself.server_kid()!=server_kid",
+			"ifself.server_id.as_bytes()!=&server_binding.identity_public_key",
+			"self.identity_key_kid=authenticated.assigned_key_id();",
+			"self.state=BeaconState::Established",
+		],
+		"endpoint registration Beacon initial source order",
+	)?;
+
+	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	let honest_beacon = section_between(
+		&environment,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"symbolic HonestBeacon endpoint",
+	)?;
+	let server = section_between(
+		&environment,
+		"letServer(",
+		"letMaliciousServer(",
+		"symbolic Server endpoint",
+	)?;
+	let malicious_server = section_between(
+		&environment,
+		"letMaliciousServer(",
+		"letKeepBeaconStatePrivate(",
+		"symbolic MaliciousServer endpoint",
+	)?;
+
+	let honest_open_calls = all_arguments(honest_beacon, "open_frame")?;
+	let expected_honest_open_calls = [
+		[
+			"server_material_1",
+			"associated_data",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"initial_frame",
+		],
+		[
+			"server_material_3",
+			"associated_data",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"third_frame",
+		],
+		[
+			"server_material_2",
+			"associated_data",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"second_frame",
+		],
+		[
+			"ratchet_material(ratchet_next(server_chain_3))",
+			"associated_data",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"fourth_frame",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	if honest_open_calls != expected_honest_open_calls {
+		return Err(format!(
+			"symbolic server-to-Beacon open wiring changed: {honest_open_calls:?}"
+		));
+	}
+	require_one_call(
+		honest_beacon,
+		"seal_frame",
+		&[
+			"beacon_material_1",
+			"associated_data",
+			"first_sequence()",
+			"assigned_key_id",
+			"beacon_record_secret",
+		],
+		"symbolic Beacon-to-Server seal wiring",
+	)?;
+
+	let server_seal_calls = all_arguments(server, "seal_frame")?;
+	let expected_server_seal_calls = [
+		[
+			"server_material_1",
+			"associated_data",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"registration_payload(binding,initial_secret)",
+		],
+		[
+			"server_material_2",
+			"associated_data",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"cached_secret",
+		],
+		[
+			"server_material_3",
+			"associated_data",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"advance_secret",
+		],
+		[
+			"server_material_4",
+			"associated_data",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"future_secret",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	if server_seal_calls != expected_server_seal_calls {
+		return Err(format!(
+			"symbolic Server-to-Beacon seal wiring changed: {server_seal_calls:?}"
+		));
+	}
+	require_one_call(
+		server,
+		"open_frame",
+		&[
+			"beacon_material_1",
+			"associated_data",
+			"first_sequence()",
+			"assigned_key_id",
+			"beacon_frame",
+		],
+		"symbolic Server Beacon-frame open wiring",
+	)?;
+	require_one_call(
+		malicious_server,
+		"seal_frame",
+		&[
+			"server_material_1",
+			"associated_data",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"registration_payload(binding,MALICIOUS_TASK_SECRET)",
+		],
+		"symbolic malicious-registration initial-frame wiring",
+	)?;
+
+	let honest_received_events = [
+		[
+			"session",
+			"server_to_beacon()",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"initial_plaintext",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"third_plaintext",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"second_plaintext",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"fourth_plaintext",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		honest_beacon,
+		"MessageReceived",
+		&honest_received_events,
+		"symbolic HonestBeacon received-event fixture",
+	)?;
+	let honest_sent_events = [[
+		"session",
+		"beacon_to_server()",
+		"first_sequence()",
+		"assigned_key_id",
+		"SERVER_KEY_ID",
+		"beacon_record_secret",
+	]]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		honest_beacon,
+		"MessageSent",
+		&honest_sent_events,
+		"symbolic HonestBeacon sent-event fixture",
+	)?;
+	let server_sent_events = [
+		[
+			"session",
+			"server_to_beacon()",
+			"first_sequence()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"initial_secret",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(first_sequence())",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"cached_secret",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(first_sequence()))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"advance_secret",
+		],
+		[
+			"session",
+			"server_to_beacon()",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"future_secret",
+		],
+	]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		server,
+		"MessageSent",
+		&server_sent_events,
+		"symbolic Server sent-event fixture",
+	)?;
+	let server_received_events = [[
+		"session",
+		"beacon_to_server()",
+		"first_sequence()",
+		"assigned_key_id",
+		"SERVER_KEY_ID",
+		"beacon_plaintext",
+	]]
+	.map(|call| call.map(str::to_owned).to_vec());
+	require_exact_calls(
+		server,
+		"MessageReceived",
+		&server_received_events,
+		"symbolic Server received-event fixture",
+	)?;
+	Ok(())
+}
+
 fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 	let interface = compact(&uncommented_pv(&snapshot.interface)?);
 	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
 	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	let active_quantum_witness = compact(&uncommented_pv(&snapshot.active_quantum_witness)?);
+	require_once(
+		&snapshot.environment,
+		"(* @beaconcrypt-phase1-v1 signed_init_kex.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq *)\nfun signed_init_kex(",
+		"Phase-1 symbolic constructor semantic order",
+	)?;
+	require_once(
+		&environment,
+		"funsigned_init_kex(bitstring,bitstring,bitstring,bitstring):bitstring[data].",
+		"Phase-1 symbolic constructor declaration",
+	)?;
+	require_once(
+		&crypto,
+		"funsign(bitstring,bitstring):bitstring.",
+		"Phase-1 symbolic Ed25519 signature declaration",
+	)?;
+	require_once(
+		&crypto,
+		"reducforallmessage:bitstring,signing_key:bitstring;verify_signature(sign(message,signing_key),ed_public(signing_key))=message.",
+		"Phase-1 symbolic attached-signature verification",
+	)?;
+
+	let honest_producer = "signed_init_kex(tag_ed25519(beacon_identity),sign(tag_x25519_prekey(beacon_prekey),beacon_identity_secret),sign(tag_x25519_one_time(beacon_one_time),beacon_identity_secret),sign(tag_mlkem768(beacon_pq),beacon_identity_secret))";
+	if count(&environment, honest_producer) != 2 {
+		return Err(format!(
+			"Phase-1 symbolic honest/malicious producer order changed: expected two exact producers, found {}",
+			count(&environment, honest_producer)
+		));
+	}
+	let server_consumer = "letsigned_init_kex(encoded_identity,signed_prekey,signed_one_time,signed_pq)=incoming_initin";
+	if count(&environment, server_consumer) != 2 {
+		return Err(format!(
+			"Phase-1 symbolic Server consumer order changed: expected two exact consumers, found {}",
+			count(&environment, server_consumer)
+		));
+	}
+	require_once(
+		&active_quantum_witness,
+		server_consumer,
+		"Phase-1 active-quantum consumer order",
+	)?;
+	require_once(
+		&active_quantum_witness,
+		"signed_init_kex(tag_ed25519(beacon_identity),sign(tag_x25519_prekey(forged_prekey),beacon_identity_secret),sign(tag_x25519_one_time(forged_one_time),beacon_identity_secret),sign(tag_mlkem768(forged_pq),beacon_identity_secret))",
+		"Phase-1 active-quantum producer order",
+	)?;
+
+	for (wanted, expected_count, label) in [
+		(
+			"lettag_ed25519(beacon_identity:bitstring)=encoded_identityin",
+			2,
+			"Phase-1 symbolic identity validation",
+		),
+		(
+			"lettag_x25519_prekey(beacon_prekey:bitstring)=verify_signature(signed_prekey,beacon_identity)in",
+			2,
+			"Phase-1 symbolic prekey validation",
+		),
+		(
+			"lettag_x25519_one_time(beacon_one_time:bitstring)=verify_signature(signed_one_time,beacon_identity)in",
+			2,
+			"Phase-1 symbolic one-time validation",
+		),
+		(
+			"lettag_mlkem768(beacon_pq:bitstring)=verify_signature(signed_pq,beacon_identity)in",
+			2,
+			"Phase-1 symbolic ML-KEM validation",
+		),
+		(
+			"letcore_init=beaconcrypt_core__pqxdh__InitKex(encoded_identity,tag_x25519_prekey(beacon_prekey),tag_x25519_one_time(beacon_one_time),tag_mlkem768(beacon_pq))in",
+			2,
+			"Phase-1 symbolic Server core mapping",
+		),
+		(
+			"letcore_init=beaconcrypt_core__pqxdh__InitKex(tag_ed25519(beacon_identity),tag_x25519_prekey(beacon_prekey),tag_x25519_one_time(beacon_one_time),tag_mlkem768(beacon_pq))in",
+			1,
+			"Phase-1 symbolic honest core mapping",
+		),
+	] {
+		let actual = count(&environment, wanted);
+		if actual != expected_count {
+			return Err(format!(
+				"{label} changed: expected {expected_count} exact occurrence(s), found {actual}"
+			));
+		}
+	}
+	let symbolic_gate_order = "lettag_ed25519(beacon_identity:bitstring)=encoded_identityinlettag_x25519_prekey(beacon_prekey:bitstring)=verify_signature(signed_prekey,beacon_identity)inlettag_x25519_one_time(beacon_one_time:bitstring)=verify_signature(signed_one_time,beacon_identity)inlettag_mlkem768(beacon_pq:bitstring)=verify_signature(signed_pq,beacon_identity)inletcore_init=beaconcrypt_core__pqxdh__InitKex(encoded_identity,tag_x25519_prekey(beacon_prekey),tag_x25519_one_time(beacon_one_time),tag_mlkem768(beacon_pq))in";
+	if count(&environment, symbolic_gate_order) != 2 {
+		return Err(format!(
+			"Phase-1 symbolic pure-gate evaluation order changed: expected two exact blocks, found {}",
+			count(&environment, symbolic_gate_order)
+		));
+	}
 	for declaration in [
 		"typekey_id.",
 		"typesequence.",
@@ -408,6 +2114,28 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 		&crypto,
 		"ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id))",
 		"open CTX input",
+	)?;
+	require(
+		&environment,
+		"funkex_response(bitstring,bitstring,bitstring,bitstring,key_id):bitstring[data].",
+		"Phase-2 response constructor",
+	)?;
+	require(
+		&environment,
+		"letkex_response(response_server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id)=responsein",
+		"Phase-2 response destructuring order",
+	)?;
+	let response_construction = "letresponse=kex_response(server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id)in";
+	if count(&environment, response_construction) != 2 {
+		return Err(format!(
+			"Phase-2 response construction order changed: expected two exact constructions, found {}",
+			count(&environment, response_construction)
+		));
+	}
+	require(
+		&active_quantum_witness,
+		"letkex_response(response_server_identity,server_ephemeral,kem_ciphertext,initial_frame,assigned_key_id)=responsein",
+		"active-quantum Phase-2 response destructuring order",
 	)?;
 
 	let constructor = "funestablishment_transcript(bitstring,bitstring,beaconcrypt_core__pqxdh__t_InitKex,beaconcrypt_core__pqxdh__t_RegistrationId,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,beaconcrypt_core__pqxdh__t_RootKeyInput,bitstring,bitstring,key_id,key_id,bitstring,bitstring):establishment_transcript_t[data].";
@@ -514,9 +2242,9 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"auxiliary ProVerif fidelity prerequisite",
 	)?;
 	let scenarios = scenario_names(makefile)?;
-	if scenarios.len() != 25 {
+	if scenarios.len() != 27 {
 		return Err(format!(
-			"expected 25 ProVerif scenarios, found {}",
+			"expected 27 ProVerif scenarios, found {}",
 			scenarios.len()
 		));
 	}
@@ -635,9 +2363,417 @@ fn validate_adapters() -> Result<(), String> {
 	Ok(())
 }
 
+fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
+	let adapter_source = uncommented_rust(&snapshot.adapter_ratchet)?;
+	let adapter = compact(&adapter_source);
+	let slot = section_between(
+		&adapter_source,
+		"impl RatchetKernelSlot {",
+		"impl Deref for RatchetKernelSlot",
+		"ratchet kernel slot implementation",
+	)?;
+	let take = rust_body(slot, "take")?;
+	require_once(
+		&take,
+		"self.kernel.take()",
+		"ratchet driver affine slot take",
+	)?;
+	let put = rust_body(slot, "put")?;
+	require_ordered_once(
+		&put,
+		&["assert!(self.kernel.is_none()", "self.kernel=Some(kernel);"],
+		"ratchet driver returned-kernel slot put",
+	)?;
+	require_once(
+		&adapter,
+		"pub(crate)fnratchet_hkdf(request:&verified_ratchet::SymmetricRatchetKdfRequest,)->verified_ratchet::RatchetKdfResponse{verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))}",
+		"ratchet driver typed KDF reply",
+	)?;
+
+	let send = rust_body(&snapshot.adapter_ratchet, "encrypt_message_with_ratchet")?;
+	require_once(
+		&send,
+		"ifbytes.is_empty(){returnNone;}",
+		"ratchet send empty-input precheck",
+	)?;
+	require_once(
+		&send,
+		"letcontext=SealFrameContext{bytes,target_kid,sender_kid,associated_data,};",
+		"ratchet send exact frame context",
+	)?;
+	require_one_call(
+		&send,
+		"ratchet.refined.take",
+		&[""],
+		"ratchet send affine kernel take",
+	)?;
+	require_one_call(
+		&send,
+		"verified_ratchet::begin_send",
+		&["kernel", "context"],
+		"ratchet send begin effect",
+	)?;
+	require_once(
+		&send,
+		"verified_ratchet::SendStart::SendExhausted{kernel,..}=>{ratchet.refined.put(kernel);returnNone;}verified_ratchet::SendStart::SendKdfRequested(pending)=>pending,",
+		"ratchet send exhausted and KDF branches",
+	)?;
+	require_one_call(
+		&send,
+		"ratchet_hkdf",
+		&["pending.request()"],
+		"ratchet send exact pending request interpretation",
+	)?;
+	require_one_call(
+		&send,
+		"pending.resume",
+		&["response"],
+		"ratchet send same-pending resume",
+	)?;
+	require_one_call(
+		&send,
+		"seal_frame",
+		&["seal.material()", "seal.sequence()", "seal.context()"],
+		"ratchet send seal capability handoff",
+	)?;
+	require_one_call(
+		&send,
+		"seal.finish",
+		&["sealed"],
+		"ratchet send capability finish",
+	)?;
+	let send_puts = all_arguments(&send, "ratchet.refined.put")?;
+	if send_puts != [vec!["kernel".to_owned()], vec!["kernel".to_owned()]] {
+		return Err(format!(
+			"ratchet send returned-kernel puts changed: {send_puts:?}"
+		));
+	}
+	require_once(
+		&send,
+		"ratchet.refined.put(kernel);sealed",
+		"ratchet send returned-kernel put before result",
+	)?;
+	require_ordered(
+		&send,
+		&[
+			"ifbytes.is_empty(){returnNone;}",
+			"letcontext=SealFrameContext",
+			"letkernel=ratchet.refined.take();",
+			"verified_ratchet::begin_send(kernel,context)",
+			"letresponse=ratchet_hkdf(pending.request());",
+			"letseal=pending.resume(response);",
+			"letsealed=seal_frame(seal.material(),seal.sequence(),seal.context());",
+			"let(kernel,sealed)=seal.finish(sealed);",
+			"ratchet.refined.put(kernel);",
+		],
+		"ratchet send synchronous effect order",
+	)?;
+	if !send.ends_with("sealed") {
+		return Err("ratchet send returned sealed result changed".to_owned());
+	}
+	forbid(&send, ".cancel(", "ratchet send production cancellation")?;
+
+	let concrete = compact(&uncommented_rust(&snapshot.core_ratchet_concrete)?);
+	for phase in [
+		"pubenumSendStart<Context>{",
+		"pubstructSendKdf<Context>{",
+		"pubstructSendSeal<Context>{",
+		"pubenumReceiveEffect<Context>{",
+		"pubstructReceiveKdf<Context>{",
+		"pubstructReceiveOpen<Context>{",
+	] {
+		require_once(&concrete, phase, "ratchet core affine phase API")?;
+	}
+	let send_seal = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> SendSeal<Context>",
+		"/// One phase of an owned receive transaction.",
+		"ratchet core send seal phase",
+	)?;
+	let send_finish = rust_body(send_seal, "finish")?;
+	require_once(
+		&send_finish,
+		"let_=finish_send(self.logical);(self.advanced,sealed)",
+		"ratchet send finish preserves interpreter result on advanced kernel",
+	)?;
+
+	let receive = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	require_ordered(
+		&receive,
+		&[
+			"ifdata.is_empty(){returnNone;}",
+			"capnp::serialize::read_message(data,ReaderOptions::new())",
+			"TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"letkid=frame.get_key_id();",
+			"ifkid!=expected_sender_kid{returnNone;}",
+			"letciphertext=frame.get_cipher_text().ok()?;",
+			"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
+			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,};",
+			"letkey_seq=frame.get_seq();",
+			"letkernel=ratchet.refined.take();",
+			"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);",
+			"letplaintext=loop{",
+		],
+		"ratchet receive prechecks and effect start order",
+	)?;
+	require_one_call(
+		&receive,
+		"ratchet.refined.take",
+		&[""],
+		"ratchet receive affine kernel take",
+	)?;
+	require_one_call(
+		&receive,
+		"verified_ratchet::begin_receive",
+		&["kernel", "key_seq", "context"],
+		"ratchet receive begin effect",
+	)?;
+	require_once(
+		&receive,
+		"verified_ratchet::ReceiveEffect::ReceiveRejected{kernel,..}=>{ratchet.refined.put(kernel);returnNone;}",
+		"ratchet receive rejected branch",
+	)?;
+	require_once(
+		&receive,
+		"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);letplaintext=loop{effect=matcheffect{",
+		"ratchet receive effect loop without fixed iteration count",
+	)?;
+	let receive_kdf_arm = section_between(
+		&receive,
+		"verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending)=>{",
+		"verified_ratchet::ReceiveEffect::ReceiveOpenRequested(open)=>{",
+		"ratchet receive KDF arm",
+	)?;
+	forbid(
+		receive_kdf_arm,
+		"ratchet.refined.put(",
+		"ratchet receive KDF-arm live publication",
+	)?;
+	forbid(
+		&receive,
+		".cancel(",
+		"ratchet receive production cancellation",
+	)?;
+	require_one_call(
+		&receive,
+		"ratchet_hkdf",
+		&["pending.request()"],
+		"ratchet receive exact pending request interpretation",
+	)?;
+	require_one_call(
+		&receive,
+		"pending.resume",
+		&["response"],
+		"ratchet receive same-pending resume",
+	)?;
+	require_once(
+		&receive,
+		"verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending)=>{letresponse=ratchet_hkdf(pending.request());pending.resume(response)}",
+		"ratchet receive private KDF loop arm",
+	)?;
+	require_once(
+		&receive,
+		"letSome(material)=open.material()else{let(kernel,_)=open.reject();ratchet.refined.put(kernel);returnNone;};",
+		"ratchet receive no-material rejection",
+	)?;
+	require_one_call(
+		&receive,
+		"open_frame",
+		&["material", "open.sequence()", "open.context()"],
+		"ratchet receive open capability handoff",
+	)?;
+	require_one_call(
+		&receive,
+		"open.finish",
+		&["opened"],
+		"ratchet receive capability finish",
+	)?;
+	let receive_puts = all_arguments(&receive, "ratchet.refined.put")?;
+	if receive_puts
+		!= [
+			vec!["kernel".to_owned()],
+			vec!["kernel".to_owned()],
+			vec!["kernel".to_owned()],
+		] {
+		return Err(format!(
+			"ratchet receive returned-kernel puts changed: {receive_puts:?}"
+		));
+	}
+	require_ordered(
+		&receive,
+		&[
+			"letSome(material)=open.material()else{",
+			"let(kernel,_)=open.reject();",
+			"ratchet.refined.put(kernel);",
+			"returnNone;",
+			"letopened=open_frame(material,open.sequence(),open.context());",
+			"let(kernel,opened)=open.finish(opened);",
+			"ratchet.refined.put(kernel);",
+			"breakopened?;",
+		],
+		"ratchet receive open and terminal publication order",
+	)?;
+	require_once(
+		&receive,
+		"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
+		"ratchet receive parsed result metadata",
+	)?;
+	let receive_open = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveOpen<Context>",
+		"/// Checked restoration builder",
+		"ratchet core receive open phase",
+	)?;
+	let receive_finish = rust_body(receive_open, "finish")?;
+	require_once(
+		&receive_finish,
+		"None=>return(self.entry,None)",
+		"ratchet receive finish failure restores entry",
+	)?;
+	require_once(
+		&receive_finish,
+		"PreparedReceive::PreparedReceiveCachedCase(prepared)=>{publish_cached_receive(&mutentry.refined,prepared);}",
+		"ratchet core cached receive publication branch",
+	)?;
+	require_once(
+		&receive_finish,
+		"PreparedReceive::PreparedReceiveFutureCase(pending)=>{publish_future_receive(&mutentry.refined,pending);}",
+		"ratchet core future receive publication branch",
+	)?;
+	let begin_receive = rust_body(&snapshot.core_ratchet_concrete, "begin_receive")?;
+	for absent in [
+		"publish_cached_receive",
+		"publish_future_receive",
+		"kernel.refined.control=",
+		"kernel.refined.send_chain=",
+		"kernel.refined.receive_chain=",
+		"kernel.refined.receive_slots=",
+	] {
+		forbid(
+			&begin_receive,
+			absent,
+			"ratchet core begin_receive live publication",
+		)?;
+	}
+	let receive_kdf = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveKdf<Context>",
+		"impl<Context> ReceiveOpen<Context>",
+		"ratchet core receive KDF phase",
+	)?;
+	let receive_resume = rust_body(receive_kdf, "resume")?;
+	forbid(
+		&receive_resume,
+		"publish_cached_receive",
+		"ratchet core receive KDF cached publication",
+	)?;
+	forbid(
+		&receive_resume,
+		"publish_future_receive",
+		"ratchet core receive KDF future publication",
+	)?;
+	require_ordered(
+		&receive_finish,
+		&[
+			"letplaintext=matchopened{",
+			"None=>return(self.entry,None)",
+			"letmutentry=self.entry;",
+			"publish_cached_receive(&mutentry.refined,prepared)",
+			"publish_future_receive(&mutentry.refined,pending)",
+			"(entry,Some(plaintext))",
+		],
+		"ratchet core receive publication after successful open",
+	)?;
+
+	for theorem in [
+		"theorem ratchet.concrete.begin_send_nonexhausted_exact",
+		"theorem ratchet.concrete.begin_send_exhausted_restores_entry",
+		"theorem ratchet.concrete.SendKdf.request_exact",
+		"theorem ratchet.concrete.SendKdf.resume_exact",
+		"theorem ratchet.concrete.SendSeal.finish_returns_interpreter_result",
+		"theorem ratchet.concrete.begin_receive_rejected_plan_restores_entry",
+		"theorem ratchet.concrete.begin_receive_cached_exact",
+		"theorem ratchet.concrete.begin_receive_future_request_exact",
+		"theorem ratchet.concrete.ReceiveKdf.request_exact",
+		"theorem ratchet.concrete.ReceiveOpen.reject_exact",
+		"theorem ratchet.concrete.ReceiveOpen.context_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_sequence_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_material_exact",
+		"theorem ratchet.concrete.ReceiveOpen.finish_failure_restores_entry",
+		"theorem ratchet.concrete.ReceiveOpen.finish_future_success_publishes_same_plaintext",
+		"theorem ratchet.concrete.ReceiveOpen.finish_cached_success_publishes_same_plaintext",
+	] {
+		require_once(
+			&snapshot.lean_ratchet_effect,
+			theorem,
+			"ratchet checked structural Lean anchor",
+		)?;
+	}
+	require_once(
+		&snapshot.lean_ratchet_effect_refinement,
+		"theorem ReceiveFailureTrace.result_eq_entry",
+		"ratchet checked structural failure-trace anchor",
+	)?;
+	for theorem in [
+		"def ResponseRefines",
+		"theorem begin_send_refines",
+		"theorem SendKdf.resume_refines",
+		"theorem SendSeal.finish_refines_ideal_send",
+		"theorem ReceiveOpen.failure_preserves_refinement",
+		"theorem ReceiveFailureTrace.preserves_refinement",
+		"def OpenReplyRefines",
+		"theorem begin_receive_cached_refines",
+		"theorem CachedOpenRefines.finish_success_matches_ideal",
+		"theorem CachedOpenRefines.finish_success_refines_of_publication",
+	] {
+		require_once(
+			&snapshot.lean_ratchet_effect_refinement,
+			theorem,
+			"ratchet conditional Lean refinement anchor",
+		)?;
+	}
+
+	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
+	require_once(
+		&crypto,
+		"letfunseal_frame(",
+		"ratchet ProVerif atomic seal abstraction",
+	)?;
+	require_once(
+		&crypto,
+		";open_frame(",
+		"ratchet ProVerif ideal exact open abstraction",
+	)?;
+	let symbolic = format!(
+		"{}{}",
+		crypto,
+		compact(&uncommented_pv(&snapshot.environment)?)
+	);
+	for absent in [
+		"RatchetKernelSlot",
+		"begin_send",
+		"begin_receive",
+		"ratchet_hkdf",
+		"SendKdfRequested",
+		"ReceiveKdfRequested",
+	] {
+		forbid(
+			&symbolic,
+			absent,
+			"concrete ratchet driver step in atomic ProVerif model",
+		)?;
+	}
+	Ok(())
+}
+
 fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_manifest(&snapshot.interface)?;
 	validate_pv(snapshot)?;
+	validate_phase1_source(snapshot)?;
+	validate_phase2_source(snapshot)?;
+	validate_cryptoframe_source(snapshot)?;
+	validate_endpoint_frame_context_wiring(snapshot)?;
+	validate_ratchet_effect_driver(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
 
@@ -646,6 +2782,51 @@ fn replace_once(source: &mut String, from: &str, to: &str) {
 		.find(from)
 		.unwrap_or_else(|| panic!("mutation anchor missing: {from}"));
 	source.replace_range(start..start + from.len(), to);
+}
+
+fn replace_once_after(source: &mut String, marker: &str, from: &str, to: &str) {
+	let marker_start = source
+		.find(marker)
+		.unwrap_or_else(|| panic!("mutation scope missing: {marker}"));
+	let relative = source[marker_start..]
+		.find(from)
+		.unwrap_or_else(|| panic!("mutation anchor missing after {marker}: {from}"));
+	let start = marker_start + relative;
+	source.replace_range(start..start + from.len(), to);
+}
+
+fn replace_nth_call_argument_after(
+	source: &mut String,
+	scope_marker: &str,
+	function: &str,
+	call_index: usize,
+	argument_index: usize,
+	replacement: &str,
+) {
+	let scope_start = source
+		.find(scope_marker)
+		.unwrap_or_else(|| panic!("mutation scope missing: {scope_marker}"));
+	let call_marker = format!("{function}(");
+	let mut search_start = scope_start;
+	for current in 0..=call_index {
+		let relative = source[search_start..]
+			.find(&call_marker)
+			.unwrap_or_else(|| panic!("mutation call missing: {function} #{call_index}"));
+		let call_start = search_start + relative;
+		let open = call_start + call_marker.len() - 1;
+		let (mut arguments, end) = parse_call(source, open).unwrap();
+		if current == call_index {
+			assert!(
+				argument_index < arguments.len(),
+				"mutation argument missing: {function} #{call_index} argument #{argument_index}"
+			);
+			arguments[argument_index] = replacement.to_owned();
+			source.replace_range(open + 1..end - 1, &arguments.join(","));
+			return;
+		}
+		search_start = end;
+	}
+	unreachable!();
 }
 
 fn mutate_fact(source: &mut String, key: &str, value: &str) {
@@ -658,6 +2839,118 @@ fn mutate_fact(source: &mut String, key: &str, value: &str) {
 	source.replace_range(value_start..value_end, value);
 }
 
+fn replace_call(source: &mut String, function: &str, occurrence: usize, arguments: &[String]) {
+	let marker = format!("{function}(");
+	let mut offset = 0usize;
+	let mut found = None;
+	for index in 0..=occurrence {
+		let relative = source[offset..]
+			.find(&marker)
+			.unwrap_or_else(|| panic!("mutation call missing: {function} occurrence {occurrence}"));
+		let start = offset + relative;
+		if index == occurrence {
+			found = Some(start);
+			break;
+		}
+		let (_, end) = parse_call(source, start + marker.len() - 1).unwrap();
+		offset = end;
+	}
+	let start = found.unwrap();
+	let (_, end) = parse_call(source, start + marker.len() - 1).unwrap();
+	source.replace_range(start..end, &format!("{function}({})", arguments.join(",")));
+}
+
+fn phase1_permutations() -> Vec<[usize; 4]> {
+	let mut permutations = Vec::new();
+	for first in 0..4 {
+		for second in 0..4 {
+			for third in 0..4 {
+				for fourth in 0..4 {
+					let candidate = [first, second, third, fourth];
+					if candidate
+						.iter()
+						.enumerate()
+						.all(|(index, value)| !candidate[..index].contains(value))
+					{
+						permutations.push(candidate);
+					}
+				}
+			}
+		}
+	}
+	permutations
+}
+
+fn phase1_transpositions() -> Vec<[usize; 4]> {
+	let mut transpositions = Vec::new();
+	for left in 0..4 {
+		for right in left + 1..4 {
+			let mut permutation = [0, 1, 2, 3];
+			permutation.swap(left, right);
+			transpositions.push(permutation);
+		}
+	}
+	transpositions
+}
+
+fn cryptoframe_permutations() -> [[usize; 3]; 6] {
+	[
+		[0, 1, 2],
+		[0, 2, 1],
+		[1, 0, 2],
+		[1, 2, 0],
+		[2, 0, 1],
+		[2, 1, 0],
+	]
+}
+
+fn permute_cryptoframe(arguments: &[&str; 3], permutation: [usize; 3]) -> Vec<String> {
+	permutation
+		.into_iter()
+		.map(|index| arguments[index].to_owned())
+		.collect()
+}
+
+fn replace_cryptoframe_schema(snapshot: &mut Snapshot, fields: &[(&str, usize, &str)]) {
+	let start = snapshot
+		.cryptoframe_schema
+		.find("struct CryptoFrame {")
+		.unwrap();
+	let relative_end = snapshot.cryptoframe_schema[start..].find("\n}").unwrap();
+	let end = start + relative_end + 2;
+	let declarations = fields
+		.iter()
+		.map(|(name, ordinal, field_type)| format!("    {name} @{ordinal} :{field_type};"))
+		.collect::<Vec<_>>()
+		.join("\n");
+	snapshot.cryptoframe_schema.replace_range(
+		start..end,
+		&format!("struct CryptoFrame {{\n{declarations}\n}}"),
+	);
+}
+
+fn permute_phase1(arguments: &[&str; 4], permutation: [usize; 4]) -> Vec<String> {
+	permutation
+		.into_iter()
+		.map(|index| arguments[index].to_owned())
+		.collect()
+}
+
+fn replace_phase1_schema(snapshot: &mut Snapshot, fields: &[(&str, usize)]) {
+	let start = snapshot.phase1_schema.find("struct InitKex {").unwrap();
+	let relative_end = snapshot.phase1_schema[start..].find("\n}").unwrap();
+	let end = start + relative_end + 2;
+	let declarations = fields
+		.iter()
+		.map(|(name, ordinal)| format!("    {name} @{ordinal} :Data;"))
+		.collect::<Vec<_>>()
+		.join("\n");
+	snapshot.phase1_schema.replace_range(
+		start..end,
+		&format!("struct InitKex {{\n{declarations}\n}}"),
+	);
+}
+
 fn assert_rejected(name: &str, diagnostic: &str, mutate: impl FnOnce(&mut Snapshot)) {
 	let mut snapshot = Snapshot::production();
 	mutate(&mut snapshot);
@@ -668,6 +2961,23 @@ fn assert_rejected(name: &str, diagnostic: &str, mutate: impl FnOnce(&mut Snapsh
 	assert!(
 		error.contains(diagnostic),
 		"mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn assert_ratchet_driver_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_ratchet_effect_driver(&snapshot) {
+		Ok(()) => panic!("ratchet driver mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"ratchet driver mutation {name} produced wrong diagnostic: {error}"
 	);
 }
 
@@ -844,6 +3154,3378 @@ fn compiled_core_matches_the_canonical_transcript() {
 	assert_eq!(&bytes[221..229], &sender_id.to_le_bytes());
 }
 
+const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;
+
+#[test]
+fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+
+	for fact in EXPECTED_FACTS
+		.iter()
+		.filter(|fact| fact.starts_with("cryptoframe."))
+	{
+		let key = fact.split_once('=').unwrap().0;
+		assert_rejected(&format!("cryptoframe_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	let schema_fields = [
+		("seq", 0, "UInt64"),
+		("keyId", 1, "UInt64"),
+		("cipherText", 2, "Data"),
+	];
+	assert_rejected(
+		"cryptoframe_schema_id_drift",
+		"CryptoFrame schema changed",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.cryptoframe_schema,
+				"@0xef858976d7f7863b;",
+				"@0xef858976d7f7863c;",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let fields = permutation.map(|field| schema_fields[field]);
+		assert_rejected(
+			&format!("cryptoframe_schema_declaration_permutation_{index}"),
+			"CryptoFrame schema changed",
+			move |snapshot| replace_cryptoframe_schema(snapshot, &fields),
+		);
+		mutation_count += 1;
+	}
+	for omitted in 0..3 {
+		let fields = schema_fields
+			.iter()
+			.copied()
+			.filter(|(name, _, _)| *name != schema_fields[omitted].0)
+			.collect::<Vec<_>>();
+		assert_rejected(
+			&format!("cryptoframe_schema_omits_field_{omitted}"),
+			"CryptoFrame schema changed",
+			move |snapshot| replace_cryptoframe_schema(snapshot, &fields),
+		);
+		mutation_count += 1;
+	}
+	for (index, renamed) in ["messageSeq", "senderKeyId", "payload"]
+		.into_iter()
+		.enumerate()
+	{
+		let mut fields = schema_fields;
+		fields[index].0 = renamed;
+		assert_rejected(
+			&format!("cryptoframe_schema_renames_field_{index}"),
+			"CryptoFrame schema changed",
+			move |snapshot| replace_cryptoframe_schema(snapshot, &fields),
+		);
+		mutation_count += 1;
+	}
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let fields: [(&str, usize, &str); 3] = core::array::from_fn(|field| {
+			let (name, _, field_type) = schema_fields[field];
+			(name, permutation[field], field_type)
+		});
+		assert_rejected(
+			&format!("cryptoframe_schema_ordinal_permutation_{index}"),
+			"CryptoFrame schema changed",
+			move |snapshot| replace_cryptoframe_schema(snapshot, &fields),
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_adapter_key_length_drift",
+			"pub const AEAD_KEY_LEN: usize = 32;",
+			"pub const AEAD_KEY_LEN: usize = 31;",
+			"CryptoFrame AEAD key length",
+		),
+		(
+			"cryptoframe_adapter_nonce_length_drift",
+			"pub const AEAD_NONCE_LEN: usize = 12;",
+			"pub const AEAD_NONCE_LEN: usize = 11;",
+			"CryptoFrame AEAD nonce length",
+		),
+		(
+			"cryptoframe_adapter_tag_length_drift",
+			"pub const AEAD_TAG_LEN: usize = 16;",
+			"pub const AEAD_TAG_LEN: usize = 15;",
+			"CryptoFrame AEAD tag length",
+		),
+		(
+			"cryptoframe_adapter_commitment_length_drift",
+			"pub const COMMITMENT_SIZE: usize = 64;",
+			"pub const COMMITMENT_SIZE: usize = 63;",
+			"CryptoFrame commitment length",
+		),
+		(
+			"cryptoframe_adapter_overhead_formula_drift",
+			"pub const MESSAGE_OVERHEAD: usize = COMMITMENT_SIZE + AEAD_TAG_LEN;",
+			"pub const MESSAGE_OVERHEAD: usize = COMMITMENT_SIZE;",
+			"CryptoFrame payload overhead",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_seal_uses_zero_key",
+			"let key: AeadKey = (*material.key().as_bytes()).into();",
+			"let key: AeadKey = [0u8; AEAD_KEY_LEN].into();",
+			"CryptoFrame seal selected key",
+		),
+		(
+			"cryptoframe_seal_uses_zero_nonce",
+			"let nonce: AeadNonce = (*material.nonce().as_bytes()).into();",
+			"let nonce: AeadNonce = [0u8; AEAD_NONCE_LEN].into();",
+			"CryptoFrame seal selected nonce",
+		),
+		(
+			"cryptoframe_seal_encrypts_associated_data",
+			"\t\tcontext.bytes,\n\t\tSome(context.associated_data.as_slice()),",
+			"\t\tcontext.associated_data.as_slice(),\n\t\tSome(context.associated_data.as_slice()),",
+			"CryptoFrame detached AEAD seal",
+		),
+		(
+			"cryptoframe_seal_omits_associated_data",
+			"Some(context.associated_data.as_slice()),",
+			"None,",
+			"CryptoFrame detached AEAD seal",
+		),
+		(
+			"cryptoframe_seal_commitment_swaps_ad_and_tag",
+			"\t\tcontext.associated_data.as_slice(),\n\t\ttag.as_slice(),",
+			"\t\ttag.as_slice(),\n\t\tcontext.associated_data.as_slice(),",
+			"CryptoFrame seal commitment mapping",
+		),
+		(
+			"cryptoframe_seal_commitment_swaps_sequence_sender",
+			"\t\tkey_seq,\n\t\tcontext.sender_kid,",
+			"\t\tcontext.sender_kid,\n\t\tkey_seq,",
+			"CryptoFrame seal commitment mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	let payload_fields = ["plaintext", "tag", "commitment"];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let ordered = permutation.map(|field| payload_fields[field]);
+		let replacement = format!(
+			"\tlet mut payload = vec![];\n\tpayload.append(&mut {});\n\tpayload.append(&mut {});\n\tpayload.append(&mut {});",
+			ordered[0], ordered[1], ordered[2]
+		);
+		assert_rejected(
+			&format!("cryptoframe_payload_permutation_{index}"),
+			"CryptoFrame seal payload order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"\tplaintext.append(&mut tag);\n\tplaintext.append(&mut commitment);",
+					&replacement,
+				);
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"builder.set_cipher_text(&plaintext)",
+					"builder.set_cipher_text(&payload)",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for omitted in 0..3 {
+		let retained = (0..3)
+			.filter(|field| *field != omitted)
+			.map(|field| payload_fields[field])
+			.collect::<Vec<_>>();
+		let replacement = format!(
+			"\tlet mut payload = vec![];\n\tpayload.append(&mut {});\n\tpayload.append(&mut {});",
+			retained[0], retained[1]
+		);
+		assert_rejected(
+			&format!("cryptoframe_payload_omits_field_{omitted}"),
+			"CryptoFrame seal payload order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"\tplaintext.append(&mut tag);\n\tplaintext.append(&mut commitment);",
+					&replacement,
+				);
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"builder.set_cipher_text(&plaintext)",
+					"builder.set_cipher_text(&payload)",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_payload_setter_uses_tag",
+			"builder.set_cipher_text(&plaintext)",
+			"builder.set_cipher_text(&tag)",
+			"CryptoFrame payload setter mapping",
+		),
+		(
+			"cryptoframe_sequence_setter_uses_sender",
+			"builder.set_seq(key_seq)",
+			"builder.set_seq(context.sender_kid)",
+			"CryptoFrame sequence setter mapping",
+		),
+		(
+			"cryptoframe_sender_setter_uses_sequence",
+			"builder.set_key_id(context.sender_kid)",
+			"builder.set_key_id(key_seq)",
+			"CryptoFrame sender-ID setter mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	let setters = [
+		"builder.set_cipher_text(&plaintext);",
+		"builder.set_seq(key_seq);",
+		"builder.set_key_id(context.sender_kid);",
+	];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let replacement = permutation.map(|setter| setters[setter]).join("\n\t");
+		assert_rejected(
+			&format!("cryptoframe_builder_order_permutation_{index}"),
+			"CryptoFrame builder serialization order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"builder.set_cipher_text(&plaintext);\n\tbuilder.set_seq(key_seq);\n\tbuilder.set_key_id(context.sender_kid);",
+					&replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"cryptoframe_builder_type_drift",
+			"TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default()",
+			"TypedBuilder::<crate::cryptoframe_capnp::crypto_frame::Owned>::new_default()",
+		),
+		(
+			"cryptoframe_builder_root_drift",
+			"t_builder.init_root()",
+			"t_builder.get_root().ok()?",
+		),
+		(
+			"cryptoframe_output_buffer_prefixed",
+			"let mut buffer = vec![];",
+			"let mut buffer = vec![0u8];",
+		),
+		(
+			"cryptoframe_serializes_into_payload",
+			"write_message(&mut buffer, t_builder.borrow_inner())",
+			"write_message(&mut plaintext, t_builder.borrow_inner())",
+		),
+	] {
+		assert_rejected(
+			name,
+			"CryptoFrame builder serialization order",
+			|snapshot| {
+				replace_once(&mut snapshot.adapter_ratchet, from, to);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_local_metadata_uses_sender",
+			"key_id: context.target_kid,",
+			"key_id: context.sender_kid,",
+			"CryptoFrame local target metadata",
+		),
+		(
+			"cryptoframe_seal_context_target_uses_sender",
+			"\t\ttarget_kid,\n\t\tsender_kid,",
+			"\t\ttarget_kid: sender_kid,\n\t\tsender_kid,",
+			"CryptoFrame seal context mapping",
+		),
+		(
+			"cryptoframe_seal_context_sender_uses_target",
+			"\t\ttarget_kid,\n\t\tsender_kid,",
+			"\t\ttarget_kid,\n\t\tsender_kid: target_kid,",
+			"CryptoFrame seal context mapping",
+		),
+		(
+			"cryptoframe_empty_plaintext_gate_removed",
+			"\tif bytes.is_empty() {\n\t\treturn None;\n\t}\n",
+			"",
+			"CryptoFrame empty-plaintext rejection",
+		),
+		(
+			"cryptoframe_seal_uses_unallocated_sequence",
+			"seal_frame(seal.material(), seal.sequence(), seal.context())",
+			"seal_frame(seal.material(), sender_kid, seal.context())",
+			"CryptoFrame selected send material and sequence",
+		),
+		(
+			"cryptoframe_seal_skips_one_use_finish",
+			"let (kernel, sealed) = seal.finish(sealed);",
+			"let (kernel, sealed) = (kernel, sealed);",
+			"CryptoFrame one-use send completion",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_empty_wire_gate_removed",
+			"\tif data.is_empty() {\n\t\treturn None;\n\t}\n",
+			"",
+			"CryptoFrame empty-wire rejection",
+		),
+		(
+			"cryptoframe_parse_uses_unbounded_options",
+			"read_message(data, ReaderOptions::new())",
+			"read_message(data, Default::default())",
+			"CryptoFrame Cap'n Proto parse",
+		),
+		(
+			"cryptoframe_parse_typed_reader_path_drift",
+			"TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"CryptoFrame typed reader",
+		),
+		(
+			"cryptoframe_parse_typed_root_unwraps",
+			"let frame = typed_reader.get().ok()?;",
+			"let frame = typed_reader.get().unwrap();",
+			"CryptoFrame typed root",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn decrypt_message_with_ratchet(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	let getter_declarations = [
+		"let kid = frame.get_key_id();",
+		"let ciphertext = frame.get_cipher_text().ok()?;",
+		"let key_seq = frame.get_seq();",
+	];
+	let getter_block = "\tlet kid = frame.get_key_id();\n\tif kid != expected_sender_kid {\n\t\treturn None;\n\t}\n\tlet ciphertext = frame.get_cipher_text().ok()?;\n\tlet ct_len = ciphertext.len();\n\tif ct_len <= MESSAGE_OVERHEAD {\n\t\treturn None;\n\t}\n\tlet context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};\n\tlet key_seq = frame.get_seq();";
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let getters = permutation
+			.map(|getter| getter_declarations[getter])
+			.join("\n\t");
+		let replacement = format!(
+			"\t{getters}\n\tif kid != expected_sender_kid {{\n\t\treturn None;\n\t}}\n\tlet ct_len = ciphertext.len();\n\tif ct_len <= MESSAGE_OVERHEAD {{\n\t\treturn None;\n\t}}\n\tlet context = OpenFrameContext {{\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t}};"
+		);
+		assert_rejected(
+			&format!("cryptoframe_getter_permutation_{index}"),
+			"CryptoFrame parser and gate evaluation order",
+			move |snapshot| {
+				replace_once(&mut snapshot.adapter_ratchet, getter_block, &replacement);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"cryptoframe_sender_gate_compares_wire_to_itself",
+		"CryptoFrame expected-sender gate",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn decrypt_message_with_ratchet(",
+				"if kid != expected_sender_kid {",
+				"if kid != frame.get_key_id() {",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_open_length_accepts_exact_overhead",
+		"CryptoFrame open length gate",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn open_frame(",
+				"if ct_len <= MESSAGE_OVERHEAD",
+				"if ct_len < MESSAGE_OVERHEAD",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_parser_length_accepts_exact_overhead",
+		"CryptoFrame pre-ratchet length gate",
+		|snapshot| {
+			let start = snapshot
+				.adapter_ratchet
+				.find("fn decrypt_message_with_ratchet(")
+				.unwrap();
+			let relative = snapshot.adapter_ratchet[start..]
+				.find("if ct_len <= MESSAGE_OVERHEAD")
+				.unwrap();
+			let gate = start + relative;
+			snapshot.adapter_ratchet.replace_range(
+				gate..gate + "if ct_len <= MESSAGE_OVERHEAD".len(),
+				"if ct_len < MESSAGE_OVERHEAD",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_open_context_payload_is_wire_data",
+			"\t\tciphertext,\n\t\tassociated_data,",
+			"\t\tciphertext: data,\n\t\tassociated_data,",
+			"CryptoFrame open context mapping",
+		),
+		(
+			"cryptoframe_open_context_ad_is_ciphertext",
+			"\t\tciphertext,\n\t\tassociated_data,",
+			"\t\tciphertext,\n\t\tassociated_data: ciphertext.try_into().ok()?,",
+			"CryptoFrame open context mapping",
+		),
+		(
+			"cryptoframe_open_context_sender_is_expected",
+			"sender_kid: kid,",
+			"sender_kid: expected_sender_kid,",
+			"CryptoFrame open context mapping",
+		),
+		(
+			"cryptoframe_ratchet_selects_sender_as_sequence",
+			"begin_receive(kernel, key_seq, context)",
+			"begin_receive(kernel, kid, context)",
+			"CryptoFrame parsed-sequence ratchet selection",
+		),
+		(
+			"cryptoframe_open_capability_pattern_is_mutable",
+			"verified_ratchet::ReceiveEffect::ReceiveOpenRequested(open) =>",
+			"beaconcrypt_core::ratchet::ReceiveEffect::ReceiveOpenRequested(open) =>",
+			"CryptoFrame parser and gate evaluation order",
+		),
+		(
+			"cryptoframe_open_uses_parsed_not_returned_sequence",
+			"open_frame(material, open.sequence(), open.context())",
+			"open_frame(material, key_seq, open.context())",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"cryptoframe_open_uses_rebuilt_context",
+			"open_frame(material, open.sequence(), open.context())",
+			"open_frame(material, open.sequence(), &context)",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"cryptoframe_open_finish_discards_plaintext",
+			"open.finish(opened)",
+			"open.finish(None)",
+			"CryptoFrame one-use receive completion",
+		),
+		(
+			"cryptoframe_result_swaps_sender_sequence",
+			"key_id: kid,\n\t\tseq: key_seq,",
+			"key_id: key_seq,\n\t\tseq: kid,",
+			"CryptoFrame returned parsed metadata",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn decrypt_message_with_ratchet(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"cryptoframe_open_renames_returned_material",
+		"CryptoFrame selected receive material and sequence",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.adapter_ratchet,
+				"let Some(material) = open.material() else {",
+				"let Some(selected_material) = open.material() else {",
+			);
+			replace_once(
+				&mut snapshot.adapter_ratchet,
+				"open_frame(material, open.sequence(), open.context())",
+				"open_frame(selected_material, open.sequence(), open.context())",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, fields) in [
+		(
+			"cryptoframe_schema_seq_type_drift",
+			[
+				("seq", 0, "Data"),
+				("keyId", 1, "UInt64"),
+				("cipherText", 2, "Data"),
+			],
+		),
+		(
+			"cryptoframe_schema_sender_type_drift",
+			[
+				("seq", 0, "UInt64"),
+				("keyId", 1, "Data"),
+				("cipherText", 2, "Data"),
+			],
+		),
+		(
+			"cryptoframe_schema_payload_type_drift",
+			[
+				("seq", 0, "UInt64"),
+				("keyId", 1, "UInt64"),
+				("cipherText", 2, "UInt64"),
+			],
+		),
+	] {
+		assert_rejected(name, "CryptoFrame schema changed", move |snapshot| {
+			replace_cryptoframe_schema(snapshot, &fields);
+		});
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_schema_extra_field",
+		"CryptoFrame schema changed",
+		|snapshot| {
+			replace_cryptoframe_schema(
+				snapshot,
+				&[
+					("seq", 0, "UInt64"),
+					("keyId", 1, "UInt64"),
+					("cipherText", 2, "Data"),
+					("targetId", 3, "UInt64"),
+				],
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (index, duplicated) in [
+		["plaintext", "plaintext", "commitment"],
+		["plaintext", "tag", "tag"],
+		["commitment", "tag", "commitment"],
+	]
+	.into_iter()
+	.enumerate()
+	{
+		let replacement = format!(
+			"\tlet mut payload = vec![];\n\tpayload.append(&mut {});\n\tpayload.append(&mut {});\n\tpayload.append(&mut {});",
+			duplicated[0], duplicated[1], duplicated[2]
+		);
+		assert_rejected(
+			&format!("cryptoframe_payload_duplicate_{index}"),
+			"CryptoFrame seal payload order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"\tplaintext.append(&mut tag);\n\tplaintext.append(&mut commitment);",
+					&replacement,
+				);
+				replace_once(
+					&mut snapshot.adapter_ratchet,
+					"builder.set_cipher_text(&plaintext)",
+					"builder.set_cipher_text(&payload)",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_open_uses_zero_key",
+			"let key: AeadKey = (*material.key().as_bytes()).into();",
+			"let key: AeadKey = [0u8; AEAD_KEY_LEN].into();",
+			"CryptoFrame open selected key",
+		),
+		(
+			"cryptoframe_open_uses_zero_nonce",
+			"let nonce: AeadNonce = (*material.nonce().as_bytes()).into();",
+			"let nonce: AeadNonce = [0u8; AEAD_NONCE_LEN].into();",
+			"CryptoFrame open selected nonce",
+		),
+		(
+			"cryptoframe_open_tag_slice_starts_late",
+			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE",
+			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN + 1..ct_len - COMMITMENT_SIZE",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"cryptoframe_open_tag_slice_ends_late",
+			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE",
+			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE + 1",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"cryptoframe_open_tag_uses_commitment_suffix",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE]",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"cryptoframe_open_commitment_slice_starts_late",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE + 1..]",
+			"CryptoFrame libsodium memcmp commitment comparison",
+		),
+		(
+			"cryptoframe_open_commitment_slice_ends_early",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
+			"&context.ciphertext[ct_len - COMMITMENT_SIZE..ct_len - 1]",
+			"CryptoFrame libsodium memcmp commitment comparison",
+		),
+		(
+			"cryptoframe_open_decrypts_ciphertext_without_tag",
+			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
+			"&context.ciphertext[..ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN]",
+			"CryptoFrame C-and-tag AEAD open",
+		),
+		(
+			"cryptoframe_open_decrypts_commitment_too",
+			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
+			"context.ciphertext",
+			"CryptoFrame C-and-tag AEAD open",
+		),
+		(
+			"cryptoframe_open_decrypt_prefix_boundary_late",
+			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
+			"&context.ciphertext[..ct_len - COMMITMENT_SIZE + 1]",
+			"CryptoFrame C-and-tag AEAD open",
+		),
+		(
+			"cryptoframe_open_omits_associated_data",
+			"Some(context.associated_data.as_slice()),",
+			"None,",
+			"CryptoFrame C-and-tag AEAD open",
+		),
+		(
+			"cryptoframe_open_commitment_swaps_sequence_sender",
+			"\t\tkey_seq,\n\t\tcontext.sender_kid,",
+			"\t\tcontext.sender_kid,\n\t\tkey_seq,",
+			"CryptoFrame open commitment mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.adapter_ratchet, "fn open_frame(", from, to);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"cryptoframe_open_decrypts_before_commitment_equality",
+		"CryptoFrame commitment-before-AEAD order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn open_frame(",
+				"\tif !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {\n\t\treturn None;\n\t}\n\tlet key: AeadKey = (*material.key().as_bytes()).into();\n\tlet nonce: AeadNonce = (*material.nonce().as_bytes()).into();\n\tcrypto_aead::chacha20poly1305_ietf::decrypt(\n\t\t&context.ciphertext[..ct_len - COMMITMENT_SIZE],\n\t\tSome(context.associated_data.as_slice()),\n\t\t&nonce,\n\t\t&key,\n\t)\n\t.ok()",
+				"\tlet key: AeadKey = (*material.key().as_bytes()).into();\n\tlet nonce: AeadNonce = (*material.nonce().as_bytes()).into();\n\tlet opened = crypto_aead::chacha20poly1305_ietf::decrypt(\n\t\t&context.ciphertext[..ct_len - COMMITMENT_SIZE],\n\t\tSome(context.associated_data.as_slice()),\n\t\t&nonce,\n\t\t&key,\n\t)\n\t.ok();\n\tif !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {\n\t\treturn None;\n\t}\n\topened",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_commitment_extracts_zero_key",
+			"let key = material.key().as_bytes();",
+			"let key = &[0u8; AEAD_KEY_LEN];",
+			"CryptoFrame commitment selected key",
+		),
+		(
+			"cryptoframe_commitment_extracts_zero_nonce",
+			"let nonce = material.nonce().as_bytes();",
+			"let nonce = &[0u8; AEAD_NONCE_LEN];",
+			"CryptoFrame commitment selected nonce",
+		),
+		(
+			"cryptoframe_commitment_converts_tag_as_ad",
+			"let ad = ad.try_into().ok()?;",
+			"let ad = tag.try_into().ok()?;",
+			"CryptoFrame commitment fixed-width AD",
+		),
+		(
+			"cryptoframe_commitment_uses_ad_prefix_as_tag",
+			"let tag = tag.try_into().ok()?;",
+			"let tag = ad[..AEAD_TAG_LEN].try_into().ok()?;",
+			"CryptoFrame commitment fixed-width retained tag",
+		),
+		(
+			"cryptoframe_commitment_core_call_swaps_sequence_sender",
+			"build_commitment_transcript(key, nonce, ad, tag, seq, kid)",
+			"build_commitment_transcript(key, nonce, ad, tag, kid, seq)",
+			"CryptoFrame adapter-to-core commitment mapping",
+		),
+		(
+			"cryptoframe_commitment_hash_output_shortened",
+			"generichash(input.as_bytes(), None, COMMITMENT_SIZE)",
+			"generichash(input.as_bytes(), None, COMMITMENT_SIZE - 1)",
+			"CryptoFrame unkeyed commitment hash",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn build_commitment(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_core_key_size_drift",
+			"pub const AEAD_KEY_SIZE: usize = 32;",
+			"pub const AEAD_KEY_SIZE: usize = 31;",
+			"CryptoFrame core key size",
+		),
+		(
+			"cryptoframe_core_nonce_size_drift",
+			"pub const AEAD_NONCE_SIZE: usize = 12;",
+			"pub const AEAD_NONCE_SIZE: usize = 11;",
+			"CryptoFrame core nonce size",
+		),
+		(
+			"cryptoframe_core_ad_size_source_drift",
+			"pub const ASSOCIATED_DATA_SIZE: usize = crate::constants::ASSOCIATED_DATA_SIZE;",
+			"pub const ASSOCIATED_DATA_SIZE: usize = 152;",
+			"CryptoFrame core associated-data size source",
+		),
+		(
+			"cryptoframe_core_tag_size_drift",
+			"pub const AEAD_TAG_SIZE: usize = 16;",
+			"pub const AEAD_TAG_SIZE: usize = 15;",
+			"CryptoFrame core tag size",
+		),
+		(
+			"cryptoframe_core_integer_size_drift",
+			"pub const ENCODED_U64_SIZE: usize = 8;",
+			"pub const ENCODED_U64_SIZE: usize = 7;",
+			"CryptoFrame core integer size",
+		),
+		(
+			"cryptoframe_core_transcript_formula_omits_sender",
+			"AEAD_TAG_SIZE + (2 * ENCODED_U64_SIZE)",
+			"AEAD_TAG_SIZE + ENCODED_U64_SIZE",
+			"CryptoFrame core transcript-size formula",
+		),
+		(
+			"cryptoframe_core_ad_length_assertion_drift",
+			"assert!(ASSOCIATED_DATA_SIZE == 153)",
+			"assert!(ASSOCIATED_DATA_SIZE == 152)",
+			"CryptoFrame core associated-data length",
+		),
+		(
+			"cryptoframe_core_transcript_length_assertion_drift",
+			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 229)",
+			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 228)",
+			"CryptoFrame core transcript length",
+		),
+		(
+			"cryptoframe_core_result_uses_literal_size",
+			"bytes: [u8; COMMITMENT_TRANSCRIPT_SIZE]",
+			"bytes: [u8; 229]",
+			"CryptoFrame core fixed-width result",
+		),
+		(
+			"cryptoframe_core_sequence_parameter_narrows",
+			"sequence: u64,\n\tsender_id: u64,",
+			"sequence: u32,\n\tsender_id: u64,",
+			"CryptoFrame core transcript signature",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_commitment, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"cryptoframe_core_le64_uses_big_endian_order",
+		"CryptoFrame core LE64 encoding",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"\t\tvalue as u8,\n\t\t(value >> 8) as u8,\n\t\t(value >> 16) as u8,\n\t\t(value >> 24) as u8,\n\t\t(value >> 32) as u8,\n\t\t(value >> 40) as u8,\n\t\t(value >> 48) as u8,\n\t\t(value >> 56) as u8,",
+				"\t\t(value >> 56) as u8,\n\t\t(value >> 48) as u8,\n\t\t(value >> 40) as u8,\n\t\t(value >> 32) as u8,\n\t\t(value >> 24) as u8,\n\t\t(value >> 16) as u8,\n\t\t(value >> 8) as u8,\n\t\tvalue as u8,",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_core_swaps_encoded_sequence_sender",
+		"CryptoFrame core integer mapping",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"\tlet sequence = encode_u64_le(sequence);\n\tlet sender_id = encode_u64_le(sender_id);",
+				"\tlet sequence = encode_u64_le(sender_id);\n\tlet sender_id = encode_u64_le(sequence);",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_core_key_bytes_reversed",
+			"key[i]",
+			"key[31 - i]",
+			"CryptoFrame core key field",
+		),
+		(
+			"cryptoframe_core_nonce_offset_drift",
+			"nonce[i - 32]",
+			"nonce[i - 31]",
+			"CryptoFrame core nonce field",
+		),
+		(
+			"cryptoframe_core_ad_offset_drift",
+			"associated_data[i - 44]",
+			"associated_data[i - 43]",
+			"CryptoFrame core associated-data field",
+		),
+		(
+			"cryptoframe_core_tag_offset_drift",
+			"tag[i - 197]",
+			"tag[i - 196]",
+			"CryptoFrame core retained-tag field",
+		),
+		(
+			"cryptoframe_core_sequence_offset_drift",
+			"sequence[i - 213]",
+			"sequence[i - 212]",
+			"CryptoFrame core sequence field",
+		),
+		(
+			"cryptoframe_core_sender_offset_drift",
+			"sender_id[i - 221]",
+			"sender_id[i - 220]",
+			"CryptoFrame core sender-ID field",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_commitment, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_core_array_builder_spelling_drift",
+		"CryptoFrame core fixed-width construction",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"core::array::from_fn(|i|",
+				"core::array::from_fn::<_, COMMITMENT_TRANSCRIPT_SIZE, _>(|i|",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_core_result_clones_bytes",
+		"CryptoFrame core transcript result",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"CommitmentTranscript { bytes }",
+				"CommitmentTranscript { bytes: bytes.clone() }",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"cryptoframe_core_reorders_tag_and_sequence_branches",
+		"CryptoFrame core transcript field order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_commitment,
+				"\t\t} else if i < 213 {\n\t\t\ttag[i - 197]\n\t\t} else if i < 221 {\n\t\t\tsequence[i - 213]",
+				"\t\t} else if i < 221 {\n\t\t\tsequence[i - 213]\n\t\t} else if i < 213 {\n\t\t\ttag[i - 197]",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	let symbolic_fields = ["ciphertext", "retained_aead_tag", "commitment"];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let fields = permutation.map(|field| symbolic_fields[field]);
+		let mutated = format!(
+			"crypto_frame.fields={},sequence,sender_id",
+			fields.join(",")
+		);
+		assert_rejected(
+			&format!("cryptoframe_symbolic_annotation_permutation_{index}"),
+			"CryptoFrame symbolic semantic field order",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.crypto,
+					"crypto_frame.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id",
+					&mutated,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_symbolic_annotation_uses_target_id",
+		"CryptoFrame symbolic semantic field order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.crypto,
+				"commitment,sequence,sender_id *)",
+				"commitment,sequence,target_id *)",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, from, to) in [
+		(
+			"cryptoframe_symbolic_sequence_type_drift",
+			"  sequence,\n  key_id\n): bitstring [data].",
+			"  key_id,\n  key_id\n): bitstring [data].",
+		),
+		(
+			"cryptoframe_symbolic_sender_type_drift",
+			"  sequence,\n  key_id\n): bitstring [data].",
+			"  sequence,\n  bitstring\n): bitstring [data].",
+		),
+	] {
+		assert_rejected(
+			name,
+			"CryptoFrame symbolic constructor declaration",
+			|snapshot| {
+				replace_once(&mut snapshot.crypto, from, to);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let seal_formals = [
+		"material: bitstring",
+		"associated_data: bitstring",
+		"message_sequence: sequence",
+		"sender_id: key_id",
+		"plaintext: bitstring",
+	];
+	let seal_bitstrings = [seal_formals[0], seal_formals[1], seal_formals[4]];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let permuted = permute_cryptoframe(&seal_bitstrings, permutation);
+		let mut arguments = seal_formals.map(str::to_owned).to_vec();
+		arguments[0] = permuted[0].clone();
+		arguments[1] = permuted[1].clone();
+		arguments[4] = permuted[2].clone();
+		assert_rejected(
+			&format!("cryptoframe_symbolic_seal_argument_permutation_{index}"),
+			"CryptoFrame symbolic seal arguments",
+			move |snapshot| replace_call(&mut snapshot.crypto, "seal_frame", 0, &arguments),
+		);
+		mutation_count += 1;
+	}
+
+	let seal_fields = [
+		"aead_cipher(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"aead_tag(material_key(material),material_nonce(material),associated_data,plaintext)",
+		"ctx_commitment(material_key(material),material_nonce(material),associated_data,aead_tag(material_key(material),material_nonce(material),associated_data,plaintext),message_sequence,sender_id)",
+	];
+	let seal_tail = ["message_sequence", "sender_id"];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let mut arguments = permute_cryptoframe(&seal_fields, permutation);
+		arguments.extend(seal_tail.map(str::to_owned));
+		assert_rejected(
+			&format!("cryptoframe_symbolic_seal_field_permutation_{index}"),
+			"CryptoFrame symbolic seal fields",
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 1, &arguments),
+		);
+		mutation_count += 1;
+	}
+	for (index, duplicated) in [
+		[seal_fields[0], seal_fields[0], seal_fields[2]],
+		[seal_fields[0], seal_fields[1], seal_fields[1]],
+		[seal_fields[2], seal_fields[1], seal_fields[2]],
+	]
+	.into_iter()
+	.enumerate()
+	{
+		let mut arguments = duplicated.map(str::to_owned).to_vec();
+		arguments.extend(seal_tail.map(str::to_owned));
+		let diagnostic = match index {
+			1 => "seal CTX input",
+			2 => "seal AEAD input",
+			_ => "CryptoFrame symbolic seal fields",
+		};
+		assert_rejected(
+			&format!("cryptoframe_symbolic_seal_field_duplicate_{index}"),
+			diagnostic,
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 1, &arguments),
+		);
+		mutation_count += 1;
+	}
+
+	let open_fields = [
+		"aead_cipher(key,nonce,associated_data,plaintext)",
+		"aead_tag(key,nonce,associated_data,plaintext)",
+		"blake2b512(ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id)))",
+	];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let mut arguments = permute_cryptoframe(&open_fields, permutation);
+		arguments.extend(seal_tail.map(str::to_owned));
+		assert_rejected(
+			&format!("cryptoframe_symbolic_open_field_permutation_{index}"),
+			"CryptoFrame symbolic open fields",
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 2, &arguments),
+		);
+		mutation_count += 1;
+	}
+	for (index, duplicated) in [
+		[open_fields[0], open_fields[0], open_fields[2]],
+		[open_fields[0], open_fields[1], open_fields[1]],
+		[open_fields[2], open_fields[1], open_fields[2]],
+	]
+	.into_iter()
+	.enumerate()
+	{
+		let mut arguments = duplicated.map(str::to_owned).to_vec();
+		arguments.extend(seal_tail.map(str::to_owned));
+		let diagnostic = if index == 1 {
+			"open CTX input"
+		} else {
+			"CryptoFrame symbolic open fields"
+		};
+		assert_rejected(
+			&format!("cryptoframe_symbolic_open_field_duplicate_{index}"),
+			diagnostic,
+			move |snapshot| replace_call(&mut snapshot.crypto, "crypto_frame", 2, &arguments),
+		);
+		mutation_count += 1;
+	}
+
+	let open_frame_arguments = [
+		"ratchet_key_nonce(key,nonce)",
+		"associated_data",
+		"message_sequence",
+		"sender_id",
+		"crypto_frame(aead_cipher(key,nonce,associated_data,plaintext),aead_tag(key,nonce,associated_data,plaintext),blake2b512(ctx_preimage(key,nonce,associated_data,aead_tag(key,nonce,associated_data,plaintext),sequence_le64(message_sequence),sender_id_le64(sender_id))),message_sequence,sender_id)",
+	];
+	let open_bitstrings = [
+		open_frame_arguments[0],
+		open_frame_arguments[1],
+		open_frame_arguments[4],
+	];
+	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
+		let permuted = permute_cryptoframe(&open_bitstrings, permutation);
+		let mut arguments = open_frame_arguments.map(str::to_owned).to_vec();
+		arguments[0] = permuted[0].clone();
+		arguments[1] = permuted[1].clone();
+		arguments[4] = permuted[2].clone();
+		assert_rejected(
+			&format!("cryptoframe_symbolic_open_argument_permutation_{index}"),
+			"CryptoFrame symbolic open acceptance",
+			move |snapshot| replace_call(&mut snapshot.crypto, "open_frame", 0, &arguments),
+		);
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"cryptoframe_symbolic_open_returns_associated_data",
+		"CryptoFrame symbolic open result",
+		|snapshot| {
+			let end = snapshot.crypto.rfind(") = plaintext.").unwrap();
+			snapshot
+				.crypto
+				.replace_range(end..end + ") = plaintext.".len(), ") = associated_data.");
+		},
+	);
+	mutation_count += 1;
+
+	for (name, occurrence, seal_context, diagnostic) in [
+		(
+			"cryptoframe_symbolic_seal_commitment_uses_different_tag",
+			1,
+			true,
+			"seal CTX input",
+		),
+		(
+			"cryptoframe_symbolic_open_commitment_uses_different_tag",
+			3,
+			false,
+			"open CTX input",
+		),
+	] {
+		let arguments = if seal_context {
+			[
+				"material_key(material)",
+				"material_nonce(material)",
+				"associated_data",
+				"associated_data",
+			]
+			.map(str::to_owned)
+		} else {
+			["key", "nonce", "associated_data", "associated_data"].map(str::to_owned)
+		};
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_call(&mut snapshot.crypto, "aead_tag", occurrence, &arguments);
+		});
+		mutation_count += 1;
+	}
+
+	let ctx_fields = [
+		"key",
+		"nonce",
+		"associated_data",
+		"retained_aead_tag",
+		"sequence_le64(message_sequence)",
+		"sender_id_le64(sender_id)",
+	];
+	for left in 0..6 {
+		for right in left + 1..6 {
+			let mut arguments = ctx_fields.map(str::to_owned);
+			arguments.swap(left, right);
+			assert_rejected(
+				&format!("cryptoframe_ctx_pair_transposition_{left}_{right}"),
+				"CTX preimage field order",
+				move |snapshot| {
+					replace_call(&mut snapshot.interface, "ctx_preimage", 1, &arguments);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+	for omitted in 0..6 {
+		let mut arguments = ctx_fields.map(str::to_owned);
+		arguments[omitted] = ctx_fields[(omitted + 1) % 6].to_owned();
+		assert_rejected(
+			&format!("cryptoframe_ctx_omits_and_duplicates_field_{omitted}"),
+			"CTX preimage field order",
+			move |snapshot| {
+				replace_call(&mut snapshot.interface, "ctx_preimage", 1, &arguments);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, CRYPTOFRAME_WIRE_MUTATION_COUNT);
+}
+
+const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 163;
+
+#[test]
+fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	for key in [
+		"phase1.init_kex.constructor",
+		"phase1.init_kex.field_count",
+		"phase1.init_kex.field.0",
+		"phase1.init_kex.field.1",
+		"phase1.init_kex.field.2",
+		"phase1.init_kex.field.3",
+		"phase1.signature.primitive",
+		"phase1.signature.format",
+		"phase1.init_kex.beacon_writes",
+		"phase1.init_kex.beacon_signs",
+		"phase1.init_kex.server_reads",
+		"phase1.init_kex.server.verifies",
+		"phase1.init_kex.server.from_encoded",
+		"phase1.init_kex.server.validates",
+		"phase1.init_kex.symbolic.fields",
+		"phase1.init_kex.symbolic.producers",
+		"phase1.init_kex.symbolic.consumers",
+		"phase1.init_kex.symbolic.validation",
+	] {
+		let name = format!("changed_{key}");
+		assert_rejected(&name, key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	const SCHEMA_FIELDS: [(&str, usize); 4] = [
+		("identityKey", 0),
+		("preKey", 1),
+		("oneTimeKey", 2),
+		("pqKey", 3),
+	];
+	let permutations = phase1_permutations();
+	assert_eq!(permutations.len(), 24);
+	for (index, permutation) in permutations
+		.iter()
+		.copied()
+		.filter(|permutation| permutation != &[0, 1, 2, 3])
+		.enumerate()
+	{
+		let fields = permutation.map(|field| SCHEMA_FIELDS[field]);
+		let name = format!("phase1_schema_same_typed_permutation_{index}");
+		assert_rejected(&name, "Phase-1 InitKex schema", move |snapshot| {
+			replace_phase1_schema(snapshot, &fields);
+		});
+		mutation_count += 1;
+	}
+	for omitted in 0..4 {
+		let fields = SCHEMA_FIELDS
+			.iter()
+			.enumerate()
+			.filter(|(index, _)| *index != omitted)
+			.enumerate()
+			.map(|(ordinal, (_, (name, _)))| (*name, ordinal))
+			.collect::<Vec<_>>();
+		let name = format!("phase1_schema_omits_field_{omitted}");
+		assert_rejected(&name, "Phase-1 InitKex schema", move |snapshot| {
+			replace_phase1_schema(snapshot, &fields);
+		});
+		mutation_count += 1;
+	}
+	for (original, renamed) in [
+		("identityKey", "renamedIdentityKey"),
+		("preKey", "renamedPreKey"),
+		("oneTimeKey", "renamedOneTimeKey"),
+		("pqKey", "renamedPqKey"),
+	] {
+		let name = format!("phase1_schema_renames_{original}");
+		assert_rejected(&name, "Phase-1 InitKex schema", |snapshot| {
+			replace_once(&mut snapshot.phase1_schema, original, renamed);
+		});
+		mutation_count += 1;
+	}
+	for (index, permutation) in phase1_transpositions().into_iter().enumerate() {
+		let fields = SCHEMA_FIELDS.map(|(name, _)| {
+			(
+				name,
+				permutation[SCHEMA_FIELDS
+					.iter()
+					.position(|(candidate, _)| candidate == &name)
+					.unwrap()],
+			)
+		});
+		let name = format!("phase1_schema_ordinal_drift_{index}");
+		assert_rejected(&name, "Phase-1 InitKex schema", move |snapshot| {
+			replace_phase1_schema(snapshot, &fields);
+		});
+		mutation_count += 1;
+	}
+
+	let beacon_setters = [
+		(
+			"bundle.set_identity_key",
+			"started.message.identity_key()",
+			"Phase-1 Beacon identity setter mapping",
+		),
+		(
+			"bundle.set_pre_key",
+			"&prekey_sig",
+			"Phase-1 Beacon prekey setter mapping",
+		),
+		(
+			"bundle.set_one_time_key",
+			"&onetime_sig",
+			"Phase-1 Beacon one-time setter mapping",
+		),
+		(
+			"bundle.set_pq_key",
+			"&pq_sig",
+			"Phase-1 Beacon ML-KEM setter mapping",
+		),
+	];
+	let beacon_payloads = [
+		"started.message.identity_key()",
+		"&crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?",
+		"&crypto_sign::sign(started.message.one_time_key(), self.identity_sk()).ok()?",
+		"&crypto_sign::sign(started.message.pq_key(), self.identity_sk()).ok()?",
+	];
+	for (setter_index, (function, canonical, diagnostic)) in beacon_setters.iter().enumerate() {
+		for (payload_index, payload) in beacon_payloads.iter().enumerate() {
+			if setter_index == payload_index {
+				continue;
+			}
+			let name = format!("phase1_beacon_setter_{setter_index}_uses_{payload_index}");
+			let from = format!("{function}({canonical});");
+			let to = format!("{function}({payload});");
+			assert_rejected(&name, diagnostic, |snapshot| {
+				replace_once(&mut snapshot.adapter_beacon, &from, &to);
+			});
+			mutation_count += 1;
+		}
+	}
+	let signed_inputs = [
+		"started.message.prekey()",
+		"started.message.one_time_key()",
+		"started.message.pq_key()",
+	];
+	for (signature_index, canonical) in signed_inputs.iter().enumerate() {
+		for (input_index, replacement) in signed_inputs.iter().enumerate() {
+			if signature_index == input_index {
+				continue;
+			}
+			let name = format!("phase1_beacon_signature_{signature_index}_uses_{input_index}");
+			let from = format!("crypto_sign::sign({canonical}, self.identity_sk())");
+			let to = format!("crypto_sign::sign({replacement}, self.identity_sk())");
+			assert_rejected(
+				&name,
+				"Phase-1 Beacon attached-signature inputs",
+				|snapshot| {
+					replace_once(&mut snapshot.adapter_beacon, &from, &to);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	let server_consumers = [
+		(
+			"registration.get_identity_key()",
+			"Phase-1 Server identity consumer",
+		),
+		(
+			"registration.get_pre_key()",
+			"Phase-1 Server prekey signature consumer",
+		),
+		(
+			"registration.get_one_time_key()",
+			"Phase-1 Server one-time signature consumer",
+		),
+		(
+			"registration.get_pq_key()",
+			"Phase-1 Server ML-KEM signature consumer",
+		),
+	];
+	for (consumer_index, (canonical, diagnostic)) in server_consumers.iter().enumerate() {
+		for (field_index, (replacement, _)) in server_consumers.iter().enumerate() {
+			if consumer_index == field_index {
+				continue;
+			}
+			let name = format!("phase1_server_consumer_{consumer_index}_uses_{field_index}");
+			assert_rejected(&name, diagnostic, |snapshot| {
+				replace_once(&mut snapshot.adapter_server, canonical, replacement);
+			});
+			mutation_count += 1;
+		}
+	}
+	for (name, getter, diagnostic) in [
+		(
+			"phase1_server_pq_verifies_under_local_identity",
+			"registration.get_pq_key().ok()?",
+			"Phase-1 Server ML-KEM signature consumer",
+		),
+		(
+			"phase1_server_prekey_verifies_under_local_identity",
+			"registration.get_pre_key().ok()?",
+			"Phase-1 Server prekey signature consumer",
+		),
+		(
+			"phase1_server_one_time_verifies_under_local_identity",
+			"registration.get_one_time_key().ok()?",
+			"Phase-1 Server one-time signature consumer",
+		),
+	] {
+		let from = format!("crypto_sign::verify({getter}, &remote_id)");
+		let to = format!("crypto_sign::verify({getter}, self.identity_pk())");
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_server, &from, &to);
+		});
+		mutation_count += 1;
+	}
+	let encoded_identity = "encoded_identity";
+	let prekey_verified = "prekey_verified.as_slice().try_into().ok()?";
+	let onetime_verified = "onetime_verified.as_slice().try_into().ok()?";
+	let pq_verified = "pq_verified.as_slice().try_into().ok()?";
+	for (name, arguments) in [
+		(
+			"phase1_from_encoded_duplicates_one_time",
+			[
+				encoded_identity,
+				onetime_verified,
+				onetime_verified,
+				pq_verified,
+			],
+		),
+		(
+			"phase1_from_encoded_duplicates_prekey",
+			[
+				encoded_identity,
+				prekey_verified,
+				prekey_verified,
+				pq_verified,
+			],
+		),
+		(
+			"phase1_from_encoded_swaps_x25519_roles",
+			[
+				encoded_identity,
+				onetime_verified,
+				prekey_verified,
+				pq_verified,
+			],
+		),
+	] {
+		let arguments = arguments.map(str::to_owned);
+		assert_rejected(
+			name,
+			"Phase-1 Server from_encoded mapping",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.adapter_server,
+					"verified_pqxdh::InitKex::from_encoded",
+					0,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	let declaration_arguments = [
+		"encoded_identity",
+		"signed_prekey",
+		"signed_one_time",
+		"signed_pq",
+	];
+	let producer_arguments = [
+		"tag_ed25519(beacon_identity)",
+		"sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret)",
+		"sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret)",
+		"sign(tag_mlkem768(beacon_pq), beacon_identity_secret)",
+	];
+	let forged_producer_arguments = [
+		"tag_ed25519(beacon_identity)",
+		"sign(tag_x25519_prekey(forged_prekey), beacon_identity_secret)",
+		"sign(tag_x25519_one_time(forged_one_time), beacon_identity_secret)",
+		"sign(tag_mlkem768(forged_pq), beacon_identity_secret)",
+	];
+	let server_core_arguments = [
+		"encoded_identity",
+		"tag_x25519_prekey(beacon_prekey)",
+		"tag_x25519_one_time(beacon_one_time)",
+		"tag_mlkem768(beacon_pq)",
+	];
+	let honest_core_arguments = [
+		"tag_ed25519(beacon_identity)",
+		"tag_x25519_prekey(beacon_prekey)",
+		"tag_x25519_one_time(beacon_one_time)",
+		"tag_mlkem768(beacon_pq)",
+	];
+	for (index, permutation) in phase1_transpositions().into_iter().enumerate() {
+		let declaration = permute_phase1(&declaration_arguments, permutation);
+		let declaration_value = declaration.join(",");
+		let annotation =
+			"signed_init_kex.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq";
+		let mutated_annotation = format!("signed_init_kex.fields={declaration_value}");
+		assert_rejected(
+			&format!("phase1_symbolic_declaration_transposition_{index}"),
+			"Phase-1 symbolic constructor semantic order",
+			|snapshot| {
+				replace_once(&mut snapshot.environment, annotation, &mutated_annotation);
+			},
+		);
+		mutation_count += 1;
+
+		for (name, occurrence, diagnostic) in [
+			(
+				"honest_producer",
+				1,
+				"Phase-1 symbolic honest/malicious producer order",
+			),
+			(
+				"malicious_producer",
+				2,
+				"Phase-1 symbolic honest/malicious producer order",
+			),
+		] {
+			let arguments = permute_phase1(&producer_arguments, permutation);
+			assert_rejected(
+				&format!("phase1_symbolic_{name}_transposition_{index}"),
+				diagnostic,
+				move |snapshot| {
+					replace_call(
+						&mut snapshot.environment,
+						"signed_init_kex",
+						occurrence,
+						&arguments,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+		let arguments = permute_phase1(&forged_producer_arguments, permutation);
+		assert_rejected(
+			&format!("phase1_symbolic_active_quantum_producer_transposition_{index}"),
+			"Phase-1 active-quantum producer order",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.active_quantum_witness,
+					"signed_init_kex",
+					1,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+
+		for (name, occurrence) in [("server_consumer", 3), ("malicious_server_consumer", 4)] {
+			let arguments = permute_phase1(&declaration_arguments, permutation);
+			assert_rejected(
+				&format!("phase1_symbolic_{name}_transposition_{index}"),
+				"Phase-1 symbolic Server consumer order",
+				move |snapshot| {
+					replace_call(
+						&mut snapshot.environment,
+						"signed_init_kex",
+						occurrence,
+						&arguments,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+		let arguments = permute_phase1(&declaration_arguments, permutation);
+		assert_rejected(
+			&format!("phase1_symbolic_active_quantum_consumer_transposition_{index}"),
+			"Phase-1 active-quantum consumer order",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.active_quantum_witness,
+					"signed_init_kex",
+					0,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+
+		let arguments = permute_phase1(&honest_core_arguments, permutation);
+		assert_rejected(
+			&format!("phase1_symbolic_honest_core_transposition_{index}"),
+			"Phase-1 symbolic honest core mapping",
+			move |snapshot| {
+				replace_call(
+					&mut snapshot.environment,
+					"beaconcrypt_core__pqxdh__InitKex",
+					0,
+					&arguments,
+				);
+			},
+		);
+		mutation_count += 1;
+		for (name, occurrence) in [("server_core", 1), ("malicious_server_core", 2)] {
+			let arguments = permute_phase1(&server_core_arguments, permutation);
+			assert_rejected(
+				&format!("phase1_symbolic_{name}_transposition_{index}"),
+				"Phase-1 symbolic Server core mapping",
+				move |snapshot| {
+					replace_call(
+						&mut snapshot.environment,
+						"beaconcrypt_core__pqxdh__InitKex",
+						occurrence,
+						&arguments,
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"phase1_core_prekey_uses_one_time_role",
+			"prekey: tag_x25519_key(KEY_ROLE_PREKEY, inputs.prekey_public_key)",
+			"prekey: tag_x25519_key(KEY_ROLE_ONE_TIME, inputs.prekey_public_key)",
+			"Phase-1 core prekey encoding",
+		),
+		(
+			"phase1_core_one_time_uses_prekey_role",
+			"one_time_key: tag_x25519_key(KEY_ROLE_ONE_TIME, coins.one_time_public_key)",
+			"one_time_key: tag_x25519_key(KEY_ROLE_PREKEY, coins.one_time_public_key)",
+			"Phase-1 core one-time encoding",
+		),
+		(
+			"phase1_core_prekey_validates_one_time_role",
+			"untag_x25519_key(message.prekey, KEY_ROLE_PREKEY)",
+			"untag_x25519_key(message.prekey, KEY_ROLE_ONE_TIME)",
+			"Phase-1 core X25519 prekey role validation",
+		),
+		(
+			"phase1_core_one_time_validates_prekey_role",
+			"untag_x25519_key(message.one_time_key, KEY_ROLE_ONE_TIME)",
+			"untag_x25519_key(message.one_time_key, KEY_ROLE_PREKEY)",
+			"Phase-1 core X25519 one-time role validation",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_pqxdh, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"phase1_server_accepts_mlkem_identity_tag",
+		"Phase-1 Server Ed25519 identity tag gate",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.adapter_server,
+				"encoded_identity[0] != verified_pqxdh::SIGN_TYPE_ED25519",
+				"encoded_identity[0] != verified_pqxdh::KEM_TYPE_MLKEM768",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_server_decodes_identity_with_tag",
+		"Phase-1 Server identity decoder",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.adapter_server,
+				"crypto_sign::PublicKey::from_bytes(&encoded_identity[1..])",
+				"crypto_sign::PublicKey::from_bytes(&encoded_identity[..32])",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_symbolic_signature_verifies_under_x25519_key",
+		"Phase-1 symbolic attached-signature verification",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.crypto,
+				"ed_public(signing_key)) = message",
+				"x25519_public(signing_key)) = message",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_server_reorders_pq_and_prekey_verification",
+		"Phase-1 Server source evaluation order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.adapter_server,
+				"\t\tlet pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id)?;\n\t\tlet prekey_verified = crypto_sign::verify(registration.get_pre_key().ok()?, &remote_id)?;",
+				"\t\tlet prekey_verified = crypto_sign::verify(registration.get_pre_key().ok()?, &remote_id)?;\n\t\tlet pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id)?;",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_symbolic_reorders_prekey_and_one_time_gates",
+		"Phase-1 symbolic pure-gate evaluation order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"  let tag_x25519_prekey(beacon_prekey: bitstring) =\n    verify_signature(signed_prekey, beacon_identity)\n  in\n  let tag_x25519_one_time(beacon_one_time: bitstring) =\n    verify_signature(signed_one_time, beacon_identity)\n  in",
+				"  let tag_x25519_one_time(beacon_one_time: bitstring) =\n    verify_signature(signed_one_time, beacon_identity)\n  in\n  let tag_x25519_prekey(beacon_prekey: bitstring) =\n    verify_signature(signed_prekey, beacon_identity)\n  in",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_beacon_serializes_identity_after_prekey_signature",
+		"Phase-1 Beacon serialization order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.adapter_beacon,
+				"\t\tbundle.set_identity_key(started.message.identity_key());\n\t\tlet prekey_sig = crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?;\n\t\tbundle.set_pre_key(&prekey_sig);",
+				"\t\tlet prekey_sig = crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?;\n\t\tbundle.set_identity_key(started.message.identity_key());\n\t\tbundle.set_pre_key(&prekey_sig);",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_core_reorders_prekey_and_one_time_fields",
+		"Phase-1 core InitKex field order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				"\t\t\tprekey: tag_x25519_key(KEY_ROLE_PREKEY, inputs.prekey_public_key),\n\t\t\tone_time_key: tag_x25519_key(KEY_ROLE_ONE_TIME, coins.one_time_public_key),",
+				"\t\t\tone_time_key: tag_x25519_key(KEY_ROLE_ONE_TIME, coins.one_time_public_key),\n\t\t\tprekey: tag_x25519_key(KEY_ROLE_PREKEY, inputs.prekey_public_key),",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_rejected(
+		"phase1_core_reorders_prekey_and_one_time_validation",
+		"Phase-1 core tag-validation order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				"\tlet Some(prekey) = untag_x25519_key(message.prekey, KEY_ROLE_PREKEY) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};\n\tlet Some(one_time) = untag_x25519_key(message.one_time_key, KEY_ROLE_ONE_TIME) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};",
+				"\tlet Some(one_time) = untag_x25519_key(message.one_time_key, KEY_ROLE_ONE_TIME) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};\n\tlet Some(prekey) = untag_x25519_key(message.prekey, KEY_ROLE_PREKEY) else {\n\t\treturn Err(RegistrationError::InvalidKeyEncoding);\n\t};",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	assert_eq!(mutation_count, PHASE1_REGISTRATION_MUTATION_COUNT);
+}
+
+const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 242;
+
+#[test]
+fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let endpoint_facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("endpoint."))
+		.collect::<Vec<_>>();
+	assert_eq!(endpoint_facts.len(), 56);
+	for fact in endpoint_facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_rejected(&format!("endpoint_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_sender_parser_ignores_wire",
+			"capnp::serialize::read_message(data, ReaderOptions::new())",
+			"capnp::serialize::read_message(&[], ReaderOptions::new())",
+			"endpoint Server wire-sender Cap'n Proto read",
+		),
+		(
+			"endpoint_sender_parser_uses_phase2_type",
+			"TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"TypedReader::<_, crate::phase2_capnp::kex_response::Owned>::new(reader)",
+			"endpoint Server wire-sender typed CryptoFrame reader",
+		),
+		(
+			"endpoint_sender_parser_returns_sequence",
+			"Some(typed_reader.get().ok()?.get_key_id())",
+			"Some(typed_reader.get().ok()?.get_seq())",
+			"endpoint Server wire-sender keyId getter",
+		),
+		(
+			"endpoint_sender_parser_returns_constant",
+			"Some(typed_reader.get().ok()?.get_key_id())",
+			"Some(0)",
+			"endpoint Server wire-sender keyId getter",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn encrypted_frame_sender",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"endpoint_server_ad_reverses_identities",
+			"build_associated_data(\n\t\t\tself.identity_pk().clone(),\n\t\t\tself.pk_by_kid(k)?.clone(),\n\t\t)",
+			"build_associated_data(\n\t\t\tself.pk_by_kid(k)?.clone(),\n\t\t\tself.identity_pk().clone(),\n\t\t)",
+		),
+		(
+			"endpoint_server_ad_selects_local_id",
+			"self.pk_by_kid(k)?.clone()",
+			"self.pk_by_kid(self.identity_key_kid)?.clone()",
+		),
+		(
+			"endpoint_server_ad_uses_peer_twice",
+			"self.identity_pk().clone()",
+			"self.pk_by_kid(k)?.clone()",
+		),
+	] {
+		assert_rejected(
+			name,
+			"endpoint Server server-first associated-data mapping",
+			move |snapshot| {
+				replace_once_after(&mut snapshot.adapter_server, "fn associated_data", from, to);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_server_send_ad_uses_local_id",
+			"let ad = self.associated_data(k)?;",
+			"let ad = self.associated_data(self.identity_key_kid)?;",
+			"endpoint Server send peer-associated data",
+		),
+		(
+			"endpoint_server_send_sender_uses_peer_id",
+			"let sender = self.identity_key_kid;",
+			"let sender = k;",
+			"endpoint Server send local sender",
+		),
+		(
+			"endpoint_server_send_target_uses_local_sender",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"encrypt_message_with_ratchet(b, sender, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"endpoint Server send target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_send_wire_sender_uses_peer",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"encrypt_message_with_ratchet(b, k, k, &ad, self.ratchet_manager_mut(k)?)",
+			"endpoint Server send target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_send_ratchet_uses_local_sender",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(k)?)",
+			"encrypt_message_with_ratchet(b, k, sender, &ad, self.ratchet_manager_mut(sender)?)",
+			"endpoint Server send target/sender/context/ratchet mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"pub fn encrypt_message(&mut self, b: &[u8], k: u64)",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_server_receive_ignores_parsed_sender",
+			"let Some(k) = crate::ratchet::encrypted_frame_sender(b) else {\n\t\t\treturn ReceiveTransition::Rejected;\n\t\t};",
+			"let Some(_k) = crate::ratchet::encrypted_frame_sender(b) else {\n\t\t\treturn ReceiveTransition::Rejected;\n\t\t};\n\t\tlet k = self.identity_key_kid;",
+			"endpoint Server parsed sender selector",
+		),
+		(
+			"endpoint_server_receive_ad_uses_local_id",
+			"self.associated_data(k)",
+			"self.associated_data(self.identity_key_kid)",
+			"endpoint Server receive selected-peer associated data",
+		),
+		(
+			"endpoint_server_receive_ratchet_uses_local_id",
+			"self.ratchet_manager_mut(k)",
+			"self.ratchet_manager_mut(self.identity_key_kid)",
+			"endpoint Server receive selected-peer ratchet",
+		),
+		(
+			"endpoint_server_receive_expected_sender_uses_local_id",
+			"decrypt_message_with_ratchet(b, k, &ad, ratchet)",
+			"decrypt_message_with_ratchet(b, self.identity_key_kid, &ad, ratchet)",
+			"endpoint Server receive expected-sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_receive_uses_zero_ad",
+			"decrypt_message_with_ratchet(b, k, &ad, ratchet)",
+			"decrypt_message_with_ratchet(b, k, &[0; AD_SIZE], ratchet)",
+			"endpoint Server receive expected-sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_server_receive_rejects_successful_open",
+			"Some(decrypted) => ReceiveTransition::Accepted(decrypted)",
+			"Some(_decrypted) => ReceiveTransition::Rejected",
+			"endpoint Server acceptance only after successful open",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn decrypt_message_transition",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"endpoint_beacon_send_sender_uses_server_id",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"let sender = self.identity_key_kid;",
+			"let sender = self.server_kid();",
+			"endpoint Beacon assigned sender snapshot",
+		),
+		(
+			"endpoint_beacon_send_target_uses_assigned_id",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, ratchet)",
+			"encrypt_message_with_ratchet(b, sender, sender, associated_data, ratchet)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_send_wire_sender_uses_server_id",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, ratchet)",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), control.server_key_id(), associated_data, ratchet)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_send_replaces_stored_ad",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, ratchet)",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, &[0; AD_SIZE], ratchet)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_receive_expected_sender_uses_assigned_id",
+			"pub fn decrypt_message(&mut self, b: &[u8])",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, ratchet)",
+			"decrypt_message_with_ratchet(b, self.identity_key_kid, associated_data, ratchet)",
+			"endpoint Beacon receive expected-sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_receive_replaces_stored_ad",
+			"pub fn decrypt_message(&mut self, b: &[u8])",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, ratchet)",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), &[0; AD_SIZE], ratchet)",
+			"endpoint Beacon receive expected-sender/stored context mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.adapter_beacon, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_registration_server_peer_identity_uses_local_identity",
+			"crypto_sign::PublicKey::from_bytes(candidate.beacon_identity_public_key()).ok()?",
+			"crypto_sign::PublicKey::from_bytes(candidate.server_identity_public_key()).ok()?",
+			"endpoint registration Server candidate peer identity",
+		),
+		(
+			"endpoint_registration_server_ratchet_uses_zero_root",
+			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"start_server_candidate_ratchet_kdf(&candidate, &[0; 32])",
+			"endpoint registration Server candidate ratchet",
+		),
+		(
+			"endpoint_registration_server_rebuilds_candidate_ad",
+			"let associated_data = *candidate.associated_data();",
+			"let associated_data = self.associated_data(remote_kid)?;",
+			"endpoint registration Server candidate associated data",
+		),
+		(
+			"endpoint_registration_server_target_uses_local_id",
+			"&authenticated_plaintext,\n\t\t\tremote_kid,\n\t\t\tcandidate.server_identity_key_id(),",
+			"&authenticated_plaintext,\n\t\t\tcandidate.server_identity_key_id(),\n\t\t\tcandidate.server_identity_key_id(),",
+			"endpoint registration Server initial target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_registration_server_sender_uses_assigned_id",
+			"&authenticated_plaintext,\n\t\t\tremote_kid,\n\t\t\tcandidate.server_identity_key_id(),",
+			"&authenticated_plaintext,\n\t\t\tremote_kid,\n\t\t\tremote_kid,",
+			"endpoint registration Server initial target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_registration_server_initial_uses_zero_ad",
+			"&associated_data,\n\t\t\t&mut ratchet,",
+			"&[0; AD_SIZE],\n\t\t\t&mut ratchet,",
+			"endpoint registration Server initial target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_registration_server_initial_uses_committed_ratchet",
+			"&associated_data,\n\t\t\t&mut ratchet,",
+			"&associated_data,\n\t\t\tself.ratchet_manager_mut(remote_kid)?,",
+			"endpoint registration Server initial target/sender/context/ratchet mapping",
+		),
+		(
+			"endpoint_registration_server_return_metadata_uses_local_id",
+			"kid: remote_kid,",
+			"kid: self.identity_key_kid,",
+			"endpoint registration Server returned target metadata",
+		),
+		(
+			"endpoint_registration_server_map_uses_local_id",
+			".insert(remote_kid, EstablishedRemote::new(public_key, ratchet))",
+			".insert(self.identity_key_kid, EstablishedRemote::new(public_key, ratchet))",
+			"endpoint registration Server committed peer identity and candidate ratchet",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn build_registration_response",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"endpoint_registration_server_outer_key_id_uses_local_id",
+		"Phase-2 server assigned-ID mapping",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn build_registration_response",
+				"bundle.set_key_id(remote_kid);",
+				"bundle.set_key_id(candidate.server_identity_key_id());",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_registration_beacon_ratchet_uses_zero_root",
+			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"start_beacon_candidate_ratchet_kdf(&candidate, &[0; 32])",
+			"endpoint registration Beacon candidate ratchet",
+		),
+		(
+			"endpoint_registration_beacon_replaces_candidate_ad",
+			"let associated_data = *candidate.associated_data();",
+			"let associated_data = [0; AD_SIZE];",
+			"endpoint registration Beacon candidate associated data",
+		),
+		(
+			"endpoint_registration_beacon_expected_sender_uses_outer_id",
+			"candidate.server_key_id(),\n\t\t\t\t&associated_data,",
+			"response.get_key_id(),\n\t\t\t\t&associated_data,",
+			"Phase-2 beacon initial-frame mapping",
+		),
+		(
+			"endpoint_registration_beacon_open_uses_zero_ad",
+			"&associated_data,\n\t\t\t\t&mut ratchet,",
+			"&[0; AD_SIZE],\n\t\t\t\t&mut ratchet,",
+			"Phase-2 beacon initial-frame mapping",
+		),
+		(
+			"endpoint_registration_beacon_open_discards_candidate_ratchet",
+			"&associated_data,\n\t\t\t\t&mut ratchet,",
+			"&associated_data,\n\t\t\t\tpanic!(),",
+			"Phase-2 beacon initial-frame mapping",
+		),
+		(
+			"endpoint_registration_beacon_handoff_replaces_ad",
+			"Some((authenticated, associated_data, ratchet, plaintext))",
+			"Some((authenticated, [0; AD_SIZE], ratchet, plaintext))",
+			"endpoint registration Beacon candidate context handoff",
+		),
+		(
+			"endpoint_registration_beacon_handoff_discards_ratchet",
+			"Some((authenticated, associated_data, ratchet, plaintext))",
+			"Some((authenticated, associated_data, panic!(), plaintext))",
+			"endpoint registration Beacon candidate context handoff",
+		),
+		(
+			"endpoint_registration_beacon_local_sender_uses_server_id",
+			"self.identity_key_kid = authenticated.assigned_key_id();",
+			"self.identity_key_kid = server_kid;",
+			"endpoint registration Beacon assigned local sender",
+		),
+		(
+			"endpoint_registration_beacon_state_replaces_ad",
+			"associated_data,\n\t\t\tratchet,",
+			"associated_data: [0; AD_SIZE],\n\t\t\tratchet,",
+			"endpoint registration Beacon stores candidate context",
+		),
+		(
+			"endpoint_registration_beacon_state_discards_ratchet",
+			"associated_data,\n\t\t\tratchet,",
+			"associated_data,\n\t\t\tratchet: panic!(),",
+			"endpoint registration Beacon stores candidate context",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"endpoint_server_receive_fail_open",
+		"endpoint Server acceptance only after successful open",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn decrypt_message_transition",
+				"None => ReceiveTransition::Rejected",
+				"None => ReceiveTransition::Accepted(panic!())",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"endpoint_beacon_send_discards_stored_ratchet",
+			"pub fn encrypt_message(&mut self, b: &[u8])",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, ratchet)",
+			"encrypt_message_with_ratchet(b, control.server_key_id(), sender, associated_data, return None)",
+			"endpoint Beacon send target/sender/stored context mapping",
+		),
+		(
+			"endpoint_beacon_receive_discards_stored_ratchet",
+			"pub fn decrypt_message(&mut self, b: &[u8])",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, ratchet)",
+			"decrypt_message_with_ratchet(b, control.server_key_id(), associated_data, return None)",
+			"endpoint Beacon receive expected-sender/stored context mapping",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.adapter_beacon, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_rejected(
+		"endpoint_registration_server_remote_id_uses_local_id",
+		"Phase-2 assigned key-ID source",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn build_registration_response",
+				"let remote_kid = candidate.key_id();",
+				"let remote_kid = candidate.server_identity_key_id();",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_registration_server_materialization_discards_pending",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(panic!()))",
+			"endpoint registration Server initial ratchet materialization",
+		),
+		(
+			"endpoint_registration_server_map_discards_peer_identity",
+			"EstablishedRemote::new(public_key, ratchet)",
+			"EstablishedRemote::new(panic!(), ratchet)",
+			"endpoint registration Server committed peer identity and candidate ratchet",
+		),
+		(
+			"endpoint_registration_server_map_discards_post_send_ratchet",
+			"EstablishedRemote::new(public_key, ratchet)",
+			"EstablishedRemote::new(public_key, panic!())",
+			"endpoint registration Server committed peer identity and candidate ratchet",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn build_registration_response",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"endpoint_registration_beacon_materialization_discards_pending",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(panic!()))",
+			"endpoint registration Beacon initial ratchet materialization",
+		),
+		(
+			"endpoint_registration_beacon_state_discards_authenticated_control",
+			"control: verified_pqxdh::beacon_commit(authenticated),",
+			"control: panic!(),",
+			"endpoint registration Beacon stores candidate context",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_rejected(
+		"endpoint_registration_beacon_assigns_local_id_before_server_binding_checks",
+		"endpoint registration Beacon initial source order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> {",
+				"let server_binding = authenticated.server_binding();",
+				"self.identity_key_kid = authenticated.assigned_key_id();\n\t\tlet server_binding = authenticated.server_binding();",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_beacon,
+				"if self.server_id.as_bytes() != &server_binding.identity_public_key",
+				"self.identity_key_kid = authenticated.assigned_key_id();",
+				"let _assigned_id_checked_above = authenticated.assigned_key_id();",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	assert_rejected(
+		"endpoint_registration_server_publishes_control_before_peer_insert",
+		"endpoint registration Server initial source order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_server,
+				"fn build_registration_response",
+				"let old = self\n\t\t\t.known_ids\n\t\t\t.insert(remote_kid, EstablishedRemote::new(public_key, ratchet));\n\t\tdebug_assert!(old.is_none());\n\t\tself.control = next_control;",
+				"self.control = next_control;\n\t\tlet old = self\n\t\t\t.known_ids\n\t\t\t.insert(remote_kid, EstablishedRemote::new(public_key, ratchet));\n\t\tdebug_assert!(old.is_none());",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (family, scope, function, calls, replacement, diagnostic) in [
+		(
+			"honest_beacon_server_open",
+			"let HonestBeacon(",
+			"open_frame",
+			4usize,
+			"assigned_key_id",
+			"symbolic server-to-Beacon open wiring changed",
+		),
+		(
+			"honest_beacon_send",
+			"let HonestBeacon(",
+			"seal_frame",
+			1usize,
+			"SERVER_KEY_ID",
+			"symbolic Beacon-to-Server seal wiring",
+		),
+		(
+			"server_send",
+			"let Server(",
+			"seal_frame",
+			4usize,
+			"assigned_key_id",
+			"symbolic Server-to-Beacon seal wiring changed",
+		),
+		(
+			"server_beacon_open",
+			"let Server(",
+			"open_frame",
+			1usize,
+			"SERVER_KEY_ID",
+			"symbolic Server Beacon-frame open wiring",
+		),
+		(
+			"malicious_registration_server_send",
+			"let MaliciousServer(",
+			"seal_frame",
+			1usize,
+			"assigned_key_id",
+			"symbolic malicious-registration initial-frame wiring",
+		),
+	] {
+		for call_index in 0..calls {
+			for (argument_index, field, wrong_value) in [
+				(0usize, "material", "server_identity"),
+				(1usize, "associated_data", "server_identity"),
+				(
+					2usize,
+					"sequence",
+					"next_sequence(next_sequence(next_sequence(next_sequence(first_sequence()))))",
+				),
+				(3usize, "sender", replacement),
+				(4usize, "payload", "server_identity"),
+			] {
+				assert_rejected(
+					&format!("endpoint_symbolic_{family}_{field}_{call_index}"),
+					diagnostic,
+					move |snapshot| {
+						replace_nth_call_argument_after(
+							&mut snapshot.environment,
+							scope,
+							function,
+							call_index,
+							argument_index,
+							wrong_value,
+						);
+					},
+				);
+				mutation_count += 1;
+			}
+		}
+	}
+
+	for (name, scope, marker, replacement, diagnostic) in [
+		(
+			"endpoint_symbolic_honest_server_open_count_increases",
+			"let HonestBeacon(",
+			"let opened_initial = open_frame(",
+			"let endpoint_extra_open = open_frame(server_material_1, associated_data, first_sequence(), SERVER_KEY_ID, initial_frame) in\n    let opened_initial = open_frame(",
+			"symbolic server-to-Beacon open wiring changed",
+		),
+		(
+			"endpoint_symbolic_honest_beacon_seal_count_increases",
+			"let HonestBeacon(",
+			"let beacon_frame = seal_frame(",
+			"let endpoint_extra_beacon_frame = seal_frame(beacon_material_1, associated_data, first_sequence(), assigned_key_id, beacon_record_secret) in\n    let beacon_frame = seal_frame(",
+			"symbolic Beacon-to-Server seal wiring",
+		),
+		(
+			"endpoint_symbolic_server_seal_count_increases",
+			"let Server(",
+			"let initial_frame = seal_frame(",
+			"let endpoint_extra_initial_frame = seal_frame(server_material_1, associated_data, first_sequence(), SERVER_KEY_ID, registration_payload(binding, initial_secret)) in\n      let initial_frame = seal_frame(",
+			"symbolic Server-to-Beacon seal wiring changed",
+		),
+		(
+			"endpoint_symbolic_server_open_count_increases",
+			"let Server(",
+			"let beacon_plaintext = open_frame(",
+			"let endpoint_extra_beacon_plaintext = open_frame(beacon_material_1, associated_data, first_sequence(), assigned_key_id, beacon_frame) in\n      let beacon_plaintext = open_frame(",
+			"symbolic Server Beacon-frame open wiring",
+		),
+		(
+			"endpoint_symbolic_malicious_initial_seal_count_increases",
+			"let MaliciousServer(",
+			"let initial_frame = seal_frame(",
+			"let endpoint_extra_malicious_frame = seal_frame(server_material_1, associated_data, first_sequence(), SERVER_KEY_ID, registration_payload(binding, MALICIOUS_TASK_SECRET)) in\n  let initial_frame = seal_frame(",
+			"symbolic malicious-registration initial-frame wiring",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, scope, marker, replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (family, scope, event, calls, direction, sender, receiver, diagnostic) in [
+		(
+			"honest_beacon_receive",
+			"let HonestBeacon(",
+			"MessageReceived",
+			4usize,
+			"server_to_beacon()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"symbolic HonestBeacon received-event fixture",
+		),
+		(
+			"honest_beacon_send",
+			"let HonestBeacon(",
+			"MessageSent",
+			1usize,
+			"beacon_to_server()",
+			"assigned_key_id",
+			"SERVER_KEY_ID",
+			"symbolic HonestBeacon sent-event fixture",
+		),
+		(
+			"server_send",
+			"let Server(",
+			"MessageSent",
+			4usize,
+			"server_to_beacon()",
+			"SERVER_KEY_ID",
+			"assigned_key_id",
+			"symbolic Server sent-event fixture",
+		),
+		(
+			"server_receive",
+			"let Server(",
+			"MessageReceived",
+			1usize,
+			"beacon_to_server()",
+			"assigned_key_id",
+			"SERVER_KEY_ID",
+			"symbolic Server received-event fixture",
+		),
+	] {
+		for call_index in 0..calls {
+			let wrong_direction = if direction == "server_to_beacon()" {
+				"beacon_to_server()"
+			} else {
+				"server_to_beacon()"
+			};
+			let wrong_sender = if sender == "SERVER_KEY_ID" {
+				"assigned_key_id"
+			} else {
+				"SERVER_KEY_ID"
+			};
+			let wrong_receiver = if receiver == "SERVER_KEY_ID" {
+				"assigned_key_id"
+			} else {
+				"SERVER_KEY_ID"
+			};
+			for (argument_index, field, wrong_value) in [
+				(0usize, "session", "server_identity"),
+				(1usize, "direction", wrong_direction),
+				(
+					2usize,
+					"sequence",
+					"next_sequence(next_sequence(next_sequence(next_sequence(first_sequence()))))",
+				),
+				(3usize, "sender", wrong_sender),
+				(4usize, "receiver", wrong_receiver),
+				(5usize, "plaintext", "server_identity"),
+			] {
+				assert_rejected(
+					&format!("endpoint_symbolic_{family}_event_{field}_{call_index}"),
+					diagnostic,
+					move |snapshot| {
+						replace_nth_call_argument_after(
+							&mut snapshot.environment,
+							scope,
+							event,
+							call_index,
+							argument_index,
+							wrong_value,
+						);
+					},
+				);
+				mutation_count += 1;
+			}
+		}
+	}
+
+	for (name, scope, marker, replacement, diagnostic) in [
+		(
+			"endpoint_symbolic_honest_received_event_count_increases",
+			"let HonestBeacon(",
+			"event MessageReceived(",
+			"event MessageReceived(session, server_to_beacon(), first_sequence(), SERVER_KEY_ID, assigned_key_id, initial_plaintext);\n    event MessageReceived(",
+			"symbolic HonestBeacon received-event fixture",
+		),
+		(
+			"endpoint_symbolic_honest_sent_event_count_increases",
+			"let HonestBeacon(",
+			"event MessageSent(",
+			"event MessageSent(session, beacon_to_server(), first_sequence(), assigned_key_id, SERVER_KEY_ID, beacon_record_secret);\n    event MessageSent(",
+			"symbolic HonestBeacon sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_sent_event_count_increases",
+			"let Server(",
+			"event MessageSent(",
+			"event MessageSent(session, server_to_beacon(), first_sequence(), SERVER_KEY_ID, assigned_key_id, initial_secret);\n      event MessageSent(",
+			"symbolic Server sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_received_event_count_increases",
+			"let Server(",
+			"event MessageReceived(",
+			"event MessageReceived(session, beacon_to_server(), first_sequence(), assigned_key_id, SERVER_KEY_ID, beacon_plaintext);\n      event MessageReceived(",
+			"symbolic Server received-event fixture",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, scope, marker, replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, scope, marker, replacement, diagnostic) in [
+		(
+			"endpoint_symbolic_honest_received_event_arity_increases",
+			"let HonestBeacon(",
+			"assigned_key_id,\n      initial_plaintext\n    );",
+			"assigned_key_id,\n      initial_plaintext,\n      server_identity\n    );",
+			"symbolic HonestBeacon received-event fixture",
+		),
+		(
+			"endpoint_symbolic_honest_sent_event_arity_increases",
+			"let HonestBeacon(",
+			"SERVER_KEY_ID,\n      beacon_record_secret\n    );",
+			"SERVER_KEY_ID,\n      beacon_record_secret,\n      server_identity\n    );",
+			"symbolic HonestBeacon sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_sent_event_arity_increases",
+			"let Server(",
+			"assigned_key_id,\n        initial_secret\n      );",
+			"assigned_key_id,\n        initial_secret,\n        server_identity\n      );",
+			"symbolic Server sent-event fixture",
+		),
+		(
+			"endpoint_symbolic_server_received_event_arity_increases",
+			"let Server(",
+			"SERVER_KEY_ID,\n        beacon_plaintext\n      );",
+			"SERVER_KEY_ID,\n        beacon_plaintext,\n        server_identity\n      );",
+			"symbolic Server received-event fixture",
+		),
+	] {
+		assert_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.environment, scope, marker, replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, scope) in [
+		(
+			"endpoint_symbolic_honest_ad_reverses_identities",
+			"let HonestBeacon(",
+		),
+		(
+			"endpoint_symbolic_server_ad_reverses_identities",
+			"let Server(",
+		),
+		(
+			"endpoint_symbolic_malicious_server_ad_reverses_identities",
+			"let MaliciousServer(",
+		),
+	] {
+		assert_rejected(
+			name,
+			"associated-data identity order changed",
+			move |snapshot| {
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					scope,
+					"beaconcrypt_core__pqxdh__build_associated_data",
+					0,
+					0,
+					"beacon_identity",
+				);
+				replace_nth_call_argument_after(
+					&mut snapshot.environment,
+					scope,
+					"beaconcrypt_core__pqxdh__build_associated_data",
+					0,
+					1,
+					"server_identity",
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT);
+}
+
+const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 154;
+
+#[test]
+fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let driver_facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("ratchet.driver."))
+		.collect::<Vec<_>>();
+	assert_eq!(driver_facts.len(), 38);
+	for fact in driver_facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_rejected(&format!("ratchet_driver_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"ratchet_driver_slot_take_duplicates_take",
+			"fn take(&mut self)",
+			"self.kernel\n\t\t\t.take()",
+			"self.kernel.take();\n\t\tself.kernel\n\t\t\t.take()",
+			"ratchet driver affine slot take",
+		),
+		(
+			"ratchet_driver_slot_put_omits_empty_assertion",
+			"fn put(&mut self",
+			"assert!(\n\t\t\tself.kernel.is_none(),\n\t\t\t\"a completed ratchet effect must return to an empty kernel slot\"\n\t\t);",
+			"if self.kernel.is_some() {\n\t\t\tpanic!(\"a completed ratchet effect must return to an empty kernel slot\");\n\t\t}",
+			"ratchet driver returned-kernel slot put",
+		),
+		(
+			"ratchet_driver_slot_put_drops_returned_kernel",
+			"fn put(&mut self",
+			"self.kernel = Some(kernel);",
+			"drop(kernel);",
+			"ratchet driver returned-kernel slot put",
+		),
+		(
+			"ratchet_driver_kdf_uses_fixed_request",
+			"pub(crate) fn ratchet_hkdf",
+			"symmetric_ratchet_hkdf(request)",
+			"symmetric_ratchet_hkdf(&verified_ratchet::SymmetricRatchetKdfRequest::new([0; KDF_STATE_SIZE]))",
+			"ratchet driver typed KDF reply",
+		),
+		(
+			"ratchet_driver_kdf_returns_untyped_bytes",
+			"pub(crate) fn ratchet_hkdf",
+			"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+			"symmetric_ratchet_hkdf(request)",
+			"ratchet driver typed KDF reply",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.adapter_ratchet, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"ratchet_driver_send_context_swaps_target_and_sender",
+			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t};",
+			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid: sender_kid,\n\t\tsender_kid: target_kid,\n\t\tassociated_data,\n\t};",
+			"ratchet send exact frame context",
+		),
+		(
+			"ratchet_driver_send_context_replaces_plaintext",
+			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t};",
+			"let context = SealFrameContext {\n\t\tbytes: &[],\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t};",
+			"ratchet send exact frame context",
+		),
+		(
+			"ratchet_driver_send_context_replaces_associated_data",
+			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t};",
+			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data: &[0; AD_SIZE],\n\t};",
+			"ratchet send exact frame context",
+		),
+		(
+			"ratchet_driver_send_duplicates_kernel_take",
+			"let kernel = ratchet.refined.take();",
+			"let kernel = ratchet.refined.take();\n\tratchet.refined.put(kernel);\n\tlet kernel = ratchet.refined.take();",
+			"ratchet send affine kernel take",
+		),
+		(
+			"ratchet_driver_send_omits_begin",
+			"verified_ratchet::begin_send(kernel, context)",
+			"panic!(\"begin send omitted\")",
+			"ratchet send begin effect",
+		),
+		(
+			"ratchet_driver_send_begins_with_rebuilt_context",
+			"verified_ratchet::begin_send(kernel, context)",
+			"verified_ratchet::begin_send(kernel, SealFrameContext { bytes, target_kid: sender_kid, sender_kid: target_kid, associated_data })",
+			"ratchet send begin effect",
+		),
+		(
+			"ratchet_driver_send_exhaustion_drops_kernel",
+			"ratchet.refined.put(kernel);\n\t\t\treturn None;",
+			"drop(kernel);\n\t\t\treturn None;",
+			"ratchet send exhausted and KDF branches",
+		),
+		(
+			"ratchet_driver_send_exhaustion_puts_after_return",
+			"ratchet.refined.put(kernel);\n\t\t\treturn None;",
+			"return None;\n\t\t\tratchet.refined.put(kernel);",
+			"ratchet send exhausted and KDF branches",
+		),
+		(
+			"ratchet_driver_send_uses_fixed_request",
+			"ratchet_hkdf(pending.request())",
+			"ratchet_hkdf(&verified_ratchet::SymmetricRatchetKdfRequest::new([0; KDF_STATE_SIZE]))",
+			"ratchet send exact pending request interpretation",
+		),
+		(
+			"ratchet_driver_send_omits_request_interpretation",
+			"let response = ratchet_hkdf(pending.request());",
+			"let response = verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]);",
+			"ratchet send exact pending request interpretation",
+		),
+		(
+			"ratchet_driver_send_resumes_with_wrong_response",
+			"pending.resume(response)",
+			"pending.resume(verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]))",
+			"ratchet send same-pending resume",
+		),
+		(
+			"ratchet_driver_send_resumes_different_pending",
+			"pending.resume(response)",
+			"unsafe { std::hint::unreachable_unchecked() }.resume(response)",
+			"ratchet send same-pending resume",
+		),
+		(
+			"ratchet_driver_send_omits_pending_resume",
+			"let seal = pending.resume(response);",
+			"let seal = panic!(\"pending resume omitted\");",
+			"ratchet send same-pending resume",
+		),
+		(
+			"ratchet_driver_send_seals_with_wrong_material",
+			"seal_frame(seal.material(), seal.sequence(), seal.context())",
+			"seal_frame(panic!(), seal.sequence(), seal.context())",
+			"ratchet send seal capability handoff",
+		),
+		(
+			"ratchet_driver_send_seals_with_wrong_sequence",
+			"seal_frame(seal.material(), seal.sequence(), seal.context())",
+			"seal_frame(seal.material(), seal.sequence().wrapping_add(1), seal.context())",
+			"ratchet send seal capability handoff",
+		),
+		(
+			"ratchet_driver_send_seals_with_rebuilt_context",
+			"seal_frame(seal.material(), seal.sequence(), seal.context())",
+			"seal_frame(seal.material(), seal.sequence(), &SealFrameContext { bytes, target_kid: sender_kid, sender_kid: target_kid, associated_data })",
+			"ratchet send seal capability handoff",
+		),
+		(
+			"ratchet_driver_send_omits_seal",
+			"let sealed = seal_frame(seal.material(), seal.sequence(), seal.context());",
+			"let sealed: Option<Encrypted> = None;",
+			"ratchet send seal capability handoff",
+		),
+		(
+			"ratchet_driver_send_finishes_with_none",
+			"seal.finish(sealed)",
+			"seal.finish(None::<Encrypted>)",
+			"ratchet send capability finish",
+		),
+		(
+			"ratchet_driver_send_omits_finish",
+			"let (kernel, sealed) = seal.finish(sealed);",
+			"let (kernel, sealed) = panic!(\"seal finish omitted\");",
+			"ratchet send capability finish",
+		),
+		(
+			"ratchet_driver_send_drops_finished_kernel",
+			"ratchet.refined.put(kernel);\n\tsealed",
+			"drop(kernel);\n\tsealed",
+			"ratchet send returned-kernel puts",
+		),
+		(
+			"ratchet_driver_send_returns_before_put",
+			"ratchet.refined.put(kernel);\n\tsealed",
+			"return sealed;\n\tratchet.refined.put(kernel);",
+			"ratchet send returned-kernel put before result",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn encrypt_message_with_ratchet",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_send_moves_empty_gate_after_take",
+		"ratchet send empty-input precheck",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn encrypt_message_with_ratchet",
+				"if bytes.is_empty() {\n\t\treturn None;\n\t}\n",
+				"",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn encrypt_message_with_ratchet",
+				"let kernel = ratchet.refined.take();",
+				"let kernel = ratchet.refined.take();\n\tif bytes.is_empty() {\n\t\tratchet.refined.put(kernel);\n\t\treturn None;\n\t}",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_send_invokes_cancel",
+		"ratchet send production cancellation",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn encrypt_message_with_ratchet",
+				"let response = ratchet_hkdf(pending.request());",
+				"pending.cancel();\n\tlet response = ratchet_hkdf(pending.request());",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to) in [
+		(
+			"ratchet_driver_core_send_finish_discards_interpreter_result",
+			"(self.advanced, sealed)",
+			"(self.advanced, None)",
+		),
+		(
+			"ratchet_driver_core_send_finish_discards_advanced_kernel",
+			"(self.advanced, sealed)",
+			"(panic!(), sealed)",
+		),
+	] {
+		assert_ratchet_driver_rejected(
+			name,
+			"ratchet send finish preserves interpreter result on advanced kernel",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.core_ratchet_concrete,
+					"impl<Context> SendSeal<Context>",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"ratchet_driver_receive_context_uses_expected_sender",
+			"sender_kid: kid,",
+			"sender_kid: expected_sender_kid,",
+			"ratchet receive prechecks and effect start order",
+		),
+		(
+			"ratchet_driver_receive_context_replaces_ciphertext",
+			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
+			"let context = OpenFrameContext {\n\t\tciphertext: &[],\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
+			"ratchet receive prechecks and effect start order",
+		),
+		(
+			"ratchet_driver_receive_context_replaces_associated_data",
+			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
+			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data: &[0; AD_SIZE],\n\t\tsender_kid: kid,\n\t};",
+			"ratchet receive prechecks and effect start order",
+		),
+		(
+			"ratchet_driver_receive_duplicates_kernel_take",
+			"let kernel = ratchet.refined.take();",
+			"let kernel = ratchet.refined.take();\n\tratchet.refined.put(kernel);\n\tlet kernel = ratchet.refined.take();",
+			"ratchet receive affine kernel take",
+		),
+		(
+			"ratchet_driver_receive_begins_with_wrong_sequence",
+			"verified_ratchet::begin_receive(kernel, key_seq, context)",
+			"verified_ratchet::begin_receive(kernel, key_seq.wrapping_add(1), context)",
+			"ratchet receive prechecks and effect start order",
+		),
+		(
+			"ratchet_driver_receive_begins_with_rebuilt_context",
+			"verified_ratchet::begin_receive(kernel, key_seq, context)",
+			"verified_ratchet::begin_receive(kernel, key_seq, OpenFrameContext { ciphertext, associated_data, sender_kid: expected_sender_kid })",
+			"ratchet receive prechecks and effect start order",
+		),
+		(
+			"ratchet_driver_receive_rejected_drops_kernel",
+			"ratchet.refined.put(kernel);\n\t\t\t\treturn None;",
+			"drop(kernel);\n\t\t\t\treturn None;",
+			"ratchet receive rejected branch",
+		),
+		(
+			"ratchet_driver_receive_rejected_puts_after_return",
+			"ratchet.refined.put(kernel);\n\t\t\t\treturn None;",
+			"return None;\n\t\t\t\tratchet.refined.put(kernel);",
+			"ratchet receive rejected branch",
+		),
+		(
+			"ratchet_driver_receive_fixes_loop_iteration_count",
+			"let plaintext = loop {\n\t\teffect = match effect {",
+			"let mut remaining_iterations = 1usize;\n\tlet plaintext = loop {\n\t\tif remaining_iterations == 0 { return None; }\n\t\tremaining_iterations -= 1;\n\t\teffect = match effect {",
+			"ratchet receive effect loop without fixed iteration count",
+		),
+		(
+			"ratchet_driver_receive_uses_fixed_kdf_request",
+			"ratchet_hkdf(pending.request())",
+			"ratchet_hkdf(&verified_ratchet::SymmetricRatchetKdfRequest::new([0; KDF_STATE_SIZE]))",
+			"ratchet receive exact pending request interpretation",
+		),
+		(
+			"ratchet_driver_receive_omits_kdf_request",
+			"let response = ratchet_hkdf(pending.request());",
+			"let response = verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]);",
+			"ratchet receive exact pending request interpretation",
+		),
+		(
+			"ratchet_driver_receive_resumes_with_wrong_response",
+			"pending.resume(response)",
+			"pending.resume(verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]))",
+			"ratchet receive same-pending resume",
+		),
+		(
+			"ratchet_driver_receive_resumes_different_pending",
+			"pending.resume(response)",
+			"unsafe { std::hint::unreachable_unchecked() }.resume(response)",
+			"ratchet receive same-pending resume",
+		),
+		(
+			"ratchet_driver_receive_omits_pending_resume",
+			"pending.resume(response)",
+			"panic!(\"pending resume omitted\")",
+			"ratchet receive same-pending resume",
+		),
+		(
+			"ratchet_driver_receive_kdf_publishes_slot",
+			"let response = ratchet_hkdf(pending.request());",
+			"ratchet.refined.put(panic!(\"premature publication\"));\n\t\t\t\tlet response = ratchet_hkdf(pending.request());",
+			"ratchet receive KDF-arm live publication",
+		),
+		(
+			"ratchet_driver_receive_no_material_omits_material_gate",
+			"let Some(material) = open.material() else {",
+			"let material = open.material().unwrap_or_else(|| panic!(\"material missing\"));\n\t\t\t\tif false {",
+			"ratchet receive no-material rejection",
+		),
+		(
+			"ratchet_driver_receive_no_material_omits_reject",
+			"let (kernel, _) = open.reject();",
+			"let kernel = panic!(\"open reject omitted\");",
+			"ratchet receive no-material rejection",
+		),
+		(
+			"ratchet_driver_receive_no_material_drops_kernel",
+			"ratchet.refined.put(kernel);\n\t\t\t\t\treturn None;",
+			"drop(kernel);\n\t\t\t\t\treturn None;",
+			"ratchet receive no-material rejection",
+		),
+		(
+			"ratchet_driver_receive_no_material_puts_after_return",
+			"ratchet.refined.put(kernel);\n\t\t\t\t\treturn None;",
+			"return None;\n\t\t\t\t\tratchet.refined.put(kernel);",
+			"ratchet receive no-material rejection",
+		),
+		(
+			"ratchet_driver_receive_opens_with_wrong_material",
+			"open_frame(material, open.sequence(), open.context())",
+			"open_frame(panic!(), open.sequence(), open.context())",
+			"ratchet receive open capability handoff",
+		),
+		(
+			"ratchet_driver_receive_opens_with_wrong_sequence",
+			"open_frame(material, open.sequence(), open.context())",
+			"open_frame(material, open.sequence().wrapping_add(1), open.context())",
+			"ratchet receive open capability handoff",
+		),
+		(
+			"ratchet_driver_receive_opens_with_rebuilt_context",
+			"open_frame(material, open.sequence(), open.context())",
+			"open_frame(material, open.sequence(), &OpenFrameContext { ciphertext, associated_data, sender_kid: expected_sender_kid })",
+			"ratchet receive open capability handoff",
+		),
+		(
+			"ratchet_driver_receive_omits_open",
+			"let opened = open_frame(material, open.sequence(), open.context());",
+			"let opened: Option<Vec<u8>> = None;",
+			"ratchet receive open capability handoff",
+		),
+		(
+			"ratchet_driver_receive_finishes_with_none",
+			"open.finish(opened)",
+			"open.finish(None::<Vec<u8>>)",
+			"ratchet receive capability finish",
+		),
+		(
+			"ratchet_driver_receive_omits_finish",
+			"let (kernel, opened) = open.finish(opened);",
+			"let (kernel, opened) = panic!(\"open finish omitted\");",
+			"ratchet receive capability finish",
+		),
+		(
+			"ratchet_driver_receive_drops_finished_kernel",
+			"ratchet.refined.put(kernel);\n\t\t\t\tbreak opened?;",
+			"drop(kernel);\n\t\t\t\tbreak opened?;",
+			"ratchet receive returned-kernel puts",
+		),
+		(
+			"ratchet_driver_receive_questions_result_before_put",
+			"let (kernel, opened) = open.finish(opened);\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\tbreak opened?;",
+			"let (kernel, opened) = open.finish(opened);\n\t\t\t\tlet opened = opened?;\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\tbreak opened;",
+			"ratchet receive open and terminal publication order",
+		),
+		(
+			"ratchet_driver_receive_returns_expected_sender_metadata",
+			"key_id: kid,",
+			"key_id: expected_sender_kid,",
+			"ratchet receive parsed result metadata",
+		),
+		(
+			"ratchet_driver_receive_returns_wrong_sequence_metadata",
+			"seq: key_seq,",
+			"seq: key_seq.wrapping_add(1),",
+			"ratchet receive parsed result metadata",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_receive_invokes_cancel",
+		"ratchet receive production cancellation",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"let response = ratchet_hkdf(pending.request());",
+				"pending.cancel();\n\t\t\t\tlet response = ratchet_hkdf(pending.request());",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, gate) in [
+		(
+			"ratchet_driver_receive_moves_sender_gate_after_take",
+			"if kid != expected_sender_kid {\n\t\treturn None;\n\t}\n",
+		),
+		(
+			"ratchet_driver_receive_moves_length_gate_after_take",
+			"if ct_len <= MESSAGE_OVERHEAD {\n\t\treturn None;\n\t}\n",
+		),
+	] {
+		assert_ratchet_driver_rejected(
+			name,
+			"ratchet receive prechecks and effect start order",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.adapter_ratchet,
+					"pub(crate) fn decrypt_message_with_ratchet",
+					gate,
+					"",
+				);
+				replace_once_after(
+					&mut snapshot.adapter_ratchet,
+					"pub(crate) fn decrypt_message_with_ratchet",
+					"let kernel = ratchet.refined.take();",
+					&format!("let kernel = ratchet.refined.take();\n\t{gate}"),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_receive_moves_empty_gate_after_take",
+		"ratchet receive prechecks and effect start order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"if data.is_empty() {\n\t\treturn None;\n\t}\n",
+				"",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"let kernel = ratchet.refined.take();",
+				"let kernel = ratchet.refined.take();\n\tif data.is_empty() {\n\t\tratchet.refined.put(kernel);\n\t\treturn None;\n\t}",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_receive_takes_kernel_before_typed_parse",
+		"ratchet receive prechecks and effect start order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"let kernel = ratchet.refined.take();",
+				"",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"if data.is_empty() {\n\t\treturn None;\n\t}",
+				"if data.is_empty() {\n\t\treturn None;\n\t}\n\tlet kernel = ratchet.refined.take();",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"ratchet_driver_core_phase_renames_send_start",
+			"pub enum SendStart<Context>",
+			"pub enum SendStart<Context>",
+			"pub enum RenamedSendStart<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_send_kdf",
+			"pub struct SendKdf<Context>",
+			"pub struct SendKdf<Context>",
+			"pub struct RenamedSendKdf<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_send_seal",
+			"pub struct SendSeal<Context>",
+			"pub struct SendSeal<Context>",
+			"pub struct RenamedSendSeal<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_receive_effect",
+			"pub enum ReceiveEffect<Context>",
+			"pub enum ReceiveEffect<Context>",
+			"pub enum RenamedReceiveEffect<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_receive_kdf",
+			"pub struct ReceiveKdf<Context>",
+			"pub struct ReceiveKdf<Context>",
+			"pub struct RenamedReceiveKdf<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_receive_open",
+			"pub struct ReceiveOpen<Context>",
+			"pub struct ReceiveOpen<Context>",
+			"pub struct RenamedReceiveOpen<Context>",
+			"ratchet core affine phase API",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"ratchet_driver_core_finish_none_drops_entry",
+			"impl<Context> ReceiveOpen<Context>",
+			"None => return (self.entry, None)",
+			"None => return (panic!(\"entry dropped\"), None)",
+			"ratchet receive finish failure restores entry",
+		),
+		(
+			"ratchet_driver_core_finish_cached_publication_omitted",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_cached_receive(&mut entry.refined, prepared);",
+			"drop(prepared);",
+			"ratchet core cached receive publication branch",
+		),
+		(
+			"ratchet_driver_core_finish_future_publication_omitted",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_future_receive(&mut entry.refined, pending);",
+			"drop(pending);",
+			"ratchet core future receive publication branch",
+		),
+		(
+			"ratchet_driver_core_finish_cached_uses_future_publisher",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_cached_receive(&mut entry.refined, prepared);",
+			"publish_future_receive(&mut entry.refined, panic!(\"wrong prepared type\"));",
+			"ratchet core cached receive publication branch",
+		),
+		(
+			"ratchet_driver_core_finish_future_uses_cached_publisher",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_future_receive(&mut entry.refined, pending);",
+			"publish_cached_receive(&mut entry.refined, panic!(\"wrong prepared type\"));",
+			"ratchet core future receive publication branch",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, insertion, diagnostic) in [
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_control",
+			"kernel.refined.control = kernel.refined.control;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_send_chain",
+			"kernel.refined.send_chain = kernel.refined.send_chain;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_receive_chain",
+			"kernel.refined.receive_chain = kernel.refined.receive_chain;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_receive_slots",
+			"kernel.refined.receive_slots = kernel.refined.receive_slots;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet_concrete,
+				"pub fn begin_receive<Context>",
+				"let plan = plan_receive_until",
+				&format!("{insertion}let plan = plan_receive_until"),
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, insertion, diagnostic) in [
+		(
+			"ratchet_driver_core_receive_kdf_publishes_cached_early",
+			"let _ = publish_cached_receive::<RatchetChain, RatchetChain, RatchetMaterial>;\n\t\t",
+			"ratchet core receive KDF cached publication",
+		),
+		(
+			"ratchet_driver_core_receive_kdf_publishes_future_early",
+			"let _ = publish_future_receive::<RatchetChain, RatchetChain, RatchetMaterial>;\n\t\t",
+			"ratchet core receive KDF future publication",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet_concrete,
+				"impl<Context> ReceiveKdf<Context>",
+				"if self.remaining == 0 {",
+				&format!("{insertion}if self.remaining == 0 {{"),
+			);
+		});
+		mutation_count += 1;
+	}
+
+	let structural_anchors = [
+		"theorem ratchet.concrete.begin_send_nonexhausted_exact",
+		"theorem ratchet.concrete.begin_send_exhausted_restores_entry",
+		"theorem ratchet.concrete.SendKdf.request_exact",
+		"theorem ratchet.concrete.SendKdf.resume_exact",
+		"theorem ratchet.concrete.SendSeal.finish_returns_interpreter_result",
+		"theorem ratchet.concrete.begin_receive_rejected_plan_restores_entry",
+		"theorem ratchet.concrete.begin_receive_cached_exact",
+		"theorem ratchet.concrete.begin_receive_future_request_exact",
+		"theorem ratchet.concrete.ReceiveKdf.request_exact",
+		"theorem ratchet.concrete.ReceiveOpen.reject_exact",
+		"theorem ratchet.concrete.ReceiveOpen.context_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_sequence_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_material_exact",
+		"theorem ratchet.concrete.ReceiveOpen.finish_failure_restores_entry",
+		"theorem ratchet.concrete.ReceiveOpen.finish_future_success_publishes_same_plaintext",
+		"theorem ratchet.concrete.ReceiveOpen.finish_cached_success_publishes_same_plaintext",
+	];
+	for (index, anchor) in structural_anchors.into_iter().enumerate() {
+		assert_ratchet_driver_rejected(
+			&format!("ratchet_driver_lean_structural_anchor_{index}_renamed"),
+			"ratchet checked structural Lean anchor",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.lean_ratchet_effect,
+					anchor,
+					&anchor.replace("theorem ", "theorem renamed_"),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_lean_failure_trace_anchor_renamed",
+		"ratchet checked structural failure-trace anchor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.lean_ratchet_effect_refinement,
+				"theorem ReceiveFailureTrace.result_eq_entry",
+				"theorem ReceiveFailureTrace.renamed_result_eq_entry",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	let refinement_anchors = [
+		"def ResponseRefines",
+		"theorem begin_send_refines",
+		"theorem SendKdf.resume_refines",
+		"theorem SendSeal.finish_refines_ideal_send",
+		"theorem ReceiveOpen.failure_preserves_refinement",
+		"theorem ReceiveFailureTrace.preserves_refinement",
+		"def OpenReplyRefines",
+		"theorem begin_receive_cached_refines",
+		"theorem CachedOpenRefines.finish_success_matches_ideal",
+		"theorem CachedOpenRefines.finish_success_refines_of_publication",
+	];
+	for (index, anchor) in refinement_anchors.into_iter().enumerate() {
+		assert_ratchet_driver_rejected(
+			&format!("ratchet_driver_lean_conditional_anchor_{index}_renamed"),
+			"ratchet conditional Lean refinement anchor",
+			move |snapshot| {
+				let renamed = if anchor.starts_with("def ") {
+					anchor.replacen("def ", "def renamed_", 1)
+				} else {
+					anchor.replacen("theorem ", "theorem renamed_", 1)
+				};
+				replace_once(
+					&mut snapshot.lean_ratchet_effect_refinement,
+					anchor,
+					&renamed,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_proverif_renames_atomic_seal",
+		"ratchet ProVerif atomic seal abstraction",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.crypto,
+				"letfun seal_frame(",
+				"letfun renamed_seal_frame(",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_proverif_renames_ideal_open",
+		"ratchet ProVerif ideal exact open abstraction",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.crypto,
+				"reduc forall key: bitstring",
+				"  open_frame(",
+				"  renamed_open_frame(",
+			);
+		},
+	);
+	mutation_count += 1;
+	for concrete_step in [
+		"RatchetKernelSlot",
+		"begin_send",
+		"begin_receive",
+		"ratchet_hkdf",
+		"SendKdfRequested",
+		"ReceiveKdfRequested",
+	] {
+		assert_ratchet_driver_rejected(
+			&format!("ratchet_driver_proverif_exposes_{concrete_step}"),
+			"concrete ratchet driver step in atomic ProVerif model",
+			move |snapshot| {
+				snapshot
+					.crypto
+					.push_str(&format!("\nfun {concrete_step}(bitstring): bitstring.\n"));
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, RATCHET_EFFECT_DRIVER_MUTATION_COUNT);
+}
+
 #[test]
 fn requested_transcript_mutations_are_rejected() {
 	assert_rejected("pqxdh_label_byte", "domain.pqxdh.hex", |snapshot| {
@@ -904,6 +6586,212 @@ fn requested_transcript_mutations_are_rejected() {
 			);
 		},
 	);
+	assert_rejected(
+		"reordered_phase2_manifest_field",
+		"phase2.response.field.3",
+		|snapshot| {
+			mutate_fact(
+				&mut snapshot.interface,
+				"phase2.response.field.3",
+				"keyId@4:assigned_key_id",
+			);
+		},
+	);
+	for (name, key, value) in [
+		(
+			"changed_phase2_manifest_constructor",
+			"phase2.response.constructor",
+			"legacy_kex_response",
+		),
+		(
+			"changed_phase2_manifest_field_count",
+			"phase2.response.field_count",
+			"4",
+		),
+		(
+			"changed_phase2_manifest_field_0",
+			"phase2.response.field.0",
+			"ephemeralKey@1:server_ephemeral",
+		),
+		(
+			"changed_phase2_manifest_field_1",
+			"phase2.response.field.1",
+			"identityKey@0:server_identity",
+		),
+		(
+			"changed_phase2_manifest_field_2",
+			"phase2.response.field.2",
+			"appCipherText@3:initial_frame",
+		),
+		(
+			"changed_phase2_manifest_field_4",
+			"phase2.response.field.4",
+			"appCipherText@3:initial_frame",
+		),
+		(
+			"changed_phase2_manifest_server_writes",
+			"phase2.response.server_writes",
+			"candidate.ephemeral_public_key,candidate.server_identity_public_key,candidate.kem_ciphertext,initial_encrypted_frame,candidate.key_id",
+		),
+		(
+			"changed_phase2_manifest_beacon_reads",
+			"phase2.response.beacon_reads",
+			"server_ephemeral,response_server_identity,kem_ciphertext,initial_frame,assigned_key_id",
+		),
+	] {
+		assert_rejected(name, key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, value);
+		});
+	}
+	assert_rejected(
+		"legacy_phase2_symbolic_order",
+		"Phase-2 response constructor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"fun kex_response(\n  bitstring,\n  bitstring,\n  bitstring,\n  bitstring,\n  key_id\n): bitstring [data].",
+				"fun kex_response(\n  bitstring,\n  bitstring,\n  bitstring,\n  key_id,\n  bitstring\n): bitstring [data].",
+			);
+		},
+	);
+	assert_rejected(
+		"permuted_phase2_beacon_destructure",
+		"Phase-2 response destructuring order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"    response_server_identity,\n    server_ephemeral,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+				"    server_ephemeral,\n    response_server_identity,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+			);
+		},
+	);
+	assert_rejected(
+		"permuted_phase2_response_construction",
+		"Phase-2 response construction order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.environment,
+				"        server_identity,\n        server_ephemeral,\n        kem_ciphertext,\n        initial_frame,\n        assigned_key_id",
+				"        server_ephemeral,\n        server_identity,\n        kem_ciphertext,\n        initial_frame,\n        assigned_key_id",
+			);
+		},
+	);
+	assert_rejected(
+		"permuted_active_quantum_phase2_destructure",
+		"active-quantum Phase-2 response destructuring order",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.active_quantum_witness,
+				"    response_server_identity,\n    server_ephemeral,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+				"    server_ephemeral,\n    response_server_identity,\n    kem_ciphertext,\n    initial_frame,\n    assigned_key_id",
+			);
+		},
+	);
+	assert_rejected(
+		"reordered_phase2_schema_fields",
+		"Phase-2 response schema",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.phase2_schema,
+				"    appCipherText @3 :Data;\n    # The ID assigned to this beacon instance's identity\n    keyId @4 :UInt64;",
+				"    keyId @4 :UInt64;\n    # The encrypted initial application frame\n    appCipherText @3 :Data;",
+			);
+		},
+	);
+	assert_rejected(
+		"omitted_phase2_schema_field",
+		"Phase-2 response schema",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.phase2_schema,
+				"    appCipherText @3 :Data;\n",
+				"",
+			);
+		},
+	);
+	assert_rejected(
+		"renamed_phase2_schema_field",
+		"Phase-2 response schema",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.phase2_schema,
+				"appCipherText @3",
+				"initialFrame @3",
+			);
+		},
+	);
+	for (name, from, to, label) in [
+		(
+			"swapped_phase2_server_identity_mapping",
+			"bundle.set_identity_key(candidate.server_identity_public_key());",
+			"bundle.set_identity_key(candidate.ephemeral_public_key());",
+			"Phase-2 server identity mapping",
+		),
+		(
+			"swapped_phase2_server_ephemeral_mapping",
+			"bundle.set_ephemeral_key(candidate.ephemeral_public_key());",
+			"bundle.set_ephemeral_key(candidate.server_identity_public_key());",
+			"Phase-2 server ephemeral mapping",
+		),
+		(
+			"swapped_phase2_server_kem_mapping",
+			"bundle.set_kem_cipher_text(candidate.kem_ciphertext());",
+			"bundle.set_kem_cipher_text(&encrypted.ciphertext);",
+			"Phase-2 server KEM-ciphertext mapping",
+		),
+		(
+			"swapped_phase2_server_frame_mapping",
+			"bundle.set_app_cipher_text(&encrypted.ciphertext);",
+			"bundle.set_app_cipher_text(candidate.kem_ciphertext());",
+			"Phase-2 server initial-frame mapping",
+		),
+		(
+			"swapped_phase2_server_key_id_mapping",
+			"bundle.set_key_id(remote_kid);",
+			"bundle.set_key_id(candidate.server_identity_key_id());",
+			"Phase-2 server assigned-ID mapping",
+		),
+	] {
+		assert_rejected(name, label, |snapshot| {
+			replace_once(&mut snapshot.adapter_server, from, to);
+		});
+	}
+	for (name, from, to, label) in [
+		(
+			"swapped_phase2_beacon_identity_mapping",
+			"response.get_identity_key()",
+			"response.get_ephemeral_key()",
+			"Phase-2 beacon identity mapping",
+		),
+		(
+			"swapped_phase2_beacon_ephemeral_mapping",
+			"response.get_ephemeral_key()",
+			"response.get_identity_key()",
+			"Phase-2 beacon ephemeral mapping",
+		),
+		(
+			"swapped_phase2_beacon_kem_mapping",
+			"response.get_kem_cipher_text()",
+			"response.get_app_cipher_text()",
+			"Phase-2 beacon KEM-ciphertext mapping",
+		),
+		(
+			"swapped_phase2_beacon_frame_mapping",
+			"response.get_app_cipher_text()",
+			"response.get_kem_cipher_text()",
+			"Phase-2 beacon initial-frame mapping",
+		),
+		(
+			"swapped_phase2_beacon_key_id_mapping",
+			"response.get_key_id()",
+			"candidate.server_key_id()",
+			"Phase-2 beacon assigned-ID mapping",
+		),
+	] {
+		assert_rejected(name, label, |snapshot| {
+			replace_once(&mut snapshot.adapter_beacon, from, to);
+		});
+	}
 	assert_rejected(
 		"agreement_without_selected_pqpk",
 		"beacon establishment emitter",

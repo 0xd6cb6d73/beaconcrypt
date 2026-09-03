@@ -49,7 +49,7 @@ declare -A expected_category_counts=(
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=45
-	[handwritten-proverif]=54
+	[handwritten-proverif]=61
 	[handwritten-ssprove]=18
 	[historical-generated-fstar]=5
 	[historical-handwritten-fstar]=8
@@ -322,15 +322,23 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 4 \
+require_occurrence_count 6 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 4 '_to_bitstring' \
+require_occurrence_count 6 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
-require_line_count 57 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+require_line_count 220 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
 	"canonical production transcript fact"
+require_line_count 18 '^\(\* @beaconcrypt-fidelity-v1 phase1\.' \
+	"$transcript_interface" "Phase-1 InitKex transcript fact"
+require_line_count 42 '^\(\* @beaconcrypt-fidelity-v1 cryptoframe\.' \
+	"$transcript_interface" "CryptoFrame wire transcript fact"
+require_line_count 56 '^\(\* @beaconcrypt-fidelity-v1 endpoint\.' \
+	"$transcript_interface" "endpoint frame-context transcript fact"
+require_line_count 38 '^\(\* @beaconcrypt-fidelity-v1 ratchet\.driver\.' \
+	"$transcript_interface" "ratchet effect-driver transcript fact"
 require_line_count 5 '^type ' "$transcript_interface" \
 	"canonical ProVerif interface type"
 require_line_count 19 '^fun ' "$transcript_interface" \
@@ -345,6 +353,8 @@ require_line_count 8 '^reduc ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive reduction"
 require_line_count 6 '^letfun ' proofs/pro-verif/crypto.pvl \
 	"handwritten primitive helper"
+require_line_count 1 '^\(\* @beaconcrypt-cryptoframe-v1 crypto_frame\.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id \*\)$' \
+	proofs/pro-verif/crypto.pvl "CryptoFrame symbolic semantic order"
 require_line_count 1 '^fun pqxdh_domain\(\): kdf_domain \[data\]\.$' \
 	"$transcript_interface" "PQXDH HKDF domain"
 require_line_count 1 '^fun symmetric_ratchet_domain\(\): kdf_domain \[data\]\.$' \
@@ -390,6 +400,10 @@ require_line_count 3 '^type ' proofs/pro-verif/environment.pvl \
 	"handwritten protocol-state type"
 require_line_count 14 '^fun ' proofs/pro-verif/environment.pvl \
 	"handwritten protocol constructor/function"
+require_line_count 1 \
+	'^\(\* @beaconcrypt-phase1-v1 signed_init_kex\.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq \*\)$' \
+	proofs/pro-verif/environment.pvl \
+	"Phase-1 symbolic signed InitKex semantic order"
 require_line_count 1 '^type establishment_transcript_t\.$' \
 	"$transcript_interface" "canonical establishment transcript type"
 require_occurrence_count 1 \
@@ -605,6 +619,133 @@ require_line_count 4 '^letfun ' \
 require_line_count 2 '^let Weak' \
 	proofs/pro-verif/public-key-confusion-weak-theory.pvl \
 	"weak key-confusion process"
+require_line_count 3 '^fun phase2_.*_binding' \
+	proofs/pro-verif/phase2-response-binding-control.pvl \
+	"Phase-2 response-binding comparison term"
+require_line_count 4 '^free PHASE2_.*_WITNESS' \
+	proofs/pro-verif/phase2-response-binding-control.pvl \
+	"Phase-2 response-binding witness"
+require_line_count 13 '^event Phase2' \
+	proofs/pro-verif/phase2-response-binding-control.pvl \
+	"Phase-2 response-binding event"
+require_line_count 2 '^let Phase2' \
+	proofs/pro-verif/phase2-response-binding-control.pvl \
+	"Phase-2 response-binding process"
+require_line_count 18 '^query ' \
+	proofs/pro-verif/phase2-response-binding-queries.pvl \
+	"Phase-2 response-binding query"
+require_line_count 13 '^query ' \
+	proofs/pro-verif/phase2-assigned-id-weak-queries.pvl \
+	"weak Phase-2 assigned-ID query"
+require_line_count 1 '^free PHASE2_ASSIGNED_ID_BINDING_CANARY: bitstring \[private\]\.$' \
+	proofs/pro-verif/phase2-response-binding-control.pvl \
+	"Phase-2 assigned-ID differential canary"
+reject_matches "primitive rule in Phase-2 response-binding control" \
+	'(?m)^(?:reduc|equation) ' \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+for assigned_id_theory in strong weak; do
+	require_line_count 1 '^fun phase2_assigned_id_binding_gate' \
+		"proofs/pro-verif/phase2-assigned-id-${assigned_id_theory}-theory.pvl" \
+		"${assigned_id_theory} Phase-2 assigned-ID gate declaration"
+	require_line_count 1 '^reduc ' \
+		"proofs/pro-verif/phase2-assigned-id-${assigned_id_theory}-theory.pvl" \
+		"${assigned_id_theory} Phase-2 assigned-ID gate rule"
+	reject_matches "extra declaration in ${assigned_id_theory} Phase-2 assigned-ID theory" \
+		'(?m)^(?:equation|event|free|let|letfun|process|table|type)\b' \
+		"proofs/pro-verif/phase2-assigned-id-${assigned_id_theory}-theory.pvl"
+done
+require_occurrence_count 1 \
+	'phase2_assigned_id_binding_gate\(\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding\s*\):\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding\s+reduc\s+forall\s+binding:\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding;\s*phase2_assigned_id_binding_gate\(binding,\s*binding\)\s*=\s*binding\.' \
+	"exact production Phase-2 assigned-ID equality gate" \
+	proofs/pro-verif/phase2-assigned-id-strong-theory.pvl
+require_occurrence_count 1 \
+	'phase2_assigned_id_binding_gate\(\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding\s*\):\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding\s+reduc\s+forall\s+authenticated_binding:\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,\s*outer_binding:\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding;\s*phase2_assigned_id_binding_gate\(\s*authenticated_binding,\s*outer_binding\s*\)\s*=\s*authenticated_binding\.' \
+	"exact weakened Phase-2 assigned-ID-only gate" \
+	proofs/pro-verif/phase2-assigned-id-weak-theory.pvl
+require_occurrence_count 1 \
+	'let\s+kex_response\(\s*response_server_identity,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*assigned_key_id\s*\)\s*=\s*response\s+in' \
+	"exact Phase-2 response-binding destructure order" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'let\s+wrong_outer_identity_response\s*=\s*kex_response\(\s*wrong_outer_identity,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*assigned_key_id\s*\)\s+in' \
+	"wrong outer identity changes only the Phase-2 identity field" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'let\s+relabeled_assigned_id_response\s*=\s*kex_response\(\s*server_identity,\s*server_ephemeral,\s*kem_ciphertext,\s*initial_frame,\s*relabeled_assigned_key_id\s*\)\s+in' \
+	"relabeled Phase-2 assigned ID retains the genuine frame" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'new\s+assigned_key_id:\s*key_id;\s*new\s+relabeled_assigned_key_id:\s*key_id;' \
+	"fresh distinct original and relabeled Phase-2 assigned IDs" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'let\s+wrong_inner_sender_frame\s*=\s*seal_frame\(\s*server_material,\s*associated_data,\s*first_sequence\(\),\s*wrong_inner_sender_key_id,\s*initial_payload\s*\)\s+in' \
+	"wrong inner sender seals an otherwise genuine frame" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'if\s+response_server_identity\s*=\s*expected_server_identity\s+then[\s\S]*?beaconcrypt_core__pqxdh__build_associated_data\(\s*expected_server_identity,\s*beacon_identity\s*\)[\s\S]*?if\s+authenticated_server_key_id\s*=\s*expected_server_key_id\s+then[\s\S]*?open_frame\(\s*server_material,\s*associated_data,\s*frame_sequence,\s*expected_server_key_id,\s*initial_frame\s*\)[\s\S]*?beaconcrypt_core__pqxdh__RegistrationKeyIdBinding\(\s*key_id_encoding\(assigned_key_id\)\s*\)[\s\S]*?phase2_assigned_id_binding_gate\(\s*authenticated_binding,\s*expected_binding\s*\)[\s\S]*?event Phase2ResponseCommitted\(witness\)' \
+	"ordered production Phase-2 acceptance gates" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'event\s+Phase2OuterIdentityGateReached\(witness\);\s*if\s+response_server_identity\s*=\s*expected_server_identity\s+then' \
+	"internal Phase-2 outer-identity gate witness" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'event\s+Phase2InnerSenderGateReached\(witness\);\s*if\s+authenticated_server_key_id\s*=\s*expected_server_key_id\s+then' \
+	"internal Phase-2 inner-sender gate witness" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'let\s+registration_payload\(\s*authenticated_binding,\s*initial_plaintext\s*\)\s*=\s*opened_initial\s+in[\s\S]*?if\s+authenticated_binding\s*=\s*genuine_assigned_binding\s+then\s*event\s+Phase2GenuineAssignedPrefixObserved\(witness\)' \
+	"internal Phase-2 original authenticated-prefix witness" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'let\s+admitted_binding\s*=\s*phase2_assigned_id_binding_gate\(\s*authenticated_binding,\s*expected_binding\s*\)\s+in\s*event\s+Phase2AcceptedOuterIdentity\([\s\S]*?\);\s*event\s+Phase2AcceptedAssignedPrefix\([\s\S]*?\);\s*event\s+Phase2AcceptedInnerSender\([\s\S]*?\);\s*event\s+Phase2ResponseCommitted\(witness\);' \
+	"sole Phase-2 commit follows all binding antecedents" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 2 \
+	'event\s+Phase2ResponseCommitted\(' \
+	"one Phase-2 commit declaration and one emission" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'query\s+event\(Phase2OuterIdentityGateReached\(PHASE2_WRONG_OUTER_IDENTITY_WITNESS\)\)\.' \
+	"wrong outer-identity internal-gate witness" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 1 \
+	'query\s+event\(Phase2InnerSenderGateReached\(PHASE2_WRONG_INNER_SENDER_WITNESS\)\)\.' \
+	"wrong inner-sender internal-gate witness" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 1 \
+	'query\s+event\(Phase2AuthenticatedFrameOpened\(PHASE2_RELABELED_ASSIGNED_ID_WITNESS\)\)\.' \
+	"relabeled assigned-ID genuine-frame opening witness" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 1 \
+	'query\s+event\(Phase2GenuineAssignedPrefixObserved\(PHASE2_RELABELED_ASSIGNED_ID_WITNESS\)\)\.' \
+	"relabeled assigned-ID original authenticated-prefix witness" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 3 \
+	'query\s+binding: bitstring;\s*event\(Phase2Accepted(?:OuterIdentity|AssignedPrefix|InnerSender)\(binding\)\)\.' \
+	"non-vacuous Phase-2 binding antecedent" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 3 \
+	'query\s+binding: bitstring;\s*inj-event\(Phase2Accepted(?:OuterIdentity|AssignedPrefix|InnerSender)\(binding\)\)\s*==>\s*inj-event\(Phase2(?:PinnedOuterIdentity|AuthenticatedAssignedPrefix|PinnedInnerSender)\(binding\)\)\.' \
+	"Phase-2 response binding correspondence" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 1 \
+	'query\s+attacker\(PHASE2_ASSIGNED_ID_BINDING_CANARY\)\.' \
+	"production Phase-2 assigned-ID canary secrecy query" \
+	proofs/pro-verif/phase2-response-binding-queries.pvl
+require_occurrence_count 1 \
+	'query\s+queried_authenticated_binding:\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,\s*queried_outer_binding:\s*beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding;\s*event\(Phase2RelabeledAssignedIdCommitted\(\s*PHASE2_RELABELED_ASSIGNED_ID_WITNESS,\s*queried_authenticated_binding,\s*queried_outer_binding\s*\)\)\.' \
+	"weak Phase-2 relabeled-ID commit witness" \
+	proofs/pro-verif/phase2-assigned-id-weak-queries.pvl
+require_occurrence_count 1 \
+	'query\s+attacker\(PHASE2_ASSIGNED_ID_BINDING_CANARY\)\.' \
+	"weak Phase-2 assigned-ID canary disclosure query" \
+	proofs/pro-verif/phase2-assigned-id-weak-queries.pvl
+require_occurrence_count 1 \
+	'event\s+Phase2ResponseCommitted\(witness\);\s*if\s+witness\s*=\s*PHASE2_RELABELED_ASSIGNED_ID_WITNESS\s+then\s*event\s+Phase2RelabeledAssignedIdCommitted\(\s*witness,\s*authenticated_binding,\s*expected_binding\s*\);\s*out\(c,\s*PHASE2_ASSIGNED_ID_BINDING_CANARY\)\.' \
+	"relabeled Phase-2 commit canary release" \
+	proofs/pro-verif/phase2-response-binding-control.pvl
 require_line_count 8 '^query ' \
 	proofs/pro-verif/mlkem-reencapsulation-control-queries.pvl \
 	"ML-KEM re-encapsulation control query"
@@ -662,25 +803,31 @@ for scenario_process in \
 	quantum-mlkem-control \
 	mlkem-reencapsulation-control \
 	public-key-confusion-strong \
-	public-key-confusion-weak; do
+	public-key-confusion-weak \
+	phase2-response-binding \
+	phase2-assigned-id-weak; do
 	require_line_count 1 '^process$' \
 		"proofs/pro-verif/${scenario_process}.pv" \
 			"${scenario_process} top-level process"
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 7 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED): &str = include_str!' \
+require_line_count 18 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_COMMITMENT|CORE_PQXDH|CORE_RATCHET_CONCRETE|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = include_str!|^const (LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable snapshot"
-require_line_count 3 '^#\[test\]$' \
+require_line_count 7 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
 	compiled_core_matches_the_canonical_transcript \
+	cryptoframe_wire_mutation_matrix_is_complete_and_rejected \
+	endpoint_frame_context_mutation_matrix_is_complete_and_rejected \
+	ratchet_effect_driver_mutation_matrix_is_complete_and_rejected \
+	phase1_registration_mutation_matrix_is_complete_and_rejected \
 	requested_transcript_mutations_are_rejected; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
 		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
@@ -689,8 +836,132 @@ require_occurrence_count 1 \
 	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
 	"transcript-fidelity model and adapter composition" "$fidelity_test"
 require_occurrence_count 1 \
-	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
+	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
+require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;$' \
+	"$fidelity_test" "CryptoFrame exact mutation count"
+require_occurrence_count 1 \
+	'(?s)fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, CRYPTOFRAME_WIRE_MUTATION_COUNT\);\s*\}' \
+	"CryptoFrame mutation matrix count assertion" "$fidelity_test"
+for cryptoframe_mutation_family in \
+	cryptoframe_schema_declaration_permutation_ \
+	cryptoframe_schema_ordinal_permutation_ \
+	cryptoframe_schema_omits_field_ \
+	cryptoframe_schema_renames_field_ \
+	cryptoframe_payload_permutation_ \
+	cryptoframe_payload_omits_field_ \
+	cryptoframe_payload_duplicate_ \
+	cryptoframe_builder_order_permutation_ \
+	cryptoframe_getter_permutation_ \
+	cryptoframe_open_tag_slice_starts_late \
+	cryptoframe_open_commitment_slice_starts_late \
+	cryptoframe_open_decrypts_before_commitment_equality \
+	cryptoframe_core_le64_uses_big_endian_order \
+	cryptoframe_core_reorders_tag_and_sequence_branches \
+	cryptoframe_symbolic_annotation_permutation_ \
+	cryptoframe_symbolic_seal_argument_permutation_ \
+	cryptoframe_symbolic_seal_field_permutation_ \
+	cryptoframe_symbolic_open_field_permutation_ \
+	cryptoframe_symbolic_open_argument_permutation_ \
+	cryptoframe_ctx_pair_transposition_ \
+	cryptoframe_ctx_omits_and_duplicates_field_; do
+	require_occurrence_count 1 "$cryptoframe_mutation_family" \
+		"CryptoFrame ${cryptoframe_mutation_family} mutation family" "$fidelity_test"
+done
+require_line_count 1 '^const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 163;$' \
+	"$fidelity_test" "Phase-1 exact mutation count"
+require_occurrence_count 1 \
+	'(?s)fn phase1_registration_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, PHASE1_REGISTRATION_MUTATION_COUNT\);\s*\}' \
+	"Phase-1 mutation matrix count assertion" "$fidelity_test"
+for phase1_mutation_family in \
+	phase1_schema_same_typed_permutation_ \
+	phase1_schema_omits_field_ \
+	phase1_schema_renames_ \
+	phase1_schema_ordinal_drift_ \
+	phase1_beacon_setter_ \
+	phase1_beacon_signature_ \
+	phase1_server_consumer_ \
+	phase1_from_encoded_swaps_x25519_roles \
+	phase1_symbolic_declaration_transposition_ \
+	phase1_symbolic_active_quantum_producer_transposition_ \
+	phase1_symbolic_active_quantum_consumer_transposition_ \
+	phase1_core_prekey_uses_one_time_role \
+	phase1_core_prekey_validates_one_time_role \
+	phase1_server_accepts_mlkem_identity_tag \
+	phase1_server_decodes_identity_with_tag \
+	phase1_symbolic_signature_verifies_under_x25519_key \
+	phase1_server_reorders_pq_and_prekey_verification \
+	phase1_symbolic_reorders_prekey_and_one_time_gates \
+	phase1_beacon_serializes_identity_after_prekey_signature \
+	phase1_core_reorders_prekey_and_one_time_fields \
+	phase1_core_reorders_prekey_and_one_time_validation; do
+	require_occurrence_count 1 "$phase1_mutation_family" \
+		"Phase-1 ${phase1_mutation_family} mutation family" "$fidelity_test"
+done
+require_line_count 1 '^const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 242;$' \
+	"$fidelity_test" "endpoint frame-context exact mutation count"
+require_occurrence_count 1 \
+	'(?s)fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT\);\s*\}' \
+	"endpoint frame-context mutation matrix count assertion" "$fidelity_test"
+for endpoint_mutation_family in \
+	endpoint_fact_\{key\} \
+	endpoint_sender_parser_ignores_wire \
+	endpoint_server_ad_reverses_identities \
+	endpoint_server_send_target_uses_local_sender \
+	endpoint_server_receive_ignores_parsed_sender \
+	endpoint_server_receive_fail_open \
+	endpoint_beacon_send_target_uses_assigned_id \
+	endpoint_beacon_receive_expected_sender_uses_assigned_id \
+	endpoint_registration_server_map_discards_peer_identity \
+	endpoint_registration_server_publishes_control_before_peer_insert \
+	endpoint_registration_beacon_expected_sender_uses_outer_id \
+	endpoint_registration_beacon_assigns_local_id_before_server_binding_checks \
+	endpoint_symbolic_\{family\}_\{field\}_\{call_index\} \
+	endpoint_symbolic_honest_server_open_count_increases \
+	endpoint_symbolic_server_seal_count_increases \
+	endpoint_symbolic_malicious_initial_seal_count_increases \
+	endpoint_symbolic_\{family\}_event_\{field\}_\{call_index\} \
+	endpoint_symbolic_honest_received_event_count_increases \
+	endpoint_symbolic_server_received_event_count_increases \
+	endpoint_symbolic_honest_received_event_arity_increases \
+	endpoint_symbolic_server_received_event_arity_increases \
+	endpoint_symbolic_honest_ad_reverses_identities \
+	endpoint_symbolic_malicious_server_ad_reverses_identities; do
+	require_occurrence_count 1 "$endpoint_mutation_family" \
+		"endpoint frame-context ${endpoint_mutation_family} mutation family" "$fidelity_test"
+done
+require_line_count 1 '^const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 154;$' \
+	"$fidelity_test" "ratchet effect-driver exact mutation count"
+require_occurrence_count 1 \
+	'(?s)fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, RATCHET_EFFECT_DRIVER_MUTATION_COUNT\);\s*\}' \
+	"ratchet effect-driver mutation matrix count assertion" "$fidelity_test"
+for ratchet_driver_mutation_family in \
+	ratchet_driver_fact_\{key\} \
+	ratchet_driver_slot_take_duplicates_take \
+	ratchet_driver_send_resumes_different_pending \
+	ratchet_driver_send_returns_before_put \
+	ratchet_driver_receive_moves_empty_gate_after_take \
+	ratchet_driver_receive_takes_kernel_before_typed_parse \
+	ratchet_driver_receive_moves_sender_gate_after_take \
+	ratchet_driver_receive_moves_length_gate_after_take \
+	ratchet_driver_receive_resumes_different_pending \
+	ratchet_driver_receive_kdf_publishes_slot \
+	ratchet_driver_receive_questions_result_before_put \
+	ratchet_driver_core_finish_none_drops_entry \
+	ratchet_driver_core_finish_cached_publication_omitted \
+	ratchet_driver_core_finish_future_publication_omitted \
+	ratchet_driver_core_begin_receive_mutates_live_control \
+	ratchet_driver_core_receive_kdf_publishes_cached_early \
+	ratchet_driver_core_receive_kdf_publishes_future_early \
+	ratchet_driver_lean_structural_anchor_\{index\}_renamed \
+	ratchet_driver_lean_failure_trace_anchor_renamed \
+	ratchet_driver_lean_conditional_anchor_\{index\}_renamed \
+	ratchet_driver_proverif_renames_atomic_seal \
+	ratchet_driver_proverif_renames_ideal_open \
+	ratchet_driver_proverif_exposes_\{concrete_step\}; do
+	require_occurrence_count 1 "$ratchet_driver_mutation_family" \
+		"ratchet effect-driver ${ratchet_driver_mutation_family} mutation family" "$fidelity_test"
+done
 for mutation_name in \
 	pqxdh_label_byte \
 	symmetric_label_byte \
@@ -698,6 +969,32 @@ for mutation_name in \
 	separate_initial_step_domain \
 	reversed_ad_identities \
 	swapped_x25519_roles \
+	reordered_phase2_manifest_field \
+	changed_phase2_manifest_constructor \
+	changed_phase2_manifest_field_count \
+	changed_phase2_manifest_field_0 \
+	changed_phase2_manifest_field_1 \
+	changed_phase2_manifest_field_2 \
+	changed_phase2_manifest_field_4 \
+	changed_phase2_manifest_server_writes \
+	changed_phase2_manifest_beacon_reads \
+	legacy_phase2_symbolic_order \
+	permuted_phase2_beacon_destructure \
+	permuted_phase2_response_construction \
+	permuted_active_quantum_phase2_destructure \
+	reordered_phase2_schema_fields \
+	omitted_phase2_schema_field \
+	renamed_phase2_schema_field \
+	swapped_phase2_server_identity_mapping \
+	swapped_phase2_server_ephemeral_mapping \
+	swapped_phase2_server_kem_mapping \
+	swapped_phase2_server_frame_mapping \
+	swapped_phase2_server_key_id_mapping \
+	swapped_phase2_beacon_identity_mapping \
+	swapped_phase2_beacon_ephemeral_mapping \
+	swapped_phase2_beacon_kem_mapping \
+	swapped_phase2_beacon_frame_mapping \
+	swapped_phase2_beacon_key_id_mapping \
 	agreement_without_selected_pqpk \
 	agreement_without_kem_ciphertext \
 	ctx_without_key \
@@ -729,11 +1026,38 @@ require_line_count 1 \
 require_line_count 1 '^check-proverif: check-proverif-transcript-fidelity$' \
 	Makefile "aggregate transcript-fidelity prerequisite"
 require_occurrence_count 1 \
+	'check-proverif-phase2-assigned-id-weak:\s+check-proverif-extraction\s+\\\s*check-proverif-phase2-response-binding' \
+	"weak Phase-2 target paired with production response binding" \
+	Makefile
+require_occurrence_count 1 \
+	'check-proverif-phase2-response-binding:\s+check-proverif-extraction[\s\S]*?\$\(PROVERIF_COMMON_LIBS\)\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-strong-theory\.pvl\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-response-binding-control\.pvl\s+\\[\s\S]*?awk -v scenario=phase2-response-binding' \
+	"production Phase-2 target loads only the strong assigned-ID gate" \
+	Makefile
+require_occurrence_count 1 \
+	'check-proverif-phase2-assigned-id-weak:\s+check-proverif-extraction[\s\S]*?\$\(PROVERIF_COMMON_LIBS\)\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-weak-theory\.pvl\s+\\\s*-lib \$\(PROVERIF_DIR\)/phase2-response-binding-control\.pvl\s+\\[\s\S]*?awk -v scenario=phase2-assigned-id-weak' \
+	"weak Phase-2 target loads only the weak assigned-ID gate" \
+	Makefile
+require_line_count 1 \
+	'^\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-strong-theory\.pvl \\$' \
+	Makefile "production Phase-2 assigned-ID gate loader"
+require_line_count 1 \
+	'^\s*-lib \$\(PROVERIF_DIR\)/phase2-assigned-id-weak-theory\.pvl \\$' \
+	Makefile "weak Phase-2 assigned-ID gate loader"
+require_line_count 2 \
+	'^\s*-lib \$\(PROVERIF_DIR\)/phase2-response-binding-control\.pvl \\$' \
+	Makefile "shared strong/weak Phase-2 control loader"
+require_occurrence_count 1 \
 	'PROVERIF_CRYPTO_LIBS :=\s*\\\s*-lib \$\(PROVERIF_INTERFACE\)\s*\\\s*-lib \$\(PROVERIF_DIR\)/crypto\.pvl' \
 	"canonical interface loaded before cryptographic theory" Makefile
 require_line_count 1 '^            target: check-proverif-transcript-fidelity$' \
 	../.github/workflows/formal-verification.yml \
 	"dedicated transcript-fidelity CI target"
+require_line_count 1 '^            target: check-generated-proverif-phase2-response-binding$' \
+	../.github/workflows/formal-verification.yml \
+	"dedicated Phase-2 response-binding CI target"
+require_line_count 1 '^            target: check-generated-proverif-phase2-assigned-id-weak$' \
+	../.github/workflows/formal-verification.yml \
+	"dedicated weak Phase-2 assigned-ID CI target"
 
 require_line_count 1 '^  Theorem ctx_misattribution_reduces_to_collision :' \
 	proofs/ssprove/CtxEventReduction.v \

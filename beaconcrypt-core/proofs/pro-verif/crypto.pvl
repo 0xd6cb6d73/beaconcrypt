@@ -94,6 +94,7 @@ letfun ratchet_material(chain: bitstring) =
     )
   ).
 
+(* @beaconcrypt-cryptoframe-v1 crypto_frame.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id *)
 fun crypto_frame(
   bitstring,
   bitstring,
