@@ -1,0 +1,1347 @@
+{
+  "commitment.COMMITMENT_TRANSCRIPT_SIZE": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.commitment_COMMITMENT_TRANSCRIPT_SIZE_total"
+  },
+  "commitment.CommitmentTranscript.as_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.commitment_CommitmentTranscript_as_bytes_total"
+  },
+  "commitment.CommitmentTranscript.as_mut_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.commitment_CommitmentTranscript_as_mut_bytes_total"
+  },
+  "commitment._": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.commitment_assert_total"
+  },
+  "commitment.__1": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.commitment_assert_1_total"
+  },
+  "commitment.__2": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.commitment_assert_2_total"
+  },
+  "commitment.__3": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.commitment_assert_3_total"
+  },
+  "commitment.__4": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.commitment_assert_4_total"
+  },
+  "commitment.__5": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.commitment_assert_5_total"
+  },
+  "commitment.build_commitment_transcript": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.build_commitment_transcript_ok"
+  },
+  "commitment.encode_u64_le": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.commitment_encode_u64_le_ok"
+  },
+  "pqxdh.AuthenticatedBeaconRegistration.assigned_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_AuthenticatedBeaconRegistration_assigned_key_id_total"
+  },
+  "pqxdh.AuthenticatedBeaconRegistration.server_binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_AuthenticatedBeaconRegistration_server_binding_total"
+  },
+  "pqxdh.AuthenticatedBeaconRegistration.server_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_AuthenticatedBeaconRegistration_server_key_id_total"
+  },
+  "pqxdh.BEACON_RATCHETS": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_BEACON_RATCHETS_total"
+  },
+  "pqxdh.BeaconAborted.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconAborted_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.BeaconAborted.impl.server_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconAborted_impl_server_key_id_total"
+  },
+  "pqxdh.BeaconAborted.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconAborted_new_total"
+  },
+  "pqxdh.BeaconCoins.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconCoins_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.BeaconEstablished.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconEstablished_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.BeaconEstablished.impl.assigned_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconEstablished_impl_assigned_key_id_total"
+  },
+  "pqxdh.BeaconEstablished.impl.server_binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconEstablished_impl_server_binding_total"
+  },
+  "pqxdh.BeaconEstablished.server_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconEstablished_server_key_id_total"
+  },
+  "pqxdh.BeaconFresh.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconFresh_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.BeaconFresh.impl.expected_server_binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconFresh_impl_expected_server_binding_total"
+  },
+  "pqxdh.BeaconFresh.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconFresh_new_total"
+  },
+  "pqxdh.BeaconFresh.server_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconFresh_server_key_id_total"
+  },
+  "pqxdh.BeaconInitSent.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconInitSent_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.BeaconInitSent.impl.expected_server_binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconInitSent_impl_expected_server_binding_total"
+  },
+  "pqxdh.BeaconInitSent.server_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconInitSent_server_key_id_total"
+  },
+  "pqxdh.BeaconRegistrationCandidate.impl.assigned_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconRegistrationCandidate_impl_assigned_key_id_total"
+  },
+  "pqxdh.BeaconRegistrationCandidate.impl.associated_data": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconRegistrationCandidate_impl_associated_data_total"
+  },
+  "pqxdh.BeaconRegistrationCandidate.impl.root_key_input": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconRegistrationCandidate_impl_root_key_input_total"
+  },
+  "pqxdh.BeaconRegistrationCandidate.impl.server_binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconRegistrationCandidate_impl_server_binding_total"
+  },
+  "pqxdh.BeaconRegistrationCandidate.key_id_binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_BeaconRegistrationCandidate_key_id_binding_total"
+  },
+  "pqxdh.BeaconRegistrationCandidate.ratchet_initialization": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_BeaconRegistrationCandidate_ratchet_initialization_total"
+  },
+  "pqxdh.BeaconRegistrationCandidate.root_key_input_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconRegistrationCandidate_root_key_input_mut_total"
+  },
+  "pqxdh.BeaconRegistrationCandidate.server_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconRegistrationCandidate_server_key_id_total"
+  },
+  "pqxdh.BeaconStart.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconStart_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.BeaconStartInputs.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconStartInputs_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.ENCODED_MLKEM768_PUBLIC_KEY_SIZE": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_ENCODED_MLKEM768_PUBLIC_KEY_SIZE_total"
+  },
+  "pqxdh.ENCODED_SIGN_PUBLIC_KEY_SIZE": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_ENCODED_SIGN_PUBLIC_KEY_SIZE_total"
+  },
+  "pqxdh.ENCODED_X25519_PUBLIC_KEY_SIZE": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_ENCODED_X25519_PUBLIC_KEY_SIZE_total"
+  },
+  "pqxdh.EstablishedPeer.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.established_peer_clone_ok"
+  },
+  "pqxdh.EstablishedPeer.Insts.CoreCmpPartialEqEstablishedPeer.eq": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.established_peer_eq_ok"
+  },
+  "pqxdh.EstablishedPeer.Insts.CoreCmpPartialEqEstablishedPeer.ne": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.established_peer_ne_ok"
+  },
+  "pqxdh.INITIAL_RATCHET_KDF_OUTPUT_SIZE": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_INITIAL_RATCHET_KDF_OUTPUT_SIZE_total"
+  },
+  "pqxdh.InitKex.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_InitKex_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.InitKex.from_encoded": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_InitKex_from_encoded_total"
+  },
+  "pqxdh.InitKex.impl.identity_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_InitKex_impl_identity_key_total"
+  },
+  "pqxdh.InitKex.impl.one_time_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_InitKex_impl_one_time_key_total"
+  },
+  "pqxdh.InitKex.impl.pq_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_InitKex_impl_pq_key_total"
+  },
+  "pqxdh.InitKex.impl.prekey": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_InitKex_impl_prekey_total"
+  },
+  "pqxdh.InitialRatchetChains.impl.receive_chain": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_InitialRatchetChains_impl_receive_chain_total"
+  },
+  "pqxdh.InitialRatchetChains.impl.send_chain": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_InitialRatchetChains_impl_send_chain_total"
+  },
+  "pqxdh.InitialRatchetChains.into_parts": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_InitialRatchetChains_into_parts_total"
+  },
+  "pqxdh.KeyIdAvailability.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_KeyIdAvailability_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.PendingServerRegistration.impl.beacon_identity_public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_PendingServerRegistration_impl_beacon_identity_public_key_total"
+  },
+  "pqxdh.PendingServerRegistration.impl.registration_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_PendingServerRegistration_impl_registration_id_total"
+  },
+  "pqxdh.PendingServerRegistration.impl.root_key_input": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_PendingServerRegistration_impl_root_key_input_total"
+  },
+  "pqxdh.PendingServerRegistration.root_key_input_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_PendingServerRegistration_root_key_input_mut_total"
+  },
+  "pqxdh.REGISTRATION_ID_SIZE": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_REGISTRATION_ID_SIZE_total"
+  },
+  "pqxdh.ROOT_KEY_INPUT_SIZE": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_ROOT_KEY_INPUT_SIZE_total"
+  },
+  "pqxdh.RatchetInitialization.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RatchetInitialization_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.RatchetInitialization.impl.receive_offset": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RatchetInitialization_impl_receive_offset_total"
+  },
+  "pqxdh.RatchetInitialization.impl.send_offset": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RatchetInitialization_impl_send_offset_total"
+  },
+  "pqxdh.RegistrationError.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RegistrationError_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.RegistrationId.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RegistrationId_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.RegistrationId.as_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RegistrationId_as_bytes_total"
+  },
+  "pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RegistrationKeyIdBinding_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.RegistrationKeyIdBinding.as_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RegistrationKeyIdBinding_as_bytes_total"
+  },
+  "pqxdh.RegistrationStatus.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RegistrationStatus_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.RootKeyInput.as_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RootKeyInput_as_bytes_total"
+  },
+  "pqxdh.RootKeyInput.as_mut_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_RootKeyInput_as_mut_bytes_total"
+  },
+  "pqxdh.SERVER_RATCHETS": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_SERVER_RATCHETS_total"
+  },
+  "pqxdh.ServerBinding.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerBinding_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.ServerCoins.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerCoins_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.ServerRegistrationCandidate.impl.associated_data": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerRegistrationCandidate_impl_associated_data_total"
+  },
+  "pqxdh.ServerRegistrationCandidate.impl.beacon_identity_public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerRegistrationCandidate_impl_beacon_identity_public_key_total"
+  },
+  "pqxdh.ServerRegistrationCandidate.impl.ephemeral_public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerRegistrationCandidate_impl_ephemeral_public_key_total"
+  },
+  "pqxdh.ServerRegistrationCandidate.impl.kem_ciphertext": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerRegistrationCandidate_impl_kem_ciphertext_total"
+  },
+  "pqxdh.ServerRegistrationCandidate.impl.key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerRegistrationCandidate_impl_key_id_total"
+  },
+  "pqxdh.ServerRegistrationCandidate.impl.server_identity_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerRegistrationCandidate_impl_server_identity_key_id_total"
+  },
+  "pqxdh.ServerRegistrationCandidate.impl.server_identity_public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerRegistrationCandidate_impl_server_identity_public_key_total"
+  },
+  "pqxdh.ServerRegistrationCandidate.key_id_binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_ServerRegistrationCandidate_key_id_binding_total"
+  },
+  "pqxdh.ServerRegistrationCandidate.ratchet_initialization": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_ServerRegistrationCandidate_ratchet_initialization_total"
+  },
+  "pqxdh.ServerState.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerState_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.ServerState.impl.last_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerState_impl_last_key_id_total"
+  },
+  "pqxdh.ServerState.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerState_new_total"
+  },
+  "pqxdh.VerifiedInitKex.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_VerifiedInitKex_Insts_CoreCloneClone_clone_total"
+  },
+  "pqxdh.VerifiedInitKex.impl.beacon_identity_public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_VerifiedInitKex_impl_beacon_identity_public_key_total"
+  },
+  "pqxdh.VerifiedInitKex.impl.beacon_one_time_public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_VerifiedInitKex_impl_beacon_one_time_public_key_total"
+  },
+  "pqxdh.VerifiedInitKex.impl.beacon_pq_public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_VerifiedInitKex_impl_beacon_pq_public_key_total"
+  },
+  "pqxdh.VerifiedInitKex.impl.beacon_prekey_public_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_VerifiedInitKex_impl_beacon_prekey_public_key_total"
+  },
+  "pqxdh.VerifiedInitKex.registration_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.verified_registration_id_ok"
+  },
+  "pqxdh._": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_total"
+  },
+  "pqxdh.__1": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_1_total"
+  },
+  "pqxdh.__10": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_10_total"
+  },
+  "pqxdh.__11": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_11_total"
+  },
+  "pqxdh.__12": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_12_total"
+  },
+  "pqxdh.__13": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_13_total"
+  },
+  "pqxdh.__14": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_14_total"
+  },
+  "pqxdh.__15": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_15_total"
+  },
+  "pqxdh.__16": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_16_total"
+  },
+  "pqxdh.__2": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_2_total"
+  },
+  "pqxdh.__3": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_3_total"
+  },
+  "pqxdh.__4": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_4_total"
+  },
+  "pqxdh.__5": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_5_total"
+  },
+  "pqxdh.__6": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_6_total"
+  },
+  "pqxdh.__7": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_7_total"
+  },
+  "pqxdh.__8": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_8_total"
+  },
+  "pqxdh.__9": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_assert_9_total"
+  },
+  "pqxdh.authenticate_registration_key_id_binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.authenticate_registration_key_id_binding_ok"
+  },
+  "pqxdh.beacon_abort_candidate": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_beacon_abort_candidate_total"
+  },
+  "pqxdh.beacon_abort_fresh": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_beacon_abort_fresh_total"
+  },
+  "pqxdh.beacon_abort_init": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_beacon_abort_init_total"
+  },
+  "pqxdh.beacon_commit": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_beacon_commit_total"
+  },
+  "pqxdh.beacon_prepare_finish": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.beacon_prepare_finish_ok"
+  },
+  "pqxdh.beacon_ratchet_initialization": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_beacon_ratchet_initialization_total"
+  },
+  "pqxdh.beacon_start": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.beacon_start_ok"
+  },
+  "pqxdh.build_associated_data": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.build_associated_data_ok"
+  },
+  "pqxdh.build_root_key_input": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.build_root_key_input_ok"
+  },
+  "pqxdh.concrete.InitialRatchetKdfPending.impl.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_concrete_InitialRatchetKdfPending_impl_request_total"
+  },
+  "pqxdh.concrete.InitialRatchetKdfResponse.as_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_concrete_InitialRatchetKdfResponse_as_bytes_total"
+  },
+  "pqxdh.concrete.InitialRatchetKdfResponse.from_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_concrete_InitialRatchetKdfResponse_from_bytes_total"
+  },
+  "pqxdh.concrete.resume_initial_ratchet_kdf": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Bytes",
+    "theorem": "BeaconcryptCore.PanicFreedom.resume_initial_ratchet_kdf_ok"
+  },
+  "pqxdh.concrete.start_beacon_candidate_ratchet_kdf": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_concrete_start_beacon_candidate_ratchet_kdf_total"
+  },
+  "pqxdh.concrete.start_beacon_ratchet_kdf": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_concrete_start_beacon_ratchet_kdf_total"
+  },
+  "pqxdh.concrete.start_initial_ratchet_kdf": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_concrete_start_initial_ratchet_kdf_total"
+  },
+  "pqxdh.concrete.start_server_candidate_ratchet_kdf": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_concrete_start_server_candidate_ratchet_kdf_total"
+  },
+  "pqxdh.concrete.start_server_ratchet_kdf": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_concrete_start_server_ratchet_kdf_total"
+  },
+  "pqxdh.is_all_zero": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.is_all_zero_ok"
+  },
+  "pqxdh.registration_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.registration_id_ok"
+  },
+  "pqxdh.registration_key_id_binding": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.registration_key_id_binding_ok"
+  },
+  "pqxdh.server_abort_candidate": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_server_abort_candidate_total"
+  },
+  "pqxdh.server_accept": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.server_accept_ok"
+  },
+  "pqxdh.server_commit": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_server_commit_total"
+  },
+  "pqxdh.server_next_key_id": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.server_next_key_id_ok"
+  },
+  "pqxdh.server_prepare_commit": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.server_prepare_commit_ok"
+  },
+  "pqxdh.server_ratchet_initialization": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.pqxdh_server_ratchet_initialization_total"
+  },
+  "pqxdh.split_initial_ratchet_kdf_output": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Bytes",
+    "theorem": "BeaconcryptCore.PanicFreedom.split_initial_ratchet_kdf_output_ok"
+  },
+  "pqxdh.tag_mlkem768_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.tag_mlkem768_key_ok"
+  },
+  "pqxdh.tag_sign_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.tag_sign_key_ok"
+  },
+  "pqxdh.tag_x25519_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.tag_x25519_key_ok"
+  },
+  "pqxdh.untag_mlkem768_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.untag_mlkem768_key_ok"
+  },
+  "pqxdh.untag_sign_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.untag_sign_key_ok"
+  },
+  "pqxdh.untag_x25519_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.untag_x25519_key_ok"
+  },
+  "pqxdh.validate_init_kex": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
+    "theorem": "BeaconcryptCore.PanicFreedom.validate_init_kex_ok"
+  },
+  "pqxdh.validate_registration_status": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_validate_registration_status_total"
+  },
+  "ratchet.RATCHET_KDF_OUTPUT_SIZE": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.ratchet_RATCHET_KDF_OUTPUT_SIZE_total"
+  },
+  "ratchet.RatchetChain.as_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetChain_as_bytes_total"
+  },
+  "ratchet.RatchetChain.from_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetChain_from_bytes_total"
+  },
+  "ratchet.RatchetChain.into_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetChain_into_bytes_total"
+  },
+  "ratchet.RatchetKdfOutput.impl.key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetKdfOutput_impl_key_total"
+  },
+  "ratchet.RatchetKdfOutput.impl.next_chain": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetKdfOutput_impl_next_chain_total"
+  },
+  "ratchet.RatchetKdfOutput.impl.nonce": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetKdfOutput_impl_nonce_total"
+  },
+  "ratchet.RatchetKdfResponse.as_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetKdfResponse_as_bytes_total"
+  },
+  "ratchet.RatchetKdfResponse.from_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetKdfResponse_from_bytes_total"
+  },
+  "ratchet.RatchetKey.as_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetKey_as_bytes_total"
+  },
+  "ratchet.RatchetKey.from_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetKey_from_bytes_total"
+  },
+  "ratchet.RatchetKey.into_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetKey_into_bytes_total"
+  },
+  "ratchet.RatchetMaterial.from_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_RatchetMaterial_from_bytes_total"
+  },
+  "ratchet.RatchetMaterial.from_parts": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetMaterial_from_parts_total"
+  },
+  "ratchet.RatchetMaterial.impl.key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetMaterial_impl_key_total"
+  },
+  "ratchet.RatchetMaterial.impl.nonce": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetMaterial_impl_nonce_total"
+  },
+  "ratchet.RatchetNonce.as_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetNonce_as_bytes_total"
+  },
+  "ratchet.RatchetNonce.from_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetNonce_from_bytes_total"
+  },
+  "ratchet.RatchetNonce.into_bytes": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_RatchetNonce_into_bytes_total"
+  },
+  "ratchet.SymmetricRatchetKdfRequest.impl.info": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_SymmetricRatchetKdfRequest_impl_info_total"
+  },
+  "ratchet.SymmetricRatchetKdfRequest.impl.input": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_SymmetricRatchetKdfRequest_impl_input_total"
+  },
+  "ratchet.SymmetricRatchetKdfRequest.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_SymmetricRatchetKdfRequest_new_total"
+  },
+  "ratchet._": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.ratchet_assert_total"
+  },
+  "ratchet.concrete.ConcreteRatchetKernel.from_counters": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_concrete_ConcreteRatchetKernel_from_counters_total"
+  },
+  "ratchet.concrete.ConcreteRatchetKernel.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_concrete_ConcreteRatchetKernel_new_total"
+  },
+  "ratchet.concrete.ConcreteRatchetKernel.receive_cache_len": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_concrete_ConcreteRatchetKernel_receive_cache_len_total"
+  },
+  "ratchet.concrete.ConcreteRatchetKernel.receive_chain": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_concrete_ConcreteRatchetKernel_receive_chain_total"
+  },
+  "ratchet.concrete.ConcreteRatchetKernel.receive_entry_at": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Lookup",
+    "theorem": "beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel.receive_entry_at_total"
+  },
+  "ratchet.concrete.ConcreteRatchetKernel.receive_sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_concrete_ConcreteRatchetKernel_receive_sequence_total"
+  },
+  "ratchet.concrete.ConcreteRatchetKernel.send_chain": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_concrete_ConcreteRatchetKernel_send_chain_total"
+  },
+  "ratchet.concrete.ConcreteRatchetKernel.send_sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_concrete_ConcreteRatchetKernel_send_sequence_total"
+  },
+  "ratchet.concrete.ReceiveKdf.cancel": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_concrete_ReceiveKdf_cancel_total"
+  },
+  "ratchet.concrete.ReceiveKdf.impl.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_concrete_ReceiveKdf_impl_request_total"
+  },
+  "ratchet.concrete.ReceiveKdf.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Effects",
+    "theorem": "beaconcrypt_core.ratchet.concrete.ReceiveKdf.resume_total"
+  },
+  "ratchet.concrete.ReceiveOpen.finish": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Effects",
+    "theorem": "beaconcrypt_core.ratchet.concrete.ReceiveOpen.finish_total"
+  },
+  "ratchet.concrete.ReceiveOpen.impl.context": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_concrete_ReceiveOpen_impl_context_total"
+  },
+  "ratchet.concrete.ReceiveOpen.material": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Effects",
+    "theorem": "beaconcrypt_core.ratchet.concrete.ReceiveOpen.material_total"
+  },
+  "ratchet.concrete.ReceiveOpen.reject": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_concrete_ReceiveOpen_reject_total"
+  },
+  "ratchet.concrete.ReceiveOpen.sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Effects",
+    "theorem": "beaconcrypt_core.ratchet.concrete.ReceiveOpen.sequence_total"
+  },
+  "ratchet.concrete.SendKdf.cancel": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_concrete_SendKdf_cancel_total"
+  },
+  "ratchet.concrete.SendKdf.impl.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_concrete_SendKdf_impl_request_total"
+  },
+  "ratchet.concrete.SendKdf.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Effects",
+    "theorem": "beaconcrypt_core.ratchet.concrete.SendKdf.resume_total"
+  },
+  "ratchet.concrete.SendSeal.finish": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Effects",
+    "theorem": "beaconcrypt_core.ratchet.concrete.SendSeal.finish_total"
+  },
+  "ratchet.concrete.SendSeal.impl.context": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_concrete_SendSeal_impl_context_total"
+  },
+  "ratchet.concrete.SendSeal.impl.material": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_concrete_SendSeal_impl_material_total"
+  },
+  "ratchet.concrete.SendSeal.impl.sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_concrete_SendSeal_impl_sequence_total"
+  },
+  "ratchet.concrete._": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.ratchet_concrete_assert_total"
+  },
+  "ratchet.concrete.begin_receive": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Effects",
+    "theorem": "beaconcrypt_core.ratchet.concrete.begin_receive_total"
+  },
+  "ratchet.concrete.begin_send": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Effects",
+    "theorem": "beaconcrypt_core.ratchet.concrete.begin_send_total"
+  },
+  "ratchet.concrete.concrete_restore_receive_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Restore",
+    "theorem": "beaconcrypt_core.ratchet.concrete.concrete_restore_receive_key_total"
+  },
+  "ratchet.concrete.finish_concrete_restore": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Restore",
+    "theorem": "beaconcrypt_core.ratchet.concrete.finish_concrete_restore_total"
+  },
+  "ratchet.concrete.ratchet_step_from_response": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Bytes",
+    "theorem": "BeaconcryptCore.PanicFreedom.ratchet_step_from_response_ok"
+  },
+  "ratchet.concrete.receive_rejected": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_concrete_receive_rejected_total"
+  },
+  "ratchet.concrete.start_concrete_restore": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Restore",
+    "theorem": "beaconcrypt_core.ratchet.concrete.start_concrete_restore_total"
+  },
+  "ratchet.control.PeerRatchetState.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_PeerRatchetState_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.PeerSendAdvance.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_PeerSendAdvance_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.RECEIVE_CACHE_CAPACITY": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.ratchet_control_RECEIVE_CACHE_CAPACITY_total"
+  },
+  "ratchet.control.RatchetRestore.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_RatchetRestore_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.RatchetState.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_RatchetState_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.RatchetState.Insts.CoreDefaultDefault.default": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Static",
+    "theorem": "BeaconcryptCore.PanicFreedom.Static.ratchet_control_RatchetState_Insts_CoreDefaultDefault_default_total"
+  },
+  "ratchet.control.RatchetState.from_counters": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.RatchetState.from_counters_total"
+  },
+  "ratchet.control.RatchetState.impl.receive_sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_RatchetState_impl_receive_sequence_total"
+  },
+  "ratchet.control.RatchetState.impl.send_sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_RatchetState_impl_send_sequence_total"
+  },
+  "ratchet.control.RatchetState.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.RatchetState.new_total"
+  },
+  "ratchet.control.RatchetState.receive_cache_len": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_RatchetState_receive_cache_len_total"
+  },
+  "ratchet.control.RatchetState.receive_key_at": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.RatchetState.receive_key_at_total"
+  },
+  "ratchet.control.ReceiveAdvance.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_ReceiveAdvance_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.ReceiveDisposition.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_ReceiveDisposition_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.ReceiveFinish.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_ReceiveFinish_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.ReceiveFinishWithRemoval.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_ReceiveFinishWithRemoval_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.ReceivePlan.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_ReceivePlan_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.ReceiveRemoval.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_ReceiveRemoval_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.ReceiveRestoreStep.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_ReceiveRestoreStep_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.ReceiveTargetAdvance.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_ReceiveTargetAdvance_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.SendAdvance.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_SendAdvance_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.SendFinish.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_SendFinish_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.SendKey.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_SendKey_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.SendKey.impl.sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.SendKey.sequence_total"
+  },
+  "ratchet.control.SendKey.is_available": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_SendKey_is_available_total"
+  },
+  "ratchet.control.SendKey.unavailable": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_SendKey_unavailable_total"
+  },
+  "ratchet.control.SequenceCache.Insts.CoreCloneClone.clone": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_SequenceCache_Insts_CoreCloneClone_clone_total"
+  },
+  "ratchet.control.SequenceCache.append": {
+    "form": "exists",
+    "module": "BeaconcryptCore.Refinement.RatchetControl",
+    "theorem": "beaconcrypt_core.ratchet.control.SequenceCache.append_total"
+  },
+  "ratchet.control.SequenceCache.empty": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_SequenceCache_empty_total"
+  },
+  "ratchet.control.SequenceCache.entry": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.SequenceCache.entry_total"
+  },
+  "ratchet.control.advance_receive": {
+    "form": "exists",
+    "module": "BeaconcryptCore.Refinement.RatchetControl",
+    "theorem": "beaconcrypt_core.ratchet.control.advance_receive_ok"
+  },
+  "ratchet.control.advance_receive_target": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.advance_receive_target_total"
+  },
+  "ratchet.control.advance_send": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.advance_send_total"
+  },
+  "ratchet.control.advance_send_for_peer": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.advance_send_for_peer_total"
+  },
+  "ratchet.control.finish_receive": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.finish_receive_total"
+  },
+  "ratchet.control.finish_receive_with_removal": {
+    "form": "exists",
+    "module": "BeaconcryptCore.Refinement.RatchetControl",
+    "theorem": "beaconcrypt_core.ratchet.control.finish_receive_with_removal_ok"
+  },
+  "ratchet.control.finish_restore": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_control_finish_restore_total"
+  },
+  "ratchet.control.finish_send": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.finish_send_total"
+  },
+  "ratchet.control.lookup_receive_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.lookup_receive_key_total"
+  },
+  "ratchet.control.plan_receive_until": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.plan_receive_until_total"
+  },
+  "ratchet.control.replace_ratchet_for_peer": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.replace_ratchet_for_peer_total"
+  },
+  "ratchet.control.restore_receive_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Control",
+    "theorem": "beaconcrypt_core.ratchet.control.restore_receive_key_total"
+  },
+  "ratchet.control.restore_receive_key_with_slot": {
+    "form": "exists",
+    "module": "BeaconcryptCore.Refinement.RatchetControlRestore",
+    "theorem": "beaconcrypt_core.ratchet.control.restore_receive_key_with_slot_total"
+  },
+  "ratchet.control.start_restore": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Restore",
+    "theorem": "beaconcrypt_core.ratchet.control.start_restore_total"
+  },
+  "ratchet.refined.RefinedRatchet.from_counters": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_refined_RefinedRatchet_from_counters_total"
+  },
+  "ratchet.refined.RefinedRatchet.impl.receive_chain": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_refined_RefinedRatchet_impl_receive_chain_total"
+  },
+  "ratchet.refined.RefinedRatchet.impl.send_chain": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_refined_RefinedRatchet_impl_send_chain_total"
+  },
+  "ratchet.refined.RefinedRatchet.new": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_refined_RefinedRatchet_new_total"
+  },
+  "ratchet.refined.RefinedRatchet.receive_cache_len": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_refined_RefinedRatchet_receive_cache_len_total"
+  },
+  "ratchet.refined.RefinedRatchet.receive_entry_at": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Lookup",
+    "theorem": "beaconcrypt_core.ratchet.refined.RefinedRatchet.receive_entry_at_total"
+  },
+  "ratchet.refined.RefinedRatchet.receive_sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_refined_RefinedRatchet_receive_sequence_total"
+  },
+  "ratchet.refined.RefinedRatchet.send_sequence": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_refined_RefinedRatchet_send_sequence_total"
+  },
+  "ratchet.refined.empty_material_slots": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Structural",
+    "theorem": "BeaconcryptCore.PanicFreedom.Structural.ratchet_refined_empty_material_slots_total"
+  },
+  "ratchet.refined.finish_refined_restore": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Restore",
+    "theorem": "beaconcrypt_core.ratchet.refined.finish_refined_restore_total"
+  },
+  "ratchet.refined.pending_receive_is_valid": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RatchetReceive",
+    "theorem": "beaconcrypt_core.ratchet.refined.pending_receive_is_valid_ok"
+  },
+  "ratchet.refined.pending_receive_slots_are_valid": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RatchetLoops",
+    "theorem": "beaconcrypt_core.ratchet.refined.pending_receive_slots_are_valid_ok"
+  },
+  "ratchet.refined.prepare_cached_receive": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Effects",
+    "theorem": "beaconcrypt_core.ratchet.refined.prepare_cached_receive_total"
+  },
+  "ratchet.refined.publish_cached_receive": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RatchetReceive",
+    "theorem": "beaconcrypt_core.ratchet.refined.publish_cached_receive_ok"
+  },
+  "ratchet.refined.publish_future_receive": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RatchetReceive",
+    "theorem": "beaconcrypt_core.ratchet.refined.publish_future_receive_ok"
+  },
+  "ratchet.refined.publish_future_receive_slots": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RatchetLoops",
+    "theorem": "beaconcrypt_core.ratchet.refined.publish_future_receive_slots_ok"
+  },
+  "ratchet.refined.receive_control_prefix_matches": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RatchetLoops",
+    "theorem": "beaconcrypt_core.ratchet.refined.receive_control_prefix_matches_ok"
+  },
+  "ratchet.refined.refined_receive_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Lookup",
+    "theorem": "beaconcrypt_core.ratchet.refined.refined_receive_key_total"
+  },
+  "ratchet.refined.refined_receive_slots_are_empty": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.RatchetLoops",
+    "theorem": "beaconcrypt_core.ratchet.refined.refined_receive_slots_are_empty_ok"
+  },
+  "ratchet.refined.refined_restore_receive_key": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Restore",
+    "theorem": "beaconcrypt_core.ratchet.refined.refined_restore_receive_key_total"
+  },
+  "ratchet.refined.start_refined_restore": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Restore",
+    "theorem": "beaconcrypt_core.ratchet.refined.start_refined_restore_total"
+  },
+  "ratchet.split_ratchet_kdf_output": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Bytes",
+    "theorem": "BeaconcryptCore.PanicFreedom.split_ratchet_kdf_output_ok"
+  }
+}
