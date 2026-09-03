@@ -24,6 +24,13 @@ structure RestoreSlotShape (before : RatchetRestore) (sequence : Std.U64)
   length : step.restore.state.receive_cache.len.val = before.state.receive_cache.len.val + 1
   entry : step.restore.state.receive_cache.entries.val[step.slot.val]! = sequence
 
+/-- The returned slot is live, bounded, and contains the restored sequence. -/
+theorem RestoreSlotShape.cache_slot (before : RatchetRestore) (sequence : Std.U64)
+    (step : ReceiveRestoreStep) (h : RestoreSlotShape before sequence step) :
+    step.slot.val < step.restore.state.receive_cache.len.val ∧ step.slot.val < 50 ∧
+      step.restore.state.receive_cache.entries.val[step.slot.val]! = sequence :=
+  ⟨by have := h.slot_value; have := h.length; omega, h.slot_bound, h.entry⟩
+
 /-- Checked raw restoration preserves the full logical invariant and reports the append slot. -/
 theorem ValidRestore.restore_with_slot (restore : RatchetRestore) (h : ValidRestore restore)
     (sequence : Std.U64) :
@@ -85,3 +92,27 @@ theorem ValidRestore.restore (restore : RatchetRestore) (h : ValidRestore restor
       exact (hvalid step rfl).1
 
 end beaconcrypt_core.ratchet.control
+
+namespace beaconcrypt_core.ratchet.refined
+
+/-- Accepted restoration preserves the complete packed prefix and exposes its exact new tagged slot. -/
+theorem RestoreAppendShape.exact_slots {SendChain ReceiveChain Material : Type}
+    (before after : RefinedRatchetRestore SendChain ReceiveChain Material)
+    (sequence : Std.U64) (material : Material)
+    (h : RestoreAppendShape before after sequence material) (hvalid : ValidRestore after) :
+    ∃ slot : Std.U8, slot.val = before.logical.state.receive_cache.len.val ∧
+      slot.val < after.logical.state.receive_cache.len.val ∧ slot.val < 50 ∧
+      after.logical.state.receive_cache.entries.val[slot.val]! = sequence ∧
+      after.receive_slots.val[slot.val]! = core.option.Option.Some { sequence, material } ∧
+      (∀ i, i < before.logical.state.receive_cache.len.val →
+        after.logical.state.receive_cache.entries.val[i]! = before.logical.state.receive_cache.entries.val[i]! ∧
+        after.receive_slots.val[i]! = before.receive_slots.val[i]!) := by
+  obtain ⟨_, _, _, _, _, hlen, hentries, hslots⟩ := h
+  have hcap : after.logical.state.receive_cache.len.val ≤ 50 := hvalid.control.capacity
+  refine ⟨before.logical.state.receive_cache.len, rfl, by omega, by omega, ?_, ?_, ?_⟩
+  · simp_lists [hentries]
+  · simp_lists [hslots]
+  · intro i hi
+    simp_lists [hentries, hslots]
+
+end beaconcrypt_core.ratchet.refined
