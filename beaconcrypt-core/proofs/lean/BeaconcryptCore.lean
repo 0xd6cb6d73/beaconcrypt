@@ -54,6 +54,17 @@ import BeaconcryptCore.PanicFreedom.RatchetLoops
 import BeaconcryptCore.PanicFreedom.Restore
 import BeaconcryptCore.PanicFreedom.Static
 import BeaconcryptCore.PanicFreedom.Trivial
+import BeaconcryptCore.Refinement.RatchetFutureFinalization
+import BeaconcryptCore.Refinement.CommitmentSurface
+import BeaconcryptCore.Refinement.RatchetRoleReachability
+import BeaconcryptCore.Refinement.RatchetFuturePublication
+import BeaconcryptCore.Refinement.RatchetCachedLifecycle
+import BeaconcryptCore.Refinement.RatchetFutureTrace
+import BeaconcryptCore.Refinement.PqxdhSessionLifecycle
+import BeaconcryptCore.Refinement.RatchetReceiveAdmission
+import BeaconcryptCore.Refinement.RatchetReceiveDriver
+import BeaconcryptCore.Refinement.RatchetReceiveReachability
+import BeaconcryptCore.Refinement.RatchetLifetime
 
 /-!
 # Beaconcrypt-core verification root
