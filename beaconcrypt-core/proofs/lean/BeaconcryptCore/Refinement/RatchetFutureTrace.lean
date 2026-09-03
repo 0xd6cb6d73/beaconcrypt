@@ -1,4 +1,5 @@
 import BeaconcryptCore.Refinement.RatchetFutureFinalization
+import BeaconcryptCore.Refinement.RatchetExecution
 
 /-! Constructive execution of every admitted future receive through its exact finite KDF trace. -/
 
@@ -73,5 +74,72 @@ theorem FutureKdfRefines.resume_last
   have hvalid := htransaction.valid cr origin send receive entry target transaction
   dsimp only [transaction] at hvalid
   simp only [hvalid, bind_tc_ok, if_true, transaction]
+
+/-- The remaining counter is a constructive bound for the exact extracted KDF execution. -/
+theorem future_kdf_trace_count
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (execute : KdfInterpreter) (origin : ratchet.RatchetChain)
+    (send : Ratchet.SendState ratchet.RatchetChain)
+    (receive : Ratchet.RecvState ratchet.RatchetChain ratchet.RatchetMaterial)
+    (entry : ConcreteRatchetKernel) (context : Context) (target : Std.U64) (n : Nat) :
+    ∀ (count : Nat) (pending : ReceiveKdf Context), pending.remaining.val = n →
+      FutureKdfRefines (withInterpreter cr execute) origin send receive entry context target count pending →
+      ∃ opened, ReceiveKdfTrace execute (ReceiveEffect.ReceiveKdfRequested pending)
+          (ReceiveEffect.ReceiveOpenRequested opened) n ∧
+        FutureOpenRefines (withInterpreter cr execute) origin send receive entry context target opened := by
+  induction n with
+  | zero =>
+    intro count pending hremaining h
+    have hpositive := h.position
+    have hcounter := h.remaining
+    omega
+  | succ n ih =>
+    intro count pending hremaining h
+    have hresponse := interpreter_request_refines cr execute
+      (Ratchet.chainAt (withInterpreter cr execute) receive.ck count) pending.request h.requestInput h.requestInfo
+    by_cases hn : n = 0
+    · obtain ⟨opened, hresume, hopen⟩ := h.resume_last (withInterpreter cr execute) origin send receive
+        entry context target count pending (by omega) (execute pending.request) hresponse
+      exact ⟨opened, by simpa only [hn] using (ReceiveKdfTrace.step pending _ _ 0 hresume
+          (ReceiveKdfTrace.refl (ReceiveEffect.ReceiveOpenRequested opened))), hopen⟩
+    · obtain ⟨next, hresume, hnext⟩ := h.resume_more (withInterpreter cr execute) origin send receive
+        entry context target count pending (by omega) (execute pending.request) hresponse
+      obtain ⟨opened, htrace, hopen⟩ := ih (count + 1) next
+        (by have hleft := h.remaining; have hright := hnext.remaining; omega) hnext
+      exact ⟨opened, ReceiveKdfTrace.step pending _ _ n hresume htrace, hopen⟩
+
+/-- Any live semantic continuation reaches authentication in exactly its remaining KDF steps. -/
+theorem FutureKdfRefines.trace
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (execute : KdfInterpreter) (origin : ratchet.RatchetChain)
+    (send : Ratchet.SendState ratchet.RatchetChain)
+    (receive : Ratchet.RecvState ratchet.RatchetChain ratchet.RatchetMaterial)
+    (entry : ConcreteRatchetKernel) (context : Context) (target : Std.U64) (count : Nat)
+    (pending : ReceiveKdf Context)
+    (h : FutureKdfRefines (withInterpreter cr execute) origin send receive entry context target count pending) :
+    ∃ opened, ReceiveKdfTrace execute (ReceiveEffect.ReceiveKdfRequested pending)
+        (ReceiveEffect.ReceiveOpenRequested opened) pending.remaining.val ∧
+      FutureOpenRefines (withInterpreter cr execute) origin send receive entry context target opened :=
+  future_kdf_trace_count cr execute origin send receive entry context target pending.remaining.val count pending rfl h
+
+/-- An admitted future receive constructively reaches the ideal target's authentication phase. -/
+theorem KernelRefines.begin_receive_future_trace
+    (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (execute : KdfInterpreter) (origin : ratchet.RatchetChain)
+    (send : Ratchet.SendState ratchet.RatchetChain)
+    (receive : Ratchet.RecvState ratchet.RatchetChain ratchet.RatchetMaterial)
+    (entry : ConcreteRatchetKernel) (context : Context) (target : Std.U64)
+    (h : KernelRefines (withInterpreter cr execute) origin send receive entry)
+    (hfuture : receive.n < target.val)
+    (hcapacity : entry.refined.control.receive_cache.len.val + (target.val - receive.n - 1) ≤ 50) :
+    ∃ pending opened,
+      begin_receive entry target context = ok (ReceiveEffect.ReceiveKdfRequested pending) ∧
+      ReceiveKdfTrace execute (ReceiveEffect.ReceiveKdfRequested pending)
+        (ReceiveEffect.ReceiveOpenRequested opened) (target.val - receive.n) ∧
+      FutureOpenRefines (withInterpreter cr execute) origin send receive entry context target opened := by
+  obtain ⟨pending, hbegin, hpending⟩ := h.begin_receive_future (withInterpreter cr execute) origin send receive
+    entry context target hfuture hcapacity
+  obtain ⟨opened, htrace, hopen⟩ := hpending.trace cr execute origin send receive entry context target 0 pending
+  exact ⟨pending, opened, hbegin, by simpa only [hpending.remaining, Nat.sub_zero] using htrace, hopen⟩
 
 end beaconcrypt_core.ratchet.concrete
