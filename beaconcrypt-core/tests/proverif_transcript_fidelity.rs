@@ -28,6 +28,8 @@ const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
 const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
 const CORE_COMMITMENT: &str = include_str!("../src/commitment.rs");
 const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
+const CORE_PQXDH_CONCRETE: &str = include_str!("../src/pqxdh/concrete.rs");
+const CORE_RATCHET: &str = include_str!("../src/ratchet.rs");
 const CORE_RATCHET_CONCRETE: &str = include_str!("../src/ratchet/concrete.rs");
 const CORE_RATCHET_CONTROL: &str = include_str!("../src/ratchet/control.rs");
 const CORE_RATCHET_REFINED: &str = include_str!("../src/ratchet/refined.rs");
@@ -35,6 +37,9 @@ const LEAN_RATCHET_EFFECT: &str =
 	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetEffect.lean");
 const LEAN_RATCHET_EFFECT_REFINEMENT: &str =
 	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean");
+const LEAN_PQXDH_KDF: &str = include_str!("../proofs/lean/BeaconcryptCore/Model/Pqxdh/Kdf.lean");
+const LEAN_PQXDH_THEOREMS: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Model/Pqxdh/Theorems.lean");
 const CRYPTOFRAME_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/cryptoframe.capnp");
 const PHASE1_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase1.capnp");
 const PHASE2_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase2.capnp");
@@ -368,6 +373,77 @@ const EXPECTED_FACTS: &[&str] = &[
 	"registration.lifecycle.hb49.replay_id=same_identity_and_one_time_imply_equal_source_id",
 	"registration.lifecycle.hb49.production=second_registration_consumed_after_first_successful_get_shared_secret",
 	"registration.lifecycle.hb49.scope=isolated_unsupported_control:not_production_rotation_or_attack",
+	"initial_ratchet.scope=deterministic_source_and_finite_symbolic_synchronization:not_semantic_Rust_to_Lean_or_ProVerif_refinement",
+	"initial_ratchet.claim=exact_root_handoff_to_typed_64_byte_response_and_role_ordered_initial_kernel",
+	"initial_ratchet.condition=complementarity_requires_equal_local_roots_and_equal_outputs_from_the_same_faithful_deterministic_response_function",
+	"initial_ratchet.source.server.output=RegistrationOutput(derived_secret,control)",
+	"initial_ratchet.source.server.root=derive_root_key_input(pending.root_key_input_mut())",
+	"initial_ratchet.source.server.cross_method=get_shared_secret_returns_by_value_and_build_registration_response_consumes_caller_supplied_value",
+	"initial_ratchet.source.server.provenance=RegistrationOutput_not_indexed_by_producer_or_Server_instance",
+	"initial_ratchet.source.derived_root.output_width=KEX_KDF_OUT_LEN:usize=32",
+	"initial_ratchet.source.derived_root.width_link=KEX_KDF_OUT_LEN==KDF_STATE_SIZE",
+	"initial_ratchet.source.derived_root.alias=SecretArr<KDF_STATE_SIZE,systems::Pqxdh,roles::DerivedSecret>",
+	"initial_ratchet.source.derived_root.accessor.signature=&[u8;S]",
+	"initial_ratchet.source.derived_root.accessor.body=&self.data",
+	"initial_ratchet.source.server.destructure=derived_secret,control:pending",
+	"initial_ratchet.source.server.start=start_server_candidate_ratchet_kdf(candidate,derived_secret.as_array())",
+	"initial_ratchet.source.server.finish=finish_initial_ratchet_kdf(same_pending)",
+	"initial_ratchet.source.server.wrap=RatchetManager::from_kernel(returned_kernel)",
+	"initial_ratchet.source.server.initial_use=wrapped_kernel_before_encrypt_message_with_ratchet",
+	"initial_ratchet.source.beacon.root=derive_root_key_input(candidate.root_key_input_mut())",
+	"initial_ratchet.source.beacon.start=start_beacon_candidate_ratchet_kdf(candidate,derived_secret.as_array())",
+	"initial_ratchet.source.beacon.finish=finish_initial_ratchet_kdf(same_pending)",
+	"initial_ratchet.source.beacon.wrap=RatchetManager::from_kernel(returned_kernel)",
+	"initial_ratchet.source.beacon.initial_use=wrapped_kernel_before_decrypt_message_with_ratchet",
+	"initial_ratchet.core.pending.fields=request,initialization",
+	"initial_ratchet.core.pending.affine=neither_Clone_nor_Copy",
+	"initial_ratchet.core.pending.request_accessor=&self.request",
+	"initial_ratchet.core.response.type=InitialRatchetKdfResponse",
+	"initial_ratchet.core.response.output=64",
+	"initial_ratchet.core.response.constructor=Self{bytes}",
+	"initial_ratchet.core.response.distinct=RatchetKdfResponse_is_76_bytes",
+	"initial_ratchet.core.response.provenance=not_tied_to_particular_pending_by_type",
+	"initial_ratchet.core.response.bytes_accessor=&self.bytes",
+	"initial_ratchet.core.request.input=exact_32_byte_root",
+	"initial_ratchet.core.request.label=SYM_RATCHET_INFO",
+	"initial_ratchet.core.request.fields=input:[u8;32],info:[u8;41]",
+	"initial_ratchet.core.request.accessors=input:&self.input,info:&self.info",
+	"initial_ratchet.core.start.signatures=root:&[u8;32],candidate:role_specific_reference,return:InitialRatchetKdfPending",
+	"initial_ratchet.core.start.server=candidate.ratchet_initialization()",
+	"initial_ratchet.core.start.beacon=candidate.ratchet_initialization()",
+	"initial_ratchet.core.initialization.server=send_offset:0,receive_offset:32",
+	"initial_ratchet.core.initialization.beacon=send_offset:32,receive_offset:0",
+	"initial_ratchet.core.split.left=output[0..32]",
+	"initial_ratchet.core.split.right=output[32..64]",
+	"initial_ratchet.core.resume=split_response_with_same_pending.initialization",
+	"initial_ratchet.core.kernel=ConcreteRatchetKernel::new(send_chain,receive_chain)",
+	"initial_ratchet.core.kernel.initialization=ConcreteRatchetKernel::from_counters(0,0,send_chain,receive_chain)",
+	"initial_ratchet.adapter.initial_hkdf.output=64",
+	"initial_ratchet.adapter.executor=input:request.input(),label:request.info(),output:OUTPUT_SIZE_bytes",
+	"initial_ratchet.adapter.finish.hkdf=initial_ratchet_hkdf(same_pending.request()):once",
+	"initial_ratchet.adapter.finish.response=InitialRatchetKdfResponse::from_bytes(exact_hkdf_bytes)",
+	"initial_ratchet.adapter.finish.resume=resume_initial_ratchet_kdf(same_pending,same_response):once",
+	"initial_ratchet.adapter.finish.provenance=checked_local_dataflow:not_response_type",
+	"initial_ratchet.lean.structural=start_initial_ratchet_kdf_exact,initial_request_accessor_exact,start_beacon_ratchet_kdf_exact,start_server_ratchet_kdf_exact,resume_initial_ratchet_kdf_is_core_partition",
+	"initial_ratchet.lean.ideal=Pqxdh.rootChains,Pqxdh.HonestRun.chain_agreement",
+	"initial_ratchet.lean.scope=checked_interpretation_anchors_and_ideal_model:text_link_only",
+	"initial_ratchet.proverif.definition.server_to_beacon=first32(HKDF(root,SYM))",
+	"initial_ratchet.proverif.definition.beacon_to_server=second32(HKDF(root,SYM))",
+	"initial_ratchet.proverif.honest_beacon.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
+	"initial_ratchet.proverif.server.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
+	"initial_ratchet.proverif.malicious_server.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
+	"initial_ratchet.proverif.server.initial_seal=server_to_beacon_chain(root)",
+	"initial_ratchet.proverif.server.initial_open=beacon_to_server_chain(root)",
+	"initial_ratchet.proverif.honest_beacon.initial_open=server_to_beacon_chain(root)",
+	"initial_ratchet.proverif.honest_beacon.outgoing=beacon_to_server_chain(root)",
+	"initial_ratchet.proverif.malicious_server.initial_seal=server_to_beacon_chain(root)",
+	"initial_ratchet.proverif.honest_beacon.initial_material=ratchet_material(server_chain_1)",
+	"initial_ratchet.proverif.honest_beacon.outgoing_material=ratchet_material(beacon_send_chain_1)",
+	"initial_ratchet.proverif.server.initial_material=ratchet_material(server_chain_1)",
+	"initial_ratchet.proverif.scoped_occurrences=5",
+	"initial_ratchet.proverif.complementarity=conditional_on_equal_roots_and_equal_outputs_from_the_same_faithful_deterministic_response_function",
+	"initial_ratchet.bridge=source_Lean_and_ProVerif_text_synchronization_only",
+	"initial_ratchet.excludes=HKDF_security,totality,correctness,noncollision,root_agreement,RegistrationOutput_origin,same_Server_instance_provenance,response_type_provenance,array_term_equality,extraction,compiler,AEAD,CTX,nonce,arbitrary_schedules,persistence,multiuser,crash,erasure",
 	"agreement.constructor=establishment_transcript",
 	"agreement.field_count=18",
 	"agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin",
@@ -383,13 +459,18 @@ struct Snapshot {
 	mlkem_reencapsulation_control: String,
 	makefile: String,
 	adapter_ratchet: String,
+	adapter_shared: String,
 	core_commitment: String,
 	core_pqxdh: String,
+	core_pqxdh_concrete: String,
+	core_ratchet: String,
 	core_ratchet_concrete: String,
 	core_ratchet_control: String,
 	core_ratchet_refined: String,
 	lean_ratchet_effect: String,
 	lean_ratchet_effect_refinement: String,
+	lean_pqxdh_kdf: String,
+	lean_pqxdh_theorems: String,
 	cryptoframe_schema: String,
 	phase1_schema: String,
 	phase2_schema: String,
@@ -410,13 +491,18 @@ impl Snapshot {
 			mlkem_reencapsulation_control: MLKEM_REENCAPSULATION_CONTROL.to_owned(),
 			makefile: CORE_MAKEFILE.to_owned(),
 			adapter_ratchet: ADAPTER_RATCHET.to_owned(),
+			adapter_shared: ADAPTER_SHARED.to_owned(),
 			core_commitment: CORE_COMMITMENT.to_owned(),
 			core_pqxdh: CORE_PQXDH.to_owned(),
+			core_pqxdh_concrete: CORE_PQXDH_CONCRETE.to_owned(),
+			core_ratchet: CORE_RATCHET.to_owned(),
 			core_ratchet_concrete: CORE_RATCHET_CONCRETE.to_owned(),
 			core_ratchet_control: CORE_RATCHET_CONTROL.to_owned(),
 			core_ratchet_refined: CORE_RATCHET_REFINED.to_owned(),
 			lean_ratchet_effect: LEAN_RATCHET_EFFECT.to_owned(),
 			lean_ratchet_effect_refinement: LEAN_RATCHET_EFFECT_REFINEMENT.to_owned(),
+			lean_pqxdh_kdf: LEAN_PQXDH_KDF.to_owned(),
+			lean_pqxdh_theorems: LEAN_PQXDH_THEOREMS.to_owned(),
 			cryptoframe_schema: CRYPTOFRAME_SCHEMA.to_owned(),
 			phase1_schema: PHASE1_SCHEMA.to_owned(),
 			phase2_schema: PHASE2_SCHEMA.to_owned(),
@@ -4072,6 +4158,704 @@ fn validate_registration_lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 	Ok(())
 }
 
+fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> {
+	let shared_source = compact(&uncommented_rust(&snapshot.adapter_shared)?);
+	for (wanted, label) in [
+		(
+			"pubconstKEX_KDF_OUT_LEN:usize=32usize;",
+			"initial ratchet derived-root output width",
+		),
+		(
+			"const_:()=assert!(KEX_KDF_OUT_LEN==KDF_STATE_SIZE);",
+			"initial ratchet derived-root width link",
+		),
+		(
+			"pubtypeKexDerivedSecret=SecretArr<KDF_STATE_SIZE,systems::Pqxdh,roles::DerivedSecret>;",
+			"initial ratchet derived-root alias",
+		),
+		(
+			"pubfnas_array(&self)->&[u8;S]{",
+			"initial ratchet derived-root accessor signature",
+		),
+	] {
+		require_once(&shared_source, wanted, label)?;
+	}
+	let as_array = rust_body(&snapshot.adapter_shared, "as_array")?;
+	if as_array != "&self.data" {
+		return Err(format!(
+			"initial ratchet derived-root accessor body changed: {as_array}"
+		));
+	}
+
+	let server_source = compact(&uncommented_rust(&snapshot.adapter_server)?);
+	require_once(
+		&server_source,
+		"pubstructRegistrationOutput{pub(crate)derived_secret:KexDerivedSecret,pub(crate)control:beaconcrypt_core::pqxdh::PendingServerRegistration,}",
+		"initial ratchet RegistrationOutput storage",
+	)?;
+	for (wanted, label) in [
+		(
+			"fnget_shared_secret(&mutself,buffer:&[u8])->Option<RegistrationOutput>{",
+			"initial ratchet Server RegistrationOutput return signature",
+		),
+		(
+			"fnbuild_registration_response(&mutself,reg_out:RegistrationOutput,data:Option<&[u8]>,)->Option<RegResponse>{",
+			"initial ratchet Server RegistrationOutput by-value consumer signature",
+		),
+	] {
+		require_once(&server_source, wanted, label)?;
+	}
+	let get_shared_secret = rust_body(&snapshot.adapter_server, "get_shared_secret")?;
+	require_ordered_once(
+		&get_shared_secret,
+		&[
+			"letderived_secret=derive_root_key_input(pending.root_key_input_mut())?;",
+			"Some(RegistrationOutput{derived_secret,control:pending,})",
+		],
+		"initial ratchet Server derived-root output",
+	)?;
+	if count(&get_shared_secret, "letderived_secret=") != 1 {
+		return Err("initial ratchet Server derived-root binding count changed".to_owned());
+	}
+	let server_response = rust_body(&snapshot.adapter_server, "build_registration_response")?;
+	require_once(
+		&server_response,
+		"letRegistrationOutput{derived_secret,control:pending,}=reg_out;",
+		"initial ratchet Server RegistrationOutput destructure",
+	)?;
+	require_one_call(
+		&server_response,
+		"start_server_candidate_ratchet_kdf",
+		&["&candidate", "derived_secret.as_array()"],
+		"initial ratchet Server root and candidate handoff",
+	)?;
+	require_one_call(
+		&server_response,
+		"finish_initial_ratchet_kdf",
+		&["pending"],
+		"initial ratchet Server pending completion",
+	)?;
+	require_one_call(
+		&server_response,
+		"RatchetManager::from_kernel",
+		&["finish_initial_ratchet_kdf(pending)"],
+		"initial ratchet Server kernel wrapper",
+	)?;
+	require_ordered_once(
+		&server_response,
+		&[
+			"letRegistrationOutput{derived_secret,control:pending,}=reg_out;",
+			"letpending=start_server_candidate_ratchet_kdf(&candidate,derived_secret.as_array());",
+			"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
+			"letencrypted=encrypt_message_with_ratchet(",
+		],
+		"initial ratchet Server cross-method root-to-seal flow",
+	)?;
+	if count(&server_response, "letderived_secret=") != 0 {
+		return Err("initial ratchet Server derived root was shadowed after handoff".to_owned());
+	}
+	if count(&server_response, "letpending=") != 1 {
+		return Err("initial ratchet Server KDF pending binding count changed".to_owned());
+	}
+
+	let beacon_finish = rust_body(&snapshot.adapter_beacon, "finish_registration")?;
+	require_one_call(
+		&beacon_finish,
+		"derive_root_key_input",
+		&["candidate.root_key_input_mut()"],
+		"initial ratchet Beacon candidate-root derivation",
+	)?;
+	require_one_call(
+		&beacon_finish,
+		"start_beacon_candidate_ratchet_kdf",
+		&["&candidate", "derived_secret.as_array()"],
+		"initial ratchet Beacon root and candidate handoff",
+	)?;
+	require_one_call(
+		&beacon_finish,
+		"finish_initial_ratchet_kdf",
+		&["pending"],
+		"initial ratchet Beacon pending completion",
+	)?;
+	require_one_call(
+		&beacon_finish,
+		"RatchetManager::from_kernel",
+		&["finish_initial_ratchet_kdf(pending)"],
+		"initial ratchet Beacon kernel wrapper",
+	)?;
+	require_ordered_once(
+		&beacon_finish,
+		&[
+			"letderived_secret=derive_root_key_input(candidate.root_key_input_mut())?;",
+			"letpending=start_beacon_candidate_ratchet_kdf(&candidate,derived_secret.as_array());",
+			"letmutratchet=RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));",
+			"letdecrypted=decrypt_message_with_ratchet(",
+		],
+		"initial ratchet Beacon root-to-open flow",
+	)?;
+	if count(&beacon_finish, "letderived_secret=") != 1 {
+		return Err("initial ratchet Beacon derived-root binding count changed".to_owned());
+	}
+	if count(&beacon_finish, "letpending=") != 1 {
+		return Err("initial ratchet Beacon KDF pending binding count changed".to_owned());
+	}
+
+	let core_pqxdh = compact(&uncommented_rust(&snapshot.core_pqxdh)?);
+	for (wanted, label) in [
+		(
+			"pubconstRATCHET_CHAIN_SIZE:usize=crate::ratchet::RATCHET_CHAIN_SIZE;",
+			"initial ratchet root and chain width",
+		),
+		(
+			"pubconstINITIAL_RATCHET_KDF_OUTPUT_SIZE:usize=RATCHET_CHAIN_SIZE*2;",
+			"initial ratchet output-width expression",
+		),
+		(
+			"const_:()=assert!(INITIAL_RATCHET_KDF_OUTPUT_SIZE==64);",
+			"initial ratchet output 64-byte assertion",
+		),
+		(
+			"constBEACON_RATCHETS:RatchetInitialization=RatchetInitialization{send_offset:RATCHET_CHAIN_SIZEasu8,receive_offset:0,};",
+			"initial ratchet Beacon role offsets",
+		),
+		(
+			"constSERVER_RATCHETS:RatchetInitialization=RatchetInitialization{send_offset:0,receive_offset:RATCHET_CHAIN_SIZEasu8,};",
+			"initial ratchet Server role offsets",
+		),
+	] {
+		require_once(&core_pqxdh, wanted, label)?;
+	}
+	let beacon_candidate = section_between(
+		&core_pqxdh,
+		"implBeaconRegistrationCandidate{",
+		"pubstructBeaconFinishInputs",
+		"initial ratchet Beacon candidate impl",
+	)?;
+	require_once(
+		beacon_candidate,
+		"pubconstfnratchet_initialization(&self)->RatchetInitialization{BEACON_RATCHETS}",
+		"initial ratchet Beacon candidate role",
+	)?;
+	let server_candidate = section_between(
+		&core_pqxdh,
+		"implServerRegistrationCandidate{",
+		"pubenumKeyIdAvailability",
+		"initial ratchet Server candidate impl",
+	)?;
+	require_once(
+		server_candidate,
+		"pubconstfnratchet_initialization(&self)->RatchetInitialization{SERVER_RATCHETS}",
+		"initial ratchet Server candidate role",
+	)?;
+	let split = rust_body(&snapshot.core_pqxdh, "split_initial_ratchet_kdf_output")?;
+	for (wanted, label) in [
+		(
+			"letleft=core::array::from_fn(|i|output[i]);",
+			"initial ratchet left 0..32 slice",
+		),
+		(
+			"letright=core::array::from_fn(|i|output[i+RATCHET_CHAIN_SIZE]);",
+			"initial ratchet right 32..64 slice",
+		),
+		(
+			"ifinitialization.send_offset==0{InitialRatchetChains{send_chain:crate::ratchet::RatchetChain::from_bytes(left),receive_chain:crate::ratchet::RatchetChain::from_bytes(right),}}else{InitialRatchetChains{send_chain:crate::ratchet::RatchetChain::from_bytes(right),receive_chain:crate::ratchet::RatchetChain::from_bytes(left),}}",
+			"initial ratchet role-ordered split",
+		),
+	] {
+		require_once(&split, wanted, label)?;
+	}
+
+	let core_ratchet = compact(&uncommented_rust(&snapshot.core_ratchet)?);
+	for (wanted, label) in [
+		(
+			"pubconstRATCHET_CHAIN_SIZE:usize=32;",
+			"initial ratchet request input width",
+		),
+		(
+			"pubconstSYM_RATCHET_INFO_SIZE:usize=41;",
+			"initial ratchet request label width",
+		),
+		(
+			"pubconstSYM_RATCHET_INFO:&[u8;SYM_RATCHET_INFO_SIZE]=b\"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305\";",
+			"initial ratchet request label",
+		),
+		(
+			"pubconstRATCHET_KDF_OUTPUT_SIZE:usize=crate::commitment::AEAD_KEY_SIZE+RATCHET_CHAIN_SIZE+crate::commitment::AEAD_NONCE_SIZE;",
+			"initial ratchet distinct step-response width expression",
+		),
+		(
+			"const_:()=assert!(RATCHET_KDF_OUTPUT_SIZE==76);",
+			"initial ratchet distinct 76-byte step response",
+		),
+		(
+			"pubstructSymmetricRatchetKdfRequest{input:[u8;RATCHET_CHAIN_SIZE],info:[u8;SYM_RATCHET_INFO_SIZE],}",
+			"initial ratchet request field types",
+		),
+		(
+			"pubstructRatchetKdfResponse{bytes:[u8;RATCHET_KDF_OUTPUT_SIZE],}",
+			"initial ratchet distinct step-response type",
+		),
+	] {
+		require_once(&core_ratchet, wanted, label)?;
+	}
+	let request_new = rust_body(&snapshot.core_ratchet, "new")?;
+	require_once(
+		&request_new,
+		"Self{input,info:*SYM_RATCHET_INFO,}",
+		"initial ratchet exact fixed-domain request construction",
+	)?;
+	let request_input = rust_body(&snapshot.core_ratchet, "input")?;
+	if request_input != "&self.input" {
+		return Err(format!(
+			"initial ratchet request input accessor changed: {request_input}"
+		));
+	}
+	let request_info = rust_body(&snapshot.core_ratchet, "info")?;
+	if request_info != "&self.info" {
+		return Err(format!(
+			"initial ratchet request info accessor changed: {request_info}"
+		));
+	}
+
+	let core_concrete = compact(&uncommented_rust(&snapshot.core_pqxdh_concrete)?);
+	let pending_declaration = section_between(
+		&core_concrete,
+		"#[must_use=\"theinitialratchetKDFrequestmustbeperformedorthephaseexplicitlydropped\"]",
+		"implInitialRatchetKdfPending",
+		"initial ratchet pending declaration",
+	)?;
+	require_once(
+		pending_declaration,
+		"pubstructInitialRatchetKdfPending{request:SymmetricRatchetKdfRequest,initialization:RatchetInitialization,}",
+		"initial ratchet pending fields",
+	)?;
+	for forbidden in [
+		"derive(Clone",
+		"derive(Copy",
+		"derive(Clone,Copy",
+		"derive(Copy,Clone",
+	] {
+		forbid(
+			pending_declaration,
+			forbidden,
+			"initial ratchet pending Clone/Copy derivation",
+		)?;
+	}
+	for forbidden in [
+		"implCloneforInitialRatchetKdfPending",
+		"implCopyforInitialRatchetKdfPending",
+	] {
+		forbid(
+			&core_concrete,
+			forbidden,
+			"initial ratchet pending Clone/Copy implementation",
+		)?;
+	}
+	let response_declaration = section_between(
+		&core_concrete,
+		"#[must_use=\"theinitialratchetKDFresponsemustresumeitspendingphase\"]",
+		"implInitialRatchetKdfResponse",
+		"initial ratchet response declaration",
+	)?;
+	for forbidden in ["pending:", "request:", "initialization:"] {
+		forbid(
+			response_declaration,
+			forbidden,
+			"initial ratchet response falsely gains type-level provenance",
+		)?;
+	}
+	require_once(
+		response_declaration,
+		"pubstructInitialRatchetKdfResponse{bytes:[u8;INITIAL_RATCHET_KDF_OUTPUT_SIZE],}",
+		"initial ratchet distinct 64-byte response type",
+	)?;
+	let pending_request = rust_body(&snapshot.core_pqxdh_concrete, "request")?;
+	if pending_request != "&self.request" {
+		return Err(format!(
+			"initial ratchet pending request accessor changed: {pending_request}"
+		));
+	}
+	let response_from_bytes = rust_body(&snapshot.core_pqxdh_concrete, "from_bytes")?;
+	if response_from_bytes != "Self{bytes}" {
+		return Err(format!(
+			"initial ratchet response byte constructor changed: {response_from_bytes}"
+		));
+	}
+	let response_bytes = rust_body(&snapshot.core_pqxdh_concrete, "as_bytes")?;
+	if response_bytes != "&self.bytes" {
+		return Err(format!(
+			"initial ratchet response bytes accessor changed: {response_bytes}"
+		));
+	}
+	let start_initial = rust_body(&snapshot.core_pqxdh_concrete, "start_initial_ratchet_kdf")?;
+	require_once(
+		&start_initial,
+		"InitialRatchetKdfPending{request:SymmetricRatchetKdfRequest::new(*root),initialization,}",
+		"initial ratchet exact root request and initialization",
+	)?;
+	for (wanted, label) in [
+		(
+			"pubfnstart_initial_ratchet_kdf(root:&[u8;RATCHET_CHAIN_SIZE],initialization:RatchetInitialization,)->InitialRatchetKdfPending{",
+			"initial ratchet typed base start signature",
+		),
+		(
+			"pubfnstart_beacon_candidate_ratchet_kdf(candidate:&BeaconRegistrationCandidate,root:&[u8;RATCHET_CHAIN_SIZE],)->InitialRatchetKdfPending{",
+			"initial ratchet typed Beacon candidate start signature",
+		),
+		(
+			"pubfnstart_server_candidate_ratchet_kdf(candidate:&ServerRegistrationCandidate,root:&[u8;RATCHET_CHAIN_SIZE],)->InitialRatchetKdfPending{",
+			"initial ratchet typed Server candidate start signature",
+		),
+	] {
+		require_once(&core_concrete, wanted, label)?;
+	}
+	let resume_initial = rust_body(&snapshot.core_pqxdh_concrete, "resume_initial_ratchet_kdf")?;
+	require_one_call(
+		&resume_initial,
+		"split_initial_ratchet_kdf_output",
+		&["response.as_bytes()", "pending.initialization"],
+		"initial ratchet response split with same pending plan",
+	)?;
+	require_one_call(
+		&resume_initial,
+		"ConcreteRatchetKernel::new",
+		&["send_chain", "receive_chain"],
+		"initial ratchet kernel chain order",
+	)?;
+	require_ordered_once(
+		&resume_initial,
+		&[
+			"letchains=split_initial_ratchet_kdf_output(response.as_bytes(),pending.initialization);",
+			"let(send_chain,receive_chain)=chains.into_parts();",
+			"ConcreteRatchetKernel::new(send_chain,receive_chain)",
+		],
+		"initial ratchet response-to-kernel flow",
+	)?;
+	for (function, expected, label) in [
+		(
+			"start_beacon_ratchet_kdf",
+			"start_initial_ratchet_kdf(root,BEACON_RATCHETS)",
+			"initial ratchet direct Beacon role start",
+		),
+		(
+			"start_server_ratchet_kdf",
+			"start_initial_ratchet_kdf(root,SERVER_RATCHETS)",
+			"initial ratchet direct Server role start",
+		),
+		(
+			"start_beacon_candidate_ratchet_kdf",
+			"start_initial_ratchet_kdf(root,candidate.ratchet_initialization())",
+			"initial ratchet Beacon candidate role start",
+		),
+		(
+			"start_server_candidate_ratchet_kdf",
+			"start_initial_ratchet_kdf(root,candidate.ratchet_initialization())",
+			"initial ratchet Server candidate role start",
+		),
+	] {
+		let body = rust_body(&snapshot.core_pqxdh_concrete, function)?;
+		require_once(&body, expected, label)?;
+	}
+
+	let finish = rust_body(&snapshot.adapter_ratchet, "finish_initial_ratchet_kdf")?;
+	require_one_call(
+		&finish,
+		"initial_ratchet_hkdf",
+		&["pending.request()"],
+		"initial ratchet adapter exact pending request",
+	)?;
+	require_one_call(
+		&finish,
+		"InitialRatchetKdfResponse::from_bytes",
+		&["initial_ratchet_hkdf(pending.request())", ""],
+		"initial ratchet adapter exact response bytes",
+	)?;
+	require_one_call(
+		&finish,
+		"resume_initial_ratchet_kdf",
+		&["pending", "response"],
+		"initial ratchet adapter same pending response resume",
+	)?;
+	require_ordered_once(
+		&finish,
+		&[
+			"letresponse=beaconcrypt_core::pqxdh::InitialRatchetKdfResponse::from_bytes(initial_ratchet_hkdf(pending.request()),);",
+			"beaconcrypt_core::pqxdh::resume_initial_ratchet_kdf(pending,response)",
+		],
+		"initial ratchet adapter local response provenance",
+	)?;
+	if count(&finish, "letresponse=") != 1 {
+		return Err("initial ratchet adapter response binding count changed".to_owned());
+	}
+	if count(&finish, "letpending=") != 0 {
+		return Err("initial ratchet adapter pending parameter was shadowed".to_owned());
+	}
+	let adapter_ratchet = compact(&uncommented_rust(&snapshot.adapter_ratchet)?);
+	require_once(
+		&adapter_ratchet,
+		"pub(crate)fninitial_ratchet_hkdf(request:&verified_ratchet::SymmetricRatchetKdfRequest,)->[u8;INITIAL_RATCHET_KDF_OUTPUT_SIZE]{",
+		"initial ratchet adapter 64-byte HKDF signature",
+	)?;
+	let initial_hkdf = rust_body(&snapshot.adapter_ratchet, "initial_ratchet_hkdf")?;
+	require_once(
+		&initial_hkdf,
+		"symmetric_ratchet_hkdf(request)",
+		"initial ratchet adapter HKDF executor",
+	)?;
+	let symmetric_hkdf = rust_body(&snapshot.adapter_ratchet, "symmetric_ratchet_hkdf")?;
+	require_one_call(
+		&symmetric_hkdf,
+		"crypto_kdf::hkdf::sha512::extract",
+		&["None", "request.input()"],
+		"initial ratchet adapter executor input",
+	)?;
+	require_one_call(
+		&symmetric_hkdf,
+		"crypto_kdf::hkdf::sha512::expand",
+		&["OUTPUT_SIZE", "Some(request.info())", "&prk"],
+		"initial ratchet adapter executor label",
+	)?;
+	require_once(
+		&symmetric_hkdf,
+		"letmutoutput=[0u8;OUTPUT_SIZE];output.copy_from_slice(&expanded);output",
+		"initial ratchet adapter executor output",
+	)?;
+	let step_hkdf = rust_body(&snapshot.adapter_ratchet, "ratchet_hkdf")?;
+	require_once(
+		&step_hkdf,
+		"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+		"initial ratchet distinct 76-byte adapter response",
+	)?;
+	let kernel_new = rust_body(&snapshot.core_ratchet_concrete, "new")?;
+	require_once(
+		&kernel_new,
+		"Self::from_counters(0,0,send_chain,receive_chain)",
+		"initial ratchet zero-counter kernel initialization",
+	)?;
+
+	let lean_effect = compact(&snapshot.lean_ratchet_effect);
+	let lean_initial = section_between(
+		&lean_effect,
+		"theorempqxdh.concrete.start_initial_ratchet_kdf_exact",
+		"theorempqxdh.concrete.initial_request_accessor_exact",
+		"initial ratchet Lean exact start anchor",
+	)?;
+	require_once(
+		lean_initial,
+		"request:={input:=root,info:=ratchet.SYM_RATCHET_INFO},initialization:=initialization",
+		"initial ratchet Lean exact request interpretation",
+	)?;
+	let lean_accessor = section_between(
+		&lean_effect,
+		"theorempqxdh.concrete.initial_request_accessor_exact",
+		"theorempqxdh.concrete.start_beacon_ratchet_kdf_exact",
+		"initial ratchet Lean request accessor anchor",
+	)?;
+	require_once(
+		lean_accessor,
+		"pqxdh.concrete.InitialRatchetKdfPending.impl.requestpending=okpending.request",
+		"initial ratchet Lean exact request accessor",
+	)?;
+	let lean_beacon = section_between(
+		&lean_effect,
+		"theorempqxdh.concrete.start_beacon_ratchet_kdf_exact",
+		"theorempqxdh.concrete.start_server_ratchet_kdf_exact",
+		"initial ratchet Lean Beacon role anchor",
+	)?;
+	require_once(
+		lean_beacon,
+		"initialization:={send_offset:=32#u8,receive_offset:=0#u8}",
+		"initial ratchet Lean Beacon offsets",
+	)?;
+	let lean_server = section_between(
+		&lean_effect,
+		"theorempqxdh.concrete.start_server_ratchet_kdf_exact",
+		"theorempqxdh.concrete.resume_initial_ratchet_kdf_is_core_partition",
+		"initial ratchet Lean Server role anchor",
+	)?;
+	require_once(
+		lean_server,
+		"initialization:={send_offset:=0#u8,receive_offset:=32#u8}",
+		"initial ratchet Lean Server offsets",
+	)?;
+	let lean_resume = section_between(
+		&lean_effect,
+		"theorempqxdh.concrete.resume_initial_ratchet_kdf_is_core_partition",
+		"/-!##RatchetKDFresponseinterpretation-/",
+		"initial ratchet Lean resume anchor",
+	)?;
+	for (wanted, label) in [
+		(
+			"pqxdh.split_initial_ratchet_kdf_outputresponse.bytespending.initialization",
+			"initial ratchet Lean response partition",
+		),
+		(
+			"ratchet.concrete.ConcreteRatchetKernel.newchains.send_chainchains.receive_chain",
+			"initial ratchet Lean kernel chain order",
+		),
+	] {
+		require_once(lean_resume, wanted, label)?;
+	}
+	let lean_kdf = compact(&snapshot.lean_pqxdh_kdf);
+	require_once(
+		&lean_kdf,
+		"defrootChains(c:Crypto)(ds:Bytes):Bytes×Bytes:=((c.hkdfdsINFO_R64).take32,(c.hkdfdsINFO_R64).drop32)",
+		"initial ratchet Lean ideal root-chain split anchor",
+	)?;
+	let lean_theorems = compact(&snapshot.lean_pqxdh_theorems);
+	require_once(
+		&lean_theorems,
+		"theoremchain_agreement:",
+		"initial ratchet Lean ideal post-record complementarity anchor",
+	)?;
+
+	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
+	for (wanted, label) in [
+		(
+			"letfunserver_to_beacon_chain(root:bitstring)=hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+			"initial ratchet ProVerif server-to-beacon definition",
+		),
+		(
+			"letfunbeacon_to_server_chain(root:bitstring)=hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+			"initial ratchet ProVerif beacon-to-server definition",
+		),
+	] {
+		require_once(&crypto, wanted, label)?;
+	}
+	let environment = compact(&uncommented_pv(&snapshot.environment)?);
+	let honest_beacon = section_between(
+		&environment,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"initial ratchet ProVerif HonestBeacon role",
+	)?;
+	let server = section_between(
+		&environment,
+		"letServer(",
+		"letMaliciousServer()",
+		"initial ratchet ProVerif Server role",
+	)?;
+	let malicious_server = section_between(
+		&environment,
+		"letMaliciousServer()",
+		"letKeepBeaconStatePrivate()",
+		"initial ratchet ProVerif MaliciousServer role",
+	)?;
+	for (role, label) in [
+		(honest_beacon, "HonestBeacon"),
+		(server, "Server"),
+		(malicious_server, "MaliciousServer"),
+	] {
+		require_once(
+			role,
+			"letroot=pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input))in",
+			&format!("initial ratchet ProVerif {label} exact root derivation"),
+		)?;
+	}
+	for (role, server_calls, beacon_calls, label) in [
+		(honest_beacon, 1, 1, "HonestBeacon"),
+		(server, 1, 1, "Server"),
+		(malicious_server, 1, 0, "MaliciousServer"),
+	] {
+		if count(role, "server_to_beacon_chain(") != server_calls
+			|| count(role, "beacon_to_server_chain(") != beacon_calls
+		{
+			return Err(format!(
+				"initial ratchet ProVerif {label} scoped chain occurrence count changed"
+			));
+		}
+		if count(role, "letroot=") != 1 {
+			return Err(format!(
+				"initial ratchet ProVerif {label} root binding count changed"
+			));
+		}
+	}
+	for (source, wanted, label) in [
+		(
+			honest_beacon,
+			"letserver_chain_1=server_to_beacon_chain(root)in",
+			"initial ratchet ProVerif HonestBeacon initial-open chain",
+		),
+		(
+			honest_beacon,
+			"letbeacon_send_chain_1=beacon_to_server_chain(root)in",
+			"initial ratchet ProVerif HonestBeacon outgoing chain",
+		),
+		(
+			server,
+			"letserver_chain_1=server_to_beacon_chain(root)in",
+			"initial ratchet ProVerif Server initial-seal chain",
+		),
+		(
+			server,
+			"letbeacon_material_1=ratchet_material(beacon_to_server_chain(root))in",
+			"initial ratchet ProVerif Server incoming chain",
+		),
+		(
+			malicious_server,
+			"letserver_material_1=ratchet_material(server_to_beacon_chain(root))in",
+			"initial ratchet ProVerif MaliciousServer initial-seal chain",
+		),
+	] {
+		require_once(source, wanted, label)?;
+	}
+	for (source, bindings, label) in [
+		(
+			honest_beacon,
+			&[
+				("letserver_chain_1=", 1usize),
+				("letserver_material_1=", 1usize),
+				("letbeacon_send_chain_1=", 1usize),
+				("letbeacon_material_1=", 1usize),
+			][..],
+			"HonestBeacon",
+		),
+		(
+			server,
+			&[
+				("letserver_chain_1=", 1usize),
+				("letserver_material_1=", 1usize),
+				("letbeacon_material_1=", 1usize),
+			][..],
+			"Server",
+		),
+		(
+			malicious_server,
+			&[("letserver_material_1=", 1usize)][..],
+			"MaliciousServer",
+		),
+	] {
+		for (binding, expected) in bindings {
+			if count(source, binding) != *expected {
+				return Err(format!(
+					"initial ratchet ProVerif {label} binding count changed: {binding}"
+				));
+			}
+		}
+	}
+	for (source, wanted, label) in [
+		(
+			honest_beacon,
+			"letserver_material_1=ratchet_material(server_chain_1)inletopened_initial=open_frame(server_material_1,",
+			"initial ratchet ProVerif HonestBeacon chain-to-open material",
+		),
+		(
+			honest_beacon,
+			"letbeacon_material_1=ratchet_material(beacon_send_chain_1)inletbeacon_frame=seal_frame(beacon_material_1,",
+			"initial ratchet ProVerif HonestBeacon chain-to-seal material",
+		),
+		(
+			server,
+			"letserver_material_1=ratchet_material(server_chain_1)inletbinding=",
+			"initial ratchet ProVerif Server initial material",
+		),
+	] {
+		require_once(source, wanted, label)?;
+	}
+
+	Ok(())
+}
+
 fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_manifest(&snapshot.interface)?;
 	validate_pv(snapshot)?;
@@ -4082,6 +4866,7 @@ fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_ratchet_effect_driver(snapshot)?;
 	validate_finite_receive_state_fixture(snapshot)?;
 	validate_registration_lifecycle(snapshot)?;
+	validate_initial_ratchet_fidelity(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
 
@@ -4325,6 +5110,25 @@ fn assert_registration_lifecycle_rejected(
 	);
 }
 
+fn assert_initial_ratchet_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_manifest(&snapshot.interface)
+		.and_then(|()| validate_initial_ratchet_fidelity(&snapshot))
+	{
+		Ok(()) => panic!("initial ratchet mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"initial ratchet mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
 fn omit_ctx(snapshot: &mut Snapshot, field: &str) {
 	let anchor = "    ctx_preimage(\n";
 	let call = snapshot.interface.find(anchor).unwrap();
@@ -4498,6 +5302,41 @@ fn compiled_core_matches_the_canonical_transcript() {
 	assert_eq!(&bytes[221..229], &sender_id.to_le_bytes());
 }
 
+#[test]
+fn initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous() {
+	validate_manifest(INTERFACE).unwrap();
+	validate_initial_ratchet_fidelity(&Snapshot::production()).unwrap();
+	let facts = parse_facts(INTERFACE).unwrap();
+	assert_eq!(
+		facts
+			.iter()
+			.filter(|fact| fact.starts_with("initial_ratchet."))
+			.count(),
+		71
+	);
+
+	let root = core::array::from_fn::<_, 32, _>(|index| index as u8);
+	let output = core::array::from_fn::<_, 64, _>(|index| (index as u8).wrapping_add(1));
+	let server = pqxdh::resume_initial_ratchet_kdf(
+		pqxdh::start_server_ratchet_kdf(&root),
+		InitialRatchetKdfResponse::from_bytes(output),
+	);
+	let beacon = pqxdh::resume_initial_ratchet_kdf(
+		pqxdh::start_beacon_ratchet_kdf(&root),
+		InitialRatchetKdfResponse::from_bytes(output),
+	);
+	assert_eq!(
+		server.send_chain().as_bytes(),
+		beacon.receive_chain().as_bytes()
+	);
+	assert_eq!(
+		server.receive_chain().as_bytes(),
+		beacon.send_chain().as_bytes()
+	);
+	assert_eq!(server.send_chain().as_bytes(), &output[0..32]);
+	assert_eq!(server.receive_chain().as_bytes(), &output[32..64]);
+}
+
 const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;
 
 #[test]
@@ -4617,7 +5456,6 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		});
 		mutation_count += 1;
 	}
-
 	for (name, from, to, diagnostic) in [
 		(
 			"cryptoframe_seal_uses_zero_key",
@@ -4661,7 +5499,6 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		});
 		mutation_count += 1;
 	}
-
 	let payload_fields = ["plaintext", "tag", "commitment"];
 	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
 		let ordered = permutation.map(|field| payload_fields[field]);
@@ -11025,6 +11862,1242 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 	}
 
 	assert_eq!(mutation_count, REGISTRATION_LIFECYCLE_MUTATION_COUNT);
+}
+const INITIAL_RATCHET_MUTATION_COUNT: usize = 223;
+
+#[test]
+fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("initial_ratchet."))
+		.collect::<Vec<_>>();
+	assert_eq!(facts.len(), 71);
+	for fact in facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_initial_ratchet_rejected(&format!("initial_ratchet_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated")
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_derived_root_output_width_drifts",
+			"pub const KEX_KDF_OUT_LEN",
+			"pub const KEX_KDF_OUT_LEN: usize = 32usize;",
+			"pub const KEX_KDF_OUT_LEN: usize = 31usize;",
+			"derived-root output width",
+		),
+		(
+			"initial_ratchet_derived_root_width_link_drifts",
+			"const _: () = assert!(KEX_KDF_OUT_LEN",
+			"KEX_KDF_OUT_LEN == KDF_STATE_SIZE",
+			"KEX_KDF_OUT_LEN == KDF_STATE_SIZE + 1",
+			"derived-root width link",
+		),
+		(
+			"initial_ratchet_derived_root_alias_size_drifts",
+			"pub type KexDerivedSecret",
+			"SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>",
+			"SecretArr<31, systems::Pqxdh, roles::DerivedSecret>",
+			"derived-root alias",
+		),
+		(
+			"initial_ratchet_derived_root_alias_system_drifts",
+			"pub type KexDerivedSecret",
+			"SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>",
+			"SecretArr<KDF_STATE_SIZE, systems::X25519, roles::DerivedSecret>",
+			"derived-root alias",
+		),
+		(
+			"initial_ratchet_derived_root_alias_role_drifts",
+			"pub type KexDerivedSecret",
+			"SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>",
+			"SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::SendChain>",
+			"derived-root alias",
+		),
+		(
+			"initial_ratchet_derived_root_accessor_signature_drifts",
+			"pub fn as_array",
+			"pub fn as_array(&self) -> &[u8; S]",
+			"pub fn as_array(&self) -> &[u8]",
+			"derived-root accessor signature",
+		),
+		(
+			"initial_ratchet_derived_root_accessor_substitutes_data",
+			"pub fn as_array",
+			"&self.data",
+			"&replacement.data",
+			"derived-root accessor body",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.adapter_shared, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_server_output_return_type_drifts",
+			"impl ProviderServer for Server",
+			"fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput>",
+			"fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<ReplacementOutput>",
+			"RegistrationOutput return signature",
+		),
+		(
+			"initial_ratchet_server_output_consumer_borrows_value",
+			"impl ProviderServer for Server",
+			"reg_out: RegistrationOutput",
+			"reg_out: &RegistrationOutput",
+			"RegistrationOutput by-value consumer signature",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.adapter_server, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_server_output_drops_root",
+			"\tpub(crate) derived_secret: KexDerivedSecret,\n",
+			"",
+			"RegistrationOutput storage",
+		),
+		(
+			"initial_ratchet_server_output_root_type_substituted",
+			"pub(crate) derived_secret: KexDerivedSecret",
+			"pub(crate) derived_secret: [u8; 32]",
+			"RegistrationOutput storage",
+		),
+		(
+			"initial_ratchet_server_root_uses_control_input",
+			"derive_root_key_input(pending.root_key_input_mut())?",
+			"derive_root_key_input(control.root_key_input_mut())?",
+			"Server derived-root output",
+		),
+		(
+			"initial_ratchet_server_output_substitutes_root",
+			"Some(RegistrationOutput {\n\t\t\tderived_secret,",
+			"Some(RegistrationOutput {\n\t\t\tderived_secret: replacement_secret,",
+			"Server derived-root output",
+		),
+		(
+			"initial_ratchet_server_output_substitutes_pending",
+			"control: pending,\n\t\t})",
+			"control: replacement_pending,\n\t\t})",
+			"Server derived-root output",
+		),
+		(
+			"initial_ratchet_server_response_drops_root_destructure",
+			"\t\t\tderived_secret,\n\t\t\tcontrol: pending,\n\t\t} = reg_out;",
+			"\t\t\tcontrol: pending,\n\t\t} = reg_out;",
+			"RegistrationOutput destructure",
+		),
+		(
+			"initial_ratchet_server_response_substitutes_root_destructure",
+			"let RegistrationOutput {\n\t\t\tderived_secret,",
+			"let RegistrationOutput {\n\t\t\tderived_secret: replacement_secret,",
+			"RegistrationOutput destructure",
+		),
+		(
+			"initial_ratchet_server_start_swaps_role",
+			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"Server root and candidate handoff",
+		),
+		(
+			"initial_ratchet_server_start_substitutes_candidate",
+			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"start_server_candidate_ratchet_kdf(&replacement_candidate, derived_secret.as_array())",
+			"Server root and candidate handoff",
+		),
+		(
+			"initial_ratchet_server_start_substitutes_root",
+			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"start_server_candidate_ratchet_kdf(&candidate, replacement_secret.as_array())",
+			"Server root and candidate handoff",
+		),
+		(
+			"initial_ratchet_server_start_is_duplicated",
+			"let pending = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
+			"let pending = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());\n\t\tlet duplicate = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
+			"Server root and candidate handoff",
+		),
+		(
+			"initial_ratchet_server_finish_uses_different_pending",
+			"finish_initial_ratchet_kdf(pending)",
+			"finish_initial_ratchet_kdf(replacement_pending)",
+			"Server pending completion",
+		),
+		(
+			"initial_ratchet_server_finish_is_duplicated",
+			"finish_initial_ratchet_kdf(pending)",
+			"finish_initial_ratchet_kdf(pending); finish_initial_ratchet_kdf(pending)",
+			"Server pending completion",
+		),
+		(
+			"initial_ratchet_server_finish_is_bypassed",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"RatchetManager::from_kernel(replacement_kernel)",
+			"Server pending completion",
+		),
+		(
+			"initial_ratchet_server_kernel_wrapper_is_bypassed",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"finish_initial_ratchet_kdf(pending)",
+			"Server kernel wrapper",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_server, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, insertion, diagnostic) in [
+		(
+			"initial_ratchet_server_get_root_is_shadowed",
+			"let derived_secret = derive_root_key_input(pending.root_key_input_mut())?;",
+			"\n\t\tlet derived_secret = replacement_secret;",
+			"Server derived-root binding count",
+		),
+		(
+			"initial_ratchet_server_handoff_root_is_shadowed",
+			"} = reg_out;",
+			"\n\t\tlet derived_secret = replacement_secret;",
+			"Server derived root was shadowed",
+		),
+		(
+			"initial_ratchet_server_kdf_pending_is_shadowed",
+			"let pending = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
+			"\n\t\tlet pending = replacement_pending;",
+			"Server KDF pending binding count",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			let replacement = format!("{marker}{insertion}");
+			replace_once(&mut snapshot.adapter_server, marker, &replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_beacon_root_uses_prepared_input",
+			"derive_root_key_input(candidate.root_key_input_mut())?",
+			"derive_root_key_input(prepared.root_key_input_mut())?",
+			"Beacon candidate-root derivation",
+		),
+		(
+			"initial_ratchet_beacon_start_swaps_role",
+			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"Beacon root and candidate handoff",
+		),
+		(
+			"initial_ratchet_beacon_start_substitutes_candidate",
+			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"start_beacon_candidate_ratchet_kdf(&replacement_candidate, derived_secret.as_array())",
+			"Beacon root and candidate handoff",
+		),
+		(
+			"initial_ratchet_beacon_start_substitutes_root",
+			"start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array())",
+			"start_beacon_candidate_ratchet_kdf(&candidate, replacement_secret.as_array())",
+			"Beacon root and candidate handoff",
+		),
+		(
+			"initial_ratchet_beacon_start_is_duplicated",
+			"let pending = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
+			"let pending = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array());\n\t\t\tlet duplicate = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
+			"Beacon root and candidate handoff",
+		),
+		(
+			"initial_ratchet_beacon_finish_uses_different_pending",
+			"finish_initial_ratchet_kdf(pending)",
+			"finish_initial_ratchet_kdf(replacement_pending)",
+			"Beacon pending completion",
+		),
+		(
+			"initial_ratchet_beacon_finish_is_duplicated",
+			"finish_initial_ratchet_kdf(pending)",
+			"finish_initial_ratchet_kdf(pending); finish_initial_ratchet_kdf(pending)",
+			"Beacon pending completion",
+		),
+		(
+			"initial_ratchet_beacon_finish_is_bypassed",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"RatchetManager::from_kernel(replacement_kernel)",
+			"Beacon pending completion",
+		),
+		(
+			"initial_ratchet_beacon_kernel_wrapper_is_bypassed",
+			"RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending))",
+			"finish_initial_ratchet_kdf(pending)",
+			"Beacon kernel wrapper",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_beacon, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, insertion, diagnostic) in [
+		(
+			"initial_ratchet_beacon_root_is_shadowed",
+			"let derived_secret = derive_root_key_input(candidate.root_key_input_mut())?;",
+			"\n\t\t\tlet derived_secret = replacement_secret;",
+			"Beacon derived-root binding count",
+		),
+		(
+			"initial_ratchet_beacon_kdf_pending_is_shadowed",
+			"let pending = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array());",
+			"\n\t\t\tlet pending = replacement_pending;",
+			"Beacon KDF pending binding count",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			let replacement = format!("{marker}{insertion}");
+			replace_once(&mut snapshot.adapter_beacon, marker, &replacement);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_chain_width_drifts",
+			"pub const RATCHET_CHAIN_SIZE: usize = crate::ratchet::RATCHET_CHAIN_SIZE;",
+			"pub const RATCHET_CHAIN_SIZE: usize = 31;",
+			"root and chain width",
+		),
+		(
+			"initial_ratchet_output_width_expression_drifts",
+			"pub const INITIAL_RATCHET_KDF_OUTPUT_SIZE: usize = RATCHET_CHAIN_SIZE * 2;",
+			"pub const INITIAL_RATCHET_KDF_OUTPUT_SIZE: usize = RATCHET_CHAIN_SIZE * 3;",
+			"output-width expression",
+		),
+		(
+			"initial_ratchet_output_width_assertion_drifts",
+			"const _: () = assert!(INITIAL_RATCHET_KDF_OUTPUT_SIZE == 64);",
+			"const _: () = assert!(INITIAL_RATCHET_KDF_OUTPUT_SIZE == 76);",
+			"output 64-byte assertion",
+		),
+		(
+			"initial_ratchet_beacon_send_offset_drifts",
+			"send_offset: RATCHET_CHAIN_SIZE as u8,\n\treceive_offset: 0,",
+			"send_offset: 0,\n\treceive_offset: 0,",
+			"Beacon role offsets",
+		),
+		(
+			"initial_ratchet_beacon_receive_offset_drifts",
+			"send_offset: RATCHET_CHAIN_SIZE as u8,\n\treceive_offset: 0,",
+			"send_offset: RATCHET_CHAIN_SIZE as u8,\n\treceive_offset: RATCHET_CHAIN_SIZE as u8,",
+			"Beacon role offsets",
+		),
+		(
+			"initial_ratchet_server_send_offset_drifts",
+			"send_offset: 0,\n\treceive_offset: RATCHET_CHAIN_SIZE as u8,",
+			"send_offset: RATCHET_CHAIN_SIZE as u8,\n\treceive_offset: RATCHET_CHAIN_SIZE as u8,",
+			"Server role offsets",
+		),
+		(
+			"initial_ratchet_server_receive_offset_drifts",
+			"send_offset: 0,\n\treceive_offset: RATCHET_CHAIN_SIZE as u8,",
+			"send_offset: 0,\n\treceive_offset: 0,",
+			"Server role offsets",
+		),
+		(
+			"initial_ratchet_beacon_candidate_role_swaps",
+			"pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tBEACON_RATCHETS\n\t}",
+			"pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tSERVER_RATCHETS\n\t}",
+			"Beacon candidate role",
+		),
+		(
+			"initial_ratchet_server_candidate_role_swaps",
+			"pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tSERVER_RATCHETS\n\t}",
+			"pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tBEACON_RATCHETS\n\t}",
+			"Server candidate role",
+		),
+		(
+			"initial_ratchet_left_slice_bound_drifts",
+			"let left = core::array::from_fn(|i| output[i]);",
+			"let left = core::array::from_fn(|i| output[i + 1]);",
+			"left 0..32 slice",
+		),
+		(
+			"initial_ratchet_right_slice_duplicates_left",
+			"let right = core::array::from_fn(|i| output[i + RATCHET_CHAIN_SIZE]);",
+			"let right = core::array::from_fn(|i| output[i]);",
+			"right 32..64 slice",
+		),
+		(
+			"initial_ratchet_right_slice_bound_drifts",
+			"let right = core::array::from_fn(|i| output[i + RATCHET_CHAIN_SIZE]);",
+			"let right = core::array::from_fn(|i| output[i + RATCHET_CHAIN_SIZE - 1]);",
+			"right 32..64 slice",
+		),
+		(
+			"initial_ratchet_server_branch_swaps_chain_arguments",
+			"send_chain: crate::ratchet::RatchetChain::from_bytes(left),\n\t\t\treceive_chain: crate::ratchet::RatchetChain::from_bytes(right),",
+			"send_chain: crate::ratchet::RatchetChain::from_bytes(right),\n\t\t\treceive_chain: crate::ratchet::RatchetChain::from_bytes(left),",
+			"role-ordered split",
+		),
+		(
+			"initial_ratchet_beacon_branch_duplicates_left",
+			"send_chain: crate::ratchet::RatchetChain::from_bytes(right),\n\t\t\treceive_chain: crate::ratchet::RatchetChain::from_bytes(left),",
+			"send_chain: crate::ratchet::RatchetChain::from_bytes(left),\n\t\t\treceive_chain: crate::ratchet::RatchetChain::from_bytes(left),",
+			"role-ordered split",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_pqxdh, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_candidate_role_methods_swap_together",
+		"Beacon candidate role",
+		|snapshot| {
+			let beacon = "pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tBEACON_RATCHETS\n\t}";
+			let server = "pub const fn ratchet_initialization(&self) -> RatchetInitialization {\n\t\tSERVER_RATCHETS\n\t}";
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				beacon,
+				"HB64_BEACON_ROLE_SENTINEL",
+			);
+			replace_once(&mut snapshot.core_pqxdh, server, beacon);
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				"HB64_BEACON_ROLE_SENTINEL",
+				server,
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_left_and_right_slices_swap",
+		"left 0..32 slice",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.core_pqxdh,
+				"let left = core::array::from_fn(|i| output[i]);\n\tlet right = core::array::from_fn(|i| output[i + RATCHET_CHAIN_SIZE]);",
+				"let left = core::array::from_fn(|i| output[i + RATCHET_CHAIN_SIZE]);\n\tlet right = core::array::from_fn(|i| output[i]);",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_request_input_width_drifts",
+			"pub const RATCHET_CHAIN_SIZE: usize = 32;",
+			"pub const RATCHET_CHAIN_SIZE: usize = 31;",
+			"request input width",
+		),
+		(
+			"initial_ratchet_request_label_width_drifts",
+			"pub const SYM_RATCHET_INFO_SIZE: usize = 41;",
+			"pub const SYM_RATCHET_INFO_SIZE: usize = 40;",
+			"request label width",
+		),
+		(
+			"initial_ratchet_request_label_drifts",
+			"b\"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305\"",
+			"b\"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1304\"",
+			"request label",
+		),
+		(
+			"initial_ratchet_step_response_width_expression_drifts",
+			"crate::commitment::AEAD_KEY_SIZE + RATCHET_CHAIN_SIZE + crate::commitment::AEAD_NONCE_SIZE",
+			"crate::commitment::AEAD_KEY_SIZE + RATCHET_CHAIN_SIZE",
+			"step-response width expression",
+		),
+		(
+			"initial_ratchet_step_response_width_assertion_drifts",
+			"const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 76);",
+			"const _: () = assert!(RATCHET_KDF_OUTPUT_SIZE == 64);",
+			"distinct 76-byte step response",
+		),
+		(
+			"initial_ratchet_step_response_type_uses_initial_width",
+			"bytes: [u8; RATCHET_KDF_OUTPUT_SIZE],",
+			"bytes: [u8; pqxdh::INITIAL_RATCHET_KDF_OUTPUT_SIZE],",
+			"distinct step-response type",
+		),
+		(
+			"initial_ratchet_request_uses_other_label",
+			"info: *SYM_RATCHET_INFO,",
+			"info: *PQXDH_INFO,",
+			"fixed-domain request construction",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, from, to) in [
+		(
+			"initial_ratchet_request_input_field_type_drifts",
+			"input: [u8; RATCHET_CHAIN_SIZE]",
+			"input: [u8; 31]",
+		),
+		(
+			"initial_ratchet_request_info_field_type_drifts",
+			"info: [u8; SYM_RATCHET_INFO_SIZE]",
+			"info: [u8; 40]",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, "request field types", |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet,
+				"pub struct SymmetricRatchetKdfRequest",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_request_input_accessor_substituted",
+			"pub const fn input",
+			"&self.input",
+			"&replacement.input",
+			"request input accessor",
+		),
+		(
+			"initial_ratchet_request_info_accessor_substituted",
+			"pub const fn info",
+			"&self.info",
+			"&replacement.info",
+			"request info accessor",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pending_derives_clone",
+			"pub struct InitialRatchetKdfPending {",
+			"#[derive(Clone)]\npub struct InitialRatchetKdfPending {",
+			"pending Clone/Copy derivation",
+		),
+		(
+			"initial_ratchet_pending_derives_copy",
+			"pub struct InitialRatchetKdfPending {",
+			"#[derive(Copy)]\npub struct InitialRatchetKdfPending {",
+			"pending Clone/Copy derivation",
+		),
+		(
+			"initial_ratchet_pending_drops_request",
+			"\trequest: SymmetricRatchetKdfRequest,\n",
+			"",
+			"pending fields",
+		),
+		(
+			"initial_ratchet_pending_drops_initialization",
+			"\tinitialization: RatchetInitialization,\n",
+			"",
+			"pending fields",
+		),
+		(
+			"initial_ratchet_response_confuses_76_byte_step_type",
+			"bytes: [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE],",
+			"bytes: [u8; crate::ratchet::RATCHET_KDF_OUTPUT_SIZE],",
+			"distinct 64-byte response type",
+		),
+		(
+			"initial_ratchet_response_claims_pending_provenance",
+			"pub struct InitialRatchetKdfResponse {\n\tbytes:",
+			"pub struct InitialRatchetKdfResponse {\n\tpending: InitialRatchetKdfPending,\n\tbytes:",
+			"falsely gains type-level provenance",
+		),
+		(
+			"initial_ratchet_start_substitutes_root",
+			"request: SymmetricRatchetKdfRequest::new(*root),",
+			"request: SymmetricRatchetKdfRequest::new([0; RATCHET_CHAIN_SIZE]),",
+			"exact root request and initialization",
+		),
+		(
+			"initial_ratchet_start_substitutes_plan",
+			"\t\tinitialization,\n\t}",
+			"\t\tinitialization: SERVER_RATCHETS,\n\t}",
+			"exact root request and initialization",
+		),
+		(
+			"initial_ratchet_direct_beacon_start_swaps_role",
+			"start_initial_ratchet_kdf(root, BEACON_RATCHETS)",
+			"start_initial_ratchet_kdf(root, SERVER_RATCHETS)",
+			"direct Beacon role start",
+		),
+		(
+			"initial_ratchet_direct_server_start_swaps_role",
+			"start_initial_ratchet_kdf(root, SERVER_RATCHETS)",
+			"start_initial_ratchet_kdf(root, BEACON_RATCHETS)",
+			"direct Server role start",
+		),
+		(
+			"initial_ratchet_resume_substitutes_response_bytes",
+			"split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization)",
+			"split_initial_ratchet_kdf_output(replacement_response.as_bytes(), pending.initialization)",
+			"response split with same pending plan",
+		),
+		(
+			"initial_ratchet_resume_substitutes_pending_plan",
+			"split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization)",
+			"split_initial_ratchet_kdf_output(response.as_bytes(), replacement_pending.initialization)",
+			"response split with same pending plan",
+		),
+		(
+			"initial_ratchet_resume_is_duplicated",
+			"let chains = split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization);",
+			"let chains = split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization);\n\tlet duplicate = split_initial_ratchet_kdf_output(response.as_bytes(), pending.initialization);",
+			"response split with same pending plan",
+		),
+		(
+			"initial_ratchet_kernel_arguments_swap",
+			"ConcreteRatchetKernel::new(send_chain, receive_chain)",
+			"ConcreteRatchetKernel::new(receive_chain, send_chain)",
+			"kernel chain order",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_pqxdh_concrete, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pending_request_accessor_substituted",
+			"impl InitialRatchetKdfPending",
+			"&self.request",
+			"&replacement.request",
+			"pending request accessor",
+		),
+		(
+			"initial_ratchet_response_bytes_accessor_substituted",
+			"impl InitialRatchetKdfResponse",
+			"&self.bytes",
+			"&replacement.bytes",
+			"response bytes accessor",
+		),
+		(
+			"initial_ratchet_response_constructor_substitutes_bytes",
+			"impl InitialRatchetKdfResponse",
+			"Self { bytes }",
+			"Self { bytes: replacement }",
+			"response byte constructor",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.core_pqxdh_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, replacement, diagnostic) in [
+		(
+			"initial_ratchet_beacon_candidate_start_bypasses_candidate",
+			"pub fn start_beacon_candidate_ratchet_kdf",
+			"start_initial_ratchet_kdf(root, BEACON_RATCHETS)",
+			"Beacon candidate role start",
+		),
+		(
+			"initial_ratchet_server_candidate_start_bypasses_candidate",
+			"pub fn start_server_candidate_ratchet_kdf",
+			"start_initial_ratchet_kdf(root, SERVER_RATCHETS)",
+			"Server candidate role start",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_pqxdh_concrete,
+				marker,
+				"start_initial_ratchet_kdf(root, candidate.ratchet_initialization())",
+				replacement,
+			);
+		});
+		mutation_count += 1;
+	}
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_base_start_root_signature_drifts",
+			"pub fn start_initial_ratchet_kdf",
+			"root: &[u8; RATCHET_CHAIN_SIZE]",
+			"root: &[u8; 31]",
+			"typed base start signature",
+		),
+		(
+			"initial_ratchet_beacon_candidate_signature_swaps_type",
+			"pub fn start_beacon_candidate_ratchet_kdf",
+			"candidate: &BeaconRegistrationCandidate",
+			"candidate: &ServerRegistrationCandidate",
+			"typed Beacon candidate start signature",
+		),
+		(
+			"initial_ratchet_server_candidate_signature_swaps_type",
+			"pub fn start_server_candidate_ratchet_kdf",
+			"candidate: &ServerRegistrationCandidate",
+			"candidate: &BeaconRegistrationCandidate",
+			"typed Server candidate start signature",
+		),
+		(
+			"initial_ratchet_candidate_start_root_signature_drifts",
+			"pub fn start_beacon_candidate_ratchet_kdf",
+			"root: &[u8; RATCHET_CHAIN_SIZE]",
+			"root: &[u8; 31]",
+			"typed Beacon candidate start signature",
+		),
+		(
+			"initial_ratchet_server_candidate_start_root_signature_drifts",
+			"pub fn start_server_candidate_ratchet_kdf",
+			"root: &[u8; RATCHET_CHAIN_SIZE]",
+			"root: &[u8; 31]",
+			"typed Server candidate start signature",
+		),
+		(
+			"initial_ratchet_base_start_return_type_drifts",
+			"pub fn start_initial_ratchet_kdf",
+			") -> InitialRatchetKdfPending {",
+			") -> ReplacementPending {",
+			"typed base start signature",
+		),
+		(
+			"initial_ratchet_beacon_candidate_start_return_type_drifts",
+			"pub fn start_beacon_candidate_ratchet_kdf",
+			") -> InitialRatchetKdfPending {",
+			") -> ReplacementPending {",
+			"typed Beacon candidate start signature",
+		),
+		(
+			"initial_ratchet_server_candidate_start_return_type_drifts",
+			"pub fn start_server_candidate_ratchet_kdf",
+			") -> InitialRatchetKdfPending {",
+			") -> ReplacementPending {",
+			"typed Server candidate start signature",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.core_pqxdh_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, from, to) in [
+		(
+			"initial_ratchet_kernel_initial_sequence_is_nonzero",
+			"Self::from_counters(0, 0, send_chain, receive_chain)",
+			"Self::from_counters(1, 0, send_chain, receive_chain)",
+		),
+		(
+			"initial_ratchet_kernel_initial_chains_swap",
+			"Self::from_counters(0, 0, send_chain, receive_chain)",
+			"Self::from_counters(0, 0, receive_chain, send_chain)",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, "zero-counter kernel initialization", |snapshot| {
+			replace_once(&mut snapshot.core_ratchet_concrete, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_adapter_hkdf_uses_different_pending",
+			"initial_ratchet_hkdf(pending.request())",
+			"initial_ratchet_hkdf(replacement_pending.request())",
+			"adapter exact pending request",
+		),
+		(
+			"initial_ratchet_adapter_hkdf_is_duplicated",
+			"initial_ratchet_hkdf(pending.request())",
+			"initial_ratchet_hkdf(pending.request()); initial_ratchet_hkdf(pending.request())",
+			"adapter exact pending request",
+		),
+		(
+			"initial_ratchet_adapter_hkdf_is_bypassed",
+			"initial_ratchet_hkdf(pending.request())",
+			"[0; INITIAL_RATCHET_KDF_OUTPUT_SIZE]",
+			"adapter exact pending request",
+		),
+		(
+			"initial_ratchet_adapter_response_confuses_step_type",
+			"beaconcrypt_core::pqxdh::InitialRatchetKdfResponse::from_bytes",
+			"verified_ratchet::RatchetKdfResponse::from_bytes",
+			"adapter exact response bytes",
+		),
+		(
+			"initial_ratchet_adapter_response_bytes_substituted",
+			"initial_ratchet_hkdf(pending.request())",
+			"replacement_bytes",
+			"adapter exact pending request",
+		),
+		(
+			"initial_ratchet_adapter_resume_uses_different_pending",
+			"resume_initial_ratchet_kdf(pending, response)",
+			"resume_initial_ratchet_kdf(replacement_pending, response)",
+			"adapter same pending response resume",
+		),
+		(
+			"initial_ratchet_adapter_resume_uses_different_response",
+			"resume_initial_ratchet_kdf(pending, response)",
+			"resume_initial_ratchet_kdf(pending, replacement_response)",
+			"adapter same pending response resume",
+		),
+		(
+			"initial_ratchet_adapter_resume_is_duplicated",
+			"resume_initial_ratchet_kdf(pending, response)",
+			"resume_initial_ratchet_kdf(pending, response); resume_initial_ratchet_kdf(pending, response)",
+			"adapter same pending response resume",
+		),
+		(
+			"initial_ratchet_adapter_resume_is_bypassed",
+			"beaconcrypt_core::pqxdh::resume_initial_ratchet_kdf(pending, response)",
+			"replacement_kernel",
+			"adapter same pending response resume",
+		),
+		(
+			"initial_ratchet_adapter_step_response_uses_initial_type",
+			"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+			"beaconcrypt_core::pqxdh::InitialRatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+			"distinct 76-byte adapter response",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.adapter_ratchet, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_adapter_executor_substitutes_input",
+			"request.input()",
+			"replacement.input()",
+			"adapter executor input",
+		),
+		(
+			"initial_ratchet_adapter_executor_substitutes_label",
+			"request.info()",
+			"replacement.info()",
+			"adapter executor label",
+		),
+		(
+			"initial_ratchet_adapter_executor_substitutes_output_bytes",
+			"output.copy_from_slice(&expanded);",
+			"output.copy_from_slice(&replacement);",
+			"adapter executor output",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn symmetric_ratchet_hkdf",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_adapter_initial_executor_uses_step_wrapper",
+		"adapter HKDF executor",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn initial_ratchet_hkdf",
+				"symmetric_ratchet_hkdf(request)",
+				"ratchet_hkdf(request)",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_adapter_initial_hkdf_uses_76_byte_width",
+		"adapter 64-byte HKDF signature",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn initial_ratchet_hkdf",
+				"[u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE]",
+				"[u8; RATCHET_KDF_OUTPUT_SIZE]",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_adapter_response_is_shadowed",
+		"adapter response binding count",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn finish_initial_ratchet_kdf",
+				");\n\tbeaconcrypt_core::pqxdh::resume_initial_ratchet_kdf(pending, response)",
+				");\n\tlet response = replacement_response;\n\tbeaconcrypt_core::pqxdh::resume_initial_ratchet_kdf(pending, response)",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_adapter_pending_parameter_is_shadowed",
+		"adapter pending parameter was shadowed",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn finish_initial_ratchet_kdf",
+				") -> verified_ratchet::ConcreteRatchetKernel {",
+				") -> verified_ratchet::ConcreteRatchetKernel {\n\tlet pending = replacement_pending;",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_ratchet_lean_start_root_substituted",
+			"request := { input := root, info := ratchet.SYM_RATCHET_INFO },",
+			"request := { input := replacement, info := ratchet.SYM_RATCHET_INFO },",
+			"Lean exact request interpretation",
+		),
+		(
+			"initial_ratchet_lean_request_accessor_substituted",
+			"ok pending.request := by",
+			"ok replacement.request := by",
+			"Lean exact request accessor",
+		),
+		(
+			"initial_ratchet_lean_beacon_offsets_swap",
+			"initialization := { send_offset := 32#u8, receive_offset := 0#u8 }",
+			"initialization := { send_offset := 0#u8, receive_offset := 32#u8 }",
+			"Lean Beacon offsets",
+		),
+		(
+			"initial_ratchet_lean_server_offsets_swap",
+			"initialization := { send_offset := 0#u8, receive_offset := 32#u8 }",
+			"initialization := { send_offset := 32#u8, receive_offset := 0#u8 }",
+			"Lean Server offsets",
+		),
+		(
+			"initial_ratchet_lean_resume_response_substituted",
+			"split_initial_ratchet_kdf_output response.bytes pending.initialization",
+			"split_initial_ratchet_kdf_output replacement.bytes pending.initialization",
+			"Lean response partition",
+		),
+		(
+			"initial_ratchet_lean_resume_plan_substituted",
+			"split_initial_ratchet_kdf_output response.bytes pending.initialization",
+			"split_initial_ratchet_kdf_output response.bytes replacement.initialization",
+			"Lean response partition",
+		),
+		(
+			"initial_ratchet_lean_kernel_arguments_swap",
+			"ConcreteRatchetKernel.new chains.send_chain chains.receive_chain",
+			"ConcreteRatchetKernel.new chains.receive_chain chains.send_chain",
+			"Lean kernel chain order",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.lean_ratchet_effect, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_lean_ideal_left_slice_drifts",
+		"Lean ideal root-chain split anchor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.lean_pqxdh_kdf,
+				"(c.hkdf ds INFO_R 64).take 32",
+				"(c.hkdf ds INFO_R 64).take 31",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_lean_ideal_right_slice_drifts",
+		"Lean ideal root-chain split anchor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.lean_pqxdh_kdf,
+				"(c.hkdf ds INFO_R 64).drop 32",
+				"(c.hkdf ds INFO_R 64).drop 31",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_initial_ratchet_rejected(
+		"initial_ratchet_lean_ideal_chain_agreement_anchor_renamed",
+		"Lean ideal post-record complementarity anchor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.lean_pqxdh_theorems,
+				"theorem chain_agreement :",
+				"theorem chain_alignment :",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pv_server_definition_swaps_projection",
+			"letfun server_to_beacon_chain",
+			"hkdf_first_32(",
+			"hkdf_second_32(",
+			"ProVerif server-to-beacon definition",
+		),
+		(
+			"initial_ratchet_pv_server_definition_substitutes_root",
+			"letfun server_to_beacon_chain",
+			"hkdf_sha512_no_salt(root, symmetric_ratchet_domain())",
+			"hkdf_sha512_no_salt(replacement_root, symmetric_ratchet_domain())",
+			"ProVerif server-to-beacon definition",
+		),
+		(
+			"initial_ratchet_pv_server_definition_substitutes_label",
+			"letfun server_to_beacon_chain",
+			"symmetric_ratchet_domain()",
+			"pqxdh_domain()",
+			"ProVerif server-to-beacon definition",
+		),
+		(
+			"initial_ratchet_pv_beacon_definition_swaps_projection",
+			"letfun beacon_to_server_chain",
+			"hkdf_second_32(",
+			"hkdf_first_32(",
+			"ProVerif beacon-to-server definition",
+		),
+		(
+			"initial_ratchet_pv_beacon_definition_substitutes_root",
+			"letfun beacon_to_server_chain",
+			"hkdf_sha512_no_salt(root, symmetric_ratchet_domain())",
+			"hkdf_sha512_no_salt(replacement_root, symmetric_ratchet_domain())",
+			"ProVerif beacon-to-server definition",
+		),
+		(
+			"initial_ratchet_pv_beacon_definition_substitutes_label",
+			"letfun beacon_to_server_chain",
+			"symmetric_ratchet_domain()",
+			"pqxdh_domain()",
+			"ProVerif beacon-to-server definition",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.crypto, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pv_honest_beacon_root_constructor_drifts",
+			"let HonestBeacon(",
+			"let root = pqxdh_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n    ) in",
+			"let root = replacement_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n    ) in",
+			"HonestBeacon exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_root_input_drifts",
+			"let HonestBeacon(",
+			"let root = pqxdh_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n    ) in",
+			"let root = pqxdh_root(\n      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(replacement_input)\n    ) in",
+			"HonestBeacon exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_server_root_constructor_drifts",
+			"let Server(",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = replacement_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"Server exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_server_root_input_drifts",
+			"let Server(",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(replacement_input)\n  ) in",
+			"Server exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_root_constructor_drifts",
+			"let MaliciousServer()",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = replacement_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"MaliciousServer exact root derivation",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_root_input_drifts",
+			"let MaliciousServer()",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)\n  ) in",
+			"let root = pqxdh_root(\n    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(replacement_input)\n  ) in",
+			"MaliciousServer exact root derivation",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pv_honest_beacon_initial_open_swaps_chain",
+			"let HonestBeacon(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"let server_chain_1 = beacon_to_server_chain(root) in",
+			"HonestBeacon scoped chain occurrence count",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_initial_open_substitutes_root",
+			"let HonestBeacon(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"let server_chain_1 = server_to_beacon_chain(replacement_root) in",
+			"HonestBeacon initial-open chain",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_outgoing_swaps_chain",
+			"let HonestBeacon(",
+			"let beacon_send_chain_1 = beacon_to_server_chain(root) in",
+			"let beacon_send_chain_1 = server_to_beacon_chain(root) in",
+			"HonestBeacon scoped chain occurrence count",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_outgoing_substitutes_root",
+			"let HonestBeacon(",
+			"let beacon_send_chain_1 = beacon_to_server_chain(root) in",
+			"let beacon_send_chain_1 = beacon_to_server_chain(replacement_root) in",
+			"HonestBeacon outgoing chain",
+		),
+		(
+			"initial_ratchet_pv_server_initial_seal_swaps_chain",
+			"let Server(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"let server_chain_1 = beacon_to_server_chain(root) in",
+			"Server scoped chain occurrence count",
+		),
+		(
+			"initial_ratchet_pv_server_initial_seal_substitutes_root",
+			"let Server(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"let server_chain_1 = server_to_beacon_chain(replacement_root) in",
+			"Server initial-seal chain",
+		),
+		(
+			"initial_ratchet_pv_server_initial_open_swaps_chain",
+			"let Server(",
+			"ratchet_material(beacon_to_server_chain(root))",
+			"ratchet_material(server_to_beacon_chain(root))",
+			"Server scoped chain occurrence count",
+		),
+		(
+			"initial_ratchet_pv_server_initial_open_substitutes_root",
+			"let Server(",
+			"ratchet_material(beacon_to_server_chain(root))",
+			"ratchet_material(beacon_to_server_chain(replacement_root))",
+			"Server incoming chain",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_initial_seal_swaps_chain",
+			"let MaliciousServer()",
+			"ratchet_material(server_to_beacon_chain(root))",
+			"ratchet_material(beacon_to_server_chain(root))",
+			"MaliciousServer scoped chain occurrence count",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_initial_seal_substitutes_root",
+			"let MaliciousServer()",
+			"ratchet_material(server_to_beacon_chain(root))",
+			"ratchet_material(server_to_beacon_chain(replacement_root))",
+			"MaliciousServer initial-seal chain",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"initial_ratchet_pv_honest_beacon_initial_material_uses_wrong_chain",
+			"let HonestBeacon(",
+			"let server_material_1 = ratchet_material(server_chain_1) in",
+			"let server_material_1 = ratchet_material(beacon_send_chain_1) in",
+			"HonestBeacon chain-to-open material",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_initial_material_is_shadowed",
+			"let HonestBeacon(",
+			"let server_material_1 = ratchet_material(server_chain_1) in",
+			"let server_material_1 = ratchet_material(server_chain_1) in\n    let server_material_1 = replacement_material in",
+			"HonestBeacon binding count",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_outgoing_material_uses_wrong_chain",
+			"let HonestBeacon(",
+			"let beacon_material_1 = ratchet_material(beacon_send_chain_1) in",
+			"let beacon_material_1 = ratchet_material(server_chain_1) in",
+			"HonestBeacon chain-to-seal material",
+		),
+		(
+			"initial_ratchet_pv_honest_beacon_outgoing_material_is_shadowed",
+			"let HonestBeacon(",
+			"let beacon_material_1 = ratchet_material(beacon_send_chain_1) in",
+			"let beacon_material_1 = ratchet_material(beacon_send_chain_1) in\n    let beacon_material_1 = replacement_material in",
+			"HonestBeacon binding count",
+		),
+		(
+			"initial_ratchet_pv_server_initial_material_uses_wrong_chain",
+			"let Server(",
+			"let server_material_1 = ratchet_material(server_chain_1) in",
+			"let server_material_1 = ratchet_material(replacement_chain) in",
+			"Server initial material",
+		),
+		(
+			"initial_ratchet_pv_server_initial_material_is_shadowed",
+			"let Server(",
+			"let server_material_1 = ratchet_material(server_chain_1) in",
+			"let server_material_1 = ratchet_material(server_chain_1) in\n      let server_material_1 = replacement_material in",
+			"Server binding count",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.environment, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, binding, diagnostic) in [
+		(
+			"initial_ratchet_pv_honest_beacon_root_is_shadowed",
+			"let HonestBeacon(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"HonestBeacon root binding count",
+		),
+		(
+			"initial_ratchet_pv_server_root_is_shadowed",
+			"let Server(",
+			"let server_chain_1 = server_to_beacon_chain(root) in",
+			"Server root binding count",
+		),
+		(
+			"initial_ratchet_pv_malicious_server_root_is_shadowed",
+			"let MaliciousServer()",
+			"let server_material_1 = ratchet_material(server_to_beacon_chain(root)) in",
+			"MaliciousServer root binding count",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			let replacement = format!("let root = replacement_root in\n  {binding}");
+			replace_once_after(&mut snapshot.environment, marker, binding, &replacement);
+		});
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, INITIAL_RATCHET_MUTATION_COUNT);
 }
 
 #[test]
