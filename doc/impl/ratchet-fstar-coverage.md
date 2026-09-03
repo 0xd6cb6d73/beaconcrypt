@@ -32,8 +32,8 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `lookup_receive_key_sound` | 226 | Matched | `RatchetControl.lookup_receive_key_sound`. |
 | `lookup_receive_key_none_is_absent` | 237 | Matched | `RatchetRefinement.lookup_receive_key_of_not_mem and RatchetControl.lookup_receive_key_complete`. |
 | `lookup_receive_key_is_complete` | 247 | Matched | `RatchetControl.lookup_receive_key_complete`. |
-| `lookup_receive_key_returns_unique_slot` | 256 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `from_counters_is_valid` | 273 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `lookup_receive_key_returns_unique_slot` | 256 | Matched | `RatchetStructural.ValidControl.slot_unique combined with RatchetControl.lookup_receive_key_sound`. |
+| `from_counters_is_valid` | 273 | Matched | `RatchetStructural.control.from_counters_valid`. |
 | `start_restore_is_valid` | 277 | In progress | Conditional material restoration in `RatchetMaterialRestore`; existing control restoration bounds do not alone establish canonical material provenance. |
 | `advance_send_is_monotonic` | 284 | Matched | `RatchetControl.advance_send_ok`. |
 | `advance_send_exhaustion_is_neutral` | 296 | Matched | `RatchetControl.advance_send_max`. |
@@ -51,11 +51,11 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `advance_receive_success_shape` | 450 | Matched | `RatchetControl.advance_receive_step`. |
 | `advance_receive_exhaustion_is_neutral` | 469 | Matched | `RatchetControl.advance_receive_max`. |
 | `advance_receive_full_cache_is_neutral` | 478 | Matched | `RatchetControl.advance_receive_full`. |
-| `advance_receive_preserves_validity` | 489 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `advance_receive_preserves_validity` | 489 | Matched | `RatchetStructural.ValidControl.advance_receive`. |
 | `finish_receive_missing_is_neutral` | 495 | Matched | `RatchetControl.finish_receive_missing_state_neutral`. |
 | `finish_receive_failure_retains_key` | 508 | Matched | `RatchetControl.finish_receive_auth_fail_state_neutral`. |
 | `finish_receive_success_shape` | 524 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `finish_receive_preserves_validity` | 540 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `finish_receive_preserves_validity` | 540 | Matched | `RatchetStructural.ValidControl.finish_receive`. |
 | `finish_receive_consumes_target` | 551 | Matched | `RatchetControl.lookup_receive_key_consumed_absent`. |
 | `finish_receive_preserves_other_key` | 562 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `finish_receive_replay_is_rejected` | 575 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -65,7 +65,7 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `finish_receive_with_removal_missing_is_neutral` | 627 | Matched | `RatchetControl.finish_receive_with_removal_out_of_range and finish_receive_with_removal_mismatch`. |
 | `finish_receive_with_removal_failure_retains_key` | 641 | Matched | `RatchetControl.finish_receive_with_removal_auth_fail`. |
 | `finish_receive_with_removal_success_shape` | 658 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `finish_receive_with_removal_preserves_validity` | 680 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `finish_receive_with_removal_preserves_validity` | 680 | Matched | `RatchetStructural.ValidControl.finish_receive_with_removal`. |
 | `finish_receive_with_removal_consumes_target` | 693 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `finish_receive_with_removal_preserves_other_key` | 706 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `finish_receive_with_removal_preserves_other_key_exactly_once` | 721 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -88,8 +88,8 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `packed_prefix_unchanged_refl` | 1145 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `packed_prefix_unchanged_transitive` | 1162 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `cached_materials_after_append_are_derived` | 1196 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_from_counters_is_valid` | 1342 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_new_is_valid` | 1354 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `refined_from_counters_is_valid` | 1342 | Matched | `RatchetStructural.refined.from_counters_valid`. |
+| `refined_new_is_valid` | 1354 | Matched | `RatchetStructural.refined.new_valid`. |
 | `refined_from_counters_is_reachable` | 1366 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_new_is_reachable` | 1396 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `concrete_kernel_new_is_reachable` | 1415 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -100,7 +100,7 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `refined_seal_next_uses_exact_step_material` | 1517 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_seal_next_preserves_validity` | 1541 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_seal_next_preserves_reachability` | 1556 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `concrete_seal_next_preserves_reachability` | 1578 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `concrete_seal_next_preserves_reachability` | 1578 | Matched | `RatchetRoleReachability.sealNext_preserves_reachability; actual first-order send driver with arbitrary optional callback`. |
 | `refined_advance_receive_rejection_is_step_independent` | 1596 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_advance_receive_success_uses_step` | 1609 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_advance_receive_preserves_validity` | 1638 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -124,14 +124,14 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `refined_finish_receive_neutral_outcomes_preserve_full_state` | 2238 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_finish_receive_mismatched_target_is_neutral` | 2252 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_finish_receive_mismatched_last_is_neutral` | 2271 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `material_slots_after_swap_remove_is_exact` | 2325 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `material_slots_after_swap_remove_is_exact` | 2325 | Matched | `RatchetCachedPublication.publish_cached_receive_exact for arbitrary chain and material types`. |
 | `cached_materials_after_swap_remove_are_derived` | 2384 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `generated_material_swap_remove_matches_view` | 2445 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `generated_material_swap_remove_matches_view` | 2445 | Matched | `RatchetCachedPublication.publish_cached_receive_exact for arbitrary chain and material types`. |
 | `refined_finish_receive_success_computes_swap` | 2477 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `finish_receive_with_removal_preserves_other_physical_slot` | 2522 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `material_slots_after_swap_remove_matches` | 2550 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `refined_finish_receive_success_is_exact_swap_removal` | 2606 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `refined_finish_receive_preserves_validity` | 2710 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `refined_finish_receive_preserves_validity` | 2710 | Matched | `RatchetStructural.ValidRefined.cached_publication plus exact entry preservation on rejection; the historical monolithic helper is replaced by prepare/finish phases`. |
 | `refined_finish_receive_preserves_reachability` | 2736 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `receive_control_extension_refl` | 2814 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 | `receive_control_extension_advance` | 2833 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
@@ -195,7 +195,7 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `valid_cached_publication_preserves_reachability` | 5764 | Matched | `RatchetCachedPublication.CachedOpenRefines.finish_success_refines`. |
 | `valid_pending_publication_preserves_reachability` | 5789 | Matched | `RatchetFuturePublication.FutureOpenRefines.finish_success_refines`. |
 | `refined_open_and_finish_preserves_reachability` | 5856 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
-| `concrete_open_and_finish_preserves_reachability` | 5914 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
+| `concrete_open_and_finish_preserves_reachability` | 5914 | Matched | `RatchetReceiveReachability.receiveNext_preserves_reachability; constructive unbounded first-order driver for every canonical entry and optional callback`. |
 | `start_refined_restore_is_valid` | 5935 | In progress | Conditional material restoration in `RatchetMaterialRestore`; existing control restoration bounds do not alone establish canonical material provenance. |
 | `start_refined_restore_is_reachable` | 5948 | In progress | Conditional material restoration in `RatchetMaterialRestore`; existing control restoration bounds do not alone establish canonical material provenance. |
 | `refined_restore_receive_key_is_atomic` | 5978 | In progress | Conditional material restoration in `RatchetMaterialRestore`; existing control restoration bounds do not alone establish canonical material provenance. |
@@ -207,4 +207,4 @@ Evidence entries abbreviate `BeaconcryptCore.Refinement.<module>` and the theore
 | `advance_send_for_other_peer_is_neutral` | 6104 | Matched | `RatchetControlRestore.advance_send_for_peer_other`. |
 | `advance_send_for_selected_peer_matches` | 6114 | Unmatched | Compare the full statement with checked effect, control, and trace capstones; record a checked corollary or explain replacement of this internal fact. |
 
-The inventory contains 192 declarations: 35 matched, 12 in progress, and 145 unmatched in this draft.
+The inventory contains 192 declarations: 47 matched, 12 in progress, and 133 unmatched in this draft.
