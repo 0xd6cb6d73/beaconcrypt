@@ -1,0 +1,101 @@
+import BeaconcryptCore.PanicFreedom.RatchetReceive
+
+/-!
+# Exact material receive loop behavior
+
+The lemmas in this file describe the validated array windows and the exact copy-and-clear behavior of future material publication. They reason about the extracted loops without changing the ideal ratchet model.
+-/
+
+open CoreModels Aeneas
+open Aeneas.Std hiding namespace core alloc
+open RustM beaconcrypt_core.ratchet.control
+
+set_option maxHeartbeats 1000000
+set_option autoImplicit false
+
+namespace beaconcrypt_core.ratchet.refined
+
+variable {SendChain ReceiveChain Material : Type}
+
+private theorem array_index_bang {α : Type} [Inhabited α] {n : Std.Usize}
+    (v : Std.Array α n) (i : Std.Usize) (h : i.val < v.length) :
+    v.index_usize i = ok v.val[i.val]! := by
+  simpa only [getElem!_pos v.val i.val (by simpa using h)] using array_index_eq_ok v i h
+
+private theorem array_set_bang {α : Type} [Inhabited α] {n : Std.Usize}
+    (v : Std.Array α n) (i : Std.Usize) (x : α) (j : Nat) (h : j < v.length) :
+    (v.set i x).val[j]! = if i.val = j then x else v.val[j]! := by
+  by_cases heq : i.val = j
+  · simpa only [if_pos heq, Array.getElem!_Nat_eq] using
+      Array.getElem!_Nat_set_eq v i j x ⟨heq, h⟩
+  · simpa only [if_neg heq, Array.getElem!_Nat_eq] using
+      Array.getElem!_Nat_set_ne v i j x heq
+
+/-- Publication copies precisely its bounded window and clears precisely the same staged slots. -/
+theorem publish_future_receive_slots_loop_exact (n : Nat) :
+    ∀ (state : RefinedRatchet SendChain ReceiveChain Material)
+      (staged : Std.Array (core.option.Option (CachedReceiveKey Material)) 50#usize)
+      (slot left : Std.U8), left.val = n → slot.val + left.val ≤ 50 →
+      ∃ out remaining, publish_future_receive_slots_loop state staged slot left = ok (out, remaining) ∧
+        out.control = state.control ∧ out.send_chain = state.send_chain ∧
+        out.receive_chain = state.receive_chain ∧
+        (∀ i, i < 50 → out.receive_slots.val[i]! =
+          if slot.val ≤ i ∧ i < slot.val + left.val then staged.val[i]! else state.receive_slots.val[i]!) ∧
+        (∀ i, i < 50 → remaining.val[i]! =
+          if slot.val ≤ i ∧ i < slot.val + left.val then core.option.Option.None else staged.val[i]!) := by
+  induction n with
+  | zero =>
+    intro state staged slot left hleft hbound
+    have hz : left = 0#u8 := by scalar_tac
+    simp [hz, publish_future_receive_slots_loop, loop.eq_def,
+      publish_future_receive_slots_loop.body]
+  | succ n ih =>
+    intro state staged slot left hleft hbound
+    rw [publish_future_receive_slots_loop, loop.eq_def]
+    simp only [publish_future_receive_slots_loop.body,
+      if_pos (by scalar_tac : left > 0#u8), lift, capacity_eq_ok, bind_tc_ok,
+      if_neg (by scalar_tac : ¬ UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64)]
+    simp only [Array.index_mut_usize,
+      array_index_bang staged (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
+      array_index_bang state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
+      bind_tc_ok, core.option.Option.take, Std.core.option.Option.take, massert,
+      if_pos (by scalar_tac : UScalar.cast UScalarTy.Usize slot < 50#usize)]
+    dsimp! only
+    rw [Array.set_getElem!_eq, array_update_eq_ok _ _ _ (by scalar_tac)]
+    obtain ⟨slot', hslot, hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
+    obtain ⟨left', hnext, hnextval⟩ := uscalar_sub_eq_ok left 1#u8 (by scalar_tac)
+    obtain ⟨out, remaining, hrun, hcontrol, hsend, hreceive, hslots, hremaining⟩ :=
+      ih { state with receive_slots := (state.receive_slots.set (UScalar.cast UScalarTy.Usize slot)
+          staged.val[(UScalar.cast UScalarTy.Usize slot).val]!) }
+        (staged.set (UScalar.cast UScalarTy.Usize slot) core.option.Option.None)
+        slot' left' (by scalar_tac) (by scalar_tac)
+    simp! only [publish_future_receive_slots_loop, publish_future_receive_slots_loop.body,
+      lift, capacity_eq_ok, bind_tc_ok, Array.index_mut_usize, core.option.Option.take,
+      Std.core.option.Option.take, massert] at hrun
+    refine ⟨out, remaining, by simpa only [hslot, hnext, bind_tc_ok] using hrun,
+      hcontrol, hsend, hreceive, ?_, ?_⟩
+    · intro i hi
+      rw [hslots i hi, array_set_bang staged _ _ i (by scalar_tac),
+        array_set_bang state.receive_slots _ _ i (by scalar_tac)]
+      have hcast : (UScalar.cast UScalarTy.Usize slot).val = slot.val := by simp_scalar
+      simp only [hcast]
+      split_ifs <;> first | rfl | scalar_tac
+    · intro i hi
+      rw [hremaining i hi, array_set_bang staged _ _ i (by scalar_tac)]
+      split_ifs <;> first | rfl | scalar_tac
+
+/-- The public publication helper has the same exact copy-and-clear semantics. -/
+theorem publish_future_receive_slots_exact
+    (state : RefinedRatchet SendChain ReceiveChain Material)
+    (staged : Std.Array (core.option.Option (CachedReceiveKey Material)) 50#usize)
+    (slot left : Std.U8) (hbound : slot.val + left.val ≤ 50) :
+    ∃ out remaining, publish_future_receive_slots state staged slot left = ok (out, remaining) ∧
+      out.control = state.control ∧ out.send_chain = state.send_chain ∧
+      out.receive_chain = state.receive_chain ∧
+      (∀ i, i < 50 → out.receive_slots.val[i]! =
+        if slot.val ≤ i ∧ i < slot.val + left.val then staged.val[i]! else state.receive_slots.val[i]!) ∧
+      (∀ i, i < 50 → remaining.val[i]! =
+        if slot.val ≤ i ∧ i < slot.val + left.val then core.option.Option.None else staged.val[i]!) :=
+  publish_future_receive_slots_loop_exact left.val state staged slot left rfl hbound
+
+end beaconcrypt_core.ratchet.refined
