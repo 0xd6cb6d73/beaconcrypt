@@ -329,7 +329,7 @@ require_occurrence_count 6 '_to_bitstring' \
 	"all handwritten generated ProVerif converters" "${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
-require_line_count 182 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+require_line_count 220 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
 	"canonical production transcript fact"
 require_line_count 18 '^\(\* @beaconcrypt-fidelity-v1 phase1\.' \
 	"$transcript_interface" "Phase-1 InitKex transcript fact"
@@ -337,6 +337,8 @@ require_line_count 42 '^\(\* @beaconcrypt-fidelity-v1 cryptoframe\.' \
 	"$transcript_interface" "CryptoFrame wire transcript fact"
 require_line_count 56 '^\(\* @beaconcrypt-fidelity-v1 endpoint\.' \
 	"$transcript_interface" "endpoint frame-context transcript fact"
+require_line_count 38 '^\(\* @beaconcrypt-fidelity-v1 ratchet\.driver\.' \
+	"$transcript_interface" "ratchet effect-driver transcript fact"
 require_line_count 5 '^type ' "$transcript_interface" \
 	"canonical ProVerif interface type"
 require_line_count 19 '^fun ' "$transcript_interface" \
@@ -810,20 +812,21 @@ for scenario_process in \
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 15 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_COMMITMENT|CORE_PQXDH|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = include_str!' \
+require_line_count 18 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_COMMITMENT|CORE_PQXDH|CORE_RATCHET_CONCRETE|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = include_str!|^const (LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable snapshot"
-require_line_count 6 '^#\[test\]$' \
+require_line_count 7 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
 	compiled_core_matches_the_canonical_transcript \
 	cryptoframe_wire_mutation_matrix_is_complete_and_rejected \
 	endpoint_frame_context_mutation_matrix_is_complete_and_rejected \
+	ratchet_effect_driver_mutation_matrix_is_complete_and_rejected \
 	phase1_registration_mutation_matrix_is_complete_and_rejected \
 	requested_transcript_mutations_are_rejected; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
@@ -833,7 +836,7 @@ require_occurrence_count 1 \
 	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
 	"transcript-fidelity model and adapter composition" "$fidelity_test"
 require_occurrence_count 1 \
-	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
+	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
 require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;$' \
 	"$fidelity_test" "CryptoFrame exact mutation count"
@@ -926,6 +929,38 @@ for endpoint_mutation_family in \
 	endpoint_symbolic_malicious_server_ad_reverses_identities; do
 	require_occurrence_count 1 "$endpoint_mutation_family" \
 		"endpoint frame-context ${endpoint_mutation_family} mutation family" "$fidelity_test"
+done
+require_line_count 1 '^const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 154;$' \
+	"$fidelity_test" "ratchet effect-driver exact mutation count"
+require_occurrence_count 1 \
+	'(?s)fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, RATCHET_EFFECT_DRIVER_MUTATION_COUNT\);\s*\}' \
+	"ratchet effect-driver mutation matrix count assertion" "$fidelity_test"
+for ratchet_driver_mutation_family in \
+	ratchet_driver_fact_\{key\} \
+	ratchet_driver_slot_take_duplicates_take \
+	ratchet_driver_send_resumes_different_pending \
+	ratchet_driver_send_returns_before_put \
+	ratchet_driver_receive_moves_empty_gate_after_take \
+	ratchet_driver_receive_takes_kernel_before_typed_parse \
+	ratchet_driver_receive_moves_sender_gate_after_take \
+	ratchet_driver_receive_moves_length_gate_after_take \
+	ratchet_driver_receive_resumes_different_pending \
+	ratchet_driver_receive_kdf_publishes_slot \
+	ratchet_driver_receive_questions_result_before_put \
+	ratchet_driver_core_finish_none_drops_entry \
+	ratchet_driver_core_finish_cached_publication_omitted \
+	ratchet_driver_core_finish_future_publication_omitted \
+	ratchet_driver_core_begin_receive_mutates_live_control \
+	ratchet_driver_core_receive_kdf_publishes_cached_early \
+	ratchet_driver_core_receive_kdf_publishes_future_early \
+	ratchet_driver_lean_structural_anchor_\{index\}_renamed \
+	ratchet_driver_lean_failure_trace_anchor_renamed \
+	ratchet_driver_lean_conditional_anchor_\{index\}_renamed \
+	ratchet_driver_proverif_renames_atomic_seal \
+	ratchet_driver_proverif_renames_ideal_open \
+	ratchet_driver_proverif_exposes_\{concrete_step\}; do
+	require_occurrence_count 1 "$ratchet_driver_mutation_family" \
+		"ratchet effect-driver ${ratchet_driver_mutation_family} mutation family" "$fidelity_test"
 done
 for mutation_name in \
 	pqxdh_label_byte \

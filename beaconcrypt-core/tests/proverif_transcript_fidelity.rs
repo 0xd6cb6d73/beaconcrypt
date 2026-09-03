@@ -26,6 +26,11 @@ const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
 const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
 const CORE_COMMITMENT: &str = include_str!("../src/commitment.rs");
 const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
+const CORE_RATCHET_CONCRETE: &str = include_str!("../src/ratchet/concrete.rs");
+const LEAN_RATCHET_EFFECT: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetEffect.lean");
+const LEAN_RATCHET_EFFECT_REFINEMENT: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean");
 const CRYPTOFRAME_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/cryptoframe.capnp");
 const PHASE1_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase1.capnp");
 const PHASE2_SCHEMA: &str = include_str!("../../beaconcrypt/src/schema/phase2.capnp");
@@ -212,6 +217,44 @@ const EXPECTED_FACTS: &[&str] = &[
 	"endpoint.symbolic.malicious_registration.associated_data=server_identity,beacon_identity",
 	"endpoint.symbolic.malicious_registration.fixture.initial_seal.count=1",
 	"endpoint.symbolic.malicious_registration.fixture.initial_seal.calls=server_material_1,associated_data,first_sequence(),SERVER_KEY_ID,registration_payload(binding,MALICIOUS_TASK_SECRET)",
+	"ratchet.driver.kind=synchronous_affine_interpreter",
+	"ratchet.driver.slot.take=Option::take:once_per_encrypt_or_decrypt_helper_after_prechecks",
+	"ratchet.driver.slot.put=assert_empty_then_store_returned_kernel",
+	"ratchet.driver.kdf.reply=ratchet_hkdf(SymmetricRatchetKdfRequest)->RatchetKdfResponse",
+	"ratchet.driver.send.precheck=empty_input_rejected_before_take",
+	"ratchet.driver.send.context=SealFrameContext(bytes,target_kid,sender_kid,associated_data)",
+	"ratchet.driver.send.take=ratchet.refined.take():once",
+	"ratchet.driver.send.begin=begin_send(kernel,same_context):once",
+	"ratchet.driver.send.exhausted=put(returned_kernel),return_none",
+	"ratchet.driver.send.kdf.request=ratchet_hkdf(same_pending.request()):once",
+	"ratchet.driver.send.kdf.resume=same_pending.resume(same_response)",
+	"ratchet.driver.send.seal=seal_frame(seal.material(),seal.sequence(),seal.context())",
+	"ratchet.driver.send.finish=seal.finish(sealed)",
+	"ratchet.driver.send.put=finish_returned_kernel_before_returned_sealed",
+	"ratchet.driver.send.failure=seal.finish(None):advanced_kernel_then_slot_put",
+	"ratchet.driver.send.cancel=not_invoked_in_encrypt_helper",
+	"ratchet.driver.receive.prechecks=empty,typed_parse,sender_match,payload_length:before_take",
+	"ratchet.driver.receive.context=OpenFrameContext(ciphertext,associated_data,parsed_sender)",
+	"ratchet.driver.receive.take=ratchet.refined.take():once",
+	"ratchet.driver.receive.begin=begin_receive(kernel,parsed_sequence,same_context):once",
+	"ratchet.driver.receive.loop=effect_match_without_fixed_iteration_count",
+	"ratchet.driver.receive.rejected=put(returned_kernel),return_none",
+	"ratchet.driver.receive.kdf.request=ratchet_hkdf(same_pending.request()):per_arm",
+	"ratchet.driver.receive.kdf.resume=same_pending.resume(same_response)",
+	"ratchet.driver.receive.kdf.slot_put=none_in_ReceiveKdfRequested_arm",
+	"ratchet.driver.receive.no_material=open.reject(),put(returned_kernel),return_none",
+	"ratchet.driver.receive.open=open_frame(material,open.sequence(),open.context())",
+	"ratchet.driver.receive.finish=open.finish(opened)",
+	"ratchet.driver.receive.put=finish_returned_kernel_before_opened_question",
+	"ratchet.driver.receive.success=plaintext,parsed_sender,parsed_sequence",
+	"ratchet.driver.receive.failure=open.finish(None):entry_kernel_then_slot_put",
+	"ratchet.driver.receive.cancel=not_invoked_in_decrypt_helper",
+	"ratchet.driver.core.phase_api=SendStart,SendKdf,SendSeal,ReceiveEffect,ReceiveKdf,ReceiveOpen",
+	"ratchet.driver.core.receive.publication=staged_until_ReceiveOpen.finish(Some)",
+	"ratchet.driver.lean.structural=begin_send_nonexhausted_exact,begin_send_exhausted_restores_entry,SendKdf.request_exact,SendKdf.resume_exact,SendSeal.finish_returns_interpreter_result,begin_receive_rejected_plan_restores_entry,begin_receive_cached_exact,begin_receive_future_request_exact,ReceiveKdf.request_exact,ReceiveOpen.reject_exact,ReceiveOpen.context_exact,ReceiveOpen.future_sequence_exact,ReceiveOpen.future_material_exact,ReceiveOpen.finish_failure_restores_entry,ReceiveOpen.finish_future_success_publishes_same_plaintext,ReceiveOpen.finish_cached_success_publishes_same_plaintext,ReceiveFailureTrace.result_eq_entry",
+	"ratchet.driver.lean.refinement_anchors=conditional:ResponseRefines,begin_send_refines,SendKdf.resume_refines,SendSeal.finish_refines_ideal_send,ReceiveOpen.failure_preserves_refinement,ReceiveFailureTrace.preserves_refinement,OpenReplyRefines,begin_receive_cached_refines,CachedOpenRefines.finish_success_matches_ideal,CachedOpenRefines.finish_success_refines_of_publication",
+	"ratchet.driver.proverif.abstraction=atomic_seal_frame,ideal_exact_open_frame",
+	"ratchet.driver.bridge=text_checker_only:not_semantic_Rust_to_Lean_or_ProVerif_refinement",
 	"agreement.constructor=establishment_transcript",
 	"agreement.field_count=18",
 	"agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin",
@@ -227,6 +270,9 @@ struct Snapshot {
 	adapter_ratchet: String,
 	core_commitment: String,
 	core_pqxdh: String,
+	core_ratchet_concrete: String,
+	lean_ratchet_effect: String,
+	lean_ratchet_effect_refinement: String,
 	cryptoframe_schema: String,
 	phase1_schema: String,
 	phase2_schema: String,
@@ -245,6 +291,9 @@ impl Snapshot {
 			adapter_ratchet: ADAPTER_RATCHET.to_owned(),
 			core_commitment: CORE_COMMITMENT.to_owned(),
 			core_pqxdh: CORE_PQXDH.to_owned(),
+			core_ratchet_concrete: CORE_RATCHET_CONCRETE.to_owned(),
+			lean_ratchet_effect: LEAN_RATCHET_EFFECT.to_owned(),
+			lean_ratchet_effect_refinement: LEAN_RATCHET_EFFECT_REFINEMENT.to_owned(),
 			cryptoframe_schema: CRYPTOFRAME_SCHEMA.to_owned(),
 			phase1_schema: PHASE1_SCHEMA.to_owned(),
 			phase2_schema: PHASE2_SCHEMA.to_owned(),
@@ -539,6 +588,17 @@ fn require_ordered_once(source: &str, wanted: &[&str], label: &str) -> Result<()
 		let relative = source[cursor..]
 			.find(item)
 			.ok_or_else(|| format!("{label} changed: {item} is out of order"))?;
+		cursor += relative + item.len();
+	}
+	Ok(())
+}
+
+fn require_ordered(source: &str, wanted: &[&str], label: &str) -> Result<(), String> {
+	let mut cursor = 0usize;
+	for item in wanted {
+		let relative = source[cursor..]
+			.find(item)
+			.ok_or_else(|| format!("{label} changed: {item} is missing or out of order"))?;
 		cursor += relative + item.len();
 	}
 	Ok(())
@@ -2303,6 +2363,409 @@ fn validate_adapters() -> Result<(), String> {
 	Ok(())
 }
 
+fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
+	let adapter_source = uncommented_rust(&snapshot.adapter_ratchet)?;
+	let adapter = compact(&adapter_source);
+	let slot = section_between(
+		&adapter_source,
+		"impl RatchetKernelSlot {",
+		"impl Deref for RatchetKernelSlot",
+		"ratchet kernel slot implementation",
+	)?;
+	let take = rust_body(slot, "take")?;
+	require_once(
+		&take,
+		"self.kernel.take()",
+		"ratchet driver affine slot take",
+	)?;
+	let put = rust_body(slot, "put")?;
+	require_ordered_once(
+		&put,
+		&["assert!(self.kernel.is_none()", "self.kernel=Some(kernel);"],
+		"ratchet driver returned-kernel slot put",
+	)?;
+	require_once(
+		&adapter,
+		"pub(crate)fnratchet_hkdf(request:&verified_ratchet::SymmetricRatchetKdfRequest,)->verified_ratchet::RatchetKdfResponse{verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))}",
+		"ratchet driver typed KDF reply",
+	)?;
+
+	let send = rust_body(&snapshot.adapter_ratchet, "encrypt_message_with_ratchet")?;
+	require_once(
+		&send,
+		"ifbytes.is_empty(){returnNone;}",
+		"ratchet send empty-input precheck",
+	)?;
+	require_once(
+		&send,
+		"letcontext=SealFrameContext{bytes,target_kid,sender_kid,associated_data,};",
+		"ratchet send exact frame context",
+	)?;
+	require_one_call(
+		&send,
+		"ratchet.refined.take",
+		&[""],
+		"ratchet send affine kernel take",
+	)?;
+	require_one_call(
+		&send,
+		"verified_ratchet::begin_send",
+		&["kernel", "context"],
+		"ratchet send begin effect",
+	)?;
+	require_once(
+		&send,
+		"verified_ratchet::SendStart::SendExhausted{kernel,..}=>{ratchet.refined.put(kernel);returnNone;}verified_ratchet::SendStart::SendKdfRequested(pending)=>pending,",
+		"ratchet send exhausted and KDF branches",
+	)?;
+	require_one_call(
+		&send,
+		"ratchet_hkdf",
+		&["pending.request()"],
+		"ratchet send exact pending request interpretation",
+	)?;
+	require_one_call(
+		&send,
+		"pending.resume",
+		&["response"],
+		"ratchet send same-pending resume",
+	)?;
+	require_one_call(
+		&send,
+		"seal_frame",
+		&["seal.material()", "seal.sequence()", "seal.context()"],
+		"ratchet send seal capability handoff",
+	)?;
+	require_one_call(
+		&send,
+		"seal.finish",
+		&["sealed"],
+		"ratchet send capability finish",
+	)?;
+	let send_puts = all_arguments(&send, "ratchet.refined.put")?;
+	if send_puts != [vec!["kernel".to_owned()], vec!["kernel".to_owned()]] {
+		return Err(format!(
+			"ratchet send returned-kernel puts changed: {send_puts:?}"
+		));
+	}
+	require_once(
+		&send,
+		"ratchet.refined.put(kernel);sealed",
+		"ratchet send returned-kernel put before result",
+	)?;
+	require_ordered(
+		&send,
+		&[
+			"ifbytes.is_empty(){returnNone;}",
+			"letcontext=SealFrameContext",
+			"letkernel=ratchet.refined.take();",
+			"verified_ratchet::begin_send(kernel,context)",
+			"letresponse=ratchet_hkdf(pending.request());",
+			"letseal=pending.resume(response);",
+			"letsealed=seal_frame(seal.material(),seal.sequence(),seal.context());",
+			"let(kernel,sealed)=seal.finish(sealed);",
+			"ratchet.refined.put(kernel);",
+		],
+		"ratchet send synchronous effect order",
+	)?;
+	if !send.ends_with("sealed") {
+		return Err("ratchet send returned sealed result changed".to_owned());
+	}
+	forbid(&send, ".cancel(", "ratchet send production cancellation")?;
+
+	let concrete = compact(&uncommented_rust(&snapshot.core_ratchet_concrete)?);
+	for phase in [
+		"pubenumSendStart<Context>{",
+		"pubstructSendKdf<Context>{",
+		"pubstructSendSeal<Context>{",
+		"pubenumReceiveEffect<Context>{",
+		"pubstructReceiveKdf<Context>{",
+		"pubstructReceiveOpen<Context>{",
+	] {
+		require_once(&concrete, phase, "ratchet core affine phase API")?;
+	}
+	let send_seal = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> SendSeal<Context>",
+		"/// One phase of an owned receive transaction.",
+		"ratchet core send seal phase",
+	)?;
+	let send_finish = rust_body(send_seal, "finish")?;
+	require_once(
+		&send_finish,
+		"let_=finish_send(self.logical);(self.advanced,sealed)",
+		"ratchet send finish preserves interpreter result on advanced kernel",
+	)?;
+
+	let receive = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	require_ordered(
+		&receive,
+		&[
+			"ifdata.is_empty(){returnNone;}",
+			"capnp::serialize::read_message(data,ReaderOptions::new())",
+			"TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"letkid=frame.get_key_id();",
+			"ifkid!=expected_sender_kid{returnNone;}",
+			"letciphertext=frame.get_cipher_text().ok()?;",
+			"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
+			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,};",
+			"letkey_seq=frame.get_seq();",
+			"letkernel=ratchet.refined.take();",
+			"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);",
+			"letplaintext=loop{",
+		],
+		"ratchet receive prechecks and effect start order",
+	)?;
+	require_one_call(
+		&receive,
+		"ratchet.refined.take",
+		&[""],
+		"ratchet receive affine kernel take",
+	)?;
+	require_one_call(
+		&receive,
+		"verified_ratchet::begin_receive",
+		&["kernel", "key_seq", "context"],
+		"ratchet receive begin effect",
+	)?;
+	require_once(
+		&receive,
+		"verified_ratchet::ReceiveEffect::ReceiveRejected{kernel,..}=>{ratchet.refined.put(kernel);returnNone;}",
+		"ratchet receive rejected branch",
+	)?;
+	require_once(
+		&receive,
+		"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);letplaintext=loop{effect=matcheffect{",
+		"ratchet receive effect loop without fixed iteration count",
+	)?;
+	let receive_kdf_arm = section_between(
+		&receive,
+		"verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending)=>{",
+		"verified_ratchet::ReceiveEffect::ReceiveOpenRequested(open)=>{",
+		"ratchet receive KDF arm",
+	)?;
+	forbid(
+		receive_kdf_arm,
+		"ratchet.refined.put(",
+		"ratchet receive KDF-arm live publication",
+	)?;
+	forbid(
+		&receive,
+		".cancel(",
+		"ratchet receive production cancellation",
+	)?;
+	require_one_call(
+		&receive,
+		"ratchet_hkdf",
+		&["pending.request()"],
+		"ratchet receive exact pending request interpretation",
+	)?;
+	require_one_call(
+		&receive,
+		"pending.resume",
+		&["response"],
+		"ratchet receive same-pending resume",
+	)?;
+	require_once(
+		&receive,
+		"verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending)=>{letresponse=ratchet_hkdf(pending.request());pending.resume(response)}",
+		"ratchet receive private KDF loop arm",
+	)?;
+	require_once(
+		&receive,
+		"letSome(material)=open.material()else{let(kernel,_)=open.reject();ratchet.refined.put(kernel);returnNone;};",
+		"ratchet receive no-material rejection",
+	)?;
+	require_one_call(
+		&receive,
+		"open_frame",
+		&["material", "open.sequence()", "open.context()"],
+		"ratchet receive open capability handoff",
+	)?;
+	require_one_call(
+		&receive,
+		"open.finish",
+		&["opened"],
+		"ratchet receive capability finish",
+	)?;
+	let receive_puts = all_arguments(&receive, "ratchet.refined.put")?;
+	if receive_puts
+		!= [
+			vec!["kernel".to_owned()],
+			vec!["kernel".to_owned()],
+			vec!["kernel".to_owned()],
+		] {
+		return Err(format!(
+			"ratchet receive returned-kernel puts changed: {receive_puts:?}"
+		));
+	}
+	require_ordered(
+		&receive,
+		&[
+			"letSome(material)=open.material()else{",
+			"let(kernel,_)=open.reject();",
+			"ratchet.refined.put(kernel);",
+			"returnNone;",
+			"letopened=open_frame(material,open.sequence(),open.context());",
+			"let(kernel,opened)=open.finish(opened);",
+			"ratchet.refined.put(kernel);",
+			"breakopened?;",
+		],
+		"ratchet receive open and terminal publication order",
+	)?;
+	require_once(
+		&receive,
+		"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
+		"ratchet receive parsed result metadata",
+	)?;
+	let receive_open = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveOpen<Context>",
+		"/// Checked restoration builder",
+		"ratchet core receive open phase",
+	)?;
+	let receive_finish = rust_body(receive_open, "finish")?;
+	require_once(
+		&receive_finish,
+		"None=>return(self.entry,None)",
+		"ratchet receive finish failure restores entry",
+	)?;
+	require_once(
+		&receive_finish,
+		"PreparedReceive::PreparedReceiveCachedCase(prepared)=>{publish_cached_receive(&mutentry.refined,prepared);}",
+		"ratchet core cached receive publication branch",
+	)?;
+	require_once(
+		&receive_finish,
+		"PreparedReceive::PreparedReceiveFutureCase(pending)=>{publish_future_receive(&mutentry.refined,pending);}",
+		"ratchet core future receive publication branch",
+	)?;
+	let begin_receive = rust_body(&snapshot.core_ratchet_concrete, "begin_receive")?;
+	for absent in [
+		"publish_cached_receive",
+		"publish_future_receive",
+		"kernel.refined.control=",
+		"kernel.refined.send_chain=",
+		"kernel.refined.receive_chain=",
+		"kernel.refined.receive_slots=",
+	] {
+		forbid(
+			&begin_receive,
+			absent,
+			"ratchet core begin_receive live publication",
+		)?;
+	}
+	let receive_kdf = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveKdf<Context>",
+		"impl<Context> ReceiveOpen<Context>",
+		"ratchet core receive KDF phase",
+	)?;
+	let receive_resume = rust_body(receive_kdf, "resume")?;
+	forbid(
+		&receive_resume,
+		"publish_cached_receive",
+		"ratchet core receive KDF cached publication",
+	)?;
+	forbid(
+		&receive_resume,
+		"publish_future_receive",
+		"ratchet core receive KDF future publication",
+	)?;
+	require_ordered(
+		&receive_finish,
+		&[
+			"letplaintext=matchopened{",
+			"None=>return(self.entry,None)",
+			"letmutentry=self.entry;",
+			"publish_cached_receive(&mutentry.refined,prepared)",
+			"publish_future_receive(&mutentry.refined,pending)",
+			"(entry,Some(plaintext))",
+		],
+		"ratchet core receive publication after successful open",
+	)?;
+
+	for theorem in [
+		"theorem ratchet.concrete.begin_send_nonexhausted_exact",
+		"theorem ratchet.concrete.begin_send_exhausted_restores_entry",
+		"theorem ratchet.concrete.SendKdf.request_exact",
+		"theorem ratchet.concrete.SendKdf.resume_exact",
+		"theorem ratchet.concrete.SendSeal.finish_returns_interpreter_result",
+		"theorem ratchet.concrete.begin_receive_rejected_plan_restores_entry",
+		"theorem ratchet.concrete.begin_receive_cached_exact",
+		"theorem ratchet.concrete.begin_receive_future_request_exact",
+		"theorem ratchet.concrete.ReceiveKdf.request_exact",
+		"theorem ratchet.concrete.ReceiveOpen.reject_exact",
+		"theorem ratchet.concrete.ReceiveOpen.context_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_sequence_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_material_exact",
+		"theorem ratchet.concrete.ReceiveOpen.finish_failure_restores_entry",
+		"theorem ratchet.concrete.ReceiveOpen.finish_future_success_publishes_same_plaintext",
+		"theorem ratchet.concrete.ReceiveOpen.finish_cached_success_publishes_same_plaintext",
+	] {
+		require_once(
+			&snapshot.lean_ratchet_effect,
+			theorem,
+			"ratchet checked structural Lean anchor",
+		)?;
+	}
+	require_once(
+		&snapshot.lean_ratchet_effect_refinement,
+		"theorem ReceiveFailureTrace.result_eq_entry",
+		"ratchet checked structural failure-trace anchor",
+	)?;
+	for theorem in [
+		"def ResponseRefines",
+		"theorem begin_send_refines",
+		"theorem SendKdf.resume_refines",
+		"theorem SendSeal.finish_refines_ideal_send",
+		"theorem ReceiveOpen.failure_preserves_refinement",
+		"theorem ReceiveFailureTrace.preserves_refinement",
+		"def OpenReplyRefines",
+		"theorem begin_receive_cached_refines",
+		"theorem CachedOpenRefines.finish_success_matches_ideal",
+		"theorem CachedOpenRefines.finish_success_refines_of_publication",
+	] {
+		require_once(
+			&snapshot.lean_ratchet_effect_refinement,
+			theorem,
+			"ratchet conditional Lean refinement anchor",
+		)?;
+	}
+
+	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
+	require_once(
+		&crypto,
+		"letfunseal_frame(",
+		"ratchet ProVerif atomic seal abstraction",
+	)?;
+	require_once(
+		&crypto,
+		";open_frame(",
+		"ratchet ProVerif ideal exact open abstraction",
+	)?;
+	let symbolic = format!(
+		"{}{}",
+		crypto,
+		compact(&uncommented_pv(&snapshot.environment)?)
+	);
+	for absent in [
+		"RatchetKernelSlot",
+		"begin_send",
+		"begin_receive",
+		"ratchet_hkdf",
+		"SendKdfRequested",
+		"ReceiveKdfRequested",
+	] {
+		forbid(
+			&symbolic,
+			absent,
+			"concrete ratchet driver step in atomic ProVerif model",
+		)?;
+	}
+	Ok(())
+}
+
 fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_manifest(&snapshot.interface)?;
 	validate_pv(snapshot)?;
@@ -2310,6 +2773,7 @@ fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_phase2_source(snapshot)?;
 	validate_cryptoframe_source(snapshot)?;
 	validate_endpoint_frame_context_wiring(snapshot)?;
+	validate_ratchet_effect_driver(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
 
@@ -2497,6 +2961,23 @@ fn assert_rejected(name: &str, diagnostic: &str, mutate: impl FnOnce(&mut Snapsh
 	assert!(
 		error.contains(diagnostic),
 		"mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn assert_ratchet_driver_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_ratchet_effect_driver(&snapshot) {
+		Ok(()) => panic!("ratchet driver mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"ratchet driver mutation {name} produced wrong diagnostic: {error}"
 	);
 }
 
@@ -5238,6 +5719,811 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 	}
 
 	assert_eq!(mutation_count, ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT);
+}
+
+const RATCHET_EFFECT_DRIVER_MUTATION_COUNT: usize = 154;
+
+#[test]
+fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+	let driver_facts = parse_facts(INTERFACE)
+		.unwrap()
+		.into_iter()
+		.filter(|fact| fact.starts_with("ratchet.driver."))
+		.collect::<Vec<_>>();
+	assert_eq!(driver_facts.len(), 38);
+	for fact in driver_facts {
+		let (key, _) = fact.split_once('=').unwrap();
+		assert_rejected(&format!("ratchet_driver_fact_{key}"), key, |snapshot| {
+			mutate_fact(&mut snapshot.interface, key, "mutated");
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"ratchet_driver_slot_take_duplicates_take",
+			"fn take(&mut self)",
+			"self.kernel\n\t\t\t.take()",
+			"self.kernel.take();\n\t\tself.kernel\n\t\t\t.take()",
+			"ratchet driver affine slot take",
+		),
+		(
+			"ratchet_driver_slot_put_omits_empty_assertion",
+			"fn put(&mut self",
+			"assert!(\n\t\t\tself.kernel.is_none(),\n\t\t\t\"a completed ratchet effect must return to an empty kernel slot\"\n\t\t);",
+			"if self.kernel.is_some() {\n\t\t\tpanic!(\"a completed ratchet effect must return to an empty kernel slot\");\n\t\t}",
+			"ratchet driver returned-kernel slot put",
+		),
+		(
+			"ratchet_driver_slot_put_drops_returned_kernel",
+			"fn put(&mut self",
+			"self.kernel = Some(kernel);",
+			"drop(kernel);",
+			"ratchet driver returned-kernel slot put",
+		),
+		(
+			"ratchet_driver_kdf_uses_fixed_request",
+			"pub(crate) fn ratchet_hkdf",
+			"symmetric_ratchet_hkdf(request)",
+			"symmetric_ratchet_hkdf(&verified_ratchet::SymmetricRatchetKdfRequest::new([0; KDF_STATE_SIZE]))",
+			"ratchet driver typed KDF reply",
+		),
+		(
+			"ratchet_driver_kdf_returns_untyped_bytes",
+			"pub(crate) fn ratchet_hkdf",
+			"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+			"symmetric_ratchet_hkdf(request)",
+			"ratchet driver typed KDF reply",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.adapter_ratchet, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"ratchet_driver_send_context_swaps_target_and_sender",
+			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t};",
+			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid: sender_kid,\n\t\tsender_kid: target_kid,\n\t\tassociated_data,\n\t};",
+			"ratchet send exact frame context",
+		),
+		(
+			"ratchet_driver_send_context_replaces_plaintext",
+			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t};",
+			"let context = SealFrameContext {\n\t\tbytes: &[],\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t};",
+			"ratchet send exact frame context",
+		),
+		(
+			"ratchet_driver_send_context_replaces_associated_data",
+			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data,\n\t};",
+			"let context = SealFrameContext {\n\t\tbytes,\n\t\ttarget_kid,\n\t\tsender_kid,\n\t\tassociated_data: &[0; AD_SIZE],\n\t};",
+			"ratchet send exact frame context",
+		),
+		(
+			"ratchet_driver_send_duplicates_kernel_take",
+			"let kernel = ratchet.refined.take();",
+			"let kernel = ratchet.refined.take();\n\tratchet.refined.put(kernel);\n\tlet kernel = ratchet.refined.take();",
+			"ratchet send affine kernel take",
+		),
+		(
+			"ratchet_driver_send_omits_begin",
+			"verified_ratchet::begin_send(kernel, context)",
+			"panic!(\"begin send omitted\")",
+			"ratchet send begin effect",
+		),
+		(
+			"ratchet_driver_send_begins_with_rebuilt_context",
+			"verified_ratchet::begin_send(kernel, context)",
+			"verified_ratchet::begin_send(kernel, SealFrameContext { bytes, target_kid: sender_kid, sender_kid: target_kid, associated_data })",
+			"ratchet send begin effect",
+		),
+		(
+			"ratchet_driver_send_exhaustion_drops_kernel",
+			"ratchet.refined.put(kernel);\n\t\t\treturn None;",
+			"drop(kernel);\n\t\t\treturn None;",
+			"ratchet send exhausted and KDF branches",
+		),
+		(
+			"ratchet_driver_send_exhaustion_puts_after_return",
+			"ratchet.refined.put(kernel);\n\t\t\treturn None;",
+			"return None;\n\t\t\tratchet.refined.put(kernel);",
+			"ratchet send exhausted and KDF branches",
+		),
+		(
+			"ratchet_driver_send_uses_fixed_request",
+			"ratchet_hkdf(pending.request())",
+			"ratchet_hkdf(&verified_ratchet::SymmetricRatchetKdfRequest::new([0; KDF_STATE_SIZE]))",
+			"ratchet send exact pending request interpretation",
+		),
+		(
+			"ratchet_driver_send_omits_request_interpretation",
+			"let response = ratchet_hkdf(pending.request());",
+			"let response = verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]);",
+			"ratchet send exact pending request interpretation",
+		),
+		(
+			"ratchet_driver_send_resumes_with_wrong_response",
+			"pending.resume(response)",
+			"pending.resume(verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]))",
+			"ratchet send same-pending resume",
+		),
+		(
+			"ratchet_driver_send_resumes_different_pending",
+			"pending.resume(response)",
+			"unsafe { std::hint::unreachable_unchecked() }.resume(response)",
+			"ratchet send same-pending resume",
+		),
+		(
+			"ratchet_driver_send_omits_pending_resume",
+			"let seal = pending.resume(response);",
+			"let seal = panic!(\"pending resume omitted\");",
+			"ratchet send same-pending resume",
+		),
+		(
+			"ratchet_driver_send_seals_with_wrong_material",
+			"seal_frame(seal.material(), seal.sequence(), seal.context())",
+			"seal_frame(panic!(), seal.sequence(), seal.context())",
+			"ratchet send seal capability handoff",
+		),
+		(
+			"ratchet_driver_send_seals_with_wrong_sequence",
+			"seal_frame(seal.material(), seal.sequence(), seal.context())",
+			"seal_frame(seal.material(), seal.sequence().wrapping_add(1), seal.context())",
+			"ratchet send seal capability handoff",
+		),
+		(
+			"ratchet_driver_send_seals_with_rebuilt_context",
+			"seal_frame(seal.material(), seal.sequence(), seal.context())",
+			"seal_frame(seal.material(), seal.sequence(), &SealFrameContext { bytes, target_kid: sender_kid, sender_kid: target_kid, associated_data })",
+			"ratchet send seal capability handoff",
+		),
+		(
+			"ratchet_driver_send_omits_seal",
+			"let sealed = seal_frame(seal.material(), seal.sequence(), seal.context());",
+			"let sealed: Option<Encrypted> = None;",
+			"ratchet send seal capability handoff",
+		),
+		(
+			"ratchet_driver_send_finishes_with_none",
+			"seal.finish(sealed)",
+			"seal.finish(None::<Encrypted>)",
+			"ratchet send capability finish",
+		),
+		(
+			"ratchet_driver_send_omits_finish",
+			"let (kernel, sealed) = seal.finish(sealed);",
+			"let (kernel, sealed) = panic!(\"seal finish omitted\");",
+			"ratchet send capability finish",
+		),
+		(
+			"ratchet_driver_send_drops_finished_kernel",
+			"ratchet.refined.put(kernel);\n\tsealed",
+			"drop(kernel);\n\tsealed",
+			"ratchet send returned-kernel puts",
+		),
+		(
+			"ratchet_driver_send_returns_before_put",
+			"ratchet.refined.put(kernel);\n\tsealed",
+			"return sealed;\n\tratchet.refined.put(kernel);",
+			"ratchet send returned-kernel put before result",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn encrypt_message_with_ratchet",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_send_moves_empty_gate_after_take",
+		"ratchet send empty-input precheck",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn encrypt_message_with_ratchet",
+				"if bytes.is_empty() {\n\t\treturn None;\n\t}\n",
+				"",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn encrypt_message_with_ratchet",
+				"let kernel = ratchet.refined.take();",
+				"let kernel = ratchet.refined.take();\n\tif bytes.is_empty() {\n\t\tratchet.refined.put(kernel);\n\t\treturn None;\n\t}",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_send_invokes_cancel",
+		"ratchet send production cancellation",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn encrypt_message_with_ratchet",
+				"let response = ratchet_hkdf(pending.request());",
+				"pending.cancel();\n\tlet response = ratchet_hkdf(pending.request());",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to) in [
+		(
+			"ratchet_driver_core_send_finish_discards_interpreter_result",
+			"(self.advanced, sealed)",
+			"(self.advanced, None)",
+		),
+		(
+			"ratchet_driver_core_send_finish_discards_advanced_kernel",
+			"(self.advanced, sealed)",
+			"(panic!(), sealed)",
+		),
+	] {
+		assert_ratchet_driver_rejected(
+			name,
+			"ratchet send finish preserves interpreter result on advanced kernel",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.core_ratchet_concrete,
+					"impl<Context> SendSeal<Context>",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"ratchet_driver_receive_context_uses_expected_sender",
+			"sender_kid: kid,",
+			"sender_kid: expected_sender_kid,",
+			"ratchet receive prechecks and effect start order",
+		),
+		(
+			"ratchet_driver_receive_context_replaces_ciphertext",
+			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
+			"let context = OpenFrameContext {\n\t\tciphertext: &[],\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
+			"ratchet receive prechecks and effect start order",
+		),
+		(
+			"ratchet_driver_receive_context_replaces_associated_data",
+			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
+			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data: &[0; AD_SIZE],\n\t\tsender_kid: kid,\n\t};",
+			"ratchet receive prechecks and effect start order",
+		),
+		(
+			"ratchet_driver_receive_duplicates_kernel_take",
+			"let kernel = ratchet.refined.take();",
+			"let kernel = ratchet.refined.take();\n\tratchet.refined.put(kernel);\n\tlet kernel = ratchet.refined.take();",
+			"ratchet receive affine kernel take",
+		),
+		(
+			"ratchet_driver_receive_begins_with_wrong_sequence",
+			"verified_ratchet::begin_receive(kernel, key_seq, context)",
+			"verified_ratchet::begin_receive(kernel, key_seq.wrapping_add(1), context)",
+			"ratchet receive prechecks and effect start order",
+		),
+		(
+			"ratchet_driver_receive_begins_with_rebuilt_context",
+			"verified_ratchet::begin_receive(kernel, key_seq, context)",
+			"verified_ratchet::begin_receive(kernel, key_seq, OpenFrameContext { ciphertext, associated_data, sender_kid: expected_sender_kid })",
+			"ratchet receive prechecks and effect start order",
+		),
+		(
+			"ratchet_driver_receive_rejected_drops_kernel",
+			"ratchet.refined.put(kernel);\n\t\t\t\treturn None;",
+			"drop(kernel);\n\t\t\t\treturn None;",
+			"ratchet receive rejected branch",
+		),
+		(
+			"ratchet_driver_receive_rejected_puts_after_return",
+			"ratchet.refined.put(kernel);\n\t\t\t\treturn None;",
+			"return None;\n\t\t\t\tratchet.refined.put(kernel);",
+			"ratchet receive rejected branch",
+		),
+		(
+			"ratchet_driver_receive_fixes_loop_iteration_count",
+			"let plaintext = loop {\n\t\teffect = match effect {",
+			"let mut remaining_iterations = 1usize;\n\tlet plaintext = loop {\n\t\tif remaining_iterations == 0 { return None; }\n\t\tremaining_iterations -= 1;\n\t\teffect = match effect {",
+			"ratchet receive effect loop without fixed iteration count",
+		),
+		(
+			"ratchet_driver_receive_uses_fixed_kdf_request",
+			"ratchet_hkdf(pending.request())",
+			"ratchet_hkdf(&verified_ratchet::SymmetricRatchetKdfRequest::new([0; KDF_STATE_SIZE]))",
+			"ratchet receive exact pending request interpretation",
+		),
+		(
+			"ratchet_driver_receive_omits_kdf_request",
+			"let response = ratchet_hkdf(pending.request());",
+			"let response = verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]);",
+			"ratchet receive exact pending request interpretation",
+		),
+		(
+			"ratchet_driver_receive_resumes_with_wrong_response",
+			"pending.resume(response)",
+			"pending.resume(verified_ratchet::RatchetKdfResponse::from_bytes([0; verified_ratchet::RATCHET_KDF_OUTPUT_SIZE]))",
+			"ratchet receive same-pending resume",
+		),
+		(
+			"ratchet_driver_receive_resumes_different_pending",
+			"pending.resume(response)",
+			"unsafe { std::hint::unreachable_unchecked() }.resume(response)",
+			"ratchet receive same-pending resume",
+		),
+		(
+			"ratchet_driver_receive_omits_pending_resume",
+			"pending.resume(response)",
+			"panic!(\"pending resume omitted\")",
+			"ratchet receive same-pending resume",
+		),
+		(
+			"ratchet_driver_receive_kdf_publishes_slot",
+			"let response = ratchet_hkdf(pending.request());",
+			"ratchet.refined.put(panic!(\"premature publication\"));\n\t\t\t\tlet response = ratchet_hkdf(pending.request());",
+			"ratchet receive KDF-arm live publication",
+		),
+		(
+			"ratchet_driver_receive_no_material_omits_material_gate",
+			"let Some(material) = open.material() else {",
+			"let material = open.material().unwrap_or_else(|| panic!(\"material missing\"));\n\t\t\t\tif false {",
+			"ratchet receive no-material rejection",
+		),
+		(
+			"ratchet_driver_receive_no_material_omits_reject",
+			"let (kernel, _) = open.reject();",
+			"let kernel = panic!(\"open reject omitted\");",
+			"ratchet receive no-material rejection",
+		),
+		(
+			"ratchet_driver_receive_no_material_drops_kernel",
+			"ratchet.refined.put(kernel);\n\t\t\t\t\treturn None;",
+			"drop(kernel);\n\t\t\t\t\treturn None;",
+			"ratchet receive no-material rejection",
+		),
+		(
+			"ratchet_driver_receive_no_material_puts_after_return",
+			"ratchet.refined.put(kernel);\n\t\t\t\t\treturn None;",
+			"return None;\n\t\t\t\t\tratchet.refined.put(kernel);",
+			"ratchet receive no-material rejection",
+		),
+		(
+			"ratchet_driver_receive_opens_with_wrong_material",
+			"open_frame(material, open.sequence(), open.context())",
+			"open_frame(panic!(), open.sequence(), open.context())",
+			"ratchet receive open capability handoff",
+		),
+		(
+			"ratchet_driver_receive_opens_with_wrong_sequence",
+			"open_frame(material, open.sequence(), open.context())",
+			"open_frame(material, open.sequence().wrapping_add(1), open.context())",
+			"ratchet receive open capability handoff",
+		),
+		(
+			"ratchet_driver_receive_opens_with_rebuilt_context",
+			"open_frame(material, open.sequence(), open.context())",
+			"open_frame(material, open.sequence(), &OpenFrameContext { ciphertext, associated_data, sender_kid: expected_sender_kid })",
+			"ratchet receive open capability handoff",
+		),
+		(
+			"ratchet_driver_receive_omits_open",
+			"let opened = open_frame(material, open.sequence(), open.context());",
+			"let opened: Option<Vec<u8>> = None;",
+			"ratchet receive open capability handoff",
+		),
+		(
+			"ratchet_driver_receive_finishes_with_none",
+			"open.finish(opened)",
+			"open.finish(None::<Vec<u8>>)",
+			"ratchet receive capability finish",
+		),
+		(
+			"ratchet_driver_receive_omits_finish",
+			"let (kernel, opened) = open.finish(opened);",
+			"let (kernel, opened) = panic!(\"open finish omitted\");",
+			"ratchet receive capability finish",
+		),
+		(
+			"ratchet_driver_receive_drops_finished_kernel",
+			"ratchet.refined.put(kernel);\n\t\t\t\tbreak opened?;",
+			"drop(kernel);\n\t\t\t\tbreak opened?;",
+			"ratchet receive returned-kernel puts",
+		),
+		(
+			"ratchet_driver_receive_questions_result_before_put",
+			"let (kernel, opened) = open.finish(opened);\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\tbreak opened?;",
+			"let (kernel, opened) = open.finish(opened);\n\t\t\t\tlet opened = opened?;\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\tbreak opened;",
+			"ratchet receive open and terminal publication order",
+		),
+		(
+			"ratchet_driver_receive_returns_expected_sender_metadata",
+			"key_id: kid,",
+			"key_id: expected_sender_kid,",
+			"ratchet receive parsed result metadata",
+		),
+		(
+			"ratchet_driver_receive_returns_wrong_sequence_metadata",
+			"seq: key_seq,",
+			"seq: key_seq.wrapping_add(1),",
+			"ratchet receive parsed result metadata",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_receive_invokes_cancel",
+		"ratchet receive production cancellation",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"let response = ratchet_hkdf(pending.request());",
+				"pending.cancel();\n\t\t\t\tlet response = ratchet_hkdf(pending.request());",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, gate) in [
+		(
+			"ratchet_driver_receive_moves_sender_gate_after_take",
+			"if kid != expected_sender_kid {\n\t\treturn None;\n\t}\n",
+		),
+		(
+			"ratchet_driver_receive_moves_length_gate_after_take",
+			"if ct_len <= MESSAGE_OVERHEAD {\n\t\treturn None;\n\t}\n",
+		),
+	] {
+		assert_ratchet_driver_rejected(
+			name,
+			"ratchet receive prechecks and effect start order",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.adapter_ratchet,
+					"pub(crate) fn decrypt_message_with_ratchet",
+					gate,
+					"",
+				);
+				replace_once_after(
+					&mut snapshot.adapter_ratchet,
+					"pub(crate) fn decrypt_message_with_ratchet",
+					"let kernel = ratchet.refined.take();",
+					&format!("let kernel = ratchet.refined.take();\n\t{gate}"),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_receive_moves_empty_gate_after_take",
+		"ratchet receive prechecks and effect start order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"if data.is_empty() {\n\t\treturn None;\n\t}\n",
+				"",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"let kernel = ratchet.refined.take();",
+				"let kernel = ratchet.refined.take();\n\tif data.is_empty() {\n\t\tratchet.refined.put(kernel);\n\t\treturn None;\n\t}",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_receive_takes_kernel_before_typed_parse",
+		"ratchet receive prechecks and effect start order",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"let kernel = ratchet.refined.take();",
+				"",
+			);
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"pub(crate) fn decrypt_message_with_ratchet",
+				"if data.is_empty() {\n\t\treturn None;\n\t}",
+				"if data.is_empty() {\n\t\treturn None;\n\t}\n\tlet kernel = ratchet.refined.take();",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"ratchet_driver_core_phase_renames_send_start",
+			"pub enum SendStart<Context>",
+			"pub enum SendStart<Context>",
+			"pub enum RenamedSendStart<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_send_kdf",
+			"pub struct SendKdf<Context>",
+			"pub struct SendKdf<Context>",
+			"pub struct RenamedSendKdf<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_send_seal",
+			"pub struct SendSeal<Context>",
+			"pub struct SendSeal<Context>",
+			"pub struct RenamedSendSeal<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_receive_effect",
+			"pub enum ReceiveEffect<Context>",
+			"pub enum ReceiveEffect<Context>",
+			"pub enum RenamedReceiveEffect<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_receive_kdf",
+			"pub struct ReceiveKdf<Context>",
+			"pub struct ReceiveKdf<Context>",
+			"pub struct RenamedReceiveKdf<Context>",
+			"ratchet core affine phase API",
+		),
+		(
+			"ratchet_driver_core_phase_renames_receive_open",
+			"pub struct ReceiveOpen<Context>",
+			"pub struct ReceiveOpen<Context>",
+			"pub struct RenamedReceiveOpen<Context>",
+			"ratchet core affine phase API",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"ratchet_driver_core_finish_none_drops_entry",
+			"impl<Context> ReceiveOpen<Context>",
+			"None => return (self.entry, None)",
+			"None => return (panic!(\"entry dropped\"), None)",
+			"ratchet receive finish failure restores entry",
+		),
+		(
+			"ratchet_driver_core_finish_cached_publication_omitted",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_cached_receive(&mut entry.refined, prepared);",
+			"drop(prepared);",
+			"ratchet core cached receive publication branch",
+		),
+		(
+			"ratchet_driver_core_finish_future_publication_omitted",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_future_receive(&mut entry.refined, pending);",
+			"drop(pending);",
+			"ratchet core future receive publication branch",
+		),
+		(
+			"ratchet_driver_core_finish_cached_uses_future_publisher",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_cached_receive(&mut entry.refined, prepared);",
+			"publish_future_receive(&mut entry.refined, panic!(\"wrong prepared type\"));",
+			"ratchet core cached receive publication branch",
+		),
+		(
+			"ratchet_driver_core_finish_future_uses_cached_publisher",
+			"impl<Context> ReceiveOpen<Context>",
+			"publish_future_receive(&mut entry.refined, pending);",
+			"publish_cached_receive(&mut entry.refined, panic!(\"wrong prepared type\"));",
+			"ratchet core future receive publication branch",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(&mut snapshot.core_ratchet_concrete, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, insertion, diagnostic) in [
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_control",
+			"kernel.refined.control = kernel.refined.control;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_send_chain",
+			"kernel.refined.send_chain = kernel.refined.send_chain;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_receive_chain",
+			"kernel.refined.receive_chain = kernel.refined.receive_chain;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+		(
+			"ratchet_driver_core_begin_receive_mutates_live_receive_slots",
+			"kernel.refined.receive_slots = kernel.refined.receive_slots;\n\t",
+			"ratchet core begin_receive live publication",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet_concrete,
+				"pub fn begin_receive<Context>",
+				"let plan = plan_receive_until",
+				&format!("{insertion}let plan = plan_receive_until"),
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, insertion, diagnostic) in [
+		(
+			"ratchet_driver_core_receive_kdf_publishes_cached_early",
+			"let _ = publish_cached_receive::<RatchetChain, RatchetChain, RatchetMaterial>;\n\t\t",
+			"ratchet core receive KDF cached publication",
+		),
+		(
+			"ratchet_driver_core_receive_kdf_publishes_future_early",
+			"let _ = publish_future_receive::<RatchetChain, RatchetChain, RatchetMaterial>;\n\t\t",
+			"ratchet core receive KDF future publication",
+		),
+	] {
+		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
+			replace_once_after(
+				&mut snapshot.core_ratchet_concrete,
+				"impl<Context> ReceiveKdf<Context>",
+				"if self.remaining == 0 {",
+				&format!("{insertion}if self.remaining == 0 {{"),
+			);
+		});
+		mutation_count += 1;
+	}
+
+	let structural_anchors = [
+		"theorem ratchet.concrete.begin_send_nonexhausted_exact",
+		"theorem ratchet.concrete.begin_send_exhausted_restores_entry",
+		"theorem ratchet.concrete.SendKdf.request_exact",
+		"theorem ratchet.concrete.SendKdf.resume_exact",
+		"theorem ratchet.concrete.SendSeal.finish_returns_interpreter_result",
+		"theorem ratchet.concrete.begin_receive_rejected_plan_restores_entry",
+		"theorem ratchet.concrete.begin_receive_cached_exact",
+		"theorem ratchet.concrete.begin_receive_future_request_exact",
+		"theorem ratchet.concrete.ReceiveKdf.request_exact",
+		"theorem ratchet.concrete.ReceiveOpen.reject_exact",
+		"theorem ratchet.concrete.ReceiveOpen.context_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_sequence_exact",
+		"theorem ratchet.concrete.ReceiveOpen.future_material_exact",
+		"theorem ratchet.concrete.ReceiveOpen.finish_failure_restores_entry",
+		"theorem ratchet.concrete.ReceiveOpen.finish_future_success_publishes_same_plaintext",
+		"theorem ratchet.concrete.ReceiveOpen.finish_cached_success_publishes_same_plaintext",
+	];
+	for (index, anchor) in structural_anchors.into_iter().enumerate() {
+		assert_ratchet_driver_rejected(
+			&format!("ratchet_driver_lean_structural_anchor_{index}_renamed"),
+			"ratchet checked structural Lean anchor",
+			move |snapshot| {
+				replace_once(
+					&mut snapshot.lean_ratchet_effect,
+					anchor,
+					&anchor.replace("theorem ", "theorem renamed_"),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_lean_failure_trace_anchor_renamed",
+		"ratchet checked structural failure-trace anchor",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.lean_ratchet_effect_refinement,
+				"theorem ReceiveFailureTrace.result_eq_entry",
+				"theorem ReceiveFailureTrace.renamed_result_eq_entry",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	let refinement_anchors = [
+		"def ResponseRefines",
+		"theorem begin_send_refines",
+		"theorem SendKdf.resume_refines",
+		"theorem SendSeal.finish_refines_ideal_send",
+		"theorem ReceiveOpen.failure_preserves_refinement",
+		"theorem ReceiveFailureTrace.preserves_refinement",
+		"def OpenReplyRefines",
+		"theorem begin_receive_cached_refines",
+		"theorem CachedOpenRefines.finish_success_matches_ideal",
+		"theorem CachedOpenRefines.finish_success_refines_of_publication",
+	];
+	for (index, anchor) in refinement_anchors.into_iter().enumerate() {
+		assert_ratchet_driver_rejected(
+			&format!("ratchet_driver_lean_conditional_anchor_{index}_renamed"),
+			"ratchet conditional Lean refinement anchor",
+			move |snapshot| {
+				let renamed = if anchor.starts_with("def ") {
+					anchor.replacen("def ", "def renamed_", 1)
+				} else {
+					anchor.replacen("theorem ", "theorem renamed_", 1)
+				};
+				replace_once(
+					&mut snapshot.lean_ratchet_effect_refinement,
+					anchor,
+					&renamed,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_proverif_renames_atomic_seal",
+		"ratchet ProVerif atomic seal abstraction",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.crypto,
+				"letfun seal_frame(",
+				"letfun renamed_seal_frame(",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_ratchet_driver_rejected(
+		"ratchet_driver_proverif_renames_ideal_open",
+		"ratchet ProVerif ideal exact open abstraction",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.crypto,
+				"reduc forall key: bitstring",
+				"  open_frame(",
+				"  renamed_open_frame(",
+			);
+		},
+	);
+	mutation_count += 1;
+	for concrete_step in [
+		"RatchetKernelSlot",
+		"begin_send",
+		"begin_receive",
+		"ratchet_hkdf",
+		"SendKdfRequested",
+		"ReceiveKdfRequested",
+	] {
+		assert_ratchet_driver_rejected(
+			&format!("ratchet_driver_proverif_exposes_{concrete_step}"),
+			"concrete ratchet driver step in atomic ProVerif model",
+			move |snapshot| {
+				snapshot
+					.crypto
+					.push_str(&format!("\nfun {concrete_step}(bitstring): bitstring.\n"));
+			},
+		);
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, RATCHET_EFFECT_DRIVER_MUTATION_COUNT);
 }
 
 #[test]
