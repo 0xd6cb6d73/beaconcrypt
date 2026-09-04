@@ -23,3 +23,8 @@ rev = "v4.31.0"
 name = "Hax"
 git = { url = "https://github.com/cryspen/hax-lean" }
 rev = "v0.3.12"
+
+[[require]]
+name = "VCVio"
+git = "https://github.com/Verified-zkEVM/VCVio.git"
+rev = "cbd4144b51d92da00dd50f05e068b2348fa6e529"

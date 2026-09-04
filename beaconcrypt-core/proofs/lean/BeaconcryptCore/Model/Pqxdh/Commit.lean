@@ -167,6 +167,48 @@ theorem ctxDistinct_of_noCtxCollision (c : Crypto) {mk mk' : Bytes × Bytes}
 
 /-! ## Consequences for the record layer -/
 
+/-- **Two distinct successful openings expose a BLAKE2b collision.** The witness uses the tag parsed from the shared wire payload, so the caller need not provide an encoder-image witness for an adversarial payload. -/
+theorem openRecord_double_opening_yields_ctx_collision (c : Crypto)
+    {mk mk' : Bytes × Bytes} {ad ad' : RecordAD} {b pt pt' : Bytes}
+    (hw : RecordWf mk ad) (hw' : RecordWf mk' ad')
+    (h : openRecord c mk ad b = some pt)
+    (h' : openRecord c mk' ad' b = some pt')
+    (hne : ¬ (mk = mk' ∧ ad = ad' ∧ pt = pt')) :
+    ∃ r, decodeRecord b = some r ∧
+      ctxPreimage mk ad r.tag ≠ ctxPreimage mk' ad' r.tag ∧
+      c.blake2b (ctxPreimage mk ad r.tag) =
+        c.blake2b (ctxPreimage mk' ad' r.tag) := by
+  rcases hd : decodeRecord b with _ | r
+  · rw [openRecord, hd] at h
+    simp at h
+  · rw [openRecord, hd] at h h'
+    simp only [Option.bind_some] at h h'
+    by_cases hc : r.commit = ctxCommit c mk ad r.tag
+    · by_cases hc' : r.commit = ctxCommit c mk' ad' r.tag
+      · have htag : r.tag.length = 16 := by
+          rw [decodeRecord] at hd
+          split at hd
+          · cases hd
+            simp
+            omega
+          · exact absurd hd (by simp)
+        refine ⟨r, rfl, ?_, ?_⟩
+        · intro heq
+          obtain ⟨hk, hA, _⟩ := ctxPreimage_inj hw hw' htag htag heq
+          apply hne
+          refine ⟨hk, hA, ?_⟩
+          rw [if_pos hc] at h
+          rw [if_pos hc'] at h'
+          rw [hk, hA] at h
+          rw [h] at h'
+          exact Option.some.inj h'
+        · rw [← ctxCommit_eq, ← ctxCommit_eq]
+          exact hc.symm.trans hc'
+      · rw [if_neg hc'] at h'
+        simp at h'
+    · rw [if_neg hc] at h
+      simp at h
+
 /-- **The record layer is key- and context-committing.**  If the two contexts do not
 collide, a wire ciphertext `CT ‖ T ‖ T*` opens under at most one message key and one
 record context — and then to a single plaintext.  In particular the sequence number

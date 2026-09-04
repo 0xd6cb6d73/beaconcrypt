@@ -1,10 +1,26 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(* All three properties must be false.
+(* All four properties must be false.
    This is an expected attack witness, not a positive active post-quantum security theorem. *)
 query attacker(INITIAL_SECRET).
 
-query event(QuantumInitialSecretRecovered(INITIAL_SECRET)).
+query selected_pq_public_key: bitstring,
+      server_ephemeral: bitstring,
+      kem_ciphertext: bitstring,
+      initial_frame: bitstring,
+      response: bitstring,
+      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
+      root: bitstring;
+  event(QuantumInitialSecretRecovered(
+    selected_pq_public_key,
+    server_ephemeral,
+    kem_ciphertext,
+    initial_frame,
+    response,
+    root_input,
+    root,
+    INITIAL_SECRET
+  )).
 
 query server_identity: bitstring,
       beacon_identity: bitstring,
@@ -29,3 +45,7 @@ query server_identity: bitstring,
     registration_id,
     origin
   )).
+
+query bundle: authenticated_init_bundle_t;
+  inj-event(ServerBundleAccepted(bundle)) ==>
+  inj-event(BeaconBundleInitiated(bundle)).

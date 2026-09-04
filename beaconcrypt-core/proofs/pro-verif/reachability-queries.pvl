@@ -20,6 +20,9 @@ query server_identity: bitstring,
     origin
   )).
 
+query bundle: authenticated_init_bundle_t;
+  event(ServerBundleAccepted(bundle)).
+
 query server_identity: bitstring,
       beacon_identity: bitstring,
       init: beaconcrypt_core__pqxdh__t_InitKex,
@@ -50,28 +53,8 @@ query server_identity: bitstring,
     origin
   )).
 
-query server_identity: bitstring,
-      beacon_identity: bitstring,
-      init: beaconcrypt_core__pqxdh__t_InitKex,
-      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
-      assigned_key_id: key_id,
-      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
-      root: bitstring,
-      associated_data: bitstring,
-      session: bitstring,
-      origin: bitstring;
-  event(BeaconCommitted(
-    server_identity,
-    beacon_identity,
-    init,
-    registration_id,
-    assigned_key_id,
-    root_input,
-    root,
-    associated_data,
-    session,
-    origin
-  )).
+query transcript: establishment_transcript_t;
+  event(BeaconCommitted(transcript)).
 
 query session: bitstring,
       message_direction: direction,
@@ -90,28 +73,8 @@ query session: bitstring,
 
 (* A self-signed registration whose complete beacon state is attacker-known
    reaches the normal response-commit point. *)
-query server_identity: bitstring,
-      beacon_identity: bitstring,
-      init: beaconcrypt_core__pqxdh__t_InitKex,
-      registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
-      assigned_key_id: key_id,
-      root_input: beaconcrypt_core__pqxdh__t_RootKeyInput,
-      root: bitstring,
-      associated_data: bitstring,
-      session: bitstring,
-      plaintext: bitstring;
-  event(MaliciousRegistrationCommitted(
-    server_identity,
-    beacon_identity,
-    init,
-    registration_id,
-    assigned_key_id,
-    root_input,
-    root,
-    associated_data,
-    session,
-    plaintext
-  )).
+query transcript: establishment_transcript_t, plaintext: bitstring;
+  event(MaliciousRegistrationCommitted(transcript, plaintext)).
 
 (* This deliberate negative secrecy result proves that the attacker-known
    beacon can derive the task canary routed to the server's response. *)

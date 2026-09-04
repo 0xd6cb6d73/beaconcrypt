@@ -3,7 +3,7 @@ import BeaconcryptCore.Refinement.RatchetControl
 /-!
 # Restore and per-peer wrappers of the symmetric single ratchet control plane
 
-This file continues the verification started in `BeaconcryptCore/Model/RatchetControl.lean`,
+This file continues the verification started in `BeaconcryptCore/Refinement/RatchetControl.lean`,
 covering the two remaining parts of the extracted control plane
 (`beaconcrypt-core/src/ratchet/control.rs`):
 

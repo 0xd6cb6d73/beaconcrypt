@@ -5,12 +5,11 @@
 
   inputs = {
     hax.url = "github:cryspen/hax/4c9e2b7c75ab1e2b645a4a8361ae86c4504f9800";
-    fstar.follows = "hax/fstar";
     nixpkgs.follows = "hax/nixpkgs";
     proof-nixpkgs.url = "github:NixOS/nixpkgs/3de8f8d73e35724bf9abef41f1bdbedda1e14a31";
   };
 
-  outputs = { hax, fstar, nixpkgs, proof-nixpkgs, ... }:
+  outputs = { hax, nixpkgs, proof-nixpkgs, ... }:
     let
       systems = [
         "x86_64-linux"
@@ -24,7 +23,7 @@
         proofs = hax.devShells.${system}.ci-examples.overrideAttrs (old: {
           nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
             hax.packages.${system}.rustc
-            fstar.packages.${system}.z3
+            nixpkgs.legacyPackages.${system}.rustup
             nixpkgs.legacyPackages.${system}.ripgrep
             nixpkgs.legacyPackages.${system}.elan
             proof-nixpkgs.legacyPackages.${system}.coqPackages_9_0.coq

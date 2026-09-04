@@ -2,4 +2,8 @@
 
 process
   out(c, ed_public(SERVER_IDENTITY_SECRET));
-  (!HonestBeacon() | !Server() | !CompromiseBeaconState())
+  (
+    !HonestBeacon(BEACON_RECORD_SECRET)
+    | !Server(INITIAL_SECRET, CACHED_SECRET, ADVANCE_SECRET, FUTURE_SECRET)
+    | !CompromiseBeaconState()
+  )

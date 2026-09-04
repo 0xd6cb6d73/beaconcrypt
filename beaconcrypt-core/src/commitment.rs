@@ -14,7 +14,7 @@ pub const COMMITMENT_TRANSCRIPT_SIZE: usize =
 	AEAD_KEY_SIZE + AEAD_NONCE_SIZE + ASSOCIATED_DATA_SIZE + AEAD_TAG_SIZE + (2 * ENCODED_U64_SIZE);
 
 // The literal slice bounds in `build_commitment_transcript` are intentionally tied to the public sizes.
-// Hax exposes those bounds directly to F*.
+// Hax exposes those bounds directly to Lean.
 const _: () = assert!(AEAD_KEY_SIZE == 32);
 const _: () = assert!(AEAD_NONCE_SIZE == 12);
 const _: () = assert!(ASSOCIATED_DATA_SIZE == 153);

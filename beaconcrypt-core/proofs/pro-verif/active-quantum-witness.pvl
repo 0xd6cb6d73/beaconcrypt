@@ -11,7 +11,16 @@ fun quantum_x25519_secret(bitstring): bitstring [private].
 equation forall private_key: bitstring;
   quantum_x25519_secret(x25519_public(private_key)) = private_key.
 
-event QuantumInitialSecretRecovered(bitstring).
+event QuantumInitialSecretRecovered(
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring
+).
 
 let ActiveQuantumMitm() =
   in(c, incoming_init: bitstring);
@@ -56,8 +65,8 @@ let ActiveQuantumMitm() =
     response_server_identity,
     server_ephemeral,
     kem_ciphertext,
-    assigned_key_id,
-    initial_frame
+    initial_frame,
+    assigned_key_id
   ) = response in
   let server_identity_secret = quantum_x25519_secret(
     x25519_public_from_ed(response_server_identity)
@@ -112,5 +121,14 @@ let ActiveQuantumMitm() =
   let registration_payload(=expected_binding, stolen_plaintext) =
     opened_initial
   in
-  event QuantumInitialSecretRecovered(stolen_plaintext);
+  event QuantumInitialSecretRecovered(
+    forged_pq,
+    server_ephemeral,
+    kem_ciphertext,
+    initial_frame,
+    response,
+    root_input,
+    root,
+    stolen_plaintext
+  );
   out(c, stolen_plaintext).

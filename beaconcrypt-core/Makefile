@@ -7,122 +7,9 @@ PROOF_SHELL := path:..\#proofs
 EXPECTED_RUSTC := rustc 1.93.0-nightly (843f8ce2e 2025-11-07)
 EXPECTED_CARGO := cargo 1.93.0-nightly (636800288 2025-10-31)
 EXPECTED_HAX := 0.4.0-rc.1
-EXPECTED_FSTAR := F* 2025.10.06~dev
-EXPECTED_Z3 := Z3 version 4.15.3 - 64 bit
 EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
 EXPECTED_ROCQ := The Rocq Prover, version 9.0.0
 EXPECTED_SSPROVE := 0.2.4
-HAX_ITEMS := -** \
-	+beaconcrypt_core::commitment::build_commitment_transcript \
-	+beaconcrypt_core::ratchet::control::SequenceCache \
-	+beaconcrypt_core::ratchet::RatchetChain \
-	+beaconcrypt_core::ratchet::RatchetKey \
-	+beaconcrypt_core::ratchet::RatchetNonce \
-	+beaconcrypt_core::ratchet::RatchetMaterial \
-	+beaconcrypt_core::ratchet::SymmetricRatchetKdfRequest \
-	+beaconcrypt_core::ratchet::RatchetKdfOutput \
-	+beaconcrypt_core::ratchet::split_ratchet_kdf_output \
-	+beaconcrypt_core::ratchet::derive_ratchet_step \
-	+beaconcrypt_core::ratchet::ConcreteRatchetChain \
-	+beaconcrypt_core::ratchet::concrete_ratchet_step \
-	+beaconcrypt_core::ratchet::refined::RatchetStep \
-	+beaconcrypt_core::ratchet::refined::CachedReceiveKey \
-	+beaconcrypt_core::ratchet::refined::RefinedRatchet \
-	+beaconcrypt_core::ratchet::ConcreteRatchetKernel \
-	+beaconcrypt_core::ratchet::refined::RefinedSendKey \
-	+beaconcrypt_core::ratchet::refined::RefinedRatchetRestore \
-	+beaconcrypt_core::ratchet::ConcreteRatchetRestore \
-	+beaconcrypt_core::ratchet::**::new \
-	+beaconcrypt_core::ratchet::**::from_counters \
-	+beaconcrypt_core::ratchet::**::send_sequence \
-	+beaconcrypt_core::ratchet::**::receive_sequence \
-	+beaconcrypt_core::ratchet::**::receive_cache_len \
-	+beaconcrypt_core::ratchet::**::send_chain \
-	+beaconcrypt_core::ratchet::**::receive_chain \
-	+beaconcrypt_core::ratchet::**::receive_entry_at \
-	+beaconcrypt_core::ratchet::**::sequence \
-	+beaconcrypt_core::ratchet::**::material \
-	+beaconcrypt_core::ratchet::**::key \
-	+beaconcrypt_core::ratchet::**::next_chain \
-	+beaconcrypt_core::ratchet::**::nonce \
-	+beaconcrypt_core::ratchet::**::as_bytes \
-	+beaconcrypt_core::ratchet::**::into_bytes \
-	+beaconcrypt_core::ratchet::**::into_parts \
-	+beaconcrypt_core::ratchet::**::into_step \
-	+beaconcrypt_core::ratchet::refined::refined_advance_send \
-	+beaconcrypt_core::ratchet::refined::refined_finish_send \
-	+beaconcrypt_core::ratchet::refined::refined_seal_next \
-	+beaconcrypt_core::ratchet::refined::refined_advance_receive \
-	+beaconcrypt_core::ratchet::refined::refined_advance_receive_until \
-	+beaconcrypt_core::ratchet::refined::refined_receive_key \
-	+beaconcrypt_core::ratchet::refined::refined_finish_receive \
-	+beaconcrypt_core::ratchet::refined::PreparedReceive \
-	+beaconcrypt_core::ratchet::refined::PreparedCachedReceive \
-	+beaconcrypt_core::ratchet::refined::PreparedFutureTarget \
-	+beaconcrypt_core::ratchet::refined::PendingReceive \
-	+beaconcrypt_core::ratchet::refined::prepare_cached_receive \
-	+beaconcrypt_core::ratchet::refined::prepare_future_receive_steps \
-	+beaconcrypt_core::ratchet::refined::receive_control_prefix_matches \
-	+beaconcrypt_core::ratchet::refined::pending_receive_slots_are_valid \
-	+beaconcrypt_core::ratchet::refined::pending_receive_is_valid \
-	+beaconcrypt_core::ratchet::refined::prepare_receive \
-	+beaconcrypt_core::ratchet::refined::publish_cached_receive \
-	+beaconcrypt_core::ratchet::refined::publish_future_receive_slots \
-	+beaconcrypt_core::ratchet::refined::publish_future_receive \
-	+beaconcrypt_core::ratchet::refined::refined_open_and_finish \
-	+beaconcrypt_core::ratchet::concrete_seal_next \
-	+beaconcrypt_core::ratchet::concrete_open_and_finish \
-	+beaconcrypt_core::ratchet::refined::start_refined_restore \
-	+beaconcrypt_core::ratchet::refined::refined_restore_receive_key \
-	+beaconcrypt_core::ratchet::refined::finish_refined_restore \
-	+beaconcrypt_core::ratchet::start_concrete_restore \
-	+beaconcrypt_core::ratchet::concrete_restore_receive_key \
-	+beaconcrypt_core::ratchet::finish_concrete_restore \
-	+beaconcrypt_core::ratchet::control::advance_send \
-	+beaconcrypt_core::ratchet::control::finish_send \
-	+beaconcrypt_core::ratchet::control::plan_receive_until \
-	+beaconcrypt_core::ratchet::control::advance_receive \
-	+beaconcrypt_core::ratchet::control::lookup_receive_key \
-	+beaconcrypt_core::ratchet::control::ReceiveRemoval \
-	+beaconcrypt_core::ratchet::control::ReceiveFinishWithRemoval \
-	+beaconcrypt_core::ratchet::control::finish_receive_with_removal \
-	+beaconcrypt_core::ratchet::control::finish_receive \
-	+beaconcrypt_core::ratchet::control::start_restore \
-	+beaconcrypt_core::ratchet::control::ReceiveRestoreStep \
-	+beaconcrypt_core::ratchet::control::restore_receive_key_with_slot \
-	+beaconcrypt_core::ratchet::control::restore_receive_key \
-	+beaconcrypt_core::ratchet::control::finish_restore \
-	+beaconcrypt_core::ratchet::control::replace_ratchet_for_peer \
-	+beaconcrypt_core::ratchet::control::advance_send_for_peer \
-	+beaconcrypt_core::pqxdh::beacon_start \
-	+beaconcrypt_core::pqxdh::validate_init_kex \
-	+beaconcrypt_core::pqxdh::build_root_key_input \
-	+beaconcrypt_core::pqxdh::beacon_ratchet_initialization \
-	+beaconcrypt_core::pqxdh::server_ratchet_initialization \
-	+beaconcrypt_core::pqxdh::InitialRatchetChains \
-	+beaconcrypt_core::pqxdh::split_initial_ratchet_kdf_output \
-	+beaconcrypt_core::pqxdh::derive_initial_ratchet_chains \
-	+beaconcrypt_core::pqxdh::derive_initial_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::derive_beacon_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::derive_server_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::**::derive_ratchet_kernel \
-	+beaconcrypt_core::pqxdh::**::ratchet_initialization \
-	+beaconcrypt_core::pqxdh::**::key_id_binding \
-	+beaconcrypt_core::pqxdh::beacon_prepare_finish \
-	+beaconcrypt_core::pqxdh::registration_key_id_binding \
-	+beaconcrypt_core::pqxdh::authenticate_registration_key_id_binding \
-	+beaconcrypt_core::pqxdh::beacon_commit \
-	+beaconcrypt_core::pqxdh::beacon_abort_candidate \
-	+beaconcrypt_core::pqxdh::beacon_abort_init \
-	+beaconcrypt_core::pqxdh::beacon_abort_fresh \
-	+beaconcrypt_core::pqxdh::server_accept \
-	+beaconcrypt_core::pqxdh::validate_registration_status \
-	+beaconcrypt_core::pqxdh::server_next_key_id \
-	+beaconcrypt_core::pqxdh::server_prepare_commit \
-	+beaconcrypt_core::pqxdh::server_commit \
-	+beaconcrypt_core::pqxdh::server_abort_candidate \
-	+beaconcrypt_core::pqxdh::build_associated_data
-
 HAX_PROVERIF_ITEMS := -** \
 	+!beaconcrypt_core::pqxdh::InitKex \
 	+!beaconcrypt_core::pqxdh::VerifiedInitKex \
@@ -136,17 +23,21 @@ HAX_PROVERIF_ITEMS := -** \
 
 PROVERIF_DIR := proofs/pro-verif
 PROVERIF_EXTRACTION := $(PROVERIF_DIR)/extraction/lib.pvl
+PROVERIF_INTERFACE := $(PROVERIF_DIR)/production-transcript-interface.pvl
+PROVERIF_CRYPTO_LIBS := \
+	-lib $(PROVERIF_INTERFACE) \
+	-lib $(PROVERIF_DIR)/crypto.pvl
 PROVERIF_COMMON_LIBS := \
-	-lib $(PROVERIF_DIR)/crypto.pvl \
+	$(PROVERIF_CRYPTO_LIBS) \
 	-lib $(PROVERIF_EXTRACTION) \
 	-lib $(PROVERIF_DIR)/environment.pvl
 PROVERIF_QUANTUM_LIBS := \
-	-lib $(PROVERIF_DIR)/crypto.pvl \
+	$(PROVERIF_CRYPTO_LIBS) \
 	-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
 	-lib $(PROVERIF_EXTRACTION) \
 	-lib $(PROVERIF_DIR)/environment.pvl
 PROVERIF_AEAD_CONTROL_LIBS := \
-	-lib $(PROVERIF_DIR)/crypto.pvl \
+	$(PROVERIF_CRYPTO_LIBS) \
 	-lib $(PROVERIF_DIR)/aead-commitment-negative-control.pvl \
 	-lib $(PROVERIF_DIR)/aead-commitment-negative-control-queries.pvl
 PROVERIF_CHECKER := $(PROVERIF_DIR)/check-results.awk
@@ -157,7 +48,22 @@ PROVERIF_SCENARIOS := \
 	aead-no-commitment \
 	active-classical \
 	passive-classical \
+	passive-classical-equivalence \
 	passive-quantum \
+	passive-quantum-equivalence \
+	quantum-mlkem-opacity \
+	quantum-mlkem-recovery \
+	mlkem-reencapsulation-strong \
+	mlkem-reencapsulation-weak \
+	hkdf-prefix-conformance \
+	hkdf-endpoint-controls \
+	hkdf-domain-distinct \
+	hkdf-domain-alias \
+	public-key-confusion-strong \
+	public-key-confusion-weak \
+	phase2-response-binding \
+	phase2-assigned-id-weak \
+	later-sequence-registration \
 	active-quantum \
 	baseline \
 	reachability \
@@ -188,13 +94,14 @@ LEAN_GENERATED_PATHS := \
 # The checked-in root and Lake configuration are maintained verification entry points.
 # Extraction preserves their proof imports and all-module build glob.
 
-.PHONY: verify verify-in-shell verify-fstar verify-fstar-in-shell \
+.PHONY: verify verify-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
-	check-toolchain check-fstar-policy check-lean-policy check-lean-root check-inventory \
-	extract-fstar check-fstar extract-proverif check-proverif \
-	check-proverif-extraction check-generated check-generated-fstar check-generated-lean \
+	check-proverif-transcript-fidelity \
+	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
+	extract-proverif check-proverif \
+	check-proverif-extraction check-generated check-generated-lean \
 	$(PROVERIF_CHECK_TARGETS) $(PROVERIF_VERIFY_TARGETS) \
 	$(PROVERIF_GENERATED_TARGETS) extract-lean check-lean verify-lean \
 	verify-lean-in-shell
@@ -210,23 +117,11 @@ verify:
 # without recursively starting Nix.
 verify-in-shell:
 	$(MAKE) check-toolchain
-	$(MAKE) extract-fstar
-	$(MAKE) check-fstar
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
 	$(MAKE) check-ssprove
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
-
-verify-fstar:
-	$(NIX) --extra-experimental-features 'nix-command flakes' \
-		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
-		$(MAKE) verify-fstar-in-shell
-
-verify-fstar-in-shell:
-	$(MAKE) check-toolchain
-	$(MAKE) extract-fstar
-	$(MAKE) check-fstar
 
 verify-proverif:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -265,7 +160,7 @@ check-inventory:
 	bash proofs/check-inventory.sh
 
 # Fail before extraction if PATH or a flake edit selected a tool other than the
-# reviewed proof bundle. F* uses this same exposed z3-4.15.3 executable.
+# reviewed proof bundle.
 check-toolchain:
 	@set -euo pipefail; \
 		check_version() { \
@@ -282,9 +177,6 @@ check-toolchain:
 		check_version cargo '$(EXPECTED_CARGO)' "$$(cargo --version)"; \
 		check_version hax '$(EXPECTED_HAX)' \
 			"$$(cargo hax --version | awk -F= '$$1 == "version" { print $$2 }')"; \
-		check_version Fstar '$(EXPECTED_FSTAR)' \
-			"$$(fstar.exe --version | sed -n '1p')"; \
-		check_version Z3 '$(EXPECTED_Z3)' "$$(z3-4.15.3 -version)"; \
 		check_version ProVerif '$(EXPECTED_PROVERIF)' \
 			"$$(proverif -help 2>&1 | sed -n '1p')"; \
 		check_version Rocq '$(EXPECTED_ROCQ)' \
@@ -292,31 +184,12 @@ check-toolchain:
 		check_version SSProve '$(EXPECTED_SSPROVE)' \
 			"$${SSPROVE_VERSION:-missing}"
 
-extract-fstar:
-	# Enable hax-lib so the bounded recursive lookup carries its checked measure.
-	cargo hax -C --locked --features=proverif ';' into -i '$(HAX_ITEMS)' fstar
-
-# F* accepts explicit assumptions and lax/admit flags, so strict typechecking
-# alone is not a sufficient policy gate for repository-owned proof modules.
-check-fstar-policy:
-	@if rg -n --pcre2 '\b(?:assume|admit)\b' proofs/fstar \
-		--glob '*.fst' --glob '*.fsti'; then \
-		echo 'unexpected assume/admit in repository-owned F* proof' >&2; \
-		exit 1; \
-	fi
-	@if rg -n -- '--(lax|admit_smt_queries|admit_except|use_hint_hashes)' \
-		proofs/fstar/Makefile; then \
-		echo 'unexpected lax/admit flag in the F* checker' >&2; \
-		exit 1; \
-	fi
-
-check-fstar: check-fstar-policy
-	$(MAKE) -C proofs/fstar/extraction -f ../Makefile verify
-
 extract-proverif:
 	cargo hax -C --locked --features=proverif ';' into \
 		-i '$(HAX_PROVERIF_ITEMS)' \
 		--output-dir $(PROVERIF_DIR)/extraction pro-verif
+	# Hax emits one terminal empty line after replacement blocks; normalize it for the repository whitespace policy.
+	sed -i '$${/^$$/d;}' '$(PROVERIF_EXTRACTION)'
 
 check-proverif-extraction:
 	@if rg -n 'rust_primitives__hax__failure|REPLACE by|todo return|unimplemented' \
@@ -340,7 +213,13 @@ check-ssprove-policy:
 check-ssprove:
 	$(MAKE) -C '$(SSPROVE_DIR)' check
 
-check-proverif:
+check-proverif-transcript-fidelity:
+	cargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity
+
+$(PROVERIF_CHECK_TARGETS): check-proverif-transcript-fidelity
+check-proverif-passive-reachability check-proverif-quantum-capabilities: check-proverif-transcript-fidelity
+
+check-proverif: check-proverif-transcript-fidelity
 	+$(MAKE) --no-print-directory -j$(words $(PROVERIF_SCENARIOS)) \
 		$(PROVERIF_CHECK_TARGETS)
 
@@ -378,15 +257,163 @@ check-proverif-passive-reachability: check-proverif-extraction
 check-proverif-quantum-capabilities:
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
-			-lib $(PROVERIF_DIR)/crypto.pvl \
+			$(PROVERIF_CRYPTO_LIBS) \
 			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
 			-lib $(PROVERIF_DIR)/quantum-capability-control.pvl \
 			-lib $(PROVERIF_DIR)/quantum-capability-control-queries.pvl \
 			$(PROVERIF_DIR)/quantum-capability-control.pv | \
 		awk -v scenario=quantum-capabilities -f '$(PROVERIF_CHECKER)'
 
+check-proverif-quantum-mlkem-opacity:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
+			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
+		awk -v scenario=quantum-mlkem-opacity -f '$(PROVERIF_CHECKER)'
+
+check-proverif-quantum-mlkem-recovery:
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/quantum-capabilities.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-control.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery.pvl \
+			-lib $(PROVERIF_DIR)/quantum-mlkem-recovery-queries.pvl \
+			$(PROVERIF_DIR)/quantum-mlkem-control.pv | \
+		awk -v scenario=quantum-mlkem-recovery -f '$(PROVERIF_CHECKER)'
+
+check-proverif-mlkem-reencapsulation-strong: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-strong-theory.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control-queries.pvl \
+			$(PROVERIF_DIR)/mlkem-reencapsulation-control.pv | \
+		awk -v scenario=mlkem-reencapsulation-strong \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-mlkem-reencapsulation-weak: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control.pvl \
+			-lib $(PROVERIF_DIR)/mlkem-reencapsulation-control-queries.pvl \
+			$(PROVERIF_DIR)/mlkem-reencapsulation-control.pv | \
+		awk -v scenario=mlkem-reencapsulation-weak \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-prefix-conformance: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-prefix-conformance.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-prefix-conformance-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-prefix-conformance.pv | \
+		awk -v scenario=hkdf-prefix-conformance -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-endpoint-controls: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-endpoint-controls.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-endpoint-controls-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-endpoint-controls.pv | \
+		awk -v scenario=hkdf-endpoint-controls -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-domain-distinct: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-domain-distinct-control.pv | \
+		awk -v scenario=hkdf-domain-distinct -f '$(PROVERIF_CHECKER)'
+
+check-proverif-hkdf-domain-alias: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control.pvl \
+			-lib $(PROVERIF_DIR)/hkdf-domain-alias-control-queries.pvl \
+			$(PROVERIF_DIR)/hkdf-domain-alias-control.pv | \
+		awk -v scenario=hkdf-domain-alias -f '$(PROVERIF_CHECKER)'
+
+check-proverif-public-key-confusion-strong: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control-queries.pvl \
+			$(PROVERIF_DIR)/public-key-confusion-strong.pv | \
+		awk -v scenario=public-key-confusion-strong \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-public-key-confusion-weak: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/public-key-confusion-control-queries.pvl \
+			$(PROVERIF_DIR)/public-key-confusion-weak.pv | \
+		awk -v scenario=public-key-confusion-weak \
+			-f '$(PROVERIF_CHECKER)'
+
+check-proverif-phase2-response-binding: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl \
+			-lib $(PROVERIF_DIR)/phase2-response-binding-control.pvl \
+			-lib $(PROVERIF_DIR)/phase2-response-binding-queries.pvl \
+			$(PROVERIF_DIR)/phase2-response-binding.pv | \
+		awk -v scenario=phase2-response-binding -f '$(PROVERIF_CHECKER)'
+
+check-proverif-phase2-assigned-id-weak: check-proverif-extraction \
+	check-proverif-phase2-response-binding
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-theory.pvl \
+			-lib $(PROVERIF_DIR)/phase2-response-binding-control.pvl \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-queries.pvl \
+			$(PROVERIF_DIR)/phase2-assigned-id-weak.pv | \
+		awk -v scenario=phase2-assigned-id-weak -f '$(PROVERIF_CHECKER)'
+
+check-proverif-later-sequence-registration: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl \
+			-lib $(PROVERIF_DIR)/later-sequence-registration-control.pvl \
+			-lib $(PROVERIF_DIR)/later-sequence-registration-queries.pvl \
+			$(PROVERIF_DIR)/later-sequence-registration.pv | \
+		awk -v scenario=later-sequence-registration -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-classical-equivalence: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_COMMON_LIBS) \
+			$(PROVERIF_DIR)/passive-strong-secrecy.pv | \
+		awk -v scenario=passive-classical-equivalence -f '$(PROVERIF_CHECKER)'
+
+check-proverif-passive-quantum-equivalence: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			-set attacker passive \
+			$(PROVERIF_QUANTUM_LIBS) \
+			$(PROVERIF_DIR)/passive-strong-secrecy.pv | \
+		awk -v scenario=passive-quantum-equivalence -f '$(PROVERIF_CHECKER)'
+
 check-proverif-passive-classical: check-proverif-extraction \
-	check-proverif-passive-reachability
+	check-proverif-passive-reachability \
+	check-proverif-passive-classical-equivalence
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			-set attacker passive \
@@ -396,7 +423,10 @@ check-proverif-passive-classical: check-proverif-extraction \
 		awk -v scenario=passive-classical -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-quantum: check-proverif-extraction \
-	check-proverif-passive-reachability check-proverif-quantum-capabilities
+	check-proverif-passive-reachability check-proverif-quantum-capabilities \
+	check-proverif-quantum-mlkem-opacity \
+	check-proverif-quantum-mlkem-recovery \
+	check-proverif-passive-quantum-equivalence
 	@set -o pipefail; \
 		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
 			-set attacker passive \
@@ -492,13 +522,19 @@ check-lean-policy:
 check-lean-root:
 	@for module in \
 		BeaconcryptCore.Extraction \
+		BeaconcryptCore.PanicFreedom.API \
 		BeaconcryptCore.Refinement.PqxdhSession \
+		BeaconcryptCore.Refinement.PqxdhCommitment \
+		BeaconcryptCore.Verification.PqxdhCommitmentRefinement \
 		BeaconcryptCore.Refinement.RatchetControlRestore \
 		BeaconcryptCore.Refinement.RatchetEffectRefinement \
 		BeaconcryptCore.Model.Pqxdh.Instance \
 		BeaconcryptCore.Model.Pqxdh.InstanceCommit \
 		BeaconcryptCore.Model.Pqxdh.Acceptance \
 		BeaconcryptCore.Model.Pqxdh.Runs \
+		BeaconcryptCore.Computational.CtxReduction \
+		BeaconcryptCore.Computational.CtxTransitionReduction \
+		BeaconcryptCore.Computational.VCVioFeasibility \
 		BeaconcryptCore.Verification.ProofObligations; do \
 		rg -Fqx "import $$module" '$(LEAN_ROOT)' || { \
 			echo "missing verification-root import: $$module" >&2; \
@@ -511,7 +547,13 @@ check-lean-root:
 		exit 1; \
 	}
 
-check-lean: check-lean-policy check-lean-root
+# Reconstruct unconditional contracts from every current extracted operation.
+# The following Lake build checks each certificate against that exact signature.
+check-lean-panic-freedom:
+	python3 ../scripts/test_check_lean_panic_freedom.py
+	python3 ../scripts/check_lean_panic_freedom.py
+
+check-lean: check-lean-policy check-lean-root check-lean-panic-freedom
 	cd $(LEAN_DIR) && lake build
 
 # Regenerate and check the complete default beaconcrypt-core production surface.
@@ -524,16 +566,6 @@ verify-lean-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
-
-check-generated-fstar: verify-fstar
-	git diff --exit-code -- proofs/fstar/extraction
-	@untracked="$$(git ls-files --others --exclude-standard -- \
-		proofs/fstar/extraction)"; \
-		if [[ -n "$$untracked" ]]; then \
-			echo 'untracked generated F* proof artifacts:' >&2; \
-			printf '%s\n' "$$untracked" >&2; \
-			exit 1; \
-		fi
 
 check-generated-lean: verify-lean
 	git diff --exit-code -- $(LEAN_GENERATED_PATHS)
@@ -557,10 +589,10 @@ $(PROVERIF_GENERATED_TARGETS): check-generated-proverif-%: verify-proverif-%
 
 # Run this after committing generated output to ensure extraction is stable.
 check-generated: verify
-	git diff --exit-code -- proofs/fstar/extraction proofs/pro-verif/extraction \
+	git diff --exit-code -- proofs/pro-verif/extraction \
 		$(LEAN_GENERATED_PATHS)
 	@untracked="$$(git ls-files --others --exclude-standard -- \
-		proofs/fstar/extraction proofs/pro-verif/extraction \
+		proofs/pro-verif/extraction \
 		$(LEAN_GENERATED_PATHS))"; \
 		if [[ -n "$$untracked" ]]; then \
 			echo 'untracked generated proof artifacts:' >&2; \

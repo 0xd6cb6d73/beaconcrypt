@@ -1,0 +1,43 @@
+<!-- SPDX-License-Identifier: 0BSD -->
+
+# ProVerif and VCVio component-closure plan
+
+## Scope
+
+The objective is to justify the cryptographic idealizations consumed by BeaconCrypt's source-aligned ProVerif models, not to reimplement the complete protocol or a cryptographic library in VCVio. ProVerif retains responsibility for its stated symbolic protocol properties. Lean/VCVio supplies protocol-specific component reductions, exact interface correspondence, and the probability losses needed when perfect symbolic behavior is replaced by the computational games.
+
+The Rust source is authoritative. HKDF-SHA-512 without salt, ChaCha20-Poly1305, ML-KEM-768, Ed25519, X25519, and BLAKE2b-512 are fixed choices. Their security and implementation correctness are external assumptions, not proof tasks deferred to a later stage. A reduction may invoke their named security games; it must not claim that defining such a game proves the primitive secure. Changes to primitives, production labels, transcripts, or wire formats are outside this plan.
+
+This plan supersedes any broader historical roadmap insofar as that roadmap calls for primitive proofs, a port of all SSProve work, or exhaustive Lean verification unrelated to the component boundary. Existing implementation proofs may discharge a needed deterministic premise, but unrelated implementation gaps do not become prerequisites for every computational stage.
+
+## Integrated starting point
+
+At `vcvio` commit `f7974b9a0b10630b4ade784b8976b5b3ed4fa787`, the relevant checked components are:
+
+| Boundary | Available result | Remaining composition obligation |
+| --- | --- | --- |
+| Signed Phase-1 fields | HB-63 reduces one honest target's changed accepted tuple to one weak-EUF-CMA forgery, with three honest signing calls. | Preserve private setup correlations and connect the actual selected tuple to the initializer game. |
+| Hybrid initializer | HB-66 reduces one authenticated honest-target initializer to ML-KEM IND-CCA, the fixed-HKDF joint-stream advantage, and one hidden-input guess term. | Discharge target authentication for the exact joint game; do not assume it again as the desired conclusion. |
+| Initial directional chains | HB-69 composes the initializer through the two same-address symmetric projections, preserving their shared cache and adding two logical symmetric queries. | Connect the common random world to symbolic constructor behavior and the later ratchet uses. |
+| Initial source state | HB-64 synchronizes the initial source seam; HB-67 proves conditional complementary zero-state kernels from endpoint-local root and response premises. | Supply those premises only where a component claim actually consumes them; synchronization alone is not semantic refinement. |
+| KDF constructor collisions | HB-54 bounds collisions between distinct observed same-width coordinates, retaining intentional initialization/step aliases. | Apply its random-world bound inside the common initializer/ratchet game without paying for a second real-to-random HKDF replacement. |
+| Modified CTX | Checked binding, typed single-key classical-ROM integrity, and Boolean component-privacy reductions have explicit accounting. | Connect ratchet-derived material, nonce discipline, raw accepted payloads, and any required multi-key/attempt interface to those endpoints. |
+| Later registration receive | HB-65 proves and source-locks a finite genuine sequence-three registration path and its exact committed cache. | Carry that actual state through established cached reception, replay rejection, and future reception. |
+
+These are component results, not an automatic computational interpretation of every ProVerif query. In particular, HB-69's internal observer receives the directional chains; that interface is useful for composing a downstream component and does not itself assert that a network attacker receives production chain keys.
+
+## Ordered work
+
+1. **Authenticated initializer composition (HB-70).** Generalize the Phase-1 client only enough to retain privately correlated setup and a stateful selector with broad CCA access. Keep the target KEM secret inside the game interpreter. Preserve the exact three signing messages and the Server's PQ/prekey/one-time verification order. Charge changed accepted target tuples once, before later encapsulation and DH work, then factor the unchanged-target branch into HB-69. The unfiltered game must still use the selected accepted tuple on bad branches, and rejected/non-target branches must retain their common behavior. The target bound has one signature advantage, one KEM advantage, one joint-HKDF advantage, and one hidden-contribution guess term. Generic signature EUF does not automatically simulate earlier interactions that expose the related Ed25519-to-X25519 use.
+2. **Post-registration source continuation (HB-68, parallel).** Reuse the actual HB-65 committed state: accept the genuine cached sequence-one frame, return its entire plaintext through the ordinary established receive API, consume only its cache entry, reject its replay without KDF/open/state change, then accept genuine sequence four while preserving cached sequence two. Use a reachable retain-consumed-entry negative control and keep the original HB-65 checks live. This is a finite source-fidelity extension, not an arbitrary-schedule result.
+3. **Joint KDF constructor interpretation.** Instrument the common game before discarding its query/cache state. Use the existing real-to-random joint-HKDF hop once, then charge hidden-input and observed-coordinate collision events in its random world. Retain the exact two labels, shared initialization/step prefixes, and per-class root/initial/step/public-projection accounting. Do not add HB-54's standalone real-world advantage to HB-69 and describe the result as a single HKDF charge. Prove the interface preservation needed by the selected symbolic initializer and record prefix.
+4. **Ratchet-to-record component bridge.** Extend the same shared KDF model through the actual 76-byte `key || next_chain || nonce` expansion needed by the maintained symbolic schedules. State which chains/material are private, released, or erased. Derive the relevant per-key nonce-use premise from the source-shaped schedule and collision event before applying the existing CTX games; production does not implement the computational game's nonce-rejection oracle. Account for unsuccessful sends, repeated receives, and challenge/verification calls when their interfaces are in scope. No post-compromise recovery follows merely from a deterministic one-way ratchet.
+5. **Component closure and claims.** Map each maintained secrecy, authenticity, agreement, replay, and compromise claim to its exact symbolic query, source boundary, computational component theorem, and external assumption. Compose the component games at their actual interfaces, or state a specifically identified remaining composition premise. A collection of standalone reductions does not automatically transfer arbitrary ProVerif correspondences to computational executions. Retain the active-quantum negative controls; a symbolic classical-key-recovery capability does not establish QPT or QROM security.
+
+After each completed stage, select the next unclosed component seam from this list. Additional source fixtures should discharge a concrete premise used by that seam, not expand into general implementation verification without a protocol-proof need. Any multi-user, arbitrary-schedule, or quantum lift must be explicitly scoped before it is claimed.
+
+## Stage acceptance
+
+Every computational reduction stage must contain a checked theorem about the actual joint game, its public/private state split, and explicit query accounting; a newly named assumption or adapter type alone is not closure. A needed deterministic bridge must prove the exact interface premise it discharges. Every symbolic stage must preserve meaningful positive reachability and negative controls as well as its intended security queries. Describe substantive new results in `doc/formal-verification-analysis.md` and keep source-fidelity, mutation, inventory, admission, axiom, and relevant locked proof gates current.
+
+Run the two lanes in separate worktrees with independent review. Commit and push meaningful verified checkpoints to `git.mschn.fr`; fetch before integration, merge completed topics into `vcvio`, and verify the remote object ID after pushing. Preserve unrelated work and report existing toolchain/gate limitations without changing primitives or weakening proof policy to make a gate pass. Do not collect Nix garbage while another lane is using Nix.

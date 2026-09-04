@@ -66,7 +66,7 @@ All work is committed and pushed, and the Properties table reflects the final st
 # Refinement summary for run efb23f7b-df1d-4784-8c84-6d93808cd65a and the later bound correction
 The original run established the refinement structure summarized below. The repository later updated the production planner and proof so the production and ideal models share the exact 50-skipped-key boundary. The current whole project builds `sorry`-free.
 
-**What was proved** (all in `BeaconcryptCore/Model/RatchetRefinement.lean`, which imports the handwritten model in `BeaconcryptCore/Model/Ratchet.lean` and the previously verified generated control plane in `BeaconcryptCore/Model/RatchetControl.lean`):
+**What was proved** (all in `BeaconcryptCore/Refinement/RatchetRefinement.lean`, which imports the handwritten model in `BeaconcryptCore/Model/Ratchet.lean` and the previously verified generated control plane in `BeaconcryptCore/Refinement/RatchetControl.lean`):
 
 - `receiveMessage` — the generated receive logic assembled into one transactional step. A cached target follows plan → lookup → finish. A future target plans the gap, derives and caches only the skipped keys with `advance_receive`, advances the separately consumed target with `advance_receive_target`, and commits that private candidate only when authentication succeeds.
 - `Refines` — the refinement relation: the concrete control-plane state represents an abstract receive state of the handwritten ratchet (receive counter = next expected index, with wire sequence number = abstract index + 1; the abstract chain key and every stored key are the ones derived from the session chain key; the cache holds exactly the sequence numbers of the abstract skipped keys).
