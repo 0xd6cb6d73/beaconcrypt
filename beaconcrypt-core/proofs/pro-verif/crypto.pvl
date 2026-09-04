@@ -4,10 +4,8 @@
 (* Reviewed symbolic primitive boundary                                   *)
 (**************************************************************************)
 
-(* Rust uses u64 identifiers and counters.  Fresh values of these private
-   sorts model the checked, collision-free prefix of those finite spaces. *)
-type key_id.
-type sequence.
+(* Production-facing transcript sorts, domains, encodings, AEAD, and CTX
+   declarations come from production-transcript-interface.pvl. *)
 type direction.
 type role.
 
@@ -17,18 +15,6 @@ fun server_to_beacon(): direction [data].
 fun beacon_to_server(): direction [data].
 fun beacon_role(): role [data].
 fun server_role(): role [data].
-
-(* Fixed-width LE64 encoding is injective on the modeled key-ID sort. *)
-fun key_id_encoding(key_id): bitstring [data].
-
-(* Disjoint production key encodings.  The two X25519 constructors represent
-   [4:u8, 128:u8, key] for a prekey and [4:u8, 129:u8, key] for a one-time
-   key. Rust reserves low marker bytes for types and high marker bytes for
-   roles, and the F* lemmas check the concrete values and byte positions. *)
-fun tag_ed25519(bitstring): bitstring [data].
-fun tag_x25519_prekey(bitstring): bitstring [data].
-fun tag_x25519_one_time(bitstring): bitstring [data].
-fun tag_mlkem768(bitstring): bitstring [data].
 
 (* Ed25519 and its authenticated verification equation. *)
 fun ed_public(bitstring): bitstring.
@@ -51,7 +37,12 @@ reduc forall beacon_secret: bitstring, server_secret: bitstring;
   x25519_shared(server_secret, beacon_secret).
 
 (* ML-KEM encapsulation/decapsulation correctness.  The encapsulator knows
-   both the ciphertext and shared secret for its fresh coins. *)
+   both the ciphertext and shared secret for its fresh coins.  Because
+   mlkem_shared_secret is a free constructor in both its public-key and coin
+   arguments, this exact production theory additionally assumes ML-KEM
+   public-key binding, equivalently strong shared-secret collision resistance
+   across distinct public keys in the symbolic model.  Generic IND-CCA alone
+   does not imply that extra property. *)
 fun mlkem_public(bitstring): bitstring.
 fun mlkem_ciphertext(bitstring, bitstring): bitstring.
 fun mlkem_shared_secret(bitstring, bitstring): bitstring.
@@ -61,53 +52,49 @@ reduc forall secret_key: bitstring, coins: bitstring;
     secret_key
   ) = mlkem_shared_secret(mlkem_public(secret_key), coins).
 
-(* These constructors are referenced by the backend replacements attached to
-   production Rust functions.  Their argument order is the Stage 6 layout:
-   registration ID = identity || one-time key, and root input =
-   0xff^32 || DH1 || DH2 || DH3 || DH4 || KEM secret. *)
+(* This constructor is referenced by the registration-ID backend replacement. *)
 fun registration_identifier(bitstring, bitstring): bitstring [data].
-fun pqxdh_root_input(
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring
-): bitstring [data].
 
-(* Domain-separated HKDF abstractions. *)
-fun pqxdh_root(bitstring): bitstring.
-fun server_to_beacon_chain(bitstring): bitstring.
-fun beacon_to_server_chain(bitstring): bitstring.
-fun ratchet_next(bitstring): bitstring.
-fun ratchet_material(bitstring): bitstring.
-fun material_key(bitstring): bitstring.
-fun material_nonce(bitstring): bitstring.
+(* Stored record material contains only the projected key and nonce.  It does
+   not retain the HKDF stream, so disclosing cached material cannot reveal the
+   second projection that becomes the next chain. *)
+fun ratchet_key_nonce(bitstring, bitstring): bitstring.
+reduc forall key: bitstring, nonce: bitstring;
+  material_key(ratchet_key_nonce(key, nonce)) = key.
+reduc forall key: bitstring, nonce: bitstring;
+  material_nonce(ratchet_key_nonce(key, nonce)) = nonce.
 
-(* Ideal ChaCha20-Poly1305 plus the CTX commitment.  The only opening
-   reduction below requires the same key material, ordered AD, sequence, and
-   sender ID.  `ctx_commitment` deliberately models the fixed-size BLAKE2b
-   use as a collision-free symbolic constructor; this is a symbolic primitive
-   assumption, not a computational proof of BLAKE2b. *)
-fun aead_cipher(
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring
-): bitstring.
-fun aead_tag(
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring
-): bitstring.
-fun ctx_commitment(
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring,
-  sequence,
-  key_id
-): bitstring.
+letfun pqxdh_root(input: bitstring) =
+  hkdf_first_32(hkdf_sha512_no_salt(input, pqxdh_domain())).
+
+(* The server sends on the first initialization projection and receives on the
+   second; the beacon reverses those roles at its existing call sites. *)
+letfun server_to_beacon_chain(root: bitstring) =
+  hkdf_first_32(
+    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+  ).
+
+letfun beacon_to_server_chain(root: bitstring) =
+  hkdf_second_32(
+    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+  ).
+
+letfun ratchet_next(chain: bitstring) =
+  hkdf_second_32(
+    hkdf_sha512_no_salt(chain, symmetric_ratchet_domain())
+  ).
+
+letfun ratchet_material(chain: bitstring) =
+  ratchet_key_nonce(
+    hkdf_first_32(
+      hkdf_sha512_no_salt(chain, symmetric_ratchet_domain())
+    ),
+    hkdf_final_12(
+      hkdf_sha512_no_salt(chain, symmetric_ratchet_domain())
+    )
+  ).
+
+(* @beaconcrypt-cryptoframe-v1 crypto_frame.fields=ciphertext,retained_aead_tag,commitment,sequence,sender_id *)
 fun crypto_frame(
   bitstring,
   bitstring,
@@ -153,41 +140,44 @@ letfun seal_frame(
     sender_id
   ).
 
-reduc forall material: bitstring,
+reduc forall key: bitstring,
+             nonce: bitstring,
              associated_data: bitstring,
              message_sequence: sequence,
              sender_id: key_id,
              plaintext: bitstring;
   open_frame(
-    material,
+    ratchet_key_nonce(key, nonce),
     associated_data,
     message_sequence,
     sender_id,
     crypto_frame(
       aead_cipher(
-        material_key(material),
-        material_nonce(material),
+        key,
+        nonce,
         associated_data,
         plaintext
       ),
       aead_tag(
-        material_key(material),
-        material_nonce(material),
+        key,
+        nonce,
         associated_data,
         plaintext
       ),
-      ctx_commitment(
-        material_key(material),
-        material_nonce(material),
-        associated_data,
-        aead_tag(
-          material_key(material),
-          material_nonce(material),
+      blake2b512(
+        ctx_preimage(
+          key,
+          nonce,
           associated_data,
-          plaintext
-        ),
-        message_sequence,
-        sender_id
+          aead_tag(
+            key,
+            nonce,
+            associated_data,
+            plaintext
+          ),
+          sequence_le64(message_sequence),
+          sender_id_le64(sender_id)
+        )
       ),
       message_sequence,
       sender_id

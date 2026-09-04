@@ -1,0 +1,11 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Correct-path queries are intentional reachability failures, while wrong-label and wrong-projection commitment queries must be proved unreachable. *)
+query event(HkdfCorrectRootEndpointCommitted(HKDF_CORRECT_ROOT_COMMIT_WITNESS)).
+query event(HkdfWrongRootOpeningAttempted(HKDF_WRONG_ROOT_COMMIT_WITNESS)).
+query event(HkdfWrongRootEndpointCommitted(HKDF_WRONG_ROOT_COMMIT_WITNESS)).
+query event(HkdfCorrectSymmetricEndpointCommitted(HKDF_CORRECT_SYMMETRIC_COMMIT_WITNESS)).
+query event(HkdfWrongSymmetricOpeningAttempted(HKDF_WRONG_SYMMETRIC_COMMIT_WITNESS)).
+query event(HkdfWrongSymmetricEndpointCommitted(HKDF_WRONG_SYMMETRIC_COMMIT_WITNESS)).
+query event(HkdfWrongProjectionOpeningAttempted(HKDF_WRONG_PROJECTION_COMMIT_WITNESS)).
+query event(HkdfWrongProjectionEndpointCommitted(HKDF_WRONG_PROJECTION_COMMIT_WITNESS)).

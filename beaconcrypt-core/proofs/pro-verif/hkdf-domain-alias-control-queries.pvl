@@ -1,0 +1,5 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The distinct-domain scenario must preserve secrecy; the deliberately aliased scenario must expose this same canary. *)
+query event(HkdfDomainComparisonAttempted(HKDF_DOMAIN_COMPARISON_WITNESS)).
+query attacker(HKDF_DOMAIN_ALIAS_CANARY).

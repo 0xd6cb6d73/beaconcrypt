@@ -11,7 +11,7 @@ pub const RECEIVE_CACHE_CAPACITY: usize = RATCHET_MAX_GAP as usize;
 
 /// Opaque fixed-capacity cache of logical receive-key sequence numbers.
 ///
-/// Its representation is public to the hax/F* proof boundary, while private
+/// Its representation is public to the Hax/Lean proof boundary, while private
 /// fields prevent Rust callers from constructing states that bypass validation.
 #[derive(Clone, Copy)]
 #[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]

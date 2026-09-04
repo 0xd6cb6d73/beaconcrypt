@@ -56,7 +56,7 @@ pub const ROOT_KEY_INPUT_SIZE: usize =
 pub const ASSOCIATED_DATA_SIZE: usize = crate::constants::ASSOCIATED_DATA_SIZE;
 
 // The fixed ranges below are deliberately literal so hax exposes exact slice
-// boundaries to F*. Keep those proof-visible bounds tied to the public sizes.
+// boundaries to Lean. Keep those proof-visible bounds tied to the public sizes.
 const _: () = assert!(SIGN_PUBLIC_KEY_SIZE == 32);
 const _: () = assert!(X25519_PUBLIC_KEY_SIZE == 32);
 const _: () = assert!(MLKEM768_PUBLIC_KEY_SIZE == 1_184);
@@ -207,7 +207,7 @@ impl VerifiedInitKex {
 /// Production abstraction used by the replay adapter and the ProVerif model.
 ///
 /// The backend replacement below is deliberately limited to the exact
-/// identity/one-time-key projection proved by the Stage 6 F* lemmas. It does
+/// identity/one-time-key projection proved by the Lean PQXDH refinement. It does
 /// not replace the Rust implementation on ordinary builds.
 #[cfg_attr(
 	feature = "proverif",
@@ -374,7 +374,7 @@ impl RootKeyInput {
 #[cfg_attr(
 	feature = "proverif",
 	hax_lib::proverif::replace(
-		"reduc forall dh1: bitstring, dh2: bitstring, dh3: bitstring, dh4: bitstring, kem: bitstring;\n  ${build_root_key_input}(beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem)) = beaconcrypt_core__pqxdh__RootKeyInput(pqxdh_root_input(dh1, dh2, dh3, dh4, kem))."
+		"reduc forall dh1: bitstring, dh2: bitstring, dh3: bitstring, dh4: bitstring, kem: bitstring;\n  ${build_root_key_input}(beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1, dh2, dh3, dh4, kem)) = beaconcrypt_core__pqxdh__RootKeyInput(pqxdh_root_input(pqxdh_ff32_padding(), dh1, dh2, dh3, dh4, kem))."
 	)
 )]
 pub fn build_root_key_input(
@@ -447,7 +447,6 @@ pub const fn server_ratchet_initialization() -> RatchetInitialization {
 }
 
 /// Role-ordered fixed-width initial send and receive chains.
-#[cfg_attr(feature = "proverif", hax_lib::fstar::before("noeq"))]
 pub struct InitialRatchetChains {
 	send_chain: crate::ratchet::RatchetChain,
 	receive_chain: crate::ratchet::RatchetChain,
@@ -923,7 +922,7 @@ pub const fn server_abort_candidate(candidate: &ServerRegistrationCandidate) -> 
 #[cfg_attr(
 	feature = "proverif",
 	hax_lib::proverif::replace(
-		"fun ${build_associated_data}(bitstring, bitstring): bitstring [data]."
+		"reduc forall server_identity: bitstring, beacon_identity: bitstring;\n  ${build_associated_data}(server_identity, beacon_identity) = beaconcrypt_associated_data(tag_ed25519(server_identity), tag_ed25519(beacon_identity), pqxdh_domain(), symmetric_ratchet_domain())."
 	)
 )]
 pub fn build_associated_data(

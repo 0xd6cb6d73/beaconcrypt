@@ -1,0 +1,9 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Production assigned-ID binding: the gate returns only when the authenticated eight-byte prefix equals the binding derived from the outer response keyId. *)
+fun phase2_assigned_id_binding_gate(
+  beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+  beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding
+): beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding
+reduc forall binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding;
+  phase2_assigned_id_binding_gate(binding, binding) = binding.

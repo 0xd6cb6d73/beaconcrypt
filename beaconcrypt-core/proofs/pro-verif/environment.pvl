@@ -5,6 +5,7 @@
 (* Wire adapters and event vocabulary                                     *)
 (**************************************************************************)
 
+(* @beaconcrypt-phase1-v1 signed_init_kex.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq *)
 fun signed_init_kex(
   bitstring,
   bitstring,
@@ -28,8 +29,8 @@ fun kex_response(
   bitstring,
   bitstring,
   bitstring,
-  key_id,
-  bitstring
+  bitstring,
+  key_id
 ): bitstring [data].
 
 fun session_label(
@@ -38,6 +39,41 @@ fun session_label(
   key_id,
   beaconcrypt_core__pqxdh__t_RootKeyInput
 ): bitstring [data].
+
+(* This injective proof term carries, in order, the server identity, beacon identity, authenticated InitKex, registration ID, prekey, one-time X25519 key, selected ML-KEM public key, server ephemeral key, exact KEM ciphertext, initial frame, complete response, ordered root input, derived root, exact associated data, assigned beacon key ID, pinned server key ID, session identifier, and registration origin. *)
+fun establishment_transcript(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_InitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_RootKeyInput,
+  bitstring,
+  bitstring,
+  key_id,
+  key_id,
+  bitstring,
+  bitstring
+): establishment_transcript_t [data].
+
+(* This separate injective proof term makes the authenticated registration-bundle agreement explicit before response commitment. *)
+type authenticated_init_bundle_t.
+fun authenticated_init_bundle(
+  bitstring,
+  bitstring,
+  beaconcrypt_core__pqxdh__t_InitKex,
+  beaconcrypt_core__pqxdh__t_RegistrationId,
+  bitstring,
+  bitstring,
+  bitstring,
+  bitstring
+): authenticated_init_bundle_t [data].
 
 (* Explicit proof state for the bounded state-neutral receive traces. *)
 (* The arguments are the committed receive counter, live chain, and exact logical cache, whose entries are newest first. *)
@@ -101,40 +137,12 @@ event ServerResponseAborted(
   bitstring,
   bitstring
 ).
-event ServerCommitted(
-  bitstring,
-  bitstring,
-  beaconcrypt_core__pqxdh__t_InitKex,
-  beaconcrypt_core__pqxdh__t_RegistrationId,
-  key_id,
-  beaconcrypt_core__pqxdh__t_RootKeyInput,
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring
-).
-event BeaconCommitted(
-  bitstring,
-  bitstring,
-  beaconcrypt_core__pqxdh__t_InitKex,
-  beaconcrypt_core__pqxdh__t_RegistrationId,
-  key_id,
-  beaconcrypt_core__pqxdh__t_RootKeyInput,
-  bitstring,
-  bitstring,
-  bitstring,
-  bitstring
-).
+event ServerCommitted(establishment_transcript_t).
+event BeaconCommitted(establishment_transcript_t).
+event BeaconBundleInitiated(authenticated_init_bundle_t).
+event ServerBundleAccepted(authenticated_init_bundle_t).
 event MaliciousRegistrationCommitted(
-  bitstring,
-  bitstring,
-  beaconcrypt_core__pqxdh__t_InitKex,
-  beaconcrypt_core__pqxdh__t_RegistrationId,
-  key_id,
-  beaconcrypt_core__pqxdh__t_RootKeyInput,
-  bitstring,
-  bitstring,
-  bitstring,
+  establishment_transcript_t,
   bitstring
 ).
 event MessageSent(
@@ -301,12 +309,9 @@ free receive_snapshots: channel [private].
 (* Single-owner, non-rollback registration replay state                    *)
 (**************************************************************************)
 
-(* The current production typestate creates one bundle under each fresh
-   beacon identity.  Under that invariant, one owner per honest identity is
-   equivalent to the semantic-ID set for valid bundles.  Crucially, the owner
-   records the publicly parsed InitKex and ID from the first request rather
-   than matching private originals, so a field-substitution regression makes
-   the exact-origin correspondence fail instead of blocking invisibly. *)
+(* The finite honest role pairs one bundle producer with one replay owner, matching the checked get_registration_bundle invariant of at most one successful Some return per live Beacon object. *)
+(* This does not cover caller-constructed bundles through public secret accessors, persistent multiple owners, rollback, or crashes. *)
+(* The owner records the publicly parsed InitKex and ID from the first request rather than matching private originals, so a field-substitution regression makes the exact-origin correspondence fail instead of blocking invisibly. *)
 let RegistrationReplayGuard(
   server_identity: bitstring,
   beacon_identity: bitstring,
@@ -346,7 +351,7 @@ let RegistrationReplayGuard(
 (* One honest beacon registration and its bounded record prefix            *)
 (**************************************************************************)
 
-let HonestBeacon() =
+let HonestBeacon(beacon_record_secret: bitstring) =
   new beacon_identity_secret: bitstring;
   new beacon_prekey_secret: bitstring;
   new beacon_one_time_secret: bitstring;
@@ -379,6 +384,17 @@ let HonestBeacon() =
     registration_id,
     registration_session
   );
+  let initiated_bundle = authenticated_init_bundle(
+    server_identity,
+    beacon_identity,
+    core_init,
+    registration_id,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq,
+    registration_session
+  ) in
+  event BeaconBundleInitiated(initiated_bundle);
   insert honest_origin(beacon_identity, registration_session);
   (
   RegistrationReplayGuard(
@@ -402,8 +418,8 @@ let HonestBeacon() =
     response_server_identity,
     server_ephemeral,
     kem_ciphertext,
-    assigned_key_id,
-    initial_frame
+    initial_frame,
+    assigned_key_id
   ) = response in
   if response_server_identity = server_identity then
     let dh1 = x25519_beacon_dh(
@@ -469,18 +485,27 @@ let HonestBeacon() =
       first_sequence(),
       server_material_1
     );
-    event BeaconCommitted(
+    let beacon_establishment = establishment_transcript(
       server_identity,
       beacon_identity,
       core_init,
       registration_id,
-      assigned_key_id,
+      beacon_prekey,
+      beacon_one_time,
+      beacon_pq,
+      server_ephemeral,
+      kem_ciphertext,
+      initial_frame,
+      response,
       root_input,
       root,
       associated_data,
+      assigned_key_id,
+      SERVER_KEY_ID,
       session,
       registration_session
-    );
+    ) in
+    event BeaconCommitted(beacon_establishment);
 
     (* Receive sequence three first.  The bounded receive transition derives
        and retains sequence two, then consumes only sequence three. *)
@@ -590,7 +615,7 @@ let HonestBeacon() =
       associated_data,
       first_sequence(),
       assigned_key_id,
-      BEACON_RECORD_SECRET
+      beacon_record_secret
     ) in
     event MessageSent(
       session,
@@ -598,7 +623,7 @@ let HonestBeacon() =
       first_sequence(),
       assigned_key_id,
       SERVER_KEY_ID,
-      BEACON_RECORD_SECRET
+      beacon_record_secret
     );
     event MessageKeyUnavailable(
       session,
@@ -658,7 +683,12 @@ let MaliciousBeacon() =
 (* Serialized, non-rollback server registration                            *)
 (**************************************************************************)
 
-let Server() =
+let Server(
+  initial_secret: bitstring,
+  cached_secret: bitstring,
+  advance_secret: bitstring,
+  future_secret: bitstring
+) =
   in(c, incoming_init: bitstring);
   let signed_init_kex(
     encoded_identity,
@@ -740,6 +770,17 @@ let Server() =
       root,
       registration_session
     );
+    let accepted_bundle = authenticated_init_bundle(
+      server_identity,
+      beacon_identity,
+      core_init,
+      registration_id,
+      beacon_prekey,
+      beacon_one_time,
+      beacon_pq,
+      registration_session
+    ) in
+    event ServerBundleAccepted(accepted_bundle);
 
     (* Replay state remains consumed even on this modeled response failure. *)
     in(c, registration_control: bitstring);
@@ -780,7 +821,14 @@ let Server() =
         associated_data,
         first_sequence(),
         SERVER_KEY_ID,
-        registration_payload(binding, INITIAL_SECRET)
+        registration_payload(binding, initial_secret)
+      ) in
+      let response = kex_response(
+        server_identity,
+        server_ephemeral,
+        kem_ciphertext,
+        initial_frame,
+        assigned_key_id
       ) in
       event MessageSent(
         session,
@@ -788,7 +836,7 @@ let Server() =
         first_sequence(),
         SERVER_KEY_ID,
         assigned_key_id,
-        INITIAL_SECRET
+        initial_secret
       );
       event MessageKeyUnavailable(
         session,
@@ -797,28 +845,28 @@ let Server() =
         first_sequence(),
         server_material_1
       );
-      event ServerCommitted(
+      let server_establishment = establishment_transcript(
         server_identity,
         beacon_identity,
         core_init,
         registration_id,
-        assigned_key_id,
+        beacon_prekey,
+        beacon_one_time,
+        beacon_pq,
+        server_ephemeral,
+        kem_ciphertext,
+        initial_frame,
+        response,
         root_input,
         root,
         associated_data,
+        assigned_key_id,
+        SERVER_KEY_ID,
         session,
         registration_session
-      );
-      out(
-        c,
-        kex_response(
-          server_identity,
-          server_ephemeral,
-          kem_ciphertext,
-          assigned_key_id,
-          initial_frame
-        )
-      );
+      ) in
+      event ServerCommitted(server_establishment);
+      out(c, response);
 
       let server_chain_2 = ratchet_next(server_chain_1) in
       let server_chain_3 = ratchet_next(server_chain_2) in
@@ -831,7 +879,7 @@ let Server() =
         associated_data,
         next_sequence(first_sequence()),
         SERVER_KEY_ID,
-        CACHED_SECRET
+        cached_secret
       ) in
       event MessageSent(
         session,
@@ -839,7 +887,7 @@ let Server() =
         next_sequence(first_sequence()),
         SERVER_KEY_ID,
         assigned_key_id,
-        CACHED_SECRET
+        cached_secret
       );
       event MessageKeyUnavailable(
         session,
@@ -855,7 +903,7 @@ let Server() =
         associated_data,
         next_sequence(next_sequence(first_sequence())),
         SERVER_KEY_ID,
-        ADVANCE_SECRET
+        advance_secret
       ) in
       event MessageSent(
         session,
@@ -863,7 +911,7 @@ let Server() =
         next_sequence(next_sequence(first_sequence())),
         SERVER_KEY_ID,
         assigned_key_id,
-        ADVANCE_SECRET
+        advance_secret
       );
       event MessageKeyUnavailable(
         session,
@@ -879,7 +927,7 @@ let Server() =
         associated_data,
         next_sequence(next_sequence(next_sequence(first_sequence()))),
         SERVER_KEY_ID,
-        FUTURE_SECRET
+        future_secret
       ) in
       event MessageSent(
         session,
@@ -887,7 +935,7 @@ let Server() =
         next_sequence(next_sequence(next_sequence(first_sequence()))),
         SERVER_KEY_ID,
         assigned_key_id,
-        FUTURE_SECRET
+        future_secret
       );
       event MessageKeyUnavailable(
         session,
@@ -1028,28 +1076,38 @@ let MaliciousServer() =
     SERVER_KEY_ID,
     registration_payload(binding, MALICIOUS_TASK_SECRET)
   ) in
-  event MaliciousRegistrationCommitted(
+  let response = kex_response(
+    server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    initial_frame,
+    assigned_key_id
+  ) in
+  let malicious_establishment = establishment_transcript(
     server_identity,
     beacon_identity,
     core_init,
     registration_id,
-    assigned_key_id,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq,
+    server_ephemeral,
+    kem_ciphertext,
+    initial_frame,
+    response,
     root_input,
     root,
     associated_data,
+    assigned_key_id,
+    SERVER_KEY_ID,
     session,
+    registration_session
+  ) in
+  event MaliciousRegistrationCommitted(
+    malicious_establishment,
     MALICIOUS_TASK_SECRET
   );
-  out(
-    c,
-    kex_response(
-      server_identity,
-      server_ephemeral,
-      kem_ciphertext,
-      assigned_key_id,
-      initial_frame
-    )
-  ).
+  out(c, response).
 
 (**************************************************************************)
 (* Explicit late-state compromise                                         *)
@@ -1197,6 +1255,7 @@ let StateNeutralFutureReceive() =
 
   in(c, forged_candidate: bitstring);
   if forged_candidate = forged_target_frame then
+  (
     let forged_plaintext = open_frame(
       target_material,
       associated_data,
@@ -1222,6 +1281,7 @@ let StateNeutralFutureReceive() =
       );
       in(c, repeated_candidate: bitstring);
       if repeated_candidate = forged_target_frame then
+      (
         let repeated_plaintext = open_frame(
           target_material,
           associated_data,
@@ -1379,9 +1439,11 @@ let StateNeutralFutureReceive() =
                 committed_state,
                 delayed_state
               )
-            )
           )
         )
+      )
+    )
+  )
     ).
 
 (* A separate exact capacity leg accepts sequence 52 from counter one, retaining 50 skipped keys while consuming the target separately. *)
