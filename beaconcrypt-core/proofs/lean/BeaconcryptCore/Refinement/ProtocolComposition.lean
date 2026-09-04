@@ -1,6 +1,7 @@
 import BeaconcryptCore.Refinement.PqxdhConcreteSession
 import BeaconcryptCore.Refinement.PqxdhProtocol
 import BeaconcryptCore.Refinement.RatchetReceiveIdeal
+import BeaconcryptCore.Refinement.RatchetRoleReachability
 import BeaconcryptCore.Refinement.RepresentationBridge
 
 /-! Composition of extracted registration preparation, role initialization, and first-record processing. The drivers in this module sequence the public extracted phases; they do not assert that the surrounding Rust adapter implements this sequencing. -/
@@ -343,5 +344,69 @@ theorem completeBeacon_refines (c : Pqxdh.Crypto)
     · simp [BeaconResultRefines, Pqxdh.beaconFinish, hboundary.decapsulation, absBinding,
         ← hboundary.responseIdentity, Ne.symm hidentity]
 
+
+/-- The record boundary returns the full encoded record and preserves the actual extracted wire sequence as the ideal zero-based index. -/
+noncomputable def recordSealReply (c : Pqxdh.Crypto) (execute : KdfInterpreter)
+    (ad : Pqxdh.RecordAD) (plaintext : Pqxdh.Bytes)
+    (material : ratchet.RatchetMaterial) (sequence : Std.U64) (_ : Unit) :
+    core.option.Option (Ratchet.Msg Pqxdh.Bytes) :=
+  .Some ⟨sequence.val - 1, (concreteCrypto c execute).enc material ad plaintext⟩
+
+/-- The actual server initializer and first send produce the exact byte-model record and advanced send state, retaining the complementary empty receive state. -/
+theorem initialize_send_refines (c : Pqxdh.Crypto)
+    (initial : InitialKdfInterpreter) (execute : KdfInterpreter)
+    (hinitial : InitialKdfLaw c initial) (hstep : KdfLaw c execute)
+    (root : Std.Array Std.U8 32#usize) (ad : Pqxdh.RecordAD) (plaintext : Pqxdh.Bytes) :
+    ∃ initialized next send receive,
+      initializeServer root initial = ok initialized ∧
+      sealNext execute initialized () (recordSealReply c execute ad plaintext) =
+        ok (next, .Some (Ratchet.sendStep (Pqxdh.ratchetCrypto c)
+          ⟨(Pqxdh.rootChains c (absBytes root)).1, 0⟩ ad plaintext).1) ∧
+      KernelRefines (concreteCrypto c execute) initialized.refined.receive_chain send receive next ∧
+      mapSend send = (Ratchet.sendStep (Pqxdh.ratchetCrypto c)
+          ⟨(Pqxdh.rootChains c (absBytes root)).1, 0⟩ ad plaintext).2 ∧
+      mapRecv receive = ⟨(Pqxdh.rootChains c (absBytes root)).2, 0, []⟩ := by
+  obtain ⟨initialized, hinit, hsend, hreceive, hkernel⟩ :=
+    initializeServer_refines c (concreteCrypto c execute) root initial hinitial
+  have hmax : initialized.refined.control.send_sequence ≠ core.num.U64.MAX := by
+    intro heq
+    have hv := hkernel.sendSequence
+    rw [heq, u64_max_val] at hv
+    norm_num at hv
+  obtain ⟨pending, hbegin, hpending⟩ := begin_send_refines (concreteCrypto c execute)
+    initialized.refined.receive_chain ⟨initialized.refined.send_chain, 0⟩
+    ⟨initialized.refined.receive_chain, 0, []⟩ initialized () hkernel hmax
+  obtain ⟨ready, hresume, hready⟩ := SendKdf.resume_refines (concreteCrypto c execute)
+    initialized.refined.receive_chain ⟨initialized.refined.send_chain, 0⟩
+    ⟨initialized.refined.receive_chain, 0, []⟩ initialized () pending hpending
+    (execute pending.request) (interpreter_request_refines (recordCrypto c) execute
+      initialized.refined.send_chain pending.request hpending.requestInput hpending.requestInfo)
+  have hcommute := sendStep_commutes c execute hstep ⟨initialized.refined.send_chain, 0⟩ ad plaintext
+  simp only [mapSend, show absChain initialized.refined.send_chain =
+    (Pqxdh.rootChains c (absBytes root)).1 from hsend] at hcommute
+  refine ⟨initialized, ready.advanced, _, _, hinit, ?_, hready.advanced,
+    congrArg Prod.snd hcommute, ?_⟩
+  · rw [← congrArg Prod.fst hcommute]
+    simp only [sealNext, hbegin, bind_tc_ok, hresume, SendSeal.finish_returns_interpreter_result,
+      recordSealReply, hready.sequence, hready.material, Ratchet.sendStep]
+  · simpa only [mapRecv, List.map_nil, Ratchet.RecvState.mk.injEq, and_true] using
+      (show absChain initialized.refined.receive_chain = (Pqxdh.rootChains c (absBytes root)).2 from hreceive)
+
+/-- Specialize actual first sending to the unchanged PQXDH `serverRecord`, including its bound identifier prefix and server wire metadata. -/
+theorem initialize_serverRecord_refines (c : Pqxdh.Crypto)
+    (initial : InitialKdfInterpreter) (execute : KdfInterpreter)
+    (hinitial : InitialKdfLaw c initial) (hstep : KdfLaw c execute)
+    (root : Std.Array Std.U8 32#usize) (S : Pqxdh.ServerState) (ikB ds app : Pqxdh.Bytes)
+    (hroot : absBytes root = ds) :
+    ∃ initialized next send receive,
+      initializeServer root initial = ok initialized ∧
+      sealNext execute initialized () (recordSealReply c execute
+        ⟨Pqxdh.assocData (c.edPub S.ikSk) ikB, 1, S.sid⟩ (Pqxdh.LE64 (S.n + 1) ++ app)) =
+        ok (next, .Some (Pqxdh.serverRecord c S ikB ds app).1) ∧
+      KernelRefines (concreteCrypto c execute) initialized.refined.receive_chain send receive next ∧
+      mapSend send = (Pqxdh.serverRecord c S ikB ds app).2 ∧
+      mapRecv receive = ⟨(Pqxdh.rootChains c ds).2, 0, []⟩ := by
+  simpa only [Pqxdh.serverRecord, hroot] using initialize_send_refines c initial execute hinitial hstep root
+    ⟨Pqxdh.assocData (c.edPub S.ikSk) ikB, 1, S.sid⟩ (Pqxdh.LE64 (S.n + 1) ++ app)
 
 end BeaconcryptCore.Refinement.ProtocolComposition
