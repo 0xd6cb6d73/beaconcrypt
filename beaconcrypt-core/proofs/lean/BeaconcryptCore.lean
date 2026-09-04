@@ -73,6 +73,7 @@ import BeaconcryptCore.Refinement.BoundaryExecution
 import BeaconcryptCore.Refinement.ProtocolHistory
 import BeaconcryptCore.Refinement.ProtocolComposition
 import BeaconcryptCore.Refinement.ServerTransactionRefinement
+import BeaconcryptCore.Refinement.ServerPublicationRefinement
 
 import BeaconcryptCore.Refinement.RatchetAccessors
 import BeaconcryptCore.Refinement.RatchetByteSurface
