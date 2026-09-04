@@ -1,0 +1,50 @@
+# Lean behavioral refinement implementation plan
+
+## Baseline and audited gaps
+
+The baseline is `a3b2bb0` on `vcvio`, fetched from the private `origin` at `ssh://git@git.mschn.fr/amn/beaconcrypt` on 2026-09-04. The main worktree was clean. Existing unrelated branches and worktrees are preserved. The coordinator integrates in `~/worktrees/beaconcrypt-lean-refinement-integration` on `codex/lean-refinement-integration`.
+
+This audit reads theorem statements and extracted definitions, rather than treating the earlier completion records as refinement evidence. `KernelRefines.receive_ideal_run` and `KernelRefines.receive_ideal` establish exact plaintext and ideal poststate correspondence for positive wire sequence numbers, including rejection rollback. `RatchetExecution.lean` gives exact extracted receive phase semantics and determinism. `SendSeal.finish_refines_ideal_send` covers successful sealing, while the extracted seal phase already advances before its optional result is returned. `executeHistory_preserves_reachability` proves termination, output count, and a canonical invariant for mixed histories; it does not relate those outputs to a model trace. `initial_kernels_refine` executes extracted role initialization and proves concrete complementarity but uses an arbitrary concrete-typed cryptographic interpretation. `honest_run_refines` supplies the ideal first-record result as an input and does not execute the actual initialized receive kernel. Current initialization is `start_{beacon,server}_ratchet_kdf` followed by `resume_initial_ratchet_kdf`; there is no current extracted function called `initialize_ratchet_keys`.
+
+The byte interpretation is `Pqxdh.ratchetCrypto c`, and the concrete interpretation is `withInterpreter cr execute`. Existing exact byte partition proofs do not establish commutation between these two interpretations. These are remaining behavioral obligations, independently of the completed panic-freedom, former F* surface replacement, and invariant proofs.
+
+## Agreed interfaces and ownership
+
+1. Representation workstream: `codex/lean-refinement-representation`, its corresponding worktree, new `Refinement/RepresentationBridge.lean`, and `doc/impl/lean-refinement-representation.md`. Define `absChain`, `absMaterial`, `concreteCrypto`, `KdfLaw`, `absSend`, and `absReceive` in `BeaconcryptCore.Refinement.RepresentationBridge`. Derive step, ongoing chain, material, skipped-store, and record commutation from the primitive HKDF response law and extracted partitions. Ciphertext, plaintext, associated-data bytes, indices, and ideal error results remain observable through the bridge.
+2. Ratchet workstream: `codex/lean-refinement-ratchet`, corresponding worktree, new `Refinement/RatchetTraceRefinement.lean`, and its implementation ledger. Define `APIAction`, `APIObservation`, `IdealRoleState`, `executeAction`, `executeTrace`, `idealAction`, and `idealTrace` in `beaconcrypt_core.ratchet.concrete`. Compose existing extracted phase drivers and prove operation and finite-history refinement for every outcome. Add finite trace-property transfer and instrumentation adequacy.
+3. Protocol workstream: `codex/lean-refinement-protocol`, corresponding worktree, new `Refinement/ProtocolComposition.lean`, and its implementation ledger. Own the initial 64-byte HKDF boundary law, compose extracted registration and role initialization with actual first-record processing, and relate protocol states and outputs including included rejection branches. Coordinate directly with the representation workstream.
+4. Coordinator: integration, shared documentation/root imports, inventory updates after diff review, new `Refinement/BehavioralProperties.lean`, useful existing-model property derivations, independent cross-workstream review, validation, commits, publication, and final merge/cleanup. Reassign a completed workstream agent to independent review when capacity permits.
+
+All proof changes use the pinned Lean 4.31.0 environment with separate copied build caches. Agents do not run Nix or garbage collection. Only the coordinator runs repository Nix gates, and garbage collection follows confirmation that all repository Nix activity has ended. No workstream modifies the ideal models, extracted artifacts, runtime implementation, or another workstream's files without coordination.
+
+## Semantics and boundary contract
+
+The target is finite completed executions of the typed core registration and synchronous ratchet request/resume/finish API, starting from established related states or the proved initialization. Drivers must expose equations or relational semantics tying their operations to extracted definitions. The cryptographic boundary supplies deterministic fixed-length HKDF replies for core-owned requests and correct seal/open interpretations on the core-selected material and context. Primitive algorithms, the surrounding adapter, scheduling, wire parsing outside the core, persistence integration, cryptographic probabilistic properties, and infinite-run fairness are outside this proof claim. Additional necessary assumptions discovered during implementation must be stated as primitive or representation laws, never as the desired protocol refinement or a successful composite execution.
+
+Failed sealing is a consuming send attempt: the corresponding ideal send advances, its generated record is not published, and the observation records failure and consumed position. Exhaustion leaves the kernel and ideal state unchanged. Wire sequence zero is rejected as an explicit invalid-input stutter; positive sequences map to ideal index `sequence - 1`. Receive errors remain distinguished by the ideal result but project to the absent plaintext actually returned by the core; successful ciphertexts, plaintexts, sequence positions, and related final states cannot be erased. This is an annotated execution of the unchanged ideal model with explicit API boundary stutters and failed publication, not a modification of its transition functions. The adequacy of these observations and the supported property classes require explicit proofs and documentation.
+
+## Acceptance criteria
+
+- Every included typed concrete operation and finite execution under the stated primitive boundary laws has a corresponding execution of the existing ideal transitions, with related final states and a precisely matching observation trace.
+- The claim quantifies over actual concrete executions, not only an existential preferred run; determinism or execution equations connect the two where needed.
+- Registration, concrete root/chain initialization, and first-record handling are composed in checked statements. Early rejection, failed authentication, binding mismatch, plaintext failure, replay/capacity rejection, counter exhaustion, and zero sequence are accounted for wherever present in the included typed API.
+- Both ongoing chain derivation and cached key material have one consistent byte representation across PQXDH and ratchet proofs. Successful record bytes, indices, and plaintext are preserved.
+- Failed seal consumption and exhausted-send neutrality have different proved transitions. Receive rejection and rollback preserve the exact concrete entry kernel.
+- A property-transfer theorem states the supported class of universal finite observable trace/state properties and any abstraction restrictions. Useful properties already proved in the ideal models are derived for concrete execution, beyond invariant preservation alone.
+- No `sorry`, `admit`, custom axioms, circular assumptions, or premises asserting the desired composite refinement are introduced. New theorem dependencies are audited. All ideal model files remain byte-identical to the baseline.
+- New and substantial proofs are explained in `doc/formal-verification-analysis.md`; the maintained documentation and milestone ledger distinguish proved results, boundary assumptions, and open obligations.
+- Completed validated milestones are committed and pushed to private `origin` promptly, then integrated. Final gates include `make -C beaconcrypt-core verify`, generated-artifact drift checks, the separate `check-inventory`, formatting, full-workspace Clippy, and the complete workspace mutation suite after substantial additions. Every missed or timed-out viable mutant must be resolved.
+- After final review and validation, merge into `vcvio`, push it, and remove only task worktrees whose committed work is already pushed and preserved.
+
+## Milestone ledger
+
+| Milestone | Status | Evidence and unresolved obligations |
+| --- | --- | --- |
+| M0: audit, interfaces, acceptance criteria | Audited and agreed; plan committed before implementation | Baseline theorem inspection above; no new refinement claim yet. |
+| M1: representation bridge | In progress | Primitive 76-byte HKDF law agreed; all commutation proofs remain open. |
+| M2: complete ratchet operations/history | In progress | Existing receive and send-phase proofs available; complete annotated trace and observation adequacy remain open. |
+| M3: protocol composition | In progress | Existing initialization and protocol phase proofs available; initial HKDF bridge and real first-record composition remain open. |
+| M4: property transfer and independent review | Pending | Depends on M1–M3; useful concrete model-property derivations required. |
+| M5: final validation, merge, publication, cleanup | Pending | Full required gates and final cross-layer acceptance audit required. |
+
+A module building or an individual milestone finishing does not mark the overall refinement complete. Exact semantic mismatches must be recorded with their counterexamples and resolved in the permitted refinement layer, or remain explicitly unresolved.
