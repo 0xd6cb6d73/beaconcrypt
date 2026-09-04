@@ -66,6 +66,10 @@ import BeaconcryptCore.Refinement.RatchetReceiveDriver
 import BeaconcryptCore.Refinement.RatchetReceiveReachability
 import BeaconcryptCore.Refinement.RatchetLifetime
 import BeaconcryptCore.Refinement.BehavioralProperties
+import BeaconcryptCore.Refinement.RepresentationBridge
+import BeaconcryptCore.Refinement.RatchetTraceRefinement
+import BeaconcryptCore.Refinement.ProtocolComposition
+import BeaconcryptCore.Refinement.ServerTransactionRefinement
 
 import BeaconcryptCore.Refinement.RatchetAccessors
 import BeaconcryptCore.Refinement.RatchetByteSurface

@@ -41,10 +41,16 @@ Failed sealing is a consuming send attempt: the corresponding ideal send advance
 | Milestone | Status | Evidence and unresolved obligations |
 | --- | --- | --- |
 | M0: audit, interfaces, acceptance criteria | Audited and agreed; plan committed before implementation | Baseline theorem inspection above; no new refinement claim yet. |
-| M1: representation bridge | In progress | Primitive 76-byte HKDF law agreed; all commutation proofs remain open. |
-| M2: complete ratchet operations/history | In progress | Existing receive and send-phase proofs available; complete annotated trace and observation adequacy remain open. |
-| M3: protocol composition | In progress | Existing initialization and protocol phase proofs available; initial HKDF bridge and real first-record composition remain open. |
+| M1: representation bridge | Proved, reviewed, and pushed | `b9ca361`, integrated as `f30b50c`; exact byte partitions, injective chain/material maps, ongoing and complete step commutation; standard Lean axioms only. |
+| M2: complete ratchet operations/history | Proved and pushed; byte lift in progress | `f99c367`, integrated as `b5f9596`; all outcomes, exact traces, arbitrary actual evaluation, primitive seal callback coverage, and finite property transfer. |
+| M3: protocol composition | Foundation proved and pushed; complete outcomes in progress | `9136fb6`, integrated as `a9ac8cd`; actual initial HKDF plus first-receive byte correspondence. Strict atomic server publication mismatch proved; explicit abortable-prefix closure is separate and needs candidate correspondence. |
 | M4: property transfer and independent review | Property applications locally checked; transfer and review pending | `receive_in_order`, `receive_retained`, and `receive_replay` derive plaintext delivery, exact retained-key removal, and exact replay rollback from existing model theorems. Byte/history composition and independent review depend on M1–M3. |
 | M5: final validation, merge, publication, cleanup | Pending | Full required gates and final cross-layer acceptance audit required. |
 
 A module building or an individual milestone finishing does not mark the overall refinement complete. Exact semantic mismatches must be recorded with their counterexamples and resolved in the permitted refinement layer, or remain explicitly unresolved.
+
+## Exact semantic mismatch found during implementation
+
+A fresh valid registration with nonzero DH contributions, a free identifier below `u64::MAX`, and a nonempty application message makes the unchanged atomic ideal server emit a response and increment its counter. Actual first-record sealing may fail after replay-token consumption, discard the transient kernel, and abort the candidate without advancing the allocation counter or publishing a peer. The checked `finishCandidate_failed` and `failed_candidate_differs_from_atomic_emit` expose this discrepancy. No counter-preserving same-input refinement to a completed atomic `serverRespond` can cover that case.
+
+The permitted refinement-layer treatment is to expose the consumed-token prefix already present in `serverRespond` and give candidate publication an explicit abort closure. This preserves failure observations and state. It is not silently identified with the original completed atomic model, and only separately proved abort/stutter-stable property classes transfer. Independent review explicitly requires keeping this limit visible in the final acceptance audit.
