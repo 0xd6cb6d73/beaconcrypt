@@ -27,7 +27,7 @@ while IFS=$'\t' read -r category expected path extra ||
 	[[ -n "${category:-}${expected:-}${path:-}${extra:-}" ]]; do
 	[[ -z "${category:-}" || "$category" == \#* ]] && continue
 	[[ -z "${extra:-}" ]] || fail "malformed manifest entry for $path"
-	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|handwritten-ssprove|historical-generated-fstar|historical-handwritten-fstar|inventory|lean-control|validation)$ ]] ||
+	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|handwritten-ssprove|inventory|lean-control|validation)$ ]] ||
 		fail "unknown manifest category: $category"
 	[[ "$expected" =~ ^[0-9a-f]{64}$ ]] || fail "invalid SHA-256 for $path"
 	[[ -n "$path" && -f "$path" ]] || fail "missing reviewed file: $path"
@@ -45,16 +45,14 @@ declare -A expected_category_counts=(
 	[adapter-rust]=13
 	[adapter-schema]=3
 	[core-rust]=9
-	[control]=12
+	[control]=11
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=49
+	[handwritten-lean]=115
 	[handwritten-proverif]=64
 	[handwritten-ssprove]=18
-	[historical-generated-fstar]=5
-	[historical-handwritten-fstar]=8
 	[inventory]=2
-	[lean-control]=9
+	[lean-control]=12
 	[validation]=3
 )
 for category in "${!expected_category_counts[@]}"; do
@@ -96,8 +94,7 @@ printf '%s\n' \
 	../flake.nix \
 	Cargo.toml \
 	Makefile \
-	README.md \
-	proofs/fstar/Makefile > "$tmp_dir/control"
+	README.md > "$tmp_dir/control"
 compare_set control "$tmp_dir/control"
 
 printf '%s\n' proofs/check-inventory.sh proofs/trusted-boundary.md \
@@ -139,11 +136,6 @@ compare_set adapter-schema "$tmp_dir/adapter-schema"
 find src -type f -name '*.rs' -printf '%p\n' > "$tmp_dir/core-rust"
 compare_set core-rust "$tmp_dir/core-rust"
 
-find proofs/fstar -type f \( -name '*.fst' -o -name '*.fsti' \) \
-	! -path 'proofs/fstar/extraction/*' ! -path '*/.cache/*' \
-	-printf '%p\n' > "$tmp_dir/historical-handwritten-fstar"
-compare_set historical-handwritten-fstar "$tmp_dir/historical-handwritten-fstar"
-
 find proofs/pro-verif -type f \
 	\( -name '*.pv' -o -name '*.pvl' -o -name '*.awk' \) \
 	! -path 'proofs/pro-verif/extraction/*' \
@@ -153,11 +145,6 @@ compare_set handwritten-proverif "$tmp_dir/handwritten-proverif"
 find proofs/ssprove -type f -printf '%p\n' \
 	> "$tmp_dir/handwritten-ssprove"
 compare_set handwritten-ssprove "$tmp_dir/handwritten-ssprove"
-
-find proofs/fstar/extraction -type f \
-	\( -name '*.fst' -o -name '*.fsti' \) \
-	-printf '%p\n' > "$tmp_dir/historical-generated-fstar"
-compare_set historical-generated-fstar "$tmp_dir/historical-generated-fstar"
 
 find proofs/pro-verif/extraction -type f \
 	\( -name '*.pv' -o -name '*.pvl' \) -printf '%p\n' > "$tmp_dir/generated-proverif"
@@ -178,13 +165,16 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/Verification/PqxdhCommitmentRefinement.lean \
 	proofs/lean/BeaconcryptCore/Verification/ProofObligations.lean \
 	> "$tmp_dir/handwritten-lean"
-for lean_proof_dir in Model Refinement Computational; do
+for lean_proof_dir in Model Refinement Computational PanicFreedom; do
 	find "proofs/lean/BeaconcryptCore/$lean_proof_dir" -type f -name '*.lean' \
 		-printf '%p\n' >> "$tmp_dir/handwritten-lean"
 done
 compare_set handwritten-lean "$tmp_dir/handwritten-lean"
 
 printf '%s\n' \
+	../scripts/check_lean_panic_freedom.py \
+	../scripts/test_check_lean_panic_freedom.py \
+	proofs/lean/panic-freedom.json \
 	proofs/lean/.gitignore \
 	proofs/lean/ARISTOTLE_SUMMARY.md \
 	proofs/lean/PQXDH_IDEAL_MODEL.md \
@@ -251,34 +241,6 @@ reject_matches() {
 
 reject_matches "new hax opaque annotation requires inventory review" \
 	'hax_lib\s*::\s*(?:opaque|opaque_type)\b' src
-require_occurrence_count 1 \
-	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)' \
-	"reviewed F* noeq insertion" src
-require_occurrence_count 3 \
-	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(' \
-	"complete F* before-annotation allowlist" src
-require_occurrence_count 1 \
-	'#\[cfg_attr\(feature\s*=\s*"proverif",\s*hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"noeq"\s*\)\)\]\s*pub\s+struct\s+InitialRatchetChains\b' \
-	"reviewed noeq target InitialRatchetChains" src/pqxdh.rs
-require_occurrence_count 1 \
-	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"friend Beaconcrypt_core\.Ratchet\.Refined"\s*\)' \
-	"reviewed Ratchet-to-Refined friend edge" src/ratchet.rs
-require_occurrence_count 1 \
-	'hax_lib\s*::\s*fstar\s*::\s*before\s*\(\s*"friend Beaconcrypt_core\.Ratchet\.Control"\s*\)' \
-	"reviewed Refined-to-Control friend edge" src/ratchet/refined.rs
-
-# The checked-in F* files intentionally archive the predecessor executor/callback implementation.
-# They are reviewed historical evidence from a previously checked snapshot, but canonical regeneration does not currently verify them or establish correspondence with the current Rust effect machine.
-# These markers make that migration gap explicit and force an inventory review when the six-module current extraction replaces it.
-[[ ! -e proofs/fstar/extraction/Beaconcrypt_core.Ratchet.Concrete.fst ]] ||
-	fail "current-effect F* extraction appeared; reclassify the historical F* inventory"
-require_line_count 1 '^type t_ConcreteRatchetChain = ' \
-	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
-	"historical executor-bearing F* snapshot marker"
-require_line_count 1 '^let concrete_ratchet_step ' \
-	proofs/fstar/extraction/Beaconcrypt_core.Ratchet.fst \
-	"historical callback-era F* snapshot marker"
-
 replacement_pattern='hax_lib\s*::\s*proverif\s*::\s*replace\s*\('
 require_occurrence_count 3 "$replacement_pattern" \
 	"ProVerif Rust replacement" src
@@ -2034,7 +1996,7 @@ done
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioFeasibility$' \
 	"$lean_root" \
 	"canonical VCVio feasibility proof-root import"
-for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca PqxdhEd25519EufCma PqxdhInitializerSecrecy PqxdhInitialRatchetComplementarity; do
+for pqxdh_computational_module in PqxdhJointKdf PqxdhJointKdfGame PqxdhHiddenRoot PqxdhProjectionCollisions PqxdhKemIndCca PqxdhEd25519EufCma PqxdhInitializerSecrecy PqxdhInitialRatchetComplementarity PqxdhInitializedChainsSecrecy; do
 	require_line_count 1 "^import BeaconcryptCore\\.Computational\\.${pqxdh_computational_module}$" \
 		"$lean_root" "canonical PQXDH computational ${pqxdh_computational_module} proof-root import"
 done
@@ -2565,6 +2527,102 @@ for theorem_name in concreteKernelNew_refines_initial initialRatchetComplementar
 	initialRatchetComplementarity_jointStream; do
 	require_line_count 1 "^#print axioms ${theorem_name}$" \
 		"$pqxdh_initial_ratchet" "PQXDH initial-ratchet axiom audit ${theorem_name}"
+done
+
+pqxdh_initialized_chains=proofs/lean/BeaconcryptCore/Computational/PqxdhInitializedChainsSecrecy.lean
+for import_name in \
+	BeaconcryptCore.Computational.PqxdhInitializerSecrecy \
+	BeaconcryptCore.Computational.PqxdhInitialRatchetComplementarity; do
+	require_line_count 1 "^import ${import_name//./\\.}$" \
+		"$pqxdh_initialized_chains" "PQXDH initialized-chain narrow import ${import_name}"
+done
+require_line_count 2 '^import ' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain exact import count"
+for structure_name in InitializedDirectionalChains InitializedChainsObserver \
+	InitializedChainsExplicitReductionBounds; do
+	require_line_count 1 "^structure ${structure_name}( |$)" \
+		"$pqxdh_initialized_chains" "PQXDH initialized-chain structure ${structure_name}"
+done
+for definition in initializedFirstQuery initializedSecondQuery \
+	initializedChainsWrapperMain toInitializerAdversary \
+	InitializedChainsObserver.MakesAtMostQueries \
+	toProductionInitializedChainsOneKeyAdversary productionInitializedChainsGame \
+	independentRootInitializedChainsGame \
+	InitializedChainsExplicitReductionBounds.toInitializerBounds \
+	initializedChainsKemReduction initializedChainsKdfReduction \
+	initializedChainsSecrecyAdvantage productionDirectionalChains; do
+	require_line_count 1 "^(noncomputable )?def ${definition//./\\.}( |$)" \
+		"$pqxdh_initialized_chains" "PQXDH initialized-chain definition ${definition}"
+done
+for theorem_name in initializedFirstQuery_address initializedSecondQuery_address \
+	initializedQueries_same_address initializedFirstQuery_width initializedSecondQuery_width \
+	initializedChainsWrapperMain_query_normal_form \
+	simulateQ_initializedChainsWrapperMain_real \
+	initializedChainsWrapperMain_uniform_query_bound \
+	initializedChainsWrapperMain_base_query_bound \
+	initializedChainsWrapperMain_decapsulation_query_bound \
+	initializedChainsWrapperMain_root_query_bound \
+	initializedChainsWrapperMain_symmetric_query_bound \
+	toInitializerAdversary_makesAtMostQueries \
+	simulateQ_initializedChainsWrapperMain_toJointKdfView \
+	jointKdfViewRandomImpl_inr_run_miss jointKdfViewRandomImpl_inr_run_hit \
+	run_initializedChainsWrapperMain_random_empty \
+	"run'_initializedChainsWrapperMain_random_empty" \
+	toKemOneKeyAdversary_initializedChains_postChallenge \
+	initializerRealGame_initializedChains_eq_production \
+	initializerIndependentRootGame_initializedChains_eq \
+	initializedChainsKdfReduction_uniform_query_bound \
+	initializedChainsKdfReduction_stream_query_bound \
+	initializedChainsKdfReduction_root_query_bound \
+	initializedChainsKdfReduction_symmetric_query_bound \
+	initializedChainsKdfReduction_no_untyped_stream_queries \
+	initializedChainsKdfReduction_totalQueryBound \
+	initializedChainsKemReduction_makesAtMostQueries \
+	initializedChainsKemReduction_post_unblockedDecapsulationQueryBound \
+	initializedChainsSecrecyAdvantage_le \
+	productionDirectionalChains_serverToBeacon productionDirectionalChains_beaconToServer \
+	productionInitializedChains_to_concreteKernels; do
+	require_line_count 1 "^(@\[simp\] )?theorem ${theorem_name}( |$)" \
+		"$pqxdh_initialized_chains" "PQXDH initialized-chain theorem ${theorem_name}"
+done
+require_line_count 1 '^  main : InitializerPublicTranscript Context → KnownPqxdhRootCoordinates →$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain observer public inputs"
+require_line_count 1 '^    InitializedDirectionalChains → OracleComp \(InitializerPostSpec baseSpec\) Bool$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain observer chain-only argument"
+require_line_count 1 '^  serverToBeacon : Pqxdh\.Bytes$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain Server-to-Beacon model bytes"
+require_line_count 1 '^  beaconToServer : Pqxdh\.Bytes$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain Beacon-to-Server model bytes"
+require_line_count 1 '^  ⟨root\.toList, \.ratchet, \.first32⟩$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain first typed same-root query"
+require_line_count 1 '^  ⟨root\.toList, \.ratchet, \.second32⟩$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain second typed same-root query"
+require_line_count 1 '^      kem\.IND_CCA_Advantage \(runtimeOfImpl \(kemAmbientImpl baseImpl\)\)$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain one KEM advantage"
+require_line_count 1 '^        fixedHkdfSha512JointStreamAdvantage source$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain one fixed-HKDF advantage"
+require_line_count 1 '^        \(\(qRoot : ℝ≥0∞\) / \(2 \^ 256 : ℝ≥0∞\)\)\.toReal := by$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain one root-guess term"
+require_line_count 1 '^      IsFixedHkdfSymmetricStreamQuery \(qSym \+ 2\) :=$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain two added symmetric calls"
+require_line_count 1 '^      IsFixedHkdfSha512StreamQuery \(qRoot \+ \(qSym \+ 2\) \+ 1\) :=$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain complete-stream accounting"
+require_line_count 1 '^      IsFixedHkdfSha512UntypedStreamQuery 0 :=$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain no untyped calls"
+require_line_count 1 '^    \(hserverRoot : RootArrayRefines serverRoot root\)$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain separate Server root premise"
+require_line_count 1 '^    \(hbeaconRoot : RootArrayRefines beaconRoot root\)$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain separate Beacon root premise"
+require_line_count 1 '^      \(serverPending serverRoot\) serverResponse\)$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain pending-indexed Server response"
+require_line_count 1 '^      \(beaconPending beaconRoot\) beaconResponse\) :$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain pending-indexed Beacon response"
+require_line_count 3 '^#guard_msgs in$' \
+	"$pqxdh_initialized_chains" "PQXDH initialized-chain guarded axiom audits"
+for theorem_name in run_initializedChainsWrapperMain_random_empty \
+	initializedChainsSecrecyAdvantage_le productionInitializedChains_to_concreteKernels; do
+	require_line_count 1 "^#print axioms ${theorem_name}$" \
+		"$pqxdh_initialized_chains" "PQXDH initialized-chain axiom audit ${theorem_name}"
 done
 
 require_line_count 1 '^theorem openRecord_double_opening_yields_ctx_collision( |$)' \
@@ -3157,7 +3215,7 @@ require_line_count 1 '^theorem honest_run_refines( |$)' \
 	"PQXDH session-refinement theorem honest_run_refines"
 
 # The imported phase-refinement layer covers the full kernel/cache relation, the KDF response law, non-exhausted successful-send refinement, all neutral exits, supplied finite failed-trace witnesses, and the conditional open reply/material relation.
-# Cached success additionally has generated open construction from KernelRefines plus an ideal lookup, exact material/reply, direct ideal outcome, concrete finish output, and the consumed control-cache refinement; its material-array post-state KernelRefines result remains conditional on CachedPublicationRefines, and future success remains unproved.
+# Cached success has generated open construction, exact material/reply, ideal outcome, and control refinement. RatchetCachedPublication now discharges its material publication premise; complete future success remains in progress.
 for declaration in KernelRefines SendKdfRefines SendSealRefines; do
 	require_line_count 1 "^structure ${declaration}( |$)" \
 		proofs/lean/BeaconcryptCore/Refinement/RatchetEffectRefinement.lean \
@@ -3194,27 +3252,20 @@ for theorem_name in \
 		"effect-refinement theorem ${theorem_name}"
 done
 
-require_line_count 1 '^let commitment_transcript_is_exact' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
-	"exact production commitment transcript lemma"
-require_line_count 1 '^let commitment_transcript_integer_fields_are_le64' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
-	"production commitment integer-encoding lemma"
-require_line_count 1 '^let encode_u64_le_is_injective' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
-	"injective production LE64 encoding lemma"
-require_line_count 1 '^let production_commitment_input_is_injective' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
-	"injective six-field production commitment lemma"
-require_line_count 1 '^type t_HashCollisionWitness' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
+# Checked Lean contracts now carry the complete concrete commitment proof surface.
+for theorem_name in \
+	productionInput_spec \
+	productionInput_abs \
+	decode_encode_u64_le \
+	encode_u64_le_is_injective \
+	production_commitment_input_is_injective \
+	ctx_distinct_openings_imply_hash_collision; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean \
+		"concrete commitment theorem ${theorem_name}"
+done
+require_line_count 1 '^structure HashCollisionWitness( |$)' \
+	proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean \
 	"CTX hash-collision witness type"
-require_line_count 1 '^let ctx_distinct_openings_imply_hash_collision' \
-	proofs/fstar/Beaconcrypt_core.Commitment.Lemmas.fst \
-	"CTX distinct-opening collision extractor"
-
-reject_matches "unreviewed generated F* exception" \
-	'\b(?:while_loop_return|to_le_bytes|assume|admit)\b' \
-	proofs/fstar/extraction --glob '*.fst' --glob '*.fsti'
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

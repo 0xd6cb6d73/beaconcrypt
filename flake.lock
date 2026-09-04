@@ -160,10 +160,6 @@
     },
     "root": {
       "inputs": {
-        "fstar": [
-          "hax",
-          "fstar"
-        ],
         "hax": "hax",
         "nixpkgs": [
           "hax",

@@ -20,8 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: F*
-            target: check-generated-fstar
           - name: Lean
             target: check-generated-lean
           - name: ProVerif transcript fidelity
@@ -101,7 +99,6 @@ jobs:
         with:
           name: hax
           skipPush: true
-          extraPullNames: fstar-nix-versions,z3-nix-versions
 
       - name: Regenerate and verify formal proof artifacts
         run: make -C beaconcrypt-core ${{ matrix.target }}
