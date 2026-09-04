@@ -177,6 +177,7 @@ PROVERIF_SCENARIOS := \
 	phase2-response-binding \
 	phase2-assigned-id-weak \
 	later-sequence-registration \
+	post-registration-ratchet \
 	active-quantum \
 	baseline \
 	reachability \
@@ -543,6 +544,17 @@ check-proverif-later-sequence-registration: check-proverif-extraction
 			-lib $(PROVERIF_DIR)/later-sequence-registration-queries.pvl \
 			$(PROVERIF_DIR)/later-sequence-registration.pv | \
 		awk -v scenario=later-sequence-registration -f '$(PROVERIF_CHECKER)'
+
+check-proverif-post-registration-ratchet: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl \
+			-lib $(PROVERIF_DIR)/later-sequence-registration-control.pvl \
+			-lib $(PROVERIF_DIR)/post-registration-ratchet-control.pvl \
+			-lib $(PROVERIF_DIR)/post-registration-ratchet-queries.pvl \
+			$(PROVERIF_DIR)/post-registration-ratchet.pv | \
+		awk -v scenario=post-registration-ratchet -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-classical-equivalence: check-proverif-extraction
 	@set -o pipefail; \

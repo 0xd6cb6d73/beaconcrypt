@@ -2576,9 +2576,9 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"auxiliary ProVerif fidelity prerequisite",
 	)?;
 	let scenarios = scenario_names(makefile)?;
-	if scenarios.len() != 28 {
+	if scenarios.len() != 29 {
 		return Err(format!(
-			"expected 28 ProVerif scenarios, found {}",
+			"expected 29 ProVerif scenarios, found {}",
 			scenarios.len()
 		));
 	}
@@ -5717,7 +5717,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 		|| open_outputs[0]
 			!= [
 				"reply",
-				"(session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet)",
+				"(session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
 			]
 			.map(str::to_owned)
 	{
@@ -5819,7 +5819,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	)?;
 	require_once(
 		faithful,
-		"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FAITHFUL_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet)",
+		"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FAITHFUL_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
 		"later-registration faithful direct commit",
 	)?;
 	for forbidden in [
@@ -5853,7 +5853,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"eventLaterRegistrationFirstOnlyGateReached(LATER_REGISTRATION_FIRST_ONLY_WITNESS,frame_sequence,response);",
 			"ifframe_sequence=first_sequence()then",
 			"eventLaterRegistrationFirstOnlyGatePassed(LATER_REGISTRATION_FIRST_ONLY_WITNESS,frame_sequence,response);",
-			"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FIRST_ONLY_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet)",
+			"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FIRST_ONLY_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
 		],
 		"later-registration counterfactual post-open gate placement",
 	)?;
@@ -6092,7 +6092,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	let checker = section_between(
 		&snapshot.proverif_result_checker,
 		"} else if (scenario == \"later-sequence-registration\") {",
-		"} else if (scenario == \"baseline\" ||",
+		"} else if (scenario == \"post-registration-ratchet\") {",
 		"later-registration result-checker branch",
 	)?;
 	for (wanted, label) in [
@@ -6747,6 +6747,139 @@ fn later_registration_sequence_three_poststate_is_exact_and_nonvacuous() {
 }
 
 const LATER_REGISTRATION_MUTATION_COUNT: usize = 409;
+
+#[test]
+fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
+	fn response(key: u8, next_chain: u8, nonce: u8) -> RatchetKdfResponse {
+		let mut bytes = [0u8; RATCHET_KDF_OUTPUT_SIZE];
+		bytes[..32].fill(key);
+		bytes[32..64].fill(next_chain);
+		bytes[64..].fill(nonce);
+		RatchetKdfResponse::from_bytes(bytes)
+	}
+
+	type Snapshot = (
+		u64,
+		u64,
+		[u8; 32],
+		[u8; 32],
+		Vec<Option<(u64, [u8; 32], [u8; 12])>>,
+		u8,
+	);
+	fn snapshot(kernel: &ConcreteRatchetKernel) -> Snapshot {
+		(
+			kernel.send_sequence(),
+			kernel.receive_sequence(),
+			*kernel.send_chain().as_bytes(),
+			*kernel.receive_chain().as_bytes(),
+			(0..50)
+				.map(|slot| {
+					kernel.receive_entry_at(slot).map(|(sequence, material)| {
+						(sequence, *material.key().as_bytes(), *material.nonce().as_bytes())
+					})
+				})
+				.collect(),
+			kernel.receive_cache_len(),
+		)
+	}
+
+	// These are supplied opaque KDF replies, not executions or security claims about HKDF.
+	let root = [0x71; 32];
+	let mut initial_output = [0x41; 64];
+	initial_output[32..].fill(0x31);
+	let kernel = pqxdh::resume_initial_ratchet_kdf(
+		pqxdh::start_beacon_ratchet_kdf(&root),
+		InitialRatchetKdfResponse::from_bytes(initial_output),
+	);
+	let ReceiveEffect::ReceiveKdfRequested(first) = begin_receive(kernel, 3, "seq3 frame")
+	else {
+		panic!("sequence-three registration starts with one derivation");
+	};
+	assert_eq!(first.request().input(), &[0x41; 32]);
+	let ReceiveEffect::ReceiveKdfRequested(second) = first.resume(response(0x11, 0x42, 0x91))
+	else {
+		panic!("sequence-one material must be staged");
+	};
+	assert_eq!(second.request().input(), &[0x42; 32]);
+	let ReceiveEffect::ReceiveKdfRequested(third) = second.resume(response(0x22, 0x43, 0x92))
+	else {
+		panic!("sequence-two material must be staged");
+	};
+	assert_eq!(third.request().input(), &[0x43; 32]);
+	let ReceiveEffect::ReceiveOpenRequested(open) = third.resume(response(0x33, 0x44, 0x93))
+	else {
+		panic!("sequence-three registration must open with its separate target");
+	};
+	assert_eq!(open.sequence(), 3);
+	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x33; 32]);
+	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x93; 12]);
+	let (kernel, returned) = open.finish(Some("seq3 registration remainder"));
+	assert_eq!(returned, Some("seq3 registration remainder"));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.receive_sequence(), 3);
+	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
+	assert_eq!(kernel.receive_chain().as_bytes(), &[0x44; 32]);
+	assert_eq!(kernel.receive_cache_len(), 2);
+	assert_eq!(snapshot(&kernel).4[0], Some((1, [0x11; 32], [0x91; 12])));
+	assert_eq!(snapshot(&kernel).4[1], Some((2, [0x22; 32], [0x92; 12])));
+	assert!(snapshot(&kernel).4[2..].iter().all(Option::is_none));
+
+	// Carry that very kernel into ordinary receive; do not reconstruct its post-registration state.
+	let original_frame_context = ("original seq1 frame", 7u64, [0x51; 153]);
+	let full_registration_payload = (7u64.to_le_bytes(), "seq1 application payload");
+	let ReceiveEffect::ReceiveOpenRequested(open) =
+		begin_receive(kernel, 1, &original_frame_context)
+	else {
+		panic!("cached sequence-one must reach open directly, without KDF");
+	};
+	assert_eq!(open.sequence(), 1);
+	assert_eq!(*open.context(), &original_frame_context);
+	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x11; 32]);
+	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x91; 12]);
+	let (kernel, returned) = open.finish(Some(full_registration_payload));
+	assert_eq!(returned, Some(full_registration_payload));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.receive_sequence(), 3);
+	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
+	assert_eq!(kernel.receive_chain().as_bytes(), &[0x44; 32]);
+	assert_eq!(kernel.receive_cache_len(), 1);
+	assert_eq!(snapshot(&kernel).4[0], Some((2, [0x22; 32], [0x92; 12])));
+	assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));
+
+	let before_replay = snapshot(&kernel);
+	let ReceiveEffect::ReceiveRejected { kernel, context } =
+		begin_receive(kernel, 1, &original_frame_context)
+	else {
+		panic!("consumed replay must reject without KDF, open, or plaintext return");
+	};
+	assert_eq!(context, &original_frame_context);
+	assert_eq!(snapshot(&kernel), before_replay);
+
+	let fourth_frame_context = ("genuine seq4 frame", 7u64, [0x51; 153]);
+	let ReceiveEffect::ReceiveKdfRequested(pending) =
+		begin_receive(kernel, 4, &fourth_frame_context)
+	else {
+		panic!("sequence-four needs exactly the next carried receive-chain step");
+	};
+	assert_eq!(pending.request().input(), &[0x44; 32]);
+	let ReceiveEffect::ReceiveOpenRequested(open) = pending.resume(response(0x44, 0x45, 0x94))
+	else {
+		panic!("one sequence-four derivation must immediately produce the target open");
+	};
+	assert_eq!(open.sequence(), 4);
+	assert_eq!(*open.context(), &fourth_frame_context);
+	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x44; 32]);
+	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x94; 12]);
+	let (kernel, returned) = open.finish(Some("seq4 application payload"));
+	assert_eq!(returned, Some("seq4 application payload"));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.receive_sequence(), 4);
+	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
+	assert_eq!(kernel.receive_chain().as_bytes(), &[0x45; 32]);
+	assert_eq!(kernel.receive_cache_len(), 1);
+	assert_eq!(snapshot(&kernel).4[0], Some((2, [0x22; 32], [0x92; 12])));
+	assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));
+}
 
 #[test]
 fn later_registration_mutation_matrix_is_complete_and_rejected() {
@@ -8668,7 +8801,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later_registration_make_scenario_removed",
 			"\tlater-sequence-registration \\\n",
 			"",
-			"expected 28 ProVerif scenarios",
+			"expected 29 ProVerif scenarios",
 		),
 		(
 			"later_registration_make_extraction_prerequisite_removed",

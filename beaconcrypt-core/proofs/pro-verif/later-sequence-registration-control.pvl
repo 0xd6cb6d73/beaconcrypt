@@ -22,6 +22,10 @@ free LATER_REGISTRATION_SEQ1_PAYLOAD: bitstring [private].
 free LATER_REGISTRATION_SEQ2_PAYLOAD: bitstring [private].
 free LATER_REGISTRATION_SEQ3_PAYLOAD: bitstring [private].
 
+(* These hooks are private and used only by the separate finite continuation scenario. Unconsumed hooks add no public behavior to this scenario. *)
+free later_registration_committed_handoff: channel [private].
+free later_registration_server_handoff: channel [private].
+
 event LaterRegistrationOriginalResponseIssued(
   bitstring,
   bitstring,
@@ -248,7 +252,8 @@ let LaterSequenceRegistrationOpen(
           server_material_3,
           cache_2,
           receive_poststate,
-          committed_ratchet
+          committed_ratchet,
+          associated_data
         )
       ).
 
@@ -271,7 +276,8 @@ let LaterSequenceRegistrationCommit(
   server_material_3: bitstring,
   cache_2: receive_cache,
   receive_poststate: bitstring,
-  committed_ratchet: bitstring
+  committed_ratchet: bitstring,
+  associated_data: bitstring
 ) =
   let expected_binding =
     beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
@@ -318,8 +324,24 @@ let LaterSequenceRegistrationCommit(
   );
   event LaterRegistrationReturned(witness, registration_plaintext);
   out(c, later_registration_return(witness, registration_plaintext));
+  (
+  out(
+    later_registration_committed_handoff,
+    (
+      witness,
+      session,
+      root,
+      response,
+      assigned_key_id,
+      authenticated_server_key_id,
+      associated_data,
+      committed_ratchet
+    )
+  )
+  |
   if witness = LATER_REGISTRATION_FIRST_ONLY_WITNESS then
-    out(c, LATER_REGISTRATION_FIRST_ONLY_CANARY).
+    out(c, LATER_REGISTRATION_FIRST_ONLY_CANARY)
+  ).
 
 let LaterSequenceRegistrationFaithfulFinish(
   expected_server_identity: bitstring,
@@ -367,7 +389,8 @@ let LaterSequenceRegistrationFaithfulFinish(
         server_material_3: bitstring,
         cache_2: receive_cache,
         receive_poststate: bitstring,
-        committed_ratchet: bitstring
+        committed_ratchet: bitstring,
+        associated_data: bitstring
       )
     );
     LaterSequenceRegistrationCommit(
@@ -388,7 +411,8 @@ let LaterSequenceRegistrationFaithfulFinish(
       server_material_3,
       cache_2,
       receive_poststate,
-      committed_ratchet
+      committed_ratchet,
+      associated_data
     )
   ).
 
@@ -438,7 +462,8 @@ let LaterSequenceRegistrationFirstOnlyFinish(
         server_material_3: bitstring,
         cache_2: receive_cache,
         receive_poststate: bitstring,
-        committed_ratchet: bitstring
+        committed_ratchet: bitstring,
+        associated_data: bitstring
       )
     );
     event LaterRegistrationFirstOnlyGateReached(
@@ -470,7 +495,8 @@ let LaterSequenceRegistrationFirstOnlyFinish(
         server_material_3,
         cache_2,
         receive_poststate,
-        committed_ratchet
+        committed_ratchet,
+        associated_data
       )
   ).
 
@@ -623,6 +649,22 @@ let LaterSequenceRegistrationControl() =
     third_frame,
     assigned_key_id
   ) in
+  (
+  out(
+    later_registration_server_handoff,
+    (
+      session,
+      root,
+      original_response,
+      substituted_response,
+      first_frame,
+      server_chain_3,
+      associated_data,
+      server_key_id,
+      assigned_key_id
+    )
+  )
+  |
   in(c, candidate: bitstring);
   if candidate = substituted_response then
     event LaterRegistrationSubstitutionSelected(
@@ -652,4 +694,5 @@ let LaterSequenceRegistrationControl() =
         beacon_pq_secret,
         candidate
       )
-    ).
+    )
+  ).
