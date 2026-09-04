@@ -1,5 +1,6 @@
 import BeaconcryptCore.Refinement.PqxdhConcreteSession
 import BeaconcryptCore.Refinement.PqxdhProtocol
+import BeaconcryptCore.Model.Pqxdh.Acceptance
 import BeaconcryptCore.Refinement.RatchetReceiveIdeal
 import BeaconcryptCore.Refinement.RatchetRoleReachability
 import BeaconcryptCore.Refinement.RepresentationBridge
@@ -408,5 +409,31 @@ theorem initialize_serverRecord_refines (c : Pqxdh.Crypto)
       mapRecv receive = ⟨(Pqxdh.rootChains c ds).2, 0, []⟩ := by
   simpa only [Pqxdh.serverRecord, hroot] using initialize_send_refines c initial execute hinitial hstep root
     ⟨Pqxdh.assocData (c.edPub S.ikSk) ikB, 1, S.sid⟩ (Pqxdh.LE64 (S.n + 1) ++ app)
+
+/-- An actually accepted core registration inherits the existing PQXDH model's authenticated-record admission property. The incoming frame is arbitrary, so the statement covers relabelled and foreign records rather than assuming honest delivery. -/
+theorem completeBeacon_success_admits_record (h : Pqxdh.HonestRun) (hok : h.Ok)
+    (derive : pqxdh.RootKeyInput → Std.Array Std.U8 32#usize)
+    (initial : InitialKdfInterpreter) (execute : KdfInterpreter)
+    (hrootLaw : RootKdfLaw h.c derive) (hinitial : InitialKdfLaw h.c initial) (hstep : KdfLaw h.c execute)
+    (state : pqxdh.BeaconInitSent) (inputs : pqxdh.BeaconFinishInputs)
+    (sender target : Std.U64) (frame : Pqxdh.CryptoFrame)
+    (hpin : absBinding state.expected_server_binding = h.binding)
+    (hboundary : BeaconBoundary h.c state inputs sender target { h.response with appFrame := frame }
+      h.ikSkB h.preSkB h.otSkB h.kemSkB (h.c.xpub (h.c.xsk h.ikSkS)))
+    (established : pqxdh.BeaconEstablished) (kernel : ConcreteRatchetKernel)
+    (hactual : completeBeacon (concreteCrypto h.c execute) derive initial execute state inputs sender target
+      frame.cipherText = ok (.ok (established, kernel))) :
+    frame.keyId = h.sid ∧ frame.seq ≠ 0 ∧
+      ∃ plaintext, Pqxdh.openRecord h.c
+        (Ratchet.msgKeyAt (Pqxdh.ratchetCrypto h.c) h.chains.1 (frame.seq - 1))
+        ⟨h.ad, frame.seq, frame.keyId⟩ frame.cipherText = some plaintext := by
+  obtain ⟨result, hrun, hrelated⟩ := completeBeacon_refines h.c derive initial execute hrootLaw hinitial hstep
+    state inputs sender target { h.response with appFrame := frame }
+    h.ikSkB h.preSkB h.otSkB h.kemSkB (h.c.xpub (h.c.xsk h.ikSkS)) hboundary
+  have hresult : result = .ok (established, kernel) := RustM.ok.inj (hrun.symm.trans hactual)
+  subst result
+  obtain ⟨origin, send, receive, _, hideal⟩ := hrelated
+  apply h.beaconRecordAdmitted_elim hok frame
+  simp only [Pqxdh.HonestRun.beaconInitSent, ← hpin, hideal, Pqxdh.BeaconRecordAdmitted]
 
 end BeaconcryptCore.Refinement.ProtocolComposition
