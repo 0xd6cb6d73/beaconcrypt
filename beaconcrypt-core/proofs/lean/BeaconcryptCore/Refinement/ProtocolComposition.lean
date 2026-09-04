@@ -202,4 +202,146 @@ theorem initialize_receive_refines (c : Pqxdh.Crypto)
       (show absChain initialized.refined.send_chain = (Pqxdh.rootChains c (absBytes root)).2 from hsend),
     congrArg Prod.snd hcommute⟩
 
+/-- Registration preserves the precise failure code, or the assigned identity and the complete established ratchet state. -/
+def BeaconResultRefines (c : Pqxdh.Crypto) (execute : KdfInterpreter) (ikSk : Pqxdh.Bytes)
+    (result : Except Pqxdh.BeaconError (pqxdh.BeaconEstablished × ConcreteRatchetKernel))
+    (ideal : Except Pqxdh.BeaconError Nat × Pqxdh.BeaconState) : Prop :=
+  match result with
+  | .error error => ideal = (.error error, .aborted)
+  | .ok (established, kernel) =>
+      ∃ origin send receive,
+        KernelRefines (concreteCrypto c execute) origin send receive kernel ∧
+        ideal = (.ok established.assigned_key_id.val,
+          .established (absBinding established.server_binding) ikSk established.assigned_key_id.val
+            (Pqxdh.assocData (absBytes established.server_binding.identity_public_key) (c.edPub ikSk))
+            (mapSend send) (mapRecv receive))
+
+
+/-- The suffix of the unchanged ideal transition after its sender and sequence guards. This is a named expression, not an added model transition. -/
+def idealFinishRecord (binding : Pqxdh.ServerBinding) (ikSk : Pqxdh.Bytes) (kid : Nat)
+    (ad : Pqxdh.Bytes) (send : Ratchet.SendState Pqxdh.Bytes)
+    (opened : Except Ratchet.RecvError Pqxdh.Bytes × Ratchet.RecvState Pqxdh.Bytes (Pqxdh.Bytes × Pqxdh.Bytes)) :
+    Except Pqxdh.BeaconError Nat × Pqxdh.BeaconState :=
+  match opened with
+  | (.error _, _) => (.error .badRecord, .aborted)
+  | (.ok plaintext, receive) =>
+      if plaintext.length ≤ 8 then (.error .badPlaintext, .aborted)
+      else if plaintext.take 8 ≠ Pqxdh.LE64 kid then (.error .keyIdMismatch, .aborted)
+      else (.ok kid, .established binding ikSk kid ad send receive)
+
+/-- Every included beacon registration outcome matches the existing atomic ideal transition. Primitive assumptions are local request/response laws; no registration or successful receive equation is assumed. -/
+theorem completeBeacon_refines (c : Pqxdh.Crypto)
+    (derive : pqxdh.RootKeyInput → Std.Array Std.U8 32#usize)
+    (initial : InitialKdfInterpreter) (execute : KdfInterpreter)
+    (hrootLaw : RootKdfLaw c derive) (hinitial : InitialKdfLaw c initial) (hstep : KdfLaw c execute)
+    (state : pqxdh.BeaconInitSent) (inputs : pqxdh.BeaconFinishInputs)
+    (sender target : Std.U64) (response : Pqxdh.KexResponse)
+    (ikSk preSk otSk kemSk ikSX : Pqxdh.Bytes)
+    (hboundary : BeaconBoundary c state inputs sender target response ikSk preSk otSk kemSk ikSX) :
+    ∃ result,
+      completeBeacon (concreteCrypto c execute) derive initial execute state inputs sender target
+        response.appFrame.cipherText = ok result ∧
+      BeaconResultRefines c execute ikSk result
+        (Pqxdh.beaconFinish c (.initSent (absBinding state.expected_server_binding) ikSk preSk otSk kemSk) response) := by
+  by_cases hidentity : absBytes state.expected_server_binding.identity_public_key =
+      absBytes inputs.response_server_identity
+  · have hid : response.identityKey = absBytes state.expected_server_binding.identity_public_key :=
+      hboundary.responseIdentity.symm.trans hidentity.symm
+    by_cases hnonzero : Pqxdh.dhNonZero (absDHs inputs.shared_secrets)
+    · obtain ⟨candidate, hprepare, hbinding, hkid, had, htranscript⟩ :=
+        prepareBeacon_refines state inputs hidentity hnonzero
+      by_cases hsender : sender = candidate.server_binding.identity_key_id
+      · have hsenderModel : response.appFrame.keyId = state.expected_server_binding.identity_key_id.val := by
+          rw [← hboundary.senderId, hsender, hbinding]
+        by_cases hzero : target.val = 0
+        · exact ⟨.error .badRecord,
+            by simp only [completeBeacon, hprepare, bind_tc_ok, hsender, ne_self_iff_false, if_false, if_pos hzero],
+            by simp [BeaconResultRefines, Pqxdh.beaconFinish, hboundary.decapsulation, absBinding,
+              ← hid, hboundary.conversion, ← hboundary.sharedDH, hnonzero, hsenderModel,
+              ← hboundary.sequence, hzero]⟩
+        · have hroot : absBytes (derive candidate.root_key_input) = Pqxdh.beaconRoot c ikSk preSk otSk ikSX
+              response.ephemeralKey (absBytes inputs.shared_secrets.kem_shared_secret) := by
+            rw [hrootLaw, htranscript, hboundary.sharedDH]
+            rfl
+          obtain ⟨initialized, next, send, receive, hinit, hrecv, hpost, hsend, hreceive⟩ :=
+            initialize_receive_refines c initial execute hinitial hstep (derive candidate.root_key_input)
+              target (Nat.pos_of_ne_zero hzero)
+              ⟨absBytes candidate.associated_data, target.val, sender.val⟩ response.appFrame.cipherText
+          have hadModel : absBytes candidate.associated_data =
+              Pqxdh.assocData (absBytes state.expected_server_binding.identity_public_key) (c.edPub ikSk) := by
+            rw [had, hboundary.beaconIdentity]
+          have hmodel : Pqxdh.beaconFinish c
+                (.initSent (absBinding state.expected_server_binding) ikSk preSk otSk kemSk) response =
+              idealFinishRecord (absBinding state.expected_server_binding) ikSk response.keyId
+                (absBytes candidate.associated_data) (mapSend send)
+                (Ratchet.recvStep (Pqxdh.ratchetCrypto c)
+                  ⟨(Pqxdh.rootChains c (absBytes (derive candidate.root_key_input))).1, 0, []⟩
+                  ⟨absBytes candidate.associated_data, target.val, sender.val⟩
+                  ⟨target.val - 1, response.appFrame.cipherText⟩) := by
+            simp only [Pqxdh.beaconFinish, hboundary.decapsulation, absBinding,
+              if_neg (not_ne_iff.mpr hid), hboundary.conversion,
+              if_neg (not_not_intro (hboundary.sharedDH ▸ hnonzero)),
+              if_neg (not_ne_iff.mpr (hboundary.senderId.trans hsenderModel)), if_false,
+              ← hboundary.sequence, hzero, ← hroot, ← hadModel, ← hboundary.senderId, hsend, idealFinishRecord]
+            rfl
+          cases hopened : Ratchet.recvStep (Pqxdh.ratchetCrypto c)
+              ⟨(Pqxdh.rootChains c (absBytes (derive candidate.root_key_input))).1, 0, []⟩
+              ⟨absBytes candidate.associated_data, target.val, sender.val⟩
+              ⟨target.val - 1, response.appFrame.cipherText⟩ with
+          | mk result received =>
+            cases result with
+            | error error =>
+                exact ⟨.error .badRecord,
+                  by simp only [completeBeacon, hprepare, bind_tc_ok, if_neg (not_not_intro hsender),
+                    if_neg hzero, initializeBeaconCandidate_eq, hinit, hrecv, hopened, receiveIdealPlaintext, core.option.Option.None]
+                     rfl,
+                  by simp only [BeaconResultRefines, hmodel, hopened, idealFinishRecord]⟩
+            | ok plaintext =>
+                have hactual : completeBeacon (concreteCrypto c execute) derive initial execute state inputs
+                      sender target response.appFrame.cipherText =
+                    (do let committed ← commitPlaintext candidate sender plaintext
+                        match committed with
+                        | .error error => ok (.error error)
+                        | .ok established => ok (.ok (established, next))) := by
+                  simp only [completeBeacon, hprepare, bind_tc_ok, if_neg (not_not_intro hsender),
+                    if_neg hzero, initializeBeaconCandidate_eq, hinit, hrecv, hopened, receiveIdealPlaintext,
+                    core.option.Option.Some]
+                  rfl
+                by_cases hlength : plaintext.length ≤ 8
+                · exact ⟨.error .badPlaintext,
+                    by simp only [hactual, commitPlaintext_eq candidate sender plaintext hsender, if_pos hlength, bind_tc_ok],
+                    by simp only [BeaconResultRefines, hmodel, hopened, idealFinishRecord, if_pos hlength]⟩
+                · have hkey : candidate.assigned_key_id.val = response.keyId := by
+                    rw [hkid, hboundary.assignedId]
+                  by_cases hbound : plaintext.take 8 ≠ Pqxdh.LE64 response.keyId
+                  · exact ⟨.error .keyIdMismatch,
+                      by simp only [hactual, commitPlaintext_eq candidate sender plaintext hsender, hkey,
+                        if_neg hlength, if_pos hbound, bind_tc_ok],
+                      by simp only [BeaconResultRefines, hmodel, hopened, idealFinishRecord,
+                        if_neg hlength, if_pos hbound]⟩
+                  · refine ⟨.ok (⟨candidate.server_binding, candidate.assigned_key_id⟩, next), ?_,
+                      initialized.refined.receive_chain, send, receive, hpost, ?_⟩
+                    · simp only [hactual, commitPlaintext_eq candidate sender plaintext hsender, hkey,
+                        if_neg hlength, if_neg hbound, bind_tc_ok]
+                    · rw [hmodel, hopened]
+                      simp only [idealFinishRecord, if_neg hlength, if_neg hbound,
+                        hbinding, hkey, hadModel, show mapRecv receive = received by simpa only [hopened] using hreceive]
+
+      · have hsenderModel : response.appFrame.keyId ≠ state.expected_server_binding.identity_key_id.val := by
+          intro heq
+          exact hsender (Std.UScalar.eq_of_val_eq (by simpa only [hbinding, hboundary.senderId] using heq))
+        exact ⟨.error .badSender, by simp only [completeBeacon, hprepare, bind_tc_ok, if_pos hsender],
+          by simp [BeaconResultRefines, Pqxdh.beaconFinish, hboundary.decapsulation, absBinding,
+            ← hid, hboundary.conversion, ← hboundary.sharedDH, hnonzero, hsenderModel]⟩
+    · refine ⟨.error .zeroDH, ?_, ?_⟩
+      · simp [completeBeacon, pqxdh.beacon_prepare_finish, array_eq_abs, hidentity,
+          (build_root_key_input_abs inputs.shared_secrets).2 hnonzero]
+      · simp [BeaconResultRefines, Pqxdh.beaconFinish, hboundary.decapsulation, absBinding,
+          ← hid, hboundary.conversion, ← hboundary.sharedDH, hnonzero]
+  · refine ⟨.error .identityMismatch, ?_, ?_⟩
+    · simp [completeBeacon, pqxdh.beacon_prepare_finish, array_eq_abs, hidentity]
+    · simp [BeaconResultRefines, Pqxdh.beaconFinish, hboundary.decapsulation, absBinding,
+        ← hboundary.responseIdentity, Ne.symm hidentity]
+
+
 end BeaconcryptCore.Refinement.ProtocolComposition
