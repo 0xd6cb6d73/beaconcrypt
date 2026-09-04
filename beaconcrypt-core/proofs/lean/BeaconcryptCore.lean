@@ -68,6 +68,9 @@ import BeaconcryptCore.Refinement.RatchetLifetime
 import BeaconcryptCore.Refinement.BehavioralProperties
 import BeaconcryptCore.Refinement.RepresentationBridge
 import BeaconcryptCore.Refinement.RatchetTraceRefinement
+import BeaconcryptCore.Refinement.ByteTraceRefinement
+import BeaconcryptCore.Refinement.BoundaryExecution
+import BeaconcryptCore.Refinement.ProtocolHistory
 import BeaconcryptCore.Refinement.ProtocolComposition
 import BeaconcryptCore.Refinement.ServerTransactionRefinement
 
