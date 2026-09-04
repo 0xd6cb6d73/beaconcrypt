@@ -43,6 +43,16 @@ This is sufficient for misattribution resistance because one fixed `R` fixes `C`
 
 ## Machine-checked collision witness and computational lifting
 
+The checked declarations below distinguish the extracted implementation from the ideal-model probability games. The implementation theorems are in `BeaconcryptCore.Refinement.CommitmentSurface`; the probability bounds are in `CtxReduction.lean`.
+
+| Claim | Checked Lean evidence |
+| --- | --- |
+| The actual extracted builder returns the transcript whose bytes equal ideal `ctxPreimage` | [`productionInput_spec`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean#L32) and [`productionInput_abs`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean#L38) |
+| Full-width little-endian encoding has a left inverse and is injective | [`decode_encode_u64_le`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean#L124) and [`encode_u64_le_is_injective`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean#L130) |
+| Equal production transcript arrays imply equal six-field inputs | [`production_commitment_input_is_injective`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean#L56) |
+| Two distinct accepted explanations yield a collision on the actual production inputs | [`ctx_distinct_openings_imply_hash_collision`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean#L90) |
+| Ideal-model misattribution and one-shot full commitment reduce to collision finding with factor one | [`ctxMisattributionAdvantage_le_blake2b_cr`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/CtxReduction.lean#L94) and [`ctxFullCommitmentAdvantage_le_blake2b_cr`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/CtxReduction.lean#L201) |
+
 The Lean extracted-code theorem `ctx_distinct_openings_imply_hash_collision` quantifies over arbitrary pure 229-to-64-byte `hash` and AEAD-open functions.
 It fixes the same ciphertext core `C`, transmitted tag `T`, and outer value `U` for both accepted openings, allows the base AEAD to open that payload under unequal keys or contexts, and treats semantic differences in `K`, `N`, `A`, `S`, `I`, or `M` as a distinct explanation.
 For two such accepted explanations, let:
@@ -80,7 +90,7 @@ Pr_bounded-hidden-ROM[CTX misattribution] <= Pr_same-run[unequal-input, equal-ou
 
 `ctx_hidden_rom_extractor_reduction` proves this for every hidden-table distribution, and `ctx_uniform_hidden_rom_extractor_reduction` specializes it to a uniformly sampled finite random function. `ctx_hidden_binding_trace_size_bound` gives the `q + 2` upper bound, and `ctx_attach_verifier_completed_run` proves that any adversary completing within its budget is followed by exactly the two verifier query-answer pairs. `ctx_hidden_misattribution_challenge_reachable` supplies a concrete non-vacuity witness using a deliberately multi-opening AEAD and a colliding constant table.
 
-The game uses an injective product of one-bit semantic fields, so its extractor fact is proved directly in Rocq. Connecting those fields to the 229-byte production transcript still requires the reviewed representation bridge to the Lean extracted-transcript injectivity and collision-witness theorems. Instantiating the abstract collision event as `Adv_commit_beaconcrypt(A) <= Adv_collision_BLAKE2b-512(B)` also requires the production-width game, the concrete primitive premise, and runtime accounting.
+The game uses an injective product of one-bit semantic fields, so its extractor fact is proved directly in Rocq. Connecting those fields to the 229-byte production transcript still requires the reviewed representation bridge to the Lean extracted-transcript injectivity and collision-witness theorems. This open Lean/SSProve bridge relates the finite game to the extracted representation; it is separate from `productionInput_abs`, which already equates the extracted builder's bytes with the ideal Lean `ctxPreimage`. Instantiating the abstract collision event as `Adv_commit_beaconcrypt(A) <= Adv_collision_BLAKE2b-512(B)` also requires the production-width game, the concrete primitive premise, and runtime accounting.
 
 The checked assumption reports contain only the reviewed MathComp Boolean-predicate foundations and an abstract real-number carrier; they contain no repository admission, unaccepted SSProve interchange dependency, or unsafe hax prelude import.
 There is no additive ChaCha20-Poly1305 term in this binding reduction, and unequal-key or unequal-context multi-openings by the base AEAD remain allowed.
