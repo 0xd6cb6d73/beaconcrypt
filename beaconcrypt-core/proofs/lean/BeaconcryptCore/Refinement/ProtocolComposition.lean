@@ -436,4 +436,36 @@ theorem completeBeacon_success_admits_record (h : Pqxdh.HonestRun) (hok : h.Ok)
   apply h.beaconRecordAdmitted_elim hok frame
   simp only [Pqxdh.HonestRun.beaconInitSent, ← hpin, hideal, Pqxdh.BeaconRecordAdmitted]
 
+/-- An actually accepted server phase retains exactly the root transcript assembled from its supplied shared secrets. No equality of protocol roots is assumed. -/
+theorem server_accept_root_input (state acceptedState : pqxdh.ServerState)
+    (registration : pqxdh.VerifiedInitKex) (status : pqxdh.RegistrationStatus)
+    (binding : pqxdh.ServerBinding) (coins : pqxdh.ServerCoins) (secrets : pqxdh.PqxdhSharedSecrets)
+    (pending : pqxdh.PendingServerRegistration)
+    (hactual : pqxdh.server_accept state registration status binding coins secrets =
+      ok (.Ok (acceptedState, pending))) :
+    absBytes pending.root_key_input.bytes = Pqxdh.ikmOf (absDHs secrets) (absBytes secrets.kem_shared_secret) := by
+  by_cases hnonzero : Pqxdh.dhNonZero (absDHs secrets)
+  · obtain ⟨root, hroot, hbytes⟩ := (build_root_key_input_abs secrets).1 hnonzero
+    obtain ⟨rid, hrid, _⟩ := registration_id_abs registration
+    cases status <;> simp only [pqxdh.server_accept, pqxdh.validate_registration_status,
+      hroot, hrid, bind_tc_ok, RustM.ok.injEq, core.result.Result.Ok.injEq,
+      Prod.mk.injEq, reduceCtorEq, if_true, if_false] at hactual
+    exact (congrArg (fun value : pqxdh.PendingServerRegistration => absBytes value.root_key_input.bytes)
+      hactual.2).symm.trans hbytes
+  · cases status <;> simp [pqxdh.server_accept, pqxdh.validate_registration_status,
+      (build_root_key_input_abs secrets).2 hnonzero] at hactual
+
+/-- Interpreting the root request of an actual accepted server phase derives the byte-model root from those same DH and KEM inputs. Primitive DH/KEM correspondence can subsequently rewrite these inputs to the ideal protocol expressions. -/
+theorem accepted_root_refines (c : Pqxdh.Crypto)
+    (derive : pqxdh.RootKeyInput → Std.Array Std.U8 32#usize) (hrootLaw : RootKdfLaw c derive)
+    (state acceptedState : pqxdh.ServerState)
+    (registration : pqxdh.VerifiedInitKex) (status : pqxdh.RegistrationStatus)
+    (binding : pqxdh.ServerBinding) (coins : pqxdh.ServerCoins) (secrets : pqxdh.PqxdhSharedSecrets)
+    (pending : pqxdh.PendingServerRegistration)
+    (hactual : pqxdh.server_accept state registration status binding coins secrets =
+      ok (.Ok (acceptedState, pending))) :
+    absBytes (derive pending.root_key_input) =
+      Pqxdh.rootSecret c (Pqxdh.ikmOf (absDHs secrets) (absBytes secrets.kem_shared_secret)) := by
+  rw [hrootLaw, server_accept_root_input state acceptedState registration status binding coins secrets pending hactual]
+
 end BeaconcryptCore.Refinement.ProtocolComposition
