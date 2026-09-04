@@ -65,6 +65,7 @@ import BeaconcryptCore.Refinement.RatchetReceiveAdmission
 import BeaconcryptCore.Refinement.RatchetReceiveDriver
 import BeaconcryptCore.Refinement.RatchetReceiveReachability
 import BeaconcryptCore.Refinement.RatchetLifetime
+import BeaconcryptCore.Refinement.BehavioralProperties
 
 import BeaconcryptCore.Refinement.RatchetAccessors
 import BeaconcryptCore.Refinement.RatchetByteSurface

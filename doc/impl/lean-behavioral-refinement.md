@@ -44,7 +44,7 @@ Failed sealing is a consuming send attempt: the corresponding ideal send advance
 | M1: representation bridge | In progress | Primitive 76-byte HKDF law agreed; all commutation proofs remain open. |
 | M2: complete ratchet operations/history | In progress | Existing receive and send-phase proofs available; complete annotated trace and observation adequacy remain open. |
 | M3: protocol composition | In progress | Existing initialization and protocol phase proofs available; initial HKDF bridge and real first-record composition remain open. |
-| M4: property transfer and independent review | Pending | Depends on M1–M3; useful concrete model-property derivations required. |
+| M4: property transfer and independent review | Property applications locally checked; transfer and review pending | `receive_in_order`, `receive_retained`, and `receive_replay` derive plaintext delivery, exact retained-key removal, and exact replay rollback from existing model theorems. Byte/history composition and independent review depend on M1–M3. |
 | M5: final validation, merge, publication, cleanup | Pending | Full required gates and final cross-layer acceptance audit required. |
 
 A module building or an individual milestone finishing does not mark the overall refinement complete. Exact semantic mismatches must be recorded with their counterexamples and resolved in the permitted refinement layer, or remain explicitly unresolved.
