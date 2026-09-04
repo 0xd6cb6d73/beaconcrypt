@@ -224,18 +224,19 @@ theorem executeAction_receive_eq {AD PT CT : Type}
     executeAction cr execute entry (.receive target ad ciphertext) = ok (result, .received output) := by
   simp [executeAction, hrun, hpositive]
 
-/-- Every actual seal callback satisfying only the successful-encryption primitive contract is represented by a Boolean outcome for this invocation. No state or trace correspondence is assumed. -/
-theorem KernelRefines.sealNext_callback_covered {AD PT CT : Type}
+/-- Every optional callback matching a specified successful reply is covered by its actual Boolean outcome. The expected reply may retain the actual request sequence and any complete output data. -/
+theorem KernelRefines.sealNext_optional_callback_covered {AD PT CT Output : Type}
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT) (execute : KdfInterpreter)
     (origin : RatchetChain) (ideal : IdealRoleState) (entry : ConcreteRatchetKernel)
     (h : KernelRefines (withInterpreter cr execute) origin ideal.send ideal.receive entry)
-    (ad : AD) (plaintext : PT)
-    (sealReply : RatchetMaterial → Std.U64 → Unit → core.option.Option CT)
+    (expected : RatchetMaterial → Std.U64 → Unit → Output)
+    (sealReply : RatchetMaterial → Std.U64 → Unit → core.option.Option Output)
     (hcorrect : ∀ material sequence context ciphertext,
       sealReply material sequence context = .Some ciphertext →
-      ciphertext = (withInterpreter cr execute).enc material ad plaintext) :
-    ∃ sealed, sealNext execute entry () sealReply =
-      sealNext execute entry () (apiSealReply (withInterpreter cr execute) ad plaintext sealed) := by
+      ciphertext = expected material sequence context) :
+    ∃ sealed : Bool, sealNext execute entry () sealReply =
+      sealNext execute entry () (fun material sequence context =>
+        if sealed then .Some (expected material sequence context) else .None) := by
   by_cases hmax : entry.refined.control.send_sequence = core.num.U64.MAX
   · exact ⟨false, by simp [sealNext, begin_send_exhausted_restores_entry entry () hmax]⟩
   · obtain ⟨pending, hbegin, hpending⟩ := begin_send_refines (withInterpreter cr execute)
@@ -247,9 +248,25 @@ theorem KernelRefines.sealNext_callback_covered {AD PT CT : Type}
     cases hreply : sealReply ready.material ready.sequence ready.context with
     | none =>
         exact ⟨false, by simp [sealNext, hbegin, hresume, SendSeal.finish_returns_interpreter_result,
-          hreply, apiSealReply]⟩
+          hreply]⟩
     | some ciphertext =>
         exact ⟨true, by simp [sealNext, hbegin, hresume, SendSeal.finish_returns_interpreter_result,
-          hreply, apiSealReply, hcorrect ready.material ready.sequence ready.context ciphertext hreply]⟩
+          hreply, hcorrect ready.material ready.sequence ready.context ciphertext hreply]⟩
+
+
+/-- Every actual seal callback satisfying only the successful-encryption primitive contract is represented by a Boolean outcome for this invocation. No state or trace correspondence is assumed. -/
+theorem KernelRefines.sealNext_callback_covered {AD PT CT : Type}
+    (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT) (execute : KdfInterpreter)
+    (origin : RatchetChain) (ideal : IdealRoleState) (entry : ConcreteRatchetKernel)
+    (h : KernelRefines (withInterpreter cr execute) origin ideal.send ideal.receive entry)
+    (ad : AD) (plaintext : PT)
+    (sealReply : RatchetMaterial → Std.U64 → Unit → core.option.Option CT)
+    (hcorrect : ∀ material sequence context ciphertext,
+      sealReply material sequence context = .Some ciphertext →
+      ciphertext = (withInterpreter cr execute).enc material ad plaintext) :
+    ∃ sealed, sealNext execute entry () sealReply =
+      sealNext execute entry () (apiSealReply (withInterpreter cr execute) ad plaintext sealed) :=
+  h.sealNext_optional_callback_covered cr execute origin ideal entry
+    (fun material _ _ => (withInterpreter cr execute).enc material ad plaintext) sealReply hcorrect
 
 end beaconcrypt_core.ratchet.concrete

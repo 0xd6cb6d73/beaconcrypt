@@ -1,6 +1,7 @@
 import BeaconcryptCore.Refinement.ServerTransactionRefinement
 import BeaconcryptCore.Refinement.ProtocolComposition
 import BeaconcryptCore.Refinement.PqxdhSurface
+import BeaconcryptCore.Refinement.RatchetTraceRefinement
 
 /-! The extracted candidate publication transaction refines an explicit optional-publication closure of the unchanged ideal server operation. The core allocation state and emitted values are related field by field; the ideal peer map and consumed-registration set are external context. This is not atomic serverRespond refinement on failed sealing. -/
 
@@ -286,5 +287,131 @@ theorem prepareAndFinish_refines (c : Pqxdh.Crypto)
         entry candidate root identity kemCipher ephemeral application hcandidate hmax hoccupied sealed
       exact ⟨.finished result, by simp [prepareAndFinish, havailable, hprepare, hfinish],
         candidate, hcandidate, hresult⟩
+
+/-- Successful arbitrary callbacks preserve the actual extracted sequence and full encrypted record. Failure remains unrestricted. -/
+def CandidateSealCorrect (c : Pqxdh.Crypto) (execute : KdfInterpreter)
+    (candidate : pqxdh.ServerRegistrationCandidate) (application : Pqxdh.Bytes)
+    (reply : ratchet.RatchetMaterial → Std.U64 → Unit → core.option.Option (Ratchet.Msg Pqxdh.Bytes)) : Prop :=
+  ∀ material sequence context message, reply material sequence context = .Some message →
+    message = ⟨sequence.val - 1, (concreteCrypto c execute).enc material
+      ⟨absBytes candidate.associated_data, 1, candidate.server_identity_key_id.val⟩
+      (Pqxdh.LE64 candidate.key_id.val ++ application)⟩
+
+/-- Every actual optional first-seal callback has an outcome annotation reproducing the complete extracted candidate transaction. -/
+theorem finishCandidate_callback_covered (c : Pqxdh.Crypto)
+    (initial : InitialKdfInterpreter) (execute : KdfInterpreter)
+    (candidate : pqxdh.ServerRegistrationCandidate) (root : Std.Array Std.U8 32#usize)
+    (application : Pqxdh.Bytes)
+    (reply : ratchet.RatchetMaterial → Std.U64 → Unit → core.option.Option (Ratchet.Msg Pqxdh.Bytes))
+    (hcorrect : CandidateSealCorrect c execute candidate application reply) :
+    ∃ sealed, finishCandidate candidate root initial execute reply =
+      finishCandidate candidate root initial execute (candidateSealReply c execute candidate application sealed) := by
+  obtain ⟨beaconOrigin, serverOrigin, _, server, _, hinit, _, _, _, hkernel⟩ :=
+    initial_kernels_refine (concreteCrypto c execute) root initial
+  obtain ⟨sealed, hcovered⟩ := hkernel.sealNext_optional_callback_covered (recordCrypto c) execute
+    beaconOrigin ⟨⟨serverOrigin, 0⟩, ⟨beaconOrigin, 0, []⟩⟩ server
+    (fun material sequence _ => (⟨sequence.val - 1, (concreteCrypto c execute).enc material
+      ⟨absBytes candidate.associated_data, 1, candidate.server_identity_key_id.val⟩
+      (Pqxdh.LE64 candidate.key_id.val ++ application)⟩ : Ratchet.Msg Pqxdh.Bytes)) reply hcorrect
+  have hcovered' : sealNext execute server () reply =
+      sealNext execute server () (candidateSealReply c execute candidate application sealed) := hcovered
+  exact ⟨sealed, by simp only [finishCandidate, initializeCandidate_eq, hinit, bind_tc_ok, hcovered']⟩
+
+/-- The complete preparation/publication driver with actual external optional callbacks, selected from the actual prepared candidate. -/
+noncomputable def prepareAndFinishWith
+    (initial : InitialKdfInterpreter) (execute : KdfInterpreter)
+    (state : pqxdh.ServerState) (pending : pqxdh.PendingServerRegistration)
+    (binding : pqxdh.ServerBinding) (availability : pqxdh.KeyIdAvailability)
+    (root : Std.Array Std.U8 32#usize)
+    (reply : pqxdh.ServerRegistrationCandidate → ratchet.RatchetMaterial → Std.U64 → Unit →
+      core.option.Option (Ratchet.Msg Pqxdh.Bytes)) : RustM PreparedPublicationResult := do
+  let prepared ← pqxdh.server_prepare_commit state pending binding availability
+  match prepared with
+  | .Err error => ok (.rejected error)
+  | .Ok candidate =>
+      let result ← finishCandidate candidate root initial execute (reply candidate)
+      ok (.finished result)
+
+/-- Actual optional callbacks are covered for every preparation outcome; only the actual seal outcome is selected, and no invocation field is changed. -/
+theorem prepareAndFinishWith_covered (c : Pqxdh.Crypto)
+    (initial : InitialKdfInterpreter) (execute : KdfInterpreter)
+    (state : pqxdh.ServerState) (pending : pqxdh.PendingServerRegistration)
+    (binding : pqxdh.ServerBinding) (availability : pqxdh.KeyIdAvailability)
+    (root : Std.Array Std.U8 32#usize) (application : Pqxdh.Bytes)
+    (reply : pqxdh.ServerRegistrationCandidate → ratchet.RatchetMaterial → Std.U64 → Unit →
+      core.option.Option (Ratchet.Msg Pqxdh.Bytes))
+    (hcorrect : ∀ candidate, CandidateSealCorrect c execute candidate application (reply candidate)) :
+    ∃ sealed, prepareAndFinishWith initial execute state pending binding availability root reply =
+      prepareAndFinish c initial execute state pending binding availability root application sealed := by
+  obtain ⟨prepared, hprepare⟩ := BeaconcryptCore.PanicFreedom.server_prepare_commit_ok state pending binding availability
+  cases prepared with
+  | Err error => exact ⟨false, by simp [prepareAndFinishWith, prepareAndFinish, hprepare]⟩
+  | Ok candidate =>
+      obtain ⟨sealed, hcovered⟩ := finishCandidate_callback_covered c initial execute candidate root
+        application (reply candidate) (hcorrect candidate)
+      exact ⟨sealed, by simp only [prepareAndFinishWith, prepareAndFinish, hprepare, bind_tc_ok, hcovered]⟩
+
+/-- The plaintext prefix used by the first-seal driver is exactly the extracted candidate binding accessor's bytes. -/
+theorem candidate_binding_prefix_exact (candidate : pqxdh.ServerRegistrationCandidate)
+    (application : Pqxdh.Bytes) :
+    ∃ binding, candidate.key_id_binding = ok binding ∧
+      absBytes binding.bytes ++ application = Pqxdh.LE64 candidate.key_id.val ++ application := by
+  obtain ⟨binding, hbinding, hbytes⟩ := registration_key_id_binding_abs candidate.key_id
+  exact ⟨binding, hbinding, congrArg (· ++ application) hbytes⟩
+
+/-- The actual callback driver retains changed-binding rejection before initialization and sealing. -/
+theorem prepareAndFinishWith_binding_changed
+    (initial : InitialKdfInterpreter) (execute : KdfInterpreter)
+    (state : pqxdh.ServerState) (pending : pqxdh.PendingServerRegistration)
+    (binding : pqxdh.ServerBinding) (availability : pqxdh.KeyIdAvailability)
+    (root : Std.Array Std.U8 32#usize)
+    (reply : pqxdh.ServerRegistrationCandidate → ratchet.RatchetMaterial → Std.U64 → Unit →
+      core.option.Option (Ratchet.Msg Pqxdh.Bytes))
+    (hmismatch : pending.server_binding.identity_key_id ≠ binding.identity_key_id ∨
+      pending.server_binding.identity_public_key ≠ binding.identity_public_key) :
+    prepareAndFinishWith initial execute state pending binding availability root reply =
+      ok (.rejected .IdentityMismatch) := by
+  simp only [prepareAndFinishWith, prepare_binding_changed state pending binding availability hmismatch, bind_tc_ok]
+
+/-- Every actual boundary-compliant preparation/publication execution after successful extracted acceptance has an optional-publication witness. The root is computed from that same pending transcript under the root KDF law; no protocol-root equality is assumed. The entry peer/replay context is the externally supplied already-consumed prefix. -/
+theorem accepted_prepareAndFinishWith_refines (c : Pqxdh.Crypto)
+    (derive : pqxdh.RootKeyInput → Std.Array Std.U8 32#usize) (hrootLaw : RootKdfLaw c derive)
+    (initial : InitialKdfInterpreter) (execute : KdfInterpreter)
+    (hinitial : InitialKdfLaw c initial) (hstep : KdfLaw c execute)
+    (originalState state : pqxdh.ServerState)
+    (registration : pqxdh.VerifiedInitKex) (status : pqxdh.RegistrationStatus)
+    (acceptedBinding : pqxdh.ServerBinding) (coins : pqxdh.ServerCoins)
+    (secrets : pqxdh.PqxdhSharedSecrets) (pending : pqxdh.PendingServerRegistration)
+    (haccept : pqxdh.server_accept originalState registration status acceptedBinding coins secrets =
+      ok (.Ok (state, pending)))
+    (entry : Pqxdh.ServerState) (binding : pqxdh.ServerBinding)
+    (availability : pqxdh.KeyIdAvailability)
+    (identity kemCipher ephemeral application : Pqxdh.Bytes)
+    (reply : pqxdh.ServerRegistrationCandidate → ratchet.RatchetMaterial → Std.U64 → Unit →
+      core.option.Option (Ratchet.Msg Pqxdh.Bytes))
+    (hcorrect : ∀ candidate, CandidateSealCorrect c execute candidate application (reply candidate))
+    (hcounter : state.last_key_id.val = entry.n) (hbinding : pending.server_binding = binding)
+    (hserverIdentity : absBytes binding.identity_public_key = c.edPub entry.ikSk)
+    (hserverId : binding.identity_key_id.val = entry.sid)
+    (hidentity : absBytes pending.beacon_identity_public_key = identity)
+    (hkem : absBytes pending.kem_ciphertext = kemCipher)
+    (hephem : absBytes pending.ephemeral_public_key = ephemeral)
+    (havail : availability = .Occupied ↔ (entry.peers.lookup (entry.n + 1)).isSome) :
+    ∃ sealed result, prepareAndFinishWith initial execute state pending binding availability
+        (derive pending.root_key_input) reply = ok result ∧
+      PreparedPublicationRefines c execute entry
+        (Pqxdh.rootSecret c (Pqxdh.ikmOf (absDHs secrets) (absBytes secrets.kem_shared_secret)))
+        identity kemCipher ephemeral result
+        (idealPublication c entry identity
+          (Pqxdh.rootSecret c (Pqxdh.ikmOf (absDHs secrets) (absBytes secrets.kem_shared_secret)))
+          kemCipher ephemeral application sealed) := by
+  have hroot := accepted_root_refines c derive hrootLaw originalState state registration status
+    acceptedBinding coins secrets pending haccept
+  obtain ⟨sealed, hcovered⟩ := prepareAndFinishWith_covered c initial execute state pending binding
+    availability (derive pending.root_key_input) application reply hcorrect
+  obtain ⟨result, hrun, hresult⟩ := prepareAndFinish_refines c initial execute hinitial hstep entry
+    state pending binding availability (derive pending.root_key_input) identity kemCipher ephemeral
+    application sealed hcounter hbinding hserverIdentity hserverId hidentity hkem hephem havail
+  exact ⟨sealed, result, hcovered.trans hrun, by simpa only [hroot] using hresult⟩
 
 end BeaconcryptCore.Refinement.ServerPublicationRefinement
