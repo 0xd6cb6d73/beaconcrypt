@@ -414,4 +414,60 @@ theorem accepted_prepareAndFinishWith_refines (c : Pqxdh.Crypto)
     application sealed hcounter hbinding hserverIdentity hserverId hidentity hkem hephem havail
   exact ⟨sealed, result, hcovered.trans hrun, by simpa only [hroot] using hresult⟩
 
+/-- The accepted-transcript theorem applies to any actual completed evaluation, by injectivity of the extracted computation's result. -/
+theorem accepted_prepareAndFinishWith_observed (c : Pqxdh.Crypto)
+    (derive : pqxdh.RootKeyInput → Std.Array Std.U8 32#usize) (hrootLaw : RootKdfLaw c derive)
+    (initial : InitialKdfInterpreter) (execute : KdfInterpreter)
+    (hinitial : InitialKdfLaw c initial) (hstep : KdfLaw c execute)
+    (originalState state : pqxdh.ServerState)
+    (registration : pqxdh.VerifiedInitKex) (status : pqxdh.RegistrationStatus)
+    (acceptedBinding : pqxdh.ServerBinding) (coins : pqxdh.ServerCoins)
+    (secrets : pqxdh.PqxdhSharedSecrets) (pending : pqxdh.PendingServerRegistration)
+    (haccept : pqxdh.server_accept originalState registration status acceptedBinding coins secrets =
+      ok (.Ok (state, pending)))
+    (entry : Pqxdh.ServerState) (binding : pqxdh.ServerBinding)
+    (availability : pqxdh.KeyIdAvailability)
+    (identity kemCipher ephemeral application : Pqxdh.Bytes)
+    (reply : pqxdh.ServerRegistrationCandidate → ratchet.RatchetMaterial → Std.U64 → Unit →
+      core.option.Option (Ratchet.Msg Pqxdh.Bytes))
+    (hcorrect : ∀ candidate, CandidateSealCorrect c execute candidate application (reply candidate))
+    (hcounter : state.last_key_id.val = entry.n) (hbinding : pending.server_binding = binding)
+    (hserverIdentity : absBytes binding.identity_public_key = c.edPub entry.ikSk)
+    (hserverId : binding.identity_key_id.val = entry.sid)
+    (hidentity : absBytes pending.beacon_identity_public_key = identity)
+    (hkem : absBytes pending.kem_ciphertext = kemCipher)
+    (hephem : absBytes pending.ephemeral_public_key = ephemeral)
+    (havail : availability = .Occupied ↔ (entry.peers.lookup (entry.n + 1)).isSome)
+    (result : PreparedPublicationResult)
+    (hactual : prepareAndFinishWith initial execute state pending binding availability
+      (derive pending.root_key_input) reply = ok result) :
+    ∃ sealed, PreparedPublicationRefines c execute entry
+        (Pqxdh.rootSecret c (Pqxdh.ikmOf (absDHs secrets) (absBytes secrets.kem_shared_secret)))
+        identity kemCipher ephemeral result
+        (idealPublication c entry identity
+          (Pqxdh.rootSecret c (Pqxdh.ikmOf (absDHs secrets) (absBytes secrets.kem_shared_secret)))
+          kemCipher ephemeral application sealed) := by
+  obtain ⟨sealed, covered, hrun, hrelated⟩ := accepted_prepareAndFinishWith_refines c derive hrootLaw
+    initial execute hinitial hstep originalState state registration status acceptedBinding coins secrets
+    pending haccept entry binding availability identity kemCipher ephemeral application reply hcorrect
+    hcounter hbinding hserverIdentity hserverId hidentity hkem hephem havail
+  have heq : covered = result := RustM.ok.inj (hrun.symm.trans hactual)
+  exact ⟨sealed, heq ▸ hrelated⟩
+
+/--
+info: 'BeaconcryptCore.Refinement.ServerPublicationRefinement.accepted_prepareAndFinishWith_refines' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms accepted_prepareAndFinishWith_refines
+
+/--
+info: 'BeaconcryptCore.Refinement.ServerPublicationRefinement.accepted_prepareAndFinishWith_observed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms accepted_prepareAndFinishWith_observed
+
 end BeaconcryptCore.Refinement.ServerPublicationRefinement
