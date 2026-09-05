@@ -48,12 +48,12 @@ declare -A expected_category_counts=(
 	[control]=11
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=120
-	[handwritten-proverif]=68
+	[handwritten-lean]=121
+	[handwritten-proverif]=70
 	[handwritten-ssprove]=18
 	[inventory]=2
 	[lean-control]=12
-	[validation]=6
+	[validation]=8
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -104,6 +104,8 @@ compare_set inventory "$tmp_dir/inventory"
 printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	../beaconcrypt/tests/registration_completion.rs \
 	../beaconcrypt/tests/raw_receive.rs ../beaconcrypt/tests/construction.rs \
+	../beaconcrypt/tests/registration_response_alias.rs \
+	proofs/pro-verif/check-phase2-x25519-alias.py \
 	tests/proverif_transcript_fidelity.rs \
 	> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
@@ -827,8 +829,10 @@ for fidelity_test_name in \
 		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
 done
 require_occurrence_count 1 \
-	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*\}' \
+	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*check_x25519_alias_runner_mutations\(\);\s*\}' \
 	"transcript-fidelity model and adapter composition" "$fidelity_test"
+require_line_count 1 '^fn check_x25519_alias_runner_mutations\(\) \{$' \
+	"$fidelity_test" "X25519 alias runner mutation controls"
 require_occurrence_count 1 \
 	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_finite_receive_state_fixture\(snapshot\)\?;\s*validate_registration_lifecycle\(snapshot\)\?;\s*validate_initial_ratchet_fidelity\(snapshot\)\?;\s*validate_later_registration_fidelity\(snapshot\)\?;\s*validate_post_registration_fidelity\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
@@ -3316,5 +3320,22 @@ done
 require_line_count 1 '^structure HashCollisionWitness( |$)' \
 	proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean \
 	"CTX hash-collision witness type"
+
+# Functional public-key encoding aliases preserve the complete modeled outcome.
+response_alias="proofs/lean/BeaconcryptCore/Model/Pqxdh/ResponseEncodingAlias.lean"
+for theorem_name in beaconDHs_eq beaconFinish_eq distinct_response_same_outcome; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$response_alias" \
+		"response-encoding alias theorem ${theorem_name}"
+done
+require_line_count 1 '^def SameDhReplies( |$)' "$response_alias" \
+	"response-encoding functional X25519 interface condition"
+require_line_count 2 '^#guard_msgs in$' "$response_alias" \
+	"response-encoding alias guarded dependency reports"
+for theorem_name in beaconFinish_eq distinct_response_same_outcome; do
+	require_line_count 1 "^#print axioms Pqxdh.ResponseEncodingAlias.${theorem_name}$" \
+		"$response_alias" "response-encoding alias dependency report ${theorem_name}"
+done
+require_line_count 1 '^import BeaconcryptCore.Model.Pqxdh.ResponseEncodingAlias$' \
+	proofs/lean/BeaconcryptCore.lean "response-encoding alias root import"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

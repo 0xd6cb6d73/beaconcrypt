@@ -63,6 +63,7 @@ PROVERIF_SCENARIOS := \
 	public-key-confusion-weak \
 	phase2-response-binding \
 	phase2-assigned-id-weak \
+	phase2-x25519-alias \
 	later-sequence-registration \
 	post-registration-ratchet \
 	main-registration-controls \
@@ -386,6 +387,9 @@ check-proverif-phase2-assigned-id-weak: check-proverif-extraction \
 			-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-queries.pvl \
 			$(PROVERIF_DIR)/phase2-assigned-id-weak.pv | \
 		awk -v scenario=phase2-assigned-id-weak -f '$(PROVERIF_CHECKER)'
+
+check-proverif-phase2-x25519-alias: check-proverif-extraction
+	python3 $(PROVERIF_DIR)/check-phase2-x25519-alias.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
 
 check-proverif-later-sequence-registration: check-proverif-extraction
 	@set -o pipefail; \

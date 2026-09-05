@@ -16,6 +16,10 @@ use beaconcrypt_core::{
 
 const INTERFACE: &str = include_str!("../proofs/pro-verif/production-transcript-interface.pvl");
 const CRYPTO_MODEL: &str = include_str!("../proofs/pro-verif/crypto.pvl");
+const MAIN_QUERIES: &str = include_str!("../proofs/pro-verif/queries.pvl");
+const X25519_ALIAS_RUNNER: &str = include_str!("../proofs/pro-verif/check-phase2-x25519-alias.py");
+const X25519_ALIAS_CONTROL: &str =
+	include_str!("../proofs/pro-verif/phase2-x25519-alias-control.pv");
 const ENVIRONMENT_MODEL: &str = include_str!("../proofs/pro-verif/environment.pvl");
 const ACTIVE_QUANTUM_WITNESS: &str = include_str!("../proofs/pro-verif/active-quantum-witness.pvl");
 const EXTRACTION_MODEL: &str = include_str!("../proofs/pro-verif/extraction/lib.pvl");
@@ -2736,6 +2740,84 @@ fn scenario_names(makefile: &str) -> Result<Vec<String>, String> {
 		.collect())
 }
 
+fn validate_x25519_alias_runner(
+	runner: &str,
+	control: &str,
+	baseline_queries: &str,
+) -> Result<(), String> {
+	let script = compact(runner);
+	for (wanted, label) in [
+		(
+			r#"source=without_comments((directory/"queries.pvl").read_text())queries=re.findall(r"\bquery\b.*?\.",source,flags=re.S)selected=[queryforqueryinqueriesif"inj-event(BeaconCommitted("inqueryor"inj-event(BeaconRegistrationCompleted("inquery]iflen(selected)!=3:"#,
+			"X25519 alias unchanged baseline query selection",
+		),
+		(
+			r#"return"\n\n".join(selected)+"\n""#,
+			"X25519 alias unchanged selected query text",
+		),
+		(
+			r#"source=(directory/"crypto.pvl").read_text()start=source.index("(*X25519.")finish=source.index("(*ML-KEMencapsulation",start)ifcompact(source[start:finish])!=compact(EXPECTED_X25519):"#,
+			"X25519 alias checked canonical crypto boundary",
+		),
+		(
+			r#"replacement=(directory/"phase2-x25519-alias-theory.pvl").read_text()returnsource[:start]+replacement+source[finish:]"#,
+			"X25519 alias preserves crypto outside X25519",
+		),
+		(
+			r#"queries=work/"exact-registration-queries.pvl"queries.write_text(selected_queries(directory))alias=work/"crypto-with-x25519-aliases.pvl"alias.write_text(alias_crypto(directory))forlabel,crypto,expectedin(("canonical",directory/"crypto.pvl","true"),("alias",alias,"false"),):"#,
+			"X25519 alias canonical and alias query runs",
+		),
+		(
+			r#"command=[args.proverif]forlibraryin(directory/"production-transcript-interface.pvl",crypto,directory/"extraction/lib.pvl",directory/"environment.pvl",queries,):command.extend(("-lib",str(library)))command.append(str(directory/"phase2-x25519-alias-control.pv"))"#,
+			"X25519 alias exact ordered library and control loading",
+		),
+		(
+			r#"result=subprocess.run(command,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=args.timeout,check=True,)"#,
+			"X25519 alias checked subprocess execution",
+		),
+		(
+			"check_run(result.stdout,expected)",
+			"X25519 alias checked correspondence results",
+		),
+		(
+			r#"if__name__=="__main__":main()"#,
+			"X25519 alias executable entry point",
+		),
+	] {
+		require_once(&script, wanted, label)?;
+	}
+	// Pin the independently reviewed runner as well as its readable wiring above.
+	// Extra code must not silently bypass a check or rewrite the selected queries.
+	if stable_text_hash(runner) != 10_577_693_918_808_656_546 {
+		return Err("X25519 alias reviewed runner changed; review the complete runner".to_owned());
+	}
+	let control = compact(&uncommented_pv(control)?);
+	if control
+		!= "processout(c,ed_public(SERVER_IDENTITY_SECRET));(HonestBeacon(BEACON_RECORD_SECRET)|Server(INITIAL_SECRET,CACHED_SECRET,ADVANCE_SECRET,FUTURE_SECRET)|KeepBeaconStatePrivate())"
+	{
+		return Err("X25519 alias unchanged honest role control changed".to_owned());
+	}
+	let queries = compact(&uncommented_pv(baseline_queries)?);
+	let selected = queries
+		.split("query")
+		.skip(1)
+		.filter(|query| {
+			query.contains("inj-event(BeaconCommitted(")
+				|| query.contains("inj-event(BeaconRegistrationCompleted(")
+		})
+		.map(|query| stable_text_hash(&format!("query{query}")))
+		.collect::<Vec<_>>();
+	if selected
+		!= [
+			5_922_842_905_554_828_522,
+			1_537_735_056_464_180_222,
+			9_278_209_781_568_601_116,
+		] {
+		return Err("X25519 alias three exact baseline correspondences changed".to_owned());
+	}
+	Ok(())
+}
+
 fn validate_makefile(makefile: &str) -> Result<(), String> {
 	if count(makefile, "-lib $(PROVERIF_INTERFACE)") != 1
 		|| count(makefile, "-lib $(PROVERIF_DIR)/crypto.pvl") != 1
@@ -2753,11 +2835,19 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"auxiliary ProVerif fidelity prerequisite",
 	)?;
 	let scenarios = scenario_names(makefile)?;
-	if scenarios.len() != 30 {
+	if scenarios.len() != 31 {
 		return Err(format!(
-			"expected 30 ProVerif scenarios, found {}",
+			"expected 31 ProVerif scenarios, found {}",
 			scenarios.len()
 		));
+	}
+	if scenarios
+		.iter()
+		.filter(|scenario| scenario.as_str() == "phase2-x25519-alias")
+		.count()
+		!= 1
+	{
+		return Err("X25519 alias must be enumerated exactly once".to_owned());
 	}
 	for scenario in scenarios {
 		let marker = format!("check-proverif-{scenario}:");
@@ -2766,6 +2856,15 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 			.ok_or_else(|| format!("missing scenario target: {scenario}"))?;
 		let tail = &makefile[start..];
 		let block = &tail[..tail.find("\n\n").unwrap_or(tail.len())];
+		if scenario == "phase2-x25519-alias" {
+			if compact(block)
+				!= "check-proverif-phase2-x25519-alias:check-proverif-extractionpython3$(PROVERIF_DIR)/check-phase2-x25519-alias.py--proverif'$(PROVERIF)'--timeout'$(PROVERIF_TIMEOUT)'"
+			{
+				return Err("X25519 alias exact Make runner wiring changed".to_owned());
+			}
+			validate_x25519_alias_runner(X25519_ALIAS_RUNNER, X25519_ALIAS_CONTROL, MAIN_QUERIES)?;
+			continue;
+		}
 		let loaders = [
 			"$(PROVERIF_COMMON_LIBS)",
 			"$(PROVERIF_QUANTUM_LIBS)",
@@ -2821,6 +2920,11 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		&workflow,
 		"-name:ProVeriftranscriptfidelitytarget:check-proverif-transcript-fidelity",
 		"dedicated transcript-fidelity CI entry",
+	)?;
+	require_once(
+		&workflow,
+		"target:check-generated-proverif-phase2-x25519-alias",
+		"X25519 alias CI scenario",
 	)?;
 	Ok(())
 }
@@ -7393,10 +7497,62 @@ fn omit_ctx(snapshot: &mut Snapshot, field: &str) {
 	snapshot.interface.replace_range(start..start + length, "");
 }
 
+fn check_x25519_alias_runner_mutations() {
+	// These new runner controls are separate from the retained 409/297 matrices.
+	for (from, to) in [
+		("production-transcript-interface.pvl", "other-interface.pvl"),
+		("extraction/lib.pvl", "other-extraction.pvl"),
+		("environment.pvl", "other-environment.pvl"),
+		("phase2-x25519-alias-control.pv", "other-control.pv"),
+		("phase2-x25519-alias-theory.pvl", "other-theory.pvl"),
+		("\"queries.pvl\"", "\"other-queries.pvl\""),
+		(
+			"\"canonical\", directory / \"crypto.pvl\", \"true\"",
+			"\"canonical\", alias, \"true\"",
+		),
+		("\"alias\", alias, \"false\"", "\"alias\", alias, \"true\""),
+		(
+			"queries.write_text(selected_queries(directory))",
+			"queries.write_text(\"query attacker(root).\")",
+		),
+		(
+			"source[:start] + replacement + source[finish:]",
+			"replacement",
+		),
+		(
+			"command.extend((\"-lib\", str(library)))",
+			"command.extend((\"-lib\", str(queries)))",
+		),
+		("check=True,", "check=False,"),
+		("check_run(result.stdout, expected)", "print(result.stdout)"),
+		("if __name__ == \"__main__\":", "if False:"),
+	] {
+		let mut mutated = X25519_ALIAS_RUNNER.to_owned();
+		replace_once(&mut mutated, from, to);
+		assert!(
+			validate_x25519_alias_runner(&mutated, X25519_ALIAS_CONTROL, MAIN_QUERIES).is_err(),
+			"X25519 alias runner mutation survived: {from}"
+		);
+	}
+	let changed_control = X25519_ALIAS_CONTROL.replace("KeepBeaconStatePrivate()", "0");
+	assert!(
+		validate_x25519_alias_runner(X25519_ALIAS_RUNNER, &changed_control, MAIN_QUERIES).is_err()
+	);
+	let changed_queries = MAIN_QUERIES.replace(
+		"inj-event(ServerCommitted(transcript))",
+		"event(ServerCommitted(transcript))",
+	);
+	assert!(
+		validate_x25519_alias_runner(X25519_ALIAS_RUNNER, X25519_ALIAS_CONTROL, &changed_queries)
+			.is_err()
+	);
+}
+
 #[test]
 fn production_manifest_symbolic_model_and_adapters_are_exact() {
 	validate(&Snapshot::production()).unwrap();
 	validate_adapters().unwrap();
+	check_x25519_alias_runner_mutations();
 }
 
 #[test]
@@ -10747,7 +10903,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later_registration_make_scenario_removed",
 			"\tlater-sequence-registration \\\n",
 			"",
-			"expected 30 ProVerif scenarios",
+			"expected 31 ProVerif scenarios",
 		),
 		(
 			"later_registration_make_extraction_prerequisite_removed",

@@ -16,6 +16,7 @@ import BeaconcryptCore.Model.Pqxdh.Instance
 import BeaconcryptCore.Model.Pqxdh.InstanceCommit
 import BeaconcryptCore.Model.Pqxdh.Acceptance
 import BeaconcryptCore.Model.Pqxdh.Runs
+import BeaconcryptCore.Model.Pqxdh.ResponseEncodingAlias
 import BeaconcryptCore.Computational.PqxdhJointKdf
 import BeaconcryptCore.Computational.PqxdhJointKdfGame
 import BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample
