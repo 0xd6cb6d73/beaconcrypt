@@ -15,6 +15,7 @@ use beaconcrypt_core::pqxdh::{
 use beaconcrypt_core::pqxdh::{RatchetInitialization, start_initial_ratchet_kdf};
 use beaconcrypt_core::ratchet as verified_ratchet;
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+use capnp::serialize::OwnedSegments;
 use libsodium_rs::utils::memcmp;
 use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
 use std::ops::{Deref, DerefMut};
@@ -340,11 +341,23 @@ impl RatchetManager {
 	}
 }
 
+/// Decode exactly one complete message. Trailing bytes, including a second valid
+/// frame, are rejected before routing or touching a ratchet. Cap'n Proto may have
+/// multiple encodings of the same fields; this is framing, not canonicalization.
+fn decode_crypto_frame(
+	data: &[u8],
+) -> Option<TypedReader<OwnedSegments, cryptoframe_capnp::crypto_frame::Owned>> {
+	let mut remaining = data;
+	let reader = capnp::serialize::read_message(&mut remaining, ReaderOptions::new()).ok()?;
+	if !remaining.is_empty() {
+		return None;
+	}
+	Some(TypedReader::new(reader))
+}
+
 #[cfg(feature = "server")]
 pub(crate) fn encrypted_frame_sender(data: &[u8]) -> Option<u64> {
-	let reader = capnp::serialize::read_message(data, ReaderOptions::new()).ok()?;
-	let typed_reader = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
-	Some(typed_reader.get().ok()?.get_key_id())
+	Some(decode_crypto_frame(data)?.get().ok()?.get_key_id())
 }
 
 struct SealFrameContext<'a> {
@@ -429,40 +442,74 @@ pub(crate) fn encrypt_message_with_ratchet(
 	sealed
 }
 
+/// Validated payload fields borrowed from the single decoded frame. Construction
+/// and splitting happen before the ratchet is taken. The AEAD input and CTX tag
+/// are views of this same payload, so their provenance cannot diverge later.
 struct OpenFrameContext<'a> {
-	ciphertext: &'a [u8],
+	base_ciphertext: &'a [u8],
+	tag: &'a [u8; AEAD_TAG_LEN],
+	commitment: &'a [u8; COMMITMENT_SIZE],
 	associated_data: &'a [u8; AD_SIZE],
 	sender_kid: u64,
 }
 
-fn open_frame(
-	material: &verified_ratchet::RatchetMaterial,
-	key_seq: u64,
-	context: &OpenFrameContext<'_>,
-) -> Option<Vec<u8>> {
-	let ct_len = context.ciphertext.len();
-	if ct_len <= MESSAGE_OVERHEAD {
-		return None;
+impl<'a> OpenFrameContext<'a> {
+	fn from_frame(
+		ciphertext: &'a [u8],
+		associated_data: &'a [u8; AD_SIZE],
+		sender_kid: u64,
+	) -> Option<Self> {
+		if ciphertext.len() <= MESSAGE_OVERHEAD {
+			return None;
+		}
+		let (base_ciphertext, commitment) = ciphertext.split_at(ciphertext.len() - COMMITMENT_SIZE);
+		let tag = &base_ciphertext[base_ciphertext.len() - AEAD_TAG_LEN..];
+		Some(Self {
+			base_ciphertext,
+			tag: tag.try_into().ok()?,
+			commitment: commitment.try_into().ok()?,
+			associated_data,
+			sender_kid,
+		})
 	}
-	let commitment = build_commitment(
-		material,
-		context.associated_data.as_slice(),
-		&context.ciphertext[ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE],
-		key_seq,
-		context.sender_kid,
-	)?;
-	if !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {
-		return None;
-	}
-	let key: AeadKey = (*material.key().as_bytes()).into();
-	let nonce: AeadNonce = (*material.nonce().as_bytes()).into();
-	crypto_aead::chacha20poly1305_ietf::decrypt(
-		&context.ciphertext[..ct_len - COMMITMENT_SIZE],
-		Some(context.associated_data.as_slice()),
-		&nonce,
-		&key,
-	)
-	.ok()
+}
+
+/// The executor accepts the one-use core request itself. Callers cannot choose
+/// an independent sequence, material, or context, or substitute a claimed
+/// plaintext. Publication consumes this request only after the primitive result.
+fn execute_open(
+	open: verified_ratchet::ReceiveOpen<OpenFrameContext<'_>>,
+) -> (RatchetKernel, Option<Decrypted>) {
+	let opened = (|| {
+		let material = open.material()?;
+		let context = open.context();
+		let key_seq = open.sequence();
+		let commitment = build_commitment(
+			material,
+			context.associated_data.as_slice(),
+			context.tag,
+			key_seq,
+			context.sender_kid,
+		)?;
+		if !memcmp(&commitment, context.commitment) {
+			return None;
+		}
+		let key: AeadKey = (*material.key().as_bytes()).into();
+		let nonce: AeadNonce = (*material.nonce().as_bytes()).into();
+		let plaintext = crypto_aead::chacha20poly1305_ietf::decrypt(
+			context.base_ciphertext,
+			Some(context.associated_data.as_slice()),
+			&nonce,
+			&key,
+		)
+		.ok()?;
+		Some(Decrypted {
+			plaintext,
+			key_id: context.sender_kid,
+			seq: key_seq,
+		})
+	})();
+	open.finish(opened)
 }
 
 /// Decrypt one frame against a staged or committed peer ratchet.
@@ -480,27 +527,18 @@ pub(crate) fn decrypt_message_with_ratchet(
 	if data.is_empty() {
 		return None;
 	}
-	let reader = capnp::serialize::read_message(data, ReaderOptions::new()).ok()?;
-	let typed_reader = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
+	let typed_reader = decode_crypto_frame(data)?;
 	let frame = typed_reader.get().ok()?;
 	let kid = frame.get_key_id();
 	if kid != expected_sender_kid {
 		return None;
 	}
 	let ciphertext = frame.get_cipher_text().ok()?;
-	let ct_len = ciphertext.len();
-	if ct_len <= MESSAGE_OVERHEAD {
-		return None;
-	}
-	let context = OpenFrameContext {
-		ciphertext,
-		associated_data,
-		sender_kid: kid,
-	};
+	let context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;
 	let key_seq = frame.get_seq();
 	let kernel = ratchet.refined.take();
 	let mut effect = verified_ratchet::begin_receive(kernel, key_seq, context);
-	let plaintext = loop {
+	loop {
 		effect = match effect {
 			verified_ratchet::ReceiveEffect::ReceiveRejected { kernel, .. } => {
 				ratchet.refined.put(kernel);
@@ -511,23 +549,12 @@ pub(crate) fn decrypt_message_with_ratchet(
 				pending.resume(response)
 			}
 			verified_ratchet::ReceiveEffect::ReceiveOpenRequested(open) => {
-				let Some(material) = open.material() else {
-					let (kernel, _) = open.reject();
-					ratchet.refined.put(kernel);
-					return None;
-				};
-				let opened = open_frame(material, open.sequence(), open.context());
-				let (kernel, opened) = open.finish(opened);
+				let (kernel, opened) = execute_open(open);
 				ratchet.refined.put(kernel);
-				break opened?;
+				return opened;
 			}
 		};
-	};
-	Some(Decrypted {
-		plaintext,
-		key_id: kid,
-		seq: key_seq,
-	})
+	}
 }
 
 /// Implementation of the modified Chan and Rogaway `CTX` scheme: <https://eprint.iacr.org/2022/1260.pdf>
@@ -560,4 +587,58 @@ pub(crate) fn build_commitment(
 	let hash = crypto_generichash::generichash(input.as_bytes(), None, COMMITMENT_SIZE).ok();
 	input.as_mut_bytes().zeroize();
 	hash
+}
+
+#[cfg(test)]
+mod raw_receive_tests {
+	use super::*;
+
+	#[test]
+	fn authenticated_empty_payload_is_rejected_without_state_change() {
+		let mut sender = RatchetManager::default();
+		let mut receiver = RatchetManager::default();
+		let associated_data = [0x42; AD_SIZE];
+		let context = SealFrameContext {
+			bytes: &[],
+			target_kid: 9,
+			sender_kid: 7,
+			associated_data: &associated_data,
+		};
+		let verified_ratchet::SendStart::SendKdfRequested(pending) =
+			verified_ratchet::begin_send(sender.refined.take(), context)
+		else {
+			panic!("the initial sequence is available")
+		};
+		let response = ratchet_hkdf(pending.request());
+		let seal = pending.resume(response);
+		// The primitive supports empty messages; the production protocol excludes them.
+		let encrypted = seal_frame(seal.material(), seal.sequence(), seal.context()).unwrap();
+		let before = serde_json::to_string(&receiver).unwrap();
+		assert!(
+			decrypt_message_with_ratchet(&encrypted.ciphertext, 7, &associated_data, &mut receiver)
+				.is_none()
+		);
+		assert_eq!(serde_json::to_string(&receiver).unwrap(), before);
+	}
+
+	#[test]
+	fn associated_data_mismatch_preserves_the_complete_ratchet() {
+		let mut sender = RatchetManager::default();
+		let mut receiver = RatchetManager::default();
+		let associated_data = [0x51; AD_SIZE];
+		let encrypted =
+			encrypt_message_with_ratchet(b"payload", 9, 7, &associated_data, &mut sender).unwrap();
+		let before = serde_json::to_string(&receiver).unwrap();
+		assert!(
+			decrypt_message_with_ratchet(&encrypted.ciphertext, 7, &[0x52; AD_SIZE], &mut receiver)
+				.is_none()
+		);
+		assert_eq!(serde_json::to_string(&receiver).unwrap(), before);
+		assert_eq!(
+			decrypt_message_with_ratchet(&encrypted.ciphertext, 7, &associated_data, &mut receiver)
+				.unwrap()
+				.plaintext,
+			b"payload"
+		);
+	}
 }
