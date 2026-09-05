@@ -17,6 +17,15 @@ const (
 	ratchetStateBytes = 32
 )
 
+func TestNewBeaconRejectsIncorrectKeyLengths(t *testing.T) {
+	for _, length := range []int{0, 1, 31, 33, 64} {
+		beacon, err := NewBeacon(19, make([]byte, length))
+		if beacon != nil || !errors.Is(err, ErrCrypto) {
+			t.Fatalf("key length %d: got beacon %v, error %v", length, beacon, err)
+		}
+	}
+}
+
 type jsonStateUpdate struct {
 	KID       uint64
 	Seq       uint64

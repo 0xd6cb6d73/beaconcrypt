@@ -10,6 +10,13 @@ package beaconcrypt
 #include <stdint.h>
 #include <stdlib.h>
 
+// C.CBytes owns exactly len bytes. Volatile stores prevent removal of the wipe before free.
+static void beaconcrypt_wipe_free(void *ptr, uintptr_t len) {
+	volatile uint8_t *bytes = (volatile uint8_t *)ptr;
+	for (uintptr_t i = 0; i < len; i++) bytes[i] = 0;
+	free(ptr);
+}
+
 typedef struct {
 	uint8_t *ptr;
 	uintptr_t len;
@@ -452,5 +459,5 @@ func cBytes(data []byte) (*C.uint8_t, func()) {
 		return nil, func() {}
 	}
 	ptr := C.CBytes(data)
-	return (*C.uint8_t)(ptr), func() { C.free(ptr) }
+	return (*C.uint8_t)(ptr), func() { C.beaconcrypt_wipe_free(ptr, C.uintptr_t(len(data))) }
 }

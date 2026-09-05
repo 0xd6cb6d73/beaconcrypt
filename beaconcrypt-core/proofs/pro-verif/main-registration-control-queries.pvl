@@ -1,0 +1,29 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* These queries run the actual baseline process, including both registration schedules. A false reachability query is an intentional acceptance witness. *)
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id;
+  event(BeaconRegistrationCompleted(main_agreement, first_sequence(), main_payload, main_frame, main_response, main_claimed)).
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id;
+  event(BeaconRegistrationCompleted(main_agreement, next_sequence(next_sequence(first_sequence())), main_payload, main_frame, main_response, main_claimed)).
+
+(* Both invalid application payload classes are actually emitted by the genuine server. *)
+query main_agreement: registration_session_t, main_response: bitstring, main_claimed: key_id;
+  event(MainRegistrationCandidateSent(main_agreement, main_registration_wrong_binding(), main_response)).
+query main_agreement: registration_session_t, main_response: bitstring, main_claimed: key_id;
+  event(MainRegistrationCandidateSent(main_agreement, main_registration_unframed(), main_response)).
+
+(* The same invalid candidate must never complete either honest scheduling branch. *)
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_sequence: sequence, main_claimed: key_id;
+  event(MainRegistrationCandidateSent(main_agreement, main_registration_wrong_binding(), main_response)) &&
+  event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)).
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_sequence: sequence, main_claimed: key_id;
+  event(MainRegistrationCandidateSent(main_agreement, main_registration_unframed(), main_response)) &&
+  event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)).
+
+(* The unqualified exact-response property is intentionally false: genuine later records may replace the original response's application ciphertext. *)
+query main_transcript: establishment_transcript_t;
+  inj-event(BeaconAnyCommitted(main_transcript)) ==> inj-event(ServerCommitted(main_transcript)).
+
+(* An authentic later payload with a different prefix can complete after the outer numeric ID is changed to match it. This is accepted authenticated application data, not a forged cryptographic record. *)
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id;
+  event(MainRegistrationRelabelCompleted(main_agreement, main_payload, main_frame, main_response)).

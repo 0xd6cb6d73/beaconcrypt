@@ -5,6 +5,7 @@ use crate::server::{RecvState, SendState};
 use crate::{Beacon, ProviderBeacon};
 use std::mem;
 use std::slice;
+use zeroize::Zeroize;
 
 /// Opaque server handle owned by the C caller.
 pub struct Server(BindingServer);
@@ -103,10 +104,12 @@ unsafe fn input<'a>(ptr: *const u8, len: usize) -> Option<&'a [u8]> {
 /// Release a byte buffer returned by this API.
 ///
 /// Passing an empty buffer is allowed. The buffer and its pointer must not be used after this call.
+/// The complete allocation is wiped before release. Copies retained by the caller are not erased.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_free_buffer(buffer: Buffer) {
 	if !buffer.ptr.is_null() {
-		unsafe { Vec::from_raw_parts(buffer.ptr, buffer.len, buffer.cap) };
+		let mut bytes = unsafe { Vec::from_raw_parts(buffer.ptr, buffer.len, buffer.cap) };
+		bytes.zeroize();
 	}
 }
 
@@ -177,7 +180,7 @@ pub extern "C" fn beaconcrypt_server_export_state(handle: *const Server) -> Buff
 ///
 /// `server_pk_ptr` must point to an Ed25519 public key of the length implied by the API constants.
 ///
-/// Returns an owned handle, or null when the public-key input is absent. Release a non-null handle with `beaconcrypt_beacon_free`.
+/// Returns an owned handle, or null for absent or incorrectly sized input or a reported initialization/key-generation failure. Release a non-null handle with `beaconcrypt_beacon_free`.
 #[unsafe(no_mangle)]
 pub extern "C" fn beaconcrypt_beacon_new(
 	server_kid: u64,
@@ -187,7 +190,9 @@ pub extern "C" fn beaconcrypt_beacon_new(
 	let Some(server_pk) = (unsafe { input(server_pk_ptr, server_pk_len) }) else {
 		return std::ptr::null_mut();
 	};
-	Box::into_raw(Box::new(Beacon::new(server_kid, server_pk)))
+	Beacon::try_new(server_kid, server_pk)
+		.map(|beacon| Box::into_raw(Box::new(beacon)))
+		.unwrap_or(std::ptr::null_mut())
 }
 
 /// Release a server handle created by this API.
@@ -509,4 +514,22 @@ fn decrypt(handle: *mut Server, ptr: *const u8, len: usize) -> Buffer {
 		.flatten()
 		.map(|decrypted| into_buffer(decrypted.plaintext))
 		.unwrap_or_else(empty_buffer)
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn c_constructors_reject_malformed_lengths() {
+		for length in [1, 31, 33, 64] {
+			let bytes = vec![7; length];
+			assert!(beaconcrypt_beacon_new(19, bytes.as_ptr(), bytes.len()).is_null());
+			assert!(beaconcrypt_server_new_from_seed(19, bytes.as_ptr(), bytes.len()).is_null());
+		}
+		assert!(beaconcrypt_beacon_new(19, std::ptr::null(), 0).is_null());
+		beaconcrypt_free_buffer(empty_buffer());
+		beaconcrypt_free_buffer(into_buffer(Vec::with_capacity(32)));
+		beaconcrypt_free_buffer(into_buffer(vec![7; 48]));
+	}
 }

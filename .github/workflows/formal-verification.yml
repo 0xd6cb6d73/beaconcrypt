@@ -64,6 +64,12 @@ jobs:
             target: check-generated-proverif-phase2-response-binding
           - name: ProVerif weakened Phase 2 assigned ID binding
             target: check-generated-proverif-phase2-assigned-id-weak
+          - name: ProVerif later-sequence registration
+            target: check-generated-proverif-later-sequence-registration
+          - name: ProVerif main registration controls
+            target: check-generated-proverif-main-registration-controls
+          - name: ProVerif post-registration ratchet
+            target: check-generated-proverif-post-registration-ratchet
           - name: ProVerif active quantum attack
             target: check-generated-proverif-active-quantum
           - name: ProVerif reachability

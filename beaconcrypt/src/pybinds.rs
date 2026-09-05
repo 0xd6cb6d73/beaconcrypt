@@ -185,10 +185,10 @@ pub struct Beacon {
 #[pymethods]
 impl Beacon {
 	#[new]
-	fn new(server_kid: u64, server_id_pk: &[u8]) -> Self {
-		Self {
-			_0: PqxdhBeacon::new(server_kid, server_id_pk),
-		}
+	fn new(server_kid: u64, server_id_pk: &[u8]) -> PyResult<Self> {
+		PqxdhBeacon::try_new(server_kid, server_id_pk)
+			.map(|beacon| Self { _0: beacon })
+			.map_err(|error| PyValueError::new_err(error.to_string()))
 	}
 
 	/// Begin the beacon registration process. The output buffer should be sent as-is over the network.

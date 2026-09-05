@@ -54,22 +54,32 @@ pub trait ProviderBeacon {
 }
 
 impl Beacon {
+	/// Construct a beacon, panicking if initialization, input validation or key generation fails.
+	/// Use [`Self::try_new`] when inputs or dependency failures must be recoverable.
 	pub fn new(server_kid: u64, server_id_pk: &[u8]) -> Self {
-		ensure_init().expect("Failed to initialize libsodium");
-		let id = crypto_sign::PublicKey::from_bytes(server_id_pk).unwrap();
-		Self {
-			identity_key: crypto_sign::KeyPair::generate().unwrap(),
+		Self::try_new(server_kid, server_id_pk).expect("Failed to construct beacon")
+	}
+
+	/// Construct a beacon without panicking on reported initialization, key-length or key-generation errors.
+	/// Allocation failure and failures inside the native RNG remain process-level failures.
+	pub fn try_new(server_kid: u64, server_id_pk: &[u8]) -> Result<Self, crate::KeyGenError> {
+		ensure_init().map_err(|_| crate::KeyGenError)?;
+		let id =
+			crypto_sign::PublicKey::from_bytes(server_id_pk).map_err(|_| crate::KeyGenError)?;
+		Ok(Self {
+			identity_key: crypto_sign::KeyPair::generate().map_err(|_| crate::KeyGenError)?,
 			identity_key_kid: server_kid,
 			state: BeaconState::Fresh {
 				control: verified_pqxdh::BeaconFresh::new(verified_pqxdh::ServerBinding {
 					identity_public_key: *id.as_bytes(),
 					identity_key_id: server_kid,
 				}),
-				prekey: crypto_kx::KeyPair::generate().unwrap(),
-				pq_key: crypto_kem::mlkem768::KeyPair::generate().unwrap(),
+				prekey: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,
+				pq_key: crypto_kem::mlkem768::KeyPair::generate()
+					.map_err(|_| crate::KeyGenError)?,
 			},
 			server_id: id,
-		}
+		})
 	}
 	pub fn identity_key_kid(&self) -> u64 {
 		self.identity_key_kid

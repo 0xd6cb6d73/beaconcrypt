@@ -44,19 +44,8 @@ impl SnapshotStore for FileSnapshotStore {
 		if current.as_ref() != expected {
 			return false;
 		}
-		let Ok(replacement_head) = replacement.head() else {
+		if replacement.validate_successor(expected).is_err() {
 			return false;
-		};
-		match expected {
-			Some(previous)
-				if replacement_head.lineage() != previous.lineage()
-					|| previous.generation().checked_add(1)
-						!= Some(replacement_head.generation()) =>
-			{
-				return false;
-			}
-			None if replacement_head.generation() != 0 => return false,
-			_ => {}
 		}
 
 		let Ok(mut file) = File::create(&self.path) else {
@@ -90,7 +79,8 @@ fn main() {
 		.expect("failed to create persistent server");
 
 	// It is assumed that the server's public key is compiled into beacons.
-	let mut beacon = Beacon::new(SERVER_KID, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::try_new(SERVER_KID, server.identity_pk().as_bytes())
+		.expect("failed to create beacon");
 	let transport = Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/rust/transport");
 
 	// The beacon is run and registers.

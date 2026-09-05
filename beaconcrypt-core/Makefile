@@ -65,6 +65,7 @@ PROVERIF_SCENARIOS := \
 	phase2-assigned-id-weak \
 	later-sequence-registration \
 	post-registration-ratchet \
+	main-registration-controls \
 	active-quantum \
 	baseline \
 	reachability \
@@ -406,6 +407,14 @@ check-proverif-post-registration-ratchet: check-proverif-extraction
 			-lib $(PROVERIF_DIR)/post-registration-ratchet-queries.pvl \
 			$(PROVERIF_DIR)/post-registration-ratchet.pv | \
 		awk -v scenario=post-registration-ratchet -f '$(PROVERIF_CHECKER)'
+
+check-proverif-main-registration-controls: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/main-registration-control-queries.pvl \
+			$(PROVERIF_DIR)/baseline.pv | \
+		awk -v scenario=main-registration-controls -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-classical-equivalence: check-proverif-extraction
 	@set -o pipefail; \
