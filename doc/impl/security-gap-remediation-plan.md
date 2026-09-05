@@ -35,4 +35,4 @@ Forward secrecy does not provide recovery from current-chain compromise; skipped
 ## Progress
 
 - M0 inspection: `AGENTS.md` read; clean baseline confirmed; fresh remote comparison `0 0`; fixed public-input KDF game, typed CTX game, adapter phase execution and documented external correspondence boundary inspected; existing later-sequence controls and main symbolic schedule located.
-- M1–M4: pending implementation and validation.
+- M1–M4 implementation and independent review are integrated locally through `377da6e39ac572ddd105c3834b4fac27fe80071a`. Full locked proofs, inventory, Rust, feature, lint and binding checks pass. The final integrated mutation run passed all 1,173 mutants: 816 caught, 357 unviable, no missed or timed-out mutants. M1–M4 meet their implementation and delimited-proof acceptance criteria; broader cryptographic and deployment obligations remain explicitly open. The shared fixture dependency and exact acceptance/residual table are recorded in [the integration record](security-integration-record.md).

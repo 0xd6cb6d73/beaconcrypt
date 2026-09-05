@@ -48,12 +48,12 @@ declare -A expected_category_counts=(
 	[control]=11
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=116
-	[handwritten-proverif]=64
+	[handwritten-lean]=120
+	[handwritten-proverif]=65
 	[handwritten-ssprove]=18
 	[inventory]=2
 	[lean-control]=12
-	[validation]=3
+	[validation]=6
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -102,6 +102,8 @@ printf '%s\n' proofs/check-inventory.sh proofs/trusted-boundary.md \
 compare_set inventory "$tmp_dir/inventory"
 
 printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
+	../beaconcrypt/tests/registration_completion.rs \
+	../beaconcrypt/tests/raw_receive.rs ../beaconcrypt/tests/construction.rs \
 	tests/proverif_transcript_fidelity.rs \
 	> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
@@ -284,10 +286,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 8 \
+require_occurrence_count 10 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 11 '_to_bitstring' \
+require_occurrence_count 13 '_to_bitstring' \
 	"all handwritten _to_bitstring tokens including three initial-ratchet manifest facts" \
 	"${handwritten_proverif[@]}"
 
@@ -367,9 +369,9 @@ reject_matches "invented AEAD or CTX label constructor" \
 reject_matches "production transcript declaration duplicated outside canonical interface" \
 	'(?m)^(?:type (?:key_id|sequence|kdf_domain|hkdf_stream|establishment_transcript_t)|fun (?:sequence_le64|sender_id_le64|tag_ed25519|tag_x25519_prekey|tag_x25519_one_time|tag_mlkem768|pqxdh_ff32_padding|pqxdh_root_input|pqxdh_domain|symmetric_ratchet_domain|hkdf_sha512_no_salt|hkdf_first_32|hkdf_second_32|hkdf_final_12|beaconcrypt_associated_data|aead_cipher|aead_tag|ctx_preimage|blake2b512)\b|letfun (?:key_id_encoding|ctx_commitment)\b)' \
 	proofs/pro-verif/crypto.pvl
-require_line_count 3 '^type ' proofs/pro-verif/environment.pvl \
+require_line_count 4 '^type ' proofs/pro-verif/environment.pvl \
 	"handwritten protocol-state type"
-require_line_count 14 '^fun ' proofs/pro-verif/environment.pvl \
+require_line_count 18 '^fun ' proofs/pro-verif/environment.pvl \
 	"handwritten protocol constructor/function"
 require_line_count 1 \
 	'^\(\* @beaconcrypt-phase1-v1 signed_init_kex\.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq \*\)$' \
@@ -418,16 +420,24 @@ require_occurrence_count 1 'event\s+BeaconBundleInitiated\(initiated_bundle\)' \
 	"beacon authenticated-bundle emitter" proofs/pro-verif/environment.pvl
 require_occurrence_count 1 'event\s+ServerBundleAccepted\(accepted_bundle\)' \
 	"server authenticated-bundle emitter" proofs/pro-verif/environment.pvl
-require_line_count 26 '^event ' proofs/pro-verif/environment.pvl \
+require_line_count 32 '^event ' proofs/pro-verif/environment.pvl \
 	"handwritten event"
 require_line_count 2 '^table ' proofs/pro-verif/environment.pvl \
 	"handwritten table"
 require_line_count 17 '^free ' proofs/pro-verif/environment.pvl \
 	"handwritten free name/channel"
-require_line_count 12 '^let [A-Z]' proofs/pro-verif/environment.pvl \
+require_line_count 14 '^let [A-Z]' proofs/pro-verif/environment.pvl \
 	"handwritten process"
-require_line_count 12 '^query ' proofs/pro-verif/queries.pvl \
+require_line_count 14 '^query ' proofs/pro-verif/queries.pvl \
 	"baseline query"
+require_line_count 8 '^query ' proofs/pro-verif/main-registration-control-queries.pvl \
+	"main registration acceptance and rejection controls"
+require_line_count 1 '^event BeaconRegistrationCompleted\(registration_session_t, sequence, bitstring, bitstring, bitstring, key_id\)\.$' \
+	proofs/pro-verif/environment.pvl "main completion with separate claimed ID"
+require_line_count 1 '^event ServerRegistrationSessionCommitted\(registration_session_t, key_id\)\.$' \
+	proofs/pro-verif/environment.pvl "main session origin with actual assigned ID"
+require_line_count 1 '^event RegistrationRecordSent\(registration_session_t, sequence, bitstring, bitstring, key_id\)\.$' \
+	proofs/pro-verif/environment.pvl "main exact authenticated record origin"
 require_occurrence_count 1 \
 	'query\s+transcript: establishment_transcript_t;\s*inj-event\(BeaconCommitted\(transcript\)\)\s*==>\s*inj-event\(ServerCommitted\(transcript\)\)\.' \
 	"complete establishment transcript correspondence query" \
@@ -791,7 +801,7 @@ require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable snapshot"
-require_line_count 13 '^#\[test\]$' \
+require_line_count 14 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -816,7 +826,7 @@ require_occurrence_count 1 \
 require_occurrence_count 1 \
 	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_finite_receive_state_fixture\(snapshot\)\?;\s*validate_registration_lifecycle\(snapshot\)\?;\s*validate_initial_ratchet_fidelity\(snapshot\)\?;\s*validate_later_registration_fidelity\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
-require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;$' \
+require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 229;$' \
 	"$fidelity_test" "CryptoFrame exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, CRYPTOFRAME_WIRE_MUTATION_COUNT\);\s*\}' \

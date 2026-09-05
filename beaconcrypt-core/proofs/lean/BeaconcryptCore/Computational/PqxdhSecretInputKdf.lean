@@ -4,7 +4,7 @@ import VCVio.OracleComp.QueryTracking.SubSpec
 /-!
 # A secret-input PQXDH root game and an Extract/HMAC decomposition
 
-Only the honest root is replaced. The adversary is ordinary probabilistic code with the public source implementation available for local evaluation in BOTH worlds. It receives public side information from a joint sampler, never the sampled IKM or PRK. This rules out the public-oracle replacement defect without banning guesses or local HKDF evaluation.
+Only the honest root is replaced. The adversary is ordinary probabilistic code with the public source implementation available for local evaluation in BOTH worlds. It receives side information from a joint sampler; IKM and PRK are not separate observer arguments. Context may still leak them, in which case the Extract obligation need not be small. This rules out the public-oracle replacement defect without banning guesses or local HKDF evaluation.
 
 The two endpoints are (1) pseudorandomness of the fixed-zero-salt HMAC-Extract PRK for the specified joint input/side-information distribution, against a distinguisher receiving the entire PRK, and (2) the ordinary HMAC PRF game with an independent uniform secret 64-byte key and a public-message oracle. Neither endpoint assumes protocol secrecy. No small bound for concrete SHA-512 Extract is proved: a secret or high-entropy IKM alone does not establish this endpoint, and ordinary secret-key HMAC PRF security does not apply to the public fixed Extract key.
 

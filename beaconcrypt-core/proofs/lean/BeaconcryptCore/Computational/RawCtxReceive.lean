@@ -201,3 +201,35 @@ theorem rawReceive_total (decode : FrameDecoder) (c : Pqxdh.Crypto)
     · exact ⟨entry, .None, rfl⟩
 
 end BeaconcryptCore.Computational.RawCtxReceive
+
+/--
+info: 'BeaconcryptCore.Computational.RawCtxReceive.rawReceive_success' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RawCtxReceive.rawReceive_success
+
+/--
+info: 'BeaconcryptCore.Computational.RawCtxReceive.rawReceive_failure_entry' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RawCtxReceive.rawReceive_failure_entry
+
+/--
+info: 'BeaconcryptCore.Computational.RawCtxReceive.rawReceive_success_replay' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RawCtxReceive.rawReceive_success_replay
+
+/--
+info: 'BeaconcryptCore.Computational.RawCtxReceive.rawReceive_total' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RawCtxReceive.rawReceive_total
