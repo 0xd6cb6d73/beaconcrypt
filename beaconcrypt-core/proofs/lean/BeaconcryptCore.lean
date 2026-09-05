@@ -1,3 +1,6 @@
+import BeaconcryptCore.Computational.PqxdhJointIdentity
+import BeaconcryptCore.Computational.PqxdhJointIdentityFamily
+import BeaconcryptCore.Computational.PqxdhJointIdentitySessions
 import BeaconcryptCore.Extraction
 import BeaconcryptCore.Refinement.PqxdhSession
 import BeaconcryptCore.Refinement.PqxdhCommitment

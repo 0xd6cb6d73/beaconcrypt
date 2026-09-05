@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=129
+	[handwritten-lean]=132
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3339,5 +3339,26 @@ require_line_count 2 '^#guard_msgs in$' "$optional_kem_source" "optional KEM gua
 require_line_count 2 '^#guard_msgs in$' "$optional_kem_bounds" "optional KEM bound guarded audits"
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhOptionalKemSourceQueryBounds$' \
 	proofs/lean/BeaconcryptCore.lean "optional KEM root import"
+
+# Joint identity games: explicit auxiliary DH, complete family/session routing, and costs.
+for joint_module in PqxdhJointIdentity PqxdhJointIdentityFamily PqxdhJointIdentitySessions; do
+	require_line_count 1 "^import BeaconcryptCore\.Computational\.${joint_module}$" \
+		proofs/lean/BeaconcryptCore.lean "joint identity ${joint_module} root import"
+done
+joint_identity=proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentity.lean
+joint_family=proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentityFamily.lean
+joint_sessions=proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentitySessions.lean
+for theorem_name in jointPublic_conversion serverDhsFromAux_eq beaconDhsFromAux_eq primitive_query_complete_continuation; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_identity" "joint identity theorem ${theorem_name}"
+done
+for theorem_name in sampleFamily_target_first targetRouting_complete targetGame_eq_reduction family_advantage_le_sum reduction_query_bound familyRun_rejectedDh_bound reductionGame_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_family" "joint family theorem ${theorem_name}"
+done
+for theorem_name in route_complete session_advantage_le_identity_sum route_query_bound session_reduction_query_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_sessions" "joint session theorem ${theorem_name}"
+done
+require_line_count 2 '^#guard_msgs in$' "$joint_identity" "joint identity guarded audits"
+require_line_count 6 '^#guard_msgs in$' "$joint_family" "joint family guarded audits"
+require_line_count 3 '^#guard_msgs in$' "$joint_sessions" "joint session guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
