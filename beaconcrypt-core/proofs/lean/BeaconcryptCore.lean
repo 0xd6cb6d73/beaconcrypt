@@ -1,3 +1,6 @@
+import BeaconcryptCore.Computational.AdaptiveCtxRetainedKey
+import BeaconcryptCore.Computational.AdaptiveCtxPrefix
+import BeaconcryptCore.Computational.AdaptiveCtxPrefixQueryBounds
 import BeaconcryptCore.Computational.AdaptiveCtxIndependent
 import BeaconcryptCore.Computational.AdaptiveCtxReceive
 import BeaconcryptCore.Computational.AdaptiveCtxCanonical

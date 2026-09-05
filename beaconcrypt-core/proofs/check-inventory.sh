@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=126
+	[handwritten-lean]=129
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3376,5 +3376,26 @@ done
 require_line_count 1 '^structure HashCollisionWitness( |$)' \
 	proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean \
 	"CTX hash-collision witness type"
+
+# Adaptive prefix coupling retains the actual key only in terminal analysis.
+for prefix_module in AdaptiveCtxRetainedKey AdaptiveCtxPrefix AdaptiveCtxPrefixQueryBounds; do
+	require_line_count 1 "^import BeaconcryptCore\.Computational\.${prefix_module}$" \
+		proofs/lean/BeaconcryptCore.lean "adaptive prefix ${prefix_module} root import"
+done
+adaptive_retained=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxRetainedKey.lean
+adaptive_prefix=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxPrefix.lean
+adaptive_prefix_bounds=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxPrefixQueryBounds.lean
+for theorem_name in retainedAdaptiveGame_distance_le_intctxt_sum retainedLinkedGame_projection retainedIndependentGame_distance_le_intctxt_sum; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_retained" "retained key theorem ${theorem_name}"
+done
+for theorem_name in sourceImpl_eq_of_not_prefix flaggedImpl_agree_good flaggedGame_bad_eq flaggedGame_prefix independentGame_prefix_probe_iff retainedRoutedGame_distance_le_prefix_add_intctxt; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_prefix" "adaptive prefix theorem ${theorem_name}"
+done
+for theorem_name in splitRandom_uniform keyFreeSeal_uniform splitRaw_uniform sourceImpl_uniform_step flaggedGame_uniform_bound retainedRoutedGame_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_prefix_bounds" "adaptive prefix budget ${theorem_name}"
+done
+require_line_count 3 '^#guard_msgs in$' "$adaptive_retained" "retained key guarded audits"
+require_line_count 4 '^#guard_msgs in$' "$adaptive_prefix" "adaptive prefix guarded audits"
+require_line_count 3 '^#guard_msgs in$' "$adaptive_prefix_bounds" "adaptive prefix budget guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
