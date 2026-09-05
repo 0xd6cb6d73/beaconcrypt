@@ -45,10 +45,10 @@ declare -A expected_category_counts=(
 	[adapter-rust]=13
 	[adapter-schema]=3
 	[core-rust]=9
-	[control]=11
+	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=127
+	[handwritten-lean]=129
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -85,6 +85,7 @@ tracked_proof_symlink="$(git -C "$repo_dir" ls-files -s -- beaconcrypt-core/proo
 
 printf '%s\n' \
 	../.cargo/config.toml \
+	../.gitattributes \
 	../.github/workflows/formal-verification.yml \
 	../.gitignore \
 	../Cargo.lock \
@@ -3316,5 +3317,27 @@ done
 require_line_count 1 '^structure HashCollisionWitness( |$)' \
 	proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean \
 	"CTX hash-collision witness type"
+
+# Optional source KEM boundary: preserve support-only compatibility and complete root/cost links.
+optional_kem_source=proofs/lean/BeaconcryptCore/Computational/PqxdhOptionalKemSource.lean
+optional_kem_bounds=proofs/lean/BeaconcryptCore/Computational/PqxdhOptionalKemSourceQueryBounds.lean
+require_line_count 1 '^structure SourceKemInterface( |$)' "$optional_kem_source" "optional KEM interface"
+require_line_count 1 '^def HonestKeyCompatibility( |$)' "$optional_kem_source" "honest-support functional compatibility"
+for theorem_name in honestEncapsulation_no_failure directTargetContinuation_eq_total sourceContinuation_eq_actual sourceGame_eq_actualGame actualRootAdvantage_le_euf_add_kem_add_extract_add_hmac; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$optional_kem_source" "optional KEM theorem ${theorem_name}"
+done
+for theorem_name in acceptedCommon_query_bound allCandidateCommon_query_bound sourceProtocol_prefix_query_bound sourceProtocol_decapsulation_bound sourceProtocol_post_query_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$optional_kem_bounds" "optional KEM bound ${theorem_name}"
+done
+for theorem_name in sourceGame_eq_actualGame actualRootAdvantage_le_euf_add_kem_add_extract_add_hmac; do
+	require_line_count 1 "^#print axioms ${theorem_name}$" "$optional_kem_source" "optional KEM dependency audit ${theorem_name}"
+done
+for theorem_name in acceptedCommon_query_bound sourceProtocol_prefix_query_bound; do
+	require_line_count 1 "^#print axioms ${theorem_name}$" "$optional_kem_bounds" "optional KEM dependency audit ${theorem_name}"
+done
+require_line_count 2 '^#guard_msgs in$' "$optional_kem_source" "optional KEM guarded audits"
+require_line_count 2 '^#guard_msgs in$' "$optional_kem_bounds" "optional KEM bound guarded audits"
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhOptionalKemSourceQueryBounds$' \
+	proofs/lean/BeaconcryptCore.lean "optional KEM root import"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
