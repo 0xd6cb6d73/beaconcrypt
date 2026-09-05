@@ -1,0 +1,3 @@
+# Source-fidelity checks compare exact multiline text embedded with include_str!.
+# Keep text files in LF form on every platform, including Windows checkouts.
+* text=auto eol=lf
