@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=11
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=121
+	[handwritten-lean]=122
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3316,5 +3316,17 @@ done
 require_line_count 1 '^structure HashCollisionWitness( |$)' \
 	proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean \
 	"CTX hash-collision witness type"
+
+# Ordered fixed-length chain component: require source links, adjacent hops and accounting.
+for theorem_name in ordered_chain_bound bidirectional_bound realEvolution_records descendants_from_live hopReduction_query_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		proofs/lean/BeaconcryptCore/Computational/PqxdhOrderedChainHybrids.lean \
+		"ordered evolving chain theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.${theorem_name}$" \
+		proofs/lean/BeaconcryptCore/Computational/PqxdhOrderedChainHybrids.lean \
+		"ordered evolving chain dependency audit ${theorem_name}"
+done
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhOrderedChainHybrids$' \
+	proofs/lean/BeaconcryptCore.lean "ordered chain root import"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
