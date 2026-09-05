@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=134
+	[handwritten-lean]=135
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3384,5 +3384,15 @@ for theorem_name in sourceImpl_publicUpdate occurred_probability_le_stopped repo
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointIdentityEvents.${theorem_name}$" "$joint_events" "joint report-time dependency audit ${theorem_name}"
 done
 require_line_count 8 '^#guard_msgs in$' "$joint_events" "joint report-time guarded audits"
+
+# Dynamic creation: complete private-prefix/transcript equality and every reserved draw.
+joint_dynamic=proofs/lean/BeaconcryptCore/Computational/PqxdhDynamicIdentityPool.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDynamicIdentityPool$' \
+	proofs/lean/BeaconcryptCore.lean "dynamic identity root import"
+for theorem_name in sampleSeeds_succ lazy_eager_complete lazyImpl_uniform_step lazyRun_uniform_bound eagerReserved_uniform_bound lazyImpl_transcript lazyRun_trace_bound lazyImpl_seed_extension lazyRun_seed_extension; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_dynamic" "dynamic identity theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.${theorem_name}$" "$joint_dynamic" "dynamic identity dependency audit ${theorem_name}"
+done
+require_line_count 9 '^#guard_msgs in$' "$joint_dynamic" "dynamic identity guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

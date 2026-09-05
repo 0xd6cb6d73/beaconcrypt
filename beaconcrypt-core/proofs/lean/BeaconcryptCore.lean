@@ -1,3 +1,4 @@
+import BeaconcryptCore.Computational.PqxdhDynamicIdentityPool
 import BeaconcryptCore.Computational.PqxdhJointIdentityEvents
 import BeaconcryptCore.Computational.PqxdhJointIdentityFreshness
 import BeaconcryptCore.Computational.PqxdhJointIdentity
