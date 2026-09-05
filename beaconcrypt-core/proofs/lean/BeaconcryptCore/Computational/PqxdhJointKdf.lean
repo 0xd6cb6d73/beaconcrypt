@@ -10,7 +10,7 @@ Initial ratchet chains and record-step material share the first two 32-byte proj
 
 `ProductionHkdfPrefixConsistent` is only the functional prefix contract supplied by the fixed no-salt HKDF-SHA-512 source implementation.
 It is separate from `Pqxdh.Crypto` and states no primitive-security assumption.
-Later computational games can replace the joint stream by a cached random stream while retaining a named HKDF-SHA-512 real-or-random advantage.
+Replacing the public deterministic stream by a cached random stream yields valid game inequalities, but its distinguishing gap is efficiently large, as checked by `PqxdhPublicKdfCounterexample`. It is not a sound negligibility assumption. `PqxdhSecretInputKdf` instead isolates one secret-input root without randomizing public evaluations.
 -/
 
 open OracleSpec

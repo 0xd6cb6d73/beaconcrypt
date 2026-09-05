@@ -13,8 +13,7 @@ coordinates and the exact source encoding
 `FF^32 || DH1 || DH2 || DH3 || DH4 || hidden32`; no other transcript field is serialized into
 the HKDF address.
 
-The only primitive-security endpoint is the fixed BeaconCrypt HKDF-SHA-512/no-salt joint-stream
-advantage from `PqxdhJointKdfGame`.  Nothing here proves HKDF, HMAC, SHA-512, or ML-KEM security.
+The legacy real-to-random endpoint from `PqxdhJointKdfGame` is efficiently distinguishable and is not a sound negligibility assumption. In particular, both terminal root games also replace public adversarial KDF responses by random-table responses: even an observer ignoring the root can compare an unrelated public query with a local fixed-HKDF evaluation. The ROM hidden-query bound and every displayed inequality remain valid, but they do not prove production root secrecy. `PqxdhSecretInputKdf` supplies a separate one-root replacement with real public evaluation retained in both branches.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -2326,9 +2325,7 @@ theorem hiddenRootReal_shared_advantage_eq_fixedHkdfSha512JointStreamAdvantage
 
 The reduction makes at most `qU + 32` uniform-byte queries, at most `qRoot + 1` root-domain
 stream queries (including its one honest lookup), at most `qSym` symmetric-domain queries, and
-at most `qRoot + qSym + 1` stream queries in total.  Its terminal primitive assumption is the
-fixed BeaconCrypt HKDF-SHA-512/no-salt joint-stream advantage; the only information-theoretic
-loss is one 256-bit hidden-coordinate guess per adversarial root-domain logical query.
+at most `qRoot + qSym + 1` stream queries in total.  Its terminal fixed-public-HKDF/random-table distinguishing term is not negligible in general. The only information-theoretic loss within the ROM comparison is one 256-bit hidden-coordinate guess per adversarial root-domain logical query; this does not repair the invalid production interpretation.
 -/
 theorem hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add
     (source : FixedHkdfSha512NoSaltSource)

@@ -10,6 +10,7 @@ The four DH-derived root coordinates are conservatively caller/adversary-visible
 Two logical projection requests remain two challenger-facing source calls, while the lazy-random interpretation samples one 76-byte value on the first empty-cache request and reuses it for the second same-address request and later observer requests.
 The coefficient-one capstone reuses exactly the existing ML-KEM-768 IND-CCA and fixed HKDF-SHA-512/no-salt joint-stream endpoints plus the HB-66 root-guess term.
 The extracted-kernel corollary is deterministic and conditional on separate endpoint-local root representations and pending-indexed response adapter premises; no concrete array or kernel appears inside a probabilistic game.
+The inherited fixed-public-HKDF/random-table advantage is efficiently distinguishable and is not a sound negligibility premise. Consequently the capstone remains a valid inequality, not a production initialized-chain secrecy guarantee; the terminal world changes later observer KDF responses as well as the honest derivations. The one-root correction in `PqxdhSecretInputKdf` does not establish this correlated joint-chain endpoint.
 This module proves no primitive internals, root provenance or agreement, authenticated-target discharge, projection-collision conditioning, operation-level crypto adapter, source/compiler refinement, multi-session lifting, or PPT, QPT, or QROM claim.
 -/
 
