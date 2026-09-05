@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=129
+	[handwritten-lean]=130
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3397,5 +3397,18 @@ done
 require_line_count 3 '^#guard_msgs in$' "$adaptive_retained" "retained key guarded audits"
 require_line_count 4 '^#guard_msgs in$' "$adaptive_prefix" "adaptive prefix guarded audits"
 require_line_count 3 '^#guard_msgs in$' "$adaptive_prefix_bounds" "adaptive prefix budget guarded audits"
+
+# Conventional validation uses a bounded executable nonce search.
+constructive_nonce=proofs/lean/BeaconcryptCore/Computational/CtxConstructiveNonce.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxConstructiveNonce$' \
+	proofs/lean/BeaconcryptCore.lean "constructive nonce root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.CtxConstructiveNonce$' \
+	"$ctx_nonce_aead_ind_dollar_validation" "constructive nonce validation import"
+require_line_count 1 '^def chooseFreshCtxNonce ' "$ctx_nonce_aead_ind_dollar_validation" "computable validation nonce"
+require_line_count 1 '^  CtxConstructiveNonce.chooseNonce used$' "$ctx_nonce_aead_ind_dollar_validation" "bounded validation nonce routing"
+for theorem_name in nonceOfIndex_decode nonceOfIndex_injective candidates_nodup candidates_have_fresh chooseNonce_not_mem candidates_length_le_of_seal_bound chooseNonce_not_mem_of_seal_bound chooseNonce_no_queries; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$constructive_nonce" "constructive nonce theorem ${theorem_name}"
+done
+require_line_count 4 '^#guard_msgs in$' "$constructive_nonce" "constructive nonce guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

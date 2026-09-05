@@ -1,4 +1,4 @@
-import BeaconcryptCore.Computational.CtxNonceAeadIndDollar
+import BeaconcryptCore.Computational.CtxConstructiveNonce
 import VCVio.CryptoFoundations.SecExp
 
 /-!
@@ -75,15 +75,15 @@ theorem exists_ctxNonce_not_mem (used : List CtxNonce)
     List.toFinset_card_le used
   omega
 
-/-- Total choice of a nonce outside the recorded history whenever one exists. -/
-noncomputable def chooseFreshCtxNonce (used : List CtxNonce) : CtxNonce :=
-  if h : ∃ nonce : CtxNonce, nonce ∉ used then Classical.choose h else default
+/-- Executable bounded scan of one more candidate than the recorded used-nonce count. -/
+def chooseFreshCtxNonce (used : List CtxNonce) : CtxNonce :=
+  CtxConstructiveNonce.chooseNonce used
 
 theorem chooseFreshCtxNonce_not_mem (used : List CtxNonce)
-    (hexists : ∃ nonce : CtxNonce, nonce ∉ used) :
+    (hlen : used.length < Fintype.card CtxNonce) :
     chooseFreshCtxNonce used ∉ used := by
-  rw [chooseFreshCtxNonce, dif_pos hexists]
-  exact Classical.choose_spec hexists
+  apply CtxConstructiveNonce.chooseNonce_not_mem_of_seal_bound used used.length (le_refl _)
+  simpa only [ctxNonce_card] using hlen
 
 theorem ctxIndependentPublicOracle_usedNonces
     (query : CtxRO.Domain) (state : CtxIndependentTagState)
@@ -223,7 +223,6 @@ theorem chooseFreshCtxNonce_fresh_of_direct_support_of_main
         main).run emptyCtxIndependentTagState)) :
     chooseFreshCtxNonce result.2.usedNonces ∉ result.2.usedNonces := by
   apply chooseFreshCtxNonce_not_mem
-  apply exists_ctxNonce_not_mem
   rw [ctxNonce_card]
   exact lt_of_le_of_lt
     (ctxDirectSampleIndependentTag_run_usedNonces_length_le_qE_of_main
