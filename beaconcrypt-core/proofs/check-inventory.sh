@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=132
+	[handwritten-lean]=133
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3428,5 +3428,15 @@ for theorem_name in validationReduction_random_le loggedProbe_le_validationReal 
 done
 require_line_count 7 '^#guard_msgs in$' "$adaptive_logged" "adaptive logged guarded audits"
 require_line_count 10 '^#guard_msgs in$' "$adaptive_validation" "adaptive conventional guarded audits"
+
+# Direct logged source: actual persistent cache, optional replies and every raw attempt.
+adaptive_source=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxLoggedSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxLoggedSource$' \
+	proofs/lean/BeaconcryptCore.lean "direct logged source root import"
+for theorem_name in linkedLoggedGame_projection retainedDirectLoggedGame_eq_client seal_preserves_commitments seal_preserves_nonces seal_preserves_history loggedFresh_is_alias alias_excludes_honestSuffix used_nonce_excludes_futureSuffix loggedImpl_preserves_invariant loggedGame_invariant loggedRaw_acceptedFresh_protected loggedRun_raw_bound retainedDirectLoggedGame_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_source" "direct logged source theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxLoggedSource.${theorem_name}$" "$adaptive_source" "direct logged source dependency audit ${theorem_name}"
+done
+require_line_count 13 '^#guard_msgs in$' "$adaptive_source" "direct logged source guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
