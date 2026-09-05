@@ -12,8 +12,7 @@ Every projection at one exact `(input, domain)` address is backed by one shared 
 The real world calls the fixed production source through `Pqxdh.Crypto.hkdf` and carries the separate functional prefix-consistency contract from `PqxdhJointKdf`.
 The random world lazily samples one 76-byte stream on a cache miss and returns that same stream on every hit.
 
-The named joint-stream real-or-random advantage is the primitive endpoint of this component reduction.
-It is not an ordinary secret-key PRF assumption, and this module proves no property of HKDF, HMAC, or SHA-512 internals.
+The named joint-stream real-or-random advantage remains a mathematical endpoint, but is NOT a plausible computational security assumption. A single public evaluation distinguishes these worlds with near-one advantage; `PqxdhPublicKdfCounterexample` checks the exact negative control. The equalities and inequalities below remain valid without giving a negligible production bound. The separate `PqxdhSecretInputKdf` game retains real public evaluation in both branches and proves a primitive Extract/HMAC decomposition for one honest root.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -688,7 +687,7 @@ noncomputable def fixedHkdfSha512JointStreamRandomExp
 
 /-- Fixed-HKDF-SHA-512 joint-stream real-or-random advantage.
 
-This deliberately named primitive advantage is the reduction endpoint; it is not a claim that the public-input source is a fixed-secret-key PRF.
+This legacy mathematical endpoint is efficiently distinguishable by public evaluation. It must not be assumed negligible or used as a computational HKDF security premise; see `PqxdhPublicKdfCounterexample`.
 -/
 noncomputable def fixedHkdfSha512JointStreamAdvantage
     (source : FixedHkdfSha512NoSaltSource) {qU qKdf : ℕ}
