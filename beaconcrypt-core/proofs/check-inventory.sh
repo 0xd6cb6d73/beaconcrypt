@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=133
+	[handwritten-lean]=134
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3372,5 +3372,17 @@ for theorem_name in fresh_probability_eq_stopped stopBeforeReveal_no_target redu
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointIdentityFreshness.${theorem_name}$" "$joint_freshness" "joint freshness dependency audit ${theorem_name}"
 done
 require_line_count 9 '^#guard_msgs in$' "$joint_freshness" "joint freshness guarded audits"
+
+# Report-time authentication retains later compromises and counts all attempts.
+joint_events=proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentityEvents.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointIdentityEvents$' \
+	proofs/lean/BeaconcryptCore.lean "joint report-time root import"
+for theorem_name in sourceImpl_publicUpdate occurred_probability_le_stopped reportingRun_le_extractor reporting_advantage_le_identity_sum reportingRun_occurred reportingReduction_query_bound reportingReductionGame_uniform_bound reportingExecution_report_bound reportingRun_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_events" "joint report-time theorem ${theorem_name}"
+done
+for theorem_name in sourceImpl_publicUpdate occurred_probability_le_stopped reporting_advantage_le_identity_sum reportingRun_occurred reportingReduction_query_bound reportingReductionGame_uniform_bound reportingExecution_report_bound reportingRun_uniform_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointIdentityEvents.${theorem_name}$" "$joint_events" "joint report-time dependency audit ${theorem_name}"
+done
+require_line_count 8 '^#guard_msgs in$' "$joint_events" "joint report-time guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
