@@ -115,7 +115,7 @@ query server_identity: bitstring,
     origin
   )).
 
-(* Beacon acceptance implies a unique committed response agreeing on the complete injective establishment transcript, including the exact selected ML-KEM public key and response ciphertext rather than only the resulting root. *)
+(* Sequence-one completion implies a unique exact issued response. BeaconCommitted is emitted only by that scheduling branch; BeaconRegistrationCompleted below covers both first and later completion. *)
 query transcript: establishment_transcript_t;
   inj-event(BeaconCommitted(transcript)) ==>
   inj-event(ServerCommitted(transcript)).
@@ -145,3 +145,12 @@ query session: bitstring,
     receiver,
     plaintext
   )).
+
+(* Every modeled completion agrees on the cryptographic session, including the outer cryptographic fields and pinned server ID, and on the exact authenticated record. The assigned routing ID and its session_label are excluded: later application payloads can carry a different authenticated ID prefix. The exact-response negative control tests that distinction. *)
+query main_agreement: registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id, main_server_assigned: key_id;
+  inj-event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)) ==>
+  inj-event(ServerRegistrationSessionCommitted(main_agreement, main_server_assigned)).
+
+query main_agreement: registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id, main_server_assigned: key_id;
+  inj-event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)) ==>
+  inj-event(RegistrationRecordSent(main_agreement, main_sequence, main_payload, main_frame, main_server_assigned)).
