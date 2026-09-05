@@ -176,7 +176,7 @@ let LaterSequenceRegistrationOpen(
       expected_server_identity,
       beacon_identity,
       assigned_key_id,
-      root_input
+      root
     ) in
     let server_chain_1 = server_to_beacon_chain(root) in
     let server_chain_2 = ratchet_next(server_chain_1) in
@@ -549,7 +549,7 @@ let LaterSequenceRegistrationControl() =
     server_identity,
     beacon_identity,
     assigned_key_id,
-    root_input
+    root
   ) in
   let server_chain_1 = server_to_beacon_chain(root) in
   let server_material_1 = ratchet_material(server_chain_1) in

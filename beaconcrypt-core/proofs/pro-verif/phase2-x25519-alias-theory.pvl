@@ -25,4 +25,3 @@ reduc forall beacon_secret: bitstring, server_secret: bitstring;
 otherwise forall beacon_secret: bitstring, server_secret: bitstring;
   x25519_beacon_dh(beacon_secret, x25519_high_bit_alias(server_secret)) =
   x25519_shared(server_secret, beacon_secret).
-

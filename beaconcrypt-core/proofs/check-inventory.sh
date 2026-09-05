@@ -45,11 +45,11 @@ declare -A expected_category_counts=(
 	[adapter-rust]=13
 	[adapter-schema]=3
 	[core-rust]=9
-	[control]=11
+	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
 	[handwritten-lean]=121
-	[handwritten-proverif]=70
+	[handwritten-proverif]=71
 	[handwritten-ssprove]=18
 	[inventory]=2
 	[lean-control]=12
@@ -85,6 +85,7 @@ tracked_proof_symlink="$(git -C "$repo_dir" ls-files -s -- beaconcrypt-core/proo
 
 printf '%s\n' \
 	../.cargo/config.toml \
+	../.gitattributes \
 	../.github/workflows/formal-verification.yml \
 	../.gitignore \
 	../Cargo.lock \
@@ -373,9 +374,9 @@ reject_matches "invented AEAD or CTX label constructor" \
 reject_matches "production transcript declaration duplicated outside canonical interface" \
 	'(?m)^(?:type (?:key_id|sequence|kdf_domain|hkdf_stream|establishment_transcript_t)|fun (?:sequence_le64|sender_id_le64|tag_ed25519|tag_x25519_prekey|tag_x25519_one_time|tag_mlkem768|pqxdh_ff32_padding|pqxdh_root_input|pqxdh_domain|symmetric_ratchet_domain|hkdf_sha512_no_salt|hkdf_first_32|hkdf_second_32|hkdf_final_12|beaconcrypt_associated_data|aead_cipher|aead_tag|ctx_preimage|blake2b512)\b|letfun (?:key_id_encoding|ctx_commitment)\b)' \
 	proofs/pro-verif/crypto.pvl
-require_line_count 4 '^type ' proofs/pro-verif/environment.pvl \
+require_line_count 5 '^type ' proofs/pro-verif/environment.pvl \
 	"handwritten protocol-state type"
-require_line_count 18 '^fun ' proofs/pro-verif/environment.pvl \
+require_line_count 19 '^fun ' proofs/pro-verif/environment.pvl \
 	"handwritten protocol constructor/function"
 require_line_count 1 \
 	'^\(\* @beaconcrypt-phase1-v1 signed_init_kex\.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq \*\)$' \
@@ -424,7 +425,7 @@ require_occurrence_count 1 'event\s+BeaconBundleInitiated\(initiated_bundle\)' \
 	"beacon authenticated-bundle emitter" proofs/pro-verif/environment.pvl
 require_occurrence_count 1 'event\s+ServerBundleAccepted\(accepted_bundle\)' \
 	"server authenticated-bundle emitter" proofs/pro-verif/environment.pvl
-require_line_count 32 '^event ' proofs/pro-verif/environment.pvl \
+require_line_count 35 '^event ' proofs/pro-verif/environment.pvl \
 	"handwritten event"
 require_line_count 2 '^table ' proofs/pro-verif/environment.pvl \
 	"handwritten table"
@@ -444,8 +445,50 @@ require_line_count 1 '^event RegistrationRecordSent\(registration_session_t, seq
 	proofs/pro-verif/environment.pvl "main exact authenticated record origin"
 require_occurrence_count 1 \
 	'query\s+transcript: establishment_transcript_t;\s*inj-event\(BeaconCommitted\(transcript\)\)\s*==>\s*inj-event\(ServerCommitted\(transcript\)\)\.' \
-	"complete establishment transcript correspondence query" \
+	"historical complete establishment transcript correspondence query" \
+	proofs/pro-verif/exact-registration-origin-queries.pvl
+require_occurrence_count 1 \
+	'type\s*authenticated_registration_session_t\.' \
+	"authenticated session projection type" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'fun\s*authenticated_registration_session\(\s*bitstring,\s*bitstring,\s*beaconcrypt_core__pqxdh__t_InitKex,\s*beaconcrypt_core__pqxdh__t_RegistrationId,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*bitstring,\s*key_id,\s*bitstring\s*\):\s*authenticated_registration_session_t\s*\[data\]\.' \
+	"exact eleven-field authenticated projection constructor" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'\)\)\s*=\s*authenticated_registration_session\(\s*mr_server,\s*mr_beacon,\s*mr_init,\s*mr_id,\s*mr_prekey,\s*mr_one_time,\s*mr_pq,\s*mr_root,\s*mr_ad,\s*mr_pinned,\s*mr_origin\s*\)\.' \
+	"exact retained-value authenticated projection" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'event\s*ServerAuthenticatedSessionCommitted\(authenticated_registration_session_t,\s*key_id\)\.' \
+	"authenticated projection event ServerAuthenticatedSessionCommitted" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'event\s*BeaconAuthenticatedRegistrationCompleted\(authenticated_registration_session_t,\s*sequence,\s*bitstring,\s*bitstring,\s*key_id\)\.' \
+	"authenticated projection event BeaconAuthenticatedRegistrationCompleted" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'event\s*AuthenticatedRegistrationRecordSent\(authenticated_registration_session_t,\s*sequence,\s*bitstring,\s*bitstring,\s*key_id\)\.' \
+	"authenticated projection event AuthenticatedRegistrationRecordSent" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'fun\s*session_label\(\s*bitstring,\s*bitstring,\s*key_id,\s*bitstring\s*\):\s*bitstring\s*\[data\]\.' \
+	"traffic label uses actual root bytes" \
+	proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'inj\-event\(BeaconAuthenticatedRegistrationCompleted\(main_agreement,\s*first_sequence\(\),\s*main_payload,\s*main_frame,\s*main_claimed\)\)\s*==>\s*inj\-event\(AuthenticatedRegistrationRecordSent\(main_agreement,\s*first_sequence\(\),\s*main_payload,\s*main_frame,\s*main_claimed\)\)\.' \
+	"projected registration authentication query AuthenticatedRegistrationRecordSent" \
 	proofs/pro-verif/queries.pvl
+require_occurrence_count 1 \
+	'inj\-event\(BeaconAuthenticatedRegistrationCompleted\(main_agreement,\s*main_sequence,\s*main_payload,\s*main_frame,\s*main_claimed\)\)\s*==>\s*inj\-event\(ServerAuthenticatedSessionCommitted\(main_agreement,\s*main_server_assigned\)\)\.' \
+	"projected registration authentication query ServerAuthenticatedSessionCommitted" \
+	proofs/pro-verif/queries.pvl
+require_occurrence_count 1 \
+	'inj\-event\(BeaconAuthenticatedRegistrationCompleted\(main_agreement,\s*main_sequence,\s*main_payload,\s*main_frame,\s*main_claimed\)\)\s*==>\s*inj\-event\(AuthenticatedRegistrationRecordSent\(main_agreement,\s*main_sequence,\s*main_payload,\s*main_frame,\s*main_server_assigned\)\)\.' \
+	"projected registration authentication query AuthenticatedRegistrationRecordSent" \
+	proofs/pro-verif/queries.pvl
+require_line_count 3 '^query ' proofs/pro-verif/exact-registration-origin-queries.pvl \
+	"preserved historical exact-registration query bodies"
 require_occurrence_count 1 \
 	'query\s+bundle: authenticated_init_bundle_t;\s*inj-event\(ServerBundleAccepted\(bundle\)\)\s*==>\s*inj-event\(BeaconBundleInitiated\(bundle\)\)\.' \
 	"exact authenticated registration-bundle correspondence query" \

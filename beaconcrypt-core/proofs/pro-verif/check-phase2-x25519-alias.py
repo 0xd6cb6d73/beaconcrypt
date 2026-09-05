@@ -34,7 +34,9 @@ reduc forall beacon_secret: bitstring, server_secret: bitstring;
 
 
 def selected_queries(directory: Path) -> str:
-    source = without_comments((directory / "queries.pvl").read_text())
+    source = without_comments(
+        (directory / "exact-registration-origin-queries.pvl").read_text()
+    )
     queries = re.findall(r"\bquery\b.*?\.", source, flags=re.S)
     selected = [
         query
@@ -49,8 +51,13 @@ def selected_queries(directory: Path) -> str:
         "inj-event(ServerRegistrationSessionCommitted(main_agreement,main_server_assigned))",
         "inj-event(RegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned))",
     )
-    if any(destination not in compact(query) for query, destination in zip(selected, destinations)):
-        raise ValueError("registration correspondence destination changed; review required")
+    if any(
+        destination not in compact(query)
+        for query, destination in zip(selected, destinations)
+    ):
+        raise ValueError(
+            "registration correspondence destination changed; review required"
+        )
     return "\n\n".join(selected) + "\n"
 
 
@@ -64,16 +71,68 @@ def alias_crypto(directory: Path) -> str:
     return source[:start] + replacement + source[finish:]
 
 
+def selected_projected_queries(directory: Path) -> str:
+    source = without_comments((directory / "queries.pvl").read_text())
+    queries = re.findall(r"\bquery\b.*?\.", source, flags=re.S)
+    selected = [
+        query
+        for query in queries
+        if "inj-event(BeaconAuthenticatedRegistrationCompleted(" in query
+    ]
+    if len(selected) != 3:
+        raise ValueError("expected exactly three projected registration queries")
+    destinations = (
+        "inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence(),main_payload,main_frame,main_claimed))",
+        "inj-event(ServerAuthenticatedSessionCommitted(main_agreement,main_server_assigned))",
+        "inj-event(AuthenticatedRegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned))",
+    )
+    if any(
+        destination not in compact(query)
+        for query, destination in zip(selected, destinations)
+    ):
+        raise ValueError(
+            "projected registration correspondence destination changed; review required"
+        )
+    return "\n\n".join(selected) + "\n"
+
+
+PROJECTED_RESULTS = (
+    "RESULT inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,first_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence,main_payload,main_frame,main_claimed)) is true.",
+    "RESULT inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(ServerAuthenticatedSessionCommitted(main_agreement,main_server_assigned)) is true.",
+    "RESULT inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(AuthenticatedRegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned)) is true.",
+)
+
+
+def check_projected_run(output: str) -> None:
+    results = tuple(line for line in output.splitlines() if line.startswith("RESULT "))
+    if results != PROJECTED_RESULTS:
+        raise ValueError(
+            f"expected all three exact projected correspondences: {results}"
+        )
+
+
 def check_run(output: str, expected: str) -> None:
-    results = [line for line in output.splitlines() if line.startswith("RESULT inj-event(")]
-    if len(results) != 3 or any(not line.endswith(f" is {expected}.") for line in results):
-        raise ValueError(f"expected exactly three {expected} correspondence results: {results}")
-    destinations = ("ServerCommitted", "ServerRegistrationSessionCommitted", "RegistrationRecordSent")
+    results = [
+        line for line in output.splitlines() if line.startswith("RESULT inj-event(")
+    ]
+    if len(results) != 3 or any(
+        not line.endswith(f" is {expected}.") for line in results
+    ):
+        raise ValueError(
+            f"expected exactly three {expected} correspondence results: {results}"
+        )
+    destinations = (
+        "ServerCommitted",
+        "ServerRegistrationSessionCommitted",
+        "RegistrationRecordSent",
+    )
     if any(
         f"==> inj-event({destination}(" not in result
         for destination, result in zip(destinations, results)
     ):
-        raise ValueError("missing, duplicated, reordered, or changed correspondence result")
+        raise ValueError(
+            "missing, duplicated, reordered, or changed correspondence result"
+        )
     if expected == "false":
         traces = re.findall(
             r"A more detailed output of the traces.*?A trace has been found\.",
@@ -81,7 +140,9 @@ def check_run(output: str, expected: str) -> None:
             flags=re.S,
         )
         if len(traces) != 3:
-            raise ValueError("a concrete trace must be reconstructed for each false correspondence")
+            raise ValueError(
+                "a concrete trace must be reconstructed for each false correspondence"
+            )
         if any(
             not any(
                 line.startswith("in(c, kex_response(")
@@ -91,11 +152,17 @@ def check_run(output: str, expected: str) -> None:
             )
             for trace in traces
         ):
-            raise ValueError("the reconstructed counterexample must use the public encoding alias")
+            raise ValueError(
+                "the reconstructed counterexample must use the public encoding alias"
+            )
 
 
 def self_test() -> None:
-    destinations = ("ServerCommitted", "ServerRegistrationSessionCommitted", "RegistrationRecordSent")
+    destinations = (
+        "ServerCommitted",
+        "ServerRegistrationSessionCommitted",
+        "RegistrationRecordSent",
+    )
     lines = [
         f"RESULT inj-event(BeaconCommitted(t)) ==> inj-event({destination}(t)) is false."
         for destination in destinations
@@ -122,6 +189,25 @@ def self_test() -> None:
             continue
         raise AssertionError("negative result-checker control was accepted")
     print("phase2-x25519-alias checker: five negative controls rejected")
+    projected = "\n".join(PROJECTED_RESULTS)
+    check_projected_run(projected)
+    invalid_projected = (
+        "\n".join(PROJECTED_RESULTS[:2]),
+        projected.replace("true.", "false.", 1),
+        projected.replace("true.", "unknown.", 1),
+        "\n".join((PROJECTED_RESULTS[0], PROJECTED_RESULTS[0], PROJECTED_RESULTS[2])),
+        projected.replace(
+            "main_claimed)) is true.", "main_server_assigned)) is true.", 1
+        ),
+        projected + "\nRESULT Observational equivalence is true.",
+    )
+    for mutated in invalid_projected:
+        try:
+            check_projected_run(mutated)
+        except ValueError:
+            continue
+        raise AssertionError("negative projected-result control was accepted")
+    print("projected registration checker: six negative controls rejected")
 
 
 def main() -> None:
@@ -136,11 +222,21 @@ def main() -> None:
         work = Path(temporary)
         queries = work / "exact-registration-queries.pvl"
         queries.write_text(selected_queries(directory))
+        projected_queries = work / "projected-registration-queries.pvl"
+        projected_queries.write_text(selected_projected_queries(directory))
         alias = work / "crypto-with-x25519-aliases.pvl"
         alias.write_text(alias_crypto(directory))
-        for label, crypto, expected in (
-            ("canonical", directory / "crypto.pvl", "true"),
-            ("alias", alias, "false"),
+        for label, crypto, query_source, expected, projected in (
+            ("canonical", directory / "crypto.pvl", queries, "true", False),
+            ("alias", alias, queries, "false", False),
+            (
+                "projected-canonical",
+                directory / "crypto.pvl",
+                projected_queries,
+                "true",
+                True,
+            ),
+            ("projected-alias", alias, projected_queries, "true", True),
         ):
             command = [args.proverif]
             for library in (
@@ -148,7 +244,7 @@ def main() -> None:
                 crypto,
                 directory / "extraction/lib.pvl",
                 directory / "environment.pvl",
-                queries,
+                query_source,
             ):
                 command.extend(("-lib", str(library)))
             command.append(str(directory / "phase2-x25519-alias-control.pv"))
@@ -163,8 +259,13 @@ def main() -> None:
             if args.output_dir is not None:
                 args.output_dir.mkdir(parents=True, exist_ok=True)
                 (args.output_dir / f"{label}.log").write_text(result.stdout)
-            check_run(result.stdout, expected)
-            print(f"phase2-x25519-alias {label}: three exact correspondences {expected}")
+            if projected:
+                check_projected_run(result.stdout)
+            else:
+                check_run(result.stdout, expected)
+            print(
+                f"phase2-x25519-alias {label}: three checked correspondences {expected}"
+            )
 
 
 if __name__ == "__main__":
