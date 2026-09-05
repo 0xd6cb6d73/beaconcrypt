@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=132
+	[handwritten-lean]=133
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3360,5 +3360,17 @@ done
 require_line_count 2 '^#guard_msgs in$' "$joint_identity" "joint identity guarded audits"
 require_line_count 6 '^#guard_msgs in$' "$joint_family" "joint family guarded audits"
 require_line_count 3 '^#guard_msgs in$' "$joint_sessions" "joint session guarded audits"
+
+# Actual identity reveals: full fresh-event stopping, exact retained state, and query ledgers.
+joint_freshness=proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentityFreshness.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointIdentityFreshness$' \
+	proofs/lean/BeaconcryptCore.lean "joint freshness root import"
+for theorem_name in fresh_probability_eq_stopped stopBeforeReveal_no_target reductionWork_complete targetEvent_le_jointAdvantage global_advantage_le_sum globalReduction_query_bound globalReductionGame_uniform_bound sourceRun_reveal_bound globalRun_uniform_bound sourceRun_rejectedDh_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_freshness" "joint freshness theorem ${theorem_name}"
+done
+for theorem_name in fresh_probability_eq_stopped stopBeforeReveal_no_target reductionWork_complete global_advantage_le_sum globalReduction_query_bound globalReductionGame_uniform_bound sourceRun_reveal_bound globalRun_uniform_bound sourceRun_rejectedDh_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointIdentityFreshness.${theorem_name}$" "$joint_freshness" "joint freshness dependency audit ${theorem_name}"
+done
+require_line_count 9 '^#guard_msgs in$' "$joint_freshness" "joint freshness guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
