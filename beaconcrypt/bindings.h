@@ -123,6 +123,7 @@ extern "C" {
  * Release a byte buffer returned by this API.
  *
  * Passing an empty buffer is allowed. The buffer and its pointer must not be used after this call.
+ * The complete allocation is wiped before release. Copies retained by the caller are not erased.
  */
 void beaconcrypt_free_buffer(struct beaconcrypt_Buffer buffer);
 
@@ -168,7 +169,7 @@ struct beaconcrypt_Buffer beaconcrypt_server_export_state(const struct beaconcry
  *
  * `server_pk_ptr` must point to an Ed25519 public key of the length implied by the API constants.
  *
- * Returns an owned handle, or null when the public-key input is absent. Release a non-null handle with `beaconcrypt_beacon_free`.
+ * Returns an owned handle, or null for absent or incorrectly sized input or a reported initialization/key-generation failure. Release a non-null handle with `beaconcrypt_beacon_free`.
  */
 struct beaconcrypt_Beacon *beaconcrypt_beacon_new(uint64_t server_kid,
                                                   const uint8_t *server_pk_ptr,

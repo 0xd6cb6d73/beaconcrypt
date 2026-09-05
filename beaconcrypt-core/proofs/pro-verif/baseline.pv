@@ -4,6 +4,8 @@ process
   out(c, ed_public(SERVER_IDENTITY_SECRET));
   (
     !HonestBeacon(BEACON_RECORD_SECRET)
+    | !MainLaterBeacon(BEACON_RECORD_SECRET)
+    | !MainLaterServer(INITIAL_SECRET, CACHED_SECRET, ADVANCE_SECRET, FUTURE_SECRET)
     | !MaliciousBeacon()
     | !Server(INITIAL_SECRET, CACHED_SECRET, ADVANCE_SECRET, FUTURE_SECRET)
     | !MaliciousServer()

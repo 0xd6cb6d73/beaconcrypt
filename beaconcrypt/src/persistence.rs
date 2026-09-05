@@ -90,6 +90,28 @@ impl ServerSnapshot {
 		})
 	}
 
+	/// Validate the envelope's lineage, next generation and exact parent digest before a store CAS.
+	/// This does not authenticate bytes, decode the payload, establish freshness or make a store atomic.
+	/// The store must compare `expected` with its trusted current head under the same transaction.
+	pub fn validate_successor(
+		&self,
+		expected: Option<&SnapshotHead>,
+	) -> Result<SnapshotHead, PersistenceError> {
+		let parsed = ParsedSnapshot::parse(self.as_bytes())?;
+		match expected {
+			Some(previous)
+				if parsed.lineage != previous.lineage
+					|| previous.generation.checked_add(1) != Some(parsed.generation)
+					|| parsed.parent_digest != previous.digest =>
+			{
+				return Err(PersistenceError::StaleGeneration);
+			}
+			None if parsed.generation != 0 => return Err(PersistenceError::StaleGeneration),
+			_ => {}
+		}
+		self.head()
+	}
+
 	fn encode(
 		server: &Server,
 		lineage: SnapshotLineage,
@@ -131,6 +153,7 @@ impl ServerSnapshot {
 struct ParsedSnapshot<'a> {
 	lineage: SnapshotLineage,
 	generation: u64,
+	parent_digest: [u8; DIGEST_SIZE],
 	payload: &'a [u8],
 }
 
@@ -167,6 +190,7 @@ impl<'a> ParsedSnapshot<'a> {
 		Ok(Self {
 			lineage,
 			generation,
+			parent_digest,
 			payload: &bytes[offset..payload_end],
 		})
 	}
@@ -220,6 +244,7 @@ fn snapshot_digest(bytes: &[u8]) -> Result<[u8; DIGEST_SIZE], PersistenceError> 
 /// store the exact `replacement` bytes and new head before returning `true`. Implementations must
 /// keep that trusted head in a rollback-resistant domain; canonical encoding and a digest do not
 /// make an old generation fresh.
+/// Use [`ServerSnapshot::validate_successor`] inside that transaction to check the replacement's parent link and monotone generation as well as its lineage.
 pub trait SnapshotStore {
 	fn load(&self) -> Option<ServerSnapshot>;
 
@@ -276,20 +301,9 @@ impl SnapshotStore for BindingSnapshotStore {
 		if self.head.as_ref() != expected {
 			return false;
 		}
-		let Ok(replacement_head) = replacement.head() else {
+		let Ok(replacement_head) = replacement.validate_successor(expected) else {
 			return false;
 		};
-		match expected {
-			Some(previous)
-				if replacement_head.lineage() != previous.lineage()
-					|| previous.generation().checked_add(1)
-						!= Some(replacement_head.generation()) =>
-			{
-				return false;
-			}
-			None if replacement_head.generation() != 0 => return false,
-			_ => {}
-		}
 		self.snapshot = Some(Zeroizing::new(replacement.as_bytes().to_vec()));
 		self.head = Some(replacement_head);
 		true
@@ -326,7 +340,8 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		lineage: SnapshotLineage,
 	) -> Result<Self, PersistenceError> {
 		ensure_init().map_err(|_| PersistenceError::Initialization)?;
-		let server = Server::new(server_kid, id_seed);
+		let server =
+			Server::try_new(server_kid, id_seed).map_err(|_| PersistenceError::Initialization)?;
 		let snapshot = ServerSnapshot::encode(&server, lineage, 0, [0; DIGEST_SIZE])?;
 		if !store.compare_and_swap(None, &snapshot) {
 			return Err(PersistenceError::StaleGeneration);
@@ -612,6 +627,69 @@ mod tests {
 	use crate::ratchet::RATCHET_MAX_GAP;
 	#[cfg(feature = "beacon")]
 	use crate::{Beacon, ProviderBeacon};
+
+	#[test]
+	fn successor_validation_binds_lineage_generation_and_parent() {
+		let server = Server::try_new(19, Some(&[9; 32])).unwrap();
+		let lineage = SnapshotLineage::from_bytes([1; LINEAGE_SIZE]);
+		let initial = ServerSnapshot::encode(&server, lineage, 0, [0; DIGEST_SIZE]).unwrap();
+		let head = initial.validate_successor(None).unwrap();
+		let successor = ServerSnapshot::encode(&server, lineage, 1, head.digest()).unwrap();
+		assert_eq!(
+			successor.validate_successor(Some(&head)).unwrap(),
+			successor.head().unwrap()
+		);
+		assert_eq!(
+			successor.validate_successor(None),
+			Err(PersistenceError::StaleGeneration)
+		);
+		assert_eq!(
+			initial.validate_successor(Some(&head)),
+			Err(PersistenceError::StaleGeneration)
+		);
+		for (next_lineage, generation, parent) in [
+			(
+				SnapshotLineage::from_bytes([2; LINEAGE_SIZE]),
+				1,
+				head.digest(),
+			),
+			(lineage, 2, head.digest()),
+			(lineage, 1, [0; DIGEST_SIZE]),
+		] {
+			let invalid =
+				ServerSnapshot::encode(&server, next_lineage, generation, parent).unwrap();
+			assert_eq!(
+				invalid.validate_successor(Some(&head)),
+				Err(PersistenceError::StaleGeneration)
+			);
+		}
+		let exhausted = SnapshotHead {
+			generation: u64::MAX,
+			..head
+		};
+		assert_eq!(
+			initial.validate_successor(Some(&exhausted)),
+			Err(PersistenceError::StaleGeneration)
+		);
+		let invalid_initial =
+			ServerSnapshot::encode(&server, lineage, 0, [1; DIGEST_SIZE]).unwrap();
+		assert_eq!(
+			invalid_initial.validate_successor(None),
+			Err(PersistenceError::InvalidSnapshot)
+		);
+		assert_eq!(
+			ServerSnapshot::from_bytes(vec![]).validate_successor(None),
+			Err(PersistenceError::InvalidSnapshot)
+		);
+	}
+
+	#[test]
+	fn invalid_seed_does_not_publish_a_persistent_server() {
+		assert!(matches!(
+			PersistentServer::create(19, Some(&[0; 31]), MemoryStore::default()),
+			Err(PersistenceError::Initialization)
+		));
+	}
 
 	#[derive(Default)]
 	struct MemoryStore {

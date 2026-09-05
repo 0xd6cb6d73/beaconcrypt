@@ -54,11 +54,28 @@ const LATER_REGISTRATION_QUERIES: &str =
 	include_str!("../proofs/pro-verif/later-sequence-registration-queries.pvl");
 const LATER_REGISTRATION_MAIN: &str =
 	include_str!("../proofs/pro-verif/later-sequence-registration.pv");
+const POST_REGISTRATION_CONTROL: &str =
+	include_str!("../proofs/pro-verif/post-registration-ratchet-control.pvl");
+const POST_REGISTRATION_QUERIES: &str =
+	include_str!("../proofs/pro-verif/post-registration-ratchet-queries.pvl");
+const POST_REGISTRATION_MAIN: &str =
+	include_str!("../proofs/pro-verif/post-registration-ratchet.pv");
 const PROVERIF_RESULT_CHECKER: &str = include_str!("../proofs/pro-verif/check-results.awk");
 const LEAN_RATCHET_CONTROL: &str =
 	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetControl.lean");
 const LEAN_RATCHET_REFINEMENT: &str =
 	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetRefinement.lean");
+const LEAN_RATCHET_RECEIVE_BEHAVIOR: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/RatchetReceiveBehavior.lean");
+const LEAN_PQXDH_SESSION_LIFECYCLE: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/PqxdhSessionLifecycle.lean");
+const LEAN_BYTE_TRACE_REFINEMENT: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/ByteTraceRefinement.lean");
+const LEAN_BOUNDARY_EXECUTION: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/BoundaryExecution.lean");
+const LEAN_PROTOCOL_HISTORY: &str =
+	include_str!("../proofs/lean/BeaconcryptCore/Refinement/ProtocolHistory.lean");
+const TRANSCRIPT_FIDELITY_TEST: &str = include_str!("proverif_transcript_fidelity.rs");
 
 const FACT_PREFIX: &str = "(* @beaconcrypt-fidelity-v1 ";
 const FACT_SUFFIX: &str = " *)";
@@ -83,6 +100,36 @@ const LATER_REGISTRATION_QUERY_HASHES: [u64; 18] = [
 	4_051_337_733_113_411_667,
 ];
 const LATER_REGISTRATION_CHECKER_HASH: u64 = 6_902_455_048_869_219_859;
+const POST_REGISTRATION_QUERY_HASHES: [u64; 27] = [
+	13_442_398_044_445_305_657,
+	1_982_463_897_226_573_668,
+	13_904_433_424_887_205_758,
+	18_055_026_551_756_866_664,
+	15_452_524_558_492_993_077,
+	10_419_032_750_057_719_768,
+	12_567_658_622_396_497_260,
+	10_620_112_965_774_267_389,
+	18_312_738_672_001_042_933,
+	15_470_908_886_182_888_698,
+	173_383_255_443_887_514,
+	5_994_236_791_793_324_971,
+	15_269_535_120_974_471_958,
+	8_391_988_441_863_424_093,
+	4_186_761_583_507_723_257,
+	18_318_860_712_697_568_036,
+	1_122_727_936_689_057_007,
+	17_952_828_070_516_809_999,
+	12_832_071_055_080_247_677,
+	17_112_031_144_227_226_068,
+	4_988_454_840_997_839_352,
+	15_547_842_063_551_900_399,
+	6_458_542_681_987_309_360,
+	16_637_389_876_782_594_323,
+	16_409_484_950_328_146_878,
+	6_185_348_103_479_085_792,
+	10_779_077_534_392_446_248,
+];
+const POST_REGISTRATION_CHECKER_HASH: u64 = 4_898_378_753_972_868_244;
 const EXPECTED_FACTS: &[&str] = &[
 	"schema=1",
 	"domain.count=2",
@@ -185,7 +232,7 @@ const EXPECTED_FACTS: &[&str] = &[
 	"cryptoframe.seal.empty_plaintext=caller_rejects_before_ratchet",
 	"cryptoframe.seal.one_use=returned_material,returned_sequence,frame_context,finish",
 	"cryptoframe.open.empty_wire=rejected_before_parse",
-	"cryptoframe.open.parse=capnp_typed_reader<CryptoFrame>",
+	"cryptoframe.open.parse=decode_crypto_frame:complete_capnp_typed_message,reject_trailing_bytes",
 	"cryptoframe.open.getter_order=keyId,cipherText,seq",
 	"cryptoframe.open.sender_gate=parsed_sender_kid==expected_sender_kid:before_ratchet",
 	"cryptoframe.open.length_gate=payload_length>80:before_ratchet",
@@ -279,8 +326,8 @@ const EXPECTED_FACTS: &[&str] = &[
 	"ratchet.driver.send.put=finish_returned_kernel_before_returned_sealed",
 	"ratchet.driver.send.failure=seal.finish(None):advanced_kernel_then_slot_put",
 	"ratchet.driver.send.cancel=not_invoked_in_encrypt_helper",
-	"ratchet.driver.receive.prechecks=empty,typed_parse,sender_match,payload_length:before_take",
-	"ratchet.driver.receive.context=OpenFrameContext(ciphertext,associated_data,parsed_sender)",
+	"ratchet.driver.receive.prechecks=empty,complete_typed_parse,sender_match,validated_payload_slices:before_take",
+	"ratchet.driver.receive.context=OpenFrameContext::from_frame(ciphertext,associated_data,parsed_sender):shared_body_tag_and_commitment_views",
 	"ratchet.driver.receive.take=ratchet.refined.take():once",
 	"ratchet.driver.receive.begin=begin_receive(kernel,parsed_sequence,same_context):once",
 	"ratchet.driver.receive.loop=effect_match_without_fixed_iteration_count",
@@ -288,11 +335,11 @@ const EXPECTED_FACTS: &[&str] = &[
 	"ratchet.driver.receive.kdf.request=ratchet_hkdf(same_pending.request()):per_arm",
 	"ratchet.driver.receive.kdf.resume=same_pending.resume(same_response)",
 	"ratchet.driver.receive.kdf.slot_put=none_in_ReceiveKdfRequested_arm",
-	"ratchet.driver.receive.no_material=open.reject(),put(returned_kernel),return_none",
-	"ratchet.driver.receive.open=open_frame(material,open.sequence(),open.context())",
-	"ratchet.driver.receive.finish=open.finish(opened)",
-	"ratchet.driver.receive.put=finish_returned_kernel_before_opened_question",
-	"ratchet.driver.receive.success=plaintext,parsed_sender,parsed_sequence",
+	"ratchet.driver.receive.no_material=executor_closure_None,open.finish(None),put(returned_kernel),return_none",
+	"ratchet.driver.receive.open=execute_open(same_owned_open):get_material,context,sequence;commitment_then_AEAD",
+	"ratchet.driver.receive.finish=execute_open_calls_same_open.finish(actual_primitive_result)",
+	"ratchet.driver.receive.put=executor_returned_kernel_before_returning_optional_Decrypted",
+	"ratchet.driver.receive.success=actual_AEAD_plaintext,request_context_sender,request_sequence",
 	"ratchet.driver.receive.failure=open.finish(None):entry_kernel_then_slot_put",
 	"ratchet.driver.receive.cancel=not_invoked_in_decrypt_helper",
 	"ratchet.driver.core.phase_api=SendStart,SendKdf,SendSeal,ReceiveEffect,ReceiveKdf,ReceiveOpen",
@@ -493,9 +540,9 @@ const EXPECTED_FACTS: &[&str] = &[
 	"later_registration.adapter.sequence=key_seq_is_frame.get_seq",
 	"later_registration.adapter.begin=begin_receive(same_taken_kernel,key_seq,same_OpenFrameContext)",
 	"later_registration.adapter.loop=each_ReceiveKdfRequested_uses_ratchet_hkdf(same_pending.request)_then_same_pending.resume",
-	"later_registration.adapter.open=open_frame(open.material,open.sequence,open.context)",
-	"later_registration.adapter.finish=same_open.finish(opened)_then_returned_kernel_is_put_before_plaintext_return",
-	"later_registration.adapter.result=Decrypted(plaintext,kid,key_seq)",
+	"later_registration.adapter.open=execute_open(same_owned_open):selected_material,sequence,and_context",
+	"later_registration.adapter.finish=executor_calls_same_open.finish(actual_primitive_result)_then_driver_puts_returned_kernel_before_result",
+	"later_registration.adapter.result=Decrypted(actual_AEAD_plaintext,open.context.sender_kid,open.sequence)",
 	"later_registration.adapter.no_first_gate=generic_receive_has_no_first_sequence_special_case",
 	"later_registration.core.max_gap=RATCHET_MAX_GAP:50",
 	"later_registration.core.plan=future_derivations=target-receive_sequence;skipped=derivations-1",
@@ -546,6 +593,53 @@ const EXPECTED_FACTS: &[&str] = &[
 	"later_registration.proverif.origin=faithful_commit_implies_selected_exact_substitution_and_same_session_root_genuine_sequence_3_Server_send_after_original_response",
 	"later_registration.proverif.constructor_condition=exact_cache_and_chain_equations_hold_in_the_ideal_free_constructor_model;HB54_collision_conditioning_is_separate",
 	"later_registration.excludes=arbitrary_schedules,semantic_refinement,parser_compiler_or_serialization_theorems,liveness,primitive_security_correctness_or_totality,HKDF_correctness,CTX_or_AEAD_security,production_sequence_gate,full_BeaconState_or_PQXDH_control_poststate,persistence,multiuser,crash,erasure",
+	"post_registration.scope=one_finite_continuation_of_the_exact_HB65_committed_state:not_an_arbitrary_receive_schedule",
+	"post_registration.claim=cached_sequence_1_success_then_identical_replay_rejection_then_genuine_sequence_4_success",
+	"post_registration.source.reference=production_source_is_ultimate_reference:no_behavior_change",
+	"post_registration.source.runtime=the_same_successfully_sequence_3_opened_ConcreteRatchetKernel_is_carried_through_cached_replay_and_future_receives",
+	"post_registration.source.cache_observation=public_counters,chains,receive_cache_len,and_all_50_receive_entry_at_results:not_raw_inactive_array_bytes",
+	"post_registration.source.cached=sequence_1_uses_cached_material_1_without_a_KDF_and_success_removes_only_that_entry",
+	"post_registration.source.replay=consumed_sequence_1_rejects_before_KDF_or_open_and_preserves_the_exact_public_snapshot",
+	"post_registration.source.future=sequence_4_requests_chain_4_once,opens_with_material_4,and_publishes_chain_5_counter_4",
+	"post_registration.source.payload=cached_success_returns_the_full_registration_binding_plus_application_payload;future_success_returns_the_full_sequence_4_payload",
+	"post_registration.lean.receive=KernelRefines.receive_success_replay",
+	"post_registration.lean.cached=ConcreteSession.finish_cached_server_preserves,ConcreteSession.finish_cached_beacon_preserves",
+	"post_registration.lean.byte_trace=executeTrace_refines,executeTrace_observed,executeTrace_recvWf",
+	"post_registration.lean.boundary=runTrace_refines,runTrace_observed",
+	"post_registration.lean.history=completeHistory_refines,completeHistory_observed",
+	"post_registration.lean.scope=conditional_exact_semantic_anchors_under_supplied_record_and_KDF_interpreters:not_a_ProVerif_extraction_theorem",
+	"post_registration.proverif.hooks=later_registration_server_handoff_and_later_registration_committed_handoff_are_private",
+	"post_registration.proverif.hook_parallel=both_handoff_outputs_are_parallel_to_the_original_HB65_continuation_and_cannot_block_it_when_unconsumed",
+	"post_registration.proverif.server_handoff=session,root,original_response,substituted_response,first_frame,server_chain_3,associated_data,server_key_id,assigned_key_id",
+	"post_registration.proverif.committed_handoff=faithful_witness,session,root,substituted_response,assigned_key_id,authenticated_server_key_id,associated_data,committed_ratchet",
+	"post_registration.proverif.join=exact_session,root,substituted_response,assigned_id,server_id,and_associated_data_join_one_Server_trace_to_one_faithful_commit",
+	"post_registration.proverif.seq4_origin=chain_4_is_ratchet_next(server_chain_3);material_4_is_ratchet_material(chain_4);frame_4_is_genuine_Server_seal",
+	"post_registration.proverif.trace=cached_reply_precedes_replay_reply_and_only_replay_failure_continues_to_sequence_4",
+	"post_registration.proverif.delta=faithful_and_counterfactual_traces_differ_only_by_witness_and_post_registration_consume_v_retain_mode",
+	"post_registration.proverif.cached.entry=counter_3,chain_4,cache_sequence_2_material_2_then_sequence_1_material_1",
+	"post_registration.proverif.cached.open=sequence_1_opens_with_material_1_and_never_emits_PostRegistrationKdfCalled",
+	"post_registration.proverif.cached.return=full_registration_payload(assigned_binding,SEQ1_PAYLOAD)",
+	"post_registration.proverif.cached.cache=consume_returns_only_sequence_2_material_2;retain_returns_the_exact_entry_cache",
+	"post_registration.proverif.replay=faithful_second_sequence_1_lookup_fails_after_consumption",
+	"post_registration.proverif.replay.order=rejection_precedes_reply_and_no_replay_KDF,open,return,or_accept_event_is_reachable",
+	"post_registration.proverif.replay.state=rejection_reports_the_same_consumed_entry_ratchet_as_input_and_output",
+	"post_registration.proverif.future=only_the_replay_failure_payload_is_carried_to_PostRegistrationReceiveFuture",
+	"post_registration.proverif.future.kdf=one_PostRegistrationKdfCalled_uses_the_carried_chain_4",
+	"post_registration.proverif.future.open=sequence_4_frame_opens_with_material_4_under_the_joined_associated_data_and_server_id",
+	"post_registration.proverif.future.state=send_counter_0_and_initial_send_chain_unchanged;receive_counter_4_and_chain_5",
+	"post_registration.proverif.future.cache=sequence_2_material_2_is_retained_and_sequence_4_material_is_not_inserted",
+	"post_registration.proverif.target=PostRegistrationTargetUnavailable_separately_certifies_sequence_4_material_absence_from_the_exact_cache",
+	"post_registration.proverif.negative=retain_consumed_changes_only_cache_finalization_then_reaccepts_the_identical_replay_and_discloses_the_private_canary",
+	"post_registration.proverif.main=LaterSequenceRegistrationControl_parallel_PostRegistrationControl",
+	"post_registration.proverif.queries=27:21_reachability_or_absence_classifications_and_6_origin_or_order_correspondences",
+	"post_registration.proverif.query_lock=all_27_compact_query_terms_and_all_27_result_terms_are_hash_and_polarity_locked",
+	"post_registration.proverif.origin=handoff_from_faithful_commit,cached_frame_from_original_Server_send,sequence_4_from_same_Server_chain,and_replay_rejection_after_cached_success",
+	"post_registration.makefile.scenario=post-registration-ratchet_is_one_enumerated_parallel_checked_scenario",
+	"post_registration.makefile.libs=common,strong_assigned_id_theory,later_control,post_control,post_queries,post_main,post_result_checker",
+	"post_registration.checker=exact_27_result_strings_with_1_to_5,7_to_8,13_to_21_false;6,9_to_12_true;22_to_27_true",
+	"post_registration.constructor_condition=exact_chain,cache,payload,and_frame_equations_hold_in_the_ideal_free_constructor_model;HB54_collision_conditioning_is_separate",
+	"post_registration.primitive_contracts=HKDF-SHA-512,ChaCha20-Poly1305,and_BLAKE2b-512_properties_are_permanent_external_assumptions_not_proof_tasks",
+	"post_registration.excludes=arbitrary_schedules,ProVerif_extraction,primitive_correctness_or_security,raw_inactive_cache_bytes,physical_erasure,persistence,multiuser,crash,and_application_routing",
 	"agreement.constructor=establishment_transcript",
 	"agreement.field_count=18",
 	"agreement.fields=server_identity,beacon_identity,authenticated_init_kex,registration_id,prekey,one_time_x25519,selected_mlkem_public_key,server_ephemeral,kem_ciphertext,initial_frame,response,root_input,root,associated_data,assigned_beacon_key_id,pinned_server_key_id,session_id,registration_origin",
@@ -583,9 +677,18 @@ struct Snapshot {
 	later_registration_control: String,
 	later_registration_queries: String,
 	later_registration_main: String,
+	post_registration_control: String,
+	post_registration_queries: String,
+	post_registration_main: String,
 	proverif_result_checker: String,
 	lean_ratchet_control: String,
 	lean_ratchet_refinement: String,
+	lean_ratchet_receive_behavior: String,
+	lean_pqxdh_session_lifecycle: String,
+	lean_byte_trace_refinement: String,
+	lean_boundary_execution: String,
+	lean_protocol_history: String,
+	fidelity_test: String,
 }
 
 impl Snapshot {
@@ -621,9 +724,18 @@ impl Snapshot {
 			later_registration_control: LATER_REGISTRATION_CONTROL.to_owned(),
 			later_registration_queries: LATER_REGISTRATION_QUERIES.to_owned(),
 			later_registration_main: LATER_REGISTRATION_MAIN.to_owned(),
+			post_registration_control: POST_REGISTRATION_CONTROL.to_owned(),
+			post_registration_queries: POST_REGISTRATION_QUERIES.to_owned(),
+			post_registration_main: POST_REGISTRATION_MAIN.to_owned(),
 			proverif_result_checker: PROVERIF_RESULT_CHECKER.to_owned(),
 			lean_ratchet_control: LEAN_RATCHET_CONTROL.to_owned(),
 			lean_ratchet_refinement: LEAN_RATCHET_REFINEMENT.to_owned(),
+			lean_ratchet_receive_behavior: LEAN_RATCHET_RECEIVE_BEHAVIOR.to_owned(),
+			lean_pqxdh_session_lifecycle: LEAN_PQXDH_SESSION_LIFECYCLE.to_owned(),
+			lean_byte_trace_refinement: LEAN_BYTE_TRACE_REFINEMENT.to_owned(),
+			lean_boundary_execution: LEAN_BOUNDARY_EXECUTION.to_owned(),
+			lean_protocol_history: LEAN_PROTOCOL_HISTORY.to_owned(),
+			fidelity_test: TRANSCRIPT_FIDELITY_TEST.to_owned(),
 		}
 	}
 }
@@ -1382,11 +1494,36 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		"CryptoFrame empty-input and send ordering",
 	)?;
 
-	let open = rust_body(&snapshot.adapter_ratchet, "open_frame")?;
+	let open = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
+	let context_factory = rust_body(&snapshot.adapter_ratchet, "from_frame")?;
 	require_once(
-		&open,
-		"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
+		&context_factory,
+		"ifciphertext.len()<=MESSAGE_OVERHEAD{returnNone;}",
 		"CryptoFrame open length gate",
+	)?;
+	require_once(
+		&context_factory,
+		"let(base_ciphertext,commitment)=ciphertext.split_at(ciphertext.len()-COMMITMENT_SIZE);",
+		"CryptoFrame split commitment boundary",
+	)?;
+	require_once(
+		&context_factory,
+		"lettag=&base_ciphertext[base_ciphertext.len()-AEAD_TAG_LEN..];",
+		"CryptoFrame open commitment mapping",
+	)?;
+	require_once(
+		&context_factory,
+		"Some(Self{base_ciphertext,tag:tag.try_into().ok()?,commitment:commitment.try_into().ok()?,associated_data,sender_kid,})",
+		"CryptoFrame validated payload views",
+	)?;
+	require_ordered_once(
+		&open,
+		&[
+			"letmaterial=open.material()?;",
+			"letcontext=open.context();",
+			"letkey_seq=open.sequence();",
+		],
+		"CryptoFrame selected receive material and sequence",
 	)?;
 	for (wanted, label) in [
 		(
@@ -1406,7 +1543,7 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		&[
 			"material",
 			"context.associated_data.as_slice()",
-			"&context.ciphertext[ct_len-COMMITMENT_SIZE-AEAD_TAG_LEN..ct_len-COMMITMENT_SIZE]",
+			"context.tag",
 			"key_seq",
 			"context.sender_kid",
 			"",
@@ -1415,14 +1552,14 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 	require_once(
 		&open,
-		"if!memcmp(&commitment,&context.ciphertext[ct_len-COMMITMENT_SIZE..]){returnNone;}",
+		"if!memcmp(&commitment,context.commitment){returnNone;}",
 		"CryptoFrame libsodium memcmp commitment comparison",
 	)?;
 	require_one_call(
 		&open,
 		"crypto_aead::chacha20poly1305_ietf::decrypt",
 		&[
-			"&context.ciphertext[..ct_len-COMMITMENT_SIZE]",
+			"context.base_ciphertext",
 			"Some(context.associated_data.as_slice())",
 			"&nonce",
 			"&key",
@@ -1434,7 +1571,7 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		&open,
 		&[
 			"letcommitment=build_commitment(",
-			"memcmp(&commitment,&context.ciphertext[ct_len-COMMITMENT_SIZE..])",
+			"memcmp(&commitment,context.commitment)",
 			"letkey:AeadKey=(*material.key().as_bytes()).into()",
 			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into()",
 			"crypto_aead::chacha20poly1305_ietf::decrypt(",
@@ -1442,6 +1579,48 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		"CryptoFrame commitment-before-AEAD order",
 	)?;
 
+	require_once(
+		&compact(&uncommented_rust(&snapshot.adapter_ratchet)?),
+		")->Option<TypedReader<OwnedSegments,cryptoframe_capnp::crypto_frame::Owned>>",
+		"CryptoFrame decoder return type",
+	)?;
+	require_once(
+		&open,
+		"letplaintext=crypto_aead::chacha20poly1305_ietf::decrypt(context.base_ciphertext,Some(context.associated_data.as_slice()),&nonce,&key,).ok()?;",
+		"CryptoFrame recovered plaintext binding",
+	)?;
+	for binding in [
+		"letmaterial=",
+		"letcontext=",
+		"letkey_seq=",
+		"letplaintext=",
+		"letopened=",
+	] {
+		if count(&open, binding) != 1 {
+			return Err(format!("CryptoFrame executor binding shadowed: {binding}"));
+		}
+	}
+	let decoder = rust_body(&snapshot.adapter_ratchet, "decode_crypto_frame")?;
+	require_once(
+		&decoder,
+		"letreader=capnp::serialize::read_message(&mutremaining,ReaderOptions::new()).ok()?;",
+		"CryptoFrame Cap'n Proto parse",
+	)?;
+	require_once(
+		&decoder,
+		"Some(TypedReader::new(reader))",
+		"CryptoFrame typed reader",
+	)?;
+	require_ordered_once(
+		&decoder,
+		&[
+			"letmutremaining=data;",
+			"read_message(&mutremaining,ReaderOptions::new())",
+			"if!remaining.is_empty(){returnNone;}",
+			"Some(TypedReader::new(reader))",
+		],
+		"CryptoFrame exact-message decoder",
+	)?;
 	let decrypt = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
 	for (wanted, label) in [
 		(
@@ -1449,12 +1628,8 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 			"CryptoFrame empty-wire rejection",
 		),
 		(
-			"letreader=capnp::serialize::read_message(data,ReaderOptions::new()).ok()?;",
-			"CryptoFrame Cap'n Proto parse",
-		),
-		(
-			"lettyped_reader=TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader);",
-			"CryptoFrame typed reader",
+			"lettyped_reader=decode_crypto_frame(data)?;",
+			"CryptoFrame complete-message parse handoff",
 		),
 		(
 			"letframe=typed_reader.get().ok()?;",
@@ -1470,11 +1645,11 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 			"CryptoFrame payload getter",
 		),
 		(
-			"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
+			"letcontext=OpenFrameContext::from_frame(",
 			"CryptoFrame pre-ratchet length gate",
 		),
 		(
-			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,};",
+			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?;",
 			"CryptoFrame open context mapping",
 		),
 		("letkey_seq=frame.get_seq();", "CryptoFrame parsed sequence"),
@@ -1483,39 +1658,37 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 			"CryptoFrame parsed-sequence ratchet selection",
 		),
 		(
-			"letopened=open_frame(material,open.sequence(),open.context());",
+			"let(kernel,opened)=execute_open(open);",
 			"CryptoFrame selected receive material and sequence",
-		),
-		(
-			"let(kernel,opened)=open.finish(opened);",
-			"CryptoFrame one-use receive completion",
 		),
 	] {
 		require_once(&decrypt, wanted, label)?;
 	}
+	require_once(
+		&open,
+		"open.finish(opened)",
+		"CryptoFrame one-use receive completion",
+	)?;
 	require_ordered_once(
 		&decrypt,
 		&[
 			"ifdata.is_empty()",
-			"capnp::serialize::read_message(data,ReaderOptions::new())",
+			"decode_crypto_frame(data)",
 			"letkid=frame.get_key_id()",
 			"ifkid!=expected_sender_kid",
 			"letciphertext=frame.get_cipher_text().ok()?",
-			"ifct_len<=MESSAGE_OVERHEAD",
-			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,}",
+			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?",
 			"letkey_seq=frame.get_seq()",
 			"letkernel=ratchet.refined.take()",
 			"verified_ratchet::begin_receive(kernel,key_seq,context)",
 			"verified_ratchet::ReceiveEffect::ReceiveOpenRequested",
-			"open.material()",
-			"open_frame(material,open.sequence(),open.context())",
-			"open.finish(opened)",
+			"execute_open(open)",
 		],
 		"CryptoFrame parser and gate evaluation order",
 	)?;
 	require_once(
-		&decrypt,
-		"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
+		&open,
+		"Some(Decrypted{plaintext,key_id:context.sender_kid,seq:key_seq,})",
 		"CryptoFrame returned parsed metadata",
 	)?;
 
@@ -1746,28 +1919,29 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 }
 
 fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), String> {
-	let parsed_sender = rust_body(&snapshot.adapter_ratchet, "encrypted_frame_sender")?;
+	let decoder = rust_body(&snapshot.adapter_ratchet, "decode_crypto_frame")?;
 	require_once(
-		&parsed_sender,
-		"letreader=capnp::serialize::read_message(data,ReaderOptions::new()).ok()?;",
+		&decoder,
+		"letreader=capnp::serialize::read_message(&mutremaining,ReaderOptions::new()).ok()?;",
 		"endpoint Server wire-sender Cap'n Proto read",
 	)?;
 	require_once(
-		&parsed_sender,
-		"lettyped_reader=TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader);",
+		&decoder,
+		"Some(TypedReader::new(reader))",
 		"endpoint Server wire-sender typed CryptoFrame reader",
 	)?;
+	let parsed_sender = rust_body(&snapshot.adapter_ratchet, "encrypted_frame_sender")?;
 	require_once(
 		&parsed_sender,
-		"Some(typed_reader.get().ok()?.get_key_id())",
+		"Some(decode_crypto_frame(data)?.get().ok()?.get_key_id())",
 		"endpoint Server wire-sender keyId getter",
 	)?;
 	require_ordered_once(
 		&parsed_sender,
 		&[
-			"capnp::serialize::read_message(data,ReaderOptions::new())",
-			"TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
-			"typed_reader.get().ok()?.get_key_id()",
+			"decode_crypto_frame(data)?",
+			".get().ok()?",
+			".get_key_id()",
 		],
 		"endpoint Server wire-sender parse source order",
 	)?;
@@ -2521,11 +2695,14 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 		&environment,
 		"beaconcrypt_core__pqxdh__build_associated_data",
 	)?;
-	if ad_calls.len() != 3
-		|| ad_calls
-			.iter()
-			.any(|arguments| arguments != &["server_identity", "beacon_identity"])
-	{
+	if ad_calls
+		!= [
+			vec!["server_identity", "beacon_identity"],
+			vec!["server_identity", "beacon_identity"],
+			vec!["server_identity", "beacon_identity"],
+			vec!["main_server_identity", "main_beacon_identity"],
+			vec!["main_server_identity", "main_beacon_identity"],
+		] {
 		return Err(format!(
 			"associated-data identity order changed: {ad_calls:?}"
 		));
@@ -2576,9 +2753,9 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"auxiliary ProVerif fidelity prerequisite",
 	)?;
 	let scenarios = scenario_names(makefile)?;
-	if scenarios.len() != 28 {
+	if scenarios.len() != 30 {
 		return Err(format!(
-			"expected 28 ProVerif scenarios, found {}",
+			"expected 30 ProVerif scenarios, found {}",
 			scenarios.len()
 		));
 	}
@@ -2608,7 +2785,7 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 	let later_registration = section_between(
 		makefile,
 		"check-proverif-later-sequence-registration:",
-		"check-proverif-passive-classical-equivalence:",
+		"check-proverif-post-registration-ratchet:",
 		"later-sequence registration Make target",
 	)?;
 	for (wanted, label) in [
@@ -2706,15 +2883,15 @@ fn validate_adapters() -> Result<(), String> {
 		"build_commitment(material,context.associated_data.as_slice(),tag.as_slice(),key_seq,context.sender_kid,)",
 		"production seal commitment inputs",
 	)?;
-	let open = rust_body(ADAPTER_RATCHET, "open_frame")?;
+	let open = rust_body(ADAPTER_RATCHET, "execute_open")?;
 	require(
 		&open,
-		"build_commitment(material,context.associated_data.as_slice(),&context.ciphertext[ct_len-COMMITMENT_SIZE-AEAD_TAG_LEN..ct_len-COMMITMENT_SIZE],key_seq,context.sender_kid,)",
+		"build_commitment(material,context.associated_data.as_slice(),context.tag,key_seq,context.sender_kid,)",
 		"production retained-tag commitment inputs",
 	)?;
 	require(
 		&open,
-		"crypto_aead::chacha20poly1305_ietf::decrypt(&context.ciphertext[..ct_len-COMMITMENT_SIZE],Some(context.associated_data.as_slice()),&nonce,&key,)",
+		"crypto_aead::chacha20poly1305_ietf::decrypt(context.base_ciphertext,Some(context.associated_data.as_slice()),&nonce,&key,)",
 		"production AEAD open",
 	)?;
 	let commitment = rust_body(ADAPTER_RATCHET, "build_commitment")?;
@@ -2866,21 +3043,20 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 
 	let receive = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	let executor = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
 	require_ordered(
 		&receive,
 		&[
 			"ifdata.is_empty(){returnNone;}",
-			"capnp::serialize::read_message(data,ReaderOptions::new())",
-			"TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"decode_crypto_frame(data)",
 			"letkid=frame.get_key_id();",
 			"ifkid!=expected_sender_kid{returnNone;}",
 			"letciphertext=frame.get_cipher_text().ok()?;",
-			"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
-			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,};",
+			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?;",
 			"letkey_seq=frame.get_seq();",
 			"letkernel=ratchet.refined.take();",
 			"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);",
-			"letplaintext=loop{",
+			"loop{",
 		],
 		"ratchet receive prechecks and effect start order",
 	)?;
@@ -2903,7 +3079,7 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 	require_once(
 		&receive,
-		"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);letplaintext=loop{effect=matcheffect{",
+		"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);loop{effect=matcheffect{",
 		"ratchet receive effect loop without fixed iteration count",
 	)?;
 	let receive_kdf_arm = section_between(
@@ -2940,29 +3116,33 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 		"ratchet receive private KDF loop arm",
 	)?;
 	require_once(
-		&receive,
-		"letSome(material)=open.material()else{let(kernel,_)=open.reject();ratchet.refined.put(kernel);returnNone;};",
+		&executor,
+		"letmaterial=open.material()?;",
 		"ratchet receive no-material rejection",
 	)?;
 	require_one_call(
 		&receive,
-		"open_frame",
-		&["material", "open.sequence()", "open.context()"],
+		"execute_open",
+		&["open"],
+		"ratchet receive open capability handoff",
+	)?;
+	require_ordered_once(
+		&executor,
+		&[
+			"letmaterial=open.material()?;",
+			"letcontext=open.context();",
+			"letkey_seq=open.sequence();",
+		],
 		"ratchet receive open capability handoff",
 	)?;
 	require_one_call(
-		&receive,
+		&executor,
 		"open.finish",
 		&["opened"],
 		"ratchet receive capability finish",
 	)?;
 	let receive_puts = all_arguments(&receive, "ratchet.refined.put")?;
-	if receive_puts
-		!= [
-			vec!["kernel".to_owned()],
-			vec!["kernel".to_owned()],
-			vec!["kernel".to_owned()],
-		] {
+	if receive_puts != [vec!["kernel".to_owned()], vec!["kernel".to_owned()]] {
 		return Err(format!(
 			"ratchet receive returned-kernel puts changed: {receive_puts:?}"
 		));
@@ -2970,22 +3150,21 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 	require_ordered(
 		&receive,
 		&[
-			"letSome(material)=open.material()else{",
-			"let(kernel,_)=open.reject();",
+			"let(kernel,opened)=execute_open(open);",
 			"ratchet.refined.put(kernel);",
-			"returnNone;",
-			"letopened=open_frame(material,open.sequence(),open.context());",
-			"let(kernel,opened)=open.finish(opened);",
-			"ratchet.refined.put(kernel);",
-			"breakopened?;",
+			"returnopened;",
 		],
 		"ratchet receive open and terminal publication order",
 	)?;
 	require_once(
-		&receive,
-		"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
+		&executor,
+		"Some(Decrypted{plaintext,key_id:context.sender_kid,seq:key_seq,})",
 		"ratchet receive parsed result metadata",
 	)?;
+	if !executor.ends_with("})();open.finish(opened)") {
+		return Err("ratchet receive primitive result must finish the same capability".to_owned());
+	}
+
 	let receive_open = section_between(
 		&snapshot.core_ratchet_concrete,
 		"impl<Context> ReceiveOpen<Context>",
@@ -3867,14 +4046,14 @@ fn validate_registration_lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 
 	let beacon_source = compact(&uncommented_rust(&snapshot.adapter_beacon)?);
-	let beacon_new = rust_body(&snapshot.adapter_beacon, "new")?;
+	let beacon_new = rust_body(&snapshot.adapter_beacon, "try_new")?;
 	for (wanted, label) in [
 		(
-			"identity_key:crypto_sign::KeyPair::generate().unwrap()",
+			"identity_key:crypto_sign::KeyPair::generate().map_err(|_|crate::KeyGenError)?",
 			"registration Beacon identity generation",
 		),
 		(
-			"state:BeaconState::Fresh{control:verified_pqxdh::BeaconFresh::new(verified_pqxdh::ServerBinding{identity_public_key:*id.as_bytes(),identity_key_id:server_kid,}),prekey:crypto_kx::KeyPair::generate().unwrap(),pq_key:crypto_kem::mlkem768::KeyPair::generate().unwrap(),}",
+			"state:BeaconState::Fresh{control:verified_pqxdh::BeaconFresh::new(verified_pqxdh::ServerBinding{identity_public_key:*id.as_bytes(),identity_key_id:server_kid,}),prekey:crypto_kx::KeyPair::generate().map_err(|_|crate::KeyGenError)?,pq_key:crypto_kem::mlkem768::KeyPair::generate().map_err(|_|crate::KeyGenError)?,}",
 			"registration Beacon Fresh material co-location",
 		),
 	] {
@@ -5135,6 +5314,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	}
 
 	let adapter = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	let executor = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
 	for (wanted, label) in [
 		(
 			"letkey_seq=frame.get_seq();",
@@ -5153,37 +5333,49 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration adapter exact KDF continuation",
 		),
 		(
-			"letopened=open_frame(material,open.sequence(),open.context());",
+			"let(kernel,opened)=execute_open(open);",
 			"later-registration adapter exact open capability",
-		),
-		(
-			"let(kernel,opened)=open.finish(opened);",
-			"later-registration adapter receive completion",
-		),
-		(
-			"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
-			"later-registration adapter result metadata",
 		),
 	] {
 		require_once(&adapter, wanted, label)?;
 	}
+	for getter in [
+		"letmaterial=open.material()?;",
+		"letcontext=open.context();",
+		"letkey_seq=open.sequence();",
+	] {
+		require_once(
+			&executor,
+			getter,
+			"later-registration adapter exact open capability",
+		)?;
+	}
+	require_once(
+		&executor,
+		"open.finish(opened)",
+		"later-registration adapter receive completion",
+	)?;
+	require_once(
+		&executor,
+		"Some(Decrypted{plaintext,key_id:context.sender_kid,seq:key_seq,})",
+		"later-registration adapter result metadata",
+	)?;
 	require_ordered(
 		&adapter,
 		&[
-			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,};",
+			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?;",
 			"letkey_seq=frame.get_seq();",
 			"letkernel=ratchet.refined.take();",
 			"verified_ratchet::begin_receive(kernel,key_seq,context)",
 			"ratchet_hkdf(pending.request())",
 			"pending.resume(response)",
-			"open_frame(material,open.sequence(),open.context())",
-			"open.finish(opened)",
+			"execute_open(open)",
 			"ratchet.refined.put(kernel)",
-			"breakopened?",
-			"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
+			"returnopened;",
 		],
 		"later-registration adapter parsed-sequence-to-result flow",
 	)?;
+
 	for forbidden in ["first_sequence", "key_seq==1", "key_seq!=1"] {
 		forbid(
 			&adapter,
@@ -5717,7 +5909,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 		|| open_outputs[0]
 			!= [
 				"reply",
-				"(session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet)",
+				"(session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
 			]
 			.map(str::to_owned)
 	{
@@ -5819,7 +6011,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	)?;
 	require_once(
 		faithful,
-		"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FAITHFUL_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet)",
+		"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FAITHFUL_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
 		"later-registration faithful direct commit",
 	)?;
 	for forbidden in [
@@ -5853,7 +6045,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"eventLaterRegistrationFirstOnlyGateReached(LATER_REGISTRATION_FIRST_ONLY_WITNESS,frame_sequence,response);",
 			"ifframe_sequence=first_sequence()then",
 			"eventLaterRegistrationFirstOnlyGatePassed(LATER_REGISTRATION_FIRST_ONLY_WITNESS,frame_sequence,response);",
-			"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FIRST_ONLY_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet)",
+			"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FIRST_ONLY_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
 		],
 		"later-registration counterfactual post-open gate placement",
 	)?;
@@ -6092,7 +6284,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	let checker = section_between(
 		&snapshot.proverif_result_checker,
 		"} else if (scenario == \"later-sequence-registration\") {",
-		"} else if (scenario == \"baseline\" ||",
+		"} else if (scenario == \"post-registration-ratchet\") {",
 		"later-registration result-checker branch",
 	)?;
 	for (wanted, label) in [
@@ -6153,6 +6345,611 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	Ok(())
 }
 
+fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String> {
+	let facts = parse_facts(&snapshot.interface)?;
+	let post_fact_count = facts
+		.iter()
+		.filter(|fact| fact.starts_with("post_registration."))
+		.count();
+	if post_fact_count != 47 {
+		return Err(format!(
+			"expected 47 post-registration fidelity facts, found {post_fact_count}"
+		));
+	}
+
+	let begin = rust_body(&snapshot.core_ratchet_concrete, "begin_receive")?;
+	require_ordered_once(
+		&begin,
+		&[
+			"letplan=plan_receive_until(kernel.refined.control,target);",
+			"ifplan.derivations==0{",
+			"letprepared=matchprepare_cached_receive(&kernel.refined,sequence){Some(prepared)=>prepared,None=>returnreceive_rejected(kernel,context),};",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared)",
+		],
+		"post-registration source cached admission",
+	)?;
+	let open_phase = section_between(
+		&snapshot.core_ratchet_concrete,
+		"impl<Context> ReceiveOpen<Context>",
+		"/// Checked restoration builder",
+		"post-registration source receive-open phase",
+	)?;
+	for (name, wanted, label) in [
+		(
+			"sequence",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared)=>prepared.sequence,",
+			"post-registration source cached sequence",
+		),
+		(
+			"material",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared)=>{letslot_index=prepared.target_slotasusize;ifslot_index>=RECEIVE_CACHE_CAPACITY{returnNone;}letcached=matchself.entry.refined.receive_slots[slot_index].as_ref(){Some(cached)=>cached,None=>returnNone,};if!(cached.sequence==prepared.sequence){returnNone;}Some(&cached.material)}",
+			"post-registration source cached material",
+		),
+	] {
+		require_once(&rust_body(open_phase, name)?, wanted, label)?;
+	}
+	let finish = rust_body(open_phase, "finish")?;
+	require_ordered_once(
+		&finish,
+		&[
+			"None=>return(self.entry,None)",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared)=>{publish_cached_receive(&mutentry.refined,prepared);}",
+			"PreparedReceive::PreparedReceiveFutureCase(pending)=>{publish_future_receive(&mutentry.refined,pending);}",
+			"(entry,Some(plaintext))",
+		],
+		"post-registration source success-only publication",
+	)?;
+	let prepared = rust_body(&snapshot.core_ratchet_refined, "prepare_cached_receive")?;
+	require_ordered_once(
+		&prepared,
+		&[
+			"lookup_receive_key(state.control,sequence)",
+			"state.control.receive_key_at(target_slot)==Some(sequence)",
+			"target.sequence==sequence",
+			"letlast_slot=len-1;",
+			"finish_receive_with_removal(state.control,sequence,target_slot,true)",
+			"ReceiveDisposition::Consumed=>{}",
+			"PreparedCachedReceive{sequence,target_slot,last_slot,committed_control:finished.state,}",
+		],
+		"post-registration source cached removal preparation",
+	)?;
+	let publish = rust_body(&snapshot.core_ratchet_refined, "publish_cached_receive")?;
+	require_ordered_once(
+		&publish,
+		&[
+			"lettarget_index=prepared.target_slotasusize;",
+			"letlast_index=prepared.last_slotasusize;",
+			"iftarget_index==last_index{let_=state.receive_slots[last_index].take();}else{letmoved=state.receive_slots[last_index].take();state.receive_slots[target_index]=moved;}",
+			"state.control=prepared.committed_control;",
+		],
+		"post-registration source cached removal publication",
+	)?;
+
+	let runtime_name = [
+		"post_registration_cached_replay",
+		"_and_future_trace_is_exact_and_nonvacuous",
+	]
+	.concat();
+	let runtime = rust_body(&snapshot.fidelity_test, &runtime_name)?;
+	require_ordered(
+		&runtime,
+		&[
+			"letkernel=pqxdh::resume_initial_ratchet_kdf(",
+			"begin_receive(kernel,3,\"seq3frame\")",
+			"first.resume(response(0x11,0x42,0x91))",
+			"second.resume(response(0x22,0x43,0x92))",
+			"third.resume(response(0x33,0x44,0x93))",
+			"open.finish(Some(\"seq3registrationremainder\"))",
+			"begin_receive(kernel,1,&original_frame_context)",
+		],
+		"post-registration runtime carried sequence-three kernel",
+	)?;
+	if count(&runtime, "letkernel=") != 1 {
+		return Err("post-registration runtime kernel was reconstructed or substituted".to_owned());
+	}
+	if count(&runtime, "begin_receive(kernel,1,&original_frame_context)") != 2 {
+		return Err("post-registration runtime cached/replay kernel carry changed".to_owned());
+	}
+	for (wanted, label) in [
+		(
+			"typeSnapshot=(u64,u64,[u8;32],[u8;32],Vec<Option<(u64,[u8;32],[u8;12])>>,u8,);",
+			"post-registration runtime public snapshot shape",
+		),
+		(
+			"(0..50).map(|slot|{kernel.receive_entry_at(slot).map(|(sequence,material)|{(sequence,*material.key().as_bytes(),*material.nonce().as_bytes(),)})}).collect(),kernel.receive_cache_len(),",
+			"post-registration runtime complete public cache observation",
+		),
+		(
+			"let(kernel,returned)=open.finish(Some(full_registration_payload));assert_eq!(returned,Some(full_registration_payload));",
+			"post-registration runtime full cached payload",
+		),
+		(
+			"letbefore_replay=snapshot(&kernel);letReceiveEffect::ReceiveRejected{kernel,context}=begin_receive(kernel,1,&original_frame_context)else{panic!(\"consumedreplaymustrejectwithoutKDF,open,orplaintextreturn\");};assert_eq!(context,&original_frame_context);assert_eq!(snapshot(&kernel),before_replay);",
+			"post-registration runtime exact replay rejection",
+		),
+		(
+			"assert_eq!(pending.request().input(),&[0x44;32]);",
+			"post-registration runtime sequence-four KDF input",
+		),
+		(
+			"assert_eq!(kernel.receive_sequence(),4);assert_eq!(kernel.send_chain().as_bytes(),&[0x31;32]);assert_eq!(kernel.receive_chain().as_bytes(),&[0x45;32]);assert_eq!(kernel.receive_cache_len(),1);assert_eq!(snapshot(&kernel).4[0],Some((2,[0x22;32],[0x92;12])));assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));",
+			"post-registration runtime exact future poststate",
+		),
+	] {
+		require_once(&runtime, wanted, label)?;
+	}
+
+	for (source, theorems, label) in [
+		(
+			&snapshot.lean_ratchet_receive_behavior,
+			&["theorem KernelRefines.receive_success_replay"][..],
+			"post-registration Lean replay anchor",
+		),
+		(
+			&snapshot.lean_pqxdh_session_lifecycle,
+			&[
+				"theorem ConcreteSession.finish_cached_server_preserves",
+				"theorem ConcreteSession.finish_cached_beacon_preserves",
+			][..],
+			"post-registration Lean cached-session anchor",
+		),
+		(
+			&snapshot.lean_byte_trace_refinement,
+			&[
+				"theorem executeTrace_refines",
+				"theorem executeTrace_observed",
+				"theorem executeTrace_recvWf",
+			][..],
+			"post-registration Lean byte-trace anchor",
+		),
+		(
+			&snapshot.lean_boundary_execution,
+			&["theorem runTrace_refines", "theorem runTrace_observed"][..],
+			"post-registration Lean boundary-history anchor",
+		),
+		(
+			&snapshot.lean_protocol_history,
+			&[
+				"theorem completeHistory_refines",
+				"theorem completeHistory_observed",
+			][..],
+			"post-registration Lean protocol-history anchor",
+		),
+	] {
+		for theorem in theorems {
+			require_once(source, theorem, label)?;
+		}
+	}
+
+	let later = compact(&uncommented_pv(&snapshot.later_registration_control)?);
+	for (wanted, label) in [
+		(
+			"freelater_registration_committed_handoff:channel[private].",
+			"post-registration private committed hook",
+		),
+		(
+			"freelater_registration_server_handoff:channel[private].",
+			"post-registration private Server hook",
+		),
+		(
+			"eventLaterRegistrationReturned(witness,registration_plaintext);out(c,later_registration_return(witness,registration_plaintext));(out(later_registration_committed_handoff,(witness,session,root,response,assigned_key_id,authenticated_server_key_id,associated_data,committed_ratchet))|ifwitness=LATER_REGISTRATION_FIRST_ONLY_WITNESSthenout(c,LATER_REGISTRATION_FIRST_ONLY_CANARY))",
+			"post-registration committed hook parallel placement and tuple",
+		),
+		(
+			"letsubstituted_response=kex_response(server_identity,server_ephemeral,kem_ciphertext,third_frame,assigned_key_id)in(out(later_registration_server_handoff,(session,root,original_response,substituted_response,first_frame,server_chain_3,associated_data,server_key_id,assigned_key_id))|in(c,candidate:bitstring);",
+			"post-registration Server hook parallel placement and tuple",
+		),
+	] {
+		require_once(&later, wanted, label)?;
+	}
+
+	let model = compact(&uncommented_pv(&snapshot.post_registration_control)?);
+	for (wanted, label) in [
+		(
+			"freePOST_REGISTRATION_FAITHFUL:bitstring[private].",
+			"post-registration faithful witness declaration",
+		),
+		(
+			"freePOST_REGISTRATION_RETAIN_CONSUMED:bitstring[private].",
+			"post-registration retained-entry witness declaration",
+		),
+		(
+			"freePOST_REGISTRATION_CACHED:bitstring[private].",
+			"post-registration cached request declaration",
+		),
+		(
+			"freePOST_REGISTRATION_REPLAY:bitstring[private].",
+			"post-registration replay request declaration",
+		),
+		(
+			"freePOST_REGISTRATION_FUTURE:bitstring[private].",
+			"post-registration future request declaration",
+		),
+		(
+			"freePOST_REGISTRATION_SEQ4_PAYLOAD:bitstring[private].",
+			"post-registration sequence-four payload declaration",
+		),
+		(
+			"freePOST_REGISTRATION_REPLAY_CANARY:bitstring[private].",
+			"post-registration replay canary declaration",
+		),
+		(
+			"funpost_registration_success(bitstring,bitstring):bitstring[data].",
+			"post-registration success constructor",
+		),
+		(
+			"funpost_registration_failure(bitstring):bitstring[data].",
+			"post-registration failure constructor",
+		),
+		(
+			"funpost_registration_return(bitstring,bitstring,bitstring):bitstring[data].",
+			"post-registration public return constructor",
+		),
+		(
+			"typepost_registration_consumption_mode.",
+			"post-registration consumption-mode type",
+		),
+		(
+			"funpost_registration_consume():post_registration_consumption_mode[data].",
+			"post-registration consume constructor",
+		),
+		(
+			"funpost_registration_retain():post_registration_consumption_mode[data].",
+			"post-registration retain constructor",
+		),
+		(
+			"eventPostRegistrationHandoff(bitstring,bitstring,bitstring,bitstring,key_id,key_id,bitstring,bitstring).",
+			"post-registration handoff event shape",
+		),
+		(
+			"eventPostRegistrationBranchStarted(bitstring,bitstring,bitstring,bitstring,key_id,key_id,bitstring,bitstring).",
+			"post-registration branch event shape",
+		),
+		(
+			"eventPostRegistrationAttempted(bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"post-registration attempted event shape",
+		),
+		(
+			"eventPostRegistrationKdfCalled(bitstring,bitstring,bitstring,bitstring).",
+			"post-registration KDF event shape",
+		),
+		(
+			"eventPostRegistrationOpenCalled(bitstring,bitstring,bitstring,bitstring,sequence,bitstring).",
+			"post-registration open event shape",
+		),
+		(
+			"eventPostRegistrationReturned(bitstring,bitstring,bitstring,key_id,key_id,bitstring,bitstring,sequence,bitstring,bitstring).",
+			"post-registration return event shape",
+		),
+		(
+			"eventPostRegistrationRejected(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"post-registration rejection event shape",
+		),
+		(
+			"eventPostRegistrationReplayAccepted(bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"post-registration replay-accept event shape",
+		),
+		(
+			"eventPostRegistrationFinalState(bitstring,bitstring,bitstring,sequence,bitstring,sequence,bitstring,receive_cache,bitstring).",
+			"post-registration final-state event shape",
+		),
+		(
+			"eventPostRegistrationTargetUnavailable(bitstring,bitstring,sequence,bitstring,receive_cache,bitstring).",
+			"post-registration target-absence event shape",
+		),
+		(
+			"eventPostRegistrationServerFrameSent(bitstring,bitstring,bitstring,sequence,key_id,key_id,bitstring,bitstring,bitstring).",
+			"post-registration Server-origin event shape",
+		),
+	] {
+		require_once(&model, wanted, label)?;
+	}
+	for (wanted, label) in [
+		(
+			"post_registration_finish_cache(post_registration_consume(),entry_cache,consumed_cache)=consumed_cache;",
+			"post-registration faithful cache consumption equation",
+		),
+		(
+			"post_registration_finish_cache(post_registration_retain(),entry_cache,consumed_cache)=entry_cache.",
+			"post-registration retained-cache counterfactual equation",
+		),
+	] {
+		require_once(&model, wanted, label)?;
+	}
+	if count(&model, "post_registration_finish_cache(") != 3 {
+		return Err("post-registration sole consume-v-retain delta changed".to_owned());
+	}
+
+	let cached = section_between(
+		&model,
+		"letPostRegistrationReceiveCached(",
+		"letPostRegistrationReceiveFuture(",
+		"post-registration cached receive",
+	)?;
+	require_ordered_once(
+		cached,
+		&[
+			"eventPostRegistrationAttempted(witness,request_kind,session,frame,entry_ratchet);",
+			"letcrypto_frame(ciphertext,tag,commitment,frame_sequence,sender_key_id)=framein",
+			"ifsender_key_id=expected_server_key_idthen",
+			"ifframe_sequence=first_sequence()then",
+			"letlater_registration_ratchet_state(send_sequence,send_chain,receive_entry)=entry_ratchetin",
+			"letreceive_state(receive_sequence,receive_chain,entry_cache)=receive_entryin",
+			"ifreceive_sequence=next_sequence(next_sequence(first_sequence()))then",
+			"letreceive_cache_entry(=next_sequence(first_sequence()),material_2,cache_tail)=entry_cachein",
+			"letreceive_cache_entry(=first_sequence(),material_1,=receive_cache_empty())=cache_tailin",
+			"eventPostRegistrationOpenCalled(witness,request_kind,session,frame,frame_sequence,material_1);",
+			"letopened=open_frame(material_1,associated_data,frame_sequence,expected_server_key_id,frame)in",
+			"letconsumed_cache=receive_cache_entry(next_sequence(first_sequence()),material_2,receive_cache_empty())in",
+			"letoutput_cache=post_registration_finish_cache(mode,entry_cache,consumed_cache)in",
+			"letoutput_ratchet=later_registration_ratchet_state(send_sequence,send_chain,receive_state(receive_sequence,receive_chain,output_cache))in",
+			"eventPostRegistrationReturned(witness,request_kind,session,sender_key_id,assigned_key_id,associated_data,frame,frame_sequence,opened,output_ratchet);",
+			"out(c,post_registration_return(witness,request_kind,opened));",
+			"out(reply,post_registration_success(output_ratchet,opened))",
+			"eventPostRegistrationRejected(witness,request_kind,session,frame,entry_ratchet,entry_ratchet);",
+			"out(reply,post_registration_failure(entry_ratchet))",
+		],
+		"post-registration cached success and replay-rejection flow",
+	)?;
+	forbid(
+		cached,
+		"PostRegistrationKdfCalled",
+		"post-registration cached KDF call",
+	)?;
+
+	let future = section_between(
+		&model,
+		"letPostRegistrationReceiveFuture(",
+		"letPostRegistrationTrace(",
+		"post-registration future receive",
+	)?;
+	require_ordered_once(
+		future,
+		&[
+			"eventPostRegistrationAttempted(witness,POST_REGISTRATION_FUTURE,session,frame,entry_ratchet);",
+			"letcrypto_frame(ciphertext,tag,commitment,frame_sequence,sender_key_id)=framein",
+			"ifsender_key_id=expected_server_key_idthen",
+			"ifframe_sequence=next_sequence(next_sequence(next_sequence(first_sequence())))then",
+			"letlater_registration_ratchet_state(send_sequence,send_chain,receive_entry)=entry_ratchetin",
+			"letreceive_state(receive_sequence,receive_chain,entry_cache)=receive_entryin",
+			"ifreceive_sequence=next_sequence(next_sequence(first_sequence()))then",
+			"letreceive_cache_entry(=next_sequence(first_sequence()),material_2,=receive_cache_empty())=entry_cachein",
+			"eventPostRegistrationKdfCalled(witness,POST_REGISTRATION_FUTURE,session,receive_chain);",
+			"letmaterial_4=ratchet_material(receive_chain)in",
+			"letreceive_chain_5=ratchet_next(receive_chain)in",
+			"eventPostRegistrationOpenCalled(witness,POST_REGISTRATION_FUTURE,session,frame,frame_sequence,material_4);",
+			"letopened=open_frame(material_4,associated_data,frame_sequence,expected_server_key_id,frame)in",
+			"letoutput_ratchet=later_registration_ratchet_state(send_sequence,send_chain,receive_state(frame_sequence,receive_chain_5,entry_cache))in",
+			"eventPostRegistrationReturned(witness,POST_REGISTRATION_FUTURE,session,sender_key_id,assigned_key_id,associated_data,frame,frame_sequence,opened,output_ratchet);",
+			"eventPostRegistrationFinalState(witness,session,root,send_sequence,send_chain,frame_sequence,receive_chain_5,entry_cache,output_ratchet);",
+			"eventPostRegistrationTargetUnavailable(witness,session,frame_sequence,material_4,entry_cache,output_ratchet);",
+			"out(c,post_registration_return(witness,POST_REGISTRATION_FUTURE,opened)).",
+		],
+		"post-registration exact sequence-four flow",
+	)?;
+
+	let trace = section_between(
+		&model,
+		"letPostRegistrationTrace(",
+		"letPostRegistrationControl()=",
+		"post-registration trace",
+	)?;
+	require_ordered_once(
+		trace,
+		&[
+			"eventPostRegistrationBranchStarted(witness,session,root,response,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet);",
+			"PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_CACHED,session,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet,first_frame,cached_reply)",
+			"in(cached_reply,post_registration_success(cached_ratchet:bitstring,cached_plaintext:bitstring));",
+			"PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_REPLAY,session,expected_server_key_id,assigned_key_id,associated_data,cached_ratchet,first_frame,replay_reply)",
+			"in(replay_reply,replay_result:bitstring);",
+			"letpost_registration_failure(replay_ratchet)=replay_resultinPostRegistrationReceiveFuture(witness,session,root,expected_server_key_id,assigned_key_id,associated_data,replay_ratchet,fourth_frame)",
+			"letpost_registration_success(replayed_ratchet,replayed_plaintext)=replay_resultineventPostRegistrationReplayAccepted(witness,session,first_frame,replayed_plaintext,replayed_ratchet);ifwitness=POST_REGISTRATION_RETAIN_CONSUMEDthenout(c,POST_REGISTRATION_REPLAY_CANARY)",
+		],
+		"post-registration cached-replay-future order",
+	)?;
+	for (wanted, label) in [
+		(
+			"newcached_reply:channel;(PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_CACHED,session,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet,first_frame,cached_reply)|in(cached_reply,post_registration_success(cached_ratchet:bitstring,cached_plaintext:bitstring));newreplay_reply:channel;(",
+			"post-registration cached producer-consumer parallel placement",
+		),
+		(
+			"newreplay_reply:channel;(PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_REPLAY,session,expected_server_key_id,assigned_key_id,associated_data,cached_ratchet,first_frame,replay_reply)|in(replay_reply,replay_result:bitstring);",
+			"post-registration replay producer-consumer parallel placement",
+		),
+	] {
+		require_once(trace, wanted, label)?;
+	}
+
+	let coordinator = &model[model
+		.find("letPostRegistrationControl()=")
+		.ok_or_else(|| "missing post-registration coordinator".to_owned())?..];
+	require_ordered_once(
+		coordinator,
+		&[
+			"in(later_registration_server_handoff,(session:bitstring,root:bitstring,original_response:bitstring,substituted_response:bitstring,first_frame:bitstring,server_chain_3:bitstring,server_associated_data:bitstring,server_key_id:key_id,server_assigned_key_id:key_id));",
+			"letserver_chain_4=ratchet_next(server_chain_3)in",
+			"letserver_material_4=ratchet_material(server_chain_4)in",
+			"letfourth_sequence=next_sequence(next_sequence(next_sequence(first_sequence())))in",
+			"letfourth_frame=seal_frame(server_material_4,server_associated_data,fourth_sequence,server_key_id,POST_REGISTRATION_SEQ4_PAYLOAD)in",
+			"eventPostRegistrationServerFrameSent(session,root,original_response,fourth_sequence,server_key_id,server_assigned_key_id,POST_REGISTRATION_SEQ4_PAYLOAD,fourth_frame,server_material_4);",
+			"out(c,fourth_frame);",
+			"in(later_registration_committed_handoff,(=LATER_REGISTRATION_FAITHFUL_WITNESS,=session,=root,=substituted_response,assigned_key_id:key_id,expected_server_key_id:key_id,associated_data:bitstring,committed_ratchet:bitstring));",
+			"ifassigned_key_id=server_assigned_key_idthen",
+			"ifexpected_server_key_id=server_key_idthen",
+			"ifassociated_data=server_associated_datathen",
+			"eventPostRegistrationHandoff(LATER_REGISTRATION_FAITHFUL_WITNESS,session,root,substituted_response,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet);",
+		],
+		"post-registration private tuple join and sequence-four origin",
+	)?;
+	let trace_calls = all_arguments(coordinator, "PostRegistrationTrace")?;
+	let common_tail = [
+		"session",
+		"root",
+		"substituted_response",
+		"expected_server_key_id",
+		"assigned_key_id",
+		"associated_data",
+		"committed_ratchet",
+		"first_frame",
+		"fourth_frame",
+	]
+	.map(str::to_owned);
+	if trace_calls.len() != 2
+		|| trace_calls[0][..2] != ["POST_REGISTRATION_FAITHFUL", "post_registration_consume()"]
+		|| trace_calls[1][..2]
+			!= [
+				"POST_REGISTRATION_RETAIN_CONSUMED",
+				"post_registration_retain()",
+			] || trace_calls[0][2..] != common_tail
+		|| trace_calls[1][2..] != common_tail
+	{
+		return Err(format!(
+			"post-registration faithful/counterfactual sole delta changed: {trace_calls:?}"
+		));
+	}
+
+	let queries = compact(&uncommented_pv(&snapshot.post_registration_queries)?);
+	if snapshot
+		.post_registration_queries
+		.lines()
+		.filter(|line| line.trim_start().starts_with("query "))
+		.count()
+		!= 27
+	{
+		return Err("post-registration query count changed".to_owned());
+	}
+	for (wanted, label) in [
+		(
+			"event(PostRegistrationReturned(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_CACHED,session,sender,receiver,beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()),crypto_frame(ciphertext,tag,commitment,first_sequence(),sender),first_sequence(),registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(receiver)),LATER_REGISTRATION_SEQ1_PAYLOAD),",
+			"post-registration full cached-payload query",
+		),
+		(
+			"event(PostRegistrationRejected(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_REPLAY,session,crypto_frame(ciphertext,tag,commitment,first_sequence(),sender),",
+			"post-registration exact replay-state query",
+		),
+		(
+			"event(PostRegistrationReturned(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_FUTURE,session,sender,receiver,beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()),crypto_frame(ciphertext,tag,commitment,next_sequence(next_sequence(next_sequence(first_sequence()))),sender),next_sequence(next_sequence(next_sequence(first_sequence()))),POST_REGISTRATION_SEQ4_PAYLOAD,",
+			"post-registration exact sequence-four query",
+		),
+	] {
+		require_once(&queries, wanted, label)?;
+	}
+	let query_hashes = queries
+		.split("query")
+		.skip(1)
+		.map(stable_text_hash)
+		.collect::<Vec<_>>();
+	if query_hashes.len() != POST_REGISTRATION_QUERY_HASHES.len() {
+		return Err(format!(
+			"expected {} post-registration query hashes, found {}",
+			POST_REGISTRATION_QUERY_HASHES.len(),
+			query_hashes.len()
+		));
+	}
+	if let Some((index, (actual, expected))) = query_hashes
+		.iter()
+		.zip(POST_REGISTRATION_QUERY_HASHES)
+		.enumerate()
+		.find(|(_, (actual, expected))| **actual != *expected)
+	{
+		return Err(format!(
+			"post-registration exact query {} changed: expected {expected}, found {actual}",
+			index + 1
+		));
+	}
+
+	let main = compact(&uncommented_pv(&snapshot.post_registration_main)?);
+	if main != "process(LaterSequenceRegistrationControl()|PostRegistrationControl())" {
+		return Err(format!("post-registration main process changed: {main}"));
+	}
+	let checker = section_between(
+		&snapshot.proverif_result_checker,
+		"} else if (scenario == \"post-registration-ratchet\") {",
+		"} else if (scenario == \"baseline\" ||",
+		"post-registration result-checker branch",
+	)?;
+	for (wanted, label) in [
+		(
+			"if (query_count != 27)",
+			"post-registration checker query count",
+		),
+		(
+			"for (post_registration_index = 1; post_registration_index <= 27; post_registration_index++)",
+			"post-registration checker complete result loop",
+		),
+	] {
+		require_once(checker, wanted, label)?;
+	}
+	for index in 1..=27 {
+		require_once(
+			checker,
+			&format!("post_registration_expected[{index}] ="),
+			"post-registration checker expected result",
+		)?;
+		let next = if index == 27 {
+			"for (post_registration_index = 1; post_registration_index <= 27; post_registration_index++)"
+				.to_owned()
+		} else {
+			format!("post_registration_expected[{}] =", index + 1)
+		};
+		let assignment = section_between(
+			checker,
+			&format!("post_registration_expected[{index}] ="),
+			&next,
+			"post-registration checker assignment",
+		)?;
+		let expected_true = matches!(index, 6 | 9..=12 | 22..=27);
+		let polarity = if expected_true {
+			"is true."
+		} else {
+			"is false."
+		};
+		require_once(
+			assignment,
+			polarity,
+			"post-registration checker exact polarity",
+		)?;
+	}
+	let checker_hash = stable_text_hash(&compact(checker));
+	if checker_hash != POST_REGISTRATION_CHECKER_HASH {
+		return Err(format!(
+			"post-registration exact result-checker branch changed: expected {POST_REGISTRATION_CHECKER_HASH}, found {checker_hash}"
+		));
+	}
+
+	let scenarios = scenario_names(&snapshot.makefile)?;
+	if scenarios
+		.iter()
+		.filter(|scenario| scenario.as_str() == "post-registration-ratchet")
+		.count()
+		!= 1
+	{
+		return Err("post-registration Make scenario enumeration changed".to_owned());
+	}
+	let make_target = section_between(
+		&snapshot.makefile,
+		"check-proverif-post-registration-ratchet:",
+		"check-proverif-main-registration-controls:",
+		"post-registration Make target",
+	)?;
+	require_ordered_once(
+		make_target,
+		&[
+			"check-proverif-post-registration-ratchet: check-proverif-extraction",
+			"$(PROVERIF_COMMON_LIBS)",
+			"-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl",
+			"-lib $(PROVERIF_DIR)/later-sequence-registration-control.pvl",
+			"-lib $(PROVERIF_DIR)/post-registration-ratchet-control.pvl",
+			"-lib $(PROVERIF_DIR)/post-registration-ratchet-queries.pvl",
+			"$(PROVERIF_DIR)/post-registration-ratchet.pv",
+			"awk -v scenario=post-registration-ratchet -f '$(PROVERIF_CHECKER)'",
+		],
+		"post-registration Make wiring",
+	)?;
+
+	Ok(())
+}
+
 fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_manifest(&snapshot.interface)?;
 	validate_pv(snapshot)?;
@@ -6165,6 +6962,7 @@ fn validate(snapshot: &Snapshot) -> Result<(), String> {
 	validate_registration_lifecycle(snapshot)?;
 	validate_initial_ratchet_fidelity(snapshot)?;
 	validate_later_registration_fidelity(snapshot)?;
+	validate_post_registration_fidelity(snapshot)?;
 	validate_makefile(&snapshot.makefile)
 }
 
@@ -6175,7 +6973,47 @@ fn replace_once(source: &mut String, from: &str, to: &str) {
 	source.replace_range(start..start + from.len(), to);
 }
 
+// Receive validation and execution now span private helpers. A matrix mutation must still hit an exact source anchor in this surface, never an unrelated send call.
+fn replace_receive_surface(source: &mut String, from: &str, to: &str) {
+	let mut matches = Vec::new();
+	for name in [
+		"decode_crypto_frame",
+		"encrypted_frame_sender",
+		"from_frame",
+		"execute_open",
+		"decrypt_message_with_ratchet",
+	] {
+		let marker = format!("fn {name}(");
+		let start = source
+			.find(&marker)
+			.unwrap_or_else(|| panic!("receive mutation scope missing: {marker}"));
+		let end = start + source[start..].find("\n}").unwrap() + 2;
+		if let Some(relative) = source[start..end].find(from) {
+			matches.push(start + relative);
+		}
+	}
+	assert_eq!(
+		matches.len(),
+		1,
+		"receive mutation anchor must occur in one helper: {from}"
+	);
+	let start = matches[0];
+	source.replace_range(start..start + from.len(), to);
+}
+
 fn replace_once_after(source: &mut String, marker: &str, from: &str, to: &str) {
+	if [
+		"decrypt_message_with_ratchet",
+		"encrypted_frame_sender",
+		"execute_open",
+		"from_frame",
+	]
+	.iter()
+	.any(|name| marker.contains(name))
+	{
+		replace_receive_surface(source, from, to);
+		return;
+	}
 	let marker_start = source
 		.find(marker)
 		.unwrap_or_else(|| panic!("mutation scope missing: {marker}"));
@@ -6460,6 +7298,81 @@ fn assert_later_registration_rejected(
 		error.contains(diagnostic),
 		"later-registration mutation {name} produced wrong diagnostic: {error}"
 	);
+}
+
+fn assert_post_registration_rejected(
+	name: &str,
+	diagnostic: &str,
+	mutate: impl FnOnce(&mut Snapshot),
+) {
+	let mut snapshot = Snapshot::production();
+	mutate(&mut snapshot);
+	let error = match validate_manifest(&snapshot.interface)
+		.and_then(|()| validate_post_registration_fidelity(&snapshot))
+	{
+		Ok(()) => panic!("post-registration mutation survived: {name}"),
+		Err(error) => error,
+	};
+	assert!(
+		error.contains(diagnostic),
+		"post-registration mutation {name} produced wrong diagnostic: {error}"
+	);
+}
+
+fn mutate_post_registration_query(source: &mut String, index: usize) {
+	let starts = source
+		.match_indices("query ")
+		.map(|(start, _)| start)
+		.collect::<Vec<_>>();
+	assert_eq!(starts.len(), 27, "post-registration mutation query count");
+	let start = starts[index];
+	let end = starts.get(index + 1).copied().unwrap_or(source.len());
+	let segment = &source[start..end];
+	let relative = segment
+		.find("event(")
+		.or_else(|| segment.find("attacker("))
+		.expect("post-registration query mutation anchor");
+	let insert = start + relative;
+	source.insert_str(insert, "mutated_");
+}
+
+fn mutate_post_registration_checker_result(source: &mut String, index: usize) {
+	let marker = format!("post_registration_expected[{}] =", index + 1);
+	let start = source
+		.find(&marker)
+		.unwrap_or_else(|| panic!("missing post-registration checker mutation {marker}"));
+	let relative = source[start..]
+		.find("Query ")
+		.expect("post-registration checker result mutation anchor");
+	source.insert_str(start + relative, "mutated_");
+}
+
+fn flip_post_registration_checker_polarity(source: &mut String, index: usize) {
+	let marker = format!("post_registration_expected[{}] =", index + 1);
+	let start = source
+		.find(&marker)
+		.unwrap_or_else(|| panic!("missing post-registration checker polarity {marker}"));
+	let next = if index == 26 {
+		"for (post_registration_index = 1; post_registration_index <= 27; post_registration_index++)"
+			.to_owned()
+	} else {
+		format!("post_registration_expected[{}] =", index + 2)
+	};
+	let relative_end = source[start..]
+		.find(&next)
+		.unwrap_or_else(|| panic!("missing post-registration checker polarity end {next}"));
+	let end = start + relative_end;
+	let assignment = &source[start..end];
+	let (from, to) = if assignment.contains("is true.") {
+		("is true.", "is false.")
+	} else {
+		("is false.", "is true.")
+	};
+	let relative = assignment
+		.find(from)
+		.expect("post-registration checker polarity mutation anchor");
+	let polarity = start + relative;
+	source.replace_range(polarity..polarity + from.len(), to);
 }
 
 fn omit_ctx(snapshot: &mut Snapshot, field: &str) {
@@ -6749,6 +7662,1172 @@ fn later_registration_sequence_three_poststate_is_exact_and_nonvacuous() {
 const LATER_REGISTRATION_MUTATION_COUNT: usize = 409;
 
 #[test]
+fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
+	fn response(key: u8, next_chain: u8, nonce: u8) -> RatchetKdfResponse {
+		let mut bytes = [0u8; RATCHET_KDF_OUTPUT_SIZE];
+		bytes[..32].fill(key);
+		bytes[32..64].fill(next_chain);
+		bytes[64..].fill(nonce);
+		RatchetKdfResponse::from_bytes(bytes)
+	}
+
+	type Snapshot = (
+		u64,
+		u64,
+		[u8; 32],
+		[u8; 32],
+		Vec<Option<(u64, [u8; 32], [u8; 12])>>,
+		u8,
+	);
+	fn snapshot(kernel: &ConcreteRatchetKernel) -> Snapshot {
+		(
+			kernel.send_sequence(),
+			kernel.receive_sequence(),
+			*kernel.send_chain().as_bytes(),
+			*kernel.receive_chain().as_bytes(),
+			(0..50)
+				.map(|slot| {
+					kernel.receive_entry_at(slot).map(|(sequence, material)| {
+						(
+							sequence,
+							*material.key().as_bytes(),
+							*material.nonce().as_bytes(),
+						)
+					})
+				})
+				.collect(),
+			kernel.receive_cache_len(),
+		)
+	}
+
+	// These are supplied opaque KDF replies, not executions or security claims about HKDF.
+	let root = [0x71; 32];
+	let mut initial_output = [0x41; 64];
+	initial_output[32..].fill(0x31);
+	let kernel = pqxdh::resume_initial_ratchet_kdf(
+		pqxdh::start_beacon_ratchet_kdf(&root),
+		InitialRatchetKdfResponse::from_bytes(initial_output),
+	);
+	let ReceiveEffect::ReceiveKdfRequested(first) = begin_receive(kernel, 3, "seq3 frame") else {
+		panic!("sequence-three registration starts with one derivation");
+	};
+	assert_eq!(first.request().input(), &[0x41; 32]);
+	let ReceiveEffect::ReceiveKdfRequested(second) = first.resume(response(0x11, 0x42, 0x91))
+	else {
+		panic!("sequence-one material must be staged");
+	};
+	assert_eq!(second.request().input(), &[0x42; 32]);
+	let ReceiveEffect::ReceiveKdfRequested(third) = second.resume(response(0x22, 0x43, 0x92))
+	else {
+		panic!("sequence-two material must be staged");
+	};
+	assert_eq!(third.request().input(), &[0x43; 32]);
+	let ReceiveEffect::ReceiveOpenRequested(open) = third.resume(response(0x33, 0x44, 0x93)) else {
+		panic!("sequence-three registration must open with its separate target");
+	};
+	assert_eq!(open.sequence(), 3);
+	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x33; 32]);
+	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x93; 12]);
+	let (kernel, returned) = open.finish(Some("seq3 registration remainder"));
+	assert_eq!(returned, Some("seq3 registration remainder"));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.receive_sequence(), 3);
+	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
+	assert_eq!(kernel.receive_chain().as_bytes(), &[0x44; 32]);
+	assert_eq!(kernel.receive_cache_len(), 2);
+	assert_eq!(snapshot(&kernel).4[0], Some((1, [0x11; 32], [0x91; 12])));
+	assert_eq!(snapshot(&kernel).4[1], Some((2, [0x22; 32], [0x92; 12])));
+	assert!(snapshot(&kernel).4[2..].iter().all(Option::is_none));
+
+	// Carry that very kernel into ordinary receive; do not reconstruct its post-registration state.
+	let original_frame_context = ("original seq1 frame", 7u64, [0x51; 153]);
+	let full_registration_payload = (7u64.to_le_bytes(), "seq1 application payload");
+	let ReceiveEffect::ReceiveOpenRequested(open) =
+		begin_receive(kernel, 1, &original_frame_context)
+	else {
+		panic!("cached sequence-one must reach open directly, without KDF");
+	};
+	assert_eq!(open.sequence(), 1);
+	assert_eq!(*open.context(), &original_frame_context);
+	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x11; 32]);
+	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x91; 12]);
+	let (kernel, returned) = open.finish(Some(full_registration_payload));
+	assert_eq!(returned, Some(full_registration_payload));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.receive_sequence(), 3);
+	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
+	assert_eq!(kernel.receive_chain().as_bytes(), &[0x44; 32]);
+	assert_eq!(kernel.receive_cache_len(), 1);
+	assert_eq!(snapshot(&kernel).4[0], Some((2, [0x22; 32], [0x92; 12])));
+	assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));
+
+	let before_replay = snapshot(&kernel);
+	let ReceiveEffect::ReceiveRejected { kernel, context } =
+		begin_receive(kernel, 1, &original_frame_context)
+	else {
+		panic!("consumed replay must reject without KDF, open, or plaintext return");
+	};
+	assert_eq!(context, &original_frame_context);
+	assert_eq!(snapshot(&kernel), before_replay);
+
+	let fourth_frame_context = ("genuine seq4 frame", 7u64, [0x51; 153]);
+	let ReceiveEffect::ReceiveKdfRequested(pending) =
+		begin_receive(kernel, 4, &fourth_frame_context)
+	else {
+		panic!("sequence-four needs exactly the next carried receive-chain step");
+	};
+	assert_eq!(pending.request().input(), &[0x44; 32]);
+	let ReceiveEffect::ReceiveOpenRequested(open) = pending.resume(response(0x44, 0x45, 0x94))
+	else {
+		panic!("one sequence-four derivation must immediately produce the target open");
+	};
+	assert_eq!(open.sequence(), 4);
+	assert_eq!(*open.context(), &fourth_frame_context);
+	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x44; 32]);
+	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x94; 12]);
+	let (kernel, returned) = open.finish(Some("seq4 application payload"));
+	assert_eq!(returned, Some("seq4 application payload"));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.receive_sequence(), 4);
+	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
+	assert_eq!(kernel.receive_chain().as_bytes(), &[0x45; 32]);
+	assert_eq!(kernel.receive_cache_len(), 1);
+	assert_eq!(snapshot(&kernel).4[0], Some((2, [0x22; 32], [0x92; 12])));
+	assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));
+}
+
+const POST_REGISTRATION_MUTATION_COUNT: usize = 297;
+
+#[test]
+fn post_registration_mutation_matrix_is_complete_and_rejected() {
+	let mut mutation_count = 0usize;
+
+	for fact in EXPECTED_FACTS
+		.iter()
+		.filter(|fact| fact.starts_with("post_registration."))
+	{
+		let key = fact.split_once('=').unwrap().0;
+		assert_post_registration_rejected(
+			&format!("post_registration_fact_{key}"),
+			key,
+			|snapshot| mutate_fact(&mut snapshot.interface, key, "mutated"),
+		);
+		mutation_count += 1;
+	}
+
+	for (name, source, marker, from, to, diagnostic) in [
+		(
+			"post_registration_source_cached_plan_changed",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"if plan.derivations == 0 {",
+			"if plan.derivations == 1 {",
+			"post-registration source cached admission",
+		),
+		(
+			"post_registration_source_cached_lookup_sequence_changed",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"prepare_cached_receive(&kernel.refined, sequence)",
+			"prepare_cached_receive(&kernel.refined, sequence + 1)",
+			"post-registration source cached admission",
+		),
+		(
+			"post_registration_source_cached_case_changed",
+			"concrete",
+			"pub fn begin_receive<Context>(",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared)",
+			"PreparedReceive::PreparedReceiveFutureCase(prepared)",
+			"post-registration source cached admission",
+		),
+		(
+			"post_registration_source_cached_sequence_changed",
+			"concrete",
+			"impl<Context> ReceiveOpen<Context>",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared) => prepared.sequence",
+			"PreparedReceive::PreparedReceiveCachedCase(prepared) => prepared.sequence + 1",
+			"post-registration source cached sequence",
+		),
+		(
+			"post_registration_source_cached_slot_changed",
+			"concrete",
+			"pub fn material(&self)",
+			"prepared.target_slot as usize",
+			"prepared.last_slot as usize",
+			"post-registration source cached material",
+		),
+		(
+			"post_registration_source_cached_pair_changed",
+			"concrete",
+			"pub fn material(&self)",
+			"cached.sequence == prepared.sequence",
+			"cached.sequence != prepared.sequence",
+			"post-registration source cached material",
+		),
+		(
+			"post_registration_source_cached_material_removed",
+			"concrete",
+			"pub fn material(&self)",
+			"Some(&cached.material)",
+			"None",
+			"post-registration source cached material",
+		),
+		(
+			"post_registration_source_cached_publish_removed",
+			"concrete",
+			"pub fn finish<Plaintext>(",
+			"publish_cached_receive(&mut entry.refined, prepared);",
+			"let _ = prepared;",
+			"post-registration source success-only publication",
+		),
+		(
+			"post_registration_source_prepare_lookup_changed",
+			"refined",
+			"pub(super) fn prepare_cached_receive<",
+			"lookup_receive_key(state.control, sequence)",
+			"lookup_receive_key(state.control, sequence + 1)",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_prepare_control_pair_changed",
+			"refined",
+			"pub(super) fn prepare_cached_receive<",
+			"state.control.receive_key_at(target_slot) == Some(sequence)",
+			"state.control.receive_key_at(target_slot) == Some(sequence + 1)",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_prepare_material_pair_changed",
+			"refined",
+			"pub(super) fn prepare_cached_receive<",
+			"target.sequence == sequence",
+			"target.sequence != sequence",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_prepare_consume_flag_changed",
+			"refined",
+			"pub(super) fn prepare_cached_receive<",
+			"finish_receive_with_removal(state.control, sequence, target_slot, true)",
+			"finish_receive_with_removal(state.control, sequence, target_slot, false)",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_prepare_disposition_changed",
+			"refined",
+			"pub(super) fn prepare_cached_receive<",
+			"ReceiveDisposition::Consumed => {}",
+			"ReceiveDisposition::Retained => {}",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_prepare_last_slot_changed",
+			"refined",
+			"Some(PreparedCachedReceive {",
+			"last_slot,",
+			"last_slot: target_slot,",
+			"post-registration source cached removal preparation",
+		),
+		(
+			"post_registration_source_publish_target_changed",
+			"refined",
+			"pub(super) fn publish_cached_receive<",
+			"prepared.target_slot as usize",
+			"prepared.last_slot as usize",
+			"post-registration source cached removal publication",
+		),
+		(
+			"post_registration_source_publish_single_take_changed",
+			"refined",
+			"pub(super) fn publish_cached_receive<",
+			"state.receive_slots[last_index].take()",
+			"state.receive_slots[target_index].take()",
+			"post-registration source cached removal publication",
+		),
+		(
+			"post_registration_source_publish_move_changed",
+			"refined",
+			"pub(super) fn publish_cached_receive<",
+			"state.receive_slots[target_index] = moved;",
+			"state.receive_slots[last_index] = moved;",
+			"post-registration source cached removal publication",
+		),
+		(
+			"post_registration_source_publish_control_changed",
+			"refined",
+			"pub(super) fn publish_cached_receive<",
+			"state.control = prepared.committed_control;",
+			"let _ = prepared.committed_control;",
+			"post-registration source cached removal publication",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			let selected = if source == "concrete" {
+				&mut snapshot.core_ratchet_concrete
+			} else {
+				&mut snapshot.core_ratchet_refined
+			};
+			replace_once_after(selected, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"post_registration_runtime_cache_scan_shortened",
+			"(0..50)",
+			"(0..49)",
+			"post-registration runtime complete public cache observation",
+		),
+		(
+			"post_registration_runtime_kernel_reconstructed",
+			"let (kernel, returned) = open.finish(Some(\"seq3 registration remainder\"));",
+			"let (kernel, returned) = open.finish(Some(\"seq3 registration remainder\"));\n\tlet kernel = replacement_kernel;",
+			"post-registration runtime kernel was reconstructed or substituted",
+		),
+		(
+			"post_registration_runtime_cache_len_hidden",
+			"kernel.receive_cache_len(),",
+			"0,",
+			"post-registration runtime complete public cache observation",
+		),
+		(
+			"post_registration_runtime_payload_stripped",
+			"open.finish(Some(full_registration_payload))",
+			"open.finish(Some(full_registration_payload.1))",
+			"post-registration runtime full cached payload",
+		),
+		(
+			"post_registration_runtime_replay_snapshot_changed",
+			"let before_replay = snapshot(&kernel);",
+			"let before_replay = snapshot(&replacement_kernel);",
+			"post-registration runtime exact replay rejection",
+		),
+		(
+			"post_registration_runtime_seq4_request_changed",
+			"assert_eq!(pending.request().input(), &[0x44; 32]);",
+			"assert_eq!(pending.request().input(), &[0x43; 32]);",
+			"post-registration runtime sequence-four KDF input",
+		),
+		(
+			"post_registration_runtime_final_counter_changed",
+			"assert_eq!(kernel.receive_sequence(), 4);",
+			"assert_eq!(kernel.receive_sequence(), 5);",
+			"post-registration runtime exact future poststate",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.fidelity_test,
+				"fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous()",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, source, theorem) in [
+		(
+			"post_registration_lean_replay_anchor_removed",
+			"receive",
+			"theorem KernelRefines.receive_success_replay",
+		),
+		(
+			"post_registration_lean_cached_server_anchor_removed",
+			"session",
+			"theorem ConcreteSession.finish_cached_server_preserves",
+		),
+		(
+			"post_registration_lean_cached_beacon_anchor_removed",
+			"session",
+			"theorem ConcreteSession.finish_cached_beacon_preserves",
+		),
+		(
+			"post_registration_lean_execute_refines_anchor_removed",
+			"byte",
+			"theorem executeTrace_refines",
+		),
+		(
+			"post_registration_lean_execute_observed_anchor_removed",
+			"byte",
+			"theorem executeTrace_observed",
+		),
+		(
+			"post_registration_lean_execute_wf_anchor_removed",
+			"byte",
+			"theorem executeTrace_recvWf",
+		),
+		(
+			"post_registration_lean_run_refines_anchor_removed",
+			"boundary",
+			"theorem runTrace_refines",
+		),
+		(
+			"post_registration_lean_run_observed_anchor_removed",
+			"boundary",
+			"theorem runTrace_observed",
+		),
+		(
+			"post_registration_lean_history_refines_anchor_removed",
+			"history",
+			"theorem completeHistory_refines",
+		),
+		(
+			"post_registration_lean_history_observed_anchor_removed",
+			"history",
+			"theorem completeHistory_observed",
+		),
+	] {
+		assert_post_registration_rejected(name, "post-registration Lean", |snapshot| {
+			let selected = match source {
+				"receive" => &mut snapshot.lean_ratchet_receive_behavior,
+				"session" => &mut snapshot.lean_pqxdh_session_lifecycle,
+				"byte" => &mut snapshot.lean_byte_trace_refinement,
+				"boundary" => &mut snapshot.lean_boundary_execution,
+				"history" => &mut snapshot.lean_protocol_history,
+				_ => unreachable!(),
+			};
+			replace_once(selected, theorem, "theorem mutated_anchor");
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"post_registration_committed_hook_not_private",
+			"free later_registration_committed_handoff",
+			"[private]",
+			"",
+			"post-registration private committed hook",
+		),
+		(
+			"post_registration_server_hook_not_private",
+			"free later_registration_server_handoff",
+			"[private]",
+			"",
+			"post-registration private Server hook",
+		),
+		(
+			"post_registration_committed_hook_made_blocking",
+			"out(\n    later_registration_committed_handoff,",
+			")\n  |\n  if witness = LATER_REGISTRATION_FIRST_ONLY_WITNESS",
+			");\n  if witness = LATER_REGISTRATION_FIRST_ONLY_WITNESS",
+			"post-registration committed hook parallel placement and tuple",
+		),
+		(
+			"post_registration_server_hook_made_blocking",
+			"out(\n    later_registration_server_handoff,",
+			")\n  |\n  in(c, candidate: bitstring);",
+			");\n  in(c, candidate: bitstring);",
+			"post-registration Server hook parallel placement and tuple",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.later_registration_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	for (hook, marker, fields, diagnostic) in [
+		(
+			"committed",
+			"out(\n    later_registration_committed_handoff,",
+			&[
+				"witness",
+				"session",
+				"root",
+				"response",
+				"assigned_key_id",
+				"authenticated_server_key_id",
+				"associated_data",
+				"committed_ratchet",
+			][..],
+			"post-registration committed hook parallel placement and tuple",
+		),
+		(
+			"server",
+			"out(\n    later_registration_server_handoff,",
+			&[
+				"session",
+				"root",
+				"original_response",
+				"substituted_response",
+				"first_frame",
+				"server_chain_3",
+				"associated_data",
+				"server_key_id",
+				"assigned_key_id",
+			][..],
+			"post-registration Server hook parallel placement and tuple",
+		),
+	] {
+		for field in fields {
+			assert_post_registration_rejected(
+				&format!("post_registration_{hook}_hook_{field}_changed"),
+				diagnostic,
+				|snapshot| {
+					replace_once_after(
+						&mut snapshot.later_registration_control,
+						marker,
+						field,
+						&format!("mutated_{field}"),
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for name in [
+		"POST_REGISTRATION_FAITHFUL",
+		"POST_REGISTRATION_RETAIN_CONSUMED",
+		"POST_REGISTRATION_CACHED",
+		"POST_REGISTRATION_REPLAY",
+		"POST_REGISTRATION_FUTURE",
+		"POST_REGISTRATION_SEQ4_PAYLOAD",
+		"POST_REGISTRATION_REPLAY_CANARY",
+	] {
+		assert_post_registration_rejected(
+			&format!("post_registration_declaration_{name}_changed"),
+			"post-registration",
+			|snapshot| {
+				replace_once(
+					&mut snapshot.post_registration_control,
+					&format!("free {name}"),
+					&format!("free MUTATED_{name}"),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	for name in [
+		"post_registration_success",
+		"post_registration_failure",
+		"post_registration_return",
+		"post_registration_consume",
+		"post_registration_retain",
+	] {
+		assert_post_registration_rejected(
+			&format!("post_registration_constructor_{name}_changed"),
+			"post-registration",
+			|snapshot| {
+				replace_once(
+					&mut snapshot.post_registration_control,
+					&format!("fun {name}"),
+					&format!("fun mutated_{name}"),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+	assert_post_registration_rejected(
+		"post_registration_consumption_type_changed",
+		"post-registration consumption-mode type",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.post_registration_control,
+				"type post_registration_consumption_mode",
+				"type mutated_post_registration_consumption_mode",
+			);
+		},
+	);
+	mutation_count += 1;
+	for name in [
+		"PostRegistrationHandoff",
+		"PostRegistrationBranchStarted",
+		"PostRegistrationAttempted",
+		"PostRegistrationKdfCalled",
+		"PostRegistrationOpenCalled",
+		"PostRegistrationReturned",
+		"PostRegistrationRejected",
+		"PostRegistrationReplayAccepted",
+		"PostRegistrationFinalState",
+		"PostRegistrationTargetUnavailable",
+		"PostRegistrationServerFrameSent",
+	] {
+		assert_post_registration_rejected(
+			&format!("post_registration_event_{name}_shape_changed"),
+			"post-registration",
+			|snapshot| {
+				replace_once(
+					&mut snapshot.post_registration_control,
+					&format!("event {name}("),
+					&format!("event Mutated{name}("),
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"post_registration_consume_equation_changed",
+			"post_registration_finish_cache(post_registration_consume(), entry_cache, consumed_cache) = consumed_cache",
+			"post_registration_finish_cache(post_registration_consume(), entry_cache, consumed_cache) = entry_cache",
+			"post-registration faithful cache consumption equation",
+		),
+		(
+			"post_registration_retain_equation_changed",
+			"post_registration_finish_cache(post_registration_retain(), entry_cache, consumed_cache) = entry_cache",
+			"post_registration_finish_cache(post_registration_retain(), entry_cache, consumed_cache) = consumed_cache",
+			"post-registration retained-cache counterfactual equation",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.post_registration_control, from, to);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"post_registration_cached_sender_gate_changed",
+			"let PostRegistrationReceiveCached(",
+			"sender_key_id = expected_server_key_id",
+			"sender_key_id = assigned_key_id",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_sequence_gate_changed",
+			"let PostRegistrationReceiveCached(",
+			"frame_sequence = first_sequence()",
+			"frame_sequence = next_sequence(first_sequence())",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_counter_gate_changed",
+			"let PostRegistrationReceiveCached(",
+			"receive_sequence = next_sequence(next_sequence(first_sequence()))",
+			"receive_sequence = first_sequence()",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_head_sequence_changed",
+			"let PostRegistrationReceiveCached(",
+			"=next_sequence(first_sequence()), material_2, cache_tail",
+			"=first_sequence(), material_2, cache_tail",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_tail_sequence_changed",
+			"let PostRegistrationReceiveCached(",
+			"=first_sequence(), material_1, =receive_cache_empty()",
+			"=next_sequence(first_sequence()), material_1, =receive_cache_empty()",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_open_material_changed",
+			"let PostRegistrationReceiveCached(",
+			"open_frame(material_1, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_2, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_open_ad_changed",
+			"let PostRegistrationReceiveCached(",
+			"open_frame(material_1, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_1, mutated_ad, frame_sequence, expected_server_key_id, frame)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_consumed_cache_changed",
+			"let PostRegistrationReceiveCached(",
+			"receive_cache_entry(next_sequence(first_sequence()), material_2, receive_cache_empty())",
+			"receive_cache_empty()",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_finish_mode_changed",
+			"let PostRegistrationReceiveCached(",
+			"post_registration_finish_cache(mode, entry_cache, consumed_cache)",
+			"post_registration_finish_cache(post_registration_retain(), entry_cache, consumed_cache)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_output_counter_changed",
+			"let PostRegistrationReceiveCached(",
+			"receive_state(receive_sequence, receive_chain, output_cache)",
+			"receive_state(frame_sequence, receive_chain, output_cache)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_full_payload_changed",
+			"let PostRegistrationReceiveCached(",
+			"post_registration_return(witness, request_kind, opened)",
+			"post_registration_return(witness, request_kind, mutated_plaintext)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_cached_reply_state_changed",
+			"let PostRegistrationReceiveCached(",
+			"post_registration_success(output_ratchet, opened)",
+			"post_registration_success(entry_ratchet, opened)",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_replay_rejection_input_changed",
+			"let PostRegistrationReceiveCached(",
+			"frame, entry_ratchet, entry_ratchet",
+			"frame, mutated_ratchet, entry_ratchet",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_replay_rejection_output_changed",
+			"let PostRegistrationReceiveCached(",
+			"frame, entry_ratchet, entry_ratchet",
+			"frame, entry_ratchet, mutated_ratchet",
+			"post-registration cached success and replay-rejection flow",
+		),
+		(
+			"post_registration_replay_failure_reply_changed",
+			"let PostRegistrationReceiveCached(",
+			"post_registration_failure(entry_ratchet)",
+			"post_registration_failure(mutated_ratchet)",
+			"post-registration cached success and replay-rejection flow",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.post_registration_control, marker, from, to);
+		});
+		mutation_count += 1;
+	}
+	assert_post_registration_rejected(
+		"post_registration_cached_emits_kdf",
+		"post-registration cached KDF call",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.post_registration_control,
+				"let PostRegistrationReceiveCached(",
+				"event PostRegistrationOpenCalled",
+				"event PostRegistrationKdfCalled(witness, request_kind, session, material_1);\n    event PostRegistrationOpenCalled",
+			);
+		},
+	);
+	mutation_count += 1;
+
+	for (name, from, to) in [
+		(
+			"post_registration_future_frame_destructuring_changed",
+			"let crypto_frame(ciphertext, tag, commitment, frame_sequence, sender_key_id) = frame",
+			"let crypto_frame(ciphertext, tag, commitment, frame_sequence, mutated_sender) = frame",
+		),
+		(
+			"post_registration_future_sender_gate_changed",
+			"sender_key_id = expected_server_key_id",
+			"sender_key_id = assigned_key_id",
+		),
+		(
+			"post_registration_future_ratchet_destructuring_changed",
+			"let later_registration_ratchet_state(send_sequence, send_chain, receive_entry) = entry_ratchet",
+			"let later_registration_ratchet_state(send_sequence, send_chain, receive_entry) = mutated_ratchet",
+		),
+		(
+			"post_registration_future_receive_destructuring_changed",
+			"let receive_state(receive_sequence, receive_chain, entry_cache) = receive_entry",
+			"let receive_state(receive_sequence, receive_chain, entry_cache) = mutated_receive_entry",
+		),
+		(
+			"post_registration_future_sequence_gate_changed",
+			"frame_sequence = next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"frame_sequence = next_sequence(next_sequence(first_sequence()))",
+		),
+		(
+			"post_registration_future_entry_counter_changed",
+			"receive_sequence = next_sequence(next_sequence(first_sequence()))",
+			"receive_sequence = first_sequence()",
+		),
+		(
+			"post_registration_future_cache_sequence_changed",
+			"=next_sequence(first_sequence()), material_2, =receive_cache_empty()",
+			"=first_sequence(), material_2, =receive_cache_empty()",
+		),
+		(
+			"post_registration_future_kdf_chain_changed",
+			"POST_REGISTRATION_FUTURE, session, receive_chain",
+			"POST_REGISTRATION_FUTURE, session, send_chain",
+		),
+		(
+			"post_registration_future_material_changed",
+			"let material_4 = ratchet_material(receive_chain)",
+			"let material_4 = ratchet_material(send_chain)",
+		),
+		(
+			"post_registration_future_next_chain_changed",
+			"let receive_chain_5 = ratchet_next(receive_chain)",
+			"let receive_chain_5 = receive_chain",
+		),
+		(
+			"post_registration_future_open_material_changed",
+			"open_frame(material_4, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_2, associated_data, frame_sequence, expected_server_key_id, frame)",
+		),
+		(
+			"post_registration_future_open_sender_changed",
+			"open_frame(material_4, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_4, associated_data, frame_sequence, assigned_key_id, frame)",
+		),
+		(
+			"post_registration_future_output_counter_changed",
+			"receive_state(frame_sequence, receive_chain_5, entry_cache)",
+			"receive_state(receive_sequence, receive_chain_5, entry_cache)",
+		),
+		(
+			"post_registration_future_output_chain_changed",
+			"receive_state(frame_sequence, receive_chain_5, entry_cache)",
+			"receive_state(frame_sequence, receive_chain, entry_cache)",
+		),
+		(
+			"post_registration_future_return_payload_changed",
+			"post_registration_return(witness, POST_REGISTRATION_FUTURE, opened)",
+			"post_registration_return(witness, POST_REGISTRATION_FUTURE, mutated_plaintext)",
+		),
+	] {
+		assert_post_registration_rejected(
+			name,
+			"post-registration exact sequence-four flow",
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.post_registration_control,
+					"let PostRegistrationReceiveFuture(",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"post_registration_trace_cached_parallel_removed",
+			"  |\n    in(cached_reply",
+			"  ;\n    in(cached_reply",
+		),
+		(
+			"post_registration_trace_replay_parallel_removed",
+			"    |\n      in(replay_reply",
+			"    ;\n      in(replay_reply",
+		),
+		(
+			"post_registration_trace_cached_state_changed",
+			"committed_ratchet, first_frame, cached_reply",
+			"mutated_ratchet, first_frame, cached_reply",
+		),
+		(
+			"post_registration_trace_cached_frame_changed",
+			"committed_ratchet, first_frame, cached_reply",
+			"committed_ratchet, fourth_frame, cached_reply",
+		),
+		(
+			"post_registration_trace_replay_state_changed",
+			"cached_ratchet, first_frame, replay_reply",
+			"committed_ratchet, first_frame, replay_reply",
+		),
+		(
+			"post_registration_trace_replay_frame_changed",
+			"cached_ratchet, first_frame, replay_reply",
+			"cached_ratchet, fourth_frame, replay_reply",
+		),
+		(
+			"post_registration_trace_future_not_failure_only",
+			"let post_registration_failure(replay_ratchet) = replay_result in",
+			"let post_registration_success(replay_ratchet, replayed) = replay_result in",
+		),
+		(
+			"post_registration_trace_future_entry_changed",
+			"associated_data, replay_ratchet, fourth_frame",
+			"associated_data, cached_ratchet, fourth_frame",
+		),
+		(
+			"post_registration_trace_canary_witness_changed",
+			"witness = POST_REGISTRATION_RETAIN_CONSUMED",
+			"witness = POST_REGISTRATION_FAITHFUL",
+		),
+	] {
+		assert_post_registration_rejected(name, "post-registration", |snapshot| {
+			replace_once_after(
+				&mut snapshot.post_registration_control,
+				"let PostRegistrationTrace(",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"post_registration_join_server_chain_changed",
+			"ratchet_next(server_chain_3)",
+			"ratchet_next(mutated_chain)",
+		),
+		(
+			"post_registration_join_seq4_material_changed",
+			"ratchet_material(server_chain_4)",
+			"ratchet_material(server_chain_3)",
+		),
+		(
+			"post_registration_join_seq4_sequence_changed",
+			"next_sequence(next_sequence(next_sequence(first_sequence())))",
+			"next_sequence(next_sequence(first_sequence()))",
+		),
+		(
+			"post_registration_join_seq4_seal_material_changed",
+			"seal_frame(server_material_4, server_associated_data",
+			"seal_frame(server_chain_4, server_associated_data",
+		),
+		(
+			"post_registration_join_seq4_seal_ad_changed",
+			"seal_frame(server_material_4, server_associated_data",
+			"seal_frame(server_material_4, mutated_ad",
+		),
+		(
+			"post_registration_join_seq4_seal_sender_changed",
+			"fourth_sequence, server_key_id, POST_REGISTRATION_SEQ4_PAYLOAD",
+			"fourth_sequence, server_assigned_key_id, POST_REGISTRATION_SEQ4_PAYLOAD",
+		),
+		(
+			"post_registration_join_committed_witness_changed",
+			"=LATER_REGISTRATION_FAITHFUL_WITNESS,",
+			"=LATER_REGISTRATION_FIRST_ONLY_WITNESS,",
+		),
+		(
+			"post_registration_join_session_not_exact",
+			"=session,",
+			"session_2: bitstring,",
+		),
+		(
+			"post_registration_join_root_not_exact",
+			"=root,",
+			"root_2: bitstring,",
+		),
+		(
+			"post_registration_join_response_not_exact",
+			"=substituted_response,",
+			"response_2: bitstring,",
+		),
+		(
+			"post_registration_join_assigned_id_changed",
+			"assigned_key_id = server_assigned_key_id",
+			"assigned_key_id = server_key_id",
+		),
+		(
+			"post_registration_join_server_id_changed",
+			"expected_server_key_id = server_key_id",
+			"expected_server_key_id = server_assigned_key_id",
+		),
+		(
+			"post_registration_join_ad_changed",
+			"associated_data = server_associated_data",
+			"associated_data = mutated_ad",
+		),
+	] {
+		assert_post_registration_rejected(
+			name,
+			"post-registration private tuple join and sequence-four origin",
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.post_registration_control,
+					"let PostRegistrationControl() =",
+					from,
+					to,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	for (call, fields) in [
+		(
+			0usize,
+			&[
+				"POST_REGISTRATION_FAITHFUL",
+				"post_registration_consume()",
+				"session",
+				"root",
+				"substituted_response",
+				"expected_server_key_id",
+				"assigned_key_id",
+				"associated_data",
+				"committed_ratchet",
+				"first_frame",
+				"fourth_frame",
+			][..],
+		),
+		(
+			1,
+			&[
+				"POST_REGISTRATION_RETAIN_CONSUMED",
+				"post_registration_retain()",
+				"session",
+				"root",
+				"substituted_response",
+				"expected_server_key_id",
+				"assigned_key_id",
+				"associated_data",
+				"committed_ratchet",
+				"first_frame",
+				"fourth_frame",
+			][..],
+		),
+	] {
+		for (argument, field) in fields.iter().enumerate() {
+			assert_post_registration_rejected(
+				&format!("post_registration_trace_{call}_argument_{argument}_{field}_changed"),
+				"post-registration faithful/counterfactual sole delta",
+				|snapshot| {
+					replace_nth_call_argument_after(
+						&mut snapshot.post_registration_control,
+						"let PostRegistrationControl() =",
+						"PostRegistrationTrace",
+						call,
+						argument,
+						"mutated_argument",
+					);
+				},
+			);
+			mutation_count += 1;
+		}
+	}
+
+	for index in 0..27 {
+		assert_post_registration_rejected(
+			&format!("post_registration_query_{}_changed", index + 1),
+			"post-registration exact query",
+			|snapshot| {
+				mutate_post_registration_query(&mut snapshot.post_registration_queries, index)
+			},
+		);
+		mutation_count += 1;
+		assert_post_registration_rejected(
+			&format!("post_registration_checker_result_{}_changed", index + 1),
+			"post-registration exact result-checker branch",
+			|snapshot| {
+				mutate_post_registration_checker_result(
+					&mut snapshot.proverif_result_checker,
+					index,
+				)
+			},
+		);
+		mutation_count += 1;
+		assert_post_registration_rejected(
+			&format!("post_registration_checker_polarity_{}_changed", index + 1),
+			"post-registration checker exact polarity",
+			|snapshot| {
+				flip_post_registration_checker_polarity(
+					&mut snapshot.proverif_result_checker,
+					index,
+				)
+			},
+		);
+		mutation_count += 1;
+	}
+	for (name, from, to, diagnostic) in [
+		(
+			"post_registration_checker_count_changed",
+			"if (query_count != 27)",
+			"if (query_count != 26)",
+			"post-registration checker query count",
+		),
+		(
+			"post_registration_checker_loop_changed",
+			"post_registration_index <= 27",
+			"post_registration_index <= 26",
+			"post-registration checker complete result loop",
+		),
+	] {
+		assert_post_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(
+				&mut snapshot.proverif_result_checker,
+				"} else if (scenario == \"post-registration-ratchet\") {",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_post_registration_rejected(
+		"post_registration_main_join_changed",
+		"post-registration main process",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.post_registration_main,
+				"PostRegistrationControl()",
+				"MutatedPostRegistrationControl()",
+			);
+		},
+	);
+	mutation_count += 1;
+	assert_post_registration_rejected(
+		"post_registration_make_scenario_removed",
+		"post-registration Make scenario enumeration",
+		|snapshot| {
+			replace_once(
+				&mut snapshot.makefile,
+				"\tpost-registration-ratchet \\\n",
+				"",
+			);
+		},
+	);
+	mutation_count += 1;
+	for (name, from, to) in [
+		(
+			"post_registration_make_dependency_changed",
+			"check-proverif-post-registration-ratchet: check-proverif-extraction",
+			"check-proverif-post-registration-ratchet:",
+		),
+		(
+			"post_registration_make_common_libs_changed",
+			"$(PROVERIF_COMMON_LIBS)",
+			"$(PROVERIF_CRYPTO_LIBS)",
+		),
+		(
+			"post_registration_make_theory_changed",
+			"-lib $(PROVERIF_DIR)/phase2-assigned-id-strong-theory.pvl",
+			"-lib $(PROVERIF_DIR)/phase2-assigned-id-weak-theory.pvl",
+		),
+		(
+			"post_registration_make_later_control_changed",
+			"-lib $(PROVERIF_DIR)/later-sequence-registration-control.pvl",
+			"-lib $(PROVERIF_DIR)/mutated-later-control.pvl",
+		),
+		(
+			"post_registration_make_control_changed",
+			"-lib $(PROVERIF_DIR)/post-registration-ratchet-control.pvl",
+			"-lib $(PROVERIF_DIR)/mutated-post-control.pvl",
+		),
+		(
+			"post_registration_make_queries_changed",
+			"-lib $(PROVERIF_DIR)/post-registration-ratchet-queries.pvl",
+			"-lib $(PROVERIF_DIR)/mutated-post-queries.pvl",
+		),
+		(
+			"post_registration_make_main_changed",
+			"$(PROVERIF_DIR)/post-registration-ratchet.pv",
+			"$(PROVERIF_DIR)/mutated-post.pv",
+		),
+		(
+			"post_registration_make_checker_changed",
+			"awk -v scenario=post-registration-ratchet -f '$(PROVERIF_CHECKER)'",
+			"awk -v scenario=mutated-post -f '$(PROVERIF_CHECKER)'",
+		),
+	] {
+		assert_post_registration_rejected(name, "post-registration Make wiring", |snapshot| {
+			replace_once_after(
+				&mut snapshot.makefile,
+				"check-proverif-post-registration-ratchet:",
+				from,
+				to,
+			);
+		});
+		mutation_count += 1;
+	}
+
+	assert_eq!(mutation_count, POST_REGISTRATION_MUTATION_COUNT);
+}
+
+#[test]
 fn later_registration_mutation_matrix_is_complete_and_rejected() {
 	let mut mutation_count = 0usize;
 
@@ -6980,20 +9059,20 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"later_registration_adapter_open_material_substituted",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(replacement_material, open.sequence(), open.context())",
+			"let material = open.material()?;",
+			"let material = replacement_material;",
 			"later-registration adapter exact open capability",
 		),
 		(
 			"later_registration_adapter_open_sequence_substituted",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, key_seq, open.context())",
+			"let key_seq = open.sequence();",
+			"let key_seq = replacement_sequence;",
 			"later-registration adapter exact open capability",
 		),
 		(
 			"later_registration_adapter_open_context_substituted",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, open.sequence(), replacement_context)",
+			"let context = open.context();",
+			"let context = replacement_context;",
 			"later-registration adapter exact open capability",
 		),
 		(
@@ -8668,7 +10747,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later_registration_make_scenario_removed",
 			"\tlater-sequence-registration \\\n",
 			"",
-			"expected 28 ProVerif scenarios",
+			"expected 30 ProVerif scenarios",
 		),
 		(
 			"later_registration_make_extraction_prerequisite_removed",
@@ -9202,7 +11281,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 	assert_eq!(mutation_count, LATER_REGISTRATION_MUTATION_COUNT);
 }
 
-const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;
+const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 229;
 
 #[test]
 fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
@@ -9549,14 +11628,14 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_parse_uses_unbounded_options",
-			"read_message(data, ReaderOptions::new())",
-			"read_message(data, Default::default())",
+			"read_message(&mut remaining, ReaderOptions::new())",
+			"read_message(&mut remaining, Default::default())",
 			"CryptoFrame Cap'n Proto parse",
 		),
 		(
 			"cryptoframe_parse_typed_reader_path_drift",
-			"TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
-			"TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"Some(TypedReader::new(reader))",
+			"Some(TypedReader::<_, crate::phase2_capnp::kex_response::Owned>::new(reader))",
 			"CryptoFrame typed reader",
 		),
 		(
@@ -9582,13 +11661,13 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		"let ciphertext = frame.get_cipher_text().ok()?;",
 		"let key_seq = frame.get_seq();",
 	];
-	let getter_block = "\tlet kid = frame.get_key_id();\n\tif kid != expected_sender_kid {\n\t\treturn None;\n\t}\n\tlet ciphertext = frame.get_cipher_text().ok()?;\n\tlet ct_len = ciphertext.len();\n\tif ct_len <= MESSAGE_OVERHEAD {\n\t\treturn None;\n\t}\n\tlet context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};\n\tlet key_seq = frame.get_seq();";
+	let getter_block = "\tlet kid = frame.get_key_id();\n\tif kid != expected_sender_kid {\n\t\treturn None;\n\t}\n\tlet ciphertext = frame.get_cipher_text().ok()?;\n\tlet context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;\n\tlet key_seq = frame.get_seq();";
 	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
 		let getters = permutation
 			.map(|getter| getter_declarations[getter])
 			.join("\n\t");
 		let replacement = format!(
-			"\t{getters}\n\tif kid != expected_sender_kid {{\n\t\treturn None;\n\t}}\n\tlet ct_len = ciphertext.len();\n\tif ct_len <= MESSAGE_OVERHEAD {{\n\t\treturn None;\n\t}}\n\tlet context = OpenFrameContext {{\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t}};"
+			"\t{getters}\n\tif kid != expected_sender_kid {{\n\t\treturn None;\n\t}}\n\tlet context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;"
 		);
 		assert_rejected(
 			&format!("cryptoframe_getter_permutation_{index}"),
@@ -9619,28 +11698,21 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		|snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
-				"fn open_frame(",
-				"if ct_len <= MESSAGE_OVERHEAD",
-				"if ct_len < MESSAGE_OVERHEAD",
+				"fn execute_open(",
+				"if ciphertext.len() <= MESSAGE_OVERHEAD",
+				"if ciphertext.len() < MESSAGE_OVERHEAD",
 			);
 		},
 	);
 	mutation_count += 1;
 	assert_rejected(
-		"cryptoframe_parser_length_accepts_exact_overhead",
+		"cryptoframe_parser_bypasses_validated_length_factory",
 		"CryptoFrame pre-ratchet length gate",
 		|snapshot| {
-			let start = snapshot
-				.adapter_ratchet
-				.find("fn decrypt_message_with_ratchet(")
-				.unwrap();
-			let relative = snapshot.adapter_ratchet[start..]
-				.find("if ct_len <= MESSAGE_OVERHEAD")
-				.unwrap();
-			let gate = start + relative;
-			snapshot.adapter_ratchet.replace_range(
-				gate..gate + "if ct_len <= MESSAGE_OVERHEAD".len(),
-				"if ct_len < MESSAGE_OVERHEAD",
+			replace_receive_surface(
+				&mut snapshot.adapter_ratchet,
+				"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+				"OpenFrameContext::unchecked_frame(ciphertext, associated_data, kid)",
 			);
 		},
 	);
@@ -9649,20 +11721,20 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"cryptoframe_open_context_payload_is_wire_data",
-			"\t\tciphertext,\n\t\tassociated_data,",
-			"\t\tciphertext: data,\n\t\tassociated_data,",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(data, associated_data, kid)",
 			"CryptoFrame open context mapping",
 		),
 		(
 			"cryptoframe_open_context_ad_is_ciphertext",
-			"\t\tciphertext,\n\t\tassociated_data,",
-			"\t\tciphertext,\n\t\tassociated_data: ciphertext.try_into().ok()?,",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(ciphertext, ciphertext.try_into().ok()?, kid)",
 			"CryptoFrame open context mapping",
 		),
 		(
 			"cryptoframe_open_context_sender_is_expected",
-			"sender_kid: kid,",
-			"sender_kid: expected_sender_kid,",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, expected_sender_kid)",
 			"CryptoFrame open context mapping",
 		),
 		(
@@ -9679,14 +11751,14 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_open_uses_parsed_not_returned_sequence",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, key_seq, open.context())",
+			"let key_seq = open.sequence();",
+			"let key_seq = expected_sender_kid;",
 			"CryptoFrame selected receive material and sequence",
 		),
 		(
 			"cryptoframe_open_uses_rebuilt_context",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, open.sequence(), &context)",
+			"let context = open.context();",
+			"let context = replacement_context;",
 			"CryptoFrame selected receive material and sequence",
 		),
 		(
@@ -9697,8 +11769,8 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_result_swaps_sender_sequence",
-			"key_id: kid,\n\t\tseq: key_seq,",
-			"key_id: key_seq,\n\t\tseq: kid,",
+			"key_id: context.sender_kid,\n\t\t\tseq: key_seq,",
+			"key_id: key_seq,\n\t\t\tseq: context.sender_kid,",
 			"CryptoFrame returned parsed metadata",
 		),
 	] {
@@ -9717,15 +11789,15 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		"cryptoframe_open_renames_returned_material",
 		"CryptoFrame selected receive material and sequence",
 		|snapshot| {
-			replace_once(
+			replace_receive_surface(
 				&mut snapshot.adapter_ratchet,
-				"let Some(material) = open.material() else {",
-				"let Some(selected_material) = open.material() else {",
+				"let material = open.material()?;",
+				"let selected_material = open.material()?;",
 			);
-			replace_once(
+			replace_receive_surface(
 				&mut snapshot.adapter_ratchet,
-				"open_frame(material, open.sequence(), open.context())",
-				"open_frame(selected_material, open.sequence(), open.context())",
+				"(*material.key().as_bytes()).into()",
+				"(*selected_material.key().as_bytes()).into()",
 			);
 		},
 	);
@@ -9825,50 +11897,50 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_open_tag_slice_starts_late",
-			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE",
-			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN + 1..ct_len - COMMITMENT_SIZE",
+			"base_ciphertext.len() - AEAD_TAG_LEN..",
+			"base_ciphertext.len() - AEAD_TAG_LEN + 1..",
 			"CryptoFrame open commitment mapping",
 		),
 		(
 			"cryptoframe_open_tag_slice_ends_late",
-			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE",
-			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE + 1",
+			"base_ciphertext.len() - AEAD_TAG_LEN..",
+			"base_ciphertext.len() - AEAD_TAG_LEN..base_ciphertext.len() + 1",
 			"CryptoFrame open commitment mapping",
 		),
 		(
 			"cryptoframe_open_tag_uses_commitment_suffix",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE]",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
+			"context.tag,",
+			"context.commitment,",
 			"CryptoFrame open commitment mapping",
 		),
 		(
 			"cryptoframe_open_commitment_slice_starts_late",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE + 1..]",
+			"memcmp(&commitment, context.commitment)",
+			"memcmp(&commitment, &context.commitment[1..])",
 			"CryptoFrame libsodium memcmp commitment comparison",
 		),
 		(
 			"cryptoframe_open_commitment_slice_ends_early",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE..ct_len - 1]",
+			"memcmp(&commitment, context.commitment)",
+			"memcmp(&commitment, &context.commitment[..COMMITMENT_SIZE - 1])",
 			"CryptoFrame libsodium memcmp commitment comparison",
 		),
 		(
 			"cryptoframe_open_decrypts_ciphertext_without_tag",
-			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
-			"&context.ciphertext[..ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN]",
+			"context.base_ciphertext,",
+			"&context.base_ciphertext[..context.base_ciphertext.len() - AEAD_TAG_LEN],",
 			"CryptoFrame C-and-tag AEAD open",
 		),
 		(
 			"cryptoframe_open_decrypts_commitment_too",
-			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
-			"context.ciphertext",
+			"context.base_ciphertext,",
+			"context.commitment,",
 			"CryptoFrame C-and-tag AEAD open",
 		),
 		(
 			"cryptoframe_open_decrypt_prefix_boundary_late",
-			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
-			"&context.ciphertext[..ct_len - COMMITMENT_SIZE + 1]",
+			"context.base_ciphertext,",
+			"&context.base_ciphertext[..context.base_ciphertext.len() + 1],",
 			"CryptoFrame C-and-tag AEAD open",
 		),
 		(
@@ -9879,13 +11951,13 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_open_commitment_swaps_sequence_sender",
-			"\t\tkey_seq,\n\t\tcontext.sender_kid,",
-			"\t\tcontext.sender_kid,\n\t\tkey_seq,",
+			"\t\t\tkey_seq,\n\t\t\tcontext.sender_kid,",
+			"\t\t\tcontext.sender_kid,\n\t\t\tkey_seq,",
 			"CryptoFrame open commitment mapping",
 		),
 	] {
 		assert_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(&mut snapshot.adapter_ratchet, "fn open_frame(", from, to);
+			replace_once_after(&mut snapshot.adapter_ratchet, "fn execute_open(", from, to);
 		});
 		mutation_count += 1;
 	}
@@ -9894,11 +11966,15 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		"cryptoframe_open_decrypts_before_commitment_equality",
 		"CryptoFrame commitment-before-AEAD order",
 		|snapshot| {
-			replace_once_after(
+			replace_receive_surface(
 				&mut snapshot.adapter_ratchet,
-				"fn open_frame(",
-				"\tif !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {\n\t\treturn None;\n\t}\n\tlet key: AeadKey = (*material.key().as_bytes()).into();\n\tlet nonce: AeadNonce = (*material.nonce().as_bytes()).into();\n\tcrypto_aead::chacha20poly1305_ietf::decrypt(\n\t\t&context.ciphertext[..ct_len - COMMITMENT_SIZE],\n\t\tSome(context.associated_data.as_slice()),\n\t\t&nonce,\n\t\t&key,\n\t)\n\t.ok()",
-				"\tlet key: AeadKey = (*material.key().as_bytes()).into();\n\tlet nonce: AeadNonce = (*material.nonce().as_bytes()).into();\n\tlet opened = crypto_aead::chacha20poly1305_ietf::decrypt(\n\t\t&context.ciphertext[..ct_len - COMMITMENT_SIZE],\n\t\tSome(context.associated_data.as_slice()),\n\t\t&nonce,\n\t\t&key,\n\t)\n\t.ok();\n\tif !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {\n\t\treturn None;\n\t}\n\topened",
+				"\t\tif !memcmp(&commitment, context.commitment) {\n\t\t\treturn None;\n\t\t}\n",
+				"",
+			);
+			replace_receive_surface(
+				&mut snapshot.adapter_ratchet,
+				"\t\t.ok()?;\n\t\tSome(Decrypted {",
+				"\t\t.ok()?;\n\t\tif !memcmp(&commitment, context.commitment) {\n\t\t\treturn None;\n\t\t}\n\t\tSome(Decrypted {",
 			);
 		},
 	);
@@ -10379,6 +12455,50 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 				replace_call(&mut snapshot.interface, "ctx_preimage", 1, &arguments);
 			},
 		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_decoder_allows_trailing_bytes",
+			"\tif !remaining.is_empty() {\n\t\treturn None;\n\t}\n",
+			"",
+			"CryptoFrame exact-message decoder",
+		),
+		(
+			"cryptoframe_decoder_ignores_input",
+			"let mut remaining = data;",
+			"let mut remaining = &[][..];",
+			"CryptoFrame exact-message decoder",
+		),
+		(
+			"cryptoframe_factory_split_boundary_drift",
+			"ciphertext.split_at(ciphertext.len() - COMMITMENT_SIZE)",
+			"ciphertext.split_at(ciphertext.len() - COMMITMENT_SIZE + 1)",
+			"CryptoFrame split commitment boundary",
+		),
+		(
+			"cryptoframe_factory_tag_views_commitment",
+			"tag: tag.try_into().ok()?,",
+			"tag: commitment[..AEAD_TAG_LEN].try_into().ok()?,",
+			"CryptoFrame validated payload views",
+		),
+		(
+			"cryptoframe_executor_shadows_plaintext",
+			"Some(Decrypted {",
+			"let plaintext = vec![0];\n\t\tSome(Decrypted {",
+			"CryptoFrame executor binding shadowed",
+		),
+		(
+			"cryptoframe_executor_accepts_claimed_plaintext",
+			"\t\t.ok()?;\n\t\tSome(Decrypted {",
+			"\t\t.ok().or_else(|| Some(vec![0]))?;\n\t\tSome(Decrypted {",
+			"CryptoFrame recovered plaintext binding",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_receive_surface(&mut snapshot.adapter_ratchet, from, to);
+		});
 		mutation_count += 1;
 	}
 
@@ -10953,25 +13073,25 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"endpoint_sender_parser_ignores_wire",
-			"capnp::serialize::read_message(data, ReaderOptions::new())",
+			"capnp::serialize::read_message(&mut remaining, ReaderOptions::new())",
 			"capnp::serialize::read_message(&[], ReaderOptions::new())",
-			"endpoint Server wire-sender Cap'n Proto read",
+			"CryptoFrame Cap'n Proto parse",
 		),
 		(
 			"endpoint_sender_parser_uses_phase2_type",
-			"TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
-			"TypedReader::<_, crate::phase2_capnp::kex_response::Owned>::new(reader)",
-			"endpoint Server wire-sender typed CryptoFrame reader",
+			"Some(TypedReader::new(reader))",
+			"Some(TypedReader::<_, crate::phase2_capnp::kex_response::Owned>::new(reader))",
+			"CryptoFrame typed reader",
 		),
 		(
 			"endpoint_sender_parser_returns_sequence",
-			"Some(typed_reader.get().ok()?.get_key_id())",
-			"Some(typed_reader.get().ok()?.get_seq())",
+			"Some(decode_crypto_frame(data)?.get().ok()?.get_key_id())",
+			"Some(decode_crypto_frame(data)?.get().ok()?.get_seq())",
 			"endpoint Server wire-sender keyId getter",
 		),
 		(
 			"endpoint_sender_parser_returns_constant",
-			"Some(typed_reader.get().ok()?.get_key_id())",
+			"Some(decode_crypto_frame(data)?.get().ok()?.get_key_id())",
 			"Some(0)",
 			"endpoint Server wire-sender keyId getter",
 		),
@@ -12032,20 +14152,20 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"ratchet_driver_receive_context_uses_expected_sender",
-			"sender_kid: kid,",
-			"sender_kid: expected_sender_kid,",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, expected_sender_kid)",
 			"ratchet receive prechecks and effect start order",
 		),
 		(
 			"ratchet_driver_receive_context_replaces_ciphertext",
-			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
-			"let context = OpenFrameContext {\n\t\tciphertext: &[],\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(&[], associated_data, kid)",
 			"ratchet receive prechecks and effect start order",
 		),
 		(
 			"ratchet_driver_receive_context_replaces_associated_data",
-			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
-			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data: &[0; AD_SIZE],\n\t\tsender_kid: kid,\n\t};",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(ciphertext, &[0; AD_SIZE], kid)",
 			"ratchet receive prechecks and effect start order",
 		),
 		(
@@ -12080,8 +14200,8 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_fixes_loop_iteration_count",
-			"let plaintext = loop {\n\t\teffect = match effect {",
-			"let mut remaining_iterations = 1usize;\n\tlet plaintext = loop {\n\t\tif remaining_iterations == 0 { return None; }\n\t\tremaining_iterations -= 1;\n\t\teffect = match effect {",
+			"loop {\n\t\teffect = match effect {",
+			"let mut remaining_iterations = 1usize;\n\tloop {\n\t\tif remaining_iterations == 0 { return None; }\n\t\tremaining_iterations -= 1;\n\t\teffect = match effect {",
 			"ratchet receive effect loop without fixed iteration count",
 		),
 		(
@@ -12122,50 +14242,50 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_no_material_omits_material_gate",
-			"let Some(material) = open.material() else {",
-			"let material = open.material().unwrap_or_else(|| panic!(\"material missing\"));\n\t\t\t\tif false {",
+			"let material = open.material()?;",
+			"let material = open.material().unwrap();",
 			"ratchet receive no-material rejection",
 		),
 		(
 			"ratchet_driver_receive_no_material_omits_reject",
-			"let (kernel, _) = open.reject();",
-			"let kernel = panic!(\"open reject omitted\");",
+			"let material = open.material()?;",
+			"let material = open.material().or_else(|| panic!(\"missing material\"))?;",
 			"ratchet receive no-material rejection",
 		),
 		(
 			"ratchet_driver_receive_no_material_drops_kernel",
-			"ratchet.refined.put(kernel);\n\t\t\t\t\treturn None;",
-			"drop(kernel);\n\t\t\t\t\treturn None;",
-			"ratchet receive no-material rejection",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\tratchet.refined.put(kernel);",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\tdrop(kernel);",
+			"ratchet receive returned-kernel puts",
 		),
 		(
 			"ratchet_driver_receive_no_material_puts_after_return",
-			"ratchet.refined.put(kernel);\n\t\t\t\t\treturn None;",
-			"return None;\n\t\t\t\t\tratchet.refined.put(kernel);",
-			"ratchet receive no-material rejection",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\treturn opened;",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\treturn opened;\n\t\t\t\tratchet.refined.put(kernel);",
+			"ratchet receive open and terminal publication order",
 		),
 		(
 			"ratchet_driver_receive_opens_with_wrong_material",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(panic!(), open.sequence(), open.context())",
+			"execute_open(open)",
+			"execute_open(panic!(\"wrong request\"))",
 			"ratchet receive open capability handoff",
 		),
 		(
 			"ratchet_driver_receive_opens_with_wrong_sequence",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, open.sequence().wrapping_add(1), open.context())",
+			"let key_seq = open.sequence();",
+			"let key_seq = open.sequence().wrapping_add(1);",
 			"ratchet receive open capability handoff",
 		),
 		(
 			"ratchet_driver_receive_opens_with_rebuilt_context",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, open.sequence(), &OpenFrameContext { ciphertext, associated_data, sender_kid: expected_sender_kid })",
+			"let context = open.context();",
+			"let context = replacement_context;",
 			"ratchet receive open capability handoff",
 		),
 		(
 			"ratchet_driver_receive_omits_open",
-			"let opened = open_frame(material, open.sequence(), open.context());",
-			"let opened: Option<Vec<u8>> = None;",
+			"let (kernel, opened) = execute_open(open);",
+			"let (kernel, opened) = (panic!(\"open omitted\"), None);",
 			"ratchet receive open capability handoff",
 		),
 		(
@@ -12176,25 +14296,25 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_omits_finish",
-			"let (kernel, opened) = open.finish(opened);",
-			"let (kernel, opened) = panic!(\"open finish omitted\");",
+			"open.finish(opened)",
+			"panic!(\"open finish omitted\")",
 			"ratchet receive capability finish",
 		),
 		(
 			"ratchet_driver_receive_drops_finished_kernel",
-			"ratchet.refined.put(kernel);\n\t\t\t\tbreak opened?;",
-			"drop(kernel);\n\t\t\t\tbreak opened?;",
+			"ratchet.refined.put(kernel);\n\t\t\t\treturn opened;",
+			"drop(kernel);\n\t\t\t\treturn opened;",
 			"ratchet receive returned-kernel puts",
 		),
 		(
 			"ratchet_driver_receive_questions_result_before_put",
-			"let (kernel, opened) = open.finish(opened);\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\tbreak opened?;",
-			"let (kernel, opened) = open.finish(opened);\n\t\t\t\tlet opened = opened?;\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\tbreak opened;",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\treturn opened;",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\tlet opened = opened?;\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\treturn Some(opened);",
 			"ratchet receive open and terminal publication order",
 		),
 		(
 			"ratchet_driver_receive_returns_expected_sender_metadata",
-			"key_id: kid,",
+			"key_id: context.sender_kid,",
 			"key_id: expected_sender_kid,",
 			"ratchet receive parsed result metadata",
 		),
@@ -12236,7 +14356,7 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_moves_length_gate_after_take",
-			"if ct_len <= MESSAGE_OVERHEAD {\n\t\treturn None;\n\t}\n",
+			"let context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;\n",
 		),
 	] {
 		assert_ratchet_driver_rejected(
@@ -14759,8 +16879,8 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"registration_beacon_identity_generation_changes",
-			"identity_key: crypto_sign::KeyPair::generate().unwrap(),",
-			"identity_key: crypto_kx::KeyPair::generate().unwrap(),",
+			"identity_key: crypto_sign::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
+			"identity_key: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
 			"registration Beacon identity generation",
 		),
 		(
@@ -14771,19 +16891,19 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"registration_beacon_prekey_generation_changes",
-			"prekey: crypto_kx::KeyPair::generate().unwrap(),",
-			"prekey: crypto_kem::mlkem768::KeyPair::generate().unwrap(),",
+			"prekey: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
+			"prekey: crypto_kem::mlkem768::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
 			"registration Beacon Fresh material co-location",
 		),
 		(
 			"registration_beacon_pq_generation_changes",
-			"pq_key: crypto_kem::mlkem768::KeyPair::generate().unwrap(),",
-			"pq_key: crypto_kx::KeyPair::generate().unwrap(),",
+			"pq_key: crypto_kem::mlkem768::KeyPair::generate()\n\t\t\t\t\t.map_err(|_| crate::KeyGenError)?,",
+			"pq_key: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
 			"registration Beacon Fresh material co-location",
 		),
 	] {
 		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(&mut snapshot.adapter_beacon, "pub fn new(", from, to);
+			replace_once_after(&mut snapshot.adapter_beacon, "pub fn try_new(", from, to);
 		});
 		mutation_count += 1;
 	}
@@ -17265,4 +19385,101 @@ fn requested_transcript_mutations_are_rejected() {
 			omit_ctx(snapshot, field);
 		});
 	}
+}
+
+#[test]
+fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
+	let environment = compact(&uncommented_pv(ENVIRONMENT_MODEL).unwrap());
+	let baseline =
+		compact(&uncommented_pv(include_str!("../proofs/pro-verif/baseline.pv")).unwrap());
+	for role in [
+		"!HonestBeacon(BEACON_RECORD_SECRET)",
+		"!MainLaterBeacon(BEACON_RECORD_SECRET)",
+		"!MainLaterServer(INITIAL_SECRET,CACHED_SECRET,ADVANCE_SECRET,FUTURE_SECRET)",
+		"!Server(INITIAL_SECRET,CACHED_SECRET,ADVANCE_SECRET,FUTURE_SECRET)",
+	] {
+		require_once(&baseline, role, "live main registration role").unwrap();
+	}
+	let server = section_between(
+		&environment,
+		"letServer(",
+		"letMaliciousServer(",
+		"first server",
+	)
+	.unwrap();
+	let later_server = environment.split_once("letMainLaterServer(").unwrap().1;
+	let later_server = format!("letServer({later_server}").replace("main_", "");
+	assert_eq!(
+		server.split_once("letthird_frame=seal_frame(").unwrap().0,
+		later_server
+			.split_once("in(c,completion_kind:bitstring);")
+			.unwrap()
+			.0,
+		"later server must retain the entire checked authentication, replay, root, response and first-two-record prefix"
+	);
+	assert_eq!(
+		server.split_once("out(c,third_frame);").unwrap().1,
+		later_server.split_once("out(c,third_frame);").unwrap().1,
+		"later server must retain the checked suffix after its alternative third payload"
+	);
+	let beacon = section_between(
+		&environment,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"first beacon",
+	)
+	.unwrap();
+	let later_beacon = section_between(
+		&environment,
+		"letMainLaterBeacon(",
+		"letMainLaterServer(",
+		"later beacon",
+	)
+	.unwrap()
+	.replace("MainLaterBeacon", "HonestBeacon")
+	.replace("main_", "");
+	assert_eq!(
+		beacon.split_once("letserver_material_1=").unwrap().0,
+		later_beacon.split_once("letserver_chain_2=").unwrap().0,
+		"later beacon must retain the checked single-use lifecycle, response parsing, root and associated-data derivation prefix"
+	);
+	require_ordered(&later_beacon, &[
+		"letserver_chain_2=ratchet_next(server_chain_1)in",
+		"letserver_chain_3=ratchet_next(server_chain_2)in",
+		"letserver_material_3=ratchet_material(server_chain_3)in",
+		"letopened_initial=open_frame(server_material_3,associated_data,next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,initial_frame)in",
+		"letregistration_payload(=expected_binding,initial_plaintext)=opened_initialin",
+		"eventBeaconRegistrationCompleted(establishment_session(beacon_establishment),next_sequence(next_sequence(first_sequence())),opened_initial,initial_frame,response,assigned_key_id);",
+		"eventMessageKeyCached(session,beacon_role(),server_to_beacon(),first_sequence(),server_material_1);",
+		"eventMessageKeyCached(session,beacon_role(),server_to_beacon(),next_sequence(first_sequence()),server_material_2);",
+		"eventMessageKeyUnavailable(session,beacon_role(),server_to_beacon(),next_sequence(next_sequence(first_sequence())),server_material_3);",
+	], "later completion authentication and state ordering").unwrap();
+	assert_eq!(count(&later_beacon, "open_frame("), 1);
+	let queries =
+		compact(&uncommented_pv(include_str!("../proofs/pro-verif/queries.pvl")).unwrap());
+	for conclusion in [
+		"inj-event(ServerRegistrationSessionCommitted(main_agreement,main_server_assigned))",
+		"inj-event(RegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned))",
+	] {
+		require_once(&queries, conclusion, "general completion origin").unwrap();
+	}
+	let controls = compact(
+		&uncommented_pv(include_str!(
+			"../proofs/pro-verif/main-registration-control-queries.pvl"
+		))
+		.unwrap(),
+	);
+	assert_eq!(count(&controls, "query"), 8);
+	require_once(
+		&controls,
+		"inj-event(BeaconAnyCommitted(main_transcript))==>inj-event(ServerCommitted(main_transcript))",
+		"unqualified exact-response negative control",
+	)
+	.unwrap();
+	require_once(
+		&controls,
+		"event(MainRegistrationRelabelCompleted(main_agreement,main_payload,main_frame,main_response))",
+		"reachable relabel control",
+	)
+	.unwrap();
 }

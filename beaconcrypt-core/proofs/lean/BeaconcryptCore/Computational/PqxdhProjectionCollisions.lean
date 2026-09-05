@@ -14,8 +14,7 @@ identities have the same value.
 The random model exposes a 76-byte answer as independent 32-byte first, 32-byte second, and
 12-byte final coordinates. It records the exact source calls `root`, `initial`, `step`, and a
 single public projection without inventing protocol labels or fixed protocol call counts.
-The eventual real-world endpoint is the already named fixed HKDF-SHA-512/no-salt joint-stream
-advantage; nothing here unfolds or proves HKDF, HMAC, or SHA-512 security.
+The real-world inequality retains the legacy fixed-public-HKDF/random-table advantage, which is efficiently large in general (`PqxdhPublicKdfCounterexample`). Thus the birthday bound is a random-table result; this module does not discharge computational output noncollision of production HKDF. A useful production transfer still needs a source/distribution-specific reduction that preserves local public evaluation.
 -/
 
 open OracleComp OracleSpec ENNReal
