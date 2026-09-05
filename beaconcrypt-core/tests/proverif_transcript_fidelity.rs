@@ -2521,11 +2521,14 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 		&environment,
 		"beaconcrypt_core__pqxdh__build_associated_data",
 	)?;
-	if ad_calls.len() != 3
-		|| ad_calls
-			.iter()
-			.any(|arguments| arguments != &["server_identity", "beacon_identity"])
-	{
+	if ad_calls
+		!= [
+			vec!["server_identity", "beacon_identity"],
+			vec!["server_identity", "beacon_identity"],
+			vec!["server_identity", "beacon_identity"],
+			vec!["main_server_identity", "main_beacon_identity"],
+			vec!["main_server_identity", "main_beacon_identity"],
+		] {
 		return Err(format!(
 			"associated-data identity order changed: {ad_calls:?}"
 		));
@@ -2576,9 +2579,9 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"auxiliary ProVerif fidelity prerequisite",
 	)?;
 	let scenarios = scenario_names(makefile)?;
-	if scenarios.len() != 28 {
+	if scenarios.len() != 29 {
 		return Err(format!(
-			"expected 28 ProVerif scenarios, found {}",
+			"expected 29 ProVerif scenarios, found {}",
 			scenarios.len()
 		));
 	}
@@ -8668,7 +8671,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later_registration_make_scenario_removed",
 			"\tlater-sequence-registration \\\n",
 			"",
-			"expected 28 ProVerif scenarios",
+			"expected 29 ProVerif scenarios",
 		),
 		(
 			"later_registration_make_extraction_prerequisite_removed",
@@ -17265,4 +17268,101 @@ fn requested_transcript_mutations_are_rejected() {
 			omit_ctx(snapshot, field);
 		});
 	}
+}
+
+#[test]
+fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
+	let environment = compact(&uncommented_pv(ENVIRONMENT_MODEL).unwrap());
+	let baseline =
+		compact(&uncommented_pv(include_str!("../proofs/pro-verif/baseline.pv")).unwrap());
+	for role in [
+		"!HonestBeacon(BEACON_RECORD_SECRET)",
+		"!MainLaterBeacon(BEACON_RECORD_SECRET)",
+		"!MainLaterServer(INITIAL_SECRET,CACHED_SECRET,ADVANCE_SECRET,FUTURE_SECRET)",
+		"!Server(INITIAL_SECRET,CACHED_SECRET,ADVANCE_SECRET,FUTURE_SECRET)",
+	] {
+		require_once(&baseline, role, "live main registration role").unwrap();
+	}
+	let server = section_between(
+		&environment,
+		"letServer(",
+		"letMaliciousServer(",
+		"first server",
+	)
+	.unwrap();
+	let later_server = environment.split_once("letMainLaterServer(").unwrap().1;
+	let later_server = format!("letServer({later_server}").replace("main_", "");
+	assert_eq!(
+		server.split_once("letthird_frame=seal_frame(").unwrap().0,
+		later_server
+			.split_once("in(c,completion_kind:bitstring);")
+			.unwrap()
+			.0,
+		"later server must retain the entire checked authentication, replay, root, response and first-two-record prefix"
+	);
+	assert_eq!(
+		server.split_once("out(c,third_frame);").unwrap().1,
+		later_server.split_once("out(c,third_frame);").unwrap().1,
+		"later server must retain the checked suffix after its alternative third payload"
+	);
+	let beacon = section_between(
+		&environment,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"first beacon",
+	)
+	.unwrap();
+	let later_beacon = section_between(
+		&environment,
+		"letMainLaterBeacon(",
+		"letMainLaterServer(",
+		"later beacon",
+	)
+	.unwrap()
+	.replace("MainLaterBeacon", "HonestBeacon")
+	.replace("main_", "");
+	assert_eq!(
+		beacon.split_once("letserver_material_1=").unwrap().0,
+		later_beacon.split_once("letserver_chain_2=").unwrap().0,
+		"later beacon must retain the checked single-use lifecycle, response parsing, root and associated-data derivation prefix"
+	);
+	require_ordered(&later_beacon, &[
+		"letserver_chain_2=ratchet_next(server_chain_1)in",
+		"letserver_chain_3=ratchet_next(server_chain_2)in",
+		"letserver_material_3=ratchet_material(server_chain_3)in",
+		"letopened_initial=open_frame(server_material_3,associated_data,next_sequence(next_sequence(first_sequence())),SERVER_KEY_ID,initial_frame)in",
+		"letregistration_payload(=expected_binding,initial_plaintext)=opened_initialin",
+		"eventBeaconRegistrationCompleted(establishment_session(beacon_establishment),next_sequence(next_sequence(first_sequence())),opened_initial,initial_frame,response,assigned_key_id);",
+		"eventMessageKeyCached(session,beacon_role(),server_to_beacon(),first_sequence(),server_material_1);",
+		"eventMessageKeyCached(session,beacon_role(),server_to_beacon(),next_sequence(first_sequence()),server_material_2);",
+		"eventMessageKeyUnavailable(session,beacon_role(),server_to_beacon(),next_sequence(next_sequence(first_sequence())),server_material_3);",
+	], "later completion authentication and state ordering").unwrap();
+	assert_eq!(count(&later_beacon, "open_frame("), 1);
+	let queries =
+		compact(&uncommented_pv(include_str!("../proofs/pro-verif/queries.pvl")).unwrap());
+	for conclusion in [
+		"inj-event(ServerRegistrationSessionCommitted(main_agreement,main_server_assigned))",
+		"inj-event(RegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned))",
+	] {
+		require_once(&queries, conclusion, "general completion origin").unwrap();
+	}
+	let controls = compact(
+		&uncommented_pv(include_str!(
+			"../proofs/pro-verif/main-registration-control-queries.pvl"
+		))
+		.unwrap(),
+	);
+	assert_eq!(count(&controls, "query"), 8);
+	require_once(
+		&controls,
+		"inj-event(BeaconAnyCommitted(main_transcript))==>inj-event(ServerCommitted(main_transcript))",
+		"unqualified exact-response negative control",
+	)
+	.unwrap();
+	require_once(
+		&controls,
+		"event(MainRegistrationRelabelCompleted(main_agreement,main_payload,main_frame,main_response))",
+		"reachable relabel control",
+	)
+	.unwrap();
 }

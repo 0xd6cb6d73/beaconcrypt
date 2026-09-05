@@ -86,6 +86,12 @@ END {
   registration_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,origin_1"
   accepted_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,root_input_3,root_3,origin_1"
   message_arguments = "session_4,message_direction,message_sequence_6,sender,receiver,plaintext_2"
+  # The main process now expands a second honest registration schedule. Keep exact alpha-renamed query expectations for that larger process; isolated scenarios retain their original names.
+  if (scenario == "baseline" || scenario == "active-classical" || scenario == "reachability") {
+    registration_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,origin_2"
+    accepted_arguments = "server_identity_3,beacon_identity_4,init,registration_id_4,root_input_3,root_3,origin_2"
+    message_arguments = "session_4,message_direction,message_sequence_10,sender,receiver,plaintext_3"
+  }
   receive_rejected_arguments = "session_3,target_sequence_2,forged_frame,entry_state"
   receive_future_arguments = "session_3,target_sequence_2,sender,receiver,plaintext_8,accepted_frame,target_material_1,forged_frame,entry_state,committed_state_1"
   receive_reachable_future_arguments = "session_3,target_sequence_2,sender,receiver,RECEIVE_TARGET_SECRET[],accepted_frame,target_material_1,forged_frame,entry_state,committed_state_1"
@@ -397,8 +403,8 @@ END {
     }
   } else if (scenario == "baseline" ||
              scenario == "active-classical") {
-    if (query_count != 12) {
-      reject("expected 12 " scenario " queries, saw " query_count)
+    if (query_count != 14) {
+      reject("expected 14 " scenario " queries, saw " query_count)
     }
 
     baseline_secret[1] = "INITIAL_SECRET"
@@ -426,9 +432,26 @@ END {
     expected_correspondence[5] = "Query inj-event(ServerResponseAborted(" accepted_arguments ")) ==> inj-event(RegistrationConsumed(" registration_arguments ")) is true."
     expected_correspondence[6] = "Query inj-event(BeaconCommitted(transcript)) ==> inj-event(ServerCommitted(transcript)) is true."
     expected_correspondence[7] = "Query inj-event(MessageReceived(" message_arguments ")) ==> inj-event(MessageSent(" message_arguments ")) is true."
-    for (correspondence_index = 1; correspondence_index <= 7; correspondence_index++) {
+    expected_correspondence[8] = "Query inj-event(BeaconRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_response_2,main_claimed)) ==> inj-event(ServerRegistrationSessionCommitted(main_agreement,main_server_assigned)) is true."
+    expected_correspondence[9] = "Query inj-event(BeaconRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_response_2,main_claimed)) ==> inj-event(RegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned)) is true."
+    for (correspondence_index = 1; correspondence_index <= 9; correspondence_index++) {
       require_exact(expected_correspondence[correspondence_index], scenario " correspondence")
     }
+  } else if (scenario == "main-registration-controls") {
+    if (query_count != 8) {
+      reject("expected 8 main-registration-controls queries, saw " query_count)
+    }
+    main_completion = "main_agreement,main_sequence,main_payload,main_frame,main_response_2,main_claimed"
+    require_exact("Query not event(BeaconRegistrationCompleted(main_agreement,first_sequence,main_payload,main_frame,main_response_2,main_claimed)) is false.", "main first-completion witness")
+    require_exact("Query not event(BeaconRegistrationCompleted(main_agreement,next_sequence(next_sequence(first_sequence)),main_payload,main_frame,main_response_2,main_claimed)) is false.", "main later-completion witness")
+    for (main_invalid_index = 1; main_invalid_index <= 2; main_invalid_index++) {
+      main_invalid = (main_invalid_index == 1) ? "main_registration_wrong_binding" : "main_registration_unframed"
+      main_candidate = "MainRegistrationCandidateSent(main_agreement," main_invalid ",main_response_2)"
+      require_exact("Query not event(" main_candidate ") is false.", "main invalid candidate emission")
+      require_exact("Query not (event(" main_candidate ") && event(BeaconRegistrationCompleted(" main_completion "))) is true.", "main exact invalid candidate rejection")
+    }
+    require_exact("Query inj-event(BeaconAnyCommitted(main_transcript)) ==> inj-event(ServerCommitted(main_transcript)) is false.", "unqualified exact-response negative control")
+    require_exact("Query not event(MainRegistrationRelabelCompleted(main_agreement,main_payload,main_frame,main_response_2)) is false.", "authenticated-prefix outer-ID relabel witness")
   } else if (scenario == "reachability") {
     if (query_count != 8) {
       reject("expected 8 reachability queries, saw " query_count)
@@ -440,7 +463,7 @@ END {
     required[4] = "Query not event(ServerResponseAborted(" accepted_arguments ")) is false."
     required[5] = "Query not event(BeaconCommitted(transcript)) is false."
     required[6] = "Query not event(MessageReceived(" message_arguments ")) is false."
-    required[7] = "Query not event(MaliciousRegistrationCommitted(transcript,plaintext_2)) is false."
+    required[7] = "Query not event(MaliciousRegistrationCommitted(transcript,plaintext_3)) is false."
     required[8] = "Query not attacker(MALICIOUS_TASK_SECRET[]) is false."
     for (required_index = 1; required_index <= 8; required_index++) {
       require_exact(required[required_index], "reachability")
