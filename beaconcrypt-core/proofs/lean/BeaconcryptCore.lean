@@ -20,6 +20,7 @@ import BeaconcryptCore.Computational.PqxdhJointKdf
 import BeaconcryptCore.Computational.PqxdhJointKdfGame
 import BeaconcryptCore.Computational.PqxdhPublicKdfCounterexample
 import BeaconcryptCore.Computational.PqxdhSecretInputKdf
+import BeaconcryptCore.Computational.PqxdhFullSecretInputKdf
 import BeaconcryptCore.Computational.PqxdhComposition
 import BeaconcryptCore.Computational.RawCtxReceive
 import BeaconcryptCore.Computational.PqxdhHiddenRoot

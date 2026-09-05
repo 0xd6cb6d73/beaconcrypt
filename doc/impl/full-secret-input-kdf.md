@@ -1,0 +1,28 @@
+# HB-84 full secret-input expansion component
+
+This work extends the corrected HB-79 secret-input root game to one complete 76-byte HKDF output, with the 64-byte initialization prefix and the exact first-32, second-32 and final-12 projections. It is a component of HB-84; ordered evolving-key and multi-session composition remain required. The root, initial-chain and ratchet-step functional links are checked against the existing source interface, while actual HMAC implementation correctness is the permanent primitive contract.
+
+For either of the two exact production labels, the construction computes `T1 = HMAC(PRK, info || 0x01)` and `T2 = HMAC(PRK, T1 || info || 0x02)`, then returns `T1 || first12(T2)`. The second message is always distinct from the first because it is 64 bytes longer. `fullExpandReduction_random` proves exact equality of the complete adaptive HMAC random-function execution and two fresh 64-byte blocks. The second message depends on the entire first answer, and the proof retains that dependency rather than assuming independent HMAC queries.
+
+`joinBlocks_uniform` proves that concatenating the first block and twelve bytes of the second produces one uniform 76-byte vector. The proof uses bijective byte splitting and the evaluated distribution of the entire continuation. `initialPrefix_joinBlocks` fixes the shared 64-byte prefix. `projectedOutput_uniform` reuses the existing exact triple-splitting theorem, so the distinct key, next-chain and nonce slots are independent in this ideal output, while any repeated projection observes the same value.
+
+`SourceFullCorrect` is an algorithmic equation between the fixed source wrapper and this Extract/Expand construction. It has no secrecy or injectivity clause. Its `root`, `initialChains` and `ratchetStep` theorems connect the 32-byte PQXDH root, both initial chains and complete source ratchet output, using the already stated source prefix-consistency contract. There is no third domain, salt, output-length separation or primitive change.
+
+`sourceFullAdvantage_le_extract_add_hmac` proves that replacing this one secret-input full output costs the sum of two coefficient-one advantages. The first is fixed-zero-salt Extract pseudorandomness against a reduction receiving the whole PRK and the exact sampler context. The second is ordinary HMAC PRF security under an independently sampled uniform 64-byte secret key, against a reduction making two adaptive challenge queries. Every public local HKDF evaluation remains real in both worlds. No public-HKDF/random-table advantage, hidden-input guessing term or claimed entropy-to-Extract theorem appears.
+
+The sampler must end before output-dependent records or other descendants are generated. Its context must not disclose the target input, PRK or surviving copies. Those distribution and freshness obligations are not asserted merely by the sampler type; subsequent protocol composition must discharge them. The observer receives the substituted full output and constructs all its downstream computations consistently from it. A 64-byte-only observation is the same output's prefix; the joint reduction conservatively retains both challenge queries.
+
+## Query accounting
+
+The reduction takes explicit upper bounds `qSample` and `qObserver` on all underlying uniform queries of the interpreted sampler and every observer continuation. No ambient probabilistic work is declared free. Its adversary interface uses at most `qSample + qObserver` uniform queries and two secret-key HMAC queries. The source game has uniform cap `qSample + qObserver`. Uniform Extract additionally samples 64 bytes, the real HMAC challenger additionally samples 64 key bytes, the random HMAC challenger samples both 64-byte blocks, and the independent full-output game samples 76 bytes. Caller budgets must include any randomness introduced by interpreted signing, KEM, decapsulation, base or protocol computations. This local component does not itself provide their global protocol query bounds or an asymptotic runtime model.
+
+The component contains one Extract challenge use, followed by two local HMAC evaluations in the Extract reduction. The HMAC reduction has two challenge calls and no Extract challenge call; its local sampler still executes unchanged. Primitive implementations remain opaque and trusted, with their own stated security contracts.
+
+## Remaining HB-84 work
+
+The component alone does not prove that the protocol supplies every required input distribution, establish the evolving cache/alias and reveal invariants, or construct ordered hybrids across both directions and restored snapshots. Repeated equal inputs must retain equal outputs; retained skipped keys and snapshots must be considered by freshness; revealing a current chain exposes all descendants. The common protocol experiment and adaptive CTX lift remain separate required stages. Validation and independent-review evidence will be recorded after the exact commands finish.
+
+
+## Component review and validation
+
+Independent review checked the theorem statements, adaptive second-query distribution, source projections, complete-continuation commutation, assumptions, separate query budgets and the stated remaining obligations. The reviewed module SHA-256 is `796d695ac71f8f46e1d4f637dea559ebcf225a392193eeab593937a79c08479c`. Direct Lean checking, including five guarded dependency reports, passed. The reports contain only `propext`, `Classical.choice` and `Quot.sound`. The full `lake build` passed 3,169 jobs, and the reviewed inventory passed with 121 handwritten Lean units; this review approves the delimited component and does not approve the remaining HB-84 or global protocol claims.
