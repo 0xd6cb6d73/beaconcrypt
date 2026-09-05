@@ -45,10 +45,10 @@ declare -A expected_category_counts=(
 	[adapter-rust]=13
 	[adapter-schema]=3
 	[core-rust]=9
-	[control]=11
+	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=122
+	[handwritten-lean]=125
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -85,6 +85,7 @@ tracked_proof_symlink="$(git -C "$repo_dir" ls-files -s -- beaconcrypt-core/proo
 
 printf '%s\n' \
 	../.cargo/config.toml \
+	../.gitattributes \
 	../.github/workflows/formal-verification.yml \
 	../.gitignore \
 	../Cargo.lock \
@@ -3240,6 +3241,35 @@ for theorem_name in retainedProbability_eq_intctxtAdvantage canonicalOpenAndReta
 done
 require_line_count 4 '^#guard_msgs in$' "$ctx_unclaimed_acceptance" \
 	"ciphertext-only CTX guarded axiom audits"
+
+for adaptive_ctx_module in AdaptiveCtxReceive AdaptiveCtxCanonical AdaptiveCtxQueryBounds; do
+	require_line_count 1 "^import BeaconcryptCore\\.Computational\\.${adaptive_ctx_module}$" \
+		"$lean_root" "adaptive CTX ${adaptive_ctx_module} proof-root import"
+done
+adaptive_ctx_receive=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxReceive.lean
+for theorem_name in linkedGame_eq wrapped_raw_query_bound uniformLinkedGame_eq \
+	uniformLinkedGame_distance_le_intctxt_sum; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$adaptive_ctx_receive" "adaptive CTX wrapper theorem ${theorem_name}"
+done
+require_line_count 2 '^#guard_msgs in$' "$adaptive_ctx_receive" \
+	"adaptive CTX wrapper guarded axiom audits"
+adaptive_ctx_canonical=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxCanonical.lean
+for theorem_name in canonicalRaw_split canonicalCtx_split canonicalImpl_split \
+	canonicalGame_split canonicalRaw_attempts canonicalGame_attempt_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$adaptive_ctx_canonical" "adaptive CTX shared-cache theorem ${theorem_name}"
+done
+require_line_count 2 '^#guard_msgs in$' "$adaptive_ctx_canonical" \
+	"adaptive CTX shared-cache guarded axiom audits"
+adaptive_ctx_query_bounds=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxQueryBounds.lean
+for theorem_name in wrapped_seal_bound sourceWork_bound wrapped_uniform_pair_bound \
+	wrapped_uniform_bound indexedReduction_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$adaptive_ctx_query_bounds" "adaptive CTX resource theorem ${theorem_name}"
+done
+require_line_count 3 '^#guard_msgs in$' "$adaptive_ctx_query_bounds" \
+	"adaptive CTX resource guarded axiom audits"
 
 ctx_computational_privacy=proofs/lean/BeaconcryptCore/Computational/CtxComputationalPrivacy.lean
 for declaration in CtxPrivacyAdversary CtxPrivacyQueryAccounting; do
