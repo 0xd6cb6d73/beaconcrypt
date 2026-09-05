@@ -1,4 +1,6 @@
 import BeaconcryptCore.Computational.CtxConstructiveNonce
+import BeaconcryptCore.Computational.AdaptiveCtxLogSimulation
+import BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation
 import BeaconcryptCore.Computational.AdaptiveCtxRetainedKey
 import BeaconcryptCore.Computational.AdaptiveCtxPrefix
 import BeaconcryptCore.Computational.AdaptiveCtxPrefixQueryBounds

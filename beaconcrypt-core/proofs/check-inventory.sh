@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=130
+	[handwritten-lean]=132
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3410,5 +3410,23 @@ for theorem_name in nonceOfIndex_decode nonceOfIndex_injective candidates_nodup 
 	require_line_count 1 "^theorem ${theorem_name}( |$)" "$constructive_nonce" "constructive nonce theorem ${theorem_name}"
 done
 require_line_count 4 '^#guard_msgs in$' "$constructive_nonce" "constructive nonce guarded audits"
+
+# Adaptive conventional prefix validation keeps both explicit integrity charges.
+for adaptive_module in AdaptiveCtxLogSimulation AdaptiveCtxPrefixValidation; do
+	require_line_count 1 "^import BeaconcryptCore\.Computational\.${adaptive_module}$" \
+		proofs/lean/BeaconcryptCore.lean "adaptive conventional ${adaptive_module} root import"
+done
+adaptive_logged=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxLogSimulation.lean
+adaptive_validation=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxPrefixValidation.lean
+require_line_count 1 '^def validationAccept ' "$adaptive_validation" "explicit finite validation decision"
+require_line_count 1 '^\@\[simp\] theorem validationAccept_eq ' "$adaptive_validation" "finite validation decision equality"
+for theorem_name in runLogged_projection runLogged_query_bound runLogged_history primitive_preserves_nonceHistory ordinary_run_nonce_count sourceClient_seal_bound sourceClient_uniform_bound sourceClient_validation_fresh retainedLoggedGame_eq; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_logged" "adaptive logged theorem ${theorem_name}"
+done
+for theorem_name in validationReduction_random_le loggedProbe_le_validationReal independent_prefix_le_indDollar_add_intctxt routed_distance_le_indDollar_add_two_intctxt validationReduction_seal_bound validationReduction_uniform_bound validationReal_uniform_bound retainedCanonicalGame_eq_routed canonical_distance_le_indDollar_add_two_intctxt; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_validation" "adaptive conventional theorem ${theorem_name}"
+done
+require_line_count 7 '^#guard_msgs in$' "$adaptive_logged" "adaptive logged guarded audits"
+require_line_count 10 '^#guard_msgs in$' "$adaptive_validation" "adaptive conventional guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
