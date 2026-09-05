@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=11
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=120
+	[handwritten-lean]=122
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3220,6 +3220,26 @@ for theorem_name in ctxDirectSampleIndependentTagGame_commitmentsCached \
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
 		"$ctx_computational_security" "modified-CTX final theorem ${theorem_name}"
 done
+
+adaptive_raw_nonce_aead=proofs/lean/BeaconcryptCore/Computational/AdaptiveRawNonceAead.lean
+for theorem_name in discrepancy_iff_fresh firstDiscrepancy_le_indexed_sum \
+	uniformAdaptiveGame_distance_le_intctxt_sum uniformAdaptiveGame_distance_le_raw_count \
+	indexedReduction_query_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$adaptive_raw_nonce_aead" "adaptive raw nonce-AEAD theorem ${theorem_name}"
+done
+require_line_count 3 '^#guard_msgs in$' "$adaptive_raw_nonce_aead" \
+	"adaptive raw nonce-AEAD guarded axiom audits"
+
+ctx_unclaimed_acceptance=proofs/lean/BeaconcryptCore/Computational/CtxUnclaimedAcceptance.lean
+for theorem_name in retainedProbability_eq_intctxtAdvantage canonicalOpenAndRetain_split \
+	canonicalGame_eq_game canonicalGame_le_intctxt_add_booleanIndDollar_add_guesses \
+	reduction_query_bounds openAndRetain_uniform_query_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$ctx_unclaimed_acceptance" "ciphertext-only CTX theorem ${theorem_name}"
+done
+require_line_count 4 '^#guard_msgs in$' "$ctx_unclaimed_acceptance" \
+	"ciphertext-only CTX guarded axiom audits"
 
 ctx_computational_privacy=proofs/lean/BeaconcryptCore/Computational/CtxComputationalPrivacy.lean
 for declaration in CtxPrivacyAdversary CtxPrivacyQueryAccounting; do
