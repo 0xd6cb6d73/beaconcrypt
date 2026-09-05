@@ -185,7 +185,7 @@ const EXPECTED_FACTS: &[&str] = &[
 	"cryptoframe.seal.empty_plaintext=caller_rejects_before_ratchet",
 	"cryptoframe.seal.one_use=returned_material,returned_sequence,frame_context,finish",
 	"cryptoframe.open.empty_wire=rejected_before_parse",
-	"cryptoframe.open.parse=capnp_typed_reader<CryptoFrame>",
+	"cryptoframe.open.parse=decode_crypto_frame:complete_capnp_typed_message,reject_trailing_bytes",
 	"cryptoframe.open.getter_order=keyId,cipherText,seq",
 	"cryptoframe.open.sender_gate=parsed_sender_kid==expected_sender_kid:before_ratchet",
 	"cryptoframe.open.length_gate=payload_length>80:before_ratchet",
@@ -279,8 +279,8 @@ const EXPECTED_FACTS: &[&str] = &[
 	"ratchet.driver.send.put=finish_returned_kernel_before_returned_sealed",
 	"ratchet.driver.send.failure=seal.finish(None):advanced_kernel_then_slot_put",
 	"ratchet.driver.send.cancel=not_invoked_in_encrypt_helper",
-	"ratchet.driver.receive.prechecks=empty,typed_parse,sender_match,payload_length:before_take",
-	"ratchet.driver.receive.context=OpenFrameContext(ciphertext,associated_data,parsed_sender)",
+	"ratchet.driver.receive.prechecks=empty,complete_typed_parse,sender_match,validated_payload_slices:before_take",
+	"ratchet.driver.receive.context=OpenFrameContext::from_frame(ciphertext,associated_data,parsed_sender):shared_body_tag_and_commitment_views",
 	"ratchet.driver.receive.take=ratchet.refined.take():once",
 	"ratchet.driver.receive.begin=begin_receive(kernel,parsed_sequence,same_context):once",
 	"ratchet.driver.receive.loop=effect_match_without_fixed_iteration_count",
@@ -288,11 +288,11 @@ const EXPECTED_FACTS: &[&str] = &[
 	"ratchet.driver.receive.kdf.request=ratchet_hkdf(same_pending.request()):per_arm",
 	"ratchet.driver.receive.kdf.resume=same_pending.resume(same_response)",
 	"ratchet.driver.receive.kdf.slot_put=none_in_ReceiveKdfRequested_arm",
-	"ratchet.driver.receive.no_material=open.reject(),put(returned_kernel),return_none",
-	"ratchet.driver.receive.open=open_frame(material,open.sequence(),open.context())",
-	"ratchet.driver.receive.finish=open.finish(opened)",
-	"ratchet.driver.receive.put=finish_returned_kernel_before_opened_question",
-	"ratchet.driver.receive.success=plaintext,parsed_sender,parsed_sequence",
+	"ratchet.driver.receive.no_material=executor_closure_None,open.finish(None),put(returned_kernel),return_none",
+	"ratchet.driver.receive.open=execute_open(same_owned_open):get_material,context,sequence;commitment_then_AEAD",
+	"ratchet.driver.receive.finish=execute_open_calls_same_open.finish(actual_primitive_result)",
+	"ratchet.driver.receive.put=executor_returned_kernel_before_returning_optional_Decrypted",
+	"ratchet.driver.receive.success=actual_AEAD_plaintext,request_context_sender,request_sequence",
 	"ratchet.driver.receive.failure=open.finish(None):entry_kernel_then_slot_put",
 	"ratchet.driver.receive.cancel=not_invoked_in_decrypt_helper",
 	"ratchet.driver.core.phase_api=SendStart,SendKdf,SendSeal,ReceiveEffect,ReceiveKdf,ReceiveOpen",
@@ -493,9 +493,9 @@ const EXPECTED_FACTS: &[&str] = &[
 	"later_registration.adapter.sequence=key_seq_is_frame.get_seq",
 	"later_registration.adapter.begin=begin_receive(same_taken_kernel,key_seq,same_OpenFrameContext)",
 	"later_registration.adapter.loop=each_ReceiveKdfRequested_uses_ratchet_hkdf(same_pending.request)_then_same_pending.resume",
-	"later_registration.adapter.open=open_frame(open.material,open.sequence,open.context)",
-	"later_registration.adapter.finish=same_open.finish(opened)_then_returned_kernel_is_put_before_plaintext_return",
-	"later_registration.adapter.result=Decrypted(plaintext,kid,key_seq)",
+	"later_registration.adapter.open=execute_open(same_owned_open):selected_material,sequence,and_context",
+	"later_registration.adapter.finish=executor_calls_same_open.finish(actual_primitive_result)_then_driver_puts_returned_kernel_before_result",
+	"later_registration.adapter.result=Decrypted(actual_AEAD_plaintext,open.context.sender_kid,open.sequence)",
 	"later_registration.adapter.no_first_gate=generic_receive_has_no_first_sequence_special_case",
 	"later_registration.core.max_gap=RATCHET_MAX_GAP:50",
 	"later_registration.core.plan=future_derivations=target-receive_sequence;skipped=derivations-1",
@@ -1382,11 +1382,36 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		"CryptoFrame empty-input and send ordering",
 	)?;
 
-	let open = rust_body(&snapshot.adapter_ratchet, "open_frame")?;
+	let open = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
+	let context_factory = rust_body(&snapshot.adapter_ratchet, "from_frame")?;
 	require_once(
-		&open,
-		"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
+		&context_factory,
+		"ifciphertext.len()<=MESSAGE_OVERHEAD{returnNone;}",
 		"CryptoFrame open length gate",
+	)?;
+	require_once(
+		&context_factory,
+		"let(base_ciphertext,commitment)=ciphertext.split_at(ciphertext.len()-COMMITMENT_SIZE);",
+		"CryptoFrame split commitment boundary",
+	)?;
+	require_once(
+		&context_factory,
+		"lettag=&base_ciphertext[base_ciphertext.len()-AEAD_TAG_LEN..];",
+		"CryptoFrame open commitment mapping",
+	)?;
+	require_once(
+		&context_factory,
+		"Some(Self{base_ciphertext,tag:tag.try_into().ok()?,commitment:commitment.try_into().ok()?,associated_data,sender_kid,})",
+		"CryptoFrame validated payload views",
+	)?;
+	require_ordered_once(
+		&open,
+		&[
+			"letmaterial=open.material()?;",
+			"letcontext=open.context();",
+			"letkey_seq=open.sequence();",
+		],
+		"CryptoFrame selected receive material and sequence",
 	)?;
 	for (wanted, label) in [
 		(
@@ -1406,7 +1431,7 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		&[
 			"material",
 			"context.associated_data.as_slice()",
-			"&context.ciphertext[ct_len-COMMITMENT_SIZE-AEAD_TAG_LEN..ct_len-COMMITMENT_SIZE]",
+			"context.tag",
 			"key_seq",
 			"context.sender_kid",
 			"",
@@ -1415,14 +1440,14 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 	require_once(
 		&open,
-		"if!memcmp(&commitment,&context.ciphertext[ct_len-COMMITMENT_SIZE..]){returnNone;}",
+		"if!memcmp(&commitment,context.commitment){returnNone;}",
 		"CryptoFrame libsodium memcmp commitment comparison",
 	)?;
 	require_one_call(
 		&open,
 		"crypto_aead::chacha20poly1305_ietf::decrypt",
 		&[
-			"&context.ciphertext[..ct_len-COMMITMENT_SIZE]",
+			"context.base_ciphertext",
 			"Some(context.associated_data.as_slice())",
 			"&nonce",
 			"&key",
@@ -1434,7 +1459,7 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		&open,
 		&[
 			"letcommitment=build_commitment(",
-			"memcmp(&commitment,&context.ciphertext[ct_len-COMMITMENT_SIZE..])",
+			"memcmp(&commitment,context.commitment)",
 			"letkey:AeadKey=(*material.key().as_bytes()).into()",
 			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into()",
 			"crypto_aead::chacha20poly1305_ietf::decrypt(",
@@ -1442,6 +1467,48 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		"CryptoFrame commitment-before-AEAD order",
 	)?;
 
+	require_once(
+		&compact(&uncommented_rust(&snapshot.adapter_ratchet)?),
+		")->Option<TypedReader<OwnedSegments,cryptoframe_capnp::crypto_frame::Owned>>",
+		"CryptoFrame decoder return type",
+	)?;
+	require_once(
+		&open,
+		"letplaintext=crypto_aead::chacha20poly1305_ietf::decrypt(context.base_ciphertext,Some(context.associated_data.as_slice()),&nonce,&key,).ok()?;",
+		"CryptoFrame recovered plaintext binding",
+	)?;
+	for binding in [
+		"letmaterial=",
+		"letcontext=",
+		"letkey_seq=",
+		"letplaintext=",
+		"letopened=",
+	] {
+		if count(&open, binding) != 1 {
+			return Err(format!("CryptoFrame executor binding shadowed: {binding}"));
+		}
+	}
+	let decoder = rust_body(&snapshot.adapter_ratchet, "decode_crypto_frame")?;
+	require_once(
+		&decoder,
+		"letreader=capnp::serialize::read_message(&mutremaining,ReaderOptions::new()).ok()?;",
+		"CryptoFrame Cap'n Proto parse",
+	)?;
+	require_once(
+		&decoder,
+		"Some(TypedReader::new(reader))",
+		"CryptoFrame typed reader",
+	)?;
+	require_ordered_once(
+		&decoder,
+		&[
+			"letmutremaining=data;",
+			"read_message(&mutremaining,ReaderOptions::new())",
+			"if!remaining.is_empty(){returnNone;}",
+			"Some(TypedReader::new(reader))",
+		],
+		"CryptoFrame exact-message decoder",
+	)?;
 	let decrypt = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
 	for (wanted, label) in [
 		(
@@ -1449,12 +1516,8 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 			"CryptoFrame empty-wire rejection",
 		),
 		(
-			"letreader=capnp::serialize::read_message(data,ReaderOptions::new()).ok()?;",
-			"CryptoFrame Cap'n Proto parse",
-		),
-		(
-			"lettyped_reader=TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader);",
-			"CryptoFrame typed reader",
+			"lettyped_reader=decode_crypto_frame(data)?;",
+			"CryptoFrame complete-message parse handoff",
 		),
 		(
 			"letframe=typed_reader.get().ok()?;",
@@ -1470,11 +1533,11 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 			"CryptoFrame payload getter",
 		),
 		(
-			"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
+			"letcontext=OpenFrameContext::from_frame(",
 			"CryptoFrame pre-ratchet length gate",
 		),
 		(
-			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,};",
+			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?;",
 			"CryptoFrame open context mapping",
 		),
 		("letkey_seq=frame.get_seq();", "CryptoFrame parsed sequence"),
@@ -1483,39 +1546,37 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 			"CryptoFrame parsed-sequence ratchet selection",
 		),
 		(
-			"letopened=open_frame(material,open.sequence(),open.context());",
+			"let(kernel,opened)=execute_open(open);",
 			"CryptoFrame selected receive material and sequence",
-		),
-		(
-			"let(kernel,opened)=open.finish(opened);",
-			"CryptoFrame one-use receive completion",
 		),
 	] {
 		require_once(&decrypt, wanted, label)?;
 	}
+	require_once(
+		&open,
+		"open.finish(opened)",
+		"CryptoFrame one-use receive completion",
+	)?;
 	require_ordered_once(
 		&decrypt,
 		&[
 			"ifdata.is_empty()",
-			"capnp::serialize::read_message(data,ReaderOptions::new())",
+			"decode_crypto_frame(data)",
 			"letkid=frame.get_key_id()",
 			"ifkid!=expected_sender_kid",
 			"letciphertext=frame.get_cipher_text().ok()?",
-			"ifct_len<=MESSAGE_OVERHEAD",
-			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,}",
+			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?",
 			"letkey_seq=frame.get_seq()",
 			"letkernel=ratchet.refined.take()",
 			"verified_ratchet::begin_receive(kernel,key_seq,context)",
 			"verified_ratchet::ReceiveEffect::ReceiveOpenRequested",
-			"open.material()",
-			"open_frame(material,open.sequence(),open.context())",
-			"open.finish(opened)",
+			"execute_open(open)",
 		],
 		"CryptoFrame parser and gate evaluation order",
 	)?;
 	require_once(
-		&decrypt,
-		"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
+		&open,
+		"Some(Decrypted{plaintext,key_id:context.sender_kid,seq:key_seq,})",
 		"CryptoFrame returned parsed metadata",
 	)?;
 
@@ -1746,28 +1807,29 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 }
 
 fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), String> {
-	let parsed_sender = rust_body(&snapshot.adapter_ratchet, "encrypted_frame_sender")?;
+	let decoder = rust_body(&snapshot.adapter_ratchet, "decode_crypto_frame")?;
 	require_once(
-		&parsed_sender,
-		"letreader=capnp::serialize::read_message(data,ReaderOptions::new()).ok()?;",
+		&decoder,
+		"letreader=capnp::serialize::read_message(&mutremaining,ReaderOptions::new()).ok()?;",
 		"endpoint Server wire-sender Cap'n Proto read",
 	)?;
 	require_once(
-		&parsed_sender,
-		"lettyped_reader=TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader);",
+		&decoder,
+		"Some(TypedReader::new(reader))",
 		"endpoint Server wire-sender typed CryptoFrame reader",
 	)?;
+	let parsed_sender = rust_body(&snapshot.adapter_ratchet, "encrypted_frame_sender")?;
 	require_once(
 		&parsed_sender,
-		"Some(typed_reader.get().ok()?.get_key_id())",
+		"Some(decode_crypto_frame(data)?.get().ok()?.get_key_id())",
 		"endpoint Server wire-sender keyId getter",
 	)?;
 	require_ordered_once(
 		&parsed_sender,
 		&[
-			"capnp::serialize::read_message(data,ReaderOptions::new())",
-			"TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
-			"typed_reader.get().ok()?.get_key_id()",
+			"decode_crypto_frame(data)?",
+			".get().ok()?",
+			".get_key_id()",
 		],
 		"endpoint Server wire-sender parse source order",
 	)?;
@@ -2709,15 +2771,15 @@ fn validate_adapters() -> Result<(), String> {
 		"build_commitment(material,context.associated_data.as_slice(),tag.as_slice(),key_seq,context.sender_kid,)",
 		"production seal commitment inputs",
 	)?;
-	let open = rust_body(ADAPTER_RATCHET, "open_frame")?;
+	let open = rust_body(ADAPTER_RATCHET, "execute_open")?;
 	require(
 		&open,
-		"build_commitment(material,context.associated_data.as_slice(),&context.ciphertext[ct_len-COMMITMENT_SIZE-AEAD_TAG_LEN..ct_len-COMMITMENT_SIZE],key_seq,context.sender_kid,)",
+		"build_commitment(material,context.associated_data.as_slice(),context.tag,key_seq,context.sender_kid,)",
 		"production retained-tag commitment inputs",
 	)?;
 	require(
 		&open,
-		"crypto_aead::chacha20poly1305_ietf::decrypt(&context.ciphertext[..ct_len-COMMITMENT_SIZE],Some(context.associated_data.as_slice()),&nonce,&key,)",
+		"crypto_aead::chacha20poly1305_ietf::decrypt(context.base_ciphertext,Some(context.associated_data.as_slice()),&nonce,&key,)",
 		"production AEAD open",
 	)?;
 	let commitment = rust_body(ADAPTER_RATCHET, "build_commitment")?;
@@ -2869,21 +2931,20 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 
 	let receive = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	let executor = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
 	require_ordered(
 		&receive,
 		&[
 			"ifdata.is_empty(){returnNone;}",
-			"capnp::serialize::read_message(data,ReaderOptions::new())",
-			"TypedReader::<_,cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"decode_crypto_frame(data)",
 			"letkid=frame.get_key_id();",
 			"ifkid!=expected_sender_kid{returnNone;}",
 			"letciphertext=frame.get_cipher_text().ok()?;",
-			"ifct_len<=MESSAGE_OVERHEAD{returnNone;}",
-			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,};",
+			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?;",
 			"letkey_seq=frame.get_seq();",
 			"letkernel=ratchet.refined.take();",
 			"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);",
-			"letplaintext=loop{",
+			"loop{",
 		],
 		"ratchet receive prechecks and effect start order",
 	)?;
@@ -2906,7 +2967,7 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 	require_once(
 		&receive,
-		"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);letplaintext=loop{effect=matcheffect{",
+		"letmuteffect=verified_ratchet::begin_receive(kernel,key_seq,context);loop{effect=matcheffect{",
 		"ratchet receive effect loop without fixed iteration count",
 	)?;
 	let receive_kdf_arm = section_between(
@@ -2943,29 +3004,33 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 		"ratchet receive private KDF loop arm",
 	)?;
 	require_once(
-		&receive,
-		"letSome(material)=open.material()else{let(kernel,_)=open.reject();ratchet.refined.put(kernel);returnNone;};",
+		&executor,
+		"letmaterial=open.material()?;",
 		"ratchet receive no-material rejection",
 	)?;
 	require_one_call(
 		&receive,
-		"open_frame",
-		&["material", "open.sequence()", "open.context()"],
+		"execute_open",
+		&["open"],
+		"ratchet receive open capability handoff",
+	)?;
+	require_ordered_once(
+		&executor,
+		&[
+			"letmaterial=open.material()?;",
+			"letcontext=open.context();",
+			"letkey_seq=open.sequence();",
+		],
 		"ratchet receive open capability handoff",
 	)?;
 	require_one_call(
-		&receive,
+		&executor,
 		"open.finish",
 		&["opened"],
 		"ratchet receive capability finish",
 	)?;
 	let receive_puts = all_arguments(&receive, "ratchet.refined.put")?;
-	if receive_puts
-		!= [
-			vec!["kernel".to_owned()],
-			vec!["kernel".to_owned()],
-			vec!["kernel".to_owned()],
-		] {
+	if receive_puts != [vec!["kernel".to_owned()], vec!["kernel".to_owned()]] {
 		return Err(format!(
 			"ratchet receive returned-kernel puts changed: {receive_puts:?}"
 		));
@@ -2973,22 +3038,21 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 	require_ordered(
 		&receive,
 		&[
-			"letSome(material)=open.material()else{",
-			"let(kernel,_)=open.reject();",
+			"let(kernel,opened)=execute_open(open);",
 			"ratchet.refined.put(kernel);",
-			"returnNone;",
-			"letopened=open_frame(material,open.sequence(),open.context());",
-			"let(kernel,opened)=open.finish(opened);",
-			"ratchet.refined.put(kernel);",
-			"breakopened?;",
+			"returnopened;",
 		],
 		"ratchet receive open and terminal publication order",
 	)?;
 	require_once(
-		&receive,
-		"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
+		&executor,
+		"Some(Decrypted{plaintext,key_id:context.sender_kid,seq:key_seq,})",
 		"ratchet receive parsed result metadata",
 	)?;
+	if !executor.ends_with("})();open.finish(opened)") {
+		return Err("ratchet receive primitive result must finish the same capability".to_owned());
+	}
+
 	let receive_open = section_between(
 		&snapshot.core_ratchet_concrete,
 		"impl<Context> ReceiveOpen<Context>",
@@ -5138,6 +5202,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	}
 
 	let adapter = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
+	let executor = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
 	for (wanted, label) in [
 		(
 			"letkey_seq=frame.get_seq();",
@@ -5156,37 +5221,49 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration adapter exact KDF continuation",
 		),
 		(
-			"letopened=open_frame(material,open.sequence(),open.context());",
+			"let(kernel,opened)=execute_open(open);",
 			"later-registration adapter exact open capability",
-		),
-		(
-			"let(kernel,opened)=open.finish(opened);",
-			"later-registration adapter receive completion",
-		),
-		(
-			"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
-			"later-registration adapter result metadata",
 		),
 	] {
 		require_once(&adapter, wanted, label)?;
 	}
+	for getter in [
+		"letmaterial=open.material()?;",
+		"letcontext=open.context();",
+		"letkey_seq=open.sequence();",
+	] {
+		require_once(
+			&executor,
+			getter,
+			"later-registration adapter exact open capability",
+		)?;
+	}
+	require_once(
+		&executor,
+		"open.finish(opened)",
+		"later-registration adapter receive completion",
+	)?;
+	require_once(
+		&executor,
+		"Some(Decrypted{plaintext,key_id:context.sender_kid,seq:key_seq,})",
+		"later-registration adapter result metadata",
+	)?;
 	require_ordered(
 		&adapter,
 		&[
-			"letcontext=OpenFrameContext{ciphertext,associated_data,sender_kid:kid,};",
+			"letcontext=OpenFrameContext::from_frame(ciphertext,associated_data,kid)?;",
 			"letkey_seq=frame.get_seq();",
 			"letkernel=ratchet.refined.take();",
 			"verified_ratchet::begin_receive(kernel,key_seq,context)",
 			"ratchet_hkdf(pending.request())",
 			"pending.resume(response)",
-			"open_frame(material,open.sequence(),open.context())",
-			"open.finish(opened)",
+			"execute_open(open)",
 			"ratchet.refined.put(kernel)",
-			"breakopened?",
-			"Some(Decrypted{plaintext,key_id:kid,seq:key_seq,})",
+			"returnopened;",
 		],
 		"later-registration adapter parsed-sequence-to-result flow",
 	)?;
+
 	for forbidden in ["first_sequence", "key_seq==1", "key_seq!=1"] {
 		forbid(
 			&adapter,
@@ -6178,7 +6255,47 @@ fn replace_once(source: &mut String, from: &str, to: &str) {
 	source.replace_range(start..start + from.len(), to);
 }
 
+// Receive validation and execution now span private helpers. A matrix mutation must still hit an exact source anchor in this surface, never an unrelated send call.
+fn replace_receive_surface(source: &mut String, from: &str, to: &str) {
+	let mut matches = Vec::new();
+	for name in [
+		"decode_crypto_frame",
+		"encrypted_frame_sender",
+		"from_frame",
+		"execute_open",
+		"decrypt_message_with_ratchet",
+	] {
+		let marker = format!("fn {name}(");
+		let start = source
+			.find(&marker)
+			.unwrap_or_else(|| panic!("receive mutation scope missing: {marker}"));
+		let end = start + source[start..].find("\n}").unwrap() + 2;
+		if let Some(relative) = source[start..end].find(from) {
+			matches.push(start + relative);
+		}
+	}
+	assert_eq!(
+		matches.len(),
+		1,
+		"receive mutation anchor must occur in one helper: {from}"
+	);
+	let start = matches[0];
+	source.replace_range(start..start + from.len(), to);
+}
+
 fn replace_once_after(source: &mut String, marker: &str, from: &str, to: &str) {
+	if [
+		"decrypt_message_with_ratchet",
+		"encrypted_frame_sender",
+		"execute_open",
+		"from_frame",
+	]
+	.iter()
+	.any(|name| marker.contains(name))
+	{
+		replace_receive_surface(source, from, to);
+		return;
+	}
 	let marker_start = source
 		.find(marker)
 		.unwrap_or_else(|| panic!("mutation scope missing: {marker}"));
@@ -6983,20 +7100,20 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"later_registration_adapter_open_material_substituted",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(replacement_material, open.sequence(), open.context())",
+			"let material = open.material()?;",
+			"let material = replacement_material;",
 			"later-registration adapter exact open capability",
 		),
 		(
 			"later_registration_adapter_open_sequence_substituted",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, key_seq, open.context())",
+			"let key_seq = open.sequence();",
+			"let key_seq = replacement_sequence;",
 			"later-registration adapter exact open capability",
 		),
 		(
 			"later_registration_adapter_open_context_substituted",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, open.sequence(), replacement_context)",
+			"let context = open.context();",
+			"let context = replacement_context;",
 			"later-registration adapter exact open capability",
 		),
 		(
@@ -9205,7 +9322,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 	assert_eq!(mutation_count, LATER_REGISTRATION_MUTATION_COUNT);
 }
 
-const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;
+const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 229;
 
 #[test]
 fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
@@ -9552,14 +9669,14 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_parse_uses_unbounded_options",
-			"read_message(data, ReaderOptions::new())",
-			"read_message(data, Default::default())",
+			"read_message(&mut remaining, ReaderOptions::new())",
+			"read_message(&mut remaining, Default::default())",
 			"CryptoFrame Cap'n Proto parse",
 		),
 		(
 			"cryptoframe_parse_typed_reader_path_drift",
-			"TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
-			"TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
+			"Some(TypedReader::new(reader))",
+			"Some(TypedReader::<_, crate::phase2_capnp::kex_response::Owned>::new(reader))",
 			"CryptoFrame typed reader",
 		),
 		(
@@ -9585,13 +9702,13 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		"let ciphertext = frame.get_cipher_text().ok()?;",
 		"let key_seq = frame.get_seq();",
 	];
-	let getter_block = "\tlet kid = frame.get_key_id();\n\tif kid != expected_sender_kid {\n\t\treturn None;\n\t}\n\tlet ciphertext = frame.get_cipher_text().ok()?;\n\tlet ct_len = ciphertext.len();\n\tif ct_len <= MESSAGE_OVERHEAD {\n\t\treturn None;\n\t}\n\tlet context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};\n\tlet key_seq = frame.get_seq();";
+	let getter_block = "\tlet kid = frame.get_key_id();\n\tif kid != expected_sender_kid {\n\t\treturn None;\n\t}\n\tlet ciphertext = frame.get_cipher_text().ok()?;\n\tlet context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;\n\tlet key_seq = frame.get_seq();";
 	for (index, permutation) in cryptoframe_permutations().into_iter().skip(1).enumerate() {
 		let getters = permutation
 			.map(|getter| getter_declarations[getter])
 			.join("\n\t");
 		let replacement = format!(
-			"\t{getters}\n\tif kid != expected_sender_kid {{\n\t\treturn None;\n\t}}\n\tlet ct_len = ciphertext.len();\n\tif ct_len <= MESSAGE_OVERHEAD {{\n\t\treturn None;\n\t}}\n\tlet context = OpenFrameContext {{\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t}};"
+			"\t{getters}\n\tif kid != expected_sender_kid {{\n\t\treturn None;\n\t}}\n\tlet context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;"
 		);
 		assert_rejected(
 			&format!("cryptoframe_getter_permutation_{index}"),
@@ -9622,28 +9739,21 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		|snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
-				"fn open_frame(",
-				"if ct_len <= MESSAGE_OVERHEAD",
-				"if ct_len < MESSAGE_OVERHEAD",
+				"fn execute_open(",
+				"if ciphertext.len() <= MESSAGE_OVERHEAD",
+				"if ciphertext.len() < MESSAGE_OVERHEAD",
 			);
 		},
 	);
 	mutation_count += 1;
 	assert_rejected(
-		"cryptoframe_parser_length_accepts_exact_overhead",
+		"cryptoframe_parser_bypasses_validated_length_factory",
 		"CryptoFrame pre-ratchet length gate",
 		|snapshot| {
-			let start = snapshot
-				.adapter_ratchet
-				.find("fn decrypt_message_with_ratchet(")
-				.unwrap();
-			let relative = snapshot.adapter_ratchet[start..]
-				.find("if ct_len <= MESSAGE_OVERHEAD")
-				.unwrap();
-			let gate = start + relative;
-			snapshot.adapter_ratchet.replace_range(
-				gate..gate + "if ct_len <= MESSAGE_OVERHEAD".len(),
-				"if ct_len < MESSAGE_OVERHEAD",
+			replace_receive_surface(
+				&mut snapshot.adapter_ratchet,
+				"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+				"OpenFrameContext::unchecked_frame(ciphertext, associated_data, kid)",
 			);
 		},
 	);
@@ -9652,20 +9762,20 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"cryptoframe_open_context_payload_is_wire_data",
-			"\t\tciphertext,\n\t\tassociated_data,",
-			"\t\tciphertext: data,\n\t\tassociated_data,",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(data, associated_data, kid)",
 			"CryptoFrame open context mapping",
 		),
 		(
 			"cryptoframe_open_context_ad_is_ciphertext",
-			"\t\tciphertext,\n\t\tassociated_data,",
-			"\t\tciphertext,\n\t\tassociated_data: ciphertext.try_into().ok()?,",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(ciphertext, ciphertext.try_into().ok()?, kid)",
 			"CryptoFrame open context mapping",
 		),
 		(
 			"cryptoframe_open_context_sender_is_expected",
-			"sender_kid: kid,",
-			"sender_kid: expected_sender_kid,",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, expected_sender_kid)",
 			"CryptoFrame open context mapping",
 		),
 		(
@@ -9682,14 +9792,14 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_open_uses_parsed_not_returned_sequence",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, key_seq, open.context())",
+			"let key_seq = open.sequence();",
+			"let key_seq = expected_sender_kid;",
 			"CryptoFrame selected receive material and sequence",
 		),
 		(
 			"cryptoframe_open_uses_rebuilt_context",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, open.sequence(), &context)",
+			"let context = open.context();",
+			"let context = replacement_context;",
 			"CryptoFrame selected receive material and sequence",
 		),
 		(
@@ -9700,8 +9810,8 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_result_swaps_sender_sequence",
-			"key_id: kid,\n\t\tseq: key_seq,",
-			"key_id: key_seq,\n\t\tseq: kid,",
+			"key_id: context.sender_kid,\n\t\t\tseq: key_seq,",
+			"key_id: key_seq,\n\t\t\tseq: context.sender_kid,",
 			"CryptoFrame returned parsed metadata",
 		),
 	] {
@@ -9720,15 +9830,15 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		"cryptoframe_open_renames_returned_material",
 		"CryptoFrame selected receive material and sequence",
 		|snapshot| {
-			replace_once(
+			replace_receive_surface(
 				&mut snapshot.adapter_ratchet,
-				"let Some(material) = open.material() else {",
-				"let Some(selected_material) = open.material() else {",
+				"let material = open.material()?;",
+				"let selected_material = open.material()?;",
 			);
-			replace_once(
+			replace_receive_surface(
 				&mut snapshot.adapter_ratchet,
-				"open_frame(material, open.sequence(), open.context())",
-				"open_frame(selected_material, open.sequence(), open.context())",
+				"(*material.key().as_bytes()).into()",
+				"(*selected_material.key().as_bytes()).into()",
 			);
 		},
 	);
@@ -9828,50 +9938,50 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_open_tag_slice_starts_late",
-			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE",
-			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN + 1..ct_len - COMMITMENT_SIZE",
+			"base_ciphertext.len() - AEAD_TAG_LEN..",
+			"base_ciphertext.len() - AEAD_TAG_LEN + 1..",
 			"CryptoFrame open commitment mapping",
 		),
 		(
 			"cryptoframe_open_tag_slice_ends_late",
-			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE",
-			"ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE + 1",
+			"base_ciphertext.len() - AEAD_TAG_LEN..",
+			"base_ciphertext.len() - AEAD_TAG_LEN..base_ciphertext.len() + 1",
 			"CryptoFrame open commitment mapping",
 		),
 		(
 			"cryptoframe_open_tag_uses_commitment_suffix",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN..ct_len - COMMITMENT_SIZE]",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
+			"context.tag,",
+			"context.commitment,",
 			"CryptoFrame open commitment mapping",
 		),
 		(
 			"cryptoframe_open_commitment_slice_starts_late",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE + 1..]",
+			"memcmp(&commitment, context.commitment)",
+			"memcmp(&commitment, &context.commitment[1..])",
 			"CryptoFrame libsodium memcmp commitment comparison",
 		),
 		(
 			"cryptoframe_open_commitment_slice_ends_early",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE..]",
-			"&context.ciphertext[ct_len - COMMITMENT_SIZE..ct_len - 1]",
+			"memcmp(&commitment, context.commitment)",
+			"memcmp(&commitment, &context.commitment[..COMMITMENT_SIZE - 1])",
 			"CryptoFrame libsodium memcmp commitment comparison",
 		),
 		(
 			"cryptoframe_open_decrypts_ciphertext_without_tag",
-			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
-			"&context.ciphertext[..ct_len - COMMITMENT_SIZE - AEAD_TAG_LEN]",
+			"context.base_ciphertext,",
+			"&context.base_ciphertext[..context.base_ciphertext.len() - AEAD_TAG_LEN],",
 			"CryptoFrame C-and-tag AEAD open",
 		),
 		(
 			"cryptoframe_open_decrypts_commitment_too",
-			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
-			"context.ciphertext",
+			"context.base_ciphertext,",
+			"context.commitment,",
 			"CryptoFrame C-and-tag AEAD open",
 		),
 		(
 			"cryptoframe_open_decrypt_prefix_boundary_late",
-			"&context.ciphertext[..ct_len - COMMITMENT_SIZE]",
-			"&context.ciphertext[..ct_len - COMMITMENT_SIZE + 1]",
+			"context.base_ciphertext,",
+			"&context.base_ciphertext[..context.base_ciphertext.len() + 1],",
 			"CryptoFrame C-and-tag AEAD open",
 		),
 		(
@@ -9882,13 +9992,13 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_open_commitment_swaps_sequence_sender",
-			"\t\tkey_seq,\n\t\tcontext.sender_kid,",
-			"\t\tcontext.sender_kid,\n\t\tkey_seq,",
+			"\t\t\tkey_seq,\n\t\t\tcontext.sender_kid,",
+			"\t\t\tcontext.sender_kid,\n\t\t\tkey_seq,",
 			"CryptoFrame open commitment mapping",
 		),
 	] {
 		assert_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(&mut snapshot.adapter_ratchet, "fn open_frame(", from, to);
+			replace_once_after(&mut snapshot.adapter_ratchet, "fn execute_open(", from, to);
 		});
 		mutation_count += 1;
 	}
@@ -9897,11 +10007,15 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		"cryptoframe_open_decrypts_before_commitment_equality",
 		"CryptoFrame commitment-before-AEAD order",
 		|snapshot| {
-			replace_once_after(
+			replace_receive_surface(
 				&mut snapshot.adapter_ratchet,
-				"fn open_frame(",
-				"\tif !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {\n\t\treturn None;\n\t}\n\tlet key: AeadKey = (*material.key().as_bytes()).into();\n\tlet nonce: AeadNonce = (*material.nonce().as_bytes()).into();\n\tcrypto_aead::chacha20poly1305_ietf::decrypt(\n\t\t&context.ciphertext[..ct_len - COMMITMENT_SIZE],\n\t\tSome(context.associated_data.as_slice()),\n\t\t&nonce,\n\t\t&key,\n\t)\n\t.ok()",
-				"\tlet key: AeadKey = (*material.key().as_bytes()).into();\n\tlet nonce: AeadNonce = (*material.nonce().as_bytes()).into();\n\tlet opened = crypto_aead::chacha20poly1305_ietf::decrypt(\n\t\t&context.ciphertext[..ct_len - COMMITMENT_SIZE],\n\t\tSome(context.associated_data.as_slice()),\n\t\t&nonce,\n\t\t&key,\n\t)\n\t.ok();\n\tif !memcmp(&commitment, &context.ciphertext[ct_len - COMMITMENT_SIZE..]) {\n\t\treturn None;\n\t}\n\topened",
+				"\t\tif !memcmp(&commitment, context.commitment) {\n\t\t\treturn None;\n\t\t}\n",
+				"",
+			);
+			replace_receive_surface(
+				&mut snapshot.adapter_ratchet,
+				"\t\t.ok()?;\n\t\tSome(Decrypted {",
+				"\t\t.ok()?;\n\t\tif !memcmp(&commitment, context.commitment) {\n\t\t\treturn None;\n\t\t}\n\t\tSome(Decrypted {",
 			);
 		},
 	);
@@ -10382,6 +10496,50 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 				replace_call(&mut snapshot.interface, "ctx_preimage", 1, &arguments);
 			},
 		);
+		mutation_count += 1;
+	}
+
+	for (name, from, to, diagnostic) in [
+		(
+			"cryptoframe_decoder_allows_trailing_bytes",
+			"\tif !remaining.is_empty() {\n\t\treturn None;\n\t}\n",
+			"",
+			"CryptoFrame exact-message decoder",
+		),
+		(
+			"cryptoframe_decoder_ignores_input",
+			"let mut remaining = data;",
+			"let mut remaining = &[][..];",
+			"CryptoFrame exact-message decoder",
+		),
+		(
+			"cryptoframe_factory_split_boundary_drift",
+			"ciphertext.split_at(ciphertext.len() - COMMITMENT_SIZE)",
+			"ciphertext.split_at(ciphertext.len() - COMMITMENT_SIZE + 1)",
+			"CryptoFrame split commitment boundary",
+		),
+		(
+			"cryptoframe_factory_tag_views_commitment",
+			"tag: tag.try_into().ok()?,",
+			"tag: commitment[..AEAD_TAG_LEN].try_into().ok()?,",
+			"CryptoFrame validated payload views",
+		),
+		(
+			"cryptoframe_executor_shadows_plaintext",
+			"Some(Decrypted {",
+			"let plaintext = vec![0];\n\t\tSome(Decrypted {",
+			"CryptoFrame executor binding shadowed",
+		),
+		(
+			"cryptoframe_executor_accepts_claimed_plaintext",
+			"\t\t.ok()?;\n\t\tSome(Decrypted {",
+			"\t\t.ok().or_else(|| Some(vec![0]))?;\n\t\tSome(Decrypted {",
+			"CryptoFrame recovered plaintext binding",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			replace_receive_surface(&mut snapshot.adapter_ratchet, from, to);
+		});
 		mutation_count += 1;
 	}
 
@@ -10956,25 +11114,25 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"endpoint_sender_parser_ignores_wire",
-			"capnp::serialize::read_message(data, ReaderOptions::new())",
+			"capnp::serialize::read_message(&mut remaining, ReaderOptions::new())",
 			"capnp::serialize::read_message(&[], ReaderOptions::new())",
-			"endpoint Server wire-sender Cap'n Proto read",
+			"CryptoFrame Cap'n Proto parse",
 		),
 		(
 			"endpoint_sender_parser_uses_phase2_type",
-			"TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader)",
-			"TypedReader::<_, crate::phase2_capnp::kex_response::Owned>::new(reader)",
-			"endpoint Server wire-sender typed CryptoFrame reader",
+			"Some(TypedReader::new(reader))",
+			"Some(TypedReader::<_, crate::phase2_capnp::kex_response::Owned>::new(reader))",
+			"CryptoFrame typed reader",
 		),
 		(
 			"endpoint_sender_parser_returns_sequence",
-			"Some(typed_reader.get().ok()?.get_key_id())",
-			"Some(typed_reader.get().ok()?.get_seq())",
+			"Some(decode_crypto_frame(data)?.get().ok()?.get_key_id())",
+			"Some(decode_crypto_frame(data)?.get().ok()?.get_seq())",
 			"endpoint Server wire-sender keyId getter",
 		),
 		(
 			"endpoint_sender_parser_returns_constant",
-			"Some(typed_reader.get().ok()?.get_key_id())",
+			"Some(decode_crypto_frame(data)?.get().ok()?.get_key_id())",
 			"Some(0)",
 			"endpoint Server wire-sender keyId getter",
 		),
@@ -12035,20 +12193,20 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"ratchet_driver_receive_context_uses_expected_sender",
-			"sender_kid: kid,",
-			"sender_kid: expected_sender_kid,",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, expected_sender_kid)",
 			"ratchet receive prechecks and effect start order",
 		),
 		(
 			"ratchet_driver_receive_context_replaces_ciphertext",
-			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
-			"let context = OpenFrameContext {\n\t\tciphertext: &[],\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(&[], associated_data, kid)",
 			"ratchet receive prechecks and effect start order",
 		),
 		(
 			"ratchet_driver_receive_context_replaces_associated_data",
-			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data,\n\t\tsender_kid: kid,\n\t};",
-			"let context = OpenFrameContext {\n\t\tciphertext,\n\t\tassociated_data: &[0; AD_SIZE],\n\t\tsender_kid: kid,\n\t};",
+			"OpenFrameContext::from_frame(ciphertext, associated_data, kid)",
+			"OpenFrameContext::from_frame(ciphertext, &[0; AD_SIZE], kid)",
 			"ratchet receive prechecks and effect start order",
 		),
 		(
@@ -12083,8 +12241,8 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_fixes_loop_iteration_count",
-			"let plaintext = loop {\n\t\teffect = match effect {",
-			"let mut remaining_iterations = 1usize;\n\tlet plaintext = loop {\n\t\tif remaining_iterations == 0 { return None; }\n\t\tremaining_iterations -= 1;\n\t\teffect = match effect {",
+			"loop {\n\t\teffect = match effect {",
+			"let mut remaining_iterations = 1usize;\n\tloop {\n\t\tif remaining_iterations == 0 { return None; }\n\t\tremaining_iterations -= 1;\n\t\teffect = match effect {",
 			"ratchet receive effect loop without fixed iteration count",
 		),
 		(
@@ -12125,50 +12283,50 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_no_material_omits_material_gate",
-			"let Some(material) = open.material() else {",
-			"let material = open.material().unwrap_or_else(|| panic!(\"material missing\"));\n\t\t\t\tif false {",
+			"let material = open.material()?;",
+			"let material = open.material().unwrap();",
 			"ratchet receive no-material rejection",
 		),
 		(
 			"ratchet_driver_receive_no_material_omits_reject",
-			"let (kernel, _) = open.reject();",
-			"let kernel = panic!(\"open reject omitted\");",
+			"let material = open.material()?;",
+			"let material = open.material().or_else(|| panic!(\"missing material\"))?;",
 			"ratchet receive no-material rejection",
 		),
 		(
 			"ratchet_driver_receive_no_material_drops_kernel",
-			"ratchet.refined.put(kernel);\n\t\t\t\t\treturn None;",
-			"drop(kernel);\n\t\t\t\t\treturn None;",
-			"ratchet receive no-material rejection",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\tratchet.refined.put(kernel);",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\tdrop(kernel);",
+			"ratchet receive returned-kernel puts",
 		),
 		(
 			"ratchet_driver_receive_no_material_puts_after_return",
-			"ratchet.refined.put(kernel);\n\t\t\t\t\treturn None;",
-			"return None;\n\t\t\t\t\tratchet.refined.put(kernel);",
-			"ratchet receive no-material rejection",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\treturn opened;",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\treturn opened;\n\t\t\t\tratchet.refined.put(kernel);",
+			"ratchet receive open and terminal publication order",
 		),
 		(
 			"ratchet_driver_receive_opens_with_wrong_material",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(panic!(), open.sequence(), open.context())",
+			"execute_open(open)",
+			"execute_open(panic!(\"wrong request\"))",
 			"ratchet receive open capability handoff",
 		),
 		(
 			"ratchet_driver_receive_opens_with_wrong_sequence",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, open.sequence().wrapping_add(1), open.context())",
+			"let key_seq = open.sequence();",
+			"let key_seq = open.sequence().wrapping_add(1);",
 			"ratchet receive open capability handoff",
 		),
 		(
 			"ratchet_driver_receive_opens_with_rebuilt_context",
-			"open_frame(material, open.sequence(), open.context())",
-			"open_frame(material, open.sequence(), &OpenFrameContext { ciphertext, associated_data, sender_kid: expected_sender_kid })",
+			"let context = open.context();",
+			"let context = replacement_context;",
 			"ratchet receive open capability handoff",
 		),
 		(
 			"ratchet_driver_receive_omits_open",
-			"let opened = open_frame(material, open.sequence(), open.context());",
-			"let opened: Option<Vec<u8>> = None;",
+			"let (kernel, opened) = execute_open(open);",
+			"let (kernel, opened) = (panic!(\"open omitted\"), None);",
 			"ratchet receive open capability handoff",
 		),
 		(
@@ -12179,25 +12337,25 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_omits_finish",
-			"let (kernel, opened) = open.finish(opened);",
-			"let (kernel, opened) = panic!(\"open finish omitted\");",
+			"open.finish(opened)",
+			"panic!(\"open finish omitted\")",
 			"ratchet receive capability finish",
 		),
 		(
 			"ratchet_driver_receive_drops_finished_kernel",
-			"ratchet.refined.put(kernel);\n\t\t\t\tbreak opened?;",
-			"drop(kernel);\n\t\t\t\tbreak opened?;",
+			"ratchet.refined.put(kernel);\n\t\t\t\treturn opened;",
+			"drop(kernel);\n\t\t\t\treturn opened;",
 			"ratchet receive returned-kernel puts",
 		),
 		(
 			"ratchet_driver_receive_questions_result_before_put",
-			"let (kernel, opened) = open.finish(opened);\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\tbreak opened?;",
-			"let (kernel, opened) = open.finish(opened);\n\t\t\t\tlet opened = opened?;\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\tbreak opened;",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\treturn opened;",
+			"let (kernel, opened) = execute_open(open);\n\t\t\t\tlet opened = opened?;\n\t\t\t\tratchet.refined.put(kernel);\n\t\t\t\treturn Some(opened);",
 			"ratchet receive open and terminal publication order",
 		),
 		(
 			"ratchet_driver_receive_returns_expected_sender_metadata",
-			"key_id: kid,",
+			"key_id: context.sender_kid,",
 			"key_id: expected_sender_kid,",
 			"ratchet receive parsed result metadata",
 		),
@@ -12239,7 +12397,7 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_moves_length_gate_after_take",
-			"if ct_len <= MESSAGE_OVERHEAD {\n\t\treturn None;\n\t}\n",
+			"let context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;\n",
 		),
 	] {
 		assert_ratchet_driver_rejected(
