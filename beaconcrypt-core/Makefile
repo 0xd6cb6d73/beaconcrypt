@@ -64,6 +64,7 @@ PROVERIF_SCENARIOS := \
 	phase2-response-binding \
 	phase2-assigned-id-weak \
 	later-sequence-registration \
+	main-registration-controls \
 	active-quantum \
 	baseline \
 	reachability \
@@ -394,6 +395,14 @@ check-proverif-later-sequence-registration: check-proverif-extraction
 			-lib $(PROVERIF_DIR)/later-sequence-registration-queries.pvl \
 			$(PROVERIF_DIR)/later-sequence-registration.pv | \
 		awk -v scenario=later-sequence-registration -f '$(PROVERIF_CHECKER)'
+
+check-proverif-main-registration-controls: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/main-registration-control-queries.pvl \
+			$(PROVERIF_DIR)/baseline.pv | \
+		awk -v scenario=main-registration-controls -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-classical-equivalence: check-proverif-extraction
 	@set -o pipefail; \

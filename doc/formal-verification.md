@@ -4,7 +4,7 @@
 
 Lean verifies panic freedom for the complete default `beaconcrypt-core` extraction and behavioral refinement for the documented synchronous core API semantics against the existing ideal PQXDH and symmetric-ratchet models. The extraction uses Hax, Charon, and Aeneas. ProVerif and SSProve provide complementary symbolic and finite probabilistic results. Concrete primitive implementations, adapters, codecs, persistence, and compiler correspondence remain outside the extracted-core proof.
 
-For detailed explanations and assumptions, see [What the proofs establish](formal-verification-analysis.md) and the [reviewed trust boundary](../beaconcrypt-core/proofs/trusted-boundary.md). The earlier staged plan and historical F* milestone descriptions are preserved in the [design history](impl/formal-verification-design-history.md).
+For the concrete dependency, constructor, erasure and storage contracts, see [the deployment boundary](deployment-boundary.md). For detailed explanations and assumptions, see [What the proofs establish](formal-verification-analysis.md) and the [reviewed trust boundary](../beaconcrypt-core/proofs/trusted-boundary.md). The earlier staged plan and historical F* milestone descriptions are preserved in the [design history](impl/formal-verification-design-history.md).
 
 ## Checked core guarantees
 
@@ -27,7 +27,7 @@ These guarantees concern the current first-order production phases, including th
 
 ProVerif checks the maintained active-classical, passive-classical, passive-quantum capability, compromise, receive-rejection/capacity, identity-binding, and negative-control scenarios. Its network and cryptographic operations are symbolic. Its finite record schedules do not replace the universal extracted-core receive proofs.
 
-The Lean computational development gives the documented CTX and PQXDH reductions under explicit primitive-game and query-accounting assumptions. SSProve independently checks finite ROM, binding, privacy, and protocol games. Neither proves the security or correctness of the concrete primitive libraries, and the documented production-width, adapter, cross-prover, and broader computational-composition gaps remain.
+The Lean computational development gives the documented CTX and PQXDH inequalities with explicit games and query accounting. The public-input fixed-HKDF/random-table endpoint is efficiently distinguishable, so those conditional inequalities do not establish negligible production advantage; the secret-input correction and remaining composition obligations are explained in the analysis. SSProve independently checks finite ROM, binding, privacy, and protocol games. Neither proves the security or correctness of the concrete primitive libraries, and the documented production-width, adapter, cross-prover, and broader computational-composition gaps remain.
 
 ## Reproducible checks
 

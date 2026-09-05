@@ -3867,14 +3867,14 @@ fn validate_registration_lifecycle(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 
 	let beacon_source = compact(&uncommented_rust(&snapshot.adapter_beacon)?);
-	let beacon_new = rust_body(&snapshot.adapter_beacon, "new")?;
+	let beacon_new = rust_body(&snapshot.adapter_beacon, "try_new")?;
 	for (wanted, label) in [
 		(
-			"identity_key:crypto_sign::KeyPair::generate().unwrap()",
+			"identity_key:crypto_sign::KeyPair::generate().map_err(|_|crate::KeyGenError)?",
 			"registration Beacon identity generation",
 		),
 		(
-			"state:BeaconState::Fresh{control:verified_pqxdh::BeaconFresh::new(verified_pqxdh::ServerBinding{identity_public_key:*id.as_bytes(),identity_key_id:server_kid,}),prekey:crypto_kx::KeyPair::generate().unwrap(),pq_key:crypto_kem::mlkem768::KeyPair::generate().unwrap(),}",
+			"state:BeaconState::Fresh{control:verified_pqxdh::BeaconFresh::new(verified_pqxdh::ServerBinding{identity_public_key:*id.as_bytes(),identity_key_id:server_kid,}),prekey:crypto_kx::KeyPair::generate().map_err(|_|crate::KeyGenError)?,pq_key:crypto_kem::mlkem768::KeyPair::generate().map_err(|_|crate::KeyGenError)?,}",
 			"registration Beacon Fresh material co-location",
 		),
 	] {
@@ -14759,8 +14759,8 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"registration_beacon_identity_generation_changes",
-			"identity_key: crypto_sign::KeyPair::generate().unwrap(),",
-			"identity_key: crypto_kx::KeyPair::generate().unwrap(),",
+			"identity_key: crypto_sign::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
+			"identity_key: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
 			"registration Beacon identity generation",
 		),
 		(
@@ -14771,19 +14771,19 @@ fn registration_lifecycle_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"registration_beacon_prekey_generation_changes",
-			"prekey: crypto_kx::KeyPair::generate().unwrap(),",
-			"prekey: crypto_kem::mlkem768::KeyPair::generate().unwrap(),",
+			"prekey: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
+			"prekey: crypto_kem::mlkem768::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
 			"registration Beacon Fresh material co-location",
 		),
 		(
 			"registration_beacon_pq_generation_changes",
-			"pq_key: crypto_kem::mlkem768::KeyPair::generate().unwrap(),",
-			"pq_key: crypto_kx::KeyPair::generate().unwrap(),",
+			"pq_key: crypto_kem::mlkem768::KeyPair::generate()\n\t\t\t\t\t.map_err(|_| crate::KeyGenError)?,",
+			"pq_key: crypto_kx::KeyPair::generate().map_err(|_| crate::KeyGenError)?,",
 			"registration Beacon Fresh material co-location",
 		),
 	] {
 		assert_registration_lifecycle_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(&mut snapshot.adapter_beacon, "pub fn new(", from, to);
+			replace_once_after(&mut snapshot.adapter_beacon, "pub fn try_new(", from, to);
 		});
 		mutation_count += 1;
 	}

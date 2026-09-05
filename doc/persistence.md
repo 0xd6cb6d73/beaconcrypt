@@ -26,6 +26,8 @@ Go uses `Server.ExportState` and `NewServerFromState`. C uses `beaconcrypt_serve
 
 The exported value is a binary version-2 snapshot envelope, not a bare JSON document. It contains a format identifier, a lineage identifier, a monotonic generation, the previous snapshot's digest, a payload length, and the canonical JSON server-state payload. The digest identifies exact snapshot bytes and links generations; because it is unkeyed, it does not authenticate snapshots obtained outside trusted storage.
 
+Store implementations can call `replacement.validate_successor(expected)` to validate the envelope, exact next generation, same lineage and complete parent digest before accepting a replacement. The in-memory binding store uses this check. It must run in the same transaction as comparison with the authoritative current head; it supplies neither payload authentication nor external freshness, durability or linearizability. [The deployment boundary](deployment-boundary.md) describes the separate requirements and the limits of buffer erasure and fallible construction.
+
 The decoded JSON payload has the following shape:
 
 ```json
