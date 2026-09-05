@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=125
+	[handwritten-lean]=126
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3242,7 +3242,7 @@ done
 require_line_count 4 '^#guard_msgs in$' "$ctx_unclaimed_acceptance" \
 	"ciphertext-only CTX guarded axiom audits"
 
-for adaptive_ctx_module in AdaptiveCtxReceive AdaptiveCtxCanonical AdaptiveCtxQueryBounds; do
+for adaptive_ctx_module in AdaptiveCtxReceive AdaptiveCtxCanonical AdaptiveCtxQueryBounds AdaptiveCtxIndependent; do
 	require_line_count 1 "^import BeaconcryptCore\\.Computational\\.${adaptive_ctx_module}$" \
 		"$lean_root" "adaptive CTX ${adaptive_ctx_module} proof-root import"
 done
@@ -3270,6 +3270,16 @@ for theorem_name in wrapped_seal_bound sourceWork_bound wrapped_uniform_pair_bou
 done
 require_line_count 3 '^#guard_msgs in$' "$adaptive_ctx_query_bounds" \
 	"adaptive CTX resource guarded axiom audits"
+
+adaptive_ctx_independent=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxIndependent.lean
+for theorem_name in linked_preserves_aligned linked_projection linkedGame_projection \
+	linkedGame_aligned uniformIndependentGame_distance_le_intctxt_sum \
+	uniformIndependentGame_bound_and_query_accounting indexedReduction_challenger_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		"$adaptive_ctx_independent" "direct adaptive CTX simulation theorem ${theorem_name}"
+done
+require_line_count 5 '^#guard_msgs in$' "$adaptive_ctx_independent" \
+	"direct adaptive CTX simulation guarded axiom audits"
 
 ctx_computational_privacy=proofs/lean/BeaconcryptCore/Computational/CtxComputationalPrivacy.lean
 for declaration in CtxPrivacyAdversary CtxPrivacyQueryAccounting; do
