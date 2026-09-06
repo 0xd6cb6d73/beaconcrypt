@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=126
+	[handwritten-lean]=127
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3541,6 +3541,19 @@ for theorem_pattern in 'arguments_some' 'arguments_none' 'adapter_missing' 'adap
 		"source owner theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxWholeOwner[.]${theorem_pattern}$" \
 		"$owner_module" "source owner dependency ${theorem_pattern}"
+done
+
+# HB-91 follow-on: arbitrary-response target/context and successful raw-result provenance.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxOwnerProvenance.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxOwnerProvenance$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxOwnerProvenance root import"
+require_line_count 12 '^theorem ' "$owner_module" "RawCtxOwnerProvenance theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$owner_module" "RawCtxOwnerProvenance guarded dependencies"
+for theorem_pattern in 'validated_target' 'resume_scope' 'plan_target' 'begin_scope' 'oracle_resume_scope' 'oracle_begin_scope' 'supported_success' 'receive_success' 'adapter_success' 'receive_adapter_success' 'raw_success' 'raw_success_metadata'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source provenance theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOwnerProvenance[.]${theorem_pattern}$" \
+		"$owner_module" "source provenance dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

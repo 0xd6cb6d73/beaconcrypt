@@ -27,6 +27,7 @@ import BeaconcryptCore.Computational.RawCtxOwnerResult
 import BeaconcryptCore.Computational.RawCtxOwnerEffects
 import BeaconcryptCore.Computational.RawCtxOwnerOracle
 import BeaconcryptCore.Computational.RawCtxWholeOwner
+import BeaconcryptCore.Computational.RawCtxOwnerProvenance
 import BeaconcryptCore.Computational.PqxdhHiddenRoot
 import BeaconcryptCore.Computational.PqxdhProjectionCollisions
 import BeaconcryptCore.Computational.PqxdhKemIndCca
