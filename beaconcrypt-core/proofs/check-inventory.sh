@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=125
+	[handwritten-lean]=126
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3362,6 +3362,17 @@ require_line_count 17 '^#guard_msgs in$' "$adaptive_bidirectional" "adaptive bid
 for theorem_name in sourceView_tapeView actualGame_eq_initialized final_bidirectional_eq_eager adaptive_initialized_advantage_bound sourceRun_uniform_bound tapeRun_uniform_bound tapeObserver_uniform_bound actualGame_uniform_bound eagerGame_uniform_bound sourceImpl_requests sourceRun_requests_bound adaptiveInitialReduction_query_bounds adaptiveLeftReduction_query_bounds adaptiveRightReduction_query_bounds adaptiveInitialChallenger_query_bounds adaptiveLeftChallenger_query_bounds adaptiveRightChallenger_query_bounds; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_bidirectional" "adaptive bidirectional theorem ${theorem_name}"
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAdaptiveBidirectionalChains.${theorem_name}$" "$adaptive_bidirectional" "adaptive bidirectional dependency ${theorem_name}"
+done
+
+# Joint eager material key aliases retain both original tapes and the whole observation.
+material_keys=proofs/lean/BeaconcryptCore/Computational/PqxdhMaterialKeyCollisions.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions$' \
+	proofs/lean/BeaconcryptCore.lean "material key-collision root import"
+require_line_count 17 '^theorem ' "$material_keys" "material key-collision theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$material_keys" "material key-collision guarded dependencies"
+for theorem_name in material_key_eq material_key_mem sampleMaterials_length keyCollision_append sampleMaterials_collision_bound sampleMaterials_append sampleTapes_collision_bound observedTapes_collision_bound material_key_card observedTapes_collision_bound256 observedEager_projection observedEager_collision_bound keyPositions_injective sampleTapes_lengths observedTapes_lengths observedTapes_uniform_bound observedEager_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$material_keys" "material key-collision theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.${theorem_name}$" "$material_keys" "material key-collision dependency ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
