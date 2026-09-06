@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=136
+	[handwritten-lean]=137
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3404,5 +3404,15 @@ for theorem_name in route_complete lazy_eager_history_complete dynamic_reserved_
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.${theorem_name}$" "$joint_dynamic_routing" "dynamic identity routing dependency audit ${theorem_name}"
 done
 require_line_count 9 '^#guard_msgs in$' "$joint_dynamic_routing" "dynamic identity routing guarded audits"
+
+# Dynamic reports retain earlier source observations and permit later compromise.
+joint_dynamic_reports=proofs/lean/BeaconcryptCore/Computational/PqxdhDynamicIdentityReports.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDynamicIdentityReports$' \
+	proofs/lean/BeaconcryptCore.lean "dynamic identity report root import"
+for theorem_name in source_snapshot_step reportAccepted_iff_source occurred_probability_le_stopped reporting_advantage_le_identity_sum reportingRun_occurred reportingReduction_query_bound reportingReductionGame_uniform_bound reportingExecution_report_bound reportingRun_uniform_bound reportingExecution_trace_bound reporting_advantage_le_identity_count; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_dynamic_reports" "dynamic identity report theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.${theorem_name}$" "$joint_dynamic_reports" "dynamic identity report dependency audit ${theorem_name}"
+done
+require_line_count 11 '^#guard_msgs in$' "$joint_dynamic_reports" "dynamic identity report guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
