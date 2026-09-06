@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=131
+	[handwritten-lean]=132
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3605,6 +3605,19 @@ for theorem_pattern in 'baseOpen_combined' 'hashInput_extracted' 'hashInput_leng
 		"source opening theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSourceOpen[.]${theorem_pattern}$" \
 		"$owner_module" "source opening dependency ${theorem_pattern}"
+done
+
+# HB-91: exact source send effects, failed-seal advancement and adaptive application accounting.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSourceSend.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSourceSend$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxSourceSend root import"
+require_line_count 21 '^theorem ' "$owner_module" "RawCtxSourceSend theorem inventory"
+require_line_count 21 '^#guard_msgs in$' "$owner_module" "RawCtxSourceSend guarded dependencies"
+for theorem_pattern in 'beginSend_exact' 'resumeSend_exact' 'requested_support' 'resumeSend_fields' 'send_exhausted' 'beginSend_fields' 'send_nonexhausted_support' 'program_kdf_bound' 'program_seal_bound' 'sourceDriver_exact' 'arguments_exact' 'encrypted_fields' 'sendOwner_empty' 'sendGame_publication' 'adapter_bound' 'selected_bounds' 'sendOwner_bound' 'application_bounds' 'application_interpretation' 'application_schedule_interpretation' 'sendGame_active_state'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source send theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSourceSend[.]${theorem_pattern}$" \
+		"$owner_module" "source send dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
