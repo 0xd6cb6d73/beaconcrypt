@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=133
+	[handwritten-lean]=134
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3631,6 +3631,19 @@ for theorem_pattern in 'program_scoped' 'receive_scoped' 'program_congr' 'argume
 		"opening occurrence theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOpeningOccurrence[.]${theorem_pattern}$" \
 		"$owner_module" "opening occurrence dependency ${theorem_pattern}"
+done
+
+# HB-91: actual source sealing order, complete callback states and adaptive inner-work accounting.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSourceSeal.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSourceSeal$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxSourceSeal root import"
+require_line_count 18 '^theorem ' "$owner_module" "RawCtxSourceSeal theorem inventory"
+require_line_count 18 '^#guard_msgs in$' "$owner_module" "RawCtxSourceSeal guarded dependencies"
+for theorem_pattern in 'sealInput_success' 'sealInput_bound' 'hashInput_extracted' 'hashInput_length' 'frame_fields' 'frame_record' 'sealInput_run' 'sealLift_bound' 'sealLift_no_kdf' 'nativeAdapter_kdf_bound' 'nativeAdapter_seal_bound' 'nativeSend_bounds' 'nativeSchedule_bounds' 'nativeOwner_interpretation' 'nativeSchedule_interpretation' 'sealLift_apply' 'adapter_success_primitives' 'send_success_primitives'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source sealing theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSourceSeal[.]${theorem_pattern}$" \
+		"$owner_module" "source sealing dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
