@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=139
+	[handwritten-lean]=140
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3434,5 +3434,15 @@ for theorem_name in translateReport_event run_complete run_compatible run_event 
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointPhase1Reports.${theorem_name}$" "$joint_phase1_reports" "joint Phase1 report dependency audit ${theorem_name}"
 done
 require_line_count 16 '^#guard_msgs in$' "$joint_phase1_reports" "joint Phase1 report guarded audits"
+
+# Optional source acceptance preserves full replies and erases only public instrumentation.
+phase1_acceptance=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase1AcceptanceOracle.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle$' \
+	proofs/lean/BeaconcryptCore.lean "PqxdhPhase1AcceptanceOracle root import"
+for theorem_name in acceptanceImpl_eq actualRun_eq instrument_query_bound instrumentedClient_query_bound acceptance_advantage_le_sum sourceCandidate_erase sourceIdentity_erase acceptanceImpl_erase actualRun_erase reduction_query_bound reductionGame_uniform_bound actualRun_uniform_bound bareRun_uniform_bound actualRun_attempt_bound actualRun_occurred instrumentedClient_total_bound actualRun_request_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$phase1_acceptance" "Phase1 acceptance theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.${theorem_name}$" "$phase1_acceptance" "Phase1 acceptance dependency audit ${theorem_name}"
+done
+require_line_count 17 '^#guard_msgs in$' "$phase1_acceptance" "Phase1 acceptance guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
