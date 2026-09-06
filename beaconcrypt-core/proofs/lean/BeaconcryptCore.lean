@@ -224,6 +224,10 @@ import BeaconcryptCore.Computational.RawCtxRevealPositions
 import BeaconcryptCore.Computational.RawKeyPartition
 import BeaconcryptCore.Computational.AdaptiveRawKeySelection
 import BeaconcryptCore.Computational.AdaptiveRawMultiKeyIntegrity
+import BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily
+import BeaconcryptCore.Computational.PqxdhCorrelatedExtractQueryBounds
+import BeaconcryptCore.Computational.RawCtxConsumptionGate
+import BeaconcryptCore.Computational.RawCtxPositionedOpening
 /-!
 # Beaconcrypt-core verification root
 

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=240
+	[handwritten-lean]=244
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4816,5 +4816,44 @@ require_line_count 14 '^#guard_msgs in$' "$raw_key_selection_module" "AdaptiveRa
 for theorem_name in hybrid_before hybrid_after hop_distance hop_bound family_bound first_flags final_flags selected_source_bound global_attempt_bound uniform_advantage_bound ordinary_reduction_bounds source_uniform_step source_run_uniform source_uniform_bound; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveRawMultiKeyIntegrity.${theorem_name}$" "$raw_key_selection_module" "raw key selection dependency ${theorem_name}"
 done
+
+extract_family_module=proofs/lean/BeaconcryptCore/Computational/PqxdhCorrelatedExtractFamily.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily$' proofs/lean/BeaconcryptCore.lean "PqxdhCorrelatedExtractFamily root import"
+require_line_count 15 '^#guard_msgs in$' "$extract_family_module" "PqxdhCorrelatedExtractFamily guarded dependencies"
+for theorem_name in familyInput_source familyInput_length root_real coins_real post_real post_complete resume_real reduction_real real_eq_correlated correlated_advantage_eq familyInput_message_injective familyInput_eq_iff random_hit random_miss authenticated_family_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$extract_family_module" "correlated Extract theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily.${theorem_name}$" "$extract_family_module" "correlated Extract dependency ${theorem_name}"
+done
+
+extract_family_module=proofs/lean/BeaconcryptCore/Computational/PqxdhCorrelatedExtractQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhCorrelatedExtractQueryBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhCorrelatedExtractQueryBounds root import"
+require_line_count 18 '^#guard_msgs in$' "$extract_family_module" "PqxdhCorrelatedExtractQueryBounds guarded dependencies"
+for theorem_name in coins_uniform coins_family root_bounds post_uniform_step post_uniform_run post_uniform_bound post_family_step post_family_bound prepare_uniform_bound resume_bounds reduction_bounds real_step real_run_uniform realGame_uniform_bound random_step random_run_uniform randomGame_uniform_bound reduction_uniform_ledger; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$extract_family_module" "correlated Extract theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhCorrelatedExtractQueryBounds.${theorem_name}$" "$extract_family_module" "correlated Extract dependency ${theorem_name}"
+done
+
+
+# HB-91: an explicit consumed-position guard is the exact reachable source program.
+consumption_gate=proofs/lean/BeaconcryptCore/Computational/RawCtxConsumptionGate.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxConsumptionGate$' proofs/lean/BeaconcryptCore.lean "Consumption guard root import"
+require_line_count 9 '^theorem ' "$consumption_gate" "Consumption guard theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$consumption_gate" "Consumption guard guarded dependencies"
+for theorem_name in receive_spent rawReceive_spent rawGame_spent tracked_raw_spent gated_step gated_schedule gated_source_erasure gated_query_bounds initialized_erasure; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$consumption_gate" "Consumption guard theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxConsumptionGate[.]${theorem_name}$" "$consumption_gate" "Consumption guard dependency ${theorem_name}"
+done
+
+
+# HB-91: every reached source opening retains its exact original material position.
+positioned_opening=proofs/lean/BeaconcryptCore/Computational/RawCtxPositionedOpening.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxPositionedOpening$' proofs/lean/BeaconcryptCore.lean "Positioned opening root import"
+require_line_count 16 '^theorem ' "$positioned_opening" "Positioned opening theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$positioned_opening" "Positioned opening guarded dependencies"
+for theorem_name in prefix_scope receive_prefix receive_positioned_congr bare_receive_positioned_congr arguments_positioned adapter_positioned_congr primitive_bare owner_receive_positioned_congr raw_positioned_congr rawGame_positioned_congr source_kdf source_raw_positioned_congr atPosition_eq source_raw_positioned atPosition_bytes source_positioned_query_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$positioned_opening" "Positioned opening theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxPositionedOpening[.]${theorem_name}$" "$positioned_opening" "Positioned opening dependency ${theorem_name}"
+done
+
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
