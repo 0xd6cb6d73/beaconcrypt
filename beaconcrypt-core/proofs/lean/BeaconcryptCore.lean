@@ -221,6 +221,9 @@ import BeaconcryptCore.Computational.AdaptiveRawKeyFamily
 import BeaconcryptCore.Computational.AdaptiveRawKeyPreparation
 import BeaconcryptCore.Computational.RawCtxReceiveConsumption
 import BeaconcryptCore.Computational.RawCtxRevealPositions
+import BeaconcryptCore.Computational.RawKeyPartition
+import BeaconcryptCore.Computational.AdaptiveRawKeySelection
+import BeaconcryptCore.Computational.AdaptiveRawMultiKeyIntegrity
 /-!
 # Beaconcrypt-core verification root
 

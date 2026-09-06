@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=237
+	[handwritten-lean]=240
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4795,5 +4795,26 @@ for theorem_name in selected_positions chain_reveal_positions skipped_reveal_pos
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxRevealPositions[.]${theorem_name}$" "$reveal_positions" "Reveal positions dependency ${theorem_name}"
 done
 
+
+raw_key_selection_module=proofs/lean/BeaconcryptCore/Computational/RawKeyPartition.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawKeyPartition$' proofs/lean/BeaconcryptCore.lean "RawKeyPartition root import"
+require_line_count 8 '^#guard_msgs in$' "$raw_key_selection_module" "RawKeyPartition guarded dependencies"
+for theorem_name in join_target join_other sampled_partition partition_continuation join_selected_update join_other_update join_constant join_reconstruct; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawKeyPartition.${theorem_name}$" "$raw_key_selection_module" "raw key selection dependency ${theorem_name}"
+done
+
+raw_key_selection_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveRawKeySelection.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveRawKeySelection$' proofs/lean/BeaconcryptCore.lean "AdaptiveRawKeySelection root import"
+require_line_count 10 '^#guard_msgs in$' "$raw_key_selection_module" "AdaptiveRawKeySelection guarded dependencies"
+for theorem_name in selected_step selected_schedule fixed_source_selection source_prepared_selection selection_step_bound selection_bound selected_integrity selection_target_class selection_uniform_class selected_reduction_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveRawKeySelection.${theorem_name}$" "$raw_key_selection_module" "raw key selection dependency ${theorem_name}"
+done
+
+raw_key_selection_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveRawMultiKeyIntegrity.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveRawMultiKeyIntegrity$' proofs/lean/BeaconcryptCore.lean "AdaptiveRawMultiKeyIntegrity root import"
+require_line_count 14 '^#guard_msgs in$' "$raw_key_selection_module" "AdaptiveRawMultiKeyIntegrity guarded dependencies"
+for theorem_name in hybrid_before hybrid_after hop_distance hop_bound family_bound first_flags final_flags selected_source_bound global_attempt_bound uniform_advantage_bound ordinary_reduction_bounds source_uniform_step source_run_uniform source_uniform_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveRawMultiKeyIntegrity.${theorem_name}$" "$raw_key_selection_module" "raw key selection dependency ${theorem_name}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
