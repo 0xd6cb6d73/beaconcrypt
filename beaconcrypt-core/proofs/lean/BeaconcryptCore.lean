@@ -131,6 +131,9 @@ import BeaconcryptCore.Refinement.RatchetRestoreStructural
 import BeaconcryptCore.Refinement.RatchetRestoreSurface
 import BeaconcryptCore.Refinement.RatchetRestoreProvenance
 
+import BeaconcryptCore.Computational.AdaptiveCtxPrivacyGuard
+import BeaconcryptCore.Computational.AdaptiveCtxPrivacyQueryBounds
+
 /-!
 # Beaconcrypt-core verification root
 

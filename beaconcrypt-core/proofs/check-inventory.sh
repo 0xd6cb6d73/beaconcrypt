@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=144
+	[handwritten-lean]=146
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3579,5 +3579,25 @@ for theorem_name in runLogged_bind runLogged_no_plaintext sealStep_plaintext_bou
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxPlaintextQueryBounds.${theorem_name}$" "$adaptive_ctx_plaintext_query_bounds" "AdaptiveCtxPlaintextQueryBounds dependency audit ${theorem_name}"
 done
 require_line_count 9 '^#guard_msgs in$' "$adaptive_ctx_plaintext_query_bounds" "AdaptiveCtxPlaintextQueryBounds guarded audits"
+
+
+# Boolean adaptive CTX privacy projects the analysis key away before ciphertext replacement.
+adaptive_ctx_privacy_guard=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxPrivacyGuard.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxPrivacyGuard$' \
+	proofs/lean/BeaconcryptCore.lean "AdaptiveCtxPrivacyGuard root import"
+for theorem_name in guardedClient_query_bound guardedRaw_eq_replay loggedImpl_recordReply guard_query_complete guard_run_complete guardedGame_complete retainedGuard_complete viewReduction_real_eq replay_random_advantage canonical_replay_advantage_bound canonical_random_advantage_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_ctx_privacy_guard" "AdaptiveCtxPrivacyGuard theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxPrivacyGuard.${theorem_name}$" "$adaptive_ctx_privacy_guard" "AdaptiveCtxPrivacyGuard dependency audit ${theorem_name}"
+done
+require_line_count 11 '^#guard_msgs in$' "$adaptive_ctx_privacy_guard" "AdaptiveCtxPrivacyGuard guarded audits"
+
+adaptive_ctx_privacy_query_bounds=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxPrivacyQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxPrivacyQueryBounds$' \
+	proofs/lean/BeaconcryptCore.lean "AdaptiveCtxPrivacyQueryBounds root import"
+for theorem_name in viewReduction_seal_bound viewReduction_uniform_bound viewReal_uniform_bound guard_plaintext_step sourcePlaintext_bind guardRun_plaintext_bound guardedClient_plaintext_bound viewReduction_plaintext_bound viewRandom_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_ctx_privacy_query_bounds" "AdaptiveCtxPrivacyQueryBounds theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxPrivacyQueryBounds.${theorem_name}$" "$adaptive_ctx_privacy_query_bounds" "AdaptiveCtxPrivacyQueryBounds dependency audit ${theorem_name}"
+done
+require_line_count 9 '^#guard_msgs in$' "$adaptive_ctx_privacy_query_bounds" "AdaptiveCtxPrivacyQueryBounds guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
