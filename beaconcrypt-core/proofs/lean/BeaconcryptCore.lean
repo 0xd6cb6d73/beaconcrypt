@@ -206,6 +206,9 @@ import BeaconcryptCore.Computational.RawCtxProtocolRoles
 import BeaconcryptCore.Computational.RawCtxProtocolBudgets
 import BeaconcryptCore.Computational.RawCtxProtocolUniform
 
+import BeaconcryptCore.Computational.PqxdhJointGapDh
+import BeaconcryptCore.Computational.KemValueClasses
+import BeaconcryptCore.Computational.RawCtxMaterialPositions
 /-!
 # Beaconcrypt-core verification root
 

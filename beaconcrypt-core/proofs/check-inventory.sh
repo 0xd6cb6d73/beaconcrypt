@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=222
+	[handwritten-lean]=225
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4649,5 +4649,37 @@ for theorem in beacon_uniform beacon_source_uniform source_step schedule_uniform
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxProtocolUniform[.]${theorem_pattern}$" \
 		"$owner_module" "RawCtxProtocolUniform.${theorem} dependency report"
 done
+
+gap_dh_module=proofs/lean/BeaconcryptCore/Computational/PqxdhJointGapDh.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointGapDh$' proofs/lean/BeaconcryptCore.lean "Joint native Gap-DH root import"
+require_line_count 39 '^#guard_msgs in$' "$gap_dh_module" "Joint native Gap-DH guarded dependencies"
+for theorem_name in service_step scan_full scan_complete wins_none wins_zero failed_target target_agreement scanResult_wins service_uniform_step run_uniform sampleScalar_uniform game_uniform assemble_length read_first read_third assemble_eq_iff sourceInput_some_iff candidateCoordinates_some_iff sourceInput_assembled_iff testInputResult_exact testInput_full scan_query_bound scan_excludes testInput_query_bound testInput_excludes testOutcome_value testInput_continuation scan_final extraction_game candidate_success_eq_advantage extractor_class_bound extractor_excludes extractor_uniform extractor_signing extractor_game_uniform static_alias_decision assemble_source source_target_input; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$gap_dh_module" "joint Gap-DH theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointGapDh.${theorem_name}$" "$gap_dh_module" "joint Gap-DH dependency ${theorem_name}"
+done
+require_line_count 1 '^def sourceInterface ' "$gap_dh_module" "Joint Gap-DH functional source construction"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhJointGapDh.sourceInterface$' "$gap_dh_module" "Joint Gap-DH source construction dependency"
+
+
+# Actual-value classes retain every optional reply, equality branch and primitive query.
+value_classes=proofs/lean/BeaconcryptCore/Computational/KemValueClasses.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.KemValueClasses$' proofs/lean/BeaconcryptCore.lean "KemValueClasses root import"
+require_line_count 21 '^#guard_msgs in$' "$value_classes" "KemValueClasses guarded dependencies"
+for theorem_name in intern_value intern_extends mem_intern intern_existing intern_fresh intern_transition intern_nodup intern_preserves_lookup intern_length record_nodup record_preserves_lookup record_length classes_eq_iff sequential_classes_eq_iff branch_eq annotated_step annotated_execution annotated_query_bounds annotated_supported_nodup optional_pair_run optional_pair_length; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$value_classes" "KemValueClasses theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.KemValueClasses.${theorem_name}$" "$value_classes" "KemValueClasses dependency ${theorem_name}"
+done
+
+
+# Actual source material positions, private request history and full callback-state preservation.
+material_positions=proofs/lean/BeaconcryptCore/Computational/RawCtxMaterialPositions.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxMaterialPositions$' proofs/lean/BeaconcryptCore.lean "Material positions root import"
+require_line_count 30 '^theorem ' "$material_positions" "Material positions theorem inventory"
+require_line_count 30 '^#guard_msgs in$' "$material_positions" "Material positions guarded dependencies"
+for theorem_name in prefix_complete opened_complete positionedRequests_succ positionedRequests_chainAt positionedRequests_length future_positioned_prefix future_positioned_run cached_positioned_run send_requested_complete send_positioned_run receive_query_erase receive_complete_erase send_query_erase send_complete_erase source_position_bytes retry_complete future_retry cached_finish_positioned future_finish_positioned receive_preserves_positions send_preserves_positions source_receive_handler source_receive_complete source_send_handler source_send_complete beacon_initial_positions server_initial_positions receive_query_bounds send_query_bounds source_response_at_position; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$material_positions" "material position theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxMaterialPositions.${theorem_name}$" "$material_positions" "material position dependency ${theorem_name}"
+done
+
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
