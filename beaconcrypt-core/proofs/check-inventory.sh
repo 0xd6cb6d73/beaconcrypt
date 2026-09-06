@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=137
+	[handwritten-lean]=138
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3414,5 +3414,15 @@ for theorem_name in source_snapshot_step reportAccepted_iff_source occurred_prob
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.${theorem_name}$" "$joint_dynamic_reports" "dynamic identity report dependency audit ${theorem_name}"
 done
 require_line_count 11 '^#guard_msgs in$' "$joint_dynamic_reports" "dynamic identity report guarded audits"
+
+# Known-seed owners preserve complete generated state and retain all local source work.
+known_identity_imports=proofs/lean/BeaconcryptCore/Computational/PqxdhKnownIdentityImports.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhKnownIdentityImports$' \
+	proofs/lean/BeaconcryptCore.lean "known identity imports root import"
+for theorem_name in run_complete report_advantage_le_sum reduction_query_bound reductionGame_uniform_bound run_uniform_bound run_trace_bound import_source imported_service_source imported_reveal_source imported_report_source report_advantage_le_count; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$known_identity_imports" "known identity imports theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhKnownIdentityImports.${theorem_name}$" "$known_identity_imports" "known identity imports dependency audit ${theorem_name}"
+done
+require_line_count 11 '^#guard_msgs in$' "$known_identity_imports" "known identity imports guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
