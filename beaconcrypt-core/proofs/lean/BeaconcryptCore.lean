@@ -213,6 +213,10 @@ import BeaconcryptCore.Computational.RawCtxProtocolReveals
 import BeaconcryptCore.Computational.RawCtxRevealBudgets
 import BeaconcryptCore.Computational.PqxdhChallengeSecretRouting
 import BeaconcryptCore.Computational.PqxdhChallengeSecretQueryBounds
+import BeaconcryptCore.Computational.RawCtxPositionedOwner
+import BeaconcryptCore.Computational.RawCtxProtocolPositions
+import BeaconcryptCore.Computational.PqxdhCorrelatedRootSource
+import BeaconcryptCore.Computational.PqxdhCorrelatedRootQueryBounds
 /-!
 # Beaconcrypt-core verification root
 

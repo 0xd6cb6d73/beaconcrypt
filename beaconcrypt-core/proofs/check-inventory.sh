@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=229
+	[handwritten-lean]=233
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4718,6 +4718,44 @@ require_line_count 12 '^#guard_msgs in$' "$challenge_secret_module" "PqxdhChalle
 for theorem_name in route_step route_class_bound route_public_bound route_decapsulation_bound reduction_bounds fixed_world_uniform_bound actual_step_uniform actual_run_uniform actual_post_uniform source_uniform_bound native_uniform_bound fair_uniform_bound; do
 	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$challenge_secret_module" "challenge secret theorem ${theorem_name}"
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhChallengeSecretQueryBounds.${theorem_name}$" "$challenge_secret_module" "challenge secret dependency ${theorem_name}"
+done
+
+
+# Actual source positions through complete owner and replicated-role execution.
+position_module=proofs/lean/BeaconcryptCore/Computational/RawCtxPositionedOwner.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxPositionedOwner$' proofs/lean/BeaconcryptCore.lean "RawCtxPositionedOwner root import"
+require_line_count 12 '^theorem ' "$position_module" "RawCtxPositionedOwner theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$position_module" "RawCtxPositionedOwner guarded dependencies"
+for theorem_name in receive_positions send_positions raw_positions sendOwner_positions shared_receiveNative step_positions schedule_positions positioned_chains positioned_slot initialized_positions initialized_schedule positioned_slot_bytes; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$position_module" "RawCtxPositionedOwner theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxPositionedOwner[.]${theorem_name}$" "$position_module" "RawCtxPositionedOwner dependency ${theorem_name}"
+done
+
+# Actual source positions through complete owner and replicated-role execution.
+position_module=proofs/lean/BeaconcryptCore/Computational/RawCtxProtocolPositions.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxProtocolPositions$' proofs/lean/BeaconcryptCore.lean "RawCtxProtocolPositions root import"
+require_line_count 8 '^theorem ' "$position_module" "RawCtxProtocolPositions theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$position_module" "RawCtxProtocolPositions guarded dependencies"
+for theorem_name in putPeer_positions server_raw_positions server_send_positions server_step_positions beacon_step_positions family_positions protocol_step_positions protocol_schedule_positions; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$position_module" "RawCtxProtocolPositions theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxProtocolPositions[.]${theorem_name}$" "$position_module" "RawCtxProtocolPositions dependency ${theorem_name}"
+done
+
+
+correlated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhCorrelatedRootSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhCorrelatedRootSource$' proofs/lean/BeaconcryptCore.lean "PqxdhCorrelatedRootSource root import"
+require_line_count 10 '^#guard_msgs in$' "$correlated_root_module" "PqxdhCorrelatedRootSource guarded dependencies"
+for theorem_name in sourcePost_interpreter sourcePost_complete nativeTarget_eq_total actualGame_eq_total finishTarget_actual dispatch_complete_eq_source filteredSource_eq_sourceMain continuedSource_filtered authentication_hop authenticated_correlated_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$correlated_root_module" "correlated source theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhCorrelatedRootSource.${theorem_name}$" "$correlated_root_module" "correlated source dependency ${theorem_name}"
+done
+
+correlated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhCorrelatedRootQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhCorrelatedRootQueryBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhCorrelatedRootQueryBounds root import"
+require_line_count 27 '^#guard_msgs in$' "$correlated_root_module" "PqxdhCorrelatedRootQueryBounds guarded dependencies"
+for theorem_name in localCoins_uniform localCoins_excluded localSource_uniform_step localSource_uniform_bound localSource_class_step localSource_class_bound sourcePost_step sourcePost_bound localObserve_bounds sourcePost_public_bound sourcePost_decapsulation_bound observe_bounds acceptedCommon_bound allCandidateCommon_bound dispatch_bound rootProtocol_prefix_bound targetAfterEncapsulation_bound nativeNext_bound rootProtocol_resume_bounds rootProtocol_reduction_bounds actualGame_uniform_bound actualGame_uniform_from_calls rootProtocol_sampler_bounds randomMain_eq_branchMain correlated_world_ledger ccaAmbient_no_decap nativeNext_observer_bounds; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$correlated_root_module" "correlated source theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhCorrelatedRootQueryBounds.${theorem_name}$" "$correlated_root_module" "correlated source dependency ${theorem_name}"
 done
 
 
