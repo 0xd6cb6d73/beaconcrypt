@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=142
+	[handwritten-lean]=144
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3559,5 +3559,25 @@ for theorem_name in flaggedImpl_uniform_step flaggedRun_uniform_bound stoppedRun
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxAliasQueryBounds.${theorem_name}$" "$adaptive_ctx_alias_query_bounds" "AdaptiveCtxAliasQueryBounds dependency audit ${theorem_name}"
 done
 require_line_count 7 '^#guard_msgs in$' "$adaptive_ctx_alias_query_bounds" "AdaptiveCtxAliasQueryBounds guarded audits"
+
+
+# Complete random validation sampling requires an explicit source plaintext-byte budget.
+nonce_aead_random_query_bounds=proofs/lean/BeaconcryptCore/Computational/NonceAeadRandomQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.NonceAeadRandomQueryBounds$' \
+	proofs/lean/BeaconcryptCore.lean "NonceAeadRandomQueryBounds root import"
+for theorem_name in randomSeal_uniform_bound randomImpl_uniform_step randomRun_uniform_bound randomExperiment_uniform_bound plaintext_bind plaintext_simulate no_seal_plaintext_zero lifted_probability_plaintext_zero; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$nonce_aead_random_query_bounds" "NonceAeadRandomQueryBounds theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.NonceAeadRandomQueryBounds.${theorem_name}$" "$nonce_aead_random_query_bounds" "NonceAeadRandomQueryBounds dependency audit ${theorem_name}"
+done
+require_line_count 8 '^#guard_msgs in$' "$nonce_aead_random_query_bounds" "NonceAeadRandomQueryBounds guarded audits"
+
+adaptive_ctx_plaintext_query_bounds=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxPlaintextQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxPlaintextQueryBounds$' \
+	proofs/lean/BeaconcryptCore.lean "AdaptiveCtxPlaintextQueryBounds root import"
+for theorem_name in runLogged_bind runLogged_no_plaintext sealStep_plaintext_bound sourceStep_plaintext_bound loggedSource_plaintext_bound sourceClient_plaintext_bound validationSeal_plaintext_zero validationReduction_plaintext_bound validationRandom_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_ctx_plaintext_query_bounds" "AdaptiveCtxPlaintextQueryBounds theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxPlaintextQueryBounds.${theorem_name}$" "$adaptive_ctx_plaintext_query_bounds" "AdaptiveCtxPlaintextQueryBounds dependency audit ${theorem_name}"
+done
+require_line_count 9 '^#guard_msgs in$' "$adaptive_ctx_plaintext_query_bounds" "AdaptiveCtxPlaintextQueryBounds guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
