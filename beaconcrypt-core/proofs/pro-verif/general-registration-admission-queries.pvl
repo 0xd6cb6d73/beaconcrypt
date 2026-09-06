@@ -1,0 +1,99 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Every accepted initial target shares the authenticated cryptographic session. Numeric claimed and originally assigned IDs intentionally remain distinct. *)
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring,
+      qga_frame: bitstring, qga_response: bitstring, qga_claimed: key_id, qga_assigned: key_id;
+  inj-event(GeneralAdmissionCompleted(qga_agreement, qga_seq, qga_payload, qga_frame, qga_response, qga_claimed)) ==>
+  inj-event(GeneralAdmissionSessionOrigin(qga_agreement, qga_assigned)).
+
+(* Acceptance authenticates the exact decoded record fields and full plaintext under that session. crypto_frame equality does not assert byte-identical Cap'n Proto serialization. *)
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring,
+      qga_frame: bitstring, qga_response: bitstring, qga_claimed: key_id, qga_assigned: key_id;
+  inj-event(GeneralAdmissionCompleted(qga_agreement, qga_seq, qga_payload, qga_frame, qga_response, qga_claimed)) ==>
+  inj-event(GeneralAdmissionRecordOrigin(qga_agreement, qga_seq, qga_payload, qga_frame, qga_assigned)).
+
+(* Each accepted case must have a reachable completion; 0 and 52 must not. *)
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring,
+      qga_frame: bitstring, qga_response: bitstring, qga_claimed: key_id;
+  event(GeneralAdmissionCompleted(qga_agreement, qga_seq, qga_payload, qga_frame, qga_response, qga_claimed)).
+
+(* Prefix-only and short/unframed plaintext representations cannot pass the nonempty binding parser. *)
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence,
+      qga_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+      qga_frame: bitstring, qga_response: bitstring, qga_claimed: key_id;
+  event(GeneralAdmissionCompleted(qga_agreement, qga_seq,
+    registration_payload(qga_binding, general_empty_suffix()), qga_frame, qga_response, qga_claimed)).
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_body: bitstring,
+      qga_frame: bitstring, qga_response: bitstring, qga_claimed: key_id;
+  event(GeneralAdmissionCompleted(qga_agreement, qga_seq,
+    general_short_payload(qga_body), qga_frame, qga_response, qga_claimed)).
+
+(* Malformed/unframed records have no crypto_frame decoding rule. *)
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring,
+      qga_body: bitstring, qga_response: bitstring, qga_claimed: key_id;
+  event(GeneralAdmissionCompleted(qga_agreement, qga_seq, qga_payload,
+    general_short_payload(qga_body), qga_response, qga_claimed)).
+
+(* Later application-prefix relabelling remains reachable at every later admitted target. *)
+query qga_seq: sequence, qga_payload: bitstring; event(GeneralAdmissionRelabelled(qga_seq, qga_payload)).
+
+(* Every accepted decoded prefix equals the claimed outer ID; this does not identify the server's originally assigned ID. *)
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_body: bitstring,
+      qga_frame: bitstring, qga_response: bitstring, qga_claimed: key_id, qga_actual_prefix: key_id;
+  event(GeneralAdmissionCompleted(qga_agreement, qga_seq,
+    registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(qga_actual_prefix)), general_nonempty(qga_body)),
+    qga_frame, qga_response, qga_claimed)) ==> qga_actual_prefix = qga_claimed.
+
+(* The full committed cache, live chain, unchanged send chain and separately consumed target material agree with the same session's complete source-order send prefix. *)
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_send_chain: bitstring,
+      qga_next_chain: bitstring, qga_cache: receive_cache, qga_target_material: bitstring;
+  inj-event(GeneralAdmissionPoststate(qga_agreement, qga_seq, qga_send_chain, qga_next_chain, qga_cache, qga_target_material)) ==>
+  inj-event(GeneralAdmissionPlanOrigin(qga_agreement, qga_seq, qga_send_chain, qga_next_chain, qga_cache, qga_target_material)).
+
+(* Subsequent cached and immediate future receptions retain exact decoded record origin for every admitted committed state. *)
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring,
+      qga_frame: bitstring, qga_assigned: key_id;
+  inj-event(GeneralCachedAccepted(qga_agreement, qga_seq, qga_payload, qga_frame)) ==>
+  inj-event(GeneralAdmissionRecordOrigin(qga_agreement, qga_seq, qga_payload, qga_frame, qga_assigned)).
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring,
+      qga_frame: bitstring, qga_assigned: key_id;
+  inj-event(GeneralFutureAccepted(qga_agreement, qga_seq, qga_payload, qga_frame)) ==>
+  inj-event(GeneralAdmissionRecordOrigin(qga_agreement, qga_seq, qga_payload, qga_frame, qga_assigned)).
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring, qga_frame: bitstring;
+  event(GeneralCachedAccepted(qga_agreement, qga_seq, qga_payload, qga_frame)).
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring, qga_frame: bitstring;
+  event(GeneralFutureAccepted(qga_agreement, qga_seq, qga_payload, qga_frame)).
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence;
+  event(GeneralReplayAccepted(qga_agreement, qga_seq)).
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence;
+  event(GeneralReplayRejected(qga_agreement, qga_seq)).
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence;
+  event(GeneralInitialTargetRetained(qga_agreement, qga_seq)).
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_chain: bitstring,
+      qga_cache: receive_cache, qga_send_chain: bitstring, qga_target_material: bitstring;
+  inj-event(GeneralContinuationStarted(qga_agreement, qga_seq, qga_chain, qga_cache)) ==>
+  inj-event(GeneralAdmissionPoststate(qga_agreement, qga_seq, qga_send_chain, qga_chain, qga_cache, qga_target_material)).
+
+(* Checked guard implications recover the general query from each fixed-target specialization. The runner replaces the undeclared template marker before invoking ProVerif. *)
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring,
+      qga_frame: bitstring, qga_response: bitstring, qga_claimed: key_id;
+  event(GeneralAdmissionCompleted(qga_agreement, qga_seq, qga_payload, qga_frame, qga_response, qga_claimed)) ==>
+  qga_seq = general_expected_case_sequence().
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_send_chain: bitstring,
+      qga_next_chain: bitstring, qga_cache: receive_cache, qga_target_material: bitstring;
+  event(GeneralAdmissionPoststate(qga_agreement, qga_seq, qga_send_chain, qga_next_chain, qga_cache, qga_target_material)) ==>
+  qga_seq = general_expected_case_sequence().
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring, qga_frame: bitstring;
+  event(GeneralFutureAccepted(qga_agreement, qga_seq, qga_payload, qga_frame)) ==>
+  qga_seq = next_sequence(general_expected_case_sequence()).
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence;
+  event(GeneralInitialTargetRetained(qga_agreement, qga_seq)) ==>
+  qga_seq = general_expected_case_sequence().
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_chain: bitstring, qga_cache: receive_cache;
+  event(GeneralContinuationStarted(qga_agreement, qga_seq, qga_chain, qga_cache)) ==>
+  qga_seq = general_expected_case_sequence().
+
+(* Every successful cached target is one of the exact source-prefix entries. This separate guard is mandatory for the exhaustive per-target cached-origin decomposition. *)
+query qga_agreement: authenticated_registration_session_t, qga_seq: sequence, qga_payload: bitstring, qga_frame: bitstring;
+  event(GeneralCachedAccepted(qga_agreement, qga_seq, qga_payload, qga_frame)) ==>
+  general_cached_sequence_coverage(qga_seq).

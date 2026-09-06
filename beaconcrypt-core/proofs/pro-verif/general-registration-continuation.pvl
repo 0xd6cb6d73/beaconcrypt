@@ -1,0 +1,53 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* The generated bounded cache destructor implements the source last-slot swap. *)
+fun general_use_cached(): bitstring [data].
+fun general_check_initial(): bitstring [data].
+free general_admitted_states: channel [private].
+event GeneralCachedAccepted(authenticated_registration_session_t, sequence, bitstring, bitstring).
+event GeneralFutureAccepted(authenticated_registration_session_t, sequence, bitstring, bitstring).
+event GeneralReplayAccepted(authenticated_registration_session_t, sequence).
+event GeneralReplayRejected(authenticated_registration_session_t, sequence).
+event GeneralInitialTargetRetained(authenticated_registration_session_t, sequence).
+event GeneralContinuationStarted(authenticated_registration_session_t, sequence, bitstring, receive_cache).
+
+(* Plaintext remains at the honest local receive boundary; it is not published to the network. *)
+let GeneralAdmissionFuture(
+  agreement: authenticated_registration_session_t, associated_data: bitstring,
+  counter: sequence, chain: bitstring, cache: receive_cache, send_chain: bitstring
+) =
+  in(c, frame: bitstring);
+  let crypto_frame(ciphertext, tag, commitment, =next_sequence(counter), =SERVER_KEY_ID) = frame in
+  let opened = open_frame(ratchet_material(chain), associated_data,
+    next_sequence(counter), SERVER_KEY_ID, frame) in
+  event GeneralFutureAccepted(agreement, next_sequence(counter), opened, frame).
+
+(* Each private handoff is consumed once. The attacker chooses any retained target or immediate future reception from the carried admitted counter, chains and cache. *)
+let GeneralAdmissionContinue(agreement: authenticated_registration_session_t) =
+  in(general_admitted_states, (=agreement, associated_data: bitstring,
+    claimed: key_id, receive_state(counter: sequence, chain: bitstring, cache: receive_cache),
+    send_chain: bitstring));
+  event GeneralContinuationStarted(agreement, counter, chain, cache);
+  in(c, mode: bitstring);
+  if mode = general_check_initial() then (
+    let initial_result = general_cache_pop(counter, cache) in
+    if initial_result <> general_cache_missing() then
+      event GeneralInitialTargetRetained(agreement, counter)
+  ) else
+    if mode = general_use_cached() then (
+      in(c, frame: bitstring);
+      let crypto_frame(ciphertext, tag, commitment, target, =SERVER_KEY_ID) = frame in
+      let general_cached_result(material, remaining_cache) = general_cache_pop(target, cache) in
+      let opened = open_frame(material, associated_data, target, SERVER_KEY_ID, frame) in
+      event GeneralCachedAccepted(agreement, target, opened, frame);
+      (* The identical decoded frame is delivered again after consumption. Lookup rejection precedes KDF or opening. *)
+      let replay_result = general_cache_pop(target, remaining_cache) in
+      if replay_result = general_cache_missing() then
+        event GeneralReplayRejected(agreement, target);
+        GeneralAdmissionFuture(agreement, associated_data, counter, chain, remaining_cache, send_chain)
+      else
+        let general_cached_result(replayed_material, replayed_cache) = replay_result in
+        let replayed = open_frame(replayed_material, associated_data, target, SERVER_KEY_ID, frame) in
+        event GeneralReplayAccepted(agreement, target)
+    ) else
+      GeneralAdmissionFuture(agreement, associated_data, counter, chain, cache, send_chain).

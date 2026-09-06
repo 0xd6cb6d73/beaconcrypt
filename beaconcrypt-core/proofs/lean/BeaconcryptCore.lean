@@ -101,6 +101,7 @@ import BeaconcryptCore.Refinement.RatchetPlannerSurface
 import BeaconcryptCore.Refinement.RatchetReceiveBoundary
 import BeaconcryptCore.Refinement.RatchetReceiveCompatibility
 import BeaconcryptCore.Refinement.RatchetReceiveStructural
+import BeaconcryptCore.Refinement.GeneralRegistrationAdmission
 import BeaconcryptCore.Refinement.RatchetRelativeFuture
 import BeaconcryptCore.Refinement.RatchetFutureSurface
 import BeaconcryptCore.Refinement.RatchetRestoreSlots

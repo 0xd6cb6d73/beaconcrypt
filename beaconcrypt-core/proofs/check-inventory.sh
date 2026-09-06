@@ -48,12 +48,12 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=121
-	[handwritten-proverif]=71
+	[handwritten-lean]=122
+	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
 	[lean-control]=12
-	[validation]=8
+	[validation]=12
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -107,6 +107,10 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	../beaconcrypt/tests/raw_receive.rs ../beaconcrypt/tests/construction.rs \
 	../beaconcrypt/tests/registration_response_alias.rs \
 	proofs/pro-verif/check-phase2-x25519-alias.py \
+	proofs/pro-verif/check-general-registration.py \
+	proofs/pro-verif/generate-general-registration.py \
+	proofs/pro-verif/test-general-registration-checker.py \
+	tests/general_registration_admission.rs \
 	tests/proverif_transcript_fidelity.rs \
 	> "$tmp_dir/validation"
 compare_set validation "$tmp_dir/validation"
@@ -289,10 +293,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 10 \
+require_occurrence_count 12 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 13 '_to_bitstring' \
+require_occurrence_count 15 '_to_bitstring' \
 	"all handwritten _to_bitstring tokens including three initial-ratchet manifest facts" \
 	"${handwritten_proverif[@]}"
 
@@ -872,10 +876,12 @@ for fidelity_test_name in \
 		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
 done
 require_occurrence_count 1 \
-	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*check_x25519_alias_runner_mutations\(\);\s*\}' \
+	'fn production_manifest_symbolic_model_and_adapters_are_exact\(\) \{\s*validate\(&Snapshot::production\(\)\)\.unwrap\(\);\s*validate_adapters\(\)\.unwrap\(\);\s*check_x25519_alias_runner_mutations\(\);\s*check_general_registration_runner_mutations\(\);\s*\}' \
 	"transcript-fidelity model and adapter composition" "$fidelity_test"
 require_line_count 1 '^fn check_x25519_alias_runner_mutations\(\) \{$' \
 	"$fidelity_test" "X25519 alias runner mutation controls"
+require_line_count 1 '^fn check_general_registration_runner_mutations\(\) \{$' \
+	"$fidelity_test" "general admission runner mutation controls"
 require_occurrence_count 1 \
 	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_finite_receive_state_fixture\(snapshot\)\?;\s*validate_registration_lifecycle\(snapshot\)\?;\s*validate_initial_ratchet_fidelity\(snapshot\)\?;\s*validate_later_registration_fidelity\(snapshot\)\?;\s*validate_post_registration_fidelity\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
@@ -3380,5 +3386,114 @@ for theorem_name in beaconFinish_eq distinct_response_same_outcome; do
 done
 require_line_count 1 '^import BeaconcryptCore.Model.Pqxdh.ResponseEncodingAlias$' \
 	proofs/lean/BeaconcryptCore.lean "response-encoding alias root import"
+
+# HB-83: complete operational admission interface and mandatory generated gate.
+general_admission=proofs/lean/BeaconcryptCore/Refinement/GeneralRegistrationAdmission.lean
+require_line_count 1 '^import BeaconcryptCore.Refinement.GeneralRegistrationAdmission$' \
+	proofs/lean/BeaconcryptCore.lean "general registration admission root import"
+require_line_count 23 '^theorem ' "$general_admission" \
+	"general registration operational theorem inventory"
+require_line_count 23 '^#guard_msgs in$' "$general_admission" \
+	"general registration guarded dependency inventory"
+require_line_count 1 '^theorem registrationPrefix_exact( |$)' "$general_admission" \
+	"general registration theorem registrationPrefix_exact"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationPrefix_exact$' "$general_admission" \
+	"general registration guarded dependency registrationPrefix_exact"
+require_line_count 1 '^theorem registrationPrefix_member_sequence( |$)' "$general_admission" \
+	"general registration theorem registrationPrefix_member_sequence"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationPrefix_member_sequence$' "$general_admission" \
+	"general registration guarded dependency registrationPrefix_member_sequence"
+require_line_count 1 '^theorem registrationPrefix_selected_case_sequence( |$)' "$general_admission" \
+	"general registration theorem registrationPrefix_selected_case_sequence"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationPrefix_selected_case_sequence$' "$general_admission" \
+	"general registration guarded dependency registrationPrefix_selected_case_sequence"
+require_line_count 1 '^theorem registrationSendToken_advance( |$)' "$general_admission" \
+	"general registration theorem registrationSendToken_advance"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationSendToken_advance$' "$general_admission" \
+	"general registration guarded dependency registrationSendToken_advance"
+require_line_count 1 '^theorem registrationSendToken_plan( |$)' "$general_admission" \
+	"general registration theorem registrationSendToken_plan"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationSendToken_plan$' "$general_admission" \
+	"general registration guarded dependency registrationSendToken_plan"
+require_line_count 1 '^theorem registrationSendToken_after_first( |$)' "$general_admission" \
+	"general registration theorem registrationSendToken_after_first"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationSendToken_after_first$' "$general_admission" \
+	"general registration guarded dependency registrationSendToken_after_first"
+require_line_count 1 '^theorem registrationSendObservedRun_public( |$)' "$general_admission" \
+	"general registration theorem registrationSendObservedRun_public"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationSendObservedRun_public$' "$general_admission" \
+	"general registration guarded dependency registrationSendObservedRun_public"
+require_line_count 1 '^theorem registrationSendAfterCutoff_index( |$)' "$general_admission" \
+	"general registration theorem registrationSendAfterCutoff_index"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationSendAfterCutoff_index$' "$general_admission" \
+	"general registration guarded dependency registrationSendAfterCutoff_index"
+require_line_count 1 '^theorem registrationCacheSwap_case( |$)' "$general_admission" \
+	"general registration theorem registrationCacheSwap_case"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationCacheSwap_case$' "$general_admission" \
+	"general registration guarded dependency registrationCacheSwap_case"
+require_line_count 1 '^theorem registrationCacheSwap_length( |$)' "$general_admission" \
+	"general registration theorem registrationCacheSwap_length"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationCacheSwap_length$' "$general_admission" \
+	"general registration guarded dependency registrationCacheSwap_length"
+require_line_count 1 '^theorem registrationCacheSwap_lookup( |$)' "$general_admission" \
+	"general registration theorem registrationCacheSwap_lookup"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.registrationCacheSwap_lookup$' "$general_admission" \
+	"general registration guarded dependency registrationCacheSwap_lookup"
+require_line_count 1 '^theorem NewestCacheRepresents\.sequence_unique( |$)' "$general_admission" \
+	"general registration theorem NewestCacheRepresents.sequence_unique"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.NewestCacheRepresents\.sequence_unique$' "$general_admission" \
+	"general registration guarded dependency NewestCacheRepresents.sequence_unique"
+require_line_count 1 '^theorem cached_symbolic_position_is_exhaustive( |$)' "$general_admission" \
+	"general registration theorem cached_symbolic_position_is_exhaustive"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.cached_symbolic_position_is_exhaustive$' "$general_admission" \
+	"general registration guarded dependency cached_symbolic_position_is_exhaustive"
+require_line_count 1 '^theorem cached_publication_represents_symbolic_swap( |$)' "$general_admission" \
+	"general registration theorem cached_publication_represents_symbolic_swap"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.cached_publication_represents_symbolic_swap$' "$general_admission" \
+	"general registration guarded dependency cached_publication_represents_symbolic_swap"
+require_line_count 1 '^theorem RelativeFutureResult\.registration_prefix( |$)' "$general_admission" \
+	"general registration theorem RelativeFutureResult.registration_prefix"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.RelativeFutureResult\.registration_prefix$' "$general_admission" \
+	"general registration guarded dependency RelativeFutureResult.registration_prefix"
+require_line_count 1 '^theorem RegistrationPublicationRefines\.newest_cache( |$)' "$general_admission" \
+	"general registration theorem RegistrationPublicationRefines.newest_cache"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.RegistrationPublicationRefines\.newest_cache$' "$general_admission" \
+	"general registration guarded dependency RegistrationPublicationRefines.newest_cache"
+require_line_count 1 '^theorem RegistrationPublicationRefines\.cached_target_is_earlier( |$)' "$general_admission" \
+	"general registration theorem RegistrationPublicationRefines.cached_target_is_earlier"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.RegistrationPublicationRefines\.cached_target_is_earlier$' "$general_admission" \
+	"general registration guarded dependency RegistrationPublicationRefines.cached_target_is_earlier"
+require_line_count 1 '^theorem initial_registration_prepares_every_admitted_target( |$)' "$general_admission" \
+	"general registration theorem initial_registration_prepares_every_admitted_target"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.initial_registration_prepares_every_admitted_target$' "$general_admission" \
+	"general registration guarded dependency initial_registration_prepares_every_admitted_target"
+require_line_count 1 '^theorem initial_registration_rejects_above_51( |$)' "$general_admission" \
+	"general registration theorem initial_registration_rejects_above_51"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.initial_registration_rejects_above_51$' "$general_admission" \
+	"general registration guarded dependency initial_registration_rejects_above_51"
+require_line_count 1 '^theorem initial_registration_rejects_zero( |$)' "$general_admission" \
+	"general registration theorem initial_registration_rejects_zero"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.initial_registration_rejects_zero$' "$general_admission" \
+	"general registration guarded dependency initial_registration_rejects_zero"
+require_line_count 1 '^theorem initial_registration_case_is_exhaustive( |$)' "$general_admission" \
+	"general registration theorem initial_registration_case_is_exhaustive"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.initial_registration_case_is_exhaustive$' "$general_admission" \
+	"general registration guarded dependency initial_registration_case_is_exhaustive"
+require_line_count 1 '^theorem RegistrationPublicationRefines\.replay( |$)' "$general_admission" \
+	"general registration theorem RegistrationPublicationRefines.replay"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.RegistrationPublicationRefines\.replay$' "$general_admission" \
+	"general registration guarded dependency RegistrationPublicationRefines.replay"
+require_line_count 1 '^theorem RegistrationPublicationRefines\.continue( |$)' "$general_admission" \
+	"general registration theorem RegistrationPublicationRefines.continue"
+require_line_count 1 '^#print axioms beaconcrypt_core\.ratchet\.concrete\.RegistrationPublicationRefines\.continue$' "$general_admission" \
+	"general registration guarded dependency RegistrationPublicationRefines.continue"
+require_line_count 23 '^query ' proofs/pro-verif/general-registration-admission-queries.pvl \
+	"general registration exact query template inventory"
+require_line_count 50 '^(reduc|otherwise) forall target: sequence, material: bitstring, tail: receive_cache' \
+	proofs/pro-verif/general-registration-cache.pvl "general ordered source cache cases"
+require_line_count 1 '^check-proverif-general-registration-admission: check-proverif-extraction$' \
+	Makefile "general admission full gate"
+require_line_count 1 '^            target: check-generated-proverif-general-registration-admission$' \
+	../.github/workflows/formal-verification.yml "general admission CI gate"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

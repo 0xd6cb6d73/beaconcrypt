@@ -21,6 +21,38 @@ const EXACT_REGISTRATION_ORIGIN_QUERIES: &str =
 const X25519_ALIAS_RUNNER: &str = include_str!("../proofs/pro-verif/check-phase2-x25519-alias.py");
 const X25519_ALIAS_CONTROL: &str =
 	include_str!("../proofs/pro-verif/phase2-x25519-alias-control.pv");
+const GENERAL_REGISTRATION_RUNNER: &str =
+	include_str!("../proofs/pro-verif/check-general-registration.py");
+const GENERAL_REGISTRATION_GENERATOR: &str =
+	include_str!("../proofs/pro-verif/generate-general-registration.py");
+const GENERAL_REGISTRATION_CHECKER_TESTS: &str =
+	include_str!("../proofs/pro-verif/test-general-registration-checker.py");
+const GENERAL_REGISTRATION_ARTIFACTS: [(&str, &str); 6] = [
+	(
+		"general-registration-admission.pv",
+		include_str!("../proofs/pro-verif/general-registration-admission.pv"),
+	),
+	(
+		"general-registration-admission.pvl",
+		include_str!("../proofs/pro-verif/general-registration-admission.pvl"),
+	),
+	(
+		"general-registration-admission-queries.pvl",
+		include_str!("../proofs/pro-verif/general-registration-admission-queries.pvl"),
+	),
+	(
+		"general-registration-cache.pvl",
+		include_str!("../proofs/pro-verif/general-registration-cache.pvl"),
+	),
+	(
+		"general-registration-continuation.pvl",
+		include_str!("../proofs/pro-verif/general-registration-continuation.pvl"),
+	),
+	(
+		"general-registration-public-witness.pvl",
+		include_str!("../proofs/pro-verif/general-registration-public-witness.pvl"),
+	),
+];
 const ENVIRONMENT_MODEL: &str = include_str!("../proofs/pro-verif/environment.pvl");
 const ACTIVE_QUANTUM_WITNESS: &str = include_str!("../proofs/pro-verif/active-quantum-witness.pvl");
 const EXTRACTION_MODEL: &str = include_str!("../proofs/pro-verif/extraction/lib.pvl");
@@ -2819,6 +2851,138 @@ fn validate_x25519_alias_runner(
 	Ok(())
 }
 
+fn validate_general_registration_runner(
+	runner: &str,
+	generator: &str,
+	checker_tests: &str,
+	artifacts: &[(&str, &str)],
+) -> Result<(), String> {
+	let script = compact(runner);
+	for (wanted, label) in [
+		(
+			r#"targets=args.targetifargs.targetisnotNoneelselist(range(53))query_indices=args.queryifargs.queryisnotNoneelselist(range(1,24))"#,
+			"general complete target and query inventory",
+		),
+		(
+			r#"if10inorder:if23notinorder:raiseValueError("cachedoriginrequiresitsseparatelycheckedcoverageguard")order.remove(23)order.insert(order.index(10),23)"#,
+			"general mandatory cached coverage before origin",
+		),
+		(
+			"ifindex==10and2<=target<=51:returnlist(range(1,target))",
+			"general every retained cached sequence",
+		),
+		(
+			"ifindexin{12,15}and2<=target<=51:",
+			"general concrete cached witness routing",
+		),
+		(
+			r#"subprocess.run(["python3",str(HERE/"generate-general-registration.py"),"--check"],check=True,)"#,
+			"general checked generator output",
+		),
+		(
+			r#"forlibin["production-transcript-interface.pvl","crypto.pvl","extraction/lib.pvl","environment.pvl","general-registration-cache.pvl",]:command.extend(["-lib",str(HERE/lib)])"#,
+			"general exact ordered cryptographic and cache libraries",
+		),
+		(
+			r#"command+["-lib",str(continuation_file),"-lib",str(role_file),"-lib",str(HERE/"general-registration-public-witness.pvl"),"-lib",str(query_file),str(query_case),],check=True,timeout=timeout,stdout=output,stderr=subprocess.STDOUT,"#,
+			"general exact role query process loading and subprocess failure",
+		),
+		(
+			r#"found=re.findall(r"^RESULT(.+)is(true|false)\.$",text,re.M)iflen(found)!=1:"#,
+			"general exactly one conclusive protocol result",
+		),
+		(
+			r#"iffinite_witnessand(found[0][1]!="false"ortext.count("Atracehasbeenfound.")!=1):"#,
+			"general concrete reconstructed witness trace",
+		),
+		(
+			"ifresults!=expected:raiseValueError",
+			"general exact result name and polarity comparison",
+		),
+		(
+			"ifindex==23and1<=target<=51:",
+			"general separate local range routing",
+		),
+		(
+			"ifnormalize(query)!=normalize(expected)ornot1<=target<=51:",
+			"general exact local component obligation",
+		),
+		(
+			r#"component,expected_component=local_cached_range(query,target)"#,
+			"general material-parametric local helper selection",
+		),
+		(
+			"ifindexin{11,20}:continuation=project_future_safety(continuation,index)",
+			"general future safety excludes witnesses",
+		),
+		(
+			"ifcached_targetisnotNone:continuation=project_cached_target(continuation,index,target,cached_target)",
+			"general actual decoded cached target guard",
+		),
+		(
+			"roles,continuation=inline_owned_handoff(roles,continuation,(HERE/\"environment.pvl\").read_text())",
+			"general complete owned handoff substitution",
+		),
+		(
+			"roles=project_initial_plan(roles,query_main,target)",
+			"general evaluated initial plan at the literal role argument",
+		),
+		(
+			"code.count(signature)!=1orcode.count(\"GeneralAdmissionBeacon(\")!=1orlen(re.findall(r\"\\bgeneral_expected_sequence\\b\",code))!=3",
+			"general initial parameter binding and shadow exclusion",
+		),
+		(
+			r#""ifwitnesselsef"out(c,({chain},{sequence(cutoff+1)},main_associated_data,main_assigned_key_id))""#,
+			"general safety actual next-chain disclosure",
+		),
+	] {
+		require(&script, wanted, label)?;
+	}
+	for (text, expected, label) in [
+		(runner, 6_237_376_055_663_319_124, "runner"),
+		(generator, 14_396_280_816_143_547_146, "generator"),
+		(checker_tests, 14_129_843_359_489_167_816, "checker tests"),
+	] {
+		if stable_text_hash(text) != expected {
+			return Err(format!(
+				"general reviewed {label} changed; review all transformations"
+			));
+		}
+	}
+	let expected = [
+		(
+			"general-registration-admission.pv",
+			17_214_740_764_917_819_192,
+		),
+		(
+			"general-registration-admission.pvl",
+			17_686_911_930_606_850_571,
+		),
+		(
+			"general-registration-admission-queries.pvl",
+			2_204_557_196_734_332_185,
+		),
+		("general-registration-cache.pvl", 11_111_788_908_665_374_809),
+		(
+			"general-registration-continuation.pvl",
+			16_393_726_630_133_289_574,
+		),
+		(
+			"general-registration-public-witness.pvl",
+			11_331_453_798_314_310_886,
+		),
+	];
+	if artifacts.len() != expected.len() {
+		return Err("general role and query inventory changed".to_owned());
+	}
+	for ((name, text), (expected_name, expected_hash)) in artifacts.iter().zip(expected) {
+		if *name != expected_name || stable_text_hash(text) != expected_hash {
+			return Err(format!("general reviewed artifact changed: {name}"));
+		}
+	}
+	Ok(())
+}
+
 fn validate_makefile(makefile: &str) -> Result<(), String> {
 	if count(makefile, "-lib $(PROVERIF_INTERFACE)") != 1
 		|| count(makefile, "-lib $(PROVERIF_DIR)/crypto.pvl") != 1
@@ -2836,9 +3000,9 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"auxiliary ProVerif fidelity prerequisite",
 	)?;
 	let scenarios = scenario_names(makefile)?;
-	if scenarios.len() != 31 {
+	if scenarios.len() != 32 {
 		return Err(format!(
-			"expected 31 ProVerif scenarios, found {}",
+			"expected 32 ProVerif scenarios, found {}",
 			scenarios.len()
 		));
 	}
@@ -2850,6 +3014,14 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 	{
 		return Err("X25519 alias must be enumerated exactly once".to_owned());
 	}
+	if scenarios
+		.iter()
+		.filter(|scenario| scenario.as_str() == "general-registration-admission")
+		.count()
+		!= 1
+	{
+		return Err("general registration must be enumerated exactly once".to_owned());
+	}
 	for scenario in scenarios {
 		let marker = format!("check-proverif-{scenario}:");
 		let start = makefile
@@ -2857,6 +3029,20 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 			.ok_or_else(|| format!("missing scenario target: {scenario}"))?;
 		let tail = &makefile[start..];
 		let block = &tail[..tail.find("\n\n").unwrap_or(tail.len())];
+		if scenario == "general-registration-admission" {
+			if compact(block)
+				!= "check-proverif-general-registration-admission:check-proverif-extractionpython3$(PROVERIF_DIR)/test-general-registration-checker.pypython3$(PROVERIF_DIR)/check-general-registration.py--proverif'$(PROVERIF)'--timeout'$(PROVERIF_TIMEOUT)'"
+			{
+				return Err("general exact Make runner and self-test wiring changed".to_owned());
+			}
+			validate_general_registration_runner(
+				GENERAL_REGISTRATION_RUNNER,
+				GENERAL_REGISTRATION_GENERATOR,
+				GENERAL_REGISTRATION_CHECKER_TESTS,
+				&GENERAL_REGISTRATION_ARTIFACTS,
+			)?;
+			continue;
+		}
 		if scenario == "phase2-x25519-alias" {
 			if compact(block)
 				!= "check-proverif-phase2-x25519-alias:check-proverif-extractionpython3$(PROVERIF_DIR)/check-phase2-x25519-alias.py--proverif'$(PROVERIF)'--timeout'$(PROVERIF_TIMEOUT)'"
@@ -2931,6 +3117,30 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"target:check-generated-proverif-phase2-x25519-alias",
 		"X25519 alias CI scenario",
 	)?;
+	require_once(
+		&workflow,
+		"target:check-generated-proverif-general-registration-admissiontimeout:240",
+		"general exhaustive-family CI budget",
+	)?;
+	require_once(
+		&workflow,
+		"timeout-minutes:${{matrix.timeout||60}}",
+		"unchanged default and explicit general CI time budgets",
+	)?;
+	let mut workflow_scenarios = FORMAL_WORKFLOW
+		.lines()
+		.filter_map(|line| {
+			line.trim()
+				.strip_prefix("target: check-generated-proverif-")
+		})
+		.map(str::to_owned)
+		.collect::<Vec<_>>();
+	let mut make_scenarios = scenario_names(makefile)?;
+	workflow_scenarios.sort_unstable();
+	make_scenarios.sort_unstable();
+	if workflow_scenarios != make_scenarios {
+		return Err("Make and CI must enumerate exactly the same ProVerif scenarios".to_owned());
+	}
 	Ok(())
 }
 
@@ -7569,11 +7779,132 @@ fn check_x25519_alias_runner_mutations() {
 	);
 }
 
+fn check_general_registration_runner_mutations() {
+	// Additive runner controls leave the independent 409/297 matrices unchanged.
+	for (from, to) in [
+		(
+			"roles = project_initial_plan(roles, query_main, target)",
+			"roles = roles",
+		),
+		("code.count(signature) != 1", "False"),
+		(
+			"general_prefix_{target}(server_to_beacon_chain(main_root))",
+			"general_prefix_1(server_to_beacon_chain(main_root))",
+		),
+		("list(range(53))", "list(range(52))"),
+		("list(range(1, 24))", "list(range(1, 23))"),
+		(
+			"return list(range(1, target))",
+			"return list(range(1, target - 1))",
+		),
+		("if 23 not in order:", "if False:"),
+		("order.insert(order.index(10), 23)", "order.append(23)"),
+		("production-transcript-interface.pvl", "other-interface.pvl"),
+		("extraction/lib.pvl", "other-extraction.pvl"),
+		("environment.pvl", "other-environment.pvl"),
+		("check=True,", "check=False,"),
+		("timeout=timeout,", "timeout=None,"),
+		("if results != expected:", "if False:"),
+		("text.count(\"A trace has been found.\") != 1", "False"),
+		("if index in {11, 20}:", "if index in {11, 13, 20}:"),
+		(
+			"if index == 23 and 1 <= target <= 51:",
+			"if index in {10, 23} and 1 <= target <= 51:",
+		),
+		("if normalize(query) != normalize(expected)", "if False"),
+		("if target = {sequence(cached_target)} then", "if true then"),
+		("records.add(cached_target)", "records.clear()"),
+		(
+			"cache: receive_cache, send_chain: bitstring",
+			"cache: receive_cache, send_chain: chain",
+		),
+		(
+			"if witness\n        else f\"      out(c,",
+			"if True\n        else f\"      out(c,",
+		),
+		(
+			"\"new main_registration_session: bitstring;\"",
+			"\"main_registration_session: bitstring;\"",
+		),
+	] {
+		let mut changed = GENERAL_REGISTRATION_RUNNER.to_owned();
+		replace_once(&mut changed, from, to);
+		assert!(
+			validate_general_registration_runner(
+				&changed,
+				GENERAL_REGISTRATION_GENERATOR,
+				GENERAL_REGISTRATION_CHECKER_TESTS,
+				&GENERAL_REGISTRATION_ARTIFACTS
+			)
+			.is_err(),
+			"general runner mutation survived: {from}"
+		);
+	}
+	let mutations = [
+		("!GeneralAdmissionBeacon(", "GeneralAdmissionBeacon("),
+		(
+			"if general_sequence = general_expected_sequence then",
+			"if true then",
+		),
+		(
+			"inj-event(GeneralAdmissionRecordOrigin(",
+			"event(GeneralAdmissionRecordOrigin(",
+		),
+		("receive_cache_entry(s0, m0, tail)", "tail"),
+		(
+			"in(general_admitted_states, (=agreement",
+			"in(general_admitted_states, (agreement",
+		),
+		("out(c, response)", "out(c, INITIAL_SECRET)"),
+	];
+	for (index, (from, to)) in mutations.into_iter().enumerate() {
+		let mut changed = GENERAL_REGISTRATION_ARTIFACTS[index].1.to_owned();
+		replace_once(&mut changed, from, to);
+		let mut artifacts = GENERAL_REGISTRATION_ARTIFACTS;
+		artifacts[index].1 = &changed;
+		assert!(
+			validate_general_registration_runner(
+				GENERAL_REGISTRATION_RUNNER,
+				GENERAL_REGISTRATION_GENERATOR,
+				GENERAL_REGISTRATION_CHECKER_TESTS,
+				&artifacts
+			)
+			.is_err()
+		);
+	}
+	let generator = GENERAL_REGISTRATION_GENERATOR.replace("range(50)", "range(49)");
+	assert_ne!(generator, GENERAL_REGISTRATION_GENERATOR);
+	assert!(
+		validate_general_registration_runner(
+			GENERAL_REGISTRATION_RUNNER,
+			&generator,
+			GENERAL_REGISTRATION_CHECKER_TESTS,
+			&GENERAL_REGISTRATION_ARTIFACTS
+		)
+		.is_err()
+	);
+	let checker_tests = GENERAL_REGISTRATION_CHECKER_TESTS.replace(
+		"self.assertEqual(classified, 2444)",
+		"self.assertEqual(classified, 2443)",
+	);
+	assert_ne!(checker_tests, GENERAL_REGISTRATION_CHECKER_TESTS);
+	assert!(
+		validate_general_registration_runner(
+			GENERAL_REGISTRATION_RUNNER,
+			GENERAL_REGISTRATION_GENERATOR,
+			&checker_tests,
+			&GENERAL_REGISTRATION_ARTIFACTS
+		)
+		.is_err()
+	);
+}
+
 #[test]
 fn production_manifest_symbolic_model_and_adapters_are_exact() {
 	validate(&Snapshot::production()).unwrap();
 	validate_adapters().unwrap();
 	check_x25519_alias_runner_mutations();
+	check_general_registration_runner_mutations();
 }
 
 #[test]
@@ -10924,7 +11255,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later_registration_make_scenario_removed",
 			"\tlater-sequence-registration \\\n",
 			"",
-			"expected 31 ProVerif scenarios",
+			"expected 32 ProVerif scenarios",
 		),
 		(
 			"later_registration_make_extraction_prerequisite_removed",
