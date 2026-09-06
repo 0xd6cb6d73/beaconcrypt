@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=140
+	[handwritten-lean]=141
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3444,5 +3444,15 @@ for theorem_name in acceptanceImpl_eq actualRun_eq instrument_query_bound instru
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.${theorem_name}$" "$phase1_acceptance" "Phase1 acceptance dependency audit ${theorem_name}"
 done
 require_line_count 17 '^#guard_msgs in$' "$phase1_acceptance" "Phase1 acceptance guarded audits"
+
+# Source Phase-1 builder and signing preserve complete joint identity histories.
+joint_phase1_source_writer=proofs/lean/BeaconcryptCore/Computational/PqxdhJointPhase1SourceWriter.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointPhase1SourceWriter$' \
+	proofs/lean/BeaconcryptCore.lean "PqxdhJointPhase1SourceWriter root import"
+for theorem_name in signing_step signingProgram_created signingProgram_uncreated signedState_seeds signedState_transcript signingProgram_continuation signing_history_step signingProgram_complete signedGlobalState_exact signedGlobalState_messages signedGlobalState_three_messages signingProgram_complete_continuation signedCandidate_source signing_message_bytes signingProgram_total_bound signingProgram_class_bound signingProgram_excluded_bound signingProgram_complete_uncreated signingProgram_interpreted_uniform_bound sourceSigning_complete beacon_start_unsigned sourceBuilderSigning_complete; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_phase1_source_writer" "source Phase-1 writer theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointPhase1SourceWriter.${theorem_name}$" "$joint_phase1_source_writer" "source Phase-1 writer dependency ${theorem_name}"
+done
+require_line_count 22 '^#guard_msgs in$' "$joint_phase1_source_writer" "source Phase-1 writer guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
