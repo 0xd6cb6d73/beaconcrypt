@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=141
+	[handwritten-lean]=142
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3454,5 +3454,16 @@ for theorem_name in signing_step signingProgram_created signingProgram_uncreated
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointPhase1SourceWriter.${theorem_name}$" "$joint_phase1_source_writer" "source Phase-1 writer dependency ${theorem_name}"
 done
 require_line_count 22 '^#guard_msgs in$' "$joint_phase1_source_writer" "source Phase-1 writer guarded audits"
+
+# Source creation/writer/actual optional acceptance compose in the same joint identity execution.
+joint_acceptance=proofs/lean/BeaconcryptCore/Computational/PqxdhJointPhase1AcceptanceComposition.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition$' \
+	proofs/lean/BeaconcryptCore.lean "joint source acceptance root import"
+require_line_count 41 '^theorem ' "$joint_acceptance" "joint source acceptance theorem inventory"
+require_line_count 41 '^#guard_msgs in$' "$joint_acceptance" "joint source acceptance guarded dependencies"
+for theorem_name in historyUpdate_noSign bare_step_noSign bare_run_noSign bare_step_seed_extension bare_step_created bare_run_created bare_dynamic_compose liftDynamic_complete selectedProgram_complete selectedProgram_three_messages selectedProgram_fieldOrigin reportingImpl_snapshot reportingExecution_snapshot reportingRun_snapshot actualRun_snapshot sessionBody_complete bare_create_initial oneSession_complete singletonState_facts sessionBody_supported oneSession_supported sessionBody_finalCandidate oneSession_finalCandidate oneSession_changed_fieldOrigin liftDynamic_query_bound selectedProgram_query_bound oneSession_query_bound sourceCandidate_monitor acceptanceCandidate_monitor acceptanceCandidate_snapshot_occurred acceptanceCandidate_hit_recorded oneSession_changed_recorded oneSession_create_bound oneSession_authentication_bound oneSession_class_bound oneSession_total_bound oneSessionReduction_class_bound oneSession_attempt_bound oneSession_reveal_bound oneSession_actual_uniform_bound oneSession_challenger_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_acceptance" "joint source acceptance theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition.${theorem_name}$" "$joint_acceptance" "joint source acceptance dependency ${theorem_name}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
