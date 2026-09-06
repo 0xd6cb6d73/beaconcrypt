@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=260
+	[handwritten-lean]=270
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4977,6 +4977,76 @@ require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxInterpretedArg
 require_line_count 14 '^#guard_msgs in$' "$send_mixed_arguments_module" "RawCtxInterpretedArguments guarded dependencies"
 for theorem_name in sequence_total material_total openArguments_map openArguments_native openAdapter_interpreted receive_interpreted sealArguments_map sealArguments_native sealAdapter_interpreted send_interpreted receive_state send_state receive_query_bounds send_query_bounds; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxInterpretedArguments.${theorem_name}$" "$send_mixed_arguments_module" "send/mixed/arguments dependency ${theorem_name}"
+done
+
+shared_ctx_hybrid_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedReplay.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedReplay$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedReplay root import"
+require_line_count 11 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedReplay guarded dependencies"
+for theorem_name in install_separate separate_install private_lookup_exact hash_uniform private_interpretation seal_interpretation raw_interpretation local_interpretation linked_step linked_schedule local_from_replay; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedReplay.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
+done
+
+shared_ctx_hybrid_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedModes.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedModes$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedModes root import"
+require_line_count 17 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedModes guarded dependencies"
+for theorem_name in real_step replay_step real_schedule replay_schedule canonical_initial replay_initial real_view_eq replay_view_eq local_forward target_run hash_uniform_step forward_step forward_schedule forward_complete local_public_history public_history_step local_from_target; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedModes.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
+done
+
+shared_ctx_hybrid_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedReplayBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedReplayBounds$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedReplayBounds root import"
+require_line_count 12 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedReplayBounds guarded dependencies"
+for theorem_name in lift_hash_bound private_hash_bound replay_hash_step mode_hash_step mode_hash_schedule private_lookup_uniform lift_uniform_bound private_uniform_bound replay_uniform_step mode_private_not_uniform mode_uniform_step mode_uniform_schedule; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedReplayBounds.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
+done
+
+shared_ctx_hybrid_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedModeFamily.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedModeFamily$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedModeFamily root import"
+require_line_count 10 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedModeFamily guarded dependencies"
+for theorem_name in linked_selected_run selected_step linked_other_run other_step linked_step linked_schedule schedule_interpretation initial_projection uniform_interpretation source_view_eq; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedModeFamily.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
+done
+
+shared_ctx_hybrid_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedModeBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedModeBounds$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedModeBounds root import"
+require_line_count 12 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedModeBounds guarded dependencies"
+for theorem_name in target_step_bound wrapped_target_bound hash_step_bound wrapped_hash_bound private_not_uniform uniform_step_bound wrapped_uniform_bound decision_budgets selected_integrity_bound plaintext_step wrapped_plaintext_bound decision_plaintext_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedModeBounds.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
+done
+
+shared_ctx_hybrid_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedModePreparation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedModePreparation$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedModePreparation root import"
+require_line_count 13 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedModePreparation guarded dependencies"
+for theorem_name in mode_uniform prepared_interpretation prepared_class_bound prepared_uniform_bound prepared_view_eq decision_class_bound prepared_integrity_bound independent_setup_bound prepared_decision_budgets prepared_plaintext_bound prepared_decision_plaintext prepared_reduction_bounds prepared_experiment_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedModePreparation.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
+done
+
+shared_ctx_hybrid_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedKeySelection.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedKeySelection$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedKeySelection root import"
+require_line_count 8 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedKeySelection guarded dependencies"
+for theorem_name in selected_step selected_schedule fixed_source_selection source_prepared_selection selection_step_bound selection_bound source_view_selection selected_integrity; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedKeySelection.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
+done
+
+shared_ctx_hybrid_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedMultiKeyIntegrity.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedMultiKeyIntegrity$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedMultiKeyIntegrity root import"
+require_line_count 4 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedMultiKeyIntegrity guarded dependencies"
+for theorem_name in hop_distance loss_finite hop_bound family_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedMultiKeyIntegrity.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
+done
+
+shared_ctx_hybrid_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedMultiKeyBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedMultiKeyBounds$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedMultiKeyBounds root import"
+require_line_count 14 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedMultiKeyBounds guarded dependencies"
+for theorem_name in selected_budgets reduction_bounds selection_uniform_exact selection_target_exact selected_source_bound hash_route_work private_route_work source_union_bound global_work_bound global_routed_budgets global_family_bound selected_plaintext_bound selected_decision_plaintext validation_experiment_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedMultiKeyBounds.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
+done
+
+shared_ctx_hybrid_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedSourceBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedSourceBounds$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedSourceBounds root import"
+require_line_count 8 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedSourceBounds guarded dependencies"
+for theorem_name in hash_step_bound hash_run_bound target_step_bound source_step_bound source_run_pair_bound source_work_bound source_run_bound source_game_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedSourceBounds.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
