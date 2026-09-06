@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=168
+	[handwritten-lean]=190
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4148,6 +4148,155 @@ for theorem_pattern in begin_remaining resume_small resume_cost program_cost beg
 		"receive KDF budget theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxKdfBudget[.]${theorem_pattern}$" \
 		"$owner_module" "receive KDF budget dependency ${theorem_pattern}"
+done
+
+
+# Optional source KEM boundary: preserve support-only compatibility and complete root/cost links.
+optional_kem_source=proofs/lean/BeaconcryptCore/Computational/PqxdhOptionalKemSource.lean
+optional_kem_bounds=proofs/lean/BeaconcryptCore/Computational/PqxdhOptionalKemSourceQueryBounds.lean
+require_line_count 1 '^structure SourceKemInterface( |$)' "$optional_kem_source" "optional KEM interface"
+require_line_count 1 '^def HonestKeyCompatibility( |$)' "$optional_kem_source" "honest-support functional compatibility"
+for theorem_name in honestEncapsulation_no_failure directTargetContinuation_eq_total sourceContinuation_eq_actual sourceGame_eq_actualGame actualRootAdvantage_le_euf_add_kem_add_extract_add_hmac; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$optional_kem_source" "optional KEM theorem ${theorem_name}"
+done
+for theorem_name in acceptedCommon_query_bound allCandidateCommon_query_bound sourceProtocol_prefix_query_bound sourceProtocol_decapsulation_bound sourceProtocol_post_query_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$optional_kem_bounds" "optional KEM bound ${theorem_name}"
+done
+for theorem_name in sourceGame_eq_actualGame actualRootAdvantage_le_euf_add_kem_add_extract_add_hmac; do
+	require_line_count 1 "^#print axioms ${theorem_name}$" "$optional_kem_source" "optional KEM dependency audit ${theorem_name}"
+done
+for theorem_name in acceptedCommon_query_bound sourceProtocol_prefix_query_bound; do
+	require_line_count 1 "^#print axioms ${theorem_name}$" "$optional_kem_bounds" "optional KEM dependency audit ${theorem_name}"
+done
+require_line_count 2 '^#guard_msgs in$' "$optional_kem_source" "optional KEM guarded audits"
+require_line_count 2 '^#guard_msgs in$' "$optional_kem_bounds" "optional KEM bound guarded audits"
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhOptionalKemSourceQueryBounds$' \
+	proofs/lean/BeaconcryptCore.lean "optional KEM root import"
+
+# Joint identity games: explicit auxiliary DH, complete family/session routing, and costs.
+for joint_module in PqxdhJointIdentity PqxdhJointIdentityFamily PqxdhJointIdentitySessions; do
+	require_line_count 1 "^import BeaconcryptCore\.Computational\.${joint_module}$" \
+		proofs/lean/BeaconcryptCore.lean "joint identity ${joint_module} root import"
+done
+joint_identity=proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentity.lean
+joint_family=proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentityFamily.lean
+joint_sessions=proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentitySessions.lean
+for theorem_name in jointPublic_conversion serverDhsFromAux_eq beaconDhsFromAux_eq primitive_query_complete_continuation; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_identity" "joint identity theorem ${theorem_name}"
+done
+for theorem_name in sampleFamily_target_first targetRouting_complete targetGame_eq_reduction family_advantage_le_sum reduction_query_bound familyRun_rejectedDh_bound reductionGame_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_family" "joint family theorem ${theorem_name}"
+done
+for theorem_name in route_complete session_advantage_le_identity_sum route_query_bound session_reduction_query_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_sessions" "joint session theorem ${theorem_name}"
+done
+require_line_count 2 '^#guard_msgs in$' "$joint_identity" "joint identity guarded audits"
+require_line_count 6 '^#guard_msgs in$' "$joint_family" "joint family guarded audits"
+require_line_count 3 '^#guard_msgs in$' "$joint_sessions" "joint session guarded audits"
+
+# Actual identity reveals: full fresh-event stopping, exact retained state, and query ledgers.
+joint_freshness=proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentityFreshness.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointIdentityFreshness$' \
+	proofs/lean/BeaconcryptCore.lean "joint freshness root import"
+for theorem_name in fresh_probability_eq_stopped stopBeforeReveal_no_target reductionWork_complete targetEvent_le_jointAdvantage global_advantage_le_sum globalReduction_query_bound globalReductionGame_uniform_bound sourceRun_reveal_bound globalRun_uniform_bound sourceRun_rejectedDh_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_freshness" "joint freshness theorem ${theorem_name}"
+done
+for theorem_name in fresh_probability_eq_stopped stopBeforeReveal_no_target reductionWork_complete global_advantage_le_sum globalReduction_query_bound globalReductionGame_uniform_bound sourceRun_reveal_bound globalRun_uniform_bound sourceRun_rejectedDh_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointIdentityFreshness.${theorem_name}$" "$joint_freshness" "joint freshness dependency audit ${theorem_name}"
+done
+require_line_count 9 '^#guard_msgs in$' "$joint_freshness" "joint freshness guarded audits"
+
+# Report-time authentication retains later compromises and counts all attempts.
+joint_events=proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentityEvents.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointIdentityEvents$' \
+	proofs/lean/BeaconcryptCore.lean "joint report-time root import"
+for theorem_name in sourceImpl_publicUpdate occurred_probability_le_stopped reportingRun_le_extractor reporting_advantage_le_identity_sum reportingRun_occurred reportingReduction_query_bound reportingReductionGame_uniform_bound reportingExecution_report_bound reportingRun_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_events" "joint report-time theorem ${theorem_name}"
+done
+for theorem_name in sourceImpl_publicUpdate occurred_probability_le_stopped reporting_advantage_le_identity_sum reportingRun_occurred reportingReduction_query_bound reportingReductionGame_uniform_bound reportingExecution_report_bound reportingRun_uniform_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointIdentityEvents.${theorem_name}$" "$joint_events" "joint report-time dependency audit ${theorem_name}"
+done
+require_line_count 8 '^#guard_msgs in$' "$joint_events" "joint report-time guarded audits"
+
+# Dynamic creation: complete private-prefix/transcript equality and every reserved draw.
+joint_dynamic=proofs/lean/BeaconcryptCore/Computational/PqxdhDynamicIdentityPool.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDynamicIdentityPool$' \
+	proofs/lean/BeaconcryptCore.lean "dynamic identity root import"
+for theorem_name in sampleSeeds_succ lazy_eager_complete lazyImpl_uniform_step lazyRun_uniform_bound eagerReserved_uniform_bound lazyImpl_transcript lazyRun_trace_bound lazyImpl_seed_extension lazyRun_seed_extension; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_dynamic" "dynamic identity theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.${theorem_name}$" "$joint_dynamic" "dynamic identity dependency audit ${theorem_name}"
+done
+require_line_count 9 '^#guard_msgs in$' "$joint_dynamic" "dynamic identity guarded audits"
+
+# Dynamic public routing: exact source execution, final freshness, identity loss and full query ledgers.
+joint_dynamic_routing=proofs/lean/BeaconcryptCore/Computational/PqxdhDynamicIdentityRouting.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting$' \
+	proofs/lean/BeaconcryptCore.lean "dynamic identity routing root import"
+for theorem_name in route_complete lazy_eager_history_complete dynamic_reserved_complete dynamic_advantage_le_sum dynamicReduction_query_bound dynamicReductionGame_uniform_bound dynamicRun_uniform_bound dynamicRun_trace_bound dynamic_advantage_le_count; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_dynamic_routing" "dynamic identity routing theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.${theorem_name}$" "$joint_dynamic_routing" "dynamic identity routing dependency audit ${theorem_name}"
+done
+require_line_count 9 '^#guard_msgs in$' "$joint_dynamic_routing" "dynamic identity routing guarded audits"
+
+# Dynamic reports retain earlier source observations and permit later compromise.
+joint_dynamic_reports=proofs/lean/BeaconcryptCore/Computational/PqxdhDynamicIdentityReports.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDynamicIdentityReports$' \
+	proofs/lean/BeaconcryptCore.lean "dynamic identity report root import"
+for theorem_name in source_snapshot_step reportAccepted_iff_source occurred_probability_le_stopped reporting_advantage_le_identity_sum reportingRun_occurred reportingReduction_query_bound reportingReductionGame_uniform_bound reportingExecution_report_bound reportingRun_uniform_bound reportingExecution_trace_bound reporting_advantage_le_identity_count; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_dynamic_reports" "dynamic identity report theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.${theorem_name}$" "$joint_dynamic_reports" "dynamic identity report dependency audit ${theorem_name}"
+done
+require_line_count 11 '^#guard_msgs in$' "$joint_dynamic_reports" "dynamic identity report guarded audits"
+
+# Known-seed owners preserve complete generated state and retain all local source work.
+known_identity_imports=proofs/lean/BeaconcryptCore/Computational/PqxdhKnownIdentityImports.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhKnownIdentityImports$' \
+	proofs/lean/BeaconcryptCore.lean "known identity imports root import"
+for theorem_name in run_complete report_advantage_le_sum reduction_query_bound reductionGame_uniform_bound run_uniform_bound run_trace_bound import_source imported_service_source imported_reveal_source imported_report_source report_advantage_le_count; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$known_identity_imports" "known identity imports theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhKnownIdentityImports.${theorem_name}$" "$known_identity_imports" "known identity imports dependency audit ${theorem_name}"
+done
+require_line_count 11 '^#guard_msgs in$' "$known_identity_imports" "known identity imports guarded audits"
+
+# Source-facing Phase-1 field origin retains complete joint history and every original candidate.
+joint_phase1_reports=proofs/lean/BeaconcryptCore/Computational/PqxdhJointPhase1Reports.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointPhase1Reports$' \
+	proofs/lean/BeaconcryptCore.lean "PqxdhJointPhase1Reports root import"
+for theorem_name in translateReport_event run_complete run_compatible run_event fieldOrigin_advantage_le_sum source_attached_adapter sourceAccept_eq fieldReduction_query_bound fieldReductionGame_uniform_bound run_uniform_bound wrapper_observation run_attempt_bound run_occurred singleBundle_fieldOrigin run_request_bound candidateFields_length; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_phase1_reports" "joint Phase1 report theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointPhase1Reports.${theorem_name}$" "$joint_phase1_reports" "joint Phase1 report dependency audit ${theorem_name}"
+done
+require_line_count 16 '^#guard_msgs in$' "$joint_phase1_reports" "joint Phase1 report guarded audits"
+
+# Optional source acceptance preserves full replies and erases only public instrumentation.
+phase1_acceptance=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase1AcceptanceOracle.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle$' \
+	proofs/lean/BeaconcryptCore.lean "PqxdhPhase1AcceptanceOracle root import"
+for theorem_name in acceptanceImpl_eq actualRun_eq instrument_query_bound instrumentedClient_query_bound acceptance_advantage_le_sum sourceCandidate_erase sourceIdentity_erase acceptanceImpl_erase actualRun_erase reduction_query_bound reductionGame_uniform_bound actualRun_uniform_bound bareRun_uniform_bound actualRun_attempt_bound actualRun_occurred instrumentedClient_total_bound actualRun_request_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$phase1_acceptance" "Phase1 acceptance theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.${theorem_name}$" "$phase1_acceptance" "Phase1 acceptance dependency audit ${theorem_name}"
+done
+require_line_count 17 '^#guard_msgs in$' "$phase1_acceptance" "Phase1 acceptance guarded audits"
+
+# Source Phase-1 builder and signing preserve complete joint identity histories.
+joint_phase1_source_writer=proofs/lean/BeaconcryptCore/Computational/PqxdhJointPhase1SourceWriter.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointPhase1SourceWriter$' \
+	proofs/lean/BeaconcryptCore.lean "PqxdhJointPhase1SourceWriter root import"
+for theorem_name in signing_step signingProgram_created signingProgram_uncreated signedState_seeds signedState_transcript signingProgram_continuation signing_history_step signingProgram_complete signedGlobalState_exact signedGlobalState_messages signedGlobalState_three_messages signingProgram_complete_continuation signedCandidate_source signing_message_bytes signingProgram_total_bound signingProgram_class_bound signingProgram_excluded_bound signingProgram_complete_uncreated signingProgram_interpreted_uniform_bound sourceSigning_complete beacon_start_unsigned sourceBuilderSigning_complete; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_phase1_source_writer" "source Phase-1 writer theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointPhase1SourceWriter.${theorem_name}$" "$joint_phase1_source_writer" "source Phase-1 writer dependency ${theorem_name}"
+done
+require_line_count 22 '^#guard_msgs in$' "$joint_phase1_source_writer" "source Phase-1 writer guarded audits"
+
+# Source creation/writer/actual optional acceptance compose in the same joint identity execution.
+joint_acceptance=proofs/lean/BeaconcryptCore/Computational/PqxdhJointPhase1AcceptanceComposition.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition$' \
+	proofs/lean/BeaconcryptCore.lean "joint source acceptance root import"
+require_line_count 41 '^theorem ' "$joint_acceptance" "joint source acceptance theorem inventory"
+require_line_count 41 '^#guard_msgs in$' "$joint_acceptance" "joint source acceptance guarded dependencies"
+for theorem_name in historyUpdate_noSign bare_step_noSign bare_run_noSign bare_step_seed_extension bare_step_created bare_run_created bare_dynamic_compose liftDynamic_complete selectedProgram_complete selectedProgram_three_messages selectedProgram_fieldOrigin reportingImpl_snapshot reportingExecution_snapshot reportingRun_snapshot actualRun_snapshot sessionBody_complete bare_create_initial oneSession_complete singletonState_facts sessionBody_supported oneSession_supported sessionBody_finalCandidate oneSession_finalCandidate oneSession_changed_fieldOrigin liftDynamic_query_bound selectedProgram_query_bound oneSession_query_bound sourceCandidate_monitor acceptanceCandidate_monitor acceptanceCandidate_snapshot_occurred acceptanceCandidate_hit_recorded oneSession_changed_recorded oneSession_create_bound oneSession_authentication_bound oneSession_class_bound oneSession_total_bound oneSessionReduction_class_bound oneSession_attempt_bound oneSession_reveal_bound oneSession_actual_uniform_bound oneSession_challenger_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_acceptance" "joint source acceptance theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition.${theorem_name}$" "$joint_acceptance" "joint source acceptance dependency ${theorem_name}"
 done
 
 

@@ -2,13 +2,11 @@ import BeaconcryptCore.Computational.PqxdhEd25519EufCma
 import BeaconcryptCore.Computational.PqxdhKemIndCca
 
 /-!
-# Stateful Phase-1 authentication prefix
+# Stateful Phase-1 retained writer and forgery reduction
 
-This module defines the privately correlated, source-ordered Phase-1 prefix needed to compose the existing Ed25519 field-origin reduction with the initialized-chain secrecy game. The `publicContext` callback is passed only the identity, prekey, target ML-KEM public key, and one-time public key and receives none of the generated private results or the ML-KEM secret key; private setup and selector continuation state remain in the retained result, and the ML-KEM secret key remains exclusively inside the local CCA interpreter.
+This module defines the privately correlated, source-ordered Phase-1 prefix for an Ed25519 field-origin reduction. Local ML-KEM prechallenge interpretation preserves the complete retained tail: the incoming private prekey state, the generated private one-time state, the prekey/one-time/PQ signing order, the adaptive selected candidate, and selector continuation state. The exact signing writer equality retains every message and its actual returned signature together with that full protocol result.
 
-The checked routing lemma shows that lifting an arbitrary full prechallenge CCA computation through the signing layer and interpreting it with the locally owned ML-KEM key preserves the complete CCA computation under an untouched signing layer. It does not yet prove the joint writer/EUF equality or the final authentication-plus-chain bound.
-
-Ed25519, ML-KEM-768, HKDF-SHA-512, X25519, ChaCha20-Poly1305, and BLAKE2b-512 correctness, security, implementation realization, generator independence, binding, and related-use properties are permanent external assumptions. This module proves no primitive internals and does not present those properties as future proof obligations.
+Ed25519, ML-KEM-768, HKDF-SHA-512, X25519, ChaCha20-Poly1305, and BLAKE2b-512 implementations are treated as perfect implementations of their stated primitive contracts; this module proves no primitive internals. The structural writer and routing equalities require no cryptographic security premise. Generator-order interchange, protocol correlations across later phases, source/ideal semantic correspondence, and initialized-chain/KDF composition remain separate protocol proof obligations, rather than primitive assumptions.
 -/
 
 open OracleSpec OracleComp ENNReal
@@ -35,7 +33,7 @@ structure PrivateOneTime (Private : Type) where
   publicKey : X25519PublicKey
   privateState : Private
 
-/-- Source-shaped honest material setup. The context callback receives only public argument values and none of the generated private results or the KEM secret key. -/
+/-- Source-shaped honest material setup. Its callbacks receive no identity secret key or locally generated KEM secret key, and public context depends only on public inputs. -/
 structure StatefulPhase1Setup (baseSpec : OracleSpec iota) where
   PrivatePre : Type
   PrivateOne : Type
@@ -54,6 +52,16 @@ structure StatefulPhase1Selector
   main : Phase1PublicTranscript Context →
     OracleComp kem.IND_CCA_oracleSpec (Phase1Candidate × State)
 
+/-- The selector at the concrete CCA surface, avoiding opaque abbreviation casts in later routing equalities. -/
+def StatefulPhase1Selector.mainConcrete
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    {Context : Type} (selector : StatefulPhase1Selector kem Context)
+    (transcript : Phase1PublicTranscript Context) :
+    OracleComp ((unifSpec + baseSpec) +
+      (MlKem768Ciphertext →ₒ Option MlKemSharedSecret))
+      (Phase1Candidate × selector.State) :=
+  selector.main transcript
+
 /-- The selected KEM public key is installed by construction, never by an external honest-selection equality. -/
 def setupMaterial (setup : StatefulPhase1Setup baseSpec)
     (identity : Ed25519PublicKey) (before : PrivatePrekey setup.PrivatePre)
@@ -70,7 +78,41 @@ def setupMaterial (setup : StatefulPhase1Setup baseSpec)
     (setupMaterial setup identity before target after).pqKey = target := by
   rfl
 
-/-- The retained joint client result contains no KEM secret key. -/
+/-- Directly embed the CCA surface as the left side of the signing-extended surface. -/
+def phase1CcaLiftImpl : QueryImpl
+    ((unifSpec + baseSpec) +
+      (MlKem768Ciphertext →ₒ Option MlKemSharedSecret))
+    (OracleComp (((unifSpec + baseSpec) +
+      (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) +
+        Phase1SigningSpec)) :=
+  fun query => liftM (((((unifSpec + baseSpec) +
+    (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) +
+      Phase1SigningSpec).query (.inl query)))
+
+def phase1CcaLift {alpha : Type}
+    (computation : OracleComp ((unifSpec + baseSpec) +
+      (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) alpha) :
+    OracleComp (((unifSpec + baseSpec) +
+      (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) +
+        Phase1SigningSpec) alpha :=
+  simulateQ phase1CcaLiftImpl computation
+
+/-- A signing-interface call at the explicit right summand of the CCA-plus-signing surface. -/
+def phase1SigningQuery (message : Pqxdh.Bytes) :
+    OracleComp (((unifSpec + baseSpec) +
+      (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) +
+        Phase1SigningSpec) Ed25519Signature :=
+  liftM (((((unifSpec + baseSpec) +
+    (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) +
+      Phase1SigningSpec).query (.inr message)))
+
+/-- The same signing call after the local CCA interpreter has removed the decapsulation layer. -/
+def phase1ForwardSigningQuery (message : Pqxdh.Bytes) :
+    OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)
+      Ed25519Signature :=
+  liftM ((((unifSpec + baseSpec) + Phase1SigningSpec).query (.inr message)))
+
+/-- The locally generated `sk` is not passed to setup or selector callbacks and is not returned as a dedicated result field; it stays closed over by the local CCA interpreter. -/
 structure StatefulPhase1Result
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (setup : StatefulPhase1Setup baseSpec)
@@ -115,29 +157,36 @@ def statefulPhase1Tail
     (selector : StatefulPhase1Selector kem setup.Context)
     (identity : Ed25519PublicKey) (before : PrivatePrekey setup.PrivatePre)
     (target : TargetKemPublicKey) :
-    OracleComp (kem.IND_CCA_oracleSpec + Phase1SigningSpec)
+    OracleComp (((unifSpec + baseSpec) +
+      (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) + Phase1SigningSpec)
       (StatefulPhase1Result kem setup selector) := do
-  let after ← OracleComp.liftComp
-    (OracleComp.liftComp (setup.oneTime identity before target)
+  let after ← phase1CcaLift (OracleComp.liftComp
+    (setup.oneTime identity before target)
       ((unifSpec + baseSpec) + (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)))
-    (((unifSpec + baseSpec) + (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) +
-      Phase1SigningSpec)
   let material := setupMaterial setup identity before target after
-  let preSignature ← liftM (Phase1SigningSpec.query (prekeyMessage material.prekey))
-  let oneSignature ← liftM (Phase1SigningSpec.query (oneTimeMessage material.oneTime))
-  let pqSignature ← liftM (Phase1SigningSpec.query (pqMessage material.pqKey))
+  let preSignature ← phase1SigningQuery (prekeyMessage material.prekey)
+  let oneSignature ← phase1SigningQuery (oneTimeMessage material.oneTime)
+  let pqSignature ← phase1SigningQuery (pqMessage material.pqKey)
   let transcript := honestPhase1Transcript identity material preSignature oneSignature pqSignature
-  let selected ← OracleComp.liftComp (selector.main transcript)
-    (kem.IND_CCA_oracleSpec + Phase1SigningSpec)
+  let selected ← phase1CcaLift (selector.mainConcrete kem transcript)
   return ⟨identity, target, before, after, preSignature, oneSignature, pqSignature,
     selected.1, selected.2⟩
 
-/-- The stopped EUF reduction owns the locally generated KEM key and interprets all prechallenge decapsulation calls while forwarding signature queries. -/
+/-- The concrete local prechallenge interpreter at the exact exposed CCA surface. -/
+def localKemPreChallengeImpl
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (sk : KemSK) :
+    QueryImpl ((unifSpec + baseSpec) +
+        (MlKem768Ciphertext →ₒ Option MlKemSharedSecret))
+      (OracleComp (unifSpec + baseSpec)) :=
+  kem.IND_CCA_preChallengeImpl sk
+
+/-- The stopped EUF reduction owns the locally generated KEM key and interprets all prechallenge decapsulation calls, while forwarding signature queries. -/
 def localKemPhase1Impl
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (sk : KemSK) :
-    QueryImpl (kem.IND_CCA_oracleSpec + Phase1SigningSpec)
+    QueryImpl (((unifSpec + baseSpec) +
+        (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) + Phase1SigningSpec)
       (OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)) :=
-  (kem.IND_CCA_preChallengeImpl sk).liftTarget
+  (localKemPreChallengeImpl kem sk).liftTarget
       (OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)) +
     (fun message : Pqxdh.Bytes => (liftM (Phase1SigningSpec.query message) :
       OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec) Ed25519Signature))
@@ -157,7 +206,7 @@ def statefulPhase1Client
   simulateQ (localKemPhase1Impl kem sk)
     (statefulPhase1Tail kem setup selector identity before target)
 
-/-- Direct locally interpreted tail used to expose the same retained result shape, including private state and adaptive selector output. -/
+/-- Direct locally interpreted tail used to expose the exact same joint distribution, including private state and adaptive selector output. -/
 def localStatefulPhase1Tail
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (setup : StatefulPhase1Setup baseSpec)
@@ -166,40 +215,74 @@ def localStatefulPhase1Tail
     (target : TargetKemPublicKey) (sk : KemSK) :
     OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)
       (StatefulPhase1Result kem setup selector) := do
-  let after ← OracleComp.liftComp (setup.oneTime identity before target)
-    ((unifSpec + baseSpec) + Phase1SigningSpec)
+  let after ← (liftM
+    (simulateQ (localKemPreChallengeImpl kem sk) (OracleComp.liftComp
+      (setup.oneTime identity before target)
+      ((unifSpec + baseSpec) +
+        (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)))) :
+    OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)
+      (PrivateOneTime setup.PrivateOne))
   let material := setupMaterial setup identity before target after
-  let preSignature ← liftM (Phase1SigningSpec.query (prekeyMessage material.prekey))
-  let oneSignature ← liftM (Phase1SigningSpec.query (oneTimeMessage material.oneTime))
-  let pqSignature ← liftM (Phase1SigningSpec.query (pqMessage material.pqKey))
+  let preSignature ← phase1ForwardSigningQuery (prekeyMessage material.prekey)
+  let oneSignature ← phase1ForwardSigningQuery (oneTimeMessage material.oneTime)
+  let pqSignature ← phase1ForwardSigningQuery (pqMessage material.pqKey)
   let transcript := honestPhase1Transcript identity material preSignature oneSignature pqSignature
-  let selected ← OracleComp.liftComp
-    (simulateQ (kem.IND_CCA_preChallengeImpl sk) (selector.main transcript))
-    ((unifSpec + baseSpec) + Phase1SigningSpec)
+  let selected ← (liftM
+    (simulateQ (localKemPreChallengeImpl kem sk)
+      (selector.mainConcrete kem transcript)) :
+    OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)
+      (Phase1Candidate × selector.State))
   return ⟨identity, target, before, after, preSignature, oneSignature, pqSignature,
     selected.1, selected.2⟩
 
 set_option backward.isDefEq.respectTransparency false in
-/-- Interpreting a lifted full prechallenge CCA computation with the private local KEM key preserves that entire computation under the signing layer. -/
 theorem simulateQ_localKemPhase1Impl_liftCCA
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (sk : KemSK)
-    {alpha : Type} (computation : OracleComp kem.IND_CCA_oracleSpec alpha) :
+    {alpha : Type} (computation : OracleComp
+      ((unifSpec + baseSpec) +
+        (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) alpha) :
     simulateQ (localKemPhase1Impl kem sk)
-        (OracleComp.liftComp computation
-          (kem.IND_CCA_oracleSpec + Phase1SigningSpec)) =
-      (liftM (simulateQ (kem.IND_CCA_preChallengeImpl sk) computation) :
+        (phase1CcaLift computation) =
+      (liftM (simulateQ (localKemPreChallengeImpl kem sk) computation) :
         OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec) alpha) := by
-  refine (QueryImpl.simulateQ_add_liftComp_left
-    ((kem.IND_CCA_preChallengeImpl sk).liftTarget
-      (OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)))
-    ((fun message : Pqxdh.Bytes =>
-      (liftM (Phase1SigningSpec.query message) :
-        OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)
-          Ed25519Signature)) :
-      QueryImpl Phase1SigningSpec
-        (OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)))
-    computation).trans ?_
+  unfold phase1CcaLift
+  rw [← QueryImpl.simulateQ_compose]
+  rw [show (localKemPhase1Impl kem sk ∘ₛ phase1CcaLiftImpl) =
+      (localKemPreChallengeImpl kem sk).liftTarget
+        (OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)) by
+    funext query
+    unfold QueryImpl.compose phase1CcaLiftImpl
+    rw [simulateQ_spec_query]
+    rfl]
   rw [simulateQ_liftTarget]
+
+set_option backward.isDefEq.respectTransparency false in
+theorem simulateQ_localKemPhase1Impl_sign
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (sk : KemSK)
+    (message : Pqxdh.Bytes) :
+    simulateQ (localKemPhase1Impl kem sk)
+        (phase1SigningQuery message) =
+      phase1ForwardSigningQuery message := by
+  unfold localKemPhase1Impl
+  unfold phase1SigningQuery phase1ForwardSigningQuery
+  rw [simulateQ_spec_query]
+  rfl
+
+set_option backward.isDefEq.respectTransparency false in
+theorem simulateQ_statefulPhase1Tail_localKem
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context)
+    (identity : Ed25519PublicKey) (before : PrivatePrekey setup.PrivatePre)
+    (target : TargetKemPublicKey) (sk : KemSK) :
+    simulateQ (localKemPhase1Impl kem sk)
+        (statefulPhase1Tail kem setup selector identity before target) =
+      localStatefulPhase1Tail kem setup selector identity before target sk := by
+  unfold statefulPhase1Tail localStatefulPhase1Tail
+  simp only [simulateQ_bind, simulateQ_pure]
+  rw [simulateQ_localKemPhase1Impl_liftCCA]
+  simp_rw [simulateQ_localKemPhase1Impl_sign]
+  simp_rw [simulateQ_localKemPhase1Impl_liftCCA]
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.simulateQ_localKemPhase1Impl_liftCCA' depends on axioms: [propext,
@@ -208,5 +291,425 @@ info: 'BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.simulateQ_localKe
 -/
 #guard_msgs in
 #print axioms simulateQ_localKemPhase1Impl_liftCCA
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.simulateQ_localKemPhase1Impl_sign' depends on axioms: [propext,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms simulateQ_localKemPhase1Impl_sign
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.simulateQ_statefulPhase1Tail_localKem' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms simulateQ_statefulPhase1Tail_localKem
+
+/-- The complete signing log, including the actual three returned signatures in source order. -/
+def StatefulPhase1Result.signingLog
+    {kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)}
+    {setup : StatefulPhase1Setup baseSpec}
+    {selector : StatefulPhase1Selector kem setup.Context}
+    (result : StatefulPhase1Result kem setup selector) : QueryLog Phase1SigningSpec :=
+  [⟨prekeyMessage result.material.prekey, result.preSignature⟩,
+    ⟨oneTimeMessage result.material.oneTime, result.oneSignature⟩,
+    ⟨pqMessage result.material.pqKey, result.pqSignature⟩]
+
+set_option backward.isDefEq.respectTransparency false in
+theorem phase1SigningImpl_run_forwardSign {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (pk : Ed25519PublicKey) (sk : SecretKey) (message : Pqxdh.Bytes) :
+    (simulateQ (phase1SigningImpl sigAlg pk sk)
+      (phase1ForwardSigningQuery message)).run =
+      (sigAlg.sign pk sk message >>= fun signature =>
+        pure (signature, ([⟨message, signature⟩] : QueryLog Phase1SigningSpec))) := by
+  simp [phase1ForwardSigningQuery, phase1SigningImpl, SignatureAlg.signingOracle]
+
+set_option backward.isDefEq.respectTransparency false in
+theorem phase1Base_cca_query_liftComp (query : (unifSpec + baseSpec).Domain) :
+    OracleComp.liftComp (liftM ((unifSpec + baseSpec).query query) :
+      OracleComp (unifSpec + baseSpec) ((unifSpec + baseSpec).Range query))
+      ((unifSpec + baseSpec) + (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)) =
+    liftM ((((unifSpec + baseSpec) + (MlKem768Ciphertext →ₒ Option MlKemSharedSecret)).query (.inl query))) := by
+  cases query <;> rfl
+
+set_option backward.isDefEq.respectTransparency false in
+theorem localKemPreChallengeImpl_base {alpha : Type}
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (sk : KemSK)
+    (computation : OracleComp (unifSpec + baseSpec) alpha) :
+    simulateQ (localKemPreChallengeImpl kem sk)
+      (OracleComp.liftComp computation ((unifSpec + baseSpec) +
+        (MlKem768Ciphertext →ₒ Option MlKemSharedSecret))) = computation := by
+  induction computation using OracleComp.inductionOn with
+  | pure value => simp
+  | query_bind query continuation ih =>
+    simp only [OracleComp.liftComp_bind, simulateQ_bind, phase1Base_cca_query_liftComp, ih]
+    simp [localKemPreChallengeImpl, KEMScheme.IND_CCA_preChallengeImpl]
+    rfl
+
+/-- Direct source-order signing execution retaining every private and public tail result. -/
+def statefulPhase1TailReference {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context)
+    (identity : Ed25519PublicKey) (identitySk : SecretKey)
+    (before : PrivatePrekey setup.PrivatePre) (target : TargetKemPublicKey)
+    (kemSk : KemSK) : OracleComp (unifSpec + baseSpec)
+      (StatefulPhase1Result kem setup selector) := do
+  let after ← setup.oneTime identity before target
+  let material := setupMaterial setup identity before target after
+  let preSignature ← sigAlg.sign identity identitySk (prekeyMessage material.prekey)
+  let oneSignature ← sigAlg.sign identity identitySk (oneTimeMessage material.oneTime)
+  let pqSignature ← sigAlg.sign identity identitySk (pqMessage material.pqKey)
+  let transcript := honestPhase1Transcript identity material preSignature oneSignature pqSignature
+  let selected ← simulateQ (localKemPreChallengeImpl kem kemSk)
+    (selector.mainConcrete kem transcript)
+  return ⟨identity, target, before, after, preSignature, oneSignature, pqSignature,
+    selected.1, selected.2⟩
+
+/-- Stopped source prefix preserving the correlated prekey and KEM generation order. -/
+def statefulPhase1ClientReference {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context)
+    (identity : Ed25519PublicKey) (identitySk : SecretKey) :
+    OracleComp (unifSpec + baseSpec) (StatefulPhase1Result kem setup selector) := do
+  let before ← setup.prekey identity
+  let (target, kemSk) ← kem.keygen
+  statefulPhase1TailReference sigAlg kem setup selector identity identitySk before target kemSk
+
+/-- The same-target accepted field-substitution event on the complete retained result. -/
+def StatefulPhase1Result.badBit
+    {kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)}
+    {setup : StatefulPhase1Setup baseSpec}
+    {selector : StatefulPhase1Selector kem setup.Context}
+    (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
+    (result : StatefulPhase1Result kem setup selector) : Bool :=
+  phase1FieldSubstitutionBit verifyFn result.identity result.material result.candidate
+
+/-- Select one changed typed field in the existing server verification order, without guessing a field. -/
+def StatefulPhase1Result.forgery
+    {kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)}
+    {setup : StatefulPhase1Setup baseSpec}
+    {selector : StatefulPhase1Selector kem setup.Context}
+    (result : StatefulPhase1Result kem setup selector) : Pqxdh.Bytes × Ed25519Signature :=
+  selectPhase1Forgery result.material result.transcript result.candidate
+
+/-- A successful substitution selects a valid message absent from all three actual signing requests. -/
+theorem StatefulPhase1Result.badBit_selects_fresh_valid
+    {kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)}
+    {setup : StatefulPhase1Setup baseSpec}
+    {selector : StatefulPhase1Selector kem setup.Context}
+    (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
+    (result : StatefulPhase1Result kem setup selector)
+    (bad : result.badBit verifyFn = true) :
+    verifyFn result.identity result.forgery.1 result.forgery.2 = true ∧
+      result.forgery.1 ∉ result.signingLog.map (fun entry => entry.1) := by
+  simpa [StatefulPhase1Result.forgery, StatefulPhase1Result.signingLog,
+    honestPhase1Messages] using
+    phase1FieldSubstitution_selects_fresh_valid verifyFn result.identity result.material
+      result.transcript result.candidate bad
+
+/-- The reduction runs the retained source prefix and outputs the one selected field forgery. -/
+def statefulPhase1ToEUFCMA {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context) :
+    SignatureAlg.unforgeableAdv sigAlg where
+  main identity := StatefulPhase1Result.forgery <$>
+    statefulPhase1Client kem setup selector identity
+
+/-- Identity generation encloses the complete source-order retained reference. -/
+def statefulPhase1JointReference {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context) :
+    OracleComp (unifSpec + baseSpec) (StatefulPhase1Result kem setup selector) := do
+  let (identity, identitySk) ← sigAlg.keygen
+  statefulPhase1ClientReference sigAlg kem setup selector identity identitySk
+
+/-- The actual signature experiment writer retains the full protocol result beside its log. -/
+def statefulPhase1WriterJoint {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context) :
+    OracleComp (unifSpec + baseSpec)
+      (StatefulPhase1Result kem setup selector × QueryLog Phase1SigningSpec) := do
+  let (identity, identitySk) ← sigAlg.keygen
+  (simulateQ (phase1SigningImpl sigAlg identity identitySk)
+    (statefulPhase1Client kem setup selector identity)).run
+
+/-- Weak EUF checks freshness of the message, without requiring a new signature for an old message. -/
+def StatefulPhase1Result.eufBit
+    {kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)}
+    {setup : StatefulPhase1Setup baseSpec}
+    {selector : StatefulPhase1Selector kem setup.Context}
+    (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
+    (result : StatefulPhase1Result kem setup selector) : Bool :=
+  decide (result.forgery.1 ∉ result.signingLog.map (fun entry => entry.1)) &&
+    verifyFn result.identity result.forgery.1 result.forgery.2
+
+theorem StatefulPhase1Result.badBit_implies_eufBit
+    {kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)}
+    {setup : StatefulPhase1Setup baseSpec}
+    {selector : StatefulPhase1Selector kem setup.Context}
+    (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
+    (result : StatefulPhase1Result kem setup selector)
+    (bad : result.badBit verifyFn = true) : result.eufBit verifyFn = true := by
+  obtain ⟨valid, fresh⟩ := result.badBit_selects_fresh_valid verifyFn bad
+  simp [StatefulPhase1Result.eufBit, fresh, valid]
+
+set_option backward.isDefEq.respectTransparency false in
+theorem phase1Base_query_lift (query : (unifSpec + baseSpec).Domain) :
+    (liftM (liftM ((unifSpec + baseSpec).query query) :
+      OracleComp (unifSpec + baseSpec) ((unifSpec + baseSpec).Range query)) :
+      OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)
+      ((unifSpec + baseSpec).Range query)) =
+    liftM ((((unifSpec + baseSpec) + Phase1SigningSpec).query (.inl query))) := by
+  cases query <;> rfl
+
+set_option backward.isDefEq.respectTransparency false in
+theorem phase1SigningImpl_run_concreteLift {SecretKey alpha : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (pk : Ed25519PublicKey) (sk : SecretKey)
+    (computation : OracleComp (unifSpec + baseSpec) alpha) :
+    (simulateQ (phase1SigningImpl sigAlg pk sk)
+      (liftM computation : OracleComp ((unifSpec + baseSpec) + Phase1SigningSpec)
+        alpha)).run =
+      (fun output => (output, ([] : QueryLog Phase1SigningSpec))) <$> computation := by
+  induction computation using OracleComp.inductionOn with
+  | pure value => simp
+  | query_bind query continuation ih =>
+    simp only [liftM_bind, simulateQ_bind, WriterT.run_bind, phase1Base_query_lift]
+    simp only [ih]
+    simp [phase1SigningImpl, HasQuery.toQueryImpl_apply]
+
+set_option backward.isDefEq.respectTransparency false in
+theorem localStatefulPhase1Tail_writer_exact {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context)
+    (identity : Ed25519PublicKey) (identitySk : SecretKey)
+    (before : PrivatePrekey setup.PrivatePre) (target : TargetKemPublicKey)
+    (kemSk : KemSK) :
+    (simulateQ (phase1SigningImpl sigAlg identity identitySk)
+      (localStatefulPhase1Tail kem setup selector identity before target kemSk)).run =
+      (fun result => (result, result.signingLog)) <$>
+        statefulPhase1TailReference sigAlg kem setup selector identity identitySk
+          before target kemSk := by
+  simp [localStatefulPhase1Tail, statefulPhase1TailReference,
+    phase1SigningImpl_run_concreteLift, phase1SigningImpl_run_forwardSign,
+    localKemPreChallengeImpl_base,
+    StatefulPhase1Result.signingLog, StatefulPhase1Result.material]
+  rfl
+
+noncomputable def statefulPhase1EufBody {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context) :
+    OracleComp (unifSpec + baseSpec) Bool := by
+  letI : DecidableEq Pqxdh.Bytes := Classical.decEq Pqxdh.Bytes
+  exact do
+    let (identity, identitySk) ← sigAlg.keygen
+    let (result, log) ← (simulateQ (phase1SigningImpl sigAlg identity identitySk)
+      (statefulPhase1Client kem setup selector identity)).run
+    let verified ← sigAlg.verify identity result.forgery.1 result.forgery.2
+    return !log.wasQueried result.forgery.1 && verified
+
+set_option backward.isDefEq.respectTransparency false in
+theorem unforgeableExp_statefulPhase1ToEUFCMA {SecretKey : Type}
+    (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec)))
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context) :
+    SignatureAlg.unforgeableExp runtime (statefulPhase1ToEUFCMA sigAlg kem setup selector) =
+      runtime.evalDist (statefulPhase1EufBody sigAlg kem setup selector) := by
+  simp [SignatureAlg.unforgeableExp, statefulPhase1EufBody, statefulPhase1ToEUFCMA,
+    phase1SigningImpl, map_eq_bind_pure_comp]
+  congr 1
+
+set_option backward.isDefEq.respectTransparency false in
+theorem phase1Base_query_liftComp (query : (unifSpec + baseSpec).Domain) :
+    OracleComp.liftComp (liftM ((unifSpec + baseSpec).query query) :
+      OracleComp (unifSpec + baseSpec) ((unifSpec + baseSpec).Range query))
+      ((unifSpec + baseSpec) + Phase1SigningSpec) =
+    liftM ((((unifSpec + baseSpec) + Phase1SigningSpec).query (.inl query))) := by
+  cases query <;> rfl
+
+set_option backward.isDefEq.respectTransparency false in
+theorem phase1SigningImpl_run_concreteLiftComp {SecretKey alpha : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (pk : Ed25519PublicKey) (sk : SecretKey)
+    (computation : OracleComp (unifSpec + baseSpec) alpha) :
+    (simulateQ (phase1SigningImpl sigAlg pk sk)
+      (OracleComp.liftComp computation ((unifSpec + baseSpec) + Phase1SigningSpec))).run =
+      (fun output => (output, ([] : QueryLog Phase1SigningSpec))) <$> computation := by
+  induction computation using OracleComp.inductionOn with
+  | pure value => simp
+  | query_bind query continuation ih =>
+    simp only [OracleComp.liftComp_bind, simulateQ_bind, WriterT.run_bind, phase1Base_query_liftComp]
+    simp only [ih]
+    simp [phase1SigningImpl, HasQuery.toQueryImpl_apply]
+
+set_option backward.isDefEq.respectTransparency false in
+theorem statefulPhase1Client_writer_exact {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context)
+    (identity : Ed25519PublicKey) (identitySk : SecretKey) :
+    (simulateQ (phase1SigningImpl sigAlg identity identitySk)
+      (statefulPhase1Client kem setup selector identity)).run =
+      (fun result => (result, result.signingLog)) <$>
+        statefulPhase1ClientReference sigAlg kem setup selector identity identitySk := by
+  simp [statefulPhase1Client, statefulPhase1ClientReference,
+    simulateQ_statefulPhase1Tail_localKem, localStatefulPhase1Tail_writer_exact,
+    phase1SigningImpl_run_concreteLiftComp]
+
+/-- Identity generation, the full retained result, and every message/signature log entry agree jointly. -/
+theorem statefulPhase1WriterJoint_exact {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context) :
+    statefulPhase1WriterJoint sigAlg kem setup selector =
+      (fun result => (result, result.signingLog)) <$>
+        statefulPhase1JointReference sigAlg kem setup selector := by
+  simp [statefulPhase1WriterJoint, statefulPhase1JointReference,
+    statefulPhase1Client_writer_exact]
+
+@[simp] theorem StatefulPhase1Result.signingLog_length
+    {kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)}
+    {setup : StatefulPhase1Setup baseSpec}
+    {selector : StatefulPhase1Selector kem setup.Context}
+    (result : StatefulPhase1Result kem setup selector) : result.signingLog.length = 3 := by
+  rfl
+
+@[simp] theorem StatefulPhase1Result.signingLog_messages
+    {kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)}
+    {setup : StatefulPhase1Setup baseSpec}
+    {selector : StatefulPhase1Selector kem setup.Context}
+    (result : StatefulPhase1Result kem setup selector) :
+    result.signingLog.map (fun entry => entry.1) = honestPhase1Messages result.material := by
+  rfl
+
+set_option backward.isDefEq.respectTransparency false in
+theorem statefulPhase1EufBody_eq_reference {SecretKey : Type}
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context)
+    (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
+    (deterministic : HasDeterministicVerification sigAlg verifyFn) :
+    statefulPhase1EufBody sigAlg kem setup selector =
+      StatefulPhase1Result.eufBit verifyFn <$>
+        statefulPhase1JointReference sigAlg kem setup selector := by
+  unfold statefulPhase1EufBody statefulPhase1JointReference
+  simp only [map_eq_bind_pure_comp, bind_assoc]
+  apply bind_congr
+  rintro ⟨identity, identitySk⟩
+  simp_rw [deterministic identity]
+  rw [statefulPhase1Client_writer_exact]
+  simp only [bind_map_left, pure_bind, QueryLog.wasQueried_eq_decide_mem_map_fst]
+  simp [statefulPhase1ClientReference, statefulPhase1TailReference,
+    StatefulPhase1Result.eufBit]
+
+theorem unforgeableExp_statefulPhase1ToEUFCMA_eq_reference {SecretKey : Type}
+    (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec)))
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context)
+    (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
+    (deterministic : HasDeterministicVerification sigAlg verifyFn)
+    (runtime_map : ∀ {alpha beta : Type} (f : alpha → beta)
+      (computation : OracleComp (unifSpec + baseSpec) alpha),
+      runtime.evalDist (f <$> computation) = f <$> runtime.evalDist computation) :
+    SignatureAlg.unforgeableExp runtime (statefulPhase1ToEUFCMA sigAlg kem setup selector) =
+      StatefulPhase1Result.eufBit verifyFn <$>
+        runtime.evalDist (statefulPhase1JointReference sigAlg kem setup selector) := by
+  rw [unforgeableExp_statefulPhase1ToEUFCMA, statefulPhase1EufBody_eq_reference
+    sigAlg kem setup selector verifyFn deterministic, runtime_map]
+
+/-- Probability of accepted same-identity field substitution in the stopped source-order experiment. -/
+noncomputable def StatefulPhase1FieldSubstitutionAdvantage {SecretKey : Type}
+    (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec)))
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context)
+    (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool) : ℝ≥0∞ :=
+  Pr[= true | StatefulPhase1Result.badBit verifyFn <$>
+    runtime.evalDist (statefulPhase1JointReference sigAlg kem setup selector)]
+
+/-- One deterministic field selection gives a coefficient-one weak-EUF-CMA reduction. -/
+theorem statefulPhase1FieldSubstitutionAdvantage_le_eufCma {SecretKey : Type}
+    (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec)))
+    (sigAlg : Ed25519Scheme (unifSpec + baseSpec) SecretKey)
+    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
+    (setup : StatefulPhase1Setup baseSpec)
+    (selector : StatefulPhase1Selector kem setup.Context)
+    (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
+    (deterministic : HasDeterministicVerification sigAlg verifyFn)
+    (runtime_map : ∀ {alpha beta : Type} (f : alpha → beta)
+      (computation : OracleComp (unifSpec + baseSpec) alpha),
+      runtime.evalDist (f <$> computation) = f <$> runtime.evalDist computation) :
+    StatefulPhase1FieldSubstitutionAdvantage runtime sigAlg kem setup selector verifyFn ≤
+      (statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage runtime := by
+  unfold StatefulPhase1FieldSubstitutionAdvantage SignatureAlg.unforgeableAdv.advantage
+  rw [unforgeableExp_statefulPhase1ToEUFCMA_eq_reference runtime sigAlg kem setup
+    selector verifyFn deterministic runtime_map, ← probEvent_eq_eq_probOutput,
+    ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
+  exact probEvent_mono'' fun result => result.badBit_implies_eufBit verifyFn
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.localStatefulPhase1Tail_writer_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms localStatefulPhase1Tail_writer_exact
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.statefulPhase1Client_writer_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms statefulPhase1Client_writer_exact
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.statefulPhase1WriterJoint_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms statefulPhase1WriterJoint_exact
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.StatefulPhase1Result.badBit_selects_fresh_valid' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms StatefulPhase1Result.badBit_selects_fresh_valid
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.statefulPhase1FieldSubstitutionAdvantage_le_eufCma' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms statefulPhase1FieldSubstitutionAdvantage_le_eufCma
 
 end BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma
