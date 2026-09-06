@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=161
+	[handwritten-lean]=162
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3780,6 +3780,19 @@ for theorem_pattern in recordOpening_cache annotated_query annotated_complete an
 		"canonical schedule theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxCanonicalSchedule[.]${theorem_pattern}$" \
 		"$owner_module" "canonical schedule dependency ${theorem_pattern}"
+done
+
+# Source-window-derived KDF count and complete source/canonical randomness cap.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxKdfBudget.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxKdfBudget$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxKdfBudget root import"
+require_line_count 11 '^theorem ' "$owner_module" "RawCtxKdfBudget theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$owner_module" "RawCtxKdfBudget guarded dependencies"
+for theorem_pattern in begin_remaining resume_small resume_cost program_cost begin_cost receive_bound native_receive_bound raw_bound schedule_bound source_uniform canonical_uniform; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"receive KDF budget theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxKdfBudget[.]${theorem_pattern}$" \
+		"$owner_module" "receive KDF budget dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
