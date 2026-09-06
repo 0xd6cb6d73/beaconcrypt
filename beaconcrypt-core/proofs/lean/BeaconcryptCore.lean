@@ -183,6 +183,8 @@ import BeaconcryptCore.Computational.RawCtxCanonicalOpening
 import BeaconcryptCore.Computational.RawCtxSharedPrimitive
 import BeaconcryptCore.Computational.RawCtxCanonicalSchedule
 import BeaconcryptCore.Computational.RawCtxKdfBudget
+import BeaconcryptCore.Computational.RawCtxMixedOwner
+import BeaconcryptCore.Computational.RawCtxMixedShared
 
 /-!
 # Beaconcrypt-core verification root
