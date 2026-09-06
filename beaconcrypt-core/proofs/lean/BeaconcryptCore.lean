@@ -23,6 +23,7 @@ import BeaconcryptCore.Computational.PqxdhSecretInputKdf
 import BeaconcryptCore.Computational.PqxdhFullSecretInputKdf
 import BeaconcryptCore.Computational.PqxdhOrderedChainHybrids
 import BeaconcryptCore.Computational.PqxdhInitialChainComposition
+import BeaconcryptCore.Computational.PqxdhAdaptiveChainObservation
 import BeaconcryptCore.Computational.PqxdhComposition
 import BeaconcryptCore.Computational.RawCtxReceive
 import BeaconcryptCore.Computational.PqxdhHiddenRoot

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=123
+	[handwritten-lean]=124
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3340,5 +3340,17 @@ for theorem_name in initial_chains_observed initialized_pair_source independent_
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhInitialChainComposition.${theorem_name}$" "$initial_chain_composition" "initial-chain dependency ${theorem_name}"
 done
 require_line_count 20 '^#guard_msgs in$' "$initial_chain_composition" "initial-chain guarded audits"
+
+
+# Adaptive private-chain observation retains complete client results and all sampling budgets.
+adaptive_chain=proofs/lean/BeaconcryptCore/Computational/PqxdhAdaptiveChainObservation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAdaptiveChainObservation$' \
+	proofs/lean/BeaconcryptCore.lean "adaptive chain root import"
+require_line_count 13 '^theorem ' "$adaptive_chain" "adaptive chain theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$adaptive_chain" "adaptive chain guarded dependencies"
+for theorem_name in sourceView_tapeView sourceGame_eq_hybrid final_hybrid_eq_eager adaptive_advantage_bound sourceRun_uniform_bound tapeRun_uniform_bound tapeObserver_uniform_bound sourceImpl_requests sourceRun_requests_bound sourceGame_uniform_bound eagerGame_uniform_bound adaptiveReduction_query_bounds adaptiveChallenger_query_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_chain" "adaptive chain theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAdaptiveChainObservation.${theorem_name}$" "$adaptive_chain" "adaptive chain dependency ${theorem_name}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
