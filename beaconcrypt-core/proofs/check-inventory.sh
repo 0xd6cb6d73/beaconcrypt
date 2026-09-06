@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=254
+	[handwritten-lean]=257
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4935,6 +4935,27 @@ require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedPre
 require_line_count 18 '^#guard_msgs in$' "$shared_ctx_module" "AdaptiveCtxSharedPreparation guarded dependencies"
 for theorem_name in canonical_uniform prepared_interpretation lift_no_class lift_uniform_bound prepared_class_bound prepared_uniform_bound prepared_budgets prepared_view_eq prepared_source_uniform prepared_plaintext_bound independent_setup_bound prepared_decision_budgets prepared_decision_plaintext prepared_integrity_bound prepared_privacy_bound prepared_reduction_bounds prepared_experiment_bounds independent_source_bound; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedPreparation.${theorem_name}$" "$shared_ctx_module" "shared CTX dependency ${theorem_name}"
+done
+
+root_position_interpretation_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRootTableInitialization.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRootTableInitialization$' proofs/lean/BeaconcryptCore.lean "PqxdhRootTableInitialization root import"
+require_line_count 28 '^#guard_msgs in$' "$root_position_interpretation_module" "PqxdhRootTableInitialization guarded dependencies"
+for theorem_name in initialResponse_bytes initialResponse_law rootArray_bytes initialResponse_prefix initialize_refines source_query source_complete source_cached source_fresh source_uniform_game source_preserves_cached source_run_preserves_cached source_initial_result source_aligned source_run_aligned history_same_coordinates source_history_same_coordinates equal_roots_kernel initialize_stream_refines complementary_kernels compile_step compile_bound source_uniform_bound source_initial_count source_run_initial_count source_initial_kernel source_public source_hkdf_calls; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhRootTableInitialization.${theorem_name}$" "$root_position_interpretation_module" "root/position/interpretation dependency ${theorem_name}"
+done
+
+root_position_interpretation_module=proofs/lean/BeaconcryptCore/Computational/RawCtxPositionCapability.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxPositionCapability$' proofs/lean/BeaconcryptCore.lean "RawCtxPositionCapability root import"
+require_line_count 19 '^#guard_msgs in$' "$root_position_interpretation_module" "RawCtxPositionCapability guarded dependencies"
+for theorem_name in bare_prefix_complete opening_reply arguments_exact owner_reply_choice raw_prepared_reply positionReceive_false raw_reply_choice source_gated_reply_choice source_capability_step source_trace_capability logged_raw_erasure logged_run_erasure logged_run_trace source_supported_capability SourceTrace.metadata SourceTrace.history_length source_capability_bounded initialized_capability logged_query_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxPositionCapability.${theorem_name}$" "$root_position_interpretation_module" "root/position/interpretation dependency ${theorem_name}"
+done
+
+root_position_interpretation_module=proofs/lean/BeaconcryptCore/Computational/RawCtxInterpretedReceive.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxInterpretedReceive$' proofs/lean/BeaconcryptCore.lean "RawCtxInterpretedReceive root import"
+require_line_count 27 '^#guard_msgs in$' "$root_position_interpretation_module" "RawCtxInterpretedReceive guarded dependencies"
+for theorem_name in native_resume resume_map native_begin begin_map resume_progress begin_total finish_total normalResume_exact normalBegin_exact normalFinish_exact normalResume_rank normalResume_map normalBegin_map normalFinish_map program_map receive_map decodeResponse_exact normalResume_native normalBegin_native normalFinish_native program_native receive_native receive_interpreted program_kdf_bound program_open_bound receive_state receive_query_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxInterpretedReceive.${theorem_name}$" "$root_position_interpretation_module" "root/position/interpretation dependency ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

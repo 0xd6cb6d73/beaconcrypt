@@ -238,6 +238,9 @@ import BeaconcryptCore.Computational.AdaptiveCtxSharedTarget
 import BeaconcryptCore.Computational.AdaptiveCtxSharedFamily
 import BeaconcryptCore.Computational.AdaptiveCtxSharedFamilyBounds
 import BeaconcryptCore.Computational.AdaptiveCtxSharedPreparation
+import BeaconcryptCore.Computational.PqxdhRootTableInitialization
+import BeaconcryptCore.Computational.RawCtxPositionCapability
+import BeaconcryptCore.Computational.RawCtxInterpretedReceive
 /-!
 # Beaconcrypt-core verification root
 
