@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=198
+	[handwritten-lean]=201
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4408,5 +4408,35 @@ for theorem_pattern in 'shared_receive' 'shared_hash' 'shared_sealing' 'shared_w
 		"$owner_module" "mixed source dependency ${theorem_pattern}"
 done
 
+
+# Exact adaptive Server/public source interfaces and complete call ledgers.
+server_proof=proofs/lean/BeaconcryptCore/Computational/RawCtxServerMixed.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxServerMixed$' proofs/lean/BeaconcryptCore.lean "RawCtxServerMixed root import"
+require_line_count 9 '^theorem ' "$server_proof" "RawCtxServerMixed theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$server_proof" "RawCtxServerMixed guarded dependencies"
+for theorem_name in raw_interpretation send_interpretation server_interpretation schedule_interpretation raw_bound send_bound schedule_bound schedule_bounds shared_uniform; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$server_proof" "RawCtxServerMixed theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxServerMixed.${theorem_name}$" "$server_proof" "RawCtxServerMixed dependency ${theorem_name}"
+done
+
+# Exact adaptive Server/public source interfaces and complete call ledgers.
+server_proof=proofs/lean/BeaconcryptCore/Computational/RawCtxServerServices.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxServerServices$' proofs/lean/BeaconcryptCore.lean "RawCtxServerServices root import"
+require_line_count 7 '^theorem ' "$server_proof" "RawCtxServerServices theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$server_proof" "RawCtxServerServices guarded dependencies"
+for theorem_name in same_hash native_interpretation public_hkdf public_hash public_coin server_interpretation schedule_interpretation; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$server_proof" "RawCtxServerServices theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxServerServices.${theorem_name}$" "$server_proof" "RawCtxServerServices dependency ${theorem_name}"
+done
+
+# Exact adaptive Server/public source interfaces and complete call ledgers.
+server_proof=proofs/lean/BeaconcryptCore/Computational/RawCtxServerServiceBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxServerServiceBounds$' proofs/lean/BeaconcryptCore.lean "RawCtxServerServiceBounds root import"
+require_line_count 11 '^theorem ' "$server_proof" "RawCtxServerServiceBounds theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$server_proof" "RawCtxServerServiceBounds guarded dependencies"
+for theorem_name in bill_step weighted_bound source_bound source_uniform_step uniform_bill schedule_uniform nativeLift_bound backend_step native_bill backend_bound backend_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$server_proof" "RawCtxServerServiceBounds theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxServerServiceBounds.${theorem_name}$" "$server_proof" "RawCtxServerServiceBounds dependency ${theorem_name}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
