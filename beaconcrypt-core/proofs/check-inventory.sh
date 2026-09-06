@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=133
+	[handwritten-lean]=139
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3438,5 +3438,97 @@ for theorem_name in linkedLoggedGame_projection retainedDirectLoggedGame_eq_clie
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxLoggedSource.${theorem_name}$" "$adaptive_source" "direct logged source dependency audit ${theorem_name}"
 done
 require_line_count 13 '^#guard_msgs in$' "$adaptive_source" "direct logged source guarded audits"
+
+# Private dictionary completion keeps the same table and every failed raw lookup.
+private_dictionary_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxReplayDictionary.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.AdaptiveCtxReplayDictionary$' \
+	proofs/lean/BeaconcryptCore.lean "private dictionary AdaptiveCtxReplayDictionary root import"
+require_line_count 1 '^theorem replayPlaintext_exact( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.replayPlaintext_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.replayPlaintext_exact$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.replayPlaintext_exact"
+require_line_count 1 '^theorem replay_discrepancy_iff( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.replay_discrepancy_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.replay_discrepancy_iff$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.replay_discrepancy_iff"
+require_line_count 1 '^theorem abstractSuffix_projection( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.abstractSuffix_projection"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.abstractSuffix_projection$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.abstractSuffix_projection"
+require_line_count 1 '^theorem abstractSuffix_preserves( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.abstractSuffix_preserves"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.abstractSuffix_preserves$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.abstractSuffix_preserves"
+require_line_count 1 '^theorem dictionaryLinked_preserves( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.dictionaryLinked_preserves"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.dictionaryLinked_preserves$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.dictionaryLinked_preserves"
+require_line_count 1 '^theorem abstractRun_projection( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.abstractRun_projection"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.abstractRun_projection$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayDictionary.abstractRun_projection"
+require_line_count 6 '^#guard_msgs in$' "$private_dictionary_module" "private dictionary AdaptiveCtxReplayDictionary guarded audits"
+private_dictionary_module=proofs/lean/BeaconcryptCore/Computational/JointEagerTable.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.JointEagerTable$' \
+	proofs/lean/BeaconcryptCore.lean "private dictionary JointEagerTable root import"
+require_line_count 1 '^theorem completedLazy_eq_eager( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.JointEagerTable.completedLazy_eq_eager"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.JointEagerTable.completedLazy_eq_eager$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.JointEagerTable.completedLazy_eq_eager"
+require_line_count 1 '^theorem completedLazy_empty_eq_uniform( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.JointEagerTable.completedLazy_empty_eq_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.JointEagerTable.completedLazy_empty_eq_uniform$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.JointEagerTable.completedLazy_empty_eq_uniform"
+require_line_count 1 '^theorem uniform_update_bind( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.JointEagerTable.uniform_update_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.JointEagerTable.uniform_update_bind$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.JointEagerTable.uniform_update_bind"
+require_line_count 1 '^theorem mixedCompletedLazy_eq_eager( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.JointEagerTable.mixedCompletedLazy_eq_eager"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.JointEagerTable.mixedCompletedLazy_eq_eager$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.JointEagerTable.mixedCompletedLazy_eq_eager"
+require_line_count 1 '^theorem mixedCompletedLazy_empty_eq_uniform( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.JointEagerTable.mixedCompletedLazy_empty_eq_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.JointEagerTable.mixedCompletedLazy_empty_eq_uniform$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.JointEagerTable.mixedCompletedLazy_empty_eq_uniform"
+require_line_count 5 '^#guard_msgs in$' "$private_dictionary_module" "private dictionary JointEagerTable guarded audits"
+private_dictionary_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxReplayTable.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.AdaptiveCtxReplayTable$' \
+	proofs/lean/BeaconcryptCore.lean "private dictionary AdaptiveCtxReplayTable root import"
+require_line_count 1 '^theorem completedSource_eq_eager( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayTable.completedSource_eq_eager"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayTable.completedSource_eq_eager$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayTable.completedSource_eq_eager"
+require_line_count 1 '^theorem completedSource_initial_eq_uniform( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayTable.completedSource_initial_eq_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayTable.completedSource_initial_eq_uniform$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayTable.completedSource_initial_eq_uniform"
+require_line_count 1 '^theorem honestRaw_restore( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayTable.honestRaw_restore"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayTable.honestRaw_restore$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayTable.honestRaw_restore"
+require_line_count 1 '^theorem honestSeal_restore( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayTable.honestSeal_restore"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayTable.honestSeal_restore$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayTable.honestSeal_restore"
+require_line_count 1 '^theorem honestRun_restore( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayTable.honestRun_restore"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayTable.honestRun_restore$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayTable.honestRun_restore"
+require_line_count 1 '^theorem completedSource_eq_honestCompletion( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayTable.completedSource_eq_honestCompletion"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayTable.completedSource_eq_honestCompletion$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayTable.completedSource_eq_honestCompletion"
+require_line_count 6 '^#guard_msgs in$' "$private_dictionary_module" "private dictionary AdaptiveCtxReplayTable guarded audits"
+private_dictionary_module=proofs/lean/BeaconcryptCore/Computational/JointTableFreshCandidates.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.JointTableFreshCandidates$' \
+	proofs/lean/BeaconcryptCore.lean "private dictionary JointTableFreshCandidates root import"
+require_line_count 1 '^theorem uniform_coordinate( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.JointTableFreshCandidates.uniform_coordinate"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.JointTableFreshCandidates.uniform_coordinate$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.JointTableFreshCandidates.uniform_coordinate"
+require_line_count 1 '^theorem fixed_fresh_guess_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_fresh_guess_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_fresh_guess_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_fresh_guess_bound"
+require_line_count 1 '^theorem fixed_vector_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound"
+require_line_count 1 '^theorem completed_result_vector_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.JointTableFreshCandidates.completed_result_vector_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.JointTableFreshCandidates.completed_result_vector_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.JointTableFreshCandidates.completed_result_vector_bound"
+require_line_count 1 '^theorem mixed_completed_vector_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.JointTableFreshCandidates.mixed_completed_vector_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.JointTableFreshCandidates.mixed_completed_vector_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.JointTableFreshCandidates.mixed_completed_vector_bound"
+require_line_count 5 '^#guard_msgs in$' "$private_dictionary_module" "private dictionary JointTableFreshCandidates guarded audits"
+private_dictionary_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxHonestCache.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.AdaptiveCtxHonestCache$' \
+	proofs/lean/BeaconcryptCore.lean "private dictionary AdaptiveCtxHonestCache root import"
+require_line_count 1 '^theorem honestNative_preserves( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxHonestCache.honestNative_preserves"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxHonestCache.honestNative_preserves$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxHonestCache.honestNative_preserves"
+require_line_count 1 '^theorem honestClient_cache_invariant( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxHonestCache.honestClient_cache_invariant"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxHonestCache.honestClient_cache_invariant$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxHonestCache.honestClient_cache_invariant"
+require_line_count 1 '^theorem freshGuess_address_absent( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxHonestCache.freshGuess_address_absent"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxHonestCache.freshGuess_address_absent$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxHonestCache.freshGuess_address_absent"
+require_line_count 1 '^theorem guessEvent_implies_freshHit( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxHonestCache.guessEvent_implies_freshHit"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxHonestCache.guessEvent_implies_freshHit$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxHonestCache.guessEvent_implies_freshHit"
+require_line_count 1 '^theorem honestCompletion_guess_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxHonestCache.honestCompletion_guess_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxHonestCache.honestCompletion_guess_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxHonestCache.honestCompletion_guess_bound"
+require_line_count 1 '^theorem completedSource_guess_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxHonestCache.completedSource_guess_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxHonestCache.completedSource_guess_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxHonestCache.completedSource_guess_bound"
+require_line_count 6 '^#guard_msgs in$' "$private_dictionary_module" "private dictionary AdaptiveCtxHonestCache guarded audits"
+private_dictionary_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxReplayQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.AdaptiveCtxReplayQueryBounds$' \
+	proofs/lean/BeaconcryptCore.lean "private dictionary AdaptiveCtxReplayQueryBounds root import"
+require_line_count 1 '^theorem replayRun_uniform_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.replayRun_uniform_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.replayRun_uniform_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.replayRun_uniform_bound"
+require_line_count 1 '^theorem honestClient_private_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.honestClient_private_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.honestClient_private_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.honestClient_private_bound"
+require_line_count 1 '^theorem abstractRun_private_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.abstractRun_private_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.abstractRun_private_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.abstractRun_private_bound"
+require_line_count 1 '^theorem honestNativeRun_uniform_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.honestNativeRun_uniform_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.honestNativeRun_uniform_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.honestNativeRun_uniform_bound"
+require_line_count 1 '^theorem abstractRaw_private_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.abstractRaw_private_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.abstractRaw_private_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.abstractRaw_private_bound"
+require_line_count 5 '^#guard_msgs in$' "$private_dictionary_module" "private dictionary AdaptiveCtxReplayQueryBounds guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
