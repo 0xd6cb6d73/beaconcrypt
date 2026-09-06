@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=280
+	[handwritten-lean]=288
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5131,6 +5131,78 @@ require_line_count 34 '^theorem ' "$accepted_labels_graph_module" "KemFunctional
 for theorem_name in lookup_consistent tableStep_reply tableStep_consistent lookup_append tableStep_preserves tableStep_lookup tableStep_cases tableStep_repeat tableStep_extends tableStep_length same_key_ciphertext decap_before_encap decap_prior_reply public_private_same table_step_erasure table_execution_erasure classified_execution_erasure classified_query_bounds classified_supported_nodup observed_length recorded_field consistent_matches consistent_decapsulation consistent_ciphertexts consistent_compatible tableStep_extension traced_step_reply traced_execution_erasure traced_fields_erasure source_supported_trace Extension.length Trace.length Trace.preserves_lookup traced_query_bounds; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.KemFunctionalGraph.${theorem_name}$" "$accepted_labels_graph_module" "accepted/labels/graph dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$accepted_labels_graph_module" "accepted/labels/graph theorem ${theorem_name}"
+done
+
+shared_privacy_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveSealKeyFamily.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveSealKeyFamily$' proofs/lean/BeaconcryptCore.lean "AdaptiveSealKeyFamily root import"
+require_line_count 3 '^theorem ' "$shared_privacy_module" "AdaptiveSealKeyFamily theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$shared_privacy_module" "AdaptiveSealKeyFamily guarded dependencies"
+for theorem_name in targetUniform interpretation schedule_interpretation; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveSealKeyFamily.${theorem_name}$" "$shared_privacy_module" "shared privacy dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$shared_privacy_module" "shared privacy theorem ${theorem_name}"
+done
+
+shared_privacy_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveSealKeySelection.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveSealKeySelection$' proofs/lean/BeaconcryptCore.lean "AdaptiveSealKeySelection root import"
+require_line_count 5 '^theorem ' "$shared_privacy_module" "AdaptiveSealKeySelection theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$shared_privacy_module" "AdaptiveSealKeySelection guarded dependencies"
+for theorem_name in selected_step selected_schedule fixed_source_selection prepared_run source_prepared_selection; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveSealKeySelection.${theorem_name}$" "$shared_privacy_module" "shared privacy dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$shared_privacy_module" "shared privacy theorem ${theorem_name}"
+done
+
+shared_privacy_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveSealMultiKeyPrivacy.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveSealMultiKeyPrivacy$' proofs/lean/BeaconcryptCore.lean "AdaptiveSealMultiKeyPrivacy root import"
+require_line_count 6 '^theorem ' "$shared_privacy_module" "AdaptiveSealMultiKeyPrivacy theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$shared_privacy_module" "AdaptiveSealMultiKeyPrivacy guarded dependencies"
+for theorem_name in real_reduction random_reduction selected_advantage hop_advantage family_bound all_keys_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveSealMultiKeyPrivacy.${theorem_name}$" "$shared_privacy_module" "shared privacy dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$shared_privacy_module" "shared privacy theorem ${theorem_name}"
+done
+
+shared_privacy_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveSealKeyBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveSealKeyBounds$' proofs/lean/BeaconcryptCore.lean "AdaptiveSealKeyBounds root import"
+require_line_count 23 '^theorem ' "$shared_privacy_module" "AdaptiveSealKeyBounds theorem inventory"
+require_line_count 23 '^#guard_msgs in$' "$shared_privacy_module" "AdaptiveSealKeyBounds guarded dependencies"
+for theorem_name in local_uniform_bound reduction_seal_step wrapped_seal_bound selection_step_bound selection_bound prepared_seal_bound work_simulate reduction_uniform_step wrapped_uniform_bound selected_work_bound prepared_uniform_bound reduction_plaintext_step wrapped_plaintext_bound prepared_plaintext_bound reduction_bounds experiment_bounds work_mono work_of_global_caps selected_uniform_cost_bound prepared_global_uniform_bound family_uniform_step family_run_uniform_bound source_uniform_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveSealKeyBounds.${theorem_name}$" "$shared_privacy_module" "shared privacy dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$shared_privacy_module" "shared privacy theorem ${theorem_name}"
+done
+
+shared_privacy_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedReplaySeal.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedReplaySeal$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedReplaySeal root import"
+require_line_count 6 '^theorem ' "$shared_privacy_module" "AdaptiveCtxSharedReplaySeal theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$shared_privacy_module" "AdaptiveCtxSharedReplaySeal guarded dependencies"
+for theorem_name in real_hash forward_hash seal_complete local_complete linked_step linked_schedule; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedReplaySeal.${theorem_name}$" "$shared_privacy_module" "shared privacy dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$shared_privacy_module" "shared privacy theorem ${theorem_name}"
+done
+
+shared_privacy_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedReplayCompiler.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompiler$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedReplayCompiler root import"
+require_line_count 18 '^theorem ' "$shared_privacy_module" "AdaptiveCtxSharedReplayCompiler theorem inventory"
+require_line_count 18 '^#guard_msgs in$' "$shared_privacy_module" "AdaptiveCtxSharedReplayCompiler guarded dependencies"
+for theorem_name in family_uniform_step family_uniform family_seal_step backend_step backend_schedule local_backend_run local_query allBase_update original_run family_query family_step family_schedule compiled_schedule original_source initial_base source_game source_view replay_privacy_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompiler.${theorem_name}$" "$shared_privacy_module" "shared privacy dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$shared_privacy_module" "shared privacy theorem ${theorem_name}"
+done
+
+shared_privacy_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedMultiKeyPrivacy.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedMultiKeyPrivacy$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedMultiKeyPrivacy root import"
+require_line_count 2 '^theorem ' "$shared_privacy_module" "AdaptiveCtxSharedMultiKeyPrivacy theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$shared_privacy_module" "AdaptiveCtxSharedMultiKeyPrivacy guarded dependencies"
+for theorem_name in family_bound global_family_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedMultiKeyPrivacy.${theorem_name}$" "$shared_privacy_module" "shared privacy dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$shared_privacy_module" "shared privacy theorem ${theorem_name}"
+done
+
+shared_privacy_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxSharedReplayCompilerBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds$' proofs/lean/BeaconcryptCore.lean "AdaptiveCtxSharedReplayCompilerBounds root import"
+require_line_count 27 '^theorem ' "$shared_privacy_module" "AdaptiveCtxSharedReplayCompilerBounds theorem inventory"
+require_line_count 27 '^#guard_msgs in$' "$shared_privacy_module" "AdaptiveCtxSharedReplayCompilerBounds guarded dependencies"
+for theorem_name in work_bind work_compile work_forward work_of_total coin_work backend_work lifted_work private_work sealing_work local_work compiler_work_step compiler_work compiled_work work_indicator work_scale work_add source_aggregate compiled_aggregate compiled_seal_cost compiled_uniform compiled_seals compiled_bytes compiled_global_caps compiled_cost reduction_source_bounds experiment_source_bounds source_experiment_uniform; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds.${theorem_name}$" "$shared_privacy_module" "shared privacy dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$shared_privacy_module" "shared privacy theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
