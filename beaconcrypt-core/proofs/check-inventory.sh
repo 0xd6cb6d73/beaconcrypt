@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=244
+	[handwritten-lean]=249
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4853,6 +4853,52 @@ require_line_count 16 '^#guard_msgs in$' "$positioned_opening" "Positioned openi
 for theorem_name in prefix_scope receive_prefix receive_positioned_congr bare_receive_positioned_congr arguments_positioned adapter_positioned_congr primitive_bare owner_receive_positioned_congr raw_positioned_congr rawGame_positioned_congr source_kdf source_raw_positioned_congr atPosition_eq source_raw_positioned atPosition_bytes source_positioned_query_bounds; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" "$positioned_opening" "Positioned opening theorem ${theorem_name}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxPositionedOpening[.]${theorem_name}$" "$positioned_opening" "Positioned opening dependency ${theorem_name}"
+done
+
+
+expand_module=proofs/lean/BeaconcryptCore/Computational/PqxdhCorrelatedExpand.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhCorrelatedExpand$' proofs/lean/BeaconcryptCore.lean "PqxdhCorrelatedExpand root import"
+require_line_count 10 '^#guard_msgs in$' "$expand_module" "PqxdhCorrelatedExpand guarded dependencies"
+for theorem_name in compile_coins compile_post compile_resume compile_reduction projectCache_empty projectCache_update rootImpl_step rootImpl_complete expandedGame_eq reduction_expanded_eq; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$expand_module" "correlated Expand theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhCorrelatedExpand.${theorem_name}$" "$expand_module" "correlated Expand dependency ${theorem_name}"
+done
+
+expand_module=proofs/lean/BeaconcryptCore/Computational/PqxdhCorrelatedExpandHybrid.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhCorrelatedExpandHybrid$' proofs/lean/BeaconcryptCore.lean "PqxdhCorrelatedExpandHybrid root import"
+require_line_count 19 '^#guard_msgs in$' "$expand_module" "PqxdhCorrelatedExpandHybrid guarded dependencies"
+for theorem_name in scan_pure scan_coin scan_root_zero scan_root_succ scan_zero_complete scan_succ_complete scan_bound_complete hybrid_zero hybrid_bound finishReal_sample finishRandom_sample hybrid_eq_extractUniform hybrid_succ_eq_independent indexed_real indexed_random indexed_advantage hybrid_distance_sum expanded_uniform_bound authenticated_uniform_roots_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$expand_module" "correlated Expand theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhCorrelatedExpandHybrid.${theorem_name}$" "$expand_module" "correlated Expand dependency ${theorem_name}"
+done
+
+expand_module=proofs/lean/BeaconcryptCore/Computational/PqxdhCorrelatedExpandQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhCorrelatedExpandQueryBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhCorrelatedExpandQueryBounds root import"
+require_line_count 32 '^#guard_msgs in$' "$expand_module" "PqxdhCorrelatedExpandQueryBounds guarded dependencies"
+for theorem_name in cached_step cached_run root_run_uniform uniform_run_uniform rootCoins_uniform rootCoins_roots query_bounds post_uniform_step post_uniform_run post_uniform_bound post_root_step post_root_bound resume_bounds reduction_bounds hmacCoins_bind selectedRun_indexed challengeFrame_complete challengeFrame_pending selectedRun_pure selectedRun_coin selectedRun_root_zero selectedRun_root_succ selectedRun_uniform hmac_real_step hmac_real_run hmac_real_game hmac_random_step hmac_random_run hmac_random_game indexed_bounds indexed_uniform_ledger source_uniform_ledger; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$expand_module" "correlated Expand theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhCorrelatedExpandQueryBounds.${theorem_name}$" "$expand_module" "correlated Expand dependency ${theorem_name}"
+done
+
+
+
+# HB-91: noninjective material interpretation through actual source publication and opening.
+material_interpretation_module=proofs/lean/BeaconcryptCore/Computational/RawCtxMaterialInterpretation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxMaterialInterpretation$' proofs/lean/BeaconcryptCore.lean "RawCtxMaterialInterpretation root import"
+require_line_count 24 '^theorem ' "$material_interpretation_module" "RawCtxMaterialInterpretation theorem count"
+require_line_count 24 '^#guard_msgs in$' "$material_interpretation_module" "RawCtxMaterialInterpretation guarded dependencies"
+for theorem_name in mapArray_index receive_key_map mapOption_elim option_as_ref prepare_cached_map mapArray_set mapArray_update option_take rust_map_ok publish_cached_map mapArray_get array_ext publish_future_slots_map publish_future_map_bounded publish_future_rejected publish_future_map option_is_some_map empty_slots_body_map empty_slots_map pending_slots_body_map pending_slots_map pending_valid_map empty_material_map from_counters_map; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$material_interpretation_module" "RawCtxMaterialInterpretation theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxMaterialInterpretation[.]${theorem_name}$" "$material_interpretation_module" "RawCtxMaterialInterpretation dependency ${theorem_name}"
+done
+
+material_interpretation_module=proofs/lean/BeaconcryptCore/Computational/RawCtxInterpretedOpening.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxInterpretedOpening$' proofs/lean/BeaconcryptCore.lean "RawCtxInterpretedOpening root import"
+require_line_count 9 '^theorem ' "$material_interpretation_module" "RawCtxInterpretedOpening theorem count"
+require_line_count 9 '^#guard_msgs in$' "$material_interpretation_module" "RawCtxInterpretedOpening guarded dependencies"
+for theorem_name in native_finish native_sequence native_material finish_map sequence_map material_map run_map native_run native_run_map; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$material_interpretation_module" "RawCtxInterpretedOpening theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxInterpretedOpening[.]${theorem_name}$" "$material_interpretation_module" "RawCtxInterpretedOpening dependency ${theorem_name}"
 done
 
 

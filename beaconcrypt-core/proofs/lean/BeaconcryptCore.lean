@@ -228,6 +228,11 @@ import BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily
 import BeaconcryptCore.Computational.PqxdhCorrelatedExtractQueryBounds
 import BeaconcryptCore.Computational.RawCtxConsumptionGate
 import BeaconcryptCore.Computational.RawCtxPositionedOpening
+import BeaconcryptCore.Computational.PqxdhCorrelatedExpand
+import BeaconcryptCore.Computational.PqxdhCorrelatedExpandHybrid
+import BeaconcryptCore.Computational.PqxdhCorrelatedExpandQueryBounds
+import BeaconcryptCore.Computational.RawCtxMaterialInterpretation
+import BeaconcryptCore.Computational.RawCtxInterpretedOpening
 /-!
 # Beaconcrypt-core verification root
 
