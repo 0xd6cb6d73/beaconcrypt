@@ -211,6 +211,8 @@ import BeaconcryptCore.Computational.KemValueClasses
 import BeaconcryptCore.Computational.RawCtxMaterialPositions
 import BeaconcryptCore.Computational.RawCtxProtocolReveals
 import BeaconcryptCore.Computational.RawCtxRevealBudgets
+import BeaconcryptCore.Computational.PqxdhChallengeSecretRouting
+import BeaconcryptCore.Computational.PqxdhChallengeSecretQueryBounds
 /-!
 # Beaconcrypt-core verification root
 

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=227
+	[handwritten-lean]=229
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4703,5 +4703,22 @@ for theorem_pattern in 'bill_step' 'weighted_bound' 'backend_step' 'source_unifo
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxRevealBudgets[.]${theorem_pattern}$" \
 		"$owner_module" "RawCtxRevealBudgets dependency ${theorem_pattern}"
 done
+
+challenge_secret_module=proofs/lean/BeaconcryptCore/Computational/PqxdhChallengeSecretRouting.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhChallengeSecretRouting$' proofs/lean/BeaconcryptCore.lean "PqxdhChallengeSecretRouting root import"
+require_line_count 13 '^#guard_msgs in$' "$challenge_secret_module" "PqxdhChallengeSecretRouting guarded dependencies"
+for theorem_name in honest_decapsulation honest_decapsulation_program publicImpl_other route_interpreter route_complete route_stateful beacon_root_exact route_challenge native_eq_real random_eq_branch correlated_indCCA source_eq_native source_correlated_indCCA; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$challenge_secret_module" "challenge secret theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.${theorem_name}$" "$challenge_secret_module" "challenge secret dependency ${theorem_name}"
+done
+
+challenge_secret_module=proofs/lean/BeaconcryptCore/Computational/PqxdhChallengeSecretQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhChallengeSecretQueryBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhChallengeSecretQueryBounds root import"
+require_line_count 12 '^#guard_msgs in$' "$challenge_secret_module" "PqxdhChallengeSecretQueryBounds guarded dependencies"
+for theorem_name in route_step route_class_bound route_public_bound route_decapsulation_bound reduction_bounds fixed_world_uniform_bound actual_step_uniform actual_run_uniform actual_post_uniform source_uniform_bound native_uniform_bound fair_uniform_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$challenge_secret_module" "challenge secret theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhChallengeSecretQueryBounds.${theorem_name}$" "$challenge_secret_module" "challenge secret dependency ${theorem_name}"
+done
+
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
