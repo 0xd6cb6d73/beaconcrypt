@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=122
+	[handwritten-lean]=126
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3495,5 +3495,52 @@ require_line_count 1 '^check-proverif-general-registration-admission: check-prov
 	Makefile "general admission full gate"
 require_line_count 1 '^            target: check-generated-proverif-general-registration-admission$' \
 	../.github/workflows/formal-verification.yml "general admission CI gate"
+
+
+# HB-91: exact source effects, actual optional values and one-owner raw schedules.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxOwnerResult.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxOwnerResult$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxOwnerResult root import"
+require_line_count 3 '^theorem ' "$owner_module" "RawCtxOwnerResult theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$owner_module" "RawCtxOwnerResult guarded dependencies"
+for theorem_pattern in 'finish_map' 'execution_map' 'receiveNext_map'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source owner theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOwnerResult[.]${theorem_pattern}$" \
+		"$owner_module" "source owner dependency ${theorem_pattern}"
+done
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxOwnerEffects.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxOwnerEffects$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxOwnerEffects root import"
+require_line_count 11 '^theorem ' "$owner_module" "RawCtxOwnerEffects theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$owner_module" "RawCtxOwnerEffects guarded dependencies"
+for theorem_pattern in 'rejected_step' 'failed_open_retains_effects' 'Execution[.]driver_eq' 'Execution[.]open_bound' 'execution_exists' 'Execution[.]failure_entry' 'Execution[.]kdf_bound' 'Execution[.]project' 'execution_lift' 'receiveEffectsNext_total' 'receiveEffectsNext_refines'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source owner theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOwnerEffects[.]${theorem_pattern}$" \
+		"$owner_module" "source owner dependency ${theorem_pattern}"
+done
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxOwnerOracle.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxOwnerOracle$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxOwnerOracle root import"
+require_line_count 15 '^theorem ' "$owner_module" "RawCtxOwnerOracle theorem inventory"
+require_line_count 15 '^#guard_msgs in$' "$owner_module" "RawCtxOwnerOracle guarded dependencies"
+for theorem_pattern in 'resume_exact' 'resume_rank' 'finish_exact' 'deterministic_execution' 'supported_execution' 'resume_entry' 'finish_none' 'program_kdf_bound' 'program_open_bound' 'SupportedExecution[.]failure_entry' 'program_failure_entry' 'begin_exact' 'begin_entry' 'receive_deterministic' 'receive_failure_entry'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source owner theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOwnerOracle[.]${theorem_pattern}$" \
+		"$owner_module" "source owner dependency ${theorem_pattern}"
+done
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxWholeOwner.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxWholeOwner$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxWholeOwner root import"
+require_line_count 9 '^theorem ' "$owner_module" "RawCtxWholeOwner theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$owner_module" "RawCtxWholeOwner guarded dependencies"
+for theorem_pattern in 'arguments_some' 'arguments_none' 'adapter_missing' 'adapter_present' 'rawGame_publication' 'rawGame_preserves_metadata' 'rawGame_failure_owner' 'ownerImpl_step' 'scheduleGame_bounds'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source owner theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxWholeOwner[.]${theorem_pattern}$" \
+		"$owner_module" "source owner dependency ${theorem_pattern}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
