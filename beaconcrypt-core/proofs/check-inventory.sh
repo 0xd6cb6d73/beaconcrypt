@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=233
+	[handwritten-lean]=235
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4758,5 +4758,19 @@ for theorem_name in localCoins_uniform localCoins_excluded localSource_uniform_s
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhCorrelatedRootQueryBounds.${theorem_name}$" "$correlated_root_module" "correlated source dependency ${theorem_name}"
 done
 
+
+adaptive_key_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveRawKeyFamily.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveRawKeyFamily$' proofs/lean/BeaconcryptCore.lean "AdaptiveRawKeyFamily root import"
+require_line_count 17 '^#guard_msgs in$' "$adaptive_key_module" "AdaptiveRawKeyFamily guarded dependencies"
+for theorem_name in targetUniform interpretation schedule_interpretation lift_no_class target_step_bound wrapped_target_bound uniform_interpretation selected_integrity_bound local_uniform_bound lift_uniform_bound uniform_step_bound wrapped_uniform_bound uniform_class_exact reduction_query_bounds source_uniform_step source_run_uniform source_uniform_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveRawKeyFamily.${theorem_name}$" "$adaptive_key_module" "adaptive key dependency ${theorem_name}"
+done
+
+adaptive_key_module=proofs/lean/BeaconcryptCore/Computational/AdaptiveRawKeyPreparation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveRawKeyPreparation$' proofs/lean/BeaconcryptCore.lean "AdaptiveRawKeyPreparation root import"
+require_line_count 10 '^#guard_msgs in$' "$adaptive_key_module" "AdaptiveRawKeyPreparation guarded dependencies"
+for theorem_name in prepared_interpretation prepared_target_bound prepared_uniform_bound prepared_integrity_bound prepared_source_uniform prepared_reduction_bounds key_vector_bound key_family_bound independent_setup_bound independent_source_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveRawKeyPreparation.${theorem_name}$" "$adaptive_key_module" "adaptive key dependency ${theorem_name}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

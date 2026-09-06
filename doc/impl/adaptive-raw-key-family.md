@@ -1,0 +1,53 @@
+# Selected-key adaptive raw AEAD family
+
+HB-94 adds 27 statements connecting one hidden uniform record key to a concrete adaptive family of raw nonce-AEAD interfaces. `AdaptiveRawKeyFamily` contains seventeen handler, simulation and resource statements; `AdaptiveRawKeyPreparation` contains ten preparation, reduction and sampling statements. They reuse the existing modified nonce-AEAD INT-CTXT endpoint and its stopped adaptive opening reductions. They do not prove ChaCha20-Poly1305 internals or assume a new correlated-key integrity property.
+
+## Complete selected and other-key execution
+
+The family exposes one selected target interface and a finite indexed set of other interfaces. Each has the existing chosen-plaintext sealing, caller uniform randomness and arbitrary raw opening requests. The public decoder supplies the original nonce, associated data and detached ciphertext, or rejects malformed bytes. Each key retains its own used-nonce list, exact successful-encryption log, raw-attempt counter and private discrepancy flag. Reusing a nonce is rejected by that key's sealing interface; equal nonces at different indices are not automatically rejected.
+
+`sourceImpl` calls the actual existing per-key handlers. `reductionImpl` forwards target requests to the ordinary adaptive challenger and simulates every other key locally, using its known key and actual local history. The target key is never an argument to the reduction. Target opening returns the challenger's original optional plaintext. The reduction supplies neither a plaintext claim nor a secretly recovered target plaintext. Other raw requests retain their actual parsing, optional opening and history effects; their adaptive replies can change later target queries or stopping decisions.
+
+`interpretation` identifies the complete linked handler with this source. `schedule_interpretation` lifts the equality through the full adaptive client, retaining every selected and non-selected history. `uniform_interpretation` then samples the hidden target inside its challenger. The fixed non-target keys, initial states and client are parameters independent of this later target draw. They may be correlated with one another and may contain repeated key bytes. Accidental equality with the target is not assumed impossible; the ordinary integrity advantage still includes any resulting successful attack. No computational key injectivity is used.
+
+`selected_integrity_bound` replaces the selected key's actual opening replies by the existing encryption-log/reject replies at the sum of ordinary INT-CTXT advantages over every selected raw slot. Its constructed forger is `indexedReduction targetDecode fallback (wrapped ... client ...) index`. Each member stops before answering its selected raw attempt, preserving its exact encryption history even when the original continuation could have made later encryptions. Malformed, rejected and repeated selected requests are included in the raw cap. There is no extra multiplier within this selected-key hop.
+
+## Actual preparation and full sampling order
+
+`Prepared` retains a context, all non-target keys and their complete entry states. The displayed probabilistic `prepare` has no target-key argument. It may establish arbitrary correlations among its own outputs, but cannot be used to assert the independence of an already correlated source target. `source` runs this actual preparation before generating the hidden target and executing the family. The prepared reduction runs the same setup using its own uniform-oracle requests.
+
+`prepared_interpretation` proves equality of the complete evaluated execution when the ordinary challenger samples its target key before the reduction's preparation. It applies `JointEagerTable.independent_comm` to the entire setup and continued computation, retaining the full prepared record, adaptive replies and all final histories. It does not infer continuation equality from a marginal key distribution. It also does not interchange arbitrary shared-state primitive operations. The source and reduction resource proofs below operate on their original programs independently of this evaluated equality.
+
+`prepared_integrity_bound` is the actual prepared source hop, with the explicit ordinary forger `indexedReduction targetDecode fallback (wrapped prepare ... client) index`. The right-hand side is the sum of its advantages over `index < qTargetRaw`. No protocol acceptance, sender authentication or freshness conclusion is part of that primitive winning event. All-key telescoping and target-session/record selection still require their own checked global reductions.
+
+`independentSetup` provides one concrete preparation: it samples the uniform finite function of non-target 32-byte keys and installs the actual empty nonce/log/attempt states. Its underlying vector sampler draws 32 independent bytes for each index. This is the explicitly independent ideal-key distribution at this component; it is not yet a proof that repeated evolving production KDF outputs supply it.
+
+## Source and reduction accounting
+
+Let P bound every uniform request in the actual preparation, U bound caller uniform requests across all target and other interfaces, S bound selected target sealing requests and R bound selected target raw requests. All client caps quantify over every possible reply continuation. Let N be the number of non-target keys in `independentSetup`.
+
+| Constructed operation | Bound |
+| --- | --- |
+| Selected ordinary INT-CTXT forgers | One for each index below R |
+| Uniform requests in each prepared forger | P + U |
+| Selected encryption requests in each prepared forger | S |
+| Final primitive verification for each forger | One ordinary challenger opening |
+| Actual prepared source uniform requests | P + 32 + U |
+| Concrete independent non-target preparation | 32N byte-valued draws |
+| Actual source with the concrete preparation | 32(N + 1) + U uniform requests |
+
+`target_step_bound`, `wrapped_target_bound` and `prepared_target_bound` retain the target-only resource caps. `uniform_step_bound`, `wrapped_uniform_bound` and `prepared_uniform_bound` charge uniform queries from every key and the actual setup. `source_uniform_step`, `source_run_uniform`, `source_uniform_bound` and `prepared_source_uniform` prove the source ledger on the source programs. `reduction_query_bounds` and `prepared_reduction_bounds` apply these caps to each displayed ordinary forger. Vector and finite-function sampling have separate checked bounds, so the non-target keys are not an uncharged ambient preparation.
+
+These are oracle-request bounds. Each other-key sealing request may perform its local actual AEAD seal, and each other-key raw request may perform its local actual AEAD opening after parsing. Their original traffic, lengths and primitive cost contracts must be charged by the enclosing reduction; they do not become free because no target-challenger query occurs. Parsing, nonce/history lookup, plaintext and ciphertext copying, finite-array access, tuple reassembly and setup work remain computation. One arbitrary finite caller-uniform request counts once, while each generated 32-byte key uses 32 byte-valued draws. No constant-time or compiled local-runtime theorem is asserted.
+
+## Remaining source and global composition
+
+The retained preparation and histories are private computational analysis state. They are not extra adversary replies, a whole-state reveal or permission to serialize private ghost state into a production snapshot. Target-key disclosure needs an explicit freshness/stopping interface. Actual current-chain and skipped-material disclosures, before/after compromise, snapshots and restored ownership still need to connect to this reduction.
+
+The raw decoder here is the component decoder. Native CryptoFrame decoding, ratchet material selection, successful consumption, failed commitment/open rollback and global record scheduling must be connected through the checked source adapter and material interpretation. The same shared CTX hash cache must also be retained when non-target CTX operations are simulated locally. Separate per-key independent public caches would not supply that connection.
+
+The source evolving-key hybrids must justify the target's actual distribution, preserve repeated derivations and reveal replies, and account for source position/key collisions. A further finite indexed selection and common-experiment hybrid argument must account for every possible selected key/session/record before applying `PqxdhComposition.finiteHybridBound`. These 27 statements establish the displayed selected-key prepared integrity hop and its ledger; they do not establish the complete computational-symbolic security theorem.
+
+## Focused validation
+
+Both final modules and all 27 persistent dependency guards pass direct Lean checking. The full combined library passes 3,285 jobs. Policy, root-import, inventory and whitespace gates pass with 235 handwritten Lean modules and 399 reviewed artifacts, preserving the prior 397 paths and order. Fresh formatting and all sixteen transcript-fidelity tests pass; the fidelity suite takes 11.88 seconds. The independently reviewed scope covers the actual selected-key handlers, complete preparation/target sampling order, displayed ordinary integrity reductions and separate source/reduction ledgers. No Rust or ProVerif source changes, so the current user policy requires no Rust mutation run. These focused results do not replace the final complete matrix on the eventual common security experiment and exact integration merge.

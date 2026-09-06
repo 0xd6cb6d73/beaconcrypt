@@ -217,6 +217,8 @@ import BeaconcryptCore.Computational.RawCtxPositionedOwner
 import BeaconcryptCore.Computational.RawCtxProtocolPositions
 import BeaconcryptCore.Computational.PqxdhCorrelatedRootSource
 import BeaconcryptCore.Computational.PqxdhCorrelatedRootQueryBounds
+import BeaconcryptCore.Computational.AdaptiveRawKeyFamily
+import BeaconcryptCore.Computational.AdaptiveRawKeyPreparation
 /-!
 # Beaconcrypt-core verification root
 
