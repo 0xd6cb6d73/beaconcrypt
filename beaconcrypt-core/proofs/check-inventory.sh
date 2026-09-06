@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=235
+	[handwritten-lean]=237
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4772,5 +4772,28 @@ require_line_count 10 '^#guard_msgs in$' "$adaptive_key_module" "AdaptiveRawKeyP
 for theorem_name in prepared_interpretation prepared_target_bound prepared_uniform_bound prepared_integrity_bound prepared_source_uniform prepared_reduction_bounds key_vector_bound key_family_bound independent_setup_bound independent_source_bound; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveRawKeyPreparation.${theorem_name}$" "$adaptive_key_module" "adaptive key dependency ${theorem_name}"
 done
+
+# HB-91: source-derived successful consumption with exact private-history erasure.
+receive_consumption=proofs/lean/BeaconcryptCore/Computational/RawCtxReceiveConsumption.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxReceiveConsumption$' proofs/lean/BeaconcryptCore.lean "Receive consumption root import"
+require_line_count 22 '^theorem ' "$receive_consumption" "Receive consumption theorem inventory"
+require_line_count 22 '^#guard_msgs in$' "$receive_consumption" "Receive consumption guarded dependencies"
+for theorem_name in receive_transition Transition.success_fresh Transition.preserves_past Transition.preserves_spent Transition.spent_nodup native_receive_transition native_receive_spent recordReply_eq raw_spent native_send_spent send_spent shared_receiveNative tracked_step_spent tracked_schedule_spent tracked_erasure tracked_step_length tracked_schedule_length initialized_spent ConsumedRefines.spent_nodup source_supported_history tracked_query_bounds tracked_raw_success_fresh; do
+	theorem_pattern=${theorem_name//./[.]}
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$receive_consumption" "Receive consumption theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxReceiveConsumption[.]${theorem_pattern}$" "$receive_consumption" "Receive consumption dependency ${theorem_name}"
+done
+
+
+# Exact actual record disclosures at their original source material positions.
+reveal_positions=proofs/lean/BeaconcryptCore/Computational/RawCtxRevealPositions.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxRevealPositions$' proofs/lean/BeaconcryptCore.lean "Reveal positions root import"
+require_line_count 8 '^theorem ' "$reveal_positions" "Reveal positions theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$reveal_positions" "Reveal positions guarded dependencies"
+for theorem_name in selected_positions chain_reveal_positions skipped_reveal_positions reveal_step_positions reveal_schedule_positions chain_disclosure_index disclosed_descendant_material skipped_reveal_bytes; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$reveal_positions" "Reveal positions theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxRevealPositions[.]${theorem_name}$" "$reveal_positions" "Reveal positions dependency ${theorem_name}"
+done
+
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
