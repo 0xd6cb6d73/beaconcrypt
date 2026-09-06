@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=134
+	[handwritten-lean]=136
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3644,6 +3644,32 @@ for theorem_pattern in 'sealInput_success' 'sealInput_bound' 'hashInput_extracte
 		"source sealing theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSourceSeal[.]${theorem_pattern}$" \
 		"$owner_module" "source sealing dependency ${theorem_pattern}"
+done
+
+# HB-91: actual send slot source order and complete-state correspondence.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSendSlot.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSendSlot$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxSendSlot root import"
+require_line_count 7 '^theorem ' "$owner_module" "RawCtxSendSlot theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$owner_module" "RawCtxSendSlot guarded dependencies"
+for theorem_pattern in 'sendOwner_ready' 'sendOwner_empty' 'sendOwner_absent' 'sendGame_ready' 'sendGame_normal' 'sendGame_active' 'sendOwner_bounds'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"send slot theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSendSlot[.]${theorem_pattern}$" \
+		"$owner_module" "send slot dependency ${theorem_pattern}"
+done
+
+# HB-91: actual server send source order and complete-state correspondence.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxServerSend.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxServerSend$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxServerSend root import"
+require_line_count 11 '^theorem ' "$owner_module" "RawCtxServerSend theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$owner_module" "RawCtxServerSend guarded dependencies"
+for theorem_pattern in 'sendServer_missing' 'sendServer_selected' 'sendGame_cases' 'sendGame_metadata' 'sendGame_peer_fields' 'sendServer_bounds' 'application_bounds' 'application_interpretation' 'application_schedule_interpretation' 'sendGame_active' 'schedule_metadata'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"server send theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxServerSend[.]${theorem_pattern}$" \
+		"$owner_module" "server send dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

@@ -34,6 +34,8 @@ import BeaconcryptCore.Computational.RawCtxFrameDecoding
 import BeaconcryptCore.Computational.RawCtxSourceOpen
 import BeaconcryptCore.Computational.RawCtxSourceSend
 import BeaconcryptCore.Computational.RawCtxSourceSeal
+import BeaconcryptCore.Computational.RawCtxSendSlot
+import BeaconcryptCore.Computational.RawCtxServerSend
 import BeaconcryptCore.Computational.RawCtxOpeningOccurrence
 import BeaconcryptCore.Computational.PqxdhHiddenRoot
 import BeaconcryptCore.Computational.PqxdhProjectionCollisions
