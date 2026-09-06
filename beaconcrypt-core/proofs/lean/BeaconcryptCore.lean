@@ -241,6 +241,9 @@ import BeaconcryptCore.Computational.AdaptiveCtxSharedPreparation
 import BeaconcryptCore.Computational.PqxdhRootTableInitialization
 import BeaconcryptCore.Computational.RawCtxPositionCapability
 import BeaconcryptCore.Computational.RawCtxInterpretedReceive
+import BeaconcryptCore.Computational.RawCtxMixedPositionCapability
+import BeaconcryptCore.Computational.RawCtxInterpretedSend
+import BeaconcryptCore.Computational.RawCtxInterpretedArguments
 /-!
 # Beaconcrypt-core verification root
 

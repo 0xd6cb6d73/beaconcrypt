@@ -1,0 +1,39 @@
+# Actual material getters and primitive dispatch
+
+`RawCtxInterpretedArguments` adds fourteen guarded statements connecting the complete material-interpreted receive and send drivers to the existing source primitive adapters. Private labels may identify equal material values. The source selects the slot, sequence and context; the interpretation changes only the material carried to the primitive input.
+
+## Source getter normalization
+
+`sequence_total` and `material_total` establish totality of the actual generic getters for every represented opening. The cached material getter uses the original prepared slot, bounds check, optional array entry and sequence tag. It retains out-of-range, absent and mistagged rejection. Future openings retain the actual pending target material. No valid-entry or successful-opening premise is required.
+
+`openArguments_map` proves that the resulting optional input commutes with any material interpretation. `openArguments_native` identifies that optional input with the existing native getter normalizer. The normalizers choose only values whose unique source result is already proved; they contain no fallback on failure. `sealArguments_map` and `sealArguments_native` give the same exact correspondence for the selected send material, sequence and original private context.
+
+## Primitive adapters and complete execution
+
+The generic opening adapter returns `None` without an opening query when the actual getter has no material. Otherwise it queries the selected material/sequence/context input and wraps the actual optional plaintext using the original decoded sender and sequence. The sealing adapter preserves the optional ciphertext and the API target identifier, which remains distinct from the sender identifier in the unchanged seal context.
+
+`openAdapter_interpreted` and `sealAdapter_interpreted` discharge the higher capability-handler equations from equality of the corresponding selected low-level primitive calls. Both operate in an arbitrary lawful monad. They preserve the optional reply and API wrapping before source publication; no plaintext or ciphertext is supplied as a success premise.
+
+`receive_interpreted` and `send_interpreted` include the complete source driver. The only additional KDF equation compares the decoded actual full typed native response with the interpreted label response, retaining its returned chain. Source admission, continuation, failure behavior, optional API result and final kernel follow from the existing complete receive/send proofs and the getter/adapter equations proved here. In particular, failed openings retain their actual primitive effects, and active failed seals retain the advanced send kernel.
+
+`receive_state` and `send_state` expose equality with the entire primitive poststate, including an arbitrary shared cache and auxiliary state. `receive_query_bounds` and `send_query_bounds` preserve every selective underlying oracle-query bound through these complete stateful equations.
+
+## Remaining realization and scope
+
+The low-level primitive and KDF equations are explicit operational obligations for a concrete label backend. This component does not implement an independent key table, infer a unique label from key bytes, impose a fixed KDF output law or assume correct decryption, fresh nonces, injective keys or honest state. An arbitrary material interpretation may merge labels. Key/nonce selection inside a particular native primitive implementation must still realize the stated input equation.
+
+The actual source getter, response conversion, material interpretation, primitive execution and API wrapping remain local computation. Query-budget preservation does not prove native allocation, timing, traversal, compiler, constant-time or library implementation equality. Complete outer owner/raw/mixed compilation, actual label generation, evolving-key realization, registration and reveal/restore policies, and global security remain separate. Inputs, labels and source contexts are private interpreter data and are not added to public, reveal, persistence or snapshot interfaces. Optional API plaintext remains unchanged, with its visibility determined by the outer experiment.
+
+## Focused validation
+
+The final module and all fourteen persistent dependency guards pass direct checking without diagnostics. Independent review directly checked the final fourteen guards, rehashed all 403 fingerprints and approved the source, state, query and documented realization scope. The full Lean build passes 3,289 jobs; direct root and proof-policy checks pass. Inventory passes with 239 handwritten Lean modules and 403 unique artifacts, and a separate full rehash preserves every preceding path in its original order. Fresh source-fidelity validation passes all sixteen tests in 12.53 seconds. Formatting, diff and placeholder checks pass. Fresh Rust 1.96 workspace/all-target/all-feature Clippy completes in 0.88 seconds with the existing 38 library and two additional test warnings.
+
+Draft namespace and dependent-normalization errors were repaired without suppressing checks or adding assumptions. Fresh fetched and direct upstream checks both identify `8330cdef4f4659931b6764a026cd90c4caf833a4`, an ancestor of this topic. Runtime, symbolic processes, tests and pinned vectors are unchanged. No mutation suite was rerun for this proof-only change under the current user policy; prior runtime/symbolic/mutation results retain their own input scope. This focused validation does not establish the remaining primitive realization, owner compilation or global security obligations.
+
+## Reconciled source proof union
+
+The composition topic semantically ports this fourteen-statement module, `RawCtxInterpretedSend` (twenty-three statements) and `RawCtxMixedPositionCapability` (twenty-three statements) onto `92b6d00ac3a9568a47dbc6ca53cb639baf61035d`. All three module bodies are identical to their independently reviewed published inputs `2e687edefe3138b9534618659a557f1378aea50b`, `e18610bad3eb8d530815da83003da6770c2eb58a` and `ca5fa92cc7cfc2d5591fe356ad05aa3e668a8fba`. Common repository dependencies are byte-identical to the preceding composition checkpoint. The older topics' shared metadata is reconciled by explicit additions, preserving the existing proof scope.
+
+On this union the full Lean build passes 3,310 jobs, all sixty guarded statements pass direct checks without diagnostics, and direct root, placeholder/custom-axiom policy, inventory and whitespace checks pass. Reviewed inventory contains 260 handwritten Lean modules and 424 unique artifacts, preserving the preceding 421 paths and their order. Formatting and sixteen source-fidelity results are inherited from `c01621d1cace756bd821e59dda293a25d1b6a247` (12.43 seconds); Rust, ProVerif and transcript inputs are unchanged. Each incoming topic also records its own fresh fidelity and Clippy checks above. No Rust mutation run is needed for this proof-only union under the current user policy.
+
+Independent review inspected all sixty theorem statements and the common dependency closure against the preceding composition checkpoint. It approved the noninjective material maps, actual optional replies, common primitive state, explicit low-level realization equations and query consequences. The mixed trace theorem remains support inclusion under its fixed-functional source interpretation; the general send/getter equations do not silently turn it into a source-free strategy or probability equality. Independent final union validation directly rechecked all sixty guards without diagnostics, rehashed all 424 unique fingerprints, preserved all 421 preceding paths and their order, and approved the additive checker/root/trust metadata and documented scope. The remaining concrete label realization, evolving-key distributions, global freshness and persistent symbolic correspondence remain open.

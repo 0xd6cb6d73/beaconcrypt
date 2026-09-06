@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=257
+	[handwritten-lean]=260
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4956,6 +4956,27 @@ require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxInterpretedRec
 require_line_count 27 '^#guard_msgs in$' "$root_position_interpretation_module" "RawCtxInterpretedReceive guarded dependencies"
 for theorem_name in native_resume resume_map native_begin begin_map resume_progress begin_total finish_total normalResume_exact normalBegin_exact normalFinish_exact normalResume_rank normalResume_map normalBegin_map normalFinish_map program_map receive_map decodeResponse_exact normalResume_native normalBegin_native normalFinish_native program_native receive_native receive_interpreted program_kdf_bound program_open_bound receive_state receive_query_bounds; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxInterpretedReceive.${theorem_name}$" "$root_position_interpretation_module" "root/position/interpretation dependency ${theorem_name}"
+done
+
+send_mixed_arguments_module=proofs/lean/BeaconcryptCore/Computational/RawCtxMixedPositionCapability.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxMixedPositionCapability$' proofs/lean/BeaconcryptCore.lean "RawCtxMixedPositionCapability root import"
+require_line_count 23 '^#guard_msgs in$' "$send_mixed_arguments_module" "RawCtxMixedPositionCapability guarded dependencies"
+for theorem_name in bare_positioned_run arguments_positioned bare_position_seal bare_position_seal_all source_sealingAt source_position_seal source_position_send receive_send_counter raw_send_counter tracked_step_capability tracked_step_metadata source_trace_capability logged_step_erasure logged_run_erasure logged_run_trace source_supported_capability SourceTrace.metadata SourceTrace.history_length logged_run_count queryCount_partition source_capability_bounded initialized_capability logged_query_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxMixedPositionCapability.${theorem_name}$" "$send_mixed_arguments_module" "send/mixed/arguments dependency ${theorem_name}"
+done
+
+send_mixed_arguments_module=proofs/lean/BeaconcryptCore/Computational/RawCtxInterpretedSend.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxInterpretedSend$' proofs/lean/BeaconcryptCore.lean "RawCtxInterpretedSend root import"
+require_line_count 23 '^#guard_msgs in$' "$send_mixed_arguments_module" "RawCtxInterpretedSend guarded dependencies"
+for theorem_name in native_resume resume_map native_finish finish_map native_begin begin_map begin_total ready_exact finish_exact normalBegin_exact normalBegin_map ready_map normalBegin_native ready_native program_map program_native send_map send_native send_interpreted program_kdf_bound program_seal_bound send_state send_query_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxInterpretedSend.${theorem_name}$" "$send_mixed_arguments_module" "send/mixed/arguments dependency ${theorem_name}"
+done
+
+send_mixed_arguments_module=proofs/lean/BeaconcryptCore/Computational/RawCtxInterpretedArguments.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxInterpretedArguments$' proofs/lean/BeaconcryptCore.lean "RawCtxInterpretedArguments root import"
+require_line_count 14 '^#guard_msgs in$' "$send_mixed_arguments_module" "RawCtxInterpretedArguments guarded dependencies"
+for theorem_name in sequence_total material_total openArguments_map openArguments_native openAdapter_interpreted receive_interpreted sealArguments_map sealArguments_native sealAdapter_interpreted send_interpreted receive_state send_state receive_query_bounds send_query_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxInterpretedArguments.${theorem_name}$" "$send_mixed_arguments_module" "send/mixed/arguments dependency ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
