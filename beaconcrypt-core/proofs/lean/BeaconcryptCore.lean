@@ -257,6 +257,13 @@ import BeaconcryptCore.Computational.AdaptiveCtxSharedSourceBounds
 import BeaconcryptCore.Computational.RawCtxPositionPublicServices
 import BeaconcryptCore.Computational.RawCtxInterpretedOwner
 import BeaconcryptCore.Computational.PqxdhServerRegistrationPublication
+import BeaconcryptCore.Computational.RawCtxSourceMaterialLabels
+import BeaconcryptCore.Computational.PqxdhPrivateAcceptedRoot
+import BeaconcryptCore.Computational.PqxdhRegistrationInputs
+import BeaconcryptCore.Computational.PqxdhPrivateAcceptedRootBounds
+import BeaconcryptCore.Computational.FinitePartitionQueryBounds
+import BeaconcryptCore.Computational.PqxdhAcceptedRegistration
+import BeaconcryptCore.Computational.KemFunctionalGraph
 /-!
 # Beaconcrypt-core verification root
 

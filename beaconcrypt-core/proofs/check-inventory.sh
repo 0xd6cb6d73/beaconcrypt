@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=273
+	[handwritten-lean]=280
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5068,6 +5068,69 @@ require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhServerRegistrat
 require_line_count 23 '^#guard_msgs in$' "$public_owner_publication_module" "PqxdhServerRegistrationPublication guarded dependencies"
 for theorem_name in publish_commit publish_fields candidate_initialization candidate_binding authenticated_length first_send_state functional_send source_afterInitialization_exact candidate_normal source_candidateTail_exact source_build_exact afterInitialization_support build_normal build_run_normal afterInitialization_bound candidate_bound build_bound native_kdf_bound native_seal_bound native_aux_bound native_build_bounds native_build_normal candidate_initial_state; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.${theorem_name}$" "$public_owner_publication_module" "public/owner/publication dependency ${theorem_name}"
+done
+
+accepted_labels_graph_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSourceMaterialLabels.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSourceMaterialLabels$' proofs/lean/BeaconcryptCore.lean "RawCtxSourceMaterialLabels root import"
+require_line_count 13 '^#guard_msgs in$' "$accepted_labels_graph_module" "RawCtxSourceMaterialLabels guarded dependencies"
+require_line_count 13 '^theorem ' "$accepted_labels_graph_module" "RawCtxSourceMaterialLabels theorem inventory"
+for theorem_name in response_projections kdf_step kdf_interpreted source_schedule shared_source source_query_bounds source_uniform kernel_new_interpreted resume_initial_interpreted initialize_interpreted initialized_labels initialized_owner initialized_schedule; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSourceMaterialLabels.${theorem_name}$" "$accepted_labels_graph_module" "accepted/labels/graph dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$accepted_labels_graph_module" "accepted/labels/graph theorem ${theorem_name}"
+done
+
+accepted_labels_graph_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivateAcceptedRoot.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivateAcceptedRoot$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivateAcceptedRoot root import"
+require_line_count 18 '^#guard_msgs in$' "$accepted_labels_graph_module" "PqxdhPrivateAcceptedRoot guarded dependencies"
+require_line_count 18 '^theorem ' "$accepted_labels_graph_module" "PqxdhPrivateAcceptedRoot theorem inventory"
+for theorem_name in sourcePost_interpreter sourcePost_complete finishReady_ready observe_legacy acceptedObserve_legacy acceptedCommon_legacy allCandidateCommon_legacy targetAfterEncapsulation_legacy nativeNext_legacy actualGame_legacy nativeTarget_eq_total actualGame_eq_total finishTarget_actual dispatch_complete_eq_source filteredSource_eq_sourceMain continuedSource_filtered authentication_hop authenticated_correlated_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateAcceptedRoot.${theorem_name}$" "$accepted_labels_graph_module" "accepted/labels/graph dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$accepted_labels_graph_module" "accepted/labels/graph theorem ${theorem_name}"
+done
+
+accepted_labels_graph_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationInputs.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationInputs$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationInputs root import"
+require_line_count 12 '^#guard_msgs in$' "$accepted_labels_graph_module" "PqxdhRegistrationInputs guarded dependencies"
+require_line_count 12 '^theorem ' "$accepted_labels_graph_module" "PqxdhRegistrationInputs theorem inventory"
+for theorem_name in prepare_exact build_exact build_used_congr accepted_used used_completed_fields build_complete source_build_exact prepare_ok build_bound native_build_bounds build_normal accepted_rid; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhRegistrationInputs.${theorem_name}$" "$accepted_labels_graph_module" "accepted/labels/graph dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$accepted_labels_graph_module" "accepted/labels/graph theorem ${theorem_name}"
+done
+
+accepted_labels_graph_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivateAcceptedRootBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivateAcceptedRootBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivateAcceptedRootBounds root import"
+require_line_count 17 '^#guard_msgs in$' "$accepted_labels_graph_module" "PqxdhPrivateAcceptedRootBounds guarded dependencies"
+require_line_count 17 '^theorem ' "$accepted_labels_graph_module" "PqxdhPrivateAcceptedRootBounds theorem inventory"
+for theorem_name in localObserve_bounds observe_bounds localAccepted_bounds acceptedObserve_bounds acceptedCommon_bound allCandidateCommon_bound targetAfterEncapsulation_bound nativeNext_bound dispatch_bound rootProtocol_prefix_bound rootProtocol_resume_bounds rootProtocol_reduction_bounds actualGame_uniform_bound actualGame_uniform_from_calls rootProtocol_sampler_bounds correlated_world_ledger nativeNext_observer_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateAcceptedRootBounds.${theorem_name}$" "$accepted_labels_graph_module" "accepted/labels/graph dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$accepted_labels_graph_module" "accepted/labels/graph theorem ${theorem_name}"
+done
+
+accepted_labels_graph_module=proofs/lean/BeaconcryptCore/Computational/FinitePartitionQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.FinitePartitionQueryBounds$' proofs/lean/BeaconcryptCore.lean "FinitePartitionQueryBounds root import"
+require_line_count 3 '^#guard_msgs in$' "$accepted_labels_graph_module" "FinitePartitionQueryBounds guarded dependencies"
+require_line_count 3 '^theorem ' "$accepted_labels_graph_module" "FinitePartitionQueryBounds theorem inventory"
+for theorem_name in bill_step structural weighted_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.FinitePartitionQueryBounds.${theorem_name}$" "$accepted_labels_graph_module" "accepted/labels/graph dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$accepted_labels_graph_module" "accepted/labels/graph theorem ${theorem_name}"
+done
+
+accepted_labels_graph_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAcceptedRegistration.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAcceptedRegistration$' proofs/lean/BeaconcryptCore.lean "PqxdhAcceptedRegistration root import"
+require_line_count 16 '^#guard_msgs in$' "$accepted_labels_graph_module" "PqxdhAcceptedRegistration guarded dependencies"
+require_line_count 16 '^theorem ' "$accepted_labels_graph_module" "PqxdhAcceptedRegistration theorem inventory"
+for theorem_name in ciphertextArray_bytes accepted_fields buildReady_source buildReady_complete buildReady_bounds buildReady_native_bounds buildReady_normal buildReady_run_normal Plan.accepted_source authenticated_registration_bound Input.afterReady_fields Input.actual_consumption accepted_native_complete buildReady_native_partition buildReady_weighted Plan.accepted_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAcceptedRegistration.${theorem_name}$" "$accepted_labels_graph_module" "accepted/labels/graph dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$accepted_labels_graph_module" "accepted/labels/graph theorem ${theorem_name}"
+done
+
+accepted_labels_graph_module=proofs/lean/BeaconcryptCore/Computational/KemFunctionalGraph.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.KemFunctionalGraph$' proofs/lean/BeaconcryptCore.lean "KemFunctionalGraph root import"
+require_line_count 34 '^#guard_msgs in$' "$accepted_labels_graph_module" "KemFunctionalGraph guarded dependencies"
+require_line_count 34 '^theorem ' "$accepted_labels_graph_module" "KemFunctionalGraph theorem inventory"
+for theorem_name in lookup_consistent tableStep_reply tableStep_consistent lookup_append tableStep_preserves tableStep_lookup tableStep_cases tableStep_repeat tableStep_extends tableStep_length same_key_ciphertext decap_before_encap decap_prior_reply public_private_same table_step_erasure table_execution_erasure classified_execution_erasure classified_query_bounds classified_supported_nodup observed_length recorded_field consistent_matches consistent_decapsulation consistent_ciphertexts consistent_compatible tableStep_extension traced_step_reply traced_execution_erasure traced_fields_erasure source_supported_trace Extension.length Trace.length Trace.preserves_lookup traced_query_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.KemFunctionalGraph.${theorem_name}$" "$accepted_labels_graph_module" "accepted/labels/graph dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$accepted_labels_graph_module" "accepted/labels/graph theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
