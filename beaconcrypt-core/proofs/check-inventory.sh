@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=132
+	[handwritten-lean]=133
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3618,6 +3618,19 @@ for theorem_pattern in 'beginSend_exact' 'resumeSend_exact' 'requested_support' 
 		"source send theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSourceSend[.]${theorem_pattern}$" \
 		"$owner_module" "source send dependency ${theorem_pattern}"
+done
+
+# HB-91: every opening occurrence and scoped complete-state raw schedule replacement.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxOpeningOccurrence.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxOpeningOccurrence$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxOpeningOccurrence root import"
+require_line_count 10 '^theorem ' "$owner_module" "RawCtxOpeningOccurrence theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$owner_module" "RawCtxOpeningOccurrence guarded dependencies"
+for theorem_pattern in 'program_scoped' 'receive_scoped' 'program_congr' 'arguments_scoped' 'adapter_congr' 'receive_selected_congr' 'raw_congr' 'rawGame_congr' 'owner_congr' 'rawSchedule_congr'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"opening occurrence theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOpeningOccurrence[.]${theorem_pattern}$" \
+		"$owner_module" "opening occurrence dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
