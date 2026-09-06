@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=127
+	[handwritten-lean]=129
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3554,6 +3554,31 @@ for theorem_pattern in 'validated_target' 'resume_scope' 'plan_target' 'begin_sc
 		"source provenance theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOwnerProvenance[.]${theorem_pattern}$" \
 		"$owner_module" "source provenance dependency ${theorem_pattern}"
+done
+
+# HB-91: complete assigned-handle routing and ready native-slot representation.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxServerRouting.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxServerRouting$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxServerRouting root import"
+require_line_count 17 '^theorem ' "$owner_module" "RawCtxServerRouting theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$owner_module" "RawCtxServerRouting guarded dependencies"
+for theorem_pattern in 'associatedArray_exact' 'associatedBytes_exact' 'associatedBytes_length' 'peerAssociatedData_some' 'putPeer_selected' 'putPeer_other' 'putPeer_entry' 'rawGame_cases' 'rawGame_missing_sender' 'rawGame_missing_peer' 'rawGame_preserves_metadata' 'rawGame_failure_server' 'rawGame_success' 'rawGame_peer_fields' 'serverImpl_step' 'scheduleGame_bounds' 'scheduleGame_peer_fields'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"server/slot theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxServerRouting[.]${theorem_pattern}$" \
+		"$owner_module" "server/slot dependency ${theorem_pattern}"
+done
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxNativeSlot.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxNativeSlot$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxNativeSlot root import"
+require_line_count 9 '^theorem ' "$owner_module" "RawCtxNativeSlot theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$owner_module" "RawCtxNativeSlot guarded dependencies"
+for theorem_pattern in 'run_absent' 'run_ready' 'rawReceive_ready' 'rawGame_ready' 'rawGame_normal' 'rawGame_failure_owner' 'rawReceive_empty' 'rawReceive_malformed' 'rawReceive_invalid'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"server/slot theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxNativeSlot[.]${theorem_pattern}$" \
+		"$owner_module" "server/slot dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
