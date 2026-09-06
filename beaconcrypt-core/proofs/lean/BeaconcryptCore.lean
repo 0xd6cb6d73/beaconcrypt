@@ -233,6 +233,11 @@ import BeaconcryptCore.Computational.PqxdhCorrelatedExpandHybrid
 import BeaconcryptCore.Computational.PqxdhCorrelatedExpandQueryBounds
 import BeaconcryptCore.Computational.RawCtxMaterialInterpretation
 import BeaconcryptCore.Computational.RawCtxInterpretedOpening
+import BeaconcryptCore.Computational.AdaptiveCtxSharedHash
+import BeaconcryptCore.Computational.AdaptiveCtxSharedTarget
+import BeaconcryptCore.Computational.AdaptiveCtxSharedFamily
+import BeaconcryptCore.Computational.AdaptiveCtxSharedFamilyBounds
+import BeaconcryptCore.Computational.AdaptiveCtxSharedPreparation
 /-!
 # Beaconcrypt-core verification root
 
