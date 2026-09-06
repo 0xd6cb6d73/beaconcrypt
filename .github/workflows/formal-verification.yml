@@ -15,7 +15,7 @@ jobs:
   proof_components:
     name: ${{ matrix.name }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: ${{ matrix.timeout || 60 }}
     strategy:
       fail-fast: false
       matrix:
@@ -64,6 +64,11 @@ jobs:
             target: check-generated-proverif-phase2-response-binding
           - name: ProVerif weakened Phase 2 assigned ID binding
             target: check-generated-proverif-phase2-assigned-id-weak
+          - name: ProVerif native Phase 2 X25519 encoding alias
+            target: check-generated-proverif-phase2-x25519-alias
+          - name: ProVerif complete registration admission boundary
+            target: check-generated-proverif-general-registration-admission
+            timeout: 240
           - name: ProVerif later-sequence registration
             target: check-generated-proverif-later-sequence-registration
           - name: ProVerif main registration controls

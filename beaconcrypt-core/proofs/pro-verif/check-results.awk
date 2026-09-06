@@ -465,10 +465,10 @@ END {
     expected_correspondence[3] = "Query inj-event(ServerAccepted(" accepted_arguments ")) ==> inj-event(RegistrationConsumed(" registration_arguments ")) is true."
     expected_correspondence[4] = "Query inj-event(RegistrationConsumed(" registration_arguments ")) ==> inj-event(BeaconInitiated(" registration_arguments ")) is true."
     expected_correspondence[5] = "Query inj-event(ServerResponseAborted(" accepted_arguments ")) ==> inj-event(RegistrationConsumed(" registration_arguments ")) is true."
-    expected_correspondence[6] = "Query inj-event(BeaconCommitted(transcript)) ==> inj-event(ServerCommitted(transcript)) is true."
+    expected_correspondence[6] = "Query inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,first_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence,main_payload,main_frame,main_claimed)) is true."
     expected_correspondence[7] = "Query inj-event(MessageReceived(" message_arguments ")) ==> inj-event(MessageSent(" message_arguments ")) is true."
-    expected_correspondence[8] = "Query inj-event(BeaconRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_response_2,main_claimed)) ==> inj-event(ServerRegistrationSessionCommitted(main_agreement,main_server_assigned)) is true."
-    expected_correspondence[9] = "Query inj-event(BeaconRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_response_2,main_claimed)) ==> inj-event(RegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned)) is true."
+    expected_correspondence[8] = "Query inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(ServerAuthenticatedSessionCommitted(main_agreement,main_server_assigned)) is true."
+    expected_correspondence[9] = "Query inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(AuthenticatedRegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned)) is true."
     for (correspondence_index = 1; correspondence_index <= 9; correspondence_index++) {
       require_exact(expected_correspondence[correspondence_index], scenario " correspondence")
     }

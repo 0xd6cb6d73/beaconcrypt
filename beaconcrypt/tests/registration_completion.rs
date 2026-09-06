@@ -58,16 +58,14 @@ fn send_until(
 
 #[test]
 fn registration_accepts_later_bound_records_and_preserves_skipped_keys() {
-	for sequence in [2, 3, 51] {
+	for sequence in 2..=51 {
 		let (mut server, mut beacon, original) = pending();
-		let payload = bound_payload(original.kid, b"later completion");
+		let application: Vec<u8> = (0..=255).map(|byte| byte ^ sequence as u8).collect();
+		let payload = bound_payload(original.kid, &application);
 		let (skipped, target) = send_until(&mut server, original.kid, sequence, &payload);
 		let candidate = response_with_frame(&original, &target, original.kid);
 		assert_ne!(candidate, original.serialized);
-		assert_eq!(
-			beacon.finish_registration(&candidate).unwrap(),
-			b"later completion"
-		);
+		assert_eq!(beacon.finish_registration(&candidate).unwrap(), application);
 		let status = beacon.ratchet_status().unwrap();
 		assert_eq!(status.send_sequence(), 0);
 		assert_eq!(status.receive_sequence(), sequence);
@@ -208,4 +206,87 @@ fn later_completion_authenticates_the_payload_prefix_not_the_original_routing_id
 		.encrypt_message(b"different numeric sender ID")
 		.unwrap();
 	assert!(server.decrypt_message(&outgoing).is_none());
+}
+
+#[test]
+fn registration_accepts_the_original_first_record_and_only_consumes_its_target() {
+	let (mut server, mut beacon, original) = pending();
+	assert_eq!(
+		beacon.finish_registration(&original.serialized).unwrap(),
+		b"original response"
+	);
+	let status = beacon.ratchet_status().unwrap();
+	assert_eq!(status.send_sequence(), 0);
+	assert_eq!(status.receive_sequence(), 1);
+	assert_eq!(status.receive_cache_len(), 0);
+	let future = server
+		.encrypt_message(b"first subsequent record", original.kid)
+		.unwrap();
+	assert_eq!(
+		beacon.decrypt_message(&future).unwrap().plaintext,
+		b"first subsequent record"
+	);
+	assert!(beacon.decrypt_message(&future).is_none());
+}
+
+#[test]
+fn short_registration_plaintexts_reject_including_prefix_only() {
+	for length in 0..=8 {
+		let (mut server, mut beacon, original) = pending();
+		let payload = original.kid.to_le_bytes()[..length].to_vec();
+		if length == 0 {
+			// Production sealing rejects empty messages, so no genuine empty ciphertext is available.
+			assert!(server.encrypt_message(&payload, original.kid).is_none());
+			assert!(beacon.finish_registration(&[]).is_none());
+			assert!(beacon.ratchet_status().is_none());
+			continue;
+		}
+		let (_, target) = send_until(&mut server, original.kid, 3, &payload);
+		let candidate = response_with_frame(&original, &target, original.kid);
+		assert!(
+			beacon.finish_registration(&candidate).is_none(),
+			"length {length}"
+		);
+		assert!(beacon.ratchet_status().is_none());
+		assert!(beacon.finish_registration(&original.serialized).is_none());
+	}
+}
+
+#[test]
+fn registration_rejects_zero_sequence_malformed_and_unframed_input() {
+	for kind in 0..3 {
+		let (mut server, mut beacon, original) = pending();
+		let (_, target) = send_until(
+			&mut server,
+			original.kid,
+			3,
+			&bound_payload(original.kid, b"valid nonempty application"),
+		);
+		let frame = match kind {
+			0 => {
+				let reader =
+					capnp::serialize::read_message(&target[..], ReaderOptions::new()).unwrap();
+				let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
+				let original_frame = typed.get().unwrap();
+				let mut builder =
+					TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
+				let mut changed = builder.init_root();
+				changed.set_seq(0);
+				changed.set_key_id(original_frame.get_key_id());
+				changed.set_cipher_text(original_frame.get_cipher_text().unwrap());
+				let mut frame = vec![];
+				capnp::serialize::write_message(&mut frame, builder.borrow_inner()).unwrap();
+				frame
+			}
+			1 => vec![255; 3],
+			_ => bound_payload(original.kid, b"unframed plaintext"),
+		};
+		let candidate = response_with_frame(&original, &frame, original.kid);
+		assert!(
+			beacon.finish_registration(&candidate).is_none(),
+			"kind {kind}"
+		);
+		assert!(beacon.ratchet_status().is_none());
+		assert!(beacon.finish_registration(&original.serialized).is_none());
+	}
 }

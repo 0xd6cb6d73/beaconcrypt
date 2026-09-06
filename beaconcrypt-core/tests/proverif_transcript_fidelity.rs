@@ -16,6 +16,43 @@ use beaconcrypt_core::{
 
 const INTERFACE: &str = include_str!("../proofs/pro-verif/production-transcript-interface.pvl");
 const CRYPTO_MODEL: &str = include_str!("../proofs/pro-verif/crypto.pvl");
+const EXACT_REGISTRATION_ORIGIN_QUERIES: &str =
+	include_str!("../proofs/pro-verif/exact-registration-origin-queries.pvl");
+const X25519_ALIAS_RUNNER: &str = include_str!("../proofs/pro-verif/check-phase2-x25519-alias.py");
+const X25519_ALIAS_CONTROL: &str =
+	include_str!("../proofs/pro-verif/phase2-x25519-alias-control.pv");
+const GENERAL_REGISTRATION_RUNNER: &str =
+	include_str!("../proofs/pro-verif/check-general-registration.py");
+const GENERAL_REGISTRATION_GENERATOR: &str =
+	include_str!("../proofs/pro-verif/generate-general-registration.py");
+const GENERAL_REGISTRATION_CHECKER_TESTS: &str =
+	include_str!("../proofs/pro-verif/test-general-registration-checker.py");
+const GENERAL_REGISTRATION_ARTIFACTS: [(&str, &str); 6] = [
+	(
+		"general-registration-admission.pv",
+		include_str!("../proofs/pro-verif/general-registration-admission.pv"),
+	),
+	(
+		"general-registration-admission.pvl",
+		include_str!("../proofs/pro-verif/general-registration-admission.pvl"),
+	),
+	(
+		"general-registration-admission-queries.pvl",
+		include_str!("../proofs/pro-verif/general-registration-admission-queries.pvl"),
+	),
+	(
+		"general-registration-cache.pvl",
+		include_str!("../proofs/pro-verif/general-registration-cache.pvl"),
+	),
+	(
+		"general-registration-continuation.pvl",
+		include_str!("../proofs/pro-verif/general-registration-continuation.pvl"),
+	),
+	(
+		"general-registration-public-witness.pvl",
+		include_str!("../proofs/pro-verif/general-registration-public-witness.pvl"),
+	),
+];
 const ENVIRONMENT_MODEL: &str = include_str!("../proofs/pro-verif/environment.pvl");
 const ACTIVE_QUANTUM_WITNESS: &str = include_str!("../proofs/pro-verif/active-quantum-witness.pvl");
 const EXTRACTION_MODEL: &str = include_str!("../proofs/pro-verif/extraction/lib.pvl");
@@ -2736,6 +2773,216 @@ fn scenario_names(makefile: &str) -> Result<Vec<String>, String> {
 		.collect())
 }
 
+fn validate_x25519_alias_runner(
+	runner: &str,
+	control: &str,
+	baseline_queries: &str,
+) -> Result<(), String> {
+	let script = compact(runner);
+	for (wanted, label) in [
+		(
+			r#"source=without_comments((directory/"exact-registration-origin-queries.pvl").read_text())queries=re.findall(r"\bquery\b.*?\.",source,flags=re.S)selected=[queryforqueryinqueriesif"inj-event(BeaconCommitted("inqueryor"inj-event(BeaconRegistrationCompleted("inquery]iflen(selected)!=3:"#,
+			"X25519 alias unchanged baseline query selection",
+		),
+		(
+			r#"return"\n\n".join(selected)+"\n"defalias_crypto"#,
+			"X25519 alias unchanged selected query text",
+		),
+		(
+			r#"source=(directory/"crypto.pvl").read_text()start=source.index("(*X25519.")finish=source.index("(*ML-KEMencapsulation",start)ifcompact(source[start:finish])!=compact(EXPECTED_X25519):"#,
+			"X25519 alias checked canonical crypto boundary",
+		),
+		(
+			r#"replacement=(directory/"phase2-x25519-alias-theory.pvl").read_text()returnsource[:start]+replacement+source[finish:]"#,
+			"X25519 alias preserves crypto outside X25519",
+		),
+		(
+			r#"queries=work/"exact-registration-queries.pvl"queries.write_text(selected_queries(directory))projected_queries=work/"projected-registration-queries.pvl"projected_queries.write_text(selected_projected_queries(directory))alias=work/"crypto-with-x25519-aliases.pvl"alias.write_text(alias_crypto(directory))forlabel,crypto,query_source,expected,projectedin(("canonical",directory/"crypto.pvl",queries,"true",False),("alias",alias,queries,"false",False),("projected-canonical",directory/"crypto.pvl",projected_queries,"true",True,),("projected-alias",alias,projected_queries,"true",True),):"#,
+			"X25519 alias canonical and alias query runs",
+		),
+		(
+			r#"command=[args.proverif]forlibraryin(directory/"production-transcript-interface.pvl",crypto,directory/"extraction/lib.pvl",directory/"environment.pvl",query_source,):command.extend(("-lib",str(library)))command.append(str(directory/"phase2-x25519-alias-control.pv"))"#,
+			"X25519 alias exact ordered library and control loading",
+		),
+		(
+			r#"result=subprocess.run(command,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=args.timeout,check=True,)"#,
+			"X25519 alias checked subprocess execution",
+		),
+		(
+			"ifprojected:check_projected_run(result.stdout)else:check_run(result.stdout,expected)",
+			"X25519 alias checked correspondence results",
+		),
+		(
+			r#"if__name__=="__main__":main()"#,
+			"X25519 alias executable entry point",
+		),
+	] {
+		require_once(&script, wanted, label)?;
+	}
+	// Pin the independently reviewed runner as well as its readable wiring above.
+	// Extra code must not silently bypass a check or rewrite the selected queries.
+	if stable_text_hash(runner) != 4_157_415_351_679_264_816 {
+		return Err("X25519 alias reviewed runner changed; review the complete runner".to_owned());
+	}
+	let control = compact(&uncommented_pv(control)?);
+	if control
+		!= "processout(c,ed_public(SERVER_IDENTITY_SECRET));(HonestBeacon(BEACON_RECORD_SECRET)|Server(INITIAL_SECRET,CACHED_SECRET,ADVANCE_SECRET,FUTURE_SECRET)|KeepBeaconStatePrivate())"
+	{
+		return Err("X25519 alias unchanged honest role control changed".to_owned());
+	}
+	let queries = compact(&uncommented_pv(baseline_queries)?);
+	let selected = queries
+		.split("query")
+		.skip(1)
+		.filter(|query| {
+			query.contains("inj-event(BeaconCommitted(")
+				|| query.contains("inj-event(BeaconRegistrationCompleted(")
+		})
+		.map(|query| stable_text_hash(&format!("query{query}")))
+		.collect::<Vec<_>>();
+	if selected
+		!= [
+			5_922_842_905_554_828_522,
+			1_537_735_056_464_180_222,
+			9_278_209_781_568_601_116,
+		] {
+		return Err("X25519 alias three exact baseline correspondences changed".to_owned());
+	}
+	Ok(())
+}
+
+fn validate_general_registration_runner(
+	runner: &str,
+	generator: &str,
+	checker_tests: &str,
+	artifacts: &[(&str, &str)],
+) -> Result<(), String> {
+	let script = compact(runner);
+	for (wanted, label) in [
+		(
+			r#"targets=args.targetifargs.targetisnotNoneelselist(range(53))query_indices=args.queryifargs.queryisnotNoneelselist(range(1,24))"#,
+			"general complete target and query inventory",
+		),
+		(
+			r#"if10inorder:if23notinorder:raiseValueError("cachedoriginrequiresitsseparatelycheckedcoverageguard")order.remove(23)order.insert(order.index(10),23)"#,
+			"general mandatory cached coverage before origin",
+		),
+		(
+			"ifindex==10and2<=target<=51:returnlist(range(1,target))",
+			"general every retained cached sequence",
+		),
+		(
+			"ifindexin{12,15}and2<=target<=51:",
+			"general concrete cached witness routing",
+		),
+		(
+			r#"subprocess.run(["python3",str(HERE/"generate-general-registration.py"),"--check"],check=True,)"#,
+			"general checked generator output",
+		),
+		(
+			r#"forlibin["production-transcript-interface.pvl","crypto.pvl","extraction/lib.pvl","environment.pvl","general-registration-cache.pvl",]:command.extend(["-lib",str(HERE/lib)])"#,
+			"general exact ordered cryptographic and cache libraries",
+		),
+		(
+			r#"command+["-lib",str(continuation_file),"-lib",str(role_file),"-lib",str(HERE/"general-registration-public-witness.pvl"),"-lib",str(query_file),str(query_case),],check=True,timeout=timeout,stdout=output,stderr=subprocess.STDOUT,"#,
+			"general exact role query process loading and subprocess failure",
+		),
+		(
+			r#"found=re.findall(r"^RESULT(.+)is(true|false)\.$",text,re.M)iflen(found)!=1:"#,
+			"general exactly one conclusive protocol result",
+		),
+		(
+			r#"iffinite_witnessand(found[0][1]!="false"ortext.count("Atracehasbeenfound.")!=1):"#,
+			"general concrete reconstructed witness trace",
+		),
+		(
+			"ifresults!=expected:raiseValueError",
+			"general exact result name and polarity comparison",
+		),
+		(
+			"ifindex==23and1<=target<=51:",
+			"general separate local range routing",
+		),
+		(
+			"ifnormalize(query)!=normalize(expected)ornot1<=target<=51:",
+			"general exact local component obligation",
+		),
+		(
+			r#"component,expected_component=local_cached_range(query,target)"#,
+			"general material-parametric local helper selection",
+		),
+		(
+			"ifindexin{11,20}:continuation=project_future_safety(continuation,index)",
+			"general future safety excludes witnesses",
+		),
+		(
+			"ifcached_targetisnotNone:continuation=project_cached_target(continuation,index,target,cached_target)",
+			"general actual decoded cached target guard",
+		),
+		(
+			"roles,continuation=inline_owned_handoff(roles,continuation,(HERE/\"environment.pvl\").read_text())",
+			"general complete owned handoff substitution",
+		),
+		(
+			"roles=project_initial_plan(roles,query_main,target)",
+			"general evaluated initial plan at the literal role argument",
+		),
+		(
+			"code.count(signature)!=1orcode.count(\"GeneralAdmissionBeacon(\")!=1orlen(re.findall(r\"\\bgeneral_expected_sequence\\b\",code))!=3",
+			"general initial parameter binding and shadow exclusion",
+		),
+		(
+			r#""ifwitnesselsef"out(c,({chain},{sequence(cutoff+1)},main_associated_data,main_assigned_key_id))""#,
+			"general safety actual next-chain disclosure",
+		),
+	] {
+		require(&script, wanted, label)?;
+	}
+	for (text, expected, label) in [
+		(runner, 6_237_376_055_663_319_124, "runner"),
+		(generator, 14_396_280_816_143_547_146, "generator"),
+		(checker_tests, 14_129_843_359_489_167_816, "checker tests"),
+	] {
+		if stable_text_hash(text) != expected {
+			return Err(format!(
+				"general reviewed {label} changed; review all transformations"
+			));
+		}
+	}
+	let expected = [
+		(
+			"general-registration-admission.pv",
+			17_214_740_764_917_819_192,
+		),
+		(
+			"general-registration-admission.pvl",
+			17_686_911_930_606_850_571,
+		),
+		(
+			"general-registration-admission-queries.pvl",
+			2_204_557_196_734_332_185,
+		),
+		("general-registration-cache.pvl", 11_111_788_908_665_374_809),
+		(
+			"general-registration-continuation.pvl",
+			16_393_726_630_133_289_574,
+		),
+		(
+			"general-registration-public-witness.pvl",
+			11_331_453_798_314_310_886,
+		),
+	];
+	if artifacts.len() != expected.len() {
+		return Err("general role and query inventory changed".to_owned());
+	}
+	for ((name, text), (expected_name, expected_hash)) in artifacts.iter().zip(expected) {
+		if *name != expected_name || stable_text_hash(text) != expected_hash {
+			return Err(format!("general reviewed artifact changed: {name}"));
+		}
+	}
+	Ok(())
+}
+
 fn validate_makefile(makefile: &str) -> Result<(), String> {
 	if count(makefile, "-lib $(PROVERIF_INTERFACE)") != 1
 		|| count(makefile, "-lib $(PROVERIF_DIR)/crypto.pvl") != 1
@@ -2753,11 +3000,27 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"auxiliary ProVerif fidelity prerequisite",
 	)?;
 	let scenarios = scenario_names(makefile)?;
-	if scenarios.len() != 30 {
+	if scenarios.len() != 32 {
 		return Err(format!(
-			"expected 30 ProVerif scenarios, found {}",
+			"expected 32 ProVerif scenarios, found {}",
 			scenarios.len()
 		));
+	}
+	if scenarios
+		.iter()
+		.filter(|scenario| scenario.as_str() == "phase2-x25519-alias")
+		.count()
+		!= 1
+	{
+		return Err("X25519 alias must be enumerated exactly once".to_owned());
+	}
+	if scenarios
+		.iter()
+		.filter(|scenario| scenario.as_str() == "general-registration-admission")
+		.count()
+		!= 1
+	{
+		return Err("general registration must be enumerated exactly once".to_owned());
 	}
 	for scenario in scenarios {
 		let marker = format!("check-proverif-{scenario}:");
@@ -2766,6 +3029,33 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 			.ok_or_else(|| format!("missing scenario target: {scenario}"))?;
 		let tail = &makefile[start..];
 		let block = &tail[..tail.find("\n\n").unwrap_or(tail.len())];
+		if scenario == "general-registration-admission" {
+			if compact(block)
+				!= "check-proverif-general-registration-admission:check-proverif-extractionpython3$(PROVERIF_DIR)/test-general-registration-checker.pypython3$(PROVERIF_DIR)/check-general-registration.py--proverif'$(PROVERIF)'--timeout'$(PROVERIF_TIMEOUT)'"
+			{
+				return Err("general exact Make runner and self-test wiring changed".to_owned());
+			}
+			validate_general_registration_runner(
+				GENERAL_REGISTRATION_RUNNER,
+				GENERAL_REGISTRATION_GENERATOR,
+				GENERAL_REGISTRATION_CHECKER_TESTS,
+				&GENERAL_REGISTRATION_ARTIFACTS,
+			)?;
+			continue;
+		}
+		if scenario == "phase2-x25519-alias" {
+			if compact(block)
+				!= "check-proverif-phase2-x25519-alias:check-proverif-extractionpython3$(PROVERIF_DIR)/check-phase2-x25519-alias.py--proverif'$(PROVERIF)'--timeout'$(PROVERIF_TIMEOUT)'"
+			{
+				return Err("X25519 alias exact Make runner wiring changed".to_owned());
+			}
+			validate_x25519_alias_runner(
+				X25519_ALIAS_RUNNER,
+				X25519_ALIAS_CONTROL,
+				EXACT_REGISTRATION_ORIGIN_QUERIES,
+			)?;
+			continue;
+		}
 		let loaders = [
 			"$(PROVERIF_COMMON_LIBS)",
 			"$(PROVERIF_QUANTUM_LIBS)",
@@ -2822,6 +3112,35 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"-name:ProVeriftranscriptfidelitytarget:check-proverif-transcript-fidelity",
 		"dedicated transcript-fidelity CI entry",
 	)?;
+	require_once(
+		&workflow,
+		"target:check-generated-proverif-phase2-x25519-alias",
+		"X25519 alias CI scenario",
+	)?;
+	require_once(
+		&workflow,
+		"target:check-generated-proverif-general-registration-admissiontimeout:240",
+		"general exhaustive-family CI budget",
+	)?;
+	require_once(
+		&workflow,
+		"timeout-minutes:${{matrix.timeout||60}}",
+		"unchanged default and explicit general CI time budgets",
+	)?;
+	let mut workflow_scenarios = FORMAL_WORKFLOW
+		.lines()
+		.filter_map(|line| {
+			line.trim()
+				.strip_prefix("target: check-generated-proverif-")
+		})
+		.map(str::to_owned)
+		.collect::<Vec<_>>();
+	let mut make_scenarios = scenario_names(makefile)?;
+	workflow_scenarios.sort_unstable();
+	make_scenarios.sort_unstable();
+	if workflow_scenarios != make_scenarios {
+		return Err("Make and CI must enumerate exactly the same ProVerif scenarios".to_owned());
+	}
 	Ok(())
 }
 
@@ -5846,7 +6165,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration reconstructed associated data",
 		),
 		(
-			"letsession=session_label(expected_server_identity,beacon_identity,assigned_key_id,root_input)in",
+			"letsession=session_label(expected_server_identity,beacon_identity,assigned_key_id,root)in",
 			"later-registration reconstructed session",
 		),
 		(
@@ -6097,7 +6416,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration coordinator associated data",
 		),
 		(
-			"letsession=session_label(server_identity,beacon_identity,assigned_key_id,root_input)in",
+			"letsession=session_label(server_identity,beacon_identity,assigned_key_id,root)in",
 			"later-registration coordinator session",
 		),
 		(
@@ -7393,10 +7712,199 @@ fn omit_ctx(snapshot: &mut Snapshot, field: &str) {
 	snapshot.interface.replace_range(start..start + length, "");
 }
 
+fn check_x25519_alias_runner_mutations() {
+	// These new runner controls are separate from the retained 409/297 matrices.
+	for (from, to) in [
+		("production-transcript-interface.pvl", "other-interface.pvl"),
+		("extraction/lib.pvl", "other-extraction.pvl"),
+		("environment.pvl", "other-environment.pvl"),
+		("phase2-x25519-alias-control.pv", "other-control.pv"),
+		("phase2-x25519-alias-theory.pvl", "other-theory.pvl"),
+		(
+			"\"exact-registration-origin-queries.pvl\"",
+			"\"other-queries.pvl\"",
+		),
+		(
+			"\"canonical\", directory / \"crypto.pvl\", queries, \"true\", False",
+			"\"canonical\", alias, queries, \"true\", False",
+		),
+		(
+			"\"alias\", alias, queries, \"false\", False",
+			"\"alias\", alias, queries, \"true\", False",
+		),
+		(
+			"queries.write_text(selected_queries(directory))",
+			"queries.write_text(\"query attacker(root).\")",
+		),
+		(
+			"source[:start] + replacement + source[finish:]",
+			"replacement",
+		),
+		(
+			"command.extend((\"-lib\", str(library)))",
+			"command.extend((\"-lib\", str(queries)))",
+		),
+		("check=True,", "check=False,"),
+		("check_run(result.stdout, expected)", "print(result.stdout)"),
+		("if __name__ == \"__main__\":", "if False:"),
+	] {
+		let mut mutated = X25519_ALIAS_RUNNER.to_owned();
+		replace_once(&mut mutated, from, to);
+		assert!(
+			validate_x25519_alias_runner(
+				&mutated,
+				X25519_ALIAS_CONTROL,
+				EXACT_REGISTRATION_ORIGIN_QUERIES
+			)
+			.is_err(),
+			"X25519 alias runner mutation survived: {from}"
+		);
+	}
+	let changed_control = X25519_ALIAS_CONTROL.replace("KeepBeaconStatePrivate()", "0");
+	assert!(
+		validate_x25519_alias_runner(
+			X25519_ALIAS_RUNNER,
+			&changed_control,
+			EXACT_REGISTRATION_ORIGIN_QUERIES
+		)
+		.is_err()
+	);
+	let changed_queries = EXACT_REGISTRATION_ORIGIN_QUERIES.replace(
+		"inj-event(ServerCommitted(transcript))",
+		"event(ServerCommitted(transcript))",
+	);
+	assert!(
+		validate_x25519_alias_runner(X25519_ALIAS_RUNNER, X25519_ALIAS_CONTROL, &changed_queries)
+			.is_err()
+	);
+}
+
+fn check_general_registration_runner_mutations() {
+	// Additive runner controls leave the independent 409/297 matrices unchanged.
+	for (from, to) in [
+		(
+			"roles = project_initial_plan(roles, query_main, target)",
+			"roles = roles",
+		),
+		("code.count(signature) != 1", "False"),
+		(
+			"general_prefix_{target}(server_to_beacon_chain(main_root))",
+			"general_prefix_1(server_to_beacon_chain(main_root))",
+		),
+		("list(range(53))", "list(range(52))"),
+		("list(range(1, 24))", "list(range(1, 23))"),
+		(
+			"return list(range(1, target))",
+			"return list(range(1, target - 1))",
+		),
+		("if 23 not in order:", "if False:"),
+		("order.insert(order.index(10), 23)", "order.append(23)"),
+		("production-transcript-interface.pvl", "other-interface.pvl"),
+		("extraction/lib.pvl", "other-extraction.pvl"),
+		("environment.pvl", "other-environment.pvl"),
+		("check=True,", "check=False,"),
+		("timeout=timeout,", "timeout=None,"),
+		("if results != expected:", "if False:"),
+		("text.count(\"A trace has been found.\") != 1", "False"),
+		("if index in {11, 20}:", "if index in {11, 13, 20}:"),
+		(
+			"if index == 23 and 1 <= target <= 51:",
+			"if index in {10, 23} and 1 <= target <= 51:",
+		),
+		("if normalize(query) != normalize(expected)", "if False"),
+		("if target = {sequence(cached_target)} then", "if true then"),
+		("records.add(cached_target)", "records.clear()"),
+		(
+			"cache: receive_cache, send_chain: bitstring",
+			"cache: receive_cache, send_chain: chain",
+		),
+		(
+			"if witness\n        else f\"      out(c,",
+			"if True\n        else f\"      out(c,",
+		),
+		(
+			"\"new main_registration_session: bitstring;\"",
+			"\"main_registration_session: bitstring;\"",
+		),
+	] {
+		let mut changed = GENERAL_REGISTRATION_RUNNER.to_owned();
+		replace_once(&mut changed, from, to);
+		assert!(
+			validate_general_registration_runner(
+				&changed,
+				GENERAL_REGISTRATION_GENERATOR,
+				GENERAL_REGISTRATION_CHECKER_TESTS,
+				&GENERAL_REGISTRATION_ARTIFACTS
+			)
+			.is_err(),
+			"general runner mutation survived: {from}"
+		);
+	}
+	let mutations = [
+		("!GeneralAdmissionBeacon(", "GeneralAdmissionBeacon("),
+		(
+			"if general_sequence = general_expected_sequence then",
+			"if true then",
+		),
+		(
+			"inj-event(GeneralAdmissionRecordOrigin(",
+			"event(GeneralAdmissionRecordOrigin(",
+		),
+		("receive_cache_entry(s0, m0, tail)", "tail"),
+		(
+			"in(general_admitted_states, (=agreement",
+			"in(general_admitted_states, (agreement",
+		),
+		("out(c, response)", "out(c, INITIAL_SECRET)"),
+	];
+	for (index, (from, to)) in mutations.into_iter().enumerate() {
+		let mut changed = GENERAL_REGISTRATION_ARTIFACTS[index].1.to_owned();
+		replace_once(&mut changed, from, to);
+		let mut artifacts = GENERAL_REGISTRATION_ARTIFACTS;
+		artifacts[index].1 = &changed;
+		assert!(
+			validate_general_registration_runner(
+				GENERAL_REGISTRATION_RUNNER,
+				GENERAL_REGISTRATION_GENERATOR,
+				GENERAL_REGISTRATION_CHECKER_TESTS,
+				&artifacts
+			)
+			.is_err()
+		);
+	}
+	let generator = GENERAL_REGISTRATION_GENERATOR.replace("range(50)", "range(49)");
+	assert_ne!(generator, GENERAL_REGISTRATION_GENERATOR);
+	assert!(
+		validate_general_registration_runner(
+			GENERAL_REGISTRATION_RUNNER,
+			&generator,
+			GENERAL_REGISTRATION_CHECKER_TESTS,
+			&GENERAL_REGISTRATION_ARTIFACTS
+		)
+		.is_err()
+	);
+	let checker_tests = GENERAL_REGISTRATION_CHECKER_TESTS.replace(
+		"self.assertEqual(classified, 2444)",
+		"self.assertEqual(classified, 2443)",
+	);
+	assert_ne!(checker_tests, GENERAL_REGISTRATION_CHECKER_TESTS);
+	assert!(
+		validate_general_registration_runner(
+			GENERAL_REGISTRATION_RUNNER,
+			GENERAL_REGISTRATION_GENERATOR,
+			&checker_tests,
+			&GENERAL_REGISTRATION_ARTIFACTS
+		)
+		.is_err()
+	);
+}
+
 #[test]
 fn production_manifest_symbolic_model_and_adapters_are_exact() {
 	validate(&Snapshot::production()).unwrap();
 	validate_adapters().unwrap();
+	check_x25519_alias_runner_mutations();
+	check_general_registration_runner_mutations();
 }
 
 #[test]
@@ -9780,8 +10288,8 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		(
 			"later_registration_pv_session_assigned_id_substituted",
 			"let LaterSequenceRegistrationOpen(",
-			"assigned_key_id,\n      root_input",
-			"expected_server_key_id,\n      root_input",
+			"assigned_key_id,\n      root",
+			"expected_server_key_id,\n      root",
 			"later-registration reconstructed session",
 		),
 		(
@@ -10331,8 +10839,8 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		(
 			"later_registration_pv_coordinator_session_root_substituted",
 			"let LaterSequenceRegistrationControl() =",
-			"assigned_key_id,\n    root_input",
-			"assigned_key_id,\n    replacement_root_input",
+			"assigned_key_id,\n    root",
+			"assigned_key_id,\n    replacement_root",
 			"later-registration coordinator session",
 		),
 		(
@@ -10747,7 +11255,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later_registration_make_scenario_removed",
 			"\tlater-sequence-registration \\\n",
 			"",
-			"expected 30 ProVerif scenarios",
+			"expected 32 ProVerif scenarios",
 		),
 		(
 			"later_registration_make_extraction_prerequisite_removed",
@@ -19390,6 +19898,113 @@ fn requested_transcript_mutations_are_rejected() {
 #[test]
 fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
 	let environment = compact(&uncommented_pv(ENVIRONMENT_MODEL).unwrap());
+	assert_eq!(
+		arguments_after(&environment, "funsession_label(").unwrap(),
+		["bitstring", "bitstring", "key_id", "bitstring"],
+		"traffic agreement must retain root bytes without claiming an inverse for Extract"
+	);
+	assert_eq!(
+		arguments_after(&environment, "))=authenticated_registration_session(").unwrap(),
+		[
+			"mr_server",
+			"mr_beacon",
+			"mr_init",
+			"mr_id",
+			"mr_prekey",
+			"mr_one_time",
+			"mr_pq",
+			"mr_root",
+			"mr_ad",
+			"mr_pinned",
+			"mr_origin",
+		],
+		"authentication projection preserves identities, signed bundle, actual root, AD and origin"
+	);
+	assert_eq!(
+		arguments_after(
+			&environment,
+			"establishment_authenticated_session(establishment_transcript("
+		)
+		.unwrap(),
+		[
+			"mr_server",
+			"mr_beacon",
+			"mr_init",
+			"mr_id",
+			"mr_prekey",
+			"mr_one_time",
+			"mr_pq",
+			"mr_ephemeral",
+			"mr_kem",
+			"mr_frame",
+			"mr_response",
+			"mr_root_input",
+			"mr_root",
+			"mr_ad",
+			"mr_assigned",
+			"mr_pinned",
+			"mr_session",
+			"mr_origin",
+		],
+		"projection destructures every original field in its existing order"
+	);
+	for (raw, projected, expected_count, omit_response) in [
+		(
+			"ServerRegistrationSessionCommitted",
+			"ServerAuthenticatedSessionCommitted",
+			2,
+			false,
+		),
+		(
+			"BeaconRegistrationCompleted",
+			"BeaconAuthenticatedRegistrationCompleted",
+			2,
+			true,
+		),
+		(
+			"RegistrationRecordSent",
+			"AuthenticatedRegistrationRecordSent",
+			3,
+			false,
+		),
+	] {
+		let raw_calls = all_arguments(&environment, raw)
+			.unwrap()
+			.into_iter()
+			.filter(|args| args[0].starts_with("establishment_session("))
+			.collect::<Vec<_>>();
+		let projected_calls = all_arguments(&environment, projected)
+			.unwrap()
+			.into_iter()
+			.filter(|args| args[0].starts_with("establishment_authenticated_session("))
+			.collect::<Vec<_>>();
+		assert_eq!(raw_calls.len(), expected_count);
+		assert_eq!(projected_calls.len(), expected_count);
+		for (raw_args, actual) in raw_calls.iter().zip(projected_calls) {
+			let mut expected = raw_args.clone();
+			expected[0] = expected[0].replace(
+				"establishment_session(",
+				"establishment_authenticated_session(",
+			);
+			if omit_response {
+				expected.remove(4);
+			}
+			assert_eq!(
+				actual, expected,
+				"projected {raw} changes an authenticated argument"
+			);
+			require_once(
+				&environment,
+				&format!(
+					"event{raw}({});event{projected}({});",
+					raw_args.join(","),
+					expected.join(",")
+				),
+				"projected event retains the exact source success condition and order",
+			)
+			.unwrap();
+		}
+	}
 	let baseline =
 		compact(&uncommented_pv(include_str!("../proofs/pro-verif/baseline.pv")).unwrap());
 	for role in [
@@ -19457,9 +20072,34 @@ fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
 	assert_eq!(count(&later_beacon, "open_frame("), 1);
 	let queries =
 		compact(&uncommented_pv(include_str!("../proofs/pro-verif/queries.pvl")).unwrap());
+	assert_eq!(count(&queries, "query"), 14);
+	require_once(
+		&queries,
+		"inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,first_sequence(),main_payload,main_frame,main_claimed))==>inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence(),main_payload,main_frame,main_claimed))",
+		"sequence-one exact record and assigned-ID agreement",
+	).unwrap();
+	let exact_queries = compact(
+		&uncommented_pv(include_str!(
+			"../proofs/pro-verif/exact-registration-origin-queries.pvl"
+		))
+		.unwrap(),
+	);
+	assert_eq!(
+		exact_queries
+			.split("query")
+			.skip(1)
+			.map(|query| stable_text_hash(&format!("query{query}")))
+			.collect::<Vec<_>>(),
+		[
+			5_922_842_905_554_828_522,
+			1_537_735_056_464_180_222,
+			9_278_209_781_568_601_116
+		],
+		"all three historical exact-field query bodies remain unchanged controls"
+	);
 	for conclusion in [
-		"inj-event(ServerRegistrationSessionCommitted(main_agreement,main_server_assigned))",
-		"inj-event(RegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned))",
+		"inj-event(ServerAuthenticatedSessionCommitted(main_agreement,main_server_assigned))",
+		"inj-event(AuthenticatedRegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned))",
 	] {
 		require_once(&queries, conclusion, "general completion origin").unwrap();
 	}

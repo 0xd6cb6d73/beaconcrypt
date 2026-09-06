@@ -115,10 +115,10 @@ query server_identity: bitstring,
     origin
   )).
 
-(* Sequence-one completion implies a unique exact issued response. BeaconCommitted is emitted only by that scheduling branch; BeaconRegistrationCompleted below covers both first and later completion. *)
-query transcript: establishment_transcript_t;
-  inj-event(BeaconCommitted(transcript)) ==>
-  inj-event(ServerCommitted(transcript)).
+(* At sequence one, the exact authenticated record and its bound assigned ID originate at the server. Raw response encodings are absent; their historical equality query is retained as a negative regression control. *)
+query main_agreement: authenticated_registration_session_t, main_payload: bitstring, main_frame: bitstring, main_claimed: key_id;
+  inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement, first_sequence(), main_payload, main_frame, main_claimed)) ==>
+  inj-event(AuthenticatedRegistrationRecordSent(main_agreement, first_sequence(), main_payload, main_frame, main_claimed)).
 
 (* Authentication, replay resistance, peer binding, direction separation,
    and sequence binding for every honest-role accepted record in the bounded
@@ -146,11 +146,11 @@ query session: bitstring,
     plaintext
   )).
 
-(* Every modeled completion agrees on the cryptographic session, including the outer cryptographic fields and pinned server ID, and on the exact authenticated record. The assigned routing ID and its session_label are excluded: later application payloads can carry a different authenticated ID prefix. The exact-response negative control tests that distinction. *)
-query main_agreement: registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id, main_server_assigned: key_id;
-  inj-event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)) ==>
-  inj-event(ServerRegistrationSessionCommitted(main_agreement, main_server_assigned)).
+(* Every modeled completion agrees on pinned identities, the authenticated Phase-1 bundle and origin, actual root and associated data, and the exact authenticated record. Raw response encodings, pre-Extract input and assigned routing ID are excluded from this session equality. Later application payloads can authenticate a different ID prefix, so the all-sequence record query keeps claimed and originally assigned IDs distinct. *)
+query main_agreement: authenticated_registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_claimed: key_id, main_server_assigned: key_id;
+  inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_claimed)) ==>
+  inj-event(ServerAuthenticatedSessionCommitted(main_agreement, main_server_assigned)).
 
-query main_agreement: registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id, main_server_assigned: key_id;
-  inj-event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)) ==>
-  inj-event(RegistrationRecordSent(main_agreement, main_sequence, main_payload, main_frame, main_server_assigned)).
+query main_agreement: authenticated_registration_session_t, main_sequence: sequence, main_payload: bitstring, main_frame: bitstring, main_claimed: key_id, main_server_assigned: key_id;
+  inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_claimed)) ==>
+  inj-event(AuthenticatedRegistrationRecordSent(main_agreement, main_sequence, main_payload, main_frame, main_server_assigned)).
