@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=124
+	[handwritten-lean]=125
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3351,6 +3351,17 @@ require_line_count 13 '^#guard_msgs in$' "$adaptive_chain" "adaptive chain guard
 for theorem_name in sourceView_tapeView sourceGame_eq_hybrid final_hybrid_eq_eager adaptive_advantage_bound sourceRun_uniform_bound tapeRun_uniform_bound tapeObserver_uniform_bound sourceImpl_requests sourceRun_requests_bound sourceGame_uniform_bound eagerGame_uniform_bound adaptiveReduction_query_bounds adaptiveChallenger_query_bounds; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_chain" "adaptive chain theorem ${theorem_name}"
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAdaptiveChainObservation.${theorem_name}$" "$adaptive_chain" "adaptive chain dependency ${theorem_name}"
+done
+
+# Adaptive joint directions retain actual source initialization and complete interleaved observations.
+adaptive_bidirectional=proofs/lean/BeaconcryptCore/Computational/PqxdhAdaptiveBidirectionalChains.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAdaptiveBidirectionalChains$' \
+	proofs/lean/BeaconcryptCore.lean "adaptive bidirectional root import"
+require_line_count 17 '^theorem ' "$adaptive_bidirectional" "adaptive bidirectional theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$adaptive_bidirectional" "adaptive bidirectional guarded dependencies"
+for theorem_name in sourceView_tapeView actualGame_eq_initialized final_bidirectional_eq_eager adaptive_initialized_advantage_bound sourceRun_uniform_bound tapeRun_uniform_bound tapeObserver_uniform_bound actualGame_uniform_bound eagerGame_uniform_bound sourceImpl_requests sourceRun_requests_bound adaptiveInitialReduction_query_bounds adaptiveLeftReduction_query_bounds adaptiveRightReduction_query_bounds adaptiveInitialChallenger_query_bounds adaptiveLeftChallenger_query_bounds adaptiveRightChallenger_query_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_bidirectional" "adaptive bidirectional theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAdaptiveBidirectionalChains.${theorem_name}$" "$adaptive_bidirectional" "adaptive bidirectional dependency ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
