@@ -133,6 +133,8 @@ import BeaconcryptCore.Refinement.RatchetRestoreProvenance
 
 import BeaconcryptCore.Computational.AdaptiveCtxPrivacyGuard
 import BeaconcryptCore.Computational.AdaptiveCtxPrivacyQueryBounds
+import BeaconcryptCore.Computational.AdaptiveCtxDirectReplay
+import BeaconcryptCore.Computational.AdaptiveCtxDirectReplayQueryBounds
 
 /-!
 # Beaconcrypt-core verification root

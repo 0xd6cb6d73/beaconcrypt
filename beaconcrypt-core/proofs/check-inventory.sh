@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=146
+	[handwritten-lean]=148
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3599,5 +3599,25 @@ for theorem_name in viewReduction_seal_bound viewReduction_uniform_bound viewRea
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxPrivacyQueryBounds.${theorem_name}$" "$adaptive_ctx_privacy_query_bounds" "AdaptiveCtxPrivacyQueryBounds dependency audit ${theorem_name}"
 done
 require_line_count 9 '^#guard_msgs in$' "$adaptive_ctx_privacy_query_bounds" "AdaptiveCtxPrivacyQueryBounds guarded audits"
+
+
+# Independent random-source equality retains complete adaptive caches before primitive interpretation.
+adaptive_ctx_direct_replay=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxDirectReplay.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxDirectReplay$' \
+	proofs/lean/BeaconcryptCore.lean "AdaptiveCtxDirectReplay root import"
+for theorem_name in runLogged_eq_adapter adapter_uniform adapter_private adapter_public adapter_primitive adapter_seal adapter_raw adapter_query directPrivate_history directPublic_history directSeal_history directRaw_history directImpl_history recordReply_guarded guarded_query_expand guarded_query_complete guarded_run_complete sourceClient_direct interpreted_complete viewReduction_direct randomView_direct canonical_directRandom_advantage_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_ctx_direct_replay" "AdaptiveCtxDirectReplay theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxDirectReplay.${theorem_name}$" "$adaptive_ctx_direct_replay" "AdaptiveCtxDirectReplay dependency audit ${theorem_name}"
+done
+require_line_count 22 '^#guard_msgs in$' "$adaptive_ctx_direct_replay" "AdaptiveCtxDirectReplay guarded audits"
+
+adaptive_ctx_direct_replay_query_bounds=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxDirectReplayQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxDirectReplayQueryBounds$' \
+	proofs/lean/BeaconcryptCore.lean "AdaptiveCtxDirectReplayQueryBounds root import"
+for theorem_name in directClient_seal_bound directClient_uniform_bound directClient_plaintext_bound directRandomGame_uniform_bound directRandomView_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_ctx_direct_replay_query_bounds" "AdaptiveCtxDirectReplayQueryBounds theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxDirectReplayQueryBounds.${theorem_name}$" "$adaptive_ctx_direct_replay_query_bounds" "AdaptiveCtxDirectReplayQueryBounds dependency audit ${theorem_name}"
+done
+require_line_count 5 '^#guard_msgs in$' "$adaptive_ctx_direct_replay_query_bounds" "AdaptiveCtxDirectReplayQueryBounds guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
