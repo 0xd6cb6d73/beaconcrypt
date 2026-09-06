@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=142
+	[handwritten-lean]=154
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3464,6 +3464,103 @@ require_line_count 41 '^#guard_msgs in$' "$joint_acceptance" "joint source accep
 for theorem_name in historyUpdate_noSign bare_step_noSign bare_run_noSign bare_step_seed_extension bare_step_created bare_run_created bare_dynamic_compose liftDynamic_complete selectedProgram_complete selectedProgram_three_messages selectedProgram_fieldOrigin reportingImpl_snapshot reportingExecution_snapshot reportingRun_snapshot actualRun_snapshot sessionBody_complete bare_create_initial oneSession_complete singletonState_facts sessionBody_supported oneSession_supported sessionBody_finalCandidate oneSession_finalCandidate oneSession_changed_fieldOrigin liftDynamic_query_bound selectedProgram_query_bound oneSession_query_bound sourceCandidate_monitor acceptanceCandidate_monitor acceptanceCandidate_snapshot_occurred acceptanceCandidate_hit_recorded oneSession_changed_recorded oneSession_create_bound oneSession_authentication_bound oneSession_class_bound oneSession_total_bound oneSessionReduction_class_bound oneSession_attempt_bound oneSession_reveal_bound oneSession_actual_uniform_bound oneSession_challenger_uniform_bound; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_acceptance" "joint source acceptance theorem ${theorem_name}"
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition.${theorem_name}$" "$joint_acceptance" "joint source acceptance dependency ${theorem_name}"
+done
+
+# Private source randomness, all-candidate root composition and complete reduction ledgers.
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivateSourceCoins.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivateSourceCoins$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivateSourceCoins root import"
+require_line_count 13 '^#guard_msgs in$' "$private_root_module" "PqxdhPrivateSourceCoins guarded dependencies"
+for theorem_name in bare_create compile_create private_create compile_step compile_complete compile_step_bound compile_bound private_local_complete private_public_complete privateRun_eq privateRun_uniform_bound publicSource_query localCoins_query; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateSourceCoins.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivateCandidateAcceptance.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivateCandidateAcceptance$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivateCandidateAcceptance root import"
+require_line_count 6 '^#guard_msgs in$' "$private_root_module" "PqxdhPrivateCandidateAcceptance guarded dependencies"
+for theorem_name in candidateProgram_complete compiledCandidate_eq compiledCandidate_last restore_snapshot compiledCandidate_recorded origin_advantage_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateCandidateAcceptance.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivateKemSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivateKemSource$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivateKemSource root import"
+require_line_count 8 '^#guard_msgs in$' "$private_root_module" "PqxdhPrivateKemSource guarded dependencies"
+for theorem_name in generate_key_support source_generation_complete evalKem_coins evalKem_bind localSelector_step localSelector_complete generators_complete_continuation evalKem_ambient; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateKemSource.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivateKemQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivateKemQueryBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivateKemQueryBounds root import"
+require_line_count 3 '^#guard_msgs in$' "$private_root_module" "PqxdhPrivateKemQueryBounds guarded dependencies"
+for theorem_name in localCoins_excluded publicSource_bound localSelector_source_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateKemQueryBounds.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PrivateSourceInvariants.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PrivateSourceInvariants$' proofs/lean/BeaconcryptCore.lean "PrivateSourceInvariants root import"
+require_line_count 2 '^#guard_msgs in$' "$private_root_module" "PrivateSourceInvariants guarded dependencies"
+for theorem_name in private_run_noSign private_run_created; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PrivateSourceInvariants.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivatePhase1Prefix.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivatePhase1Prefix$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivatePhase1Prefix root import"
+require_line_count 14 '^#guard_msgs in$' "$private_root_module" "PqxdhPrivatePhase1Prefix guarded dependencies"
+for theorem_name in afterGeneration_complete generatedBody_complete beforeCandidate_complete program_complete program_supported changed_origin changed_advantage_bound afterGeneration_source_bound program_source_bound program_create_bound authentication_bound changedBit_iff program_sign_bound authentication_continuation_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivatePhase1Prefix.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivateRootSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivateRootSource$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivateRootSource root import"
+require_line_count 16 '^#guard_msgs in$' "$private_root_module" "PqxdhPrivateRootSource guarded dependencies"
+for theorem_name in borrowedPrefix_evaluated continuedSource_keyfirst blockChallenge_interpreter nativeTarget_eq_total actualGame_eq_total finishTarget_real rootInitializer_input evalKem_blockChallenge erase_changedBit evalKem_pure dispatch_finish_eq_source borrowedPrefix_target filteredSource_eq_initializerReal continuedSource_filtered authentication_hop authenticated_root_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateRootSource.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivateRootQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivateRootQueryBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivateRootQueryBounds root import"
+require_line_count 29 '^#guard_msgs in$' "$private_root_module" "PqxdhPrivateRootQueryBounds guarded dependencies"
+for theorem_name in bare_uniform_step ccaCoins_uniform ccaCoins_excluded borrowed_uniform_step borrowed_uniform_bound borrowed_class_step borrowed_class_bound postCoins_uniform postCoins_excluded postSource_uniform_step postSource_uniform_bound postSource_class_step postSource_class_bound ccaAmbient_eq_lift ccaAmbient_bound borrowedPrefix_bound acceptedCommon_bound allCandidateCommon_bound dispatch_bound rootInitializer_prefix_bound blockChallenge_bound targetAfterEncapsulation_bound nativeNext_bound observe_uniform_bound observe_base_bound observe_decap_bound finishTarget_class_bound finishTarget_uniform_bound rootInitializer_post_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateRootQueryBounds.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivateRootGameBudgets.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivateRootGameBudgets$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivateRootGameBudgets root import"
+require_line_count 15 '^#guard_msgs in$' "$private_root_module" "PqxdhPrivateRootGameBudgets guarded dependencies"
+for theorem_name in evalKem_query_uniform_bound evalKem_uniform_bound generate_uniform_bound localSelector_uniform_bound program_uniform_bound postChallenge_uniform_bound continuedSource_uniform_bound initializerKdfPrefix_uniform_bound rootObserver_uniform_bound oneKeyBranch_uniform_bound actualGame_uniform_bound program_uniform_from_calls oneKeyFairProgram_eq oneKeyFairProgram_uniform_bound initializer_uniform_ledger; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateRootGameBudgets.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/SecretInputKdfWorldBudgets.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.SecretInputKdfWorldBudgets$' proofs/lean/BeaconcryptCore.lean "SecretInputKdfWorldBudgets root import"
+require_line_count 6 '^#guard_msgs in$' "$private_root_module" "SecretInputKdfWorldBudgets guarded dependencies"
+for theorem_name in hmac_real source_root extract_real independent_root extract_uniform hmac_random; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.SecretInputKdfWorldBudgets.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PrivateSelectorCoinBudgets.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PrivateSelectorCoinBudgets$' proofs/lean/BeaconcryptCore.lean "PrivateSelectorCoinBudgets root import"
+require_line_count 3 '^#guard_msgs in$' "$private_root_module" "PrivateSelectorCoinBudgets guarded dependencies"
+for theorem_name in localCoins_uniform localSelector_uniform_step localSelector_uniform_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PrivateSelectorCoinBudgets.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+private_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPrivateRootEufBudgets.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPrivateRootEufBudgets$' proofs/lean/BeaconcryptCore.lean "PqxdhPrivateRootEufBudgets root import"
+require_line_count 8 '^#guard_msgs in$' "$private_root_module" "PqxdhPrivateRootEufBudgets guarded dependencies"
+for theorem_name in program_class_bound privateReduction_class_bound privateReduction_game_uniform_bound sourceUniform_eq_joint program_private_uniform_bound privateReduction_sign_bound privateReduction_uniform_ledger privateReduction_staticDh_bound; do
+	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateRootEufBudgets.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
