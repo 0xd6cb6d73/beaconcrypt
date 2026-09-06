@@ -254,6 +254,9 @@ import BeaconcryptCore.Computational.AdaptiveCtxSharedKeySelection
 import BeaconcryptCore.Computational.AdaptiveCtxSharedMultiKeyIntegrity
 import BeaconcryptCore.Computational.AdaptiveCtxSharedMultiKeyBounds
 import BeaconcryptCore.Computational.AdaptiveCtxSharedSourceBounds
+import BeaconcryptCore.Computational.RawCtxPositionPublicServices
+import BeaconcryptCore.Computational.RawCtxInterpretedOwner
+import BeaconcryptCore.Computational.PqxdhServerRegistrationPublication
 /-!
 # Beaconcrypt-core verification root
 

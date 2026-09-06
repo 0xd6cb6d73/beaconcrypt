@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=270
+	[handwritten-lean]=273
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5047,6 +5047,27 @@ require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxSharedSou
 require_line_count 8 '^#guard_msgs in$' "$shared_ctx_hybrid_module" "AdaptiveCtxSharedSourceBounds guarded dependencies"
 for theorem_name in hash_step_bound hash_run_bound target_step_bound source_step_bound source_run_pair_bound source_work_bound source_run_bound source_game_bound; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedSourceBounds.${theorem_name}$" "$shared_ctx_hybrid_module" "shared CTX hybrid dependency ${theorem_name}"
+done
+
+public_owner_publication_module=proofs/lean/BeaconcryptCore/Computational/RawCtxPositionPublicServices.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxPositionPublicServices$' proofs/lean/BeaconcryptCore.lean "RawCtxPositionPublicServices root import"
+require_line_count 19 '^#guard_msgs in$' "$public_owner_publication_module" "RawCtxPositionPublicServices guarded dependencies"
+for theorem_name in public_hkdf public_hash public_coin source_step_erasure source_step_invariant source_step_capability source_step_metadata source_trace_capability logged_step_erasure logged_run_erasure logged_run_trace source_supported_capability logged_run_count source_step_growth SourceTrace.metadata SourceTrace.history_length source_capability_counted initialized_capability logged_query_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxPositionPublicServices.${theorem_name}$" "$public_owner_publication_module" "public/owner/publication dependency ${theorem_name}"
+done
+
+public_owner_publication_module=proofs/lean/BeaconcryptCore/Computational/RawCtxInterpretedOwner.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxInterpretedOwner$' proofs/lean/BeaconcryptCore.lean "RawCtxInterpretedOwner root import"
+require_line_count 7 '^#guard_msgs in$' "$public_owner_publication_module" "RawCtxInterpretedOwner guarded dependencies"
+for theorem_name in rawReceive_interpreted sendOwner_interpreted owner_interpreted schedule_interpreted source_step source_schedule source_query_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxInterpretedOwner.${theorem_name}$" "$public_owner_publication_module" "public/owner/publication dependency ${theorem_name}"
+done
+
+public_owner_publication_module=proofs/lean/BeaconcryptCore/Computational/PqxdhServerRegistrationPublication.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhServerRegistrationPublication$' proofs/lean/BeaconcryptCore.lean "PqxdhServerRegistrationPublication root import"
+require_line_count 23 '^#guard_msgs in$' "$public_owner_publication_module" "PqxdhServerRegistrationPublication guarded dependencies"
+for theorem_name in publish_commit publish_fields candidate_initialization candidate_binding authenticated_length first_send_state functional_send source_afterInitialization_exact candidate_normal source_candidateTail_exact source_build_exact afterInitialization_support build_normal build_run_normal afterInitialization_bound candidate_bound build_bound native_kdf_bound native_seal_bound native_aux_bound native_build_bounds native_build_normal candidate_initial_state; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.${theorem_name}$" "$public_owner_publication_module" "public/owner/publication dependency ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
