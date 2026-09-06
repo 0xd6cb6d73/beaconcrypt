@@ -45,10 +45,10 @@ declare -A expected_category_counts=(
 	[adapter-rust]=13
 	[adapter-schema]=3
 	[core-rust]=9
-	[control]=11
+	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=122
+	[handwritten-lean]=123
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -85,6 +85,7 @@ tracked_proof_symlink="$(git -C "$repo_dir" ls-files -s -- beaconcrypt-core/proo
 
 printf '%s\n' \
 	../.cargo/config.toml \
+	../.gitattributes \
 	../.github/workflows/formal-verification.yml \
 	../.gitignore \
 	../Cargo.lock \
@@ -3328,5 +3329,16 @@ for theorem_name in ordered_chain_bound bidirectional_bound realEvolution_record
 done
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhOrderedChainHybrids$' \
 	proofs/lean/BeaconcryptCore.lean "ordered chain root import"
+
+
+# Source initialization precedes both complete ordered directional histories.
+initial_chain_composition=proofs/lean/BeaconcryptCore/Computational/PqxdhInitialChainComposition.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhInitialChainComposition$' \
+	proofs/lean/BeaconcryptCore.lean "PqxdhInitialChainComposition root import"
+for theorem_name in initial_chains_observed initialized_pair_source independent_initial_eq_bidirectional initialized_bound initialized_evolving_bound sourceInitialChains_bytes sourceInitialChains_eq actualInitializedGame_eq actualInitializedGame_evolving_bound rootSampler_query_bound initialReduction_query_bounds actualInitializedGame_query_bound initialChallenger_query_bounds sampleEvolution_query_bound leftObserver_query_bound rightContextSampler_query_bound bidirectionalGame_query_bound leftHopReduction_query_bounds rightHopReduction_query_bounds hopChallenger_query_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$initial_chain_composition" "initial-chain theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhInitialChainComposition.${theorem_name}$" "$initial_chain_composition" "initial-chain dependency ${theorem_name}"
+done
+require_line_count 20 '^#guard_msgs in$' "$initial_chain_composition" "initial-chain guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
