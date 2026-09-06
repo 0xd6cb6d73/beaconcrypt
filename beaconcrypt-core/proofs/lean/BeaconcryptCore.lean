@@ -135,6 +135,16 @@ import BeaconcryptCore.Computational.AdaptiveCtxPrivacyGuard
 import BeaconcryptCore.Computational.AdaptiveCtxPrivacyQueryBounds
 import BeaconcryptCore.Computational.AdaptiveCtxDirectReplay
 import BeaconcryptCore.Computational.AdaptiveCtxDirectReplayQueryBounds
+import BeaconcryptCore.Computational.RawCtxSourceOpen
+import BeaconcryptCore.Computational.RawCtxFrameDecoding
+import BeaconcryptCore.Computational.RawCtxServerRouting
+import BeaconcryptCore.Computational.RawCtxOwnerProvenance
+import BeaconcryptCore.Computational.RawCtxWholeOwner
+import BeaconcryptCore.Computational.RawCtxOwnerOracle
+import BeaconcryptCore.Computational.RawCtxOwnerEffects
+import BeaconcryptCore.Computational.RawCtxOwnerResult
+import BeaconcryptCore.Computational.RawCtxNativeSlot
+import BeaconcryptCore.Computational.RawCtxCanonicalOpening
 
 /-!
 # Beaconcrypt-core verification root

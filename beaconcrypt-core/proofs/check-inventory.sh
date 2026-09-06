@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=148
+	[handwritten-lean]=158
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3619,5 +3619,128 @@ for theorem_name in directClient_seal_bound directClient_uniform_bound directCli
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxDirectReplayQueryBounds.${theorem_name}$" "$adaptive_ctx_direct_replay_query_bounds" "AdaptiveCtxDirectReplayQueryBounds dependency audit ${theorem_name}"
 done
 require_line_count 5 '^#guard_msgs in$' "$adaptive_ctx_direct_replay_query_bounds" "AdaptiveCtxDirectReplayQueryBounds guarded audits"
+
+# HB-91: exact source effects, actual optional values and one-owner raw schedules.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxOwnerResult.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxOwnerResult$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxOwnerResult root import"
+require_line_count 3 '^theorem ' "$owner_module" "RawCtxOwnerResult theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$owner_module" "RawCtxOwnerResult guarded dependencies"
+for theorem_pattern in 'finish_map' 'execution_map' 'receiveNext_map'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source owner theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOwnerResult[.]${theorem_pattern}$" \
+		"$owner_module" "source owner dependency ${theorem_pattern}"
+done
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxOwnerEffects.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxOwnerEffects$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxOwnerEffects root import"
+require_line_count 11 '^theorem ' "$owner_module" "RawCtxOwnerEffects theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$owner_module" "RawCtxOwnerEffects guarded dependencies"
+for theorem_pattern in 'rejected_step' 'failed_open_retains_effects' 'Execution[.]driver_eq' 'Execution[.]open_bound' 'execution_exists' 'Execution[.]failure_entry' 'Execution[.]kdf_bound' 'Execution[.]project' 'execution_lift' 'receiveEffectsNext_total' 'receiveEffectsNext_refines'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source owner theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOwnerEffects[.]${theorem_pattern}$" \
+		"$owner_module" "source owner dependency ${theorem_pattern}"
+done
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxOwnerOracle.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxOwnerOracle$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxOwnerOracle root import"
+require_line_count 15 '^theorem ' "$owner_module" "RawCtxOwnerOracle theorem inventory"
+require_line_count 15 '^#guard_msgs in$' "$owner_module" "RawCtxOwnerOracle guarded dependencies"
+for theorem_pattern in 'resume_exact' 'resume_rank' 'finish_exact' 'deterministic_execution' 'supported_execution' 'resume_entry' 'finish_none' 'program_kdf_bound' 'program_open_bound' 'SupportedExecution[.]failure_entry' 'program_failure_entry' 'begin_exact' 'begin_entry' 'receive_deterministic' 'receive_failure_entry'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source owner theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOwnerOracle[.]${theorem_pattern}$" \
+		"$owner_module" "source owner dependency ${theorem_pattern}"
+done
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxWholeOwner.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxWholeOwner$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxWholeOwner root import"
+require_line_count 9 '^theorem ' "$owner_module" "RawCtxWholeOwner theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$owner_module" "RawCtxWholeOwner guarded dependencies"
+for theorem_pattern in 'arguments_some' 'arguments_none' 'adapter_missing' 'adapter_present' 'rawGame_publication' 'rawGame_preserves_metadata' 'rawGame_failure_owner' 'ownerImpl_step' 'scheduleGame_bounds'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source owner theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxWholeOwner[.]${theorem_pattern}$" \
+		"$owner_module" "source owner dependency ${theorem_pattern}"
+done
+
+# HB-91 follow-on: arbitrary-response target/context and successful raw-result provenance.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxOwnerProvenance.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxOwnerProvenance$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxOwnerProvenance root import"
+require_line_count 12 '^theorem ' "$owner_module" "RawCtxOwnerProvenance theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$owner_module" "RawCtxOwnerProvenance guarded dependencies"
+for theorem_pattern in 'validated_target' 'resume_scope' 'plan_target' 'begin_scope' 'oracle_resume_scope' 'oracle_begin_scope' 'supported_success' 'receive_success' 'adapter_success' 'receive_adapter_success' 'raw_success' 'raw_success_metadata'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source provenance theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxOwnerProvenance[.]${theorem_pattern}$" \
+		"$owner_module" "source provenance dependency ${theorem_pattern}"
+done
+
+# HB-91: complete assigned-handle routing and ready native-slot representation.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxServerRouting.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxServerRouting$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxServerRouting root import"
+require_line_count 17 '^theorem ' "$owner_module" "RawCtxServerRouting theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$owner_module" "RawCtxServerRouting guarded dependencies"
+for theorem_pattern in 'associatedArray_exact' 'associatedBytes_exact' 'associatedBytes_length' 'peerAssociatedData_some' 'putPeer_selected' 'putPeer_other' 'putPeer_entry' 'rawGame_cases' 'rawGame_missing_sender' 'rawGame_missing_peer' 'rawGame_preserves_metadata' 'rawGame_failure_server' 'rawGame_success' 'rawGame_peer_fields' 'serverImpl_step' 'scheduleGame_bounds' 'scheduleGame_peer_fields'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"server/slot theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxServerRouting[.]${theorem_pattern}$" \
+		"$owner_module" "server/slot dependency ${theorem_pattern}"
+done
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxNativeSlot.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxNativeSlot$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxNativeSlot root import"
+require_line_count 9 '^theorem ' "$owner_module" "RawCtxNativeSlot theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$owner_module" "RawCtxNativeSlot guarded dependencies"
+for theorem_pattern in 'run_absent' 'run_ready' 'rawReceive_ready' 'rawGame_ready' 'rawGame_normal' 'rawGame_failure_owner' 'rawReceive_empty' 'rawReceive_malformed' 'rawReceive_invalid'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"server/slot theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxNativeSlot[.]${theorem_pattern}$" \
+		"$owner_module" "server/slot dependency ${theorem_pattern}"
+done
+
+# HB-91: complete-input functional reader and exact source payload-slice instantiation.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxFrameDecoding.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxFrameDecoding$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxFrameDecoding root import"
+require_line_count 14 '^theorem ' "$owner_module" "RawCtxFrameDecoding theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$owner_module" "RawCtxFrameDecoding guarded dependencies"
+for theorem_pattern in 'sourceFrame_eq_validated' 'fromPayload_record' 'complete_success' 'complete_trailing' 'decode_success' 'decoderAgreement' 'sender_payload_failure' 'fromPayload_some_iff' 'sourcePrepared_frame' 'sourceReceive_exact' 'sourcePrepared_success' 'sourceGame_exact' 'sourceGame_ready_slot' 'sourceServerGame_exact'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source frame theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxFrameDecoding[.]${theorem_pattern}$" \
+		"$owner_module" "source frame dependency ${theorem_pattern}"
+done
+
+# HB-91: actual native hash/AEAD dispatch and complete raw-schedule query accounting.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSourceOpen.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSourceOpen$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxSourceOpen root import"
+require_line_count 26 '^theorem ' "$owner_module" "RawCtxSourceOpen theorem inventory"
+require_line_count 26 '^#guard_msgs in$' "$owner_module" "RawCtxSourceOpen guarded dependencies"
+for theorem_pattern in 'baseOpen_combined' 'hashInput_extracted' 'hashInput_length' 'openSlices_rom' 'sourceRecord_spec' 'openInput_typed' 'openSlices_hash_bound' 'openSlices_aead_bound' 'openInput_bounds' 'openSlices_run' 'openSlices_success' 'openSlices_hash_rejection' 'openInput_success' 'simulate_bound' 'openLift_bound' 'owner_open_bound' 'openLift_no_kdf' 'owner_kdf_bound' 'owner_primitive_bounds' 'openLift_apply' 'openInput_shared_cache' 'raw_success_primitives' 'raw_primitive_bounds' 'nativeSchedule_bounds' 'nativeOwner_interpretation' 'nativeSchedule_interpretation'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source opening theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSourceOpen[.]${theorem_pattern}$" \
+		"$owner_module" "source opening dependency ${theorem_pattern}"
+done
+
+# Exact per-opening source/canonical CTX connection; no global key-selection premise.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxCanonicalOpening.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxCanonicalOpening$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxCanonicalOpening root import"
+require_line_count 10 '^theorem ' "$owner_module" "RawCtxCanonicalOpening theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$owner_module" "RawCtxCanonicalOpening guarded dependencies"
+for theorem_pattern in typedOpen_target sourceOpening_canonical selectedDecoder_source sourceOpening_selected sourceOpening_continuation canonicalRaw_uniform selectedTarget_fields sourceOpening_interpretation sourceOpening_cache_projection sourceOpening_uniform; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"canonical opening theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxCanonicalOpening[.]${theorem_pattern}$" \
+		"$owner_module" "canonical opening dependency ${theorem_pattern}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
