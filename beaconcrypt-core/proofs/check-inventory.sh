@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=213
+	[handwritten-lean]=217
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4534,6 +4534,63 @@ require_line_count 8 '^#guard_msgs in$' "$private_root_module" "PqxdhPrivateRoot
 for theorem_name in program_class_bound privateReduction_class_bound privateReduction_game_uniform_bound sourceUniform_eq_joint program_private_uniform_bound privateReduction_sign_bound privateReduction_uniform_ledger privateReduction_staticDh_bound; do
 	require_line_count 1 "^(theorem|lemma) ${theorem_name}( |$)" "$private_root_module" "private root theorem ${theorem_name}"
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPrivateRootEufBudgets.${theorem_name}$" "$private_root_module" "private root dependency ${theorem_name}"
+done
+
+
+
+# HB-91: actual source sealing at the existing typed CTX computation.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxCanonicalSeal.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxCanonicalSeal$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxCanonicalSeal root import"
+require_line_count 11 '^theorem ' "$owner_module" "RawCtxCanonicalSeal theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$owner_module" "RawCtxCanonicalSeal guarded dependencies"
+for theorem_pattern in 'hashInput_exact' 'recordFrame_fields' 'sealInput_typed' 'sealInput_invalid' 'shared_step' 'shared_complete' 'shared_seal' 'sealInput_complete' 'sealInput_continuation' 'typedSource_query_bound' 'shared_seal_uniform'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source sealing theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxCanonicalSeal[.]${theorem_pattern}$" \
+		"$owner_module" "source sealing dependency ${theorem_pattern}"
+done
+
+
+# HB-91: one functional HKDF source and exact extracted response bytes.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSourceHkdf.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSourceHkdf$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxSourceHkdf root import"
+require_line_count 13 '^theorem ' "$owner_module" "RawCtxSourceHkdf theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$owner_module" "RawCtxSourceHkdf guarded dependencies"
+for theorem_pattern in 'response_bytes' 'response_law' 'response_projections' 'response_stream' 'initialResponse_bytes' 'initialResponse_law' 'initialResponse_prefix' 'rootResponse_law' 'rootResponse_stream' 'kdf_step' 'kdf_uniform' 'kdf_complete' 'mixed_uniform'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source HKDF theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSourceHkdf[.]${theorem_pattern}$" \
+		"$owner_module" "source HKDF dependency ${theorem_pattern}"
+done
+
+
+# HB-91: actual Beacon lifecycle fields, full mixed source dispatch and callback accounting.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxBeaconLifecycle.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxBeaconLifecycle$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxBeaconLifecycle root import"
+require_line_count 13 '^theorem ' "$owner_module" "RawCtxBeaconLifecycle theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$owner_module" "RawCtxBeaconLifecycle guarded dependencies"
+for theorem_pattern in 'target_exact' 'inactive' 'selected_fields' 'established' 'reinstall_fields' 'step_bound' 'selected_interpretation' 'beacon_interpretation' 'schedule_interpretation' 'schedule_bound' 'schedule_bounds' 'source_step' 'source_schedule'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"Beacon lifecycle theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxBeaconLifecycle[.]${theorem_pattern}$" \
+		"$owner_module" "Beacon lifecycle dependency ${theorem_pattern}"
+done
+
+
+# HB-91: actual frame setter order, optional writer state and conditional decoded-field provenance.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxFrameWriting.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxFrameWriting$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxFrameWriting root import"
+require_line_count 11 '^theorem ' "$owner_module" "RawCtxFrameWriting theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$owner_module" "RawCtxFrameWriting guarded dependencies"
+for theorem_pattern in 'build_fields' 'writeFrame_run' 'writeFrame_readable' 'readable_decode' 'writeFrame_decode' 'writeFrame_bound' 'nativeLift_bound' 'nativeSchedule_bounds' 'nativeSchedule_interpretation' 'nativeWriter_apply' 'sourceSend_decode'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"frame writer theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxFrameWriting[.]${theorem_pattern}$" \
+		"$owner_module" "frame writer dependency ${theorem_pattern}"
 done
 
 
