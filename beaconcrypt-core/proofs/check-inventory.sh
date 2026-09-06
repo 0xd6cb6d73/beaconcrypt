@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=225
+	[handwritten-lean]=227
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4681,5 +4681,27 @@ for theorem_name in prefix_complete opened_complete positionedRequests_succ posi
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxMaterialPositions.${theorem_name}$" "$material_positions" "material position dependency ${theorem_name}"
 done
 
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxProtocolReveals.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxProtocolReveals$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxProtocolReveals root import"
+require_line_count 10 '^theorem ' "$owner_module" "RawCtxProtocolReveals theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$owner_module" "RawCtxProtocolReveals guarded dependencies"
+for theorem_pattern in 'skipped_exact' 'protocol_interpretation' 'schedule_interpretation' 'reveal_step' 'chain_reveal_exact' 'skipped_reveal_exact' 'missing_reveals' 'source_reveal_step' 'step_history' 'schedule_history'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" "RawCtxProtocolReveals theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxProtocolReveals[.]${theorem_pattern}$" \
+		"$owner_module" "RawCtxProtocolReveals dependency ${theorem_pattern}"
+done
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxRevealBudgets.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxRevealBudgets$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxRevealBudgets root import"
+require_line_count 10 '^theorem ' "$owner_module" "RawCtxRevealBudgets theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$owner_module" "RawCtxRevealBudgets guarded dependencies"
+for theorem_pattern in 'bill_step' 'weighted_bound' 'backend_step' 'source_uniform_step' 'schedule_uniform' 'backend_bound' 'reveal_bound' 'source_bound' 'total_bound' 'total_bill'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" "RawCtxRevealBudgets theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxRevealBudgets[.]${theorem_pattern}$" \
+		"$owner_module" "RawCtxRevealBudgets dependency ${theorem_pattern}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
