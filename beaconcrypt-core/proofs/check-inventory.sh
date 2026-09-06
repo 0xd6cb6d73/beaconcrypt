@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=217
+	[handwritten-lean]=222
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4593,5 +4593,61 @@ for theorem_pattern in 'build_fields' 'writeFrame_run' 'writeFrame_readable' 're
 		"$owner_module" "frame writer dependency ${theorem_pattern}"
 done
 
+
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxProtocolBackend.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxProtocolBackend$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxProtocolBackend root import"
+require_line_count 4 '^theorem ' "$owner_module" "RawCtxProtocolBackend theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$owner_module" "RawCtxProtocolBackend guarded dependencies"
+for theorem in private_hkdf public_hkdf server_schedule server_uniform; do
+	theorem_pattern="${theorem//./[.]}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxProtocolBackend[.]${theorem_pattern}$" \
+		"$owner_module" "RawCtxProtocolBackend.${theorem} dependency report"
+done
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxRoleFamily.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxRoleFamily$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxRoleFamily root import"
+require_line_count 5 '^theorem ' "$owner_module" "RawCtxRoleFamily theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$owner_module" "RawCtxRoleFamily guarded dependencies"
+for theorem in family_interpretation schedule_interpretation step_bound server_interpretation beacon_interpretation; do
+	theorem_pattern="${theorem//./[.]}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxRoleFamily[.]${theorem_pattern}$" \
+		"$owner_module" "RawCtxRoleFamily.${theorem} dependency report"
+done
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxProtocolRoles.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxProtocolRoles$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxProtocolRoles root import"
+require_line_count 2 '^theorem ' "$owner_module" "RawCtxProtocolRoles theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$owner_module" "RawCtxProtocolRoles guarded dependencies"
+for theorem in protocol_interpretation schedule_interpretation; do
+	theorem_pattern="${theorem//./[.]}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxProtocolRoles[.]${theorem_pattern}$" \
+		"$owner_module" "RawCtxProtocolRoles.${theorem} dependency report"
+done
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxProtocolBudgets.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxProtocolBudgets$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxProtocolBudgets root import"
+require_line_count 5 '^theorem ' "$owner_module" "RawCtxProtocolBudgets theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$owner_module" "RawCtxProtocolBudgets guarded dependencies"
+for theorem in backend_step weighted_bound backend_bound backend_bounds source_bound; do
+	theorem_pattern="${theorem//./[.]}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxProtocolBudgets[.]${theorem_pattern}$" \
+		"$owner_module" "RawCtxProtocolBudgets.${theorem} dependency report"
+done
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxProtocolUniform.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxProtocolUniform$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxProtocolUniform root import"
+require_line_count 4 '^theorem ' "$owner_module" "RawCtxProtocolUniform theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$owner_module" "RawCtxProtocolUniform guarded dependencies"
+for theorem in beacon_uniform beacon_source_uniform source_step schedule_uniform; do
+	theorem_pattern="${theorem//./[.]}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxProtocolUniform[.]${theorem_pattern}$" \
+		"$owner_module" "RawCtxProtocolUniform.${theorem} dependency report"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

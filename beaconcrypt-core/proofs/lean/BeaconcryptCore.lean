@@ -200,6 +200,12 @@ import BeaconcryptCore.Computational.RawCtxCanonicalSeal
 import BeaconcryptCore.Computational.RawCtxSourceHkdf
 import BeaconcryptCore.Computational.RawCtxBeaconLifecycle
 import BeaconcryptCore.Computational.RawCtxFrameWriting
+import BeaconcryptCore.Computational.RawCtxProtocolBackend
+import BeaconcryptCore.Computational.RawCtxRoleFamily
+import BeaconcryptCore.Computational.RawCtxProtocolRoles
+import BeaconcryptCore.Computational.RawCtxProtocolBudgets
+import BeaconcryptCore.Computational.RawCtxProtocolUniform
+
 /-!
 # Beaconcrypt-core verification root
 
