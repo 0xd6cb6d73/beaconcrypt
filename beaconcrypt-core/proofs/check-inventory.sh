@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=129
+	[handwritten-lean]=130
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3579,6 +3579,19 @@ for theorem_pattern in 'run_absent' 'run_ready' 'rawReceive_ready' 'rawGame_read
 		"server/slot theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxNativeSlot[.]${theorem_pattern}$" \
 		"$owner_module" "server/slot dependency ${theorem_pattern}"
+done
+
+# HB-91: complete-input functional reader and exact source payload-slice instantiation.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxFrameDecoding.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxFrameDecoding$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxFrameDecoding root import"
+require_line_count 14 '^theorem ' "$owner_module" "RawCtxFrameDecoding theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$owner_module" "RawCtxFrameDecoding guarded dependencies"
+for theorem_pattern in 'sourceFrame_eq_validated' 'fromPayload_record' 'complete_success' 'complete_trailing' 'decode_success' 'decoderAgreement' 'sender_payload_failure' 'fromPayload_some_iff' 'sourcePrepared_frame' 'sourceReceive_exact' 'sourcePrepared_success' 'sourceGame_exact' 'sourceGame_ready_slot' 'sourceServerGame_exact'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source frame theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxFrameDecoding[.]${theorem_pattern}$" \
+		"$owner_module" "source frame dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
