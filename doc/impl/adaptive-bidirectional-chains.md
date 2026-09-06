@@ -1,0 +1,45 @@
+# Adaptive bidirectional observation after source initialization (HB-84)
+
+`PqxdhAdaptiveBidirectionalChains` connects the actual shared 64-byte source initialization to two private chain-derivation capabilities used by one arbitrary adaptive client. The client may interleave directions, use explicit randomness, retain every returned material pair and stop early. The checked comparison keeps its complete result and both actual derivation counters. One initial Extract/HMAC pair followed by the two existing ordered directional sums bounds the comparison with two independent finite material tapes, without an additional scheduling or stopping factor.
+
+This follows published `70cbf08e9856dcdfbdf83ac00117b706b97807e2`. The entry root is explicitly uniform and sampled independently of the context. The source initialization is one actual 64-byte call whose two halves initialize the respective chains. Actual authenticated-root generation, native ratchet admission/consumption, current-chain reveals, snapshots, correlated record-key routing and the common global protocol experiment remain separate. These private capabilities are for an enclosing protocol interpreter; they do not add a public key-reveal API.
+
+## Joint source and observation
+
+`sourceImpl` forwards each original finite uniform request unchanged. A directional request executes the existing full 76-byte source ratchet derivation on exactly that direction's current chain, returns the 32-byte key and 12-byte nonce together, installs its 32-byte next chain and increments only that direction's counter. False selects the first source half and true the second; the inherited source initialization fixes their orientation. The other chain and counter are preserved. No independent key table replaces the source evolution.
+
+`tapeImpl` forwards the same randomness requests and reads the selected material list. Its arbitrary exhausted-list fallback cannot occur under `sourceView_tapeView`'s separate left/right bounds. Those are structural `IsQueryBoundP` conditions on every possible reply continuation, including continuations unreachable in the real game. The theorem is exact whole `OracleComp` equality for any initial chain pair and counters. It preserves the original client result and both counters, with the same caller coin requests in the same order. The proof follows the actual selected output, decreases only that direction's remaining bound and retains the other exact source history. It does not replace a joint distribution by two unrelated marginal facts.
+
+`tapeObserver` runs the complete unchanged interleaving client against the two supplied histories and then its arbitrary probabilistic final observer. `actualGame_eq_initialized` identifies the complete actual source game with the earlier initialized two-history game for this observer. Both chains come from the same `sourceInitialChains` call. `final_bidirectional_eq_eager` identifies the final directional hybrid with the separate independent two-tape game. Only the two unused independent live-chain draws are erased, each under its full remaining continuation and proved losslessness. The observer sees returned materials and its retained state, but no current or intermediate private chain. Its own failure behavior is not assumed away.
+
+`adaptive_initialized_advantage_bound` applies the inherited source initialization and ordered comparisons to this exact observer. For left budget L and right budget R, the bound is `initialLoss` plus the sum of `hopLoss` at every left cut i with remaining length L−i−1 and every right cut j with remaining length R−j−1. Each named loss is one conditional fixed-salt whole-PRK Extract advantage plus one ordinary uniform-secret-key HMAC PRF advantage. Every coefficient is one. The left-hop observer retains the real right evolution; the right-hop sampler retains the complete previously idealized left evolution. The existing `SourceFullCorrect` and fixed-source prefix-consistency functional contracts are unchanged. This theorem does not prove those primitive security bounds for the actual global input distribution.
+
+## Query and local-work ledger
+
+`sourceImpl_requests` proves the exact selected-direction counter change for each request. `sourceRun_requests_bound` bounds every supported complete source result by its entry count plus the corresponding directional budget, including the last derivation before stopping. It applies to either direction without imposing a particular schedule.
+
+Let S bound context-sampling uniform requests, C bound all client continuations' explicit uniform requests and F bound every possible final observation. Write O = C + F. A sampled root or live chain costs 32 byte-valued uniform requests and a sampled material pair costs 44. Caller requests may have arbitrary finite ranges, so the aggregate unit is uniform-oracle calls. The bounds do not declare deterministic KDF, byte or list work free.
+
+| Checked statement | Bound |
+| --- | --- |
+| `sourceRun_uniform_bound`, `tapeRun_uniform_bound` | C for the complete client execution from arbitrary source or tape state. |
+| `tapeObserver_uniform_bound` | O for every context and pair of histories. |
+| `actualGame_uniform_bound` | S + 32 + O, including the actual independent root. |
+| `eagerGame_uniform_bound` | S + 44L + 44R + O, charging every reserved material pair, including unused suffixes after stopping. |
+| `adaptiveInitialReduction_query_bounds` | Two HMAC challenge queries and S + 32 + O local uniform calls. |
+| `adaptiveLeftReduction_query_bounds` at cut i | Two challenge queries and S + 44i + 32 + 32 + O local uniform calls, including the right chain. |
+| `adaptiveRightReduction_query_bounds` at cut j | Two challenge queries and S + 44L + 32 + 44j + 32 + O local uniform calls, including the complete left tape and live chain. |
+
+`FullWorldBounds` is notation for the five actual primitive-game sampling bounds. For joint-sampler cost J and complete observer cost Q, real Extract costs J + Q; uniform Extract J + 64 + Q; real HMAC 64 + J + Q; random HMAC J + 128 + Q; and independent full output J + 76 + Q. The three `adaptive*Challenger_query_bounds` theorems prove these exact bounds with initial `(J,Q) = (S+32,O)`, left `(S+44i+32,32+O)` and right `(S+44L+32+44j+32,O)`. Ignored roots/live chains, the PRK or challenger key, both random HMAC blocks and the initial full-output projection's unused nonce bytes remain charged in their respective worlds. No game is replaced by a cheaper sampler merely because its observer ignores part of the output.
+
+The actual source executes one deterministic 64-byte initialization and a full 76-byte ratchet operation per counted directional request. Hybrid reductions also evaluate real suffixes and copy finite material histories. Those primitive evaluations, input construction, list scans, copies and separately supplied context/client/observer functions remain local computation. These query lemmas supply no compiled reduction or native runtime bound. Any ambient KEM, signing, DH, record or storage service used by a later interpreter must be exposed and charged in the same experiment.
+
+## Remaining composition
+
+The context-independent uniform root must still be connected to the actual authenticated-root experiment through a complete continuation, preserving all source dependencies. These statements close bounded adaptive interleaving at the private derivation interface, not native send/receive ownership, failure consumption, replay caches or sequence overflow. Revealing a current chain determines its descendants; no current-chain, snapshot or copied-state reveal is present here. Adaptive raw-message observations, plaintext declassification, key aliases, per-key nonce policy, peer lookup, session selection and compromise freshness still require their common protocol wrapper.
+
+Native primitive implementation, compiler correctness, codec representation, local execution cost, physical erasure, foreign copies, storage, concurrency and deployment freshness remain external contracts. No primitive algorithm proof, new security assumption, custom axiom or public-HKDF/random-table model is introduced.
+
+## Focused validation
+
+The module and all seventeen persistent guarded dependency reports pass direct Lean checks. The final root import passes directly, and the full `lake build` passes all 3,173 jobs. The first full build rejected an import mistakenly placed after root commands; moving it into the import section resolved that root-only failure, with no proof change. The final reviewed inventory passes with 125 handwritten Lean modules and 274 unique entries. Rust formatting, forbidden-placeholder/custom-axiom and diff-whitespace scans pass. Independent review covers the exact joint source observation, named reductions, sampling ledger and remaining boundaries before topic publication. Production Rust, schemas, bindings, symbolic models, native tests and mutation inputs are unchanged. This focused validation does not substitute for the complete verification matrix on the eventual exact global integration result, and no `vcvio` merge is claimed.

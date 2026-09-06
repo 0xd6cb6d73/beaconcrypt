@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=190
+	[handwritten-lean]=196
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -4297,6 +4297,64 @@ require_line_count 41 '^#guard_msgs in$' "$joint_acceptance" "joint source accep
 for theorem_name in historyUpdate_noSign bare_step_noSign bare_run_noSign bare_step_seed_extension bare_step_created bare_run_created bare_dynamic_compose liftDynamic_complete selectedProgram_complete selectedProgram_three_messages selectedProgram_fieldOrigin reportingImpl_snapshot reportingExecution_snapshot reportingRun_snapshot actualRun_snapshot sessionBody_complete bare_create_initial oneSession_complete singletonState_facts sessionBody_supported oneSession_supported sessionBody_finalCandidate oneSession_finalCandidate oneSession_changed_fieldOrigin liftDynamic_query_bound selectedProgram_query_bound oneSession_query_bound sourceCandidate_monitor acceptanceCandidate_monitor acceptanceCandidate_snapshot_occurred acceptanceCandidate_hit_recorded oneSession_changed_recorded oneSession_create_bound oneSession_authentication_bound oneSession_class_bound oneSession_total_bound oneSessionReduction_class_bound oneSession_attempt_bound oneSession_reveal_bound oneSession_actual_uniform_bound oneSession_challenger_uniform_bound; do
 	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_acceptance" "joint source acceptance theorem ${theorem_name}"
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition.${theorem_name}$" "$joint_acceptance" "joint source acceptance dependency ${theorem_name}"
+done
+
+
+# Ordered fixed-length chain component: require source links, adjacent hops and accounting.
+for theorem_name in ordered_chain_bound bidirectional_bound realEvolution_records descendants_from_live hopReduction_query_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" \
+		proofs/lean/BeaconcryptCore/Computational/PqxdhOrderedChainHybrids.lean \
+		"ordered evolving chain theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.${theorem_name}$" \
+		proofs/lean/BeaconcryptCore/Computational/PqxdhOrderedChainHybrids.lean \
+		"ordered evolving chain dependency audit ${theorem_name}"
+done
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhOrderedChainHybrids$' \
+	proofs/lean/BeaconcryptCore.lean "ordered chain root import"
+
+
+# Source initialization precedes both complete ordered directional histories.
+initial_chain_composition=proofs/lean/BeaconcryptCore/Computational/PqxdhInitialChainComposition.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhInitialChainComposition$' \
+	proofs/lean/BeaconcryptCore.lean "PqxdhInitialChainComposition root import"
+for theorem_name in initial_chains_observed initialized_pair_source independent_initial_eq_bidirectional initialized_bound initialized_evolving_bound sourceInitialChains_bytes sourceInitialChains_eq actualInitializedGame_eq actualInitializedGame_evolving_bound rootSampler_query_bound initialReduction_query_bounds actualInitializedGame_query_bound initialChallenger_query_bounds sampleEvolution_query_bound leftObserver_query_bound rightContextSampler_query_bound bidirectionalGame_query_bound leftHopReduction_query_bounds rightHopReduction_query_bounds hopChallenger_query_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$initial_chain_composition" "initial-chain theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhInitialChainComposition.${theorem_name}$" "$initial_chain_composition" "initial-chain dependency ${theorem_name}"
+done
+require_line_count 20 '^#guard_msgs in$' "$initial_chain_composition" "initial-chain guarded audits"
+
+
+# Adaptive private-chain observation retains complete client results and all sampling budgets.
+adaptive_chain=proofs/lean/BeaconcryptCore/Computational/PqxdhAdaptiveChainObservation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAdaptiveChainObservation$' \
+	proofs/lean/BeaconcryptCore.lean "adaptive chain root import"
+require_line_count 13 '^theorem ' "$adaptive_chain" "adaptive chain theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$adaptive_chain" "adaptive chain guarded dependencies"
+for theorem_name in sourceView_tapeView sourceGame_eq_hybrid final_hybrid_eq_eager adaptive_advantage_bound sourceRun_uniform_bound tapeRun_uniform_bound tapeObserver_uniform_bound sourceImpl_requests sourceRun_requests_bound sourceGame_uniform_bound eagerGame_uniform_bound adaptiveReduction_query_bounds adaptiveChallenger_query_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_chain" "adaptive chain theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAdaptiveChainObservation.${theorem_name}$" "$adaptive_chain" "adaptive chain dependency ${theorem_name}"
+done
+
+# Adaptive joint directions retain actual source initialization and complete interleaved observations.
+adaptive_bidirectional=proofs/lean/BeaconcryptCore/Computational/PqxdhAdaptiveBidirectionalChains.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAdaptiveBidirectionalChains$' \
+	proofs/lean/BeaconcryptCore.lean "adaptive bidirectional root import"
+require_line_count 17 '^theorem ' "$adaptive_bidirectional" "adaptive bidirectional theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$adaptive_bidirectional" "adaptive bidirectional guarded dependencies"
+for theorem_name in sourceView_tapeView actualGame_eq_initialized final_bidirectional_eq_eager adaptive_initialized_advantage_bound sourceRun_uniform_bound tapeRun_uniform_bound tapeObserver_uniform_bound actualGame_uniform_bound eagerGame_uniform_bound sourceImpl_requests sourceRun_requests_bound adaptiveInitialReduction_query_bounds adaptiveLeftReduction_query_bounds adaptiveRightReduction_query_bounds adaptiveInitialChallenger_query_bounds adaptiveLeftChallenger_query_bounds adaptiveRightChallenger_query_bounds; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_bidirectional" "adaptive bidirectional theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAdaptiveBidirectionalChains.${theorem_name}$" "$adaptive_bidirectional" "adaptive bidirectional dependency ${theorem_name}"
+done
+
+# Joint eager material key aliases retain both original tapes and the whole observation.
+material_keys=proofs/lean/BeaconcryptCore/Computational/PqxdhMaterialKeyCollisions.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions$' \
+	proofs/lean/BeaconcryptCore.lean "material key-collision root import"
+require_line_count 17 '^theorem ' "$material_keys" "material key-collision theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$material_keys" "material key-collision guarded dependencies"
+for theorem_name in material_key_eq material_key_mem sampleMaterials_length keyCollision_append sampleMaterials_collision_bound sampleMaterials_append sampleTapes_collision_bound observedTapes_collision_bound material_key_card observedTapes_collision_bound256 observedEager_projection observedEager_collision_bound keyPositions_injective sampleTapes_lengths observedTapes_lengths observedTapes_uniform_bound observedEager_uniform_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$material_keys" "material key-collision theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.${theorem_name}$" "$material_keys" "material key-collision dependency ${theorem_name}"
 done
 
 
