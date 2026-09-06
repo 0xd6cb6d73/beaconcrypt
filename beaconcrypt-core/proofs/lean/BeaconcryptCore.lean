@@ -145,6 +145,7 @@ import BeaconcryptCore.Computational.RawCtxOwnerEffects
 import BeaconcryptCore.Computational.RawCtxOwnerResult
 import BeaconcryptCore.Computational.RawCtxNativeSlot
 import BeaconcryptCore.Computational.RawCtxCanonicalOpening
+import BeaconcryptCore.Computational.RawCtxSharedPrimitive
 
 /-!
 # Beaconcrypt-core verification root

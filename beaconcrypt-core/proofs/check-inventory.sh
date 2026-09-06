@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=158
+	[handwritten-lean]=159
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3741,6 +3741,19 @@ for theorem_pattern in typedOpen_target sourceOpening_canonical selectedDecoder_
 		"canonical opening theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxCanonicalOpening[.]${theorem_pattern}$" \
 		"$owner_module" "canonical opening dependency ${theorem_pattern}"
+done
+
+# Complete native KDF/opening state and actual raw-only uniform accounting.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSharedPrimitive.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSharedPrimitive$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxSharedPrimitive root import"
+require_line_count 9 '^theorem ' "$owner_module" "RawCtxSharedPrimitive theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$owner_module" "RawCtxSharedPrimitive guarded dependencies"
+for theorem_pattern in opening_query opening_step opening_complete native_opening_complete native_canonical_opening native_uniform_step native_uniform_bound sharedSchedule_source sharedSchedule_uniform; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"shared primitive theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSharedPrimitive[.]${theorem_pattern}$" \
+		"$owner_module" "shared primitive dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
