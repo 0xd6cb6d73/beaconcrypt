@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=135
+	[handwritten-lean]=136
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3394,5 +3394,15 @@ for theorem_name in sampleSeeds_succ lazy_eager_complete lazyImpl_uniform_step l
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.${theorem_name}$" "$joint_dynamic" "dynamic identity dependency audit ${theorem_name}"
 done
 require_line_count 9 '^#guard_msgs in$' "$joint_dynamic" "dynamic identity guarded audits"
+
+# Dynamic public routing: exact source execution, final freshness, identity loss and full query ledgers.
+joint_dynamic_routing=proofs/lean/BeaconcryptCore/Computational/PqxdhDynamicIdentityRouting.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting$' \
+	proofs/lean/BeaconcryptCore.lean "dynamic identity routing root import"
+for theorem_name in route_complete lazy_eager_history_complete dynamic_reserved_complete dynamic_advantage_le_sum dynamicReduction_query_bound dynamicReductionGame_uniform_bound dynamicRun_uniform_bound dynamicRun_trace_bound dynamic_advantage_le_count; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_dynamic_routing" "dynamic identity routing theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.${theorem_name}$" "$joint_dynamic_routing" "dynamic identity routing dependency audit ${theorem_name}"
+done
+require_line_count 9 '^#guard_msgs in$' "$joint_dynamic_routing" "dynamic identity routing guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
