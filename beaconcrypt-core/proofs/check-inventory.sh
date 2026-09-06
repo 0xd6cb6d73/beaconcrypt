@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=130
+	[handwritten-lean]=131
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3592,6 +3592,19 @@ for theorem_pattern in 'sourceFrame_eq_validated' 'fromPayload_record' 'complete
 		"source frame theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxFrameDecoding[.]${theorem_pattern}$" \
 		"$owner_module" "source frame dependency ${theorem_pattern}"
+done
+
+# HB-91: actual native hash/AEAD dispatch and complete raw-schedule query accounting.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSourceOpen.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSourceOpen$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxSourceOpen root import"
+require_line_count 26 '^theorem ' "$owner_module" "RawCtxSourceOpen theorem inventory"
+require_line_count 26 '^#guard_msgs in$' "$owner_module" "RawCtxSourceOpen guarded dependencies"
+for theorem_pattern in 'baseOpen_combined' 'hashInput_extracted' 'hashInput_length' 'openSlices_rom' 'sourceRecord_spec' 'openInput_typed' 'openSlices_hash_bound' 'openSlices_aead_bound' 'openInput_bounds' 'openSlices_run' 'openSlices_success' 'openSlices_hash_rejection' 'openInput_success' 'simulate_bound' 'openLift_bound' 'owner_open_bound' 'openLift_no_kdf' 'owner_kdf_bound' 'owner_primitive_bounds' 'openLift_apply' 'openInput_shared_cache' 'raw_success_primitives' 'raw_primitive_bounds' 'nativeSchedule_bounds' 'nativeOwner_interpretation' 'nativeSchedule_interpretation'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"source opening theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSourceOpen[.]${theorem_pattern}$" \
+		"$owner_module" "source opening dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

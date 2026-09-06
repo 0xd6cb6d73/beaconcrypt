@@ -31,6 +31,7 @@ import BeaconcryptCore.Computational.RawCtxOwnerProvenance
 import BeaconcryptCore.Computational.RawCtxServerRouting
 import BeaconcryptCore.Computational.RawCtxNativeSlot
 import BeaconcryptCore.Computational.RawCtxFrameDecoding
+import BeaconcryptCore.Computational.RawCtxSourceOpen
 import BeaconcryptCore.Computational.PqxdhHiddenRoot
 import BeaconcryptCore.Computational.PqxdhProjectionCollisions
 import BeaconcryptCore.Computational.PqxdhKemIndCca
