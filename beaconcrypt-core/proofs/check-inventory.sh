@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=138
+	[handwritten-lean]=139
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3424,5 +3424,15 @@ for theorem_name in run_complete report_advantage_le_sum reduction_query_bound r
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhKnownIdentityImports.${theorem_name}$" "$known_identity_imports" "known identity imports dependency audit ${theorem_name}"
 done
 require_line_count 11 '^#guard_msgs in$' "$known_identity_imports" "known identity imports guarded audits"
+
+# Source-facing Phase-1 field origin retains complete joint history and every original candidate.
+joint_phase1_reports=proofs/lean/BeaconcryptCore/Computational/PqxdhJointPhase1Reports.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhJointPhase1Reports$' \
+	proofs/lean/BeaconcryptCore.lean "PqxdhJointPhase1Reports root import"
+for theorem_name in translateReport_event run_complete run_compatible run_event fieldOrigin_advantage_le_sum source_attached_adapter sourceAccept_eq fieldReduction_query_bound fieldReductionGame_uniform_bound run_uniform_bound wrapper_observation run_attempt_bound run_occurred singleBundle_fieldOrigin run_request_bound candidateFields_length; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$joint_phase1_reports" "joint Phase1 report theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhJointPhase1Reports.${theorem_name}$" "$joint_phase1_reports" "joint Phase1 report dependency audit ${theorem_name}"
+done
+require_line_count 16 '^#guard_msgs in$' "$joint_phase1_reports" "joint Phase1 report guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
