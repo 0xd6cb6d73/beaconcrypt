@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=162
+	[handwritten-lean]=166
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3793,6 +3793,56 @@ for theorem_pattern in begin_remaining resume_small resume_cost program_cost beg
 		"receive KDF budget theorem ${theorem_pattern}"
 	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxKdfBudget[.]${theorem_pattern}$" \
 		"$owner_module" "receive KDF budget dependency ${theorem_pattern}"
+done
+
+
+# HB-91: exact send port and one mixed whole-owner/shared-cache interpreter.
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSourceSend.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSourceSend$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxSourceSend root import"
+require_line_count 21 '^theorem ' "$owner_module" "RawCtxSourceSend theorem inventory"
+require_line_count 21 '^#guard_msgs in$' "$owner_module" "RawCtxSourceSend guarded dependencies"
+for theorem_pattern in 'beginSend_exact' 'resumeSend_exact' 'requested_support' 'resumeSend_fields' 'send_exhausted' 'beginSend_fields' 'send_nonexhausted_support' 'program_kdf_bound' 'program_seal_bound' 'sourceDriver_exact' 'arguments_exact' 'encrypted_fields' 'sendOwner_empty' 'sendGame_publication' 'adapter_bound' 'selected_bounds' 'sendOwner_bound' 'application_bounds' 'application_interpretation' 'application_schedule_interpretation' 'sendGame_active_state'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"mixed source theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSourceSend[.]${theorem_pattern}$" \
+		"$owner_module" "mixed source dependency ${theorem_pattern}"
+done
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSourceSeal.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSourceSeal$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxSourceSeal root import"
+require_line_count 18 '^theorem ' "$owner_module" "RawCtxSourceSeal theorem inventory"
+require_line_count 18 '^#guard_msgs in$' "$owner_module" "RawCtxSourceSeal guarded dependencies"
+for theorem_pattern in 'sealInput_success' 'sealInput_bound' 'hashInput_extracted' 'hashInput_length' 'frame_fields' 'frame_record' 'sealInput_run' 'sealLift_bound' 'sealLift_no_kdf' 'nativeAdapter_kdf_bound' 'nativeAdapter_seal_bound' 'nativeSend_bounds' 'nativeSchedule_bounds' 'nativeOwner_interpretation' 'nativeSchedule_interpretation' 'sealLift_apply' 'adapter_success_primitives' 'send_success_primitives'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"mixed source theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxSourceSeal[.]${theorem_pattern}$" \
+		"$owner_module" "mixed source dependency ${theorem_pattern}"
+done
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxMixedOwner.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxMixedOwner$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxMixedOwner root import"
+require_line_count 12 '^theorem ' "$owner_module" "RawCtxMixedOwner theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$owner_module" "RawCtxMixedOwner guarded dependencies"
+for theorem_pattern in 'same_hash' 'same_kdf' 'owner_interpretation' 'schedule_interpretation' 'receiveLift_bound' 'sendLift_bound' 'receive_bounds' 'send_bounds' 'schedule_bound' 'schedule_bounds' 'source_step' 'source_schedule'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"mixed source theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxMixedOwner[.]${theorem_pattern}$" \
+		"$owner_module" "mixed source dependency ${theorem_pattern}"
+done
+
+owner_module=proofs/lean/BeaconcryptCore/Computational/RawCtxMixedShared.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxMixedShared$' \
+	proofs/lean/BeaconcryptCore.lean "RawCtxMixedShared root import"
+require_line_count 8 '^theorem ' "$owner_module" "RawCtxMixedShared theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$owner_module" "RawCtxMixedShared guarded dependencies"
+for theorem_pattern in 'shared_receive' 'shared_hash' 'shared_sealing' 'shared_writing' 'sharedAdapter_bound' 'shared_uniform' 'shared_source' 'shared_schedule_uniform'; do
+	require_line_count 1 "^theorem ${theorem_pattern}( |$)" "$owner_module" \
+		"mixed source theorem ${theorem_pattern}"
+	require_line_count 1 "^#print axioms BeaconcryptCore[.]Computational[.]RawCtxMixedShared[.]${theorem_pattern}$" \
+		"$owner_module" "mixed source dependency ${theorem_pattern}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
