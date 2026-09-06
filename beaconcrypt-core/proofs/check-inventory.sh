@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=139
+	[handwritten-lean]=142
 	[handwritten-proverif]=68
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -3530,5 +3530,34 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxRe
 require_line_count 1 '^theorem abstractRaw_private_bound( |$)' "$private_dictionary_module" "private dictionary theorem BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.abstractRaw_private_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.abstractRaw_private_bound$' "$private_dictionary_module" "private dictionary audit BeaconcryptCore.Computational.AdaptiveCtxReplayQueryBounds.abstractRaw_private_bound"
 require_line_count 5 '^#guard_msgs in$' "$private_dictionary_module" "private dictionary AdaptiveCtxReplayQueryBounds guarded audits"
+
+
+# Adaptive CTX private aliases preserve actual optional replies, full caches and every raw slot.
+adaptive_ctx_stopped_raw=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxStoppedRaw.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxStoppedRaw$' \
+	proofs/lean/BeaconcryptCore.lean "AdaptiveCtxStoppedRaw root import"
+for theorem_name in stopAtRaw_query_bound cachedGuess_bound stopped_guess_bound firstDiscrepancy_le_indexed_sum firstDiscrepancy_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_ctx_stopped_raw" "AdaptiveCtxStoppedRaw theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxStoppedRaw.${theorem_name}$" "$adaptive_ctx_stopped_raw" "AdaptiveCtxStoppedRaw dependency audit ${theorem_name}"
+done
+require_line_count 5 '^#guard_msgs in$' "$adaptive_ctx_stopped_raw" "AdaptiveCtxStoppedRaw guarded audits"
+
+adaptive_ctx_alias_coupling=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxAliasCoupling.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxAliasCoupling$' \
+	proofs/lean/BeaconcryptCore.lean "AdaptiveCtxAliasCoupling root import"
+for theorem_name in loggedRaw_eq_replayRaw replayRaw_discrepancy_iff flaggedImpl_agree_good flaggedImpl_bad_mono flagged_bad_eq_first flagged_run_projection flagged_bad_eq source_distance_bound retained_distance_bound canonical_replay_distance_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_ctx_alias_coupling" "AdaptiveCtxAliasCoupling theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxAliasCoupling.${theorem_name}$" "$adaptive_ctx_alias_coupling" "AdaptiveCtxAliasCoupling dependency audit ${theorem_name}"
+done
+require_line_count 10 '^#guard_msgs in$' "$adaptive_ctx_alias_coupling" "AdaptiveCtxAliasCoupling guarded audits"
+
+adaptive_ctx_alias_query_bounds=proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxAliasQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.AdaptiveCtxAliasQueryBounds$' \
+	proofs/lean/BeaconcryptCore.lean "AdaptiveCtxAliasQueryBounds root import"
+for theorem_name in flaggedImpl_uniform_step flaggedRun_uniform_bound stoppedRun_uniform_bound retainedReplayGame_uniform_bound replayRaw_raw_count replayImpl_raw_count replayRun_raw_bound; do
+	require_line_count 1 "^theorem ${theorem_name}( |$)" "$adaptive_ctx_alias_query_bounds" "AdaptiveCtxAliasQueryBounds theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxAliasQueryBounds.${theorem_name}$" "$adaptive_ctx_alias_query_bounds" "AdaptiveCtxAliasQueryBounds dependency audit ${theorem_name}"
+done
+require_line_count 7 '^#guard_msgs in$' "$adaptive_ctx_alias_query_bounds" "AdaptiveCtxAliasQueryBounds guarded audits"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
