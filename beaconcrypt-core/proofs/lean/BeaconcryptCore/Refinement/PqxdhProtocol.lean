@@ -657,7 +657,7 @@ authenticated sender identifier and the authenticated key-identifier binding —
 generated beacon pipeline returns exactly the outcome of the handwritten
 `Pqxdh.beaconFinish`: the same abort in each of the three abort cases the extracted
 core can express, and on success the ideal assigned identifier with the pinned
-binding retained. -/
+binding retained. The record-layer premise explicitly requires authenticated sequence one; this extracted core driver does not itself receive the sequence. -/
 theorem beaconFinishDriver_refines (c : Pqxdh.Crypto) (b : Pqxdh.ServerBinding)
     (ikSk preSk otSk kemSk ikSX ss : Pqxdh.Bytes) (resp : Pqxdh.KexResponse)
     (pt : Pqxdh.Bytes) (recv' : Ratchet.RecvState Pqxdh.Bytes (Pqxdh.Bytes × Pqxdh.Bytes))
@@ -672,7 +672,7 @@ theorem beaconFinishDriver_refines (c : Pqxdh.Crypto) (b : Pqxdh.ServerBinding)
       = Pqxdh.beaconDHs c ikSk preSk otSk ikSX resp.ephemeralKey)
     (hkid : inputs.assigned_key_id.val = resp.keyId)
     (hsender : authSenderId.val = resp.appFrame.keyId)
-    (hseq : resp.appFrame.seq ≠ 0)
+    (hseq : resp.appFrame.seq = 1)
     (hrecv : Ratchet.recvStep (Pqxdh.ratchetCrypto c)
         ⟨(Pqxdh.rootChains c
           (Pqxdh.beaconRoot c ikSk preSk otSk ikSX resp.ephemeralKey ss)).1, 0, []⟩
@@ -723,6 +723,7 @@ theorem beaconFinishDriver_refines (c : Pqxdh.Crypto) (b : Pqxdh.ServerBinding)
             .established b ikSk resp.keyId (Pqxdh.assocData b.ikPub (c.edPub ikSk))
               ⟨(Pqxdh.rootChains c (Pqxdh.beaconRoot c ikSk preSk otSk ikSX
                 resp.ephemeralKey ss)).2, 0⟩ recv')) := by
+  simp only [hseq, Nat.sub_self] at hrecv
   -- the generated identity comparison decides the ideal pinned-identity test
   have hidcmp : core.Array.Insts.CoreCmpPartialEqArray.eq core.U8.Insts.CoreCmpPartialEqU8
       state.expected_server_binding.identity_public_key inputs.response_server_identity

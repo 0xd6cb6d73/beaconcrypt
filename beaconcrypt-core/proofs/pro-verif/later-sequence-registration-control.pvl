@@ -15,9 +15,10 @@ fun later_registration_return(bitstring, bitstring): bitstring [data].
 
 free LATER_REGISTRATION_ORIGINAL_WITNESS: bitstring [private].
 free LATER_REGISTRATION_SUBSTITUTION_WITNESS: bitstring [private].
+free LATER_REGISTRATION_INITIAL_WITNESS: bitstring [private].
 free LATER_REGISTRATION_FAITHFUL_WITNESS: bitstring [private].
-free LATER_REGISTRATION_FIRST_ONLY_WITNESS: bitstring [private].
-free LATER_REGISTRATION_FIRST_ONLY_CANARY: bitstring [private].
+free LATER_REGISTRATION_OMITTED_GATE_WITNESS: bitstring [private].
+free LATER_REGISTRATION_OMITTED_GATE_CANARY: bitstring [private].
 free LATER_REGISTRATION_SEQ1_PAYLOAD: bitstring [private].
 free LATER_REGISTRATION_SEQ2_PAYLOAD: bitstring [private].
 free LATER_REGISTRATION_SEQ3_PAYLOAD: bitstring [private].
@@ -52,7 +53,7 @@ event LaterRegistrationSubstitutionSelected(
   bitstring
 ).
 event LaterRegistrationFaithfulAttempted(bitstring, bitstring).
-event LaterRegistrationFirstOnlyAttempted(bitstring, bitstring).
+event LaterRegistrationOmittedGateAttempted(bitstring, bitstring).
 event LaterRegistrationGeneralReceiveOpened(
   bitstring,
   bitstring,
@@ -63,12 +64,12 @@ event LaterRegistrationGeneralReceiveOpened(
   bitstring,
   bitstring
 ).
-event LaterRegistrationFirstOnlyGateReached(
+event LaterRegistrationOmittedGateReached(
   bitstring,
   sequence,
   bitstring
 ).
-event LaterRegistrationFirstOnlyGatePassed(
+event LaterRegistrationOmittedGateBypassed(
   bitstring,
   sequence,
   bitstring
@@ -247,8 +248,6 @@ let LaterSequenceRegistrationOpen(
           opened,
           app_ciphertext,
           server_chain_4,
-          server_material_1,
-          server_material_2,
           server_material_3,
           cache_2,
           receive_poststate,
@@ -257,7 +256,140 @@ let LaterSequenceRegistrationOpen(
         )
       ).
 
-(* This suffix is shared so the counterfactual differs only by its first-sequence gate. *)
+(* Honest sequence-one initialization for the separate established-ratchet continuation. Its state comes from the real first-frame opening, not a reconstructed sequence-three registration. *)
+let LaterSequenceRegistrationInitialOpen(
+  witness: bitstring,
+  expected_server_identity: bitstring,
+  expected_server_key_id: key_id,
+  beacon_identity_secret: bitstring,
+  beacon_prekey_secret: bitstring,
+  beacon_one_time_secret: bitstring,
+  beacon_pq_secret: bitstring,
+  response: bitstring,
+  reply: channel
+) =
+  let kex_response(
+    response_server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    app_ciphertext,
+    assigned_key_id
+  ) = response in
+  let response_server_kex = x25519_public_from_ed(
+    response_server_identity
+  ) in
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let dh1 = x25519_beacon_dh(
+    beacon_prekey_secret,
+    response_server_kex
+  ) in
+  let dh2 = x25519_beacon_dh(
+    beacon_identity_secret,
+    server_ephemeral
+  ) in
+  let dh3 = x25519_beacon_dh(
+    beacon_prekey_secret,
+    server_ephemeral
+  ) in
+  let dh4 = x25519_beacon_dh(
+    beacon_one_time_secret,
+    server_ephemeral
+  ) in
+  let kem_secret = mlkem_decapsulate(
+    kem_ciphertext,
+    beacon_pq_secret
+  ) in
+  let shared_secrets = beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+    dh1,
+    dh2,
+    dh3,
+    dh4,
+    kem_secret
+  ) in
+  if response_server_identity = expected_server_identity then
+    let root_input =
+      beaconcrypt_core__pqxdh__build_root_key_input(shared_secrets)
+    in
+    let root = pqxdh_root(
+      beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
+    ) in
+    let associated_data =
+      beaconcrypt_core__pqxdh__build_associated_data(
+        expected_server_identity,
+        beacon_identity
+      )
+    in
+    let session = session_label(
+      expected_server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root
+    ) in
+    let server_chain_1 = server_to_beacon_chain(root) in
+    let server_chain_2 = ratchet_next(server_chain_1) in
+    let server_material_1 = ratchet_material(server_chain_1) in
+    let crypto_frame(
+      frame_ciphertext,
+      frame_tag,
+      frame_commitment,
+      frame_sequence,
+      authenticated_server_key_id
+    ) = app_ciphertext in
+    if authenticated_server_key_id = expected_server_key_id then
+      let opened = open_frame(
+        server_material_1,
+        associated_data,
+        frame_sequence,
+        expected_server_key_id,
+        app_ciphertext
+      ) in
+      let registration_payload(
+        authenticated_binding,
+        registration_plaintext
+      ) = opened in
+      let cache_2 = receive_cache_empty() in
+      let receive_poststate = receive_state(
+        frame_sequence,
+        server_chain_2,
+        cache_2
+      ) in
+      let committed_ratchet = later_registration_ratchet_state(
+        zero_sequence(),
+        beacon_to_server_chain(root),
+        receive_poststate
+      ) in
+      event LaterRegistrationGeneralReceiveOpened(
+        witness,
+        session,
+        frame_sequence,
+        authenticated_server_key_id,
+        authenticated_binding,
+        registration_plaintext,
+        opened,
+        app_ciphertext
+      );
+      out(
+        reply,
+        (
+          session,
+          root,
+          assigned_key_id,
+          frame_sequence,
+          authenticated_server_key_id,
+          authenticated_binding,
+          registration_plaintext,
+          opened,
+          app_ciphertext,
+          server_chain_2,
+          server_material_1,
+          cache_2,
+          receive_poststate,
+          committed_ratchet,
+          associated_data
+        )
+      ).
+
+(* The binding/publication suffix is shared; only the production caller enforces sequence one. *)
 let LaterSequenceRegistrationCommit(
   witness: bitstring,
   response: bitstring,
@@ -270,11 +402,9 @@ let LaterSequenceRegistrationCommit(
   registration_plaintext: bitstring,
   opened_payload: bitstring,
   app_ciphertext: bitstring,
-  server_chain_4: bitstring,
-  server_material_1: bitstring,
-  server_material_2: bitstring,
-  server_material_3: bitstring,
-  cache_2: receive_cache,
+  next_receive_chain: bitstring,
+  target_material: bitstring,
+  committed_cache: receive_cache,
   receive_poststate: bitstring,
   committed_ratchet: bitstring,
   associated_data: bitstring
@@ -295,16 +425,16 @@ let LaterSequenceRegistrationCommit(
     zero_sequence(),
     beacon_to_server_chain(root),
     frame_sequence,
-    server_chain_4,
-    cache_2,
+    next_receive_chain,
+    committed_cache,
     committed_ratchet
   );
   event LaterRegistrationTargetUnavailable(
     witness,
     session,
     frame_sequence,
-    server_material_3,
-    cache_2,
+    target_material,
+    committed_cache,
     committed_ratchet
   );
   event LaterRegistrationCommitted(
@@ -318,7 +448,7 @@ let LaterSequenceRegistrationCommit(
     opened_payload,
     registration_plaintext,
     app_ciphertext,
-    server_material_3,
+    target_material,
     receive_poststate,
     committed_ratchet
   );
@@ -339,8 +469,8 @@ let LaterSequenceRegistrationCommit(
     )
   )
   |
-  if witness = LATER_REGISTRATION_FIRST_ONLY_WITNESS then
-    out(c, LATER_REGISTRATION_FIRST_ONLY_CANARY)
+  if witness = LATER_REGISTRATION_OMITTED_GATE_WITNESS then
+    out(c, LATER_REGISTRATION_OMITTED_GATE_CANARY)
   ).
 
 let LaterSequenceRegistrationFaithfulFinish(
@@ -383,16 +513,15 @@ let LaterSequenceRegistrationFaithfulFinish(
         registration_plaintext: bitstring,
         opened_payload: bitstring,
         app_ciphertext: bitstring,
-        server_chain_4: bitstring,
-        server_material_1: bitstring,
-        server_material_2: bitstring,
-        server_material_3: bitstring,
-        cache_2: receive_cache,
+        next_receive_chain: bitstring,
+        target_material: bitstring,
+        committed_cache: receive_cache,
         receive_poststate: bitstring,
         committed_ratchet: bitstring,
         associated_data: bitstring
       )
     );
+    if frame_sequence = first_sequence() then
     LaterSequenceRegistrationCommit(
       LATER_REGISTRATION_FAITHFUL_WITNESS,
       response,
@@ -405,18 +534,16 @@ let LaterSequenceRegistrationFaithfulFinish(
       registration_plaintext,
       opened_payload,
       app_ciphertext,
-      server_chain_4,
-      server_material_1,
-      server_material_2,
-      server_material_3,
-      cache_2,
+      next_receive_chain,
+      target_material,
+      committed_cache,
       receive_poststate,
       committed_ratchet,
       associated_data
     )
   ).
 
-let LaterSequenceRegistrationFirstOnlyFinish(
+let LaterSequenceRegistrationInitialFinish(
   expected_server_identity: bitstring,
   expected_server_key_id: key_id,
   beacon_identity_secret: bitstring,
@@ -425,14 +552,10 @@ let LaterSequenceRegistrationFirstOnlyFinish(
   beacon_pq_secret: bitstring,
   response: bitstring
 ) =
-  event LaterRegistrationFirstOnlyAttempted(
-    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
-    response
-  );
   new reply: channel;
   (
-    LaterSequenceRegistrationOpen(
-      LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+    LaterSequenceRegistrationInitialOpen(
+      LATER_REGISTRATION_INITIAL_WITNESS,
       expected_server_identity,
       expected_server_key_id,
       beacon_identity_secret,
@@ -456,29 +579,97 @@ let LaterSequenceRegistrationFirstOnlyFinish(
         registration_plaintext: bitstring,
         opened_payload: bitstring,
         app_ciphertext: bitstring,
-        server_chain_4: bitstring,
-        server_material_1: bitstring,
-        server_material_2: bitstring,
-        server_material_3: bitstring,
-        cache_2: receive_cache,
+        next_receive_chain: bitstring,
+        target_material: bitstring,
+        committed_cache: receive_cache,
         receive_poststate: bitstring,
         committed_ratchet: bitstring,
         associated_data: bitstring
       )
     );
-    event LaterRegistrationFirstOnlyGateReached(
-      LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+    if frame_sequence = first_sequence() then
+    LaterSequenceRegistrationCommit(
+      LATER_REGISTRATION_INITIAL_WITNESS,
+      response,
+      session,
+      root,
+      assigned_key_id,
+      frame_sequence,
+      authenticated_server_key_id,
+      authenticated_binding,
+      registration_plaintext,
+      opened_payload,
+      app_ciphertext,
+      next_receive_chain,
+      target_material,
+      committed_cache,
+      receive_poststate,
+      committed_ratchet,
+      associated_data
+    )
+  ).
+
+let LaterSequenceRegistrationOmittedGateFinish(
+  expected_server_identity: bitstring,
+  expected_server_key_id: key_id,
+  beacon_identity_secret: bitstring,
+  beacon_prekey_secret: bitstring,
+  beacon_one_time_secret: bitstring,
+  beacon_pq_secret: bitstring,
+  response: bitstring
+) =
+  event LaterRegistrationOmittedGateAttempted(
+    LATER_REGISTRATION_OMITTED_GATE_WITNESS,
+    response
+  );
+  new reply: channel;
+  (
+    LaterSequenceRegistrationOpen(
+      LATER_REGISTRATION_OMITTED_GATE_WITNESS,
+      expected_server_identity,
+      expected_server_key_id,
+      beacon_identity_secret,
+      beacon_prekey_secret,
+      beacon_one_time_secret,
+      beacon_pq_secret,
+      response,
+      reply
+    )
+  |
+    in(
+      reply,
+      (
+        session: bitstring,
+        root: bitstring,
+        assigned_key_id: key_id,
+        frame_sequence: sequence,
+        authenticated_server_key_id: key_id,
+        authenticated_binding:
+          beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding,
+        registration_plaintext: bitstring,
+        opened_payload: bitstring,
+        app_ciphertext: bitstring,
+        next_receive_chain: bitstring,
+        target_material: bitstring,
+        committed_cache: receive_cache,
+        receive_poststate: bitstring,
+        committed_ratchet: bitstring,
+        associated_data: bitstring
+      )
+    );
+    event LaterRegistrationOmittedGateReached(
+      LATER_REGISTRATION_OMITTED_GATE_WITNESS,
       frame_sequence,
       response
     );
-    if frame_sequence = first_sequence() then
-      event LaterRegistrationFirstOnlyGatePassed(
-        LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+    (* Negative control: deliberately omit the sequence-one admission gate. *)
+      event LaterRegistrationOmittedGateBypassed(
+        LATER_REGISTRATION_OMITTED_GATE_WITNESS,
         frame_sequence,
         response
       );
       LaterSequenceRegistrationCommit(
-        LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+        LATER_REGISTRATION_OMITTED_GATE_WITNESS,
         response,
         session,
         root,
@@ -489,11 +680,9 @@ let LaterSequenceRegistrationFirstOnlyFinish(
         registration_plaintext,
         opened_payload,
         app_ciphertext,
-        server_chain_4,
-        server_material_1,
-        server_material_2,
-        server_material_3,
-        cache_2,
+        next_receive_chain,
+        target_material,
+        committed_cache,
         receive_poststate,
         committed_ratchet,
         associated_data
@@ -658,12 +847,18 @@ let LaterSequenceRegistrationControl() =
       original_response,
       substituted_response,
       first_frame,
+      second_frame,
+      third_frame,
       server_chain_3,
       associated_data,
       server_key_id,
       assigned_key_id
     )
   )
+  |
+  LaterSequenceRegistrationInitialFinish(
+    server_identity, server_key_id, beacon_identity_secret, beacon_prekey_secret,
+    beacon_one_time_secret, beacon_pq_secret, original_response)
   |
   in(c, candidate: bitstring);
   if candidate = substituted_response then
@@ -685,7 +880,7 @@ let LaterSequenceRegistrationControl() =
         candidate
       )
     |
-      LaterSequenceRegistrationFirstOnlyFinish(
+      LaterSequenceRegistrationOmittedGateFinish(
         server_identity,
         server_key_id,
         beacon_identity_secret,

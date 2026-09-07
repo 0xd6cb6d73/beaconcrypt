@@ -23,12 +23,7 @@ The model is *ideal*: it is parametric in the cryptographic primitives (`Pqxdh.C
 It makes no computational security claim by itself.
 The separately imported `Computational/CtxReduction.lean` module now proves a computational reduction for the model's CTX misattribution event, conditional on collision resistance of its abstract `blake2b` function.
 
-The record layer is not re-invented: it is an instance `Pqxdh.ratchetCrypto` of the
-project's already verified handwritten symmetric ratchet
-(`BeaconcryptCore/Model/Ratchet.lean`), so the server's first record is one
-`Ratchet.sendStep` and the beacon's acceptance is one `Ratchet.recvStep` — i.e. "a
-valid admissible initial receive-ratchet record" in the sense of spec §16, not an
-`seq = 1` special case.
+The record layer is an instance `Pqxdh.ratchetCrypto` of the verified handwritten symmetric ratchet (`BeaconcryptCore/Model/Ratchet.lean`). The server generates its registration record with the first `Ratchet.sendStep`. The beacon evaluates `Ratchet.recvStep` and, after successful opening, requires the authenticated sequence to equal 1 before checking the registration binding and committing. The generic receive ratchet retains its out-of-order and skipped-key semantics for established sessions.
 
 ## Specification section → Lean declaration
 

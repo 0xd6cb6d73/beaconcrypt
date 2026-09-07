@@ -134,7 +134,7 @@ theorem commitPlaintext_eq (candidate : pqxdh.BeaconRegistrationCandidate) (send
       plaintextBinding_bytes, hbytes, pqxdh.beacon_commit]
   · simp [commitPlaintext, hlength, Nat.le_of_not_gt hlength]
 
-/-- The complete core registration driver: extracted candidate preparation, model-ordered sender/sequence guards, extracted initial KDF phases, actual receive phases, extracted binding authentication, and extracted commitment. Every failure discards registration-local key state. -/
+/-- The complete core registration driver: extracted candidate preparation, model-ordered sender/nonzero guards, extracted initial KDF phases, actual receive phases, the post-opening sequence-one policy, extracted binding authentication, and extracted commitment. Every failure discards registration-local key state. -/
 def completeBeacon
     (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial Pqxdh.RecordAD Pqxdh.Bytes Pqxdh.Bytes)
     (derive : pqxdh.RootKeyInput → Std.Array Std.U8 32#usize)
@@ -156,10 +156,12 @@ def completeBeacon
         match plaintext with
         | .None => ok (.error .badRecord)
         | .Some plaintext =>
-            let committed ← commitPlaintext candidate sender plaintext
-            match committed with
-            | .error error => ok (.error error)
-            | .ok established => ok (.ok (established, next))
+            if target.val ≠ 1 then ok (.error .badRecord)
+            else
+              let committed ← commitPlaintext candidate sender plaintext
+              match committed with
+              | .error error => ok (.error error)
+              | .ok established => ok (.ok (established, next))
 
 /-- The typed core inputs are the primitive outputs and wire fields of the chosen ideal registration input. Decapsulation and public-key conversion execute outside the core; their failures are adapter outcomes rather than inhabitants of this boundary. -/
 structure BeaconBoundary (c : Pqxdh.Crypto) (state : pqxdh.BeaconInitSent)
@@ -219,15 +221,16 @@ def BeaconResultRefines (c : Pqxdh.Crypto) (execute : KdfInterpreter) (ikSk : Pq
             (mapSend send) (mapRecv receive))
 
 
-/-- The suffix of the unchanged ideal transition after its sender and sequence guards. This is a named expression, not an added model transition. -/
-def idealFinishRecord (binding : Pqxdh.ServerBinding) (ikSk : Pqxdh.Bytes) (kid : Nat)
+/-- The ideal suffix after sender/nonzero admission checks: successful opening applies the sequence-one policy before plaintext binding. This is a named expression, not an added transition. -/
+def idealFinishRecord (binding : Pqxdh.ServerBinding) (ikSk : Pqxdh.Bytes) (kid sequence : Nat)
     (ad : Pqxdh.Bytes) (send : Ratchet.SendState Pqxdh.Bytes)
     (opened : Except Ratchet.RecvError Pqxdh.Bytes × Ratchet.RecvState Pqxdh.Bytes (Pqxdh.Bytes × Pqxdh.Bytes)) :
     Except Pqxdh.BeaconError Nat × Pqxdh.BeaconState :=
   match opened with
   | (.error _, _) => (.error .badRecord, .aborted)
   | (.ok plaintext, receive) =>
-      if plaintext.length ≤ 8 then (.error .badPlaintext, .aborted)
+      if sequence ≠ 1 then (.error .badRecord, .aborted)
+      else if plaintext.length ≤ 8 then (.error .badPlaintext, .aborted)
       else if plaintext.take 8 ≠ Pqxdh.LE64 kid then (.error .keyIdMismatch, .aborted)
       else (.ok kid, .established binding ikSk kid ad send receive)
 
@@ -274,7 +277,7 @@ theorem completeBeacon_refines (c : Pqxdh.Crypto)
             rw [had, hboundary.beaconIdentity]
           have hmodel : Pqxdh.beaconFinish c
                 (.initSent (absBinding state.expected_server_binding) ikSk preSk otSk kemSk) response =
-              idealFinishRecord (absBinding state.expected_server_binding) ikSk response.keyId
+              idealFinishRecord (absBinding state.expected_server_binding) ikSk response.keyId target.val
                 (absBytes candidate.associated_data) (mapSend send)
                 (Ratchet.recvStep (Pqxdh.ratchetCrypto c)
                   ⟨(Pqxdh.rootChains c (absBytes (derive candidate.root_key_input))).1, 0, []⟩
@@ -299,35 +302,42 @@ theorem completeBeacon_refines (c : Pqxdh.Crypto)
                      rfl,
                   by simp only [BeaconResultRefines, hmodel, hopened, idealFinishRecord]⟩
             | ok plaintext =>
-                have hactual : completeBeacon (concreteCrypto c execute) derive initial execute state inputs
-                      sender target response.appFrame.cipherText =
-                    (do let committed ← commitPlaintext candidate sender plaintext
-                        match committed with
-                        | .error error => ok (.error error)
-                        | .ok established => ok (.ok (established, next))) := by
-                  simp only [completeBeacon, hprepare, bind_tc_ok, if_neg (not_not_intro hsender),
-                    if_neg hzero, initializeBeaconCandidate_eq, hinit, hrecv, hopened, receiveIdealPlaintext,
-                    core.option.Option.Some]
-                  rfl
-                by_cases hlength : plaintext.length ≤ 8
-                · exact ⟨.error .badPlaintext,
-                    by simp only [hactual, commitPlaintext_eq candidate sender plaintext hsender, if_pos hlength, bind_tc_ok],
-                    by simp only [BeaconResultRefines, hmodel, hopened, idealFinishRecord, if_pos hlength]⟩
-                · have hkey : candidate.assigned_key_id.val = response.keyId := by
-                    rw [hkid, hboundary.assignedId]
-                  by_cases hbound : plaintext.take 8 ≠ Pqxdh.LE64 response.keyId
-                  · exact ⟨.error .keyIdMismatch,
-                      by simp only [hactual, commitPlaintext_eq candidate sender plaintext hsender, hkey,
-                        if_neg hlength, if_pos hbound, bind_tc_ok],
-                      by simp only [BeaconResultRefines, hmodel, hopened, idealFinishRecord,
-                        if_neg hlength, if_pos hbound]⟩
-                  · refine ⟨.ok (⟨candidate.server_binding, candidate.assigned_key_id⟩, next), ?_,
-                      initialized.refined.receive_chain, send, receive, hpost, ?_⟩
-                    · simp only [hactual, commitPlaintext_eq candidate sender plaintext hsender, hkey,
-                        if_neg hlength, if_neg hbound, bind_tc_ok]
-                    · rw [hmodel, hopened]
-                      simp only [idealFinishRecord, if_neg hlength, if_neg hbound,
-                        hbinding, hkey, hadModel, show mapRecv receive = received by simpa only [hopened] using hreceive]
+                by_cases hother : target.val ≠ 1
+                · refine ⟨.error .badRecord, ?_, ?_⟩
+                  · simp only [completeBeacon, hprepare, bind_tc_ok, if_neg (not_not_intro hsender),
+                      if_neg hzero, initializeBeaconCandidate_eq, hinit, hrecv, hopened,
+                      receiveIdealPlaintext, core.option.Option.Some, if_pos hother]
+                    rfl
+                  · simp only [BeaconResultRefines, hmodel, hopened, idealFinishRecord, if_pos hother]
+                · have hactual : completeBeacon (concreteCrypto c execute) derive initial execute state inputs
+                        sender target response.appFrame.cipherText =
+                      (do let committed ← commitPlaintext candidate sender plaintext
+                          match committed with
+                          | .error error => ok (.error error)
+                          | .ok established => ok (.ok (established, next))) := by
+                    simp only [completeBeacon, hprepare, bind_tc_ok, if_neg (not_not_intro hsender),
+                      if_neg hzero, initializeBeaconCandidate_eq, hinit, hrecv, hopened, receiveIdealPlaintext,
+                      core.option.Option.Some, if_neg hother]
+                    rfl
+                  by_cases hlength : plaintext.length ≤ 8
+                  · exact ⟨.error .badPlaintext,
+                      by simp only [hactual, commitPlaintext_eq candidate sender plaintext hsender, if_pos hlength, bind_tc_ok],
+                      by simp only [BeaconResultRefines, hmodel, hopened, idealFinishRecord, if_neg hother, if_pos hlength]⟩
+                  · have hkey : candidate.assigned_key_id.val = response.keyId := by
+                      rw [hkid, hboundary.assignedId]
+                    by_cases hbound : plaintext.take 8 ≠ Pqxdh.LE64 response.keyId
+                    · exact ⟨.error .keyIdMismatch,
+                        by simp only [hactual, commitPlaintext_eq candidate sender plaintext hsender, hkey,
+                          if_neg hlength, if_pos hbound, bind_tc_ok],
+                        by simp only [BeaconResultRefines, hmodel, hopened, idealFinishRecord, if_neg hother,
+                          if_neg hlength, if_pos hbound]⟩
+                    · refine ⟨.ok (⟨candidate.server_binding, candidate.assigned_key_id⟩, next), ?_,
+                        initialized.refined.receive_chain, send, receive, hpost, ?_⟩
+                      · simp only [hactual, commitPlaintext_eq candidate sender plaintext hsender, hkey,
+                          if_neg hlength, if_neg hbound, bind_tc_ok]
+                      · rw [hmodel, hopened]
+                        simp only [idealFinishRecord, if_neg hother, if_neg hlength, if_neg hbound,
+                          hbinding, hkey, hadModel, show mapRecv receive = received by simpa only [hopened] using hreceive]
 
       · have hsenderModel : response.appFrame.keyId ≠ state.expected_server_binding.identity_key_id.val := by
           intro heq

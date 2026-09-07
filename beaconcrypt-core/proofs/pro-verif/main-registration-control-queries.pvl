@@ -1,6 +1,6 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(* These queries run the actual baseline process, including both registration schedules. A false reachability query is an intentional acceptance witness. *)
+(* These queries run the actual baseline process, including first-sequence admission and the later candidate. A false reachability query is an intentional acceptance witness. *)
 query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id;
   event(BeaconRegistrationCompleted(main_agreement, first_sequence(), main_payload, main_frame, main_response, main_claimed)).
 query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id;
@@ -20,10 +20,18 @@ query main_agreement: registration_session_t, main_payload: bitstring, main_fram
   event(MainRegistrationCandidateSent(main_agreement, main_registration_unframed(), main_response)) &&
   event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)).
 
-(* The unqualified exact-response property is intentionally false: genuine later records may replace the original response's application ciphertext. *)
+(* The exact-response property now excludes replacement by genuine later records at the sequence-one boundary. *)
 query main_transcript: establishment_transcript_t;
   inj-event(BeaconAnyCommitted(main_transcript)) ==> inj-event(ServerCommitted(main_transcript)).
 
-(* An authentic later payload with a different prefix can complete after the outer numeric ID is changed to match it. This is accepted authenticated application data, not a forged cryptographic record. *)
+(* An authentic later payload still cannot complete when its outer numeric ID is relabelled to match its authenticated prefix. *)
 query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_claimed: key_id;
   event(MainRegistrationRelabelCompleted(main_agreement, main_payload, main_frame, main_response)).
+
+(* Every successful initial completion reports exactly sequence one. *)
+query main_agreement: registration_session_t, main_payload: bitstring, main_frame: bitstring, main_response: bitstring, main_sequence: sequence, main_claimed: key_id;
+  event(BeaconRegistrationCompleted(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed)) ==> main_sequence = first_sequence().
+
+(* The genuine later record still decrypts before the registration policy rejects it. *)
+query main_payload: bitstring, main_frame: bitstring;
+  event(MainRegistrationLaterOpened(next_sequence(next_sequence(first_sequence())), main_payload, main_frame)).

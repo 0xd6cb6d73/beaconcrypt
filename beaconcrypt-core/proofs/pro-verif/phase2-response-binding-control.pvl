@@ -124,6 +124,7 @@ let Phase2BeaconFinishControl(
         initial_frame
       ) in
       event Phase2AuthenticatedFrameOpened(witness);
+      if frame_sequence = first_sequence() then
       let registration_payload(
         authenticated_binding,
         initial_plaintext

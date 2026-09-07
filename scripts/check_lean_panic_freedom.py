@@ -15,11 +15,11 @@ import sys
 
 NAME = re.compile(r"[A-Za-z_][A-Za-z_0-9.]*\Z")
 DECLARATION = re.compile(r"^(?:@\[[^\]]*\]\s*)?def\s+([\w.]+)", re.M)
-IDEAL_MODEL_DIGEST = "1666ba5ce4e353f9fecc011dda6f60ae1af9bdd48f66252dc80356adf408e684"
+IDEAL_MODEL_DIGEST = "7cabf87898aedecef9f3049dff88bc8f169c69c6a644b1a67d6932863b98f7cc"
 
 
 def check_models(proof_root: Path) -> None:
-    """Honor the user's immutable-model constraint from starting commit 27ff282."""
+    """Pin the reviewed model: the HB-88 alias addition and authorized HB-95 policy."""
     model_root = proof_root / "BeaconcryptCore/Model"
     digest = hashlib.sha256()
     for path in sorted(model_root.rglob("*.lean")):

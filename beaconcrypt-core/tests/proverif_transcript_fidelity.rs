@@ -125,48 +125,50 @@ const LATER_REGISTRATION_QUERY_HASHES: [u64; 18] = [
 	3_455_186_719_080_634_235,
 	676_668_089_077_458_887,
 	14_740_752_099_764_896_718,
-	2_295_576_426_332_104_103,
-	11_236_771_169_740_860_269,
-	1_026_471_539_442_063_085,
-	4_537_599_263_751_259_124,
-	1_360_721_314_336_953_706,
-	4_484_615_328_937_149_544,
-	17_363_979_669_924_787_267,
+	3_761_750_926_410_306_009,
+	15_713_490_337_305_187_190,
+	346_165_226_435_181_147,
+	11_695_414_411_595_245_009,
+	8_633_529_055_395_976_217,
+	14_890_042_822_019_934_755,
+	16_368_760_463_437_037_108,
 	15_927_833_979_560_930_765,
 	7_422_622_837_596_238_938,
-	4_051_337_733_113_411_667,
+	9_459_416_062_583_179_785,
 ];
-const LATER_REGISTRATION_CHECKER_HASH: u64 = 6_902_455_048_869_219_859;
-const POST_REGISTRATION_QUERY_HASHES: [u64; 27] = [
-	13_442_398_044_445_305_657,
-	1_982_463_897_226_573_668,
-	13_904_433_424_887_205_758,
-	18_055_026_551_756_866_664,
-	15_452_524_558_492_993_077,
+const LATER_REGISTRATION_CHECKER_HASH: u64 = 13_744_418_603_477_632_925;
+const POST_REGISTRATION_QUERY_HASHES: [u64; 29] = [
+	13_732_113_423_386_418_035,
+	15_659_167_285_277_539_827,
+	911_672_438_838_539_665,
+	15_414_942_233_535_245_802,
+	3_382_390_634_288_590_345,
 	10_419_032_750_057_719_768,
-	12_567_658_622_396_497_260,
-	10_620_112_965_774_267_389,
+	2_662_333_429_768_925_921,
+	14_413_618_228_441_011_121,
 	18_312_738_672_001_042_933,
 	15_470_908_886_182_888_698,
 	173_383_255_443_887_514,
 	5_994_236_791_793_324_971,
 	15_269_535_120_974_471_958,
 	8_391_988_441_863_424_093,
-	4_186_761_583_507_723_257,
-	18_318_860_712_697_568_036,
-	1_122_727_936_689_057_007,
-	17_952_828_070_516_809_999,
-	12_832_071_055_080_247_677,
-	17_112_031_144_227_226_068,
+	9_861_910_612_467_458_182,
+	18_266_619_734_200_497_216,
+	8_809_092_985_519_307_107,
+	6_167_450_721_035_756_786,
+	6_159_604_066_175_398_263,
+	17_692_630_698_947_081_654,
 	4_988_454_840_997_839_352,
-	15_547_842_063_551_900_399,
-	6_458_542_681_987_309_360,
-	16_637_389_876_782_594_323,
+	10_540_583_738_131_838_007,
+	17_713_933_936_207_445_299,
+	2_790_340_688_878_177_269,
 	16_409_484_950_328_146_878,
 	6_185_348_103_479_085_792,
-	10_779_077_534_392_446_248,
+	7_787_840_347_632_236_485,
+	312_642_977_985_801_463,
+	18_304_722_595_062_215_684,
 ];
-const POST_REGISTRATION_CHECKER_HASH: u64 = 4_898_378_753_972_868_244;
+const POST_REGISTRATION_CHECKER_HASH: u64 = 329_879_472_483_210_497;
 const EXPECTED_FACTS: &[&str] = &[
 	"schema=1",
 	"domain.count=2",
@@ -324,7 +326,7 @@ const EXPECTED_FACTS: &[&str] = &[
 	"endpoint.registration.beacon.commit.associated_data=same_candidate_value",
 	"endpoint.registration.beacon.commit.ratchet=candidate_ratchet_after_successful_initial_open",
 	"endpoint.registration.beacon.commit.local_sender=authenticated_assigned_key_id",
-	"endpoint.registration.beacon.order=initial_open,key_id_binding_authentication,pinned_server_id,pinned_server_identity,assign_local_id,store_established",
+	"endpoint.registration.beacon.order=initial_open,decrypted_sequence_1_gate,key_id_binding_authentication,pinned_server_id,pinned_server_identity,assign_local_id,store_established",
 	"endpoint.symbolic.main_honest.server_to_beacon.sender=SERVER_KEY_ID",
 	"endpoint.symbolic.main_honest.server_to_beacon.event_receiver=assigned_key_id",
 	"endpoint.symbolic.main_honest.beacon_to_server.sender=assigned_key_id",
@@ -563,17 +565,17 @@ const EXPECTED_FACTS: &[&str] = &[
 	"initial_ratchet.bridge=source_Lean_and_ProVerif_text_synchronization_only",
 	"initial_ratchet.excludes=HKDF_security,totality,correctness,noncollision,root_agreement,RegistrationOutput_origin,same_Server_instance_provenance,response_type_provenance,array_term_equality,extraction,compiler,AEAD,CTX,nonce,arbitrary_schedules,persistence,multiuser,crash,erasure",
 	"later_registration.scope=source_and_finite_ProVerif_synchronization:not_semantic_Rust_to_ProVerif_or_Lean_refinement",
-	"later_registration.claim=finite_ideal_fixture_accepts_genuine_sequence_3;source_has_matching_general_receive_and_no_first_sequence_gate_shape",
-	"later_registration.source.reference=production_source_is_ultimate_reference:no_behavior_change",
+	"later_registration.claim=generic_receive_opens_genuine_sequence_3;production_registration_rejects_before_binding_and_publication",
+	"later_registration.source.reference=production_source_is_ultimate_reference:initial_registration_requires_sequence_1",
 	"later_registration.source.beacon.entry=finish_registration_requires_InitSent_control",
 	"later_registration.source.beacon.response=reads_identityKey,ephemeralKey,kemCipherText,keyId,and_appCipherText_from_one_KexResponse",
 	"later_registration.source.beacon.decrypt=decrypt_message_with_ratchet(response.appCipherText,candidate.server_key_id,associated_data,same_candidate_ratchet)",
 	"later_registration.source.beacon.sender=authenticated_server_key_id_is_decrypted.key_id",
 	"later_registration.source.beacon.binding=authenticated_plaintext_prefix_is_authenticated_against_response_assigned_key_id",
-	"later_registration.source.beacon.staged=successful_general_receive_returns_the_advanced_ratchet_in_staged",
+	"later_registration.source.beacon.staged=only_successful_sequence_1_receive_returns_the_advanced_ratchet_in_staged",
 	"later_registration.source.beacon.commit=Established_stores_the_same_staged_ratchet_after_server_binding_checks",
 	"later_registration.source.beacon.return=Some_returns_authenticated_plaintext_after_the_binding_prefix",
-	"later_registration.source.beacon.no_first_gate=finish_registration_does_not_read_decrypted.seq_or_require_sequence_1",
+	"later_registration.source.beacon.first_gate=finish_registration_rejects_decrypted.seq_ne_1_after_open_before_binding",
 	"later_registration.adapter.sequence=key_seq_is_frame.get_seq",
 	"later_registration.adapter.begin=begin_receive(same_taken_kernel,key_seq,same_OpenFrameContext)",
 	"later_registration.adapter.loop=each_ReceiveKdfRequested_uses_ratchet_hkdf(same_pending.request)_then_same_pending.resume",
@@ -606,7 +608,7 @@ const EXPECTED_FACTS: &[&str] = &[
 	"later_registration.lean.control=max_gap_eq,plan_receive_until_accept,plan_receive_until_bound,advance_receive_ok,advance_receive_target_ok",
 	"later_registration.lean.refinement=receiveMessage_refines,receiveMessage_state_neutral",
 	"later_registration.lean.scope=existing_general_receive_anchors_only:no_sequence_3_specialization_or_cross_language_theorem",
-	"later_registration.proverif.scope=one_finite_same_session_sequence_1_to_sequence_3_witness_and_one_identical_counterfactual_gate",
+	"later_registration.proverif.scope=one_finite_same_session_sequence_3_rejection_and_one_omitted_gate_negative_control",
 	"later_registration.proverif.session=one_genuine_Server_and_fresh_Beacon_reconstruct_equal_root,associated_data,session,and_initial_role_chains",
 	"later_registration.proverif.original=sequence_1_response_contains_registration_payload(assigned_binding,SEQ1_PAYLOAD)",
 	"later_registration.proverif.order=original_response_event_and_output_precede_genuine_sequence_2_and_sequence_3_frame_events_and_outputs",
@@ -617,28 +619,28 @@ const EXPECTED_FACTS: &[&str] = &[
 	"later_registration.proverif.root_ad=both_branches_reconstruct_the_same_session_root_and_server_first_associated_data_from_the_candidate_fields",
 	"later_registration.proverif.sender=inner_crypto_frame_sender_must_equal_genuine_Server_key_id",
 	"later_registration.proverif.sequence=parsed_inner_sequence_is_passed_to_open_and_stored_in_poststate;exact_candidate_uses_material_3",
-	"later_registration.proverif.payload=opened_registration_payload_is_exact_binding_plus_SEQ3_PAYLOAD;return_is_exact_SEQ3_PAYLOAD",
+	"later_registration.proverif.payload=generic_open_is_exact_binding_plus_SEQ3_PAYLOAD;only_omitted_gate_control_returns_SEQ3_PAYLOAD",
 	"later_registration.proverif.poststate_send=counter_0_and_initial_beacon_to_server_chain_unchanged",
 	"later_registration.proverif.poststate_receive=counter_sequence_3_and_live_server_chain_4",
 	"later_registration.proverif.poststate_cache=newest_first_sequence_2_material_2_then_sequence_1_material_1_then_empty",
 	"later_registration.proverif.poststate_target=sequence_3_material_3_is_used_for_open_and_is_not_inserted_into_the_exact_cache_constructor",
 	"later_registration.proverif.binding=phase2_assigned_id_binding_gate_precedes_commit",
-	"later_registration.proverif.faithful=successful_generic_open_flows_directly_to_shared_commit_without_a_sequence_gate",
-	"later_registration.proverif.counterfactual=after_the_same_finite_successful_open_only_sequence_1_may_reach_shared_commit;sequence_3_cannot",
+	"later_registration.proverif.faithful=successful_generic_open_reaches_sequence_1_gate_before_shared_commit;sequence_3_rejects",
+	"later_registration.proverif.counterfactual=omitted_sequence_gate_allows_the_same_successful_sequence_3_open_to_commit",
 	"later_registration.proverif.events=opened_full_payload,returned_remainder,exact_ratchet_poststate,target_absence,substitution,and_server_origin_are_separate",
-	"later_registration.proverif.queries=18:positive_witnesses,negative_first_only_commit_and_canary,and_injective_origin_order_correspondences",
-	"later_registration.proverif.origin=faithful_commit_implies_selected_exact_substitution_and_same_session_root_genuine_sequence_3_Server_send_after_original_response",
+	"later_registration.proverif.queries=18:9_positive_witnesses_and_9_absence_or_origin_classifications;faithful_sequence_3_commit_absent",
+	"later_registration.proverif.origin=omitted_gate_commit_implies_selected_exact_substitution_and_same_session_root_genuine_sequence_3_Server_send_after_original_response",
 	"later_registration.proverif.constructor_condition=exact_cache_and_chain_equations_hold_in_the_ideal_free_constructor_model;HB54_collision_conditioning_is_separate",
-	"later_registration.excludes=arbitrary_schedules,semantic_refinement,parser_compiler_or_serialization_theorems,liveness,primitive_security_correctness_or_totality,HKDF_correctness,CTX_or_AEAD_security,production_sequence_gate,full_BeaconState_or_PQXDH_control_poststate,persistence,multiuser,crash,erasure",
-	"post_registration.scope=one_finite_continuation_of_the_exact_HB65_committed_state:not_an_arbitrary_receive_schedule",
-	"post_registration.claim=cached_sequence_1_success_then_identical_replay_rejection_then_genuine_sequence_4_success",
-	"post_registration.source.reference=production_source_is_ultimate_reference:no_behavior_change",
-	"post_registration.source.runtime=the_same_successfully_sequence_3_opened_ConcreteRatchetKernel_is_carried_through_cached_replay_and_future_receives",
+	"later_registration.excludes=arbitrary_schedules,semantic_refinement,parser_compiler_or_serialization_theorems,liveness,primitive_security_correctness_or_totality,HKDF_correctness,CTX_or_AEAD_security,full_BeaconState_or_PQXDH_control_poststate,persistence,multiuser,crash,erasure",
+	"post_registration.scope=one_finite_sequence_1_registration_then_ordinary_sequence_3_continuation:not_an_arbitrary_receive_schedule",
+	"post_registration.claim=cached_sequence_2_success_then_identical_replay_rejection_then_genuine_sequence_4_success",
+	"post_registration.source.reference=production_source_is_ultimate_reference:sequence_1_registration_and_unchanged_ordinary_receive",
+	"post_registration.source.runtime=the_same_successfully_sequence_1_initialized_then_ordinary_sequence_3_opened_kernel_is_carried_through_cached_replay_and_future_receives",
 	"post_registration.source.cache_observation=public_counters,chains,receive_cache_len,and_all_50_receive_entry_at_results:not_raw_inactive_array_bytes",
-	"post_registration.source.cached=sequence_1_uses_cached_material_1_without_a_KDF_and_success_removes_only_that_entry",
-	"post_registration.source.replay=consumed_sequence_1_rejects_before_KDF_or_open_and_preserves_the_exact_public_snapshot",
+	"post_registration.source.cached=sequence_2_uses_cached_material_2_without_a_KDF_and_success_removes_only_that_entry",
+	"post_registration.source.replay=consumed_sequence_2_rejects_before_KDF_or_open_and_preserves_the_exact_public_snapshot",
 	"post_registration.source.future=sequence_4_requests_chain_4_once,opens_with_material_4,and_publishes_chain_5_counter_4",
-	"post_registration.source.payload=cached_success_returns_the_full_registration_binding_plus_application_payload;future_success_returns_the_full_sequence_4_payload",
+	"post_registration.source.payload=cached_success_returns_the_full_sequence_2_application_payload;future_success_returns_the_full_sequence_4_payload",
 	"post_registration.lean.receive=KernelRefines.receive_success_replay",
 	"post_registration.lean.cached=ConcreteSession.finish_cached_server_preserves,ConcreteSession.finish_cached_beacon_preserves",
 	"post_registration.lean.byte_trace=executeTrace_refines,executeTrace_observed,executeTrace_recvWf",
@@ -646,34 +648,34 @@ const EXPECTED_FACTS: &[&str] = &[
 	"post_registration.lean.history=completeHistory_refines,completeHistory_observed",
 	"post_registration.lean.scope=conditional_exact_semantic_anchors_under_supplied_record_and_KDF_interpreters:not_a_ProVerif_extraction_theorem",
 	"post_registration.proverif.hooks=later_registration_server_handoff_and_later_registration_committed_handoff_are_private",
-	"post_registration.proverif.hook_parallel=both_handoff_outputs_are_parallel_to_the_original_HB65_continuation_and_cannot_block_it_when_unconsumed",
-	"post_registration.proverif.server_handoff=session,root,original_response,substituted_response,first_frame,server_chain_3,associated_data,server_key_id,assigned_key_id",
-	"post_registration.proverif.committed_handoff=faithful_witness,session,root,substituted_response,assigned_key_id,authenticated_server_key_id,associated_data,committed_ratchet",
-	"post_registration.proverif.join=exact_session,root,substituted_response,assigned_id,server_id,and_associated_data_join_one_Server_trace_to_one_faithful_commit",
+	"post_registration.proverif.hook_parallel=handoff_outputs_and_honest_initialization_are_parallel_to_the_later_candidate_continuation",
+	"post_registration.proverif.server_handoff=session,root,original_response,substituted_response,first_frame,second_frame,third_frame,server_chain_3,associated_data,server_key_id,assigned_key_id",
+	"post_registration.proverif.committed_handoff=initial_witness,session,root,original_response,assigned_key_id,authenticated_server_key_id,associated_data,initial_ratchet",
+	"post_registration.proverif.join=exact_session,root,original_response,assigned_id,server_id,and_associated_data_join_one_Server_trace_to_one_sequence_1_commit_then_actual_ordinary_sequence_3_open",
 	"post_registration.proverif.seq4_origin=chain_4_is_ratchet_next(server_chain_3);material_4_is_ratchet_material(chain_4);frame_4_is_genuine_Server_seal",
 	"post_registration.proverif.trace=cached_reply_precedes_replay_reply_and_only_replay_failure_continues_to_sequence_4",
 	"post_registration.proverif.delta=faithful_and_counterfactual_traces_differ_only_by_witness_and_post_registration_consume_v_retain_mode",
-	"post_registration.proverif.cached.entry=counter_3,chain_4,cache_sequence_2_material_2_then_sequence_1_material_1",
-	"post_registration.proverif.cached.open=sequence_1_opens_with_material_1_and_never_emits_PostRegistrationKdfCalled",
-	"post_registration.proverif.cached.return=full_registration_payload(assigned_binding,SEQ1_PAYLOAD)",
-	"post_registration.proverif.cached.cache=consume_returns_only_sequence_2_material_2;retain_returns_the_exact_entry_cache",
-	"post_registration.proverif.replay=faithful_second_sequence_1_lookup_fails_after_consumption",
+	"post_registration.proverif.cached.entry=counter_3,chain_4,cache_sequence_2_material_2_then_empty",
+	"post_registration.proverif.cached.open=sequence_2_opens_with_material_2_and_never_emits_PostRegistrationKdfCalled",
+	"post_registration.proverif.cached.return=full_sequence_2_application_payload",
+	"post_registration.proverif.cached.cache=consume_returns_empty;retain_returns_the_exact_entry_cache",
+	"post_registration.proverif.replay=faithful_second_sequence_2_lookup_fails_after_consumption",
 	"post_registration.proverif.replay.order=rejection_precedes_reply_and_no_replay_KDF,open,return,or_accept_event_is_reachable",
 	"post_registration.proverif.replay.state=rejection_reports_the_same_consumed_entry_ratchet_as_input_and_output",
 	"post_registration.proverif.future=only_the_replay_failure_payload_is_carried_to_PostRegistrationReceiveFuture",
 	"post_registration.proverif.future.kdf=one_PostRegistrationKdfCalled_uses_the_carried_chain_4",
 	"post_registration.proverif.future.open=sequence_4_frame_opens_with_material_4_under_the_joined_associated_data_and_server_id",
 	"post_registration.proverif.future.state=send_counter_0_and_initial_send_chain_unchanged;receive_counter_4_and_chain_5",
-	"post_registration.proverif.future.cache=sequence_2_material_2_is_retained_and_sequence_4_material_is_not_inserted",
+	"post_registration.proverif.future.cache=empty_cache_retained_and_sequence_4_material_is_not_inserted",
 	"post_registration.proverif.target=PostRegistrationTargetUnavailable_separately_certifies_sequence_4_material_absence_from_the_exact_cache",
 	"post_registration.proverif.negative=retain_consumed_changes_only_cache_finalization_then_reaccepts_the_identical_replay_and_discloses_the_private_canary",
 	"post_registration.proverif.main=LaterSequenceRegistrationControl_parallel_PostRegistrationControl",
-	"post_registration.proverif.queries=27:21_reachability_or_absence_classifications_and_6_origin_or_order_correspondences",
-	"post_registration.proverif.query_lock=all_27_compact_query_terms_and_all_27_result_terms_are_hash_and_polarity_locked",
-	"post_registration.proverif.origin=handoff_from_faithful_commit,cached_frame_from_original_Server_send,sequence_4_from_same_Server_chain,and_replay_rejection_after_cached_success",
+	"post_registration.proverif.queries=29:22_reachability_or_absence_classifications_and_7_origin_or_order_correspondences",
+	"post_registration.proverif.query_lock=all_29_compact_query_terms_and_all_29_result_terms_are_hash_and_polarity_locked",
+	"post_registration.proverif.origin=handoff_from_actual_sequence_1_commit_and_established_sequence_3_open,cached_frame_from_original_Server_send,sequence_4_from_same_Server_chain,and_replay_rejection_after_cached_success",
 	"post_registration.makefile.scenario=post-registration-ratchet_is_one_enumerated_parallel_checked_scenario",
 	"post_registration.makefile.libs=common,strong_assigned_id_theory,later_control,post_control,post_queries,post_main,post_result_checker",
-	"post_registration.checker=exact_27_result_strings_with_1_to_5,7_to_8,13_to_21_false;6,9_to_12_true;22_to_27_true",
+	"post_registration.checker=exact_29_result_strings_with_1_to_5,7_to_8,13_to_21,28_false;6,9_to_12,22_to_27,29_true",
 	"post_registration.constructor_condition=exact_chain,cache,payload,and_frame_equations_hold_in_the_ideal_free_constructor_model;HB54_collision_conditioning_is_separate",
 	"post_registration.primitive_contracts=HKDF-SHA-512,ChaCha20-Poly1305,and_BLAKE2b-512_properties_are_permanent_external_assumptions_not_proof_tasks",
 	"post_registration.excludes=arbitrary_schedules,ProVerif_extraction,primitive_correctness_or_security,raw_inactive_cache_bytes,physical_erasure,persistence,multiuser,crash,and_application_routing",
@@ -2465,7 +2467,48 @@ fn validate_endpoint_frame_context_wiring(snapshot: &Snapshot) -> Result<(), Str
 	Ok(())
 }
 
+fn validate_initial_sequence_gate(
+	opening: &str,
+	sequence: &str,
+	binding: &str,
+) -> Result<(), String> {
+	let code = compact(&uncommented_pv(opening)?);
+	let end = code
+		.find(binding)
+		.ok_or_else(|| "missing initial binding".to_owned())?
+		+ binding.len();
+	let code = &code[..end];
+	require_ordered_once(
+		code,
+		&[
+			"=open_frame(",
+			&format!("if{sequence}=first_sequence()then"),
+			binding,
+		],
+		"initial sequence-one gate after opening and before binding",
+	)
+}
+
+fn validate_main_sequence_gates(environment: &str) -> Result<(), String> {
+	let code = compact(&uncommented_pv(environment)?);
+	let first = section_between(
+		&code,
+		"letHonestBeacon(",
+		"letMaliciousBeacon(",
+		"first registration role",
+	)?;
+	validate_initial_sequence_gate(first, "initial_sequence", "letexpected_binding=")?;
+	let later = section_between(
+		&code,
+		"letMainLaterBeacon(",
+		"letMainLaterServer(",
+		"later registration role",
+	)?;
+	validate_initial_sequence_gate(later, "main_initial_sequence", "letmain_expected_binding=")
+}
+
 fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
+	validate_main_sequence_gates(&snapshot.environment)?;
 	let interface = compact(&uncommented_pv(&snapshot.interface)?);
 	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
 	let environment = compact(&uncommented_pv(&snapshot.environment)?);
@@ -2939,9 +2982,9 @@ fn validate_general_registration_runner(
 		require(&script, wanted, label)?;
 	}
 	for (text, expected, label) in [
-		(runner, 6_237_376_055_663_319_124, "runner"),
-		(generator, 14_396_280_816_143_547_146, "generator"),
-		(checker_tests, 14_129_843_359_489_167_816, "checker tests"),
+		(runner, 16_793_361_920_611_321_656, "runner"),
+		(generator, 1_953_512_261_811_404_212, "generator"),
+		(checker_tests, 16_505_210_370_524_032_298, "checker tests"),
 	] {
 		if stable_text_hash(text) != expected {
 			return Err(format!(
@@ -2956,11 +2999,11 @@ fn validate_general_registration_runner(
 		),
 		(
 			"general-registration-admission.pvl",
-			17_686_911_930_606_850_571,
+			17_941_204_731_846_309_212,
 		),
 		(
 			"general-registration-admission-queries.pvl",
-			2_204_557_196_734_332_185,
+			10_514_299_523_075_288_879,
 		),
 		("general-registration-cache.pvl", 11_111_788_908_665_374_809),
 		(
@@ -5618,19 +5661,22 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 		],
 		"later-registration Beacon response-to-commit flow",
 	)?;
-	for forbidden in [
-		"decrypted.seq",
-		"first_sequence",
-		"get_seq()",
-		"seq==1",
-		"seq!=1",
-	] {
-		forbid(
-			&beacon,
-			forbidden,
-			"later-registration Beacon first-sequence gate",
-		)?;
-	}
+	require_once(
+		&beacon,
+		"ifdecrypted.seq!=1{returnNone;}",
+		"later-registration Beacon first-sequence gate",
+	)?;
+	require_ordered_once(
+		&beacon,
+		&[
+			"decrypt_message_with_ratchet(response.get_app_cipher_text().ok()?,candidate.server_key_id(),&associated_data,&mutratchet,)?",
+			"ifdecrypted.seq!=1{returnNone;}",
+			"letauthenticated_server_key_id=decrypted.key_id;",
+			"letmutauthenticated_plaintext=decrypted.plaintext;",
+			"verified_pqxdh::authenticate_registration_key_id_binding(",
+		],
+		"later-registration Beacon first-sequence gate order",
+	)?;
 
 	let adapter = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
 	let executor = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
@@ -6065,11 +6111,11 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration faithful witness",
 		),
 		(
-			"freeLATER_REGISTRATION_FIRST_ONLY_WITNESS:bitstring[private].",
+			"freeLATER_REGISTRATION_OMITTED_GATE_WITNESS:bitstring[private].",
 			"later-registration counterfactual witness",
 		),
 		(
-			"freeLATER_REGISTRATION_FIRST_ONLY_CANARY:bitstring[private].",
+			"freeLATER_REGISTRATION_OMITTED_GATE_CANARY:bitstring[private].",
 			"later-registration counterfactual canary",
 		),
 		(
@@ -6089,7 +6135,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration faithful-attempt event signature",
 		),
 		(
-			"eventLaterRegistrationFirstOnlyAttempted(bitstring,bitstring).",
+			"eventLaterRegistrationOmittedGateAttempted(bitstring,bitstring).",
 			"later-registration counterfactual-attempt event signature",
 		),
 		(
@@ -6097,11 +6143,11 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration opened event signature",
 		),
 		(
-			"eventLaterRegistrationFirstOnlyGateReached(bitstring,sequence,bitstring).",
+			"eventLaterRegistrationOmittedGateReached(bitstring,sequence,bitstring).",
 			"later-registration gate-reached event signature",
 		),
 		(
-			"eventLaterRegistrationFirstOnlyGatePassed(bitstring,sequence,bitstring).",
+			"eventLaterRegistrationOmittedGateBypassed(bitstring,sequence,bitstring).",
 			"later-registration gate-passed event signature",
 		),
 		(
@@ -6127,7 +6173,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	let open = section_between(
 		&model,
 		"letLaterSequenceRegistrationOpen(",
-		"letLaterSequenceRegistrationCommit(",
+		"letLaterSequenceRegistrationInitialOpen(",
 		"later-registration finite open process",
 	)?;
 	require_ordered_once(
@@ -6228,7 +6274,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 		|| open_outputs[0]
 			!= [
 				"reply",
-				"(session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
+				"(session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened,app_ciphertext,server_chain_4,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
 			]
 			.map(str::to_owned)
 	{
@@ -6258,7 +6304,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	)?;
 	require_once(
 		commit,
-		"ifwitness=LATER_REGISTRATION_FIRST_ONLY_WITNESSthenout(c,LATER_REGISTRATION_FIRST_ONLY_CANARY)",
+		"ifwitness=LATER_REGISTRATION_OMITTED_GATE_WITNESSthenout(c,LATER_REGISTRATION_OMITTED_GATE_CANARY)",
 		"later-registration counterfactual canary confinement",
 	)?;
 	for (function, expected, label) in [
@@ -6271,8 +6317,8 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 				"zero_sequence()",
 				"beacon_to_server_chain(root)",
 				"frame_sequence",
-				"server_chain_4",
-				"cache_2",
+				"next_receive_chain",
+				"committed_cache",
 				"committed_ratchet",
 			][..],
 			"later-registration exact poststate event",
@@ -6283,8 +6329,8 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 				"witness",
 				"session",
 				"frame_sequence",
-				"server_material_3",
-				"cache_2",
+				"target_material",
+				"committed_cache",
 				"committed_ratchet",
 			][..],
 			"later-registration target-absence event",
@@ -6302,7 +6348,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 				"opened_payload",
 				"registration_plaintext",
 				"app_ciphertext",
-				"server_material_3",
+				"target_material",
 				"receive_poststate",
 				"committed_ratchet",
 			][..],
@@ -6315,7 +6361,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	let faithful = section_between(
 		&model,
 		"letLaterSequenceRegistrationFaithfulFinish(",
-		"letLaterSequenceRegistrationFirstOnlyFinish(",
+		"letLaterSequenceRegistrationInitialFinish(",
 		"later-registration faithful finish process",
 	)?;
 	require_once(
@@ -6330,48 +6376,68 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	)?;
 	require_once(
 		faithful,
-		"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FAITHFUL_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
+		"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FAITHFUL_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,next_receive_chain,target_material,committed_cache,receive_poststate,committed_ratchet,associated_data)",
 		"later-registration faithful direct commit",
 	)?;
-	for forbidden in [
-		"first_sequence()",
-		"LaterRegistrationFirstOnlyGateReached",
-		"LaterRegistrationFirstOnlyGatePassed",
-	] {
-		forbid(
-			faithful,
-			forbidden,
-			"later-registration faithful sequence gate",
-		)?;
-	}
+	require_ordered_once(
+		faithful,
+		&[
+			"LaterSequenceRegistrationOpen(",
+			"in(reply,(session:bitstring,root:bitstring,assigned_key_id:key_id,frame_sequence:sequence",
+			"ifframe_sequence=first_sequence()then",
+			"LaterSequenceRegistrationCommit(",
+		],
+		"later-registration faithful sequence gate",
+	)?;
 
-	let first_only = section_between(
+	let omitted_gate = section_between(
 		&model,
-		"letLaterSequenceRegistrationFirstOnlyFinish(",
+		"letLaterSequenceRegistrationOmittedGateFinish(",
 		"letLaterSequenceRegistrationControl()=",
 		"later-registration counterfactual finish process",
 	)?;
 	require_once(
-		first_only,
-		"eventLaterRegistrationFirstOnlyAttempted(LATER_REGISTRATION_FIRST_ONLY_WITNESS,response);",
+		omitted_gate,
+		"eventLaterRegistrationOmittedGateAttempted(LATER_REGISTRATION_OMITTED_GATE_WITNESS,response);",
 		"later-registration counterfactual attempt",
 	)?;
 	require_ordered_once(
-		first_only,
+		omitted_gate,
 		&[
-			"LaterSequenceRegistrationOpen(LATER_REGISTRATION_FIRST_ONLY_WITNESS,expected_server_identity,expected_server_key_id,beacon_identity_secret,beacon_prekey_secret,beacon_one_time_secret,beacon_pq_secret,response,reply)",
+			"LaterSequenceRegistrationOpen(LATER_REGISTRATION_OMITTED_GATE_WITNESS,expected_server_identity,expected_server_key_id,beacon_identity_secret,beacon_prekey_secret,beacon_one_time_secret,beacon_pq_secret,response,reply)",
 			"in(reply,(session:bitstring,root:bitstring,assigned_key_id:key_id,frame_sequence:sequence",
-			"eventLaterRegistrationFirstOnlyGateReached(LATER_REGISTRATION_FIRST_ONLY_WITNESS,frame_sequence,response);",
-			"ifframe_sequence=first_sequence()then",
-			"eventLaterRegistrationFirstOnlyGatePassed(LATER_REGISTRATION_FIRST_ONLY_WITNESS,frame_sequence,response);",
-			"LaterSequenceRegistrationCommit(LATER_REGISTRATION_FIRST_ONLY_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,server_chain_4,server_material_1,server_material_2,server_material_3,cache_2,receive_poststate,committed_ratchet,associated_data)",
+			"eventLaterRegistrationOmittedGateReached(LATER_REGISTRATION_OMITTED_GATE_WITNESS,frame_sequence,response);",
+			"eventLaterRegistrationOmittedGateBypassed(LATER_REGISTRATION_OMITTED_GATE_WITNESS,frame_sequence,response);",
+			"LaterSequenceRegistrationCommit(LATER_REGISTRATION_OMITTED_GATE_WITNESS,response,session,root,assigned_key_id,frame_sequence,authenticated_server_key_id,authenticated_binding,registration_plaintext,opened_payload,app_ciphertext,next_receive_chain,target_material,committed_cache,receive_poststate,committed_ratchet,associated_data)",
 		],
 		"later-registration counterfactual post-open gate placement",
 	)?;
-	if count(&model, "ifframe_sequence=first_sequence()then") != 1 {
-		return Err(
-			"later-registration counterfactual first-sequence gate count changed".to_owned(),
-		);
+	forbid(
+		omitted_gate,
+		"ifframe_sequence=first_sequence()then",
+		"later-registration omitted-gate negative control",
+	)?;
+	if count(&model, "ifframe_sequence=first_sequence()then") != 2 {
+		return Err("later-registration production first-sequence gate count changed".to_owned());
+	}
+
+	let initial = section_between(
+		&model,
+		"letLaterSequenceRegistrationInitialOpen(",
+		"letLaterSequenceRegistrationCommit(",
+		"later-registration initial opening",
+	)?;
+	if stable_text_hash(initial) != 9_228_980_847_782_159_909 {
+		return Err("later-registration reviewed initial opening changed".to_owned());
+	}
+	let initial = section_between(
+		&model,
+		"letLaterSequenceRegistrationInitialFinish(",
+		"letLaterSequenceRegistrationOmittedGateFinish(",
+		"later-registration initial finish",
+	)?;
+	if stable_text_hash(initial) != 11_106_921_876_796_861_623 {
+		return Err("later-registration reviewed initial finish changed".to_owned());
 	}
 
 	let coordinator_start = model
@@ -6476,8 +6542,8 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration faithful fanout",
 		),
 		(
-			"LaterSequenceRegistrationFirstOnlyFinish",
-			"LATER_REGISTRATION_FIRST_ONLY_WITNESS",
+			"LaterSequenceRegistrationOmittedGateFinish",
+			"LATER_REGISTRATION_OMITTED_GATE_WITNESS",
 			"later-registration counterfactual fanout",
 		),
 	] {
@@ -6548,15 +6614,15 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration exact return query",
 		),
 		(
-			"event(LaterRegistrationFirstOnlyGateReached(LATER_REGISTRATION_FIRST_ONLY_WITNESS,next_sequence(next_sequence(first_sequence())),candidate)).",
+			"event(LaterRegistrationOmittedGateReached(LATER_REGISTRATION_OMITTED_GATE_WITNESS,next_sequence(next_sequence(first_sequence())),candidate)).",
 			"later-registration counterfactual gate reachability query",
 		),
 		(
-			"event(LaterRegistrationFirstOnlyGatePassed(LATER_REGISTRATION_FIRST_ONLY_WITNESS,next_sequence(next_sequence(first_sequence())),candidate)).",
+			"event(LaterRegistrationOmittedGateBypassed(LATER_REGISTRATION_OMITTED_GATE_WITNESS,next_sequence(next_sequence(first_sequence())),candidate)).",
 			"later-registration counterfactual gate-pass query",
 		),
 		(
-			"queryattacker(LATER_REGISTRATION_FIRST_ONLY_CANARY).",
+			"queryattacker(LATER_REGISTRATION_OMITTED_GATE_CANARY).",
 			"later-registration counterfactual canary query",
 		),
 	] {
@@ -6568,7 +6634,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 		"LaterRegistrationFaithfulAttempted",
 		"LaterRegistrationCommitted",
 		"LaterRegistrationServerFrameSent",
-		"LaterRegistrationFirstOnlyAttempted",
+		"LaterRegistrationOmittedGateAttempted",
 	] {
 		if !queries.contains(&format!("inj-event({event}(")) {
 			return Err(format!(
@@ -6616,15 +6682,15 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration checker complete result loop",
 		),
 		(
-			"later_expected[11] = \"Query not event(LaterRegistrationFirstOnlyGatePassed",
-			"later-registration checker unreachable gate-pass polarity",
+			"later_expected[11] = \"Query not event(LaterRegistrationOmittedGateBypassed",
+			"later-registration checker live omitted-gate bypass polarity",
 		),
 		(
-			"later_expected[12] = \"Query not event(LaterRegistrationCommitted(LATER_REGISTRATION_FIRST_ONLY_WITNESS[]",
-			"later-registration checker unreachable counterfactual commit",
+			"later_expected[12] = \"Query not event(LaterRegistrationCommitted(LATER_REGISTRATION_OMITTED_GATE_WITNESS[]",
+			"later-registration checker live omitted-gate commit",
 		),
 		(
-			"later_expected[13] = \"Query not attacker(LATER_REGISTRATION_FIRST_ONLY_CANARY[]) is true.\"",
+			"later_expected[13] = \"Query not attacker(LATER_REGISTRATION_OMITTED_GATE_CANARY[]) is false.\"",
 			"later-registration checker canary secrecy polarity",
 		),
 	] {
@@ -6647,7 +6713,11 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			&next,
 			"later-registration checker assignment",
 		)?;
-		let polarity = if index <= 10 { "is false." } else { "is true." };
+		let polarity = if matches!(index, 5..=8 | 14..=18) {
+			"is true."
+		} else {
+			"is false."
+		};
 		require_once(
 			assignment,
 			polarity,
@@ -6754,19 +6824,21 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 		&runtime,
 		&[
 			"letkernel=pqxdh::resume_initial_ratchet_kdf(",
-			"begin_receive(kernel,3,\"seq3frame\")",
+			"begin_receive(kernel,1,\"seq1registration\")",
 			"first.resume(response(0x11,0x42,0x91))",
+			"open.finish(Some(\"seq1registrationremainder\"))",
+			"begin_receive(kernel,3,\"seq3frame\")",
 			"second.resume(response(0x22,0x43,0x92))",
 			"third.resume(response(0x33,0x44,0x93))",
-			"open.finish(Some(\"seq3registrationremainder\"))",
-			"begin_receive(kernel,1,&original_frame_context)",
+			"open.finish(Some(\"seq3ordinarypayload\"))",
+			"begin_receive(kernel,2,&original_frame_context)",
 		],
 		"post-registration runtime carried sequence-three kernel",
 	)?;
 	if count(&runtime, "letkernel=") != 1 {
 		return Err("post-registration runtime kernel was reconstructed or substituted".to_owned());
 	}
-	if count(&runtime, "begin_receive(kernel,1,&original_frame_context)") != 2 {
+	if count(&runtime, "begin_receive(kernel,2,&original_frame_context)") != 2 {
 		return Err("post-registration runtime cached/replay kernel carry changed".to_owned());
 	}
 	for (wanted, label) in [
@@ -6779,11 +6851,11 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 			"post-registration runtime complete public cache observation",
 		),
 		(
-			"let(kernel,returned)=open.finish(Some(full_registration_payload));assert_eq!(returned,Some(full_registration_payload));",
+			"let(kernel,returned)=open.finish(Some(full_cached_payload));assert_eq!(returned,Some(full_cached_payload));",
 			"post-registration runtime full cached payload",
 		),
 		(
-			"letbefore_replay=snapshot(&kernel);letReceiveEffect::ReceiveRejected{kernel,context}=begin_receive(kernel,1,&original_frame_context)else{panic!(\"consumedreplaymustrejectwithoutKDF,open,orplaintextreturn\");};assert_eq!(context,&original_frame_context);assert_eq!(snapshot(&kernel),before_replay);",
+			"letbefore_replay=snapshot(&kernel);letReceiveEffect::ReceiveRejected{kernel,context}=begin_receive(kernel,2,&original_frame_context)else{panic!(\"consumedreplaymustrejectwithoutKDF,open,orplaintextreturn\");};assert_eq!(context,&original_frame_context);assert_eq!(snapshot(&kernel),before_replay);",
 			"post-registration runtime exact replay rejection",
 		),
 		(
@@ -6791,7 +6863,7 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 			"post-registration runtime sequence-four KDF input",
 		),
 		(
-			"assert_eq!(kernel.receive_sequence(),4);assert_eq!(kernel.send_chain().as_bytes(),&[0x31;32]);assert_eq!(kernel.receive_chain().as_bytes(),&[0x45;32]);assert_eq!(kernel.receive_cache_len(),1);assert_eq!(snapshot(&kernel).4[0],Some((2,[0x22;32],[0x92;12])));assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));",
+			"assert_eq!(kernel.receive_sequence(),4);assert_eq!(kernel.send_chain().as_bytes(),&[0x31;32]);assert_eq!(kernel.receive_chain().as_bytes(),&[0x45;32]);assert_eq!(kernel.receive_cache_len(),0);assert!(snapshot(&kernel).4.iter().all(Option::is_none));",
 			"post-registration runtime exact future poststate",
 		),
 	] {
@@ -6851,11 +6923,11 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 			"post-registration private Server hook",
 		),
 		(
-			"eventLaterRegistrationReturned(witness,registration_plaintext);out(c,later_registration_return(witness,registration_plaintext));(out(later_registration_committed_handoff,(witness,session,root,response,assigned_key_id,authenticated_server_key_id,associated_data,committed_ratchet))|ifwitness=LATER_REGISTRATION_FIRST_ONLY_WITNESSthenout(c,LATER_REGISTRATION_FIRST_ONLY_CANARY))",
+			"eventLaterRegistrationReturned(witness,registration_plaintext);out(c,later_registration_return(witness,registration_plaintext));(out(later_registration_committed_handoff,(witness,session,root,response,assigned_key_id,authenticated_server_key_id,associated_data,committed_ratchet))|ifwitness=LATER_REGISTRATION_OMITTED_GATE_WITNESSthenout(c,LATER_REGISTRATION_OMITTED_GATE_CANARY))",
 			"post-registration committed hook parallel placement and tuple",
 		),
 		(
-			"letsubstituted_response=kex_response(server_identity,server_ephemeral,kem_ciphertext,third_frame,assigned_key_id)in(out(later_registration_server_handoff,(session,root,original_response,substituted_response,first_frame,server_chain_3,associated_data,server_key_id,assigned_key_id))|in(c,candidate:bitstring);",
+			"letsubstituted_response=kex_response(server_identity,server_ephemeral,kem_ciphertext,third_frame,assigned_key_id)in(out(later_registration_server_handoff,(session,root,original_response,substituted_response,first_frame,second_frame,third_frame,server_chain_3,associated_data,server_key_id,assigned_key_id))|LaterSequenceRegistrationInitialFinish(server_identity,server_key_id,beacon_identity_secret,beacon_prekey_secret,beacon_one_time_secret,beacon_pq_secret,original_response)|in(c,candidate:bitstring);",
 			"post-registration Server hook parallel placement and tuple",
 		),
 	] {
@@ -6915,6 +6987,10 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 		(
 			"funpost_registration_retain():post_registration_consumption_mode[data].",
 			"post-registration retain constructor",
+		),
+		(
+			"eventPostRegistrationEstablishedAdvance(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring).",
+			"post-registration established advance event shape",
 		),
 		(
 			"eventPostRegistrationHandoff(bitstring,bitstring,bitstring,bitstring,key_id,key_id,bitstring,bitstring).",
@@ -6991,15 +7067,14 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 			"eventPostRegistrationAttempted(witness,request_kind,session,frame,entry_ratchet);",
 			"letcrypto_frame(ciphertext,tag,commitment,frame_sequence,sender_key_id)=framein",
 			"ifsender_key_id=expected_server_key_idthen",
-			"ifframe_sequence=first_sequence()then",
+			"ifframe_sequence=next_sequence(first_sequence())then",
 			"letlater_registration_ratchet_state(send_sequence,send_chain,receive_entry)=entry_ratchetin",
 			"letreceive_state(receive_sequence,receive_chain,entry_cache)=receive_entryin",
 			"ifreceive_sequence=next_sequence(next_sequence(first_sequence()))then",
-			"letreceive_cache_entry(=next_sequence(first_sequence()),material_2,cache_tail)=entry_cachein",
-			"letreceive_cache_entry(=first_sequence(),material_1,=receive_cache_empty())=cache_tailin",
-			"eventPostRegistrationOpenCalled(witness,request_kind,session,frame,frame_sequence,material_1);",
-			"letopened=open_frame(material_1,associated_data,frame_sequence,expected_server_key_id,frame)in",
-			"letconsumed_cache=receive_cache_entry(next_sequence(first_sequence()),material_2,receive_cache_empty())in",
+			"letreceive_cache_entry(=next_sequence(first_sequence()),material_2,=receive_cache_empty())=entry_cachein",
+			"eventPostRegistrationOpenCalled(witness,request_kind,session,frame,frame_sequence,material_2);",
+			"letopened=open_frame(material_2,associated_data,frame_sequence,expected_server_key_id,frame)in",
+			"letconsumed_cache=receive_cache_empty()in",
 			"letoutput_cache=post_registration_finish_cache(mode,entry_cache,consumed_cache)in",
 			"letoutput_ratchet=later_registration_ratchet_state(send_sequence,send_chain,receive_state(receive_sequence,receive_chain,output_cache))in",
 			"eventPostRegistrationReturned(witness,request_kind,session,sender_key_id,assigned_key_id,associated_data,frame,frame_sequence,opened,output_ratchet);",
@@ -7032,7 +7107,7 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 			"letlater_registration_ratchet_state(send_sequence,send_chain,receive_entry)=entry_ratchetin",
 			"letreceive_state(receive_sequence,receive_chain,entry_cache)=receive_entryin",
 			"ifreceive_sequence=next_sequence(next_sequence(first_sequence()))then",
-			"letreceive_cache_entry(=next_sequence(first_sequence()),material_2,=receive_cache_empty())=entry_cachein",
+			"ifentry_cache=receive_cache_empty()then",
 			"eventPostRegistrationKdfCalled(witness,POST_REGISTRATION_FUTURE,session,receive_chain);",
 			"letmaterial_4=ratchet_material(receive_chain)in",
 			"letreceive_chain_5=ratchet_next(receive_chain)in",
@@ -7057,22 +7132,22 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 		trace,
 		&[
 			"eventPostRegistrationBranchStarted(witness,session,root,response,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet);",
-			"PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_CACHED,session,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet,first_frame,cached_reply)",
+			"PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_CACHED,session,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet,second_frame,cached_reply)",
 			"in(cached_reply,post_registration_success(cached_ratchet:bitstring,cached_plaintext:bitstring));",
-			"PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_REPLAY,session,expected_server_key_id,assigned_key_id,associated_data,cached_ratchet,first_frame,replay_reply)",
+			"PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_REPLAY,session,expected_server_key_id,assigned_key_id,associated_data,cached_ratchet,second_frame,replay_reply)",
 			"in(replay_reply,replay_result:bitstring);",
 			"letpost_registration_failure(replay_ratchet)=replay_resultinPostRegistrationReceiveFuture(witness,session,root,expected_server_key_id,assigned_key_id,associated_data,replay_ratchet,fourth_frame)",
-			"letpost_registration_success(replayed_ratchet,replayed_plaintext)=replay_resultineventPostRegistrationReplayAccepted(witness,session,first_frame,replayed_plaintext,replayed_ratchet);ifwitness=POST_REGISTRATION_RETAIN_CONSUMEDthenout(c,POST_REGISTRATION_REPLAY_CANARY)",
+			"letpost_registration_success(replayed_ratchet,replayed_plaintext)=replay_resultineventPostRegistrationReplayAccepted(witness,session,second_frame,replayed_plaintext,replayed_ratchet);ifwitness=POST_REGISTRATION_RETAIN_CONSUMEDthenout(c,POST_REGISTRATION_REPLAY_CANARY)",
 		],
 		"post-registration cached-replay-future order",
 	)?;
 	for (wanted, label) in [
 		(
-			"newcached_reply:channel;(PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_CACHED,session,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet,first_frame,cached_reply)|in(cached_reply,post_registration_success(cached_ratchet:bitstring,cached_plaintext:bitstring));newreplay_reply:channel;(",
+			"newcached_reply:channel;(PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_CACHED,session,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet,second_frame,cached_reply)|in(cached_reply,post_registration_success(cached_ratchet:bitstring,cached_plaintext:bitstring));newreplay_reply:channel;(",
 			"post-registration cached producer-consumer parallel placement",
 		),
 		(
-			"newreplay_reply:channel;(PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_REPLAY,session,expected_server_key_id,assigned_key_id,associated_data,cached_ratchet,first_frame,replay_reply)|in(replay_reply,replay_result:bitstring);",
+			"newreplay_reply:channel;(PostRegistrationReceiveCached(witness,mode,POST_REGISTRATION_REPLAY,session,expected_server_key_id,assigned_key_id,associated_data,cached_ratchet,second_frame,replay_reply)|in(replay_reply,replay_result:bitstring);",
 			"post-registration replay producer-consumer parallel placement",
 		),
 	] {
@@ -7085,18 +7160,27 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 	require_ordered_once(
 		coordinator,
 		&[
-			"in(later_registration_server_handoff,(session:bitstring,root:bitstring,original_response:bitstring,substituted_response:bitstring,first_frame:bitstring,server_chain_3:bitstring,server_associated_data:bitstring,server_key_id:key_id,server_assigned_key_id:key_id));",
+			"in(later_registration_server_handoff,(session:bitstring,root:bitstring,original_response:bitstring,substituted_response:bitstring,first_frame:bitstring,second_frame:bitstring,third_frame:bitstring,server_chain_3:bitstring,server_associated_data:bitstring,server_key_id:key_id,server_assigned_key_id:key_id));",
 			"letserver_chain_4=ratchet_next(server_chain_3)in",
 			"letserver_material_4=ratchet_material(server_chain_4)in",
 			"letfourth_sequence=next_sequence(next_sequence(next_sequence(first_sequence())))in",
 			"letfourth_frame=seal_frame(server_material_4,server_associated_data,fourth_sequence,server_key_id,POST_REGISTRATION_SEQ4_PAYLOAD)in",
 			"eventPostRegistrationServerFrameSent(session,root,original_response,fourth_sequence,server_key_id,server_assigned_key_id,POST_REGISTRATION_SEQ4_PAYLOAD,fourth_frame,server_material_4);",
 			"out(c,fourth_frame);",
-			"in(later_registration_committed_handoff,(=LATER_REGISTRATION_FAITHFUL_WITNESS,=session,=root,=substituted_response,assigned_key_id:key_id,expected_server_key_id:key_id,associated_data:bitstring,committed_ratchet:bitstring));",
+			"in(later_registration_committed_handoff,(=LATER_REGISTRATION_INITIAL_WITNESS,=session,=root,=original_response,assigned_key_id:key_id,expected_server_key_id:key_id,associated_data:bitstring,initial_ratchet:bitstring));",
 			"ifassigned_key_id=server_assigned_key_idthen",
 			"ifexpected_server_key_id=server_key_idthen",
 			"ifassociated_data=server_associated_datathen",
-			"eventPostRegistrationHandoff(LATER_REGISTRATION_FAITHFUL_WITNESS,session,root,substituted_response,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet);",
+			"letlater_registration_ratchet_state(send_sequence,send_chain,initial_receive)=initial_ratchetin",
+			"letreceive_state(=first_sequence(),receive_chain_2,=receive_cache_empty())=initial_receivein",
+			"letmaterial_2=ratchet_material(receive_chain_2)in",
+			"letreceive_chain_3=ratchet_next(receive_chain_2)in",
+			"letmaterial_3=ratchet_material(receive_chain_3)in",
+			"letthird_sequence=next_sequence(next_sequence(first_sequence()))in",
+			"letopened_third=open_frame(material_3,associated_data,third_sequence,expected_server_key_id,third_frame)in",
+			"letcommitted_ratchet=later_registration_ratchet_state(send_sequence,send_chain,receive_state(third_sequence,ratchet_next(receive_chain_3),receive_cache_entry(next_sequence(first_sequence()),material_2,receive_cache_empty())))in",
+			"eventPostRegistrationEstablishedAdvance(session,root,original_response,third_frame,initial_ratchet,committed_ratchet);",
+			"eventPostRegistrationHandoff(LATER_REGISTRATION_INITIAL_WITNESS,session,root,original_response,expected_server_key_id,assigned_key_id,associated_data,committed_ratchet);",
 		],
 		"post-registration private tuple join and sequence-four origin",
 	)?;
@@ -7104,12 +7188,12 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 	let common_tail = [
 		"session",
 		"root",
-		"substituted_response",
+		"original_response",
 		"expected_server_key_id",
 		"assigned_key_id",
 		"associated_data",
 		"committed_ratchet",
-		"first_frame",
+		"second_frame",
 		"fourth_frame",
 	]
 	.map(str::to_owned);
@@ -7133,17 +7217,17 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 		.lines()
 		.filter(|line| line.trim_start().starts_with("query "))
 		.count()
-		!= 27
+		!= 29
 	{
 		return Err("post-registration query count changed".to_owned());
 	}
 	for (wanted, label) in [
 		(
-			"event(PostRegistrationReturned(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_CACHED,session,sender,receiver,beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()),crypto_frame(ciphertext,tag,commitment,first_sequence(),sender),first_sequence(),registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(receiver)),LATER_REGISTRATION_SEQ1_PAYLOAD),",
+			"event(PostRegistrationReturned(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_CACHED,session,sender,receiver,beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()),crypto_frame(ciphertext,tag,commitment,next_sequence(first_sequence()),sender),next_sequence(first_sequence()),LATER_REGISTRATION_SEQ2_PAYLOAD,",
 			"post-registration full cached-payload query",
 		),
 		(
-			"event(PostRegistrationRejected(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_REPLAY,session,crypto_frame(ciphertext,tag,commitment,first_sequence(),sender),",
+			"event(PostRegistrationRejected(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_REPLAY,session,crypto_frame(ciphertext,tag,commitment,next_sequence(first_sequence()),sender),",
 			"post-registration exact replay-state query",
 		),
 		(
@@ -7189,24 +7273,24 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 	)?;
 	for (wanted, label) in [
 		(
-			"if (query_count != 27)",
+			"if (query_count != 29)",
 			"post-registration checker query count",
 		),
 		(
-			"for (post_registration_index = 1; post_registration_index <= 27; post_registration_index++)",
+			"for (post_registration_index = 1; post_registration_index <= 29; post_registration_index++)",
 			"post-registration checker complete result loop",
 		),
 	] {
 		require_once(checker, wanted, label)?;
 	}
-	for index in 1..=27 {
+	for index in 1..=29 {
 		require_once(
 			checker,
 			&format!("post_registration_expected[{index}] ="),
 			"post-registration checker expected result",
 		)?;
-		let next = if index == 27 {
-			"for (post_registration_index = 1; post_registration_index <= 27; post_registration_index++)"
+		let next = if index == 29 {
+			"for (post_registration_index = 1; post_registration_index <= 29; post_registration_index++)"
 				.to_owned()
 		} else {
 			format!("post_registration_expected[{}] =", index + 1)
@@ -7217,7 +7301,7 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 			&next,
 			"post-registration checker assignment",
 		)?;
-		let expected_true = matches!(index, 6 | 9..=12 | 22..=27);
+		let expected_true = matches!(index, 6 | 9..=12 | 22..=27 | 29);
 		let polarity = if expected_true {
 			"is true."
 		} else {
@@ -7643,7 +7727,7 @@ fn mutate_post_registration_query(source: &mut String, index: usize) {
 		.match_indices("query ")
 		.map(|(start, _)| start)
 		.collect::<Vec<_>>();
-	assert_eq!(starts.len(), 27, "post-registration mutation query count");
+	assert_eq!(starts.len(), 29, "post-registration mutation query count");
 	let start = starts[index];
 	let end = starts.get(index + 1).copied().unwrap_or(source.len());
 	let segment = &source[start..end];
@@ -7671,8 +7755,8 @@ fn flip_post_registration_checker_polarity(source: &mut String, index: usize) {
 	let start = source
 		.find(&marker)
 		.unwrap_or_else(|| panic!("missing post-registration checker polarity {marker}"));
-	let next = if index == 26 {
-		"for (post_registration_index = 1; post_registration_index <= 27; post_registration_index++)"
+	let next = if index == 28 {
+		"for (post_registration_index = 1; post_registration_index <= 29; post_registration_index++)"
 			.to_owned()
 	} else {
 		format!("post_registration_expected[{}] =", index + 2)
@@ -7713,7 +7797,7 @@ fn omit_ctx(snapshot: &mut Snapshot, field: &str) {
 }
 
 fn check_x25519_alias_runner_mutations() {
-	// These new runner controls are separate from the retained 409/297 matrices.
+	// These runner controls are separate from the later and post-registration matrices.
 	for (from, to) in [
 		("production-transcript-interface.pvl", "other-interface.pvl"),
 		("extraction/lib.pvl", "other-extraction.pvl"),
@@ -7780,7 +7864,7 @@ fn check_x25519_alias_runner_mutations() {
 }
 
 fn check_general_registration_runner_mutations() {
-	// Additive runner controls leave the independent 409/297 matrices unchanged.
+	// These runner controls supplement the independent later and post-registration matrices.
 	for (from, to) in [
 		(
 			"roles = project_initial_plan(roles, query_main, target)",
@@ -8093,6 +8177,7 @@ fn initial_ratchet_source_model_fidelity_is_exact_and_nonvacuous() {
 
 #[test]
 fn later_registration_sequence_three_poststate_is_exact_and_nonvacuous() {
+	// This checks generic core receive staging. The production registration wrapper rejects sequence three.
 	validate_manifest(INTERFACE).unwrap();
 	validate_later_registration_fidelity(&Snapshot::production()).unwrap();
 	let facts = parse_facts(INTERFACE).unwrap();
@@ -8167,7 +8252,7 @@ fn later_registration_sequence_three_poststate_is_exact_and_nonvacuous() {
 	);
 }
 
-const LATER_REGISTRATION_MUTATION_COUNT: usize = 409;
+const LATER_REGISTRATION_MUTATION_COUNT: usize = 422;
 
 #[test]
 fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
@@ -8216,13 +8301,23 @@ fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
 		pqxdh::start_beacon_ratchet_kdf(&root),
 		InitialRatchetKdfResponse::from_bytes(initial_output),
 	);
-	let ReceiveEffect::ReceiveKdfRequested(first) = begin_receive(kernel, 3, "seq3 frame") else {
-		panic!("sequence-three registration starts with one derivation");
+	let ReceiveEffect::ReceiveKdfRequested(first) = begin_receive(kernel, 1, "seq1 registration")
+	else {
+		panic!("sequence-one registration starts with one derivation");
 	};
 	assert_eq!(first.request().input(), &[0x41; 32]);
-	let ReceiveEffect::ReceiveKdfRequested(second) = first.resume(response(0x11, 0x42, 0x91))
-	else {
-		panic!("sequence-one material must be staged");
+	let ReceiveEffect::ReceiveOpenRequested(open) = first.resume(response(0x11, 0x42, 0x91)) else {
+		panic!("sequence-one registration must open after one derivation");
+	};
+	assert_eq!(open.sequence(), 1);
+	let (kernel, returned) = open.finish(Some("seq1 registration remainder"));
+	assert_eq!(returned, Some("seq1 registration remainder"));
+	assert_eq!(kernel.receive_sequence(), 1);
+	assert_eq!(kernel.receive_cache_len(), 0);
+
+	// Continue the same established kernel with an ordinary out-of-order sequence-three frame.
+	let ReceiveEffect::ReceiveKdfRequested(second) = begin_receive(kernel, 3, "seq3 frame") else {
+		panic!("ordinary sequence-three receive must stage sequence two");
 	};
 	assert_eq!(second.request().input(), &[0x42; 32]);
 	let ReceiveEffect::ReceiveKdfRequested(third) = second.resume(response(0x22, 0x43, 0x92))
@@ -8231,36 +8326,13 @@ fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
 	};
 	assert_eq!(third.request().input(), &[0x43; 32]);
 	let ReceiveEffect::ReceiveOpenRequested(open) = third.resume(response(0x33, 0x44, 0x93)) else {
-		panic!("sequence-three registration must open with its separate target");
+		panic!("ordinary sequence-three receive must open with its separate target");
 	};
 	assert_eq!(open.sequence(), 3);
 	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x33; 32]);
 	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x93; 12]);
-	let (kernel, returned) = open.finish(Some("seq3 registration remainder"));
-	assert_eq!(returned, Some("seq3 registration remainder"));
-	assert_eq!(kernel.send_sequence(), 0);
-	assert_eq!(kernel.receive_sequence(), 3);
-	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
-	assert_eq!(kernel.receive_chain().as_bytes(), &[0x44; 32]);
-	assert_eq!(kernel.receive_cache_len(), 2);
-	assert_eq!(snapshot(&kernel).4[0], Some((1, [0x11; 32], [0x91; 12])));
-	assert_eq!(snapshot(&kernel).4[1], Some((2, [0x22; 32], [0x92; 12])));
-	assert!(snapshot(&kernel).4[2..].iter().all(Option::is_none));
-
-	// Carry that very kernel into ordinary receive; do not reconstruct its post-registration state.
-	let original_frame_context = ("original seq1 frame", 7u64, [0x51; 153]);
-	let full_registration_payload = (7u64.to_le_bytes(), "seq1 application payload");
-	let ReceiveEffect::ReceiveOpenRequested(open) =
-		begin_receive(kernel, 1, &original_frame_context)
-	else {
-		panic!("cached sequence-one must reach open directly, without KDF");
-	};
-	assert_eq!(open.sequence(), 1);
-	assert_eq!(*open.context(), &original_frame_context);
-	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x11; 32]);
-	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x91; 12]);
-	let (kernel, returned) = open.finish(Some(full_registration_payload));
-	assert_eq!(returned, Some(full_registration_payload));
+	let (kernel, returned) = open.finish(Some("seq3 ordinary payload"));
+	assert_eq!(returned, Some("seq3 ordinary payload"));
 	assert_eq!(kernel.send_sequence(), 0);
 	assert_eq!(kernel.receive_sequence(), 3);
 	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
@@ -8269,9 +8341,30 @@ fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
 	assert_eq!(snapshot(&kernel).4[0], Some((2, [0x22; 32], [0x92; 12])));
 	assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));
 
+	// Carry that very kernel into ordinary receive; do not reconstruct its post-registration state.
+	let original_frame_context = ("original seq2 frame", 7u64, [0x51; 153]);
+	let full_cached_payload = "seq2 application payload";
+	let ReceiveEffect::ReceiveOpenRequested(open) =
+		begin_receive(kernel, 2, &original_frame_context)
+	else {
+		panic!("cached sequence-two must reach open directly, without KDF");
+	};
+	assert_eq!(open.sequence(), 2);
+	assert_eq!(*open.context(), &original_frame_context);
+	assert_eq!(open.material().unwrap().key().as_bytes(), &[0x22; 32]);
+	assert_eq!(open.material().unwrap().nonce().as_bytes(), &[0x92; 12]);
+	let (kernel, returned) = open.finish(Some(full_cached_payload));
+	assert_eq!(returned, Some(full_cached_payload));
+	assert_eq!(kernel.send_sequence(), 0);
+	assert_eq!(kernel.receive_sequence(), 3);
+	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
+	assert_eq!(kernel.receive_chain().as_bytes(), &[0x44; 32]);
+	assert_eq!(kernel.receive_cache_len(), 0);
+	assert!(snapshot(&kernel).4.iter().all(Option::is_none));
+
 	let before_replay = snapshot(&kernel);
 	let ReceiveEffect::ReceiveRejected { kernel, context } =
-		begin_receive(kernel, 1, &original_frame_context)
+		begin_receive(kernel, 2, &original_frame_context)
 	else {
 		panic!("consumed replay must reject without KDF, open, or plaintext return");
 	};
@@ -8299,12 +8392,11 @@ fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
 	assert_eq!(kernel.receive_sequence(), 4);
 	assert_eq!(kernel.send_chain().as_bytes(), &[0x31; 32]);
 	assert_eq!(kernel.receive_chain().as_bytes(), &[0x45; 32]);
-	assert_eq!(kernel.receive_cache_len(), 1);
-	assert_eq!(snapshot(&kernel).4[0], Some((2, [0x22; 32], [0x92; 12])));
-	assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));
+	assert_eq!(kernel.receive_cache_len(), 0);
+	assert!(snapshot(&kernel).4.iter().all(Option::is_none));
 }
 
-const POST_REGISTRATION_MUTATION_COUNT: usize = 297;
+const POST_REGISTRATION_MUTATION_COUNT: usize = 316;
 
 #[test]
 fn post_registration_mutation_matrix_is_complete_and_rejected() {
@@ -8489,8 +8581,8 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"post_registration_runtime_kernel_reconstructed",
-			"let (kernel, returned) = open.finish(Some(\"seq3 registration remainder\"));",
-			"let (kernel, returned) = open.finish(Some(\"seq3 registration remainder\"));\n\tlet kernel = replacement_kernel;",
+			"let (kernel, returned) = open.finish(Some(\"seq3 ordinary payload\"));",
+			"let (kernel, returned) = open.finish(Some(\"seq3 ordinary payload\"));\n\tlet kernel = replacement_kernel;",
 			"post-registration runtime kernel was reconstructed or substituted",
 		),
 		(
@@ -8501,8 +8593,8 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"post_registration_runtime_payload_stripped",
-			"open.finish(Some(full_registration_payload))",
-			"open.finish(Some(full_registration_payload.1))",
+			"open.finish(Some(full_cached_payload))",
+			"open.finish(Some(full_cached_payload.as_bytes()))",
 			"post-registration runtime full cached payload",
 		),
 		(
@@ -8619,15 +8711,15 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 		(
 			"post_registration_committed_hook_made_blocking",
 			"out(\n    later_registration_committed_handoff,",
-			")\n  |\n  if witness = LATER_REGISTRATION_FIRST_ONLY_WITNESS",
-			");\n  if witness = LATER_REGISTRATION_FIRST_ONLY_WITNESS",
+			")\n  |\n  if witness = LATER_REGISTRATION_OMITTED_GATE_WITNESS",
+			");\n  if witness = LATER_REGISTRATION_OMITTED_GATE_WITNESS",
 			"post-registration committed hook parallel placement and tuple",
 		),
 		(
 			"post_registration_server_hook_made_blocking",
 			"out(\n    later_registration_server_handoff,",
-			")\n  |\n  in(c, candidate: bitstring);",
-			");\n  in(c, candidate: bitstring);",
+			")\n  |\n  LaterSequenceRegistrationInitialFinish(",
+			");\n  LaterSequenceRegistrationInitialFinish(",
 			"post-registration Server hook parallel placement and tuple",
 		),
 	] {
@@ -8661,6 +8753,8 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 				"original_response",
 				"substituted_response",
 				"first_frame",
+				"second_frame",
+				"third_frame",
 				"server_chain_3",
 				"associated_data",
 				"server_key_id",
@@ -8741,6 +8835,7 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 	);
 	mutation_count += 1;
 	for name in [
+		"PostRegistrationEstablishedAdvance",
 		"PostRegistrationHandoff",
 		"PostRegistrationBranchStarted",
 		"PostRegistrationAttempted",
@@ -8798,8 +8893,8 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 		(
 			"post_registration_cached_sequence_gate_changed",
 			"let PostRegistrationReceiveCached(",
-			"frame_sequence = first_sequence()",
 			"frame_sequence = next_sequence(first_sequence())",
+			"frame_sequence = first_sequence()",
 			"post-registration cached success and replay-rejection flow",
 		),
 		(
@@ -8812,36 +8907,36 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 		(
 			"post_registration_cached_head_sequence_changed",
 			"let PostRegistrationReceiveCached(",
-			"=next_sequence(first_sequence()), material_2, cache_tail",
-			"=first_sequence(), material_2, cache_tail",
+			"=next_sequence(first_sequence()), material_2, =receive_cache_empty()",
+			"=first_sequence(), material_2, =receive_cache_empty()",
 			"post-registration cached success and replay-rejection flow",
 		),
 		(
 			"post_registration_cached_tail_sequence_changed",
 			"let PostRegistrationReceiveCached(",
-			"=first_sequence(), material_1, =receive_cache_empty()",
-			"=next_sequence(first_sequence()), material_1, =receive_cache_empty()",
+			"material_2, =receive_cache_empty()",
+			"material_2, =mutated_cache",
 			"post-registration cached success and replay-rejection flow",
 		),
 		(
 			"post_registration_cached_open_material_changed",
 			"let PostRegistrationReceiveCached(",
-			"open_frame(material_1, associated_data, frame_sequence, expected_server_key_id, frame)",
 			"open_frame(material_2, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_1, associated_data, frame_sequence, expected_server_key_id, frame)",
 			"post-registration cached success and replay-rejection flow",
 		),
 		(
 			"post_registration_cached_open_ad_changed",
 			"let PostRegistrationReceiveCached(",
-			"open_frame(material_1, associated_data, frame_sequence, expected_server_key_id, frame)",
-			"open_frame(material_1, mutated_ad, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_2, associated_data, frame_sequence, expected_server_key_id, frame)",
+			"open_frame(material_2, mutated_ad, frame_sequence, expected_server_key_id, frame)",
 			"post-registration cached success and replay-rejection flow",
 		),
 		(
 			"post_registration_cached_consumed_cache_changed",
 			"let PostRegistrationReceiveCached(",
-			"receive_cache_entry(next_sequence(first_sequence()), material_2, receive_cache_empty())",
-			"receive_cache_empty()",
+			"let consumed_cache = receive_cache_empty()",
+			"let consumed_cache = entry_cache",
 			"post-registration cached success and replay-rejection flow",
 		),
 		(
@@ -8945,9 +9040,9 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 			"receive_sequence = first_sequence()",
 		),
 		(
-			"post_registration_future_cache_sequence_changed",
-			"=next_sequence(first_sequence()), material_2, =receive_cache_empty()",
-			"=first_sequence(), material_2, =receive_cache_empty()",
+			"post_registration_future_cache_empty_gate_changed",
+			"if entry_cache = receive_cache_empty() then",
+			"if entry_cache = mutated_cache then",
 		),
 		(
 			"post_registration_future_kdf_chain_changed",
@@ -9018,22 +9113,22 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"post_registration_trace_cached_state_changed",
-			"committed_ratchet, first_frame, cached_reply",
-			"mutated_ratchet, first_frame, cached_reply",
+			"committed_ratchet, second_frame, cached_reply",
+			"mutated_ratchet, second_frame, cached_reply",
 		),
 		(
 			"post_registration_trace_cached_frame_changed",
-			"committed_ratchet, first_frame, cached_reply",
+			"committed_ratchet, second_frame, cached_reply",
 			"committed_ratchet, fourth_frame, cached_reply",
 		),
 		(
 			"post_registration_trace_replay_state_changed",
-			"cached_ratchet, first_frame, replay_reply",
-			"committed_ratchet, first_frame, replay_reply",
+			"cached_ratchet, second_frame, replay_reply",
+			"committed_ratchet, second_frame, replay_reply",
 		),
 		(
 			"post_registration_trace_replay_frame_changed",
-			"cached_ratchet, first_frame, replay_reply",
+			"cached_ratchet, second_frame, replay_reply",
 			"cached_ratchet, fourth_frame, replay_reply",
 		),
 		(
@@ -9096,8 +9191,8 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"post_registration_join_committed_witness_changed",
-			"=LATER_REGISTRATION_FAITHFUL_WITNESS,",
-			"=LATER_REGISTRATION_FIRST_ONLY_WITNESS,",
+			"=LATER_REGISTRATION_INITIAL_WITNESS,",
+			"=LATER_REGISTRATION_OMITTED_GATE_WITNESS,",
 		),
 		(
 			"post_registration_join_session_not_exact",
@@ -9111,7 +9206,7 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"post_registration_join_response_not_exact",
-			"=substituted_response,",
+			"=original_response,",
 			"response_2: bitstring,",
 		),
 		(
@@ -9153,12 +9248,12 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 				"post_registration_consume()",
 				"session",
 				"root",
-				"substituted_response",
+				"original_response",
 				"expected_server_key_id",
 				"assigned_key_id",
 				"associated_data",
 				"committed_ratchet",
-				"first_frame",
+				"second_frame",
 				"fourth_frame",
 			][..],
 		),
@@ -9169,12 +9264,12 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 				"post_registration_retain()",
 				"session",
 				"root",
-				"substituted_response",
+				"original_response",
 				"expected_server_key_id",
 				"assigned_key_id",
 				"associated_data",
 				"committed_ratchet",
-				"first_frame",
+				"second_frame",
 				"fourth_frame",
 			][..],
 		),
@@ -9198,7 +9293,7 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 		}
 	}
 
-	for index in 0..27 {
+	for index in 0..29 {
 		assert_post_registration_rejected(
 			&format!("post_registration_query_{}_changed", index + 1),
 			"post-registration exact query",
@@ -9233,13 +9328,13 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"post_registration_checker_count_changed",
-			"if (query_count != 27)",
+			"if (query_count != 29)",
 			"if (query_count != 26)",
 			"post-registration checker query count",
 		),
 		(
 			"post_registration_checker_loop_changed",
-			"post_registration_index <= 27",
+			"post_registration_index <= 29",
 			"post_registration_index <= 26",
 			"post-registration checker complete result loop",
 		),
@@ -9329,6 +9424,73 @@ fn post_registration_mutation_matrix_is_complete_and_rejected() {
 				to,
 			);
 		});
+		mutation_count += 1;
+	}
+
+	for (name, from, to) in [
+		(
+			"post_registration_established_initial_counter",
+			"let receive_state(=first_sequence(), receive_chain_2, =receive_cache_empty())",
+			"let receive_state(=next_sequence(first_sequence()), receive_chain_2, =receive_cache_empty())",
+		),
+		(
+			"post_registration_established_initial_cache",
+			"receive_chain_2, =receive_cache_empty()) = initial_receive",
+			"receive_chain_2, initial_cache) = initial_receive",
+		),
+		(
+			"post_registration_established_material2",
+			"let material_2 = ratchet_material(receive_chain_2)",
+			"let material_2 = ratchet_material(send_chain)",
+		),
+		(
+			"post_registration_established_chain3",
+			"let receive_chain_3 = ratchet_next(receive_chain_2)",
+			"let receive_chain_3 = ratchet_next(send_chain)",
+		),
+		(
+			"post_registration_established_material3",
+			"let material_3 = ratchet_material(receive_chain_3)",
+			"let material_3 = ratchet_material(receive_chain_2)",
+		),
+		(
+			"post_registration_established_opening",
+			"open_frame(material_3, associated_data, third_sequence, expected_server_key_id, third_frame)",
+			"open_frame(material_2, associated_data, third_sequence, expected_server_key_id, third_frame)",
+		),
+		(
+			"post_registration_established_next_chain",
+			"receive_state(third_sequence, ratchet_next(receive_chain_3),",
+			"receive_state(third_sequence, receive_chain_3,",
+		),
+		(
+			"post_registration_established_cached_target",
+			"receive_cache_entry(next_sequence(first_sequence()), material_2, receive_cache_empty())",
+			"receive_cache_entry(first_sequence(), material_2, receive_cache_empty())",
+		),
+		(
+			"post_registration_established_advance_origin",
+			"event PostRegistrationEstablishedAdvance(session, root, original_response, third_frame, initial_ratchet, committed_ratchet);",
+			"event PostRegistrationEstablishedAdvance(session, root, original_response, third_frame, committed_ratchet, committed_ratchet);",
+		),
+		(
+			"post_registration_established_handoff_state",
+			"associated_data, committed_ratchet);",
+			"associated_data, initial_ratchet);",
+		),
+	] {
+		assert_post_registration_rejected(
+			name,
+			"post-registration private tuple join and sequence-four origin",
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.post_registration_control,
+					"let PostRegistrationControl() =",
+					from,
+					to,
+				);
+			},
+		);
 		mutation_count += 1;
 	}
 
@@ -9513,28 +9675,43 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		);
 		mutation_count += 1;
 	}
+	for (name, replacement) in [
+		("removed", ""),
+		("inverted", "if decrypted.seq == 1 { return None; }"),
+		("wrong_sequence", "if decrypted.seq != 3 { return None; }"),
+		("wrong_field", "if decrypted.key_id != 1 { return None; }"),
+		("weakened", "if decrypted.seq > 1 { return None; }"),
+		("bypassed", "if false { return None; }"),
+	] {
+		assert_later_registration_rejected(
+			&format!("later_registration_beacon_first_sequence_gate_{name}"),
+			"later-registration Beacon first-sequence gate",
+			|snapshot| {
+				replace_once_after(
+					&mut snapshot.adapter_beacon,
+					"impl ProviderBeacon for Beacon {",
+					"if decrypted.seq != 1 {\n\t\t\t\treturn None;\n\t\t\t}",
+					replacement,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
 	assert_later_registration_rejected(
-		"later_registration_beacon_reads_decrypted_sequence",
-		"later-registration Beacon first-sequence gate",
+		"later_registration_beacon_first_sequence_gate_after_binding",
+		"later-registration Beacon first-sequence gate order",
 		|snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_beacon,
 				"impl ProviderBeacon for Beacon {",
-				"let authenticated_server_key_id = decrypted.key_id;",
-				"let _registration_sequence = decrypted.seq;\n\t\t\tlet authenticated_server_key_id = decrypted.key_id;",
+				"if decrypted.seq != 1 {\n\t\t\t\treturn None;\n\t\t\t}",
+				"",
 			);
-		},
-	);
-	mutation_count += 1;
-	assert_later_registration_rejected(
-		"later_registration_beacon_adds_first_sequence_gate",
-		"later-registration Beacon first-sequence gate",
-		|snapshot| {
 			replace_once_after(
 				&mut snapshot.adapter_beacon,
 				"impl ProviderBeacon for Beacon {",
-				"let authenticated_server_key_id = decrypted.key_id;",
-				"if decrypted.seq != 1 { return None; }\n\t\t\tlet authenticated_server_key_id = decrypted.key_id;",
+				"Some((authenticated, associated_data, ratchet, plaintext))",
+				"if decrypted.seq != 1 { return None; }\n\t\t\tSome((authenticated, associated_data, ratchet, plaintext))",
 			);
 		},
 	);
@@ -10572,7 +10749,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		(
 			"later_registration_pv_canary_witness_substituted",
 			"let LaterSequenceRegistrationCommit(",
-			"if witness = LATER_REGISTRATION_FIRST_ONLY_WITNESS then",
+			"if witness = LATER_REGISTRATION_OMITTED_GATE_WITNESS then",
 			"if witness = LATER_REGISTRATION_FAITHFUL_WITNESS then",
 			"later-registration counterfactual canary confinement",
 		),
@@ -10722,7 +10899,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later_registration_pv_faithful_open_witness_substituted",
 			"let LaterSequenceRegistrationFaithfulFinish(",
 			"LaterSequenceRegistrationOpen(\n      LATER_REGISTRATION_FAITHFUL_WITNESS,",
-			"LaterSequenceRegistrationOpen(\n      LATER_REGISTRATION_FIRST_ONLY_WITNESS,",
+			"LaterSequenceRegistrationOpen(\n      LATER_REGISTRATION_OMITTED_GATE_WITNESS,",
 			"later-registration faithful shared open",
 		),
 		(
@@ -10736,7 +10913,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later_registration_pv_faithful_commit_witness_substituted",
 			"let LaterSequenceRegistrationFaithfulFinish(",
 			"LaterSequenceRegistrationCommit(\n      LATER_REGISTRATION_FAITHFUL_WITNESS,",
-			"LaterSequenceRegistrationCommit(\n      LATER_REGISTRATION_FIRST_ONLY_WITNESS,",
+			"LaterSequenceRegistrationCommit(\n      LATER_REGISTRATION_OMITTED_GATE_WITNESS,",
 			"later-registration faithful direct commit",
 		),
 		(
@@ -10754,44 +10931,44 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later-registration faithful sequence gate",
 		),
 		(
-			"later_registration_pv_first_only_attempt_response_substituted",
-			"let LaterSequenceRegistrationFirstOnlyFinish(",
-			"LATER_REGISTRATION_FIRST_ONLY_WITNESS,\n    response",
-			"LATER_REGISTRATION_FIRST_ONLY_WITNESS,\n    replacement_response",
+			"later_registration_pv_omitted_gate_attempt_response_substituted",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"LATER_REGISTRATION_OMITTED_GATE_WITNESS,\n    response",
+			"LATER_REGISTRATION_OMITTED_GATE_WITNESS,\n    replacement_response",
 			"later-registration counterfactual attempt",
 		),
 		(
-			"later_registration_pv_first_only_open_witness_substituted",
-			"let LaterSequenceRegistrationFirstOnlyFinish(",
-			"LaterSequenceRegistrationOpen(\n      LATER_REGISTRATION_FIRST_ONLY_WITNESS,",
+			"later_registration_pv_omitted_gate_open_witness_substituted",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"LaterSequenceRegistrationOpen(\n      LATER_REGISTRATION_OMITTED_GATE_WITNESS,",
 			"LaterSequenceRegistrationOpen(\n      LATER_REGISTRATION_FAITHFUL_WITNESS,",
 			"later-registration counterfactual post-open gate placement",
 		),
 		(
-			"later_registration_pv_first_only_gate_reached_removed",
-			"let LaterSequenceRegistrationFirstOnlyFinish(",
-			"event LaterRegistrationFirstOnlyGateReached(",
-			"event LaterRegistrationFirstOnlyGateSkipped(",
+			"later_registration_pv_omitted_gate_gate_reached_removed",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"event LaterRegistrationOmittedGateReached(",
+			"event LaterRegistrationOmittedGateSkipped(",
 			"later-registration counterfactual post-open gate placement",
 		),
 		(
-			"later_registration_pv_first_only_gate_condition_changed",
-			"let LaterSequenceRegistrationFirstOnlyFinish(",
-			"if frame_sequence = first_sequence() then",
-			"if frame_sequence = next_sequence(first_sequence()) then",
+			"later_registration_pv_omitted_gate_reintroduced",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"event LaterRegistrationOmittedGateBypassed(",
+			"if frame_sequence = first_sequence() then event LaterRegistrationOmittedGateBypassed(",
+			"later-registration omitted-gate negative control",
+		),
+		(
+			"later_registration_pv_omitted_gate_gate_passed_removed",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"event LaterRegistrationOmittedGateBypassed(",
+			"event LaterRegistrationOmittedGateSkipped(",
 			"later-registration counterfactual post-open gate placement",
 		),
 		(
-			"later_registration_pv_first_only_gate_passed_removed",
-			"let LaterSequenceRegistrationFirstOnlyFinish(",
-			"event LaterRegistrationFirstOnlyGatePassed(",
-			"event LaterRegistrationFirstOnlyGateSkipped(",
-			"later-registration counterfactual post-open gate placement",
-		),
-		(
-			"later_registration_pv_first_only_commit_witness_substituted",
-			"let LaterSequenceRegistrationFirstOnlyFinish(",
-			"LaterSequenceRegistrationCommit(\n        LATER_REGISTRATION_FIRST_ONLY_WITNESS,",
+			"later_registration_pv_omitted_gate_commit_witness_substituted",
+			"let LaterSequenceRegistrationOmittedGateFinish(",
+			"LaterSequenceRegistrationCommit(\n        LATER_REGISTRATION_OMITTED_GATE_WITNESS,",
 			"LaterSequenceRegistrationCommit(\n        LATER_REGISTRATION_FAITHFUL_WITNESS,",
 			"later-registration counterfactual post-open gate placement",
 		),
@@ -10802,20 +10979,20 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		mutation_count += 1;
 	}
 	assert_later_registration_rejected(
-		"later_registration_pv_first_only_gate_moved_before_open_reply",
+		"later_registration_pv_omitted_gate_gate_moved_before_open_reply",
 		"later-registration counterfactual post-open gate placement",
 		|snapshot| {
 			replace_once_after(
 				&mut snapshot.later_registration_control,
-				"let LaterSequenceRegistrationFirstOnlyFinish(",
-				"    event LaterRegistrationFirstOnlyGateReached(\n      LATER_REGISTRATION_FIRST_ONLY_WITNESS,\n      frame_sequence,\n      response\n    );\n",
+				"let LaterSequenceRegistrationOmittedGateFinish(",
+				"    event LaterRegistrationOmittedGateReached(\n      LATER_REGISTRATION_OMITTED_GATE_WITNESS,\n      frame_sequence,\n      response\n    );\n",
 				"",
 			);
 			replace_once_after(
 				&mut snapshot.later_registration_control,
-				"let LaterSequenceRegistrationFirstOnlyFinish(",
+				"let LaterSequenceRegistrationOmittedGateFinish(",
 				"    in(\n      reply,",
-				"    event LaterRegistrationFirstOnlyGateReached(\n      LATER_REGISTRATION_FIRST_ONLY_WITNESS,\n      frame_sequence,\n      response\n    );\n    in(\n      reply,",
+				"    event LaterRegistrationOmittedGateReached(\n      LATER_REGISTRATION_OMITTED_GATE_WITNESS,\n      frame_sequence,\n      response\n    );\n    in(\n      reply,",
 			);
 		},
 	);
@@ -10970,8 +11147,8 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later-registration faithful fanout",
 		),
 		(
-			"later_registration_pv_first_only_fanout_candidate_substituted",
-			"LaterSequenceRegistrationFirstOnlyFinish",
+			"later_registration_pv_omitted_gate_fanout_candidate_substituted",
+			"LaterSequenceRegistrationOmittedGateFinish",
 			"replacement_candidate",
 			"later-registration counterfactual fanout",
 		),
@@ -11182,8 +11359,8 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 
 	for index in 1..=18 {
 		let diagnostic = match index {
-			11 => "later-registration checker unreachable gate-pass polarity",
-			12 => "later-registration checker unreachable counterfactual commit",
+			11 => "later-registration checker live omitted-gate bypass polarity",
+			12 => "later-registration checker live omitted-gate commit",
 			13 => "later-registration checker canary secrecy polarity",
 			_ => "later-registration exact result-checker branch changed",
 		};
@@ -11202,8 +11379,16 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		mutation_count += 1;
 	}
 	for index in 1..=18 {
-		let polarity = if index <= 10 { "is false." } else { "is true." };
-		let replacement = if index <= 10 { "is true." } else { "is false." };
+		let polarity = if matches!(index, 5..=8 | 14..=18) {
+			"is true."
+		} else {
+			"is false."
+		};
+		let replacement = if polarity == "is true." {
+			"is false."
+		} else {
+			"is true."
+		};
 		let diagnostic = if index == 13 {
 			"later-registration checker canary secrecy polarity"
 		} else {
@@ -11620,14 +11805,14 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"later_registration_counterfactual_witness_visibility_changed",
-			"free LATER_REGISTRATION_FIRST_ONLY_WITNESS: bitstring [private].",
-			"free LATER_REGISTRATION_FIRST_ONLY_WITNESS: bitstring.",
+			"free LATER_REGISTRATION_OMITTED_GATE_WITNESS: bitstring [private].",
+			"free LATER_REGISTRATION_OMITTED_GATE_WITNESS: bitstring.",
 			"later-registration counterfactual witness",
 		),
 		(
 			"later_registration_canary_visibility_changed",
-			"free LATER_REGISTRATION_FIRST_ONLY_CANARY: bitstring [private].",
-			"free LATER_REGISTRATION_FIRST_ONLY_CANARY: bitstring.",
+			"free LATER_REGISTRATION_OMITTED_GATE_CANARY: bitstring [private].",
+			"free LATER_REGISTRATION_OMITTED_GATE_CANARY: bitstring.",
 			"later-registration counterfactual canary",
 		),
 		(
@@ -11656,8 +11841,8 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"later_registration_counterfactual_attempt_event_signature_changed",
-			"event LaterRegistrationFirstOnlyAttempted(",
-			"event LaterRegistrationOtherFirstOnlyAttempted(",
+			"event LaterRegistrationOmittedGateAttempted(",
+			"event LaterRegistrationOtherOmittedGateAttempted(",
 			"later-registration counterfactual-attempt event signature",
 		),
 		(
@@ -11668,13 +11853,13 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"later_registration_gate_reached_event_signature_changed",
-			"event LaterRegistrationFirstOnlyGateReached(",
+			"event LaterRegistrationOmittedGateReached(",
 			"event LaterRegistrationOtherGateReached(",
 			"later-registration gate-reached event signature",
 		),
 		(
 			"later_registration_gate_passed_event_signature_changed",
-			"event LaterRegistrationFirstOnlyGatePassed(",
+			"event LaterRegistrationOmittedGateBypassed(",
 			"event LaterRegistrationOtherGatePassed(",
 			"later-registration gate-passed event signature",
 		),
@@ -11783,6 +11968,71 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 				);
 			},
 		);
+		mutation_count += 1;
+	}
+
+	// These probes cover the new genuine first-frame path and the production gate.
+	for (name, marker, from, to, diagnostic) in [
+		(
+			"later_registration_initial_open_root",
+			"let LaterSequenceRegistrationInitialOpen(",
+			"let root = pqxdh_root(",
+			"let root = mutated_root(",
+			"later-registration reviewed initial opening",
+		),
+		(
+			"later_registration_initial_open_chain",
+			"let LaterSequenceRegistrationInitialOpen(",
+			"let server_chain_2 = ratchet_next(server_chain_1)",
+			"let server_chain_2 = server_chain_1",
+			"later-registration reviewed initial opening",
+		),
+		(
+			"later_registration_initial_open_material",
+			"let LaterSequenceRegistrationInitialOpen(",
+			"let server_material_1 = ratchet_material(server_chain_1)",
+			"let server_material_1 = ratchet_material(server_chain_2)",
+			"later-registration reviewed initial opening",
+		),
+		(
+			"later_registration_initial_open_cache",
+			"let LaterSequenceRegistrationInitialOpen(",
+			"let cache_2 = receive_cache_empty()",
+			"let cache_2 = receive_cache_entry(first_sequence(), server_material_1, receive_cache_empty())",
+			"later-registration reviewed initial opening",
+		),
+		(
+			"later_registration_initial_finish_gate_removed",
+			"let LaterSequenceRegistrationInitialFinish(",
+			"if frame_sequence = first_sequence() then",
+			"if true then",
+			"later-registration production first-sequence gate count",
+		),
+		(
+			"later_registration_initial_finish_wrong_sequence",
+			"let LaterSequenceRegistrationInitialFinish(",
+			"if frame_sequence = first_sequence() then",
+			"if frame_sequence = next_sequence(first_sequence()) then",
+			"later-registration production first-sequence gate count",
+		),
+		(
+			"later_registration_faithful_gate_removed",
+			"let LaterSequenceRegistrationFaithfulFinish(",
+			"if frame_sequence = first_sequence() then",
+			"if true then",
+			"later-registration faithful sequence gate",
+		),
+		(
+			"later_registration_faithful_wrong_sequence",
+			"let LaterSequenceRegistrationFaithfulFinish(",
+			"if frame_sequence = first_sequence() then",
+			"if frame_sequence = next_sequence(first_sequence()) then",
+			"later-registration faithful sequence gate",
+		),
+	] {
+		assert_later_registration_rejected(name, diagnostic, |snapshot| {
+			replace_once_after(&mut snapshot.later_registration_control, marker, from, to);
+		});
 		mutation_count += 1;
 	}
 
@@ -14155,7 +14405,7 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 			"let HonestBeacon(",
 			"let opened_initial = open_frame(",
 			"let endpoint_extra_open = open_frame(server_material_1, associated_data, first_sequence(), SERVER_KEY_ID, initial_frame) in\n    let opened_initial = open_frame(",
-			"symbolic server-to-Beacon open wiring changed",
+			"initial sequence-one gate after opening and before binding",
 		),
 		(
 			"endpoint_symbolic_honest_beacon_seal_count_increases",
@@ -19897,6 +20147,38 @@ fn requested_transcript_mutations_are_rejected() {
 
 #[test]
 fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
+	validate_main_sequence_gates(ENVIRONMENT_MODEL).unwrap();
+	for (role, sequence) in [
+		("let HonestBeacon(", "initial_sequence"),
+		("let MainLaterBeacon(", "main_initial_sequence"),
+	] {
+		let gate = format!("if {sequence} = first_sequence() then");
+		for replacement in [
+			"if true then".to_owned(),
+			format!("if {sequence} = next_sequence(first_sequence()) then"),
+		] {
+			let mut changed = ENVIRONMENT_MODEL.to_owned();
+			replace_once_after(&mut changed, role, &gate, &replacement);
+			assert!(
+				validate_main_sequence_gates(&changed).is_err(),
+				"initial sequence-one gate mutation survived: {role}"
+			);
+		}
+	}
+	let phase2 = include_str!("../proofs/pro-verif/phase2-response-binding-control.pvl");
+	validate_initial_sequence_gate(phase2, "frame_sequence", "letregistration_payload(").unwrap();
+	for replacement in [
+		"if true then",
+		"if frame_sequence = next_sequence(first_sequence()) then",
+	] {
+		let changed = phase2.replacen("if frame_sequence = first_sequence() then", replacement, 1);
+		assert!(
+			validate_initial_sequence_gate(&changed, "frame_sequence", "letregistration_payload(")
+				.is_err(),
+			"Phase-2 sequence gate mutation survived"
+		);
+	}
+
 	let environment = compact(&uncommented_pv(ENVIRONMENT_MODEL).unwrap());
 	assert_eq!(
 		arguments_after(&environment, "funsession_label(").unwrap(),
@@ -20070,6 +20352,21 @@ fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
 		"eventMessageKeyUnavailable(session,beacon_role(),server_to_beacon(),next_sequence(next_sequence(first_sequence())),server_material_3);",
 	], "later completion authentication and state ordering").unwrap();
 	assert_eq!(count(&later_beacon, "open_frame("), 1);
+	require_ordered(&later_beacon, &[
+		"letopened_initial=open_frame(",
+		"letcrypto_frame(initial_cipher,initial_tag,initial_commitment,initial_sequence,initial_sender)=initial_framein",
+		"eventMainRegistrationLaterOpened(initial_sequence,opened_initial,initial_frame);",
+		"ifinitial_sequence=first_sequence()then",
+		"letexpected_binding=",
+		"letregistration_payload(=expected_binding,initial_plaintext)=opened_initialin",
+	], "main later opening precedes sequence-one rejection before binding").unwrap();
+	require_ordered(beacon, &[
+		"letopened_initial=open_frame(",
+		"letcrypto_frame(initial_cipher,initial_tag,initial_commitment,initial_sequence,initial_sender)=initial_framein",
+		"ifinitial_sequence=first_sequence()then",
+		"letexpected_binding=",
+	], "main first opening enforces sequence one before binding").unwrap();
+
 	let queries =
 		compact(&uncommented_pv(include_str!("../proofs/pro-verif/queries.pvl")).unwrap());
 	assert_eq!(count(&queries, "query"), 14);
@@ -20109,17 +20406,24 @@ fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
 		))
 		.unwrap(),
 	);
-	assert_eq!(count(&controls, "query"), 8);
+	assert_eq!(count(&controls, "query"), 10);
+	for query in [
+		"event(BeaconRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_response,main_claimed))==>main_sequence=first_sequence().",
+		"event(MainRegistrationLaterOpened(next_sequence(next_sequence(first_sequence())),main_payload,main_frame)).",
+	] {
+		require_once(&controls, query, "additive initial sequence policy control").unwrap();
+	}
+
 	require_once(
 		&controls,
 		"inj-event(BeaconAnyCommitted(main_transcript))==>inj-event(ServerCommitted(main_transcript))",
-		"unqualified exact-response negative control",
+		"sequence-one exact-response correspondence",
 	)
 	.unwrap();
 	require_once(
 		&controls,
 		"event(MainRegistrationRelabelCompleted(main_agreement,main_payload,main_frame,main_response))",
-		"reachable relabel control",
+		"rejected later relabel control",
 	)
 	.unwrap();
 }

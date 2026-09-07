@@ -465,6 +465,9 @@ impl ProviderBeacon for Beacon {
 				&associated_data,
 				&mut ratchet,
 			)?;
+			if decrypted.seq != 1 {
+				return None;
+			}
 			let authenticated_server_key_id = decrypted.key_id;
 			let mut authenticated_plaintext = decrypted.plaintext;
 			if authenticated_plaintext.len() <= verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE {
@@ -504,5 +507,71 @@ impl ProviderBeacon for Beacon {
 			ratchet,
 		};
 		Some(plaintext)
+	}
+}
+
+#[cfg(all(test, feature = "server"))]
+mod tests {
+	use super::*;
+	use crate::{ProviderServer, Server};
+
+	#[test]
+	fn first_sequence_still_requires_nonempty_bound_plaintext() {
+		for case in 0..10 {
+			let mut server = Server::new(0, None);
+			let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+			let init = beacon.get_registration_bundle().unwrap();
+			let accepted = server.get_shared_secret(&init).unwrap();
+			// A test-only sender at the actual initial chain lets malformed plaintext reach the binding checks at sequence one.
+			let pending =
+				verified_pqxdh::start_server_ratchet_kdf(accepted.derived_secret.as_array());
+			let mut sender = RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));
+			let ad = verified_pqxdh::build_associated_data(
+				*server.identity_pk().as_bytes(),
+				*beacon.identity_pk().as_bytes(),
+			);
+			let original = server.build_registration_response(accepted, None).unwrap();
+			let payload = if case < 8 {
+				original.kid.to_le_bytes()[..case + 1].to_vec()
+			} else {
+				let claimed = if case == 8 {
+					original.kid + 1
+				} else {
+					original.kid
+				};
+				let mut payload = claimed.to_le_bytes().to_vec();
+				payload.push(0x7e);
+				payload
+			};
+			let frame =
+				encrypt_message_with_ratchet(&payload, original.kid, 0, &ad, &mut sender).unwrap();
+			assert_eq!(sender.status().send_sequence(), 1);
+			let reader = capnp::serialize_packed::read_message(
+				original.serialized.as_slice(),
+				ReaderOptions::new(),
+			)
+			.unwrap();
+			let typed = TypedReader::<_, phase2_capnp::kex_response::Owned>::new(reader);
+			let response = typed.get().unwrap();
+			let mut builder = TypedBuilder::<phase2_capnp::kex_response::Owned>::new_default();
+			let mut changed = builder.init_root();
+			changed.set_identity_key(response.get_identity_key().unwrap());
+			changed.set_ephemeral_key(response.get_ephemeral_key().unwrap());
+			changed.set_kem_cipher_text(response.get_kem_cipher_text().unwrap());
+			changed.set_key_id(original.kid);
+			changed.set_app_cipher_text(&frame);
+			let mut serialized = Vec::new();
+			capnp::serialize_packed::write_message(&mut serialized, builder.borrow_inner())
+				.unwrap();
+			let opened = beacon.finish_registration(&serialized);
+			if case == 9 {
+				assert_eq!(opened, Some(vec![0x7e]));
+				assert_eq!(beacon.ratchet_status().unwrap().receive_sequence(), 1);
+			} else {
+				assert!(opened.is_none(), "malformed plaintext case {case}");
+				assert!(beacon.ratchet_status().is_none());
+				assert!(beacon.finish_registration(&original.serialized).is_none());
+			}
+		}
 	}
 }

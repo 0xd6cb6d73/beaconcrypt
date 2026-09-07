@@ -172,7 +172,7 @@ def selected_witness_payload(index, target):
             "registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding("
             "sender_id_le64(qga_claimed)),general_nonempty(INITIAL_SECRET))"
         )
-    if (index in {3, 7} and 2 <= target <= 51) or (index == 13 and 1 <= target <= 51):
+    if index == 13 and target == 1:
         return PUBLIC_WITNESS_PAYLOAD
     return None
 
@@ -559,6 +559,16 @@ let GeneralAdmissionSend() =
         raise ValueError(
             "initial-plan constant substitution lost its exact equality guard"
         )
+    opening_gate = """
+    let main_opened_initial = open_frame(general_target_material,
+      main_associated_data, general_sequence, SERVER_KEY_ID, main_initial_frame) in
+    if general_sequence = first_sequence() then
+    let main_expected_binding =
+"""
+    if code.count(re.sub(r"\s+", "", opening_gate)) != 1:
+        raise ValueError(
+            "initial sequence-one gate or decrypt-before-gate order changed"
+        )
     return roles
 
 
@@ -568,7 +578,7 @@ def sender_projection_parameters(index, target, cached_target=None):
         raise ValueError("sender projection query or target outside the checked family")
     admitted = 1 <= target <= 51
     cached = 2 <= target <= 51
-    witness = (index in {3, 13} and admitted) or (index in {7, 12, 15} and cached)
+    witness = index in {3, 13} and target == 1
     cutoff = min(51, max(1, target))
     if index in {11, 13, 20} and admitted:
         cutoff = target + 1
@@ -937,7 +947,7 @@ def check_case(proverif, timeout, target, log_dir, query_indices):
         ),
         (
             "not event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,qga_frame,qga_response,qga_claimed))",
-            "false" if 1 <= target <= 51 else "true",
+            "false" if target == 1 else "true",
         ),
         (
             "not event(GeneralAdmissionCompleted(qga_agreement,qga_seq,registration_payload(qga_binding,general_empty_suffix),qga_frame,qga_response,qga_claimed))",
@@ -953,7 +963,7 @@ def check_case(proverif, timeout, target, log_dir, query_indices):
         ),
         (
             "not event(GeneralAdmissionRelabelled(qga_seq,qga_payload))",
-            "false" if 2 <= target <= 51 else "true",
+            "true",
         ),
         (
             "event(GeneralAdmissionCompleted(qga_agreement,qga_seq,registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(qga_actual_prefix)),general_nonempty(qga_body)),qga_frame,qga_response,qga_claimed)) ==> qga_actual_prefix = qga_claimed",
@@ -973,16 +983,16 @@ def check_case(proverif, timeout, target, log_dir, query_indices):
         ),
         (
             "not event(GeneralCachedAccepted(qga_agreement,qga_seq,qga_payload,qga_frame))",
-            "false" if 2 <= target <= 51 else "true",
+            "true",
         ),
         (
             "not event(GeneralFutureAccepted(qga_agreement,qga_seq,qga_payload,qga_frame))",
-            "false" if 1 <= target <= 51 else "true",
+            "false" if target == 1 else "true",
         ),
         ("not event(GeneralReplayAccepted(qga_agreement,qga_seq))", "true"),
         (
             "not event(GeneralReplayRejected(qga_agreement,qga_seq))",
-            "false" if 2 <= target <= 51 else "true",
+            "true",
         ),
         ("not event(GeneralInitialTargetRetained(qga_agreement,qga_seq))", "true"),
         (

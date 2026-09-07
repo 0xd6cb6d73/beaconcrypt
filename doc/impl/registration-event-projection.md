@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: 0BSD -->
 
+Current-policy note: HB-95 now requires authenticated initial sequence 1. The later-registration acceptance and relabel results recorded below describe the earlier policy or explicit omitted-gate controls. Generic raw-receiver capacity remains unchanged; current production/model behavior is documented in [the sequence-one change record](beacon-initial-sequence-one.md).
+
 # HB-89: Registration authentication without unique response encodings
 
 This topic changes proof instrumentation and query scope without changing production code, wire fields, primitive choices, message scheduling or acceptance. The observed X25519 high-bit alias is one example of why exact response-field provenance is stronger than the registration protocol needs. The proof must also avoid assuming that scalar representatives, accepted point encodings or DH inputs are injectively determined by a DH result. This topic does not attempt to prove X25519 internals or derive such injectivity from CDH.
