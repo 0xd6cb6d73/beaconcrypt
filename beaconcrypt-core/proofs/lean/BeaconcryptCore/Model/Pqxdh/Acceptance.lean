@@ -2,31 +2,13 @@ import BeaconcryptCore.Model.Pqxdh.Theorems
 import BeaconcryptCore.Model.Pqxdh.Commit
 
 /-!
-# BeaconCrypt modified PQXDH — what the beacon's acceptance test rules out
+# BeaconCrypt modified PQXDH — registration record admission
 
-Spec §16 requires the beacon to accept the server's first record through the *general*
-receive-ratchet transition, including the CTX commitment check, and to insist that
-the authenticated sender be the pinned `sid_S`.  This file draws the two
-consequences of the committing record layer of
-`BeaconcryptCore.Model.Pqxdh.Commit` at the level of the beacon transition:
+The beacon first runs the general receive-ratchet transition, including CTX and AEAD opening, then requires authenticated sequence one before processing the plaintext binding. The pinned sender must also match. A later-sequence raw record can decrypt successfully while registration admission still rejects it.
 
-* `Pqxdh.HonestRun.beaconRecordAdmitted_elim` — every outcome classified as
-  having admitted the record passed the pinned-sender and nonzero-sequence checks
-  and contains an actual successful `openRecord` call under the receive-ratchet
-  material;
-* `Pqxdh.HonestRun.beacon_rejects_reordered_record` — an honest first record
-  presented at any wire sequence number other than the one it was sealed at is
-  rejected: the beacon aborts with `BadRecord`.  Together with the sender check
-  (`Pqxdh.beaconFinish_bad_sender`) this is the statement that the record's position
-  in the stream and its sender are authenticated, not merely transported.
-* `Pqxdh.HonestRun.beacon_rejects_foreign_record` — a record sealed for a different
-  session (a different associated data, i.e. a different ordered identity pair) is
-  rejected as well.
+`Pqxdh.beaconRecordAdmitted_sequence` proves the sequence-one policy without a cryptographic assumption. `Pqxdh.HonestRun.beaconRecordAdmitted_elim` retains its existing weaker interface: an admitted outcome passed sender/nonzero checks and contains the exact successful opening under the receive-ratchet material and context.
 
-Both results assume only that the CTX commitments of the two record contexts
-involved differ (`Pqxdh.CtxDistinct`), the local and satisfiable form of collision
-resistance used in `Commit.lean`; no global injectivity of BLAKE2b-512 — which would
-contradict its fixed digest length — is assumed anywhere.
+The retained `beacon_rejects_reordered_record` and `beacon_rejects_foreign_record` results also establish rejection when their displayed CTX contexts differ. Their local `CtxDistinct` premise is the satisfiable collision-resistance condition from `Commit.lean`, not global BLAKE2b injectivity. The sequence-one policy is an independent reason to reject later initial records and does not modify raw record opening or its collision reductions.
 -/
 
 set_option relaxedAutoImplicit false
@@ -35,10 +17,18 @@ set_option maxHeartbeats 1000000
 
 namespace Pqxdh
 
-/-- Whether beacon processing reached and admitted the initial record through CTX and AEAD verification. Successful processing and the two later plaintext-format failures count as admission; every error before or at record opening does not. -/
+/-- Whether the initial record passed both opening and the sequence-one admission policy. Success and the two subsequent plaintext-format failures count; a successful raw opening at another sequence does not. -/
 def BeaconRecordAdmitted : Except BeaconError ℕ → Bool
   | .ok _ | .error .badPlaintext | .error .keyIdMismatch => true
   | _ => false
+
+/-- Every accepted record or later plaintext-format outcome passes the post-opening sequence-one policy, without a cryptographic assumption. -/
+theorem beaconRecordAdmitted_sequence (c : Crypto) (state : BeaconState) (response : KexResponse)
+    (admitted : BeaconRecordAdmitted (beaconFinish c state response).1 = true) :
+    response.appFrame.seq = 1 := by
+  unfold beaconFinish at admitted
+  repeat' split at admitted
+  all_goals simp_all only [BeaconRecordAdmitted, Bool.false_eq_true, not_not]
 
 /-- A successful receive from the empty initial ratchet exposes the exact decryption call that returned its plaintext. -/
 theorem recvStep_empty_ok_implies_dec_some {CK MK AD PT CT : Type}
@@ -80,7 +70,7 @@ namespace HonestRun
 
 variable (h : HonestRun)
 
-/-- Reaching a post-record outcome in an honest-run beacon transition means the frame passed the pinned-sender and nonzero-sequence prechecks and its ciphertext opened under the exact receive-ratchet material and record context. -/
+/-- An admitted honest-run outcome passed the sequence-one policy; this retained interface exposes the weaker sender/nonzero conditions and its exact successful receive-ratchet opening. -/
 theorem beaconRecordAdmitted_elim (hok : h.Ok) (frame : CryptoFrame)
     (ha : BeaconRecordAdmitted
       (beaconFinish h.c h.beaconInitSent { h.response with appFrame := frame }).1 = true) :
@@ -185,9 +175,7 @@ theorem beacon_rejects_reordered_record (hok : h.Ok) {seq' : ℕ}
     hdec, if_neg hid, hconv, if_neg hnz, if_neg hseq0, hroot]
   rw [show (rootChains h.c h.ds).1 = h.chains.1 from rfl,
     show assocData h.binding.ikPub (h.c.edPub h.ikSkB) = h.ad from rfl, herr]
-  split_ifs with hx
-  · exact absurd rfl hx
-  · rfl
+  split_ifs with hx <;> first | rfl | exact absurd rfl hx
 
 /-- **A record from another session is not accepted.**  If the associated data the
 record was sealed under differs from the one the beacon derives — a different ordered
@@ -232,10 +220,12 @@ theorem beacon_rejects_foreign_record (hok : h.Ok)
     show (rootChains h.c h.ds).1 = h.chains.1 from rfl,
     show assocData h.binding.ikPub (h.c.edPub h.ikSkB) = h.ad from rfl,
     show (1 : ℕ) - 1 = 0 from rfl, herr]
-  split_ifs with hx
-  · exact absurd rfl hx
-  · rfl
+  split_ifs with hx <;> first | rfl | exact absurd rfl hx
 
 end HonestRun
 
 end Pqxdh
+
+/-- info: 'Pqxdh.beaconRecordAdmitted_sequence' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms Pqxdh.beaconRecordAdmitted_sequence

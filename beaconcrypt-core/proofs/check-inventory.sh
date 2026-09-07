@@ -293,10 +293,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 12 \
+require_occurrence_count 13 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 15 '_to_bitstring' \
+require_occurrence_count 16 '_to_bitstring' \
 	"all handwritten _to_bitstring tokens including three initial-ratchet manifest facts" \
 	"${handwritten_proverif[@]}"
 
@@ -429,7 +429,7 @@ require_occurrence_count 1 'event\s+BeaconBundleInitiated\(initiated_bundle\)' \
 	"beacon authenticated-bundle emitter" proofs/pro-verif/environment.pvl
 require_occurrence_count 1 'event\s+ServerBundleAccepted\(accepted_bundle\)' \
 	"server authenticated-bundle emitter" proofs/pro-verif/environment.pvl
-require_line_count 35 '^event ' proofs/pro-verif/environment.pvl \
+require_line_count 36 '^event ' proofs/pro-verif/environment.pvl \
 	"handwritten event"
 require_line_count 2 '^table ' proofs/pro-verif/environment.pvl \
 	"handwritten table"
@@ -439,7 +439,7 @@ require_line_count 14 '^let [A-Z]' proofs/pro-verif/environment.pvl \
 	"handwritten process"
 require_line_count 14 '^query ' proofs/pro-verif/queries.pvl \
 	"baseline query"
-require_line_count 8 '^query ' proofs/pro-verif/main-registration-control-queries.pvl \
+require_line_count 10 '^query ' proofs/pro-verif/main-registration-control-queries.pvl \
 	"main registration acceptance and rejection controls"
 require_line_count 1 '^event BeaconRegistrationCompleted\(registration_session_t, sequence, bitstring, bitstring, bitstring, key_id\)\.$' \
 	proofs/pro-verif/environment.pvl "main completion with separate claimed ID"
@@ -1091,15 +1091,15 @@ for initial_ratchet_mutation_family in \
 	require_occurrence_count 1 "$initial_ratchet_mutation_family" \
 		"initial-ratchet ${initial_ratchet_mutation_family} mutation family" "$fidelity_test"
 done
-require_line_count 1 '^const LATER_REGISTRATION_MUTATION_COUNT: usize = 409;$' \
+require_line_count 1 '^const LATER_REGISTRATION_MUTATION_COUNT: usize = 422;$' \
 	"$fidelity_test" "later-sequence registration exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn later_registration_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, LATER_REGISTRATION_MUTATION_COUNT\);\s*\}' \
 	"later-sequence registration mutation matrix count assertion" "$fidelity_test"
 for later_registration_mutation_family in \
 	later_registration_fact_\{key\} \
-	later_registration_beacon_reads_decrypted_sequence \
-	later_registration_beacon_adds_first_sequence_gate \
+	later_registration_beacon_first_sequence_gate_\{name\} \
+	later_registration_beacon_first_sequence_gate_after_binding \
 	later_registration_adapter_adds_first_sequence_gate \
 	later_registration_core_begin_entry_substituted \
 	later_registration_core_staged_sequence_substituted \
@@ -1116,7 +1116,7 @@ for later_registration_mutation_family in \
 	later_registration_pv_substitution_outer_identity_changed \
 	later_registration_pv_candidate_gate_bypassed \
 	later_registration_pv_faithful_adds_sequence_gate \
-	later_registration_pv_first_only_gate_moved_before_open_reply \
+	later_registration_pv_omitted_gate_gate_moved_before_open_reply \
 	later_registration_poststate_query_cache_order_mutated \
 	later_registration_target_query_material3_mutated \
 	later_registration_query_\{\}_formula_mutated \
@@ -1130,20 +1130,20 @@ require_line_count 1 '^\s*"later_registration_make_scenario_removed",$' \
 	"$fidelity_test" "later-sequence registration scenario-removal mutation"
 require_line_count 1 '^\s*if name == "later_registration_make_scenario_removed" \{$' \
 	"$fidelity_test" "later-sequence registration scenario-removal mutation dispatch"
-require_line_count 1 '^const POST_REGISTRATION_MUTATION_COUNT: usize = 297;$' \
+require_line_count 1 '^const POST_REGISTRATION_MUTATION_COUNT: usize = 316;$' \
 	"$fidelity_test" "post-registration exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn post_registration_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, POST_REGISTRATION_MUTATION_COUNT\);\s*\}' \
 	"post-registration mutation matrix count assertion" "$fidelity_test"
-require_line_count 1 '^const POST_REGISTRATION_QUERY_HASHES: \[u64; 27\] = \[$' \
+require_line_count 1 '^const POST_REGISTRATION_QUERY_HASHES: \[u64; 29\] = \[$' \
 	"$fidelity_test" "post-registration complete query hashes"
-require_line_count 27 '^query ' proofs/pro-verif/post-registration-ratchet-queries.pvl \
+require_line_count 29 '^query ' proofs/pro-verif/post-registration-ratchet-queries.pvl \
 	"post-registration exact query count"
 require_occurrence_count 1 \
-	'else if \(scenario == "post-registration-ratchet"\) \{\s*if \(query_count != 27\)' \
+	'else if \(scenario == "post-registration-ratchet"\) \{\s*if \(query_count != 29\)' \
 	"post-registration exact result count" proofs/pro-verif/check-results.awk
 require_occurrence_count 1 \
-	'for \(post_registration_index = 1; post_registration_index <= 27; post_registration_index\+\+\) \{\s*require_exact\(post_registration_expected\[post_registration_index\],' \
+	'for \(post_registration_index = 1; post_registration_index <= 29; post_registration_index\+\+\) \{\s*require_exact\(post_registration_expected\[post_registration_index\],' \
 	"post-registration exact result loop" proofs/pro-verif/check-results.awk
 for mutation_name in \
 	pqxdh_label_byte \
@@ -1233,18 +1233,18 @@ for handoff_channel in later_registration_committed_handoff later_registration_s
 done
 post_registration_control=proofs/pro-verif/post-registration-ratchet-control.pvl
 require_line_count 7 '^free POST_REGISTRATION_' "$post_registration_control" "post-registration private values"
-require_line_count 11 '^event PostRegistration' "$post_registration_control" "post-registration events"
+require_line_count 12 '^event PostRegistration' "$post_registration_control" "post-registration events"
 require_line_count 4 '^let PostRegistration' "$post_registration_control" "post-registration finite processes"
 require_line_count 1 '^type ' "$post_registration_control" "post-registration consumption mode type"
 require_line_count 5 '^fun ' "$post_registration_control" "post-registration result and mode constructors"
 require_line_count 1 '^reduc ' "$post_registration_control" "post-registration consumption control rule block"
-require_line_count 8 '^free LATER_REGISTRATION_' \
+require_line_count 9 '^free LATER_REGISTRATION_' \
 	proofs/pro-verif/later-sequence-registration-control.pvl \
 	"later-sequence registration private fixture value"
 require_line_count 12 '^event LaterRegistration' \
 	proofs/pro-verif/later-sequence-registration-control.pvl \
 	"later-sequence registration event declaration"
-require_line_count 5 '^let LaterSequenceRegistration' \
+require_line_count 7 '^let LaterSequenceRegistration' \
 	proofs/pro-verif/later-sequence-registration-control.pvl \
 	"later-sequence registration finite process"
 require_line_count 18 '^query ' \
@@ -1283,6 +1283,62 @@ require_line_count 1 '^            target: check-generated-proverif-phase2-respo
 require_line_count 1 '^            target: check-generated-proverif-phase2-assigned-id-weak$' \
 	../.github/workflows/formal-verification.yml \
 	"dedicated weak Phase-2 assigned-ID CI target"
+
+
+# HB-95: opening remains before the initial sequence-one policy and plaintext binding.
+require_occurrence_count 1 \
+	'let decrypted = decrypt_message_with_ratchet\([\s\S]*?\)\?;\s*if decrypted\.seq != 1 \{\s*return None;\s*\}\s*let authenticated_server_key_id = decrypted\.key_id;' \
+	"Beacon authenticated sequence-one gate before binding" "$adapter_dir/src/beacon.rs"
+require_line_count 1 \
+	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.source\.beacon\.first_gate=finish_registration_rejects_decrypted\.seq_ne_1_after_open_before_binding \*\)$' \
+	"$transcript_interface" "sequence-one source fidelity fact"
+require_line_count 1 \
+	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.adapter\.no_first_gate=generic_receive_has_no_first_sequence_special_case \*\)$' \
+	"$transcript_interface" "unchanged generic receive policy fact"
+require_occurrence_count 1 \
+	'let opened_initial = open_frame\([\s\S]*?\) in\s*let crypto_frame\([\s\S]*?initial_sequence[\s\S]*?\) = initial_frame in\s*if initial_sequence = first_sequence\(\) then\s*let expected_binding =' \
+	"canonical Beacon decrypt-before-sequence-one policy" proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'event MainRegistrationLaterOpened\(main_initial_sequence, main_opened_initial, main_initial_frame\);\s*if main_initial_sequence = first_sequence\(\) then\s*let main_expected_binding =' \
+	"later Beacon live opening before initial rejection" proofs/pro-verif/environment.pvl
+require_occurrence_count 1 \
+	'let main_opened_initial = open_frame\(general_target_material,\s*main_associated_data, general_sequence, SERVER_KEY_ID, main_initial_frame\) in\s*if general_sequence = first_sequence\(\) then\s*let main_expected_binding =' \
+	"general raw receive followed by initial sequence-one policy" proofs/pro-verif/general-registration-admission.pvl
+require_occurrence_count 1 \
+	'event Phase2AuthenticatedFrameOpened\(witness\);\s*if frame_sequence = first_sequence\(\) then\s*let registration_payload\(' \
+	"Phase-2 opened record policy before binding" proofs/pro-verif/phase2-response-binding-control.pvl
+require_occurrence_count 1 \
+	'else if \(scenario == "main-registration-controls"\) \{\s*if \(query_count != 10\)' \
+	"all ten main initial-admission controls" proofs/pro-verif/check-results.awk
+require_occurrence_count 1 \
+	'event\(BeaconRegistrationCompleted\(main_agreement, main_sequence, main_payload, main_frame, main_response, main_claimed\)\) ==> main_sequence = first_sequence\(\)\.' \
+	"universal sequence-one completion query" proofs/pro-verif/main-registration-control-queries.pvl
+require_occurrence_count 1 \
+	'event\(MainRegistrationLaterOpened\(next_sequence\(next_sequence\(first_sequence\(\)\)\), main_payload, main_frame\)\)\.' \
+	"live generic later opening query" proofs/pro-verif/main-registration-control-queries.pvl
+require_occurrence_count 1 \
+	'let receive_state\(=first_sequence\(\), receive_chain_2, =receive_cache_empty\(\)\) = initial_receive in\s*let material_2 = ratchet_material\(receive_chain_2\) in\s*let receive_chain_3 = ratchet_next\(receive_chain_2\) in\s*let material_3 = ratchet_material\(receive_chain_3\) in' \
+	"ordinary continuation uses the carried sequence-one state" "$post_registration_control"
+require_occurrence_count 1 \
+	'event PostRegistrationEstablishedAdvance\(session, root, original_response, third_frame, initial_ratchet, committed_ratchet\);\s*event PostRegistrationHandoff\(LATER_REGISTRATION_INITIAL_WITNESS,' \
+	"post-registration handoff follows the actual ordinary advance" "$post_registration_control"
+for sequence_policy_mutation in \
+	later_registration_initial_open_root \
+	later_registration_initial_open_chain \
+	later_registration_initial_open_material \
+	later_registration_initial_open_cache \
+	later_registration_initial_finish_gate_removed \
+	later_registration_initial_finish_wrong_sequence \
+	later_registration_faithful_gate_removed \
+	later_registration_faithful_wrong_sequence \
+	post_registration_established_initial_counter \
+	post_registration_established_initial_cache \
+	post_registration_established_opening \
+	post_registration_established_cached_target \
+	post_registration_established_handoff_state; do
+	require_occurrence_count 1 "$sequence_policy_mutation" \
+		"initial policy ${sequence_policy_mutation} negative control" "$fidelity_test"
+done
 
 require_line_count 1 '^  Theorem ctx_misattribution_reduces_to_collision :' \
 	proofs/ssprove/CtxEventReduction.v \
@@ -5204,5 +5260,25 @@ for theorem_name in work_bind work_compile work_forward work_of_total coin_work 
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds.${theorem_name}$" "$shared_privacy_module" "shared privacy dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$shared_privacy_module" "shared privacy theorem ${theorem_name}"
 done
+
+# HB-95: the model and composed driver enforce sequence one after opening.
+sequence_policy_acceptance=proofs/lean/BeaconcryptCore/Model/Pqxdh/Acceptance.lean
+sequence_policy_reduction=proofs/lean/BeaconcryptCore/Computational/CtxTransitionReduction.lean
+require_line_count 6 '^theorem ' "$sequence_policy_acceptance" "registration admission theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$sequence_policy_acceptance" "sequence-one admission guarded dependencies"
+require_line_count 1 '^theorem beaconRecordAdmitted_sequence ' "$sequence_policy_acceptance" "unconditional admitted sequence theorem"
+require_line_count 1 '^#print axioms Pqxdh.beaconRecordAdmitted_sequence$' "$sequence_policy_acceptance" "admitted sequence dependency report"
+require_line_count 7 '^theorem ' "$sequence_policy_reduction" "registration CTX transition theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$sequence_policy_reduction" "wrong-sequence zero guarded dependencies"
+require_line_count 1 '^theorem beaconWrongSequenceAdvantage_eq_zero ' "$sequence_policy_reduction" "wrong-sequence zero advantage theorem"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage_eq_zero$' "$sequence_policy_reduction" "wrong-sequence zero dependency report"
+require_occurrence_count 1 \
+	'\| \(\.ok pt, recv\x27\) =>\s*if resp\.appFrame\.seq ≠ 1 then \(\.error \.badRecord, \.aborted\)\s*else if pt\.length ≤ 8' \
+	"ideal post-opening sequence-one policy" proofs/lean/BeaconcryptCore/Model/Pqxdh/Protocol.lean
+require_occurrence_count 1 \
+	'\| \.Some plaintext =>\s*if target\.val ≠ 1 then ok \(\.error \.badRecord\)\s*else\s*let committed ← commitPlaintext candidate sender plaintext' \
+	"composed driver post-opening sequence-one policy" proofs/lean/BeaconcryptCore/Refinement/ProtocolComposition.lean
+require_line_count 1 '^    \(hseq : resp\.appFrame\.seq = 1\)$' \
+	proofs/lean/BeaconcryptCore/Refinement/PqxdhProtocol.lean "extracted core driver explicit adapter admission premise"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

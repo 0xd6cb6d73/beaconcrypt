@@ -1,9 +1,9 @@
 import BeaconcryptCore.Refinement.RatchetReceiveStructural
 
 /-!
-# Complete empty-cache registration admission
+# Complete empty-cache raw receive admission
 
-The finite symbolic registration family uses one case for each admitted initial sequence, 1 through 51. Its prefix recursion derives the target separately from the skipped cache, with newest-first symbolic entries. This file relates that recursion to the existing arbitrary-interpreter extracted receive execution and preserves its complete published state for subsequent operations. Cryptographic authentication, the raw-byte decoder, and the nonempty eight-byte-prefix parser remain separate interfaces.
+The raw receive capability uses one case for each admitted initial sequence, 1 through 51. Production registration completion applies a separate sequence-one check after successful opening, so targets 2 through 51 do not complete registration. Its prefix recursion derives the target separately from the skipped cache, with newest-first symbolic entries. This file relates that recursion to the existing arbitrary-interpreter extracted receive execution and preserves its complete published state for subsequent operations. Cryptographic authentication, the raw-byte decoder, and the nonempty eight-byte-prefix parser remain separate interfaces.
 -/
 
 open CoreModels Aeneas
@@ -401,7 +401,7 @@ theorem RegistrationPublicationRefines.cached_target_is_earlier {AD PT CT : Type
   simp only [registrationPrefix_exact, List.mem_reverse, List.mem_map, List.mem_range, Prod.mk.injEq] at hmem
   omega
 
-/-- All 51 admitted initial targets reach the exact generated symbolic plan in exactly `target` KDF calls; every successful callback preserves the entire published state relation. -/
+/-- All 51 raw-receiver admitted initial targets reach the exact generated symbolic plan in exactly `target` KDF calls; every successful callback preserves the entire published state relation. -/
 theorem initial_registration_prepares_every_admitted_target {AD PT CT Context : Type}
     (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
     (execute : KdfInterpreter) (entry : ConcreteRatchetKernel) (target : Std.U64) (context : Context)
@@ -451,7 +451,7 @@ theorem initial_registration_rejects_zero {Context : Type}
     (lookup_receive_key_of_not_mem entry.refined.control 0#u64 hvalid.control.capacity
       (by simp [cacheSeqs, hempty]))
 
-/-- This is an exhaustive finite split of every admitted production `u64` target, not a selection of example traces. -/
+/-- This is an exhaustive finite split of every admitted raw-receiver `u64` target, not a production registration-completion rule. -/
 theorem initial_registration_case_is_exhaustive (target : Std.U64)
     (hpositive : 1 ≤ target.val) (hbound : target.val ≤ 51) :
     ∃ index : Fin 51, index.val + 1 = target.val :=

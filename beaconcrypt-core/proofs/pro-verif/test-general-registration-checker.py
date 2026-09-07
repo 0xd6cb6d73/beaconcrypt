@@ -307,6 +307,19 @@ class GeneralAdmissionGateTests(unittest.TestCase):
         self.assertEqual(GATE.validated_worker_roles(roles), roles)
         mutations = [
             roles.replace(
+                "if general_sequence = first_sequence() then", "if true then"
+            ),
+            roles.replace(
+                "if general_sequence = first_sequence() then",
+                "if general_sequence = general_expected_sequence then",
+            ),
+            roles.replace(
+                "    if general_sequence = first_sequence() then\n", ""
+            ).replace(
+                "    let main_opened_initial = open_frame(general_target_material,",
+                "    if general_sequence = first_sequence() then\n    let main_opened_initial = open_frame(general_target_material,",
+            ),
+            roles.replace(
                 "free general_send_states: channel [private].",
                 "free general_send_states: channel.",
             ),
@@ -374,9 +387,7 @@ class GeneralAdmissionGateTests(unittest.TestCase):
             for index, query in enumerate(queries, 1):
                 instantiated = GATE.instantiate_query(query, index, target)
                 selected = GATE.selected_witness_payload(index, target)
-                allowed = (index in {3, 13} and 1 <= target <= 51) or (
-                    index == 7 and 2 <= target <= 51
-                )
+                allowed = index in {3, 13} and target == 1
                 self.assertEqual(selected is not None, allowed)
                 if allowed:
                     self.assertIn(selected, instantiated)
@@ -410,7 +421,7 @@ class GeneralAdmissionGateTests(unittest.TestCase):
                 )
                 self.assertEqual(GATE.cached_query_cases(index, target), witness_case)
                 if witness_case == [1]:
-                    self.assertTrue(
+                    self.assertFalse(
                         GATE.sender_projection_parameters(index, target, 1)[3]
                     )
             for selected in expected:
@@ -477,9 +488,7 @@ class GeneralAdmissionGateTests(unittest.TestCase):
                 cutoff, records, plans, witness = GATE.sender_projection_parameters(
                     index, target
                 )
-                allowed = (index in {3, 13} and 1 <= target <= 51) or (
-                    index in {7, 12, 15} and 2 <= target <= 51
-                )
+                allowed = index in {3, 13} and target == 1
                 self.assertEqual(witness, allowed)
                 self.assertTrue(1 <= cutoff <= 52)
                 self.assertTrue(all(1 <= seq <= cutoff for seq in records | plans))

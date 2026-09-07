@@ -343,7 +343,8 @@ def beaconFinish (c : Crypto) (s : BeaconState) (resp : KexResponse) :
                       ⟨resp.appFrame.seq - 1, resp.appFrame.cipherText⟩ with
                   | (.error _, _) => (.error .badRecord, .aborted)
                   | (.ok pt, recv') =>
-                      if pt.length ≤ 8 then (.error .badPlaintext, .aborted)
+                      if resp.appFrame.seq ≠ 1 then (.error .badRecord, .aborted)
+                      else if pt.length ≤ 8 then (.error .badPlaintext, .aborted)
                       else if pt.take 8 ≠ LE64 resp.keyId then
                         (.error .keyIdMismatch, .aborted)
                       else

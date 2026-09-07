@@ -193,6 +193,7 @@ event ServerRegistrationSessionCommitted(registration_session_t, key_id).
 event BeaconRegistrationCompleted(registration_session_t, sequence, bitstring, bitstring, bitstring, key_id).
 event RegistrationRecordSent(registration_session_t, sequence, bitstring, bitstring, key_id).
 event BeaconAnyCommitted(establishment_transcript_t).
+event MainRegistrationLaterOpened(sequence, bitstring, bitstring).
 event MainRegistrationRelabelCompleted(registration_session_t, bitstring, bitstring, bitstring).
 event MainRegistrationCandidateSent(registration_session_t, bitstring, bitstring).
 fun main_registration_valid(): bitstring [data].
@@ -601,6 +602,8 @@ let HonestBeacon(beacon_record_secret: bitstring) =
       SERVER_KEY_ID,
       initial_frame
     ) in
+    let crypto_frame(initial_cipher, initial_tag, initial_commitment, initial_sequence, initial_sender) = initial_frame in
+    if initial_sequence = first_sequence() then
     let expected_binding =
       beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
         key_id_encoding(assigned_key_id)
@@ -2781,6 +2784,9 @@ let MainLaterBeacon(main_beacon_record_secret: bitstring) =
       SERVER_KEY_ID,
       main_initial_frame
     ) in
+    let crypto_frame(main_initial_cipher, main_initial_tag, main_initial_commitment, main_initial_sequence, main_initial_sender) = main_initial_frame in
+    event MainRegistrationLaterOpened(main_initial_sequence, main_opened_initial, main_initial_frame);
+    if main_initial_sequence = first_sequence() then
     let main_expected_binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
       key_id_encoding(main_assigned_key_id)
     ) in

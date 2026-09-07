@@ -1,6 +1,6 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(* The original response and accepted substitution have identical outer fields; only the application frame changes. *)
+(* The original response and attempted substitution have identical outer fields; only the application frame changes. *)
 query session: bitstring, root: bitstring, server_identity: bitstring, server_ephemeral: bitstring, kem_ciphertext: bitstring, assigned_key_id: key_id, first_frame: bitstring;
   event(LaterRegistrationOriginalResponseIssued(
     LATER_REGISTRATION_ORIGINAL_WITNESS,
@@ -260,7 +260,7 @@ query session: bitstring, root: bitstring;
     )
   )).
 
-(* The exact committed cache is newest-first seq2 then seq1; it has no seq3/material3 entry. *)
+(* The generic receive would retain seq2 then seq1; the production admission gate must prevent publishing that state. *)
 query session: bitstring, root: bitstring;
   event(LaterRegistrationTargetUnavailable(
     LATER_REGISTRATION_FAITHFUL_WITNESS,
@@ -439,30 +439,30 @@ query session: bitstring, root: bitstring;
     )
   )).
 
-(* The identical candidate reaches the counterfactual first-sequence gate but cannot pass it or commit. *)
+(* The identical candidate reaches the omitted-gate negative control, bypasses the policy, commits, and reveals its canary. *)
 query candidate: bitstring;
-  event(LaterRegistrationFirstOnlyAttempted(
-    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+  event(LaterRegistrationOmittedGateAttempted(
+    LATER_REGISTRATION_OMITTED_GATE_WITNESS,
     candidate
   )).
 
 query candidate: bitstring;
-  event(LaterRegistrationFirstOnlyGateReached(
-    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+  event(LaterRegistrationOmittedGateReached(
+    LATER_REGISTRATION_OMITTED_GATE_WITNESS,
     next_sequence(next_sequence(first_sequence())),
     candidate
   )).
 
 query candidate: bitstring;
-  event(LaterRegistrationFirstOnlyGatePassed(
-    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+  event(LaterRegistrationOmittedGateBypassed(
+    LATER_REGISTRATION_OMITTED_GATE_WITNESS,
     next_sequence(next_sequence(first_sequence())),
     candidate
   )).
 
 query session: bitstring, root: bitstring, candidate: bitstring, message_sequence: sequence, sender: key_id, receiver: key_id, opened_payload: bitstring, plaintext: bitstring, frame: bitstring, material: bitstring, receive_state_term: bitstring, committed_ratchet: bitstring;
   event(LaterRegistrationCommitted(
-    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+    LATER_REGISTRATION_OMITTED_GATE_WITNESS,
     session,
     root,
     candidate,
@@ -477,12 +477,12 @@ query session: bitstring, root: bitstring, candidate: bitstring, message_sequenc
     committed_ratchet
   )).
 
-query attacker(LATER_REGISTRATION_FIRST_ONLY_CANARY).
+query attacker(LATER_REGISTRATION_OMITTED_GATE_CANARY).
 
-(* Every branch consumes the coordinator's one exact candidate, and every faithful commit has genuine same-session Server-send origin. *)
+(* Every branch consumes the coordinator's one exact candidate, and every omitted-gate commit still has genuine same-session Server-send origin. *)
 query session: bitstring, root: bitstring, server_identity: bitstring, server_ephemeral: bitstring, kem_ciphertext: bitstring, assigned_key_id: key_id, first_frame: bitstring, third_frame: bitstring, sender: key_id, opened_payload: bitstring, material: bitstring, receive_state_term: bitstring, committed_ratchet: bitstring;
   inj-event(LaterRegistrationCommitted(
-    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    LATER_REGISTRATION_OMITTED_GATE_WITNESS,
     session,
     root,
     kex_response(
@@ -524,7 +524,7 @@ query session: bitstring, root: bitstring, server_identity: bitstring, server_ep
 
 query session: bitstring, root: bitstring, server_identity: bitstring, server_ephemeral: bitstring, kem_ciphertext: bitstring, assigned_key_id: key_id, third_frame: bitstring, sender: key_id, opened_payload: bitstring, material: bitstring, receive_state_term: bitstring, committed_ratchet: bitstring, original_response: bitstring;
   inj-event(LaterRegistrationCommitted(
-    LATER_REGISTRATION_FAITHFUL_WITNESS,
+    LATER_REGISTRATION_OMITTED_GATE_WITNESS,
     session,
     root,
     kex_response(
@@ -602,8 +602,8 @@ query candidate: bitstring, session: bitstring, root: bitstring, original_respon
   )).
 
 query candidate: bitstring, session: bitstring, root: bitstring, original_response: bitstring;
-  inj-event(LaterRegistrationFirstOnlyAttempted(
-    LATER_REGISTRATION_FIRST_ONLY_WITNESS,
+  inj-event(LaterRegistrationOmittedGateAttempted(
+    LATER_REGISTRATION_OMITTED_GATE_WITNESS,
     candidate
   )) ==>
   inj-event(LaterRegistrationSubstitutionSelected(

@@ -1,6 +1,6 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(* One finite continuation of the actual HB-65 committed ratchet. These rules describe no arbitrary cache or receive schedule. *)
+(* One finite continuation after actual sequence-one registration and ordinary sequence-three reception. These rules describe no arbitrary cache or receive schedule. *)
 free POST_REGISTRATION_FAITHFUL: bitstring [private].
 free POST_REGISTRATION_RETAIN_CONSUMED: bitstring [private].
 free POST_REGISTRATION_CACHED: bitstring [private].
@@ -22,6 +22,7 @@ reduc forall entry_cache: receive_cache, consumed_cache: receive_cache;
   forall entry_cache: receive_cache, consumed_cache: receive_cache;
   post_registration_finish_cache(post_registration_retain(), entry_cache, consumed_cache) = entry_cache.
 
+event PostRegistrationEstablishedAdvance(bitstring, bitstring, bitstring, bitstring, bitstring, bitstring).
 event PostRegistrationHandoff(bitstring, bitstring, bitstring, bitstring, key_id, key_id, bitstring, bitstring).
 event PostRegistrationBranchStarted(bitstring, bitstring, bitstring, bitstring, key_id, key_id, bitstring, bitstring).
 event PostRegistrationAttempted(bitstring, bitstring, bitstring, bitstring, bitstring).
@@ -34,7 +35,7 @@ event PostRegistrationFinalState(bitstring, bitstring, bitstring, sequence, bits
 event PostRegistrationTargetUnavailable(bitstring, bitstring, sequence, bitstring, receive_cache, bitstring).
 event PostRegistrationServerFrameSent(bitstring, bitstring, bitstring, sequence, key_id, key_id, bitstring, bitstring, bitstring).
 
-(* The finite cached path parses the carried state and borrows material from its second cache entry. A missing consumed entry rejects before any KDF or open. *)
+(* The finite cached path parses the carried state and borrows material from its remaining sequence-two cache entry. A missing consumed entry rejects before any KDF or open. *)
 let PostRegistrationReceiveCached(
   witness: bitstring,
   mode: post_registration_consumption_mode,
@@ -50,15 +51,14 @@ let PostRegistrationReceiveCached(
   event PostRegistrationAttempted(witness, request_kind, session, frame, entry_ratchet);
   let crypto_frame(ciphertext, tag, commitment, frame_sequence, sender_key_id) = frame in
   if sender_key_id = expected_server_key_id then
-  if frame_sequence = first_sequence() then
+  if frame_sequence = next_sequence(first_sequence()) then
   let later_registration_ratchet_state(send_sequence, send_chain, receive_entry) = entry_ratchet in
   let receive_state(receive_sequence, receive_chain, entry_cache) = receive_entry in
   if receive_sequence = next_sequence(next_sequence(first_sequence())) then
-  let receive_cache_entry(=next_sequence(first_sequence()), material_2, cache_tail) = entry_cache in
-  let receive_cache_entry(=first_sequence(), material_1, =receive_cache_empty()) = cache_tail in (
-    event PostRegistrationOpenCalled(witness, request_kind, session, frame, frame_sequence, material_1);
-    let opened = open_frame(material_1, associated_data, frame_sequence, expected_server_key_id, frame) in
-    let consumed_cache = receive_cache_entry(next_sequence(first_sequence()), material_2, receive_cache_empty()) in
+  let receive_cache_entry(=next_sequence(first_sequence()), material_2, =receive_cache_empty()) = entry_cache in (
+    event PostRegistrationOpenCalled(witness, request_kind, session, frame, frame_sequence, material_2);
+    let opened = open_frame(material_2, associated_data, frame_sequence, expected_server_key_id, frame) in
+    let consumed_cache = receive_cache_empty() in
     let output_cache = post_registration_finish_cache(mode, entry_cache, consumed_cache) in
     let output_ratchet = later_registration_ratchet_state(send_sequence, send_chain, receive_state(receive_sequence, receive_chain, output_cache)) in
     event PostRegistrationReturned(witness, request_kind, session, sender_key_id, assigned_key_id, associated_data, frame, frame_sequence, opened, output_ratchet);
@@ -69,7 +69,7 @@ let PostRegistrationReceiveCached(
     event PostRegistrationRejected(witness, request_kind, session, frame, entry_ratchet, entry_ratchet);
     out(reply, post_registration_failure(entry_ratchet)).
 
-(* This future step consumes the carried live chain after replay rejection and retains the one still-cached sequence-two entry. *)
+(* This future step consumes the carried live chain after replay rejection and retains the empty cache after consuming sequence two. *)
 let PostRegistrationReceiveFuture(
   witness: bitstring,
   session: bitstring,
@@ -87,7 +87,7 @@ let PostRegistrationReceiveFuture(
   let later_registration_ratchet_state(send_sequence, send_chain, receive_entry) = entry_ratchet in
   let receive_state(receive_sequence, receive_chain, entry_cache) = receive_entry in
   if receive_sequence = next_sequence(next_sequence(first_sequence())) then
-  let receive_cache_entry(=next_sequence(first_sequence()), material_2, =receive_cache_empty()) = entry_cache in
+  if entry_cache = receive_cache_empty() then
   event PostRegistrationKdfCalled(witness, POST_REGISTRATION_FUTURE, session, receive_chain);
   let material_4 = ratchet_material(receive_chain) in
   let receive_chain_5 = ratchet_next(receive_chain) in
@@ -109,31 +109,31 @@ let PostRegistrationTrace(
   assigned_key_id: key_id,
   associated_data: bitstring,
   committed_ratchet: bitstring,
-  first_frame: bitstring,
+  second_frame: bitstring,
   fourth_frame: bitstring
 ) =
   event PostRegistrationBranchStarted(witness, session, root, response, expected_server_key_id, assigned_key_id, associated_data, committed_ratchet);
   new cached_reply: channel;
   (
-    PostRegistrationReceiveCached(witness, mode, POST_REGISTRATION_CACHED, session, expected_server_key_id, assigned_key_id, associated_data, committed_ratchet, first_frame, cached_reply)
+    PostRegistrationReceiveCached(witness, mode, POST_REGISTRATION_CACHED, session, expected_server_key_id, assigned_key_id, associated_data, committed_ratchet, second_frame, cached_reply)
   |
     in(cached_reply, post_registration_success(cached_ratchet: bitstring, cached_plaintext: bitstring));
     new replay_reply: channel;
     (
-      PostRegistrationReceiveCached(witness, mode, POST_REGISTRATION_REPLAY, session, expected_server_key_id, assigned_key_id, associated_data, cached_ratchet, first_frame, replay_reply)
+      PostRegistrationReceiveCached(witness, mode, POST_REGISTRATION_REPLAY, session, expected_server_key_id, assigned_key_id, associated_data, cached_ratchet, second_frame, replay_reply)
     |
       in(replay_reply, replay_result: bitstring);
       let post_registration_failure(replay_ratchet) = replay_result in
         PostRegistrationReceiveFuture(witness, session, root, expected_server_key_id, assigned_key_id, associated_data, replay_ratchet, fourth_frame)
       else
         let post_registration_success(replayed_ratchet, replayed_plaintext) = replay_result in
-        event PostRegistrationReplayAccepted(witness, session, first_frame, replayed_plaintext, replayed_ratchet);
+        event PostRegistrationReplayAccepted(witness, session, second_frame, replayed_plaintext, replayed_ratchet);
         if witness = POST_REGISTRATION_RETAIN_CONSUMED then
           out(c, POST_REGISTRATION_REPLAY_CANARY)
     )
   ).
 
-(* The two private hooks join endpoint-local contexts from one genuine Server trace and the actual successful HB-65 commit. No state is sent on the public channel. *)
+(* The private hooks join the genuine sequence-one commit to the same Server frames. Ordinary established reception of sequence three then caches only sequence two. No owner state is public. *)
 let PostRegistrationControl() =
   in(later_registration_server_handoff, (
     session: bitstring,
@@ -141,6 +141,8 @@ let PostRegistrationControl() =
     original_response: bitstring,
     substituted_response: bitstring,
     first_frame: bitstring,
+    second_frame: bitstring,
+    third_frame: bitstring,
     server_chain_3: bitstring,
     server_associated_data: bitstring,
     server_key_id: key_id,
@@ -153,21 +155,32 @@ let PostRegistrationControl() =
   event PostRegistrationServerFrameSent(session, root, original_response, fourth_sequence, server_key_id, server_assigned_key_id, POST_REGISTRATION_SEQ4_PAYLOAD, fourth_frame, server_material_4);
   out(c, fourth_frame);
   in(later_registration_committed_handoff, (
-    =LATER_REGISTRATION_FAITHFUL_WITNESS,
+    =LATER_REGISTRATION_INITIAL_WITNESS,
     =session,
     =root,
-    =substituted_response,
+    =original_response,
     assigned_key_id: key_id,
     expected_server_key_id: key_id,
     associated_data: bitstring,
-    committed_ratchet: bitstring
+    initial_ratchet: bitstring
   ));
   if assigned_key_id = server_assigned_key_id then
   if expected_server_key_id = server_key_id then
   if associated_data = server_associated_data then
-  event PostRegistrationHandoff(LATER_REGISTRATION_FAITHFUL_WITNESS, session, root, substituted_response, expected_server_key_id, assigned_key_id, associated_data, committed_ratchet);
+  let later_registration_ratchet_state(send_sequence, send_chain, initial_receive) = initial_ratchet in
+  let receive_state(=first_sequence(), receive_chain_2, =receive_cache_empty()) = initial_receive in
+  let material_2 = ratchet_material(receive_chain_2) in
+  let receive_chain_3 = ratchet_next(receive_chain_2) in
+  let material_3 = ratchet_material(receive_chain_3) in
+  let third_sequence = next_sequence(next_sequence(first_sequence())) in
+  let opened_third = open_frame(material_3, associated_data, third_sequence, expected_server_key_id, third_frame) in
+  let committed_ratchet = later_registration_ratchet_state(send_sequence, send_chain,
+    receive_state(third_sequence, ratchet_next(receive_chain_3),
+      receive_cache_entry(next_sequence(first_sequence()), material_2, receive_cache_empty()))) in
+  event PostRegistrationEstablishedAdvance(session, root, original_response, third_frame, initial_ratchet, committed_ratchet);
+  event PostRegistrationHandoff(LATER_REGISTRATION_INITIAL_WITNESS, session, root, original_response, expected_server_key_id, assigned_key_id, associated_data, committed_ratchet);
   (
-    PostRegistrationTrace(POST_REGISTRATION_FAITHFUL, post_registration_consume(), session, root, substituted_response, expected_server_key_id, assigned_key_id, associated_data, committed_ratchet, first_frame, fourth_frame)
+    PostRegistrationTrace(POST_REGISTRATION_FAITHFUL, post_registration_consume(), session, root, original_response, expected_server_key_id, assigned_key_id, associated_data, committed_ratchet, second_frame, fourth_frame)
   |
-    PostRegistrationTrace(POST_REGISTRATION_RETAIN_CONSUMED, post_registration_retain(), session, root, substituted_response, expected_server_key_id, assigned_key_id, associated_data, committed_ratchet, first_frame, fourth_frame)
+    PostRegistrationTrace(POST_REGISTRATION_RETAIN_CONSUMED, post_registration_retain(), session, root, original_response, expected_server_key_id, assigned_key_id, associated_data, committed_ratchet, second_frame, fourth_frame)
   ).

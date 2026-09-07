@@ -57,52 +57,34 @@ fn send_until(
 }
 
 #[test]
-fn registration_accepts_later_bound_records_and_preserves_skipped_keys() {
+fn registration_rejects_every_otherwise_admissible_later_record_and_aborts() {
 	for sequence in 2..=51 {
 		let (mut server, mut beacon, original) = pending();
 		let application: Vec<u8> = (0..=255).map(|byte| byte ^ sequence as u8).collect();
 		let payload = bound_payload(original.kid, &application);
-		let (skipped, target) = send_until(&mut server, original.kid, sequence, &payload);
+		let (_, target) = send_until(&mut server, original.kid, sequence, &payload);
 		let candidate = response_with_frame(&original, &target, original.kid);
+		let server_status = server.ratchet_status(original.kid);
 		assert_ne!(candidate, original.serialized);
-		assert_eq!(beacon.finish_registration(&candidate).unwrap(), application);
-		let status = beacon.ratchet_status().unwrap();
-		assert_eq!(status.send_sequence(), 0);
-		assert_eq!(status.receive_sequence(), sequence);
-		assert_eq!(u64::from(status.receive_cache_len()), sequence - 1);
+		assert!(
+			beacon.finish_registration(&candidate).is_none(),
+			"sequence {sequence}"
+		);
+		assert!(beacon.ratchet_status().is_none());
+		assert!(beacon.associated_data().is_none());
+		assert_eq!(beacon.identity_key_kid(), SERVER_KID);
+		assert!(beacon.get_prekey_sk().is_none());
+		assert!(beacon.get_onetime_sk().is_none());
+		assert!(beacon.pq_sk().is_none());
 		assert!(beacon.decrypt_message(&target).is_none());
-		assert_eq!(beacon.ratchet_status(), Some(status));
 		assert!(beacon.finish_registration(&original.serialized).is_none());
-		for frame in skipped.iter().rev() {
-			assert_eq!(
-				beacon.decrypt_message(frame).unwrap().plaintext,
-				b"delayed application record"
-			);
-			let after = beacon.ratchet_status();
-			assert!(beacon.decrypt_message(frame).is_none());
-			assert_eq!(beacon.ratchet_status(), after);
-		}
-		// Sequence one is also retained. A normal receive returns the complete authenticated prefix and payload.
-		let original_reader = capnp::serialize_packed::read_message(
-			original.serialized.as_slice(),
-			ReaderOptions::new(),
-		)
-		.unwrap();
-		let original_typed =
-			TypedReader::<_, phase2_capnp::kex_response::Owned>::new(original_reader);
-		let first_frame = original_typed.get().unwrap().get_app_cipher_text().unwrap();
-		assert_eq!(
-			beacon.decrypt_message(first_frame).unwrap().plaintext,
-			bound_payload(original.kid, b"original response")
+		assert!(
+			beacon
+				.encrypt_message(b"must remain unestablished")
+				.is_none()
 		);
-		assert_eq!(beacon.ratchet_status().unwrap().receive_cache_len(), 0);
-		let reply = beacon
-			.encrypt_message(b"established after later completion")
-			.unwrap();
-		assert_eq!(
-			server.decrypt_message(&reply).unwrap().plaintext,
-			b"established after later completion"
-		);
+		assert!(beacon.get_registration_bundle().is_none());
+		assert_eq!(server.ratchet_status(original.kid), server_status);
 	}
 }
 
@@ -186,7 +168,7 @@ fn registration_rejects_a_genuine_later_record_from_another_session() {
 }
 
 #[test]
-fn later_completion_authenticates_the_payload_prefix_not_the_original_routing_id() {
+fn registration_rejects_later_record_substitution_even_with_a_matching_relabelled_prefix() {
 	let (mut server, mut beacon, original) = pending();
 	let relabelled = original.kid + 1;
 	let (_, target) = send_until(
@@ -196,16 +178,10 @@ fn later_completion_authenticates_the_payload_prefix_not_the_original_routing_id
 		&bound_payload(relabelled, b"authentic application payload"),
 	);
 	let candidate = response_with_frame(&original, &target, relabelled);
-	assert_eq!(
-		beacon.finish_registration(&candidate).unwrap(),
-		b"authentic application payload"
-	);
-	// This genuine same-session record establishes the payload's claimed routing ID, so it does not prove agreement on the server's originally allocated ID.
-	assert_eq!(beacon.ratchet_status().unwrap().receive_sequence(), 3);
-	let outgoing = beacon
-		.encrypt_message(b"different numeric sender ID")
-		.unwrap();
-	assert!(server.decrypt_message(&outgoing).is_none());
+	assert!(beacon.finish_registration(&candidate).is_none());
+	assert!(beacon.ratchet_status().is_none());
+	assert_eq!(beacon.identity_key_kid(), SERVER_KID);
+	assert!(beacon.finish_registration(&original.serialized).is_none());
 }
 
 #[test]
@@ -230,26 +206,24 @@ fn registration_accepts_the_original_first_record_and_only_consumes_its_target()
 }
 
 #[test]
-fn short_registration_plaintexts_reject_including_prefix_only() {
-	for length in 0..=8 {
-		let (mut server, mut beacon, original) = pending();
-		let payload = original.kid.to_le_bytes()[..length].to_vec();
-		if length == 0 {
-			// Production sealing rejects empty messages, so no genuine empty ciphertext is available.
-			assert!(server.encrypt_message(&payload, original.kid).is_none());
-			assert!(beacon.finish_registration(&[]).is_none());
-			assert!(beacon.ratchet_status().is_none());
-			continue;
-		}
-		let (_, target) = send_until(&mut server, original.kid, 3, &payload);
-		let candidate = response_with_frame(&original, &target, original.kid);
-		assert!(
-			beacon.finish_registration(&candidate).is_none(),
-			"length {length}"
-		);
-		assert!(beacon.ratchet_status().is_none());
-		assert!(beacon.finish_registration(&original.serialized).is_none());
-	}
+fn established_beacon_still_accepts_out_of_order_records_and_rejects_replays() {
+	let (mut server, mut beacon, original) = pending();
+	assert!(beacon.finish_registration(&original.serialized).is_some());
+	let second = server.encrypt_message(b"second", original.kid).unwrap();
+	let third = server.encrypt_message(b"third", original.kid).unwrap();
+	let opened = beacon.decrypt_message(&third).unwrap();
+	assert_eq!(opened.seq, 3);
+	assert_eq!(opened.plaintext, b"third");
+	assert_eq!(beacon.ratchet_status().unwrap().receive_cache_len(), 1);
+	assert_eq!(
+		beacon.decrypt_message(&second).unwrap().plaintext,
+		b"second"
+	);
+	assert_eq!(beacon.ratchet_status().unwrap().receive_cache_len(), 0);
+	let status = beacon.ratchet_status();
+	assert!(beacon.decrypt_message(&second).is_none());
+	assert!(beacon.decrypt_message(&third).is_none());
+	assert_eq!(beacon.ratchet_status(), status);
 }
 
 #[test]

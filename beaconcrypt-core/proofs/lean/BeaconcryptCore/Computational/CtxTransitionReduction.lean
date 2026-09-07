@@ -4,7 +4,7 @@ import BeaconcryptCore.Computational.CtxReduction
 /-!
 # Computational CTX reductions at the ideal beacon transition
 
-This module lifts record-opening collision reductions to the actual `Pqxdh.beaconFinish` transition. The win event observes that processing reached a result available only after CTX and AEAD verification, including the two later plaintext-format failures, so it neither misses an admitted record nor counts an earlier protocol error.
+This module lifts record-opening collision reductions to the actual `Pqxdh.beaconFinish` transition. The win event observes record admission after CTX/AEAD opening and the sequence-one policy, including the two subsequent plaintext-format failures. It does not count a successful raw opening rejected by that policy. Wrong-sequence registration advantage is exactly zero; the earlier collision reductions remain valid weaker bounds.
 -/
 
 open OracleComp ENNReal
@@ -89,6 +89,14 @@ noncomputable def beaconWrongSequenceExp (h : Pqxdh.HonestRun)
 noncomputable def beaconWrongSequenceAdvantage (h : Pqxdh.HonestRun)
     (adversary : ProbComp BeaconWrongSequenceClaim) : ℝ≥0∞ :=
   Pr[= true | beaconWrongSequenceExp h adversary]
+
+/-- Registration admission at a non-one sequence has zero advantage by the post-opening policy, even if a raw opening succeeds. -/
+theorem beaconWrongSequenceAdvantage_eq_zero (h : Pqxdh.HonestRun)
+    (adversary : ProbComp BeaconWrongSequenceClaim) :
+    beaconWrongSequenceAdvantage h adversary = 0 := by
+  have noWin : ∀ claim, ¬ BeaconWrongSequenceSuccess h claim :=
+    fun claim admitted => claim.sequence_ne (Pqxdh.beaconRecordAdmitted_sequence h.c _ _ admitted)
+  simp [beaconWrongSequenceAdvantage, beaconWrongSequenceExp, noWin]
 
 /-- The BLAKE2b collision adversary induced by a reordered-record admission adversary. -/
 def beaconWrongSequenceCollisionReduction (h : Pqxdh.HonestRun)
@@ -269,3 +277,11 @@ theorem beaconCrossSessionAdvantage_le_blake2b_cr
   exact beaconCrossSessionSuccess_implies_blake2b_collision h hok claim hwin
 
 end BeaconcryptCore.Computational.CtxTransitionReduction
+
+/--
+info: 'BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage_eq_zero' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxTransitionReduction.beaconWrongSequenceAdvantage_eq_zero

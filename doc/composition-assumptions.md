@@ -2,6 +2,8 @@
 
 The repository proves component inequalities and extracted-core state properties. Applying them to authenticated, KDF-derived keys across sessions requires a further experiment and simulation argument. This document names those missing arguments, instead of treating a list of primitive names as their justification.
 
+HB-95 requires the sequence returned by successful initial record opening to equal 1 before registration binding or commit. Later records and the previous later-payload outer-ID relabel witness now abort registration. The normal receiver still supports out-of-order traffic after establishment. This policy changes the admission premise of the remaining common-experiment work; it does not resolve the separate sequence-one X25519 raw-encoding witness or complete computational composition. See [the change record](impl/beacon-initial-sequence-one.md).
+
 ## Historical exact-origin claims and the corrected projection
 
 The production protocol cannot satisfy the three historical exact registration-origin correspondences retained in `exact-registration-origin-queries.pvl`. The [checked Phase 2 counterexample](impl/phase2-x25519-alias-counterexample.md) changes only the high bit of the received server ephemeral key, which X25519 masks before evaluating the same valid input coordinate. Rejecting invalid points and assuming perfect primitive implementations do not exclude this permitted alternative encoding. The same root and unchanged authenticated sequence-one record are accepted, while the raw decoded response differs from the server's response.
