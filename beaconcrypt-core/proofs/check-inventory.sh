@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=288
+	[handwritten-lean]=297
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5280,5 +5280,87 @@ require_occurrence_count 1 \
 	"composed driver post-opening sequence-one policy" proofs/lean/BeaconcryptCore/Refinement/ProtocolComposition.lean
 require_line_count 1 '^    \(hseq : resp\.appFrame\.seq = 1\)$' \
 	proofs/lean/BeaconcryptCore/Refinement/PqxdhProtocol.lean "extracted core driver explicit adapter admission premise"
+
+# HB-96: reached native registration scheduler, branch support and complete coin ledger.
+native_registration_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationProtocolState.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationProtocolState$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationProtocolState root import"
+require_line_count 10 '^theorem ' "$native_registration_module" "PqxdhRegistrationProtocolState theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$native_registration_module" "PqxdhRegistrationProtocolState guarded dependencies"
+for theorem_name in restore_project source_schedule install_input install_fields input_consume build_native build_normal accepted_consumption native_input_fields source_controls; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhRegistrationProtocolState.${theorem_name}$" "$native_registration_module" "native registration dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_registration_module" "native registration theorem ${theorem_name}"
+done
+
+native_registration_module=proofs/lean/BeaconcryptCore/Computational/PqxdhProtocolSelector.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhProtocolSelector$' proofs/lean/BeaconcryptCore.lean "PqxdhProtocolSelector root import"
+require_line_count 12 '^theorem ' "$native_registration_module" "PqxdhProtocolSelector theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$native_registration_module" "PqxdhProtocolSelector guarded dependencies"
+for theorem_name in local_coins selector_coins compiler_interpretation compiler_complete selected_complete coins_excluded compiler_bound selected_source_bound direct_step_controls direct_controls program_controls erased_program_controls; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhProtocolSelector.${theorem_name}$" "$native_registration_module" "native registration dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_registration_module" "native registration theorem ${theorem_name}"
+done
+
+native_registration_module=proofs/lean/BeaconcryptCore/Computational/PqxdhProtocolRegistration.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhProtocolRegistration$' proofs/lean/BeaconcryptCore.lean "PqxdhProtocolRegistration root import"
+require_line_count 5 '^theorem ' "$native_registration_module" "PqxdhProtocolRegistration theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$native_registration_module" "PqxdhProtocolRegistration guarded dependencies"
+for theorem_name in coins_bind lifted_complete native_complete afterBuilder_restored accepted_run; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhProtocolRegistration.${theorem_name}$" "$native_registration_module" "native registration dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_registration_module" "native registration theorem ${theorem_name}"
+done
+
+native_registration_module=proofs/lean/BeaconcryptCore/Computational/PqxdhProtocolServerInvariant.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhProtocolServerInvariant$' proofs/lean/BeaconcryptCore.lean "PqxdhProtocolServerInvariant root import"
+require_line_count 7 '^theorem ' "$native_registration_module" "PqxdhProtocolServerInvariant theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$native_registration_module" "PqxdhProtocolServerInvariant guarded dependencies"
+for theorem_name in server_step_fields role_step_fields source_step_fields direct_step_fields direct_fields program_fields reached_root_fields; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhProtocolServerInvariant.${theorem_name}$" "$native_registration_module" "native registration dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_registration_module" "native registration theorem ${theorem_name}"
+done
+
+native_registration_module=proofs/lean/BeaconcryptCore/Computational/PqxdhProtocolAcceptance.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhProtocolAcceptance$' proofs/lean/BeaconcryptCore.lean "PqxdhProtocolAcceptance root import"
+require_line_count 3 '^theorem ' "$native_registration_module" "PqxdhProtocolAcceptance theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$native_registration_module" "PqxdhProtocolAcceptance guarded dependencies"
+for theorem_name in coordinates_valid fresh_acceptance accepted_builder; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhProtocolAcceptance.${theorem_name}$" "$native_registration_module" "native registration dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_registration_module" "native registration theorem ${theorem_name}"
+done
+
+native_registration_module=proofs/lean/BeaconcryptCore/Computational/PqxdhProtocolExperiment.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhProtocolExperiment$' proofs/lean/BeaconcryptCore.lean "PqxdhProtocolExperiment root import"
+require_line_count 2 '^theorem ' "$native_registration_module" "PqxdhProtocolExperiment theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$native_registration_module" "PqxdhProtocolExperiment guarded dependencies"
+for theorem_name in authenticated_bound reached_accepted_run; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhProtocolExperiment.${theorem_name}$" "$native_registration_module" "native registration dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_registration_module" "native registration theorem ${theorem_name}"
+done
+
+native_registration_module=proofs/lean/BeaconcryptCore/Computational/PqxdhProtocolBranchSupport.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhProtocolBranchSupport$' proofs/lean/BeaconcryptCore.lean "PqxdhProtocolBranchSupport root import"
+require_line_count 6 '^theorem ' "$native_registration_module" "PqxdhProtocolBranchSupport theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$native_registration_module" "PqxdhProtocolBranchSupport guarded dependencies"
+for theorem_name in observe_congr acceptedObserve_congr targetAfterEncapsulation_congr acceptedCommon_congr allCandidateCommon_congr nativeNext_congr; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhProtocolBranchSupport.${theorem_name}$" "$native_registration_module" "native registration dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_registration_module" "native registration theorem ${theorem_name}"
+done
+
+native_registration_module=proofs/lean/BeaconcryptCore/Computational/PqxdhProtocolNativeAcceptance.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhProtocolNativeAcceptance$' proofs/lean/BeaconcryptCore.lean "PqxdhProtocolNativeAcceptance root import"
+require_line_count 2 '^theorem ' "$native_registration_module" "PqxdhProtocolNativeAcceptance theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$native_registration_module" "PqxdhProtocolNativeAcceptance guarded dependencies"
+for theorem_name in native_accept_eq_build accepted_native_run; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhProtocolNativeAcceptance.${theorem_name}$" "$native_registration_module" "native registration dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_registration_module" "native registration theorem ${theorem_name}"
+done
+
+native_registration_module=proofs/lean/BeaconcryptCore/Computational/PqxdhProtocolQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhProtocolQueryBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhProtocolQueryBounds root import"
+require_line_count 20 '^theorem ' "$native_registration_module" "PqxdhProtocolQueryBounds theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$native_registration_module" "PqxdhProtocolQueryBounds guarded dependencies"
+for theorem_name in coins_total compiler_bill_step source_uniform_step compiler_step compiler_total compiler_bill selected_total native_uniform_step native_uniform_bill build_uniform schedule_uniform continuation_coins_total continuation_coins_excluded coins_observer_bounds accepted_observer_bounds completed_observer_bounds prefix_sign_bound selected_class_bound selected_decap_bound actual_uniform_ledger; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhProtocolQueryBounds.${theorem_name}$" "$native_registration_module" "native registration dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_registration_module" "native registration theorem ${theorem_name}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

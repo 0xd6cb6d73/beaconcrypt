@@ -53,3 +53,5 @@ The migration inventories every historical lemma declaration: [192 ratchet decla
 The archived F* sources describe the predecessor callback implementation and remain available in Git history. The migration progress and completed verification checkpoints are recorded in the [Lean proof completion record](impl/lean-proof-completion.md).
 
 The [behavioral refinement implementation ledger](impl/lean-behavioral-refinement.md) records the audited baseline, milestone commits, supported API semantics, exact server-model mismatch, and outstanding acceptance obligations.
+
+The resumed [HB-96 native registration scheduler](impl/native-registration-scheduler.md) connects the actual reached role/control/consumption/cache state to the accepted-root continuation, original extracted acceptance/root derivation and native response builder. Its 67 guarded statements include concrete joint-use weak-EUF and ordinary KEM CCA reductions and a complete source uniform ledger. This closes that one-target source seam; dynamic registration/Phase2, actual evolving/reveal/restore distributions, persistent symbolic projection and the final common-experiment theorem remain active work.
