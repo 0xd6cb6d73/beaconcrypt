@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=357
+	[handwritten-lean]=365
 	[handwritten-proverif]=82
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5922,6 +5922,79 @@ require_line_count 6 '^#guard_msgs in$' "$phase2_live_module" "PqxdhPhase2Source
 for theorem_name in pre_classes post_classes ordinary_classes pre_continuation_classes post_continuation_classes ordinary_continuation_classes; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2SourceAuxBounds.${theorem_name}$" "$phase2_live_module" "Phase2 live dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_live_module" "Phase2 live theorem ${theorem_name}"
+done
+
+# HB-108: actual live reads, retained prior aliases, full source compiler and exact good events.
+selected_live_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedLiveRead.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedLiveRead$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedLiveRead root import"
+require_line_count 8 '^theorem ' "$selected_live_module" "RawCtxSelectedLiveRead theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_live_module" "RawCtxSelectedLiveRead guarded dependencies"
+for theorem_name in skipped_independent source_forward before_exposure source_before_exposure reply_length exposure_reply source_uniform forward_total; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedLiveRead.${theorem_name}$" "$selected_live_module" "selected live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_live_module" "selected live theorem ${theorem_name}"
+done
+
+selected_live_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedLiveTrace.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedLiveTrace$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedLiveTrace root import"
+require_line_count 8 '^theorem ' "$selected_live_module" "RawCtxSelectedLiveTrace theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_live_module" "RawCtxSelectedLiveTrace guarded dependencies"
+for theorem_name in query_safe sticky hit_marked agree_good exposure_distance exposure_probability step_length source_length; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedLiveTrace.${theorem_name}$" "$selected_live_module" "selected live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_live_module" "selected live theorem ${theorem_name}"
+done
+
+selected_live_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedLiveSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedLiveSource$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedLiveSource root import"
+require_line_count 4 '^theorem ' "$selected_live_module" "RawCtxSelectedLiveSource theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_live_module" "RawCtxSelectedLiveSource guarded dependencies"
+for theorem_name in source_step source_schedule source_query_bounds source_exposure_distance; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedLiveSource.${theorem_name}$" "$selected_live_module" "selected live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_live_module" "selected live theorem ${theorem_name}"
+done
+
+selected_live_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedAliasInitial.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedAliasInitial$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedAliasInitial root import"
+require_line_count 3 '^theorem ' "$selected_live_module" "RawCtxSelectedAliasInitial theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_live_module" "RawCtxSelectedAliasInitial guarded dependencies"
+for theorem_name in bad_probability_initial marked_distance_initial recorded_distance_initial; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedAliasInitial.${theorem_name}$" "$selected_live_module" "selected live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_live_module" "selected live theorem ${theorem_name}"
+done
+
+selected_live_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedLiveCompiler.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedLiveCompiler$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedLiveCompiler root import"
+require_line_count 4 '^theorem ' "$selected_live_module" "RawCtxSelectedLiveCompiler theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_live_module" "RawCtxSelectedLiveCompiler guarded dependencies"
+for theorem_name in primitive_recorded step_recorded nested_step source_project; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedLiveCompiler.${theorem_name}$" "$selected_live_module" "selected live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_live_module" "selected live theorem ${theorem_name}"
+done
+
+selected_live_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedLiveAliases.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedLiveAliases$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedLiveAliases root import"
+require_line_count 6 '^theorem ' "$selected_live_module" "RawCtxSelectedLiveAliases theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_live_module" "RawCtxSelectedLiveAliases guarded dependencies"
+for theorem_name in primitive_consistent read_consistent source_distance exposure_distance_initial exposure_alias_distance native_distance; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedLiveAliases.${theorem_name}$" "$selected_live_module" "selected live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_live_module" "selected live theorem ${theorem_name}"
+done
+
+selected_live_module=proofs/lean/BeaconcryptCore/Computational/StatefulGoodEvent.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.StatefulGoodEvent$' proofs/lean/BeaconcryptCore.lean "StatefulGoodEvent root import"
+require_line_count 2 '^theorem ' "$selected_live_module" "StatefulGoodEvent theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_live_module" "StatefulGoodEvent guarded dependencies"
+for theorem_name in output_good event_good; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.StatefulGoodEvent.${theorem_name}$" "$selected_live_module" "selected live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_live_module" "selected live theorem ${theorem_name}"
+done
+
+selected_live_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedLiveEvents.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedLiveEvents$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedLiveEvents root import"
+require_line_count 2 '^theorem ' "$selected_live_module" "RawCtxSelectedLiveEvents theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_live_module" "RawCtxSelectedLiveEvents guarded dependencies"
+for theorem_name in event_good good_alias_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedLiveEvents.${theorem_name}$" "$selected_live_module" "selected live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_live_module" "selected live theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
