@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=297
+	[handwritten-lean]=305
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5361,6 +5361,79 @@ require_line_count 20 '^#guard_msgs in$' "$native_registration_module" "PqxdhPro
 for theorem_name in coins_total compiler_bill_step source_uniform_step compiler_step compiler_total compiler_bill selected_total native_uniform_step native_uniform_bill build_uniform schedule_uniform continuation_coins_total continuation_coins_excluded coins_observer_bounds accepted_observer_bounds completed_observer_bounds prefix_sign_bound selected_class_bound selected_decap_bound actual_uniform_ledger; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhProtocolQueryBounds.${theorem_name}$" "$native_registration_module" "native registration dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_registration_module" "native registration theorem ${theorem_name}"
+done
+
+# HB-97: generated native Beacon publication and authenticated root scheduler.
+generated_beacon_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBeaconPhase1Publication.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBeaconPhase1Publication$' proofs/lean/BeaconcryptCore.lean "PqxdhBeaconPhase1Publication root import"
+require_line_count 6 '^theorem ' "$generated_beacon_module" "PqxdhBeaconPhase1Publication theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$generated_beacon_module" "PqxdhBeaconPhase1Publication guarded dependencies"
+for theorem_name in core_control afterSigning_complete publish_fields afterSigning_bound afterSigning_map afterSigning_map_run; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase1Publication.${theorem_name}$" "$generated_beacon_module" "generated Beacon dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_beacon_module" "generated Beacon theorem ${theorem_name}"
+done
+
+generated_beacon_module=proofs/lean/BeaconcryptCore/Computational/PqxdhGeneratedBeaconState.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhGeneratedBeaconState$' proofs/lean/BeaconcryptCore.lean "PqxdhGeneratedBeaconState root import"
+require_line_count 8 '^theorem ' "$generated_beacon_module" "PqxdhGeneratedBeaconState theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$generated_beacon_module" "PqxdhGeneratedBeaconState guarded dependencies"
+for theorem_name in existing_fields existing_identity_ne_generated existing_kem_ne_generated extend_fields extend_kernel start_complete start_uniform start_servers; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedBeaconState.${theorem_name}$" "$generated_beacon_module" "generated Beacon dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_beacon_module" "generated Beacon theorem ${theorem_name}"
+done
+
+generated_beacon_module=proofs/lean/BeaconcryptCore/Computational/PqxdhGeneratedPhase1Prefix.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhGeneratedPhase1Prefix$' proofs/lean/BeaconcryptCore.lean "PqxdhGeneratedPhase1Prefix root import"
+require_line_count 13 '^theorem ' "$generated_beacon_module" "PqxdhGeneratedPhase1Prefix theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$generated_beacon_module" "PqxdhGeneratedPhase1Prefix guarded dependencies"
+for theorem_name in afterGeneration_complete generatedBody_complete beforeCandidate_complete program_complete program_supported changed_origin changed_advantage_bound afterGeneration_source_bound program_source_bound program_create_bound authentication_bound program_sign_bound authentication_continuation_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedPhase1Prefix.${theorem_name}$" "$generated_beacon_module" "generated Beacon dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_beacon_module" "generated Beacon theorem ${theorem_name}"
+done
+
+generated_beacon_module=proofs/lean/BeaconcryptCore/Computational/PqxdhGeneratedRootSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhGeneratedRootSource$' proofs/lean/BeaconcryptCore.lean "PqxdhGeneratedRootSource root import"
+require_line_count 9 '^theorem ' "$generated_beacon_module" "PqxdhGeneratedRootSource theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$generated_beacon_module" "PqxdhGeneratedRootSource guarded dependencies"
+for theorem_name in borrowedPrefix_evaluated continuedSource_keyfirst borrowedPrefix_target actualGame_eq_total dispatch_complete_eq_source filteredSource_eq_sourceMain continuedSource_filtered authentication_hop authenticated_correlated_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedRootSource.${theorem_name}$" "$generated_beacon_module" "generated Beacon dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_beacon_module" "generated Beacon theorem ${theorem_name}"
+done
+
+generated_beacon_module=proofs/lean/BeaconcryptCore/Computational/PqxdhGeneratedRootQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhGeneratedRootQueryBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhGeneratedRootQueryBounds root import"
+require_line_count 11 '^theorem ' "$generated_beacon_module" "PqxdhGeneratedRootQueryBounds theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$generated_beacon_module" "PqxdhGeneratedRootQueryBounds guarded dependencies"
+for theorem_name in borrowedPrefix_bound program_uniform_bound continuedSource_uniform_bound program_uniform_from_calls rootProtocol_prefix_bound rootProtocol_resume_bounds rootProtocol_reduction_bounds actualGame_uniform_bound actualGame_uniform_from_calls rootProtocol_sampler_bounds correlated_world_ledger; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedRootQueryBounds.${theorem_name}$" "$generated_beacon_module" "generated Beacon dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_beacon_module" "generated Beacon theorem ${theorem_name}"
+done
+
+generated_beacon_module=proofs/lean/BeaconcryptCore/Computational/PqxdhGeneratedBeaconSelector.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhGeneratedBeaconSelector$' proofs/lean/BeaconcryptCore.lean "PqxdhGeneratedBeaconSelector root import"
+require_line_count 5 '^theorem ' "$generated_beacon_module" "PqxdhGeneratedBeaconSelector theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$generated_beacon_module" "PqxdhGeneratedBeaconSelector guarded dependencies"
+for theorem_name in driver_complete driver_class_bound driver_source_bound driver_total driver_server_fields; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedBeaconSelector.${theorem_name}$" "$generated_beacon_module" "generated Beacon dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_beacon_module" "generated Beacon theorem ${theorem_name}"
+done
+
+generated_beacon_module=proofs/lean/BeaconcryptCore/Computational/PqxdhGeneratedBeaconExperiment.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhGeneratedBeaconExperiment$' proofs/lean/BeaconcryptCore.lean "PqxdhGeneratedBeaconExperiment root import"
+require_line_count 3 '^theorem ' "$generated_beacon_module" "PqxdhGeneratedBeaconExperiment theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$generated_beacon_module" "PqxdhGeneratedBeaconExperiment guarded dependencies"
+for theorem_name in authenticated_bound reached_root_fields accepted_native_run; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedBeaconExperiment.${theorem_name}$" "$generated_beacon_module" "generated Beacon dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_beacon_module" "generated Beacon theorem ${theorem_name}"
+done
+
+generated_beacon_module=proofs/lean/BeaconcryptCore/Computational/PqxdhGeneratedBeaconQueryBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhGeneratedBeaconQueryBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhGeneratedBeaconQueryBounds root import"
+require_line_count 4 '^theorem ' "$generated_beacon_module" "PqxdhGeneratedBeaconQueryBounds theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$generated_beacon_module" "PqxdhGeneratedBeaconQueryBounds guarded dependencies"
+for theorem_name in accepted_observer_bounds completed_observer_bounds prefix_sign_bound actual_uniform_ledger; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedBeaconQueryBounds.${theorem_name}$" "$generated_beacon_module" "generated Beacon dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_beacon_module" "generated Beacon theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
