@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=349
+	[handwritten-lean]=357
 	[handwritten-proverif]=82
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5850,6 +5850,78 @@ require_line_count 4 '^#guard_msgs in$' "$selected_input_module" "RawCtxSelected
 for theorem_name in left_source pointwise cut_distance cut_bound; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedAliasCut.${theorem_name}$" "$selected_input_module" "selected input dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_input_module" "selected input theorem ${theorem_name}"
+done
+
+phase2_live_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2PreChallenge.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2PreChallenge$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2PreChallenge root import"
+require_line_count 7 '^theorem ' "$phase2_live_module" "PqxdhPhase2PreChallenge theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$phase2_live_module" "PqxdhPhase2PreChallenge guarded dependencies"
+for theorem_name in pre_step owner_pre owner_pre_continuation pre_step_bound owner_pre_bound owner_pre_classes continuation_pre_classes; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2PreChallenge.${theorem_name}$" "$phase2_live_module" "Phase2 live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_live_module" "Phase2 live theorem ${theorem_name}"
+done
+
+phase2_live_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2SourceAux.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2SourceAux$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2SourceAux root import"
+require_line_count 18 '^theorem ' "$phase2_live_module" "PqxdhPhase2SourceAux theorem inventory"
+require_line_count 18 '^#guard_msgs in$' "$phase2_live_module" "PqxdhPhase2SourceAux guarded dependencies"
+for theorem_name in borrowed_coins borrowed_step borrowed_complete source_complete evaluated_complete initial_complete raw_complete generated_dh_source generated_dh_complete generated_conversion source_class_bound source_no_sign source_no_create raw_uniform direct_uniform_bound borrowed_classes source_total_bound source_restrictions; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2SourceAux.${theorem_name}$" "$phase2_live_module" "Phase2 live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_live_module" "Phase2 live theorem ${theorem_name}"
+done
+
+phase2_live_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2KemHandles.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2KemHandles$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2KemHandles root import"
+require_line_count 11 '^theorem ' "$phase2_live_module" "PqxdhPhase2KemHandles theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$phase2_live_module" "PqxdhPhase2KemHandles guarded dependencies"
+for theorem_name in collect_map afterInputs_map prepare_map finish_map full_pre full_tail owner_map native_tail native_adapter native_owner_map native_owner_run; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2KemHandles.${theorem_name}$" "$phase2_live_module" "Phase2 live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_live_module" "Phase2 live theorem ${theorem_name}"
+done
+
+phase2_live_module=proofs/lean/BeaconcryptCore/Computational/PqxdhKemCorrectnessError.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhKemCorrectnessError$' proofs/lean/BeaconcryptCore.lean "PqxdhKemCorrectnessError root import"
+require_line_count 7 '^theorem ' "$phase2_live_module" "PqxdhKemCorrectnessError theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$phase2_live_module" "PqxdhKemCorrectnessError guarded dependencies"
+for theorem_name in error_functional error_probability good_agreement continuation_bound routed_bound sample_bound error_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhKemCorrectnessError.${theorem_name}$" "$phase2_live_module" "Phase2 live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_live_module" "Phase2 live theorem ${theorem_name}"
+done
+
+phase2_live_module=proofs/lean/BeaconcryptCore/Computational/PqxdhKemCorrectnessStopped.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhKemCorrectnessStopped$' proofs/lean/BeaconcryptCore.lean "PqxdhKemCorrectnessStopped root import"
+require_line_count 7 '^theorem ' "$phase2_live_module" "PqxdhKemCorrectnessStopped theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$phase2_live_module" "PqxdhKemCorrectnessStopped guarded dependencies"
+for theorem_name in error_keygen after_bound prepared_bound stopped_bound stopped_branch after_query_bound main_query_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhKemCorrectnessStopped.${theorem_name}$" "$phase2_live_module" "Phase2 live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_live_module" "Phase2 live theorem ${theorem_name}"
+done
+
+phase2_live_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2LiveFinish.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2LiveFinish$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2LiveFinish root import"
+require_line_count 14 '^theorem ' "$phase2_live_module" "PqxdhPhase2LiveFinish theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$phase2_live_module" "PqxdhPhase2LiveFinish guarded dependencies"
+for theorem_name in install_fields finish_interpretation live_interpretation live_schedule source_old source_finish native_raw_attempts finish_supported finish_query_bound live_query_bound old_step_history source_step_history source_schedule_history live_invariant; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2LiveFinish.${theorem_name}$" "$phase2_live_module" "Phase2 live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_live_module" "Phase2 live theorem ${theorem_name}"
+done
+
+phase2_live_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2KemProvenance.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2KemProvenance$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2KemProvenance root import"
+require_line_count 17 '^theorem ' "$phase2_live_module" "PqxdhPhase2KemProvenance theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$phase2_live_module" "PqxdhPhase2KemProvenance guarded dependencies"
+for theorem_name in decode_encode owner_inverse existing_valid fresh_valid prepare_valid afterSigning_valid finish_valid owner_valid native_valid retained_valid records_valid extend_valid start_valid role_step_valid source_step_valid live_valid native_encoded_run; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2KemProvenance.${theorem_name}$" "$phase2_live_module" "Phase2 live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_live_module" "Phase2 live theorem ${theorem_name}"
+done
+
+phase2_live_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2SourceAuxBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2SourceAuxBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2SourceAuxBounds root import"
+require_line_count 6 '^theorem ' "$phase2_live_module" "PqxdhPhase2SourceAuxBounds theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$phase2_live_module" "PqxdhPhase2SourceAuxBounds guarded dependencies"
+for theorem_name in pre_classes post_classes ordinary_classes pre_continuation_classes post_continuation_classes ordinary_continuation_classes; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2SourceAuxBounds.${theorem_name}$" "$phase2_live_module" "Phase2 live dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_live_module" "Phase2 live theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

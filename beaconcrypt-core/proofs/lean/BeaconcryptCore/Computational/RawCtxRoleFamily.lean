@@ -4,7 +4,7 @@ import BeaconcryptCore.Computational.RawCtxBeaconLifecycle
 /-!
 Indexed routing selects an entire Server or Beacon instance while every instance uses the same primitive interpreter. Five statements preserve complete adaptive execution, original replies, all unselected role fields and one common primitive state. Supplied initial role states may be arbitrarily correlated; no key-independence or generator-order interchange premise is used. The per-step query bound transfers without an operational instance-selection factor.
 
-Fin count identifies existing typed API instances; arbitrary raw-frame/machine identifiers remain inside the checked source handlers. This interface does not allocate or generate instances, and its fixed-state execution bound does not charge or declare free their earlier construction. Dynamic registration, imports, reveal/restore operations and global security require additional interfaces. Private full-state equality does not grant the adversary a state-reveal service.
+Fin count identifies existing typed API instances; arbitrary raw-frame/machine identifiers remain inside the checked source handlers. This interface does not allocate or generate instances, and its fixed-state execution bound does not charge or declare free their earlier construction. Dynamic registration, imports, live reveal operations and global security require additional interfaces. Snapshots, persistence, restoration and their consequences are excluded from the active protocol proof. Private full-state equality does not grant the adversary a state-reveal service.
 -/
 
 open OracleComp OracleSpec
