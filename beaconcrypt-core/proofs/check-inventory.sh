@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=310
+	[handwritten-lean]=313
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5481,6 +5481,35 @@ require_line_count 17 '^#guard_msgs in$' "$beacon_phase2_module" "PqxdhBeaconPha
 for theorem_name in total_of_partition simulate_total query_union receive_total raw_total native_raw_total afterRoot_bound tail_bound owner_bound native_raw_lift native_afterRoot_bound native_tail_bound native_tail_lift native_owner_bound interpreted_total_bound native_interpreted_bound native_continuation_bound; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase2Bounds.${theorem_name}$" "$beacon_phase2_module" "Beacon Phase2 dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$beacon_phase2_module" "Beacon Phase2 theorem ${theorem_name}"
+done
+
+
+# HB-101: live sequence-one source tokens, functional worker operations and actual owner contexts.
+live_sequence_module=proofs/lean/BeaconcryptCore/Refinement/LiveSequenceOne.lean
+require_line_count 1 '^import BeaconcryptCore.Refinement.LiveSequenceOne$' proofs/lean/BeaconcryptCore.lean "LiveSequenceOne root import"
+require_line_count 23 '^theorem ' "$live_sequence_module" "LiveSequenceOne theorem inventory"
+require_line_count 23 '^#guard_msgs in$' "$live_sequence_module" "LiveSequenceOne guarded dependencies"
+for theorem_name in RelativeFutureResult.live_cache RelativeFutureResult.live_represents live_cached_represents live_cached_material live_cached_open live_future_open live_receive_prepare ReceiveKdfTrace.live_interpretation LiveOpenRefines.finish_represents live_receive_interpretation live_send_prepare live_send_interpretation live_source_step live_source_trace live_client_trace live_supported_client live_initialize_beacon live_prepared_one live_sequence_one LiveStep.session LiveTrace.session live_commit_binding live_authenticated_client; do
+	require_line_count 1 "^#print axioms beaconcrypt_core.ratchet.concrete.${theorem_name}$" "$live_sequence_module" "live sequence-one dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$live_sequence_module" "live sequence-one theorem ${theorem_name}"
+done
+
+live_sequence_module=proofs/lean/BeaconcryptCore/Refinement/LiveSequenceOneService.lean
+require_line_count 1 '^import BeaconcryptCore.Refinement.LiveSequenceOneService$' proofs/lean/BeaconcryptCore.lean "LiveSequenceOneService root import"
+require_line_count 8 '^theorem ' "$live_sequence_module" "LiveSequenceOneService theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$live_sequence_module" "LiveSequenceOneService guarded dependencies"
+for theorem_name in live_cursor_next live_sequence_successor live_worker_prefix live_worker_publication LivePrepared.worker live_cache_rebuild live_cache_search live_cache_case; do
+	require_line_count 1 "^#print axioms beaconcrypt_core.ratchet.concrete.${theorem_name}$" "$live_sequence_module" "live sequence-one dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$live_sequence_module" "live sequence-one theorem ${theorem_name}"
+done
+
+live_sequence_module=proofs/lean/BeaconcryptCore/Refinement/LiveSequenceOneOwner.lean
+require_line_count 1 '^import BeaconcryptCore.Refinement.LiveSequenceOneOwner$' proofs/lean/BeaconcryptCore.lean "LiveSequenceOneOwner root import"
+require_line_count 9 '^theorem ' "$live_sequence_module" "LiveSequenceOneOwner theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$live_sequence_module" "LiveSequenceOneOwner guarded dependencies"
+for theorem_name in live_owner_raw_prelude live_owner_send_prelude live_word_source live_owner_send_adapter live_owner_receive_adapter live_owner_source_step live_owner_source_trace live_owner_client_trace live_owner_supported_client; do
+	require_line_count 1 "^#print axioms beaconcrypt_core.ratchet.concrete.${theorem_name}$" "$live_sequence_module" "live sequence-one dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$live_sequence_module" "live sequence-one theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

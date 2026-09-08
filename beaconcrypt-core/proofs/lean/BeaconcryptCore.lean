@@ -294,6 +294,9 @@ import BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdfBounds
 import BeaconcryptCore.Computational.PqxdhBeaconPhase2Preparation
 import BeaconcryptCore.Computational.PqxdhBeaconPhase2Publication
 import BeaconcryptCore.Computational.PqxdhBeaconPhase2Bounds
+import BeaconcryptCore.Refinement.LiveSequenceOne
+import BeaconcryptCore.Refinement.LiveSequenceOneService
+import BeaconcryptCore.Refinement.LiveSequenceOneOwner
 /-!
 # Beaconcrypt-core verification root
 
