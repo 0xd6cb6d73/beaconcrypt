@@ -316,6 +316,7 @@ import BeaconcryptCore.Computational.RawCtxSelectedChainGame
 import BeaconcryptCore.Computational.RawCtxSelectedInputCandidates
 import BeaconcryptCore.Computational.RawCtxSourceChainHandles
 import BeaconcryptCore.Computational.LiveRecordEvents
+import BeaconcryptCore.Computational.LiveDecodedRecordEvents
 /-!
 # Beaconcrypt-core verification root
 

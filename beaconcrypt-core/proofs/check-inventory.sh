@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=332
+	[handwritten-lean]=333
 	[handwritten-proverif]=82
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5701,5 +5701,15 @@ require_line_count 1 '^check-proverif: check-proverif-live-material$' Makefile "
 require_line_count 1 '^check-proverif-live-material: \$\(PROVERIF_MATERIAL_TARGETS\)$' Makefile "live material five component gates"
 require_line_count 1 '^verify-proverif-live-material:$' Makefile "live material locked verification target"
 require_line_count 1 '^            target: verify-proverif-live-material$' ../.github/workflows/formal-verification.yml "live material CI gate"
+
+# HB-105: same-source decoded records and consumed positions.
+live_decoded_module=proofs/lean/BeaconcryptCore/Computational/LiveDecodedRecordEvents.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.LiveDecodedRecordEvents$' proofs/lean/BeaconcryptCore.lean "live decoded records root import"
+require_line_count 10 '^theorem ' "$live_decoded_module" "live decoded records theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$live_decoded_module" "live decoded records guarded dependencies"
+for theorem_name in worker_step_positions worker_step_decoded worker_trace_positions worker_trace_decoded spent_positions worker_opened_nodup decoded_openings_provenance decoded_openings_positions worker_opened_fresh source_supported_decoded_records; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.LiveDecodedRecordEvents.${theorem_name}$" "$live_decoded_module" "live decoded records dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$live_decoded_module" "live decoded records theorem ${theorem_name}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
