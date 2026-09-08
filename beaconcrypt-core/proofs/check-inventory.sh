@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=332
+	[handwritten-lean]=341
 	[handwritten-proverif]=82
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5701,5 +5701,81 @@ require_line_count 1 '^check-proverif: check-proverif-live-material$' Makefile "
 require_line_count 1 '^check-proverif-live-material: \$\(PROVERIF_MATERIAL_TARGETS\)$' Makefile "live material five component gates"
 require_line_count 1 '^verify-proverif-live-material:$' Makefile "live material locked verification target"
 require_line_count 1 '^            target: verify-proverif-live-material$' ../.github/workflows/formal-verification.yml "live material CI gate"
+
+
+# HB-102: complete private Phase2 routing, retained source effects and explicit query classes.
+phase2_routing_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2DecapsulationRouting.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2DecapsulationRouting$' proofs/lean/BeaconcryptCore.lean "Phase2 routing PqxdhPhase2DecapsulationRouting root import"
+require_line_count 8 '^theorem ' "$phase2_routing_module" "Phase2 routing PqxdhPhase2DecapsulationRouting theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$phase2_routing_module" "Phase2 routing PqxdhPhase2DecapsulationRouting guarded dependencies"
+for theorem_name in decapsulate_native derive_native derive_reduction decapsulate_supported_native decapsulate_bound derive_bound decapsulate_reduction ordinaryDecapsulate_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2DecapsulationRouting.${theorem_name}$" "$phase2_routing_module" "Phase2 routing PqxdhPhase2DecapsulationRouting dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_routing_module" "Phase2 routing PqxdhPhase2DecapsulationRouting theorem ${theorem_name}"
+done
+phase2_routing_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2InputBytes.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2InputBytes$' proofs/lean/BeaconcryptCore.lean "Phase2 routing PqxdhPhase2InputBytes root import"
+require_line_count 10 '^theorem ' "$phase2_routing_module" "Phase2 routing PqxdhPhase2InputBytes theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$phase2_routing_module" "Phase2 routing PqxdhPhase2InputBytes guarded dependencies"
+for theorem_name in word_roundtrip word_rootArray ciphertext_roundtrip root_input root_response rootCall_native decapCall_native rootCall_reduction decapCall_bound rootCall_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2InputBytes.${theorem_name}$" "$phase2_routing_module" "Phase2 routing PqxdhPhase2InputBytes dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_routing_module" "Phase2 routing PqxdhPhase2InputBytes theorem ${theorem_name}"
+done
+phase2_routing_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBeaconPhase2Shared.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared$' proofs/lean/BeaconcryptCore.lean "Phase2 routing PqxdhBeaconPhase2Shared root import"
+require_line_count 14 '^theorem ' "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2Shared theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2Shared guarded dependencies"
+for theorem_name in admitted_exact collect_realization prepared_related afterInputs_continuation prepare_continuation cleared_related raw_realization afterRoot_realization tail_realization owner_realization owner_continuation owner_query_bounds owner_success owner_failure; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared.${theorem_name}$" "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2Shared dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2Shared theorem ${theorem_name}"
+done
+phase2_routing_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBeaconPhase2SharedBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBeaconPhase2SharedBounds$' proofs/lean/BeaconcryptCore.lean "Phase2 routing PqxdhBeaconPhase2SharedBounds root import"
+require_line_count 15 '^theorem ' "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2SharedBounds theorem inventory"
+require_line_count 15 '^#guard_msgs in$' "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2SharedBounds guarded dependencies"
+for theorem_name in collect_bound afterInputs_bound prepare_bound afterRoot_bound tail_bound owner_bound interpreted_bound continuation_bound collect_decapsulation prepare_decapsulation afterRoot_no_root tail_root owner_selected_bound owner_decapsulation owner_root; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase2SharedBounds.${theorem_name}$" "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2SharedBounds dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2SharedBounds theorem ${theorem_name}"
+done
+phase2_routing_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBeaconPhase2Routed.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBeaconPhase2Routed$' proofs/lean/BeaconcryptCore.lean "Phase2 routing PqxdhBeaconPhase2Routed root import"
+require_line_count 9 '^theorem ' "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2Routed theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2Routed guarded dependencies"
+for theorem_name in publicLift_actual sharedAux_actual preparation_calls tail_calls full_calls owner_actual owner_continuation owner_reduction owner_supported; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase2Routed.${theorem_name}$" "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2Routed dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2Routed theorem ${theorem_name}"
+done
+phase2_routing_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBeaconPhase2RoutedBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBeaconPhase2RoutedBounds$' proofs/lean/BeaconcryptCore.lean "Phase2 routing PqxdhBeaconPhase2RoutedBounds root import"
+require_line_count 9 '^theorem ' "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2RoutedBounds theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2RoutedBounds guarded dependencies"
+for theorem_name in sharedAux_no_root handles_root_step owner_private_root sharedAux_public owner_kind handles_public_step owner_public owner_classes continuation_classes; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase2RoutedBounds.${theorem_name}$" "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2RoutedBounds dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_routing_module" "Phase2 routing PqxdhBeaconPhase2RoutedBounds theorem ${theorem_name}"
+done
+phase2_routing_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2JointIdentity.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2JointIdentity$' proofs/lean/BeaconcryptCore.lean "Phase2 routing PqxdhPhase2JointIdentity root import"
+require_line_count 16 '^theorem ' "$phase2_routing_module" "Phase2 routing PqxdhPhase2JointIdentity theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$phase2_routing_module" "Phase2 routing PqxdhPhase2JointIdentity guarded dependencies"
+for theorem_name in convert_complete staticDh_complete staticDh_continuation converted_public staticDh_source staticDh_source_continuation convert_realization convert_bound staticDh_class_bound staticDh_bound staticDh_no_sign staticDh_no_create selectorDh_class_bound selectorDh_complete afterDh_preserves borrowed_source; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2JointIdentity.${theorem_name}$" "$phase2_routing_module" "Phase2 routing PqxdhPhase2JointIdentity dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_routing_module" "Phase2 routing PqxdhPhase2JointIdentity theorem ${theorem_name}"
+done
+phase2_routing_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2RouteQueries.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2RouteQueries$' proofs/lean/BeaconcryptCore.lean "Phase2 routing PqxdhPhase2RouteQueries root import"
+require_line_count 10 '^theorem ' "$phase2_routing_module" "Phase2 routing PqxdhPhase2RouteQueries theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$phase2_routing_module" "Phase2 routing PqxdhPhase2RouteQueries guarded dependencies"
+for theorem_name in publicLift_route sharedAux_route sharedAux_route_bound decapCall_route routedHandles_decap rootCall_route_bound routedHandles_bound callbackCost_le routedHandles_allowance routed_program; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2RouteQueries.${theorem_name}$" "$phase2_routing_module" "Phase2 routing PqxdhPhase2RouteQueries dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_routing_module" "Phase2 routing PqxdhPhase2RouteQueries theorem ${theorem_name}"
+done
+
+phase2_routing_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2CcaBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2CcaBounds$' proofs/lean/BeaconcryptCore.lean "Phase2 routing PqxdhPhase2CcaBounds root import"
+require_line_count 6 '^theorem ' "$phase2_routing_module" "Phase2 routing PqxdhPhase2CcaBounds theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$phase2_routing_module" "Phase2 routing PqxdhPhase2CcaBounds guarded dependencies"
+for theorem_name in allowance_eq owner_bound owner_route_bound owner_classes continuation_bound continuation_classes; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2CcaBounds.${theorem_name}$" "$phase2_routing_module" "Phase2 routing PqxdhPhase2CcaBounds dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$phase2_routing_module" "Phase2 routing PqxdhPhase2CcaBounds theorem ${theorem_name}"
+done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

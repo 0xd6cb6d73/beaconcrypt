@@ -316,6 +316,15 @@ import BeaconcryptCore.Computational.RawCtxSelectedChainGame
 import BeaconcryptCore.Computational.RawCtxSelectedInputCandidates
 import BeaconcryptCore.Computational.RawCtxSourceChainHandles
 import BeaconcryptCore.Computational.LiveRecordEvents
+import BeaconcryptCore.Computational.PqxdhPhase2DecapsulationRouting
+import BeaconcryptCore.Computational.PqxdhPhase2InputBytes
+import BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared
+import BeaconcryptCore.Computational.PqxdhBeaconPhase2SharedBounds
+import BeaconcryptCore.Computational.PqxdhBeaconPhase2Routed
+import BeaconcryptCore.Computational.PqxdhBeaconPhase2RoutedBounds
+import BeaconcryptCore.Computational.PqxdhPhase2JointIdentity
+import BeaconcryptCore.Computational.PqxdhPhase2RouteQueries
+import BeaconcryptCore.Computational.PqxdhPhase2CcaBounds
 /-!
 # Beaconcrypt-core verification root
 
