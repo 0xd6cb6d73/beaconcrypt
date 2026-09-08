@@ -48,8 +48,8 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=331
-	[handwritten-proverif]=77
+	[handwritten-lean]=332
+	[handwritten-proverif]=82
 	[handwritten-ssprove]=18
 	[inventory]=2
 	[lean-control]=12
@@ -5675,5 +5675,31 @@ for theorem_name in source_step source_alias receive_kdf receive_source send_kdf
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSourceChainHandles.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
 done
+
+# HB-103: concrete live callback events and ideal protected-record origin.
+live_events_module=proofs/lean/BeaconcryptCore/Computational/LiveRecordEvents.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.LiveRecordEvents$' proofs/lean/BeaconcryptCore.lean "live record events root import"
+require_line_count 16 '^theorem ' "$live_events_module" "live record events theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$live_events_module" "live record events guarded dependencies"
+for theorem_name in send_program_erasure open_program_erasure owner_step_erasure owner_erasure source_supported_history source_trace_erasure source_supported_live_history logged_seal_support logged_open_support owner_query_bounds source_send_primitive source_open_primitive source_owner source_trace_consumed source_supported_consumption sequence_one_consumed; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.LiveRecordEvents.${theorem_name}$" "$live_events_module" "live record events dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$live_events_module" "live record events theorem ${theorem_name}"
+done
+for material_control in origin no-disclosure reachable wrong-sequence endpoint-origin; do
+	material_process="proofs/pro-verif/live-material-${material_control}.pv"
+	require_line_count 1 '^query ' "$material_process" "live material single exact query"
+	require_line_count 1 '^process$' "$material_process" "live material complete process"
+	require_line_count 1 '^table live_material_keys\(bitstring, bitstring\)\.$' "$material_process" "live material common value table"
+	require_line_count 2 '^  event PS1PrimitiveReveal\(key\);$' "$material_process" "live material reveal and public import knowledge"
+	require_line_count 1 '^fun ps1_primitive_open_some\(channel, bitstring, bitstring\): bitstring \[data\]\.$' "$material_process" "live material actual success reply"
+	require_line_count 1 '^fun ps1_primitive_open_none\(channel, bitstring\): bitstring \[data\]\.$' "$material_process" "live material explicit rejection reply"
+	require_line_count 1 '^   out\(c, ps1_primitive_open_some\(endpoint,$' "$material_process" "live material success output"
+	require_line_count 1 '^  out\(c, ps1_primitive_open_none\(endpoint,$' "$material_process" "live material rejection output"
+	require_line_count 1 "^    (if|\} else if) \\(scenario == \"live-material-${material_control}\"" proofs/pro-verif/check-results.awk "live material exact classifier ${material_control}"
+done
+require_line_count 1 '^check-proverif: check-proverif-live-material$' Makefile "live material full verification gate"
+require_line_count 1 '^check-proverif-live-material: \$\(PROVERIF_MATERIAL_TARGETS\)$' Makefile "live material five component gates"
+require_line_count 1 '^verify-proverif-live-material:$' Makefile "live material locked verification target"
+require_line_count 1 '^            target: verify-proverif-live-material$' ../.github/workflows/formal-verification.yml "live material CI gate"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

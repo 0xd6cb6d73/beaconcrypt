@@ -79,6 +79,12 @@ PROVERIF_SCENARIOS := \
 PROVERIF_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_VERIFY_TARGETS := $(addprefix verify-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_GENERATED_TARGETS := $(addprefix check-generated-proverif-,$(PROVERIF_SCENARIOS))
+PROVERIF_MATERIAL_TARGETS := \
+	check-proverif-live-material-origin \
+	check-proverif-live-material-no-disclosure \
+	check-proverif-live-material-reachable \
+	check-proverif-live-material-wrong-sequence \
+	check-proverif-live-material-endpoint-origin
 
 SSPROVE_DIR := proofs/ssprove
 
@@ -100,6 +106,7 @@ LEAN_GENERATED_PATHS := \
 
 .PHONY: verify verify-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
+	verify-proverif-live-material check-proverif-live-material $(PROVERIF_MATERIAL_TARGETS) \
 	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity \
@@ -136,6 +143,11 @@ verify-proverif-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+
+verify-proverif-live-material:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO=live-material
 
 verify-ssprove:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -424,6 +436,21 @@ check-proverif-main-registration-controls: check-proverif-extraction
 			-lib $(PROVERIF_DIR)/main-registration-control-queries.pvl \
 			$(PROVERIF_DIR)/baseline.pv | \
 		awk -v scenario=main-registration-controls -f '$(PROVERIF_CHECKER)'
+
+# HB-103: exact ideal protected-record origin and four reachable negative controls.
+# This primitive component is separate from the 32 production scenario roster.
+$(PROVERIF_MATERIAL_TARGETS): check-proverif-transcript-fidelity
+check-proverif-live-material: $(PROVERIF_MATERIAL_TARGETS)
+check-proverif: check-proverif-live-material
+
+check-proverif-live-material-origin check-proverif-live-material-no-disclosure \
+check-proverif-live-material-reachable check-proverif-live-material-wrong-sequence \
+check-proverif-live-material-endpoint-origin: check-proverif-live-material-%: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			$(PROVERIF_DIR)/live-material-$*.pv | \
+		awk -v scenario=live-material-$* -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-classical-equivalence: check-proverif-extraction
 	@set -o pipefail; \

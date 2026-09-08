@@ -1,0 +1,72 @@
+(* LATER-IDEAL primitive/service obligation. A live bank permits fresh secret keys, arbitrary aliases of earlier keys and explicitly public imported keys. Events retain the actual key value, never the alias handle. Arbitrary public nonce/AD/sequence/sender values and unbounded seal/open/reveal calls are allowed. No source KDF distribution, cross-owner agreement, computational primitive interpretation or storage/restoration service is inferred. *)
+set traceDisplay = none.
+set explainDerivation = false.
+set verboseClauses = none.
+set verboseRules = false.
+set verboseGoalReachable = false.
+free live_material_create: channel.
+free live_material_alias: channel.
+free live_material_import: channel.
+table live_material_keys(bitstring, bitstring).
+fun ps1_primitive_seal(bitstring, bitstring, sequence, key_id, bitstring): bitstring [data].
+fun ps1_primitive_open(bitstring, bitstring, sequence, key_id, bitstring): bitstring [data].
+fun ps1_primitive_reveal(): bitstring [data].
+fun ps1_primitive_open_some(channel, bitstring, bitstring): bitstring [data].
+fun ps1_primitive_open_none(channel, bitstring): bitstring [data].
+event PS1PrimitiveSeal(bitstring, bitstring, bitstring, sequence, key_id, bitstring, bitstring).
+event PS1PrimitiveOpen(bitstring, bitstring, bitstring, sequence, key_id, bitstring, bitstring).
+event PS1PrimitiveReveal(bitstring).
+
+query key: bitstring, nonce: bitstring, associated_data: bitstring, target: sequence,
+  sender: key_id, plaintext: bitstring, frame: bitstring;
+  event(PS1PrimitiveOpen(key, nonce, associated_data, target, sender, plaintext, frame)) ==> false.
+
+let PS1PrimitiveSealService(endpoint: channel, key: bitstring) =
+  in(endpoint, ps1_primitive_seal(nonce: bitstring, associated_data: bitstring,
+    target: sequence, sender: key_id, plaintext: bitstring));
+  let frame = seal_frame(ratchet_key_nonce(key, nonce), associated_data, target, sender, plaintext) in
+  event PS1PrimitiveSeal(key, nonce, associated_data, target, sender, plaintext, frame) [];
+  out(c, frame).
+
+let PS1PrimitiveOpenService(endpoint: channel, key: bitstring) =
+  in(endpoint, ps1_primitive_open(nonce: bitstring, associated_data: bitstring,
+    target: sequence, sender: key_id, frame: bitstring));
+  let plaintext = open_frame(ratchet_key_nonce(key, nonce), associated_data, target, sender, frame) in
+  (event PS1PrimitiveOpen(key, nonce, associated_data, target, sender, plaintext, frame);
+   out(c, ps1_primitive_open_some(endpoint,
+     ps1_primitive_open(nonce, associated_data, target, sender, frame), plaintext)))
+  else
+  out(c, ps1_primitive_open_none(endpoint,
+    ps1_primitive_open(nonce, associated_data, target, sender, frame))).
+
+let PS1PrimitiveRevealService(endpoint: channel, key: bitstring) =
+  in(endpoint, =ps1_primitive_reveal());
+  event PS1PrimitiveReveal(key);
+  out(c, key).
+
+let LiveMaterialInstall(key: bitstring) =
+  new handle []: bitstring;
+  new endpoint []: channel;
+  insert live_material_keys(handle, key);
+  out(c, (handle, endpoint));
+  (!PS1PrimitiveSealService(endpoint, key)
+   | !PS1PrimitiveOpenService(endpoint, key)
+   | !PS1PrimitiveRevealService(endpoint, key)).
+
+let LiveMaterialCreate() =
+  in(live_material_create, request: bitstring);
+  new key []: bitstring;
+  LiveMaterialInstall(key).
+
+let LiveMaterialAlias() =
+  in(live_material_alias, handle: bitstring);
+  get live_material_keys(=handle, key: bitstring) in
+  LiveMaterialInstall(key).
+
+let LiveMaterialImport() =
+  in(live_material_import, key: bitstring);
+  event PS1PrimitiveReveal(key);
+  LiveMaterialInstall(key).
+
+process
+  (!LiveMaterialCreate() | !LiveMaterialAlias() | !LiveMaterialImport())

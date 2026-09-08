@@ -19,6 +19,14 @@ function require_exact(wanted, label, query_index, found) {
 
 /^RESULT / {
   print
+  if (scenario ~ /^live-material-/) {
+    material_result_count++
+    material_result = $0
+  }
+}
+
+/^A trace has been found\.$/ {
+  material_trace_count++
 }
 
 /^RESULT Observational equivalence is / {
@@ -609,6 +617,31 @@ END {
     wanted = "Query not event(ReceiveHonestFutureDelivered(" receive_reachable_future_arguments ")) is false."
     require_exact(wanted,
                   "state-neutral post-compromise delivery reachability")
+  } else if (scenario ~ /^live-material-/) {
+    if (query_count != 1 || material_result_count != 1) {
+      reject("expected exactly one material-service query and result")
+    }
+    if (scenario == "live-material-origin") {
+      wanted = "Query event(PS1PrimitiveOpen(key_7,nonce_9,associated_data_6,target_6,sender_6,plaintext_6,frame_6)) ==> event(PS1PrimitiveSeal(key_7,nonce_9,associated_data_6,target_6,sender_6,plaintext_6,frame_6)) || event(PS1PrimitiveReveal(key_7)) is true."
+    } else if (scenario == "live-material-no-disclosure") {
+      wanted = "Query event(PS1PrimitiveOpen(key_7,nonce_9,associated_data_6,target_6,sender_6,plaintext_6,frame_6)) ==> event(PS1PrimitiveSeal(key_7,nonce_9,associated_data_6,target_6,sender_6,plaintext_6,frame_6)) is false."
+    } else if (scenario == "live-material-reachable") {
+      wanted = "Query not event(PS1PrimitiveOpen(key_7,nonce_9,associated_data_6,target_6,sender_6,plaintext_6,frame_6)) is false."
+    } else if (scenario == "live-material-wrong-sequence") {
+      wanted = "Query event(PS1PrimitiveOpen(key_7,nonce_9,associated_data_6,target_6,sender_6,plaintext_6,frame_6)) ==> event(PS1PrimitiveSeal(key_7,nonce_9,associated_data_6,target_6,sender_6,plaintext_6,frame_6)) || event(PS1PrimitiveReveal(key_7)) is false."
+    } else if (scenario == "live-material-endpoint-origin") {
+      wanted = "Query event(PS1PrimitiveOpen(endpoint_12,key_7,nonce_9,associated_data_6,target_6,sender_6,plaintext_6,frame_6)) ==> event(PS1PrimitiveSeal(endpoint_12,key_7,nonce_9,associated_data_6,target_6,sender_6,plaintext_6,frame_6)) || event(PS1PrimitiveReveal(key_7)) is false."
+    } else {
+      reject("unknown material-service scenario: " scenario)
+    }
+    require_exact(wanted, "actual-key material-service")
+    if (material_result != "RESULT " substr(wanted, 7)) {
+      reject("substituted material-service result: " material_result)
+    }
+    expected_traces = (scenario == "live-material-origin" ? 0 : 1)
+    if (material_trace_count != expected_traces) {
+      reject("expected " expected_traces " reconstructed material-service traces, saw " material_trace_count)
+    }
   } else {
     reject("unknown scenario: " scenario)
   }
