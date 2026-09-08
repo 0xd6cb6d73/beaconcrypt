@@ -325,6 +325,7 @@ import BeaconcryptCore.Computational.PqxdhBeaconPhase2RoutedBounds
 import BeaconcryptCore.Computational.PqxdhPhase2JointIdentity
 import BeaconcryptCore.Computational.PqxdhPhase2RouteQueries
 import BeaconcryptCore.Computational.PqxdhPhase2CcaBounds
+import BeaconcryptCore.Computational.LiveDecodedRecordEvents
 /-!
 # Beaconcrypt-core verification root
 
