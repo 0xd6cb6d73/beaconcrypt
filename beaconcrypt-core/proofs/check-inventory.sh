@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=313
+	[handwritten-lean]=331
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5510,6 +5510,170 @@ require_line_count 9 '^#guard_msgs in$' "$live_sequence_module" "LiveSequenceOne
 for theorem_name in live_owner_raw_prelude live_owner_send_prelude live_word_source live_owner_send_adapter live_owner_receive_adapter live_owner_source_step live_owner_source_trace live_owner_client_trace live_owner_supported_client; do
 	require_line_count 1 "^#print axioms beaconcrypt_core.ratchet.concrete.${theorem_name}$" "$live_sequence_module" "live sequence-one dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$live_sequence_module" "live sequence-one theorem ${theorem_name}"
+done
+
+
+# HB-100: actual shared KDF inputs, opaque source drivers and private selected-chain cut.
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxChainInitialization.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxChainInitialization$' proofs/lean/BeaconcryptCore.lean "RawCtxChainInitialization root import"
+require_line_count 4 '^theorem ' "$evolving_kdf_module" "RawCtxChainInitialization theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxChainInitialization guarded dependencies"
+for theorem_name in initial_halves kernel_new initial_split initial_source; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxChainInitialization.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxChainInterpretation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxChainInterpretation$' proofs/lean/BeaconcryptCore.lean "RawCtxChainInterpretation root import"
+require_line_count 13 '^theorem ' "$evolving_kdf_module" "RawCtxChainInterpretation theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxChainInterpretation guarded dependencies"
+for theorem_name in publish_cached_chains receive_key_chains prepare_cached_chains pending_slots_body_chains pending_slots_chains pending_valid_chains publish_future_slots_chains publish_future_chains_bounded publish_future_chains opening_sequence_chains opening_material_chains opening_finish_chains opening_run_chains; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxChainInterpretation.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxChainOpeningArguments.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxChainOpeningArguments$' proofs/lean/BeaconcryptCore.lean "RawCtxChainOpeningArguments root import"
+require_line_count 3 '^theorem ' "$evolving_kdf_module" "RawCtxChainOpeningArguments theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxChainOpeningArguments guarded dependencies"
+for theorem_name in arguments_chains adapter_chains native_chains; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxChainOpeningArguments.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxChainOwner.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxChainOwner$' proofs/lean/BeaconcryptCore.lean "RawCtxChainOwner root import"
+require_line_count 8 '^theorem ' "$evolving_kdf_module" "RawCtxChainOwner theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxChainOwner guarded dependencies"
+for theorem_name in rawReceive_native sendOwner_native owner_native source_step source_schedule handles_source handles_query_bounds handles_uniform; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxChainOwner.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxChainRealization.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxChainRealization$' proofs/lean/BeaconcryptCore.lean "RawCtxChainRealization root import"
+require_line_count 6 '^theorem ' "$evolving_kdf_module" "RawCtxChainRealization theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxChainRealization guarded dependencies"
+for theorem_name in receive_program receive_execute send_program send_execute receive_native send_native; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxChainRealization.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxChainReceive.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxChainReceive$' proofs/lean/BeaconcryptCore.lean "RawCtxChainReceive root import"
+require_line_count 15 '^theorem ' "$evolving_kdf_module" "RawCtxChainReceive theorem inventory"
+require_line_count 15 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxChainReceive guarded dependencies"
+for theorem_name in native_resume native_begin resume_total begin_total normalResume_exact normalBegin_exact normalResume_native normalBegin_native native_rank normalResume_rank finish_total normalFinish_exact normalFinish_native program_native execute_native; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxChainReceive.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxChainReceiveBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxChainReceiveBounds$' proofs/lean/BeaconcryptCore.lean "RawCtxChainReceiveBounds root import"
+require_line_count 6 '^theorem ' "$evolving_kdf_module" "RawCtxChainReceiveBounds theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxChainReceiveBounds guarded dependencies"
+for theorem_name in resume_small resume_cost program_cost begin_cost receive_bound program_open_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxChainReceiveBounds.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxChainSend.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxChainSend$' proofs/lean/BeaconcryptCore.lean "RawCtxChainSend root import"
+require_line_count 9 '^theorem ' "$evolving_kdf_module" "RawCtxChainSend theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxChainSend guarded dependencies"
+for theorem_name in native_resume native_begin begin_total normalBegin_exact normalBegin_native program_native execute_native program_kdf_bound program_seal_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxChainSend.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxFreshChainCut.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxFreshChainCut$' proofs/lean/BeaconcryptCore.lean "RawCtxFreshChainCut root import"
+require_line_count 6 '^theorem ' "$evolving_kdf_module" "RawCtxFreshChainCut theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxFreshChainCut guarded dependencies"
+for theorem_name in decoded_parts receive_resume send_resume sampledCut_partition typedCut_bytes observedCut_delayed; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxFreshChainCut.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxInitializedKdfFamily.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxInitializedKdfFamily$' proofs/lean/BeaconcryptCore.lean "RawCtxInitializedKdfFamily root import"
+require_line_count 5 '^theorem ' "$evolving_kdf_module" "RawCtxInitializedKdfFamily theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxInitializedKdfFamily guarded dependencies"
+for theorem_name in initial_projection compiler_real source_complete compiler_step compiler_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxInitializedKdfFamily.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxKdfRequestTable.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxKdfRequestTable$' proofs/lean/BeaconcryptCore.lean "RawCtxKdfRequestTable root import"
+require_line_count 11 '^theorem ' "$evolving_kdf_module" "RawCtxKdfRequestTable theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxKdfRequestTable guarded dependencies"
+for theorem_name in fullResponse_bytes initialResponse_bytes fullResponse_source initialResponse_source consistent_empty consistent_record memo_step recorded_lookup assemble_parts full_partition table_complete; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxKdfRequestTable.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxKdfRequestViews.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxKdfRequestViews$' proofs/lean/BeaconcryptCore.lean "RawCtxKdfRequestViews root import"
+require_line_count 7 '^theorem ' "$evolving_kdf_module" "RawCtxKdfRequestViews theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxKdfRequestViews guarded dependencies"
+for theorem_name in source_projection memo_forward project_bytes reply_width initial_ongoing_address initial_public_address initial_ongoing_prefix; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxKdfRequestViews.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxNativeKdfFamily.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxNativeKdfFamily$' proofs/lean/BeaconcryptCore.lean "RawCtxNativeKdfFamily root import"
+require_line_count 4 '^theorem ' "$evolving_kdf_module" "RawCtxNativeKdfFamily theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxNativeKdfFamily guarded dependencies"
+for theorem_name in compiler_real backend_complete source_complete source_uniform; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxNativeKdfFamily.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxNativeKdfFamilyBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxNativeKdfFamilyBounds$' proofs/lean/BeaconcryptCore.lean "RawCtxNativeKdfFamilyBounds root import"
+require_line_count 6 '^theorem ' "$evolving_kdf_module" "RawCtxNativeKdfFamilyBounds theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxNativeKdfFamilyBounds guarded dependencies"
+for theorem_name in compiler_step compiler_bound nativeLift_bound protocol_step reveal_step source_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxNativeKdfFamilyBounds.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedChain.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedChain$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedChain root import"
+require_line_count 10 '^theorem ' "$evolving_kdf_module" "RawCtxSelectedChain theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxSelectedChain guarded dependencies"
+for theorem_name in step_source interpret_hide native_rebase receive_kdf send_kdf send_seal send_source receive_open receive_source source_schedule; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedChain.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedChainGame.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedChainGame$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedChainGame root import"
+require_line_count 3 '^theorem ' "$evolving_kdf_module" "RawCtxSelectedChainGame theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxSelectedChainGame guarded dependencies"
+for theorem_name in source_address actual_eq_source selected_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedChainGame.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedInputCandidates.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedInputCandidates$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedInputCandidates root import"
+require_line_count 2 '^theorem ' "$evolving_kdf_module" "RawCtxSelectedInputCandidates theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxSelectedInputCandidates guarded dependencies"
+for theorem_name in uniform_candidates observed_candidates; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedInputCandidates.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
+done
+
+evolving_kdf_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSourceChainHandles.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSourceChainHandles$' proofs/lean/BeaconcryptCore.lean "RawCtxSourceChainHandles root import"
+require_line_count 6 '^theorem ' "$evolving_kdf_module" "RawCtxSourceChainHandles theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$evolving_kdf_module" "RawCtxSourceChainHandles guarded dependencies"
+for theorem_name in source_step source_alias receive_kdf receive_source send_kdf send_source; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSourceChainHandles.${theorem_name}$" "$evolving_kdf_module" "evolving KDF dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$evolving_kdf_module" "evolving KDF theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
