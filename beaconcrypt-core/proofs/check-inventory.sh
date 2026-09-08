@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=305
+	[handwritten-lean]=307
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5434,6 +5434,25 @@ require_line_count 4 '^#guard_msgs in$' "$generated_beacon_module" "PqxdhGenerat
 for theorem_name in accepted_observer_bounds completed_observer_bounds prefix_sign_bound actual_uniform_ledger; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedBeaconQueryBounds.${theorem_name}$" "$generated_beacon_module" "generated Beacon dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_beacon_module" "generated Beacon theorem ${theorem_name}"
+done
+
+# HB-98: concrete generated root Extract/Expand reductions and complete resource ledgers.
+generated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhGeneratedBeaconKdf.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdf$' proofs/lean/BeaconcryptCore.lean "PqxdhGeneratedBeaconKdf root import"
+require_line_count 4 '^theorem ' "$generated_root_module" "PqxdhGeneratedBeaconKdf theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$generated_root_module" "PqxdhGeneratedBeaconKdf guarded dependencies"
+for theorem_name in authenticated_family_bound authenticated_uniform_roots_bound native_root_query_bound authenticated_native_root_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdf.${theorem_name}$" "$generated_root_module" "generated root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_root_module" "generated root theorem ${theorem_name}"
+done
+
+generated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhGeneratedBeaconKdfBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdfBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhGeneratedBeaconKdfBounds root import"
+require_line_count 9 '^theorem ' "$generated_root_module" "PqxdhGeneratedBeaconKdfBounds theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$generated_root_module" "PqxdhGeneratedBeaconKdfBounds guarded dependencies"
+for theorem_name in borrowed_uniform_bound borrowed_class_bound prepare_uniform_bound prepare_class_bound native_sampler_bounds reduction_query_ledger reduction_sampler_ledger ordinary_kem_ledger prepare_decapsulation_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdfBounds.${theorem_name}$" "$generated_root_module" "generated root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_root_module" "generated root theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

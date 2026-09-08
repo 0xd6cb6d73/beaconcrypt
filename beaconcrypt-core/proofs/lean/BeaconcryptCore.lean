@@ -289,6 +289,8 @@ import BeaconcryptCore.Computational.PqxdhGeneratedRootQueryBounds
 import BeaconcryptCore.Computational.PqxdhGeneratedBeaconSelector
 import BeaconcryptCore.Computational.PqxdhGeneratedBeaconExperiment
 import BeaconcryptCore.Computational.PqxdhGeneratedBeaconQueryBounds
+import BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdf
+import BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdfBounds
 /-!
 # Beaconcrypt-core verification root
 

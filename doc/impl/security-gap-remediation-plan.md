@@ -1,5 +1,7 @@
 # Security-gap remediation on vcvio
 
+The active computational-symbolic proof covers live protocol execution and the specified key-compromise interfaces. The user explicitly excluded snapshots, persistence, restoration and their consequences on 2026-09-08. No storage or restore interface, guarantee or deployment premise is required for this proof; earlier records of separate restoration or persistence work are historical and do not expand its scope.
+
 ## Baseline and integration ownership
 
 The starting commit is `10efd2b` on `vcvio`, identical to `origin/vcvio` after a fresh fetch on 2026-09-05. The main working tree was clean. Existing branches and worktrees are unrelated preserved work; none will be reset, removed, or force-pushed. Findings are hypotheses to check against source, proofs, fixtures, and maintained reference documentation.
@@ -30,7 +32,7 @@ Before each push, fetch `origin/vcvio`, inspect divergence and reconcile by merg
 
 No result may conflate tests or source tripwires with formal semantic correspondence. Do not assume the desired protocol conclusion under a new primitive-sounding name. Standard primitive games, extra cryptographic assumptions, symbolic idealizations, and unproved composition steps must be separately identified, including correlated evolving keys, session separation, compromise and reduction losses.
 
-Forward secrecy does not provide recovery from current-chain compromise; skipped keys, snapshots, copied secrets and retained plaintext limit past-message confidentiality. Core normal-return certificates do not establish whole-application memory/runtime safety; count the current certificates before quoting a total. Constant-time primitive calls and comparison do not prove constant-time protocol execution, and no timing attack is claimed without evidence. Self-signed beacon authentication does not authorize tasking; recipient policy belongs to the application unless separately implemented and verified. An unkeyed snapshot digest is a content identifier, not integrity, rollback resistance or linearizability.
+Forward secrecy does not provide recovery from current-chain compromise; live skipped keys and retained plaintext limit past-message confidentiality. Core normal-return certificates do not establish whole-application memory/runtime safety; count the current certificates before quoting a total. Constant-time primitive calls and comparison do not prove constant-time protocol execution, and no timing attack is claimed without evidence. Self-signed beacon authentication does not authorize tasking; recipient policy belongs to the application unless separately implemented and verified.
 
 ## Progress
 
