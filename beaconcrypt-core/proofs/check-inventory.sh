@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=342
+	[handwritten-lean]=349
 	[handwritten-proverif]=82
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5786,6 +5786,70 @@ require_line_count 10 '^#guard_msgs in$' "$live_decoded_module" "live decoded re
 for theorem_name in worker_step_positions worker_step_decoded worker_trace_positions worker_trace_decoded spent_positions worker_opened_nodup decoded_openings_provenance decoded_openings_positions worker_opened_fresh source_supported_decoded_records; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.LiveDecodedRecordEvents.${theorem_name}$" "$live_decoded_module" "live decoded records dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$live_decoded_module" "live decoded records theorem ${theorem_name}"
+done
+
+# HB-104: actual candidate traces, public input aliases and full-state selected routing.
+selected_input_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedQueryTrace.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedQueryTrace$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedQueryTrace root import"
+require_line_count 9 '^theorem ' "$selected_input_module" "RawCtxSelectedQueryTrace theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_input_module" "RawCtxSelectedQueryTrace guarded dependencies"
+for theorem_name in query_erase complete length_bound rootVector_concrete inputs_bound receive_erase send_erase receive_length send_length; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.${theorem_name}$" "$selected_input_module" "selected input dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_input_module" "selected input theorem ${theorem_name}"
+done
+
+selected_input_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedTraceOwner.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedTraceOwner$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedTraceOwner root import"
+require_line_count 7 '^theorem ' "$selected_input_module" "RawCtxSelectedTraceOwner theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_input_module" "RawCtxSelectedTraceOwner guarded dependencies"
+for theorem_name in source_step source_schedule native_schedule source_step_length source_length randomObserver_length stopped_candidates_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedTraceOwner.${theorem_name}$" "$selected_input_module" "selected input dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_input_module" "selected input theorem ${theorem_name}"
+done
+
+selected_input_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedPublicTrace.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedPublicTrace$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedPublicTrace root import"
+require_line_count 12 '^theorem ' "$selected_input_module" "RawCtxSelectedPublicTrace theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_input_module" "RawCtxSelectedPublicTrace guarded dependencies"
+for theorem_name in bytesCandidate_contains bytesCandidate_length inputs_bound public_alias public_erase public_length source_step source_schedule source_step_length source_length randomObserver_length stopped_candidates_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedPublicTrace.${theorem_name}$" "$selected_input_module" "selected input dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_input_module" "selected input theorem ${theorem_name}"
+done
+
+selected_input_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedAliasCoupling.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedAliasCoupling$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedAliasCoupling root import"
+require_line_count 10 '^theorem ' "$selected_input_module" "RawCtxSelectedAliasCoupling theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_input_module" "RawCtxSelectedAliasCoupling guarded dependencies"
+for theorem_name in marked_erase marked_sticky hit_marked agree_good marked_distance marked_graph complete_graph complete_erase bad_probability recorded_distance; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedAliasCoupling.${theorem_name}$" "$selected_input_module" "selected input dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_input_module" "selected input theorem ${theorem_name}"
+done
+
+selected_input_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedAliasPrimitives.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedAliasPrimitives$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedAliasPrimitives root import"
+require_line_count 7 '^theorem ' "$selected_input_module" "RawCtxSelectedAliasPrimitives theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_input_module" "RawCtxSelectedAliasPrimitives guarded dependencies"
+for theorem_name in public_input_exact hidden_receive known_receive hidden_send known_send public_consistent recorded_distance; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedAliasPrimitives.${theorem_name}$" "$selected_input_module" "selected input dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_input_module" "selected input theorem ${theorem_name}"
+done
+
+selected_input_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedAliasCompiler.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedAliasCompiler$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedAliasCompiler root import"
+require_line_count 8 '^theorem ' "$selected_input_module" "RawCtxSelectedAliasCompiler theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_input_module" "RawCtxSelectedAliasCompiler guarded dependencies"
+for theorem_name in receive_recorded send_recorded public_recorded step_recorded nested_flatten source_schedule source_project source_distance; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedAliasCompiler.${theorem_name}$" "$selected_input_module" "selected input dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_input_module" "selected input theorem ${theorem_name}"
+done
+
+selected_input_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedAliasCut.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedAliasCut$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedAliasCut root import"
+require_line_count 4 '^theorem ' "$selected_input_module" "RawCtxSelectedAliasCut theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_input_module" "RawCtxSelectedAliasCut guarded dependencies"
+for theorem_name in left_source pointwise cut_distance cut_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedAliasCut.${theorem_name}$" "$selected_input_module" "selected input dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_input_module" "selected input theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

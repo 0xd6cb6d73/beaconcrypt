@@ -326,6 +326,13 @@ import BeaconcryptCore.Computational.PqxdhPhase2JointIdentity
 import BeaconcryptCore.Computational.PqxdhPhase2RouteQueries
 import BeaconcryptCore.Computational.PqxdhPhase2CcaBounds
 import BeaconcryptCore.Computational.LiveDecodedRecordEvents
+import BeaconcryptCore.Computational.RawCtxSelectedQueryTrace
+import BeaconcryptCore.Computational.RawCtxSelectedTraceOwner
+import BeaconcryptCore.Computational.RawCtxSelectedPublicTrace
+import BeaconcryptCore.Computational.RawCtxSelectedAliasCoupling
+import BeaconcryptCore.Computational.RawCtxSelectedAliasPrimitives
+import BeaconcryptCore.Computational.RawCtxSelectedAliasCompiler
+import BeaconcryptCore.Computational.RawCtxSelectedAliasCut
 /-!
 # Beaconcrypt-core verification root
 
