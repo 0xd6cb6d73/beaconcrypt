@@ -5049,4 +5049,179 @@ def ratchet.RatchetKdfOutput.impl.nonce
   (self : ratchet.RatchetKdfOutput) : RustM ratchet.RatchetNonce := do
   ok self.nonce
 
+/-- [beaconcrypt_core::record::COMMITMENT_SIZE]
+    Source: 'beaconcrypt-core/src/record.rs', lines 13:0-13:38
+    Visibility: public -/
+@[global_simps, irreducible] def record.COMMITMENT_SIZE : Std.Usize := 64#usize
+
+/-- [beaconcrypt_core::record::MESSAGE_OVERHEAD]
+    Source: 'beaconcrypt-core/src/record.rs', lines 14:0-14:68
+    Visibility: public -/
+@[global_simps, irreducible]
+def record.MESSAGE_OVERHEAD : RustM Std.Usize :=
+  record.COMMITMENT_SIZE + commitment.AEAD_TAG_SIZE
+
+/-- [beaconcrypt_core::record::finish_frame_read]:
+    Source: 'beaconcrypt-core/src/record.rs', lines 17:0-23:1
+    Visibility: public -/
+def record.finish_frame_read
+  {Message : Type} (remaining : Slice Std.U8) (message : Message) :
+  RustM (core.option.Option Message)
+  := do
+  let b ← core.slice.Slice.is_empty remaining
+  if b
+  then ok (core.option.Option.Some message)
+  else ok core.option.Option.None
+
+/-- [beaconcrypt_core::record::{beaconcrypt_core::record::OpenFrameContext<'a>}::from_frame]:
+    Source: 'beaconcrypt-core/src/record.rs', lines 35:4-61:5
+    Visibility: public -/
+def record.OpenFrameContext.from_frame
+  (ciphertext : Slice Std.U8) (associated_data : Array Std.U8 153#usize)
+  (sender_kid : Std.U64) :
+  RustM (core.option.Option record.OpenFrameContext)
+  := do
+  let i ← core.slice.Slice.len ciphertext
+  let i1 ← record.MESSAGE_OVERHEAD
+  if i <= i1
+  then ok core.option.Option.None
+  else
+    let i2 ← i - record.COMMITMENT_SIZE
+    let (base_ciphertext, supplied_commitment) ←
+      core.slice.Slice.split_at ciphertext i2
+    let i3 ← core.slice.Slice.len base_ciphertext
+    let i4 ← i3 - commitment.AEAD_TAG_SIZE
+    let tag ←
+      core.Slice.Insts.CoreOpsIndexIndex.index
+        (core.ops.range.RangeFromUsize.Insts.CoreSliceIndexSliceIndexSliceSlice
+        Std.U8) base_ciphertext { start := i4 }
+    let r ←
+      core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+        16#usize tag
+    match r with
+    | core.result.Result.Ok tag1 =>
+      let r1 ←
+        core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+          64#usize supplied_commitment
+      match r1 with
+      | core.result.Result.Ok commitment =>
+        ok (core.option.Option.Some
+          {
+            base_ciphertext,
+            tag := tag1,
+            commitment,
+            associated_data,
+            sender_kid
+          })
+      | core.result.Result.Err _ => ok core.option.Option.None
+    | core.result.Result.Err _ => ok core.option.Option.None
+
+/-- [beaconcrypt_core::record::begin_open]:
+    Source: 'beaconcrypt-core/src/record.rs', lines 80:0-98:1
+    Visibility: public -/
+def record.begin_open
+  (opening : ratchet.concrete.ReceiveOpen record.OpenFrameContext) :
+  RustM record.OpenStart
+  := do
+  let o ← ratchet.concrete.ReceiveOpen.material opening
+  match o with
+  | core.option.Option.None =>
+    let (crk, _) ← ratchet.concrete.ReceiveOpen.reject opening
+    ok (record.OpenStart.OpenRejected crk)
+  | core.option.Option.Some material =>
+    let context ← ratchet.concrete.ReceiveOpen.impl.context opening
+    let rk ← ratchet.RatchetMaterial.impl.key material
+    let a ← ratchet.RatchetKey.as_bytes rk
+    let rn ← ratchet.RatchetMaterial.impl.nonce material
+    let a1 ← ratchet.RatchetNonce.as_bytes rn
+    let i ← ratchet.concrete.ReceiveOpen.sequence opening
+    let transcript ←
+      commitment.build_commitment_transcript a a1 context.associated_data
+        context.tag i context.sender_kid
+    ok (record.OpenStart.OpenCommitmentRequested { opening, transcript })
+
+/-- [beaconcrypt_core::record::{beaconcrypt_core::record::OpenCommitment<'a>}::transcript]:
+    Source: 'beaconcrypt-core/src/record.rs', lines 101:4-103:5
+    Visibility: public -/
+def record.OpenCommitment.impl.transcript
+  (self : record.OpenCommitment) : RustM commitment.CommitmentTranscript := do
+  ok self.transcript
+
+/-- [beaconcrypt_core::record::{beaconcrypt_core::record::OpenCommitment<'a>}::transcript_mut]:
+    Source: 'beaconcrypt-core/src/record.rs', lines 106:4-108:5
+    Visibility: public -/
+def record.OpenCommitment.transcript_mut
+  (self : record.OpenCommitment) :
+  RustM (commitment.CommitmentTranscript × (commitment.CommitmentTranscript
+    → record.OpenCommitment))
+  := do
+  let back := fun ct => { self with transcript := ct }
+  ok (self.transcript, back)
+
+/-- [beaconcrypt_core::record::{beaconcrypt_core::record::OpenCommitment<'a>}::supplied_commitment]:
+    Source: 'beaconcrypt-core/src/record.rs', lines 110:4-112:5
+    Visibility: public -/
+def record.OpenCommitment.supplied_commitment
+  (self : record.OpenCommitment) : RustM (Array Std.U8 64#usize) := do
+  let ofc ← ratchet.concrete.ReceiveOpen.impl.context self.opening
+  ok ofc.commitment
+
+/-- [beaconcrypt_core::record::{beaconcrypt_core::record::OpenCommitment<'a>}::resume]:
+    Source: 'beaconcrypt-core/src/record.rs', lines 115:4-122:5
+    Visibility: public -/
+def record.OpenCommitment.resume
+  (self : record.OpenCommitment) (commitment_matches : Bool) :
+  RustM record.OpenAfterCommitment
+  := do
+  if commitment_matches
+  then
+    ok (record.OpenAfterCommitment.OpenAeadRequested
+      { opening := self.opening })
+  else
+    let (crk, _) ← ratchet.concrete.ReceiveOpen.reject self.opening
+    ok (record.OpenAfterCommitment.OpenCommitmentRejected crk)
+
+/-- [beaconcrypt_core::record::{beaconcrypt_core::record::OpenAead<'_0>}::request]:
+    Source: 'beaconcrypt-core/src/record.rs', lines 153:4-165:5
+    Visibility: public -/
+def record.OpenAead.request
+  (self : record.OpenAead) :
+  RustM (core.option.Option record.AeadRequest)
+  := do
+  let o ← ratchet.concrete.ReceiveOpen.material self.opening
+  match o with
+  | core.option.Option.None => ok core.option.Option.None
+  | core.option.Option.Some material =>
+    let context ← ratchet.concrete.ReceiveOpen.impl.context self.opening
+    let rk ← ratchet.RatchetMaterial.impl.key material
+    let a ← ratchet.RatchetKey.as_bytes rk
+    let rn ← ratchet.RatchetMaterial.impl.nonce material
+    let a1 ← ratchet.RatchetNonce.as_bytes rn
+    ok (core.option.Option.Some
+      {
+        key := a,
+        nonce := a1,
+        ciphertext := context.base_ciphertext,
+        associated_data := context.associated_data
+      })
+
+/-- [beaconcrypt_core::record::{beaconcrypt_core::record::OpenAead<'_0>}::finish]:
+    Source: 'beaconcrypt-core/src/record.rs', lines 168:4-184:5
+    Visibility: public -/
+def record.OpenAead.finish
+  {Plaintext : Type} (self : record.OpenAead)
+  (opened : core.option.Option Plaintext) :
+  RustM (ratchet.concrete.ConcreteRatchetKernel × (core.option.Option
+    (record.OpenedRecord Plaintext)))
+  := do
+  match opened with
+  | core.option.Option.None =>
+    ratchet.concrete.ReceiveOpen.finish self.opening core.option.Option.None
+  | core.option.Option.Some plaintext =>
+    let ofc ← ratchet.concrete.ReceiveOpen.impl.context self.opening
+    let seq ← ratchet.concrete.ReceiveOpen.sequence self.opening
+    ratchet.concrete.ReceiveOpen.finish self.opening (core.option.Option.Some
+      ({ plaintext, key_id := ofc.sender_kid, seq } : record.OpenedRecord
+      Plaintext))
+
 end beaconcrypt_core

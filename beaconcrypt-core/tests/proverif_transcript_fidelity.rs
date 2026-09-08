@@ -65,6 +65,7 @@ const ADAPTER_RATCHET: &str = include_str!("../../beaconcrypt/src/ratchet.rs");
 const ADAPTER_SHARED: &str = include_str!("../../beaconcrypt/src/shared.rs");
 const ADAPTER_SERVER: &str = include_str!("../../beaconcrypt/src/server.rs");
 const ADAPTER_BEACON: &str = include_str!("../../beaconcrypt/src/beacon.rs");
+const CORE_RECORD: &str = include_str!("../src/record.rs");
 const CORE_COMMITMENT: &str = include_str!("../src/commitment.rs");
 const CORE_PQXDH: &str = include_str!("../src/pqxdh.rs");
 const CORE_PQXDH_CONCRETE: &str = include_str!("../src/pqxdh/concrete.rs");
@@ -695,6 +696,7 @@ struct Snapshot {
 	makefile: String,
 	adapter_ratchet: String,
 	adapter_shared: String,
+	core_record: String,
 	core_commitment: String,
 	core_pqxdh: String,
 	core_pqxdh_concrete: String,
@@ -742,6 +744,7 @@ impl Snapshot {
 			makefile: CORE_MAKEFILE.to_owned(),
 			adapter_ratchet: ADAPTER_RATCHET.to_owned(),
 			adapter_shared: ADAPTER_SHARED.to_owned(),
+			core_record: CORE_RECORD.to_owned(),
 			core_commitment: CORE_COMMITMENT.to_owned(),
 			core_pqxdh: CORE_PQXDH.to_owned(),
 			core_pqxdh_concrete: CORE_PQXDH_CONCRETE.to_owned(),
@@ -1376,6 +1379,263 @@ fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
 	Ok(())
 }
 
+// These are source fixtures for the production-used extracted wrapper and its native primitive interpreter.
+fn validate_record_opening_source(snapshot: &Snapshot) -> Result<(), String> {
+	let source = compact(&uncommented_rust(&snapshot.core_record)?);
+	let adapter = compact(&uncommented_rust(&snapshot.adapter_ratchet)?);
+	require_once(
+		&adapter,
+		"usebeaconcrypt_core::record::{selfasverified_record,OpenFrameContext,finish_frame_read};",
+		"CryptoFrame actual extracted wrapper import",
+	)?;
+	for wanted in [
+		"pubconstCOMMITMENT_SIZE:usize=64;",
+		"pubconstMESSAGE_OVERHEAD:usize=COMMITMENT_SIZE+AEAD_TAG_SIZE;",
+	] {
+		require_once(&source, wanted, "CryptoFrame core payload constants")?;
+	}
+	let context = rust_body(&snapshot.core_record, "from_frame")?;
+	for (wanted, label) in [
+		(
+			"ifciphertext.len()<=MESSAGE_OVERHEAD{returnNone;}",
+			"CryptoFrame open length gate",
+		),
+		(
+			"let(base_ciphertext,supplied_commitment)=ciphertext.split_at(ciphertext.len()-COMMITMENT_SIZE);",
+			"CryptoFrame split commitment boundary",
+		),
+		(
+			"lettag=&base_ciphertext[base_ciphertext.len()-AEAD_TAG_SIZE..];",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"lettag=matchtag.try_into(){Ok(tag)=>tag,Err(_)=>returnNone,};",
+			"CryptoFrame validated payload views",
+		),
+		(
+			"letcommitment=matchsupplied_commitment.try_into(){Ok(commitment)=>commitment,Err(_)=>returnNone,};",
+			"CryptoFrame validated payload views",
+		),
+		(
+			"Some(Self{base_ciphertext,tag,commitment,associated_data,sender_kid,})",
+			"CryptoFrame validated payload views",
+		),
+	] {
+		require_once(&context, wanted, label)?;
+	}
+	let complete = rust_body(&snapshot.core_record, "finish_frame_read")?;
+	if complete != "ifremaining.is_empty(){Some(message)}else{None}" {
+		return Err("CryptoFrame complete-input core gate changed".to_owned());
+	}
+	let begin = rust_body(&snapshot.core_record, "begin_open")?;
+	require_once(
+		&begin,
+		"letmaterial=matchopening.material(){Some(material)=>material,None=>returnOpenStart::OpenRejected(opening.reject().0),};",
+		"CryptoFrame selected receive material and sequence",
+	)?;
+	require_once(
+		&begin,
+		"letcontext=opening.context();",
+		"CryptoFrame selected receive material and sequence",
+	)?;
+	require_one_call(
+		&begin,
+		"build_commitment_transcript",
+		&[
+			"material.key().as_bytes()",
+			"material.nonce().as_bytes()",
+			"context.associated_data",
+			"context.tag",
+			"opening.sequence()",
+			"context.sender_kid",
+			"",
+		],
+		"CryptoFrame open commitment mapping",
+	)?;
+	require_ordered_once(
+		&begin,
+		&[
+			"opening.material()",
+			"letcontext=opening.context();",
+			"lettranscript=build_commitment_transcript(",
+			"OpenStart::OpenCommitmentRequested(OpenCommitment{opening,transcript,})",
+		],
+		"CryptoFrame selected receive material and sequence",
+	)?;
+	let supplied = rust_body(&snapshot.core_record, "supplied_commitment")?;
+	if supplied != "self.opening.context().commitment" {
+		return Err("CryptoFrame same-opening supplied commitment changed".to_owned());
+	}
+	let transcript = rust_body(&snapshot.core_record, "transcript")?;
+	let transcript_mut = rust_body(&snapshot.core_record, "transcript_mut")?;
+	if transcript != "&self.transcript" || transcript_mut != "&mutself.transcript" {
+		return Err("CryptoFrame retained transcript borrow changed".to_owned());
+	}
+	let resume = rust_body(&snapshot.core_record, "resume")?;
+	if resume
+		!= "if!commitment_matches{returnOpenAfterCommitment::OpenCommitmentRejected(self.opening.reject().0);}OpenAfterCommitment::OpenAeadRequested(OpenAead{opening:self.opening,})"
+	{
+		return Err("CryptoFrame commitment gate and same-opening resume changed".to_owned());
+	}
+	let request = rust_body(&snapshot.core_record, "request")?;
+	require_once(
+		&request,
+		"letmaterial=matchself.opening.material(){Some(material)=>material,None=>returnNone,};",
+		"CryptoFrame AEAD selected material",
+	)?;
+	require_once(
+		&request,
+		"letcontext=self.opening.context();",
+		"CryptoFrame AEAD selected context",
+	)?;
+	require_once(
+		&request,
+		"Some(AeadRequest{key:material.key().as_bytes(),nonce:material.nonce().as_bytes(),ciphertext:context.base_ciphertext,associated_data:context.associated_data,})",
+		"CryptoFrame AEAD request fields",
+	)?;
+	let (_, aead_surface) = snapshot
+		.core_record
+		.split_once("impl OpenAead<'_>")
+		.ok_or("missing core AEAD implementation")?;
+	let finish = rust_body(aead_surface, "finish")?;
+	require_once(
+		&finish,
+		"letplaintext=matchopened{Some(plaintext)=>plaintext,None=>returnself.opening.finish(None),};",
+		"CryptoFrame actual optional plaintext",
+	)?;
+	require_once(
+		&finish,
+		"letkey_id=self.opening.context().sender_kid;letseq=self.opening.sequence();letopened=OpenedRecord{plaintext,key_id,seq,};",
+		"CryptoFrame returned parsed metadata",
+	)?;
+	require_once(
+		&finish,
+		"self.opening.finish(Some(opened))",
+		"CryptoFrame one-use receive completion",
+	)?;
+	let open = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
+	require_once(
+		&open,
+		"letmutpending=matchverified_record::begin_open(open){verified_record::OpenStart::OpenRejected(kernel)=>return(kernel,None),verified_record::OpenStart::OpenCommitmentRequested(pending)=>pending,};",
+		"CryptoFrame selected receive material and sequence",
+	)?;
+	require_one_call(
+		&open,
+		"crypto_generichash::generichash",
+		&["pending.transcript().as_bytes()", "None", "COMMITMENT_SIZE"],
+		"CryptoFrame open commitment hash",
+	)?;
+	require_once(
+		&open,
+		"letcommitment=crypto_generichash::generichash(pending.transcript().as_bytes(),None,COMMITMENT_SIZE).ok();",
+		"CryptoFrame actual optional commitment",
+	)?;
+	require_once(
+		&open,
+		"pending.transcript_mut().as_mut_bytes().zeroize();",
+		"CryptoFrame unconditional opening transcript erase",
+	)?;
+	require_once(
+		&open,
+		"letcommitment_matches=matchcommitment{Some(commitment)=>memcmp(&commitment,pending.supplied_commitment()),None=>false,};",
+		"CryptoFrame libsodium memcmp commitment comparison",
+	)?;
+	require_once(
+		&open,
+		"letopening=matchpending.resume(commitment_matches){verified_record::OpenAfterCommitment::OpenCommitmentRejected(kernel)=>{return(kernel,None);}verified_record::OpenAfterCommitment::OpenAeadRequested(opening)=>opening,};",
+		"CryptoFrame commitment gate and same-opening resume",
+	)?;
+	for (wanted, label) in [
+		(
+			"letrequest=opening.request()?;",
+			"CryptoFrame exact AEAD request",
+		),
+		(
+			"letkey:AeadKey=(*request.key).into();",
+			"CryptoFrame open selected key",
+		),
+		(
+			"letnonce:AeadNonce=(*request.nonce).into();",
+			"CryptoFrame open selected nonce",
+		),
+	] {
+		require_once(&open, wanted, label)?;
+	}
+	require_one_call(
+		&open,
+		"crypto_aead::chacha20poly1305_ietf::decrypt",
+		&[
+			"request.ciphertext",
+			"Some(request.associated_data.as_slice())",
+			"&nonce",
+			"&key",
+			"",
+		],
+		"CryptoFrame C-and-tag AEAD open",
+	)?;
+	require_ordered_once(
+		&open,
+		&[
+			"verified_record::begin_open(open)",
+			"letcommitment=crypto_generichash::generichash(",
+			"pending.transcript_mut().as_mut_bytes().zeroize();",
+			"letcommitment_matches=matchcommitment",
+			"letopening=matchpending.resume(commitment_matches)",
+			"letplaintext=(||{",
+			"letrequest=opening.request()?;",
+			"crypto_aead::chacha20poly1305_ietf::decrypt(",
+			"let(kernel,opened)=opening.finish(plaintext);",
+		],
+		"CryptoFrame commitment-before-AEAD order",
+	)?;
+	require_once(
+		&open,
+		"letplaintext=(||{letrequest=opening.request()?;letkey:AeadKey=(*request.key).into();letnonce:AeadNonce=(*request.nonce).into();crypto_aead::chacha20poly1305_ietf::decrypt(request.ciphertext,Some(request.associated_data.as_slice()),&nonce,&key,).ok()})();",
+		"CryptoFrame recovered plaintext binding",
+	)?;
+	require_one_call(
+		&open,
+		"opening.finish",
+		&["plaintext"],
+		"CryptoFrame one-use receive completion",
+	)?;
+	require_once(
+		&open,
+		"(kernel,opened.map(|opened|Decrypted{plaintext:opened.plaintext,key_id:opened.key_id,seq:opened.seq,}),)",
+		"CryptoFrame returned parsed metadata",
+	)?;
+	for (body, bindings) in [
+		(
+			&begin,
+			&["letmaterial=", "letcontext=", "lettranscript="][..],
+		),
+		(&request, &["letmaterial=", "letcontext="][..]),
+		(
+			&finish,
+			&["letplaintext=", "letkey_id=", "letseq=", "letopened="][..],
+		),
+		(
+			&open,
+			&[
+				"letmutpending=",
+				"letcommitment=",
+				"letcommitment_matches=",
+				"letopening=",
+				"letplaintext=",
+				"letrequest=",
+				"let(kernel,opened)=",
+			][..],
+		),
+	] {
+		for binding in bindings {
+			if count(body, binding) != 1 {
+				return Err(format!("CryptoFrame executor binding shadowed: {binding}"));
+			}
+		}
+	}
+	Ok(())
+}
+
 fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 	let schema = compact(&uncommented_capnp(&snapshot.cryptoframe_schema));
 	let expected_schema =
@@ -1533,112 +1793,13 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		"CryptoFrame empty-input and send ordering",
 	)?;
 
+	validate_record_opening_source(snapshot)?;
 	let open = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
-	let context_factory = rust_body(&snapshot.adapter_ratchet, "from_frame")?;
-	require_once(
-		&context_factory,
-		"ifciphertext.len()<=MESSAGE_OVERHEAD{returnNone;}",
-		"CryptoFrame open length gate",
-	)?;
-	require_once(
-		&context_factory,
-		"let(base_ciphertext,commitment)=ciphertext.split_at(ciphertext.len()-COMMITMENT_SIZE);",
-		"CryptoFrame split commitment boundary",
-	)?;
-	require_once(
-		&context_factory,
-		"lettag=&base_ciphertext[base_ciphertext.len()-AEAD_TAG_LEN..];",
-		"CryptoFrame open commitment mapping",
-	)?;
-	require_once(
-		&context_factory,
-		"Some(Self{base_ciphertext,tag:tag.try_into().ok()?,commitment:commitment.try_into().ok()?,associated_data,sender_kid,})",
-		"CryptoFrame validated payload views",
-	)?;
-	require_ordered_once(
-		&open,
-		&[
-			"letmaterial=open.material()?;",
-			"letcontext=open.context();",
-			"letkey_seq=open.sequence();",
-		],
-		"CryptoFrame selected receive material and sequence",
-	)?;
-	for (wanted, label) in [
-		(
-			"letkey:AeadKey=(*material.key().as_bytes()).into();",
-			"CryptoFrame open selected key",
-		),
-		(
-			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into();",
-			"CryptoFrame open selected nonce",
-		),
-	] {
-		require_once(&open, wanted, label)?;
-	}
-	require_one_call(
-		&open,
-		"build_commitment",
-		&[
-			"material",
-			"context.associated_data.as_slice()",
-			"context.tag",
-			"key_seq",
-			"context.sender_kid",
-			"",
-		],
-		"CryptoFrame open commitment mapping",
-	)?;
-	require_once(
-		&open,
-		"if!memcmp(&commitment,context.commitment){returnNone;}",
-		"CryptoFrame libsodium memcmp commitment comparison",
-	)?;
-	require_one_call(
-		&open,
-		"crypto_aead::chacha20poly1305_ietf::decrypt",
-		&[
-			"context.base_ciphertext",
-			"Some(context.associated_data.as_slice())",
-			"&nonce",
-			"&key",
-			"",
-		],
-		"CryptoFrame C-and-tag AEAD open",
-	)?;
-	require_ordered_once(
-		&open,
-		&[
-			"letcommitment=build_commitment(",
-			"memcmp(&commitment,context.commitment)",
-			"letkey:AeadKey=(*material.key().as_bytes()).into()",
-			"letnonce:AeadNonce=(*material.nonce().as_bytes()).into()",
-			"crypto_aead::chacha20poly1305_ietf::decrypt(",
-		],
-		"CryptoFrame commitment-before-AEAD order",
-	)?;
-
 	require_once(
 		&compact(&uncommented_rust(&snapshot.adapter_ratchet)?),
 		")->Option<TypedReader<OwnedSegments,cryptoframe_capnp::crypto_frame::Owned>>",
 		"CryptoFrame decoder return type",
 	)?;
-	require_once(
-		&open,
-		"letplaintext=crypto_aead::chacha20poly1305_ietf::decrypt(context.base_ciphertext,Some(context.associated_data.as_slice()),&nonce,&key,).ok()?;",
-		"CryptoFrame recovered plaintext binding",
-	)?;
-	for binding in [
-		"letmaterial=",
-		"letcontext=",
-		"letkey_seq=",
-		"letplaintext=",
-		"letopened=",
-	] {
-		if count(&open, binding) != 1 {
-			return Err(format!("CryptoFrame executor binding shadowed: {binding}"));
-		}
-	}
 	let decoder = rust_body(&snapshot.adapter_ratchet, "decode_crypto_frame")?;
 	require_once(
 		&decoder,
@@ -1655,7 +1816,7 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		&[
 			"letmutremaining=data;",
 			"read_message(&mutremaining,ReaderOptions::new())",
-			"if!remaining.is_empty(){returnNone;}",
+			"letreader=finish_frame_read(remaining,reader)?;",
 			"Some(TypedReader::new(reader))",
 		],
 		"CryptoFrame exact-message decoder",
@@ -1705,7 +1866,7 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 	}
 	require_once(
 		&open,
-		"open.finish(opened)",
+		"opening.finish(plaintext)",
 		"CryptoFrame one-use receive completion",
 	)?;
 	require_ordered_once(
@@ -1727,7 +1888,7 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 	require_once(
 		&open,
-		"Some(Decrypted{plaintext,key_id:context.sender_kid,seq:key_seq,})",
+		"opened.map(|opened|Decrypted{plaintext:opened.plaintext,key_id:opened.key_id,seq:opened.seq,})",
 		"CryptoFrame returned parsed metadata",
 	)?;
 
@@ -3245,17 +3406,7 @@ fn validate_adapters() -> Result<(), String> {
 		"build_commitment(material,context.associated_data.as_slice(),tag.as_slice(),key_seq,context.sender_kid,)",
 		"production seal commitment inputs",
 	)?;
-	let open = rust_body(ADAPTER_RATCHET, "execute_open")?;
-	require(
-		&open,
-		"build_commitment(material,context.associated_data.as_slice(),context.tag,key_seq,context.sender_kid,)",
-		"production retained-tag commitment inputs",
-	)?;
-	require(
-		&open,
-		"crypto_aead::chacha20poly1305_ietf::decrypt(context.base_ciphertext,Some(context.associated_data.as_slice()),&nonce,&key,)",
-		"production AEAD open",
-	)?;
+	validate_record_opening_source(&Snapshot::production())?;
 	let commitment = rust_body(ADAPTER_RATCHET, "build_commitment")?;
 	require(
 		&commitment,
@@ -3405,7 +3556,6 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 
 	let receive = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
-	let executor = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
 	require_ordered(
 		&receive,
 		&[
@@ -3477,31 +3627,12 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 		"verified_ratchet::ReceiveEffect::ReceiveKdfRequested(pending)=>{letresponse=ratchet_hkdf(pending.request());pending.resume(response)}",
 		"ratchet receive private KDF loop arm",
 	)?;
-	require_once(
-		&executor,
-		"letmaterial=open.material()?;",
-		"ratchet receive no-material rejection",
-	)?;
+	validate_record_opening_source(snapshot)?;
 	require_one_call(
 		&receive,
 		"execute_open",
 		&["open"],
 		"ratchet receive open capability handoff",
-	)?;
-	require_ordered_once(
-		&executor,
-		&[
-			"letmaterial=open.material()?;",
-			"letcontext=open.context();",
-			"letkey_seq=open.sequence();",
-		],
-		"ratchet receive open capability handoff",
-	)?;
-	require_one_call(
-		&executor,
-		"open.finish",
-		&["opened"],
-		"ratchet receive capability finish",
 	)?;
 	let receive_puts = all_arguments(&receive, "ratchet.refined.put")?;
 	if receive_puts != [vec!["kernel".to_owned()], vec!["kernel".to_owned()]] {
@@ -3518,14 +3649,6 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 		],
 		"ratchet receive open and terminal publication order",
 	)?;
-	require_once(
-		&executor,
-		"Some(Decrypted{plaintext,key_id:context.sender_kid,seq:key_seq,})",
-		"ratchet receive parsed result metadata",
-	)?;
-	if !executor.ends_with("})();open.finish(opened)") {
-		return Err("ratchet receive primitive result must finish the same capability".to_owned());
-	}
 
 	let receive_open = section_between(
 		&snapshot.core_ratchet_concrete,
@@ -5679,7 +5802,6 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	)?;
 
 	let adapter = rust_body(&snapshot.adapter_ratchet, "decrypt_message_with_ratchet")?;
-	let executor = rust_body(&snapshot.adapter_ratchet, "execute_open")?;
 	for (wanted, label) in [
 		(
 			"letkey_seq=frame.get_seq();",
@@ -5704,27 +5826,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	] {
 		require_once(&adapter, wanted, label)?;
 	}
-	for getter in [
-		"letmaterial=open.material()?;",
-		"letcontext=open.context();",
-		"letkey_seq=open.sequence();",
-	] {
-		require_once(
-			&executor,
-			getter,
-			"later-registration adapter exact open capability",
-		)?;
-	}
-	require_once(
-		&executor,
-		"open.finish(opened)",
-		"later-registration adapter receive completion",
-	)?;
-	require_once(
-		&executor,
-		"Some(Decrypted{plaintext,key_id:context.sender_kid,seq:key_seq,})",
-		"later-registration adapter result metadata",
-	)?;
+	validate_record_opening_source(snapshot)?;
 	require_ordered(
 		&adapter,
 		&[
@@ -7382,7 +7484,6 @@ fn replace_receive_surface(source: &mut String, from: &str, to: &str) {
 	for name in [
 		"decode_crypto_frame",
 		"encrypted_frame_sender",
-		"from_frame",
 		"execute_open",
 		"decrypt_message_with_ratchet",
 	] {
@@ -7402,6 +7503,20 @@ fn replace_receive_surface(source: &mut String, from: &str, to: &str) {
 	);
 	let start = matches[0];
 	source.replace_range(start..start + from.len(), to);
+}
+
+// Mutate the exact core opening source when it owns the field, otherwise the native receive helpers.
+fn replace_record_surface(snapshot: &mut Snapshot, from: &str, to: &str) {
+	let matches = snapshot.core_record.matches(from).count();
+	if matches != 0 {
+		assert_eq!(
+			matches, 1,
+			"record core mutation must have one anchor: {from}"
+		);
+		replace_once(&mut snapshot.core_record, from, to);
+	} else {
+		replace_receive_surface(&mut snapshot.adapter_ratchet, from, to);
+	}
 }
 
 fn replace_once_after(source: &mut String, marker: &str, from: &str, to: &str) {
@@ -9744,42 +9859,37 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"later_registration_adapter_open_material_substituted",
-			"let material = open.material()?;",
-			"let material = replacement_material;",
-			"later-registration adapter exact open capability",
+			"let material = match opening.material()",
+			"let material = match replacement_material",
+			"CryptoFrame selected receive material and sequence",
 		),
 		(
 			"later_registration_adapter_open_sequence_substituted",
-			"let key_seq = open.sequence();",
-			"let key_seq = replacement_sequence;",
-			"later-registration adapter exact open capability",
+			"opening.sequence(),",
+			"replacement_sequence,",
+			"CryptoFrame open commitment mapping",
 		),
 		(
 			"later_registration_adapter_open_context_substituted",
-			"let context = open.context();",
+			"let context = opening.context();",
 			"let context = replacement_context;",
-			"later-registration adapter exact open capability",
+			"CryptoFrame selected receive material and sequence",
 		),
 		(
 			"later_registration_adapter_finish_substituted",
-			"open.finish(opened)",
-			"open.finish(replacement_opened)",
-			"later-registration adapter receive completion",
+			"opening.finish(plaintext)",
+			"opening.finish(replacement_opened)",
+			"CryptoFrame commitment-before-AEAD order",
 		),
 		(
 			"later_registration_adapter_result_sequence_substituted",
-			"seq: key_seq,",
+			"seq: opened.seq,",
 			"seq: 1,",
-			"later-registration adapter result metadata",
+			"CryptoFrame returned parsed metadata",
 		),
 	] {
 		assert_later_registration_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_ratchet,
-				"pub(crate) fn decrypt_message_with_ratchet(",
-				from,
-				to,
-			);
+			replace_record_surface(snapshot, from, to);
 		});
 		mutation_count += 1;
 	}
@@ -12454,9 +12564,8 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		"cryptoframe_open_length_accepts_exact_overhead",
 		"CryptoFrame open length gate",
 		|snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_ratchet,
-				"fn execute_open(",
+			replace_record_surface(
+				snapshot,
 				"if ciphertext.len() <= MESSAGE_OVERHEAD",
 				"if ciphertext.len() < MESSAGE_OVERHEAD",
 			);
@@ -12509,36 +12618,31 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_open_uses_parsed_not_returned_sequence",
-			"let key_seq = open.sequence();",
-			"let key_seq = expected_sender_kid;",
-			"CryptoFrame selected receive material and sequence",
+			"opening.sequence(),",
+			"expected_sender_kid,",
+			"CryptoFrame open commitment mapping",
 		),
 		(
 			"cryptoframe_open_uses_rebuilt_context",
-			"let context = open.context();",
+			"let context = opening.context();",
 			"let context = replacement_context;",
 			"CryptoFrame selected receive material and sequence",
 		),
 		(
 			"cryptoframe_open_finish_discards_plaintext",
-			"open.finish(opened)",
-			"open.finish(None)",
-			"CryptoFrame one-use receive completion",
+			"opening.finish(plaintext)",
+			"opening.finish(None)",
+			"CryptoFrame commitment-before-AEAD order",
 		),
 		(
 			"cryptoframe_result_swaps_sender_sequence",
-			"key_id: context.sender_kid,\n\t\t\tseq: key_seq,",
-			"key_id: key_seq,\n\t\t\tseq: context.sender_kid,",
+			"key_id: opened.key_id,\n\t\t\tseq: opened.seq,",
+			"key_id: opened.seq,\n\t\t\tseq: opened.key_id,",
 			"CryptoFrame returned parsed metadata",
 		),
 	] {
 		assert_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_ratchet,
-				"fn decrypt_message_with_ratchet(",
-				from,
-				to,
-			);
+			replace_record_surface(snapshot, from, to);
 		});
 		mutation_count += 1;
 	}
@@ -12547,15 +12651,16 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		"cryptoframe_open_renames_returned_material",
 		"CryptoFrame selected receive material and sequence",
 		|snapshot| {
-			replace_receive_surface(
-				&mut snapshot.adapter_ratchet,
-				"let material = open.material()?;",
-				"let selected_material = open.material()?;",
+			replace_record_surface(
+				snapshot,
+				"let material = match opening.material()",
+				"let selected_material = match opening.material()",
 			);
-			replace_receive_surface(
-				&mut snapshot.adapter_ratchet,
-				"(*material.key().as_bytes()).into()",
-				"(*selected_material.key().as_bytes()).into()",
+			replace_once_after(
+				&mut snapshot.core_record,
+				"pub fn begin_open(",
+				"material.key().as_bytes()",
+				"selected_material.key().as_bytes()",
 			);
 		},
 	);
@@ -12643,26 +12748,26 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"cryptoframe_open_uses_zero_key",
-			"let key: AeadKey = (*material.key().as_bytes()).into();",
+			"let key: AeadKey = (*request.key).into();",
 			"let key: AeadKey = [0u8; AEAD_KEY_LEN].into();",
 			"CryptoFrame open selected key",
 		),
 		(
 			"cryptoframe_open_uses_zero_nonce",
-			"let nonce: AeadNonce = (*material.nonce().as_bytes()).into();",
+			"let nonce: AeadNonce = (*request.nonce).into();",
 			"let nonce: AeadNonce = [0u8; AEAD_NONCE_LEN].into();",
 			"CryptoFrame open selected nonce",
 		),
 		(
 			"cryptoframe_open_tag_slice_starts_late",
-			"base_ciphertext.len() - AEAD_TAG_LEN..",
-			"base_ciphertext.len() - AEAD_TAG_LEN + 1..",
+			"base_ciphertext.len() - AEAD_TAG_SIZE..",
+			"base_ciphertext.len() - AEAD_TAG_SIZE + 1..",
 			"CryptoFrame open commitment mapping",
 		),
 		(
 			"cryptoframe_open_tag_slice_ends_late",
-			"base_ciphertext.len() - AEAD_TAG_LEN..",
-			"base_ciphertext.len() - AEAD_TAG_LEN..base_ciphertext.len() + 1",
+			"base_ciphertext.len() - AEAD_TAG_SIZE..",
+			"base_ciphertext.len() - AEAD_TAG_SIZE..base_ciphertext.len() + 1",
 			"CryptoFrame open commitment mapping",
 		),
 		(
@@ -12673,49 +12778,49 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_open_commitment_slice_starts_late",
-			"memcmp(&commitment, context.commitment)",
-			"memcmp(&commitment, &context.commitment[1..])",
+			"memcmp(&commitment, pending.supplied_commitment())",
+			"memcmp(&commitment, &pending.supplied_commitment()[1..])",
 			"CryptoFrame libsodium memcmp commitment comparison",
 		),
 		(
 			"cryptoframe_open_commitment_slice_ends_early",
-			"memcmp(&commitment, context.commitment)",
-			"memcmp(&commitment, &context.commitment[..COMMITMENT_SIZE - 1])",
+			"memcmp(&commitment, pending.supplied_commitment())",
+			"memcmp(&commitment, &pending.supplied_commitment()[..COMMITMENT_SIZE - 1])",
 			"CryptoFrame libsodium memcmp commitment comparison",
 		),
 		(
 			"cryptoframe_open_decrypts_ciphertext_without_tag",
-			"context.base_ciphertext,",
-			"&context.base_ciphertext[..context.base_ciphertext.len() - AEAD_TAG_LEN],",
+			"request.ciphertext,",
+			"&request.ciphertext[..request.ciphertext.len() - AEAD_TAG_LEN],",
 			"CryptoFrame C-and-tag AEAD open",
 		),
 		(
 			"cryptoframe_open_decrypts_commitment_too",
-			"context.base_ciphertext,",
-			"context.commitment,",
+			"request.ciphertext,",
+			"pending.supplied_commitment(),",
 			"CryptoFrame C-and-tag AEAD open",
 		),
 		(
 			"cryptoframe_open_decrypt_prefix_boundary_late",
-			"context.base_ciphertext,",
-			"&context.base_ciphertext[..context.base_ciphertext.len() + 1],",
+			"request.ciphertext,",
+			"&request.ciphertext[..request.ciphertext.len() + 1],",
 			"CryptoFrame C-and-tag AEAD open",
 		),
 		(
 			"cryptoframe_open_omits_associated_data",
-			"Some(context.associated_data.as_slice()),",
+			"Some(request.associated_data.as_slice()),",
 			"None,",
 			"CryptoFrame C-and-tag AEAD open",
 		),
 		(
 			"cryptoframe_open_commitment_swaps_sequence_sender",
-			"\t\t\tkey_seq,\n\t\t\tcontext.sender_kid,",
-			"\t\t\tcontext.sender_kid,\n\t\t\tkey_seq,",
+			"\t\topening.sequence(),\n\t\tcontext.sender_kid,",
+			"\t\tcontext.sender_kid,\n\t\topening.sequence(),",
 			"CryptoFrame open commitment mapping",
 		),
 	] {
 		assert_rejected(name, diagnostic, |snapshot| {
-			replace_once_after(&mut snapshot.adapter_ratchet, "fn execute_open(", from, to);
+			replace_record_surface(snapshot, from, to);
 		});
 		mutation_count += 1;
 	}
@@ -12724,15 +12829,19 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		"cryptoframe_open_decrypts_before_commitment_equality",
 		"CryptoFrame commitment-before-AEAD order",
 		|snapshot| {
+			let from = snapshot
+				.adapter_ratchet
+				.find("\tlet commitment_matches = match commitment {")
+				.unwrap();
+			let to = snapshot.adapter_ratchet[from..]
+				.find("\tlet plaintext = (|| {")
+				.unwrap() + from;
+			let gate = snapshot.adapter_ratchet[from..to].to_owned();
+			snapshot.adapter_ratchet.replace_range(from..to, "");
 			replace_receive_surface(
 				&mut snapshot.adapter_ratchet,
-				"\t\tif !memcmp(&commitment, context.commitment) {\n\t\t\treturn None;\n\t\t}\n",
-				"",
-			);
-			replace_receive_surface(
-				&mut snapshot.adapter_ratchet,
-				"\t\t.ok()?;\n\t\tSome(Decrypted {",
-				"\t\t.ok()?;\n\t\tif !memcmp(&commitment, context.commitment) {\n\t\t\treturn None;\n\t\t}\n\t\tSome(Decrypted {",
+				"\tlet (kernel, opened) = opening.finish(plaintext);",
+				&format!("{gate}\tlet (kernel, opened) = opening.finish(plaintext);"),
 			);
 		},
 	);
@@ -13219,7 +13328,7 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"cryptoframe_decoder_allows_trailing_bytes",
-			"\tif !remaining.is_empty() {\n\t\treturn None;\n\t}\n",
+			"\tlet reader = finish_frame_read(remaining, reader)?;\n",
 			"",
 			"CryptoFrame exact-message decoder",
 		),
@@ -13237,25 +13346,25 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_factory_tag_views_commitment",
-			"tag: tag.try_into().ok()?,",
-			"tag: commitment[..AEAD_TAG_LEN].try_into().ok()?,",
+			"let tag = match tag.try_into() {",
+			"let tag = match supplied_commitment[..AEAD_TAG_SIZE].try_into() {",
 			"CryptoFrame validated payload views",
 		),
 		(
 			"cryptoframe_executor_shadows_plaintext",
-			"Some(Decrypted {",
-			"let plaintext = vec![0];\n\t\tSome(Decrypted {",
+			"let (kernel, opened) = opening.finish(plaintext);",
+			"let plaintext = Some(vec![0]);\n\tlet (kernel, opened) = opening.finish(plaintext);",
 			"CryptoFrame executor binding shadowed",
 		),
 		(
 			"cryptoframe_executor_accepts_claimed_plaintext",
-			"\t\t.ok()?;\n\t\tSome(Decrypted {",
-			"\t\t.ok().or_else(|| Some(vec![0]))?;\n\t\tSome(Decrypted {",
+			"\t\t.ok()\n\t})();",
+			"\t\t.ok().or_else(|| Some(vec![0]))\n\t})();",
 			"CryptoFrame recovered plaintext binding",
 		),
 	] {
 		assert_rejected(name, diagnostic, |snapshot| {
-			replace_receive_surface(&mut snapshot.adapter_ratchet, from, to);
+			replace_record_surface(snapshot, from, to);
 		});
 		mutation_count += 1;
 	}
@@ -15000,15 +15109,15 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_no_material_omits_material_gate",
-			"let material = open.material()?;",
-			"let material = open.material().unwrap();",
-			"ratchet receive no-material rejection",
+			"let material = match opening.material() {\n\t\tSome(material) => material,\n\t\tNone => return OpenStart::OpenRejected(opening.reject().0),\n\t};",
+			"let material = opening.material().unwrap();",
+			"CryptoFrame selected receive material and sequence",
 		),
 		(
 			"ratchet_driver_receive_no_material_omits_reject",
-			"let material = open.material()?;",
-			"let material = open.material().or_else(|| panic!(\"missing material\"))?;",
-			"ratchet receive no-material rejection",
+			"None => return OpenStart::OpenRejected(opening.reject().0),",
+			"None => panic!(\"missing material\"),",
+			"CryptoFrame selected receive material and sequence",
 		),
 		(
 			"ratchet_driver_receive_no_material_drops_kernel",
@@ -15030,15 +15139,15 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_opens_with_wrong_sequence",
-			"let key_seq = open.sequence();",
-			"let key_seq = open.sequence().wrapping_add(1);",
-			"ratchet receive open capability handoff",
+			"opening.sequence(),",
+			"opening.sequence().wrapping_add(1),",
+			"CryptoFrame open commitment mapping",
 		),
 		(
 			"ratchet_driver_receive_opens_with_rebuilt_context",
-			"let context = open.context();",
+			"let context = opening.context();",
 			"let context = replacement_context;",
-			"ratchet receive open capability handoff",
+			"CryptoFrame selected receive material and sequence",
 		),
 		(
 			"ratchet_driver_receive_omits_open",
@@ -15048,15 +15157,15 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_finishes_with_none",
-			"open.finish(opened)",
-			"open.finish(None::<Vec<u8>>)",
-			"ratchet receive capability finish",
+			"opening.finish(plaintext)",
+			"opening.finish(None::<Vec<u8>>)",
+			"CryptoFrame commitment-before-AEAD order",
 		),
 		(
 			"ratchet_driver_receive_omits_finish",
-			"open.finish(opened)",
+			"opening.finish(plaintext)",
 			"panic!(\"open finish omitted\")",
-			"ratchet receive capability finish",
+			"CryptoFrame commitment-before-AEAD order",
 		),
 		(
 			"ratchet_driver_receive_drops_finished_kernel",
@@ -15072,24 +15181,19 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"ratchet_driver_receive_returns_expected_sender_metadata",
-			"key_id: context.sender_kid,",
+			"key_id: opened.key_id,",
 			"key_id: expected_sender_kid,",
-			"ratchet receive parsed result metadata",
+			"CryptoFrame returned parsed metadata",
 		),
 		(
 			"ratchet_driver_receive_returns_wrong_sequence_metadata",
-			"seq: key_seq,",
-			"seq: key_seq.wrapping_add(1),",
-			"ratchet receive parsed result metadata",
+			"seq: opened.seq,",
+			"seq: opened.seq.wrapping_add(1),",
+			"CryptoFrame returned parsed metadata",
 		),
 	] {
 		assert_ratchet_driver_rejected(name, diagnostic, move |snapshot| {
-			replace_once_after(
-				&mut snapshot.adapter_ratchet,
-				"pub(crate) fn decrypt_message_with_ratchet",
-				from,
-				to,
-			);
+			replace_record_surface(snapshot, from, to);
 		});
 		mutation_count += 1;
 	}
@@ -20426,4 +20530,239 @@ fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
 		"rejected later relabel control",
 	)
 	.unwrap();
+}
+
+// Additional controls for the extracted opening phases and their actual native optional replies.
+#[test]
+fn record_opening_source_mutations_are_rejected() {
+	let mut checked = 0;
+	for (name, core, from, to, diagnostic) in [
+		(
+			"core_reader_inverts_remainder",
+			true,
+			"if remaining.is_empty()",
+			"if !remaining.is_empty()",
+			"CryptoFrame complete-input core gate",
+		),
+		(
+			"core_reader_discards_message",
+			true,
+			"Some(message)",
+			"None",
+			"CryptoFrame complete-input core gate",
+		),
+		(
+			"core_payload_wrong_overhead",
+			true,
+			"COMMITMENT_SIZE + AEAD_TAG_SIZE",
+			"COMMITMENT_SIZE + AEAD_TAG_SIZE - 1",
+			"CryptoFrame core payload constants",
+		),
+		(
+			"native_wrapper_import_substituted",
+			false,
+			"beaconcrypt_core::record::{self as verified_record",
+			"unchecked_record::{self as verified_record",
+			"CryptoFrame actual extracted wrapper import",
+		),
+		(
+			"core_begin_wrong_nonce",
+			true,
+			"\t\tmaterial.nonce().as_bytes(),",
+			"\t\t&[0; AEAD_NONCE_SIZE],",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"core_begin_wrong_ad",
+			true,
+			"\t\tcontext.associated_data,",
+			"\t\t&[0; ASSOCIATED_DATA_SIZE],",
+			"CryptoFrame open commitment mapping",
+		),
+		(
+			"core_begin_drops_original_opening",
+			true,
+			"OpenCommitment {\n\t\topening,",
+			"OpenCommitment {\n\t\topening: replacement,",
+			"CryptoFrame selected receive material and sequence",
+		),
+		(
+			"core_transcript_reads_substitute",
+			true,
+			"\t\t&self.transcript\n",
+			"\t\t&replacement\n",
+			"CryptoFrame retained transcript borrow",
+		),
+		(
+			"core_transcript_erases_substitute",
+			true,
+			"\t\t&mut self.transcript\n",
+			"\t\t&mut replacement\n",
+			"CryptoFrame retained transcript borrow",
+		),
+		(
+			"core_supplied_commitment_substituted",
+			true,
+			"self.opening.context().commitment",
+			"replacement_commitment",
+			"CryptoFrame same-opening supplied commitment",
+		),
+		(
+			"core_resume_inverts_comparison",
+			true,
+			"if !commitment_matches {",
+			"if commitment_matches {",
+			"CryptoFrame commitment gate and same-opening resume",
+		),
+		(
+			"core_resume_skips_rejection",
+			true,
+			"return OpenAfterCommitment::OpenCommitmentRejected(self.opening.reject().0);",
+			"return OpenAfterCommitment::OpenAeadRequested(OpenAead { opening: self.opening });",
+			"CryptoFrame commitment gate and same-opening resume",
+		),
+		(
+			"core_resume_replaces_capability",
+			true,
+			"opening: self.opening,",
+			"opening: replacement,",
+			"CryptoFrame commitment gate and same-opening resume",
+		),
+		(
+			"core_request_wrong_material",
+			true,
+			"let material = match self.opening.material()",
+			"let material = match replacement_material",
+			"CryptoFrame AEAD selected material",
+		),
+		(
+			"core_request_wrong_context",
+			true,
+			"let context = self.opening.context();",
+			"let context = replacement_context;",
+			"CryptoFrame AEAD selected context",
+		),
+		(
+			"core_request_wrong_ciphertext",
+			true,
+			"ciphertext: context.base_ciphertext,",
+			"ciphertext: context.commitment,",
+			"CryptoFrame AEAD request fields",
+		),
+		(
+			"core_request_wrong_key",
+			true,
+			"key: material.key().as_bytes(),",
+			"key: &[0; AEAD_KEY_SIZE],",
+			"CryptoFrame AEAD request fields",
+		),
+		(
+			"core_finish_none_becomes_plaintext",
+			true,
+			"None => return self.opening.finish(None),",
+			"None => return self.opening.finish(Some(replacement_plaintext)),",
+			"CryptoFrame actual optional plaintext",
+		),
+		(
+			"core_finish_wrong_sender",
+			true,
+			"let key_id = self.opening.context().sender_kid;",
+			"let key_id = 0;",
+			"CryptoFrame returned parsed metadata",
+		),
+		(
+			"core_finish_wrong_sequence",
+			true,
+			"let seq = self.opening.sequence();",
+			"let seq = 1;",
+			"CryptoFrame returned parsed metadata",
+		),
+		(
+			"core_finish_discards_actual_some",
+			true,
+			"self.opening.finish(Some(opened))",
+			"self.opening.finish(None)",
+			"CryptoFrame one-use receive completion",
+		),
+		(
+			"native_hash_failure_short_circuits",
+			false,
+			"\n\t\t\t.ok();\n\tpending.transcript_mut()",
+			"\n\t\t\t.ok()?;\n\tpending.transcript_mut()",
+			"CryptoFrame actual optional commitment",
+		),
+		(
+			"native_hash_uses_wrong_transcript",
+			false,
+			"generichash(pending.transcript().as_bytes(), None, COMMITMENT_SIZE)",
+			"generichash(&[0; 229], None, COMMITMENT_SIZE)",
+			"CryptoFrame open commitment hash",
+		),
+		(
+			"native_hash_omits_erase",
+			false,
+			"\tpending.transcript_mut().as_mut_bytes().zeroize();\n",
+			"",
+			"CryptoFrame unconditional opening transcript erase",
+		),
+		(
+			"native_hash_none_passes",
+			false,
+			"\t\tNone => false,",
+			"\t\tNone => true,",
+			"CryptoFrame libsodium memcmp commitment comparison",
+		),
+		(
+			"native_compare_result_ignored",
+			false,
+			"Some(commitment) => memcmp(&commitment, pending.supplied_commitment()),",
+			"Some(commitment) => true,",
+			"CryptoFrame libsodium memcmp commitment comparison",
+		),
+		(
+			"native_resume_forced_true",
+			false,
+			"pending.resume(commitment_matches)",
+			"pending.resume(true)",
+			"CryptoFrame commitment gate and same-opening resume",
+		),
+		(
+			"native_rejected_commitment_drops_kernel",
+			false,
+			"return (kernel, None);",
+			"return (replacement_kernel, None);",
+			"CryptoFrame commitment gate and same-opening resume",
+		),
+		(
+			"native_aead_request_substituted",
+			false,
+			"let request = opening.request()?;",
+			"let request = replacement_request;",
+			"CryptoFrame exact AEAD request",
+		),
+		(
+			"native_optional_plaintext_substituted",
+			false,
+			"opening.finish(plaintext)",
+			"opening.finish(Some(vec![0]))",
+			"CryptoFrame commitment-before-AEAD order",
+		),
+	] {
+		assert_rejected(name, diagnostic, |snapshot| {
+			if core {
+				assert_eq!(
+					snapshot.core_record.matches(from).count(),
+					1,
+					"core record mutation anchor: {name}"
+				);
+				replace_once(&mut snapshot.core_record, from, to);
+			} else if name == "native_wrapper_import_substituted" {
+				replace_once(&mut snapshot.adapter_ratchet, from, to);
+			} else {
+				replace_once_after(&mut snapshot.adapter_ratchet, "fn execute_open(", from, to);
+			}
+		});
+		checked += 1;
+	}
+	assert_eq!(checked, 30);
 }

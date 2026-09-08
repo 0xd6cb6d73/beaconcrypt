@@ -14,6 +14,7 @@ use beaconcrypt_core::pqxdh::{
 #[cfg(test)]
 use beaconcrypt_core::pqxdh::{RatchetInitialization, start_initial_ratchet_kdf};
 use beaconcrypt_core::ratchet as verified_ratchet;
+use beaconcrypt_core::record::{self as verified_record, OpenFrameContext, finish_frame_read};
 use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
 use capnp::serialize::OwnedSegments;
 use libsodium_rs::utils::memcmp;
@@ -42,6 +43,8 @@ pub const RATCHET_MAX_GAP: u64 = 50;
 const _: () = assert!(RATCHET_MAX_GAP == verified_ratchet::RATCHET_MAX_GAP);
 pub const COMMITMENT_SIZE: usize = 64;
 pub const MESSAGE_OVERHEAD: usize = COMMITMENT_SIZE + AEAD_TAG_LEN;
+const _: () = assert!(COMMITMENT_SIZE == verified_record::COMMITMENT_SIZE);
+const _: () = assert!(MESSAGE_OVERHEAD == verified_record::MESSAGE_OVERHEAD);
 
 /// Non-secret progress metadata for an established symmetric ratchet.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -349,9 +352,7 @@ fn decode_crypto_frame(
 ) -> Option<TypedReader<OwnedSegments, cryptoframe_capnp::crypto_frame::Owned>> {
 	let mut remaining = data;
 	let reader = capnp::serialize::read_message(&mut remaining, ReaderOptions::new()).ok()?;
-	if !remaining.is_empty() {
-		return None;
-	}
+	let reader = finish_frame_read(remaining, reader)?;
 	Some(TypedReader::new(reader))
 }
 
@@ -442,74 +443,51 @@ pub(crate) fn encrypt_message_with_ratchet(
 	sealed
 }
 
-/// Validated payload fields borrowed from the single decoded frame. Construction
-/// and splitting happen before the ratchet is taken. The AEAD input and CTX tag
-/// are views of this same payload, so their provenance cannot diverge later.
-struct OpenFrameContext<'a> {
-	base_ciphertext: &'a [u8],
-	tag: &'a [u8; AEAD_TAG_LEN],
-	commitment: &'a [u8; COMMITMENT_SIZE],
-	associated_data: &'a [u8; AD_SIZE],
-	sender_kid: u64,
-}
-
-impl<'a> OpenFrameContext<'a> {
-	fn from_frame(
-		ciphertext: &'a [u8],
-		associated_data: &'a [u8; AD_SIZE],
-		sender_kid: u64,
-	) -> Option<Self> {
-		if ciphertext.len() <= MESSAGE_OVERHEAD {
-			return None;
-		}
-		let (base_ciphertext, commitment) = ciphertext.split_at(ciphertext.len() - COMMITMENT_SIZE);
-		let tag = &base_ciphertext[base_ciphertext.len() - AEAD_TAG_LEN..];
-		Some(Self {
-			base_ciphertext,
-			tag: tag.try_into().ok()?,
-			commitment: commitment.try_into().ok()?,
-			associated_data,
-			sender_kid,
-		})
-	}
-}
-
 /// The executor accepts the one-use core request itself. Callers cannot choose
 /// an independent sequence, material, or context, or substitute a claimed
 /// plaintext. Publication consumes this request only after the primitive result.
 fn execute_open(
 	open: verified_ratchet::ReceiveOpen<OpenFrameContext<'_>>,
 ) -> (RatchetKernel, Option<Decrypted>) {
-	let opened = (|| {
-		let material = open.material()?;
-		let context = open.context();
-		let key_seq = open.sequence();
-		let commitment = build_commitment(
-			material,
-			context.associated_data.as_slice(),
-			context.tag,
-			key_seq,
-			context.sender_kid,
-		)?;
-		if !memcmp(&commitment, context.commitment) {
-			return None;
+	let mut pending = match verified_record::begin_open(open) {
+		verified_record::OpenStart::OpenRejected(kernel) => return (kernel, None),
+		verified_record::OpenStart::OpenCommitmentRequested(pending) => pending,
+	};
+	let commitment =
+		crypto_generichash::generichash(pending.transcript().as_bytes(), None, COMMITMENT_SIZE)
+			.ok();
+	pending.transcript_mut().as_mut_bytes().zeroize();
+	let commitment_matches = match commitment {
+		Some(commitment) => memcmp(&commitment, pending.supplied_commitment()),
+		None => false,
+	};
+	let opening = match pending.resume(commitment_matches) {
+		verified_record::OpenAfterCommitment::OpenCommitmentRejected(kernel) => {
+			return (kernel, None);
 		}
-		let key: AeadKey = (*material.key().as_bytes()).into();
-		let nonce: AeadNonce = (*material.nonce().as_bytes()).into();
-		let plaintext = crypto_aead::chacha20poly1305_ietf::decrypt(
-			context.base_ciphertext,
-			Some(context.associated_data.as_slice()),
+		verified_record::OpenAfterCommitment::OpenAeadRequested(opening) => opening,
+	};
+	let plaintext = (|| {
+		let request = opening.request()?;
+		let key: AeadKey = (*request.key).into();
+		let nonce: AeadNonce = (*request.nonce).into();
+		crypto_aead::chacha20poly1305_ietf::decrypt(
+			request.ciphertext,
+			Some(request.associated_data.as_slice()),
 			&nonce,
 			&key,
 		)
-		.ok()?;
-		Some(Decrypted {
-			plaintext,
-			key_id: context.sender_kid,
-			seq: key_seq,
-		})
+		.ok()
 	})();
-	open.finish(opened)
+	let (kernel, opened) = opening.finish(plaintext);
+	(
+		kernel,
+		opened.map(|opened| Decrypted {
+			plaintext: opened.plaintext,
+			key_id: opened.key_id,
+			seq: opened.seq,
+		}),
+	)
 }
 
 /// Decrypt one frame against a staged or committed peer ratchet.

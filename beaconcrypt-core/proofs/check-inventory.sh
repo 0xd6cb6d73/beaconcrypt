@@ -44,16 +44,16 @@ done < "$manifest"
 declare -A expected_category_counts=(
 	[adapter-rust]=13
 	[adapter-schema]=3
-	[core-rust]=9
+	[core-rust]=10
 	[control]=12
-	[generated-lean]=5
+	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=365
+	[handwritten-lean]=368
 	[handwritten-proverif]=82
 	[handwritten-ssprove]=18
 	[inventory]=2
 	[lean-control]=12
-	[validation]=12
+	[validation]=13
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -104,6 +104,7 @@ compare_set inventory "$tmp_dir/inventory"
 
 printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	../beaconcrypt/tests/registration_completion.rs \
+	../beaconcrypt/tests/record_opening.rs \
 	../beaconcrypt/tests/raw_receive.rs ../beaconcrypt/tests/construction.rs \
 	../beaconcrypt/tests/registration_response_alias.rs \
 	proofs/pro-verif/check-phase2-x25519-alias.py \
@@ -165,12 +166,15 @@ printf '%s\n' \
 	proofs/lean/BeaconcryptCore/Extraction/FunsExternal.lean \
 	proofs/lean/BeaconcryptCore/Extraction/FunsExternal_Template.lean \
 	proofs/lean/BeaconcryptCore/Extraction/Types.lean \
+	proofs/lean/BeaconcryptCore/Extraction/TypesExternal.lean \
+	proofs/lean/BeaconcryptCore/Extraction/TypesExternal_Template.lean \
 	> "$tmp_dir/generated-lean"
 compare_set generated-lean "$tmp_dir/generated-lean"
 
 printf '%s\n' \
 	proofs/lean/BeaconcryptCore.lean \
 	proofs/lean/BeaconcryptCore/Assumptions/FunsExternal.lean \
+	proofs/lean/BeaconcryptCore/Assumptions/TypesExternal.lean \
 	proofs/lean/BeaconcryptCore/Verification/PqxdhCommitmentRefinement.lean \
 	proofs/lean/BeaconcryptCore/Verification/ProofObligations.lean \
 	> "$tmp_dir/handwritten-lean"
@@ -846,14 +850,14 @@ for scenario_process in \
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 43 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
+require_line_count 44 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_RECORD|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
 require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
-	"$fidelity_test" "transcript-fidelity mutable snapshot"
-require_line_count 16 '^#\[test\]$' \
+	"$fidelity_test" "transcript-fidelity mutable source fixture"
+require_line_count 17 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -871,7 +875,8 @@ for fidelity_test_name in \
 	post_registration_mutation_matrix_is_complete_and_rejected \
 	main_registration_completion_schedules_preserve_the_checked_prefixes \
 	phase1_registration_mutation_matrix_is_complete_and_rejected \
-	requested_transcript_mutations_are_rejected; do
+	requested_transcript_mutations_are_rejected \
+	record_opening_source_mutations_are_rejected; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
 		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
 done
@@ -885,6 +890,14 @@ require_line_count 1 '^fn check_general_registration_runner_mutations\(\) \{$' \
 require_occurrence_count 1 \
 	'fn validate\(snapshot: &Snapshot\) -> Result<\(\), String> \{\s*validate_manifest\(&snapshot\.interface\)\?;\s*validate_pv\(snapshot\)\?;\s*validate_phase1_source\(snapshot\)\?;\s*validate_phase2_source\(snapshot\)\?;\s*validate_cryptoframe_source\(snapshot\)\?;\s*validate_endpoint_frame_context_wiring\(snapshot\)\?;\s*validate_ratchet_effect_driver\(snapshot\)\?;\s*validate_finite_receive_state_fixture\(snapshot\)\?;\s*validate_registration_lifecycle\(snapshot\)\?;\s*validate_initial_ratchet_fidelity\(snapshot\)\?;\s*validate_later_registration_fidelity\(snapshot\)\?;\s*validate_post_registration_fidelity\(snapshot\)\?;\s*validate_makefile\(&snapshot\.makefile\)\s*\}' \
 	"transcript-fidelity combined validator" "$fidelity_test"
+require_line_count 1 '^fn validate_record_opening_source\(snapshot: &Snapshot\) -> Result<\(\), String> \{$' \
+	"$fidelity_test" "native record source validator"
+require_occurrence_count 1 \
+	'(?s)fn record_opening_source_mutations_are_rejected\(\) \{.*?assert_eq!\(checked, 30\);\s*\}' \
+	"native record thirty-control count assertion" "$fidelity_test"
+for record_control in core_reader_inverts_remainder core_reader_discards_message core_payload_wrong_overhead native_wrapper_import_substituted core_begin_wrong_nonce core_begin_wrong_ad core_begin_drops_original_opening core_transcript_reads_substitute core_transcript_erases_substitute core_supplied_commitment_substituted core_resume_inverts_comparison core_resume_skips_rejection core_resume_replaces_capability core_request_wrong_material core_request_wrong_context core_request_wrong_ciphertext core_request_wrong_key core_finish_none_becomes_plaintext core_finish_wrong_sender core_finish_wrong_sequence core_finish_discards_actual_some native_hash_failure_short_circuits native_hash_uses_wrong_transcript native_hash_omits_erase native_hash_none_passes native_compare_result_ignored native_resume_forced_true native_rejected_commitment_drops_kernel native_aead_request_substituted native_optional_plaintext_substituted; do
+	require_line_count 1 "^[[:space:]]*\"${record_control}\",$" "$fidelity_test" "native record control ${record_control}"
+done
 require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 229;$' \
 	"$fidelity_test" "CryptoFrame exact mutation count"
 require_occurrence_count 1 \
@@ -2117,11 +2130,46 @@ reject_matches "predecessor executor/callback symbol remains in current Lean ext
 sed -n '/^import Aeneas$/,$p' \
 	proofs/lean/BeaconcryptCore/Extraction/FunsExternal_Template.lean |
 	sed '/^[[:space:]]*$/d' > "$tmp_dir/generated-lean-externals"
-sed -n '/^import Aeneas$/,$p' \
+sed '/^\/-- The pinned extractor/,$d' \
 	proofs/lean/BeaconcryptCore/Assumptions/FunsExternal.lean |
+	sed -n '/^import Aeneas$/,$p' |
 	sed '/^[[:space:]]*$/d' > "$tmp_dir/maintained-lean-externals"
 cmp -s "$tmp_dir/generated-lean-externals" "$tmp_dir/maintained-lean-externals" ||
 	fail "maintained Lean externals differ from the reviewed generated template"
+# HB-107 permits exactly the transparent pinned-library result-constructor conversion below.
+cat > "$tmp_dir/expected-record-conversion" <<'HB107_CONVERSION'
+/-- The pinned extractor's name for the existing borrowed slice-to-array conversion, translating only the two libraries' result constructors. -/
+def CoreModels.core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+    {T : Type} (N : Aeneas.Std.Usize) (s : Aeneas.Std.Slice T) :
+    RustM (CoreModels.core.result.Result (Aeneas.Std.Array T N) Unit) := do
+  let result ← Aeneas.Std.core.array.TryFromSharedArraySlice.try_from N s
+  match result with
+  | .Ok value => ok (.Ok value)
+  | .Err _ => ok (.Err ())
+HB107_CONVERSION
+sed -n '/^\/-- The pinned extractor/,$p' \
+	proofs/lean/BeaconcryptCore/Assumptions/FunsExternal.lean > "$tmp_dir/actual-record-conversion"
+cmp -s "$tmp_dir/expected-record-conversion" "$tmp_dir/actual-record-conversion" ||
+	fail "record borrowed-array compatibility definition changed"
+for type_surface in TypesExternal TypesExternal_Template; do
+	reject_matches "unexpected new external type declaration" \
+		'\b(opaque|axiom|def|inductive|structure|abbrev|constant)\b' \
+		"proofs/lean/BeaconcryptCore/Extraction/$type_surface.lean"
+done
+reject_matches "unexpected maintained external type declaration" \
+	'\b(opaque|axiom|def|inductive|structure|abbrev|constant)\b' \
+	proofs/lean/BeaconcryptCore/Assumptions/TypesExternal.lean
+sed -n '/^import Aeneas$/,$p' \
+	proofs/lean/BeaconcryptCore/Extraction/TypesExternal_Template.lean |
+	sed '/^[[:space:]]*$/d' > "$tmp_dir/generated-lean-types"
+sed -n '/^import Aeneas$/,$p' \
+	proofs/lean/BeaconcryptCore/Assumptions/TypesExternal.lean |
+	sed '/^[[:space:]]*$/d' > "$tmp_dir/maintained-lean-types"
+cmp -s "$tmp_dir/generated-lean-types" "$tmp_dir/maintained-lean-types" ||
+	fail "maintained empty external-type surface differs from generated template"
+require_line_count 1 '^import BeaconcryptCore\.Assumptions\.TypesExternal$' \
+	proofs/lean/BeaconcryptCore/Extraction/TypesExternal.lean \
+	"generated empty external-type forwarding import"
 require_line_count 1 '^import BeaconcryptCore\.Assumptions\.FunsExternal$' \
 	proofs/lean/BeaconcryptCore/Extraction/FunsExternal.lean \
 	"generated Lean assumptions forwarding import"
@@ -5995,6 +6043,24 @@ require_line_count 2 '^#guard_msgs in$' "$selected_live_module" "RawCtxSelectedL
 for theorem_name in event_good good_alias_bound; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.RawCtxSelectedLiveEvents.${theorem_name}$" "$selected_live_module" "selected live dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_live_module" "selected live theorem ${theorem_name}"
+done
+
+# HB-107: actual extracted native record phases and unconditional operation certificates.
+native_record_module=proofs/lean/BeaconcryptCore/Refinement/NativeRecordWrapper.lean
+require_line_count 1 '^import BeaconcryptCore.Refinement.NativeRecordWrapper$' proofs/lean/BeaconcryptCore.lean "native record Refinement.NativeRecordWrapper root import"
+require_line_count 10 '^theorem ' "$native_record_module" "native record Refinement.NativeRecordWrapper theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$native_record_module" "native record Refinement.NativeRecordWrapper guarded dependencies"
+for theorem_name in payload_views complete_input begin_selected begin_missing resume_exact request_selected finish_selected getters_normal driver_source commitment_borrows; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Refinement.NativeRecordWrapper.${theorem_name}$" "$native_record_module" "native record Refinement.NativeRecordWrapper dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_record_module" "native record Refinement.NativeRecordWrapper theorem ${theorem_name}"
+done
+native_record_module=proofs/lean/BeaconcryptCore/PanicFreedom/Record.lean
+require_line_count 1 '^import BeaconcryptCore.PanicFreedom.Record$' proofs/lean/BeaconcryptCore.lean "native record PanicFreedom.Record root import"
+require_line_count 10 '^theorem ' "$native_record_module" "native record PanicFreedom.Record theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$native_record_module" "native record PanicFreedom.Record guarded dependencies"
+for theorem_name in overhead_total complete_total payload_total begin_total transcript_total transcript_mut_total supplied_total resume_total request_total finish_total; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.PanicFreedom.Record.${theorem_name}$" "$native_record_module" "native record PanicFreedom.Record dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_record_module" "native record PanicFreedom.Record theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

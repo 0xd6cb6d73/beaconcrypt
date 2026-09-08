@@ -2,6 +2,7 @@
 -- [beaconcrypt_core]: type definitions
 import Aeneas
 import CoreModels
+import BeaconcryptCore.Extraction.TypesExternal
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow Error
@@ -650,5 +651,63 @@ structure ratchet.control.PeerSendAdvance where
   peer : ratchet.control.PeerRatchetState
   sequence : core.option.Option Std.U64
   key : ratchet.control.SendKey
+
+/-- [beaconcrypt_core::record::OpenFrameContext]
+    Source: 'beaconcrypt-core/src/record.rs', lines 26:0-32:1
+    Visibility: public -/
+structure record.OpenFrameContext where
+  base_ciphertext : Slice Std.U8
+  tag : Array Std.U8 16#usize
+  commitment : Array Std.U8 64#usize
+  associated_data : Array Std.U8 153#usize
+  sender_kid : Std.U64
+
+/-- [beaconcrypt_core::record::OpenCommitment]
+    Source: 'beaconcrypt-core/src/record.rs', lines 74:0-77:1
+    Visibility: public -/
+structure record.OpenCommitment where
+  opening : ratchet.concrete.ReceiveOpen record.OpenFrameContext
+  transcript : commitment.CommitmentTranscript
+
+/-- [beaconcrypt_core::record::OpenStart]
+    Source: 'beaconcrypt-core/src/record.rs', lines 68:0-71:1
+    Visibility: public -/
+@[discriminant isize]
+inductive record.OpenStart where
+| OpenRejected : ratchet.concrete.ConcreteRatchetKernel → record.OpenStart
+| OpenCommitmentRequested : record.OpenCommitment → record.OpenStart
+
+/-- [beaconcrypt_core::record::OpenAead]
+    Source: 'beaconcrypt-core/src/record.rs', lines 133:0-135:1
+    Visibility: public -/
+structure record.OpenAead where
+  opening : ratchet.concrete.ReceiveOpen record.OpenFrameContext
+
+/-- [beaconcrypt_core::record::OpenAfterCommitment]
+    Source: 'beaconcrypt-core/src/record.rs', lines 127:0-130:1
+    Visibility: public -/
+@[discriminant isize]
+inductive record.OpenAfterCommitment where
+| OpenCommitmentRejected :
+  ratchet.concrete.ConcreteRatchetKernel →
+  record.OpenAfterCommitment
+| OpenAeadRequested : record.OpenAead → record.OpenAfterCommitment
+
+/-- [beaconcrypt_core::record::AeadRequest]
+    Source: 'beaconcrypt-core/src/record.rs', lines 138:0-143:1
+    Visibility: public -/
+structure record.AeadRequest where
+  key : Array Std.U8 32#usize
+  nonce : Array Std.U8 12#usize
+  ciphertext : Slice Std.U8
+  associated_data : Array Std.U8 153#usize
+
+/-- [beaconcrypt_core::record::OpenedRecord]
+    Source: 'beaconcrypt-core/src/record.rs', lines 146:0-150:1
+    Visibility: public -/
+structure record.OpenedRecord (Plaintext : Type) where
+  plaintext : Plaintext
+  key_id : Std.U64
+  seq : Std.U64
 
 end beaconcrypt_core

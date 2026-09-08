@@ -349,6 +349,10 @@ import BeaconcryptCore.Computational.RawCtxSelectedLiveCompiler
 import BeaconcryptCore.Computational.RawCtxSelectedLiveAliases
 import BeaconcryptCore.Computational.StatefulGoodEvent
 import BeaconcryptCore.Computational.RawCtxSelectedLiveEvents
+
+import BeaconcryptCore.Refinement.NativeRecordWrapper
+import BeaconcryptCore.PanicFreedom.Record
+
 /-!
 # Beaconcrypt-core verification root
 

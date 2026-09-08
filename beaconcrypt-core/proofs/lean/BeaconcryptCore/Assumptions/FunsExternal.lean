@@ -18,3 +18,12 @@ set_option maxHeartbeats 1000000
 /- You can set the `maxRecDepth` value with the `-max-recdepth` CLI option -/
 set_option maxRecDepth 2048
 open beaconcrypt_core
+
+/-- The pinned extractor's name for the existing borrowed slice-to-array conversion, translating only the two libraries' result constructors. -/
+def CoreModels.core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
+    {T : Type} (N : Aeneas.Std.Usize) (s : Aeneas.Std.Slice T) :
+    RustM (CoreModels.core.result.Result (Aeneas.Std.Array T N) Unit) := do
+  let result ← Aeneas.Std.core.array.TryFromSharedArraySlice.try_from N s
+  match result with
+  | .Ok value => ok (.Ok value)
+  | .Err _ => ok (.Err ())

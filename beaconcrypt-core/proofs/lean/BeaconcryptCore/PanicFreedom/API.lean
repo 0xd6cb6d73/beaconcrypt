@@ -5,6 +5,7 @@ import BeaconcryptCore.PanicFreedom.Lookup
 import BeaconcryptCore.PanicFreedom.Pqxdh
 import BeaconcryptCore.PanicFreedom.RatchetLoops
 import BeaconcryptCore.PanicFreedom.RatchetReceive
+import BeaconcryptCore.PanicFreedom.Record
 import BeaconcryptCore.PanicFreedom.Restore
 import BeaconcryptCore.PanicFreedom.Static
 import BeaconcryptCore.PanicFreedom.Structural
@@ -1431,5 +1432,57 @@ theorem operation_267 {SendChain : Type} {ReceiveChain : Type} (Material : Type)
 theorem operation_268 (output : Array Std.U8 76#usize) :
     ∃ result, ratchet.split_ratchet_kdf_output output = ok result := by
   apply BeaconcryptCore.PanicFreedom.split_ratchet_kdf_output_ok
+
+-- Extracted operation: record.MESSAGE_OVERHEAD
+theorem operation_269  :
+    ∃ result, record.MESSAGE_OVERHEAD  = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Record.overhead_total
+
+-- Extracted operation: record.OpenAead.finish
+theorem operation_270 {Plaintext : Type} (self : record.OpenAead)
+  (opened : core.option.Option Plaintext) :
+    ∃ result, record.OpenAead.finish (Plaintext := Plaintext) self opened = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Record.finish_total
+
+-- Extracted operation: record.OpenAead.request
+theorem operation_271 (self : record.OpenAead) :
+    ∃ result, record.OpenAead.request self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Record.request_total
+
+-- Extracted operation: record.OpenCommitment.impl.transcript
+theorem operation_272 (self : record.OpenCommitment) :
+    ∃ result, record.OpenCommitment.impl.transcript self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Record.transcript_total
+
+-- Extracted operation: record.OpenCommitment.resume
+theorem operation_273 (self : record.OpenCommitment) (commitment_matches : Bool) :
+    ∃ result, record.OpenCommitment.resume self commitment_matches = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Record.resume_total
+
+-- Extracted operation: record.OpenCommitment.supplied_commitment
+theorem operation_274 (self : record.OpenCommitment) :
+    ∃ result, record.OpenCommitment.supplied_commitment self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Record.supplied_total
+
+-- Extracted operation: record.OpenCommitment.transcript_mut
+theorem operation_275 (self : record.OpenCommitment) :
+    ∃ result, record.OpenCommitment.transcript_mut self = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Record.transcript_mut_total
+
+-- Extracted operation: record.OpenFrameContext.from_frame
+theorem operation_276 (ciphertext : Slice Std.U8) (associated_data : Array Std.U8 153#usize)
+  (sender_kid : Std.U64) :
+    ∃ result, record.OpenFrameContext.from_frame ciphertext associated_data sender_kid = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Record.payload_total
+
+-- Extracted operation: record.begin_open
+theorem operation_277 (opening : ratchet.concrete.ReceiveOpen record.OpenFrameContext) :
+    ∃ result, record.begin_open opening = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Record.begin_total
+
+-- Extracted operation: record.finish_frame_read
+theorem operation_278 {Message : Type} (remaining : Slice Std.U8) (message : Message) :
+    ∃ result, record.finish_frame_read (Message := Message) remaining message = ok result := by
+  apply BeaconcryptCore.PanicFreedom.Record.complete_total
 
 end BeaconcryptCore.PanicFreedom.API

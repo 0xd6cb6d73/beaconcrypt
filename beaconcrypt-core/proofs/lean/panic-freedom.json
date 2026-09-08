@@ -1343,5 +1343,55 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Bytes",
     "theorem": "BeaconcryptCore.PanicFreedom.split_ratchet_kdf_output_ok"
+  },
+  "record.MESSAGE_OVERHEAD": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Record",
+    "theorem": "BeaconcryptCore.PanicFreedom.Record.overhead_total"
+  },
+  "record.OpenAead.finish": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Record",
+    "theorem": "BeaconcryptCore.PanicFreedom.Record.finish_total"
+  },
+  "record.OpenAead.request": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Record",
+    "theorem": "BeaconcryptCore.PanicFreedom.Record.request_total"
+  },
+  "record.OpenCommitment.impl.transcript": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Record",
+    "theorem": "BeaconcryptCore.PanicFreedom.Record.transcript_total"
+  },
+  "record.OpenCommitment.resume": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Record",
+    "theorem": "BeaconcryptCore.PanicFreedom.Record.resume_total"
+  },
+  "record.OpenCommitment.supplied_commitment": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Record",
+    "theorem": "BeaconcryptCore.PanicFreedom.Record.supplied_total"
+  },
+  "record.OpenCommitment.transcript_mut": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Record",
+    "theorem": "BeaconcryptCore.PanicFreedom.Record.transcript_mut_total"
+  },
+  "record.OpenFrameContext.from_frame": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Record",
+    "theorem": "BeaconcryptCore.PanicFreedom.Record.payload_total"
+  },
+  "record.begin_open": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Record",
+    "theorem": "BeaconcryptCore.PanicFreedom.Record.begin_total"
+  },
+  "record.finish_frame_read": {
+    "form": "exists",
+    "module": "BeaconcryptCore.PanicFreedom.Record",
+    "theorem": "BeaconcryptCore.PanicFreedom.Record.complete_total"
   }
 }

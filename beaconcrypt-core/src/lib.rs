@@ -7,6 +7,7 @@ pub mod commitment;
 pub mod constants;
 pub mod pqxdh;
 pub mod ratchet;
+pub mod record;
 
 pub use ratchet::{
 	CachedReceiveKey, ConcreteRatchetKernel, ConcreteRatchetRestore, PeerRatchetState,
