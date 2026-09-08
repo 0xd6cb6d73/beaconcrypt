@@ -376,9 +376,9 @@ checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 
 [[package]]
 name = "hax-lib"
-version = "0.4.0-rc.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ec0971c55b34cb97c539b4269747282a8e25969e5c7b01ed061fabb112e44e4"
+checksum = "e14b91f3c959e69795166fb5b61e46c6c41f32e6627443a329618c01fb2798b1"
 dependencies = [
  "hax-lib-macros",
  "num-bigint",
@@ -387,9 +387,9 @@ dependencies = [
 
 [[package]]
 name = "hax-lib-macros"
-version = "0.4.0-rc.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50e5c561071275ea2df774badd1391517abae8c1e0f66da38d4376b1b7ab2dcc"
+checksum = "914ab66e650cd1b2109185e7175e1407754efafda5da5fff854fb7473e376f48"
 dependencies = [
  "hax-lib-macros-types",
  "proc-macro2",
@@ -399,9 +399,9 @@ dependencies = [
 
 [[package]]
 name = "hax-lib-macros-types"
-version = "0.4.0-rc.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db38db3c513e9fa87ac65b4464604339dae4383064327ca1a0c779986a097079"
+checksum = "4eb1a610adbc947efc77adb73875320fef6f5f134ea88dcef5fdd02d62294159"
 dependencies = [
  "proc-macro2",
  "quote",

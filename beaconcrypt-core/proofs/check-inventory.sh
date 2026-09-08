@@ -45,7 +45,7 @@ declare -A expected_category_counts=(
 	[adapter-rust]=13
 	[adapter-schema]=3
 	[core-rust]=10
-	[control]=12
+	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
 	[handwritten-lean]=368
@@ -93,6 +93,7 @@ printf '%s\n' \
 	../beaconcrypt/Cargo.toml \
 	../flake.lock \
 	../flake.nix \
+	../hax.toml \
 	Cargo.toml \
 	Makefile \
 	README.md > "$tmp_dir/control"

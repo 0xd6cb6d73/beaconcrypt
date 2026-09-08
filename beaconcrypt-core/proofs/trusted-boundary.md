@@ -320,7 +320,7 @@ Attacker-owned registration does not activate `CompromiseReceiveState`; that sep
 
 ## Maintaining the inventory
 
-`reviewed-inventory.txt` uses `category SHA-256 path`, with paths relative to `beaconcrypt-core`. It fingerprints the production Rust/schema surface, core/extraction inputs, tool and CI controls, generated artifacts, every handwritten backend file, the result classifier, the complete-state protocol regression in `../beaconcrypt/tests/protocol.rs`, the persistence receive-effect regressions in `../beaconcrypt/tests/server.rs`, and this document/checker.
+`reviewed-inventory.txt` uses `category SHA-256 path`, with paths relative to `beaconcrypt-core`. It fingerprints the production Rust/schema surface, core/extraction inputs, the Hax companion-tool configuration in `../hax.toml`, tool and CI controls, generated artifacts, every handwritten backend file, the result classifier, the complete-state protocol regression in `../beaconcrypt/tests/protocol.rs`, the persistence receive-effect regressions in `../beaconcrypt/tests/server.rs`, and this document/checker.
 The checker independently derives the production Rust/schema, core Rust, generated, and handwritten backend file sets. It also compares every file of any extension under `proofs/` with the manifest (the manifest itself is the sole implicit self-referential entry) and rejects symlinks in monitored trees, so a new helper cannot be hidden by its name, extension, or ignore status.
 
 There is deliberately no automatic refresh target. For an intentional change:

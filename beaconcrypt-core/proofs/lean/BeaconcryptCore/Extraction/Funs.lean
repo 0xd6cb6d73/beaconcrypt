@@ -11,6 +11,9 @@ open Std.Do
 set_option linter.dupNamespace false
 set_option linter.hashCommand false
 set_option linter.unusedVariables false
+set_option linter.style.whitespace false
+set_option linter.style.setOption false
+set_option linter.style.longLine false
 
 /- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/
 set_option maxHeartbeats 1000000
@@ -885,9 +888,11 @@ def pqxdh.RegistrationError.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::RegistrationError}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 77:9-77:14 -/
 @[reducible]
-def pqxdh.RegistrationError.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.RegistrationError.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.RegistrationError := {
   clone := pqxdh.RegistrationError.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.RegistrationError.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::RegistrationError}]
@@ -908,9 +913,11 @@ def pqxdh.ServerBinding.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::ServerBinding}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 94:9-94:14 -/
 @[reducible]
-def pqxdh.ServerBinding.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.ServerBinding.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.ServerBinding := {
   clone := pqxdh.ServerBinding.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.ServerBinding.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::ServerBinding}]
@@ -931,9 +938,11 @@ def pqxdh.BeaconStartInputs.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconStartInputs}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 102:9-102:14 -/
 @[reducible]
-def pqxdh.BeaconStartInputs.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.BeaconStartInputs.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.BeaconStartInputs := {
   clone := pqxdh.BeaconStartInputs.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.BeaconStartInputs.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::BeaconStartInputs}]
@@ -954,9 +963,11 @@ def pqxdh.BeaconCoins.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconCoins}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 111:9-111:14 -/
 @[reducible]
-def pqxdh.BeaconCoins.Insts.CoreCloneClone : core.clone.Clone pqxdh.BeaconCoins
-  := {
+impl_def pqxdh.BeaconCoins.Insts.CoreCloneClone : core.clone.Clone
+  pqxdh.BeaconCoins := {
   clone := pqxdh.BeaconCoins.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.BeaconCoins.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::BeaconCoins}]
@@ -977,8 +988,11 @@ def pqxdh.InitKex.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::InitKex}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 123:9-123:14 -/
 @[reducible]
-def pqxdh.InitKex.Insts.CoreCloneClone : core.clone.Clone pqxdh.InitKex := {
+impl_def pqxdh.InitKex.Insts.CoreCloneClone : core.clone.Clone pqxdh.InitKex
+  := {
   clone := pqxdh.InitKex.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.InitKex.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::InitKex}]
@@ -1036,9 +1050,11 @@ def pqxdh.VerifiedInitKex.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::VerifiedInitKex}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 165:9-165:14 -/
 @[reducible]
-def pqxdh.VerifiedInitKex.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.VerifiedInitKex.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.VerifiedInitKex := {
   clone := pqxdh.VerifiedInitKex.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.VerifiedInitKex.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::VerifiedInitKex}]
@@ -1158,9 +1174,11 @@ def pqxdh.RegistrationId.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::RegistrationId}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 224:9-224:14 -/
 @[reducible]
-def pqxdh.RegistrationId.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.RegistrationId.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.RegistrationId := {
   clone := pqxdh.RegistrationId.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.RegistrationId.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::RegistrationId}]
@@ -1188,9 +1206,11 @@ def pqxdh.RegistrationStatus.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::RegistrationStatus}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 238:9-238:14 -/
 @[reducible]
-def pqxdh.RegistrationStatus.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.RegistrationStatus.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.RegistrationStatus := {
   clone := pqxdh.RegistrationStatus.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.RegistrationStatus.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::RegistrationStatus}]
@@ -1226,9 +1246,11 @@ def pqxdh.BeaconFresh.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconFresh}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 255:9-255:14 -/
 @[reducible]
-def pqxdh.BeaconFresh.Insts.CoreCloneClone : core.clone.Clone pqxdh.BeaconFresh
-  := {
+impl_def pqxdh.BeaconFresh.Insts.CoreCloneClone : core.clone.Clone
+  pqxdh.BeaconFresh := {
   clone := pqxdh.BeaconFresh.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.BeaconFresh.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::BeaconFresh}]
@@ -1272,9 +1294,11 @@ def pqxdh.BeaconInitSent.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconInitSent}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 278:9-278:14 -/
 @[reducible]
-def pqxdh.BeaconInitSent.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.BeaconInitSent.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.BeaconInitSent := {
   clone := pqxdh.BeaconInitSent.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.BeaconInitSent.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::BeaconInitSent}]
@@ -1309,9 +1333,11 @@ def pqxdh.BeaconStart.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconStart}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 295:9-295:14 -/
 @[reducible]
-def pqxdh.BeaconStart.Insts.CoreCloneClone : core.clone.Clone pqxdh.BeaconStart
-  := {
+impl_def pqxdh.BeaconStart.Insts.CoreCloneClone : core.clone.Clone
+  pqxdh.BeaconStart := {
   clone := pqxdh.BeaconStart.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.BeaconStart.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::BeaconStart}]
@@ -1868,9 +1894,11 @@ def pqxdh.RatchetInitialization.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::RatchetInitialization}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 411:9-411:14 -/
 @[reducible]
-def pqxdh.RatchetInitialization.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.RatchetInitialization.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.RatchetInitialization := {
   clone := pqxdh.RatchetInitialization.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.RatchetInitialization.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::RatchetInitialization}]
@@ -2121,9 +2149,11 @@ def pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::RegistrationKeyIdBinding}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 567:9-567:14 -/
 @[reducible]
-def pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.RegistrationKeyIdBinding := {
   clone := pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::RegistrationKeyIdBinding}]
@@ -2195,9 +2225,11 @@ def pqxdh.BeaconEstablished.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconEstablished}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 630:9-630:14 -/
 @[reducible]
-def pqxdh.BeaconEstablished.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.BeaconEstablished.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.BeaconEstablished := {
   clone := pqxdh.BeaconEstablished.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.BeaconEstablished.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::BeaconEstablished}]
@@ -2239,9 +2271,11 @@ def pqxdh.BeaconAborted.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::BeaconAborted}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 651:9-651:14 -/
 @[reducible]
-def pqxdh.BeaconAborted.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.BeaconAborted.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.BeaconAborted := {
   clone := pqxdh.BeaconAborted.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.BeaconAborted.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::BeaconAborted}]
@@ -2312,9 +2346,11 @@ def pqxdh.ServerState.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::ServerState}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 694:9-694:14 -/
 @[reducible]
-def pqxdh.ServerState.Insts.CoreCloneClone : core.clone.Clone pqxdh.ServerState
-  := {
+impl_def pqxdh.ServerState.Insts.CoreCloneClone : core.clone.Clone
+  pqxdh.ServerState := {
   clone := pqxdh.ServerState.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.ServerState.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::ServerState}]
@@ -2349,9 +2385,11 @@ def pqxdh.ServerCoins.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::ServerCoins}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 711:9-711:14 -/
 @[reducible]
-def pqxdh.ServerCoins.Insts.CoreCloneClone : core.clone.Clone pqxdh.ServerCoins
-  := {
+impl_def pqxdh.ServerCoins.Insts.CoreCloneClone : core.clone.Clone
+  pqxdh.ServerCoins := {
   clone := pqxdh.ServerCoins.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.ServerCoins.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::ServerCoins}]
@@ -2504,9 +2542,11 @@ def pqxdh.KeyIdAvailability.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::KeyIdAvailability}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 830:9-830:14 -/
 @[reducible]
-def pqxdh.KeyIdAvailability.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.KeyIdAvailability.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.KeyIdAvailability := {
   clone := pqxdh.KeyIdAvailability.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.KeyIdAvailability.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::marker::Copy for beaconcrypt_core::pqxdh::KeyIdAvailability}]
@@ -2597,9 +2637,11 @@ def pqxdh.EstablishedPeer.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::pqxdh::{impl core::clone::Clone for beaconcrypt_core::pqxdh::EstablishedPeer}]
     Source: 'beaconcrypt-core/src/pqxdh.rs', lines 884:9-884:14 -/
 @[reducible]
-def pqxdh.EstablishedPeer.Insts.CoreCloneClone : core.clone.Clone
+impl_def pqxdh.EstablishedPeer.Insts.CoreCloneClone : core.clone.Clone
   pqxdh.EstablishedPeer := {
   clone := pqxdh.EstablishedPeer.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    pqxdh.EstablishedPeer.Insts.CoreCloneClone
 }
 
 /-- [beaconcrypt_core::pqxdh::{impl core::cmp::PartialEq<beaconcrypt_core::pqxdh::EstablishedPeer> for beaconcrypt_core::pqxdh::EstablishedPeer}::eq]:
@@ -4403,9 +4445,11 @@ def ratchet.control.SequenceCache.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::SequenceCache}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 16:9-16:14 -/
 @[reducible]
-def ratchet.control.SequenceCache.Insts.CoreCloneClone : core.clone.Clone
+impl_def ratchet.control.SequenceCache.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.SequenceCache := {
   clone := ratchet.control.SequenceCache.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.SequenceCache.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::SequenceCache}]
@@ -4428,9 +4472,11 @@ def ratchet.control.RatchetState.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::RatchetState}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 62:9-62:14 -/
 @[reducible]
-def ratchet.control.RatchetState.Insts.CoreCloneClone : core.clone.Clone
+impl_def ratchet.control.RatchetState.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.RatchetState := {
   clone := ratchet.control.RatchetState.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.RatchetState.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::RatchetState}]
@@ -4473,9 +4519,11 @@ def ratchet.control.SendKey.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::SendKey}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 110:9-110:14 -/
 @[reducible]
-def ratchet.control.SendKey.Insts.CoreCloneClone : core.clone.Clone
+impl_def ratchet.control.SendKey.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.SendKey := {
   clone := ratchet.control.SendKey.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.SendKey.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::SendKey}]
@@ -4505,9 +4553,11 @@ def ratchet.control.SendAdvance.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::SendAdvance}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 139:9-139:14 -/
 @[reducible]
-def ratchet.control.SendAdvance.Insts.CoreCloneClone : core.clone.Clone
+impl_def ratchet.control.SendAdvance.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.SendAdvance := {
   clone := ratchet.control.SendAdvance.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.SendAdvance.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::SendAdvance}]
@@ -4528,9 +4578,11 @@ def ratchet.control.SendFinish.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::SendFinish}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 177:9-177:14 -/
 @[reducible]
-def ratchet.control.SendFinish.Insts.CoreCloneClone : core.clone.Clone
+impl_def ratchet.control.SendFinish.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.SendFinish := {
   clone := ratchet.control.SendFinish.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.SendFinish.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::SendFinish}]
@@ -4553,9 +4605,11 @@ def ratchet.control.ReceivePlan.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::ReceivePlan}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 210:9-210:14 -/
 @[reducible]
-def ratchet.control.ReceivePlan.Insts.CoreCloneClone : core.clone.Clone
+impl_def ratchet.control.ReceivePlan.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.ReceivePlan := {
   clone := ratchet.control.ReceivePlan.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.ReceivePlan.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::ReceivePlan}]
@@ -4578,9 +4632,11 @@ def ratchet.control.ReceiveTargetAdvance.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::ReceiveTargetAdvance}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 248:9-248:14 -/
 @[reducible]
-def ratchet.control.ReceiveTargetAdvance.Insts.CoreCloneClone :
+impl_def ratchet.control.ReceiveTargetAdvance.Insts.CoreCloneClone :
   core.clone.Clone ratchet.control.ReceiveTargetAdvance := {
   clone := ratchet.control.ReceiveTargetAdvance.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.ReceiveTargetAdvance.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::ReceiveTargetAdvance}]
@@ -4603,9 +4659,11 @@ def ratchet.control.ReceiveAdvance.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::ReceiveAdvance}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 279:9-279:14 -/
 @[reducible]
-def ratchet.control.ReceiveAdvance.Insts.CoreCloneClone : core.clone.Clone
+impl_def ratchet.control.ReceiveAdvance.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.ReceiveAdvance := {
   clone := ratchet.control.ReceiveAdvance.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.ReceiveAdvance.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::ReceiveAdvance}]
@@ -4628,9 +4686,11 @@ def ratchet.control.ReceiveDisposition.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::ReceiveDisposition}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 322:9-322:14 -/
 @[reducible]
-def ratchet.control.ReceiveDisposition.Insts.CoreCloneClone : core.clone.Clone
-  ratchet.control.ReceiveDisposition := {
+impl_def ratchet.control.ReceiveDisposition.Insts.CoreCloneClone :
+  core.clone.Clone ratchet.control.ReceiveDisposition := {
   clone := ratchet.control.ReceiveDisposition.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.ReceiveDisposition.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::ReceiveDisposition}]
@@ -4653,9 +4713,11 @@ def ratchet.control.ReceiveFinish.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::ReceiveFinish}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 334:9-334:14 -/
 @[reducible]
-def ratchet.control.ReceiveFinish.Insts.CoreCloneClone : core.clone.Clone
+impl_def ratchet.control.ReceiveFinish.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.ReceiveFinish := {
   clone := ratchet.control.ReceiveFinish.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.ReceiveFinish.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::ReceiveFinish}]
@@ -4678,9 +4740,11 @@ def ratchet.control.ReceiveRemoval.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::ReceiveRemoval}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 342:9-342:14 -/
 @[reducible]
-def ratchet.control.ReceiveRemoval.Insts.CoreCloneClone : core.clone.Clone
+impl_def ratchet.control.ReceiveRemoval.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.ReceiveRemoval := {
   clone := ratchet.control.ReceiveRemoval.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.ReceiveRemoval.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::ReceiveRemoval}]
@@ -4703,9 +4767,11 @@ def ratchet.control.ReceiveFinishWithRemoval.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::ReceiveFinishWithRemoval}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 352:9-352:14 -/
 @[reducible]
-def ratchet.control.ReceiveFinishWithRemoval.Insts.CoreCloneClone :
+impl_def ratchet.control.ReceiveFinishWithRemoval.Insts.CoreCloneClone :
   core.clone.Clone ratchet.control.ReceiveFinishWithRemoval := {
   clone := ratchet.control.ReceiveFinishWithRemoval.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.ReceiveFinishWithRemoval.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::ReceiveFinishWithRemoval}]
@@ -4740,9 +4806,11 @@ def ratchet.control.RatchetRestore.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::RatchetRestore}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 467:9-467:14 -/
 @[reducible]
-def ratchet.control.RatchetRestore.Insts.CoreCloneClone : core.clone.Clone
+impl_def ratchet.control.RatchetRestore.Insts.CoreCloneClone : core.clone.Clone
   ratchet.control.RatchetRestore := {
   clone := ratchet.control.RatchetRestore.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.RatchetRestore.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::RatchetRestore}]
@@ -4765,9 +4833,11 @@ def ratchet.control.ReceiveRestoreStep.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::ReceiveRestoreStep}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 482:9-482:14 -/
 @[reducible]
-def ratchet.control.ReceiveRestoreStep.Insts.CoreCloneClone : core.clone.Clone
-  ratchet.control.ReceiveRestoreStep := {
+impl_def ratchet.control.ReceiveRestoreStep.Insts.CoreCloneClone :
+  core.clone.Clone ratchet.control.ReceiveRestoreStep := {
   clone := ratchet.control.ReceiveRestoreStep.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.ReceiveRestoreStep.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::ReceiveRestoreStep}]
@@ -4823,9 +4893,11 @@ def ratchet.control.PeerRatchetState.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::PeerRatchetState}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 525:9-525:14 -/
 @[reducible]
-def ratchet.control.PeerRatchetState.Insts.CoreCloneClone : core.clone.Clone
-  ratchet.control.PeerRatchetState := {
+impl_def ratchet.control.PeerRatchetState.Insts.CoreCloneClone :
+  core.clone.Clone ratchet.control.PeerRatchetState := {
   clone := ratchet.control.PeerRatchetState.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.PeerRatchetState.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::PeerRatchetState}]
@@ -4860,9 +4932,11 @@ def ratchet.control.PeerSendAdvance.Insts.CoreCloneClone.clone
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::clone::Clone for beaconcrypt_core::ratchet::control::PeerSendAdvance}]
     Source: 'beaconcrypt-core/src/ratchet/control.rs', lines 552:9-552:14 -/
 @[reducible]
-def ratchet.control.PeerSendAdvance.Insts.CoreCloneClone : core.clone.Clone
-  ratchet.control.PeerSendAdvance := {
+impl_def ratchet.control.PeerSendAdvance.Insts.CoreCloneClone :
+  core.clone.Clone ratchet.control.PeerSendAdvance := {
   clone := ratchet.control.PeerSendAdvance.Insts.CoreCloneClone.clone
+  clone_from := core.clone.Clone.clone_from.default
+    ratchet.control.PeerSendAdvance.Insts.CoreCloneClone
 }
 
 /-- Trait implementation: [beaconcrypt_core::ratchet::control::{impl core::marker::Copy for beaconcrypt_core::ratchet::control::PeerSendAdvance}]
@@ -5104,12 +5178,12 @@ def record.OpenFrameContext.from_frame
         core.SharedAArray.Insts.CoreConvertTryFromSharedASliceTryFromSliceError.try_from
           64#usize supplied_commitment
       match r1 with
-      | core.result.Result.Ok commitment =>
+      | core.result.Result.Ok commitment1 =>
         ok (core.option.Option.Some
           {
             base_ciphertext,
             tag := tag1,
-            commitment,
+            commitment := commitment1,
             associated_data,
             sender_kid
           })
