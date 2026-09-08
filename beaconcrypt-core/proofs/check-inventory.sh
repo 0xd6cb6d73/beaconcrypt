@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=12
 	[generated-lean]=5
 	[generated-proverif]=1
-	[handwritten-lean]=307
+	[handwritten-lean]=310
 	[handwritten-proverif]=77
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -5453,6 +5453,34 @@ require_line_count 9 '^#guard_msgs in$' "$generated_root_module" "PqxdhGenerated
 for theorem_name in borrowed_uniform_bound borrowed_class_bound prepare_uniform_bound prepare_class_bound native_sampler_bounds reduction_query_ledger reduction_sampler_ledger ordinary_kem_ledger prepare_decapsulation_bound; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdfBounds.${theorem_name}$" "$generated_root_module" "generated root dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$generated_root_module" "generated root theorem ${theorem_name}"
+done
+
+# HB-99: live native Beacon Phase2 preparation, publication and callback bounds.
+beacon_phase2_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBeaconPhase2Preparation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBeaconPhase2Preparation$' proofs/lean/BeaconcryptCore.lean "PqxdhBeaconPhase2Preparation root import"
+require_line_count 16 '^theorem ' "$beacon_phase2_module" "PqxdhBeaconPhase2Preparation theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$beacon_phase2_module" "PqxdhBeaconPhase2Preparation guarded dependencies"
+for theorem_name in normalPrepare_exact abort_fields owner_inactive afterInputs_complete owner_complete continueWith_complete afterInputs_origin prepare_origin owner_success collect_bound owner_failure afterInputs_bound prepare_bound owner_bound continueWith_bound owner_interpreted_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase2Preparation.${theorem_name}$" "$beacon_phase2_module" "Beacon Phase2 dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$beacon_phase2_module" "Beacon Phase2 theorem ${theorem_name}"
+done
+
+beacon_phase2_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBeaconPhase2Publication.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBeaconPhase2Publication$' proofs/lean/BeaconcryptCore.lean "PqxdhBeaconPhase2Publication root import"
+require_line_count 21 '^theorem ' "$beacon_phase2_module" "PqxdhBeaconPhase2Publication theorem inventory"
+require_line_count 21 '^#guard_msgs in$' "$beacon_phase2_module" "PqxdhBeaconPhase2Publication guarded dependencies"
+for theorem_name in normalInitial_exact normalAuthenticate_exact initial_request clearedCandidate_fields afterOpening_wrong_sequence afterOpening_success publish_fields afterRoot_complete tail_complete finish_failure finish_success owner_inactive afterRoot_supported tail_supported tail_sequence_one owner_complete owner_success owner_failure native_complete native_success native_failure; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase2Publication.${theorem_name}$" "$beacon_phase2_module" "Beacon Phase2 dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$beacon_phase2_module" "Beacon Phase2 theorem ${theorem_name}"
+done
+
+beacon_phase2_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBeaconPhase2Bounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBeaconPhase2Bounds$' proofs/lean/BeaconcryptCore.lean "PqxdhBeaconPhase2Bounds root import"
+require_line_count 17 '^theorem ' "$beacon_phase2_module" "PqxdhBeaconPhase2Bounds theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$beacon_phase2_module" "PqxdhBeaconPhase2Bounds guarded dependencies"
+for theorem_name in total_of_partition simulate_total query_union receive_total raw_total native_raw_total afterRoot_bound tail_bound owner_bound native_raw_lift native_afterRoot_bound native_tail_bound native_tail_lift native_owner_bound interpreted_total_bound native_interpreted_bound native_continuation_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase2Bounds.${theorem_name}$" "$beacon_phase2_module" "Beacon Phase2 dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$beacon_phase2_module" "Beacon Phase2 theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
