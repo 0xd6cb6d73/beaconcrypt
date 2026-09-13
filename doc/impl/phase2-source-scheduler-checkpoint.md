@@ -1,0 +1,35 @@
+# HB-109 checkpoint: generated Phase2 source scheduler
+
+Historical checkpoint record: HB-111 now semantically ports these retained modules and closes their authenticated-root composition on `codex/full-proof-composition`. The unmerged status and remaining-work statements below describe the original checkpoint, before that integration. See [the current completion record](authenticated-root-composition.md).
+
+This is a user-requested checkpoint and pause, based on verified composition `cbc2194a61c464f19a5171921faf0f79583f1c90`. The computational-symbolic bridge is incomplete. This topic is not merged into the composition or `vcvio` branches. The completed record-boundary integration remains on the composition topic; no new Rust or symbolic protocol behavior is introduced here.
+
+The checkpoint contains thirteen complete Lean modules and 63 named guarded statements. All were checked individually, with independent semantic review of their statements, complete source state, assumptions and query accounting. Checkpoint integration validation is recorded below after the final run. Its mathematical scope is the source-shaped enlarged prechallenge execution and its operational postchallenge component equation, with actual generated-handle provenance, coefficient-one joint authentication and explicit source/ordinary ledgers. It does not claim the final four-term root result or global security.
+
+| Module | Guarded statements |
+| --- | ---: |
+| `PqxdhPhase2SharedIdentity` | 4 |
+| `PqxdhPhase2NativeSource` | 4 |
+| `PqxdhPhase2OldSource` | 7 |
+| `PqxdhPhase2Selector` | 3 |
+| `PqxdhPhase2PostSource` | 8 |
+| `PqxdhPhase2SelectorBounds` | 5 |
+| `PqxdhPhase2FinishIdentity` | 1 |
+| `PqxdhPhase2SourceScheduler` | 4 |
+| `PqxdhPhase2GeneratedDriver` | 3 |
+| `PqxdhPhase2SourceSchedulerBounds` | 8 |
+| `PqxdhPhase2GeneratedDriverBounds` | 6 |
+| `PqxdhPhase2GeneratedProvenance` | 5 |
+| `PqxdhPhase2GeneratedDriverResources` | 5 |
+
+The source environment and public program are fixed before fresh target generation. Original identity/prekey/KEM/one-time generation, three signatures, optional writer/publication, every record/public/reveal/identity/CCA/native-finish request and final candidate acceptance share the complete checked execution. Accepted fresh same-identity changes are charged once by the existing exact joint Ed25519/X25519 weak-EUF contract. This is not an implication from ordinary Ed25519 EUF alone. Existing/prior and designated generated KEM handles remain reversible on the derived reached family without public-key injectivity or an honest selected-candidate premise.
+
+For `D = qWrite + bill(qLocal,budget)`, the complete source driver costs at most `D`; its ordinary uniform allowance is conservatively `2*D`, and each non-uniform base or logical-decapsulation class is bounded by `D`. Actual private evaluation adds `uBase*D + uDecap*D`. The full source charges the identity's 32 byte draws and actual prekey/KEM/one-time generation in source order. The borrowed one-key prefix omits the challenger-owned keygen from its own count; the complete challenger ledger remains to be consumed. Deterministic local primitive and codec work is not declared free by an oracle-query count. The full precise formulas and each theorem's interpretation are maintained in `doc/formal-verification-analysis.md`.
+
+The paused next steps are the enlarged postchallenge source compiler and complete authenticated root/KDF reduction; explicit correctness-error and full challenger/Extract/HMAC bills; the unfinished generated Server-field/root-field corollaries; reached 64/76-byte evolving-chain hybrids with ancestor-output exposure; the adaptive raw multi-session receive and symbolic public-observation bridge; and the remaining source-used live ratchet-slot/adapter boundary. The common computational experiment still needs to justify the exact symbolic event projection and every adjacent cryptographic hop with global selection factors and reveal/freshness rules. In particular, the symbolic ML-KEM cross-public-key/coins injectivity and wrong-key partial-decapsulation idealization must be resolved at an exact ordinary endpoint or a justified weaker theory; generic IND-CCA alone does not supply it. The exact Ed25519/X25519 joint-use and programmable classical CTX random-oracle contracts remain explicit. Known false later assigned-ID equality and raw-X25519-encoding origin must remain outside the advertised claims. The one-key root cap from the older interface is not transferred. The KDF and native-slot lanes retain their separate WIP checkpoints. No snapshot, persistence or restoration behavior is in the active proof scope.
+
+Checkpoint validation passed the full 3,433-job Lean build on the reconciled `cbc2194a` baseline, including all thirteen new modules, all 63 dependency guards and the root. The 554-entry reviewed inventory, root/policy checks, nine normality-checker controls and unchanged 279 operation contracts passed. Every new theorem's individual proof and complete source scope received independent semantic review before this packaging. The checker adds exact imports, theorem names and guarded dependency counts; all prior 541 inventory paths retain their order and categories, with only the root, checker and trust-row fingerprints changed plus thirteen additions. No new Rust, binding or ProVerif input is changed in this checkpoint, so their verification and mutation evidence is inherited from the identical `cbc2194a` composition inputs rather than rerun. Whitespace and forbidden proof-placeholder/custom-axiom scans pass. Final independent checkpoint review rehashed all 554 entries, checked every new theorem/guard/import and the preserved prior checker, read the complete English explanations and resource formulas, and approved publication of this checkpoint only. The review made no source or cache changes and claimed no completed global proof.
+
+The other paused lanes are durable: `codex/hb110-selected-parent-checkpoint` at `81434e15e6e1a20c939847dba0203f7517aecbd1` preserves six completed KDF modules with 44 guards and the unfinished prefix proof; `codex/native-live-slot-boundary` at `1b875a0a8daac87dc8c8c69bc88a316a0964fb24` preserves source-used slot work with four focused tests and an unfinished refinement/inventory/validation effort; `codex/independent-proof-pause-20260908` at `c3cdf03f02154582d1158da22d00bab7e0acaefa` preserves independent source/evidence archives and four direct-checked Server-field statements lacking final guards and the two remaining corollaries. None of those WIP topics is merged into the composition. Original worktrees, diagnostics and caches are retained.
+
+The retained HB-109 source-scheduler modules are semantically ported from `cdeb159fa0543919697b03956cc2c271a26ed41c` onto the current composition baseline for [HB-111 authenticated-root completion](authenticated-root-composition.md). HB-111 supplies the enlarged authenticated-root composition and complete source/reduction ledgers that this checkpoint left open; the later global proof obligations remain separately paused.

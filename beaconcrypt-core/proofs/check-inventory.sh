@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=368
+	[handwritten-lean]=400
 	[handwritten-proverif]=82
 	[handwritten-ssprove]=18
 	[inventory]=2
@@ -6062,6 +6062,284 @@ require_line_count 10 '^#guard_msgs in$' "$native_record_module" "native record 
 for theorem_name in overhead_total complete_total payload_total begin_total transcript_total transcript_mut_total supplied_total resume_total request_total finish_total; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.PanicFreedom.Record.${theorem_name}$" "$native_record_module" "native record PanicFreedom.Record dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$native_record_module" "native record PanicFreedom.Record theorem ${theorem_name}"
+done
+
+# HB-109 checkpoint: complete source scheduler, generated execution and explicit source/ordinary bounds.
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2SharedIdentity.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2SharedIdentity$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2SharedIdentity root import"
+require_line_count 4 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2SharedIdentity theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2SharedIdentity guarded dependencies"
+for theorem_name in unpack_pack packed_run packed_interpretation packed_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2SharedIdentity.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2SharedIdentity dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2NativeSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2NativeSource$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2NativeSource root import"
+require_line_count 4 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2NativeSource theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2NativeSource guarded dependencies"
+for theorem_name in auxiliary_step pre_step pre_interpretation pre_complete; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2NativeSource.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2NativeSource dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2OldSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2OldSource$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2OldSource root import"
+require_line_count 7 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2OldSource theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2OldSource guarded dependencies"
+for theorem_name in backend_pack backend_schedule reveals_schedule unpackState_packState packState_unpackState registration_schedule registration_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2OldSource.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2OldSource dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2Selector.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2Selector$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2Selector root import"
+require_line_count 3 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2Selector theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2Selector guarded dependencies"
+for theorem_name in borrowed_step borrowed_interpretation borrowed_complete; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2Selector.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2Selector dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2PostSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2PostSource$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2PostSource root import"
+require_line_count 8 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2PostSource theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2PostSource guarded dependencies"
+for theorem_name in coins auxiliary_step auxiliary_complete native_step native_interpretation native_complete owner_actual owner_continuation; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2PostSource.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2PostSource dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2SelectorBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2SelectorBounds$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2SelectorBounds root import"
+require_line_count 5 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2SelectorBounds theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2SelectorBounds guarded dependencies"
+for theorem_name in step_bound run_zero source_restrictions step_total owner_total; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2SelectorBounds.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2SelectorBounds dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2FinishIdentity.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2FinishIdentity$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2FinishIdentity root import"
+require_line_count 1 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2FinishIdentity theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2FinishIdentity guarded dependencies"
+for theorem_name in finish_reassociate; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2FinishIdentity.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2FinishIdentity dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2SourceScheduler.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2SourceScheduler$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2SourceScheduler root import"
+require_line_count 4 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2SourceScheduler theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2SourceScheduler guarded dependencies"
+for theorem_name in native_reassociate compiler_step borrowed_schedule compiler_complete; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2SourceScheduler.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2SourceScheduler dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2GeneratedDriver.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriver$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2GeneratedDriver root import"
+require_line_count 3 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2GeneratedDriver theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2GeneratedDriver guarded dependencies"
+for theorem_name in driver_borrowed driver_private program_complete; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriver.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2GeneratedDriver dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2SourceSchedulerBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2SourceSchedulerBounds$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2SourceSchedulerBounds root import"
+require_line_count 8 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2SourceSchedulerBounds theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2SourceSchedulerBounds guarded dependencies"
+for theorem_name in native_step_total native_restrictions compiler_step_total compiler_total bill_eq compiler_source_caps compiler_restrictions compiler_continuation_total; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2SourceSchedulerBounds.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2SourceSchedulerBounds dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2GeneratedDriverBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriverBounds$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2GeneratedDriverBounds root import"
+require_line_count 6 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2GeneratedDriverBounds theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2GeneratedDriverBounds guarded dependencies"
+for theorem_name in driver_source_caps driver_total program_source_caps authentication_bound authentication_continuation_bound driver_continuation_total; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriverBounds.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2GeneratedDriverBounds dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2GeneratedProvenance.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2GeneratedProvenance$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2GeneratedProvenance root import"
+require_line_count 5 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2GeneratedProvenance theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2GeneratedProvenance guarded dependencies"
+for theorem_name in compiler_step_valid compiler_valid ordinary_valid driver_valid program_supported; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2GeneratedProvenance.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2GeneratedProvenance dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+hb109_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2GeneratedDriverResources.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriverResources$' proofs/lean/BeaconcryptCore.lean "HB109 PqxdhPhase2GeneratedDriverResources root import"
+require_line_count 5 '^theorem ' "$hb109_module" "HB109 PqxdhPhase2GeneratedDriverResources theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$hb109_module" "HB109 PqxdhPhase2GeneratedDriverResources guarded dependencies"
+for theorem_name in driver_uniform driver_class private_driver_uniform program_uniform prefix_uniform; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriverResources.${theorem_name}$" "$hb109_module" "HB109 PqxdhPhase2GeneratedDriverResources dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$hb109_module" "HB109 theorem ${theorem_name}"
+done
+
+# HB-111 authenticated-root composition: exact independently reviewed module guards.
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootBoundary.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootBoundary$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootBoundary root import"
+require_line_count 4 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootBoundary theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootBoundary guarded dependencies"
+for theorem_name in reached_root_fields eligible_ready_from nativeAccepted_source commonAccepted_source; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootBoundary.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootBudgets.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootBudgets$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootBudgets root import"
+require_line_count 14 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootBudgets theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootBudgets guarded dependencies"
+for theorem_name in prepare_bounds localCoins_bounds targetAccepted_bounds resume_bounds sampler_bounds root_reduction_bounds cca_reduction_bounds cca_uniform_ledger extract_reduction_bounds extract_uniform_ledger root_and_hmac_uniform_ledger indexed_hmac_bounds error_uniform_bound authenticated_native_root_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootBudgets.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootCommonBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootCommonBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootCommonBounds root import"
+require_line_count 10 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootCommonBounds theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootCommonBounds guarded dependencies"
+for theorem_name in selectorLift_total selectorLift_roots coins_total coins_roots completed_total accepted_total completed_roots accepted_roots completed_bounds accepted_bounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootCommonBounds.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootComposition.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootComposition$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootComposition root import"
+require_line_count 4 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootComposition theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootComposition guarded dependencies"
+for theorem_name in nativeMain_eq_endpointMain authenticated_root_bound prefix_source_caps authenticated_native_root_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootComposition.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootCorrectness.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootCorrectness$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootCorrectness root import"
+require_line_count 6 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootCorrectness theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootCorrectness guarded dependencies"
+for theorem_name in after_bound prepared_bound main_bound stopped_branch after_uniform_bound main_uniform_bound; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootCorrectness.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootEndpoint.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootEndpoint$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootEndpoint root import"
+require_line_count 7 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootEndpoint theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootEndpoint guarded dependencies"
+for theorem_name in routed_eq_real routed_indCCA actual_routed_bound routed_uniform_bound actual_uniform_bound authenticated_uniform_bound reduction_resources; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootEndpoint.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootErrorResources.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootErrorResources$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootErrorResources root import"
+require_line_count 1 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootErrorResources theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootErrorResources guarded dependencies"
+for theorem_name in error_uniform; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootErrorResources.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootEufResources.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootEufResources$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootEufResources root import"
+require_line_count 7 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootEufResources theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootEufResources guarded dependencies"
+for theorem_name in program_uniform reduction_class reduction_game_uniform driver_uniform signing_bound staticDh_bound uniform_ledger; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootEufResources.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootExperiment.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootExperiment$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootExperiment root import"
+require_line_count 3 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootExperiment theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootExperiment guarded dependencies"
+for theorem_name in localCoins_actual nativeAccepted_actual nativeAccepted_reduction; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootExperiment.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootGoodSimulation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootGoodSimulation$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootGoodSimulation root import"
+require_line_count 2 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootGoodSimulation theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootGoodSimulation guarded dependencies"
+for theorem_name in nativeAfter_routed goodSimulation; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootGoodSimulation.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootPrepareBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootPrepareBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootPrepareBounds root import"
+require_line_count 6 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootPrepareBounds theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootPrepareBounds guarded dependencies"
+for theorem_name in observe_caps acceptedObserve_caps dispatch_caps prefix_class prefix_caps prepare_caps; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootPrepareBounds.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootSource$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootSource root import"
+require_line_count 6 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootSource theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootSource guarded dependencies"
+for theorem_name in nativeNext_eq_total actual_eq_total dispatch_complete_eq_source filtered_eq_nativeMain nativeContinued_filtered authentication_hop; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootSource.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedRootSourceResources.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhAuthenticatedRootSourceResources$' proofs/lean/BeaconcryptCore.lean "PqxdhAuthenticatedRootSourceResources root import"
+require_line_count 13 '^theorem ' "$authenticated_root_module" "PqxdhAuthenticatedRootSourceResources theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhAuthenticatedRootSourceResources guarded dependencies"
+for theorem_name in native_auxiliary_uniform native_uniform nativeFinish_uniform actual_step_uniform actual_post_uniform postBill_eq nativeAccepted_uniform observe_uniform acceptedObserve_uniform nativeAfterEncapsulation_uniform allCandidateCommon_uniform nativeNext_uniform actual_uniform; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhAuthenticatedRootSourceResources.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhGeneratedNativeContinuation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhGeneratedNativeContinuation$' proofs/lean/BeaconcryptCore.lean "PqxdhGeneratedNativeContinuation root import"
+require_line_count 1 '^theorem ' "$authenticated_root_module" "PqxdhGeneratedNativeContinuation theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhGeneratedNativeContinuation guarded dependencies"
+for theorem_name in nativeContinued_keyfirst; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhGeneratedNativeContinuation.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2GeneratedServerFields.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2GeneratedServerFields$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2GeneratedServerFields root import"
+require_line_count 6 '^theorem ' "$authenticated_root_module" "PqxdhPhase2GeneratedServerFields theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhPhase2GeneratedServerFields guarded dependencies"
+for theorem_name in compiler_step_fields compiler_fields ordinary_fields driver_fields program_fields reached_root_fields; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2GeneratedServerFields.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2PostScheduler.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2PostScheduler$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2PostScheduler root import"
+require_line_count 6 '^theorem ' "$authenticated_root_module" "PqxdhPhase2PostScheduler theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhPhase2PostScheduler guarded dependencies"
+for theorem_name in owner_actual finish_actual public_actual step_actual schedule_actual schedule_reduction; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2PostScheduler.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2PostSchedulerBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2PostSchedulerBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2PostSchedulerBounds root import"
+require_line_count 12 '^theorem ' "$authenticated_root_module" "PqxdhPhase2PostSchedulerBounds theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhPhase2PostSchedulerBounds guarded dependencies"
+for theorem_name in publicWork_bound auxiliary_bound routed_step handles_step targetFinish_bound target_step target_bound uniform_bill base_bill decapsulation_bill root_bill fullPostBounds; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2PostSchedulerBounds.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2SharedBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2SharedBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2SharedBounds root import"
+require_line_count 12 '^theorem ' "$authenticated_root_module" "PqxdhPhase2SharedBounds theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhPhase2SharedBounds guarded dependencies"
+for theorem_name in collect_total afterInputs_total prepare_total afterRoot_total tail_total owner_total collect_decapsulation prepare_decapsulation afterRoot_no_root tail_root owner_root owner_decapsulation; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2SharedBounds.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
+done
+
+authenticated_root_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2SharedKemHandles.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPhase2SharedKemHandles$' proofs/lean/BeaconcryptCore.lean "PqxdhPhase2SharedKemHandles root import"
+require_line_count 1 '^theorem ' "$authenticated_root_module" "PqxdhPhase2SharedKemHandles theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$authenticated_root_module" "PqxdhPhase2SharedKemHandles guarded dependencies"
+for theorem_name in full_calls; do
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.PqxdhPhase2SharedKemHandles.${theorem_name}$" "$authenticated_root_module" "authenticated-root dependency ${theorem_name}"
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$authenticated_root_module" "authenticated-root theorem ${theorem_name}"
 done
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

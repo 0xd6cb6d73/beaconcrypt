@@ -1,5 +1,7 @@
 <!-- SPDX-License-Identifier: 0BSD -->
 
+HB-111 closes the authenticated-root composition for one actual source-generated target and its bounded adaptive native continuation. The same all-candidate execution retains source generation order, private state, the three signatures, optional registration replies and repeated finish attempts. Its explicit bound has coefficient-one joint Ed25519/X25519 weak-EUF, ordinary KEM correctness-error and one-key IND-CCA terms, the actual secret-input Extract-family advantage, and the sum of indexed ordinary HMAC advantages. Public HKDF stays real. This stage does not establish the remaining replicated symbolic/computational experiment, evolving-chain secrecy or global raw-record origin; those workstreams are paused. See [the authenticated-root record](impl/authenticated-root-composition.md).
+
 # Formal verification
 
 The active computational-symbolic proof covers live protocol execution and the specified key-compromise interfaces. The user explicitly excluded snapshots, persistence, restoration and their consequences on 2026-09-08. No storage or restore interface, guarantee or deployment premise is required for this proof; earlier records of separate restoration or persistence work are historical and do not expand its scope.
