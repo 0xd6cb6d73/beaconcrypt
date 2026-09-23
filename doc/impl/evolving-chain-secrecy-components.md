@@ -1,10 +1,10 @@
 # Evolving-chain secrecy components (HB-112)
 
-The topic work now contains 311 Lean modules and 1,891 guarded public statements across six checkpoints supporting the evolving-chain secrecy composition. The stage remains incomplete: the concrete source experiment, original freshness interfaces, corrected private-query observer and full resource certificates are proved, while the final random-child event connection, complete first-half source comparison and final aggregate reductions remain unfinished at the requested pause. HB-110 retains its historical paused work; HB-111 is the completed authenticated-root milestone; HB-112 is the current evolving-chain milestone. The sections below preserve each checkpoint’s scope and explain every substantial component.
+HB-112 now contains 367 Lean modules and 2,148 guarded public statements beyond the authenticated-root base. The closing batch supplies the complete first/later source comparisons, exact authenticated-root event connection, original prepared-source resource certificates, ordered aggregate reductions and same-event value-consistent initializer correction. The [completed stage](#authenticated-evolving-chain-composition) states the fixed-target scope, full query ledger and explicit losses. Earlier sections preserve historical checkpoint scopes. HB-110 remains historical, HB-111 is the authenticated-root stage, and HB-112 is the evolving-chain stage.
 
 Public HKDF calls always use the fixed production function in the intended source and final experiments. Modules that temporarily mask public or retained projections are explicitly intermediate comparison components. No public-HKDF/random-table advantage is a negligibility premise. Primitive algorithms and implementations are unchanged trusted contracts. Snapshots, persistence, restoration and their consequences are outside this proof.
 
-The retained-parent component bound uses two separately constructed reductions: the main output observer and the real-input recovery tester. It pays one Extract advantage and one ordinary two-query HMAC advantage for each, plus the full-output image term 2^-352 and the independent-input candidate term q/2^256. The image term applies to a complete 76-byte child comparison. It is not a 64-byte-output image bound. Real-child guesses are not treated as independent guesses. The actual family freshness proxy may incur additional copies of the same explicitly counted alias event; the final global coefficients have not yet been established.
+The retained-parent component bound uses two separately constructed reductions: the main output observer and the real-input recovery tester. It pays one Extract advantage and one ordinary two-query HMAC advantage for each, plus the full-output image term 2^-352 and the independent-input candidate term q/2^256. The image term applies to a complete 76-byte child comparison. It is not a 64-byte-output image bound. Real-child guesses are not treated as independent guesses. The actual family freshness proxy may incur additional copies of the same explicitly counted alias event; the completed source consumer below establishes coefficient three for this freshness comparison and separately pays its chronological collision/cache terms.
 
 The source family gives private-derivation cap S+51R, seal cap S, opening cap R, caller uniform cap U, public commitment cap H, real public HKDF cap K and read cap E. Its concrete observer pays U+64(S+R+H) uniform requests and grows its candidate list by at most S+51R+K+E. The consuming source proof must supply the actual prior cache/history values in the initial list; duplicates are retained, and the subsequent source-execution checkpoint derives chronological cache provenance. These are logical query and sampling counts; ordinary local cryptographic evaluation, copying, parsing, lookup, allocation and serialization still contribute to runtime. A captured continuation's original remaining source budget must be proved, not assumed free.
 
@@ -3639,3 +3639,879 @@ This module closes the full post representation component. It does not yet provi
 ### Requested pause
 
 All completed work at the pause is preserved in this topic checkpoint. The common supported observer/resource view, final real/random adjacent source comparison, whole first-half builder/freshness comparison, initial64/authenticated-root composition and final finite ordered reduction remain unfinished. The full cached-lineage deferred-draw equality is proved, but its final source/partial-observer consumer has not been assembled. The composition branch and vcvio are unchanged.
+
+## Authenticated evolving-chain composition
+
+This stage composes the authenticated root, one shared 64-byte initializer and the ordered 76-byte derivations in the same source experiment. `PqxdhAuthenticatedEvolvingSecrecy` is the final consumer. The target is one designated source-generated session, one designated owner/direction and a positive record position chosen before execution. The original surrounding source program remains adaptive, includes all candidate and rejection branches, retains the other roles and both chain directions, and can request the modeled current-chain and skipped-key reveals. This is a computational key-material comparison for the exact source publication/freshness event; the replicated ProVerif/computational experiment and adaptive raw-record secrecy/authenticity lift remain separate work.
+
+On the eligible target continuation, the final observation keeps the original adversary decision together with actual target publication and the original byte-level freshness check. Completed and noneligible branches retain their identical original common-observer decision in both games. The source event includes the actual initialized-session origin and actual accepted record position, not a supplied successful-session premise. Freshness considers the root/input ancestors, prior disclosures, live reveal history, target message key and skipped-key material. Revealing an ancestor compromises its descendants. The proof provides no post-compromise recovery. A later descendant reveal can coexist with protection of erased earlier material under the stated freshness rule and collision terms. Snapshots, persistence and restoration are excluded entirely.
+
+The authenticated root comparison is extended before the final Boolean projection so that it carries this exact source event. It retains generation order, private identity/prekey/KEM state, the three original signatures, all selector continuations, optional native outcomes and caches. Changed same-identity accepted signed fields are charged once by the existing coefficient-one joint Ed25519/X25519 weak-EUF reduction. The unchanged authenticated path uses the actual selected one-key ML-KEM challenge; the secret key remains in its interpreter and the challenge ciphertext stays blocked on the public decapsulation channel. There is no premise that an attacker-selected candidate is honest. Root loss retains ordinary KEM correctness error, IND-CCA, the correlated fixed-salt Extract-family advantage and the indexed one-query HMAC advantages.
+
+The initializer reduction uses an independently sampled 32-byte secret input and its actual complete preparation context. It computes the production fixed HKDF with the ratchet label and compares the same full source continuation against one shared random64 response. Both directional halves come from that response. The first transition replaces the selected half's first76 derivation while retaining the opposite half, repeated matching initializers, all source state and the final freshness observation. Later transitions sample the actual stopped source prefix and its complete saved continuation. Their context carries a forward proof of support in the original sampler; this annotation does not condition, resample or change the evaluated distribution. Each reduction sees the exact same preparation and original source event.
+
+Write q for the original adaptive post-request cap, L = 7 + 67q and r = n + 1 for the designated positive record position. Let E₀ and H₀ be the actual initial64 Extract and ordinary two-query HMAC advantages. Each first/later chain hop has separately constructed main and input-recovery-tester reductions, with loss E + H + 3(Etest + Htest + 2^-352 + Q/2^256). The factor three multiplies advantages; each individual HMAC adversary still has at most two challenge queries. The 2^-352 term belongs to the complete76 output comparison and is never used as a64-output image bound. The final bound is root loss + E₀ + H₀ + first-hop loss + the sum of n later-hop losses + n times C(q) + (L + 1)/2^256, where C(q) = 2(L + 1)/2^256 + Σ[j=0..L-1](j + 1)/2^256. The last term connects the coordinate-selected initializer intermediate to a value-consistent private initializer at the same final stage. It charges every initializer attempt and handles distinct root coordinates that produce equal root bytes; it is not a public-HKDF/random-table security claim.
+
+The first-hop callback allowance is T₀ = 2L + r and its candidate allowance is Q₀ = qKnown + 3T₀. At later depth d < n, the remaining checker length is n - 1 - d, the callback allowance is T_d = 2(255 + 67q) + (n - d), and Q_d = qKnown + q + 3L + 3T_d. For either observer, each callback pays 64 + qPre + qApplication + 32 + qSelector + qAux uniform queries. The complete sampled later prefix additionally pays the actual preparation, shared64 draw and L times max(76,qPre,qApplication,32,qSelector,qAux); the parent draw adds76. The first comparison pays its actual76 analysis draw while its real source initializer still consumes only64. Each tester charges its Q real fixed-HKDF evaluations. The initializer reduction pays preparation +32 + the full source observer bill. All Extract/HMAC challenger totals separately charge their64-byte replacement/key/block samples and the independent76 child where used.
+
+`PqxdhInitialPreparedSourceCaps` derives these observer inputs from the original source certificate. The pre/post request caps are sums of the original finite request-class budgets. The initial candidate allowance is at most prior disclosed-list length plus initial history length plus the original preparation request allowance. This follows from supported source execution: publication preserves the old history and each original request adds at most one reveal entry. Preparation/application callbacks pay max(qLocal,64) + qDecap; selector callbacks pay34 + qBase + qDecap, including possible later identity creation; auxiliary callbacks pay qAux. There is no whole-observer resource assumption or assumed distribution of established sessions.
+
+The root-family cap is L + 1. The root reduction keeps its original preparation uniform/base/logical-decapsulation caps and pays L continued base requests and up to2L continued logical decapsulations, counting public and private requests separately. Its continued local-coin bill is L times max(76,qLocal,qAux); evaluating base and decapsulation calls additionally costs qBase times L plus qDecap times 2L. Signing cap remains3 and generated identity creation cap1 for the authentication prefix. Root HMAC reductions have one challenge each; initial and chain HMAC reductions have two each. The corresponding modules state the complete challenger and simulated primitive bills. These are logical query and sampling bounds. Primitive evaluation, parsing, serialization, state copying, table lookup and finite freshness checking retain their deterministic runtime costs; none is declared free.
+
+`SourceFullCorrect`, attached-verification adaptation, ordinary KEM compatibility/functional behavior and the exact joint Ed25519/X25519 interface are permanent primitive/interface contracts. Fixed-salt Extract is an explicit game on each stated joint sampler, not a theorem inferred from a primitive name. Standard ordinary HMAC PRF games handle Expand. No primitive internals are proved. Public HKDF evaluations always remain real in the source and final endpoint. Both production domain labels, the shared64 prefix and the exact first32/second32/final12 projections use the existing full-output contract.
+
+The adjacent source comparisons are proved before applying finite-hybrid arithmetic. No assigned-ID equality, X25519 encoding injectivity, cross-KEM-key injectivity, adaptive final session-selection reduction or full raw-record confidentiality/authentication is inferred from this result. The existing finite publication-position accounting remains available for the later common experiment; this fixed-target theorem has no hidden session or record guessing factor.
+
+## Closing proof modules
+
+The closing batch adds 56 modules and 257 guarded public statements. These explanations describe the checked final statements; all query bounds retain the original source work and their stated primitive/interface contracts.
+
+### FinitePartitionTotal
+
+Selective bounds for a complete finite request partition imply an explicit total request count. This accounting theorem retains every possible oracle reply.
+
+- `bound`: Summing the selective request bounds charges every original request once.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/FinitePartitionTotal.lean).
+
+### PqxdhAuthenticatedEvolvingResources
+
+One original source certificate supplies the query ledgers for the actual root-event, initializer, first-chain and every later-chain reduction. All samplers below use the literal authenticated preparation. Source callback and disclosure-history caps are derived from that preparation, including the complete continued selector interface. The target record fixes the checker length and each later remaining depth. Main and candidate reductions pay their own ordinary challenger coins, while candidate HKDF evaluations are counted separately. No whole-observer resource premise is accepted.
+
+- `input_number`: The actual source input retains exactly the externally fixed selected record number throughout preparation.
+
+- `first_caps`: The first source transition uses the exact target checker length and all caps derived from the original authenticated preparation.
+
+- `initial_queries`: The actual initial64 reduction and all four primitive games use the same preparation and full source event; only the two ordinary HMAC challenges are externalized.
+
+- `first_queries`: Main and candidate first-chain reductions include the original source preparation, full76 parent and retained source/checker continuation, plus each literal challenger bill.
+
+- `later_queries`: Every ordered later reduction uses its same global source prefix, complete sampled parent and exact remaining target depth. The main and candidate games each carry their own ordinary challenger bill.
+
+- `first_candidates`: The complete first source checker counts each real fixed-HKDF candidate evaluation separately from its ordinary uniform queries.
+
+- `later_candidates`: Every later checker has its own exact remaining-depth candidate bill over the same actual preparation and source prefix.
+
+- `root_queries`: All root-event ledgers consume this same original certificate; its source post partition supplies the complete continued request count.
+
+- `complete`: This one checked consumer instantiates every root, initializer, first-chain and later-chain resource obligation for the exact original authenticated source preparation.
+
+- `ideal_uniform`: The final value-consistent source endpoint also pays its own complete preparation, root32, shared64, source work and conservative initializer-miss bill.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedEvolvingResources.lean).
+
+### PqxdhAuthenticatedEvolvingSecrecy
+
+The authenticated source root, shared initial64 value and ordered complete76 chain derivations have one final source event. Its owner and positive record position are fixed before execution; the source schedule remains adaptive and retains all other owners and both directions. Freshness excludes byte-level disclosures that recover the target, including current-chain ancestors and retained skipped keys. All reductions, statistical charges and callback budgets are explicit. Replicated symbolic composition and adaptive raw-record forgery security are separate stages.
+
+- `prior_position`: Every pending outcome of the actual preparation retains the original target record position, without conditioning the sampler.
+
+- `coordinate_bound`: The actual authenticated source event reaches the ordered selected chain experiment using only primitive/interface contracts and the original source caller certificate. Every observer resource premise and input distribution is discharged by actual preparation.
+
+- `bound`: The authenticated source root, shared64 initializer and all ordered complete76 chain hops reach the value-consistent selected-chain ideal at the identical source publication/freshness event. The explicit loss includes every constructed primitive reduction and every collision/cache/alias term, with no honest-target, source-simulation or whole-observer-budget premise.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedEvolvingSecrecy.lean).
+
+### PqxdhAuthenticatedInitialComposition
+
+The actual all-candidate authenticated-root experiment and its actual first initializer share one complete adaptive continuation. This module composes their already constructed reductions, deriving the root and initializer counts from the same source certificate. The endpoint supplies one shared uniform64 response to the selected initializer coordinate; the value-consistent variant additionally pays the derived initializer alias term. These statements preserve the existing final decision and do not yet identify the later published-record freshness event.
+
+- `authenticated_initial_bound`: The actual generated source reaches its shared uniform64 initializer endpoint with the concrete authenticated-root and initial-expansion reductions. Both hops use the same complete post client; the root-query cap comes from its source certificate.
+
+- `authenticated_consistent_initial_bound`: Routing equal-byte initializer roots consistently adds the actual source-derived alias probability, including rejected and repeated initializer attempts. Public HKDF evaluations remain real.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhAuthenticatedInitialComposition.lean).
+
+### PqxdhEvolvingChainComposition
+
+The first initial-half transition and every later parent-child transition are composed in one original sampled protocol experiment. Every stage retains the same preparation, shared64 initializer, complete source schedule, target publication and byte-level freshness event. Finite hybrid arithmetic is applied only to these proved adjacent source simulations. All main/tester reductions and collision/cache charges remain explicit.
+
+- `statistical_finite`: The two parent-collision charges and complete chronological cache-normalization sum are finite for every original source request allowance.
+
+- `first_caps`: The first transition's checker allowance follows from the chosen positive record position; every other resource field is the same supported original source contract.
+
+- `later_loss_nonnegative`: Every displayed later primitive loss is nonnegative; no cancellation is used when converting the explicit probability accounting.
+
+- `later_bound`: The proved global later-source transition has its literal real-valued reduction bill and the finite, separately stated collision/cache term.
+
+- `ordered_bound`: Every selected positive record has one first-half reduction followed by the ordered sum of its actual later-source reductions in the same global experiment. The two collision charges and cache sum are paid once per later hop.
+
+- `initial_evolving_bound`: The exact secret-input initializer reduction precedes the ordered chain reductions in the same source experiment. Both initialized directions, the shared64 prefix, complete76 projections and every repeated evolving derivation retain their actual correlations.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhEvolvingChainComposition.lean).
+
+### PqxdhInitialAliasEvent
+
+The initializer value-consistency comparison preserves a context-dependent final source observation of the entire original result and root cache. The hidden original32-byte root is sampled independently of the complete preparation and the shared64 response. Equal-byte known or nonselected cached/generated roots receive the same selected response in the right experiment. The source consumer supplies the actual full-state client and original initializer-count bound; no protocol event equality is assumed here.
+
+- `point_source`: The ordinary final observation is computed from the literal labelled source client with all original result/cache fields; only the private candidate ledger is removed.
+
+- `left_source`: Discarding the private earlier root preserves the complete source event distribution, after the whole client and shared64 response have been retained.
+
+- `bound`: The same source event differs from its value-consistent private initializer by at most one independent-root guess for each actual initializer query, while every public HKDF evaluation remains real.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialAliasEvent.lean).
+
+### PqxdhInitialAliasPrepared
+
+The actual authenticated-root preparation supplies root-cache-free original callbacks to the initializer alias compiler. The complete shared and identity state is retained, including adaptive public decapsulation; only the separately threaded initializer root cache is held unchanged by these callbacks. The prepared input starts with an empty initializer cache as an exact source definition, not a freshness assumption.
+
+- `cache_free`: Every original noninitializer callback and the unused initializer branch leave the full initializer root cache unchanged; the complete shared/private computation is retained.
+
+- `input_admissible`: Every pending input constructed by the actual preparation has an empty initial root cache and the literal original cache-free callbacks.
+
+- `prior_admissible`: Support of the actual original preparation carries these implementation facts without conditioning or any additional acceptance/freshness premise.
+
+- `prior_post`: The source initializer alias allowance is paid by the original adaptive post budget on the exact preparation support.
+
+- `bound`: The actual authenticated-root preparation and original adaptive schedule discharge every operational premise of the full-source value-consistency correction.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialAliasPrepared.lean).
+
+### PqxdhInitialAliasQueryBounds
+
+Every value-consistent initializer call retains its original uniform sampling cost. Recording the private candidate list is pure bookkeeping; cache misses still pay32 and all ordinary client coins remain charged.
+
+- `step`: Known and selected roots are pure; every nonselected initializer cache miss pays32 and every client coin pays one.
+
+- `program`: The value-consistent interpreter charges all ordinary coins and each actual initializer attempt, including failed and repeated source branches.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialAliasQueryBounds.lean).
+
+### PqxdhInitialHalfBuilderMap
+
+The first-half interpretation starts before the actual first Server send. It preserves admission, consumed registration, optional publication and the full original post schedule, with matching initializer kernels kept hidden on the ordinary side.
+
+- `after_map`: The actual first-send tail preserves every erase and serialization effect under the complete kernel interpretation.
+
+- `candidate_map`: Identity, allocation and nonempty application admission precede the same complete mapped first send on every original branch.
+
+- `ready_map`: Current peer allocation and the consumed-registration Ready fields commute with the complete kernel map.
+
+- `build`: The first-half representation preserves the original consumed-registration builder from its admission checks through its first send and complete publication.
+
+- `sequence`: The exact original first builder and full adaptive post preserve all origins, successful publications and retained effects from before the first Server ciphertext.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialHalfBuilderMap.lean).
+
+### PqxdhInitialHalfCheckedFreshness
+
+The original firstbuilder and adaptive post use byte freshness over the same returned lineage and actual disclosure history. The derived disclosure witness removes legitimate compromised executions from freshness. Only the complete masked candidate event is charged, with coefficient three, while repeated matching initializer replies remain hidden and unchanged.
+
+- `checked_fresh`: The complete source checker interprets its hidden and known slots as precisely the original byte freshness set, retaining every earlier ancestor.
+
+- `checked_fresh_proxy`: Outside the same full candidate event, the actual final freshness predicate equals its target-free proxy using the literal saved history.
+
+- `good_bound`: The same original full-state gate and complete lineage differ from their proxy only at a recorded input alias on a clear-disclosure execution.
+
+- `decision_bound`: The Boolean source observation retains its publication gate and unconditioned original freshness event.
+
+- `proxy_bound`: The exact full stopped program and its masked observer retain the same unconditioned gate and pay the complete original candidate event.
+
+- `good_alias_bound`: Candidate aliases on clear-disclosure executions cost at most twice the same masked candidate event; forbidden disclosures add no compromise term.
+
+- `bound`: The original complete source freshness observation differs from its target-free masked observer by at most three copies of the full candidate event, including the appended checker.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialHalfCheckedFreshness.lean).
+
+### PqxdhInitialHalfDisclosure
+
+The actual first Server builder precedes the complete original adaptive post schedule. Its admission, send, erase and publication callbacks have no adversary read, and installation preserves the original reveal history. The full source disclosure invariant therefore starts from the literal pre-builder history and is derived through the same native-read interpreter.
+
+- `after_quiet`: Original first-send, erase and optional serialization callbacks contain no adversary disclosure query.
+
+- `candidate_quiet`: Every original admission branch either rejects or continues to the same disclosure-free first-send tail.
+
+- `ready_quiet`: The actual current allocator and Ready preparation introduce no family disclosure callback.
+
+- `build_quiet`: The complete actual pre-first-send builder has zero adversary reads, including consumption and unsuccessful publication.
+
+- `reinstall_history`: Consumption and reinstalling the actual builder result preserve the literal pre-builder reveal history on every Rust branch.
+
+- `sequence_invariant`: The full original builder and adaptive post derive final disclosure facts from the actual pre-builder history; no final-history premise is assumed.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialHalfDisclosure.lean).
+
+### PqxdhInitialHalfNative
+
+The first-half native observer keeps the entire original firstbuilder/post result and actual final lineage. Only its private candidate and disclosure instrumentation is removed when evaluating an observation independent of those fields.
+
+- `checker_step`: Each appended checker query uses only the original private ratchet callback and returns the exact partial-routing step.
+
+- `checker_source`: The actual partial observer evaluates its appended finite checker without changing any ambient field.
+
+- `native_projection`: The complete native freshness run retains the original stopped result and actual finite checker list after erasing only private candidate/flag instrumentation.
+
+- `observation`: An observation of only the complete original result and checker list retains exactly the same distribution after removing the query instrumentation.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialHalfNative.lean).
+
+### PqxdhInitialHalfObserverBudgets
+
+The complete first-half observer counts its actual callback syntax. Candidate accounting retains the entire initial list and charges every typed initializer input and returned chain, including repeated and failed requests. Uniform work of the source preparation, application, initializer, selector and publication callbacks is supplied separately at each actual callback and every ambient state. Primitive/open/seal/public work is derived from the existing concrete interpreter. No whole-observer budget or evaluated-distribution cost transfer is used.
+
+- `trace_length`: Every supported full candidate trace retains its complete starting ledger and charges at most three values for each original extended callback.
+
+- `cost_cap`: The conservative common callback cap includes every external cost as well as the concrete at-most64 primitive coins.
+
+- `flatten_uniform`: Reassociation of the complete source state preserves the literal random-query bill, with no distribution equality involved.
+
+- `handler_uniform`: Each full-interface callback pays the concrete old primitive bill or its own original external computation, including unsuccessful replies.
+
+- `observed_uniform`: Recording actual candidate values and the sticky direct-read bit adds no uniform query to any original source callback.
+
+- `complete_uniform`: The complete adaptive observer pays the literal callback count times the displayed callback cap, retaining all state and all failed attempts.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialHalfObserverBudgets.lean).
+
+### PqxdhInitialHalfProgram
+
+The first-half comparison executes the complete original Server builder before the original adaptive post client and then the finite private lineage checker. Its initial history is the pre-builder history. The compiler preserves optional hidden initializer kernels, all ambient effects and the installed-session/publication trace.
+
+- `initial_invariant`: The literal pre-builder source history supplies the initial disclosure invariant without using the unavailable chain.
+
+- `checked_contains`: The actual appended checker retains the hidden initial half under every backend, independently of source success or rejection.
+
+- `checker_quiet`: The finite private lineage check has no direct adversary-read operation.
+
+- `checked_invariant`: The original full firstbuilder/post execution and its private checker derive the same final byte-disclosure invariant from the actual pre-builder history.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialHalfProgram.lean).
+
+### PqxdhInitialHalfResources
+
+The first-half source observer pays the complete original firstbuilder and post callback count, every appended private lineage check and every original external callback. The candidate bound counts the literal pre-existing disclosure list plus at most three available values per compiled callback. The source initializer costs at most32 uniform byte queries. No whole-observer cost, final event or input-recovery probability is supplied as a premise.
+
+- `checker_total`: Every private lineage check contributes exactly its finite depth-plus-one reservation and invokes no external source callback.
+
+- `program_total`: The source-derived original seven-plus67-per-request allowance and the concrete audit compiler derive the full first-hop callback cap.
+
+- `callbacks`: The concrete source callbacks supply the ordinary observer's resource certificate; repeated initializer calls retain their exact32-byte root-cache bill.
+
+- `one_bounds`: The literal complete ordinary first-half observer has the derived uniform-byte and candidate bills from the actual source input.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialHalfResources.lean).
+
+### PqxdhInitialHalfRetained
+
+The complete retained source interpreter for the first initial half is the exact original firstbuilder/post program. Its marker lies in the unused root domain, so it creates no source cache binding. The private child patch changes only ratchet requests; initializer replies and all external effects retain their original kernels and state.
+
+- `separate`: Literal domain inequality separates the private initial-half address from the analysis marker, without a random-input premise.
+
+- `retained_handler`: The complete retained source callback is exactly the native half interpreter, retaining every optional initializer reply and all ambient state.
+
+- `retained_program`: The full retained original source program preserves the identical effects after ambient reassociation and marker removal.
+
+- `sequence_compiled`: Installing one complete first child realizes the full original builder and post under the audited private-alias observer.
+
+- `checker_lineage`: The first-half checker returns precisely the source lineage under the same private patch; the root-domain marker contributes no input or output.
+
+- `decision_compiled`: The retained full source observation is exactly the complete native observer's publication-gated byte freshness, including the actual original history.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialHalfRetained.lean).
+
+### PqxdhInitialHalfSecrecy
+
+The complete firstbuilder/post freshness event is compared at the same full initial-half sampler. The ordinary reduction never receives the hidden chain bytes. Both constructed Extract/HMAC reductions retain the other directional half, all original context and the complete candidate ledger. Literal source and initializer sampling equations are supplied by the source consumer.
+
+- `local_bound`: The complete pre-first-send source event and its ordinary full observer pay three copies of the same masked candidate event, with legitimate disclosures excluded by actual freshness.
+
+- `actual_route`: Averaging the real-child freshness comparison retains the exact full predecessor sampler and charges three copies of its actual input-candidate event.
+
+- `random_route`: The independent-child freshness comparison retains the full delayed-coordinate candidate experiment with the same explicit factor three.
+
+- `actual_bound`: Real-child recovery is charged to the separately constructed full-output tester, with the freshness coefficient applied explicitly to its Extract/HMAC and finite-image terms.
+
+- `random_bound`: Only the independent-child branch uses the delayed uniform-input guess bound, retaining every prior and repeated candidate and the explicit freshness coefficient.
+
+- `bound`: One full parent-to-child secrecy hop with the actual family freshness decision pays its constructed main Extract/HMAC pair and three copies of the tester, image and independent-input terms.
+
+- `observer_bounds`: Main and tester observers retain every original source/checker sample. Real fixed-HKDF testing is separately billed local work.
+
+- `reduction_queries`: Both reductions pay two HMAC queries and the original prefix/full-parent/observation coins; the additional tester pays up to the complete candidate count in real HKDF evaluations.
+
+- `challenger_queries`: Both ordinary-game challengers retain every prior/parent/observer coin, the Extract replacement key and the two random HMAC blocks; the independent full child has its own76-byte bill.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialHalfSecrecy.lean).
+
+### PqxdhInitialNativeParentRandom
+
+The deferred full76 child draw retains the original source publication and complete byte-level lineage freshness. The appended checker reads the already cached published path before private bookkeeping is projected. Its retained early-child view then realizes the same partial-routing observer as the real endpoint, with the original initializer and every ambient callback unchanged.
+
+- `child_extends`: The early child insertion preserves every existing binding when its address is absent; the complete previous root walk is retained.
+
+- `retained_fresh`: The retained early-child view gives the literal original-root freshness event, split at its actual cached parent walk.
+
+- `source_random`: The random source endpoint preserves the original publication and complete final-table freshness through the deferred draw. Its cache premise is only actual supported publication, never an assumed final-game equality.
+
+- `child_cursor`: The original selected parent response advances the source cursor to the exact native child address.
+
+- `retained_decision`: The same original full result has precisely the partial observer's native freshness decision after the early child draw.
+
+- `parent_random`: The actual later source stage after its fresh parent draw equals an early full child draw with the identical native publication/freshness decision.
+
+- `frame_random`: The complete randomized source continuation and source freshness event are exactly the same actual partial-routing observer with a full76 independent child.
+
+- `frame_real`: The complete real source continuation uses the same original publication/freshness decision as the actual partial-routing observer.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialNativeParentRandom.lean).
+
+### PqxdhInitialNativeParentSupport
+
+Actual supported cut continuations retain membership in the original complete source execution. Both adjacent stages use their proved common prefix. Consequently the source publication theorem supplies each endpoint's cached-lineage witness; no final-state path hypothesis is introduced by the local cryptographic comparison.
+
+- `continuation_supported`: Every actual supported cut, original query reply and complete continuation outcome occurs in the full original source execution.
+
+- `parent_supported`: Every full76 parent response remains an actual possible original query outcome at a supported missing cut.
+
+- `parent_later_supported`: The actual common prefix also supplies every later-stage continuation outcome, using its proved complete-state equality before the selected parent.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialNativeParentSupport.lean).
+
+### PqxdhInitialPreparedSourceCaps
+
+The actual authenticated preparation supplies the finite source caps used by evolving-chain reductions. The certificate budgets original callbacks and caller requests. This consumer interprets their concrete base/decapsulation/coin costs and retains the original preparation history, rather than assuming a whole-observer resource bound.
+
+- `post_total`: Every original post request is charged once in the complete finite source partition.
+
+- `interpreted_callback`: Interpreting the original preparation/application callback charges its real local work and every permitted selected-key decapsulation.
+
+- `selector_uniform`: A forwarded selector retains identity-creation coins, ordinary public coins, base work and blocked-challenge decapsulation costs. The later schedule has no implicit no-creation restriction.
+
+- `callbacks`: All four actual source callback categories expose concrete finite costs; the initializer is handled by its separate exact32-byte source service.
+
+- `dispatch_pending`: A pending root dispatch retains precisely its original prepared source state; all abort and non-target paths finish instead.
+
+- `prefix_history`: The actual evaluated generated-prefix state retains at most the original initial observations plus the complete prechallenge source request allowance.
+
+- `prepared_history`: The actual preparation sampler's pending state comes from its same generated source prefix; dispatch cannot replace the retained history.
+
+- `known_length`: Counting actual prior observations bounds every disclosed32-byte candidate, including duplicate values, without assuming byte distinctness.
+
+- `supported_caps`: Every source input actually prepared by the authenticated protocol supplies the full evolving-chain resource certificate, derived from original caller/callback caps and its actual initial-plus-prefix disclosure history.
+
+- `prior_uniform`: The actual prepared source sampler pays the original key generation, preparation, base and decapsulation work, and encapsulation before any independent root or initial expansion draw.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialPreparedSourceCaps.lean).
+
+### PqxdhInitialPreparedSourceInput
+
+The initializer secrecy comparison is supplied by the actual authenticated-root preparation. Completed branches retain their original decision. Pending branches retain the original prepared protocol fields, private KEM interpreter and identity state, original local callbacks, complete adaptive post client and root-free source input. No established-state distribution is postulated.
+
+- `initial_bound`: The original authenticated-root preparation supplies the exact joint sampler and the whole actual source publication/freshness observer for the coefficient-one initializer reduction.
+
+- `hmac_queries`: The constructed concrete source initializer reduction makes at most two ordinary HMAC challenge queries.
+
+- `joint_uniform`: The actual preparation, copied into the source input carrier, pays the source certificate's key-generation, full preparation, base/decapsulation interpretation and encapsulation bill before its independent root draw.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialPreparedSourceInput.lean).
+
+### PqxdhInitialRootEventAccepted
+
+The accepted root continuation retains the complete original installed-origin and publication transcript and tests the actual fixed-source lineage freshness only after the source run. The executable continuation takes the prepared protocol state and supplied root, never the selected KEM secret. Its uniform interpretation is identified with the exact source experiment by callback and complete-program equations.
+
+- `external_source`: The concrete source external callbacks are precisely the actual prepared-input callbacks with only their source initializer installed.
+
+- `source_uniform`: The complete published-record source event under a real initializer is exactly the new executable accepted continuation at the uniform-root endpoint, without an equality-of-final-events premise.
+
+- `uniform_source`: The actual new root endpoint supplies exactly the prepared source carrier and fresh root used by the source initializer reduction. All completed branches and the full adaptive pending continuation are included.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialRootEventAccepted.lean).
+
+### PqxdhInitialRootEventBounds
+
+The actual instrumented accepted-root program receives a conservative transparent resource bill from each original callback and the seven-plus-sixty-seven source schedule. Each ordinary root, decapsulation and base resource is counted separately; every original local random draw remains charged. No evaluated-distribution equality is used to transfer a query cap.
+
+- `retained_uniform`: Fixed-function execution keeps the complete original per-callback random-query bill after its private analysis table is projected.
+
+- `work_bound`: Every actual root-free preparation/application callback retains its original uniform/base/decapsulation class and cap.
+
+- `coins_bound`: Original local sampling is confined to the uniform channel and contributes no base, decapsulation or private-root query.
+
+- `step_bound`: Every concrete source callback has an explicit ordinary reduction bill, including all local random sampling and every public or private decapsulation capability.
+
+- `client_total`: The actual instrumented source client retains the full seven-call first builder and every caller-bounded adaptive post request.
+
+- `accepted_bound`: The actual final event adds no query to the source execution; its complete target bill comes from concrete source callbacks.
+
+- `sampler_bounds`: Both completed and pending modes have source-derived uniform, base, decapsulation and private-root caps in the same executable root-event protocol.
+
+- `reduction_bounds`: The full root-family reduction pays the actual key generation, original preparation, source-event callbacks and one initial root before every possible continued private request.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialRootEventBounds.lean).
+
+### PqxdhInitialRootEventCompiler
+
+The instrumented accepted-root continuation executes the same complete source callbacks before observing publication and freshness. Its executable target handler has no selected KEM secret-key argument. The selected secret is supplied only to the private CCA/root interpreter. All local primitive work is kept as its original probabilistic computation.
+
+- `coins_uniform`: Original local coins retain the full root cache under the composed CCA/root interpreter.
+
+- `initial_program`: The target's source root-then-initializer callback is the same actual root-family program, with its complete optional kernel and ambient state retained.
+
+- `initial_cache`: The complete actual initializer callback reconstructs the selected root cache privately, including every nonselected family lookup and every recovered-key request.
+
+- `public_uniform`: Every complete public continuation, including adaptive decapsulation requests, retains the standard CCA block and leaves the root-family cache untouched.
+
+- `step_cache`: Every complete source callback has the same reply and shared/private state under reconstruction of the selected root-cache entry.
+
+- `program_cache`: Cache reconstruction commutes with the whole adaptive instrumented source client, retaining its complete result and final ambient state.
+
+- `program_evaluated`: Interpreting every compiled source callback is exactly interpreting the entire executable target continuation after it runs.
+
+- `program_source`: Reassociating the same shared/private/cache state identifies the concrete source handler with the fixed-function retained source interpreter.
+
+- `observed_uniform`: A final observation of the complete instrumented source result is preserved by the executable target continuation and private selected-cache reconstruction.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialRootEventCompiler.lean).
+
+### PqxdhInitialRootEventComposition
+
+The actual generated-source experiment reaches the consistent uniform-root family with explicit joint identity, ordinary KEM correctness-error, one-key IND-CCA, secret-input Extract and indexed ordinary HMAC terms. The source authentication and concrete native good-sample simulation obligations are discharged by their checked consumers, rather than assumed at this endpoint. The same complete all-candidate source program and all postchallenge native effects are retained. The root-query cap is stated for the actual compiled root client and must include the initial root and all later private attempts. Primitive source/interface contracts and caller query restrictions remain explicit; no earlier one-root theorem, perfect correctness assumption or ideal public HKDF service is substituted. Identification of the experiment's selected Server with native acceptance additionally uses the initial RootFields representation relation and its preserved-state boundary. This authenticated-root result does not claim evolving-chain security or a global raw-record origin theorem.
+
+- `nativeMain_eq_endpointMain`: The source bridge and endpoint use the same literal native program, with no sampled-order or state projection change.
+
+- `authenticated_root_bound`: The actual all-candidate generated native experiment has the explicit five-term authenticated-root bound. Both authentication filtering and the supported good-sample simulation are derived, with no abstract hop or honest-candidate premise.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialRootEventComposition.lean).
+
+### PqxdhInitialRootEventExperiment
+
+The generated all-candidate source prefix admits an arbitrary executable accepted continuation. This extension keeps authentication filtering and KEM target selection before that continuation. The concrete consuming callback is the complete instrumented source event, never an assumed final game equality.
+
+- `nativeAccepted_reduction`: All later private roots use the same encapsulated secret on a good decapsulation sample, for the complete executable callback.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialRootEventExperiment.lean).
+
+### PqxdhInitialRootEventGoodSimulation
+
+The actual authenticated-root experiment discharges the generic endpoint's good-sample simulation obligation. Both completed and pending modes keep their full original result. The pending branch retains the initial root computed from the encapsulated secret and the exact native builder and adaptive postchallenge schedule. Decapsulation correctness is used only as the current good-sample equation; its failure remains charged by the separate ordinary correctness-error endpoint. The selected secret key remains private interpreter context. The ordinary CCA reduction owns its challenger-supplied shared secret inside private root routing; the executable protocol retains its permitted inputs without either secret field. No perfect correctness, successful acceptance, authentication, state preservation or new primitive security premise is supplied here.
+
+- `nativeAfter_routed`: The complete actual continuation equals the constructed ordinary routed continuation on one good functional decapsulation result.
+
+- `goodSimulation`: Actual mode dispatch and complete native postchallenge simulation discharge the endpoint obligation on every supported good sample. No additional preservation or acceptance premise remains.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialRootEventGoodSimulation.lean).
+
+### PqxdhInitialRootEventResources
+
+The actual source-event root reductions carry a single transparent ledger. Every fixed-source ratchet callback is counted, including the retained local randomness, original auxiliary work, private root requests, and ordinary KEM oracle simulation. HMAC and Extract endpoint sampling are additional costs, not free ambient work. These are formal oracle-query and sampling bounds; deterministic source evaluation, table operations and primitive runtimes remain explicit runtime costs rather than being equated by equality in distribution.
+
+- `hmac_queries`: Every indexed root HMAC reduction has one challenge query. Both evaluated challengers also pay their ordinary 64-byte secret-key generation.
+
+- `extract_queries`: The exact correlated Extract family has at most one initial and one per continued source callback request, with explicit real/random challenger sampling.
+
+- `cca_queries`: The source-event ordinary CCA reduction preserves all prechallenge oracle budgets and charges both public and private continued decapsulations.
+
+- `cca_challenger`: Both CCA challenger branches have the complete interpreted source bill and the branch-independent 32-byte challenge sample.
+
+- `correctness_queries`: The correctness-error endpoint invokes each ordinary KEM operation once and pays their complete sampling costs.
+
+- `signing_queries`: Authentication uses the original source prefix: exactly the three signing calls and one selected identity creation cap are preserved.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialRootEventResources.lean).
+
+### PqxdhInitialRootEventSecrecy
+
+The authenticated root reduction is instantiated with the executable source continuation that tests actual publication and freshness. The same complete preparation includes honest unchanged, changed, attacker-owned and rejected candidates. Its uniform-root endpoint is exactly the prepared source sampler used by the initial64 and evolving-chain reductions, including completed branches. This is a fixed selected-owner and record-position experiment. No caller supplies a final-event equality, root-query cap or continuation simulation. Resource premises describe original source callers and primitive/local callbacks; the concrete root client and every indexed HMAC bill are derived. The joint identity contract covers Ed25519/X25519 correlated use, and ordinary KEM correctness remains an explicit error term.
+
+- `protocol_source`: The authenticated-root endpoint uses precisely the concrete source-event protocol, not a second sampler chosen by an equality hypothesis.
+
+- `bound`: The source publication/freshness event reaches the identical prepared uniform-root experiment with explicit authentication, KEM, Extract and HMAC terms and a source-derived root cap.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialRootEventSecrecy.lean).
+
+### PqxdhInitialRootEventSource
+
+The source theorem keeps arbitrary candidates and the complete generated private prefix. The total KEM presentation is used only after support is derived from that same source generation. The exact source-order distribution then reaches a key-first private continuation through one charged authentication event. No selected-key honesty, zero-error correctness or ideal public HKDF premise occurs in this source bridge.
+
+- `nativeNext_eq_total`: Whole-continuation native/total compatibility is used only for an actually generated target key.
+
+- `actual_eq_total`: Total encapsulation is justified inside the same source prefix, with no honest selected-candidate premise.
+
+- `dispatch_complete_eq_source`: Dispatch preserves every source branch and the complete native continuation, erasing only an unused independent challenger draw on completed branches.
+
+- `filtered_eq_nativeMain`: Complete evaluated source-order equality moves only the independently generated KEM pair and the unused completed-mode challenge draw.
+
+- `nativeContinued_filtered`: The explicit source filter charges only the original changed-acceptance event; all later native work is kept verbatim.
+
+- `authentication_hop`: One constructed joint Ed25519/X25519 weak-EUF reduction charges accepted changed signed fields exactly once, preserving every other original source branch.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialRootEventSource.lean).
+
+### PqxdhInitialSampledParent
+
+The later-step reduction samples the original preparation, one shared initializer response and the actual stopped source prefix before its independent parent output. Its dependent carrier retains the exact original message, callbacks, continuation and all reached state. Consequently a context-dependent origin marker is simulated without assuming that two key or transcript marginals determine the full continuation distribution.
+
+- `local_bound`: Each branch dispatches the complete source-derived native freshness comparison, including the marker selected by the original sampled transcript.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSampledParent.lean).
+
+### PqxdhInitialSampledParentSecrecy
+
+The concrete dependent source carrier supplies one main and one input-candidate reduction. Each includes the same complete preparation and stopped-source distribution. The ordinary reduction observer receives the parent material and full child output without the hidden next-chain input; the actual byte-level freshness test is connected by its proved three-times candidate bound.
+
+- `bound`: One full parent-to-child secrecy hop with the actual family freshness decision pays its constructed main Extract/HMAC pair and three copies of the tester, image and independent-input terms.
+
+- `actual_route`: Averaging the real-child freshness comparison retains the exact full predecessor sampler and charges three copies of its actual input-candidate event.
+
+- `random_route`: The independent-child freshness comparison retains the full delayed-coordinate candidate experiment with the same explicit factor three.
+
+- `actual_bound`: Real-child recovery is charged to the separately constructed full-output tester, with the freshness coefficient applied explicitly to its Extract/HMAC and finite-image terms.
+
+- `random_bound`: Only the independent-child branch uses the delayed uniform-input guess bound, retaining every prior and repeated candidate and the explicit freshness coefficient.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSampledParentSecrecy.lean).
+
+### PqxdhInitialSampledReduction
+
+The constructed main and candidate reductions include the original preparation, shared initializer response, actual stopped source prefix, one full parent draw and the complete adaptive source/checker continuation. The candidate tester evaluates the real fixed HKDF at every returned candidate. The freshness factor multiplies advantages, not the individual reduction query caps.
+
+- `bound`: One global parent-child reduction uses the exact original preparation and source distribution, with the complete candidate allowance derived from actual supported source inputs.
+
+- `reduction_queries`: Each constructed reduction uses two HMAC challenge queries and pays all preparation, initializer, parent and observer coins. Its separate candidate tester retains up to Q real fixed-HKDF evaluations.
+
+- `challenger_queries`: Ordinary-game challenger totals retain the extra Extract key, HMAC key and random HMAC blocks, and the independent full76 child, in addition to the same complete source bill.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSampledReduction.lean).
+
+### PqxdhInitialSampledResources
+
+Finite query bills come from the actually sampled original source input. The support certificate is attached by forward syntax-preserving annotation; it neither conditions the run nor tests support at runtime. Only original callbacks, original post requests and the explicit pre-existing disclosure count are budgeted. Complete stopped observers and reduction costs are derived from those local source bounds.
+
+- `candidate_cap`: The full source candidate allowance follows from the explicitly counted actual initial disclosures and original source callback allowance.
+
+- `one_bounds`: Each supported source input supplies both the complete stopped-observer uniform cost and every candidate appended by the source and checker.
+
+- `observed_bounds`: Every actual global carrier has its supported original source certificate; unreachable arbitrary inputs introduce no uniform or candidate premise.
+
+- `sample_uniform`: The full reduction prefix pays the exact original preparation, the shared64-byte initial response and the complete original stopped-source sampler.
+
+- `observer_bounds`: The main ordinary observer and the separate real-HKDF candidate tester retain the complete original source and appended-checker sampling bill.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSampledResources.lean).
+
+### PqxdhInitialSampledSourceEndpoints
+
+The complete preparation and shared64 initializer are retained in both source endpoints and the one constructed dependent main/tester reduction. Only the proved statistical source-simulation and cache terms are averaged. No primitive advantage is averaged or replaced by a selection over initializer responses.
+
+- `actual_mixture`: The real native observer is a single constructed reduction over the exact original preparation and shared initializer distribution.
+
+- `random_mixture`: The independent-child native observer is a single constructed reduction over the exact original preparation and shared initializer distribution.
+
+- `local_real`: For every supported preparation and complete initial64 response, the real source endpoint pays only its actual prior-input collision probability bound.
+
+- `real_bound`: Averaging the exact real source endpoint over the original preparation and shared initial64 draw retains its one collision allowance without a target-response selection factor.
+
+- `local_random`: The actual later source endpoint pays its single prior-input collision allowance and the complete cached-prefix normalization sum.
+
+- `random_bound`: The later native reduction observer is connected to the same complete sampled source experiment, retaining the actual source normalization and collision terms with no initializer-selection loss.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSampledSourceEndpoints.lean).
+
+### PqxdhInitialSampledSourceLater
+
+One adjacent later-chain transition uses the actual preparation, one shared initial64 response and the same selected publication and full-history freshness event. The exact source endpoint comparisons surround a single pair of constructed global main/tester reductions. All statistical costs remain explicit, with no response-selection loss or average of primitive advantages.
+
+- `source_bound`: A later source transition has the stated global Extract/HMAC reductions and explicit two-collision/cache bill. Operational resource premises are required only of actually supported preparation results.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSampledSourceLater.lean).
+
+### PqxdhInitialSourceAliasCompiler
+
+The source alias client retains the original selective table, cursor, chronological log, private state and source result. Its only separate state is the root-family cache, owned by the response-only initializer interpreter. Ordinary callbacks remain their complete original probabilistic computations. The client first obtains the shared initial64 response and then runs the complete original source sequence.
+
+- `step`: One response-only source callback preserves its full reply and every original interpreter field after reattaching the root cache.
+
+- `program`: The full adaptive original client has the identical complete source result and state after restoring the separately interpreted root cache.
+
+- `step_initial`: Every compiled source callback makes at most one private initializer request, including rejected and repeated attempts; all original coins belong to the other query class.
+
+- `program_initial`: The complete adaptive source client retains its original total callback allowance as a conservative initializer-attempt allowance.
+
+- `client_source`: The alias client obtains the shared initializer response once, then exactly runs the complete original source experiment with its whole final state.
+
+- `client_initial`: The response-only source client counts its initial shared response plus every possible initializer callback in the original builder and bounded adaptive suffix.
+
+- `observed_source`: The labelled alias client preserves the exact original publication and complete source-lineage freshness observation for any selected record, stage and initializer response.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceAliasCompiler.lean).
+
+### PqxdhInitialSourceAliasResources
+
+The value-consistent full-source endpoint pays all original callback coins plus every possible initializer root miss. Its independent32-byte root and shared64 response are charged before the complete adaptive source. The conservative bound counts native76-byte children, commitment64-byte draws and all supplied public/base/decapsulation callback costs.
+
+- `step_coins`: Every original source callback retains its complete ordinary computation; the initializer query is separately charged by the root interpreter.
+
+- `program_coins`: The complete original source client pays the original total callback allowance times the explicit native/external maximum.
+
+- `client_coins`: The first shared initializer lookup adds no ordinary coin; all complete original source work is charged before interpreting initializer misses.
+
+- `cut_uniform`: Each cut of the exact source sampler pays all original coins and the conservative32-byte allowance for every initializer attempt.
+
+- `consistent_uniform`: The value-consistent final source endpoint pays the complete actual preparation, independent root32, shared64 response, original callback work and all initializer cache misses.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceAliasResources.lean).
+
+### PqxdhInitialSourceAliases
+
+The full source publication and freshness observation admits a value-consistent private initializer. The actual source client is reconstructed from the original callbacks and complete source state. The comparison samples one independent earlier root and charges every possible initializer attempt, including the first shared response. The admissibility facts below concern only the source callback implementation and initial cache, and are proved separately for actual preparation.
+
+- `point_source`: The actual complete source event is retained by the compiled client; admissibility is only a callback/cache implementation fact.
+
+- `client_initial`: The actual bounded suffix gives the private initializer allowance, counting the first shared response and every compiled callback.
+
+- `sampled_source`: Forward support certificates preserve the whole original source sampler and every original final event.
+
+- `bound`: The complete selected source event, at any evolving-chain stage, differs from value-consistent private initialization only by the explicit independent-root collision allowance.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceAliases.lean).
+
+### PqxdhInitialSourceFirstResources
+
+The common preparation sampler carries proof-only support certificates through unchanged syntax. Consequently finite source callback bounds are needed only for inputs that can actually be prepared. They construct the first-hop main/tester reductions and their concrete full-source candidate and query allowances, without a whole-observer security premise or conditioning loss.
+
+- `actual_erase`: Proof annotation does not change any original computation in the real-child source experiment.
+
+- `random_erase`: Proof annotation also preserves every callback and draw in the independent-child experiment.
+
+- `observed_bounds`: The ordinary source observer's complete uniform and candidate caps are derived on each actually prepared input; common decisions have zero work and candidates.
+
+- `bound`: The actual sampled source stage zero-to-one secrecy comparison uses its constructed ordinary Extract/HMAC reductions, explicit factor-three alias loss and source-derived candidate bill. No honest-selection, distinct-byte, prior-state or final-event equality is assumed.
+
+- `sample_uniform`: Attaching supported source inputs preserves the original preparation query bill by syntax equality.
+
+- `reduction_queries`: The two constructed reductions each ask at most two HMAC challenges and pay every preparation, full76 sampler and complete source/checker random query. The tester's real-HKDF evaluation count is separately bounded by the whole candidate cap.
+
+- `challenger_queries`: The literal Extract-real, Extract-random, HMAC-real, HMAC-random and independent-child games pay their own sampler/challenger bills, in addition to the same complete ordinary observer.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceFirstResources.lean).
+
+### PqxdhInitialSourceFirstSecrecy
+
+The first evolving-chain comparison is instantiated to the same sampled source experiment as every later stage. One shared uniform64 response supplies both directions. The ordinary full76 sampler uses a root-domain marker and retains only the other half plus an unused12-byte analysis coordinate. The complete source observation, including failed preparation branches, original publication and final byte freshness, is preserved through the evaluated sampling law.
+
+- `actual_source`: The actual initial64 experiment and the constructed ordinary full76 reduction have the same complete source observation, in either adaptively selected direction and on completed branches.
+
+- `random_source`: The adjacent stage uses the identical full initializer distribution and draws only the first selected full76 child; every original source effect and the complete publication/freshness event remain inside the equality.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceFirstSecrecy.lean).
+
+### PqxdhInitialSourceHalf
+
+The first directional-chain reduction starts at the original source input before the Server's first send. The selected owner chooses the hidden initial half, the opposite half remains in the comparison context, and every repeated initializer reconstructs the same original64-byte response. This module instantiates the complete private observer with those literal callbacks and full original state.
+
+- `external`: The original external interface is reconstructed exactly, including repeated selected initializer calls and all original ambient state.
+
+- `first`: The first builder uses exactly the original supplied Server constructor under the full native chain interpretation.
+
+- `root`: The actual selected owner sends on the hidden half of the same supplied initial64 response.
+
+- `retained_native`: The original retained source publication and byte-freshness event is the complete native initial-half observer. This is an exact program equality, preserving all initializer, first-send and later adaptive effects.
+
+- `real_native`: The actual stage-zero source event is obtained by supplying the selected input's unchanged real full76 response to the same private observer.
+
+- `random_native`: The actual stage-one source event draws a full76 child, preserving the same original initial64 response, publication gate and byte-level freshness observation.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceHalf.lean).
+
+### PqxdhInitialSourceInitialResources
+
+The initializer reduction observes the actual complete source execution and final publication/freshness event. Its query allowance is derived from the original firstbuilder/post syntax and each original callback, with the real retained initializer's32-byte cache allowance. The primitive reduction pays the preparation, independent32-byte input and all observer work. Support-sensitive accounting avoids requiring impossible resource caps for source inputs that preparation cannot produce.
+
+- `callbacks`: Each original source callback retains its actual random-query cost when the exact supplied initializer response is installed.
+
+- `one_uniform`: The actual complete source publication/freshness bit inherits the original source callback bill, for any supplied response and any chain stage.
+
+- `observer_uniform`: Every source context actually supplied by preparation has the same full-source observer cap; completed source branches perform no observer work.
+
+- `reduction_queries`: The exact initializer HMAC reduction asks at most two challenge queries and pays preparation plus the independent32-byte root plus all original source observation work. The proof uses only source contexts reached by its actual sampler.
+
+- `challenger_queries`: All four literal primitive challenger games retain the actual preparation and observer work, separately charging the replacement64-byte Extract key and both complete random HMAC blocks.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceInitialResources.lean).
+
+### PqxdhInitialSourceInitialSecrecy
+
+The ordinary initial Extract/HMAC comparison observes the actual complete source publication and byte-lineage freshness event. Its context precedes the independently uniform root; the executable observer receives only the supplied64-byte response, retains both actual directional chains and the complete original adaptive schedule, and runs all public HKDF evaluations as real computations.
+
+- `source_root_unused`: The complete original publication/freshness event consumes only the supplied64 initializer response; both appearances of the unavailable input root are erased by checked source laws.
+
+- `real_source`: The real full-output primitive game is the same actual source experiment and final freshness event at the independent root sampler.
+
+- `random_source`: The complete observer sees exactly one shared uniform64 response; projecting the full76 comparison and discarding the unused root preserve the evaluated continuation distribution.
+
+- `bound`: The actual full source publication/freshness event, starting at an independent32-byte root and retaining both directions, reduces to the exact Extract sampler and ordinary HMAC PRF with coefficient one.
+
+- `sampler_uniform`: The exact joint sampler pays the full original context preparation and its independent32-byte root, including common outcomes.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceInitialSecrecy.lean).
+
+### PqxdhInitialSourceLaterEndpoints
+
+Both local observer endpoints are instantiated on the same complete original source experiment. Every pending cut retains its actual source support, cursor depth and missing parent. The supported original publication theorem supplies the cached lineage after either continuation, while the exact prior-input collision event supplies child absence and parent separation.
+
+- `native_decision`: The native full freshness observer compiles to the identical complete source result and exact suffix checker, with candidate instrumentation erased only from the final observation.
+
+- `published_cached`: Both resumed actual source stages inherit the original successful-publication cache theorem from their literal supported prefix and full76 parent draw.
+
+- `safe_pending`: Outside the explicit prior-input and self-address event, actual source support supplies child absence and parent separation.
+
+- `real_endpoint`: The real later-step endpoint is the actual original source event and the concrete native reduction observer, outside only the explicitly charged input-collision event.
+
+- `random_endpoint`: The randomized later-step endpoint uses the same original source event and concrete native observer, with every publication-cache premise derived from the source execution.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceLaterEndpoints.lean).
+
+### PqxdhInitialSourceLaterMixture
+
+The complete prepared source sampler connects both endpoint simulations to the same original source games and pays the actual prior-input collision event.
+
+- `supported_event_bound`: A source-supported distributional simulation charges the explicit bad event once; forward proof annotation changes neither source syntax nor sampling.
+
+- `resumed_prepared`: The actual supported prepared sampler resumes with precisely its original full76 parent draw; a common completed bit merely ignores the reduction's separately counted comparison draw.
+
+- `resumed_real`: The earlier prepared experiment is exactly the original stage with its unchanged source decision.
+
+- `resumed_normalized`: The later prepared experiment is exactly the original cached-branch normalization, with the same full source final observation.
+
+- `collision_bound`: The same full parent sampler charges the entire prior private-input list and current parent address with its exact source callback allowance.
+
+- `real_bound`: The same original earlier source game differs from its constructed cryptographic observer by at most one explicitly counted prior-input collision event.
+
+- `random_bound`: The same original normalized later source game differs from its constructed cryptographic observer by at most one explicitly counted prior-input collision event.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceLaterMixture.lean).
+
+### PqxdhInitialSourceLaterSecrecy
+
+The fixed-source later chain transition composes its same-event source simulations, explicit collision accounting, concrete main/tester primitive reductions and cached-prefix normalization.
+
+- `normalized_bound`: The original source event pays the two actual collision comparisons around the constructed main/tester reduction, with both endpoint simulations proved from the same source sampler.
+
+- `source_bound`: One complete later chain transition in the original source experiment reduces to the constructed Extract/HMAC games, two explicit prior-input collision charges and the coefficient-one cached-prefix sum. Both sides use the identical selected publication and actual full-history freshness event.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceLaterSecrecy.lean).
+
+### PqxdhInitialSourcePreparedSecrecy
+
+The supported secrecy reduction is now instantiated on the literal source experiment: the actual supplied Server kernel, empty selective table and input log, original selected-session origin marker, complete builder/post program, retained initializer and pure original publication/freshness decision. Four original external callback coin contracts remain explicit; the actual initializer's32-call bound is derived. These are query bounds, not a claim that deterministic primitive, parser, source, bookkeeping or observation work is free.
+
+- `external_source`: Erasing the initializer audit yields exactly the complete original external source interface.
+
+- `earlier_walk`: The selected source's earlier ancestor list is the actual reached cache walk from its actual initialized directional root.
+
+- `supported_source`: Every source-supported saved descriptor projects to the same complete original carried prefix.
+
+- `pending_selected`: Every pending value returned by the actual prepared sampler is missing, matches its reached source cursor, and has exactly the selected cut depth.
+
+- `bound`: The exact source-selected, common-or-pending sampler and its native freshness observer satisfy the constructed Extract/HMAC bound with the source-derived candidate cap.
+
+- `sample_uniform`: The complete original prepared sampler pays the concrete source cap; its final Boolean observation adds no uniform query.
+
+- `reduction_queries`: Both concrete source reductions retain two HMAC challenge calls and the complete original source/parent/observer uniform bill; the separate tester retains every candidate evaluation.
+
+- `challenger_queries`: Ordinary-game challenger costs include the original source and observer, Extract replacement, HMAC key, both random HMAC blocks and the independent child.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourcePreparedSecrecy.lean).
+
+### PqxdhInitialSourceRandom
+
+The first randomized source stage preserves its exact final publication and freshness through the deferred full76 draw.
+
+- `initial_view`: The empty source private table with its early initial-chain response is exactly the private-only patch of the real production function.
+
+- `game_source`: The complete actual stage-one source experiment, including its original publication and byte freshness event, is the early full76 child draw against the exact private-only patched function. The original initializer and every public HKDF evaluation remain real.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceRandom.lean).
+
+### PqxdhInitialSourceReal
+
+The first evolving-chain experiment uses the actual fixed ratchet function. Its empty private table is analysis instrumentation: every supported final lookup is the same fixed function, and the complete original result and ambient state are retained when that instrumentation is removed. In particular the actual published-record freshness event is observed before this removal and agrees with the fixed-function event.
+
+- `final_lookup`: The entire actual stage-zero cache, including entries reached by failed or repeated requests, has exactly the real fixed-HKDF lookup.
+
+- `decision_source`: Observing the actual stage-zero publication and freshness before removing private instrumentation equals observing the fixed source lineage afterward.
+
+- `game_source`: The same complete source observation is executable against the fixed function without any private analysis cache.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceReal.lean).
+
+### PqxdhInitialSourceRootErasure
+
+The complete source chain experiment consumes the supplied64-byte initializer response, not its erased earlier root. This is proved for the entire source run and original final publication/freshness event, including all repeated initializer requests and the full private state. The input root remains available only to the separate initializer audit used after the initializer comparison.
+
+- `initial_root_unused`: The source initializer's complete optional kernel and cache effects are independent of its private audit root.
+
+- `root_unused`: Both actual directional roots come from the same supplied64 response, regardless of the erased input root.
+
+- `external_root_unused`: Every actual future initializer keeps the same optional kernel and all external state after erasing the earlier root.
+
+- `run_root_unused`: The full original adaptive source run is root-erased, retaining all final fields rather than only its final decision.
+
+- `game_root_unused`: The same original publication and byte-lineage freshness decision is root-erased in every chain stage.
+
+- `run_ready_root_unused`: The supplied initializer also removes the Ready root field from the original builder and its complete adaptive continuation.
+
+- `game_ready_root_unused`: The original source publication and full byte freshness event retain the same decision after erasing the unused Ready root.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceRootErasure.lean).
+
+### PqxdhInitialSourceSampled
+
+One preparation distribution precedes the shared64-byte initializer response and every evolving-chain stage. Completed branches retain their original decision. Pending branches retain the full original source input, directional selection and publication/freshness event. The response is sampled once and supplied consistently to both directions and every repeated initializer.
+
+- `initial`: The first evolving-chain endpoint is definitionally the same full source initializer experiment used by the preceding Extract/HMAC reduction.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceSampled.lean).
+
+### PqxdhInitialSourceSecrecyResources
+
+The full parent-to-child reduction is instantiated on the actual source-supported saved descriptor. Its earlier ancestors are obtained by executing the reached private-cache walk from the original directional root. The complete reached state, disclosure seed, publication gate and prepared source sampler are retained. The original source callback bound derives the candidate and uniform budgets; no whole-observer budget is assumed.
+
+- `earlier_walk`: The concrete source carrier derives the earlier root walk from the original zero-depth cursor; no final lineage agreement is assumed.
+
+- `pending_bounds`: The exact masked continuation uses the actual saved-history seed, so the source-derived certificate discharges both its full uniform bill and candidate cap.
+
+- `observed_uniform`: Common decisions and all supported pending continuations instantiate the full observer bill with no whole-observer resource hypothesis.
+
+- `candidates_bound`: Candidate accounting includes the actual pre-cut history and audit, every stopped callback, and every appended checker query.
+
+- `bound`: The actual supported source sampler instantiates the full native-freshness reduction with its computed candidate cap, rather than a whole-observer hypothesis.
+
+- `reduction_queries`: Both constructed HMAC adversaries pay two challenge calls and the actual complete prepared source, parent draw and stopped observer coins; the tester additionally pays the full real-HKDF candidate cap.
+
+- `challenger_queries`: The actual complete source bills also instantiate both ordinary primitive challengers, including Extract and HMAC keys, both random HMAC blocks and the independent full child.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceSecrecyResources.lean).
+
+### PqxdhInitialSourceSelection
+
+Adaptive record-position selection is bounded in the actual complete source execution. The finite allowance is derived from the original first builder and post program, including failed and repeated operations. This module supplies probability accounting only; the per-position cryptographic reductions must use these same source events.
+
+- `positions`: Selecting an actually published fresh record costs a finite sum over the source-derived position allowance, retaining the same original decision and byte-level freshness.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhInitialSourceSelection.lean).
+
+### PqxdhPhase2SourceHistory
+
+The actual prechallenge scheduler appends at most one reveal-history entry per original request. Identity, primitive and native finish computations retain the same prior history. This bound concerns the complete supported evaluated execution, including failed requests.
+
+- `step`: Every actual scheduler callback preserves the prior observations and adds at most one reveal entry.
+
+- `schedule`: The whole adaptive prechallenge schedule appends at most its original request allowance, without dropping rejected, identity or finish branches.
+
+- `start_length`: Publishing the generated Phase1 object embeds the old history without adding or deleting any observation.
+
+- `driver_length`: The actual generated driver pays its complete original source request allowance for all prior reveal observations after publication.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhPhase2SourceHistory.lean).
+
+### RawCtxSupportedMixture
+
+A uniform statistical comparison bound lifts through the same actual preparation distribution using only supported continuations. This arithmetic lemma preserves every branch and does not replace a mixture of cryptographic advantages by the advantage of an unconstructed reduction.
+
+- `probability`: A fixed local distinguishing bound gives the same one-sided probability allowance after the complete supported sampler.
+
+- `bound`: One uniform statistical allowance is preserved through arbitrary original preparation and initializer sampling, with no context or response selection factor.
+
+[Checked Lean source](../../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSupportedMixture.lean).
