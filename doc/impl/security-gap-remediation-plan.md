@@ -1,5 +1,7 @@
 # Security-gap remediation on vcvio
 
+The SSProve proof of concept was retired on 2026-09-23. Its source, build targets, CI job and Rocq/SSProve dependencies are no longer maintained or checked. Historical results below describe the checks performed at those checkpoints; the former files remain available in Git at `a6d126c82364413428d0197190b2482ee9af71d2`. Current computational reductions use Lean/VCVio, and their scope and remaining composition obligations are recorded in [the component roadmap](proverif-vcvio-component-closure.md).
+
 The active computational-symbolic proof covers live protocol execution and the specified key-compromise interfaces. The user explicitly excluded snapshots, persistence, restoration and their consequences on 2026-09-08. No storage or restore interface, guarantee or deployment premise is required for this proof; earlier records of separate restoration or persistence work are historical and do not expand its scope.
 
 ## Baseline and integration ownership

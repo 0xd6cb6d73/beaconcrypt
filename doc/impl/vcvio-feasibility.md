@@ -2,13 +2,15 @@
 
 # VCVio feasibility and native Lean computational reductions
 
+The SSProve proof of concept was retired on 2026-09-23. Its source, build targets, CI job and Rocq/SSProve dependencies are no longer maintained or checked. Historical results below describe the checks performed at those checkpoints; the former files remain available in Git at `a6d126c82364413428d0197190b2482ee9af71d2`. Current computational reductions use Lean/VCVio, and their scope and remaining composition obligations are recorded in [the component roadmap](proverif-vcvio-component-closure.md).
+
 ## Decision
 
 VCVio is feasible for computational proofs over beaconcrypt's handwritten Lean ideal models and is a better integration fit for the `lean` branch than adding a second proof assistant. The current objective is not to reproduce the tracked SSProve branch theorem by theorem. It is to prove computational reductions for security events stated directly over the ideal PQXDH, CTX, and ratchet components and then connect those models to extracted production code through explicit refinement theorems.
 
 That conclusion is deliberately narrower than “VCVio replaces SSProve.” VCVio does not provide a drop-in equivalent of SSProve 0.2.4's complete typed package/validity layer, heterogeneous location heap, or mature package-algebra surface, but matching that framework surface is no longer an acceptance condition. Neither the present SSProve suite nor VCVio supplies the full multi-session, active, extraction-linked end-to-end proof specified in [`computational-security-proof-plan.md`](computational-security-proof-plan.md), and VCVio has no quantum random-oracle or QPT adversary model.
 
-Recommendation: continue with small, theorem-driven reductions against the current ideal Lean models. Use the model's real event and transition definitions, import the narrowest applicable VCVio hardness assumption or game library, and state every missing implementation-refinement and primitive-security premise explicitly. Retain the SSProve work as comparison evidence rather than a porting target.
+Recommendation: continue with small, theorem-driven reductions against the current ideal Lean models. Use the model's real event and transition definitions, import the narrowest applicable VCVio hardness assumption or game library, and state every missing implementation-refinement and primitive-security premise explicitly. The earlier SSProve comparison is historical evidence, not a porting target; its source and verification gates are now retired.
 
 ## Reproducible baseline
 

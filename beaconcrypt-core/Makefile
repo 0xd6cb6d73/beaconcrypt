@@ -8,8 +8,6 @@ EXPECTED_RUSTC := rustc 1.93.0-nightly (843f8ce2e 2025-11-07)
 EXPECTED_CARGO := cargo 1.93.0-nightly (636800288 2025-10-31)
 EXPECTED_HAX := 0.4.0
 EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
-EXPECTED_ROCQ := The Rocq Prover, version 9.0.0
-EXPECTED_SSPROVE := 0.2.4
 HAX_PROVERIF_ITEMS := -** \
 	+!beaconcrypt_core::pqxdh::InitKex \
 	+!beaconcrypt_core::pqxdh::VerifiedInitKex \
@@ -86,8 +84,6 @@ PROVERIF_MATERIAL_TARGETS := \
 	check-proverif-live-material-wrong-sequence \
 	check-proverif-live-material-endpoint-origin
 
-SSPROVE_DIR := proofs/ssprove
-
 LEAN_DIR := proofs/lean
 LEAN_ROOT := $(LEAN_DIR)/BeaconcryptCore.lean
 LEAN_PROOF_PATHS := $(LEAN_DIR)/BeaconcryptCore $(LEAN_DIR)/BeaconcryptCore.lean
@@ -107,7 +103,6 @@ LEAN_GENERATED_PATHS := \
 .PHONY: verify verify-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	verify-proverif-live-material check-proverif-live-material $(PROVERIF_MATERIAL_TARGETS) \
-	verify-ssprove verify-ssprove-in-shell check-ssprove check-ssprove-policy \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
@@ -130,7 +125,6 @@ verify-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
-	$(MAKE) check-ssprove
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 
@@ -148,15 +142,6 @@ verify-proverif-live-material:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
 		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
 		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO=live-material
-
-verify-ssprove:
-	$(NIX) --extra-experimental-features 'nix-command flakes' \
-		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
-		$(MAKE) verify-ssprove-in-shell
-
-verify-ssprove-in-shell:
-	$(MAKE) check-toolchain
-	$(MAKE) check-ssprove
 
 $(PROVERIF_VERIFY_TARGETS): verify-proverif-%:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -194,11 +179,7 @@ check-toolchain:
 		check_version hax '$(EXPECTED_HAX)' \
 			"$$(cargo hax --version | awk -F= '$$1 == "version" { print $$2 }')"; \
 		check_version ProVerif '$(EXPECTED_PROVERIF)' \
-			"$$(proverif -help 2>&1 | sed -n '1p')"; \
-		check_version Rocq '$(EXPECTED_ROCQ)' \
-			"$$(coqc --version | sed -n '1p')"; \
-		check_version SSProve '$(EXPECTED_SSPROVE)' \
-			"$${SSPROVE_VERSION:-missing}"
+			"$$(proverif -help 2>&1 | sed -n '1p')"
 
 extract-proverif:
 	cargo hax -C --locked --features=proverif ';' into \
@@ -222,12 +203,6 @@ check-proverif-extraction:
 			exit 1; \
 		}; \
 	done
-
-check-ssprove-policy:
-	$(MAKE) -C '$(SSPROVE_DIR)' check-policy
-
-check-ssprove:
-	$(MAKE) -C '$(SSPROVE_DIR)' check
 
 check-proverif-transcript-fidelity:
 	cargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity

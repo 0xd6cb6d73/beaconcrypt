@@ -1,5 +1,7 @@
 # Integrated security-gap remediation
 
+The SSProve proof of concept was retired on 2026-09-23. Its source, build targets, CI job and Rocq/SSProve dependencies are no longer maintained or checked. Historical results below describe the checks performed at those checkpoints; the former files remain available in Git at `a6d126c82364413428d0197190b2482ee9af71d2`. Current computational reductions use Lean/VCVio, and their scope and remaining composition obligations are recorded in [the component roadmap](proverif-vcvio-component-closure.md).
+
 ## Integration and review
 
 The work started from clean `vcvio` at `10efd2b12d886ceb69190b95fb0579fd350e410b`, identical to freshly fetched `origin/vcvio`. The plan milestone `720883b3135bfa876ef270f08e40153345557ebe` was pushed and its remote object verified before concurrent implementation. Existing unrelated branches, worktrees and history were preserved.

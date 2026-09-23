@@ -1,5 +1,7 @@
 # HB-95: require sequence one for Beacon registration
 
+The SSProve proof of concept was retired on 2026-09-23. Its source, build targets, CI job and Rocq/SSProve dependencies are no longer maintained or checked. Historical results below describe the checks performed at those checkpoints; the former files remain available in Git at `a6d126c82364413428d0197190b2482ee9af71d2`. Current computational reductions use Lean/VCVio, and their scope and remaining composition obligations are recorded in [the component roadmap](proverif-vcvio-component-closure.md).
+
 This focused topic implements the user's 7 September 2026 requirement that Beacon registration accept only the initial record at sequence 1. It starts from `codex/full-proof-composition` at `666867e30c6d6bf61437f8c9ae99f7dbdf168153`. The separate computational-symbolic proof effort remains paused; this change addresses the registration admission policy and the models and validation affected by it.
 
 ## Production behavior

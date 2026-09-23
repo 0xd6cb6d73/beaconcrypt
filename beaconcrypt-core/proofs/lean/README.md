@@ -228,7 +228,7 @@ verify-lean-in-shell:
 	$(MAKE) check-lean
 ```
 
-The canonical `make verify` path checks Lean, ProVerif, and SSProve; the F* backend has been retired. `verify-lean` remains useful for an isolated pinned run, and `check-generated-lean` adds generated-drift checking for CI.
+The canonical `make verify` path checks Lean/VCVio and ProVerif; the F* backend and SSProve proof of concept have been retired. `verify-lean` remains useful for an isolated pinned run, and `check-generated-lean` adds generated-drift checking for CI.
 
 ## Writing Aeneas-compatible Rust
 

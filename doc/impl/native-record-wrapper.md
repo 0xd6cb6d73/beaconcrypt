@@ -1,5 +1,7 @@
 # HB-107: extracted native record admission and opening
 
+The SSProve proof of concept was retired on 2026-09-23. Its source, build targets, CI job and Rocq/SSProve dependencies are no longer maintained or checked. Historical results below describe the checks performed at those checkpoints; the former files remain available in Git at `a6d126c82364413428d0197190b2482ee9af71d2`. Current computational reductions use Lean/VCVio, and their scope and remaining composition obligations are recorded in [the component roadmap](proverif-vcvio-component-closure.md).
+
 This work moves the production CryptoFrame complete-input check, protected-payload views and selected opening stages into the dependency-free core. The public adapter calls those exact functions. The initial experiment is restricted to this record boundary; role lookup, ratchet take/reinstall and registration parsing remain separate native wiring. The sequence-one registration policy and generic ratchet admission behavior are unchanged. Storage, snapshots and restoration are excluded.
 
 `finish_frame_read` admits the actual decoded message only when the actual parser remainder is empty. It supplies no Cap'n Proto parsing, canonical-encoding or allocation law. `OpenFrameContext::from_frame` retains the original strict payload-length check and borrows the base ciphertext, trailing tag and commitment from that one payload, alongside the selected associated data and sender. Fixed-width conversions retain their original rejection behavior. All context fields are private.

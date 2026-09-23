@@ -2,6 +2,8 @@
 
 # HB-111: authenticated-root composition
 
+The SSProve proof of concept was retired on 2026-09-23. Its source, build targets, CI job and Rocq/SSProve dependencies are no longer maintained or checked. Historical results below describe the checks performed at those checkpoints; the former files remain available in Git at `a6d126c82364413428d0197190b2482ee9af71d2`. Current computational reductions use Lean/VCVio, and their scope and remaining composition obligations are recorded in [the component roadmap](proverif-vcvio-component-closure.md).
+
 This milestone completes the authenticated-root stage for one actual source-generated target and a bounded adaptive native continuation. It extends the retained HB-109 source scheduler into the same cryptographic experiment as the source authentication, selected-key ML-KEM, secret-input Extract-family and ordinary HMAC reductions. The integration target is `codex/full-proof-composition`. The remaining full-proof work is paused after this stage; this is not a claim that the complete computational interpretation of every ProVerif property is finished.
 
 HB-111 is a new milestone within the HB-82 authenticated-root work. HB-70 remains panic freedom. HB-110 is reserved for the separate evolving-KDF work. The fresh topic is based on `bfe6f18e2673840385a63159bc943bbd19e74706`, retaining the Hax 0.4.0 integration and its thirteenth inventory control. The thirteen HB-109 proof modules are semantically ported from `cdeb159fa0543919697b03956cc2c271a26ed41c`; shared inventory and documentation are reconciled with the newer baseline.

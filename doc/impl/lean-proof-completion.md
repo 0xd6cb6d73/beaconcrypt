@@ -1,5 +1,7 @@
 # Lean proof completion and F* retirement
 
+The SSProve proof of concept was retired on 2026-09-23. Its source, build targets, CI job and Rocq/SSProve dependencies are no longer maintained or checked. Historical results below describe the checks performed at those checkpoints; the former files remain available in Git at `a6d126c82364413428d0197190b2482ee9af71d2`. Current computational reductions use Lean/VCVio, and their scope and remaining composition obligations are recorded in [the component roadmap](proverif-vcvio-component-closure.md).
+
 ## Objective
 
 Complete panic-freedom coverage for the default production `beaconcrypt-core` Lean extraction, then replace every maintained F* guarantee with a checked Lean theorem. Each completed milestone is committed and pushed to the private `origin` remote. The integration branch is `codex/lean-proof-completion`; agent worktrees live under `/home/user/worktrees`.

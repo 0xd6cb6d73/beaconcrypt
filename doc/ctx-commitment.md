@@ -79,20 +79,6 @@ The displayed probability inequality and the analogous raw-misattribution inequa
 VCVio's `CRAdversary` does not track PPT cost, so runtime preservation remains conventional complexity reasoning. The direct equal-seal reducer runs `A`, computes the left base-AEAD tag, and constructs two transcripts without evaluating BLAKE2b; the raw-payload reducer instead adds deterministic parsing and transcript construction.
 The Lean extracted-code theorem separately checks the pointwise implication for the extracted fixed-width transcript, while the new Lean proof checks both a pointwise witness and the game-level inequality for the ideal record model.
 
-In parallel, the repository-owned SSProve development supplies a finite hidden-random-oracle formulation of the lifting.
-The repository-owned [`CtxGame.v`](../beaconcrypt-core/proofs/ssprove/CtxGame.v) defines a finite hidden-random-oracle game for this lifting. A deterministic adaptive adversary receives at most `q` classical oracle queries and returns one payload with two candidate explanations. The game then makes exactly the two transcript queries needed to verify the candidates, uses an arbitrary deterministic AEAD-open function that may multi-open, and exposes only the attempt, returned digests, and chronological query trace rather than the hidden function table.
-
-SSProve proves:
-
-```text
-Pr_bounded-hidden-ROM[CTX misattribution] <= Pr_same-run[unequal-input, equal-output collision]
-```
-
-`ctx_hidden_rom_extractor_reduction` proves this for every hidden-table distribution, and `ctx_uniform_hidden_rom_extractor_reduction` specializes it to a uniformly sampled finite random function. `ctx_hidden_binding_trace_size_bound` gives the `q + 2` upper bound, and `ctx_attach_verifier_completed_run` proves that any adversary completing within its budget is followed by exactly the two verifier query-answer pairs. `ctx_hidden_misattribution_challenge_reachable` supplies a concrete non-vacuity witness using a deliberately multi-opening AEAD and a colliding constant table.
-
-The game uses an injective product of one-bit semantic fields, so its extractor fact is proved directly in Rocq. Connecting those fields to the 229-byte production transcript still requires the reviewed representation bridge to the Lean extracted-transcript injectivity and collision-witness theorems. This open Lean/SSProve bridge relates the finite game to the extracted representation; it is separate from `productionInput_abs`, which already equates the extracted builder's bytes with the ideal Lean `ctxPreimage`. Instantiating the abstract collision event as `Adv_commit_beaconcrypt(A) <= Adv_collision_BLAKE2b-512(B)` also requires the production-width game, the concrete primitive premise, and runtime accounting.
-
-The checked assumption reports contain only the reviewed MathComp Boolean-predicate foundations and an abstract real-number carrier; they contain no repository admission, unaccepted SSProve interchange dependency, or unsafe hax prelude import.
 There is no additive ChaCha20-Poly1305 term in this binding reduction, and unequal-key or unequal-context multi-openings by the base AEAD remain allowed.
 This is the same black-box collision-reduction pattern as Theorem 2 of the CTX paper, extended by an injective encoding of `S` and `I` and simplified by the fact that BeaconCrypt transmits the original `T`. It establishes the direct one-shot equal-seal full-commitment property of the modified scheme subject to BLAKE2b collision resistance; it is not merely a statement that the extracted builder has the intended layout. A complete adaptive CAE formulation would additionally need indexed keys, oracle histories, reveal/corruption status, and query accounting.
 
@@ -102,9 +88,9 @@ This heuristic is not a proof about BLAKE2b and must not be reported as one.
 
 ## Separate random-oracle privacy hop
 
-[`CtxPrivacy.v`](../beaconcrypt-core/proofs/ssprove/CtxPrivacy.v) addresses the fact that the published digest hashes the secret key as ordinary data. It samples a jointly uniform hidden key, finite random-oracle table, and fresh digest; programs the table at the key-derived secret transcript; and couples that representation to an unprogrammed ideal table that publishes the same fresh digest. A key-preserving table-entry swap gives the uniform finite representation, and `ctx_hidden_uniform_key_true_real_privacy_bound` proves that the absolute true-real versus fresh-ideal decision-probability gap is at most the probability that the ideal trace queried the hidden key-containing transcript.
+[`CtxComputationalPrivacy.lean`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/CtxComputationalPrivacy.lean) addresses the fact that the published digest hashes the secret key as ordinary data. Its Boolean-view theorem composes the hidden-prefix argument with distinct modified nonce-AEAD IND$ reductions for the view and prefix events. The specialized key-probe endpoint gives a `qH / 2^256` guessing term; the conventional endpoint gives `qH / 2^128` when `qE < 2^96`. The proof retains the actual transmitted base tag and does not add an authenticity or collision term to the privacy bound.
 
-This is not a consequence of collision resistance and is intentionally separate from the binding result. The SSProve model establishes the finite game hop and bad-event shape. The later Lean `CtxComputationalPrivacy.lean` development instantiates the production-width 256-bit prefix, composes the bad event with distinct modified nonce-AEAD IND$ reductions, and obtains `qH / 2^256` specialized or `qH / 2^128` conventional guessing terms. Neither development proves concrete ChaCha20-Poly1305 or BLAKE2b security, a QROM result, asymptotic PPT preservation, adapter correspondence, or protocol-level multi-key composition.
+This component theorem assumes a classical random oracle; collision resistance alone does not imply privacy of the published key-containing digest. It neither proves concrete ChaCha20-Poly1305 or BLAKE2b security nor establishes a QROM result, asymptotic PPT preservation, adapter correspondence or protocol-level multi-key composition. The retired SSProve finite-game pilot is not a dependency of the maintained Lean/VCVio reductions.
 
 ## Supplementary symbolic negative control
 
@@ -115,7 +101,7 @@ It is not a computational proof or a proof of BLAKE2b.
 
 ## Scope and remaining assumptions
 
-The Lean extracted-code pointwise theorem, Lean computational reductions, and SSProve bounded hidden-ROM extractor establish complementary full-commitment and misattribution-to-collision facts on their respective extracted, ideal-model, and finite-game surfaces, including key commitment and binding of the nonce, long-lived associated data, sequence, sender key identifier, and accepted plaintext.
+The Lean extracted-code pointwise theorem and Lean/VCVio computational reductions establish full-commitment and misattribution-to-collision facts on their respective extracted and ideal-model surfaces, including key commitment and binding of the nonce, long-lived associated data, sequence, sender key identifier, and accepted plaintext.
 They explain why a deliberately multi-opening base-AEAD example does not produce a multi-opening beaconcrypt record unless the adversary finds a BLAKE2b collision.
 The maintained Lean refinement now equates the current generated transcript builder with ideal `ctxPreimage`, but completing the production reduction remains conditional on an adapter and production-width representation bridge connecting authenticated production fields and returned bytes to the actual BLAKE2b call and ideal `Crypto.blake2b`, the concrete collision game and numerical bound, BLAKE2b-512 collision resistance, and exact production use of the proved encoding.
 The concrete fixture is documented in [multi-opening-fixture.md](multi-opening-fixture.md).

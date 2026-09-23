@@ -1,5 +1,7 @@
 # Lean behavioral refinement implementation plan
 
+The SSProve proof of concept was retired on 2026-09-23. Its source, build targets, CI job and Rocq/SSProve dependencies are no longer maintained or checked. Historical results below describe the checks performed at those checkpoints; the former files remain available in Git at `a6d126c82364413428d0197190b2482ee9af71d2`. Current computational reductions use Lean/VCVio, and their scope and remaining composition obligations are recorded in [the component roadmap](proverif-vcvio-component-closure.md).
+
 ## Baseline and audited gaps
 
 The baseline is `a3b2bb0` on `vcvio`, fetched from the private `origin` at `ssh://git@git.mschn.fr/amn/beaconcrypt` on 2026-09-04. The main worktree was clean. Existing unrelated branches and worktrees are preserved. The coordinator integrates in `~/worktrees/beaconcrypt-lean-refinement-integration` on `codex/lean-refinement-integration`.

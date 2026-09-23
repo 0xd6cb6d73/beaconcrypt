@@ -1,4 +1,0 @@
-boolp.propositional_extensionality
-boolp.functional_extensionality_dep
-boolp.constructive_indefinite_description
-R

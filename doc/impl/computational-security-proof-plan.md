@@ -2,13 +2,15 @@
 
 # Computational-security proof implementation plan
 
+The SSProve proof of concept was retired on 2026-09-23. Its source, build targets, CI job and Rocq/SSProve dependencies are no longer maintained or checked. Historical results below describe the checks performed at those checkpoints; the former files remain available in Git at `a6d126c82364413428d0197190b2482ee9af71d2`. Current computational reductions use Lean/VCVio, and their scope and remaining composition obligations are recorded in [the component roadmap](proverif-vcvio-component-closure.md).
+
 ## Status and decision policy
 
 This is a proposed implementation plan written against the `proof` branch at commit `ff12e813a1f4b7ee6f6e86db573dc796eb1d7154`.
 
 The SSProve-specific implementation route in this document is superseded as a current porting checklist or acceptance target. Current work proves computational reductions directly over the maintained handwritten Lean ideal models with VCVio, beginning with the factor-one modified-CTX misattribution-to-collision theorem described in [`vcvio-feasibility.md`](vcvio-feasibility.md), while the detailed SSProve design below is retained as historical planning and comparison evidence.
 
-The maintained [integration evaluation](computational-security-proof-integration.md) records the implemented four-scenario ProVerif suite, bounded hidden-ROM CTX binding and privacy hops, the one-session one-record SSProve ideal protocol games, the attacker-facing bounded protocol-ROM reduction, standalone hybrid-combiner, one-step erasure-conditioned ratchet, record-integrity event/collision hops, the exact one-bit fresh-guess bound, the active-quantum attacks, and the remaining work.
+The historical [integration evaluation](computational-security-proof-integration.md) records the implemented four-scenario ProVerif suite, bounded hidden-ROM CTX binding and privacy hops, the one-session one-record SSProve ideal protocol games, the attacker-facing bounded protocol-ROM reduction, standalone hybrid-combiner, one-step erasure-conditioned ratchet, record-integrity event/collision hops, the exact one-bit fresh-guess bound, the active-quantum attacks, and the remaining work.
 
 Except where that evaluation explicitly records a completed milestone, nothing in this planning document is a current security claim, a completed proof, or permission to change the protocol, wire format, persistence format, or public APIs.
 

@@ -1,5 +1,7 @@
 # Post-registration fidelity reconciliation
 
+The SSProve proof of concept was retired on 2026-09-23. Its source, build targets, CI job and Rocq/SSProve dependencies are no longer maintained or checked. Historical results below describe the checks performed at those checkpoints; the former files remain available in Git at `a6d126c82364413428d0197190b2482ee9af71d2`. Current computational reductions use Lean/VCVio, and their scope and remaining composition obligations are recorded in [the component roadmap](proverif-vcvio-component-closure.md).
+
 ## Current baseline and ownership
 
 The isolated `codex/vcvio-proverif-post-registration-ratchet` branch starts at `4c718ffe346cce3af1ceab3c48d5783d1c1bc813`. On 2026-09-05 the registration worktree was clean at `782265b`, and that commit was confirmed as an ancestor of fetched `origin/vcvio`. Direct `git ls-remote origin refs/heads/vcvio` returned `e5a361289191dbb7bab3675d42d688396044d91a`. The M3 implementation and adapter fixture synchronization were therefore durable before this reconciliation began. An immediate `git fetch origin vcvio` preceded the ordinary, uncommitted merge of that remote checkpoint. No other worktree was edited.
