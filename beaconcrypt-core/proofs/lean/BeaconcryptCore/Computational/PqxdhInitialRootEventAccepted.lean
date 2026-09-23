@@ -151,4 +151,3 @@ end BeaconcryptCore.Computational.PqxdhInitialRootEventAccepted
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhInitialRootEventAccepted.uniform_source
-

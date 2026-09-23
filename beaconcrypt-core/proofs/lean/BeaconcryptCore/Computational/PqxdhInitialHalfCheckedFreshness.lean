@@ -44,7 +44,7 @@ noncomputable def maskedRun : ProbComp (Trace M P I D K A N C Result Origin S B)
       (initial disclosed execution state candidates)
 
 /-- The complete source checker interprets its hidden and known slots as precisely the original byte freshness set, retaining every earlier ancestor. -/
-theorem checked_fresh (earlier : List RatchetChain) 
+theorem checked_fresh (earlier : List RatchetChain)
     (result : Trace M P I D K A N C Result Origin S B)
     (supported : result ∈ support (nativeRun source writer prior entry pre application initializer selector aux mark sender route decode execution depth target output disclosed state candidates)) :
     RawCtxLiveLineage.Fresh (result.1.2.map (interpret (RawCtxFreshChainCut.concreteChain target)) ++ earlier)
@@ -58,7 +58,7 @@ theorem checked_fresh (earlier : List RatchetChain)
   simp only [List.mem_append, List.mem_cons, RawCtxFiniteLineageCheck.interpreted_mem, hidden, and_true, or_assoc]
 
 /-- Outside the same full candidate event, the actual final freshness predicate equals its target-free proxy using the literal saved history. -/
-theorem checked_fresh_proxy (earlier : List RatchetChain) 
+theorem checked_fresh_proxy (earlier : List RatchetChain)
     (result : Trace M P I D K A N C Result Origin S B)
     (supported : result ∈ support (nativeRun source writer prior entry pre application initializer selector aux mark sender route decode execution depth target output disclosed state candidates))
     (safe : target ∉ result.2.1.2) :
