@@ -754,6 +754,11 @@ import BeaconcryptCore.Computational.PqxdhInitialSourceSecrecyResources
 import BeaconcryptCore.Computational.PqxdhInitialSourceSelection
 import BeaconcryptCore.Computational.PqxdhPhase2SourceHistory
 import BeaconcryptCore.Computational.RawCtxSupportedMixture
+import BeaconcryptCore.Computational.RawCtxNativeFramePrelude
+import BeaconcryptCore.Computational.RawCtxKeyFreeDecoder
+import BeaconcryptCore.Computational.RawCtxSharedSourceOpening
+import BeaconcryptCore.Computational.RawCtxSharedOpeningConsumer
+import BeaconcryptCore.Computational.LivePublicObservation
 /-!
 # Beaconcrypt-core verification root
 
