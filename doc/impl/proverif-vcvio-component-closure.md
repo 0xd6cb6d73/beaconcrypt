@@ -36,6 +36,8 @@ HB-111 closes the authenticated-root composition for one actual source-generated
 
 HB-111 is the fresh completion milestone within HB-82. HB-70 remains panic freedom and HB-110 is reserved for the separate evolving-KDF work. The earlier one-root HB-98 bound remains historically scoped; the new continuation derives its initial-plus-finish root cap and pays a single ordinary KEM correctness-error term. Integration of this bounded stage goes to `codex/full-proof-composition`, followed by a pause. HB-112 now closes the subsequent fixed-target evolving-chain stage; the remaining global obligations are listed below.
 
+HB-114 additionally supplies the checked adaptive final-target projection, concrete per-target HB-112/coordinate loss sums and complete raw receive derivation/opening ledger. [The statement guide](adaptive-target-raw-ledger.md) distinguishes this from a replicated ideal or complete authentication event. Dynamic session allocation, all repeated native bundle-generation/signing attempts, selected message-key CTX composition and applied-pi event simulation remain required. The fixed catalogue alone does not account for adaptively assigned peer identifiers.
+
 ## Ordered work
 
 The full objective resumed on 2026-09-23 after SSProve retirement. HB-113 closes the native-prelude/selected-opening/public-observation interface checkpoint with 43 guarded statements; it does not mark adaptive raw cryptographic security or the replicated symbolic simulation complete. The [interface record](live-raw-source-interfaces.md) identifies the exact source equations and remaining consumers. The completed root and evolving-chain stages retain their fixed-target scopes while the subsequent stages below continue.
