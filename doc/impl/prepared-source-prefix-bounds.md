@@ -1,0 +1,33 @@
+# Actual shared-oracle prefix and its query ledger
+
+HB-121 instantiates the prepared-source compiler with the original callbacks and derives their full hash and uniform bills. The separately documented ordinary native adapter executes prechallenge decapsulation without the postchallenge block. The earlier generated prepare prefix remains a consuming obligation.
+
+## Actual prepared source callbacks
+
+These two modules instantiate the actual prepared-source callback boundary needed by the common commitment ROM prefix. They do not install a reached cache into an ordinary challenger and do not claim that the earlier authenticated-root preparation is already compiled.
+
+`PqxdhPreparedPrefixCallbacks` proves exact source equations for the pending identity/CCA selector, the concrete allocation/validation/erase/writer dispatch, and the actual Beacon preparation and application callbacks. The preparation/application equations consume the concrete cache-independence proof in `PqxdhInitialCtxFreeCallbacks`; they do not assume an arbitrary callback is independent. The local representation retains the complete auxiliary state, joint identity state, root cache and optional outputs. The `local_bills` theorem forwards every original uniform request and makes zero commitment hash queries. Callback costs remain explicit source costs, including rejection and unsuccessful publication.
+
+`PqxdhPreparedSharedPrefix.environment` constructs the source environment with the actual cache-free Phase 1 writer and server auxiliary callbacks. Its compiler executes the original source first builder, including the first Server send, followed by the original adaptive post program, stopping at the original global address cut. The `source` equation maps the entire evaluated shared-ROM result back to `PqxdhInitialSampledParent.sourceRun`, including the reached commitment cache, private derivation table/cursor, initializer cache, input/audit history, optional replies and saved continuation. The `input_source` theorem proves that the literal authenticated-root prepared input already has these callbacks, so the compiler does not substitute a new input distribution or assume final-event equality. All actual source fields survive unchanged.
+
+The source equality is parameterized by the actual reached cache. The consuming work must still execute the earlier `CorrelatedExtractFamily.prepare` prefix through the same ROM from its empty initial cache. That earlier prefix includes unblocked prechallenge decapsulation and the actual generated-owner driver. The existing `RawCtxPrefixKeyOrder.source_game` may then commute the independent selected message-key draw across the full evaluated prefix and continuation; it cannot be applied by copying an arbitrary locally generated cache into the challenger. Prior byte aliases, paired directional derivations, and all failed attempts remain represented. No new primitive assumption or probabilistic bound is introduced here.
+
+Validation: both changed modules were checked directly in an isolated Lean overlay. All seven declarations have guarded actual axiom reports containing only `propext`, `Classical.choice` and `Quot.sound`. No Rust, ProVerif, wire format, snapshot or persistence interface changed.
+
+## Complete source prefix query ledger
+
+The five modules derive the common-ROM prefix query ledger from the actual source callbacks and the already checked full first-builder/adaptive-post cap. They do not transfer resource bounds from marginal distributions, do not assume a whole final observer has bounded cost, and do not declare local computation free.
+
+`RawCtxSharedBackendBounds` counts each forwarded hash lookup, including a cache hit, and each original caller coin. A private ratchet derivation pays at most76 byte draws. Actual public HKDF projections remain fixed real computation and trigger no private-table sample. The backend theorem retains three independent source reservations: caller coins, private KDF calls and native hashes. It yields H≤qHash and U≤qCoin+76*qKdf. Its native, opening, sealing and pending wrappers consume the actual source native category bounds, retaining optional AEAD and writer failures.
+
+`RawCtxSharedPendingBounds` proves the exact enriched callback classes: a private receive/send KDF has H0/U76, an opening or seal has H1/U0, a public coin has H0/U1, a public hash has H1/U0, a public real-HKDF projection and live reveal have H0/U0. These are oracle counts, not claims that primitive evaluation, byte processing, parsing, lookup, allocation, copying or revelation have zero work.
+
+`RawCtxSharedPrefixBounds` checks the scanner's complete all-reply budget. Every attempted callback is charged; the selected cut returns the original saved descriptor without invoking that callback. Erasing the source annotation preserves the exact callback count, so annotations cannot reduce the bill artificially.
+
+`PqxdhNativeSharedPrefixBounds` combines those concrete live costs with every original source-local preparation, application, initializer, selector and publication allowance. It consumes the actual first-builder/post source theorem to derive at most7+67*qPost callbacks. It then bounds H by that count, and U by that count times76+qPre+qApplication+qInitial+qSelector+qAux. The initializer audit and full private/root/cache state remain part of the same callback computation.
+
+`PqxdhPreparedSharedPrefixBounds` consumes the existing `PqxdhInitialSampledResources.Caps` for the concrete actual source input used by `PqxdhPreparedSharedPrefix`. The preparation/application/selector/publication allowances are transported across their literal checked source equations. The retained initializer cap qInitial=32 is derived from its actual lookup computation. Thus the complete prepared prefix has H≤7+67*qPost and U≤(7+67*qPost)*(108+qPre+qApplication+qSelector+qAux). The qKnown field of the original certificate is not used to infer randomness or hash independence.
+
+The earlier generated identity/KEM/source preparation is not included in these bills and must be compiled through the same ordinary ROM from its empty initial cache, with its separate query bill added. The existing full evaluated key-order theorem can then be applied to the entire prefix. This package does not initialize a challenger with an arbitrary reached cache or assert that previous known keys cannot alias a future selected key.
+
+Validation: all five changed modules passed direct Lean checks with empty guarded logs. All21 statements report only standard Lean axioms (`propext`, `Classical.choice`, `Quot.sound`). No source Rust, ProVerif model, wire format, snapshot or persistence interface changed.
