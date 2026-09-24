@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.PqxdhProtocolSelector
 import BeaconcryptCore.Computational.PqxdhJointPhase1SourceWriter
 
 /-!
-The Phase1 adapter retains the source Fresh/FreshWithCoins distinction. The three signatures precede this private serialization continuation. Only a successful writer publishes InitSent; a failed writer keeps all prior role fields. Fresh one-time material is a local argument until publication. Identity and key-pair representations are parameters, so the same operation also runs on interpreter handles. The packed writer is an explicit optional callback, not an injective constructor or a primitive security assumption.
+The Phase1 adapter retains the source Fresh/FreshWithCoins distinction. The three signatures precede this private serialization continuation. Only a successful writer publishes InitSent; a failed writer keeps all prior role fields. Fresh one-time material is a local argument until publication. Identity and key-pair representations are parameters, so the same operation also runs on interpreter handles. The unpacked writer is an explicit optional callback, not an injective constructor or a primitive security assumption.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -16,7 +16,7 @@ variable {I D K : Type}
 
 abbrev State := RawCtxBeaconLifecycle.State I D K
 
-/-- The native match chooses existing prekey/KEM fields and either local or restored one-time material. -/
+/-- The native match chooses existing prekey/KEM fields and either local or explicitly retained one-time material. -/
 structure Prepared (D K : Type) where
   control : pqxdh.BeaconFresh
   prekey : D
