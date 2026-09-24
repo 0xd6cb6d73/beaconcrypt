@@ -91,6 +91,8 @@ jobs:
             target: check-generated-proverif-failed-receive-compromise-reachability
           - name: ProVerif live material origin and controls
             target: verify-proverif-live-material
+          - name: ProVerif private application origin and disclosure controls
+            target: verify-proverif-live-private-application
           - name: Formal proof inventory
             target: check-inventory
 

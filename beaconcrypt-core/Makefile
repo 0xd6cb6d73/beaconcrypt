@@ -83,6 +83,10 @@ PROVERIF_MATERIAL_TARGETS := \
 	check-proverif-live-material-reachable \
 	check-proverif-live-material-wrong-sequence \
 	check-proverif-live-material-endpoint-origin
+PROVERIF_APPLICATION_TARGETS := \
+	check-proverif-live-private-application-origin \
+	check-proverif-live-private-application-no-api \
+	check-proverif-live-private-application-no-key
 
 LEAN_DIR := proofs/lean
 LEAN_ROOT := $(LEAN_DIR)/BeaconcryptCore.lean
@@ -103,6 +107,7 @@ LEAN_GENERATED_PATHS := \
 .PHONY: verify verify-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	verify-proverif-live-material check-proverif-live-material $(PROVERIF_MATERIAL_TARGETS) \
+	verify-proverif-live-private-application check-proverif-live-private-application $(PROVERIF_APPLICATION_TARGETS) \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
@@ -142,6 +147,11 @@ verify-proverif-live-material:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
 		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
 		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO=live-material
+
+verify-proverif-live-private-application:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO=live-private-application
 
 $(PROVERIF_VERIFY_TARGETS): verify-proverif-%:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -426,6 +436,21 @@ check-proverif-live-material-endpoint-origin: check-proverif-live-material-%: ch
 			$(PROVERIF_COMMON_LIBS) \
 			$(PROVERIF_DIR)/live-material-$*.pv | \
 		awk -v scenario=live-material-$* -f '$(PROVERIF_CHECKER)'
+
+# HB-116: target-relative ideal private-message origin and two disclosure controls.
+# This supplemental component does not change the 32 production scenario roster.
+$(PROVERIF_APPLICATION_TARGETS): check-proverif-transcript-fidelity
+check-proverif-live-private-application: $(PROVERIF_APPLICATION_TARGETS)
+check-proverif: check-proverif-live-private-application
+
+check-proverif-live-private-application-origin check-proverif-live-private-application-no-api \
+check-proverif-live-private-application-no-key: check-proverif-live-private-application-%: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_COMMON_LIBS) \
+			-lib $(PROVERIF_DIR)/live-private-application-service.pvl \
+			$(PROVERIF_DIR)/live-private-application-$*.pv | \
+		awk -v scenario=live-private-application-$* -f '$(PROVERIF_CHECKER)'
 
 check-proverif-passive-classical-equivalence: check-proverif-extraction
 	@set -o pipefail; \

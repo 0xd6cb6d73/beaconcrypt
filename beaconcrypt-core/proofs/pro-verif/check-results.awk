@@ -23,10 +23,15 @@ function require_exact(wanted, label, query_index, found) {
     material_result_count++
     material_result = $0
   }
+  if (scenario ~ /^live-private-application-/) {
+    application_result_count++
+    application_result[application_result_count] = $0
+  }
 }
 
 /^A trace has been found\.$/ {
   material_trace_count++
+  application_trace_count++
 }
 
 /^RESULT Observational equivalence is / {
@@ -641,6 +646,32 @@ END {
     expected_traces = (scenario == "live-material-origin" ? 0 : 1)
     if (material_trace_count != expected_traces) {
       reject("expected " expected_traces " reconstructed material-service traces, saw " material_trace_count)
+    }
+  } else if (scenario ~ /^live-private-application-/) {
+    if (query_count != 2 || application_result_count != 2) {
+      reject("expected exactly two private-application queries and results")
+    }
+    origin = "Query event(PS1PrimitiveOpen(key_10,nonce_18,associated_data_12,target_12,sender_12,plaintext_15,frame_12)) ==> event(PS1PrimitiveSeal(key_10,nonce_18,associated_data_12,target_12,sender_12,plaintext_15,frame_12)) || event(PS1PrimitiveReveal(key_10)) is true."
+    premise = "Query event(LiveHonestMessage(key_10,plaintext_15)) && attacker(plaintext_15) ==> "
+    if (scenario == "live-private-application-origin") {
+      privacy = premise "event(PS1PrimitiveReveal(key_10)) || event(LiveApiPlaintext(key_10,plaintext_15)) is true."
+    } else if (scenario == "live-private-application-no-api") {
+      privacy = premise "event(PS1PrimitiveReveal(key_10)) is false."
+    } else if (scenario == "live-private-application-no-key") {
+      privacy = premise "event(LiveApiPlaintext(key_10,plaintext_15)) is false."
+    } else {
+      reject("unknown private-application scenario: " scenario)
+    }
+    require_exact(origin, "private-application record origin")
+    require_exact(privacy, "private-application disclosure condition")
+    for (application_index = 1; application_index <= query_count; application_index++) {
+      if (application_result[application_index] != "RESULT " substr(query[application_index], 7)) {
+        reject("substituted private-application result: " application_result[application_index])
+      }
+    }
+    expected_traces = (scenario == "live-private-application-origin" ? 0 : 1)
+    if (application_trace_count != expected_traces) {
+      reject("expected " expected_traces " reconstructed private-application traces, saw " application_trace_count)
     }
   } else {
     reject("unknown scenario: " scenario)

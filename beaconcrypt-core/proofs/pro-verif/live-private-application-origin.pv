@@ -1,0 +1,15 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Both disclosure gates are required. *)
+
+query key: bitstring, nonce: bitstring, associated_data: bitstring, target: sequence,
+  sender: key_id, plaintext: bitstring, frame: bitstring;
+  event(PS1PrimitiveOpen(key, nonce, associated_data, target, sender, plaintext, frame))
+  ==> event(PS1PrimitiveSeal(key, nonce, associated_data, target, sender, plaintext, frame))
+    || event(PS1PrimitiveReveal(key)).
+
+query key: bitstring, plaintext: bitstring;
+  event(LiveHonestMessage(key, plaintext)) && attacker(plaintext)
+  ==> event(PS1PrimitiveReveal(key)) || event(LiveApiPlaintext(key, plaintext)).
+
+process
+  (!LiveMaterialCreate() | !LiveMaterialAlias() | !LiveMaterialImport())

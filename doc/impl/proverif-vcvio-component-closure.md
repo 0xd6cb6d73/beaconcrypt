@@ -40,6 +40,8 @@ HB-114 additionally supplies the checked adaptive final-target projection, concr
 
 HB-115 supplies actual first/later selected-message-key samplers, dynamic known-key CTX reductions, private honest-application observations and normal-return dynamic Beacon allocation. The [composition guide](selected-message-key-composition.md) states explicit losses and query bills. It leaves the concrete hidden-key source compiler, byte-level freshness/alias coupling, repeated live Phase-1 signing, transactional registration and target-relative symbolic event map as consuming obligations. None is replaced by a generic simulation premise.
 
+HB-116 adds the maintained unbounded private-application ideal-service classifications and both traced omitted-disclosure controls. The [event map](live-private-application-symbolic.md) preserves actual optional plaintext versus acceptance-only delivery and distinguishes inner sealing from successful source publication. Its source/crypto consuming obligations remain explicit; it is not a whole-protocol correspondence.
+
 ## Ordered work
 
 The full objective resumed on 2026-09-23 after SSProve retirement. HB-113 closes the native-prelude/selected-opening/public-observation interface checkpoint with 43 guarded statements; it does not mark adaptive raw cryptographic security or the replicated symbolic simulation complete. The [interface record](live-raw-source-interfaces.md) identifies the exact source equations and remaining consumers. The completed root and evolving-chain stages retain their fixed-target scopes while the subsequent stages below continue.

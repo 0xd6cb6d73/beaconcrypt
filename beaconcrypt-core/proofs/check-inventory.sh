@@ -49,7 +49,7 @@ declare -A expected_category_counts=(
 	[generated-lean]=7
 	[generated-proverif]=1
 	[handwritten-lean]=796
-	[handwritten-proverif]=82
+	[handwritten-proverif]=86
 	[inventory]=2
 	[lean-control]=12
 	[validation]=13
@@ -12349,5 +12349,32 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhLiveBeac
 require_line_count 1 '^theorem schedule_length([[:space:]]|$)' "$selected_interface_module" "PqxdhLiveBeaconBirth theorem schedule_length"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhLiveBeaconBirth.selected_index$' "$selected_interface_module" "PqxdhLiveBeaconBirth dependency selected_index"
 require_line_count 1 '^theorem selected_index([[:space:]]|$)' "$selected_interface_module" "PqxdhLiveBeaconBirth theorem selected_index"
+
+
+# HB-116: target-relative private-application ideal and its exact disclosure controls.
+application_service=proofs/pro-verif/live-private-application-service.pvl
+require_line_count 1 '^  new plaintext \[key\]: bitstring;$' "$application_service" "private application fresh message correlation"
+require_line_count 1 '^  event LiveHonestMessage\(key, plaintext\);$' "$application_service" "private application sampled message event"
+require_line_count 1 '^   event LiveApiPlaintext\(key, plaintext\);$' "$application_service" "private application actual API disclosure"
+require_line_count 2 '^  event PS1PrimitiveReveal\(key\);$' "$application_service" "private application reveal and import knowledge"
+require_line_count 1 '^let LiveNetworkService\(endpoint: channel, key: bitstring\) =$' "$application_service" "private application separate network capability"
+require_line_count 1 '^   out\(c, ps1_primitive_open_some\(endpoint,$' "$application_service" "private application actual optional plaintext"
+require_line_count 1 '^   out\(c, live_network_some\(endpoint,$' "$application_service" "private application acceptance-only reply"
+for application_control in origin no-api no-key; do
+	application_process="proofs/pro-verif/live-private-application-${application_control}.pv"
+	require_line_count 2 '^query ' "$application_process" "private application two queries ${application_control}"
+	require_line_count 1 '^process$' "$application_process" "private application complete process ${application_control}"
+	require_line_count 1 '^  \(!LiveMaterialCreate\(\) \| !LiveMaterialAlias\(\) \| !LiveMaterialImport\(\)\)$' "$application_process" "private application identical process ${application_control}"
+	require_line_count 1 "^    (if|\} else if) \\(scenario == \"live-private-application-${application_control}\"" proofs/pro-verif/check-results.awk "private application exact classifier ${application_control}"
+done
+require_line_count 1 '^  ==> event\(PS1PrimitiveReveal\(key\)\) \|\| event\(LiveApiPlaintext\(key, plaintext\)\)\.$' proofs/pro-verif/live-private-application-origin.pv "private application both disclosure gates"
+require_line_count 1 '^  ==> event\(PS1PrimitiveReveal\(key\)\)\.$' proofs/pro-verif/live-private-application-no-api.pv "private application missing API control"
+require_line_count 1 '^  ==> event\(LiveApiPlaintext\(key, plaintext\)\)\.$' proofs/pro-verif/live-private-application-no-key.pv "private application missing key control"
+require_line_count 1 '^    if \(query_count != 2 \|\| application_result_count != 2\) \{$' proofs/pro-verif/check-results.awk "private application exact result count"
+require_line_count 1 '^    if \(application_trace_count != expected_traces\) \{$' proofs/pro-verif/check-results.awk "private application reconstructed trace gate"
+require_line_count 1 '^check-proverif: check-proverif-live-private-application$' Makefile "private application full verification gate"
+require_line_count 1 '^check-proverif-live-private-application: \$\(PROVERIF_APPLICATION_TARGETS\)$' Makefile "private application three component gates"
+require_line_count 1 '^verify-proverif-live-private-application:$' Makefile "private application locked verification target"
+require_line_count 1 '^            target: verify-proverif-live-private-application$' ../.github/workflows/formal-verification.yml "private application CI gate"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
