@@ -38,6 +38,8 @@ HB-111 is the fresh completion milestone within HB-82. HB-70 remains panic freed
 
 HB-114 additionally supplies the checked adaptive final-target projection, concrete per-target HB-112/coordinate loss sums and complete raw receive derivation/opening ledger. [The statement guide](adaptive-target-raw-ledger.md) distinguishes this from a replicated ideal or complete authentication event. Dynamic session allocation, all repeated native bundle-generation/signing attempts, selected message-key CTX composition and applied-pi event simulation remain required. The fixed catalogue alone does not account for adaptively assigned peer identifiers.
 
+HB-115 supplies actual first/later selected-message-key samplers, dynamic known-key CTX reductions, private honest-application observations and normal-return dynamic Beacon allocation. The [composition guide](selected-message-key-composition.md) states explicit losses and query bills. It leaves the concrete hidden-key source compiler, byte-level freshness/alias coupling, repeated live Phase-1 signing, transactional registration and target-relative symbolic event map as consuming obligations. None is replaced by a generic simulation premise.
+
 ## Ordered work
 
 The full objective resumed on 2026-09-23 after SSProve retirement. HB-113 closes the native-prelude/selected-opening/public-observation interface checkpoint with 43 guarded statements; it does not mark adaptive raw cryptographic security or the replicated symbolic simulation complete. The [interface record](live-raw-source-interfaces.md) identifies the exact source equations and remaining consumers. The completed root and evolving-chain stages retain their fixed-target scopes while the subsequent stages below continue.
