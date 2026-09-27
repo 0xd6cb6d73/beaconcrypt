@@ -65,6 +65,17 @@ theorem selected_record {M P I D K A : Type} {S B : Nat}
           (RawCtxGenericFamilyRead.nativeReader (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)))
           sender route decode) query).run state := by
   funext cache
+  change _ = (Prod.map id
+    (PqxdhInitialGenericProtocol.native
+      (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
+    (lift (PqxdhInitialGenericRecords.records
+      (RawCtxSelectedParentCalls.labelCalls source writer prior entry
+        (RawCtxSelectedParentCalls.childResponse prior entry target))
+      (PqxdhInitialSelectedRecords.backend source writer prior entry target ∘ₛ RawCtxServerServices.publicLift)
+      (RawCtxGenericFamilyRead.nativeReader
+        (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)))
+      sender route decode) query).run state).run cache
+  rw [StateT.run_map]
   simp only [lift, StateT.run]
   have direct := PqxdhInitialSelectedRecords.record source writer prior entry target sender route decode query state
   simp only [StateT.run] at direct

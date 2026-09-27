@@ -89,6 +89,7 @@ theorem pre_step
         ((fun reply => (reply, state)) <$> (Option.map rootArray <$>
           ((MlKemCCAOracleSpec baseSpec).query (.inr (PqxdhPhase2InputBytes.ciphertext value)) : OracleComp (MlKemCCAOracleSpec baseSpec) _))) = _
       rw [simulateQ_map, simulateQ_map]
+      simp only [native, StateT.run_monadLift, monadLift_self, bind_pure_comp]
       exact congrArg (fun work => (fun reply => (reply, state)) <$> (Option.map rootArray <$> work))
         (simulateQ_spec_query (interpretation baseImpl kem secret) (.inr (PqxdhPhase2InputBytes.ciphertext value)))
   all_goals exact simulateQ_pure (interpretation baseImpl kem secret) _

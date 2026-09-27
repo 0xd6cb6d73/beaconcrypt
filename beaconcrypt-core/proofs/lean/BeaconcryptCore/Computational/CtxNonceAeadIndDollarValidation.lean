@@ -429,6 +429,7 @@ theorem randomValidationContinuation_le
           $ᵗ (FixedBytes 16)] := by
             apply OracleComp.probEvent_congr' _ rfl
             intro tag _
+            classical
             simp [ctxValidationAccept,
               CtxValidationCiphertextHit,
               modifiedNonceAeadCiphertextTag]

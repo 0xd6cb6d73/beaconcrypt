@@ -778,25 +778,33 @@ theorem jointKdfStreamSplitEquiv_fst (stream : JointKdfStream) :
   rfl
 
 /-- The first 32 bytes of a uniform 76-byte stream are exactly uniform 32 bytes. -/
-theorem evalDist_first32_uniformJointKdfStream :
-    𝒟[JointKdfProjection.first32.project <$> ($ᵗ JointKdfStream)] =
-      𝒟[$ᵗ HiddenRootCoordinate] := by
-  calc
-    𝒟[JointKdfProjection.first32.project <$> ($ᵗ JointKdfStream)] =
-        𝒟[Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream))] := by
-      simp only [Functor.map_map, Function.comp_def,
-        jointKdfStreamSplitEquiv_fst]
-      rfl
-    _ = 𝒟[Prod.fst <$>
-        ($ᵗ (HiddenRootCoordinate × List.Vector UInt8 44))] := by
-      rw [evalDist_map, evalDist_ext fun pair =>
-        probOutput_map_bijective_uniform_cross
-          (α := JointKdfStream)
-          (β := HiddenRootCoordinate × List.Vector UInt8 44)
-          jointKdfStreamSplitEquiv
-          jointKdfStreamSplitEquiv.bijective pair, ← evalDist_map]
-    _ = 𝒟[$ᵗ HiddenRootCoordinate] :=
-      evalDist_map_fst_uniformSample_prod
+theorem evalSPMF_first32_uniformJointKdfStream :
+    𝒮[JointKdfProjection.first32.project <$> ($ᵗ JointKdfStream)] =
+      𝒮[$ᵗ HiddenRootCoordinate] := by
+  have hsplit :
+      evalSPMF (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream)) =
+        evalSPMF ($ᵗ (HiddenRootCoordinate × List.Vector UInt8 44)) := by
+    apply evalSPMF_ext
+    intro pair
+    exact probOutput_map_bijective_uniform_cross
+      (α := JointKdfStream)
+      (β := HiddenRootCoordinate × List.Vector UInt8 44)
+      jointKdfStreamSplitEquiv
+      jointKdfStreamSplitEquiv.bijective pair
+  rw [evalSPMF_map]
+  change (fun stream : JointKdfStream =>
+    (JointKdfProjection.first32.project stream : HiddenRootCoordinate)) <$>
+      evalSPMF ($ᵗ JointKdfStream) = evalSPMF ($ᵗ HiddenRootCoordinate)
+  simp only [JointKdfProjection.width]
+  change (fun stream : JointKdfStream =>
+      (jointKdfStreamSplitEquiv stream).1) <$>
+        evalSPMF ($ᵗ JointKdfStream) = evalSPMF ($ᵗ HiddenRootCoordinate)
+  rw [← Functor.map_map jointKdfStreamSplitEquiv
+    (fun pair : HiddenRootCoordinate × List.Vector UInt8 44 => pair.1)]
+  rw [← evalSPMF_map]
+  rw [hsplit]
+  rw [← evalSPMF_map]
+  exact evalSPMF_map_fst_uniformSample_prod
 
 /-! ## Full-stream programming at the hidden address -/
 
@@ -952,7 +960,6 @@ theorem jointKdfSingletonProgrammedStream_project_step
             jointKdfCache_cacheQuery_comm cache address target]
           rw [jointKdfLazyRandomStreamImpl_run_miss address
             (cache.cacheQuery target stream) hprefill]
-          rfl
       | some cached =>
           have hprefill :
               (cache.cacheQuery target stream) address = some cached := by
@@ -1650,6 +1657,7 @@ theorem jointKdfSimulate_withQueryLog_run_project
   have hproject := QueryImpl.fst_map_run_withLogging impl computation
   have hrun := congrArg (fun stateful => stateful.run initialState) hproject
   rw [← hrun]
+  rw [StateT.run_map]
   have houter := congrArg (fun stateful =>
     Prod.map Prod.fst id <$> stateful.run initialState) hbase
   change Prod.map Prod.fst id <$>
@@ -2018,41 +2026,41 @@ theorem hiddenRootTrackingGame_eq_projectedStreamGame
 
 /-- Sampling the first projection of a uniform complete stream gives exactly the independent
 uniform root supplied to the source adversary. -/
-theorem evalDist_hiddenRootProjectedStreamGame_eq_independentGame
+theorem evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame
     {PublicContext : Type} {qU qRoot qSym : ℕ}
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
-    𝒟[hiddenRootProjectedStreamGame adversary known publicContext] =
-      𝒟[hiddenRootIndependentGame adversary known publicContext] := by
+    𝒮[hiddenRootProjectedStreamGame adversary known publicContext] =
+      𝒮[hiddenRootIndependentGame adversary known publicContext] := by
   unfold hiddenRootProjectedStreamGame hiddenRootIndependentGame
-  refine evalDist_bind_congr' ($ᵗ HiddenRootCoordinate) fun _hidden => ?_
+  refine evalSPMF_bind_congr' ($ᵗ HiddenRootCoordinate) fun _hidden => ?_
   let continuation : HiddenRootCoordinate → ProbComp Bool := fun root =>
     (simulateQ jointKdfViewRandomImpl
       (adversary.main known publicContext root)).run' ∅
   change
-    𝒟[($ᵗ JointKdfStream) >>= fun stream =>
+    𝒮[($ᵗ JointKdfStream) >>= fun stream =>
       continuation (jointKdfStreamSplitEquiv stream).1] =
-    𝒟[($ᵗ HiddenRootCoordinate) >>= continuation]
+    𝒮[($ᵗ HiddenRootCoordinate) >>= continuation]
   rw [show (($ᵗ JointKdfStream) >>= fun stream =>
       continuation (jointKdfStreamSplitEquiv stream).1) =
         (Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream))) >>=
           continuation by rw [bind_map_left, bind_map_left]]
   have hprefix :
-      𝒟[Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream))] =
-        𝒟[$ᵗ HiddenRootCoordinate] := by
+      𝒮[Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream))] =
+        𝒮[$ᵗ HiddenRootCoordinate] := by
     calc
-      𝒟[Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream))] =
-          𝒟[Prod.fst <$> ($ᵗ
+      𝒮[Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream))] =
+          𝒮[Prod.fst <$> ($ᵗ
             (HiddenRootCoordinate × List.Vector UInt8 44))] := by
-        rw [evalDist_map, evalDist_ext fun pair =>
+        rw [evalSPMF_map, evalSPMF_ext fun pair =>
           probOutput_map_bijective_uniform_cross
             (α := JointKdfStream)
             (β := HiddenRootCoordinate × List.Vector UInt8 44)
             jointKdfStreamSplitEquiv
-            jointKdfStreamSplitEquiv.bijective pair, ← evalDist_map]
-      _ = 𝒟[$ᵗ HiddenRootCoordinate] :=
-        evalDist_map_fst_uniformSample_prod
-  rw [evalDist_bind, evalDist_bind, hprefix]
+            jointKdfStreamSplitEquiv.bijective pair, ← evalSPMF_map]
+      _ = 𝒮[$ᵗ HiddenRootCoordinate] :=
+        evalSPMF_map_fst_uniformSample_prod
+  rw [evalSPMF_bind, evalSPMF_bind, hprefix]
 
 /-- Stateful programmed execution used only to measure the one sticky target-address event. -/
 noncomputable def hiddenRootProgrammedBadRun
@@ -2161,9 +2169,9 @@ theorem probEvent_hiddenRootProgrammedBadExperiment_le_hiddenFirstCandidate
                   hiddenRootLoggedRandomRun adversary known publicContext
                     (JointKdfProjection.first32.project stream)] := by
       refine ENNReal.tsum_le_tsum fun hidden => ?_
-      apply mul_le_mul_left'
+      apply mul_le_mul_right
       refine ENNReal.tsum_le_tsum fun stream => ?_
-      apply mul_le_mul_left'
+      apply mul_le_mul_right
       simpa [hiddenRootProgrammedBadRun, hiddenRootLoggedRandomRun] using
         (jointKdfSingletonProgrammed_bad_le_random_candidate
           known hidden stream
@@ -2277,10 +2285,10 @@ theorem tvDist_hiddenRootSharedRandomGame_independentGame_le
         (hiddenRootIndependentGame adversary known publicContext) ≤
       ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by
   have htracking :
-      𝒟[hiddenRootTrackingGame adversary known publicContext] =
-        𝒟[hiddenRootIndependentGame adversary known publicContext] := by
+      𝒮[hiddenRootTrackingGame adversary known publicContext] =
+        𝒮[hiddenRootIndependentGame adversary known publicContext] := by
     rw [hiddenRootTrackingGame_eq_projectedStreamGame]
-    exact evalDist_hiddenRootProjectedStreamGame_eq_independentGame
+    exact evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame
       adversary known publicContext
   have htvdist :
       tvDist (hiddenRootProgrammedGame adversary known publicContext)

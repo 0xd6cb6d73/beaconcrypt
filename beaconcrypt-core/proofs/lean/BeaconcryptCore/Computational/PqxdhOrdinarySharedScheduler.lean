@@ -101,7 +101,8 @@ theorem record_source (query : (RawCtxProtocolReveals.SourceSpec S B).Domain)
     PqxdhRegistrationProtocolState.restore (attach state cache) (result.1.2, result.2))) <$> work) (forwarded.symm.trans native)
   simp only [record, StateT.run_mk, simulateQ_map, StateT.run_map, Functor.map_map,
     PqxdhRegistrationProtocolState.restore, attach] at linked ⊢
-  exact linked
+  simpa only [StateT.run, PqxdhRegistrationProtocolState.sourceImpl,
+    PqxdhRegistrationProtocolState.project, bind_pure_comp, PqxdhRegistrationProtocolState.restore] using linked
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The original identity, base and prechallenge decapsulation service preserves the reached ROM cache and all fields outside its actual identity state. -/

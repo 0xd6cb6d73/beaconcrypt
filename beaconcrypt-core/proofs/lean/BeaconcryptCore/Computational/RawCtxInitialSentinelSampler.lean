@@ -13,26 +13,26 @@ open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 
 /-- The full comparison draw supplies the same two independent directional halves after ignoring its reduction-only twelve bytes, through the complete evaluated continuation. -/
 theorem full_observed {Result : Type} (next : RootOutput → RootOutput → ProbComp Result) :
-    𝒟[(do let output ← $ᵗ FullOutput
+    𝒮[(do let output ← $ᵗ FullOutput
           next (PqxdhOrderedChainHybrids.material output).1 (PqxdhOrderedChainHybrids.nextChain output))] =
-      𝒟[(do let other ← $ᵗ RootOutput
+      𝒮[(do let other ← $ᵗ RootOutput
             let target ← $ᵗ RootOutput
             next other target)] := by
   refine (PqxdhOrderedChainHybrids.fullOutput_observed (fun value target => next value.1 target)).trans ?_
-  have projected : 𝒟[(Prod.fst : Material → RootOutput) <$> ($ᵗ Material)] = 𝒟[$ᵗ RootOutput] :=
-    evalDist_map_fst_uniformSample_prod
+  have projected : 𝒮[(Prod.fst : Material → RootOutput) <$> ($ᵗ Material)] = 𝒮[$ᵗ RootOutput] :=
+    evalSPMF_map_fst_uniformSample_prod
   calc
-    _ = 𝒟[(do let other ← Prod.fst <$> ($ᵗ Material)
+    _ = 𝒮[(do let other ← Prod.fst <$> ($ᵗ Material)
                let target ← $ᵗ RootOutput
                next other target)] := by rw [bind_map_left]
     _ = _ := by
-      rw [evalDist_bind, projected, ← evalDist_bind]
+      rw [evalSPMF_bind, projected, ← evalSPMF_bind]
 
 /-- Either actual directional half has the same complete continuation law as the comparison marker sampler; the opposite half is retained and the extra bytes never enter the source continuation. -/
 theorem initial_observed {Result : Type} (second : Bool) (next : RootOutput → RootOutput → ProbComp Result) :
-    𝒟[(do let output ← $ᵗ HmacBlock
+    𝒮[(do let output ← $ᵗ HmacBlock
           next (RawCtxInitialChildSecrecy.parts second output).1 (RawCtxInitialChildSecrecy.parts second output).2)] =
-      𝒟[(do let output ← $ᵗ FullOutput
+      𝒮[(do let output ← $ᵗ FullOutput
             next (material output).1 (nextChain output))] :=
   (RawCtxInitialChildSecrecy.parts_observed second next).trans (full_observed next).symm
 
@@ -61,15 +61,15 @@ theorem constructor (request : RawCtxInitializedKdfFamily.InitialRequest) (secon
 theorem native_observed {Context Result : Type} (prior : ProbComp Context)
     (request : Context → RawCtxInitializedKdfFamily.InitialRequest) (second : Context → Bool)
     (next : Context → HmacBlock → RustM ConcreteRatchetKernel → ProbComp Result) :
-    𝒟[(do let context ← prior
+    𝒮[(do let context ← prior
           let output ← $ᵗ HmacBlock
           next context output (RawCtxSelectedInitialConstructor.from64 (request context) output))] =
-      𝒟[(do let context ← prior
+      𝒮[(do let context ← prior
             let output ← $ᵗ FullOutput
             next context (join (second context) (material output).1 (nextChain output))
               (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain (nextChain output)) <$>
                 labelInitial (second context) (request context).1 (material output).1))] := by
-  refine evalDist_bind_congr' prior (fun context => ?_)
+  refine evalSPMF_bind_congr' prior (fun context => ?_)
   simpa only [join_parts, constructor] using initial_observed (second context)
     (fun other target => next context (join (second context) other target)
       (RawCtxSelectedInitialConstructor.from64 (request context) (join (second context) other target)))

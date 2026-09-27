@@ -17,7 +17,7 @@ Query accounting keeps the source clients' pre/post uniform, base, and logical d
 This endpoint does not prove ML-KEM, HKDF, X25519, or Ed25519 internals; KEM cross-key binding; multi-user, multi-session, PPT, QPT, or QROM lifting; Rust, FFI, compiler, or serialization refinement; projection collision freedom; or end-to-end correspondence with ProVerif. HB-54's projection-collision conditioning and the remaining protocol-composition obligations stay separate.
 -/
 
-open OracleSpec OracleComp ENNReal
+open OracleSpec OracleComp ENNReal MeasureTheory
 
 set_option relaxedAutoImplicit false
 set_option autoImplicit false
@@ -33,16 +33,23 @@ variable {iota : Type} {baseSpec : OracleSpec iota} {SK : Type}
 noncomputable def runtimeOfImpl
     (impl : QueryImpl (unifSpec + baseSpec) ProbComp) :
     ProbCompRuntime (OracleComp (unifSpec + baseSpec)) where
-  toSPMFSemantics :=
+  toMeasureSemanticsVia :=
     { Sem := ProbComp
       instMonadSem := inferInstance
       interpret := simulateQ' impl
-      observe := fun computation => liftM computation }
+      observe := fun computation => 𝒟[computation]
+      observe_apply_univ_le_one := fun computation =>
+        evalDist_apply_univ_le_one computation }
   toProbCompLift := ProbCompLift.ofMonadLift _
+  evalDist_map_eq f hf computation := by
+    change 𝒟[simulateQ impl (f <$> computation)] =
+      (𝒟[simulateQ impl computation]).map f
+    rw [simulateQ_map, evalDist_map _ hf]
 
 @[simp] theorem runtimeOfImpl_evalDist
     (impl : QueryImpl (unifSpec + baseSpec) ProbComp)
-    {alpha : Type} (computation : OracleComp (unifSpec + baseSpec) alpha) :
+    {alpha : Type} [MeasurableSpace alpha]
+    (computation : OracleComp (unifSpec + baseSpec) alpha) :
     (runtimeOfImpl impl).evalDist computation =
       𝒟[simulateQ impl computation] := by
   rfl
@@ -103,11 +110,11 @@ def toKemOneKeyAdversary
         (productionHiddenRoot source known kStar))
 
 /-- Fixed source branch: `true` uses the honest encapsulated secret and `false` the single ghost-uniform replacement. -/
-def initializerKemBranch
+noncomputable def initializerKemBranch
     (source : FixedHkdfSha512NoSaltSource)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := SK))
     (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec)))
-    (adversary : InitializerAdversary kem) (b : Bool) : SPMF Bool :=
+    (adversary : InitializerAdversary kem) (b : Bool) : Measure Bool :=
   oneKeyBranch kem runtime (toKemOneKeyAdversary source kem adversary) b
 
 /-- Fixed interpretation of the KEM's ambient uniform/base surface. -/
@@ -1092,25 +1099,29 @@ theorem initializerPostToJointKdfViewImpl_root_query_bound_step
     (initializerPostToJointKdfViewImpl baseImpl kem sk cStar query).IsQueryBoundP
       IsHiddenRootDomainQuery
       (if IsInitializerRootQuery query then 1 else 0) := by
-  rcases query with ccaQuery | viewQuery
-  · simp only [initializerPostToJointKdfViewImpl, IsInitializerRootQuery,
-      if_false]
-    exact ambientToJointKdfViewImpl_no_root_queries baseImpl
-      (kem.IND_CCA_postChallengeImpl sk cStar ccaQuery)
-  · simp only [initializerPostToJointKdfViewImpl, IsInitializerRootQuery]
-    by_cases hroot : IsHiddenRootDomainQuery (.inr viewQuery)
-    · rw [if_pos hroot]
+  by_cases hroot : IsInitializerRootQuery query
+  · rw [if_pos hroot]
+    rcases query with ccaQuery | viewQuery
+    · simp [IsInitializerRootQuery] at hroot
+    · simp only [initializerPostToJointKdfViewImpl]
       change (liftM (JointKdfViewAdversarySpec.query (.inr viewQuery)) :
         OracleComp JointKdfViewAdversarySpec _).IsQueryBoundP
           IsHiddenRootDomainQuery 1
       exact (OracleComp.isQueryBoundP_query_iff
-        IsHiddenRootDomainQuery (.inr viewQuery) 1).2 (by simp [hroot])
-    · rw [if_neg hroot]
+        IsHiddenRootDomainQuery (.inr viewQuery) 1).2 (by simp)
+  · rw [if_neg hroot]
+    rcases query with ccaQuery | viewQuery
+    · simp only [initializerPostToJointKdfViewImpl]
+      exact ambientToJointKdfViewImpl_no_root_queries baseImpl
+        (kem.IND_CCA_postChallengeImpl sk cStar ccaQuery)
+    · simp only [initializerPostToJointKdfViewImpl]
       change (liftM (JointKdfViewAdversarySpec.query (.inr viewQuery)) :
         OracleComp JointKdfViewAdversarySpec _).IsQueryBoundP
           IsHiddenRootDomainQuery 0
       exact (OracleComp.isQueryBoundP_query_iff
-        IsHiddenRootDomainQuery (.inr viewQuery) 0).2 (by simpa)
+        IsHiddenRootDomainQuery (.inr viewQuery) 0).2 (by
+          intro hquery
+          exact (hroot hquery).elim)
 
 theorem initializerPostToJointKdfViewImpl_symmetric_query_bound_step
     (baseImpl : QueryImpl baseSpec ProbComp)
@@ -1120,26 +1131,29 @@ theorem initializerPostToJointKdfViewImpl_symmetric_query_bound_step
     (initializerPostToJointKdfViewImpl baseImpl kem sk cStar query).IsQueryBoundP
       IsHiddenRootSymmetricQuery
       (if IsInitializerSymmetricQuery query then 1 else 0) := by
-  rcases query with ccaQuery | viewQuery
-  · simp only [initializerPostToJointKdfViewImpl,
-      IsInitializerSymmetricQuery, if_false]
-    exact ambientToJointKdfViewImpl_no_symmetric_queries baseImpl
-      (kem.IND_CCA_postChallengeImpl sk cStar ccaQuery)
-  · simp only [initializerPostToJointKdfViewImpl,
-      IsInitializerSymmetricQuery]
-    by_cases hsym : IsHiddenRootSymmetricQuery (.inr viewQuery)
-    · rw [if_pos hsym]
+  by_cases hsym : IsInitializerSymmetricQuery query
+  · rw [if_pos hsym]
+    rcases query with ccaQuery | viewQuery
+    · simp [IsInitializerSymmetricQuery] at hsym
+    · simp only [initializerPostToJointKdfViewImpl]
       change (liftM (JointKdfViewAdversarySpec.query (.inr viewQuery)) :
         OracleComp JointKdfViewAdversarySpec _).IsQueryBoundP
           IsHiddenRootSymmetricQuery 1
       exact (OracleComp.isQueryBoundP_query_iff
-        IsHiddenRootSymmetricQuery (.inr viewQuery) 1).2 (by simp [hsym])
-    · rw [if_neg hsym]
+        IsHiddenRootSymmetricQuery (.inr viewQuery) 1).2 (by simp)
+  · rw [if_neg hsym]
+    rcases query with ccaQuery | viewQuery
+    · simp only [initializerPostToJointKdfViewImpl]
+      exact ambientToJointKdfViewImpl_no_symmetric_queries baseImpl
+        (kem.IND_CCA_postChallengeImpl sk cStar ccaQuery)
+    · simp only [initializerPostToJointKdfViewImpl]
       change (liftM (JointKdfViewAdversarySpec.query (.inr viewQuery)) :
         OracleComp JointKdfViewAdversarySpec _).IsQueryBoundP
           IsHiddenRootSymmetricQuery 0
       exact (OracleComp.isQueryBoundP_query_iff
-        IsHiddenRootSymmetricQuery (.inr viewQuery) 0).2 (by simpa)
+        IsHiddenRootSymmetricQuery (.inr viewQuery) 0).2 (by
+          intro hquery
+          exact (hsym hquery).elim)
 
 /-- Challenge blocking and ambient KEM interpretation preserve the source root-domain cap exactly. -/
 theorem initializerPostToJointKdfViewImpl_root_query_bound
@@ -1376,27 +1390,34 @@ noncomputable def initializerSecrecyAdvantage
 /-- The concrete ambient runtime evaluates pure computations exactly. -/
 theorem runtimeOfImpl_evalDist_pure
     (impl : QueryImpl (unifSpec + baseSpec) ProbComp)
-    {alpha : Type} (output : alpha) :
+    {alpha : Type} [MeasurableSpace alpha] (output : alpha) :
     (runtimeOfImpl impl).evalDist
         (pure output : OracleComp (unifSpec + baseSpec) alpha) =
-      pure output := by
-  simp
+      Measure.dirac output := by
+  rw [runtimeOfImpl_evalDist, simulateQ_pure, evalDist_pure]
 
 /-- The concrete ambient runtime distributes exactly over sequential composition. -/
 theorem runtimeOfImpl_evalDist_bind
     (impl : QueryImpl (unifSpec + baseSpec) ProbComp)
-    {alpha beta : Type}
+    {alpha beta : Type} [MeasurableSpace alpha] [MeasurableSpace beta]
     (computation : OracleComp (unifSpec + baseSpec) alpha)
-    (continuation : alpha → OracleComp (unifSpec + baseSpec) beta) :
+    (continuation : alpha → OracleComp (unifSpec + baseSpec) beta)
+    (measurable : Measurable (fun output =>
+      (runtimeOfImpl impl).evalDist (continuation output))) :
     (runtimeOfImpl impl).evalDist (computation >>= continuation) =
-      (runtimeOfImpl impl).evalDist computation >>= fun output =>
+      Measure.bind ((runtimeOfImpl impl).evalDist computation) fun output =>
         (runtimeOfImpl impl).evalDist (continuation output) := by
-  simp [runtimeOfImpl_evalDist, simulateQ_bind]
+  change 𝒟[simulateQ impl (computation >>= continuation)] =
+    Measure.bind 𝒟[simulateQ impl computation] fun output =>
+      𝒟[simulateQ impl (continuation output)]
+  change Measurable (fun output =>
+    𝒟[simulateQ impl (continuation output)]) at measurable
+  rw [simulateQ_bind, evalDist_bind _ _ measurable]
 
 /-- The concrete ambient runtime observes its explicitly lifted probabilistic samples exactly. -/
 theorem runtimeOfImpl_evalDist_liftProbComp
     (baseImpl : QueryImpl baseSpec ProbComp)
-    {alpha : Type} (computation : ProbComp alpha) :
+    {alpha : Type} [MeasurableSpace alpha] (computation : ProbComp alpha) :
     (runtimeOfImpl (kemAmbientImpl baseImpl)).evalDist
         ((runtimeOfImpl (kemAmbientImpl baseImpl)).liftProbComp computation) =
       𝒟[computation] := by
@@ -1407,11 +1428,12 @@ theorem runtimeOfImpl_evalDist_liftProbComp
 theorem runtimeOfImpl_noFail_bool
     (impl : QueryImpl (unifSpec + baseSpec) ProbComp)
     (computation : OracleComp (unifSpec + baseSpec) Bool) :
-    Pr[= true | (runtimeOfImpl impl).evalDist computation] +
-      Pr[= false | (runtimeOfImpl impl).evalDist computation] = 1 := by
-  change Pr[= true | simulateQ impl computation] +
-    Pr[= false | simulateQ impl computation] = 1
-  exact probOutput_true_add_false_of_neverFail
+    (runtimeOfImpl impl).evalDist computation {true} +
+      (runtimeOfImpl impl).evalDist computation {false} = 1 := by
+  change 𝒟[simulateQ impl computation] {true} +
+    𝒟[simulateQ impl computation] {false} = 1
+  rw [Measure.apply_true_add_apply_false]
+  exact measure_univ
 
 /-- The fixed true branch is exactly the evaluation distribution of the source real game. -/
 theorem initializerKemBranch_true_eq_real
@@ -1461,7 +1483,7 @@ theorem initializerReal_uniformKem_advantage_eq_indCCA
     (runtimeOfImpl_noFail_bool (kemAmbientImpl baseImpl))
   change kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
       (toKemOneKeyAdversary source kem adversary).toINDCCA =
-    SPMF.boolDistAdvantage
+    Measure.boolDist
       (initializerKemBranch source kem
         (runtimeOfImpl (kemAmbientImpl baseImpl)) adversary true)
       (initializerKemBranch source kem
@@ -1469,7 +1491,7 @@ theorem initializerReal_uniformKem_advantage_eq_indCCA
   rw [initializerKemBranch_true_eq_real,
     initializerKemBranch_false_eq_uniformKemGame source baseImpl kem
       adversary bounds] at hcca
-  change SPMF.boolDistAdvantage
+  change Measure.boolDist
       𝒟[initializerRealGame source baseImpl kem adversary]
       𝒟[initializerUniformKemGame source baseImpl kem adversary bounds] = _
   exact hcca.symm

@@ -126,7 +126,6 @@ theorem step_erase {Chain Metadata : Type} (sender : Std.U64) (decode : RawCtxRe
     · simp only [empty, Bool.false_eq_true, if_false, bind_pure_comp]
       refine (simulateQ_map _ _ _).trans ?_
       rw [send_call]
-      rfl
   · simp only [compiler, originalCompiler, RawCtxChainOwner.ownerImpl, RawCtxChainOwner.rawReceive, StateT.run]
     by_cases empty : raw.isEmpty = true
     · simp only [empty, if_true]
@@ -139,7 +138,6 @@ theorem step_erase {Chain Metadata : Type} (sender : Std.U64) (decode : RawCtxRe
           · simp only [valid, if_true, bind_pure_comp]
             refine (simulateQ_map _ _ _).trans ?_
             rw [receive_call]
-            rfl
           · simp only [valid, if_false]
             exact simulateQ_pure _ _
   · simp [compiler, originalCompiler, StateT.run, publicForward, originalPublic, erase, OracleSpec.query]

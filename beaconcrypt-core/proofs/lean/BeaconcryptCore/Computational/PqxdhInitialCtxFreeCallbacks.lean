@@ -93,6 +93,8 @@ theorem routed_cache
     | decapsulate value key =>
         cases key with
         | none =>
+            simp only [PqxdhBeaconPhase2Routed.handles, liftM, MonadLiftT.monadLift,
+              MonadLift.monadLift, StateT.lift, StateT.run, bind_pure_comp]
             change simulateQ (publicOnly baseImpl kem secret challenge)
               ((fun result => (result, replace cache state)) <$> PqxdhPhase2InputBytes.decapCall challenge value) =
                 reply cache <$> simulateQ (publicOnly baseImpl kem secret challenge)
@@ -112,6 +114,8 @@ theorem routed_cache
   · exact False.elim safe
   · cases query with
     | root secrets =>
+        simp only [PqxdhBeaconPhase2Routed.handles, liftM, MonadLiftT.monadLift,
+          MonadLift.monadLift, StateT.lift, StateT.run, bind_pure_comp]
         change simulateQ (publicOnly baseImpl kem secret challenge)
           ((fun result => (result, replace cache state)) <$> PqxdhPhase2InputBytes.rootCall fixed challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4) =
             reply cache <$> simulateQ (publicOnly baseImpl kem secret challenge)

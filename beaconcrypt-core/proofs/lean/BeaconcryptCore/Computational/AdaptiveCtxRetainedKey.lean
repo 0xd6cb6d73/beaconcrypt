@@ -21,6 +21,7 @@ theorem retainedAdaptiveGame_distance_le_bad (decode : RawDecoder) (c : Pqxdh.Cr
     tvDist (retainedAdaptiveGame true decode c adversary)
       (retainedAdaptiveGame false decode c adversary) ≤
       Pr[fun result => result.2.2 = true | uniformAdaptiveGame true decode c adversary].toReal := by
+  simp only [retainedAdaptiveGame, bind_pure_comp]
   have convex := tvDist_bind_left_le ($ᵗ CtxKey)
     (fun key => (Prod.mk key) <$> adaptiveGame true decode c key adversary)
     (fun key => (Prod.mk key) <$> adaptiveGame false decode c key adversary)

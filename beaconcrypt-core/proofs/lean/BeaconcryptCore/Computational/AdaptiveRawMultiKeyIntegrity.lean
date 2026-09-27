@@ -82,8 +82,20 @@ theorem hop_bound {count : Nat} (target : Fin (count + 1))
     exact ENNReal.sum_ne_top.mpr each
   have converted := ENNReal.toReal_mono finite (hop_distance target decode c fallback client rawCount bounded)
   rw [ENNReal.toReal_ofReal (tvDist_nonneg _ _), ENNReal.toReal_sum each] at converted
-  exact ((abs_probOutput_toReal_sub_le_tvDist _ _).trans
-    (tvDist_map_le Prod.fst _ _)).trans converted
+  have observation :
+      (game decode c client target.val).boolDistAdvantage
+          (game decode c client (target.val + 1)) ≤
+        tvDist (sourceGame (realAt count target.val) decode c client)
+          (sourceGame (realAt count (target.val + 1)) decode c client) := by
+    unfold game
+    simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton] using
+      (abs_probOutput_toReal_sub_le_tvDist
+        (Prod.fst <$> sourceGame (realAt count target.val) decode c client)
+        (Prod.fst <$> sourceGame (realAt count (target.val + 1)) decode c client)).trans
+          (tvDist_map_le (m := ProbComp) (Prod.fst : Bool × SourceState count → Bool)
+            (sourceGame (realAt count target.val) decode c client)
+            (sourceGame (realAt count (target.val + 1)) decode c client))
+  exact observation.trans converted
 
 noncomputable def hopLoss {count : Nat} (decode : Fin (count + 1) → RawDecoder) (c : Pqxdh.Crypto)
     (fallback : ModifiedNonceAeadForgery) (client : OracleComp (SourceSpec count) Bool)

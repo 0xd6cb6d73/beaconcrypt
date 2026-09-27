@@ -20,7 +20,7 @@ theorem uniform_candidates (candidates : List RootOutput) :
     (p := fun target : RootOutput => target ∈ candidates)
     (q := fun target : RootOutput => target ∈ candidates)
     (fun _ _ => Iff.rfl)
-    (evalDist_map_fst_uniformSample_prod (α := RootOutput) (β := NonceOutput))
+    (evalSPMF_map_fst_uniformSample_prod (α := RootOutput) (β := NonceOutput))
   rw [← projected, probEvent_map]
   change Pr[fun value : Material => value.1 ∈ candidates | $ᵗ Material] ≤ _
   simpa only [PqxdhMaterialKeyCollisions.material_key_card, Nat.cast_pow, Nat.cast_ofNat] using

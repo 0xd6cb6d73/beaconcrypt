@@ -155,7 +155,9 @@ theorem sealStep_no_raw (input : CtxSealInput) (state : ReceiveState) :
   cases answer with
   | none => trivial
   | some ciphertext =>
-      simpa only [bind_pure_comp, OracleComp.isQueryBoundP_map_iff, AdaptiveRawNonceAead.IsRawQuery, if_false] using
+      simpa only [bind_pure_comp, OracleComp.isQueryBoundP_map_iff,
+        ite_eq_right (show ¬ AdaptiveRawNonceAead.IsRawQuery (.inl (.inr
+          (CtxNonceAeadIntCtxt.CtxSealInput.toModifiedNonceAeadSealInput input))) from id)] using
         privateStep_no_raw (outerSuffix input.nonce input.context ciphertext.tag) state
 
 /-- Every source raw attempt invokes at most one primitive opening, after its complete private hash lookup. -/

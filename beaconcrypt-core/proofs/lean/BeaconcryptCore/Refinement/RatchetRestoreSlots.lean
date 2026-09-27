@@ -27,9 +27,10 @@ theorem MaterialSlotsMatch.append {Material : Type}
     omega
   · have hold := h i hi
     simp_lists [hentries, hcast, hlen, heq]
-    simp only [getElem!_pos slots.val i (by simpa using hi),
-      getElem!_pos cache.entries.val i (by simpa using hi)] at hold
-    cases hs : slots.val[i]'(by simpa using hi) <;> simp only [hs] at hold ⊢ <;> try omega
+    simp only [getElem!_pos slots.val i (by simpa [Array.length_eq] using hi),
+      getElem!_pos cache.entries.val i (by simpa [Array.length_eq] using hi)] at hold
+    cases hs : slots.val[i]'(by simpa [Array.length_eq] using hi) <;>
+      simp only [hs] at hold ⊢ <;> try omega
     exact ⟨by omega, hold.2⟩
 
 end beaconcrypt_core.ratchet.refined

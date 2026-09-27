@@ -214,7 +214,7 @@ theorem frame_run (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDe
         (childResponse prior (fromOutput (PqxdhInitialBuilderContext.address context) output) (nextChain output)))
       (PqxdhInitialBuilderContext.stopped sender route decode context (material output))).run state).run cache := by
   rw [frame_cut]
-  rfl
+  rw [StateT.run_map, StateT.run_map]
 
 end Services
 end BeaconcryptCore.Computational.PqxdhInitialParentBuilderContext

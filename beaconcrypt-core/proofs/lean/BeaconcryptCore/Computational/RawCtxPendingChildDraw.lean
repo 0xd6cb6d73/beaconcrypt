@@ -18,9 +18,9 @@ variable {A Result : Type} {S B : Nat}
 theorem pending_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (client : OracleComp (Spec S B) Result) (state : State A)
     (missing : state.2.1 (cursorAddress state.2.2) = none) :
-    𝒟[(fun result => (result.1, result.2.1)) <$>
+    𝒮[(fun result => (result.1, result.2.1)) <$>
       (simulateQ (RawCtxPendingSelectiveFamily.handler source writer (state.2.2.depth + 1)) client).run state] =
-      𝒟[(($ᵗ FullOutput) >>= fun output =>
+      𝒮[(($ᵗ FullOutput) >>= fun output =>
         (simulateQ (retained source writer (view (productionStream source.crypto)
           (state.2.1.cacheQuery (cursorAddress state.2.2) output))) client).run state.1)] := by
   simp only [RawCtxPendingSelectiveFamily.handler, backend, retained, RawCtxPendingBackendInterpretation.program_compose]
@@ -31,9 +31,9 @@ theorem pending_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
 theorem logged_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (client : OracleComp (Spec S B) Result) (state : RawCtxSelectiveFamilyLog.LoggedState A)
     (missing : state.1.2.1 (cursorAddress state.1.2.2) = none) :
-    𝒟[(fun result => (result.1, result.2.1.1)) <$>
+    𝒮[(fun result => (result.1, result.2.1.1)) <$>
       (simulateQ (RawCtxSelectiveFamilyLog.handler source writer (state.1.2.2.depth + 1)) client).run state] =
-      𝒟[(($ᵗ FullOutput) >>= fun output =>
+      𝒮[(($ᵗ FullOutput) >>= fun output =>
         (simulateQ (retained source writer (view (productionStream source.crypto)
           (state.1.2.1.cacheQuery (cursorAddress state.1.2.2) output))) client).run state.1.1)] := by
   have erased := congrArg (fun computation : ProbComp (Result × State A) =>
@@ -44,7 +44,7 @@ theorem logged_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
       (fun result => (result.1, result.2.1)) <$>
         (simulateQ (RawCtxPendingSelectiveFamily.handler source writer (state.1.2.2.depth + 1)) client).run state.1 := by
     simpa only [Functor.map_map, Prod.eta] using erased
-  exact (congrArg evalDist complete).trans (pending_uniform source writer client state.1 missing)
+  exact (congrArg evalSPMF complete).trans (pending_uniform source writer client state.1 missing)
 
 /-- After the actual matched parent response, the next source stage draws its remaining child early and keeps the entire original native family continuation under the retained private cache. -/
 theorem parent_random {M P I D K : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -57,9 +57,9 @@ theorem parent_random {M P I D K : Type} (source : FixedHkdfSha512NoSaltSource)
     (missing : (RawCtxLoggedParentResponse.updated context parent state).1.2.1
       (cursorAddress (RawCtxLoggedParentResponse.updated context parent state).1.2.2) = none) :
     let reached := RawCtxLoggedParentResponse.updated context parent state
-    𝒟[(fun result => (result.1, result.2.1.1)) <$>
+    𝒮[(fun result => (result.1, result.2.1.1)) <$>
       RawCtxLoggedParentResponse.resume source writer (depth + 2) sender route decode context parent state] =
-      𝒟[(($ᵗ FullOutput) >>= fun child =>
+      𝒮[(($ᵗ FullOutput) >>= fun child =>
         (simulateQ (retained source writer (view (productionStream source.crypto)
           (reached.1.2.1.cacheQuery (cursorAddress reached.1.2.2) child)))
           ((RawCtxSelectedFamilyContext.frame sender route decode context).2
@@ -112,9 +112,9 @@ theorem parent_random_of_unlisted {M P I D K : Type} (source : FixedHkdfSha512No
     (unlisted : cursorAddress (RawCtxLoggedParentResponse.updated context parent state).1.2.2 ∉
       state.2 ++ [RawCtxSelectedFamilyContext.address context]) :
     let reached := RawCtxLoggedParentResponse.updated context parent state
-    𝒟[(fun result => (result.1, result.2.1.1)) <$>
+    𝒮[(fun result => (result.1, result.2.1.1)) <$>
       RawCtxLoggedParentResponse.resume source writer (depth + 2) sender route decode context parent state] =
-      𝒟[(($ᵗ FullOutput) >>= fun child =>
+      𝒮[(($ᵗ FullOutput) >>= fun child =>
         (simulateQ (retained source writer (view (productionStream source.crypto)
           (reached.1.2.1.cacheQuery (cursorAddress reached.1.2.2) child)))
           ((RawCtxSelectedFamilyContext.frame sender route decode context).2

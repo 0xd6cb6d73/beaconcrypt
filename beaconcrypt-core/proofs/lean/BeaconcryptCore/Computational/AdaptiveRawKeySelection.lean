@@ -107,8 +107,8 @@ theorem source_prepared_selection {count : Nat} (target : Fin (count + 1))
     (targetReal : Bool) (targetDecode : RawDecoder) (real : Fin count → Bool)
     (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto) {Result : Type}
     (client : OracleComp (SourceSpec count) Result) :
-    𝒟[sourceGame (join target targetReal real) (join target targetDecode decode) c client] =
-      𝒟[erasePrepared target <$> AdaptiveRawKeyPreparation.source
+    𝒮[sourceGame (join target targetReal real) (join target targetDecode decode) c client] =
+      𝒮[erasePrepared target <$> AdaptiveRawKeyPreparation.source
         (AdaptiveRawKeyPreparation.independentSetup count ()) targetReal targetDecode real decode c
           (fun _ => simulateQ (select target) client)] := by
   unfold sourceGame
@@ -116,7 +116,7 @@ theorem source_prepared_selection {count : Nat} (target : Fin (count + 1))
   simp only [AdaptiveRawKeyPreparation.source, AdaptiveRawKeyPreparation.independentSetup,
     uniformSource, fixed_source_selection, map_bind, bind_assoc, pure_bind, map_pure]
   simp only [erasePrepared, bind_pure_comp]
-  exact JointEagerTable.independent_comm ($ᵗ CtxKey) ($ᵗ (Fin count → CtxKey)) _
+  exact evalSPMF_bind_bind_swap ($ᵗ CtxKey) ($ᵗ (Fin count → CtxKey)) _
 
 def SelectionClass {count : Nat} (target : Fin (count + 1))
     (p : (FamilySpec count).Domain → Prop) : (SourceSpec count).Domain → Prop :=

@@ -147,9 +147,9 @@ theorem bare_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (client : OracleComp (Spec extra RatchetChain I D K X Response Shared S B) Result) (state : Bare A N C)
     (missing : state.1.2.1 (cursorAddress state.1.2.2) = none) :
-    𝒟[(fun result => (result.1, (result.2.1.1, result.2.2))) <$>
+    𝒮[(fun result => (result.1, (result.2.1.1, result.2.2))) <$>
       (simulateQ (bare source writer (state.1.2.2.depth + 1) external) client).run state] =
-    𝒟[($ᵗ FullOutput) >>= fun output =>
+    𝒮[($ᵗ FullOutput) >>= fun output =>
       (simulateQ (retained source writer (view (productionStream source.crypto)
         (state.1.2.1.cacheQuery (cursorAddress state.1.2.2) output)) external) client).run (state.1.1, state.2)] := by
   have actual := RawCtxSelectiveSingleDraw.single_uniform source (other source writer external)
@@ -167,9 +167,9 @@ theorem logged_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (client : OracleComp (Spec extra RatchetChain I D K X Response Shared S B) Result)
     (state : PqxdhInitialNativeLog.State A N C)
     (missing : state.1.1.2.1 (cursorAddress state.1.1.2.2) = none) :
-    𝒟[(fun result => (result.1, PqxdhInitialNativeRetained.project result.2)) <$>
+    𝒮[(fun result => (result.1, PqxdhInitialNativeRetained.project result.2)) <$>
       (simulateQ (PqxdhInitialNativeLog.handler source writer (state.1.1.2.2.depth + 1) external) client).run state] =
-    𝒟[($ᵗ FullOutput) >>= fun output =>
+    𝒮[($ᵗ FullOutput) >>= fun output =>
       (simulateQ (retained source writer (view (productionStream source.crypto)
         (state.1.1.2.1.cacheQuery (cursorAddress state.1.1.2.2) output)) external) client).run (PqxdhInitialNativeRetained.project state)] := by
   have erased := congrArg (fun work : ProbComp (Result × Bare A N C) =>
@@ -180,7 +180,7 @@ theorem logged_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
       (fun result => (result.1, (result.2.1.1, result.2.2))) <$>
         (simulateQ (bare source writer (state.1.1.2.2.depth + 1) external) client).run (erase state) := by
     simpa only [Functor.map_map, PqxdhInitialNativeRetained.project, erase, Prod.map_def, id_eq] using erased
-  exact (congrArg evalDist complete).trans (bare_uniform source writer external client (erase state) missing)
+  exact (congrArg evalSPMF complete).trans (bare_uniform source writer external client (erase state) missing)
 
 
 set_option maxRecDepth 2048 in

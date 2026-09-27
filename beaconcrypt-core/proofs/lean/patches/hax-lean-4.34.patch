@@ -1,0 +1,82 @@
+diff --git a/CoreModels/RustPrimitives/Funs.lean b/CoreModels/RustPrimitives/Funs.lean
+index e6277f0067dfbbf48b103fe3e2f6d5b40116ce73..1286638f0cd70f5f012944d97d8d9c4c2ba37dbc 100644
+--- a/CoreModels/RustPrimitives/Funs.lean
++++ b/CoreModels/RustPrimitives/Funs.lean
+@@ -653,43 +653,53 @@ def rust_primitives.arithmetic.from_le_bytes_usize : Array Std.U8 8#usize → Ru
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_i8 : Array Std.U8 1#usize → RustM Std.I8 :=
+-  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_le_bytes_i8 : Array Std.U8 1#usize → RustM Std.I8 :=
+-  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_i16 : Array Std.U8 2#usize → RustM Std.I16 :=
+-  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_le_bytes_i16 : Array Std.U8 2#usize → RustM Std.I16 :=
+-  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_i32 : Array Std.U8 4#usize → RustM Std.I32 :=
+-  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_le_bytes_i32 : Array Std.U8 4#usize → RustM Std.I32 :=
+-  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_i64 : Array Std.U8 8#usize → RustM Std.I64 :=
+-  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_le_bytes_i64 : Array Std.U8 8#usize → RustM Std.I64 :=
+-  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_i128 : Array Std.U8 16#usize → RustM Std.I128 :=
+-  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_le_bytes_i128 : Array Std.U8 16#usize → RustM Std.I128 :=
+-  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
++  fun a => ok ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by
++    simp [Aeneas.Std.Array.length_eq]) ⟩
+ 
+ @[spec]
+ def rust_primitives.arithmetic.from_be_bytes_isize : Array Std.U8 8#usize → RustM Std.Isize :=
+diff --git a/CoreModels/Spec/RustPrimitives/Slice.lean b/CoreModels/Spec/RustPrimitives/Slice.lean
+index b743d7993e93b7e04bb0976c0fc6625b431190ea..8c2876c982eb523018f493bb0078c5758c75b6de 100644
+--- a/CoreModels/Spec/RustPrimitives/Slice.lean
++++ b/CoreModels/Spec/RustPrimitives/Slice.lean
+@@ -71,7 +71,8 @@ theorem rust_primitives.slice.array_from_fn_spec
+   mvcgen [rust_primitives.slice.array_from_fn, hpure']
+   · -- then-branch
+     rename_i r hlen hconj
+-    obtain ⟨_, _, hpost⟩ := hconj
++    intro _ hworker
++    obtain ⟨_, hpost⟩ := hworker
+     intro i hi
+     have hp := hpost i hi
+     mvcgen [hp]

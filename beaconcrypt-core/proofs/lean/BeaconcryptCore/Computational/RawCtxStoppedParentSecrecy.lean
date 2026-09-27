@@ -64,9 +64,13 @@ theorem local_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
       3 * Pr[= true | bad source writer continuation context target output].toReal := by
   rcases context with ⟨common | pending, entry⟩
   · simp [native, observer, ProbComp.boolDistAdvantage]
-  · simpa only [native, observer, bad, observed, Functor.map_map, Function.comp_def, candidates, RawCtxSelectedParentHop.bad,
-      ← probEvent_eq_eq_probOutput, probEvent_map, decide_eq_true_eq] using
-      RawCtxCheckedParentSecrecy.local_bound source writer continuation (pending, entry) target output
+  · have bad_eq : bad source writer continuation (.inr pending, entry) target output =
+        RawCtxSelectedParentHop.bad source writer (RawCtxCheckedParentSecrecy.parent continuation)
+          (pending, entry) target output := by
+      simp only [bad, observed, Functor.map_map, RawCtxSelectedParentHop.bad]
+      congr 1
+    rw [native, observer, bad_eq]
+    exact RawCtxCheckedParentSecrecy.local_bound source writer continuation (pending, entry) target output
 
 noncomputable def actual (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (continuation : RawCtxCheckedParentSecrecy.Continuation Context M P I D K A S B) (sample : ProbComp (Bool ⊕ Context))

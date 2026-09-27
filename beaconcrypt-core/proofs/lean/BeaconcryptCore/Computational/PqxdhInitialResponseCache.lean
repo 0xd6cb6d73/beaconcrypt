@@ -100,7 +100,14 @@ theorem uniform_miss (table : Table) (request : SymmetricRatchetKdfRequest)
       let output ← $ᵗ HmacBlock
       let response := RawCtxSelectedInitialConstructor.response64 output
       pure (response, table.cacheQuery request response)) := by
-  simp only [uniform, QueryImpl.withCaching_run_none _ absent, Functor.map_map]
+  rw [show uniform request = QueryImpl.withCaching (spec := InitialSpec)
+    (fun _ => RawCtxSelectedInitialConstructor.response64 <$> ($ᵗ HmacBlock)) request by rfl]
+  rw [QueryImpl.withCaching_run_none _ absent]
+  rw [Functor.map_map]
+  rw [map_eq_bind_pure_comp]
+  change (($ᵗ HmacBlock) >>= fun output =>
+    pure (RawCtxSelectedInitialConstructor.response64 output,
+      table.cacheQuery request (RawCtxSelectedInitialConstructor.response64 output))) = _
   rfl
 
 set_option backward.isDefEq.respectTransparency false in

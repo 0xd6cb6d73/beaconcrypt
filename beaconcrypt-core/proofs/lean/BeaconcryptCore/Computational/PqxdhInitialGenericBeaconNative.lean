@@ -44,9 +44,9 @@ theorem finish_native (interpret : Kernel → ConcreteRatchetKernel)
   | some staged =>
       simp only [PqxdhBeaconPhase2Publication.finish, PqxdhInitialGenericBeacon.finish,
         Option.map_some, nativeStaged, nativeBeacon]
-      split
-      · rfl
-      · split <;> rfl
+      split_ifs <;> simp_all [PqxdhBeaconPhase2Preparation.abort,
+        PqxdhBeaconPhase2Publication.publish, PqxdhInitialGenericBeacon.abort,
+        PqxdhInitialGenericBeacon.publish, nativeBeacon, mapPhase, Prod.map]
 
 section Effects
 variable {m : Type → Type*} [Monad m] [LawfulMonad m]

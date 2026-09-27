@@ -93,7 +93,6 @@ theorem step_recorded {Metadata Auxiliary : Type}
     · simp only [empty, Bool.false_eq_true, if_false, calls, RawCtxSelectedTraceOwner.calls, bind_pure_comp]
       refine (simulateQ_map _ _ _).trans ?_
       rw [← QueryImpl.simulateQ_compose, send_recorded]
-      rfl
   · simp only [compiler, nested, RawCtxChainOwner.ownerImpl, RawCtxChainOwner.rawReceive, StateT.run]
     by_cases empty : raw.isEmpty = true
     · simp only [empty, if_true]
@@ -107,7 +106,6 @@ theorem step_recorded {Metadata Auxiliary : Type}
           simp only [calls, RawCtxSelectedTraceOwner.calls, bind_pure_comp]
           refine (simulateQ_map _ _ _).trans ?_
           rw [← QueryImpl.simulateQ_compose, receive_recorded]
-          rfl
         · simp only [valid, if_false]
           exact simulateQ_pure _ _
   · simp only [compiler, nested, StateT.run, bind_pure_comp]

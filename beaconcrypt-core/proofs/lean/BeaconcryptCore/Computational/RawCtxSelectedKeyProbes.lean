@@ -28,13 +28,14 @@ noncomputable def finish {Result : Type}
 /-- Stopped-result instrumentation preserves the entire original output distribution, even when candidates depend on all prior replies. -/
 theorem finish_result {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
     (client : OracleComp ReceiveSpec (Result × List CtxKey)) (state : CanonicalState) :
-    𝒟[Prod.fst <$> (simulateQ (canonicalImpl decode c key) (finish client)).run state] =
-      𝒟[Prod.fst <$> (simulateQ (canonicalImpl decode c key) client).run state] := by
+    𝒮[Prod.fst <$> (simulateQ (canonicalImpl decode c key) (finish client)).run state] =
+      𝒮[Prod.fst <$> (simulateQ (canonicalImpl decode c key) client).run state] := by
   simp only [finish, simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure,
     map_bind, map_pure]
-  apply evalDist_bind_congr'
+  rw [map_eq_bind_pure_comp]
+  apply evalSPMF_bind_congr'
   intro result
-  exact OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure
+  exact OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure
     ((simulateQ (canonicalImpl decode c key) (probes result.1.2)).run result.2) (pure result.1)
 
 set_option backward.isDefEq.respectTransparency false in

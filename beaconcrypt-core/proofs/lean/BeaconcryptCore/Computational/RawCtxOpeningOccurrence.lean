@@ -45,10 +45,12 @@ theorem program_scoped {Context Plaintext : Type} (target : Std.U64) (context : 
           simp only [isQueryBoundP_pure, implies_true]
       | ReceiveKdfRequested pending =>
           rw [program, isQueryBoundP_query_bind_iff]
-          simp only [Outside, not_false_eq_true, true_or, if_false, true_and]
-          intro response
-          apply ih _ (hdepth ▸ resume_rank pending response) _ _ rfl
-          simpa only [hscope.1, hscope.2] using oracle_resume_scope pending response
+          refine ⟨Or.inl ?_, ?_⟩
+          · simp only [Outside, not_false_eq_true]
+          · intro response
+            rw [if_neg (by simp only [Outside, not_false_eq_true])]
+            apply ih _ (hdepth ▸ resume_rank pending response) _ _ rfl
+            simpa only [hscope.1, hscope.2] using oracle_resume_scope pending response
 
 /-- Actual source admission invokes no out-of-scope opening, regardless of every optional reply. -/
 theorem receive_scoped {Context Plaintext : Type} (entry : ConcreteRatchetKernel)

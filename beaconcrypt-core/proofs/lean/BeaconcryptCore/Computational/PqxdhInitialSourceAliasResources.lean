@@ -70,7 +70,7 @@ theorem client_coins (input : SourceInput)
     (PqxdhInitialSourceAliases.client source writer sender route decode stage (.inr input)).IsQueryBoundP IsCoin U := by
   apply (isQueryBoundP_map_iff _ _ _).mpr
   unfold PqxdhInitialSourceAliasCompiler.client
-  refine (isQueryBoundP_bind (m := U) (show (PqxdhInitialLabelCompiler.Spec.query (.inr (.family input.selectedMessage)) : OracleComp PqxdhInitialLabelCompiler.Spec _).IsQueryBoundP IsCoin 0 by simp [IsCoin]) ?_).mono ?_
+  refine (isQueryBoundP_bind (m := U) (show OracleComp.IsQueryBoundP (PqxdhInitialLabelCompiler.Spec.query (.inr (.family input.selectedMessage)) : OracleComp PqxdhInitialLabelCompiler.Spec _) IsCoin 0 by simp [IsCoin]) ?_).mono ?_
   · intro response _
     apply program_coins source writer qPost qCheck qKnown qPre qApplication qSelector qAux input caps stage _ (7 + qPost * 67)
     exact PqxdhInitialOriginPost.sequence_total source _ _ _ sender route decode input.index input.metadata _ input.post qPost caps.postBound _
@@ -116,6 +116,7 @@ theorem consistent_uniform
     · intro context
       apply isTotalQueryBound_bind (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 32)
       intro root
+      rw [bind_pure_comp]
       apply (isQueryBound_map_iff _ _ _ _ _).mpr
       exact CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64
   · intro cut

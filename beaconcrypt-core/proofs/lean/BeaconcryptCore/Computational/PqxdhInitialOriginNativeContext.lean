@@ -250,7 +250,7 @@ theorem frame_run (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
         (childResponse prior (fromOutput (PqxdhInitialBuilderContext.address context.original) output) (nextChain output)))
         (PqxdhInitialOriginContext.stopped mark sender route decode context (material output))).run state).run cache := by
   rw [frame_cut]
-  rfl
+  rw [StateT.run_map, StateT.run_map]
 
 end Services
 end BeaconcryptCore.Computational.PqxdhInitialOriginNativeContext

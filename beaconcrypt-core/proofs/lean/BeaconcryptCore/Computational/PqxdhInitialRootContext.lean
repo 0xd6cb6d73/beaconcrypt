@@ -78,6 +78,7 @@ theorem current_game {setup : StatefulPhase1Setup baseSpec}
         firstMiss env.source baseImpl kem (protocol env kem attachedVerify primitives program post)) := by
   simp only [uniformGame, StateT.run'_eq, reduction_complete]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- At this source cut the added private initializer callbacks recover the same entire continuation and root cache. The supplied root and cache remain private interpreter arguments, not ordinary Extract-observer context. -/
 theorem current_continuation {setup : StatefulPhase1Setup baseSpec}
     (env : PqxdhAuthenticatedRootExperiment.Environment setup M P I K X Response A S B)

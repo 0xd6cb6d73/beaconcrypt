@@ -224,14 +224,12 @@ theorem raw_send_counter {Metadata Auxiliary : Type}
   obtain ⟨send, receive, refines, aligned, consumed, unique⟩ := invariant
   unfold RawCtxWholeOwner.rawGame RawCtxWholeOwner.rawReceive StateT.run at present
   split at present
-  · simp only [simulateQ_pure] at present
-    subst result
+  · subst result
     rfl
   · split at present
-    · simp only [simulateQ_pure] at present
-      subst result
+    · subst result
       rfl
-    · dsimp only at present
+    · unfold StateT.run at present
       split at present
       · rw [simulateQ_bind] at present
         change result ∈ support (StateT.run _ primitive) at present
@@ -336,7 +334,6 @@ theorem tracked_step_capability {Metadata Auxiliary : Type}
     rw [mem_support_bind_iff]
     refine ⟨_, selected, ?_⟩
     simp only [project, recordSource, counter, support_pure, Set.mem_singleton_iff]
-    rfl
 
 /-- The actual mixed step retains immutable owner fields and increments the raw-attempt counter only for raw requests. -/
 theorem tracked_step_metadata {Metadata Auxiliary : Type}
@@ -555,7 +552,10 @@ theorem queryCount_partition (transcript : Transcript) :
   | nil => simp [queryCount]
   | cons entry rest ih =>
     rcases entry with ⟨query, reply⟩
-    cases query <;> simp [queryCount] at * <;> omega
+    cases query <;>
+      simp only [queryCount, List.length_cons, List.countP_cons, Sum.isLeft, Sum.isRight,
+        Bool.false_eq_true, ↓reduceIte] at ih ⊢ <;>
+      omega
 
 /-- Original send/raw budgets bound the constructed transcript, per-class counts and nonrepeating successful-position history. -/
 theorem source_capability_bounded {Metadata Auxiliary Result : Type}

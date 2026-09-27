@@ -53,7 +53,11 @@ theorem source_schedule {Result : Type}
   have complete := map_run_simulateQ_eq_of_query_map_eq
     (RawCtxProtocolReveals.sourceImpl source writer S B senderId route decode)
     (sourceImpl source writer senderId route decode) (restore state)
-    (fun query before => by rfl) client (project state)
+    (fun query before => by
+      simp only [sourceImpl, StateT.run, map_eq_bind_pure_comp]
+      apply bind_congr
+      intro result
+      rfl) client (project state)
   exact complete.symm
 
 /-- This is the actual selected Server state; binding comes from its current public identity and sender accessor. -/

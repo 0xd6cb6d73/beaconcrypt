@@ -30,8 +30,8 @@ noncomputable def separated {Context : Type} (sample : ProbComp Context)
 
 /-- Equality holds for the full joint distribution, including the retained parent entry and every prior context field. -/
 theorem joint_separated {Context : Type} (sample : ProbComp Context)
-    (address : Context → JointKdfAddress) : 𝒟[joint sample address] = 𝒟[separated sample address] := by
-  exact evalDist_bind_congr' sample (fun context => fullOutput_observed (fun value target =>
+    (address : Context → JointKdfAddress) : 𝒮[joint sample address] = 𝒮[separated sample address] := by
+  exact evalSPMF_bind_congr' sample (fun context => fullOutput_observed (fun value target =>
     pure ((context, Entry.mk (address context) value), target.toList)))
 
 noncomputable def actual {Context : Type} (source : FixedHkdfSha512NoSaltSource)

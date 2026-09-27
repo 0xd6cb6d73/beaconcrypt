@@ -46,13 +46,13 @@ theorem prepared_interpretation {Context Result : Type} {count : Nat}
     (prepare : ProbComp (Prepared Context count)) (targetReal : Bool) (targetDecode : RawDecoder)
     (real : Fin count → Bool) (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto)
     (client : Context → OracleComp (FamilySpec count) Result) :
-    𝒟[source prepare targetReal targetDecode real decode c client] =
-      𝒟[reassociate <$> uniformAdaptiveGame targetReal targetDecode c (wrapped prepare real decode c client)] := by
+    𝒮[source prepare targetReal targetDecode real decode c client] =
+      𝒮[reassociate <$> uniformAdaptiveGame targetReal targetDecode c (wrapped prepare real decode c client)] := by
   simp only [source, uniformSource, uniformAdaptiveGame, adaptiveGame, wrapped,
     simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure,
     targetUniform, map_bind, bind_assoc, bind_map_left, map_pure]
   simp only [schedule_interpretation, bind_map_left]
-  exact JointEagerTable.independent_comm prepare ($ᵗ CtxKey) _
+  exact evalSPMF_bind_bind_swap prepare ($ᵗ CtxKey) _
 
 /-- Preparation does not consume target encryption or raw-opening queries. -/
 theorem prepared_target_bound {Context Result : Type} {count : Nat}

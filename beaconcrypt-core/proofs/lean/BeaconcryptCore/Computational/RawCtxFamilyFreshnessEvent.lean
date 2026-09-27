@@ -64,7 +64,8 @@ theorem good_alias_bound (parameters : Parameters) (program : OracleComp Spec Re
   have bound := RawCtxSelectedParentPrivateEvents.local_bound parameters.source parameters.writer
     parameters.prior parameters.entry parameters.output parameters.target parameters.view program state
     (fun result => parameters.target ∈ result.2.1.2)
-  simp only [ProbComp.boolDistAdvantage, RawCtxSelectedParentPrivateEvents.decision_probability] at bound
+  simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton,
+    RawCtxSelectedParentPrivateEvents.decision_probability] at bound
   have contained := ENNReal.toReal_mono probEvent_ne_top (probEvent_mono
     (mx := (simulateQ (RawCtxSelectedParentReadMask.observed parameters.source parameters.writer parameters.prior
       parameters.entry parameters.output RawCtxSelectedLiveRead.labelRead parameters.view) program).run state)
@@ -98,10 +99,11 @@ theorem completion_decision_bound (parameters : Parameters) (sender : M → Std.
     (actualDecision parameters.target blocked prior <$> execution).boolDistAdvantage
       (RawCtxSelectedParentPrivateEvents.decision (remainingEvent blocked prior) <$> execution) ≤
       (Pr[fun result => parameters.target ∈ result.2.1.2 ∧ result.2.2 = false | execution]).toReal := by
-  simpa only [ProbComp.boolDistAdvantage, RawCtxSelectedParentPrivateEvents.decision_probability,
-    ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, actualDecision, decide_eq_true_eq,
-    RawCtxSelectedParentPrivateEvents.decision, remainingEvent, Proxy, and_assoc, and_left_comm, and_comm] using
-      completion_good_bound parameters sender route decode blocked prior history outside work state candidates
+  simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton]
+  rw [RawCtxSelectedParentPrivateEvents.decision_probability, ← probEvent_eq_eq_probOutput]
+  simpa only [probEvent_map, Function.comp_def, actualDecision, decide_eq_true_eq,
+    remainingEvent, Proxy, and_assoc, and_left_comm, and_comm] using
+    completion_good_bound parameters sender route decode blocked prior history outside work state candidates
 
 /-- The complete actual freshness decision pays an explicit factor three times the original target-free candidate event, while every public HKDF evaluation remains the same supplied real interface. -/
 theorem completion_bound (parameters : Parameters) (sender : M → Std.U64)

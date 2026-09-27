@@ -66,7 +66,7 @@ theorem family_total (sender : M → Std.U64) (route : RawCtxServerRouting.Sende
     show (Finset.univ : Finset Class) = {.kdf, .seal, .open, .coin, .hash, .hkdf, .read} from rfl]
 
 private theorem one_query {κ : Type} {spec : OracleSpec κ} (query : spec.Domain) :
-    (spec.query query : OracleComp spec (spec.Range query)).IsTotalQueryBound 1 :=
+    OracleComp.IsTotalQueryBound (spec.query query : OracleComp spec (spec.Range query)) 1 :=
   ⟨by change 0 < 1; decide, fun _ => True.intro⟩
 
 /-- The actual single-record descriptor adds no saved LIVE requests after its bounded pending completion. -/

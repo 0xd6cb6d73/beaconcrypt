@@ -19,6 +19,9 @@ theorem initial_root_unused (source : FixedHkdfSha512NoSaltSource) (selectedMess
     (Prod.snd <$> PqxdhInitialNativeInitializer.initial (A := A) (N := N) source selectedMessage left response64 secrets) =
       (Prod.snd <$> PqxdhInitialNativeInitializer.initial source selectedMessage right response64 secrets) := by
   funext ambient cache
+  change ((Prod.snd <$> PqxdhInitialNativeInitializer.initial source selectedMessage left response64 secrets).run ambient).run cache =
+    ((Prod.snd <$> PqxdhInitialNativeInitializer.initial source selectedMessage right response64 secrets).run ambient).run cache
+  simp only [StateT.run_map]
   exact (PqxdhInitialNativeInitializer.initial_erase source selectedMessage left response64 secrets ambient cache).trans
     (PqxdhInitialNativeInitializer.initial_erase source selectedMessage right response64 secrets ambient cache).symm
 

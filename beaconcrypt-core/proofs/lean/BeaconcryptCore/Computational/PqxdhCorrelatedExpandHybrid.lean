@@ -177,12 +177,12 @@ noncomputable def finishWithRoot {Result : Type} (hmac : HmacSha512) (frame : Pr
 set_option backward.isDefEq.respectTransparency false in
 /-- Delaying an independent PRK to the selected slot retains the complete continuation, even when that sample is unused. -/
 theorem finishReal_sample {Result : Type} (hmac : HmacSha512) (frame : Prefix Result) :
-    𝒟[($ᵗ HmacBlock) >>= fun key => finishWithRoot hmac frame (expandRoot hmac key)] =
-      𝒟[finishReal hmac frame] := by
+    𝒮[($ᵗ HmacBlock) >>= fun key => finishWithRoot hmac frame (expandRoot hmac key)] =
+      𝒮[finishReal hmac frame] := by
   rcases frame with ⟨stopped, cache⟩
   cases stopped with
   | complete result =>
-      exact OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure _ _
+      exact OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure _ _
   | pending message next =>
       cases hit : cache message with
       | none =>
@@ -193,16 +193,16 @@ theorem finishReal_sample {Result : Type} (hmac : HmacSha512) (frame : Prefix Re
           simp only [finishWithRoot, hit, finishReal, simulateQ_bind, simulateQ_spec_query,
             StateT.run_bind, rootImpl, QueryImpl.add_apply_inr,
             QueryImpl.withCaching_run_some _ hit, pure_bind]
-          exact OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure _ _
+          exact OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure _ _
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The ideal selected root is uniform, with the same ignored-sample behavior for completed and cached slots. -/
 theorem finishRandom_sample {Result : Type} (hmac : HmacSha512) (frame : Prefix Result) :
-    𝒟[($ᵗ RootOutput) >>= fun root => finishWithRoot hmac frame root] = 𝒟[finishRandom hmac frame] := by
+    𝒮[($ᵗ RootOutput) >>= fun root => finishWithRoot hmac frame root] = 𝒮[finishRandom hmac frame] := by
   rcases frame with ⟨stopped, cache⟩
   cases stopped with
   | complete result =>
-      exact OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure _ _
+      exact OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure _ _
   | pending message next =>
       cases hit : cache message with
       | none =>
@@ -212,7 +212,7 @@ theorem finishRandom_sample {Result : Type} (hmac : HmacSha512) (frame : Prefix 
       | some answer =>
           simp only [finishWithRoot, hit, finishRandom, uniformImpl, QueryImpl.add_apply_inr,
             OracleSpec.randomOracle, QueryImpl.withCaching_run_some _ hit, pure_bind]
-          exact OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure _ _
+          exact OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure _ _
 
 noncomputable def scanSampler (client : OracleComp RootSpec Bool) (index : Nat) :
     SecretInputSampler (Prefix Bool) := (do
@@ -230,36 +230,40 @@ noncomputable def indexedReduction (hmac : HmacSha512) (client : OracleComp Root
 theorem hybrid_eq_extractUniform (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (index : Nat) :
     𝒟[hybridGame hmac client index] =
       𝒟[extractUniformGame (scanSampler client index) (extractReduction hmac (scanObserver hmac))] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [hybridGame, extractUniformGame, extractReduction, scanSampler, scanObserver,
     bind_assoc, pure_bind, map_bind]
-  apply evalDist_bind_congr' (m := ProbComp) (scan client index ∅)
+  apply evalSPMF_bind_congr' (m := ProbComp) (scan client index ∅)
   intro frame
   have complete := congrArg (Functor.map (fun pair : Bool × RootOracle.QueryCache => pair.1))
     (finishReal_sample hmac frame).symm
-  simpa only [← evalDist_map, map_bind] using complete
+  simpa only [← evalSPMF_map, map_bind] using complete
 
 theorem hybrid_succ_eq_independent (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (index : Nat) :
     𝒟[hybridGame hmac client (index + 1)] =
       𝒟[independentRootGame (scanSampler client index) (scanObserver hmac)] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [hybridGame, scan_succ_complete, independentRootGame, scanSampler, scanObserver,
     bind_assoc, pure_bind, map_bind]
-  apply evalDist_bind_congr' (m := ProbComp) (scan client index ∅)
+  apply evalSPMF_bind_congr' (m := ProbComp) (scan client index ∅)
   intro frame
   have complete := congrArg (Functor.map (fun pair : Bool × RootOracle.QueryCache => pair.1))
     (finishRandom_sample hmac frame).symm
-  simpa only [← evalDist_map, map_bind] using complete
+  simpa only [← evalSPMF_map, map_bind] using complete
 
 /-- Each real HMAC challenger is exactly one adjacent hybrid with the entire stopped prefix retained. -/
 theorem indexed_real (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (index : Nat) :
     𝒟[hybridGame hmac client index] = 𝒟[hmacPrfRealGame hmac (indexedReduction hmac client index)] :=
   (hybrid_eq_extractUniform hmac client index).trans
-    (extractUniform_eq_hmacReal hmac (scanSampler client index) (scanObserver hmac))
+    (evalDist_eq_of_evalSPMF_eq _ _
+      (extractUniform_eq_hmacReal hmac (scanSampler client index) (scanObserver hmac)))
 
 /-- The random HMAC answer changes precisely the selected miss and preserves every repeated-input root. -/
 theorem indexed_random (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (index : Nat) :
     𝒟[hybridGame hmac client (index + 1)] = 𝒟[hmacPrfRandomGame (indexedReduction hmac client index)] :=
   (hybrid_succ_eq_independent hmac client index).trans
-    (hmacRandom_eq_independentRoot (scanSampler client index) (scanObserver hmac)).symm
+    (evalDist_eq_of_evalSPMF_eq _ _
+      (hmacRandom_eq_independentRoot (scanSampler client index) (scanObserver hmac)).symm)
 
 theorem indexed_advantage (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (index : Nat) :
     (hybridGame hmac client index).boolDistAdvantage (hybridGame hmac client (index + 1)) =

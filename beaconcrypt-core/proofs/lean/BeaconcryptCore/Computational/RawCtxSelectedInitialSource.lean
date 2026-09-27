@@ -178,6 +178,7 @@ theorem send_query_bounds {Auxiliary : Type}
       (RawCtxChainSend.program start)).run state).IsQueryBoundP predicate budget := by
   rw [send_program, StateT.run_map, isQueryBoundP_map_iff]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A retained original initializer specializes every typed KDF response back to the actual fixed source; the entry carries no new primitive correctness assumption. -/
 theorem response_source (source : FixedHkdfSha512NoSaltSource) (address : JointKdfAddress)
     (request : SymmetricRatchetKdfRequest) :

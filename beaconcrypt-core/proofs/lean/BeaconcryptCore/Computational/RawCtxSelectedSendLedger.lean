@@ -62,10 +62,21 @@ theorem source_nonseal (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
         bind_pure_comp, simulateQ_map] at supported
       change result ∈ support ((fun answer => (answer.1.1,
           ({before with selected := answer.1.2, cache := answer.2} : SourceState))) <$>
-        ((fun answer => ((answer.1.1, (answer.1.2, before.selected.2)), answer.2)) <$>
-          (simulateQ hashImpl ((AdaptiveCtxSharedHash.localImpl decode c key query).run before.selected.1)).run before.cache)) at supported
-      simp only [Functor.map_map, support_map] at supported
-      obtain ⟨answer, reached, rfl⟩ := supported
+        (((fun answer => (answer.1, (answer.2, before.selected.2))) <$>
+          simulateQ hashImpl (AdaptiveCtxSharedHash.localImpl decode c key query before.selected.1))
+            before.cache)) at supported
+      rw [support_map] at supported
+      obtain ⟨mapped, mappedSupported, rfl⟩ := supported
+      have baseSupported : mapped ∈ support ((fun answer =>
+          ((fun value => (value.1, (value.2, before.selected.2))) answer.1, answer.2)) <$>
+        (simulateQ hashImpl (AdaptiveCtxSharedHash.localImpl decode c key query before.selected.1)).run
+          before.cache) := by
+        exact Eq.mp (congrArg (fun distribution => mapped ∈ support distribution)
+          (StateT.run_map (fun value => (value.1, (value.2, before.selected.2)))
+            (simulateQ hashImpl (AdaptiveCtxSharedHash.localImpl decode c key query before.selected.1))
+            before.cache)) mappedSupported
+      rw [support_map] at baseSupported
+      obtain ⟨answer, reached, rfl⟩ := baseSupported
       exact local_nonseal decode c key query notSeal before.selected.1 before.cache answer reached
 
 set_option backward.isDefEq.respectTransparency false in

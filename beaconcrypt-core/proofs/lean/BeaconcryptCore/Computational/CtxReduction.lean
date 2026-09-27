@@ -97,7 +97,7 @@ theorem ctxMisattributionAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
       CollisionResistance.crAdvantage c.blake2b (ctxCollisionReduction adversary) := by
   unfold ctxMisattributionAdvantage ctxMisattributionExp
     CollisionResistance.crAdvantage CollisionResistance.crExp ctxCollisionReduction
-  simp only [monad_norm]
+  simp only [evalDist_apply_singleton, monad_norm]
   refine probOutput_bind_mono fun attempt _ => ?_
   apply probOutput_pure_bool_le
   intro hwin
@@ -206,7 +206,7 @@ theorem ctxFullCommitmentAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
   unfold ctxFullCommitmentAdvantage ctxFullCommitmentExp
     CollisionResistance.crAdvantage CollisionResistance.crExp
     ctxFullCommitmentCollisionReduction
-  simp only [monad_norm]
+  simp only [evalDist_apply_singleton, monad_norm]
   refine probOutput_bind_mono fun attempt _ => ?_
   apply probOutput_pure_bool_le
   intro hwin

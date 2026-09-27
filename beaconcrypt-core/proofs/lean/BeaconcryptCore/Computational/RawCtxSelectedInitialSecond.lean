@@ -53,21 +53,21 @@ theorem from64_second (request : RawCtxInitializedKdfFamily.InitialRequest) (oth
 
 /-- Uniform64 splits in retained-first/selected-second order without losing any original response bit. -/
 theorem second_uniform :
-    𝒟[(fun output : HmacBlock => (PqxdhSecretInputKdf.first32 output, secondChain output)) <$>
-      ($ᵗ HmacBlock)] = 𝒟[$ᵗ (RootOutput × RootOutput)] := by
-  exact evalDist_map_bijective_uniform_cross HmacBlock (vectorSplitEquiv 32 32)
+    𝒮[(fun output : HmacBlock => (PqxdhSecretInputKdf.first32 output, secondChain output)) <$>
+      ($ᵗ HmacBlock)] = 𝒮[$ᵗ (RootOutput × RootOutput)] := by
+  exact evalSPMF_map_bijective_uniform_cross HmacBlock (vectorSplitEquiv 32 32)
     (vectorSplitEquiv 32 32).bijective
 
 /-- The same two-half draw preserves an arbitrary complete continuation in retained-first order. -/
 theorem second_observed {Result : Type} (continuation : RootOutput → RootOutput → ProbComp Result) :
-    𝒟[(do let output ← $ᵗ HmacBlock
+    𝒮[(do let output ← $ᵗ HmacBlock
           continuation (PqxdhSecretInputKdf.first32 output) (secondChain output))] =
-      𝒟[(do let other ← $ᵗ RootOutput
+      𝒮[(do let other ← $ᵗ RootOutput
             let target ← $ᵗ RootOutput
             continuation other target)] := by
   have observed := congrArg (fun (distribution : SPMF (RootOutput × RootOutput)) => distribution >>=
-    fun pair => 𝒟[continuation pair.1 pair.2]) second_uniform
-  simpa only [← evalDist_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
+    fun pair => 𝒮[continuation pair.1 pair.2]) second_uniform
+  simpa only [← evalSPMF_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
 
 /-- A retained full76 predecessor initializes only its first32 and hidden second32; the analysis nonce is unused. -/
 theorem full_second (request : RawCtxInitializedKdfFamily.InitialRequest)
@@ -99,15 +99,15 @@ theorem source_second (source : FixedHkdfSha512NoSaltSource) (request : RawCtxIn
 theorem uniform_native_second {Context Result : Type} (sample : ProbComp Context)
     (request : Context → RawCtxInitializedKdfFamily.InitialRequest)
     (observe : Context → HmacBlock → RustM ConcreteRatchetKernel → ProbComp Result) :
-    𝒟[(do let context ← sample
+    𝒮[(do let context ← sample
           let output ← $ᵗ HmacBlock
           observe context output (from64 (request context) output))] =
-    𝒟[(do let context ← sample
+    𝒮[(do let context ← sample
           let other ← $ᵗ RootOutput
           let target ← $ᵗ RootOutput
           observe context (other ++ target)
             (nativeKernel (RawCtxFreshChainCut.concreteChain target) <$> initialSecond (request context).1 other))] := by
-  refine evalDist_bind_congr' sample (fun context => ?_)
+  refine evalSPMF_bind_congr' sample (fun context => ?_)
   simpa only [split_reconstruct, from64_second] using
     second_observed (fun other target =>
       observe context (other ++ target) (from64 (request context) (other ++ target)))
@@ -130,14 +130,14 @@ noncomputable def delayed {Context Result : Type} (sample : ProbComp Context)
 /-- The omitted second32 may be drawn after a complete observer of the actual private constructor and retained first32. -/
 theorem delayed_second {Context Result : Type} (sample : ProbComp Context)
     (role : Context → Bool) (observe : Context → RustM Kernel → ProbComp Result) :
-    𝒟[original sample role observe] = 𝒟[delayed sample role observe] := by
+    𝒮[original sample role observe] = 𝒮[delayed sample role observe] := by
   simp only [original, delayed]
-  refine evalDist_bind_congr' sample (fun context => ?_)
+  refine evalSPMF_bind_congr' sample (fun context => ?_)
   refine (second_observed (fun other target => do
     let result ← observe context (initialSecond (role context) other)
     pure (target, result))).trans ?_
-  exact evalDist_bind_congr' ($ᵗ RootOutput) (fun other =>
-    evalDist_sample_comm ($ᵗ RootOutput) (observe context (initialSecond (role context) other))
+  exact evalSPMF_bind_congr' ($ᵗ RootOutput) (fun other =>
+    evalSPMF_sample_comm ($ᵗ RootOutput) (observe context (initialSecond (role context) other))
       (fun target result => pure (target, result)))
 
 set_option maxRecDepth 2048 in

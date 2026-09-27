@@ -9,7 +9,7 @@ This module defines the privately correlated, source-ordered Phase-1 prefix for 
 Ed25519, ML-KEM-768, HKDF-SHA-512, X25519, ChaCha20-Poly1305, and BLAKE2b-512 implementations are treated as perfect implementations of their stated primitive contracts; this module proves no primitive internals. The structural writer and routing equalities require no cryptographic security premise. Generator-order interchange, protocol correlations across later phases, source/ideal semantic correspondence, and initialized-chain/KDF composition remain separate protocol proof obligations, rather than primitive assumptions.
 -/
 
-open OracleSpec OracleComp ENNReal
+open OracleSpec OracleComp ENNReal MeasureTheory
 
 set_option relaxedAutoImplicit false
 set_option autoImplicit false
@@ -631,15 +631,14 @@ theorem unforgeableExp_statefulPhase1ToEUFCMA_eq_reference {SecretKey : Type}
     (setup : StatefulPhase1Setup baseSpec)
     (selector : StatefulPhase1Selector kem setup.Context)
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
-    (deterministic : HasDeterministicVerification sigAlg verifyFn)
-    (runtime_map : ∀ {alpha beta : Type} (f : alpha → beta)
-      (computation : OracleComp (unifSpec + baseSpec) alpha),
-      runtime.evalDist (f <$> computation) = f <$> runtime.evalDist computation) :
+    (deterministic : HasDeterministicVerification sigAlg verifyFn) :
     SignatureAlg.unforgeableExp runtime (statefulPhase1ToEUFCMA sigAlg kem setup selector) =
-      StatefulPhase1Result.eufBit verifyFn <$>
-        runtime.evalDist (statefulPhase1JointReference sigAlg kem setup selector) := by
+      runtime.evalDist
+        (statefulPhase1JointReference sigAlg kem setup selector >>= fun result =>
+          pure (StatefulPhase1Result.eufBit verifyFn result)) := by
   rw [unforgeableExp_statefulPhase1ToEUFCMA, statefulPhase1EufBody_eq_reference
-    sigAlg kem setup selector verifyFn deterministic, runtime_map]
+    sigAlg kem setup selector verifyFn deterministic, map_eq_bind_pure_comp]
+  rfl
 
 /-- Probability of accepted same-identity field substitution in the stopped source-order experiment. -/
 noncomputable def StatefulPhase1FieldSubstitutionAdvantage {SecretKey : Type}
@@ -649,8 +648,9 @@ noncomputable def StatefulPhase1FieldSubstitutionAdvantage {SecretKey : Type}
     (setup : StatefulPhase1Setup baseSpec)
     (selector : StatefulPhase1Selector kem setup.Context)
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool) : ℝ≥0∞ :=
-  Pr[= true | StatefulPhase1Result.badBit verifyFn <$>
-    runtime.evalDist (statefulPhase1JointReference sigAlg kem setup selector)]
+  runtime.evalDist
+    (statefulPhase1JointReference sigAlg kem setup selector >>= fun result =>
+      pure (StatefulPhase1Result.badBit verifyFn result)) {true}
 
 /-- One deterministic field selection gives a coefficient-one weak-EUF-CMA reduction. -/
 theorem statefulPhase1FieldSubstitutionAdvantage_le_eufCma {SecretKey : Type}
@@ -660,17 +660,25 @@ theorem statefulPhase1FieldSubstitutionAdvantage_le_eufCma {SecretKey : Type}
     (setup : StatefulPhase1Setup baseSpec)
     (selector : StatefulPhase1Selector kem setup.Context)
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
-    (deterministic : HasDeterministicVerification sigAlg verifyFn)
-    (runtime_map : ∀ {alpha beta : Type} (f : alpha → beta)
-      (computation : OracleComp (unifSpec + baseSpec) alpha),
-      runtime.evalDist (f <$> computation) = f <$> runtime.evalDist computation) :
+    (deterministic : HasDeterministicVerification sigAlg verifyFn) :
     StatefulPhase1FieldSubstitutionAdvantage runtime sigAlg kem setup selector verifyFn ≤
       (statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage runtime := by
+  letI : MeasurableSpace (StatefulPhase1Result kem setup selector) := ⊤
+  letI : DiscreteMeasurableSpace (StatefulPhase1Result kem setup selector) :=
+    ⟨fun _ => by simp⟩
   unfold StatefulPhase1FieldSubstitutionAdvantage SignatureAlg.unforgeableAdv.advantage
   rw [unforgeableExp_statefulPhase1ToEUFCMA_eq_reference runtime sigAlg kem setup
-    selector verifyFn deterministic runtime_map, ← probEvent_eq_eq_probOutput,
-    ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
-  exact probEvent_mono'' fun result => result.badBit_implies_eufBit verifyFn
+    selector verifyFn deterministic,
+    runtime.evalDist_bind_pure _ (StatefulPhase1Result.badBit verifyFn)
+      Measurable.of_discrete,
+    runtime.evalDist_bind_pure _ (StatefulPhase1Result.eufBit verifyFn)
+      Measurable.of_discrete,
+    Measure.map_apply Measurable.of_discrete (measurableSet_singleton true),
+    Measure.map_apply Measurable.of_discrete (measurableSet_singleton true)]
+  apply measure_mono
+  intro result hresult
+  simp only [Set.mem_preimage, Set.mem_singleton_iff] at hresult ⊢
+  exact result.badBit_implies_eufBit verifyFn hresult
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.localStatefulPhase1Tail_writer_exact' depends on axioms: [propext,

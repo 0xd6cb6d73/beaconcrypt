@@ -413,8 +413,9 @@ theorem historyRun_query_bound {Result : Type} (count : ℕ)
     ((simulateQ (historyImpl count) client).run history).IsQueryBoundP predicate bound := by
   apply OracleComp.IsQueryBoundP.simulateQ_run_StateT_of_step bounded _ history
   intro query state
-  change ((fun answer : DynamicSpec.Range query => (answer, historyUpdate count query answer state)) <$>
-    (DynamicSpec.query query : OracleComp DynamicSpec _)).IsQueryBoundP predicate _
+  change OracleComp.IsQueryBoundP
+    ((fun answer : DynamicSpec.Range query => (answer, historyUpdate count query answer state)) <$>
+      (DynamicSpec.query query : OracleComp DynamicSpec _)) predicate _
   rw [OracleComp.isQueryBoundP_map_iff, OracleComp.isQueryBoundP_query_iff]
   split_ifs <;> simp_all
 
@@ -423,9 +424,9 @@ theorem lazy_eager_history_complete (primitives : Primitives) {Result : Type}
     (count : ℕ) (client : OracleComp DynamicSpec Result)
     (bounded : client.IsQueryBoundP PqxdhDynamicIdentityPool.IsCreate count)
     (history : GlobalState count) (state : PqxdhDynamicIdentityPool.SourceState) :
-    𝒟[(simulateQ (sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives)) client).run
+    𝒮[(simulateQ (sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives)) client).run
       (history, state)] =
-      𝒟[PqxdhDynamicIdentityPool.sampleSeeds count >>= fun future =>
+      𝒮[PqxdhDynamicIdentityPool.sampleSeeds count >>= fun future =>
         (simulateQ (sourceWithHistory count
           (PqxdhDynamicIdentityPool.eagerImpl primitives (state.seeds ++ future))) client).run (history, state)] := by
   have law := PqxdhDynamicIdentityPool.lazy_eager_complete primitives
@@ -435,16 +436,16 @@ theorem lazy_eager_history_complete (primitives : Primitives) {Result : Type}
     (fun value : (Result × GlobalState count) × PqxdhDynamicIdentityPool.SourceState =>
       (value.1.1, (value.1.2, value.2))) <$> distribution) law
   simp_rw [sourceWithHistory, QueryImpl.Stateful.simulateQ_link_run]
-  change 𝒟[(fun value : (Result × GlobalState count) × PqxdhDynamicIdentityPool.SourceState =>
+  change 𝒮[(fun value : (Result × GlobalState count) × PqxdhDynamicIdentityPool.SourceState =>
       (value.1.1, (value.1.2, value.2))) <$>
     (simulateQ (PqxdhDynamicIdentityPool.lazyImpl primitives)
       ((simulateQ (historyImpl count) client).run history)).run state] =
-    𝒟[PqxdhDynamicIdentityPool.sampleSeeds count >>= fun future =>
+    𝒮[PqxdhDynamicIdentityPool.sampleSeeds count >>= fun future =>
       (fun value : (Result × GlobalState count) × PqxdhDynamicIdentityPool.SourceState =>
         (value.1.1, (value.1.2, value.2))) <$>
       (simulateQ (PqxdhDynamicIdentityPool.eagerImpl primitives (state.seeds ++ future))
         ((simulateQ (historyImpl count) client).run history)).run state]
-  simpa only [evalDist_map, evalDist_bind, map_bind] using mapped
+  simpa only [evalSPMF_map, evalSPMF_bind, map_bind] using mapped
 
 /-- The real source starts with no created identity; only actual creation requests draw fresh seeds. -/
 def dynamicRun (primitives : Primitives) (count : ℕ) {Result : Type}
@@ -467,15 +468,15 @@ def reservedRun (primitives : Primitives) (count : ℕ) {Result : Type}
 theorem dynamic_reserved_complete (primitives : Primitives) (count : ℕ) {Result : Type}
     (client : OracleComp DynamicSpec Result)
     (bounded : client.IsQueryBoundP PqxdhDynamicIdentityPool.IsCreate count) :
-    𝒟[dynamicRun primitives count client] = 𝒟[reservedRun primitives count client] := by
+    𝒮[dynamicRun primitives count client] = 𝒮[reservedRun primitives count client] := by
   rw [dynamicRun, lazy_eager_history_complete primitives count client bounded]
   simp only [PqxdhDynamicIdentityPool.initialState, List.nil_append,
     PqxdhDynamicIdentityPool.sampleSeeds, bind_map_left, reservedRun, bind_pure_comp]
-  apply evalDist_bind_congr'
+  apply evalSPMF_bind_congr'
   intro seeds
   have exactRun := route_complete primitives seeds client
     (initialPublicState, PqxdhJointIdentityFreshness.initialState count) (Nat.zero_le count)
-  change 𝒟[(simulateQ (sourceWithHistory count (PqxdhDynamicIdentityPool.eagerImpl primitives (List.ofFn seeds)))
+  change 𝒮[(simulateQ (sourceWithHistory count (PqxdhDynamicIdentityPool.eagerImpl primitives (List.ofFn seeds)))
       client).run (projection seeds (initialPublicState, PqxdhJointIdentityFreshness.initialState count))] = _
   rw [← exactRun]
   rfl
@@ -501,8 +502,9 @@ theorem routeImpl_query_bound {count : ℕ} (publicKeys : Fin count → PublicId
       (if dynamicClass predicate query then 1 else 0) := by
   cases query with
   | inl coin =>
-    change ((fun answer => (answer, appendObservation (.inl coin) answer state)) <$>
-      ((GlobalSpec count).query (.inl (.inl coin)) : OracleComp (GlobalSpec count) _)).IsQueryBoundP
+    change OracleComp.IsQueryBoundP
+      ((fun answer => (answer, appendObservation (.inl coin) answer state)) <$>
+        ((GlobalSpec count).query (.inl (.inl coin)) : OracleComp (GlobalSpec count) _))
       (globalClass predicate) _
     rw [OracleComp.isQueryBoundP_map_iff]
     apply (OracleComp.isQueryBoundP_query_iff (spec := GlobalSpec count)
@@ -518,10 +520,11 @@ theorem routeImpl_query_bound {count : ℕ} (publicKeys : Fin count → PublicId
       simp only [routeImpl, StateT.run]
       split
       · rename_i available
-        change ((fun answer : JointSpec.Range request =>
-          (some answer, appendObservation (.inr (.service identity request)) (some answer) state)) <$>
-          ((GlobalSpec count).query (.inl (.inr (⟨identity, available.2⟩, request))) :
-            OracleComp (GlobalSpec count) _)).IsQueryBoundP (globalClass predicate) _
+        change OracleComp.IsQueryBoundP
+          ((fun answer : JointSpec.Range request =>
+            (some answer, appendObservation (.inr (.service identity request)) (some answer) state)) <$>
+            ((GlobalSpec count).query (.inl (.inr (⟨identity, available.2⟩, request))) :
+              OracleComp (GlobalSpec count) _)) (globalClass predicate) _
         rw [OracleComp.isQueryBoundP_map_iff]
         apply (OracleComp.isQueryBoundP_query_iff (spec := GlobalSpec count)
           (p := globalClass predicate) (.inl (.inr (⟨identity, available.2⟩, request))) _).mpr
@@ -532,10 +535,11 @@ theorem routeImpl_query_bound {count : ℕ} (publicKeys : Fin count → PublicId
       simp only [routeImpl, StateT.run]
       split
       · rename_i available
-        change ((fun answer : IdentitySeed =>
-          (some answer, appendObservation (.inr (.reveal identity)) (some answer) state)) <$>
-          ((GlobalSpec count).query (.inr ⟨identity, available.2⟩) :
-            OracleComp (GlobalSpec count) _)).IsQueryBoundP (globalClass predicate) _
+        change OracleComp.IsQueryBoundP
+          ((fun answer : IdentitySeed =>
+            (some answer, appendObservation (.inr (.reveal identity)) (some answer) state)) <$>
+            ((GlobalSpec count).query (.inr ⟨identity, available.2⟩) :
+              OracleComp (GlobalSpec count) _)) (globalClass predicate) _
         rw [OracleComp.isQueryBoundP_map_iff]
         apply (OracleComp.isQueryBoundP_query_iff (spec := GlobalSpec count)
           (p := globalClass predicate) (.inr ⟨identity, available.2⟩) _).mpr

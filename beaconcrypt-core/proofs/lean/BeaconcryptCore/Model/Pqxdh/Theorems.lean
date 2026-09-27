@@ -424,9 +424,10 @@ theorem serverStep (hok : h.Ok) :
     have := hok.free
     simp only [HonestRun.kid] at this
     simp [this]
-  simp only [serverRespond, h.validate, hconv, Option.getD_some, serverEmit,
-    HonestRun.server, if_neg hrid, if_neg hnz, if_neg happ, if_neg hok.notExhausted,
-    if_neg hfree]
+  simp only [HonestRun.server]
+  simp only [serverRespond, h.validate, hconv, Option.getD_some, if_neg hrid, if_neg hnz,
+    if_neg happ]
+  rw [serverEmit, if_neg hok.notExhausted, if_neg hfree]
   rfl
 
 /-- The beacon accepts the honest response and becomes established with the assigned

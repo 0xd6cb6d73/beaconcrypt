@@ -47,7 +47,8 @@ theorem withStickyBad_fst_map_run {m : Type → Type} [Monad m] [LawfulMonad m]
 
 /-- A sticky wrapper never clears a fired flag. -/
 theorem withStickyBad_mono {m : Type → Type} [Monad m] [LawfulMonad m]
-    [MonadLiftT m SetM] [LawfulMonadLiftT m SetM] {α σ : Type}
+    [MonadAttach m] [ExactMonadAttach m] [MonadLiftT m SetM]
+    [LawfulMonadLiftT m SetM] {α σ : Type}
     (fires : Bool) (step : StateT σ m α)
     (state : σ × Bool) (hbad : state.2 = true)
     (result : α × (σ × Bool))
@@ -65,7 +66,8 @@ theorem withStickyBad_mono {m : Type → Type} [Monad m] [LawfulMonad m]
 
 /-- A firing sticky wrapper sets bad on every supported result. -/
 theorem withStickyBad_true {m : Type → Type} [Monad m] [LawfulMonad m]
-    [MonadLiftT m SetM] [LawfulMonadLiftT m SetM] {α σ : Type}
+    [MonadAttach m] [ExactMonadAttach m] [MonadLiftT m SetM]
+    [LawfulMonadLiftT m SetM] {α σ : Type}
     (step : StateT σ m α)
     (state : σ × Bool) (result : α × (σ × Bool))
     (hresult : result ∈ support ((withStickyBad true step).run state)) :
@@ -205,7 +207,8 @@ theorem ctxPrefixIsolatedImpl_bad_mono (c : Pqxdh.Crypto) (key : CtxKey)
 
 /-- Supported sticky-wrapper results have the wrapper's explicit post-state shape. -/
 theorem withStickyBad_result_state {m : Type → Type} [Monad m] [LawfulMonad m]
-    [MonadLiftT m SetM] [LawfulMonadLiftT m SetM] {α σ : Type}
+    [MonadAttach m] [ExactMonadAttach m] [MonadLiftT m SetM]
+    [LawfulMonadLiftT m SetM] {α σ : Type}
     (fires : Bool) (step : StateT σ m α) (state : σ × Bool)
     (result : α × (σ × Bool))
     (hresult : result ∈ support ((withStickyBad fires step).run state)) :
@@ -390,6 +393,7 @@ theorem trackedProjection_realWithPrefixFlag_eq_ctxBeforeVerifyInner
   have hrhs :
       ctxBeforeVerifyInner c adversary key =
         trackedProjection key <$> currentRun := by
+    rw [map_eq_bind_pure_comp]
     rfl
   calc
     (fun result => trackedProjection key (result.1, result.2.1)) <$>

@@ -30,8 +30,8 @@ theorem family_list (sampler : ProbComp (Pair KemSK)) (count : Nat) :
 theorem target_first {Result : Type} (sampler : ProbComp (Pair KemSK))
     (count : Nat) (target : Fin (count + 1))
     (next : (Fin (count + 1) → Pair KemSK) → ProbComp Result) :
-    𝒟[sampleFamily sampler (count + 1) >>= next] =
-      𝒟[do
+    𝒮[sampleFamily sampler (count + 1) >>= next] =
+      𝒮[do
         let chosen ← sampler
         let others ← sampleFamily sampler count
         next (target.insertNth chosen others)] := by
@@ -40,20 +40,21 @@ theorem target_first {Result : Type} (sampler : ProbComp (Pair KemSK))
     induction target using Fin.cases
     case succ target =>
       calc
-        _ = 𝒟[do
+        _ = 𝒮[do
           let first ← sampler
           let chosen ← sampler
           let others ← sampleFamily sampler count
           next (Fin.cons first (target.insertNth chosen others))] := by
-            change 𝒟[(do
+            change 𝒮[(do
               let first ← sampler
               let others ← sampleFamily sampler (count + 1)
               pure (Fin.cons first others)) >>= next] = _
             simp only [bind_assoc, pure_bind]
-            apply evalDist_bind_congr
-            exact fun first _ => ih target (fun rest => next (Fin.cons first rest))
+            apply evalSPMF_bind_congr'
+            intro first
+            exact ih target (fun rest => next (Fin.cons first rest))
         _ = _ := by
-          rw [PqxdhSecretInputKdf.evalDist_sample_comm sampler sampler]
+          rw [PqxdhSecretInputKdf.evalSPMF_sample_comm sampler sampler]
           simp [sampleFamily, Fin.insertNth_succ_cons, bind_assoc]
     case zero => simp [sampleFamily, Fin.insertNth_zero']
   case zero =>
@@ -66,8 +67,8 @@ theorem source_target_first (baseImpl : QueryImpl baseSpec ProbComp) (primitives
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) {Result : Type}
     (client : OracleComp (Spec KemSK) Result) (count : Nat) (target : Fin (count + 1))
     (bounded : client.IsQueryBoundP (IsCreate (KemSK := KemSK)) (count + 1)) (state : State KemSK) :
-    𝒟[(simulateQ (impl baseImpl primitives kem) client).run state] =
-      𝒟[do
+    𝒮[(simulateQ (impl baseImpl primitives kem) client).run state] =
+      𝒮[do
         let chosen ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
         let others ← sampleFamily (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count
         (simulateQ (reserved baseImpl primitives kem

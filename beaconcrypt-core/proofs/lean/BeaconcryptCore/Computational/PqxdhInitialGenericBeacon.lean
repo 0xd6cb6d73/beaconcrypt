@@ -86,9 +86,7 @@ theorem finish_map (interpret : Kernel → Other) (control : pqxdh.BeaconInitSen
   | none => rfl
   | some staged =>
       simp only [finish, Option.map_some, mapStaged, mapBeacon]
-      split
-      · rfl
-      · split <;> rfl
+      split_ifs <;> simp_all [abort, publish, mapBeacon, mapPhase, Prod.map]
 
 section Effects
 variable {m : Type → Type*} [Monad m]

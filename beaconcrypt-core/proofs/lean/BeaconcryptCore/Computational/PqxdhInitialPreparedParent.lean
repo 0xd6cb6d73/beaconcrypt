@@ -132,7 +132,8 @@ theorem supported_pending (depth : Nat) (state reached : PqxdhInitialNativeAudit
     RawCtxForwardScan.Cut.pending context reached ∈ support
       (carried source writer pre application initial selector aux mark sender route decode execution depth (depth + 1) state) ∧
     reached.1.1.1.2.1 (PqxdhInitialBuilderContext.address context.original) = none := by
-  simp [prepare, collect_pending]
+  simp only [prepare, mem_support_bind_iff, collect_pending]
+  simp
 
 /-- The concrete prepared sampler pays the original all-branch source bill and the same final observer's bill. Removing its literal resumed suffix does not transport a cost through evaluated probability equality. -/
 theorem prepare_uniform (depth qPost qObserve : Nat)

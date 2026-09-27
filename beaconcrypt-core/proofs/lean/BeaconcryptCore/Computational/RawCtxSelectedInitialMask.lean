@@ -27,6 +27,7 @@ theorem initializer_exact (root other : RootOutput) (nonce : NonceOutput) (chain
       decide (root = RawCtxSelectedQueryTrace.rootVector chain) := by
   simp [initializerQuery, atRoot, RawCtxKdfRequestTable.address, RawCtxChainSend.nativeRequest,
     FixedHkdfDomain.address, FixedHkdfDomain.info, RawCtxSelectedQueryTrace.rootVector]
+  apply decide_eq_decide.mpr
   exact ⟨fun h => Subtype.ext h.symm, fun h => (congrArg List.Vector.toList h).symm⟩
 
 noncomputable def handler {Auxiliary : Type}

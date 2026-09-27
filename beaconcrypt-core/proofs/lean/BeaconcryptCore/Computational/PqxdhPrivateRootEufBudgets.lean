@@ -24,7 +24,8 @@ theorem program_class_bound
     (selector : Selector baseSpec setup.Context)
     (predicate : SourceSpec.Domain → Prop) [DecidablePred predicate]
     (qCreate qGeneration qWriter qSelector qAccept : Nat)
-    (creation : (SourceSpec.query (.inl (.inr .create)) : OracleComp SourceSpec _).IsQueryBoundP predicate qCreate)
+    (creation : OracleComp.IsQueryBoundP
+      (SourceSpec.query (.inl (.inr .create)) : OracleComp SourceSpec _) predicate qCreate)
     (generationBound : ∀ identity, (localCoins (generate baseImpl kem setup identity)).IsQueryBoundP
       (fun query => predicate (translated query)) qGeneration)
     (writerBound : ∀ index identity keys, (signingProgram index identity keys).IsQueryBoundP
@@ -32,7 +33,8 @@ theorem program_class_bound
     (selectorBound : ∀ secret publicTranscript,
       (simulateQ (localSelector baseImpl kem secret) (selector.main publicTranscript)).IsQueryBoundP
         (fun query => predicate (translated query)) qSelector)
-    (acceptance : ∀ candidate, (SourceSpec.query (.inr candidate) : OracleComp SourceSpec _).IsQueryBoundP predicate qAccept) :
+    (acceptance : ∀ candidate, OracleComp.IsQueryBoundP
+      (SourceSpec.query (.inr candidate) : OracleComp SourceSpec _) predicate qAccept) :
     (program baseImpl kem setup selector).IsQueryBoundP (fun query => predicate (translated query))
       (qCreate + (qGeneration + (qWriter + qSelector)) + qAccept) := by
   have afterBound : ∀ index publicIdentity generated,

@@ -253,8 +253,8 @@ theorem initial_source {A N : Type} (fixed : FixedHkdfSha512NoSaltSource) (selec
     localLift (initialLocal (A := A) (N := N) fixed selectedMessage previousRoot response secrets) =
       PqxdhInitialNativeInitializer.initial fixed selectedMessage previousRoot response secrets := by
   funext state cache
-  simp only [localLift, initialLocal, PqxdhInitialNativeInitializer.initial, Functor.map_map]
-  rfl
+  change _ = (PqxdhInitialNativeInitializer.initial fixed selectedMessage previousRoot response secrets state).run cache
+  simp only [localLift, initialLocal, PqxdhInitialNativeInitializer.initial, StateT.run_map, Functor.map_map]
 
 /-- Initializer cache misses retain the original at-most32 uniform draws; repeated hits do not draw a replacement response. -/
 theorem initial_local_uniform {A N : Type} (fixed : FixedHkdfSha512NoSaltSource) (selectedMessage : Message)

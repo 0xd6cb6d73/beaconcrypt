@@ -62,14 +62,15 @@ theorem source (position : (targets selected).number.val = 1) :
       𝒟[ideal env baseImpl kem attachedVerify primitives program post targets selected] := by
   unfold PqxdhAdaptiveCoordinateSecrecy.targetIdeal PqxdhInitialSourceSampled.game ideal
   rw [position]
-  apply evalDist_bind_congr
+  apply evalDist_bind_congr_of_support
   intro context supported
-  apply evalDist_bind_congr' ($ᵗ HmacBlock)
+  apply evalDist_bind_congr ($ᵗ HmacBlock)
   intro initial
   cases context with
   | inl decision =>
-    exact (OracleComp.DeferredSampling.evalDist_bind_const_neverFails ($ᵗ PqxdhFullSecretInputKdf.FullOutput)
-      (by simp) (pure decision)).symm
+    apply evalDist_eq_of_evalSPMF_eq
+    exact (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure
+      ($ᵗ PqxdhFullSecretInputKdf.FullOutput) (pure decision)).symm
   | inr input =>
     have positive : 0 < input.number.val := by
       rw [PqxdhAuthenticatedEvolvingSecrecy.prior_position env baseImpl kem attachedVerify primitives program
@@ -93,8 +94,8 @@ theorem bound (position : (targets selected).number.val = 1)
     PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program post targets c hmac fallback ordinaryFallback selected := by
   have result := PqxdhAdaptiveCoordinateSecrecy.target_bound env baseImpl kem attachedVerify primitives program post targets c
     selected (by omega) compatible adapter functional hmac correct fallback ordinaryFallback
-  simpa only [ProbComp.boolDistAdvantage, probOutput_congr rfl
-    (source env baseImpl kem attachedVerify primitives program post targets selected position)] using result
+  simpa only [ProbComp.boolDistAdvantage,
+    source env baseImpl kem attachedVerify primitives program post targets selected position] using result
 
 end BeaconcryptCore.Computational.PqxdhAdaptiveFirstMaterial
 

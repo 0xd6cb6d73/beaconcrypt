@@ -121,9 +121,10 @@ theorem full_step (fixed : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl ba
         (nativeFull fixed baseImpl query).run (completeCache selected root cache) := by
   cases query with
   | inl query =>
-      change Prod.map id (completeCache selected root) <$>
-        ((fun answer => (answer, cache)) <$> baseImpl query) = _
-      rw [Functor.map_map]
+      simp only [labelledFull, nativeFull, QueryImpl.add_apply_inl,
+        QueryImpl.liftTarget_apply]
+      rw [StateT.run_liftM, StateT.run_liftM]
+      simp only [bind_pure_comp, Functor.map_map]
       rfl
   | inr query => exact native_step fixed selected root query cache
 

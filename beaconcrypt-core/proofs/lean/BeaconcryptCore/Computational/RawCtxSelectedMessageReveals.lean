@@ -91,7 +91,6 @@ theorem source_step (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (wr
       pure (interpretReply key request (step request state).1, (nativeState key (step request state).2, ambient)) := by
   simp only [RawCtxProtocolReveals.sourceImpl, StateT.run, nativeState, source_reply, step, interpret_note,
     observation_reply]
-  rfl
 
 /-- Emit the original API optional value when available; a returned hidden slot stops the source comparison before disclosure. -/
 def emit : (request : Request S B) → (RawCtxSelectedMessageFreshness.RevealSpec S B).Range request →
@@ -106,9 +105,16 @@ theorem emit_exact (key : RootOutput) (request : Request S B)
     (value : (RawCtxSelectedMessageFreshness.RevealSpec S B).Range request)
     (native : (RawCtxProtocolReveals.RevealSpec S B).Range request) (emitted : emit request value = some native) :
     interpretReply key request value = native := by
-  cases request <;> cases value <;> simp_all only [emit, interpretReply, mapOption, Option.some.injEq]
-  rename_i material
-  cases material <;> simp_all [interpret]
+  cases request with
+  | sendChain _ => exact Option.some.inj emitted
+  | receiveChain _ => exact Option.some.inj emitted
+  | skippedKey _ _ =>
+    cases value with
+    | none => exact Option.some.inj emitted
+    | some material =>
+      cases material with
+      | hidden _ => contradiction
+      | known _ => exact Option.some.inj emitted
 
 /-- Emission stops exactly for a successful hidden skipped-key lookup; rejection and every known alias remain ordinary replies. -/
 theorem stopped_iff (request : Request S B)

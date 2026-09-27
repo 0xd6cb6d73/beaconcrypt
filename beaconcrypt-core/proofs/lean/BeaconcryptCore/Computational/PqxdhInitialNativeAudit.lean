@@ -80,6 +80,8 @@ theorem query_erase (query : (Spec extra RatchetChain I D K X Response Shared S 
   simp only [PqxdhInitialNativeLog.handler, PqxdhInitialNativeLog.bare,
     PqxdhInitialNativeLog.liftExternal, PqxdhInitialNativeLog.erase, PqxdhInitialNativeLog.inputs,
     external, StateT.run, bind_assoc, pure_bind]
+  change _ = (((Prod.snd <$> initial secrets).run (state.1.1.1.1, state.1.2.1)).run state.1.2.2 >>= _)
+  rw [StateT.run_map, StateT.run_map]
   change (initial secrets (state.1.1.1.1, state.1.2.1) state.1.2.2 >>= fun a =>
       pure (a.1.1.2, (((a.1.2.1, state.1.1.1.2), state.1.1.2), (a.1.2.2, a.2)))) =
     (((fun a => ((a.1.1.2, a.1.2), a.2)) <$>

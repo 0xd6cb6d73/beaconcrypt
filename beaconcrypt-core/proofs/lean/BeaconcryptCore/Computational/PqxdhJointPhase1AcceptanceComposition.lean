@@ -539,8 +539,9 @@ theorem liftDynamic_query_bound {Result : Type} (client : OracleComp DynamicSpec
       rw [isQueryBoundP_query_bind_iff] at bounded
       change (simulateQ dynamicToSource (DynamicSpec.query query >>= next)).IsQueryBoundP predicate bound
       rw [simulateQ_query_bind]
-      change ((SourceSpec.query (.inl query) : OracleComp SourceSpec _) >>= fun answer =>
-        liftDynamic (next answer)).IsQueryBoundP predicate bound
+      change OracleComp.IsQueryBoundP
+        ((SourceSpec.query (.inl query) : OracleComp SourceSpec _) >>= fun answer =>
+          liftDynamic (next answer)) predicate bound
       rw [isQueryBoundP_query_bind_iff]
       exact ⟨bounded.1, fun answer => ih answer _ (bounded.2 answer)⟩
 
@@ -565,12 +566,14 @@ theorem oneSession_query_bound {Context : Type}
     (selector : Phase1Candidate → OracleComp SourceSpec Phase1Candidate)
     (predicate : SourceSpec.Domain → Prop) [DecidablePred predicate]
     (qCreate qSetup qWriter qSelector qAccept : ℕ)
-    (createBound : (SourceSpec.query (.inl (.inr .create)) : OracleComp SourceSpec _).IsQueryBoundP predicate qCreate)
+    (createBound : OracleComp.IsQueryBoundP
+      (SourceSpec.query (.inl (.inr .create)) : OracleComp SourceSpec _) predicate qCreate)
     (setupBound : ∀ publicIdentity, (setup publicIdentity).IsQueryBoundP predicate qSetup)
     (writerBound : ∀ index identity keys, (signingProgram index identity keys).IsQueryBoundP
       (fun query => predicate (.inl query)) qWriter)
     (selectorBound : ∀ bundle, (selector bundle).IsQueryBoundP predicate qSelector)
-    (acceptBound : ∀ report, (SourceSpec.query (.inr report) : OracleComp SourceSpec _).IsQueryBoundP predicate qAccept) :
+    (acceptBound : ∀ report, OracleComp.IsQueryBoundP
+      (SourceSpec.query (.inr report) : OracleComp SourceSpec _) predicate qAccept) :
     (oneSession setup selector).IsQueryBoundP predicate
       (qCreate + (qSetup + ((qWriter + qSelector) + qAccept))) := by
   apply isQueryBoundP_bind createBound
@@ -1050,7 +1053,6 @@ info: 'BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition.oneSe
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition.sessionBody_finalCandidate' depends on axioms: [propext,
- Classical.choice,
  Quot.sound]
 -/
 #guard_msgs in
@@ -1058,7 +1060,6 @@ info: 'BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition.sessi
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition.oneSession_finalCandidate' depends on axioms: [propext,
- Classical.choice,
  Quot.sound]
 -/
 #guard_msgs in

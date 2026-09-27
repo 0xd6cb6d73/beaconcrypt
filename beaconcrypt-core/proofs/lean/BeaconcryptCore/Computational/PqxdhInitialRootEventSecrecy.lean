@@ -92,7 +92,7 @@ theorem bound
     compatible adapter functional hmac sourceCorrect c.noSign c.noCreate fallback ordinaryFallback
     (1 + (7 + qPost * 67)) genericRootBound
   have endpoint := PqxdhInitialRootEventAccepted.uniform_source env attachedVerify primitives program post baseImpl kem selected number ancestors disclosed
-  simpa only [actual, loss, protocol_source, ProbComp.boolDistAdvantage, probOutput_congr rfl endpoint] using result
+  simpa only [actual, loss, protocol_source, ProbComp.boolDistAdvantage, endpoint] using result
 
 end BeaconcryptCore.Computational.PqxdhInitialRootEventSecrecy
 

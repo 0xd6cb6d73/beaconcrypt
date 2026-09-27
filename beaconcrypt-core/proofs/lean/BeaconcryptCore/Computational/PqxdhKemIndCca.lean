@@ -13,7 +13,7 @@ Query accounting separates the pre/post clients' public uniform queries, arbitra
 No ML-KEM algorithm, implementation, public-key injectivity, cross-key binding, or cross-key shared-secret uniqueness property is proved here. Honest recipient agreement remains the separately named generic KEM correctness assumption.
 -/
 
-open OracleSpec OracleComp ENNReal
+open OracleSpec OracleComp ENNReal MeasureTheory
 
 set_option relaxedAutoImplicit false
 set_option autoImplicit false
@@ -95,131 +95,149 @@ def oneKeyBranchMain
   oneKeyFinish kem runtime adversary preState b
 
 /-- Runtime distribution of a fixed source branch; `true` supplies the encapsulated secret and `false` supplies an independent uniform secret. -/
-def oneKeyBranch
+noncomputable def oneKeyBranch
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := SK))
     (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec)))
-    (adversary : OneKeyAdversary kem) (b : Bool) : SPMF Bool :=
+    (adversary : OneKeyAdversary kem) (b : Bool) : Measure Bool :=
   runtime.evalDist (oneKeyBranchMain kem runtime adversary b)
 
 /-- A fair hidden-bit game with a shared prefix has exactly the distance of its two fixed branches, provided both branches are total. -/
 theorem boolBias_sharedPrefix_eq_branchDist
-    {α : Type} (coin : SPMF Bool) (preState : SPMF α)
-    (finish : α → Bool → SPMF Bool)
-    (hcoinTrue : Pr[= true | coin] = 1 / 2)
-    (hcoinFalse : Pr[= false | coin] = 1 / 2)
-    (hreal : Pr[= true | preState >>= fun state => finish state true] +
-      Pr[= false | preState >>= fun state => finish state true] = 1)
-    (hrandom : Pr[= true | preState >>= fun state => finish state false] +
-      Pr[= false | preState >>= fun state => finish state false] = 1) :
-    (do
-      let state ← preState
-      let b ← coin
-      let z ← finish state b
-      pure (b == z)).boolBiasAdvantage =
-    (preState >>= fun state => finish state true).boolDistAdvantage
-      (preState >>= fun state => finish state false) := by
-  let game : SPMF Bool := do
-    let state ← preState
-    let b ← coin
-    let z ← finish state b
-    pure (b == z)
-  let real : SPMF Bool := preState >>= fun state => finish state true
-  let random : SPMF Bool := preState >>= fun state => finish state false
-  let branchGame : SPMF Bool :=
-    coin >>= fun b =>
-      (ite (b = true) real random) >>= fun z => pure (b == z)
-  have hgame : ∀ output : Bool,
-      Pr[= output | game] = Pr[= output | branchGame] := by
-    intro output
-    calc
-      Pr[= output | game] = Pr[= output | do
-        let state ← preState
-        let b ← coin
-        let z ← finish state b
-        pure (b == z)] := rfl
-      _ = Pr[= output | do
-            let b ← coin
-            let state ← preState
-            let z ← finish state b
-            pure (b == z)] :=
-              probOutput_bind_bind_swap preState coin
-                (fun state b => finish state b >>= fun z => pure (b == z)) output
-      _ = Pr[= output | branchGame] := by
-        apply probOutput_bind_congr' coin output
-        intro b
-        cases b <;> simp [real, random]
-  change game.boolBiasAdvantage = _
-  rw [show game.boolBiasAdvantage = branchGame.boolBiasAdvantage by
-    unfold SPMF.boolBiasAdvantage
-    rw [hgame true, hgame false]]
-  change branchGame.boolBiasAdvantage = real.boolDistAdvantage random
-  exact SPMF.boolBiasAdvantage_eq_boolDistAdvantage_coin_branch coin real random
-    hcoinTrue hcoinFalse hreal hrandom
+    {α : Type} [MeasurableSpace α] [DiscreteMeasurableSpace α]
+    (coin : Measure Bool) (preState : Measure α)
+    (finish : α → Bool → Measure Bool)
+    [IsFiniteMeasure coin] [IsFiniteMeasure preState]
+    (hcoinTrue : coin {true} = 1 / 2)
+    (hcoinFalse : coin {false} = 1 / 2)
+    (hreal : (preState.bind fun state => finish state true) {true} +
+      (preState.bind fun state => finish state true) {false} = 1)
+    (hrandom : (preState.bind fun state => finish state false) {true} +
+      (preState.bind fun state => finish state false) {false} = 1) :
+    (preState.bind fun state => coin.bind fun b =>
+      (finish state b).bind fun z => Measure.dirac (b == z)).boolBias =
+    (preState.bind fun state => finish state true).boolDist
+      (preState.bind fun state => finish state false) := by
+  let real : Measure Bool := preState.bind fun state => finish state true
+  let random : Measure Bool := preState.bind fun state => finish state false
+  let game : Measure Bool := preState.bind fun state => coin.bind fun b =>
+    (finish state b).bind fun z => Measure.dirac (b == z)
+  let branchGame : Measure Bool := coin.bind fun b =>
+    (if b then real else random).bind fun z => Measure.dirac (b == z)
+  have hswap : game = coin.bind fun b => preState.bind fun state =>
+      (finish state b).bind fun z => Measure.dirac (b == z) := by
+    exact Measure.bind_bind_swap preState coin
+      (measurable_from_prod_countable_left fun _ => Measurable.of_discrete)
+  have hbranch : (coin.bind fun b => preState.bind fun state =>
+      (finish state b).bind fun z => Measure.dirac (b == z)) = branchGame := by
+    apply Measure.bind_congr_right
+    filter_upwards [] with b
+    cases b
+    · change (preState.bind fun state => (finish state false).bind fun z =>
+          Measure.dirac (false == z)) =
+        random.bind fun z => Measure.dirac (false == z)
+      rw [Measure.bind_bind Measurable.of_discrete.aemeasurable
+        Measurable.of_discrete.aemeasurable]
+    · change (preState.bind fun state => (finish state true).bind fun z =>
+          Measure.dirac (true == z)) =
+        real.bind fun z => Measure.dirac (true == z)
+      rw [Measure.bind_bind Measurable.of_discrete.aemeasurable
+        Measurable.of_discrete.aemeasurable]
+  change game.boolBias = real.boolDist random
+  rw [hswap, hbranch]
+  exact Measure.boolBias_bind_coin coin real random hcoinTrue hcoinFalse hreal hrandom
 
 /-- The one-key source branch distance is exactly one generic KEM IND-CCA advantage, with coefficient one. -/
 theorem oneKey_indCCAAdvantage_eq_branchDist
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := SK))
     (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec)))
     (adversary : OneKeyAdversary kem)
-    (heval_pure : ∀ {α : Type} (a : α),
-      runtime.evalDist (pure a : OracleComp (unifSpec + baseSpec) α) = pure a)
-    (heval_bind : ∀ {α β : Type} (mx : OracleComp (unifSpec + baseSpec) α)
+    (heval_pure : ∀ {α : Type} [MeasurableSpace α] (a : α),
+      runtime.evalDist (pure a : OracleComp (unifSpec + baseSpec) α) =
+        Measure.dirac a)
+    (heval_bind : ∀ {α β : Type} [MeasurableSpace α] [MeasurableSpace β]
+      (mx : OracleComp (unifSpec + baseSpec) α)
       (f : α → OracleComp (unifSpec + baseSpec) β),
+      Measurable (fun a => runtime.evalDist (f a)) →
       runtime.evalDist (mx >>= f) =
-        runtime.evalDist mx >>= fun a => runtime.evalDist (f a))
-    (heval_liftProbComp : ∀ {α : Type} (pc : ProbComp α),
+        Measure.bind (runtime.evalDist mx) fun a => runtime.evalDist (f a))
+    (heval_liftProbComp : ∀ {α : Type} [MeasurableSpace α] (pc : ProbComp α),
       runtime.evalDist (runtime.liftProbComp pc) = 𝒟[pc])
     (hno_fail : ∀ (mx : OracleComp (unifSpec + baseSpec) Bool),
-      Pr[= true | runtime.evalDist mx] + Pr[= false | runtime.evalDist mx] = 1) :
+      runtime.evalDist mx {true} + runtime.evalDist mx {false} = 1) :
     kem.IND_CCA_Advantage runtime adversary.toINDCCA =
-      SPMF.boolDistAdvantage
-        (oneKeyBranch kem runtime adversary true)
+      (oneKeyBranch kem runtime adversary true).boolDist
         (oneKeyBranch kem runtime adversary false) := by
-  let coin : SPMF Bool := 𝒟[$ᵗ Bool]
-  let keygen : SPMF (MlKem768PublicKey × SK) := runtime.evalDist kem.keygen
-  let pre (pksk : MlKem768PublicKey × SK) : SPMF adversary.Context :=
-    runtime.evalDist (simulateQ (kem.IND_CCA_preChallengeImpl pksk.2)
-      (adversary.preChallenge pksk.1))
-  let finish (pksk : MlKem768PublicKey × SK) (context : adversary.Context)
-      (b : Bool) : SPMF Bool := do
-    let encapsulation ← runtime.evalDist (kem.encaps pksk.1)
-    let kRand ← 𝒟[$ᵗ MlKemSharedSecret]
-    runtime.evalDist (simulateQ
-      (kem.IND_CCA_postChallengeImpl pksk.2 encapsulation.1)
-      (adversary.postChallenge ⟨pksk.1, encapsulation.1, context⟩
-        (if b then encapsulation.2 else kRand)))
-  let preState : SPMF ((MlKem768PublicKey × SK) × adversary.Context) := do
-    let pksk ← keygen
-    let context ← pre pksk
-    return (pksk, context)
-  have hgame : kem.IND_CCA_Game runtime adversary.toINDCCA = (do
-      let state ← preState
-      let b ← coin
-      let z ← finish state.1 state.2 b
-      pure (b == z)) := by
-    simp only [KEMScheme.IND_CCA_Game, OneKeyAdversary.toINDCCA,
-      coin, keygen, pre, finish, preState, heval_bind, heval_pure, heval_liftProbComp,
+  letI : MeasurableSpace MlKem768PublicKey := ⊤
+  letI : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace MlKem768Ciphertext := ⊤
+  letI : DiscreteMeasurableSpace MlKem768Ciphertext := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace MlKemSharedSecret := ⊤
+  letI : DiscreteMeasurableSpace MlKemSharedSecret := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace SK := ⊤
+  letI : DiscreteMeasurableSpace SK := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace adversary.Context := ⊤
+  letI : DiscreteMeasurableSpace adversary.Context := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace (MlKem768PublicKey × SK) := ⊤
+  letI : DiscreteMeasurableSpace (MlKem768PublicKey × SK) := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⊤
+  letI : DiscreteMeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) :=
+    ⟨fun _ => by simp⟩
+  letI : MeasurableSpace (MlKem768PublicKey × adversary.Context) := ⊤
+  letI : DiscreteMeasurableSpace (MlKem768PublicKey × adversary.Context) :=
+    ⟨fun _ => by simp⟩
+  letI : MeasurableSpace (MlKem768PublicKey × SK × adversary.Context) := ⊤
+  letI : DiscreteMeasurableSpace (MlKem768PublicKey × SK × adversary.Context) :=
+    ⟨fun _ => by simp⟩
+  let : EvalDistSemantics (OracleComp (unifSpec + baseSpec)) := {
+    denote mx := runtime.evalDist mx
+    apply_univ_le_one mx := runtime.evalDist_apply_univ_le_one mx }
+  let : LawfulEvalDistSemantics (OracleComp (unifSpec + baseSpec)) := {
+    denote_pure a := heval_pure a
+    denote_bind mx f hf := heval_bind mx f hf }
+  have evalDist_eq_runtime {α : Type} [MeasurableSpace α]
+      (mx : OracleComp (unifSpec + baseSpec) α) :
+      𝒟[mx] = runtime.evalDist mx := rfl
+  have evalDist_liftProbComp {α : Type} [MeasurableSpace α] (pc : ProbComp α) :
+      𝒟[runtime.liftProbComp pc] = 𝒟[pc] := by
+    rw [evalDist_eq_runtime, heval_liftProbComp]
+  let coin : Measure Bool := 𝒟[$ᵗ Bool]
+  let finish (state : MlKem768PublicKey × SK × adversary.Context)
+      (b : Bool) : Measure Bool :=
+    𝒟[oneKeyFinish kem runtime adversary state b]
+  let preState : Measure (MlKem768PublicKey × SK × adversary.Context) :=
+    𝒟[oneKeyPrefix kem adversary]
+  have hgame : kem.IND_CCA_Game runtime adversary.toINDCCA =
+      preState.bind fun state => coin.bind fun b =>
+        (finish state b).bind fun z => Measure.dirac (b == z) := by
+    rw [KEMScheme.IND_CCA_Game, ← evalDist_eq_runtime]
+    simp only [OneKeyAdversary.toINDCCA,
+      coin, finish, preState, oneKeyPrefix, oneKeyFinish,
+      evalDist_bind_of_discrete, evalDist_pure, evalDist_liftProbComp,
       simulateQ_bind, simulateQ_pure, bind_assoc, pure_bind]
-  have hbranch (b : Bool) : oneKeyBranch kem runtime adversary b = (do
-      let state ← preState
-      finish state.1 state.2 b) := by
-    simp only [oneKeyBranch, oneKeyBranchMain, oneKeyPrefix, oneKeyFinish,
-      keygen, pre, finish, preState, heval_bind, heval_liftProbComp,
-      bind_assoc, pure_bind]
+    rw [Measure.bind_bind Measurable.of_discrete.aemeasurable
+      Measurable.of_discrete.aemeasurable]
+    simp only [Measure.bind_bind Measurable.of_discrete.aemeasurable
+      Measurable.of_discrete.aemeasurable, Measure.dirac_bind Measurable.of_discrete]
+  have hbranch (b : Bool) : oneKeyBranch kem runtime adversary b =
+      preState.bind fun state => finish state b := by
+    rw [oneKeyBranch, ← evalDist_eq_runtime]
+    change 𝒟[oneKeyPrefix kem adversary >>= fun state =>
+      oneKeyFinish kem runtime adversary state b] = _
+    rw [evalDist_bind_of_discrete]
   have hrealTotal :
-      Pr[= true | do let state ← preState; finish state.1 state.2 true] +
-        Pr[= false | do let state ← preState; finish state.1 state.2 true] = 1 := by
+      (preState.bind fun state => finish state true) {true} +
+        (preState.bind fun state => finish state true) {false} = 1 := by
     rw [← hbranch true]
     exact hno_fail _
   have hrandomTotal :
-      Pr[= true | do let state ← preState; finish state.1 state.2 false] +
-        Pr[= false | do let state ← preState; finish state.1 state.2 false] = 1 := by
+      (preState.bind fun state => finish state false) {true} +
+        (preState.bind fun state => finish state false) {false} = 1 := by
     rw [← hbranch false]
     exact hno_fail _
   unfold KEMScheme.IND_CCA_Advantage
   rw [hgame, hbranch true, hbranch false]
   exact boolBias_sharedPrefix_eq_branchDist coin preState
-    (fun state b => finish state.1 state.2 b)
+    finish
     (by simp [coin, Fintype.card_bool]) (by simp [coin, Fintype.card_bool])
     hrealTotal hrandomTotal
 
@@ -346,7 +364,7 @@ theorem OneKeyAdversary.toINDCCA_makesAtMostQueries_iff
       simpa only [adversary.toINDCCA_pre_queryBound_iff] using hbounds.1 pk
     · intro transcript kStar
       rcases transcript with ⟨pk, cStar, context⟩
-      simpa only [adversary.toINDCCA_post_queryBound_iff] using
+      simpa only [OneKeyAdversary.toINDCCA] using
         hbounds.2 (pk, context) cStar kStar
   · intro hbounds
     constructor
@@ -469,9 +487,9 @@ theorem indCCA_postChallengeImpl_nonchallenge
   simp [hne]
 
 /-- The separate honest-recipient experiment using one key generation, one encapsulation, and one direct decapsulation. -/
-def mlKem768RecipientCorrectnessExp
+noncomputable def mlKem768RecipientCorrectnessExp
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := SK))
-    (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec))) : SPMF Bool :=
+    (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec))) : Measure Bool :=
   runtime.evalDist do
     let (pk, sk) ← kem.keygen
     let (cStar, kReal) ← kem.encaps pk
@@ -482,7 +500,7 @@ def mlKem768RecipientCorrectnessExp
 def MlKem768RecipientCorrectness
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := SK))
     (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec))) : Prop :=
-  Pr[= true | mlKem768RecipientCorrectnessExp kem runtime] = 1
+  mlKem768RecipientCorrectnessExp kem runtime {true} = 1
 
 theorem mlKem768RecipientCorrectness_iff_perfectlyCorrect
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := SK))
@@ -491,33 +509,111 @@ theorem mlKem768RecipientCorrectness_iff_perfectlyCorrect
       kem.PerfectlyCorrect runtime := by
   rfl
 
-/-- Probability-one recipient correctness identifies every supported direct honest decapsulation with the encapsulator's secret. -/
+/-- A positive-mass path through a perfectly correct KEM cannot end in a different secret. -/
+private theorem measure_bind_apply_singleton_ne_zero
+    {α β : Type} [MeasurableSpace α] [DiscreteMeasurableSpace α]
+    [MeasurableSpace β] [MeasurableSingletonClass β]
+    (μ : Measure α) (f : α → Measure β) (a : α) (b : β)
+    (ha : μ {a} ≠ 0) (hb : f a {b} ≠ 0) : (μ.bind f) {b} ≠ 0 := by
+  rw [Measure.bind_apply (measurableSet_singleton b) Measurable.of_discrete.aemeasurable]
+  apply ne_of_gt
+  rw [lintegral_pos_iff_support Measurable.of_discrete]
+  apply lt_of_lt_of_le (pos_iff_ne_zero.mpr ha)
+  apply measure_mono
+  intro x hx
+  have hxa : x = a := Set.mem_singleton_iff.mp hx
+  subst x
+  exact hb
+
+local instance : MeasurableSpace MlKem768PublicKey := ⊤
+local instance : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
+local instance : MeasurableSpace MlKem768Ciphertext := ⊤
+local instance : DiscreteMeasurableSpace MlKem768Ciphertext := ⟨fun _ => by simp⟩
+local instance : MeasurableSpace MlKemSharedSecret := ⊤
+local instance : DiscreteMeasurableSpace MlKemSharedSecret := ⟨fun _ => by simp⟩
+local instance : MeasurableSpace SK := ⊤
+local instance : DiscreteMeasurableSpace SK := ⟨fun _ => by simp⟩
+local instance : MeasurableSpace (MlKem768PublicKey × SK) := ⊤
+local instance : DiscreteMeasurableSpace (MlKem768PublicKey × SK) := ⟨fun _ => by simp⟩
+local instance : MeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⊤
+local instance : DiscreteMeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) :=
+  ⟨fun _ => by simp⟩
+local instance : MeasurableSpace (Option MlKemSharedSecret) := ⊤
+local instance : DiscreteMeasurableSpace (Option MlKemSharedSecret) := ⟨fun _ => by simp⟩
+
+/-- Probability-one recipient correctness identifies every positive-mass direct honest decapsulation with the encapsulator's secret. -/
 theorem mlKem768RecipientCorrectness_recovered_eq
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := SK))
     (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec)))
-    (heval_pure : ∀ {α : Type} (a : α),
-      runtime.evalDist (pure a : OracleComp (unifSpec + baseSpec) α) = pure a)
-    (heval_bind : ∀ {α β : Type} (mx : OracleComp (unifSpec + baseSpec) α)
+    (heval_pure : ∀ {α : Type} [MeasurableSpace α] (a : α),
+      runtime.evalDist (pure a : OracleComp (unifSpec + baseSpec) α) =
+        Measure.dirac a)
+    (heval_bind : ∀ {α β : Type} [MeasurableSpace α] [MeasurableSpace β]
+      (mx : OracleComp (unifSpec + baseSpec) α)
       (f : α → OracleComp (unifSpec + baseSpec) β),
+      Measurable (fun a => runtime.evalDist (f a)) →
       runtime.evalDist (mx >>= f) =
-        runtime.evalDist mx >>= fun a => runtime.evalDist (f a))
+        Measure.bind (runtime.evalDist mx) fun a => runtime.evalDist (f a))
     (hcorrect : MlKem768RecipientCorrectness kem runtime)
     {pk : MlKem768PublicKey} {sk : SK}
-    (hkeygen : (pk, sk) ∈ support (runtime.evalDist kem.keygen))
+    (hkeygen : runtime.evalDist kem.keygen {(pk, sk)} ≠ 0)
     {cStar : MlKem768Ciphertext} {kReal : MlKemSharedSecret}
-    (hencaps : (cStar, kReal) ∈ support (runtime.evalDist (kem.encaps pk)))
+    (hencaps : runtime.evalDist (kem.encaps pk) {(cStar, kReal)} ≠ 0)
     {recovered : Option MlKemSharedSecret}
-    (hdecaps : recovered ∈ support (runtime.evalDist (kem.decaps sk cStar))) :
+    (hdecaps : runtime.evalDist (kem.decaps sk cStar) {recovered} ≠ 0) :
     recovered = some kReal := by
-  have hmem : decide (recovered = some kReal) ∈
-      support (runtime.evalDist kem.CorrectExp) := by
-    simp only [KEMScheme.CorrectExp, heval_bind, heval_pure, support_bind,
-      support_pure, Set.mem_iUnion, Set.mem_singleton_iff, decide_eq_decide,
-      exists_prop, Prod.exists]
-    exact ⟨pk, sk, hkeygen, cStar, kReal, hencaps, recovered, hdecaps, Iff.rfl⟩
-  simpa [MlKem768RecipientCorrectness, mlKem768RecipientCorrectnessExp,
-    ((probOutput_eq_one_iff
-      (mx := runtime.evalDist kem.CorrectExp) (x := true)).mp hcorrect).2] using hmem
+  letI : MeasurableSpace MlKem768PublicKey := ⊤
+  letI : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace MlKem768Ciphertext := ⊤
+  letI : DiscreteMeasurableSpace MlKem768Ciphertext := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace MlKemSharedSecret := ⊤
+  letI : DiscreteMeasurableSpace MlKemSharedSecret := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace SK := ⊤
+  letI : DiscreteMeasurableSpace SK := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace (MlKem768PublicKey × SK) := ⊤
+  letI : DiscreteMeasurableSpace (MlKem768PublicKey × SK) := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⊤
+  letI : DiscreteMeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) :=
+    ⟨fun _ => by simp⟩
+  letI : MeasurableSpace (Option MlKemSharedSecret) := ⊤
+  letI : DiscreteMeasurableSpace (Option MlKemSharedSecret) := ⟨fun _ => by simp⟩
+  let : EvalDistSemantics (OracleComp (unifSpec + baseSpec)) := {
+    denote mx := runtime.evalDist mx
+    apply_univ_le_one mx := runtime.evalDist_apply_univ_le_one mx }
+  let : LawfulEvalDistSemantics (OracleComp (unifSpec + baseSpec)) := {
+    denote_pure a := heval_pure a
+    denote_bind mx f hf := heval_bind mx f hf }
+  have evalDist_eq_runtime {α : Type} [MeasurableSpace α]
+      (mx : OracleComp (unifSpec + baseSpec) α) :
+      𝒟[mx] = runtime.evalDist mx := rfl
+  have hkeygen' : 𝒟[kem.keygen] {(pk, sk)} ≠ 0 := by
+    rwa [evalDist_eq_runtime]
+  have hencaps' : 𝒟[kem.encaps pk] {(cStar, kReal)} ≠ 0 := by
+    rwa [evalDist_eq_runtime]
+  have hdecaps' : 𝒟[kem.decaps sk cStar] {recovered} ≠ 0 := by
+    rwa [evalDist_eq_runtime]
+  have hmem : 𝒟[kem.CorrectExp] {decide (recovered = some kReal)} ≠ 0 := by
+    rw [KEMScheme.CorrectExp, evalDist_bind_of_discrete]
+    refine measure_bind_apply_singleton_ne_zero _ _ (pk, sk) _ hkeygen' ?_
+    rw [evalDist_bind_of_discrete]
+    refine measure_bind_apply_singleton_ne_zero _ _ (cStar, kReal) _ hencaps' ?_
+    rw [evalDist_bind_of_discrete]
+    refine measure_bind_apply_singleton_ne_zero _ _ recovered _ hdecaps' ?_
+    rw [evalDist_pure]
+    simp
+  have htrue : 𝒟[kem.CorrectExp] {true} = 1 := by
+    rw [evalDist_eq_runtime]
+    exact hcorrect
+  have hfalse : 𝒟[kem.CorrectExp] {false} = 0 := by
+    have hmass := evalDist_apply_univ_le_one kem.CorrectExp
+    rw [← Measure.apply_true_add_apply_false, htrue] at hmass
+    apply le_zero_iff.mp
+    apply (ENNReal.add_le_add_iff_left ENNReal.one_ne_top).mp
+    simpa using hmass
+  by_contra hne
+  have hdecide : decide (recovered = some kReal) = false := by simp [hne]
+  rw [hdecide, hfalse] at hmem
+  exact hmem rfl
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhKemIndCca.oneKey_indCCAAdvantage_eq_branchDist' depends on axioms: [propext,

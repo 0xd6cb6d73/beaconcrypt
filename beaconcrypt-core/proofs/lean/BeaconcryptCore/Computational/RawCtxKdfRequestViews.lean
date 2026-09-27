@@ -91,7 +91,15 @@ theorem project_bytes (request : Request) (output : FullOutput) :
 /-- Every possible typed reply has its requested fixed width. -/
 theorem reply_width (request : Request) (reply : Spec.Range request) :
     (replyBytes request reply).length = width request := by
-  cases request <;> simp [replyBytes, width, absBytes]
+  cases request with
+  | initial input =>
+    have length : reply.bytes.val.length = 64 := by simpa using reply.bytes.property
+    simpa only [replyBytes, width, absBytes, List.length_map] using length
+  | ongoing request =>
+    have length : reply.bytes.val.length = 76 := by simpa using reply.bytes.property
+    simpa only [replyBytes, width, absBytes, List.length_map] using length
+  | publicView request =>
+    simpa only [replyBytes, width, List.Vector.toList] using reply.property
 
 /-- An initial view and an ongoing view at its exact input/info are one table address. -/
 theorem initial_ongoing_address (input : Std.Array Std.U8 32#usize) :

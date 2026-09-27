@@ -65,6 +65,7 @@ def erase (packet : PqxdhInitialSampledParent.Packet (extra := extra) (M := M) (
   | .inl decision => .inl decision
   | .inr ⟨start, value⟩ => .inr (start, Sum.map id Subtype.val value.val)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Both actual support annotations erase forwards to the same sampler, without filtering the prior or the native continuation. -/
 theorem sample_erase :
     erase source writer sender route decode depth <$>

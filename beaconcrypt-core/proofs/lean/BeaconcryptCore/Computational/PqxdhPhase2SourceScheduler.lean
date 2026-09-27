@@ -130,7 +130,6 @@ theorem compiler_step
     simp only [simulateQ_spec_query] at complete
     rw [complete]
     simp only [ccaCoins, simulateQ_map, Functor.map_map]
-    exact (simulateQ_map _ _ _).symm
   case inl.inr =>
     simp only [borrowed, QueryImpl.flattenStateT, QueryImpl.mapStateTBase, compiler,
       PqxdhProtocolSelector.compiler, ordinary, StateT.run, StateT.mk, bind_pure_comp]
@@ -141,7 +140,6 @@ theorem compiler_step
             (liftM ((SelectorSpec baseSpec).query forwarded)))).run identities = _
     rw [simulateQ_map, StateT.run_map, simulateQ_spec_query]
     simp only [Functor.map_map, identityState, packState, PqxdhPhase2SharedIdentity.pack, StateT.run]
-    rfl
   case inr =>
     change (fun result => (result.1, packState result.2.1 result.2.2)) <$>
       ((((borrowedSelector attachedVerify primitives count).mapStateTBase

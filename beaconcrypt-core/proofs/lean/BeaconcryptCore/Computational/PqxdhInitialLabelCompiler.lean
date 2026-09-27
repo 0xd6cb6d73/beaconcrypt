@@ -41,7 +41,12 @@ theorem source_step (fixed : FixedHkdfSha512NoSaltSource) (query : Spec.Domain) 
       | known root => rfl
       | family message =>
           simp only [source, simulateQ_map, simulateQ_spec_query, StateT.run_map]
-          rfl
+          change (fun result => (realInitial fixed result.1, result.2)) <$>
+              (uniformImpl (.inr message)).run cache =
+            (do
+              let result ← (uniformImpl (.inr message)).run cache
+              pure (realInitial fixed result.1, result.2))
+          rw [bind_pure_comp]
 
 /-- The complete original uniform-root/real-initializer computation is retained for every adaptive response-only client and full root cache. -/
 theorem source_program (fixed : FixedHkdfSha512NoSaltSource) (client : OracleComp Spec Result)

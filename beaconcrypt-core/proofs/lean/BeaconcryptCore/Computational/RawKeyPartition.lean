@@ -39,26 +39,26 @@ noncomputable def partition {Value : Type} {count : Nat} (target : Fin (count + 
 
 /-- The selected draw and remaining-family draw reproduce the actual full-family distribution. -/
 theorem sampled_partition (count : Nat) (target : Fin (count + 1)) :
-    𝒟[do let key ← $ᵗ CtxRomAuth.CtxKey
+    𝒮[do let key ← $ᵗ CtxRomAuth.CtxKey
           let others ← $ᵗ (Fin count → CtxRomAuth.CtxKey)
           pure (join target key others)] =
-      𝒟[$ᵗ (Fin (count + 1) → CtxRomAuth.CtxKey)] := by
-  have transported := @evalDist_uniformSample (Fin (count + 1) → CtxRomAuth.CtxKey)
+      𝒮[$ᵗ (Fin (count + 1) → CtxRomAuth.CtxKey)] := by
+  have transported := @evalSPMF_uniformSample (Fin (count + 1) → CtxRomAuth.CtxKey)
     (SampleableType.ofEquiv (partition target)) inferInstance inferInstance
-  change 𝒟[partition target <$> (Prod.mk <$> ($ᵗ CtxRomAuth.CtxKey) <*> ($ᵗ (Fin count → CtxRomAuth.CtxKey)))] = _ at transported
+  change 𝒮[partition target <$> (Prod.mk <$> ($ᵗ CtxRomAuth.CtxKey) <*> ($ᵗ (Fin count → CtxRomAuth.CtxKey)))] = _ at transported
   simpa only [seq_eq_bind_map, bind_map_left, map_bind, Functor.map_map, bind_pure_comp, partition, Equiv.coe_fn_mk] using
-    transported.trans (evalDist_uniformSample (Fin (count + 1) → CtxRomAuth.CtxKey)).symm
+    transported.trans (evalSPMF_uniformSample (Fin (count + 1) → CtxRomAuth.CtxKey)).symm
 
 /-- The sampling partition is valid under every complete evaluated continuation. -/
 theorem partition_continuation {Result : Type} (count : Nat) (target : Fin (count + 1))
     (next : (Fin (count + 1) → CtxRomAuth.CtxKey) → ProbComp Result) :
-    𝒟[($ᵗ (Fin (count + 1) → CtxRomAuth.CtxKey)) >>= next] =
-      𝒟[do let key ← $ᵗ CtxRomAuth.CtxKey
+    𝒮[($ᵗ (Fin (count + 1) → CtxRomAuth.CtxKey)) >>= next] =
+      𝒮[do let key ← $ᵗ CtxRomAuth.CtxKey
             let others ← $ᵗ (Fin count → CtxRomAuth.CtxKey)
             next (join target key others)] := by
-  have complete := congrArg (fun distribution => distribution >>= fun keys => 𝒟[next keys])
+  have complete := congrArg (fun distribution => distribution >>= fun keys => 𝒮[next keys])
     (sampled_partition count target).symm
-  simpa only [← evalDist_bind, bind_assoc, pure_bind] using complete
+  simpa only [← evalSPMF_bind, bind_assoc, pure_bind] using complete
 
 /-- Updating the selected state changes exactly its original source entry. -/
 theorem join_selected_update {Value : Type} {count : Nat} (target : Fin (count + 1))
@@ -75,7 +75,13 @@ theorem join_other_update {Value : Type} {count : Nat} (target : Fin (count + 1)
       Function.update (join target selected others) (target.succAbove other) updated := by
   funext index
   obtain ⟨position, rfl⟩ := (finSuccEquiv' target).symm.surjective index
-  cases position <;> simp [join, Function.update]
+  cases position with
+  | none => simp [join, Function.update]
+  | some position =>
+    by_cases equal : position = other
+    · subst position
+      simp [join, Function.update]
+    · simp [join, Function.update, equal]
 
 /-- Empty identical initial states reconstruct the complete source family. -/
 theorem join_constant {Value : Type} {count : Nat} (target : Fin (count + 1)) (value : Value) :

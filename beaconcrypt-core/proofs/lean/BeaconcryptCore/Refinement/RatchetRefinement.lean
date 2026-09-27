@@ -206,7 +206,9 @@ theorem advance_receive_cacheSeqs (st : RatchetState)
     simp only [List.mem_range] at hi
     rw [List.getElem!_eq_getElem?_getD, List.getElem!_eq_getElem?_getD,
       List.getElem?_set_ne (by omega)]
-  · rw [List.getElem!_eq_getElem?_getD, List.getElem?_set_self (by simp; omega)]
+  · rw [List.getElem!_eq_getElem?_getD, List.getElem?_set_self (by
+      rw [st.receive_cache.entries.property]
+      simpa only [U8.cast_Usize_val_eq, UScalar.ofNatCore_val_eq] using hlen)]
     simpa using hzval
 
 /-- `k` key derivations append the `k` next sequence numbers to the cache. -/

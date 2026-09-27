@@ -71,7 +71,8 @@ theorem finish_map (kem : K → K') (control : pqxdh.BeaconInitSent) (state : St
   | none => rfl
   | some staged =>
     simp only [PqxdhBeaconPhase2Publication.finish, PqxdhBeaconPhase1Publication.mapState]
-    split_ifs <;> rfl
+    split_ifs <;> simp_all [PqxdhBeaconPhase2Preparation.abort,
+      PqxdhBeaconPhase2Publication.publish, PqxdhBeaconPhase1Publication.mapPhase]
 
 def full (kem : K → K') :
     QueryImpl (PqxdhBeaconPhase2Publication.FullSpec I D K X Response)

@@ -59,11 +59,12 @@ theorem real_source {Context Result : Type} (source : FixedHkdfSha512NoSaltSourc
 theorem random_source {Context Result : Type} (sample : ProbComp (Context × RootOutput))
     (resume : Continue Context Result) :
     𝒟[independentFullGame (sampler sample) (observer resume)] = 𝒟[random sample resume] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [independentFullGame, sampler, bind_map_left, random]
-  refine evalDist_bind_congr' sample fun pair => ?_
+  refine evalSPMF_bind_congr' sample fun pair => ?_
   have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>= fun output =>
-    𝒟[observe resume pair.1 (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform
-  simpa only [← evalDist_bind, bind_map_left, observer] using projected
+    𝒮[observe resume pair.1 (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform
+  simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
 
 /-- All source continuation effects occur before the collision decision; even failure or adaptive stopping does not increase the uniform64 half-equality probability. -/
 theorem random_bound {Context Result : Type} (sample : ProbComp (Context × RootOutput))
@@ -94,7 +95,7 @@ theorem primitive_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltS
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp (Context × RootOutput)) (resume : Continue Context Result) :
     (real source sample resume).boolDistAdvantage (random sample resume) ≤ reductionLoss hmac sample resume := by
-  have ideal := OracleComp.probOutput_congr (x := true) rfl (random_source sample resume)
+  have ideal := random_source sample resume
   simpa only [real_source, ProbComp.boolDistAdvantage, ideal, reductionLoss] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet (sampler sample) (observer resume)
 
@@ -104,9 +105,13 @@ theorem source_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSour
     (sample : ProbComp (Context × RootOutput)) (resume : Continue Context Result) :
     Pr[= true | real source sample resume] ≤
       (1 : ENNReal) / (2 ^ 256 : ENNReal) + ENNReal.ofReal (reductionLoss hmac sample resume) := by
-  exact (ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage (real source sample resume) (random sample resume)).trans
-    (add_le_add (random_bound sample resume)
-      (ENNReal.ofReal_le_ofReal (primitive_bound source hmac correct sample resume)))
+  have randomMeasure : 𝒟[random sample resume] {true} ≤ (1 : ENNReal) / (2 ^ 256 : ENNReal) := by
+    simpa only [evalDist_apply_singleton] using random_bound sample resume
+  have result := (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+    (real source sample resume) (random sample resume)).trans
+      (add_le_add randomMeasure
+        (ENNReal.ofReal_le_ofReal (primitive_bound source hmac correct sample resume)))
+  simpa only [evalDist_apply_singleton] using result
 
 /-- The bad event is literal equality of the two actual initial sending chains when the original native constructors return. -/
 theorem native_event (c : Pqxdh.Crypto) (response : Response) (beacon server : ConcreteRatchetKernel)
@@ -212,7 +217,7 @@ end BeaconcryptCore.Computational.RawCtxInitialSendAlias
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxInitialSendAlias.native_event
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxInitialSendAlias.sampler_uniform' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxInitialSendAlias.sampler_uniform' depends on axioms: [propext] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxInitialSendAlias.sampler_uniform
 

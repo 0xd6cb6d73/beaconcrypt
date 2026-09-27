@@ -287,6 +287,7 @@ theorem retainedRoutedGame_distance_le_prefix (decode : RawDecoder) (c : Pqxdh.C
     tvDist (retainedRoutedGame decode c adversary)
       (AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary) ≤
       Pr[RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary].toReal := by
+  simp only [retainedRoutedGame, AdaptiveCtxRetainedKey.retainedIndependentGame, bind_pure_comp]
   have convex := tvDist_bind_left_le ($ᵗ CtxKey)
     (fun key => (Prod.mk key) <$> splitGame decode c key adversary)
     (fun key => (Prod.mk key) <$> independentGame decode c key adversary)
@@ -301,7 +302,6 @@ theorem retainedRoutedGame_distance_le_prefix (decode : RawDecoder) (c : Pqxdh.C
       exact mul_le_mul_of_nonneg_left ((tvDist_map_le (Prod.mk key) _ _).trans pointwise)
         ENNReal.toReal_nonneg
     _ = _ := by
-      unfold AdaptiveCtxRetainedKey.retainedIndependentGame
       simp only [bind_pure_comp, probEvent_bind_eq_tsum, probEvent_map]
       rw [tsum_fintype, ENNReal.toReal_sum]
       · simp only [Function.comp_def, RetainedPrefix, ENNReal.toReal_mul]

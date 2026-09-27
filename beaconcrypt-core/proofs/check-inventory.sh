@@ -27,7 +27,7 @@ while IFS=$'\t' read -r category expected path extra ||
 	[[ -n "${category:-}${expected:-}${path:-}${extra:-}" ]]; do
 	[[ -z "${category:-}" || "$category" == \#* ]] && continue
 	[[ -z "${extra:-}" ]] || fail "malformed manifest entry for $path"
-	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|inventory|lean-control|validation)$ ]] ||
+	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|inventory|lean-control|lean-dependency-overlay|validation)$ ]] ||
 		fail "unknown manifest category: $category"
 	[[ "$expected" =~ ^[0-9a-f]{64}$ ]] || fail "invalid SHA-256 for $path"
 	[[ -n "$path" && -f "$path" ]] || fail "missing reviewed file: $path"
@@ -52,6 +52,7 @@ declare -A expected_category_counts=(
 	[handwritten-proverif]=86
 	[inventory]=2
 	[lean-control]=12
+	[lean-dependency-overlay]=4
 	[validation]=13
 )
 for category in "${!expected_category_counts[@]}"; do
@@ -194,6 +195,14 @@ printf '%s\n' \
 	proofs/lean/lean-toolchain \
 	proofs/lean/pqxdh_spec.md > "$tmp_dir/lean-control"
 compare_set lean-control "$tmp_dir/lean-control"
+
+printf '%s\n' \
+	proofs/lean/apply-dependency-patches.sh \
+	proofs/lean/patches/README.md \
+	proofs/lean/patches/aeneas-lean-4.34.patch \
+	proofs/lean/patches/hax-lean-4.34.patch \
+	> "$tmp_dir/lean-dependency-overlay"
+compare_set lean-dependency-overlay "$tmp_dir/lean-dependency-overlay"
 
 require_line_count() {
 	local expected="$1"
@@ -1736,9 +1745,9 @@ for theorem_name in \
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
 		"$vcvio_pilot" "VCVio feasibility theorem ${theorem_name}"
 done
-require_line_count 1 '^rev = "cbd4144b51d92da00dd50f05e068b2348fa6e529"$' \
+require_line_count 1 '^rev = "98dc1089129086b776129c79d88c0c561b8d8d1a"$' \
 	proofs/lean/lakefile.toml \
-	"immutable VCVio v4.31 dependency pin"
+	"immutable VCVio v4.34.0 dependency pin"
 
 pqxdh_joint_kdf=proofs/lean/BeaconcryptCore/Computational/PqxdhJointKdf.lean
 for declaration in JointKdfAddress ProductionHkdfPrefixConsistent; do
@@ -1779,7 +1788,7 @@ for theorem_name in hiddenRootIKM_length hiddenRootIKM_injective \
 	hiddenRootReductionMain_symmetric_query_bound hiddenRootReductionMain_stream_query_bound \
 	hiddenRootReductionMain_no_untyped_stream_queries \
 	hiddenRootReduction_no_untyped_stream_queries \
-	evalDist_first32_uniformJointKdfStream \
+	evalSPMF_first32_uniformJointKdfStream \
 	jointKdfSingletonProgrammed_tracking_tvDist_le_bad \
 	hiddenRootStreamCandidates_length_le probEvent_uniformHiddenRoot_candidateHit_le \
 	tvDist_hiddenRootSharedRandomGame_independentGame_le \
@@ -1804,16 +1813,16 @@ for definition in sourceQF sourceQS sourceQN sourceQStream sourceQ32; do
 	require_line_count 1 "^def ${definition}( |$)" \
 		"$pqxdh_projection_collisions" "PQXDH projection-collision accounting ${definition}"
 done
-for theorem_name in firstCoord_ne_secondCoord evalDist_split_uniformJointKdfStream \
+for theorem_name in firstCoord_ne_secondCoord evalSPMF_split_uniformJointKdfStream \
 	initial_firstCoord_eq_step_firstCoord initial_secondCoord_eq_step_secondCoord \
 	bad32_iff_projectionCacheBad32 bad12_iff_projectionCacheBad12 \
 	projectionCoordCachingLoggingImpl_simulateQ_invariant \
 	projectionCoordCachingLoggingImpl_simulateQ_cache_marginal \
 	probEvent_projectionCacheBad32_le_birthday probEvent_projectionCacheBad12_le_birthday \
-	sourceProjectionCollision_random_le evalDist_fixedJointStreamRandom_eq_eagerCoordinates \
-	evalDist_projectionCoordUnifiedRandom_prefetch_irrelevant \
-	evalDist_sourceKdfEagerCoordinate_eq_deferred \
-	evalDist_sourceProjectionObservedFullRandom_eq_deferred \
+	sourceProjectionCollision_random_le evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates \
+	evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant \
+	evalSPMF_sourceKdfEagerCoordinate_eq_deferred \
+	evalSPMF_sourceProjectionObservedFullRandom_eq_deferred \
 	probEvent_sourceProjectionCollision_fullRandom_eq_cache \
 	sourceProjectionCollisionReduction_uniform_query_bound \
 	sourceProjectionCollisionReduction_stream_query_bound \
@@ -1884,7 +1893,7 @@ for theorem_name in boolBias_sharedPrefix_eq_branchDist \
 done
 require_line_count 1 '^    kem\.IND_CCA_Advantage runtime adversary\.toINDCCA =$' \
 	"$pqxdh_kem_indcca" "PQXDH ML-KEM factor-one generic IND-CCA endpoint"
-require_line_count 1 '^        \(oneKeyBranch kem runtime adversary true\)$' \
+require_line_count 1 '^      \(oneKeyBranch kem runtime adversary true\)\.boolDist$' \
 	"$pqxdh_kem_indcca" "PQXDH ML-KEM real branch orientation"
 require_line_count 1 '^        \(oneKeyBranch kem runtime adversary false\) := by$' \
 	"$pqxdh_kem_indcca" "PQXDH ML-KEM uniform branch orientation"

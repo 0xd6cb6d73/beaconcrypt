@@ -24,17 +24,21 @@ def validationAccept (c : Pqxdh.Crypto) (nonce : CtxNonce) {qHash : ℕ}
   cases response with
   | none => rfl
   | some ciphertext =>
+    have hits :
+        (ctxValidationTagProbeVector c nonce probes).toList.any
+            (fun candidate => candidate == some (modifiedNonceAeadCiphertextTag ciphertext)) = true ↔
+          CtxValidationCiphertextHit c nonce probes ciphertext := by
+      simp only [List.any_eq_true, beq_iff_eq, CtxValidationCiphertextHit, CtxValidationTagHit]
+      constructor
+      · rintro ⟨candidate, member, equal⟩
+        obtain ⟨index, selected⟩ := List.mem_iff_get.mp member
+        refine ⟨⟨index.val, by simpa using index.isLt⟩, ?_⟩
+        exact selected.trans equal
+      · rintro ⟨index, selected⟩
+        refine ⟨_, ?_, selected⟩
+        exact List.get_mem _ _
     apply Bool.eq_iff_iff.mpr
-    simp only [validationAccept, List.any_eq_true, beq_iff_eq,
-      ctxValidationAccept, decide_eq_true_eq, CtxValidationCiphertextHit, CtxValidationTagHit]
-    constructor
-    · rintro ⟨candidate, member, equal⟩
-      obtain ⟨index, selected⟩ := List.mem_iff_get.mp member
-      refine ⟨⟨index.val, by simpa using index.isLt⟩, ?_⟩
-      exact selected.trans equal
-    · rintro ⟨index, selected⟩
-      refine ⟨_, ?_, selected⟩
-      exact List.get_mem _ _
+    simpa only [validationAccept, ctxValidationAccept, decide_eq_true_eq] using hits
 
 /-- The decision scans exactly the bounded candidate vector, with no search of the key universe. -/
 theorem validationCandidates_length (c : Pqxdh.Crypto) (nonce : CtxNonce) {qHash : ℕ}
@@ -152,8 +156,10 @@ theorem probEvent_le_add_ofReal_tvDist {Result : Type} (left right : ProbComp Re
   let decideEvent := fun result => decide (event result)
   have comparison := ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage
     (decideEvent <$> left) (decideEvent <$> right)
-  have variation : (decideEvent <$> left).boolDistAdvantage (decideEvent <$> right) ≤ tvDist left right :=
-    (abs_probOutput_toReal_sub_le_tvDist _ _).trans (tvDist_map_le decideEvent left right)
+  have variation : (decideEvent <$> left).boolDistAdvantage (decideEvent <$> right) ≤ tvDist left right := by
+    rw [ProbComp.boolDistAdvantage]
+    simpa only [evalDist_apply_singleton] using
+      (abs_probOutput_toReal_sub_le_tvDist _ _).trans (tvDist_map_le decideEvent left right)
   calc
     Pr[event | left] ≤ Pr[event | right] +
         ENNReal.ofReal ((decideEvent <$> left).boolDistAdvantage (decideEvent <$> right)) := by

@@ -37,7 +37,7 @@ theorem send_total (kernel : KernelOf Chain) (context : RawCtxSourceSend.SealCon
     exact (isQueryBoundP_true_iff _ _).mp ((isQueryBoundP_query_iff _ _ _).mpr (by decide))
 
 private theorem one_query {κ : Type} {spec : OracleSpec κ} (query : spec.Domain) :
-    (spec.query query : OracleComp spec (spec.Range query)).IsTotalQueryBound 1 :=
+    OracleComp.IsTotalQueryBound (spec.query query : OracleComp spec (spec.Range query)) 1 :=
   ⟨by change 0 < 1; decide, fun _ => True.intro⟩
 
 /-- Every original live record or read request costs at most fifty-two pending callbacks under all replies and complete role states. -/
@@ -169,12 +169,12 @@ theorem candidate_total (initial : RustM (KernelOf Chain)) (candidate : pqxdh.Se
   intro valid
   cases valid
   · trivial
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     apply isTotalQueryBound_bind (n₁ := 1) (n₂ := 5) (one_query _)
     intro reserved
     cases reserved
     · trivial
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
       | fail error => trivial
       | div => trivial
@@ -187,7 +187,7 @@ theorem candidate_total (initial : RustM (KernelOf Chain)) (candidate : pqxdh.Se
               intro allocated
               cases allocated
               · trivial
-              · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+              · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : candidate.key_id_binding with
                 | fail error => trivial
                 | div => trivial

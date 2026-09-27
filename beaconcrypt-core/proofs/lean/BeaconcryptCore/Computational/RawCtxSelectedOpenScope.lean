@@ -68,7 +68,8 @@ theorem program_scoped {Material Context Plaintext : Type} (target : Std.U64) (c
       rw [program, isQueryBoundP_query_bind_iff]
       refine ⟨Or.inl (fun outside => outside), ?_⟩
       intro reply
-      simp only [Outside, if_false]
+      rw [ite_eq_right (show ¬Outside (Plaintext := Plaintext) target context (.inl pending.request) from by
+        simp [Outside])]
       apply ih _ (ranked ▸ normalResume_rank pending reply) _ _ rfl
       simpa only [scope.1, scope.2] using resume_scope pending reply
 

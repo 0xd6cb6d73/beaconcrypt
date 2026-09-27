@@ -220,9 +220,7 @@ theorem carried_miss (depth stage runStage : Nat) (before : depth < runStage)
 
 end BeaconcryptCore.Computational.PqxdhInitialNativeCarried
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhInitialNativeCarried.annotated_same' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhInitialNativeCarried.annotated_same' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhInitialNativeCarried.annotated_same
 /-- info: 'BeaconcryptCore.Computational.PqxdhInitialNativeCarried.carried_same' depends on axioms: [propext,

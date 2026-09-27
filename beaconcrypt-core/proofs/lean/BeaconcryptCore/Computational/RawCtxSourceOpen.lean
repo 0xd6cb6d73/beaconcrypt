@@ -187,8 +187,6 @@ theorem openSlices_hash_bound (input : RawCtxWholeOwner.OpenInput)
   · simp
   · dsimp only
     split_ifs <;> simp
-    exact (isQueryBoundP_query_iff (spec := OpenSpec)
-      (p := fun query => query.isLeft = true) (.inr (baseInput input slices)) 0).2 (by simp)
 
 /-- Every source opening makes at most one AEAD attempt after its successful commitment check. -/
 theorem openSlices_aead_bound (input : RawCtxWholeOwner.OpenInput)
@@ -201,8 +199,6 @@ theorem openSlices_aead_bound (input : RawCtxWholeOwner.OpenInput)
   · simp
   · dsimp only
     split_ifs <;> simp
-    exact (isQueryBoundP_query_iff (spec := OpenSpec)
-      (p := fun query => query.isRight = true) (.inr (baseInput input slices)) 1).2 (by simp)
 
 /-- The raw selected-input interpreter counts all inner hash/AEAD work, including failures. -/
 theorem openInput_bounds (input : RawCtxWholeOwner.OpenInput) :

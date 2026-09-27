@@ -102,7 +102,7 @@ theorem source_random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     intro result reached good
     obtain ⟨earlier, input, walked⟩ := published result reached (of_decide_eq_true good)
     exact ⟨(earlier, input), by simpa only [Nat.sub_add_cancel (by omega : 1 ≤ number.val)] using walked⟩
-  have equality := evalDist_map_eq_of_evalDist_eq
+  have equality := evalSPMF_map_eq_of_evalSPMF_eq
     (PqxdhInitialNativeLineageCheck.logged_uniform source writer external client gate (number.val - 1) root state missing cached)
     observe
   simp only [Functor.map_map, map_bind] at equality
@@ -117,7 +117,7 @@ theorem source_random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     · simp only [observe, gate, good, decide_true, if_true, retainedDecision, RawCtxPublishedLineage.lineage]
     · simp only [observe, gate, good, decide_false, Bool.false_eq_true, if_false, retainedDecision, false_and, decide_false]
   simp only [observed] at equality
-  exact equality
+  exact evalDist_eq_of_evalSPMF_eq _ _ equality
 
 /-- The original selected parent response advances the source cursor to the exact native child address. -/
 theorem child_cursor (state : State A N C) (address : JointKdfAddress) (parent : FullOutput)
@@ -247,7 +247,8 @@ theorem frame_random
       (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent)) state
     (PqxdhInitialBuilderContext.address context.original) parent missing matching childMissing separate root earlier walked
     selected number remaining position ancestors disclosed published]
-  apply evalDist_bind_congr' ($ᵗ FullOutput)
+  apply evalDist_eq_of_evalSPMF_eq
+  apply evalSPMF_bind_congr' ($ᵗ FullOutput)
   intro output
   rw [PqxdhInitialNativeParentChild.retained_compiled source writer pre application initial selector aux
     mark sender route decode context parent output state separate]

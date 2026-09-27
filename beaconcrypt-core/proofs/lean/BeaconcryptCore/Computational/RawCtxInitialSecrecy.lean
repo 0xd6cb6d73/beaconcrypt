@@ -80,11 +80,12 @@ theorem actual_source {Context : Type} (source : FixedHkdfSha512NoSaltSource)
 /-- The prefix-only full76 comparison has the same evaluated complete observation as the actual64 randomized initializer. -/
 theorem random_comparison {Context : Type} (sample : Sampler Context) (observe : Observer Context) :
     𝒟[independentFullGame (joint sample) (observer observe)] = 𝒟[random sample observe] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [independentFullGame, joint, bind_map_left, random]
-  refine evalDist_bind_congr' (m := ProbComp) (sample : ProbComp (Context × RootOutput)) (fun pair => ?_)
+  refine evalSPMF_bind_congr' (m := ProbComp) (sample : ProbComp (Context × RootOutput)) (fun pair => ?_)
   have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>=
-    fun output => 𝒟[observe pair.1 (pair64 output)]) initialPrefix_uniform
-  simpa only [← evalDist_bind, bind_map_left, observer] using projected
+    fun output => evalSPMF (observe pair.1 (pair64 output))) initialPrefix_uniform
+  simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
 
 /-- The actual paired64 initializer reduces with coefficient one to fixed-salt Extract on this exact root/context sampler and ordinary HMAC PRF. -/
 theorem primitive_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -95,8 +96,7 @@ theorem primitive_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
         (extractUniformGame (joint sample) (fullExtractReduction hmac .ratchet (observer observe))) +
       (hmacPrfRealGame hmac (fullExpandReduction .ratchet (joint sample) (observer observe))).boolDistAdvantage
         (hmacPrfRandomGame (fullExpandReduction .ratchet (joint sample) (observer observe))) := by
-  have randomLaw := OracleComp.probOutput_congr (x := true) rfl (random_comparison sample observe)
-  simpa only [← actual_source, ProbComp.boolDistAdvantage, randomLaw] using
+  simpa only [← actual_source, ProbComp.boolDistAdvantage, random_comparison sample observe] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet (joint sample) (observer observe)
 
 /-- Serializing the root into the exact Extract sampler retains every earlier uniform query without adding a draw. -/
@@ -192,7 +192,7 @@ end BeaconcryptCore.Computational.RawCtxInitialSecrecy
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxInitialSecrecy.primitive_bound
-/-- info: 'BeaconcryptCore.Computational.RawCtxInitialSecrecy.joint_bound' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxInitialSecrecy.joint_bound' depends on axioms: [propext] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxInitialSecrecy.joint_bound
 /-- info: 'BeaconcryptCore.Computational.RawCtxInitialSecrecy.reduction_bounds' depends on axioms: [propext,

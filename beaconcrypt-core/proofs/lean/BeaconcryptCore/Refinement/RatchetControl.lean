@@ -501,7 +501,8 @@ theorem entries_index_eq_ok (c : SequenceCache) (i : Std.U8) (h : i.val < 50) :
     simp_scalar
   rw [array_index_eq_ok _ _ hidx]
   have hcast : (UScalar.cast UScalarTy.Usize i).val = i.val := by simp_scalar
-  have hlt : i.val < (c.entries.val).length := by simp; exact h
+  have hlt : i.val < (c.entries.val).length := by
+    simpa only [Std.Array.length_eq, UScalar.ofNatCore_val_eq] using h
   simp [hcast, List.getElem?_eq_getElem hlt]
 
 /-! ## Looking up a cached key -/

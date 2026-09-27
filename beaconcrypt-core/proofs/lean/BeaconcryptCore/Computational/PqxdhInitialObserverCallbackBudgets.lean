@@ -32,6 +32,7 @@ theorem coins_uniform (work : ProbComp Result) (q : Nat) (bounded : work.IsTotal
 theorem coins_service (work : ProbComp Result) : (coins work).IsQueryBoundP IsService 0 :=
   IsQueryBoundP.liftComp_subSpec (fun _ => Iff.rfl) (isQueryBoundP_false work 0)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The executable root-free interpreter pays every original public coin, base and permitted decapsulation query. Its unused private-root fallback is pure. -/
 theorem public_step
     (baseImpl : QueryImpl baseSpec ProbComp)
@@ -44,8 +45,9 @@ theorem public_step
        (if PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery query then qBase else 0) +
        (if PublicClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery query then qDecap else 0)) := by
   rcases query with ((coin | query) | ciphertext) | privateRequest
-  all_goals simp only [publicOnly, publicImpl, PublicClass, IsMlKemUniformQuery,
-    IsMlKemBaseQuery, IsMlKemLogicalDecapsulationQuery, if_true, if_false, Nat.zero_add, Nat.add_zero]
+  all_goals simp only [publicOnly, publicImpl, KEMScheme.IND_CCA_postChallengeImpl, QueryImpl.add,
+    HasQuery.toQueryImpl, PublicClass, IsMlKemUniformQuery, IsMlKemBaseQuery,
+    IsMlKemLogicalDecapsulationQuery, ite_true, ite_false, Nat.zero_add, Nat.add_zero]
   · change (simulateQ (kemAmbientImpl baseImpl) ((unifSpec + baseSpec).query (.inl coin))).IsTotalQueryBound 1
     rw [simulateQ_spec_query]
     exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
@@ -146,7 +148,11 @@ theorem work_caps
 
 inductive CallbackKind where
   | ordinary | decapsulation | service
-  deriving DecidableEq, Fintype
+  deriving DecidableEq
+
+instance : Fintype CallbackKind where
+  elems := {.ordinary, .decapsulation, .service}
+  complete kind := by cases kind <;> simp
 
 def callbackKind : (PqxdhInitialFusedCompiler.Spec I D K X Response).Domain → CallbackKind
   | .inl query => if PqxdhPhase2SharedBounds.IsDecapsulation query then .decapsulation else .ordinary

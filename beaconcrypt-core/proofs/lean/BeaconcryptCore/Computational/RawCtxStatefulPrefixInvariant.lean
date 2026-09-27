@@ -58,9 +58,7 @@ theorem scan_valid {ι Result State : Type} {spec : OracleSpec ι}
 
 end BeaconcryptCore.Computational.RawCtxStatefulPrefixInvariant
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxStatefulPrefixInvariant.scan_same' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxStatefulPrefixInvariant.scan_same' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxStatefulPrefixInvariant.scan_same
 

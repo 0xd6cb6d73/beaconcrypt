@@ -22,6 +22,7 @@ def bytesCandidate (bytes : Pqxdh.Bytes) : List RootOutput :=
 theorem bytesCandidate_contains (target : RootOutput) : target ∈ bytesCandidate target.toList := by
   simp [bytesCandidate]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Each public call contributes at most one full input, including repeated projection requests. -/
 theorem bytesCandidate_length (bytes : Pqxdh.Bytes) : (bytesCandidate bytes).length ≤ 1 := by
   unfold bytesCandidate
@@ -117,9 +118,18 @@ theorem source_step {Metadata Auxiliary : Type}
   | inr request =>
     have projected := congrArg (fun work => (fun result => (result.1, (state.1, result.2))) <$> work)
       (public_erase source writer request state.2)
+    have normalized :
+        (fun result => (result.1, (state.1, result.2))) <$>
+          ((RawCtxProtocolBackend.backend source writer ∘ₛ RawCtxServerServices.publicLift) request).run state.2.1 =
+        (do
+          let result ← ((RawCtxProtocolBackend.backend source writer ∘ₛ
+            RawCtxServerServices.publicLift) request).run state.2.1
+          pure (result.1, (state.1, result.2))) := by
+      rw [map_eq_bind_pure_comp]
+      simp only [Function.comp_def]
     simpa only [sourceImpl, erasedImpl, StateT.run, bind_pure_comp, Functor.map_map,
       RawCtxSelectedTraceOwner.erase, Prod.map_def, id_eq, Function.comp_def,
-      SourceSpec, OracleSpec.Range, OracleSpec.add_def, Sum.elim] using projected
+      SourceSpec, OracleSpec.Range, OracleSpec.add_def, Sum.elim] using projected.trans normalized
 
 /-- Arbitrary mixed public/record continuations retain their original complete source state after erasing only the candidate log. -/
 theorem source_schedule {Metadata Auxiliary Result : Type}
@@ -173,6 +183,7 @@ instance : DecidablePred IsRaw := fun query => by
 instance : DecidablePred IsPublicKdf := fun query => by
   rcases query with request | request <;> simp only [IsPublicKdf] <;> infer_instance
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Original adaptive send, raw and public-KDF caps derive the complete actual candidate bound S+51R+K. -/
 theorem source_length {Metadata Auxiliary Result : Type}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -203,7 +214,7 @@ theorem source_length {Metadata Auxiliary Result : Type}
       (kdfBound.2 reply.1) reply.2 result tailSupport
     rcases query with (send | raw) | (coin | (hash | view))
     all_goals simp only [IsSend, IsRaw, IsPublicKdf, isKdf, cost, Sum.isLeft, Sum.isRight,
-      if_true, if_false, Bool.false_eq_true, not_true_eq_false, false_or] at head tail sendBound rawBound kdfBound
+      ite_true, ite_false, Bool.false_eq_true, not_true_eq_false, false_or] at head tail sendBound rawBound kdfBound
     all_goals omega
 
 open PqxdhFullSecretInputKdf ENNReal

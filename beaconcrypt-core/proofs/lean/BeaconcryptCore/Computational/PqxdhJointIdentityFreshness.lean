@@ -121,7 +121,10 @@ theorem fresh_probability_eq_stopped (primitives : Primitives) {count : ℕ}
       (simulateQ (sourceImpl primitives seeds) (stopBeforeReveal target client)).run state] := by
   classical
   induction client using OracleComp.inductionOn generalizing state with
-  | pure value => simp [StoppedEvent]
+  | pure value =>
+      by_cases accepted : Fresh target state ∧ observer (value, state)
+      · simp [StoppedEvent, accepted]
+      · simp [StoppedEvent, accepted]
   | query_bind query rest ih =>
     cases query with
     | inl request =>
@@ -143,12 +146,14 @@ theorem fresh_probability_eq_stopped (primitives : Primitives) {count : ℕ}
       rw [stopBeforeReveal_reveal]
       by_cases selected : identity = target
       · subst identity
-        simp only [if_true, simulateQ_query_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure,
-          probEvent_pure, StoppedEvent, if_false]
-        change Pr[fun result => Fresh target result.2 ∧ observer result |
-          (pure (seeds target, { state with reveals := state.reveals ++ [target] }) >>= fun value =>
-            (simulateQ (sourceImpl primitives seeds) (rest value.1)).run value.2 : ProbComp _)] = 0
-        rw [pure_bind]
+        have sourceStep :
+            (sourceImpl primitives seeds (.inr target)).run state =
+              pure (seeds target, { state with reveals := state.reveals ++ [target] }) := rfl
+        have stopped : ¬StoppedEvent target observer (none, state) := by
+          simp [StoppedEvent]
+        simp only [if_true, simulateQ_query_bind, OracleQuery.input_query, OracleQuery.cont_query,
+          id_eq, monadLift_self, StateT.run_bind, simulateQ_pure, StateT.run_pure, probEvent_pure,
+          ite_eq_right stopped, sourceStep, pure_bind]
         exact revealed_fresh_probability_zero primitives seeds target _ _ (by simp) observer
       · simp only [selected, if_false, simulateQ_query_bind, StateT.run_bind]
         change Pr[fun result => Fresh target result.2 ∧ observer result |
@@ -577,7 +582,8 @@ theorem sourceImpl_uniform_bound (primitives : Primitives) {count : ℕ} (seeds 
   | inl request =>
     cases request with
     | inl coin =>
-      change ((fun answer => (answer, state)) <$> (unifSpec.query coin : ProbComp _)).IsQueryBoundP
+      change OracleComp.IsQueryBoundP
+        ((fun answer => (answer, state)) <$> (unifSpec.query coin : ProbComp _))
         (fun _ => True) 1
       simp only [OracleComp.isQueryBoundP_map_iff]
       exact (OracleComp.isQueryBoundP_query_iff (spec := unifSpec) (p := fun _ => True) coin 1).mpr (by simp)

@@ -135,15 +135,17 @@ theorem family_closed {State M P : Type} {S B : Nat}
   rcases query with ⟨index, request⟩ | (⟨index, request⟩ | request)
   case inl =>
     simp only [RawCtxGenericFamilyFrontend.impl, StateT.run, bind_pure_comp] at supported
-    change result ∈ support ((fun reply => ((reply.1.1, (Function.update entry.1 index reply.1.2, entry.2)), reply.2)) <$>
-      ((RawCtxGenericServer.serverImpl calls sender route decode request).run (entry.1 index)).run before) at supported
+    change result ∈ support (((fun reply => (reply.1, (Function.update entry.1 index reply.2, entry.2))) <$>
+      (RawCtxGenericServer.serverImpl calls sender route decode request).run (entry.1 index)).run before) at supported
+    rw [StateT.run_map] at supported
     rw [support_map] at supported
     obtain ⟨reply, _, rfl⟩ := supported
     exact closed
   case inr.inl =>
     simp only [RawCtxGenericFamilyFrontend.impl, StateT.run, bind_pure_comp] at supported
-    change result ∈ support ((fun reply => ((reply.1.1, (entry.1, Function.update entry.2 index reply.1.2)), reply.2)) <$>
-      ((RawCtxGenericBeacon.impl calls decode request).run (entry.2 index)).run before) at supported
+    change result ∈ support (((fun reply => (reply.1, (entry.1, Function.update entry.2 index reply.2))) <$>
+      (RawCtxGenericBeacon.impl calls decode request).run (entry.2 index)).run before) at supported
+    rw [StateT.run_map] at supported
     rw [support_map] at supported
     obtain ⟨reply, reached, rfl⟩ := supported
     by_cases same : selected = index
@@ -152,11 +154,13 @@ theorem family_closed {State M P : Type} {S B : Nat}
     · simpa only [Function.update_of_ne same] using closed
   case inr.inr =>
     simp only [RawCtxGenericFamilyFrontend.impl, StateT.run, bind_pure_comp] at supported
-    change result ∈ support ((fun reply => ((reply.1, entry), reply.2)) <$> (publicCalls request).run before) at supported
+    change result ∈ support (((fun reply => (reply, entry)) <$> publicCalls request).run before) at supported
+    rw [StateT.run_map] at supported
     rw [support_map] at supported
     obtain ⟨reply, _, rfl⟩ := supported
     exact closed
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Original live read replies and their history notes cannot reopen a terminal registration; all family requests retain the same property. -/
 theorem live_closed {State M P : Type} {S B : Nat}
     (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
@@ -172,15 +176,17 @@ theorem live_closed {State M P : Type} {S B : Nat}
   cases query with
   | inl request =>
       simp only [RawCtxGenericFamilyLive.impl, StateT.run, bind_pure_comp] at supported
-      change result ∈ support ((fun reply => ((reply.1.1, (reply.1.2, RawCtxProtocolReveals.tick entry.2)), reply.2)) <$>
-        ((RawCtxGenericFamilyFrontend.impl calls publicCalls sender route decode request).run entry.1).run before) at supported
+      change result ∈ support (((fun reply => (reply.1, (reply.2, RawCtxProtocolReveals.tick entry.2))) <$>
+        (RawCtxGenericFamilyFrontend.impl calls publicCalls sender route decode request).run entry.1).run before) at supported
+      rw [StateT.run_map] at supported
       rw [support_map] at supported
       obtain ⟨reply, reached, rfl⟩ := supported
       exact family_closed calls publicCalls sender route decode request entry.1 selected closed before reply reached
   | inr request =>
       simp only [RawCtxGenericFamilyLive.impl, StateT.run, bind_pure_comp] at supported
-      change result ∈ support ((fun reply => ((reply.1, (entry.1, RawCtxProtocolReveals.note ⟨request, reply.1⟩ entry.2)), reply.2)) <$>
-        (reader (request, RawCtxGenericRoleFamily.selectedKernel (RawCtxGenericFamilyRead.requestOwner request) entry.1)).run before) at supported
+      change result ∈ support (((fun reply => (reply, (entry.1, RawCtxProtocolReveals.note ⟨request, reply⟩ entry.2))) <$>
+        reader (request, RawCtxGenericRoleFamily.selectedKernel (RawCtxGenericFamilyRead.requestOwner request) entry.1)).run before) at supported
+      rw [StateT.run_map] at supported
       rw [support_map] at supported
       obtain ⟨reply, _, rfl⟩ := supported
       exact closed

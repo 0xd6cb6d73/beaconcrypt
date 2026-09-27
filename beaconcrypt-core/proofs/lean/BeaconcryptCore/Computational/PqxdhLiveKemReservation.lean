@@ -42,8 +42,8 @@ instance : DecidablePred (IsCreate (KemSK := KemSK)) := fun query => by
 
 /-- The ordinary actual pair sampler is lossless, so privately unused future draws integrate out of the entire continued distribution. -/
 theorem unused {Result : Type} (sampler : ProbComp (Pair KemSK)) (count : Nat) (work : ProbComp Result) :
-    𝒟[samplePairs sampler count >>= fun _ => work] = 𝒟[work] := by
-  apply evalDist_ext
+    𝒮[samplePairs sampler count >>= fun _ => work] = 𝒮[work] := by
+  apply evalSPMF_ext
   intro result
   simp only [probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
 
@@ -53,8 +53,11 @@ theorem source_create (baseImpl : QueryImpl baseSpec ProbComp) (primitives : Pqx
     (impl baseImpl primitives kem (.inr (.inr .create))).run state =
       (fun pair => ((created state.2 pair).1, (state.1, (created state.2 pair).2))) <$>
         simulateQ (kemAmbientImpl baseImpl) kem.keygen := by
-  simp only [impl, poolImpl, StateT.run, Functor.map_map]
-  rfl
+  simp only [impl, poolImpl, StateT.run]
+  change (fun result : (Nat × MlKem768PublicKey) × Pool KemSK =>
+    (result.1, (state.1, result.2))) <$> (created state.2 <$>
+      simulateQ (kemAmbientImpl baseImpl) kem.keygen) = _
+  rw [LawfulMonad.map_map]
 
 /-- A nonempty private reservation supplies the next actual slot and publishes precisely the original create reply. -/
 theorem reserved_create (baseImpl : QueryImpl baseSpec ProbComp) (primitives : PqxdhJointIdentity.Primitives)
@@ -103,15 +106,15 @@ theorem complete (baseImpl : QueryImpl baseSpec ProbComp) (primitives : PqxdhJoi
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) {Result : Type}
     (client : OracleComp (Spec KemSK) Result) (count : Nat)
     (bounded : client.IsQueryBoundP (IsCreate (KemSK := KemSK)) count) (state : State KemSK) :
-    𝒟[(simulateQ (impl baseImpl primitives kem) client).run state] =
-      𝒟[samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count >>= fun future =>
+    𝒮[(simulateQ (impl baseImpl primitives kem) client).run state] =
+      𝒮[samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count >>= fun future =>
         (simulateQ (reserved baseImpl primitives kem (state.2.keys ++ future)) client).run state] := by
   induction client using OracleComp.inductionOn generalizing count state
   case query_bind query next ih =>
     rw [isQueryBoundP_query_bind_iff] at bounded
-    change 𝒟[(impl baseImpl primitives kem query).run state >>= fun result =>
+    change 𝒮[(impl baseImpl primitives kem query).run state >>= fun result =>
       (simulateQ (impl baseImpl primitives kem) (next result.1)).run result.2] =
-      𝒟[samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count >>= fun future =>
+      𝒮[samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count >>= fun future =>
         (reserved baseImpl primitives kem (state.2.keys ++ future) query).run state >>= fun result =>
           (simulateQ (reserved baseImpl primitives kem (state.2.keys ++ future)) (next result.1)).run result.2]
     by_cases creates : IsCreate (KemSK := KemSK) query
@@ -122,7 +125,7 @@ theorem complete (baseImpl : QueryImpl baseSpec ProbComp) (primitives : PqxdhJoi
       obtain ⟨count, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt (bounded.1.resolve_left (not_not.mpr creates)))
       rw [source_create, samplePairs]
       simp only [bind_assoc, bind_map_left, pure_bind]
-      apply evalDist_bind_congr
+      apply evalSPMF_bind_congr
       intro pair _
       simp only [reserved_create, pure_bind]
       simpa only [created, record, List.append_assoc, List.singleton_append] using
@@ -132,9 +135,9 @@ theorem complete (baseImpl : QueryImpl baseSpec ProbComp) (primitives : PqxdhJoi
       have stepEq (future : List (Pair KemSK)) :=
         noncreate_equal baseImpl primitives kem (state.2.keys ++ future) query creates state
       simp_rw [← stepEq]
-      rw [PqxdhSecretInputKdf.evalDist_sample_comm (samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count)
+      rw [PqxdhSecretInputKdf.evalSPMF_sample_comm (samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count)
         ((impl baseImpl primitives kem query).run state)]
-      apply evalDist_bind_congr
+      apply evalSPMF_bind_congr
       intro result actual
       simpa only [noncreate_keys baseImpl primitives kem query creates state result actual] using
         ih result.1 count (by simpa [creates] using bounded.2 result.1) result.2

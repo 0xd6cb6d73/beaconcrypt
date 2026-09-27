@@ -1,11 +1,13 @@
 import VCVio.OracleComp.QueryTracking.RandomOracle.EagerTable
+import VCVio.OracleComp.Constructions.SampleableType.MeasureCompatibility
 
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.JointEagerTable
 
 variable {D R : Type} [DecidableEq D] [Finite D] [Finite R] [Nonempty R]
-  [SampleableType R] [SampleableType (D → R)]
+  [SampleableType R] [SampleableType (D → R)] [MeasurableSpace R]
+  [DiscreteMeasurableSpace R]
 
 /-- Complete the final lazy cache with an independent uniform tail, retaining the total table jointly with the actual client result. This finite total table is analysis only. -/
 def completedLazy {Result : Type} (client : OracleComp (D →ₒ R) Result)
@@ -15,7 +17,8 @@ def completedLazy {Result : Type} (client : OracleComp (D →ₒ R) Result)
   pure (tableExtending result.2 tail, result.1)
 
 /-- Deferred sampling preserves the entire sampled answer function jointly with the evaluated client result, from every preexisting cache. -/
-theorem completedLazy_eq_eager {Result : Type} (client : OracleComp (D →ₒ R) Result)
+theorem completedLazy_eq_eager {Result : Type} [MeasurableSpace Result]
+    (client : OracleComp (D →ₒ R) Result)
     (cache : (D →ₒ R).QueryCache) :
     𝒟[completedLazy client cache] =
       𝒟[do
@@ -64,10 +67,12 @@ theorem completedLazy_eq_eager {Result : Type} (client : OracleComp (D →ₒ R)
         let answer ← $ᵗ R
         let tail ← $ᵗ (D → R)
         pure (observation (Function.update tail query answer))]
-      · rw [evalDist_bind, evalDist_bind]
-        refine congrArg _ (funext fun answer => ?_)
+      · rw [evalDist_bind_of_discrete, evalDist_bind_of_discrete]
+        apply MeasureTheory.Measure.bind_congr_right
+        filter_upwards [] with answer
         rw [ih answer (cache.cacheQuery query answer), bind_pure_comp, bind_pure_comp, updated answer]
-      · exact evalDist_uniformSample_bind_update_map query observation
+      · exact evalDist_uniformSample_bind_update_map SampleableType.evalDist_uniformSample
+          SampleableType.evalDist_uniformSample query observation
     | some answer =>
       rw [QueryImpl.withCaching_run_some _ cached, pure_bind, ih answer cache]
       have hit (tail : D → R) : tableExtending cache tail query = answer := by
@@ -75,7 +80,8 @@ theorem completedLazy_eq_eager {Result : Type} (client : OracleComp (D →ₒ R)
       simp_rw [hit]
 
 /-- From an empty dictionary the retained completed lazy table has exactly the joint law of an upfront uniform table and the client's deterministic evaluation against that same table. -/
-theorem completedLazy_empty_eq_uniform {Result : Type} (client : OracleComp (D →ₒ R) Result) :
+theorem completedLazy_empty_eq_uniform {Result : Type} [MeasurableSpace Result]
+    (client : OracleComp (D →ₒ R) Result) :
     𝒟[completedLazy client ∅] =
       𝒟[do
         let table ← $ᵗ (D → R)
@@ -84,26 +90,35 @@ theorem completedLazy_empty_eq_uniform {Result : Type} (client : OracleComp (D �
   simp only [tableExtending_empty]
 
 /-- Absorbing a fresh cell into the uniform full table preserves every complete probabilistic continuation. -/
-theorem uniform_update_bind {Result : Type} (query : D) (next : (D → R) → ProbComp Result) :
+theorem uniform_update_bind {Result : Type} [MeasurableSpace Result]
+    (query : D) (next : (D → R) → ProbComp Result) :
     𝒟[do
       let answer ← $ᵗ R
       let table ← $ᵗ (D → R)
       next (Function.update table query answer)] =
       𝒟[($ᵗ (D → R)) >>= next] := by
-  have updated := evalDist_uniformSample_bind_update (R := R) query
-  have bound := congrArg (fun distribution => distribution >>= fun table => 𝒟[next table]) updated
-  simpa only [← evalDist_bind, bind_assoc, pure_bind] using bound
+  exact evalDist_bind_bind_update ($ᵗ R) ($ᵗ (D → R))
+    SampleableType.evalDist_uniformSample SampleableType.evalDist_uniformSample query next
 
 /-- Only independent explicit samplers are reordered, with their complete following computation retained. -/
-theorem independent_comm {A B Result : Type} (left : ProbComp A) (right : ProbComp B)
+theorem independent_comm_spmf {A B Result : Type}
+    (left : ProbComp A) (right : ProbComp B)
     (next : A → B → ProbComp Result) :
-    𝒟[left >>= fun a => right >>= next a] =
-      𝒟[right >>= fun b => left >>= fun a => next a b] := by
-  apply evalDist_ext
+    𝒮[left >>= fun a => right >>= next a] =
+      𝒮[right >>= fun b => left >>= fun a => next a b] := by
+  apply evalSPMF_ext
   intro output
   simp_rw [probOutput_bind_eq_tsum, ← ENNReal.tsum_mul_left]
   rw [ENNReal.tsum_comm]
   simp only [mul_left_comm]
+
+/-- The measure-level form of independent explicit sampler reordering. -/
+theorem independent_comm {A B Result : Type} [MeasurableSpace Result]
+    (left : ProbComp A) (right : ProbComp B)
+    (next : A → B → ProbComp Result) :
+    𝒟[left >>= fun a => right >>= next a] =
+      𝒟[right >>= fun b => left >>= fun a => next a b] := by
+  exact evalDist_eq_of_evalSPMF_eq _ _ (independent_comm_spmf left right next)
 
 abbrev MixedSpec (D R : Type) := unifSpec + (D →ₒ R)
 
@@ -129,7 +144,8 @@ def mixedCompletedLazy {Result : Type} (client : OracleComp (MixedSpec D R) Resu
   pure (tableExtending result.2 tail, result.1)
 
 /-- The mixed lazy/eager correspondence retains the full private table and complete source result while every explicit uniform query remains real. -/
-theorem mixedCompletedLazy_eq_eager {Result : Type} (client : OracleComp (MixedSpec D R) Result)
+theorem mixedCompletedLazy_eq_eager {Result : Type} [MeasurableSpace Result]
+    (client : OracleComp (MixedSpec D R) Result)
     (cache : (D →ₒ R).QueryCache) :
     𝒟[mixedCompletedLazy client cache] =
       𝒟[do
@@ -156,7 +172,7 @@ theorem mixedCompletedLazy_eq_eager {Result : Type} (client : OracleComp (MixedS
             simulateQ (mixedEagerImpl (tableExtending cache tail)) (next answer) >>= fun result =>
               pure (tableExtending cache tail, result)]
       rw [independent_comm ($ᵗ (D → R)) (unifSpec.query coin : ProbComp _)]
-      apply evalDist_bind_congr'
+      apply evalDist_bind_congr
       intro answer
       exact ih answer cache
     | inr point =>
@@ -188,7 +204,7 @@ theorem mixedCompletedLazy_eq_eager {Result : Type} (client : OracleComp (MixedS
           let answer ← $ᵗ R
           let tail ← $ᵗ (D → R)
           observation (Function.update tail point answer)]
-        · apply evalDist_bind_congr'
+        · apply evalDist_bind_congr
           intro answer
           rw [ih answer (cache.cacheQuery point answer), updated answer]
         · exact uniform_update_bind point observation
@@ -200,7 +216,7 @@ theorem mixedCompletedLazy_eq_eager {Result : Type} (client : OracleComp (MixedS
 
 /-- Empty-cache specialization for the mixed interface; all explicit source randomness remains inside the continued eager interpreter. -/
 theorem mixedCompletedLazy_empty_eq_uniform {Result : Type}
-    (client : OracleComp (MixedSpec D R) Result) :
+    [MeasurableSpace Result] (client : OracleComp (MixedSpec D R) Result) :
     𝒟[mixedCompletedLazy client ∅] =
       𝒟[do
         let table ← $ᵗ (D → R)

@@ -86,8 +86,6 @@ theorem compiler_step (query : Spec.Domain) :
   | inl request => exact RawCtxNativeKdfFamilyBounds.compiler_step request
   | inr request =>
       simp [compiler, needsStream, isQueryBoundP_map_iff]
-      exact (isQueryBoundP_query_iff (spec := RawCtxNativeKdfFamily.FamilySpec)
-        (p := fun query => query.isRight = true) _ _).2 (by simp)
 
 /-- The same stream budget counts original initializers together with all private and public derivations. -/
 theorem compiler_bound {Result : Type} (client : OracleComp Spec Result) (budget : Nat)

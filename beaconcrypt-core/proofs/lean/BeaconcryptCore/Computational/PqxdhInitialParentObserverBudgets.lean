@@ -162,8 +162,7 @@ end BeaconcryptCore.Computational.PqxdhInitialParentObserverBudgets
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhInitialParentObserverBudgets.cost_cap
-/-- info: 'BeaconcryptCore.Computational.PqxdhInitialParentObserverBudgets.flatten_uniform' depends on axioms: [propext,
- Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhInitialParentObserverBudgets.flatten_uniform' depends on axioms: [propext] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhInitialParentObserverBudgets.flatten_uniform
 /-- info: 'BeaconcryptCore.Computational.PqxdhInitialParentObserverBudgets.handler_uniform' depends on axioms: [propext,

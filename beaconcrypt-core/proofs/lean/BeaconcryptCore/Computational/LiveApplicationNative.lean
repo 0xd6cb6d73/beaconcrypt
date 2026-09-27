@@ -60,11 +60,11 @@ theorem native_observation {PublicContext Result : Type}
     (application : QueryImpl (ApplicationSpec AppRequest S B) (StateT AppState ProbComp))
     (initial : ProbComp (PublicContext × NativeState M P I D K A AppState S B))
     (client : PublicContext → OracleComp (PublicSpec AppRequest S B) Result) :
-    𝒟[(do let selected ← initial
+    𝒮[(do let selected ← initial
            let observed ← publicObservation (compiled source writer sender route decode application)
              (client selected.1) selected.2
            pure (selected.1, observed))] =
-      𝒟[(do let selected ← initial
+      𝒮[(do let selected ← initial
              let observed ← publicObservation (impl source writer sender route decode application)
                (client selected.1) selected.2
              pure (selected.1, observed))] := by

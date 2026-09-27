@@ -20,7 +20,9 @@ theorem forward_class (input : Slot) (selected : Class) :
       (if selected = .kdf then 1 else 0) := by
   simp [forward, derivation, QueryImpl.compose, RawCtxSelectedLiveCompiler.primitiveForward,
     liveClass, primitiveClass, eq_comm]
-  exact (isQueryBoundP_query_iff _ _ _).mpr (by cases selected <;> simp)
+  intro equal
+  subst selected
+  simp
 
 /-- The entire finite checker pays exactly its reserved private-callback cap, with zero callbacks in every other class. -/
 theorem checker_class (n : Nat) (selected : Class) :

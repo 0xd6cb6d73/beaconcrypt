@@ -266,7 +266,8 @@ theorem program_source_bound
     (predicate : SourceSpec.Domain → Prop) [DecidablePred predicate]
     (coinsExcluded : ∀ coin, ¬ predicate (.inl (.inl coin)))
     (qCreate qWriter qDriver qAccept : Nat)
-    (creation : (SourceSpec.query (.inl (.inr .create)) : OracleComp SourceSpec _).IsQueryBoundP predicate qCreate)
+    (creation : OracleComp.IsQueryBoundP
+      (SourceSpec.query (.inl (.inr .create)) : OracleComp SourceSpec _) predicate qCreate)
     (writerBound : ∀ (index : Nat) (publicIdentity : PublicIdentity) (generated : Generated setup KemSK),
       (signingProgram index publicIdentity.ed25519
         (publicMaterial setup publicIdentity.ed25519 generated).keyTuple).IsQueryBoundP
@@ -274,7 +275,8 @@ theorem program_source_bound
     (driverBound : ∀ index publicIdentity generated publicTranscript,
       (driver.main index publicIdentity generated publicTranscript).IsQueryBoundP
       (SelectorSource (baseSpec := baseSpec) predicate) qDriver)
-    (acceptance : ∀ candidate, (SourceSpec.query (.inr candidate) : OracleComp SourceSpec _).IsQueryBoundP predicate qAccept) :
+    (acceptance : ∀ candidate, OracleComp.IsQueryBoundP
+      (SourceSpec.query (.inr candidate) : OracleComp SourceSpec _) predicate qAccept) :
     (program baseImpl kem setup driver).IsQueryBoundP
       (fun query => predicate (translated query)) (qCreate + (qWriter + qDriver) + qAccept) := by
   have generatedBound : ∀ index publicIdentity,
@@ -391,9 +393,9 @@ theorem authentication_continuation_bound {Result : Type}
       (SelectorSource (baseSpec := baseSpec) Creating) 0)
     (fallback : DynamicForgery) (ordinaryFallback : Forgery)
     (next onChanged : Option (Outcome (Retained setup KemSK driver.State)) × BareState 1 → ProbComp Result) :
-    (𝒟[privateRun attachedVerify primitives 1 (program baseImpl kem setup driver) >>= next]).tvDist
-      (𝒟[privateRun attachedVerify primitives 1 (program baseImpl kem setup driver) >>= fun state =>
-        if changedBit state then onChanged state else next state]) ≤
+    tvDist (privateRun attachedVerify primitives 1 (program baseImpl kem setup driver) >>= next)
+      (privateRun attachedVerify primitives 1 (program baseImpl kem setup driver) >>= fun state =>
+        if changedBit state then onChanged state else next state) ≤
       (advantage primitives (privateReduction primitives baseImpl kem setup driver fallback ordinaryFallback)).toReal := by
   refine (tvDist_bind_left_event_le (privateRun attachedVerify primitives 1 (program baseImpl kem setup driver))
     next _ (fun state => changedBit state = true) (fun state good => by simp [good])).trans ?_

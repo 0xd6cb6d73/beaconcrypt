@@ -114,7 +114,7 @@ LEAN_GENERATED_PATHS := \
 	extract-proverif check-proverif \
 	check-proverif-extraction check-generated check-generated-lean \
 	$(PROVERIF_CHECK_TARGETS) $(PROVERIF_VERIFY_TARGETS) \
-	$(PROVERIF_GENERATED_TARGETS) extract-lean check-lean verify-lean \
+	$(PROVERIF_GENERATED_TARGETS) extract-lean prepare-lean-dependencies check-lean verify-lean \
 	verify-lean-in-shell
 
 # Enter the repository-locked proof shell, regenerate every backend, and check
@@ -575,6 +575,16 @@ check-lean-policy:
 		echo 'unexpected sorry/admit/axiom in repository-owned Lean proof' >&2; \
 		exit 1; \
 	fi
+	@if rg -n --pcre2 '^\+(?!\+\+).*\b(?:sorry|admit|axiom|unsafe)\b|sorryAx' \
+		$(LEAN_DIR)/patches/*.patch; then \
+		echo 'unexpected sorry/admit/axiom/unsafe addition in Lean dependency patch' >&2; \
+		exit 1; \
+	fi
+	@if rg -n --pcre2 '^\+(?!\+\+).*#guard_msgs\s*\([^)]*drop\s+error' \
+		$(LEAN_DIR)/patches/*.patch; then \
+		echo 'unexpected error suppression in Lean dependency patch' >&2; \
+		exit 1; \
+	fi
 
 check-lean-root:
 	@for module in \
@@ -610,8 +620,11 @@ check-lean-panic-freedom:
 	python3 ../scripts/test_check_lean_panic_freedom.py
 	python3 ../scripts/check_lean_panic_freedom.py
 
-check-lean: check-lean-policy check-lean-root check-lean-panic-freedom
-	cd $(LEAN_DIR) && lake build
+prepare-lean-dependencies:
+	bash $(LEAN_DIR)/apply-dependency-patches.sh
+
+check-lean: prepare-lean-dependencies check-lean-policy check-lean-root check-lean-panic-freedom
+	cd $(LEAN_DIR) && lake --rehash build
 
 # Regenerate and check the complete default beaconcrypt-core production surface.
 verify-lean:

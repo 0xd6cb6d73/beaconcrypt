@@ -406,9 +406,7 @@ end BeaconcryptCore.Computational.PqxdhInitialNativeRetained
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhInitialNativeRetained.step_saturated
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhInitialNativeRetained.program_same' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhInitialNativeRetained.program_same' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhInitialNativeRetained.program_same
 
@@ -442,9 +440,7 @@ end BeaconcryptCore.Computational.PqxdhInitialNativeRetained
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhInitialNativeRetained.step_retained
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhInitialNativeRetained.program_project' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhInitialNativeRetained.program_project' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhInitialNativeRetained.program_project
 

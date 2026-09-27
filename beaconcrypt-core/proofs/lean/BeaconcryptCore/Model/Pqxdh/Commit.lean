@@ -250,8 +250,8 @@ theorem openRecord_relabelled (c : Crypto) {mk mk' : Bytes × Bytes} {ad ad' : R
   have ht : (sealRecord c mk ad pt).tag.length = 16 := c.aeadSeal_tag_length _ _ _ _
   have hc : (sealRecord c mk ad pt).commit.length = 64 := c.blake2b_length _
   simp only [openRecord, decodeRecord_encode _ ht hc, Option.bind_some]
-  simp only [sealRecord]
-  rw [if_neg (hd _ (c.aeadSeal_tag_length _ _ _ _))]
+  rw [if_neg (by
+    simpa only [sealRecord] using hd _ (c.aeadSeal_tag_length _ _ _ _))]
 
 /-- Specialisation of the previous result to the sender identifier: a record sealed by
 one sender does not open when relabelled as coming from another (spec §13). -/

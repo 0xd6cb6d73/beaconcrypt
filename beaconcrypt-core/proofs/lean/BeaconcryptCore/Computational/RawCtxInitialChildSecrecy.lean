@@ -17,13 +17,13 @@ def parts (second : Bool) (output : HmacBlock) : RootOutput × RootOutput :=
 
 /-- Both orientations split the same actual initializer draw through an arbitrary complete continuation. -/
 theorem parts_observed {Result : Type} (second : Bool) (next : RootOutput → RootOutput → ProbComp Result) :
-    𝒟[(do let output ← $ᵗ HmacBlock
+    𝒮[(do let output ← $ᵗ HmacBlock
           next (parts second output).1 (parts second output).2)] =
-      𝒟[(do let other ← $ᵗ RootOutput
+      𝒮[(do let other ← $ᵗ RootOutput
             let target ← $ᵗ RootOutput
             next other target)] := by
   cases second
-  all_goals simp only [parts, Bool.false_eq_true, if_false, if_true]
+  all_goals simp only [parts, Bool.false_eq_true, ite_false, ite_true]
   case false => exact RawCtxSelectedInitialSampler.initial_observed next
   case true => exact RawCtxSelectedInitialSecond.second_observed next
 
@@ -45,9 +45,9 @@ noncomputable def separated {Context : Type} (prior : ProbComp Context) :
 
 /-- The exact selected half is uniform independently of the complete prior context and retained opposite half, including adaptive direction selection before the initializer draw. -/
 theorem joint_separated {Context : Type} (prior : ProbComp Context) (second : Context → Bool) :
-    𝒟[joint prior second] = 𝒟[separated prior] := by
+    𝒮[joint prior second] = 𝒮[separated prior] := by
   simpa only [joint, RawCtxFullPreimageTester.byteSampler, sample, separated, map_bind, map_pure] using
-    evalDist_bind_congr' prior (fun context => parts_observed (second context)
+    evalSPMF_bind_congr' prior (fun context => parts_observed (second context)
       (fun other target => pure ((context, other), target.toList)))
 
 noncomputable def actual {Context : Type} (source : FixedHkdfSha512NoSaltSource)

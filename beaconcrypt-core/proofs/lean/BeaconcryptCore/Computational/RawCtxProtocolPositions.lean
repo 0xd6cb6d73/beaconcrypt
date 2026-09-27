@@ -270,9 +270,7 @@ end BeaconcryptCore.Computational.RawCtxProtocolPositions
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxProtocolPositions.beacon_step_positions
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxProtocolPositions.family_positions' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxProtocolPositions.family_positions' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxProtocolPositions.family_positions
 

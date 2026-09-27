@@ -78,6 +78,7 @@ theorem continuationAdvantage_le_bad
     (sample >>= next).boolDistAdvantage
         (sample >>= authenticateContinuation verifyFn next onChanged) ≤
       Pr[fun result => result.badBit verifyFn = true | sample].toReal := by
+  rw [ProbComp.boolDistAdvantage, evalDist_apply_singleton, evalDist_apply_singleton]
   exact (abs_probOutput_toReal_sub_le_tvDist _ _).trans
     (tvDist_bind_left_event_le sample next
       (authenticateContinuation verifyFn next onChanged)
@@ -103,14 +104,14 @@ theorem continuationAdvantage_le_eufCma {SecretKey : Type}
         (runtimeOfImpl (kemAmbientImpl baseImpl))).toReal := by
   have euf := statefulPhase1FieldSubstitutionAdvantage_le_eufCma
     (runtimeOfImpl (kemAmbientImpl baseImpl)) sigAlg kem setup selector verifyFn deterministic
-    (fun f computation => by simp [runtimeOfImpl_evalDist])
   refine (continuationAdvantage_le_bad verifyFn _ next onChanged).trans ?_
-  apply ENNReal.toReal_mono (show
-    (statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage
-      (runtimeOfImpl (kemAmbientImpl baseImpl)) ≠ ∞ from probOutput_ne_top)
+  apply ENNReal.toReal_mono (MeasureTheory.measure_ne_top _ _)
   unfold StatefulPhase1FieldSubstitutionAdvantage at euf
-  rw [← probEvent_eq_eq_probOutput, probEvent_map] at euf
-  simpa only [runtimeOfImpl_evalDist, probEvent_def, SPMF.evalDist_def, Function.comp_def] using euf
+  rw [runtimeOfImpl_evalDist, evalDist_apply_singleton,
+    ← probEvent_eq_eq_probOutput, simulateQ_bind] at euf
+  simp only [simulateQ_pure] at euf
+  rw [bind_pure_comp, probEvent_map] at euf
+  simpa only [Function.comp_def, SignatureAlg.unforgeableAdv.advantage] using euf
 
 /-- Independent source prefix before KEM generation, retaining the identity secret and private prekey state. -/
 noncomputable def identityPrekeySample {SecretKey : Type}
@@ -130,15 +131,15 @@ theorem generators_commute_complete_continuation {SecretKey Output : Type}
     (setup : StatefulPhase1Setup baseSpec)
     (next : (Ed25519PublicKey × SecretKey × PrivatePrekey setup.PrivatePre) →
       (TargetKemPublicKey × KemSK) → ProbComp Output) :
-    𝒟[do
+    𝒮[do
       let retained ← identityPrekeySample baseImpl sigAlg setup
       let keypair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
       next retained keypair] =
-    𝒟[do
+    𝒮[do
       let keypair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
       let retained ← identityPrekeySample baseImpl sigAlg setup
       next retained keypair] := by
-  exact evalDist_sample_comm (identityPrekeySample baseImpl sigAlg setup)
+  exact PqxdhSecretInputKdf.evalSPMF_sample_comm (identityPrekeySample baseImpl sigAlg setup)
     (simulateQ (kemAmbientImpl baseImpl) kem.keygen) next
 
 /-- Internal source prefix retains the identity secret and leaves the KEM secret available only to its later interpreter. -/
@@ -182,14 +183,16 @@ theorem privateSourcePrefix_bad_probability {SecretKey : Type}
     StatefulPhase1FieldSubstitutionAdvantage (runtimeOfImpl (kemAmbientImpl baseImpl))
       sigAlg kem setup selector verifyFn := by
   unfold StatefulPhase1FieldSubstitutionAdvantage
-  rw [← probEvent_eq_eq_probOutput, probEvent_map]
+  rw [runtimeOfImpl_evalDist, evalDist_apply_singleton,
+    ← probEvent_eq_eq_probOutput, simulateQ_bind]
+  simp only [simulateQ_pure]
+  rw [bind_pure_comp, probEvent_map]
   have projected := congrArg
     (fun computation : ProbComp (StatefulPhase1Result kem setup selector) =>
       Pr[fun result => result.badBit verifyFn = true | computation])
     (privateSourcePrefix_project baseImpl sigAlg kem setup selector)
   rw [probEvent_map] at projected
-  simpa only [runtimeOfImpl_evalDist, probEvent_def, SPMF.evalDist_def,
-    Function.comp_def] using projected
+  simpa only [Function.comp_def] using projected
 
 /-- The stopped EUF charge remains coefficient one with every private identity/KEM value retained by the enclosing protocol interpreter. `next` describes the entire private interpreter for this probability bound; it is not a protocol or adversary callback, and this theorem supplies no CCA simulation of an arbitrary such function. A later CCA reduction must confine the KEM key to its oracle handler. -/
 theorem privateContinuationAdvantage_le_eufCma {SecretKey : Type}
@@ -209,15 +212,13 @@ theorem privateContinuationAdvantage_le_eufCma {SecretKey : Type}
         (runtimeOfImpl (kemAmbientImpl baseImpl))).toReal := by
   have euf := statefulPhase1FieldSubstitutionAdvantage_le_eufCma
     (runtimeOfImpl (kemAmbientImpl baseImpl)) sigAlg kem setup selector verifyFn deterministic
-    (fun f computation => by simp [runtimeOfImpl_evalDist])
+  rw [ProbComp.boolDistAdvantage, evalDist_apply_singleton, evalDist_apply_singleton]
   refine (abs_probOutput_toReal_sub_le_tvDist _ _).trans
     ((tvDist_bind_left_event_le (privateSourcePrefix baseImpl sigAlg kem setup selector)
       next _ (fun state => state.2.1.badBit verifyFn = true)
       (fun state good => by simp [good])).trans ?_)
   rw [privateSourcePrefix_bad_probability]
-  exact ENNReal.toReal_mono (show
-    (statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage
-      (runtimeOfImpl (kemAmbientImpl baseImpl)) ≠ ∞ from probOutput_ne_top) euf
+  exact ENNReal.toReal_mono (MeasureTheory.measure_ne_top _ _) euf
 
 /-- The actual private Phase-1 prefix may take the challenger KEM key first without changing any complete continued distribution. -/
 theorem privateSourcePrefix_kem_first {SecretKey Output : Type}
@@ -227,8 +228,8 @@ theorem privateSourcePrefix_kem_first {SecretKey Output : Type}
     (setup : StatefulPhase1Setup baseSpec)
     (selector : StatefulPhase1Selector kem setup.Context)
     (next : (SecretKey × StatefulPhase1Result kem setup selector × KemSK) → ProbComp Output) :
-    𝒟[privateSourcePrefix baseImpl sigAlg kem setup selector >>= next] =
-    𝒟[do
+    𝒮[privateSourcePrefix baseImpl sigAlg kem setup selector >>= next] =
+    𝒮[do
       let (target, kemSk) ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
       let retained ← identityPrekeySample baseImpl sigAlg setup
       let result ← simulateQ (kemAmbientImpl baseImpl)
@@ -316,8 +317,8 @@ theorem privateSourcePrefix_borrowed_complete {SecretKey Output : Type}
     (setup : StatefulPhase1Setup baseSpec)
     (selector : StatefulPhase1Selector kem setup.Context)
     (next : (SecretKey × StatefulPhase1Result kem setup selector × KemSK) → ProbComp Output) :
-    𝒟[privateSourcePrefix baseImpl sigAlg kem setup selector >>= next] =
-    𝒟[do
+    𝒮[privateSourcePrefix baseImpl sigAlg kem setup selector >>= next] =
+    𝒮[do
       let (target, kemSk) ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
       let retained ← simulateQ (kemAmbientImpl baseImpl)
         (simulateQ (localKemPreChallengeImpl kem kemSk)

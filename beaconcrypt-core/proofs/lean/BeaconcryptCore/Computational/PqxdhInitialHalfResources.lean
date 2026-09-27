@@ -36,6 +36,7 @@ theorem program_total (source : FixedHkdfSha512NoSaltSource)
       (PqxdhInitialOriginPost.sequence_total source execution.first mark execution.origin sender route decode
         execution.index execution.metadata execution.ready execution.post qPost bounded (execution.before, execution.trace)))
   intro result
+  rw [bind_pure_comp]
   exact (isQueryBound_map_iff _ _ _ _ _).mpr (checker_total depth)
 
 def callbackCap (qPost qCheck : Nat) : Nat := 2 * (7 + qPost * 67) + qCheck

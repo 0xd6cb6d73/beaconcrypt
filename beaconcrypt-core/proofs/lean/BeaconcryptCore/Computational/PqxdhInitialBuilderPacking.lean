@@ -71,11 +71,19 @@ theorem build
   funext cache
   simp only [Functor.map, StateT.map, StateT.run, PqxdhInitialPendingBuilder.interpretedBuild, calls_handler, aux_handler, calls_lift,
     PqxdhInitialBuilderAmbient.ready_lift]
+  simp only [bind_pure_comp]
   let current := PqxdhInitialPendingBuilder.consume index ready before.1
   let input := PqxdhInitialPendingBuilder.selected sender index current
-  let execution := (PqxdhInitialGenericBuilder.readyBuild source
+  let work := PqxdhInitialGenericBuilder.readyBuild source
     (RawCtxGenericOwnerInterpretation.interpretedCalls primitive RawCtxPendingOwnerQueries.calls) aux kernel
-    ⟨input.server.identity, input.identityKeyId⟩ ready metadata input).run before.2.1
+    ⟨input.server.identity, input.identityKeyId⟩ ready metadata input
+  let execution := work.run before.2.1
+  have lift_run : ((PqxdhInitialBeaconAmbient.lift (N := N) (C := C) work).run before.2).run cache =
+      (fun result => ((result.1, (result.2, before.2.2)), cache)) <$> execution := rfl
+  change (fun x => ((x.1.1.1, PqxdhInitialPostPacking.pack (x.1.1.2, x.1.2)), x.2)) <$>
+    ((fun x => (PqxdhInitialPendingBuilder.reinstall index current x.1, x.2)) <$>
+      (PqxdhInitialBeaconAmbient.lift (N := N) (C := C) work).run before.2).run cache = _
+  rw [StateT.run_map, lift_run]
   change (fun x => ((x.1.1.1, PqxdhInitialPostPacking.pack (x.1.1.2, x.1.2)), x.2)) <$>
     ((fun x => ((PqxdhInitialPendingBuilder.reinstall index current x.1.1, x.1.2), x.2)) <$>
       ((fun x => ((x.1, (x.2, before.2.2)), cache)) <$> execution)) =

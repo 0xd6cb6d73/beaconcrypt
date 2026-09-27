@@ -71,7 +71,7 @@ open RawCtxSelectedChain PqxdhRefinement
 
 /-- The original available input bytes; this conversion neither labels nor changes their values. -/
 def rootVector (chain : RatchetChain) : RootOutput :=
-  ⟨absBytes chain.bytes, by simp [absBytes]⟩
+  ⟨absBytes chain.bytes, by simpa [absBytes] using chain.bytes.property⟩
 
 /-- The available-input view preserves the exact sampled chain bytes. -/
 theorem rootVector_concrete (value : RootOutput) :
@@ -158,9 +158,7 @@ end BeaconcryptCore.Computational.RawCtxSelectedQueryTrace
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.complete
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.length_bound' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.length_bound' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.length_bound
 

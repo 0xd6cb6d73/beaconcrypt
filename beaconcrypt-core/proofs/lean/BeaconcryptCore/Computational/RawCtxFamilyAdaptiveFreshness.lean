@@ -74,8 +74,9 @@ theorem completion_decision_bound (parameters : Parameters) (sender : M → Std.
     (actualDecision parameters.target blocked prior <$> execution).boolDistAdvantage
       (RawCtxSelectedParentPrivateEvents.decision (remainingEvent blocked prior) <$> execution) ≤
       (Pr[fun result => parameters.target ∈ result.2.1.2 ∧ result.2.2 = false | execution]).toReal := by
-  simpa only [ProbComp.boolDistAdvantage, RawCtxSelectedParentPrivateEvents.decision_probability,
-    ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, actualDecision, decide_eq_true_eq,
+  simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton]
+  rw [RawCtxSelectedParentPrivateEvents.decision_probability, ← probEvent_eq_eq_probOutput]
+  simpa only [probEvent_map, Function.comp_def, actualDecision, decide_eq_true_eq,
     RawCtxSelectedParentPrivateEvents.decision, remainingEvent, Proxy, and_assoc, and_left_comm, and_comm] using
       completion_good_bound parameters sender route decode blocked prior history outside work state candidates
 

@@ -106,11 +106,13 @@ theorem initial_cache (selected : Message) (root : RootOutput)
   simp only [evaluated, initial_program, simulateQ_map, StateT.run_map]
   rw [← PqxdhInitialRootLabelBridge.labelled_source source baseImpl kem secret challenge secrets selected root cache]
   change (fun result => (result.1, PqxdhInitialRootLabelService.completeCache selected root result.2)) <$>
-    ((fun result => ((result.1.1.2, result.1.2), result.2)) <$>
-      (PqxdhInitialNativeInitializer.initial source selected root
-        (PqxdhInitialRootLabelService.realInitial source root) secrets state).run cache) = _
-  rw [PqxdhInitialNativeInitializer.initial_erase]
-  simp only [Functor.map_map, Prod.map, Option.map_some]
+    (((Prod.snd <$> PqxdhInitialNativeInitializer.initial source selected root
+      (PqxdhInitialRootLabelService.realInitial source root) secrets).run state).run cache) = _
+  rw [StateT.run_map, StateT.run_map]
+  simpa only [StateT.run, Functor.map_map, Prod.map, Option.map_some] using
+    congrArg (fun work => (fun result => (result.1, PqxdhInitialRootLabelService.completeCache selected root result.2)) <$> work)
+      (PqxdhInitialNativeInitializer.initial_erase source selected root
+        (PqxdhInitialRootLabelService.realInitial source root) secrets state cache)
 
 /-- Every complete public continuation, including adaptive decapsulation requests, retains the standard CCA block and leaves the root-family cache untouched. -/
 theorem public_uniform (work : OracleComp (MlKemCCAOracleSpec baseSpec) Result) (cache : RootOracle.QueryCache) :
@@ -184,12 +186,13 @@ theorem step_cache (selected : Message) (root : RootOutput)
         PqxdhInitialPendingAmbient.selectorLift,
         simulateQ_map, Functor.map_map] at mapped ⊢
       change (fun result => (result.1, PqxdhInitialRootLabelService.completeCache selected root result.2)) <$>
-        (fun result => ((result.1.1, (state.1, result.1.2)), result.2)) <$>
-          ((PqxdhInitialPendingCurrent.selector attachedVerify primitives count baseImpl kem secret challenge query).run state.2).run cache =
-        (fun result => ((result.1.1, (state.1, result.1.2)), result.2)) <$>
-          (simulateQ uniformImpl (simulateQ (rootPost source baseImpl kem secret challenge)
+        ((fun result => (result.1, (state.1, result.2))) <$>
+          (PqxdhInitialPendingCurrent.selector attachedVerify primitives count baseImpl kem secret challenge query).run state.2).run cache =
+        ((fun result => (result.1, (state.1, result.2))) <$>
+          simulateQ uniformImpl (simulateQ (rootPost source baseImpl kem secret challenge)
             (PqxdhPhase2PostScheduler.publicWork ((borrowedSelector attachedVerify primitives count query).run state.2)))).run
               (PqxdhInitialRootLabelService.completeCache selected root cache)
+      rw [StateT.run_map, StateT.run_map]
       simp only [PqxdhInitialPendingCurrent.selector, StateT.run, Functor.map_map]
       exact mapped.symm
     · have same := coins_uniform source challenge baseImpl kem secret

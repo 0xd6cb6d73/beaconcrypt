@@ -141,6 +141,7 @@ theorem nested_step {Metadata Auxiliary : Type} {serverCount beaconCount : Nat}
     simp [nested, observedImpl, QueryImpl.flattenStateT, splitState, joinState,
       recorded, RawCtxSelectedQueryTrace.recorded, handler, inputs,
       StateT.run, StateT.mk, state_map, state_pure, bind_pure_comp]
+    rfl
 
 def regroup {Metadata Auxiliary Result : Type} {serverCount beaconCount : Nat} :
     ((Result × OuterState Metadata serverCount beaconCount) ×

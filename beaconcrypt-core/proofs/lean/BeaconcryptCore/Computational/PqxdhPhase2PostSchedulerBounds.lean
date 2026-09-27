@@ -17,6 +17,7 @@ open PqxdhGeneratedBeaconState (IdentityHandle KemHandle)
 open PqxdhPhase2JointIdentity (Converted)
 variable {ι M P I D K X Response A : Type} {baseSpec : OracleSpec ι} {S B : Nat}
 
+set_option backward.isDefEq.respectTransparency false in
 inductive Resource where
   | uniform | base | decapsulation | root
   deriving DecidableEq, Fintype
@@ -104,9 +105,19 @@ theorem routed_step
   case inl.decapsulate value key =>
     cases key with
     | none =>
-      change ((fun reply => (reply, state)) <$>
-        PqxdhPhase2InputBytes.decapCall (baseSpec := baseSpec) challenge value).IsQueryBoundP
-          (predicate (baseSpec := baseSpec) resource) _
+      have handled :
+          (PqxdhBeaconPhase2Routed.handles source challenge
+            (borrowedAux (baseSpec := baseSpec) attachedVerify primitives count source localImpl)
+              (.inl (.decapsulate value none))).run state =
+            (fun reply => (reply, state)) <$>
+              PqxdhPhase2InputBytes.decapCall (baseSpec := baseSpec) challenge value := by
+        rw [show PqxdhBeaconPhase2Routed.handles source challenge
+          (borrowedAux (baseSpec := baseSpec) attachedVerify primitives count source localImpl)
+            (.inl (.decapsulate value none)) =
+              liftM (PqxdhPhase2InputBytes.decapCall (baseSpec := baseSpec) challenge value) by rfl]
+        simp only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+          StateT.run, bind_pure_comp]
+      rw [handled]
       rw [isQueryBoundP_map_iff]
       apply (PqxdhPhase2InputBytes.decapCall_bound challenge value (predicate (baseSpec := baseSpec) resource)).mono
       cases resource <;> simp [selected, perCall, predicate, publicPredicate, PublicClass, IsPrivateRoot,
@@ -120,9 +131,20 @@ theorem routed_step
         (.localDecapsulation value prior) state).mono
       cases resource <;> simp [auxiliaryCost, selected, perCall]
   case inr.inr.root secrets =>
-    change ((fun reply => (reply, state)) <$> PqxdhPhase2InputBytes.rootCall (baseSpec := baseSpec)
-      source challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4).IsQueryBoundP
-        (predicate (baseSpec := baseSpec) resource) _
+    have handled :
+        (PqxdhBeaconPhase2Routed.handles source challenge
+          (borrowedAux (baseSpec := baseSpec) attachedVerify primitives count source localImpl)
+            (.inr (.inr (.root secrets)))).run state =
+          (fun reply => (reply, state)) <$> PqxdhPhase2InputBytes.rootCall (baseSpec := baseSpec)
+            source challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4 := by
+      rw [show PqxdhBeaconPhase2Routed.handles source challenge
+        (borrowedAux (baseSpec := baseSpec) attachedVerify primitives count source localImpl)
+          (.inr (.inr (.root secrets))) =
+            liftM (PqxdhPhase2InputBytes.rootCall (baseSpec := baseSpec)
+              source challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4) by rfl]
+      simp only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+        StateT.run, bind_pure_comp]
+    rw [handled]
     rw [isQueryBoundP_map_iff]
     apply (PqxdhPhase2InputBytes.rootCall_bound source challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3
       secrets.dh4 (predicate (baseSpec := baseSpec) resource)).mono
@@ -164,6 +186,7 @@ def finishCost (qLocal : Nat) : Resource → Nat
   | .base => 0
   | .decapsulation | .root => 1
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Every attempted finish pays for its whole source-shaped execution, including work before rejection. The selected private root and logical decapsulation each occur at most once. -/
 theorem targetFinish_bound
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes)
@@ -176,7 +199,8 @@ theorem targetFinish_bound
     ((targetFinish (baseSpec := baseSpec) attachedVerify primitives count source localImpl challenge decode query).run state).IsQueryBoundP (predicate (baseSpec := baseSpec) resource) (finishCost qLocal resource) := by
   cases query with
   | finish index raw =>
-    simp only [targetFinish, StateT.run, isQueryBoundP_map_iff]
+    simp only [targetFinish, StateT.run]
+    rw [isQueryBoundP_map_iff]
     cases resource with
     | uniform =>
       exact PqxdhBeaconPhase2Bounds.interpreted_total_bound _ _ (max qLocal 64) 69
@@ -246,7 +270,9 @@ theorem target_step
       rcases query with (request | ((coin | base) | decap)) <;>
         simp [PqxdhPhase2SourceSchedulerBounds.classify, cost, PqxdhPrivateKemQueryBounds.SelectorSource,
           PqxdhPrivateRootQueryBounds.SelectorCCA, IsMlKemUniformQuery]
-      split_ifs <;> omega
+      by_cases creating : PqxdhPrivatePhase1Prefix.Creating request <;>
+        by_cases uniform : PqxdhPrivateRootQueryBounds.SourceUniform request <;>
+          simp [creating, uniform]
     | base =>
       apply (PqxdhPrivateRootQueryBounds.borrowed_class_step attachedVerify primitives count IsMlKemBaseQuery
         (fun _ => by simp [IsMlKemBaseQuery]) query state.2).mono

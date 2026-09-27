@@ -102,8 +102,8 @@ instance : DecidablePred IsCreate := fun query => by
 
 /-- Unused future seeds can be integrated out only because the ordinary seed sampler never fails. This equality includes the whole subsequent evaluated computation. -/
 theorem sampleSeeds_unused {Result : Type} (count : ℕ) (work : ProbComp Result) :
-    𝒟[sampleSeeds count >>= fun _ => work] = 𝒟[work] := by
-  apply evalDist_ext
+    𝒮[sampleSeeds count >>= fun _ => work] = 𝒮[work] := by
+  apply evalSPMF_ext
   intro result
   simp only [probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
 
@@ -168,8 +168,8 @@ theorem noncreate_seeds_preserved (primitives : Primitives) (query : DynamicSpec
 theorem lazy_eager_complete (primitives : Primitives) {Result : Type}
     (client : OracleComp DynamicSpec Result) (count : ℕ)
     (bounded : client.IsQueryBoundP IsCreate count) (state : SourceState) :
-    𝒟[(simulateQ (lazyImpl primitives) client).run state] =
-      𝒟[sampleSeeds count >>= fun future =>
+    𝒮[(simulateQ (lazyImpl primitives) client).run state] =
+      𝒮[sampleSeeds count >>= fun future =>
         (simulateQ (eagerImpl primitives (state.seeds ++ future)) client).run state] := by
   induction client using OracleComp.inductionOn generalizing count state with
   | pure value =>
@@ -177,9 +177,9 @@ theorem lazy_eager_complete (primitives : Primitives) {Result : Type}
       (sampleSeeds_unused count (pure (value, state))).symm
   | query_bind query next ih =>
     rw [OracleComp.isQueryBoundP_query_bind_iff] at bounded
-    change 𝒟[(lazyImpl primitives query).run state >>= fun result =>
+    change 𝒮[(lazyImpl primitives query).run state >>= fun result =>
       (simulateQ (lazyImpl primitives) (next result.1)).run result.2] =
-      𝒟[sampleSeeds count >>= fun future =>
+      𝒮[sampleSeeds count >>= fun future =>
         (eagerImpl primitives (state.seeds ++ future) query).run state >>= fun result =>
           (simulateQ (eagerImpl primitives (state.seeds ++ future)) (next result.1)).run result.2]
     by_cases creates : IsCreate query
@@ -195,7 +195,7 @@ theorem lazy_eager_complete (primitives : Primitives) {Result : Type}
         rw [lazyImpl_create, sampleSeeds_succ]
         simp only [bind_assoc]
         simp only [bind_map_left, pure_bind]
-        apply evalDist_bind_congr' sampleSeed
+        apply evalSPMF_bind_congr' sampleSeed
         intro seed
         simp only [eagerImpl_create, pure_bind]
         simpa only [createdReply, record, List.append_assoc, List.singleton_append] using
@@ -205,9 +205,9 @@ theorem lazy_eager_complete (primitives : Primitives) {Result : Type}
     · have stepEq (future : List IdentitySeed) :=
         noncreate_step_eq primitives (state.seeds ++ future) query creates state
       simp_rw [← stepEq]
-      rw [PqxdhSecretInputKdf.evalDist_sample_comm (sampleSeeds count)
+      rw [PqxdhSecretInputKdf.evalSPMF_sample_comm (sampleSeeds count)
         ((lazyImpl primitives query).run state)]
-      apply evalDist_bind_congr
+      apply evalSPMF_bind_congr
       intro result supported
       have sameSeeds := noncreate_seeds_preserved primitives query creates state result supported
       simpa only [sameSeeds] using
@@ -233,17 +233,20 @@ theorem lazyImpl_uniform_step (primitives : Primitives) (query : DynamicSpec.Dom
       ((if IsCreate query then 32 else 0) + (if IsUniform query then 1 else 0)) := by
   cases query with
   | inl coin =>
-    change ((fun (answer : unifSpec.Range coin) => (answer, record (.inl coin) answer state)) <$>
-      (unifSpec.query coin : ProbComp _)).IsTotalQueryBound 1
+    change OracleComp.IsTotalQueryBound
+      ((fun (answer : unifSpec.Range coin) => (answer, record (.inl coin) answer state)) <$>
+        (unifSpec.query coin : ProbComp _)) 1
     simpa only [OracleComp.IsTotalQueryBound, OracleComp.isQueryBound_map_iff] using
       ((OracleComp.isQueryBoundP_true_iff _ _).mp
         ((OracleComp.isQueryBoundP_query_iff (spec := unifSpec) (p := fun _ => True) coin 1).mpr (by simp)))
   | inr request =>
     cases request with
     | create =>
+      rw [ite_eq_left (show IsCreate (.inr .create) from trivial),
+        ite_eq_right (show ¬IsUniform (.inr .create) from by trivial), Nat.add_zero]
       rw [lazyImpl_create]
-      simpa only [IsCreate, IsUniform, if_true, if_false, Nat.add_zero,
-        OracleComp.IsTotalQueryBound, OracleComp.isQueryBound_map_iff] using sampleSeed_uniform_bound
+      simpa only [OracleComp.IsTotalQueryBound, OracleComp.isQueryBound_map_iff] using
+        sampleSeed_uniform_bound
     | service identity request => trivial
     | reveal identity => trivial
 
@@ -254,8 +257,9 @@ theorem eagerImpl_uniform_step (primitives : Primitives) (pool : List IdentitySe
       (if IsUniform query then 1 else 0) := by
   cases query with
   | inl coin =>
-    change ((fun (answer : unifSpec.Range coin) => (answer, record (.inl coin) answer state)) <$>
-      (unifSpec.query coin : ProbComp _)).IsQueryBoundP (fun _ => True) 1
+    change OracleComp.IsQueryBoundP
+      ((fun (answer : unifSpec.Range coin) => (answer, record (.inl coin) answer state)) <$>
+        (unifSpec.query coin : ProbComp _)) (fun _ => True) 1
     simp only [OracleComp.isQueryBoundP_map_iff]
     exact (OracleComp.isQueryBoundP_query_iff (spec := unifSpec) (p := fun _ => True) coin 1).mpr (by simp)
   | inr request =>

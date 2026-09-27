@@ -82,7 +82,7 @@ theorem getElem!_drop_absBytes {n : Std.Usize} (a : Std.Array Std.U8 n) (d i : �
 
 /-- Length of a dropped suffix of an abstracted array. -/
 theorem length_drop_absBytes {n : Std.Usize} (a : Std.Array Std.U8 n) (d : ℕ) :
-    ((absBytes a).drop d).length = n.val - d := by simp [absBytes]
+    ((absBytes a).drop d).length = n.val - d := by simp [absBytes, a.property]
 
 /-- A nonempty list is its head followed by its tail. -/
 theorem list_eq_cons_drop {α : Type} [Inhabited α] (l : List α) (h : 0 < l.length) :
@@ -260,11 +260,13 @@ theorem tag_x25519_key_abs (role : Std.U8) (key : Std.Array Std.U8 32#usize) :
     · subst h0
       rw [if_pos (hlt1.mpr (by omega))]
       simp
+      rfl
     · rw [if_neg (fun h => absurd (hlt1.mp h) (by omega)), if_neg h0]
       by_cases h1 : i = 1
       · subst h1
         rw [if_pos (hlt2.mpr (by omega))]
         simp
+        rfl
       · rw [if_neg (fun h => absurd (hlt2.mp h) (by omega)), if_neg h1]
         have hsub : (2#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
           rw [usize_val_2, hval]; omega
@@ -276,6 +278,7 @@ theorem tag_x25519_key_abs (role : Std.U8) (key : Std.Array Std.U8 32#usize) :
         simp only [bind_tc_ok]
         rw [index_usize_eq key _ (by rw [h2, usize_val_32]; omega), h2]
         simp
+        rfl
   have hbyte : ∀ i, i < (34#usize).val →
       absByte (if i = 0 then pqxdh.KEM_TYPE_X25519 else if i = 1 then role
                 else key.val[i - 2]!)

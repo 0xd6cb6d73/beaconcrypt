@@ -22,7 +22,7 @@ theorem step (query : PqxdhInitialLabelCompiler.Spec.Domain) (state : RootOracle
       ((if IsCoin query then 1 else 0) + (if IsService query then 32 else 0)) := by
   cases query with
   | inl coin =>
-    change ((unifSpec.query coin : ProbComp _) >>= fun value => pure (value, state)).IsTotalQueryBound 1
+    change (((unifSpec.query coin : ProbComp _) >>= fun value => pure (value, state)) : ProbComp _).IsTotalQueryBound 1
     exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
   | inr request =>
     simp only [IsCoin, IsService, if_true, if_false, Nat.zero_add]

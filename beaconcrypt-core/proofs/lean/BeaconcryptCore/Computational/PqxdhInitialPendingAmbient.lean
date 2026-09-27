@@ -77,16 +77,28 @@ theorem step
     simp only [QueryImpl.flattenStateT, interpreted, bind_pure_comp]
     simp_rw [live]
     funext cache
-    let execution := ((RawCtxGenericFamilyLive.impl
+    let implementation : QueryImpl (RawCtxProtocolReveals.SourceSpec S B)
+        (StateT (RawCtxGenericFamilyLive.State (KernelOf Chain) M P I D K S B) (Base A)) :=
+      RawCtxGenericFamilyLive.impl
       (RawCtxGenericOwnerInterpretation.interpretedCalls primitive RawCtxPendingOwnerQueries.calls)
       (fun request => simulateQ primitive (RawCtxPendingOwnerQueries.publicForward request)) reader
-      sender route decode query).run before.1.roles).run before.2.1
-    change (fun a => ((a.1.1.1, a.1.1.2, a.1.2), a.2)) <$>
-      ((fun a => (((a.1.1.1, {before.1 with roles := a.1.1.2}), a.1.2), a.2)) <$>
-        ((fun result => ((result.1, (result.2, before.2.2)), cache)) <$> execution)) =
-      (fun a => ((a.1.1.1, {before.1 with roles := a.1.1.2}, a.1.2, before.2.2), a.2)) <$>
-        ((fun result => (result, cache)) <$> execution)
-    simp only [Functor.map_map]
+      sender route decode
+    let work := (implementation query).run before.1.roles
+    let execution := work.run before.2.1
+    have lift_run : ((PqxdhInitialBeaconAmbient.lift (N := N) (C := C) work).run before.2).run cache =
+        (fun result => ((result.1, (result.2, before.2.2)), cache)) <$> execution := rfl
+    have cache_run : (cacheLive (C := C) implementation query before.1.roles before.2.1).run cache =
+        (fun result => (result, cache)) <$> execution := rfl
+    simp only [PqxdhInitialPostPacking.separated, StateT.run, StateT.mk, bind_pure_comp]
+    change (((fun x => (x.1.1, x.1.2, x.2)) <$>
+      (((fun a => (a.1, {before.1 with roles := a.2})) <$>
+        PqxdhInitialBeaconAmbient.lift work).run before.2)).run cache) =
+      (((fun a => (a.1.1, {before.1 with roles := a.1.2}, a.2, before.2.2)) <$>
+        cacheLive (C := C) implementation query before.1.roles before.2.1).run cache)
+    rw [StateT.run_map, StateT.run_map, StateT.run_map]
+    rw [lift_run]
+    rw [StateT.run_map, cache_run]
+    simp only [Functor.map_map, Function.comp_def]
   case inl.inr =>
     simp only [QueryImpl.flattenStateT, interpreted, PqxdhInitialPostPacking.separated,
       StateT.run, StateT.mk, bind_pure_comp]

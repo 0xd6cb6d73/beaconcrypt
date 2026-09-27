@@ -104,6 +104,7 @@ theorem key_order (depth : Nat) (real : Bool) (decodeRaw : AdaptiveCtxReceive.Ra
   unfold PqxdhErasedParentMaterial.ideal
   rw [← shared_source setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth]
   simp only [bind_map_left]
+  apply evalDist_eq_of_evalSPMF_eq
   exact RawCtxPrefixKeyOrder.complete real decodeRaw env.source.crypto
     (run setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth)
     (fun key context state => PqxdhErasedParentMaterial.observe env.source env.recordWriter env.senderId env.route env.decode

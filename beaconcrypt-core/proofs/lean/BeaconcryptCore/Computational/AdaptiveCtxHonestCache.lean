@@ -257,6 +257,8 @@ theorem honestCompletion_guess_bound {Result : Type} {bound : ℕ} (decode : Raw
     (selector : Result → List.Vector (Option CtxUnclaimedAcceptance.Target) bound) :
     Pr[GuessEvent selector | mixedCompletedLazy (honestClient decode c key adversary) ∅] ≤
       (bound : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
+  letI : MeasurableSpace CtxDigest := ⊤
+  letI : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
   unfold mixedCompletedLazy
   apply probEvent_bind_le_of_forall_le
   intro result supported

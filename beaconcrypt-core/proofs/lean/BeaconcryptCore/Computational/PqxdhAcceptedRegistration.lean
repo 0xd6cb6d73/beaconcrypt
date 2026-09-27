@@ -60,9 +60,13 @@ theorem accepted_fields (c : Pqxdh.Crypto) (ready : Ready)
     pending accepted).2]
   unfold usedReady
   congr 1
-  all_goals apply BeaconcryptCore.Refinement.PqxdhSurface.bytes_eq_of_abs_eq
-  all_goals simp only [PqxdhRootTableInitialization.rootArray_bytes, ciphertextArray_bytes]
-  all_goals assumption
+  · apply BeaconcryptCore.Refinement.PqxdhSurface.bytes_eq_of_abs_eq
+    simpa only [PqxdhRootTableInitialization.rootArray_bytes] using identity
+  · apply BeaconcryptCore.Refinement.PqxdhSurface.bytes_eq_of_abs_eq
+    exact ephemeral.trans (PqxdhRootTableInitialization.rootArray_bytes
+      ⟨c.xpub ready.ephemeral.toList, c.xpub_length _⟩).symm
+  · apply BeaconcryptCore.Refinement.PqxdhSurface.bytes_eq_of_abs_eq
+    simpa only [ciphertextArray_bytes] using ciphertext
 
 
 /-- Complete source execution agrees for every original pending witness with the established field projection. -/
@@ -330,6 +334,7 @@ theorem accepted_native_complete {Metadata PeerMetadata PrimitiveState Result ι
     hidentity hephemeral hciphertext
 
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Nine actual native interfaces; the source initializer is separate local fixed-HKDF work. -/
 inductive NativeKind where
   | kdf | aead | hash | frameWriter | identity | peerReserve | plaintextReserve | erase | phase2Writer

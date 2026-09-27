@@ -32,6 +32,11 @@ theorem private_call (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
         privateStep source stage (address request) state.2 := by
   simp [native, RawCtxPendingSelectiveFamily.backend, QueryImpl.compose, RawCtxServerServices.nativeLift,
     RawCtxSelectiveKdfFamily.compiler, handler, OracleSpec.query, StateT.run]
+  change (((fun output => fullResponse output) <$> (show
+    StateT (RawCtxPendingSelectiveFamily.State A) ProbComp FullOutput from fun state =>
+      (fun result => (result.1, (state.1, result.2))) <$>
+        privateStep source stage (address request) state.2)).run state) = _
+  rw [StateT.run_map]
   change (fun reply => (fullResponse reply.1, reply.2)) <$>
     ((fun result => (result.1, (state.1, result.2))) <$> privateStep source stage (address request) state.2) = _
   simp only [Functor.map_map]

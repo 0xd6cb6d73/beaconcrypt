@@ -40,10 +40,12 @@ set_option backward.isDefEq.respectTransparency false in
 theorem root_bounds (hmac : HmacSha512) (known : KnownPqxdhRootCoordinates) :
     (root hmac known).IsQueryBoundP IsCoin 0 ∧
     (root hmac known).IsQueryBoundP IsFamily 1 := by
-  change (((FamilySpec.query (.inr (coordinates known)) : OracleComp FamilySpec HmacBlock) >>= fun prk =>
-    pure (expandRoot hmac prk)).IsQueryBoundP IsCoin 0) ∧
-    (((FamilySpec.query (.inr (coordinates known)) : OracleComp FamilySpec HmacBlock) >>= fun prk =>
-    pure (expandRoot hmac prk)).IsQueryBoundP IsFamily 1)
+  change OracleComp.IsQueryBoundP
+      (((FamilySpec.query (.inr (coordinates known)) : OracleComp FamilySpec HmacBlock) >>= fun prk =>
+        pure (expandRoot hmac prk))) IsCoin 0 ∧
+    OracleComp.IsQueryBoundP
+      (((FamilySpec.query (.inr (coordinates known)) : OracleComp FamilySpec HmacBlock) >>= fun prk =>
+        pure (expandRoot hmac prk))) IsFamily 1
   simp only [isQueryBoundP_query_bind_iff, IsCoin, IsFamily, isQueryBoundP_pure]
   simp
 
@@ -61,26 +63,52 @@ theorem post_uniform_step
        (if PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery request then qBase else 0) +
        (if RoutedClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery request then qDecap else 0)) := by
   rcases request with ((coin | query) | ciphertext) | privateRequest
-  all_goals simp only [PublicClass, RoutedClass, IsMlKemUniformQuery, IsMlKemBaseQuery,
-    IsMlKemLogicalDecapsulationQuery, if_true, if_false, Nat.zero_add, Nat.add_zero]
-  · apply coins_uniform
+  · simp only [
+      ite_eq_left (show PublicClass (baseSpec := baseSpec) IsMlKemUniformQuery
+        (.inl (.inl (.inl coin))) from True.intro),
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery
+        (.inl (.inl (.inl coin))) from id),
+      ite_eq_right (show ¬ RoutedClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery
+        (.inl (.inl (.inl coin))) from id), Nat.add_zero]
+    apply coins_uniform
     change (simulateQ (kemAmbientImpl baseImpl)
       ((unifSpec + baseSpec).query (.inl coin))).IsTotalQueryBound 1
     rw [simulateQ_spec_query]
     exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
-  · apply coins_uniform
+  · simp only [
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemUniformQuery
+        (.inl (.inl (.inr query))) from id),
+      ite_eq_left (show PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery
+        (.inl (.inl (.inr query))) from True.intro),
+      ite_eq_right (show ¬ RoutedClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery
+        (.inl (.inl (.inr query))) from id), Nat.zero_add, Nat.add_zero]
+    apply coins_uniform
     change (simulateQ (kemAmbientImpl baseImpl)
       ((unifSpec + baseSpec).query (.inr query))).IsTotalQueryBound qBase
     rw [simulateQ_spec_query]
     exact baseBound query
-  · apply coins_uniform
+  · simp only [
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemUniformQuery
+        (.inl (.inr ciphertext)) from id),
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery
+        (.inl (.inr ciphertext)) from id),
+      ite_eq_left (show RoutedClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery
+        (.inl (.inr ciphertext)) from True.intro), Nat.zero_add]
+    apply coins_uniform
     change (simulateQ (kemAmbientImpl baseImpl)
       (if ciphertext = challenge then pure none else kem.decaps secret ciphertext)).IsTotalQueryBound qDecap
     split
     · simp only [simulateQ_pure]
       trivial
     · exact decapBound ciphertext
-  · simp only [post]
+  · simp only [
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemUniformQuery
+        (.inr privateRequest) from id),
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery
+        (.inr privateRequest) from id),
+      ite_eq_left (show RoutedClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery
+        (.inr privateRequest) from True.intro), Nat.zero_add]
+    simp only [post]
     split
     · exact ((isQueryBoundP_map_iff _ some 0).mpr (root_bounds hmac privateRequest.coordinates).1).mono (Nat.zero_le _)
     · simpa only [bind_pure_comp, isQueryBoundP_map_iff] using
@@ -161,7 +189,7 @@ theorem post_family_step
   cases request with
   | inl request => exact coins_family _
   | inr request =>
-      simp only [post, IsPrivateRoot, if_true]
+      simp only [post, IsPrivateRoot]
       split
       · exact (isQueryBoundP_map_iff _ some 1).mpr (root_bounds hmac request.coordinates).2
       · simpa only [bind_pure_comp, isQueryBoundP_map_iff] using (coins_family
@@ -185,9 +213,9 @@ theorem post_family_bound {Result : Type}
       apply combined.mono
       by_cases selected : IsPrivateRoot (baseSpec := baseSpec) request
       · have positive := bounded.1.resolve_left (not_not.mpr selected)
-        simp only [selected, if_true]
+        simp only [selected, ite_true]
         omega
-      · simp only [selected, if_false, Nat.zero_add, le_refl]
+      · simp only [selected, ite_false, Nat.zero_add, le_refl]
 
 /-- The reduction still performs actual key generation, the full private preparation, and ordinary encapsulation. -/
 theorem prepare_uniform_bound
@@ -280,9 +308,9 @@ theorem real_run_uniform {Result : Type} (hmac : HmacSha512) (secret : MlKemShar
         (fun answer => ih answer _ (bounded.2 answer))).mono
       by_cases selected : IsCoin request
       · have positive := bounded.1.resolve_left (not_not.mpr selected)
-        simp only [selected, if_true]
+        simp only [selected, ite_true]
         omega
-      · simp only [selected, if_false, Nat.zero_add, le_refl]
+      · simp only [selected, ite_false, Nat.zero_add, le_refl]
 
 /-- The real family challenger pays its single hidden 32-byte key sample in addition to the client's coins. -/
 theorem realGame_uniform_bound (hmac : HmacSha512) (client : OracleComp FamilySpec Bool)
@@ -298,8 +326,9 @@ theorem random_step (request : FamilySpec.Domain) (cache : ExtractOracle.QueryCa
       ((if IsCoin request then 1 else 0) + (if IsFamily request then 64 else 0)) := by
   cases request with
   | inl request =>
-      change (((unifSpec.query request : ProbComp (unifSpec.Range request)) >>= fun answer =>
-        pure (answer, cache))).IsTotalQueryBound 1
+      change OracleComp.IsTotalQueryBound
+        (((unifSpec.query request : ProbComp (unifSpec.Range request)) >>= fun answer =>
+          pure (answer, cache))) 1
       exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
   | inr request =>
       change ((randomImpl (.inr request)).run cache).IsTotalQueryBound 64

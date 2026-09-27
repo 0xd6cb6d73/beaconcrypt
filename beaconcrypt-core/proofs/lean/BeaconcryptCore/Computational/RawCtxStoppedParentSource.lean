@@ -88,8 +88,10 @@ theorem prepare_random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   intro cut supported
   cases cut with
   | complete result reached =>
-    simp only [collect, bind_map_left, resume, bind_pure, Cached, if_false]
+    have uncached : ¬ Cached (.complete result reached) := by simp [Cached]
+    simp only [collect, bind_map_left, resume, bind_pure]
     rw [complete_stage source writer (depth + 1) (depth + 2) sender route decode result reached]
+    rw [ite_eq_right uncached]
   | pending context reached =>
     cases found : reached.1.2.1 (RawCtxSelectedFamilyContext.address context) <;>
       simp [collect, found, resume, bind_map_left, Cached]

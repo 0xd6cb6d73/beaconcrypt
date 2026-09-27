@@ -36,9 +36,10 @@ private theorem send_program_private {Chain : Type}
     constructor
     · simp
     · intro reply
-      change ((fun sealed => ((RawCtxChainSend.ready pending reply).advanced, sealed)) <$>
-        ((SendSpec Chain).query (.inr (RawCtxChainSend.ready pending reply)) : OracleComp (SendSpec Chain) _)).IsQueryBoundP
-          (fun query => query.isLeft = true) 0
+      change OracleComp.IsQueryBoundP
+        ((fun sealed => ((RawCtxChainSend.ready pending reply).advanced, sealed)) <$>
+          ((SendSpec Chain).query (.inr (RawCtxChainSend.ready pending reply)) : OracleComp (SendSpec Chain) _))
+        (fun query => query.isLeft = true) 0
       rw [isQueryBoundP_map_iff]
       exact (isQueryBoundP_query_iff (spec := SendSpec Chain) (fun query => query.isLeft = true) (.inr (RawCtxChainSend.ready pending reply)) 0).mpr (by simp)
 

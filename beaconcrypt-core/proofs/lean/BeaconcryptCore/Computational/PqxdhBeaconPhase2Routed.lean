@@ -147,6 +147,7 @@ noncomputable def actualHandles
   fun query auxiliary => simulateQ (actualImpl source kem secret challenge)
     ((handles source challenge aux query).run auxiliary)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Every preparation callback is realized with the original optional reply and private state. -/
 theorem preparation_calls
     (source : FixedHkdfSha512NoSaltSource)
@@ -163,23 +164,51 @@ theorem preparation_calls
   case decapsulate value key =>
     cases key with
     | none =>
-        change (fun reply => (reply, auxiliary)) <$>
-          (Option.map rootArray <$> kem.decaps secret (PqxdhPhase2InputBytes.ciphertext value)) =
-          (fun pair => (Option.map (fun shared => rootArray (materialize supplied shared)) pair.1, pair.2)) <$>
-            simulateQ (actualImpl source kem secret challenge)
-              ((fun reply => (reply, auxiliary)) <$> PqxdhPhase2InputBytes.decapCall challenge value)
-        simpa only [simulateQ_map, Functor.map_map, Function.comp_def] using
+        change (native source kem secret challenge aux (.inl (.decapsulate value none))).run auxiliary =
+          ((Option.map (fun shared => rootArray (materialize supplied shared)) <$>
+            actualHandles source kem secret challenge aux (.inl (.decapsulate value none))).run auxiliary)
+        rw [StateT.run_map]
+        unfold native actualHandles handles
+        simpa only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+          StateT.run, StateT.map, StateT.run_map, bind_pure_comp, simulateQ_map, Functor.map_map,
+          Function.comp_def, PqxdhBeaconPhase2Publication.NativeSpec,
+          PqxdhBeaconPhase2Preparation.Spec, OracleSpec.add_apply_inl] using
           congrArg (Functor.map (fun reply => (reply, auxiliary)))
             (PqxdhPhase2InputBytes.decapCall_native source kem secret challenge supplied agreement value).symm
     | some prior =>
-        change (nativeAux kem secret challenge aux (.localDecapsulation value prior)).run auxiliary =
-          (fun pair => (Option.map (fun shared => rootArray (materialize supplied shared)) pair.1, pair.2)) <$>
-            simulateQ (actualImpl source kem secret challenge)
-              ((fun pair => (Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) pair.1, pair.2)) <$>
-                (sharedAux aux (.localDecapsulation value prior)).run auxiliary)
-        simp [simulateQ_map, sharedAux_actual source kem secret challenge aux, Functor.map_map,
-          Function.comp_def, materialize, PqxdhPhase2InputBytes.word_roundtrip]
+        change (native source kem secret challenge aux (.inl (.decapsulate value (some prior)))).run auxiliary =
+          ((Option.map (fun shared => rootArray (materialize supplied shared)) <$>
+            actualHandles source kem secret challenge aux
+              (.inl (.decapsulate value (some prior)))).run auxiliary)
+        rw [StateT.run_map]
+        rw [show native source kem secret challenge aux (.inl (.decapsulate value (some prior))) =
+          nativeAux kem secret challenge aux (.localDecapsulation value prior) by rfl]
+        have handled :
+            (handles source challenge aux (.inl (.decapsulate value (some prior)))).run auxiliary =
+              (fun pair =>
+                (Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) pair.1, pair.2)) <$>
+                (sharedAux aux (.localDecapsulation value prior)).run auxiliary := by
+          rw [show handles source challenge aux (.inl (.decapsulate value (some prior))) =
+            Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) <$>
+              sharedAux aux (.localDecapsulation value prior) by rfl]
+          exact StateT.run_map _ _ _
+        have actual :
+            (actualHandles source kem secret challenge aux
+              (.inl (.decapsulate value (some prior)))).run auxiliary =
+              simulateQ (actualImpl source kem secret challenge)
+                ((handles source challenge aux (.inl (.decapsulate value (some prior)))).run auxiliary) := rfl
+        rw [actual, handled, simulateQ_map,
+          sharedAux_actual source kem secret challenge aux (.localDecapsulation value prior) auxiliary]
+        simp only [Functor.map_map, Option.map_map, Function.comp_def, materialize,
+          PqxdhPhase2InputBytes.word_roundtrip]
+        rw [show (fun pair : Option Word32 × Auxiliary =>
+          (Option.map (fun value => value) pair.1, pair.2)) = id by
+            funext pair
+            change (Option.map id pair.1, pair.2) = pair
+            rw [Option.map_id_apply]]
+        exact (id_map _).symm
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Root processing uses the source-derived 192 bytes and returns the same native result with its full auxiliary state. -/
 theorem tail_calls
     (source : FixedHkdfSha512NoSaltSource)
@@ -193,11 +222,28 @@ theorem tail_calls
   constructor <;> intros <;> funext auxiliary
   all_goals first | exact (sharedAux_actual source kem secret challenge aux _ auxiliary).symm | skip
   case root secrets input built =>
-    change pure (some (RawCtxSourceHkdf.rootResponse source.crypto input), auxiliary) =
-      simulateQ (actualImpl source kem secret challenge)
-        ((fun reply => (reply, auxiliary)) <$>
-          PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4)
-    rw [simulateQ_map, PqxdhPhase2InputBytes.rootCall_native source kem secret challenge supplied agreement
+    change (native source kem secret challenge aux (.inr (.inr (.root input)))).run auxiliary =
+      (actualHandles source kem secret challenge aux (.inr (.inr (.root secrets)))).run auxiliary
+    have sourceRun :
+        (native source kem secret challenge aux (.inr (.inr (.root input)))).run auxiliary =
+          pure (some (RawCtxSourceHkdf.rootResponse source.crypto input), auxiliary) := by
+      rw [show native source kem secret challenge aux (.inr (.inr (.root input))) =
+        pure (some (RawCtxSourceHkdf.rootResponse source.crypto input)) by rfl]
+      rfl
+    have handled :
+        (handles source challenge aux (.inr (.inr (.root secrets)))).run auxiliary =
+          (fun reply => (reply, auxiliary)) <$>
+            PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4 := by
+      rw [show handles source challenge aux (.inr (.inr (.root secrets))) =
+        liftM (PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4) by rfl]
+      simp only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+        StateT.run, bind_pure_comp]
+    have actual :
+        (actualHandles source kem secret challenge aux (.inr (.inr (.root secrets)))).run auxiliary =
+          simulateQ (actualImpl source kem secret challenge)
+            ((handles source challenge aux (.inr (.inr (.root secrets)))).run auxiliary) := rfl
+    rw [sourceRun, actual, handled, simulateQ_map,
+      PqxdhPhase2InputBytes.rootCall_native source kem secret challenge supplied agreement
       secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4 input built, map_pure]
 
 /-- The concrete source and reduction interpreters discharge every opaque-owner callback obligation. -/

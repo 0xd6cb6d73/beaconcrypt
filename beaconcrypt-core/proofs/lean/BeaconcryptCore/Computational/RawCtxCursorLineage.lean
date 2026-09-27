@@ -100,7 +100,9 @@ theorem private_lineage (source : FixedHkdfSha512NoSaltSource) (stage : Nat)
     exact ⟨earlier, by simpa only [advance, matching, Bool.false_eq_true, if_false] using retained⟩
   | true =>
     have same : request = inputAddress store.2.input := by
-      simpa only [matched, cursorAddress, inputAddress, decide_eq_true_eq] using matching
+      have reflected : request = cursorAddress store.2 :=
+        of_decide_eq_true (by simpa only [matched] using matching)
+      simpa only [cursorAddress, inputAddress] using reflected
     refine ⟨earlier ++ [store.2.input], ?_⟩
     simp only [advance, matching, if_true]
     simp [walk, retained, nextChain]

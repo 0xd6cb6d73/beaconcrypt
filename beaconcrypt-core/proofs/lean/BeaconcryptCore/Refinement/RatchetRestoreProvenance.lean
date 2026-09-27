@@ -46,7 +46,8 @@ theorem DerivedMaterials.append {Material : Type} (materialAt : Nat → Material
   have hcast : (UScalar.cast UScalarTy.Usize slot).val = slot.val := by simp_scalar
   by_cases heq : slot.val = i
   · have hset := Array.getElem!_Nat_set_eq slots (UScalar.cast UScalarTy.Usize slot) i
-      (core.option.Option.Some { sequence, material }) ⟨hcast.trans heq, by simpa using hi⟩
+      (core.option.Option.Some { sequence, material })
+        ⟨hcast.trans heq, by simpa [Array.length_eq] using hi⟩
     simp only [Array.getElem!_Nat_eq] at hset
     have hrecord : (⟨sequence, material⟩ : CachedReceiveKey Material) = cached := by
       simpa only [Array.getElem!_Nat_eq, core.option.Option.Some, Option.some.injEq] using hset.symm.trans hcached

@@ -134,7 +134,8 @@ theorem program_erase
           (RawCtxPendingFamilyTails.beacon_selected sender route decode request index control associatedData kernel outside state active).symm
       all_goals
         rw [RawCtxPendingFamilyTails.program_query sender route decode (.inr (.inl ⟨index, request⟩)) outside state]
-        simp only [beacon, active, StateT.run, RawCtxGenericFamilyFrontend.impl, RawCtxGenericBeacon.impl, pure_bind, ih]
+        simp only [beacon, active, StateT.run, RawCtxGenericFamilyFrontend.impl, RawCtxGenericBeacon.impl, pure_bind]
+        exact ih _ _
     case inl =>
       exact (server_erase sender route decode request state index outside _ ih).trans
         (RawCtxPendingFamilyTails.server_selected sender route decode request index outside state).symm

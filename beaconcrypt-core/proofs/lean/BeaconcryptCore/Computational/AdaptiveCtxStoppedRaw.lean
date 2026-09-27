@@ -245,7 +245,8 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
             exact le_add_of_nonneg_left zero_le
       · rw [if_neg bad]
         have restBound : (next result.1).IsQueryBoundP AdaptiveCtxReceive.IsRawQuery remaining := by
-          simpa only [AdaptiveCtxReceive.IsRawQuery, if_pos trivial, Nat.succ_sub_one] using bounded.2 result.1
+          simpa only [ite_eq_left (show AdaptiveCtxReceive.IsRawQuery (.inr raw) from trivial),
+            Nat.succ_sub_one] using bounded.2 result.1
         have tail := ih result.1 remaining result.2 restBound
         rw [Finset.sum_range_succ']
         exact tail.trans (le_add_of_nonneg_right zero_le)
@@ -254,7 +255,9 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
       simp_rw [indexedGame_primitive]
       apply AdaptiveRawNonceAead.probEvent_bind_le_sum
       intro result supported
-      exact ih result.1 count result.2 (by simpa only [AdaptiveCtxReceive.IsRawQuery, if_false] using bounded.2 result.1)
+      exact ih result.1 count result.2
+        (by simpa only [ite_eq_right (show ¬AdaptiveCtxReceive.IsRawQuery (.inl request) from id)] using
+          bounded.2 result.1)
 
 /-- The first persistent-cache alias discrepancy costs qRaw/2^512, with exactly one selected guess per counted raw position. -/
 theorem firstDiscrepancy_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)

@@ -76,6 +76,7 @@ noncomputable def nativePost
   | .inr (.finish index raw) => fun before =>
       nativeInstalled index before <$> (owner raw (before.1.roles.1.2 index)).run (before.1.primitive, before.2)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Each original record, selector and finish request retains its whole public reply and all private poststate under the displayed operational maps. -/
 theorem step_native (interpret : Kernel → ConcreteRatchetKernel)
     (records : QueryImpl (RawCtxProtocolReveals.SourceSpec S B)

@@ -204,11 +204,11 @@ theorem appended_uniform (source : FixedHkdfSha512NoSaltSource)
     (missing : table (cursorAddress cursor) = none)
     (published : ∀ result ∈ support ((simulateQ (handler source (cursor.depth + 1) other) client).run (state, (table, cursor))),
       gate result.1 = true → ∃ path, RawCtxCursorLineage.walk result.2.2.1 (n + 1) root = some path) :
-    𝒟[(fun result => ((result.1, if gate result.1 then some
+    𝒮[(fun result => ((result.1, if gate result.1 then some
       (trace nativeKey (RawCtxPublishedLineage.step (view (productionStream source.crypto) result.2.2.1)) n
         (RawCtxFreshChainCut.concreteChain root)) else none), result.2.1)) <$>
       (simulateQ (handler source (cursor.depth + 1) other) client).run (state, (table, cursor))] =
-    𝒟[($ᵗ FullOutput) >>= fun output =>
+    𝒮[($ᵗ FullOutput) >>= fun output =>
       let prior := view (productionStream source.crypto) (table.cacheQuery (cursorAddress cursor) output)
       (fun result => ((result.1, if gate result.1 then some
         (trace nativeKey (RawCtxPublishedLineage.step prior) n (RawCtxFreshChainCut.concreteChain root))
@@ -216,7 +216,7 @@ theorem appended_uniform (source : FixedHkdfSha512NoSaltSource)
         (simulateQ (RawCtxRetainedTable.viewImpl prior other) client).run state] := by
   rw [← appended_cached source (cursor.depth + 1) other client gate n root (state, (table, cursor)) published]
   rw [RawCtxSelectiveSingleDraw.single_uniform source other (appended client gate n root) state table cursor missing]
-  exact evalDist_bind_congr' ($ᵗ FullOutput) (fun output => congrArg evalDist
+  exact evalSPMF_bind_congr' ($ᵗ FullOutput) (fun output => congrArg evalSPMF
     (appended_retained (view (productionStream source.crypto) (table.cacheQuery (cursorAddress cursor) output))
       other client gate n root state))
 
@@ -257,11 +257,11 @@ theorem logged_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (published : ∀ result ∈ support ((simulateQ (PqxdhInitialNativeLog.handler source writer
         (state.1.1.2.2.depth + 1) external) client).run state),
       gate result.1 = true → ∃ path, RawCtxCursorLineage.walk result.2.1.1.2.1 (n + 1) root = some path) :
-    𝒟[(fun result => ((result.1, if gate result.1 then some
+    𝒮[(fun result => ((result.1, if gate result.1 then some
       (trace nativeKey (RawCtxPublishedLineage.step (view (productionStream source.crypto) result.2.1.1.2.1)) n
         (RawCtxFreshChainCut.concreteChain root)) else none), PqxdhInitialNativeRetained.project result.2)) <$>
       (simulateQ (PqxdhInitialNativeLog.handler source writer (state.1.1.2.2.depth + 1) external) client).run state] =
-    𝒟[($ᵗ FullOutput) >>= fun output =>
+    𝒮[($ᵗ FullOutput) >>= fun output =>
       let prior := view (productionStream source.crypto) (state.1.1.2.1.cacheQuery (cursorAddress state.1.1.2.2) output)
       (fun result => ((result.1, if gate result.1 then some
         (trace nativeKey (RawCtxPublishedLineage.step prior) n (RawCtxFreshChainCut.concreteChain root))

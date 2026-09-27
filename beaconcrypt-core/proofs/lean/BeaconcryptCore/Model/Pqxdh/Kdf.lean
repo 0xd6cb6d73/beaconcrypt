@@ -201,7 +201,6 @@ theorem openRecord_seal_ne_ad (c : Crypto) (mk : Bytes × Bytes) (ad ad' : Recor
   have ht : (sealRecord c mk ad pt).tag.length = 16 := c.aeadSeal_tag_length _ _ _ _
   have hc : (sealRecord c mk ad pt).commit.length = 64 := c.blake2b_length _
   simp only [openRecord, decodeRecord_encode _ ht hc, Option.bind_some]
-  simp only [sealRecord]
-  rw [if_neg h]
+  rw [if_neg (by simpa only [sealRecord] using h)]
 
 end Pqxdh

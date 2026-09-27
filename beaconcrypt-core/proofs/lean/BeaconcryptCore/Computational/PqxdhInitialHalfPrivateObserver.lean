@@ -167,7 +167,8 @@ theorem compiler_quiet (query : (Base extra I D K X Response Shared S B).Domain)
   · exact (isQueryBoundP_query_iff _ _ _).mpr (by simp [PqxdhInitialHalfObserver.direct])
   · simp only [PqxdhInitialHalfObserverCompiler.compiler, PqxdhInitialHalfObserverCompiler.externalForward,
       PqxdhInitialHalfObserverCompiler.audit, isQueryBoundP_query_bind_iff]
-    exact ⟨Or.inl (by simp [PqxdhInitialHalfObserver.direct]), fun _ => ⟨Or.inl (by simp [PqxdhInitialHalfObserver.direct]), fun _ => True.intro⟩⟩
+    exact ⟨Or.inl (by simp [PqxdhInitialHalfObserver.direct]), fun _ =>
+      (isQueryBoundP_query_iff _ _ _).mpr (by simp [PqxdhInitialHalfObserver.direct])⟩
   · exact (isQueryBoundP_query_iff _ _ _).mpr (by simp [PqxdhInitialHalfObserver.direct])
   · exact (isQueryBoundP_query_iff _ _ _).mpr (by simp [PqxdhInitialHalfObserver.direct])
 

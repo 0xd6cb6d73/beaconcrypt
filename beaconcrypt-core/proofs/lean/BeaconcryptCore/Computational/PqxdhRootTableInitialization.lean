@@ -156,7 +156,6 @@ theorem source_cached (source : FixedHkdfSha512NoSaltSource) (request : InitRequ
     (sourceImpl source (.inr (.inl request))).run (history, cache) =
       pure (initialKernelRun source request.beacon root, (history ++ [(request, root)], cache)) := by
   simp only [sourceImpl, StateT.run, hit]
-  rfl
 
 /-- A new coordinate samples one root and retains its full source initialization and cache entry. -/
 theorem source_fresh (source : FixedHkdfSha512NoSaltSource) (request : InitRequest)
@@ -462,10 +461,20 @@ theorem source_hkdf_calls {Result : Type} (client : OracleComp InitSpec Result) 
       rcases request with coin | (request | publicQuery)
       · simp only [Forwarded, IsRoot, IsPublic, false_or, not_false_eq_true, if_false] at initial publicCap ⊢
         exact ⟨Or.inl True.intro, fun answer => ih answer _ _ (initial.2 answer) (publicCap.2 answer)⟩
-      · simp only [Forwarded, IsRoot, IsPublic, true_or, not_true_eq_false, false_or, if_true, if_false] at initial publicCap ⊢
+      · simp only [
+          ite_eq_left (show Forwarded IsRoot (.inr (.inl request)) from True.intro),
+          ite_eq_right (show ¬ IsPublic (.inr (.inl request)) from id),
+          ite_eq_left (show Forwarded IsRoot (.inr (.inl request)) ∨
+            IsPublic (.inr (.inl request)) from Or.inl True.intro)] at initial publicCap ⊢
+        simp only [Forwarded, IsRoot, IsPublic, true_or, not_true_eq_false, false_or] at initial publicCap ⊢
         refine ⟨by omega, fun answer => ?_⟩
         exact (ih answer _ _ (initial.2 answer) (publicCap.2 answer)).mono (by omega)
-      · simp only [Forwarded, IsPublic, false_or, not_true_eq_false, if_true, if_false] at initial publicCap ⊢
+      · simp only [
+          ite_eq_right (show ¬ Forwarded IsRoot (.inr (.inr publicQuery)) from id),
+          ite_eq_left (show IsPublic (.inr (.inr publicQuery)) from True.intro),
+          ite_eq_left (show Forwarded IsRoot (.inr (.inr publicQuery)) ∨
+            IsPublic (.inr (.inr publicQuery)) from Or.inr True.intro)] at initial publicCap ⊢
+        simp only [Forwarded, IsPublic, false_or, not_true_eq_false] at initial publicCap ⊢
         refine ⟨by omega, fun answer => ?_⟩
         exact (ih answer _ _ (initial.2 answer) (publicCap.2 answer)).mono (by omega)
 

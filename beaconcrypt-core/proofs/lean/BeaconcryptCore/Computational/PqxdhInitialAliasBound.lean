@@ -66,15 +66,15 @@ theorem cut_distance (fixed : FixedHkdfSha512NoSaltSource)
 theorem delayed (fixed : FixedHkdfSha512NoSaltSource)
     (selected : Context → Message) (client : Context → OracleComp PqxdhInitialLabelCompiler.Spec Result)
     (sample : ProbComp Context) :
-    𝒟[sampleCut sample >>= left fixed selected client] =
-      𝒟[sample >>= fun context => do
+    𝒮[sampleCut sample >>= left fixed selected client] =
+      𝒮[sample >>= fun context => do
         let output ← $ᵗ HmacBlock
         let result ← observed fixed selected client context output
         let root ← $ᵗ RootOutput
         pure (root, (output, result))] := by
   simp only [sampleCut, left, bind_assoc, pure_bind]
-  refine evalDist_bind_congr' (m := ProbComp) sample fun context => ?_
-  have moved := evalDist_sample_comm ($ᵗ RootOutput)
+  refine evalSPMF_bind_congr' (m := ProbComp) sample fun context => ?_
+  have moved := evalSPMF_sample_comm ($ᵗ RootOutput)
     (do let output ← $ᵗ HmacBlock
         let result ← observed fixed selected client context output
         pure (output, result)) (fun root pair => (pure (root, pair) : ProbComp _))

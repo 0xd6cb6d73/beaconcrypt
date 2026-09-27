@@ -109,14 +109,14 @@ theorem send_selected {Context : Type}
 /-- Sampling the selected message key after the known nonce and next chain preserves every complete continuation, not just marginal key distributions. -/
 theorem key_observed {Result : Type}
     (continuation : RootOutput → NonceOutput → RootOutput → ProbComp Result) :
-    𝒟[($ᵗ FullOutput) >>= fun output =>
+    𝒮[($ᵗ FullOutput) >>= fun output =>
       continuation (material output).1 (material output).2 (nextChain output)] =
-      𝒟[(do let nonce ← $ᵗ NonceOutput
+      𝒮[(do let nonce ← $ᵗ NonceOutput
              let chain ← $ᵗ RootOutput
              let key ← $ᵗ RootOutput
              continuation key nonce chain)] := by
   have original := fullOutput_observed (fun value chain => continuation value.1 value.2 chain)
-  have reordered := JointEagerTable.independent_comm ($ᵗ RootOutput)
+  have reordered := evalSPMF_bind_bind_swap ($ᵗ RootOutput)
     ($ᵗ (NonceOutput × RootOutput)) (fun key pair => continuation key pair.1 pair.2)
   simp only [← pairSample, bind_assoc, pure_bind] at original reordered
   exact original.trans reordered
@@ -124,9 +124,9 @@ theorem key_observed {Result : Type}
 /-- The exact native decoder, with all three projections used jointly, factors through the ordinary uniform selected key sample. -/
 theorem decoded_observed {Result : Type}
     (continuation : (RatchetChain × RatchetMaterial) → ProbComp Result) :
-    𝒟[($ᵗ FullOutput) >>= fun output =>
+    𝒮[($ᵗ FullOutput) >>= fun output =>
       continuation (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output))] =
-      𝒟[(do let nonce ← $ᵗ NonceOutput
+      𝒮[(do let nonce ← $ᵗ NonceOutput
              let chain ← $ᵗ RootOutput
              let key ← $ᵗ RootOutput
              continuation (concreteChain chain, interpret key (.hidden nonce)))] := by
@@ -137,10 +137,10 @@ theorem decoded_observed {Result : Type}
 theorem receive_observed {Context Result : Type}
     (pending : RawCtxInterpretedReceive.Kdf RatchetMaterial Context)
     (continuation : RawCtxInterpretedReceive.Effect RatchetMaterial Context → ProbComp Result) :
-    𝒟[($ᵗ FullOutput) >>= fun output => continuation
+    𝒮[($ᵗ FullOutput) >>= fun output => continuation
       (RawCtxInterpretedReceive.normalResume pending
         (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output)))] =
-      𝒟[(do let nonce ← $ᵗ NonceOutput
+      𝒮[(do let nonce ← $ᵗ NonceOutput
              let chain ← $ᵗ RootOutput
              let key ← $ᵗ RootOutput
              continuation (RawCtxInterpretedReceive.mapEffect (interpret key)
@@ -165,15 +165,15 @@ noncomputable def prepareReceive {Context : Type}
 theorem receive_prepared {Context Result : Type}
     (sample : ProbComp (RawCtxInterpretedReceive.Kdf RatchetMaterial Context))
     (continuation : RawCtxInterpretedReceive.Effect RatchetMaterial Context → ProbComp Result) :
-    𝒟[(do let pending ← sample
+    𝒮[(do let pending ← sample
            let output ← $ᵗ FullOutput
            continuation (RawCtxInterpretedReceive.normalResume pending
              (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output))))] =
-      𝒟[(do let prepared ← prepareReceive sample
+      𝒮[(do let prepared ← prepareReceive sample
              let key ← $ᵗ RootOutput
              continuation (RawCtxInterpretedReceive.mapEffect (interpret key) prepared))] := by
   simp only [prepareReceive, bind_assoc, pure_bind]
-  exact evalDist_bind_congr' sample (fun pending => receive_observed pending continuation)
+  exact evalSPMF_bind_congr' sample (fun pending => receive_observed pending continuation)
 
 /-- Every original preparation random query remains charged, plus the actual 12-byte nonce and 32-byte next chain; the primitive challenger separately supplies its 32-byte key. -/
 theorem prepare_receive_bound {Context : Type}

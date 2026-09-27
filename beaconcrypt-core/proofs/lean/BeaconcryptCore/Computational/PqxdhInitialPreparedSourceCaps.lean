@@ -85,8 +85,9 @@ theorem callbacks (secret : KemSK) (challenge : MlKem768Ciphertext) :
   · intro reply state cache
     exact (isQueryBound_map_iff _ _ _ _ _).2 (interpreted_callback env baseImpl kem attachedVerify primitives program post c secret challenge (.inr (.inr reply)) state)
   · intro query state cache
-    change ((fun result => ((result.1.1, (state.1, result.1.2)), result.2)) <$>
-      (((PqxdhInitialPendingCurrent.selector attachedVerify primitives 1 baseImpl kem secret challenge query).run state.2).run cache)).IsTotalQueryBound _
+    change (((fun result => (result.1, (state.1, result.2))) <$>
+      (PqxdhInitialPendingCurrent.selector attachedVerify primitives 1 baseImpl kem secret challenge query).run state.2).run cache).IsTotalQueryBound _
+    rw [StateT.run_map]
     exact (isQueryBound_map_iff _ _ _ _ _).2
       (selector_uniform env baseImpl kem attachedVerify primitives program post c secret challenge query state.2 cache)
   · intro query state cache

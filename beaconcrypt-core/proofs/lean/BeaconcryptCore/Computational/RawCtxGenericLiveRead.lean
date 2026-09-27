@@ -88,6 +88,7 @@ theorem read_step {Chain Metadata Base : Type} {serverCount beaconCount : Nat}
         ((state.1.1, RawCtxProtocolReveals.note (observation owner read (reader read (some state.1.1.kernel))) state.1.2),
           state.2 || exposure read (some state.1.1.kernel))) := by
   simp [compiler, handler, StateT.run, OracleSpec.query]
+  rfl
 
 /-- Adding live reads leaves every full pending primitive callback and all of its effects unchanged. -/
 theorem primitive_handler {Chain Base : Type}
@@ -123,7 +124,6 @@ theorem original_step {Chain Metadata Base : Type} {serverCount beaconCount : Na
         simulateQ primitive ((RawCtxPendingOwnerQueries.compiler sender decode request).run state.1.1) := by
   simp only [compiler, StateT.run, bind_pure_comp, simulateQ_map]
   rw [← QueryImpl.simulateQ_compose, primitive_handler]
-  rfl
 
 end BeaconcryptCore.Computational.RawCtxGenericLiveRead
 

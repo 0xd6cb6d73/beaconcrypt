@@ -256,7 +256,9 @@ end BeaconcryptCore.Computational.PqxdhLiveJointBirth
 /-- info: 'BeaconcryptCore.Computational.PqxdhLiveJointBirth.coins_class' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhLiveJointBirth.coins_class
-/-- info: 'BeaconcryptCore.Computational.PqxdhLiveJointBirth.coins_bills' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhLiveJointBirth.coins_bills' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhLiveJointBirth.coins_bills
 /-- info: 'BeaconcryptCore.Computational.PqxdhLiveJointBirth.afterIdentity_bills' depends on axioms: [propext,

@@ -120,7 +120,10 @@ theorem before_exposure (read : Read) (target : RatchetChain) (entry : Option Ke
     (safe : exposed read entry = false) :
     nativeRead read (entry.map (nativeKernel target)) = labelRead read entry := by
   cases entry <;> cases read <;> simp_all [nativeRead, labelRead, exposed, skipped_independent]
-  all_goals split at safe <;> simp_all [nativeKernel, RawCtxChainInterpretation.mapChains, interpret, slotReply]
+  all_goals try rfl
+  all_goals split at safe <;>
+    simp_all [nativeKernel, RawCtxChainInterpretation.mapChains, interpret, slotReply]
+  all_goals rfl
 
 /-- The same actual source read and full disclosure history factor through private slots until direct exposure. -/
 theorem source_before_exposure {Metadata PeerMetadata Identity DhPair KemPair Auxiliary : Type}
@@ -167,6 +170,7 @@ theorem exposure_reply (read : Read) (target : RatchetChain) (entry : Option Ker
   cases entry <;> cases read <;> simp_all only [Option.map_none, Option.map_some]
   all_goals simp only [exposed, Bool.false_eq_true] at hit
   all_goals split at hit <;> simp_all [nativeRead, labelRead, nativeKernel, RawCtxChainInterpretation.mapChains, interpret, slotReply]
+  all_goals exact ⟨rfl, rfl⟩
 
 /-- The actual source read invokes no underlying uniform oracle, while its source-level attempt is retained. -/
 theorem source_uniform {Metadata PeerMetadata Identity DhPair KemPair Auxiliary : Type}

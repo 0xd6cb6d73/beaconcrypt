@@ -89,7 +89,6 @@ theorem protocol_interpretation {Metadata PeerMetadata Identity DhPair KemPair A
           (familyImpl serverCount (RawCtxServerMixed.serverImpl senderId route decode) server state.1.1)).run state.2) = _
     rw [StateT.run_map]
     simp only [Functor.map_map, StateT.run]
-    rfl
   case inr.inl =>
     rw [RawCtxProtocolBackend.backend, ← QueryImpl.simulateQ_compose,
       RawCtxServerServices.native_interpretation, ← RawCtxRoleFamily.beacon_interpretation]
@@ -100,7 +99,6 @@ theorem protocol_interpretation {Metadata PeerMetadata Identity DhPair KemPair A
           (familyImpl beaconCount (RawCtxBeaconLifecycle.beaconImpl decode) beacon state.1.2)).run state.2) = _
     rw [StateT.run_map]
     simp only [Functor.map_map, StateT.run]
-    rfl
   case inr.inr =>
     change (fun x => (x.1.1, x.1.2, x.2)) <$>
       (((fun a => (a, state.1)) <$>
@@ -108,7 +106,6 @@ theorem protocol_interpretation {Metadata PeerMetadata Identity DhPair KemPair A
           (RawCtxServerServices.publicLift publicQuery)).run state.2) = _
     rw [StateT.run_map]
     simp only [Functor.map_map, QueryImpl.compose, StateT.run]
-    rfl
 
 /-- Arbitrary adaptive cross-role delivery, requests, public queries and stopping preserve the whole protocol/primitive execution. -/
 theorem schedule_interpretation {Metadata PeerMetadata Identity DhPair KemPair Auxiliary Result : Type}

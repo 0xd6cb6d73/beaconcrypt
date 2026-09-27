@@ -56,6 +56,7 @@ private theorem map_step {Metadata Auxiliary Result Value : Type}
     (fun work => (fun x => ((finish x.1).1, ((finish x.1).2, x.2))) <$> work) realized
   simpa only [StateT.run_map, Functor.map_map, Prod.map_def, id_eq, erase, Function.comp_def] using projected
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Recording every private source KDF input changes only the added log across each original API step. -/
 theorem source_step {Metadata Auxiliary : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

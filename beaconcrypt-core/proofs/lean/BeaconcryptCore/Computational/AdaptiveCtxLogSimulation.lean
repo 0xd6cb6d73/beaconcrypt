@@ -83,7 +83,9 @@ theorem runLogged_query_bound {Result : Type} (decode : RawDecoder)
       exact ⟨bounded.1, fun answer => ih answer _ _ (bounded.2 answer)⟩
     | inr raw =>
       rw [runLogged_raw]
-      exact ih _ history bound (by simpa only [primitiveClass, if_false] using bounded.2 _)
+      have continued := bounded.2 (simulatedOpen decode history raw)
+      rw [if_neg (by simp only [primitiveClass, not_false_eq_true])] at continued
+      exact ih _ history bound continued
 
 /-- The returned simulator log equals the challenger's complete successful encryption log. -/
 theorem runLogged_history (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
@@ -261,15 +263,13 @@ theorem retainedLoggedGame_eq {Result : Type} (decode : AdaptiveCtxReceive.RawDe
 end BeaconcryptCore.Computational.AdaptiveCtxLogSimulation
 
 /--
-info: 'BeaconcryptCore.Computational.AdaptiveCtxLogSimulation.runLogged_projection' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
+info: 'BeaconcryptCore.Computational.AdaptiveCtxLogSimulation.runLogged_projection' depends on axioms: [propext, Quot.sound]
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.AdaptiveCtxLogSimulation.runLogged_projection
 
 /--
-info: 'BeaconcryptCore.Computational.AdaptiveCtxLogSimulation.runLogged_query_bound' depends on axioms: [propext, Quot.sound]
+info: 'BeaconcryptCore.Computational.AdaptiveCtxLogSimulation.runLogged_query_bound' depends on axioms: [propext]
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.AdaptiveCtxLogSimulation.runLogged_query_bound
@@ -284,7 +284,6 @@ info: 'BeaconcryptCore.Computational.AdaptiveCtxLogSimulation.runLogged_history'
 
 /--
 info: 'BeaconcryptCore.Computational.AdaptiveCtxLogSimulation.primitive_preserves_nonceHistory' depends on axioms: [propext,
- Classical.choice,
  Quot.sound]
 -/
 #guard_msgs in

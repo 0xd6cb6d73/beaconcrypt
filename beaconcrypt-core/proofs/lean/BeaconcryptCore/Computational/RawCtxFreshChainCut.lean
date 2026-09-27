@@ -86,8 +86,8 @@ noncomputable def partitionedCut {Context Stopped : Type} (sample : ProbComp Con
 /-- Exact full-context equality derives the input distribution from the actual response partition, rather than imposing an independent-input hypothesis. -/
 theorem sampledCut_partition {Context Stopped : Type} (sample : ProbComp Context)
     (stop : Context → RatchetMaterial → Stopped) :
-    𝒟[sampledCut sample stop] = 𝒟[partitionedCut sample stop] := by
-  exact evalDist_bind_congr' sample (fun context =>
+    𝒮[sampledCut sample stop] = 𝒮[partitionedCut sample stop] := by
+  exact evalSPMF_bind_congr' sample (fun context =>
     fullOutput_observed (fun value chain => pure (stop context (concreteMaterial value), chain.toList)))
 
 /-- Typed form used by the concrete selected-chain source game. -/
@@ -124,13 +124,13 @@ noncomputable def delayedCut {Context Stopped Result : Type} (sample : ProbComp 
 /-- The complete original prior state, material and continued result survive delaying only the independent second32 coordinate. -/
 theorem observedCut_delayed {Context Stopped Result : Type} (sample : ProbComp Context)
     (stop : Context → RatchetMaterial → Stopped) (observe : Stopped → ProbComp Result) :
-    𝒟[observedCut sample stop observe] = 𝒟[delayedCut sample stop observe] := by
+    𝒮[observedCut sample stop observe] = 𝒮[delayedCut sample stop observe] := by
   simp only [observedCut, typedCut, delayedCut, bind_assoc, pure_bind]
-  refine evalDist_bind_congr' sample (fun context => ?_)
+  refine evalSPMF_bind_congr' sample (fun context => ?_)
   refine (fullOutput_observed (fun value target => do
     let result ← observe (stop context (concreteMaterial value)); pure (target, result))).trans ?_
-  exact evalDist_bind_congr' ($ᵗ Material) (fun value =>
-    evalDist_sample_comm ($ᵗ RootOutput) (observe (stop context (concreteMaterial value)))
+  exact evalSPMF_bind_congr' ($ᵗ Material) (fun value =>
+    evalSPMF_sample_comm ($ᵗ RootOutput) (observe (stop context (concreteMaterial value)))
       (fun target result => pure (target, result)))
 
 end BeaconcryptCore.Computational.RawCtxFreshChainCut

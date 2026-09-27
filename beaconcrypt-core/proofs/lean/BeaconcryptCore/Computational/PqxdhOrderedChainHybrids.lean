@@ -85,36 +85,36 @@ def materialChainEquiv : FullOutput ≃ (Material × RootOutput) :=
     right_inv := fun _ => rfl }
 
 theorem materialChain_uniform :
-    𝒟[(fun output : FullOutput => (material output, nextChain output)) <$>
-      ($ᵗ FullOutput)] = 𝒟[$ᵗ (Material × RootOutput)] := by
-  exact evalDist_map_bijective_uniform_cross FullOutput materialChainEquiv
+    𝒮[(fun output : FullOutput => (material output, nextChain output)) <$>
+      ($ᵗ FullOutput)] = 𝒮[$ᵗ (Material × RootOutput)] := by
+  exact evalSPMF_map_bijective_uniform_cross FullOutput materialChainEquiv
     materialChainEquiv.bijective
 
 /-- Complete continuations see a material/next-chain pair with the exact uniform joint law. -/
 theorem fullOutput_observed {A : Type} (continuation : Material → RootOutput → ProbComp A) :
-    𝒟[(do let output ← $ᵗ FullOutput
+    𝒮[(do let output ← $ᵗ FullOutput
           continuation (material output) (nextChain output))] =
-      𝒟[(do let record ← $ᵗ Material
+      𝒮[(do let record ← $ᵗ Material
             let chain ← $ᵗ RootOutput
             continuation record chain)] := by
   have observed := congrArg (fun distribution => distribution >>=
-    fun pair => 𝒟[continuation pair.1 pair.2]) materialChain_uniform
-  simpa only [← evalDist_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
+    fun pair => 𝒮[continuation pair.1 pair.2]) materialChain_uniform
+  simpa only [← evalSPMF_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
 
 /-- The independent full-output hop is precisely the next ordered hybrid. -/
 theorem independentHop_eq_hybrid {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (sample : ProbComp Context) (observer : EvolutionObserver Context) (cut remaining : Nat) :
-    𝒟[independentFullGame (hopSampler sample cut) (hopObserver source observer remaining)] =
-      𝒟[hybrid source sample observer (cut + 1 + remaining) (cut + 1)] := by
+    𝒮[independentFullGame (hopSampler sample cut) (hopObserver source observer remaining)] =
+      𝒮[hybrid source sample observer (cut + 1 + remaining) (cut + 1)] := by
   have count : cut + 1 + remaining - (cut + 1) = remaining := by omega
   simp only [independentFullGame, hopSampler, hopObserver, hybrid, count, sampleMaterials,
     bind_assoc, pure_bind, List.append_assoc, List.singleton_append]
-  refine evalDist_bind_congr' sample fun context => ?_
-  refine evalDist_bind_congr' (sampleMaterials cut) fun prior => ?_
+  refine evalSPMF_bind_congr' sample fun context => ?_
+  refine evalSPMF_bind_congr' (sampleMaterials cut) fun prior => ?_
   have ignored (computation : ProbComp Bool) :
-      𝒟[(($ᵗ RootOutput) : ProbComp RootOutput) >>= fun _ => computation] =
-        𝒟[computation] :=
-    OracleComp.DeferredSampling.evalDist_bind_const_neverFails _ (by simp) computation
+      𝒮[(($ᵗ RootOutput) : ProbComp RootOutput) >>= fun _ => computation] =
+        𝒮[computation] :=
+    OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails _ (by simp) computation
   rw [ignored]
   exact fullOutput_observed (fun record chain =>
     observer context ⟨prior ++ record :: (realEvolution source remaining chain).records,
@@ -138,7 +138,7 @@ theorem adjacent_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (hybrid source sample observer (cut + 1 + remaining) cut).boolDistAdvantage
       (hybrid source sample observer (cut + 1 + remaining) (cut + 1)) ≤
         hopLoss source hmac sample observer cut remaining := by
-  have random := OracleComp.probOutput_congr (x := true) rfl
+  have random := evalDist_eq_of_evalSPMF_eq _ _
     (independentHop_eq_hybrid source sample observer cut remaining)
   simpa only [hybrid_eq_sourceHop, hopLoss, ProbComp.boolDistAdvantage, random] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet

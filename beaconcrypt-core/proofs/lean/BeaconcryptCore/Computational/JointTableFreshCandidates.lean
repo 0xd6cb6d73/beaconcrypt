@@ -6,19 +6,22 @@ namespace BeaconcryptCore.Computational.JointTableFreshCandidates
 
 open JointEagerTable
 variable {D R : Type} [DecidableEq D] [Finite D] [Finite R] [Nonempty R]
-  [SampleableType R] [SampleableType (D → R)]
+  [SampleableType R] [SampleableType (D → R)] [MeasurableSpace R]
+  [DiscreteMeasurableSpace R]
 
 /-- Any fixed coordinate of the independent completed tail is uniform. -/
 theorem uniform_coordinate (point : D) :
     𝒟[(fun table : D → R => table point) <$> ($ᵗ (D → R))] = 𝒟[$ᵗ R] := by
-  have law := evalDist_uniformSample_bind_update_map (R := R) point (fun table => table point)
+  have law := evalDist_uniformSample_bind_update_map (R := R)
+    SampleableType.evalDist_uniformSample SampleableType.evalDist_uniformSample
+    point (fun table => table point)
   simp only [Function.update_self, bind_pure_comp] at law
   rw [← law]
-  apply evalDist_ext
-  intro value
-  simp only [probOutput_bind_eq_tsum, probOutput_map_const, probFailure_uniformSample, tsub_zero, one_mul]
-  rw [← probOutput_bind_eq_tsum]
-  simp
+  trans 𝒟[($ᵗ R) >>= fun value => pure value]
+  · apply evalDist_bind_congr
+    intro value
+    rw [OracleComp.evalDist_map_const, evalDist_pure]
+  · rw [bind_pure]
 
 /-- A candidate wins only at a final cache miss; each such fixed guess costs at most one uniform range value. Cached coordinates make this event false. -/
 theorem fixed_fresh_guess_bound (cache : (D →ₒ R).QueryCache) (point : D) (guess : R) :
@@ -30,7 +33,8 @@ theorem fixed_fresh_guess_bound (cache : (D →ₒ R).QueryCache) (point : D) (g
   · have coordinate : Pr[(fun table : D → R => table point = guess) | $ᵗ (D → R)] =
         (Nat.card R : ℝ≥0∞)⁻¹ := by
       rw [← probOutput_map]
-      rw [probOutput_def, uniform_coordinate, ← probOutput_def, probOutput_uniformSample, Nat.card_eq_fintype_card]
+      rw [← evalDist_apply_singleton, uniform_coordinate, evalDist_apply_singleton,
+        probOutput_uniformSample, Nat.card_eq_fintype_card]
     simpa only [tableExtending, fresh, Option.getD_none, true_and] using coordinate.le
   · simp [fresh]
 

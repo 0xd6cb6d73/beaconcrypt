@@ -106,11 +106,13 @@ theorem reportAccepted_iff_source (primitives : Primitives) {count : ℕ} (candi
     (state : GlobalState count × PqxdhDynamicIdentityPool.SourceState) :
     reportAccepted primitives candidate (sourceSnapshot primitives state) = true ↔
       PqxdhDynamicIdentityRouting.DynamicEvent primitives (candidate, state) := by
+  change reportAccepted primitives candidate
+    (⟨sourceKeys primitives state.2.seeds, state.1⟩ : PublicSnapshot count) = true ↔ _
   by_cases valid : candidate.identity < count
   · cases lookup : state.2.seeds[candidate.identity]? with
-    | none => simp [reportAccepted, sourceSnapshot, sourceKeys, lookup, valid,
+    | none => simp [reportAccepted, sourceKeys, lookup, valid,
         PqxdhDynamicIdentityRouting.DynamicEvent, Fresh]
-    | some seed => simp [reportAccepted, sourceSnapshot, sourceKeys, lookup, valid,
+    | some seed => simp [reportAccepted, sourceKeys, lookup, valid,
         PqxdhDynamicIdentityRouting.DynamicEvent, Fresh]
   · simp [reportAccepted, valid, PqxdhDynamicIdentityRouting.DynamicEvent, Fresh]
 
@@ -315,7 +317,9 @@ theorem stop_query_bound (primitives : Primitives) (count : ℕ) {Result : Type}
       rw [stop_report]
       split
       · trivial
-      · exact ih () bound (by simpa only [reportingClass, if_false] using bounded.2 ()) state
+      · have nextBound := bounded.2 ()
+        rw [if_neg (by simp only [reportingClass, not_false_eq_true])] at nextBound
+        exact ih () bound nextBound state
 
 /-- The concrete stopped extractor inherits creation, randomness, signing, DH and reveal request caps. -/
 theorem extractor_query_bound (primitives : Primitives) (count : ℕ) {Result : Type}
@@ -427,9 +431,12 @@ theorem reportingImpl_uniform_step (primitives : Primitives) (count : ℕ)
         (if reportingClass PqxdhDynamicIdentityPool.IsUniform query then 1 else 0)) := by
   cases query with
   | inl request =>
-    change ((fun result => (result.1, { state with source := result.2, publicSnapshot := observe request result.1 state.publicSnapshot })) <$>
-      (PqxdhDynamicIdentityRouting.sourceWithHistory count
-        (PqxdhDynamicIdentityPool.lazyImpl primitives) request).run state.source).IsTotalQueryBound _
+    rw [show (reportingImpl primitives count (.inl request)).run state =
+      (fun result => (result.1, ReportingState.mk result.2
+        (observe request result.1 state.publicSnapshot) state.occurred state.reported)) <$>
+        (PqxdhDynamicIdentityRouting.sourceWithHistory count
+          (PqxdhDynamicIdentityPool.lazyImpl primitives) request).run state.source from by
+      simp only [reportingImpl, StateT.run, bind_pure_comp]]
     simp only [OracleComp.IsTotalQueryBound, OracleComp.isQueryBound_map_iff]
     rw [PqxdhDynamicIdentityRouting.sourceWithHistory_run]
     simp only [bind_pure_comp, OracleComp.isQueryBound_map_iff, reportingClass]

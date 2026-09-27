@@ -70,9 +70,8 @@ theorem open_bound {Send Chain : Type} {count : Nat}
   cases selected : arguments pending with
   | none => trivial
   | some input =>
-    simp only [bind_pure_comp, isQueryBoundP_map_iff, isQueryBoundP_query_iff, Resource]
-    intro hit
-    simp [hit]
+    rw [isQueryBoundP_query_bind_iff]
+    cases kdf <;> simp [Resource]
 
 set_option backward.isDefEq.respectTransparency false in
 /-- One source callback conserves its resource class; no unavailable key is used by routing. -/

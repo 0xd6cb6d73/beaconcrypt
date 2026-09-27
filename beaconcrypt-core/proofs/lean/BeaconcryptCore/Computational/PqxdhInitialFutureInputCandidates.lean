@@ -34,6 +34,7 @@ noncomputable def freshBad (context : (Bool ⊕ Context) × Entry) (target : Roo
       PqxdhInitialPrivateCheckedFreshness.nativeRun source writer mark sender route decode view.continuation
         (pending, context.2) target output view.disclosed (view.ambient pending) (view.priorCandidates pending)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The source clear-disclosure candidate probability pays two copies of the same full target-input-free candidate event, including every later callback and saved candidate. -/
 theorem clear_bound (context : (Bool ⊕ Context) × Entry) (target : RootOutput) (output : FullOutput) :
     Pr[= true | clearBad source writer mark sender route decode view context target output] ≤

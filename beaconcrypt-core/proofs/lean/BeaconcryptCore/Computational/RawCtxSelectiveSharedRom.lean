@@ -55,20 +55,22 @@ theorem step {A : Type} (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
       (RawCtxSelectiveChainGame.handler source stage (RawCtxProtocolBackend.backend source writer) query).run (attach state cache) := by
   cases query with
   | inl query =>
+    simp only [handler, StateT.run, bind_pure_comp]
     change (fun result => (result.1.1, attach result.1.2 result.2)) <$>
       (simulateQ hashImpl ((fun answer => (answer, state)) <$> RawCtxSourceSharedRom.backend source writer query)).run cache = _
     simp only [simulateQ_map, StateT.run_map]
+    simp only [RawCtxSelectiveChainGame.handler, bind_pure_comp]
     change _ = (fun answer => (answer.1, (answer.2, state.2))) <$>
       (RawCtxProtocolBackend.backend source writer query).run (state.1, cache)
     rw [RawCtxSourceSharedRom.backend_step]
     simp only [Functor.map_map, attach]
   | inr request =>
+    simp only [handler, StateT.run, bind_pure_comp]
     change (fun result => (result.1.1, attach result.1.2 result.2)) <$>
       (simulateQ hashImpl ((fun answer => (answer.1, (state.1, answer.2))) <$>
         simulateQ coins (privateStep source stage request state.2))).run cache = _
     rw [simulateQ_map, StateT.run_map, coins_complete]
-    simp only [RawCtxSelectiveChainGame.handler, StateT.run, bind_pure_comp, Functor.map_map, attach]
-    rfl
+    simp only [RawCtxSelectiveChainGame.handler, bind_pure_comp, Functor.map_map, attach]
 
 /-- The complete adaptive staged program executes the exact source table and cursor while all earlier commitment work is forwarded into the retained ROM. -/
 theorem program {A Result : Type} (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -152,7 +154,7 @@ theorem coins_no_hash {Result : Type} (work : ProbComp Result) :
     (simulateQ coins work).IsQueryBoundP (HashClass true) 0 := by
   apply RawCtxSourceOpen.simulate_bound coins (fun _ => False) (HashClass true) work 0 (isQueryBoundP_false work 0)
   intro query
-  change (HashSpec.query (.inl query) : OracleComp HashSpec _).IsQueryBoundP (HashClass true) 0
+  change OracleComp.IsQueryBoundP (HashSpec.query (.inl query) : OracleComp HashSpec _) (HashClass true) 0
   exact (isQueryBoundP_query_iff (spec := HashSpec) (p := HashClass true) (.inl query) 0).2 (by simp [HashClass])
 
 /-- Every original uniform draw remains exactly one forwarded uniform request, with no hidden random work. -/
@@ -162,7 +164,7 @@ theorem coins_bound {Result : Type} (work : ProbComp Result) (bound : Nat)
   apply RawCtxSourceOpen.simulate_bound coins (fun _ => True) (HashClass false) work bound
     ((isQueryBoundP_true_iff work bound).2 bounded)
   intro query
-  change (HashSpec.query (.inl query) : OracleComp HashSpec _).IsQueryBoundP (HashClass false) 1
+  change OracleComp.IsQueryBoundP (HashSpec.query (.inl query) : OracleComp HashSpec _) (HashClass false) 1
   exact (isQueryBoundP_query_iff (spec := HashSpec) (p := HashClass false) (.inl query) 1).2 (by simp [HashClass])
 
 /-- A private staged lookup uses no hash and at most the actual76-byte full-output draw. Hits and unselected misses keep their existing cheaper branches. -/

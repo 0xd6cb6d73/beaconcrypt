@@ -104,15 +104,16 @@ theorem real_source (prior : ProbComp (Context extra M P I D K X Response A N S 
 theorem random_source (prior : ProbComp (Context extra M P I D K X Response A N S B)) :
     𝒟[independentFullGame (sampler prior) (observer source writer sender route decode)] =
       𝒟[random source writer sender route decode prior] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [independentFullGame, sampler, bind_assoc, pure_bind, random]
-  apply evalDist_bind_congr' prior
+  apply evalSPMF_bind_congr' prior
   intro context
-  have discarded := OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure
+  have discarded := OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure
     ($ᵗ RootOutput) (do let output ← $ᵗ FullOutput; observer source writer sender route decode context output)
   refine discarded.trans ?_
   have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>= fun output =>
-    𝒟[observe source writer sender route decode context (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform
-  simpa only [← evalDist_bind, bind_map_left, observer] using projected
+    𝒮[observe source writer sender route decode context (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform
+  simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
 
 /-- The actual full source publication/freshness event, starting at an independent32-byte root and retaining both directions, reduces to the exact Extract sampler and ordinary HMAC PRF with coefficient one. -/
 theorem bound (prior : ProbComp (Context extra M P I D K X Response A N S B))
@@ -122,7 +123,8 @@ theorem bound (prior : ProbComp (Context extra M P I D K X Response A N S B))
         (extractUniformGame (sampler prior) (fullExtractReduction hmac .ratchet (observer source writer sender route decode))) +
       (hmacPrfRealGame hmac (fullExpandReduction .ratchet (sampler prior) (observer source writer sender route decode))).boolDistAdvantage
         (hmacPrfRandomGame (fullExpandReduction .ratchet (sampler prior) (observer source writer sender route decode))) := by
-  have randomLaw := OracleComp.probOutput_congr (x := true) rfl (random_source source writer sender route decode prior)
+  have randomLaw := congrArg (fun distribution : MeasureTheory.Measure Bool => distribution {true})
+    (random_source source writer sender route decode prior)
   simpa only [real_source source writer sender route decode prior, ProbComp.boolDistAdvantage, randomLaw] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet (sampler prior) (observer source writer sender route decode)
 
@@ -130,8 +132,12 @@ theorem bound (prior : ProbComp (Context extra M P I D K X Response A N S B))
 theorem sampler_uniform (prior : ProbComp (Context extra M P I D K X Response A N S B))
     (qPrior : Nat) (bounded : prior.IsTotalQueryBound qPrior) :
     (sampler prior).IsTotalQueryBound (qPrior + 32) := by
-  exact isTotalQueryBound_bind bounded (fun _ =>
-    (isQueryBound_map_iff _ _ _ _ _).2 (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 32))
+  unfold sampler
+  apply isTotalQueryBound_bind bounded
+  intro context
+  simpa only [map_eq_bind_pure_comp, Function.comp_def, IsTotalQueryBound] using
+    (isQueryBound_map_iff ($ᵗ RootOutput) (fun root => (context, root.toList)) 32 _ _).2
+      (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 32)
 
 end BeaconcryptCore.Computational.PqxdhInitialSourceInitialSecrecy
 

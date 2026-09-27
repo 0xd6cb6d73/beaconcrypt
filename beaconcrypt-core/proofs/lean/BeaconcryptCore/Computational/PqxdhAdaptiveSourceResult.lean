@@ -23,6 +23,10 @@ theorem sequence_map (source : FixedHkdfSha512NoSaltSource) (initial : RustM (Ke
     (fun result => (observe result.1, result.2)) <$> (PqxdhInitialOriginPost.sequence (X := X) (Response := Response)
       source initial mark origin sender route decode index metadata ready post).run before := by
   simp only [PqxdhInitialOriginPost.sequence, StateT.run, simulateQ_map, map_bind]
+  apply bind_congr
+  intro built
+  change ((observe <$> simulateQ (PqxdhInitialOriginPost.compiler mark sender route decode) (post built.1)).run _) = _
+  rw [StateT.run_map]
   rfl
 
 end BeaconcryptCore.Computational.PqxdhAdaptiveSourceResult

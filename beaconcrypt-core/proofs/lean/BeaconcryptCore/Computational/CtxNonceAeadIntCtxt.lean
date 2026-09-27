@@ -206,6 +206,7 @@ theorem modifiedNonceAeadSealOracle_run_ctx
   simp only [toModifiedNonceAeadSealInput_nonce,
     toModifiedNonceAeadSealInput_ad,
     toModifiedNonceAeadSealInput_plaintext]
+  rfl
 
 /-- Project a CTX record to the retained detached primitive ciphertext. -/
 def CtxRomRecord.toModifiedNonceAeadCiphertext
@@ -401,10 +402,11 @@ theorem ctxRetainedBaseReductionImpl_seal_query_bound_step
         cases base with
         | none => simp
         | some ciphertext =>
-            exact (OracleComp.isQueryBoundP_map_iff
-              modifiedNonceAeadDigest _ 0).mpr
-                (liftProbComp_no_modifiedNonceAeadSealQueries
-                  ($ᵗ CtxDigest))
+            refine OracleComp.isQueryBoundP_bind (n := 0) (m := 0) ?_ ?_
+            · exact liftProbComp_no_modifiedNonceAeadSealQueries
+                ($ᵗ CtxDigest)
+            · intro commit _
+              trivial
 
 /-- The retained-base forger preserves every source sealing-query bound. -/
 theorem ctxRetainedBaseReduction_seal_query_bound

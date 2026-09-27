@@ -47,7 +47,7 @@ theorem ratchet_kdf_output_split_is_exact (output : Std.Array Std.U8 76#usize) :
       (∀ i : Nat, i < 32 → result.next_chain.bytes.val[i]! = output.val[i + 32]!) ∧
       (∀ i : Nat, i < 12 → result.nonce.bytes.val[i]! = output.val[i + 64]!) :=
   (PanicFreedom.split_ratchet_kdf_output_exact output).elim fun result hr =>
-    ⟨result, hr.1, by simp, by simp, by simp,
+    ⟨result, hr.1, by scalar_tac, by scalar_tac, by scalar_tac,
       fun i hi => by simp [hr.2.1, List.getElem!_eq_getElem?_getD, hi],
       fun i hi => by simp [hr.2.2.1, List.getElem!_eq_getElem?_getD, hi],
       fun i hi => by simp [hr.2.2.2, List.getElem!_eq_getElem?_getD, hi]⟩

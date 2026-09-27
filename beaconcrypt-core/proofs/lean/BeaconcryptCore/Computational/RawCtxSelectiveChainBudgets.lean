@@ -46,26 +46,26 @@ theorem compiled_uniform {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSourc
         64 * (if nativePredicate .hash query then 1 else 0)) := by
   rcases query with coin | ((request | request) | view)
   all_goals simp only [QueryImpl.compose, RawCtxSelectiveKdfFamily.compiler,
-    simulateQ_spec_query, simulateQ_map, handler, StateT.run,
+    simulateQ_spec_query, simulateQ_map, handler,
     bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
   case inr.inl.inl =>
-    simp only [nativePredicate, RawCtxMixedOwner.callKind, Sum.isLeft, Bool.false_eq_true,
-      if_false, if_true, Nat.mul_one, Nat.zero_add]
-    change IsTotalQueryBound ((fun result => (RawCtxKdfRequestTable.fullResponse result.1, result.2)) <$>
-      ((fun result => (result.1, (state.1, result.2))) <$>
-        privateStep source stage (RawCtxKdfRequestTable.address request) state.2)) 76
-    simpa only [IsTotalQueryBound, isQueryBound_map_iff] using
+    rw [StateT.run_map]
+    have distinct : RawCtxMixedOwner.CallKind.kdf ≠ .hash := by decide
+    simp only [nativePredicate, RawCtxMixedOwner.callKind, distinct, Sum.isLeft, Bool.false_eq_true,
+      if_false, if_true, Nat.mul_one, Nat.mul_zero, Nat.zero_add, Nat.add_zero]
+    simpa only [StateT.run_map, StateT.run, IsTotalQueryBound, isQueryBound_map_iff] using
       private_uniform source stage (RawCtxKdfRequestTable.address request) state.2
   case inr.inl.inr =>
     have bound := native_uniform source writer (.inr request) state.1
     rcases request with sealing | (opening | (hash | publish)) <;>
       simpa [RawCtxProtocolBackend.backend, RawCtxServerServices.backendImpl, nativePredicate,
-        RawCtxMixedOwner.callKind, IsTotalQueryBound] using bound
+        RawCtxMixedOwner.callKind, StateT.run, IsTotalQueryBound, isQueryBound_map_iff] using bound
   case inl =>
     simp [RawCtxProtocolBackend.backend, RawCtxServerServices.backendImpl, nativePredicate,
-      bind_pure_comp, isQueryBound_map_iff]
+      StateT.run, bind_pure_comp, isQueryBound_map_iff]
   case inr.inr =>
-    simp [RawCtxProtocolBackend.backend, RawCtxServerServices.backendImpl, nativePredicate]
+    simp [RawCtxProtocolBackend.backend, RawCtxServerServices.backendImpl, nativePredicate,
+      StateT.run, isQueryBound_map_iff]
 
 
 /-- Every possible backend continuation retains the three separate actual query reservations. -/

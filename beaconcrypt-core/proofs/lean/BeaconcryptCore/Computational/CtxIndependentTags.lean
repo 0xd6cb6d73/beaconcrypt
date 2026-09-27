@@ -220,17 +220,12 @@ theorem ctxRandomOracle_split_projection (key : CtxKey)
         unfold ctxKeyFreeSuffixStep
         simp only [StateT.run, hprefix, if_pos]
         rw [hsuffix]
-        simp only
         simp only [uniformSampleImpl, Functor.map_map]
-        change (fun digest : CtxDigest =>
-            (digest, splitCtxCache key (cache.cacheQuery ((), input) digest))) <$>
-              ($ᵗ CtxDigest) =
-          (fun digest : CtxDigest =>
-            (digest, cacheSuffix (splitCtxCache key cache)
-              (secretSuffix input) digest)) <$> ($ᵗ CtxDigest)
+        rw [bind_pure_comp]
         apply congrArg (fun f : CtxDigest → CtxDigest × SplitCache =>
           f <$> ($ᵗ CtxDigest))
         funext digest
+        simp only [Prod.map, id_eq]
         congr 1
         exact splitCtxCache_cacheQuery_prefix key cache ((), input) digest hprefix
     | some digest =>
@@ -257,15 +252,11 @@ theorem ctxRandomOracle_split_projection (key : CtxKey)
         rw [hsplit]
         simp only [if_false]
         simp only [uniformSampleImpl, Functor.map_map]
-        change (fun digest : CtxDigest =>
-            (digest, splitCtxCache key (cache.cacheQuery ((), input) digest))) <$>
-              ($ᵗ CtxDigest) =
-          (fun digest : CtxDigest =>
-            (digest, cachePublic (splitCtxCache key cache) ((), input) digest)) <$>
-              ($ᵗ CtxDigest)
+        rw [bind_pure_comp]
         apply congrArg (fun f : CtxDigest → CtxDigest × SplitCache =>
           f <$> ($ᵗ CtxDigest))
         funext digest
+        simp only [Prod.map, id_eq]
         congr 1
         exact splitCtxCache_cacheQuery_public key cache ((), input) digest hprefix
     | some digest =>
@@ -943,6 +934,14 @@ theorem ctxSplitRoutedBeforeVerifyInner_eq_ctxSplitBeforeVerifyInner
         trackedProjection key <$>
           (simulateQ (ctxAdversaryImpl c key) adversary.main).run
             emptyCtxHandlerState := by
+    unfold ctxBeforeVerifyInner
+    rw [bind_pure_comp]
+    apply congrArg (fun f : CtxAliasTarget × CtxHandlerState →
+        CtxBeforeVerify × CtxRO.QueryCache =>
+      f <$> (simulateQ (ctxAdversaryImpl c key) adversary.main).run
+        emptyCtxHandlerState)
+    funext result
+    rcases result with ⟨target, state⟩
     rfl
   rw [hcurrent, Functor.map_map]
   apply congrArg (fun f => f <$>

@@ -20,7 +20,7 @@ theorem material_key_eq (key : RootOutput) :
     Pr[fun material : Material => material.1 = key | $ᵗ Material] =
       (Fintype.card RootOutput : ℝ≥0∞)⁻¹ := by
   have projected := OracleComp.probOutput_congr (x := key) rfl
-    (evalDist_map_fst_uniformSample_prod (α := RootOutput) (β := NonceOutput))
+    (evalSPMF_map_fst_uniformSample_prod (α := RootOutput) (β := NonceOutput))
   rw [← probEvent_eq_eq_probOutput', probEvent_map] at projected
   simpa only [Function.comp_def, eq_comm, probOutput_uniformSample] using projected
 

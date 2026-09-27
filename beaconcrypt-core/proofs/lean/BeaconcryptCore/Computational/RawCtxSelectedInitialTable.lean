@@ -85,7 +85,7 @@ noncomputable def publicReply (prior : Prior) (entry : Entry) (target : RootOutp
 theorem public_table (prior : Prior) (entry : Entry) (target : RootOutput) (query : JointKdfViewQuery) :
     publicReply prior entry target query = query.project (lookup prior entry target query.address) := by
   by_cases same : query.address = entry.address <;>
-    simp [publicReply, lookup, JointKdfViewQuery.project, same, projection_parts]
+    simp [publicReply, lookup, JointKdfViewQuery.project, same, projection_parts] <;> rfl
 
 /-- Public projections outside first32 at the initializer address retain the full prior lookup and do not read the selected coordinate. -/
 theorem public_before (prior : Prior) (entry : Entry) (left right : RootOutput)

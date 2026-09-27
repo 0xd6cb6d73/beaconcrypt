@@ -77,14 +77,18 @@ theorem route_query_bound {identities sessions : ℕ} (owner : Fin sessions → 
     rw [simulateQ_query_bind]
     cases query with
     | inl coin =>
-      change (((FamilyAdversarySpec identities).query (.inl coin) : OracleComp (FamilyAdversarySpec identities) _) >>= fun answer =>
-        simulateQ (sessionImpl owner) (rest answer)).IsQueryBoundP (familyClass (IsClass kind)) bound
+      change OracleComp.IsQueryBoundP
+        (((FamilyAdversarySpec identities).query (.inl coin) : OracleComp (FamilyAdversarySpec identities) _) >>= fun answer =>
+          simulateQ (sessionImpl owner) (rest answer))
+        (familyClass (IsClass kind)) bound
       rw [OracleComp.isQueryBoundP_query_bind_iff]
       exact ⟨bounded.1, fun answer => ih answer _ (bounded.2 answer)⟩
     | inr query =>
       rcases query with ⟨session, request⟩
-      change (((FamilyAdversarySpec identities).query (.inr (owner session, request)) : OracleComp (FamilyAdversarySpec identities) _) >>= fun answer =>
-        simulateQ (sessionImpl owner) (rest answer)).IsQueryBoundP (familyClass (IsClass kind)) bound
+      change OracleComp.IsQueryBoundP
+        (((FamilyAdversarySpec identities).query (.inr (owner session, request)) : OracleComp (FamilyAdversarySpec identities) _) >>= fun answer =>
+          simulateQ (sessionImpl owner) (rest answer))
+        (familyClass (IsClass kind)) bound
       rw [OracleComp.isQueryBoundP_query_bind_iff]
       exact ⟨bounded.1, fun answer => ih answer _ (bounded.2 answer)⟩
 

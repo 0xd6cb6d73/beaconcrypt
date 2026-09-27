@@ -101,14 +101,21 @@ theorem adjacent_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
         (normalized source writer depth sender route decode client state initial >>= observe)) +
       ∑ j ∈ Finset.range (budget.1 .send + 51 * budget.1 .raw),
         ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  refine (ENNReal.ofReal_le_ofReal (ProbComp.boolDistAdvantage_triangle _
-    (normalized source writer depth sender route decode client state initial >>= observe) _)).trans ?_
-  simp only [ProbComp.boolDistAdvantage]
+  let before : ProbComp Bool :=
+    family source writer (depth + 1) sender route decode client state initial.1.1 initial.1.2 initial.2 >>= observe
+  let after : ProbComp Bool :=
+    family source writer (depth + 2) sender route decode client state initial.1.1 initial.1.2 initial.2 >>= observe
+  let middle : ProbComp Bool := normalized source writer depth sender route decode client state initial >>= observe
+  change ENNReal.ofReal (before.boolDistAdvantage after) ≤
+    ENNReal.ofReal (before.boolDistAdvantage middle) + _
+  refine (ENNReal.ofReal_le_ofReal (ProbComp.boolDistAdvantage_triangle before middle after)).trans ?_
+  simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton]
   rw [ENNReal.ofReal_add (abs_nonneg _) (abs_nonneg _)]
   apply add_le_add le_rfl
-  refine (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist _ _)).trans ?_
+  refine (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist middle after)).trans ?_
   rw [tvDist_comm]
-  exact normalization_after source writer depth k sender route decode client budget bounded state initial valid clean observe
+  simpa only [after, middle] using
+    normalization_after source writer depth k sender route decode client budget bounded state initial valid clean observe
 
 end BeaconcryptCore.Computational.RawCtxAdjacentCacheNormalization
 

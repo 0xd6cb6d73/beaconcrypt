@@ -25,6 +25,7 @@
             nixpkgs.legacyPackages.${system}.rustup
             nixpkgs.legacyPackages.${system}.ripgrep
             nixpkgs.legacyPackages.${system}.elan
+            nixpkgs.legacyPackages.${system}.jq
           ];
         });
       });

@@ -44,7 +44,7 @@ theorem source_step (fixed : FixedHkdfSha512NoSaltSource) (selected : Message)
           · subst message
             simp [compiler, labelledFull, labelled]
           · simp [compiler, same, labelledFull, labelled, native, handler, OracleSpec.query, StateT.run]
-            rfl
+            exact StateT.run_map (realInitial fixed) (uniformImpl (.inr message)) cache
 
 /-- The exact entire adaptive initializer observer survives this private expansion with all original root-cache correlations. -/
 theorem source_program (fixed : FixedHkdfSha512NoSaltSource) (selected : Message)

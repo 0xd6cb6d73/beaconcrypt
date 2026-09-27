@@ -53,7 +53,7 @@ theorem scan_cut
     scan privateQuery selected selection impl (((Spec Tag base).query query : OracleComp (Spec Tag base) _) >>= next) covered state =
       pure (.pending (query.1.get (covered.1.trans (selection query.2 state chosen))) state) := by
   change (if chosen : selected query.2 state = true then _ else _ : ProbComp _) = _
-  rw [dif_pos chosen]
+  rw [dite_eq_left chosen]
   rfl
 
 /-- An unselected callback executes its original full stateful interface and scans the unchanged reply continuation. -/
@@ -68,7 +68,7 @@ theorem scan_other
       (do let (reply, updated) ← (impl query.2).run state
           scan privateQuery selected selection impl (next reply) (covered.2 reply) updated) := by
   change (if chosen : selected query.2 state = true then _ else _ : ProbComp _) = _
-  rw [dif_neg (by rw [chosen]; decide)]
+  rw [dite_eq_right (by rw [chosen]; decide)]
   rfl
 
 /-- Packing the carried descriptor gives exactly the original complete stateful prefix, retaining the selected dependent callback and every pre-cut effect. -/
@@ -159,9 +159,7 @@ end BeaconcryptCore.Computational.RawCtxForwardScan
 /-- info: 'BeaconcryptCore.Computational.RawCtxForwardScan.scan_finish' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxForwardScan.scan_finish
-/-- info: 'BeaconcryptCore.Computational.RawCtxForwardScan.pending_origin' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxForwardScan.pending_origin' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxForwardScan.pending_origin
 /-- info: 'BeaconcryptCore.Computational.RawCtxForwardScan.scan_uniform' depends on axioms: [propext, Quot.sound] -/

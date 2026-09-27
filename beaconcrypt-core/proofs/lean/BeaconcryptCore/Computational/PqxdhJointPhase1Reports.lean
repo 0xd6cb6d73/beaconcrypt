@@ -315,7 +315,8 @@ theorem wrapper_query_step (primitives : Primitives) (count : ℕ)
     | some forgery =>
       simp only [bind_pure_comp, OracleComp.isQueryBoundP_map_iff,
         OracleComp.isQueryBoundP_query_iff, reportingClass, SourceClass, if_false]
-      trivial
+      intro impossible
+      exact impossible.elim
 
 /-- Complete source translation retains the same identity-creation, uniform, signing, DH and reveal caps. -/
 theorem routedClient_query_bound (primitives : Primitives) (count : ℕ) {Result : Type}

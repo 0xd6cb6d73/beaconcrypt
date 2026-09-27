@@ -44,9 +44,9 @@ theorem ccaCoins_uniform {Result : Type} (client : ProbComp Result) (q : Nat)
   | query_bind coin next ih =>
       rw [isTotalQueryBound_query_bind_iff] at bound
       simp only [ccaCoins, simulateQ_bind, simulateQ_spec_query]
-      change (((MlKemCCAOracleSpec baseSpec).query (.inl (.inl coin)) :
+      change OracleComp.IsQueryBoundP (((MlKemCCAOracleSpec baseSpec).query (.inl (.inl coin)) :
         OracleComp (MlKemCCAOracleSpec baseSpec) ((MlKemCCAOracleSpec baseSpec).Range (.inl (.inl coin)))) >>=
-        fun answer => ccaCoins (next answer)).IsQueryBoundP IsMlKemUniformQuery q
+        fun answer => ccaCoins (next answer)) IsMlKemUniformQuery q
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inr bound.1, ?_⟩
       intro answer
@@ -62,9 +62,9 @@ theorem ccaCoins_excluded {Result : Type} (client : ProbComp Result)
   | pure value => simp [ccaCoins]
   | query_bind coin next ih =>
       simp only [ccaCoins, simulateQ_bind, simulateQ_spec_query]
-      change (((MlKemCCAOracleSpec baseSpec).query (.inl (.inl coin)) :
+      change OracleComp.IsQueryBoundP (((MlKemCCAOracleSpec baseSpec).query (.inl (.inl coin)) :
         OracleComp (MlKemCCAOracleSpec baseSpec) ((MlKemCCAOracleSpec baseSpec).Range (.inl (.inl coin)))) >>=
-        fun answer => ccaCoins (next answer)).IsQueryBoundP predicate 0
+        fun answer => ccaCoins (next answer)) predicate 0
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inl (excluded coin), ?_⟩
       intro answer
@@ -164,9 +164,9 @@ theorem postCoins_uniform {Result : Type} (client : ProbComp Result) (q : Nat)
   | query_bind coin next ih =>
       rw [isTotalQueryBound_query_bind_iff] at bound
       simp only [postCoins, simulateQ_bind, simulateQ_spec_query]
-      change (((InitializerPostSpec baseSpec).query (.inl (.inl (.inl coin))) :
+      change OracleComp.IsQueryBoundP (((InitializerPostSpec baseSpec).query (.inl (.inl (.inl coin))) :
         OracleComp (InitializerPostSpec baseSpec) ((InitializerPostSpec baseSpec).Range (.inl (.inl (.inl coin))))) >>=
-        fun answer => postCoins (next answer)).IsQueryBoundP IsInitializerUniformQuery q
+        fun answer => postCoins (next answer)) IsInitializerUniformQuery q
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inr bound.1, ?_⟩
       intro answer
@@ -182,9 +182,9 @@ theorem postCoins_excluded {Result : Type} (client : ProbComp Result)
   | pure value => simp [postCoins]
   | query_bind coin next ih =>
       simp only [postCoins, simulateQ_bind, simulateQ_spec_query]
-      change (((InitializerPostSpec baseSpec).query (.inl (.inl (.inl coin))) :
+      change OracleComp.IsQueryBoundP (((InitializerPostSpec baseSpec).query (.inl (.inl (.inl coin))) :
         OracleComp (InitializerPostSpec baseSpec) ((InitializerPostSpec baseSpec).Range (.inl (.inl (.inl coin))))) >>=
-        fun answer => postCoins (next answer)).IsQueryBoundP predicate 0
+        fun answer => postCoins (next answer)) predicate 0
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inl (excluded coin), ?_⟩
       intro answer
@@ -306,9 +306,9 @@ theorem ccaAmbient_bound {Result : Type} (client : OracleComp (unifSpec + baseSp
   | query_bind query next ih =>
       rw [isQueryBoundP_query_bind_iff] at bounded
       simp only [ccaAmbient, simulateQ_bind, simulateQ_spec_query]
-      change (((MlKemCCAOracleSpec baseSpec).query (.inl query) :
+      change OracleComp.IsQueryBoundP (((MlKemCCAOracleSpec baseSpec).query (.inl query) :
         OracleComp (MlKemCCAOracleSpec baseSpec) ((MlKemCCAOracleSpec baseSpec).Range (.inl query))) >>=
-        fun answer => ccaAmbient (next answer)).IsQueryBoundP predicate q
+        fun answer => ccaAmbient (next answer)) predicate q
       rw [isQueryBoundP_query_bind_iff]
       exact ⟨bounded.1, fun answer => ih answer _ (bounded.2 answer)⟩
 
@@ -528,7 +528,8 @@ theorem observe_uniform_bound
     (directCoins : (observer.main output execution).IsQueryBoundP (PostDirect (baseSpec := baseSpec) IsInitializerUniformQuery) qDirectCoins) :
     (observe parameters.source kem attachedVerify primitives 1 setup observer output execution state).IsQueryBoundP
       IsMlKemUniformQuery (32 * qCreate + qSourceCoins + qDirectCoins) := by
-  simp only [observe, isQueryBoundP_map_iff]
+  unfold observe
+  apply (OracleComp.isQueryBoundP_map_iff _ _ _).2
   exact initializerPostRealImpl_uniform_query_bound parameters.source kem
     (postSource_uniform_bound attachedVerify primitives 1 (observer.main output execution)
       qCreate qSourceCoins qDirectCoins creates sourceCoins directCoins state)
@@ -545,7 +546,8 @@ theorem observe_base_bound
       (PostDirect (baseSpec := baseSpec) IsInitializerBaseQuery) q) :
     (observe parameters.source kem attachedVerify primitives 1 setup observer output execution state).IsQueryBoundP
       IsMlKemBaseQuery q := by
-  simp only [observe, isQueryBoundP_map_iff]
+  unfold observe
+  apply (OracleComp.isQueryBoundP_map_iff _ _ _).2
   exact initializerPostRealImpl_base_query_bound parameters.source kem
     (postSource_class_bound attachedVerify primitives 1 (observer.main output execution)
       IsInitializerBaseQuery (fun _ => by simp [IsInitializerBaseQuery, IsMlKemBaseQuery]) q bounded state)
@@ -562,7 +564,8 @@ theorem observe_decap_bound
       (PostDirect (baseSpec := baseSpec) IsInitializerLogicalDecapsulationQuery) q) :
     (observe parameters.source kem attachedVerify primitives 1 setup observer output execution state).IsQueryBoundP
       IsMlKemLogicalDecapsulationQuery q := by
-  simp only [observe, isQueryBoundP_map_iff]
+  unfold observe
+  apply (OracleComp.isQueryBoundP_map_iff _ _ _).2
   exact initializerPostRealImpl_decapsulation_query_bound parameters.source kem
     (postSource_class_bound attachedVerify primitives 1 (observer.main output execution)
       IsInitializerLogicalDecapsulationQuery

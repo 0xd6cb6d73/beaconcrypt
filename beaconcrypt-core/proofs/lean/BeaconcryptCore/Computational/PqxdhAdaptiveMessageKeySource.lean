@@ -64,8 +64,9 @@ theorem later_source (depth : Nat) :
       𝒟[laterIdeal env baseImpl kem attachedVerify primitives program post targets selected depth] := by
   unfold PqxdhAdaptiveFinalMaterial.laterIdeal PqxdhInitialSampledParentSecrecy.random laterIdeal laterPrepare laterObserve
   simp only [bind_assoc, pure_bind]
-  apply evalDist_bind_congr'
+  apply evalDist_bind_congr
   intro context
+  apply evalDist_eq_of_evalSPMF_eq
   exact PqxdhFinalMaterialKeySplit.complete _
 
 abbrev FirstContext :=
@@ -97,10 +98,11 @@ theorem first_source :
       𝒟[firstIdeal env baseImpl kem attachedVerify primitives program post targets selected] := by
   unfold PqxdhAdaptiveFirstMaterial.ideal firstIdeal firstPrepare firstObserve
   simp only [bind_assoc, pure_bind]
-  apply evalDist_bind_congr'
+  apply evalDist_bind_congr
   intro context
-  apply evalDist_bind_congr'
+  apply evalDist_bind_congr
   intro initial
+  apply evalDist_eq_of_evalSPMF_eq
   exact PqxdhFinalMaterialKeySplit.complete _
 
 /-- The complete actual source comparison reaches one ordinary uniform selected message key after its original source preparation; every final-material alias charge is explicit. -/
@@ -116,8 +118,8 @@ theorem later_bound (depth : Nat) (position : (targets selected).number.val = de
       (PqxdhAdaptiveFinalMaterial.statistical qPost).toReal := by
   have result := PqxdhAdaptiveFinalMaterial.later_bound env baseImpl kem attachedVerify primitives program post targets c selected
     depth position compatible adapter functional hmac correct fallback ordinaryFallback
-  simpa only [ProbComp.boolDistAdvantage, probOutput_congr rfl
-    (later_source env baseImpl kem attachedVerify primitives program post targets selected depth)] using result
+  simpa only [ProbComp.boolDistAdvantage,
+    later_source env baseImpl kem attachedVerify primitives program post targets selected depth] using result
 
 /-- The first-record source comparison reaches the same ordinary selected-key endpoint without a final cached-prefix charge. -/
 theorem first_bound (position : (targets selected).number.val = 1)
@@ -131,8 +133,8 @@ theorem first_bound (position : (targets selected).number.val = 1)
     PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program post targets c hmac fallback ordinaryFallback selected := by
   have result := PqxdhAdaptiveFirstMaterial.bound env baseImpl kem attachedVerify primitives program post targets c selected
     position compatible adapter functional hmac correct fallback ordinaryFallback
-  simpa only [ProbComp.boolDistAdvantage, probOutput_congr rfl
-    (first_source env baseImpl kem attachedVerify primitives program post targets selected)] using result
+  simpa only [ProbComp.boolDistAdvantage,
+    first_source env baseImpl kem attachedVerify primitives program post targets selected] using result
 
 end BeaconcryptCore.Computational.PqxdhAdaptiveMessageKeySource
 

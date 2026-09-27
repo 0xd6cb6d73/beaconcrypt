@@ -22,7 +22,7 @@ theorem erase (program : OracleComp spec α) (property : α → Prop)
     (valid : ∀ value ∈ support program, property value) :
     Subtype.val <$> certify program property valid = program := by
   induction program using OracleComp.inductionOn with
-  | pure value => simp [certify]
+  | pure value => simp only [certify, OracleComp.construct_pure, map_pure]
   | query_bind query next ih =>
     simp only [certify, OracleComp.construct_query_bind, map_bind]
     congr 1

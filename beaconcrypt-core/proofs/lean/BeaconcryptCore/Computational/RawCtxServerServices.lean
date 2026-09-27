@@ -131,7 +131,6 @@ theorem server_interpretation {Metadata PeerMetadata Auxiliary : Type}
       (((fun a => (a, state.1)) <$> simulateQ (backendImpl source writer kdf) (publicLift request)).run state.2) = _
     rw [StateT.run_map]
     simp only [Functor.map_map, StateT.run]
-    rfl
 
 /-- Arbitrary adaptive source/public interleaving preserves the original result and both complete private states. -/
 theorem schedule_interpretation {Metadata PeerMetadata Auxiliary Result : Type}

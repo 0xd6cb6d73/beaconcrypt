@@ -82,26 +82,26 @@ def vectorSplitEquiv (left right : Nat) :
 
 /-- Projecting a uniform byte vector gives a uniform prefix. -/
 theorem take_uniform (left right : Nat) :
-    𝒟[(fun bytes => (vectorSplitEquiv left right bytes).1) <$>
+    𝒮[(fun bytes => (vectorSplitEquiv left right bytes).1) <$>
       ($ᵗ List.Vector UInt8 (left + right))] =
-      𝒟[$ᵗ List.Vector UInt8 left] := by
-  have split := evalDist_map_bijective_uniform_cross
+      𝒮[$ᵗ List.Vector UInt8 left] := by
+  have split := evalSPMF_map_bijective_uniform_cross
     (List.Vector UInt8 (left + right)) (vectorSplitEquiv left right)
     (vectorSplitEquiv left right).bijective
   have projected := congrArg (fun distribution => Prod.fst <$> distribution) split
-  simpa only [← evalDist_map, Functor.map_map] using
+  simpa only [← evalSPMF_map, Functor.map_map] using
     projected.trans (show Prod.fst <$>
-      𝒟[$ᵗ (List.Vector UInt8 left × List.Vector UInt8 right)] =
-        𝒟[$ᵗ List.Vector UInt8 left] from by
-      rw [← evalDist_map]
-      exact evalDist_map_fst_uniformSample_prod)
+      𝒮[$ᵗ (List.Vector UInt8 left × List.Vector UInt8 right)] =
+        𝒮[$ᵗ List.Vector UInt8 left] from by
+      rw [← evalSPMF_map]
+      exact evalSPMF_map_fst_uniformSample_prod)
 
 /-- Two independent byte vectors concatenate to a uniform full vector. -/
 theorem append_uniform (left right : Nat) :
-    𝒟[(fun parts : List.Vector UInt8 left × List.Vector UInt8 right =>
+    𝒮[(fun parts : List.Vector UInt8 left × List.Vector UInt8 right =>
         parts.1 ++ parts.2) <$> ($ᵗ (List.Vector UInt8 left × List.Vector UInt8 right))] =
-      𝒟[$ᵗ List.Vector UInt8 (left + right)] := by
-  exact evalDist_map_bijective_uniform_cross
+      𝒮[$ᵗ List.Vector UInt8 (left + right)] := by
+  exact evalSPMF_map_bijective_uniform_cross
     (List.Vector UInt8 left × List.Vector UInt8 right)
     (vectorSplitEquiv left right).symm (vectorSplitEquiv left right).symm.bijective
 
@@ -114,24 +114,24 @@ theorem pairSample {A B : Type} [SampleableType A] [SampleableType B] :
 
 /-- The production 76-byte observation is uniform jointly, including its shared prefix. -/
 theorem joinBlocks_uniform :
-    𝒟[(do let first ← $ᵗ HmacBlock
+    𝒮[(do let first ← $ᵗ HmacBlock
           let second ← $ᵗ HmacBlock
-          pure (joinBlocks first second))] = 𝒟[$ᵗ FullOutput] := by
-  have nonceUniform : 𝒟[noncePart <$> ($ᵗ HmacBlock)] =
-      𝒟[$ᵗ NonceOutput] := take_uniform 12 52
-  have projected : 𝒟[(do let first ← $ᵗ HmacBlock
+          pure (joinBlocks first second))] = 𝒮[$ᵗ FullOutput] := by
+  have nonceUniform : 𝒮[noncePart <$> ($ᵗ HmacBlock)] =
+      𝒮[$ᵗ NonceOutput] := take_uniform 12 52
+  have projected : 𝒮[(do let first ← $ᵗ HmacBlock
                          let second ← $ᵗ HmacBlock
                          pure (joinBlocks first second))] =
-      𝒟[(do let first ← $ᵗ HmacBlock
+      𝒮[(do let first ← $ᵗ HmacBlock
             let nonce ← $ᵗ NonceOutput
             pure (first ++ nonce))] := by
-    refine evalDist_bind_congr' (m := ProbComp) ($ᵗ HmacBlock) fun first => ?_
-    change 𝒟[($ᵗ HmacBlock) >>= fun second =>
+    refine evalSPMF_bind_congr' (m := ProbComp) ($ᵗ HmacBlock) fun first => ?_
+    change 𝒮[($ᵗ HmacBlock) >>= fun second =>
       (fun nonce : NonceOutput => (pure (first ++ nonce) : ProbComp FullOutput))
         (noncePart second)] = _
     rw [← bind_map_left noncePart ($ᵗ HmacBlock)
       (fun nonce : NonceOutput => (pure (first ++ nonce) : ProbComp FullOutput)),
-      evalDist_bind, nonceUniform, ← evalDist_bind]
+      evalSPMF_bind, nonceUniform, ← evalSPMF_bind]
   rw [projected]
   have factored : (do let first ← $ᵗ HmacBlock
                       let nonce ← $ᵗ NonceOutput
@@ -187,25 +187,25 @@ theorem sourceFullGame_eq_extract {Context : Type}
 theorem fullExtractUniform_eq_hmacReal {Context : Type} (hmac : HmacSha512)
     (domain : FixedHkdfDomain) (sample : SecretInputSampler Context)
     (observer : FullObserver Context) :
-    𝒟[extractUniformGame sample (fullExtractReduction hmac domain observer)] =
-      𝒟[hmacPrfRealGame hmac (fullExpandReduction domain sample observer)] := by
+    𝒮[extractUniformGame sample (fullExtractReduction hmac domain observer)] =
+      𝒮[hmacPrfRealGame hmac (fullExpandReduction domain sample observer)] := by
   simpa [hmacPrfRealGame, fullExpandReduction_real, extractUniformGame,
     fullExtractReduction] using
-      evalDist_sample_comm (sample : ProbComp (Context × Pqxdh.Bytes)) ($ᵗ HmacBlock)
+      evalSPMF_sample_comm (sample : ProbComp (Context × Pqxdh.Bytes)) ($ᵗ HmacBlock)
         (fun pair key => observer pair.1 (expandFull hmac domain key))
 
 /-- Any continuation observes exactly a uniform full output in the HMAC random world. -/
 theorem fullHmacRandom_eq_independent {Context : Type} (domain : FixedHkdfDomain)
     (sample : SecretInputSampler Context) (observer : FullObserver Context) :
-    𝒟[hmacPrfRandomGame (fullExpandReduction domain sample observer)] =
-      𝒟[independentFullGame sample observer] := by
+    𝒮[hmacPrfRandomGame (fullExpandReduction domain sample observer)] =
+      𝒮[independentFullGame sample observer] := by
   rw [fullExpandReduction_random]
-  refine evalDist_bind_congr' (m := ProbComp) (sample : ProbComp (Context × Pqxdh.Bytes))
+  refine evalSPMF_bind_congr' (m := ProbComp) (sample : ProbComp (Context × Pqxdh.Bytes))
     fun pair => ?_
   rcases pair with ⟨context, input⟩
   have observed := congrArg (fun distribution => distribution >>=
-    fun output => 𝒟[observer context output]) joinBlocks_uniform
-  simpa only [← evalDist_bind, bind_assoc, pure_bind] using observed
+    fun output => 𝒮[observer context output]) joinBlocks_uniform
+  simpa only [← evalSPMF_bind, bind_assoc, pure_bind] using observed
 
 /-- A loss-one full-output reduction at the actual joint input/context sampler. -/
 theorem sourceFullAdvantage_le_extract_add_hmac {Context : Type}
@@ -218,9 +218,9 @@ theorem sourceFullAdvantage_le_extract_add_hmac {Context : Type}
         (extractUniformGame sample (fullExtractReduction hmac domain observer)) +
       (hmacPrfRealGame hmac (fullExpandReduction domain sample observer)).boolDistAdvantage
         (hmacPrfRandomGame (fullExpandReduction domain sample observer)) := by
-  have real := OracleComp.probOutput_congr (x := true) rfl
+  have real := evalDist_eq_of_evalSPMF_eq _ _
     (fullExtractUniform_eq_hmacReal hmac domain sample observer)
-  have random := OracleComp.probOutput_congr (x := true) rfl
+  have random := evalDist_eq_of_evalSPMF_eq _ _
     (fullHmacRandom_eq_independent domain sample observer)
   simpa only [sourceFullGame_eq_extract source hmac correct, ProbComp.boolDistAdvantage,
     real, random] using
@@ -292,7 +292,7 @@ theorem initialPrefix_expandFull (hmac : HmacSha512) (domain : FixedHkdfDomain)
   exact initialPrefix_joinBlocks _ _
 
 theorem initialPrefix_uniform :
-    𝒟[initialPrefix <$> ($ᵗ FullOutput)] = 𝒟[$ᵗ HmacBlock] := by
+    𝒮[initialPrefix <$> ($ᵗ FullOutput)] = 𝒮[$ᵗ HmacBlock] := by
   exact take_uniform 64 12
 
 /-- The root projection never uses the second expansion block. -/
@@ -328,11 +328,11 @@ theorem SourceFullCorrect.ratchetStep {source : FixedHkdfSha512NoSaltSource}
 
 /-- Distinct canonical slots are independent in this justified ideal output; repeated projections still alias. -/
 theorem projectedOutput_uniform :
-    𝒟[(fun output : FullOutput =>
+    𝒮[(fun output : FullOutput =>
       (JointKdfProjection.first32.project output, JointKdfProjection.second32.project output,
         JointKdfProjection.final12.project output)) <$> ($ᵗ FullOutput)] =
-      𝒟[$ᵗ (RootOutput × RootOutput × NonceOutput)] := by
-  exact PqxdhProjectionCollisions.evalDist_split_uniformJointKdfStream
+      𝒮[$ᵗ (RootOutput × RootOutput × NonceOutput)] := by
+  exact PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream
 
 /-- The source game charges every sampler and observer random query. -/
 theorem sourceFullGame_uniform_query_bound {Context : Type}

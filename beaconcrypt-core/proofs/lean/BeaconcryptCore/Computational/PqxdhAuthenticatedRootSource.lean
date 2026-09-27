@@ -28,11 +28,12 @@ theorem nativeNext_eq_total
     (supported : (prepared.1.context.generated.target, secret) ∈ support (simulateQ (kemAmbientImpl baseImpl) kem.keygen)) :
     𝒟[PqxdhAuthenticatedRootExperiment.nativeNext env baseImpl kem attachedVerify primitives program post secret prepared] =
       𝒟[PqxdhAuthenticatedRootExperiment.totalNext env baseImpl kem attachedVerify primitives program post secret prepared] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [PqxdhAuthenticatedRootExperiment.nativeNext, PqxdhAuthenticatedRootExperiment.totalNext]
   split
-  · apply evalDist_bind_congr'
+  · apply evalSPMF_bind_congr'
     intro ephemeral
-    rw [evalDist_bind, compatible _ supported, ← evalDist_bind]
+    rw [evalSPMF_bind, compatible _ supported, ← evalSPMF_bind]
     simp only [bind_map_left]
   · rfl
 
@@ -42,11 +43,13 @@ theorem actual_eq_total
     𝒟[actual env baseImpl kem attachedVerify primitives program post] =
       𝒟[nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
         (PqxdhAuthenticatedRootExperiment.totalNext env baseImpl kem attachedVerify primitives program post) false] := by
+  apply evalDist_eq_of_evalSPMF_eq
   rw [actual, nativeContinued_keyfirst, nativeContinued_keyfirst]
-  apply evalDist_bind_congr
+  apply evalSPMF_bind_congr
   intro pair generated
-  apply evalDist_bind_congr
+  apply evalSPMF_bind_congr
   intro prepared reached
+  apply evalSPMF_eq_of_evalDist_eq
   apply nativeNext_eq_total env baseImpl kem attachedVerify primitives program post compatible pair.2 prepared
   rw [PqxdhGeneratedRootSource.borrowedPrefix_target attachedVerify primitives baseImpl kem pair.2 setup
     (driver env.toDriverEnvironment program) pair.1 prepared reached]
@@ -73,14 +76,15 @@ theorem dispatch_complete_eq_source
         (PqxdhPrivateAcceptedRoot.dispatch kem env.parameters attachedVerify primitives setup (commonObserver env program post) prepared)
       nativeComplete env baseImpl kem attachedVerify primitives program post key secret mode] =
       𝒟[PqxdhAuthenticatedRootExperiment.filteredNext env baseImpl kem attachedVerify primitives program post secret prepared] := by
+  apply evalDist_eq_of_evalSPMF_eq
   by_cases bad : changedBit (some prepared.1, prepared.2) = true
-  · apply evalDist_ext
+  · apply evalSPMF_ext
     intro output
     simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhAuthenticatedRootExperiment.filteredNext, bad, evalKem, nativeComplete, nativeAfter]
   · by_cases eligible : targetEligible env.parameters prepared = true
-    · simp only [PqxdhPrivateAcceptedRoot.dispatch, PqxdhAuthenticatedRootExperiment.filteredNext, bad, Bool.false_eq_true, if_false,
-        eligible, if_true, PqxdhAuthenticatedRootExperiment.totalNext, evalKem_bind, evalKem_ambient, bind_assoc]
-      apply evalDist_bind_congr'
+    · simp only [PqxdhPrivateAcceptedRoot.dispatch, PqxdhAuthenticatedRootExperiment.filteredNext, bad, Bool.false_eq_true, ite_false,
+        eligible, ite_true, PqxdhAuthenticatedRootExperiment.totalNext, evalKem_bind, evalKem_ambient, bind_assoc]
+      apply evalSPMF_bind_congr'
       intro ephemeral
       cases failure : rootFailure env.source.crypto env.server.ikSk ephemeral.toList
         prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.before.publicKey
@@ -91,14 +95,14 @@ theorem dispatch_complete_eq_source
       | some reason =>
           simp only [Environment.parameters, failure, evalKem_bind, evalKem_ambient, evalKem_pure,
             bind_assoc, pure_bind, nativeAfterEncapsulation]
-          apply evalDist_bind_congr'
+          apply evalSPMF_bind_congr'
           intro encapsulated
-          apply evalDist_ext
+          apply evalSPMF_ext
           intro output
           simp [nativeComplete, nativeAfter, probOutput_bind_eq_tsum]
     · simp only [PqxdhPrivateAcceptedRoot.dispatch, PqxdhAuthenticatedRootExperiment.filteredNext,
         PqxdhAuthenticatedRootExperiment.totalNext, bad, eligible]
-      apply evalDist_ext
+      apply evalSPMF_ext
       intro output
       simp [evalKem, nativeComplete, nativeAfter, probOutput_bind_eq_tsum, Environment.parameters]
 
@@ -107,12 +111,14 @@ theorem filtered_eq_nativeMain :
     𝒟[nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
       (PqxdhAuthenticatedRootExperiment.filteredNext env baseImpl kem attachedVerify primitives program post) false] =
       𝒟[nativeMain env baseImpl kem attachedVerify primitives program post] := by
+  apply evalDist_eq_of_evalSPMF_eq
   rw [nativeContinued_keyfirst]
   simp only [nativeMain, protocol, evalKem_bind, bind_assoc]
-  apply evalDist_bind_congr'
+  apply evalSPMF_bind_congr'
   intro pair
-  apply evalDist_bind_congr
+  apply evalSPMF_bind_congr
   intro prepared supported
+  apply evalSPMF_eq_of_evalDist_eq
   exact (dispatch_complete_eq_source env baseImpl kem attachedVerify primitives program post prepared pair.1 pair.2
     (PqxdhGeneratedRootSource.borrowedPrefix_target attachedVerify primitives baseImpl kem pair.2 setup
       (driver env.toDriverEnvironment program) pair.1 prepared supported)).symm
@@ -171,10 +177,10 @@ theorem authentication_hop
     unfold tvDist
     convert auth using 1
     refine congrArg₂ SPMF.tvDist ?_ ?_
-    all_goals refine evalDist_bind_congr' _ (fun state => ?_)
+    all_goals refine evalSPMF_bind_congr' _ (fun state => ?_)
     all_goals split <;> simp_all only
   have output := (abs_probOutput_toReal_sub_le_tvDist _ _).trans totalBound
-  simpa only [ProbComp.boolDistAdvantage, probOutput_def,
+  simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton, probOutput_def,
     actual_eq_total env baseImpl kem attachedVerify primitives program post compatible,
     ← filtered_eq_nativeMain env baseImpl kem attachedVerify primitives program post] using output
 

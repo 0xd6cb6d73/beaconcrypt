@@ -130,7 +130,6 @@ theorem nonread_step (parameters : Parameters)
   rw [show observed (A := A) parameters = RawCtxFlaggedQueryTrace.trace (handler parameters)
     RawCtxSelectedLiveCompiler.inputs RawCtxSelectedParentReadMask.direct from rfl, ← retained]
   simp only [Functor.map_map, Prod.map_def, id_eq]
-  rfl
 
 private theorem primitive_prefix {Base Result : Type}
     (handler : QueryImpl Spec (StateT Base ProbComp))

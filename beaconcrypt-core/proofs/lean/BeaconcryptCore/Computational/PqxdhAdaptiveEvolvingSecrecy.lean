@@ -71,8 +71,9 @@ theorem selection_bound [Fintype Choice] (positive : ∀ selected, 0 < (targets 
   apply (Finset.abs_sum_le_sum_abs _ Finset.univ).trans
   apply Finset.sum_le_sum
   intro selected _
-  exact target_bound env baseImpl kem attachedVerify primitives program post targets c selected (positive selected)
-    compatible adapter functional hmac correct fallback ordinaryFallback
+  simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton] using
+    target_bound env baseImpl kem attachedVerify primitives program post targets c selected (positive selected)
+      compatible adapter functional hmac correct fallback ordinaryFallback
 
 end BeaconcryptCore.Computational.PqxdhAdaptiveEvolvingSecrecy
 

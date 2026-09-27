@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhJointKdfGame
+import VCVio.OracleComp.Constructions.SampleableType.MeasureCompatibility
 import VCVio.OracleComp.QueryTracking.SubSpec
 
 /-!
@@ -139,11 +140,11 @@ theorem expandReduction_real {Context : Type} (hmac : HmacSha512)
     expandRoot]
 
 /-- The independent PRF key and public sampler may be reordered in distribution. -/
-theorem evalDist_sample_comm {A B C : Type} (left : ProbComp A) (right : ProbComp B)
+theorem evalSPMF_sample_comm {A B C : Type} (left : ProbComp A) (right : ProbComp B)
     (next : A → B → ProbComp C) :
-    𝒟[left >>= fun a => right >>= next a] =
-      𝒟[right >>= fun b => left >>= fun a => next a b] := by
-  apply evalDist_ext
+    𝒮[left >>= fun a => right >>= next a] =
+      𝒮[right >>= fun b => left >>= fun a => next a b] := by
+  apply evalSPMF_ext
   intro output
   simp_rw [probOutput_bind_eq_tsum, ← ENNReal.tsum_mul_left]
   rw [ENNReal.tsum_comm]
@@ -152,10 +153,10 @@ theorem evalDist_sample_comm {A B C : Type} (left : ProbComp A) (right : ProbCom
 /-- Uniform Extract output is exactly the ordinary secret-key HMAC real world. -/
 theorem extractUniform_eq_hmacReal {Context : Type} (hmac : HmacSha512)
     (sample : SecretInputSampler Context) (observer : RootObserver Context) :
-    𝒟[extractUniformGame sample (extractReduction hmac observer)] =
-      𝒟[hmacPrfRealGame hmac (expandReduction sample observer)] := by
+    𝒮[extractUniformGame sample (extractReduction hmac observer)] =
+      𝒮[hmacPrfRealGame hmac (expandReduction sample observer)] := by
   simpa [hmacPrfRealGame, expandReduction_real, extractUniformGame, extractReduction] using
-    evalDist_sample_comm (sample : ProbComp (Context × Pqxdh.Bytes)) ($ᵗ HmacBlock)
+    evalSPMF_sample_comm (sample : ProbComp (Context × Pqxdh.Bytes)) ($ᵗ HmacBlock)
       (fun pair key => observer pair.1 (expandRoot hmac key))
 
 /-- The ideal HMAC reduction receives one fresh block, while local computations leave the table alone. -/
@@ -184,28 +185,28 @@ def blockSplitEquiv : HmacBlock ≃ (RootOutput × RootOutput) where
 
 /-- The ideal first-block projection is exactly a uniform 32-byte root. -/
 theorem first32_uniform :
-    𝒟[first32 <$> ($ᵗ HmacBlock)] = 𝒟[$ᵗ RootOutput] := by
-  have split : 𝒟[blockSplitEquiv <$> ($ᵗ HmacBlock)] =
-      𝒟[$ᵗ (RootOutput × RootOutput)] :=
-    evalDist_map_bijective_uniform_cross HmacBlock blockSplitEquiv blockSplitEquiv.bijective
+    𝒮[first32 <$> ($ᵗ HmacBlock)] = 𝒮[$ᵗ RootOutput] := by
+  have split : 𝒮[blockSplitEquiv <$> ($ᵗ HmacBlock)] =
+      𝒮[$ᵗ (RootOutput × RootOutput)] :=
+    evalSPMF_map_bijective_uniform_cross HmacBlock blockSplitEquiv blockSplitEquiv.bijective
   calc
-    _ = 𝒟[Prod.fst <$> (blockSplitEquiv <$> ($ᵗ HmacBlock))] := by
+    _ = 𝒮[Prod.fst <$> (blockSplitEquiv <$> ($ᵗ HmacBlock))] := by
       simp only [Functor.map_map]
       rfl
-    _ = 𝒟[Prod.fst <$> ($ᵗ (RootOutput × RootOutput))] := by
-      rw [evalDist_map, split, ← evalDist_map]
-    _ = _ := evalDist_map_fst_uniformSample_prod
+    _ = 𝒮[Prod.fst <$> ($ᵗ (RootOutput × RootOutput))] := by
+      rw [evalSPMF_map, split, ← evalSPMF_map]
+    _ = _ := evalSPMF_map_fst_uniformSample_prod
 
 /-- The HMAC random world replaces exactly the honest root and preserves the observer's local public evaluations. -/
 theorem hmacRandom_eq_independentRoot {Context : Type}
     (sample : SecretInputSampler Context) (observer : RootObserver Context) :
-    𝒟[hmacPrfRandomGame (expandReduction sample observer)] =
-      𝒟[independentRootGame sample observer] := by
+    𝒮[hmacPrfRandomGame (expandReduction sample observer)] =
+      𝒮[independentRootGame sample observer] := by
   rw [expandReduction_random]
-  refine evalDist_bind_congr' (m := ProbComp) (sample : ProbComp (Context × Pqxdh.Bytes)) fun pair => ?_
-  change 𝒟[($ᵗ HmacBlock) >>= fun block => observer pair.1 (first32 block)] =
-    𝒟[($ᵗ RootOutput) >>= observer pair.1]
-  rw [← bind_map_left, evalDist_bind, first32_uniform, ← evalDist_bind]
+  refine evalSPMF_bind_congr' (m := ProbComp) (sample : ProbComp (Context × Pqxdh.Bytes)) fun pair => ?_
+  change 𝒮[($ᵗ HmacBlock) >>= fun block => observer pair.1 (first32 block)] =
+    𝒮[($ᵗ RootOutput) >>= observer pair.1]
+  rw [← bind_map_left, evalSPMF_bind, first32_uniform, ← evalSPMF_bind]
 
 /-- A loss-one root reduction to fixed-salt Extract pseudorandomness and ordinary secret-key HMAC PRF advantage.
 
@@ -221,9 +222,9 @@ theorem sourceRootAdvantage_le_extract_add_hmac {Context : Type}
         (extractUniformGame sample (extractReduction hmac observer)) +
       (hmacPrfRealGame hmac (expandReduction sample observer)).boolDistAdvantage
         (hmacPrfRandomGame (expandReduction sample observer)) := by
-  have real := OracleComp.probOutput_congr (x := true) rfl
+  have real := evalDist_eq_of_evalSPMF_eq _ _
     (extractUniform_eq_hmacReal hmac sample observer)
-  have random := OracleComp.probOutput_congr (x := true) rfl
+  have random := evalDist_eq_of_evalSPMF_eq _ _
     (hmacRandom_eq_independentRoot sample observer)
   simpa only [sourceRootGame_eq_extract source hmac correct, ProbComp.boolDistAdvantage,
     real, random] using

@@ -389,11 +389,7 @@ info: 'BeaconcryptCore.Computational.LivePublicObservation.private_source_trace'
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.LivePublicObservation.private_source_trace
 
-/--
-info: 'BeaconcryptCore.Computational.LivePublicObservation.public_supported_private' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
+/-- info: 'BeaconcryptCore.Computational.LivePublicObservation.public_supported_private' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.LivePublicObservation.public_supported_private
 
@@ -425,11 +421,7 @@ info: 'BeaconcryptCore.Computational.LivePublicObservation.source_supported_reco
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.LivePublicObservation.source_supported_records
 
-/--
-info: 'BeaconcryptCore.Computational.LivePublicObservation.private_supported_public' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
+/-- info: 'BeaconcryptCore.Computational.LivePublicObservation.private_supported_public' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.LivePublicObservation.private_supported_public
 

@@ -189,8 +189,11 @@ theorem rejected (hmac : HmacSha512) (joint : Primitives) (dh : DhInterface join
     (message : Message) (state : State) (invalid : input joint dh seed scalar message = none) :
     (impl hmac joint dh seed scalar extractImpl (.inr (.derive message))).run state =
       pure (none, { state with history := state.history ++ [.derive message none] }) := by
-  simp only [impl, invalid, StateT.run]
-  rfl
+  unfold impl
+  change (match input joint dh seed scalar message with
+    | none => pure (none, { state with history := state.history ++ [Observation.derive message none] })
+    | some bytes => _) = _
+  rw [invalid]
 
 /-- An unrelated actual DH1 reply keeps the complete real service, even with a selected third coordinate. This covers attacker-computable side sessions without a public-Extract inconsistency. -/
 theorem side_real (hmac : HmacSha512) (joint : Primitives) (dh : DhInterface joint)

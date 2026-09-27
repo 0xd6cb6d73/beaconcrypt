@@ -75,14 +75,15 @@ theorem nativeFinish_uniform
     ((PqxdhPhase2PostScheduler.nativeFinish attachedVerify primitives count source localImpl baseImpl kem secret decode query).run state).IsTotalQueryBound (69 * max qLocal 64) := by
   cases query with
   | finish index raw =>
-    simpa only [PqxdhPhase2PostScheduler.nativeFinish, StateT.run, IsTotalQueryBound, isQueryBound_map_iff] using
-      (isQueryBoundP_true_iff _ _).1
-        (PqxdhBeaconPhase2Bounds.native_interpreted_bound
-          (PqxdhPhase2PostScheduler.native attachedVerify primitives count source localImpl baseImpl kem secret)
-          (fun _ => True) (max qLocal 64)
-          (fun query state => (isQueryBoundP_true_iff _ _).2
-            (native_uniform attachedVerify primitives count source localImpl baseImpl kem functional secret qLocal localBound query state))
-          decode raw (state.1.roles.1.2 index) (state.1.primitive, state.2))
+    simp only [PqxdhPhase2PostScheduler.nativeFinish, StateT.run, IsTotalQueryBound]
+    apply (isQueryBound_map_iff _ _ _ _ _).2
+    exact (isQueryBoundP_true_iff _ _).1
+      (PqxdhBeaconPhase2Bounds.native_interpreted_bound
+        (PqxdhPhase2PostScheduler.native attachedVerify primitives count source localImpl baseImpl kem secret)
+        (fun _ => True) (max qLocal 64)
+        (fun query state => (isQueryBoundP_true_iff _ _).2
+          (native_uniform attachedVerify primitives count source localImpl baseImpl kem functional secret qLocal localBound query state))
+        decode raw (state.1.roles.1.2 index) (state.1.primitive, state.2))
 
 /-- The original post service may create an identity; its actual 32-byte sampler is included. -/
 def postCost (qLocal uBase : Nat) : PqxdhPhase2SourceSchedulerBounds.Kind → Nat
@@ -127,7 +128,7 @@ theorem actual_step_uniform
         PqxdhPhase2PostSource.interpretation, publicImpl,
         KEMScheme.IND_CCA_postChallengeImpl, kemAmbientImpl,
         PqxdhPhase2SourceSchedulerBounds.classify, postCost, IsTotalQueryBound]
-      change (unifSpec.query coin : ProbComp _).IsTotalQueryBound 1
+      change OracleComp.IsTotalQueryBound (unifSpec.query coin : ProbComp _) 1
       exact (isQueryBound_query_iff (spec := unifSpec) coin 1 _ _).2 (by decide)
     · simp [PqxdhPhase2PostScheduler.actual, borrowedSelector, StateT.run,
         PqxdhPhase2PostSource.interpretation, publicImpl,

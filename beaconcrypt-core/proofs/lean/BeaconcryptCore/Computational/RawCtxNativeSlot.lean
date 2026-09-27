@@ -111,7 +111,7 @@ theorem rawReceive_ready {Metadata : Type} (decode : RawCtxReceive.FrameDecoder)
   split
   all_goals simp_all only [map_pure]
   split
-  all_goals simp only [run_ready, map_pure, map_bind, bind_map_left]
+  all_goals simp_all only [run_ready, map_pure, map_bind, bind_map_left, ite_true, ite_false]
 
 /-- Stateful private cryptographic effects stay outside the native slot and its publication. -/
 noncomputable def rawGame {Metadata PrimitiveState : Type} {ι : Type} {base : OracleSpec ι}

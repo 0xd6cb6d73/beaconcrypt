@@ -20,6 +20,7 @@ theorem read_local (address : TupleAddress) (first third : DhOutput) :
     readDh 128 (assemble address first third) = some address.fourth ∧
     readDh 160 (assemble address first third) = some address.kem := by
   simp [readDh, assemble, List.append_assoc, List.drop_append]
+  congr 1
   apply List.Vector.toList_injective
   simp
 

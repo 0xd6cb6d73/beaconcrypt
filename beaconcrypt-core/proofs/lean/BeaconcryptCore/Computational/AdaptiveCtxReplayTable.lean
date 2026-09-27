@@ -57,13 +57,13 @@ theorem completedSource_eq_mixed {Result : Type} (decode : RawDecoder) (c : Pqxd
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (state : AdaptiveCtxReceive.ReceiveState) (dictionary : PrivateSpec.QueryCache)
     (aligned : DictionaryAligned state.ctx.cache dictionary) :
-    𝒟[completedSource decode c key adversary state] =
-      𝒟[mixedCompletedLazy ((simulateQ (abstractImpl decode c key) adversary).run state) dictionary] := by
+    𝒮[completedSource decode c key adversary state] =
+      𝒮[mixedCompletedLazy ((simulateQ (abstractImpl decode c key) adversary).run state) dictionary] := by
   unfold completedSource mixedCompletedLazy
   rw [← abstractRun_projection decode c key adversary state dictionary aligned]
   simp only [bind_map_left]
   rw [← lazyDictionary_eq_mixed]
-  apply evalDist_bind_congr
+  apply evalSPMF_bind_congr
   intro result supported
   have same := abstractRun_dictionary decode c key adversary state dictionary aligned result supported
   rw [same]
@@ -78,20 +78,26 @@ noncomputable def tableRun {Result : Type} (decode : RawDecoder) (c : Pqxdh.Cryp
 theorem completedSource_eq_eager {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (state : AdaptiveCtxReceive.ReceiveState) :
-    𝒟[completedSource decode c key adversary state] =
-      𝒟[do
+    𝒮[completedSource decode c key adversary state] =
+      𝒮[do
         let tail ← $ᵗ (Suffix → CtxDigest)
         let table := tableExtending (sourceDictionary state) tail
         let result ← tableRun decode c key table adversary state
         pure (table, result)] := by
   rw [completedSource_eq_mixed decode c key adversary state (sourceDictionary state) (fun _ => rfl)]
-  exact mixedCompletedLazy_eq_eager _ _
+  letI : MeasurableSpace Result := ⊤
+  letI : DiscreteMeasurableSpace Result := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace CtxDigest := ⊤
+  letI : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace AdaptiveCtxReceive.ReceiveState := ⊤
+  letI : DiscreteMeasurableSpace AdaptiveCtxReceive.ReceiveState := ⟨fun _ => by simp⟩
+  exact evalSPMF_eq_of_evalDist_eq _ _ (mixedCompletedLazy_eq_eager _ _)
 
 /-- Fresh-source specialization: one uniformly reserved private table retains its joint law with all actual source state, adaptive replies, logs and explicit coins. -/
 theorem completedSource_initial_eq_uniform {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result) :
-    𝒟[completedSource decode c key adversary AdaptiveCtxReceive.initialState] =
-      𝒟[do
+    𝒮[completedSource decode c key adversary AdaptiveCtxReceive.initialState] =
+      𝒮[do
         let table ← $ᵗ (Suffix → CtxDigest)
         let result ← tableRun decode c key table adversary AdaptiveCtxReceive.initialState
         pure (table, result)] := by
@@ -245,14 +251,21 @@ def restoreTerminal {Result : Type} (terminal : (Suffix → CtxDigest) × (Resul
 /-- The actual completed replay-only source is exactly the completed honest-sealing dictionary client followed by full-cache reconstruction, including every failed raw lookup. -/
 theorem completedSource_eq_honestCompletion {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result) :
-    𝒟[completedSource decode c key adversary AdaptiveCtxReceive.initialState] =
-      𝒟[restoreTerminal <$> mixedCompletedLazy (honestClient decode c key adversary) ∅] := by
+    𝒮[completedSource decode c key adversary AdaptiveCtxReceive.initialState] =
+      𝒮[restoreTerminal <$> mixedCompletedLazy (honestClient decode c key adversary) ∅] := by
   rw [completedSource_initial_eq_uniform]
-  have reserved := evalDist_map_eq_of_evalDist_eq
-    (mixedCompletedLazy_empty_eq_uniform (honestClient decode c key adversary)) restoreTerminal
+  letI : MeasurableSpace Result := ⊤
+  letI : DiscreteMeasurableSpace Result := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace CtxDigest := ⊤
+  letI : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace AdaptiveCtxReceive.ReceiveState := ⊤
+  letI : DiscreteMeasurableSpace AdaptiveCtxReceive.ReceiveState := ⟨fun _ => by simp⟩
+  have reserved := evalSPMF_map_eq_of_evalSPMF_eq
+    (evalSPMF_eq_of_evalDist_eq _ _
+      (mixedCompletedLazy_empty_eq_uniform (honestClient decode c key adversary))) restoreTerminal
   rw [reserved]
   simp only [map_bind, bind_pure_comp, Functor.map_map]
-  apply evalDist_bind_congr'
+  apply evalSPMF_bind_congr'
   intro table
   have reconstructed := honestRun_restore decode c key table adversary AdaptiveCtxReceive.initialState
   rw [restorePrivate_initial] at reconstructed

@@ -161,7 +161,9 @@ theorem route_queries (target : RootOutput) (nonce : NonceOutput) (next : RootOu
   simp only [route]
   split
   · trivial
-  · change ((PriorSpec.query (RawCtxKdfRequestTable.address request) : OracleComp PriorSpec FullOutput) >>= fun output => pure (known output)).IsTotalQueryBound 1
+  · change OracleComp.IsTotalQueryBound
+      ((PriorSpec.query (RawCtxKdfRequestTable.address request) : OracleComp PriorSpec FullOutput) >>=
+        fun output => pure (known output)) 1
     rw [isTotalQueryBound_query_bind_iff]
     exact ⟨by omega, fun _ => trivial⟩
 

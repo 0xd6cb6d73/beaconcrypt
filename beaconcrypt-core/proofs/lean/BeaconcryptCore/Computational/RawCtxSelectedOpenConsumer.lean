@@ -71,12 +71,13 @@ theorem native_service {A : Type} (c : Pqxdh.Crypto)
           (RawCtxSharedOpeningConsumer.apiReply input.sequence input.context result.1, (ambient, result.2))) <$>
           (simulateQ ctxRandomOracle (simulateQ (RawCtxSourceOpen.romAdapter c)
             (RawCtxSourceOpen.openInput input))).run cache := by
-  simp only [RawCtxSourceOpen.ownerAdapter, QueryImpl.compose, RawCtxWholeOwner.adapter]
+  simp only [RawCtxSourceOpen.ownerAdapter, QueryImpl.compose]
   cases found : RawCtxWholeOwner.arguments pending with
-  | none => simp only [simulateQ_pure, StateT.run_pure]
+  | none => simp only [RawCtxWholeOwner.adapter, found, simulateQ_pure, StateT.run_pure]
   | some input =>
-    simp only [simulateQ_map, RawCtxSourceOpen.nativeAdapter, OracleSpec.query, simulateQ_query,
-      OracleQuery.input, OracleQuery.cont, StateT.run_map, bind_pure_comp]
+    rw [RawCtxWholeOwner.adapter_present pending input found]
+    simp only [bind_pure_comp, simulateQ_map, simulateQ_spec_query,
+      RawCtxSourceOpen.nativeAdapter, StateT.run_map]
     rw [RawCtxSharedPrimitive.native_opening_complete]
     simp only [Functor.map_map]
     congr 1

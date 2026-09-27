@@ -35,14 +35,14 @@ theorem erased : Prod.snd <$> retained env baseImpl kem attachedVerify primitive
 theorem complete_split
     (second : (Context env kem attachedVerify primitives program post × RootOutput) → Bool)
     (next : Context env kem attachedVerify primitives program post → RootOutput → HmacBlock → ProbComp Result) :
-    𝒟[(do let pair ← sample env baseImpl kem attachedVerify primitives program post
+    𝒮[(do let pair ← sample env baseImpl kem attachedVerify primitives program post
           let output ← $ᵗ HmacBlock
           next pair.1 pair.2 output)] =
-      𝒟[(do let pair ← sample env baseImpl kem attachedVerify primitives program post
+      𝒮[(do let pair ← sample env baseImpl kem attachedVerify primitives program post
             let other ← $ᵗ RootOutput
             let target ← $ᵗ RootOutput
             next pair.1 pair.2 (RawCtxInitialSentinelSampler.join (second pair) other target))] := by
-  refine evalDist_bind_congr' (sample env baseImpl kem attachedVerify primitives program post) (fun pair => ?_)
+  refine evalSPMF_bind_congr' (sample env baseImpl kem attachedVerify primitives program post) (fun pair => ?_)
   simpa only [RawCtxInitialSentinelSampler.join_parts] using
     RawCtxInitialChildSecrecy.parts_observed (second pair)
       (fun other target => next pair.1 pair.2 (RawCtxInitialSentinelSampler.join (second pair) other target))
@@ -50,9 +50,9 @@ theorem complete_split
 /-- The first-child ordinary sampler contains the exact current preparation and its earlier root, plus the opposite half; only the selected half is serialized as the unavailable input. -/
 theorem joint_separated
     (second : (Context env kem attachedVerify primitives program post × RootOutput) → Bool) :
-    𝒟[RawCtxInitialChildSecrecy.joint
+    𝒮[RawCtxInitialChildSecrecy.joint
       (sample env baseImpl kem attachedVerify primitives program post) second] =
-      𝒟[RawCtxInitialChildSecrecy.separated
+      𝒮[RawCtxInitialChildSecrecy.separated
         (sample env baseImpl kem attachedVerify primitives program post)] :=
   RawCtxInitialChildSecrecy.joint_separated _ second
 

@@ -105,18 +105,30 @@ theorem sourceView_tapeView {Result : Type} (source : FixedHkdfSha512NoSaltSourc
         have positive : 0 < left := (or_iff_right (by simp [IsDirection])).mp leftBound.1
         obtain ⟨remaining, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt positive)
         apply ih
-        · simpa [IsDirection] using leftBound.2 (material (PqxdhJointKdf.productionStream source.crypto
-            (FixedHkdfDomain.ratchet.address chains.1.toList)))
-        · simpa [IsDirection] using rightBound.2 (material (PqxdhJointKdf.productionStream source.crypto
-            (FixedHkdfDomain.ratchet.address chains.1.toList)))
+        · convert leftBound.2 (material (PqxdhJointKdf.productionStream source.crypto
+            (FixedHkdfDomain.ratchet.address chains.1.toList))) using 1
+          · change next (id _) = next _
+            rfl
+          · simp [IsDirection]
+        · convert rightBound.2 (material (PqxdhJointKdf.productionStream source.crypto
+            (FixedHkdfDomain.ratchet.address chains.1.toList))) using 1
+          · change next (id _) = next _
+            rfl
+          · simp [IsDirection]
       | true =>
         have positive : 0 < right := (or_iff_right (by simp [IsDirection])).mp rightBound.1
         obtain ⟨remaining, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt positive)
         apply ih
-        · simpa [IsDirection] using leftBound.2 (material (PqxdhJointKdf.productionStream source.crypto
-            (FixedHkdfDomain.ratchet.address chains.2.toList)))
-        · simpa [IsDirection] using rightBound.2 (material (PqxdhJointKdf.productionStream source.crypto
-            (FixedHkdfDomain.ratchet.address chains.2.toList)))
+        · convert leftBound.2 (material (PqxdhJointKdf.productionStream source.crypto
+            (FixedHkdfDomain.ratchet.address chains.2.toList))) using 1
+          · change next (id _) = next _
+            rfl
+          · simp [IsDirection]
+        · convert rightBound.2 (material (PqxdhJointKdf.productionStream source.crypto
+            (FixedHkdfDomain.ratchet.address chains.2.toList))) using 1
+          · change next (id _) = next _
+            rfl
+          · simp [IsDirection]
 
 /-- The two-history observer runs the unchanged interleaving client and its entire final observation. -/
 def tapeObserver {Context Result : Type} (fallback : Material)
@@ -167,13 +179,14 @@ theorem final_bidirectional_eq_eager {Context Result : Type} (source : FixedHkdf
     (finish : Context → Result × (Nat × Nat) → ProbComp Bool) (left right : Nat) :
     𝒟[bidirectionalGame source sample (tapeObserver fallback client finish) left right left right] =
       𝒟[eagerGame fallback sample client finish left right] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [bidirectionalGame, eagerGame, tapeObserver, sampleEvolution, Nat.sub_self,
     realEvolution, List.append_nil, bind_assoc, pure_bind]
-  refine evalDist_bind_congr' sample (fun context => ?_)
-  refine evalDist_bind_congr' (sampleMaterials left) (fun leftRecords => ?_)
-  rw [OracleComp.DeferredSampling.evalDist_bind_const_neverFails ($ᵗ RootOutput) (by simp)]
-  refine evalDist_bind_congr' (sampleMaterials right) (fun rightRecords => ?_)
-  exact OracleComp.DeferredSampling.evalDist_bind_const_neverFails ($ᵗ RootOutput) (by simp) _
+  refine evalSPMF_bind_congr' sample (fun context => ?_)
+  refine evalSPMF_bind_congr' (sampleMaterials left) (fun leftRecords => ?_)
+  rw [OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp)]
+  refine evalSPMF_bind_congr' (sampleMaterials right) (fun rightRecords => ?_)
+  exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp) _
 
 /-- One initial hop and the two ordered directional sums cover arbitrary adaptive interleaving without a scheduling-selection factor. -/
 theorem adaptive_initialized_advantage_bound {Context Result : Type}
@@ -191,8 +204,7 @@ theorem adaptive_initialized_advantage_bound {Context Result : Type}
        (∑ cut ∈ Finset.range right,
         hopLoss source hmac (rightContextSampler source sample left left)
           (rightObserver observer) cut (right - cut - 1))) := by
-  have random := OracleComp.probOutput_congr (x := true) rfl
-    (final_bidirectional_eq_eager source fallback sample client finish left right)
+  have random := final_bidirectional_eq_eager source fallback sample client finish left right
   simpa only [actualGame_eq_initialized source fallback sample client finish left right leftBound rightBound,
     ProbComp.boolDistAdvantage, random] using
       actualInitializedGame_evolving_bound source hmac correct sample (tapeObserver fallback client finish) left right
@@ -522,7 +534,6 @@ info: 'BeaconcryptCore.Computational.PqxdhAdaptiveBidirectionalChains.eagerGame_
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhAdaptiveBidirectionalChains.sourceImpl_requests' depends on axioms: [propext,
- Classical.choice,
  Quot.sound]
 -/
 #guard_msgs in

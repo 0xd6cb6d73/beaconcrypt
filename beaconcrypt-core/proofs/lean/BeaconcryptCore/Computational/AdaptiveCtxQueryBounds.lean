@@ -67,7 +67,8 @@ theorem sealStep_uniform (input : CtxSealInput) (state : AdaptiveCtxReceive.Rece
   cases answer with
   | none => trivial
   | some ciphertext =>
-    simpa only [TargetUniform, primitiveClass, IsPrimitiveUniformQuery, if_false,
+    simpa only [ite_eq_right (show ¬ TargetUniform (.inl (.inr
+      (CtxNonceAeadIntCtxt.CtxSealInput.toModifiedNonceAeadSealInput input))) from id),
       bind_pure_comp, OracleComp.isQueryBoundP_map_iff] using
       privateStep_uniform (outerSuffix input.nonce input.context ciphertext.tag) state
 
@@ -81,7 +82,8 @@ theorem sealStep_seal_bound (input : CtxSealInput) (state : AdaptiveCtxReceive.R
   cases answer with
   | none => trivial
   | some ciphertext =>
-    simpa only [TargetSeal, primitiveClass, IsModifiedNonceAeadSealQuery, if_true,
+    simpa only [ite_eq_left (show TargetSeal (.inl (.inr
+      (CtxNonceAeadIntCtxt.CtxSealInput.toModifiedNonceAeadSealInput input))) from trivial),
       Nat.sub_self, bind_pure_comp, OracleComp.isQueryBoundP_map_iff] using
       privateStep_no_seal (outerSuffix input.nonce input.context ciphertext.tag) state
 

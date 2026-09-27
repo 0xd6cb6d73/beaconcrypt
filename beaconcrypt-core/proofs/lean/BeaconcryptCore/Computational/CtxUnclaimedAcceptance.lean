@@ -182,9 +182,10 @@ theorem classifiedVerifier_le_inv_of_direct_support
     refine (probEvent_mono''
       (q := fun x : CtxDigest => x = target.record.commit) ?_).trans ?_
     · intro expected haccepted
-      simp only [Function.comp_apply, decide_eq_true_eq] at haccepted
-      unfold ClassifiedAt at haccepted
-      rcases haccepted with hretained | haliasAccepted
+      simp only [Function.comp_apply] at haccepted
+      have hclassified := @of_decide_eq_true _ (Classical.propDecidable _) haccepted
+      unfold ClassifiedAt at hclassified
+      rcases hclassified with hretained | haliasAccepted
       · exact (hnotRetained hretained).elim
       · exact haliasAccepted.2.symm
     · rw [probEvent_eq_eq_probOutput,
@@ -478,7 +479,6 @@ theorem canonicalAcceptedVerifier_eq_split (c : Pqxdh.Crypto) (result : CtxBefor
     pure (@decide (CtxTypedFullFresh result.1 ∧ opened.1 ≠ none) (Classical.propDecidable _))) projected
   simp only [canonicalAcceptedVerifier, bind_map_left, Prod.map, id_eq] at observed ⊢
   convert observed using 1
-  congr 1
 
 /-- The pre-verification split is exactly the original shared-ROM game, with its own sampled key retained. -/
 theorem splitBeforeVerifyGame_eq_map (c : Pqxdh.Crypto) (adversary : CtxAdversary) :

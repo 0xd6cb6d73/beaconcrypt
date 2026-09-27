@@ -63,7 +63,7 @@ theorem bills (start : Input) (output : HmacBlock) (depth qPost qPre qApplicatio
 end BeaconcryptCore.Computational.PqxdhPreparedSharedPrefixBounds
 
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhPreparedSharedPrefixBounds.local_uniform' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhPreparedSharedPrefixBounds.local_uniform' depends on axioms: [propext] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhPreparedSharedPrefixBounds.local_uniform
 

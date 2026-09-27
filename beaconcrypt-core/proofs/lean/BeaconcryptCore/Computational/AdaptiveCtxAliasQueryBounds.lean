@@ -19,7 +19,8 @@ theorem flaggedImpl_uniform_step (logged : Bool) (decode : RawDecoder) (c : Pqxd
       OracleComp.isQueryBoundP_map_iff] using replayImpl_uniform_step decode c key (.inl request) state.1
   | inr raw =>
     simpa only [AdaptiveCtxAliasCoupling.flaggedImpl, StateT.run, bind_pure_comp,
-      OracleComp.isQueryBoundP_map_iff, SourceUniform, if_false] using
+      OracleComp.isQueryBoundP_map_iff,
+      ite_eq_right (show ¬SourceUniform (.inr raw) from id)] using
       (OracleComp.isQueryBoundP_true_iff _ _).mpr (replayRaw_uniform_bound decode raw state.1)
 
 /-- Full sticky runs include every source coin, hash, seal and raw slot, from any prior cache and counter. -/

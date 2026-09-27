@@ -40,8 +40,6 @@ theorem finish_reassociate {m : Type → Type} [Monad m] [LawfulMonad m]
       · simp only [QueryImpl.flattenStateT, finishImpl, StateT.run_mk,
           bind_pure_comp, StateT.run_map, Functor.map_map, packState, install, pack]
         rfl
-      · simp only [finishImpl, StateT.run_mk, bind_pure_comp, packState]
-        rfl
 
 end BeaconcryptCore.Computational.PqxdhPhase2FinishIdentity
 

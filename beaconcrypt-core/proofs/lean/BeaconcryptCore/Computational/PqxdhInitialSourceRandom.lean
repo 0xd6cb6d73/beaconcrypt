@@ -74,9 +74,10 @@ theorem game_source (number : Std.U64) (positive : 0 < number.val) (ancestors di
       exact published_cached source writer selectedMessage previousRoot response64 other sender route decode
         index metadata ready post before selected number shared privateState cache 1 result supported gate.2)
   refine equality.trans ?_
-  apply evalDist_bind_congr' ($ᵗ PqxdhFullSecretInputKdf.FullOutput)
+  apply congrArg evalDist
+  apply bind_congr
   intro output
-  change 𝒟[(fun result => PqxdhInitialNativeParentRandom.retainedDecision
+  change (fun result => PqxdhInitialNativeParentRandom.retainedDecision
     (RawCtxSelectedParentTable.view (productionStream source.crypto)
       (QueryCache.cacheQuery (spec := JointKdfRO) (fun _ => none)
         (RawCtxFirstParentRisk.inputAddress (root source previousRoot response64 selected)) output))
@@ -87,7 +88,7 @@ theorem game_source (number : Std.U64) (positive : 0 < number.val) (ancestors di
           (RawCtxFirstParentRisk.inputAddress (root source previousRoot response64 selected)) output))
       (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other))
       (PqxdhInitialNativeCarried.original source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
-        sender route decode (execution response64 index metadata ready post before))).run (shared, (privateState, cache))] = _
+        sender route decode (execution response64 index metadata ready post before))).run (shared, (privateState, cache)) = _
   rw [initial_view]
   rfl
 

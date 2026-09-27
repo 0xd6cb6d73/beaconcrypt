@@ -39,8 +39,8 @@ theorem randomImpl_uniform_step (query : ModifiedNonceAeadAdversarySpec.Domain)
       (match query with | .inl _ => 1 | .inr input => input.plaintext.length + 16) := by
   cases query with
   | inl coin =>
-    change ((fun answer => (answer, state)) <$>
-      (unifSpec.query coin : ProbComp (unifSpec.Range coin))).IsTotalQueryBound 1
+    change OracleComp.IsTotalQueryBound ((fun answer => (answer, state)) <$>
+      (unifSpec.query coin : ProbComp (unifSpec.Range coin))) 1
     simp only [OracleComp.IsTotalQueryBound, OracleComp.isQueryBound_map_iff,
       OracleComp.isQueryBound_query_iff]
     decide
@@ -76,13 +76,15 @@ theorem randomRun_uniform_bound {Result : Type}
     cases query with
     | inl coin =>
       simp only [plaintextCost, IsModifiedNonceAeadSealQuery, IsModifiedNonceAeadUniformQuery,
-        if_true, if_false, Nat.sub_zero, not_false_eq_true, true_or, not_true_eq_false, false_or]
+        Nat.sub_zero, not_false_eq_true, true_or, not_true_eq_false, false_or]
         at byteSize sealPositive coinPositive ⊢
+      simp at byteSize sealPositive coinPositive ⊢
       omega
     | inr input =>
       simp only [plaintextCost, IsModifiedNonceAeadSealQuery, IsModifiedNonceAeadUniformQuery,
-        if_true, if_false, not_false_eq_true, true_or, not_true_eq_false, false_or]
+        not_false_eq_true, true_or, not_true_eq_false, false_or]
         at byteSize sealPositive coinPositive ⊢
+      simp at byteSize sealPositive coinPositive ⊢
       omega
 
 /-- Unlike the real experiment, the ordinary random experiment generates no encryption key. Its complete randomness is the forwarded coins plus fresh random bodies and tags. -/

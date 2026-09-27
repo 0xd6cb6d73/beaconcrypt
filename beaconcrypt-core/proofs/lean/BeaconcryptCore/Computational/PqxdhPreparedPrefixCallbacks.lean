@@ -23,8 +23,8 @@ noncomputable def selectorLocal (selector : QueryImpl extra (StateT N (StateT C 
 theorem selector_source (selector : QueryImpl extra (StateT N (StateT C ProbComp))) (query : extra.Domain) :
     localLift (selectorLocal (A := A) selector query) = PqxdhInitialPendingAmbient.selectorLift selector query := by
   funext state cache
-  simp only [localLift, selectorLocal, PqxdhInitialPendingAmbient.selectorLift, Functor.map_map]
-  rfl
+  change _ = (PqxdhInitialPendingAmbient.selectorLift selector query state).run cache
+  simp only [localLift, selectorLocal, PqxdhInitialPendingAmbient.selectorLift, StateT.run_map, Functor.map_map]
 
 noncomputable def auxiliaryLocal (callbacks : PqxdhSourceAuxiliary.Callbacks A) :
     QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (ExternalState A N C) ProbComp) := fun query state =>

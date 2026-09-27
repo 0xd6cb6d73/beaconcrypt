@@ -80,6 +80,7 @@ noncomputable def aliasTester : FullObserver ((Bool ⊕ Context) × Entry) :=
   RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source)
     (observed source writer mark sender route decode view) candidates
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The complete pre-first-send source event and its ordinary full observer pay three copies of the same masked candidate event, with legitimate disclosures excluded by actual freshness. -/
 theorem local_bound (context : (Bool ⊕ Context) × Entry) (target : RootOutput) (output : FullOutput) :
     (native source writer mark sender route decode view context target output).boolDistAdvantage

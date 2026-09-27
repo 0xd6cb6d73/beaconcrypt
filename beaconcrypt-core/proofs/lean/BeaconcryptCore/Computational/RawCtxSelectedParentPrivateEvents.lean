@@ -88,7 +88,9 @@ theorem local_bound {Auxiliary Result : Type}
       Pr[fun result => target ∈ result.2.1.2 |
         (simulateQ (RawCtxSelectedParentReadMask.observed source writer prior entry output labelRead view) client).run state].toReal := by
   have agreement := event_good source writer prior entry output target view client state event
-  rw [ProbComp.boolDistAdvantage, decision_probability, decision_probability, agreement]
+  rw [ProbComp.boolDistAdvantage]
+  simp only [evalDist_apply_singleton]
+  rw [decision_probability, decision_probability, agreement]
   have variation := (abs_probOutput_toReal_sub_le_tvDist
     (decision event <$> (simulateQ (RawCtxSelectedParentPrivate.observed source writer prior entry output labelRead view target) client).run state)
     (decision event <$> (simulateQ (RawCtxSelectedParentReadMask.observed source writer prior entry output labelRead view) client).run state)).trans

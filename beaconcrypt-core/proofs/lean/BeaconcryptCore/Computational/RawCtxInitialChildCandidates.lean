@@ -51,15 +51,15 @@ noncomputable def delayed {Context Result : Type} (prior : ProbComp Context)
 /-- Either selected initial half can be delayed past the complete independent-child candidate computation while preserving all retained context and results. -/
 theorem uniform_delayed {Context Result : Type} (prior : ProbComp Context) (second : Context → Bool)
     (observe : Context × RootOutput → FullOutput → ProbComp Result) :
-    𝒟[uniform prior second observe] = 𝒟[delayed prior observe] := by
+    𝒮[uniform prior second observe] = 𝒮[delayed prior observe] := by
   simp only [uniform, delayed, sample, bind_assoc, pure_bind]
-  refine evalDist_bind_congr' prior (fun context => ?_)
+  refine evalSPMF_bind_congr' prior (fun context => ?_)
   refine (parts_observed (second context) (fun other target => do
     let child ← $ᵗ FullOutput
     let result ← observe (context, other) child
     pure (target, result))).trans ?_
-  exact evalDist_bind_congr' ($ᵗ RootOutput) (fun other => by
-    simpa only [bind_assoc] using evalDist_sample_comm ($ᵗ RootOutput)
+  exact evalSPMF_bind_congr' ($ᵗ RootOutput) (fun other => by
+    simpa only [bind_assoc] using evalSPMF_sample_comm ($ᵗ RootOutput)
       (do let child ← $ᵗ FullOutput; observe (context, other) child)
       (fun target result => pure (target, result)))
 
@@ -114,7 +114,8 @@ theorem uniform_queries {Context Result : Type} (prior : ProbComp Context) (seco
     (uniform prior second observe).IsTotalQueryBound ((qPrior + 64) + (76 + qObserve)) := by
   exact isTotalQueryBound_bind (sample_bound prior second qPrior priorBound) fun pair =>
     isTotalQueryBound_bind (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 76) fun output =>
-      (isQueryBound_map_iff _ _ _ _ _).mpr (observeBound pair.1 output)
+      by simpa only [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff] using
+        observeBound pair.1 output
 
 end BeaconcryptCore.Computational.RawCtxInitialChildCandidates
 

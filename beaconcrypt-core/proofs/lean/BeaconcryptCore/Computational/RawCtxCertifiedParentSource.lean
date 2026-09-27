@@ -88,8 +88,10 @@ theorem earlier_actual (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   rw [stored]
   have shape := RawCtxCursorLineage.walk_shape _ depth root _ path
   refine ⟨path, shape.1, ?_, shape.2⟩
-  simpa only [RawCtxSelectiveChainGame.matched, RawCtxSelectiveChainGame.cursorAddress,
-    RawCtxFirstParentRisk.inputAddress, decide_eq_true_eq] using facts.2.1
+  have reflected : RawCtxSelectedFamilyContext.address saved.val.1 =
+      RawCtxSelectiveChainGame.cursorAddress saved.val.2.1.2.2 :=
+    of_decide_eq_true (by simpa only [RawCtxSelectiveChainGame.matched] using facts.2.1)
+  simpa only [RawCtxSelectiveChainGame.cursorAddress, RawCtxFirstParentRisk.inputAddress] using reflected
 
 end BeaconcryptCore.Computational.RawCtxCertifiedParentSource
 

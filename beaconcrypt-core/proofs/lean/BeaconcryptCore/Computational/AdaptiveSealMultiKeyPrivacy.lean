@@ -23,7 +23,8 @@ theorem real_reduction {count : Nat} (target : Fin (count + 1)) (real : Fin coun
     (c : Pqxdh.Crypto) (client : OracleComp (Spec (count + 1)) Bool) :
     𝒟[Prod.fst <$> sourceGame (join target true real) c client] =
       𝒟[modifiedNonceAeadINDDollarRealExp c (reduction target real c client)] := by
-  rw [evalDist_map, source_prepared_selection target true real c client, ← evalDist_map]
+  apply evalDist_eq_of_evalSPMF_eq
+  rw [evalSPMF_map, source_prepared_selection target true real c client, ← evalSPMF_map]
   simp only [map_bind, Functor.map_map, modifiedNonceAeadINDDollarRealExp, reduction,
     simulateQ_map, StateT.run_map, bind_pure_comp]
   rfl
@@ -33,10 +34,11 @@ theorem random_reduction {count : Nat} (target : Fin (count + 1)) (real : Fin co
     (c : Pqxdh.Crypto) (client : OracleComp (Spec (count + 1)) Bool) :
     𝒟[Prod.fst <$> sourceGame (join target false real) c client] =
       𝒟[modifiedNonceAeadINDDollarRandomExp (reduction target real c client)] := by
-  rw [evalDist_map, source_prepared_selection target false real c client, ← evalDist_map]
+  apply evalDist_eq_of_evalSPMF_eq
+  rw [evalSPMF_map, source_prepared_selection target false real c client, ← evalSPMF_map]
   simp only [map_bind, Functor.map_map, modifiedNonceAeadINDDollarRandomExp, reduction,
     simulateQ_map, StateT.run_map, bind_pure_comp, localImpl, Bool.false_eq_true, if_false, reconstruct]
-  exact OracleComp.DeferredSampling.evalDist_bind_const_neverFails ($ᵗ CtxKey) (by simp) _
+  exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ CtxKey) (by simp) _
 
 /-- One original key replacement is exactly the constructed ordinary Boolean IND$ game. -/
 theorem selected_advantage {count : Nat} (target : Fin (count + 1)) (real : Fin count → Bool)
@@ -45,8 +47,7 @@ theorem selected_advantage {count : Nat} (target : Fin (count + 1)) (real : Fin 
       (Prod.fst <$> sourceGame (join target false real) c client) =
         modifiedNonceAeadINDDollarAdvantage c (reduction target real c client) := by
   simp only [modifiedNonceAeadINDDollarAdvantage, ProbComp.boolDistAdvantage,
-    probOutput_congr rfl (real_reduction target real c client),
-    probOutput_congr rfl (random_reduction target real c client)]
+    real_reduction target real c client, random_reduction target real c client]
 
 noncomputable def game {count : Nat} (c : Pqxdh.Crypto)
     (client : OracleComp (Spec (count + 1)) Bool) (hop : Nat) : ProbComp Bool :=

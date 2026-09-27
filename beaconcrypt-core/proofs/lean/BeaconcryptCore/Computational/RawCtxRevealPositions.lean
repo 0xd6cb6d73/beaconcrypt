@@ -59,7 +59,8 @@ theorem chain_reveal_positions {Metadata PeerMetadata Identity DhPair KemPair : 
   have positions := positioned_chains c (ownerOrigins serverOrigins beaconOrigins owner).1
     (ownerOrigins serverOrigins beaconOrigins owner).2 kernel
     (selected_positions c serverOrigins beaconOrigins roles invariant owner kernel selected)
-  simp only [reveal, selected, positions.1, positions.2, and_self]
+  simp only [reveal, selected, positions.1, positions.2]
+  exact ⟨rfl, rfl⟩
 
 /-- Actual disclosed skipped material belongs to its positive source wire sequence. -/
 theorem skipped_reveal_positions {Metadata PeerMetadata Identity DhPair KemPair : Type} {serverCount beaconCount : Nat}

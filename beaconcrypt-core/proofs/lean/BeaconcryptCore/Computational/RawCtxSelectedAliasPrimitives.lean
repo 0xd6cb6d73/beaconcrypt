@@ -52,6 +52,7 @@ noncomputable def consistent {Auxiliary : Type}
     QueryImpl Spec (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp) :=
   RawCtxSelectedAliasCoupling.routed (handler source writer output) (alternate source writer output) inputs target
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Public candidate equality is exact byte equality, without injectivity of any chain, owner or key map. -/
 theorem public_input_exact (target : RootOutput) (bytes : Pqxdh.Bytes) :
     target ∈ RawCtxSelectedPublicTrace.bytesCandidate bytes ↔ bytes = target.toList := by
@@ -113,7 +114,6 @@ theorem public_consistent {Auxiliary : Type}
   by_cases bytes : view.input = target.toList
   · simp only [bytes, if_true, alternate, JointKdfViewQuery.address, FixedHkdfDomain.address,
       PqxdhJointKdf.JointKdfAddress.mk.injEq, and_true]
-    rfl
   · simp only [bytes, if_false, JointKdfViewQuery.address, FixedHkdfDomain.address,
       PqxdhJointKdf.JointKdfAddress.mk.injEq, and_false]
 

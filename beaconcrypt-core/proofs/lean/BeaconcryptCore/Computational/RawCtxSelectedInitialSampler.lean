@@ -27,20 +27,20 @@ def fullEquiv : FullOutput ≃ (Remainder × RootOutput) :=
 
 /-- Uniform full76 splits into the retained second32/nonce pair and the missing first32. -/
 theorem full_uniform :
-    𝒟[(fun output : FullOutput => (remainder output, firstChain output)) <$>
-      ($ᵗ FullOutput)] = 𝒟[$ᵗ (Remainder × RootOutput)] := by
-  exact evalDist_map_bijective_uniform_cross FullOutput fullEquiv fullEquiv.bijective
+    𝒮[(fun output : FullOutput => (remainder output, firstChain output)) <$>
+      ($ᵗ FullOutput)] = 𝒮[$ᵗ (Remainder × RootOutput)] := by
+  exact evalSPMF_map_bijective_uniform_cross FullOutput fullEquiv fullEquiv.bijective
 
 /-- Splitting the same full output preserves every effect and result of an arbitrary complete continuation. -/
 theorem full_observed {Result : Type} (continuation : Remainder → RootOutput → ProbComp Result) :
-    𝒟[(do let output ← $ᵗ FullOutput
+    𝒮[(do let output ← $ᵗ FullOutput
           continuation (remainder output) (firstChain output))] =
-      𝒟[(do let other ← $ᵗ Remainder
+      𝒮[(do let other ← $ᵗ Remainder
             let target ← $ᵗ RootOutput
             continuation other target)] := by
   have observed := congrArg (fun (distribution : SPMF (Remainder × RootOutput)) => distribution >>=
-    fun pair => 𝒟[continuation pair.1 pair.2]) full_uniform
-  simpa only [← evalDist_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
+    fun pair => 𝒮[continuation pair.1 pair.2]) full_uniform
+  simpa only [← evalSPMF_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
 
 noncomputable def original {Context Result : Type} (sample : ProbComp Context)
     (address : Context → JointKdfAddress) (observe : Context × Entry → ProbComp Result) :
@@ -62,14 +62,14 @@ noncomputable def delayed {Context Result : Type} (sample : ProbComp Context)
 /-- Delaying only the missing first32 retains the same original context, full76 remainder and complete observation. -/
 theorem delayed_eq {Context Result : Type} (sample : ProbComp Context)
     (address : Context → JointKdfAddress) (observe : Context × Entry → ProbComp Result) :
-    𝒟[original sample address observe] = 𝒟[delayed sample address observe] := by
+    𝒮[original sample address observe] = 𝒮[delayed sample address observe] := by
   simp only [original, delayed]
-  refine evalDist_bind_congr' sample (fun context => ?_)
+  refine evalSPMF_bind_congr' sample (fun context => ?_)
   refine (full_observed (fun other target => do
     let result ← observe (context, ⟨address context, other.1, other.2⟩)
     pure (target, result))).trans ?_
-  exact evalDist_bind_congr' ($ᵗ Remainder) (fun other =>
-    evalDist_sample_comm ($ᵗ RootOutput) (observe (context, ⟨address context, other.1, other.2⟩))
+  exact evalSPMF_bind_congr' ($ᵗ Remainder) (fun other =>
+    evalSPMF_sample_comm ($ᵗ RootOutput) (observe (context, ⟨address context, other.1, other.2⟩))
       (fun target result => pure (target, result)))
 
 def initialOther (output : HmacBlock) : RootOutput := (vectorSplitEquiv 32 32 output).2
@@ -79,20 +79,20 @@ def initialEquiv : HmacBlock ≃ (RootOutput × RootOutput) :=
 
 /-- Uniform initial64 contains two independent32-byte halves, in retained-other/selected-first order. -/
 theorem initial_uniform :
-    𝒟[(fun output : HmacBlock => (initialOther output, PqxdhSecretInputKdf.first32 output)) <$>
-      ($ᵗ HmacBlock)] = 𝒟[$ᵗ (RootOutput × RootOutput)] := by
-  exact evalDist_map_bijective_uniform_cross HmacBlock initialEquiv initialEquiv.bijective
+    𝒮[(fun output : HmacBlock => (initialOther output, PqxdhSecretInputKdf.first32 output)) <$>
+      ($ᵗ HmacBlock)] = 𝒮[$ᵗ (RootOutput × RootOutput)] := by
+  exact evalSPMF_map_bijective_uniform_cross HmacBlock initialEquiv initialEquiv.bijective
 
 /-- The two halves may be passed separately to the full continuation without discarding any initial64 bit. -/
 theorem initial_observed {Result : Type} (continuation : RootOutput → RootOutput → ProbComp Result) :
-    𝒟[(do let output ← $ᵗ HmacBlock
+    𝒮[(do let output ← $ᵗ HmacBlock
           continuation (initialOther output) (PqxdhSecretInputKdf.first32 output))] =
-      𝒟[(do let other ← $ᵗ RootOutput
+      𝒮[(do let other ← $ᵗ RootOutput
             let target ← $ᵗ RootOutput
             continuation other target)] := by
   have observed := congrArg (fun (distribution : SPMF (RootOutput × RootOutput)) => distribution >>=
-    fun pair => 𝒟[continuation pair.1 pair.2]) initial_uniform
-  simpa only [← evalDist_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
+    fun pair => 𝒮[continuation pair.1 pair.2]) initial_uniform
+  simpa only [← evalSPMF_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
 
 /-- The initial64 split and the full76 split select the same two byte vectors. -/
 theorem shared_prefix_parts (output : FullOutput) :
@@ -122,14 +122,14 @@ noncomputable def initialDelayed {Context Result : Type} (sample : ProbComp Cont
 /-- An actual64-byte uniform draw can delay first32 past a complete observer that retains the other direction. -/
 theorem initial_delayed_eq {Context Result : Type} (sample : ProbComp Context)
     (observe : Context → RootOutput → ProbComp Result) :
-    𝒟[initialOriginal sample observe] = 𝒟[initialDelayed sample observe] := by
+    𝒮[initialOriginal sample observe] = 𝒮[initialDelayed sample observe] := by
   simp only [initialOriginal, initialDelayed]
-  refine evalDist_bind_congr' sample (fun context => ?_)
+  refine evalSPMF_bind_congr' sample (fun context => ?_)
   refine (initial_observed (fun other target => do
     let result ← observe context other
     pure (target, result))).trans ?_
-  exact evalDist_bind_congr' ($ᵗ RootOutput) (fun other =>
-    evalDist_sample_comm ($ᵗ RootOutput) (observe context other) (fun target result => pure (target, result)))
+  exact evalSPMF_bind_congr' ($ᵗ RootOutput) (fun other =>
+    evalSPMF_sample_comm ($ᵗ RootOutput) (observe context other) (fun target result => pure (target, result)))
 
 set_option maxRecDepth 2048 in
 /-- The full76 source sampler pays every context, output-byte and continuation request. -/

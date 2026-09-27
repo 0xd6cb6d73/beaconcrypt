@@ -22,7 +22,7 @@ noncomputable def reply (prior : Prior) (entry : Entry) (target : RootOutput)
 theorem table (prior : Prior) (entry : Entry) (target : RootOutput) (query : JointKdfViewQuery) :
     reply prior entry target query = query.project (lookup prior entry target query.address) := by
   by_cases same : query.address = entry.address <;>
-    simp [reply, lookup, JointKdfViewQuery.project, same, projection_parts]
+    simp [reply, lookup, JointKdfViewQuery.project, same, projection_parts] <;> rfl
 
 /-- Before direct exposure the complete public reply is independent of the retained second32 coordinate. -/
 theorem before (prior : Prior) (entry : Entry) (left right : RootOutput)

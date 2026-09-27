@@ -13,7 +13,10 @@ namespace BeaconcryptCore.Computational.RawCtxServerServiceBounds
 
 inductive Kind where
   | send | raw | coin | hash | hkdf
-  deriving DecidableEq, Fintype
+  deriving DecidableEq
+
+instance : Fintype Kind :=
+  Fintype.ofList [.send, .raw, .coin, .hash, .hkdf] (by intro kind; cases kind <;> simp)
 
 abbrev Budget := Kind → Nat
 
@@ -98,18 +101,30 @@ theorem source_uniform_step {Metadata PeerMetadata Auxiliary : Type}
   all_goals simp only [RawCtxServerServices.sourceImpl, RawCtxServerMixed.sourceImpl, StateT.run, bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff, sourceKind, uniformWeight]
   case inl.inl =>
     dsimp only [RawCtxServerServices.SourceSpec, RawCtxServerMixed.SourceSpec, RawCtxServerSend.ApplicationSpec, RawCtxWholeOwner.RawSpec, OracleSpec.Range, OracleSpec.add_def, Sum.elim, OracleSpec.ofFn]
-    rw [isQueryBound_map_iff, ← RawCtxServerMixed.send_interpretation]
-    simpa only [Nat.mul_one, IsTotalQueryBound] using RawCtxMixedShared.shared_uniform source.crypto writer kdf kdfCoins bounded
-      (RawCtxServerMixed.sendServer senderId plaintext kid state.1) 1 1
-      (RawCtxServerMixed.send_bound senderId plaintext kid state.1 .kdf)
-      (RawCtxServerMixed.send_bound senderId plaintext kid state.1 .hash) state.2
+    have interpreted := RawCtxServerMixed.send_interpretation
+      (RawCtxMixedShared.sharedImpl source.crypto writer kdf)
+      senderId plaintext kid state.1 state.2
+    have stepBound : ((simulateQ (RawCtxMixedShared.sharedImpl source.crypto writer kdf)
+        (RawCtxServerMixed.sendServer senderId plaintext kid state.1)).run state.2).IsTotalQueryBound
+        (kdfCoins + 64) := by
+      simpa only [Nat.mul_one] using RawCtxMixedShared.shared_uniform source.crypto writer kdf
+        kdfCoins bounded (RawCtxServerMixed.sendServer senderId plaintext kid state.1) 1 1
+        (RawCtxServerMixed.send_bound senderId plaintext kid state.1 .kdf)
+        (RawCtxServerMixed.send_bound senderId plaintext kid state.1 .hash) state.2
+    exact interpreted ▸ stepBound
   case inl.inr =>
     dsimp only [RawCtxServerServices.SourceSpec, RawCtxServerMixed.SourceSpec, RawCtxServerSend.ApplicationSpec, RawCtxWholeOwner.RawSpec, OracleSpec.Range, OracleSpec.add_def, Sum.elim, OracleSpec.ofFn]
-    rw [isQueryBound_map_iff, ← RawCtxServerMixed.raw_interpretation]
-    simpa only [Nat.mul_one, IsTotalQueryBound] using RawCtxMixedShared.shared_uniform source.crypto writer kdf kdfCoins bounded
-      (RawCtxServerMixed.rawServer route decode raw state.1) 51 1
-      (RawCtxServerMixed.raw_bound route decode raw state.1 .kdf)
-      (RawCtxServerMixed.raw_bound route decode raw state.1 .hash) state.2
+    have interpreted := RawCtxServerMixed.raw_interpretation
+      (RawCtxMixedShared.sharedImpl source.crypto writer kdf)
+      route decode raw state.1 state.2
+    have stepBound : ((simulateQ (RawCtxMixedShared.sharedImpl source.crypto writer kdf)
+        (RawCtxServerMixed.rawServer route decode raw state.1)).run state.2).IsTotalQueryBound
+        (kdfCoins * 51 + 64) := by
+      simpa only [Nat.mul_one] using RawCtxMixedShared.shared_uniform source.crypto writer kdf
+        kdfCoins bounded (RawCtxServerMixed.rawServer route decode raw state.1) 51 1
+        (RawCtxServerMixed.raw_bound route decode raw state.1 .kdf)
+        (RawCtxServerMixed.raw_bound route decode raw state.1 .hash) state.2
+    exact interpreted ▸ stepBound
   case inr.inl =>
     simp [QueryImpl.compose, RawCtxServerServices.publicLift, RawCtxServerServices.backendImpl, OracleSpec.query]
     exact (isQueryBound_query_iff (spec := unifSpec) coin 1 _ _).2 (by decide)

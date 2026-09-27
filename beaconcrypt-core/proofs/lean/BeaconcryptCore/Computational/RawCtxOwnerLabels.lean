@@ -157,13 +157,11 @@ end BeaconcryptCore.Computational.RawCtxOwnerLabels
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxOwnerLabels.forget_attach
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxOwnerLabels.receive_owner' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxOwnerLabels.receive_owner' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxOwnerLabels.receive_owner
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxOwnerLabels.send_owner' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxOwnerLabels.send_owner' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxOwnerLabels.send_owner
 

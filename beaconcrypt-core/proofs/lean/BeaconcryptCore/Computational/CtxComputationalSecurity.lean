@@ -347,11 +347,14 @@ theorem ctxClassifiedVerifier_le_inv_of_direct_support
     refine (probEvent_mono''
       (q := fun x : CtxDigest => x = target.record.commit) ?_).trans ?_
     · intro expected haccepted
-      simp only [Function.comp_apply, decide_eq_true_eq] at haccepted
-      unfold CtxClassifiedForgeryAt at haccepted
-      rcases haccepted with hretained | haliasAccepted
-      · exact (hnotRetained hretained).elim
-      · exact haliasAccepted.2.1.symm
+      simp only [Function.comp_apply] at haccepted
+      have haccepted' : CtxClassifiedForgeryAt c
+          (independentHandlerStateToBeforeVerify key target state) expected :=
+        @of_decide_eq_true _ (Classical.propDecidable _) haccepted
+      unfold CtxClassifiedForgeryAt at haccepted'
+      exact Or.elim haccepted'
+        (fun hretained => (hnotRetained hretained).elim)
+        (fun haliasAccepted => haliasAccepted.2.1.symm)
     · rw [probEvent_eq_eq_probOutput,
         probOutput_uniformSample CtxDigest target.record.commit]
   · unfold ctxClassifiedVerifier
@@ -836,19 +839,20 @@ theorem ctxRetainedBaseSealOracle_uniform_query_bound
   by_cases hused : input.nonce ∈ state.usedNonces
   · unfold ctxRetainedBaseSealOracle
     simp [StateT.run, hused]
-  · simp only [ctxRetainedBaseSealOracle, StateT.run, hused, if_false]
-    unfold queryModifiedNonceAeadSeal
-    refine (OracleComp.isQueryBoundP_bind (n := 0) (m := 64) ?_ ?_).mono ?_
+  · unfold ctxRetainedBaseSealOracle
+    simp only [StateT.run]
+    rw [if_neg hused]
+    refine OracleComp.isQueryBoundP_bind (n := 0) (m := 64) ?_ ?_
     · exact queryModifiedNonceAeadSeal_no_uniform_queries
         (CtxSealInput.toModifiedNonceAeadSealInput input)
     · intro base _
       cases base with
       | none => simp
       | some ciphertext =>
-          exact (OracleComp.isQueryBoundP_map_iff
-            modifiedNonceAeadDigest _ 64).mpr
-              modifiedNonceAeadDigest_uniform_query_bound
-    · omega
+          simp only
+          rw [bind_pure_comp]
+          rw [OracleComp.isQueryBoundP_map_iff]
+          exact modifiedNonceAeadDigest_uniform_query_bound
 
 theorem OracleComp.IsQueryBoundP.simulateQ_run_StateT_of_step_le_total
     {i i' : Type} {spec : OracleSpec i} {spec' : OracleSpec i'}

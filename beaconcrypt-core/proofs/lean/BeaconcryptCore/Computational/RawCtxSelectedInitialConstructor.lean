@@ -118,15 +118,15 @@ theorem split_reconstruct (output : HmacBlock) :
 theorem uniform_native {Context Result : Type} (sample : ProbComp Context)
     (request : Context → RawCtxInitializedKdfFamily.InitialRequest)
     (observe : Context → HmacBlock → RustM ConcreteRatchetKernel → ProbComp Result) :
-    𝒟[(do let context ← sample
+    𝒮[(do let context ← sample
           let output ← $ᵗ HmacBlock
           observe context output (from64 (request context) output))] =
-    𝒟[(do let context ← sample
+    𝒮[(do let context ← sample
           let other ← $ᵗ RootOutput
           let target ← $ᵗ RootOutput
           observe context (target ++ other)
             (nativeKernel (RawCtxFreshChainCut.concreteChain target) <$> initial (request context).1 other))] := by
-  refine evalDist_bind_congr' sample (fun context => ?_)
+  refine evalSPMF_bind_congr' sample (fun context => ?_)
   simpa only [split_reconstruct, from64_initial] using
     RawCtxSelectedInitialSampler.initial_observed (fun other target =>
       observe context (target ++ other) (from64 (request context) (target ++ other)))
@@ -148,11 +148,11 @@ theorem uniform_native_bound {Context Result : Type} (sample : ProbComp Context)
 /-- After the same initial64 split, the concrete private constructor can run before drawing only its omitted first32 coordinate. -/
 theorem delayed_initial {Context Result : Type} (sample : ProbComp Context)
     (role : Context → Bool) (observe : Context → RustM Kernel → ProbComp Result) :
-    𝒟[(do let context ← sample
+    𝒮[(do let context ← sample
           let output ← $ᵗ HmacBlock
           let result ← observe context (initial (role context) (RawCtxSelectedInitialSampler.initialOther output))
           pure (PqxdhSecretInputKdf.first32 output, result))] =
-    𝒟[(do let context ← sample
+    𝒮[(do let context ← sample
           let other ← $ᵗ RootOutput
           let result ← observe context (initial (role context) other)
           let target ← $ᵗ RootOutput

@@ -22,10 +22,10 @@ theorem coins_total {Result : Type} (work : ProbComp Result) (budget : Nat)
   | pure value => trivial
   | query_bind query next ih =>
       rw [isTotalQueryBound_query_bind_iff] at bounded
-      change ((do
+      change OracleComp.IsTotalQueryBound (do
         let answer ← ((PqxdhPrivateKemSource.SelectorSpec baseSpec).query (.inr (.inl (.inl query))) :
           OracleComp (PqxdhPrivateKemSource.SelectorSpec baseSpec) _)
-        coins (next answer))).IsTotalQueryBound budget
+        coins (next answer)) budget
       rw [isTotalQueryBound_query_bind_iff]
       exact ⟨bounded.1, fun answer => ih answer (budget - 1) (bounded.2 answer)⟩
 
@@ -211,11 +211,11 @@ theorem continuation_coins_total {Result : Type} (work : ProbComp Result) (budge
   | pure value => trivial
   | query_bind query next ih =>
       rw [isTotalQueryBound_query_bind_iff] at bounded
-      change ((do
+      change OracleComp.IsTotalQueryBound (do
         let answer ← ((PqxdhPrivateAcceptedRoot.CorrelatedSpec baseSpec).query
           (.inl (.inr (.inl (.inl (.inl query))))) :
             OracleComp (PqxdhPrivateAcceptedRoot.CorrelatedSpec baseSpec) _)
-        PqxdhProtocolRegistration.coins (next answer))).IsTotalQueryBound budget
+        PqxdhProtocolRegistration.coins (next answer)) budget
       rw [isTotalQueryBound_query_bind_iff]
       exact ⟨bounded.1, fun answer => ih answer (budget - 1) (bounded.2 answer)⟩
 
@@ -228,11 +228,11 @@ theorem continuation_coins_excluded {Result : Type}
   induction work using OracleComp.inductionOn with
   | pure value => trivial
   | query_bind query next ih =>
-      change ((do
+      change OracleComp.IsQueryBoundP (do
         let answer ← ((PqxdhPrivateAcceptedRoot.CorrelatedSpec baseSpec).query
           (.inl (.inr (.inl (.inl (.inl query))))) :
             OracleComp (PqxdhPrivateAcceptedRoot.CorrelatedSpec baseSpec) _)
-        PqxdhProtocolRegistration.coins (next answer))).IsQueryBoundP predicate 0
+        PqxdhProtocolRegistration.coins (next answer)) predicate 0
       rw [isQueryBoundP_query_bind_iff]
       exact ⟨by simp [excluded query], fun answer => by simpa only [if_neg (excluded query)] using ih answer⟩
 

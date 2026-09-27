@@ -82,8 +82,7 @@ theorem raw_total {Metadata : Type} (decode : RawCtxReceive.FrameDecoder) (raw :
   · trivial
   · split
     · trivial
-    · dsimp only
-      split
+    · split
       · simp only [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
         apply simulate_total RawCtxWholeOwner.adapter _ 52 (receive_total _ _ _)
         intro query

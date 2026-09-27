@@ -198,6 +198,7 @@ instance : DecidablePred IsPublicKdf := fun query => by
 instance : DecidablePred IsRead := fun query => by
   cases query <;> simp only [IsRead] <;> infer_instance
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The same adaptive record/public/read source supplies its whole candidate bill, including every rejected attempt. -/
 theorem source_length {Metadata Auxiliary Result : Type} {serverCount beaconCount : Nat}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -228,7 +229,7 @@ theorem source_length {Metadata Auxiliary Result : Type} {serverCount beaconCoun
     all_goals simp only [IsSend, IsRaw, IsPublicKdf, IsRead, RawCtxSelectedPublicTrace.IsSend,
       RawCtxSelectedPublicTrace.IsRaw, RawCtxSelectedPublicTrace.IsPublicKdf,
       RawCtxSelectedPublicTrace.isKdf, cost, RawCtxSelectedPublicTrace.cost, Sum.isLeft, Sum.isRight,
-      if_true, if_false, Bool.false_eq_true, not_true_eq_false, false_or] at head tail sendBound rawBound kdfBound readBound
+      ite_true, ite_false, Bool.false_eq_true, not_true_eq_false, false_or] at head tail sendBound rawBound kdfBound readBound
     all_goals omega
 
 end BeaconcryptCore.Computational.RawCtxSelectedLiveTrace

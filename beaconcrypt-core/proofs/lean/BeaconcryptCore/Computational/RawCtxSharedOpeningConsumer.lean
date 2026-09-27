@@ -49,9 +49,9 @@ theorem call_bound {count : Nat} (index : Fin (count + 1)) (sequence : Std.U64)
     (classify : (SourceSpec count).Domain → Prop) [DecidablePred classify] :
     (call index sequence context).IsQueryBoundP classify
       (if classify ⟨index, .inr context.raw⟩ then 1 else 0) := by
-  simpa only [call, bind_pure_comp, isQueryBoundP_map_iff] using
-    (isQueryBoundP_query_iff classify ⟨index, .inr context.raw⟩ _).2
-      (by intro hit; simp [hit])
+  unfold call
+  rw [isQueryBoundP_query_bind_iff]
+  by_cases hit : classify ⟨index, .inr context.raw⟩ <;> simp [hit]
 
 /-- Every represented prepared capability makes at most one component call, including missing/mistagged slots. -/
 theorem opening_bound {count : Nat}

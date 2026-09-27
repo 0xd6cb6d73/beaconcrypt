@@ -110,7 +110,7 @@ theorem primitive_quiet (client : OracleComp (RawCtxPendingOwnerQueries.Spec Slo
 
 
 private theorem external_quiet (query : (PqxdhInitialPendingPost.External extra Slot I D K X Response Shared).Domain) :
-    ((Base extra I D K X Response Shared S B).query (.inr query) : OracleComp (Base extra I D K X Response Shared S B) _).IsQueryBoundP
+    OracleComp.IsQueryBoundP ((Base extra I D K X Response Shared S B).query (.inr query) : OracleComp (Base extra I D K X Response Shared S B) _)
       (isRead (extra := extra)) 0 :=
   (isQueryBoundP_query_iff _ _ _).mpr (by simp only [isRead, IsEmpty.forall_iff])
 

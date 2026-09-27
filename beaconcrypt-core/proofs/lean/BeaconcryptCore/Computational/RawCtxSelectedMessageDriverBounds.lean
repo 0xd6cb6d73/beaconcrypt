@@ -103,8 +103,9 @@ theorem receive_kdf {Context Plaintext : Type} (kernel : RawCtxSelectedMessageRe
 /-- Forwarding the explicit private table costs at most one lookup and no opening or sealing callback. -/
 theorem derive_forward {ι : Type} (extra : OracleSpec ι) (parent : Option Entry) (target : RootOutput)
     (nonce : NonceOutput) (next : RootOutput) (request : SymmetricRatchetKdfRequest) (selected : Bool) :
-    (simulateQ (fun address => ((PriorSpec + extra).query (.inl address) : OracleComp (PriorSpec + extra) FullOutput))
-      (derive parent target nonce next request)).IsQueryBoundP
+    OracleComp.IsQueryBoundP
+      (simulateQ (fun address => ((PriorSpec + extra).query (.inl address) : OracleComp (PriorSpec + extra) FullOutput))
+        (derive parent target nonce next request))
       (fun query => query.isLeft = selected) (if selected then 1 else 0) := by
   cases parent <;> cases selected <;> simp only [derive, routeLater, route]
   all_goals split_ifs <;> simp only [simulateQ_pure, simulateQ_map, simulateQ_spec_query, isQueryBoundP_map_iff]
@@ -118,8 +119,9 @@ theorem receive_callback {Context Plaintext : Type} (parent : Option Entry) (tar
       (fun service => service.isLeft = selected) (if query.isLeft = selected then 1 else 0) := by
   cases query with
   | inl request =>
-    change (simulateQ (fun address => ((ReceiveServices Context Plaintext).query (.inl address) :
-      OracleComp (ReceiveServices Context Plaintext) FullOutput)) (derive parent target nonce next request)).IsQueryBoundP
+    change OracleComp.IsQueryBoundP
+      (simulateQ (fun address => ((ReceiveServices Context Plaintext).query (.inl address) :
+        OracleComp (ReceiveServices Context Plaintext) FullOutput)) (derive parent target nonce next request))
       (fun service => service.isLeft = selected) (if true = selected then 1 else 0)
     have bound := derive_forward (RawCtxInterpretedOpening.Opening RatchetChain RatchetChain Slot Context →ₒ core.option.Option Plaintext)
       parent target nonce next request selected
@@ -135,8 +137,9 @@ theorem send_callback {Context Output : Type} (parent : Option Entry) (target : 
       (fun service => service.isLeft = selected) (if query.isLeft = selected then 1 else 0) := by
   cases query with
   | inl request =>
-    change (simulateQ (fun address => ((SendServices Context Output).query (.inl address) :
-      OracleComp (SendServices Context Output) FullOutput)) (derive parent target nonce next request)).IsQueryBoundP
+    change OracleComp.IsQueryBoundP
+      (simulateQ (fun address => ((SendServices Context Output).query (.inl address) :
+        OracleComp (SendServices Context Output) FullOutput)) (derive parent target nonce next request))
       (fun service => service.isLeft = selected) (if true = selected then 1 else 0)
     have bound := derive_forward (RawCtxInterpretedSend.Seal Slot Context →ₒ Option Output)
       parent target nonce next request selected

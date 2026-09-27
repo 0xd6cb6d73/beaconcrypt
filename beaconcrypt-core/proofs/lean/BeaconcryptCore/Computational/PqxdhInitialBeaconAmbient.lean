@@ -34,10 +34,13 @@ theorem lift_map (f : α → β) (work : Base A α) :
     lift (f <$> work) = f <$> lift (N := N) (C := C) work := by
   funext state cache
   change (fun result => ((result.1, (result.2, state.2)), cache)) <$>
-      ((fun result => (f result.1, result.2)) <$> work state.1) =
+      (f <$> work).run state.1 = ((f <$> lift (N := N) (C := C) work).run state).run cache
+  rw [StateT.run_map, StateT.run_map, StateT.run_map]
+  change (fun result => ((result.1, (result.2, state.2)), cache)) <$>
+      ((fun result => (f result.1, result.2)) <$> work.run state.1) =
     (fun result => ((f result.1.1, result.1.2), result.2)) <$>
-      ((fun result => ((result.1, (result.2, state.2)), cache)) <$> work state.1)
-  simp only [Functor.map_map]
+      ((fun result => ((result.1, (result.2, state.2)), cache)) <$> work.run state.1)
+  simp only [Functor.map_map, Function.comp_def]
 
 /-- An entire original adaptive oracle program commutes with the same full-state callback lift. -/
 theorem simulate_lift (impl : QueryImpl spec (Base A)) (client : OracleComp spec α) :

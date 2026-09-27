@@ -65,13 +65,22 @@ theorem local_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
     (native source writer continuation context target output).boolDistAdvantage
       (RawCtxSelectedParentHop.observer source writer (parent continuation) context output) ≤
       3 * Pr[= true | RawCtxSelectedParentHop.bad source writer (parent continuation) context target output].toReal := by
+  have event :
+      Pr[fun result => target ∈ RawCtxSelectedParentHop.candidates result |
+        RawCtxSelectedParentHop.observed source writer (parent continuation) context output] =
+        Pr[= true | RawCtxSelectedParentHop.bad source writer (parent continuation) context target output] := by
+    simp only [RawCtxSelectedParentHop.bad, ← probEvent_eq_eq_probOutput, probEvent_map]
+    apply OracleComp.probEvent_congr' _ rfl
+    intro result _
+    simp only [Function.comp_def, decide_eq_true_eq]
+  rw [← event]
   simpa only [native, RawCtxSelectedParentHop.observer, RawCtxSelectedParentHop.observed,
-    RawCtxSelectedParentHop.bad, RawCtxSelectedParentHop.candidates, parent, parameters, masked,
-    ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq] using
-      RawCtxCheckedFreshness.bound (parameters source writer continuation context target output)
-        continuation.sender continuation.route continuation.decode (continuation.tail context).earlier
-        (continuation.tail context).disclosed (continuation.tail context).history (continuation.tail context).outside
-        (continuation.tail context).work (continuation.tail context).remaining (continuation.tail context).state (continuation.tail context).candidates
+    RawCtxSelectedParentHop.candidates, parent, parameters, masked] using
+    RawCtxCheckedFreshness.bound (parameters source writer continuation context target output)
+      continuation.sender continuation.route continuation.decode (continuation.tail context).earlier
+      (continuation.tail context).disclosed (continuation.tail context).history (continuation.tail context).outside
+      (continuation.tail context).work (continuation.tail context).remaining (continuation.tail context).state
+      (continuation.tail context).candidates
 
 noncomputable def actual (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (continuation : Continuation Context M P I D K A S B) (sample : ProbComp Context)

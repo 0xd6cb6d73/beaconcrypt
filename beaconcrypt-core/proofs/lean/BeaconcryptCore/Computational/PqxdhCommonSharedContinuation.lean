@@ -30,6 +30,7 @@ noncomputable def completed (output : LocalOutput (M := M) (P := P) (I := I) (K 
     (PqxdhOrdinarySharedScheduler.compiler attachedVerify primitives 1 env.source env.recordWriter env.senderId env.route env.decode env.localImpl baseImpl kem secret)
     (post output.context.selection.1 (ok none))).run output.context.selection.2
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The complete ordinary source decision is preserved, including rejected, ineligible and attacker-owned candidate outcomes. -/
 theorem completed_source (output : LocalOutput (M := M) (P := P) (I := I) (K := K) (A := A) setup program) (cache : CtxRO.QueryCache)
     (execution : PqxdhSourceAuthenticatedRoot.ServerExecution) :

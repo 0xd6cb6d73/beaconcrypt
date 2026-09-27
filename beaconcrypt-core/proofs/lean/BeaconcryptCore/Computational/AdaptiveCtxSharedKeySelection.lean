@@ -114,8 +114,8 @@ theorem source_prepared_selection {count : Nat} (target : Fin (count + 1))
     (targetReal : Bool) (targetDecode : RawDecoder) (real : Fin count → Bool)
     (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto) {Result : Type}
     (client : OracleComp (SourceSpec count) Result) :
-    𝒟[sourceGame (join target targetReal real) (join target targetDecode decode) c client] =
-      𝒟[erasePrepared target <$> AdaptiveCtxSharedModePreparation.source
+    𝒮[sourceGame (join target targetReal real) (join target targetDecode decode) c client] =
+      𝒮[erasePrepared target <$> AdaptiveCtxSharedModePreparation.source
         (AdaptiveCtxSharedModePreparation.independentSetup count ()) targetReal targetDecode real decode c
           (fun _ => simulateQ (select target) client)] := by
   unfold sourceGame
@@ -123,7 +123,7 @@ theorem source_prepared_selection {count : Nat} (target : Fin (count + 1))
   simp only [AdaptiveCtxSharedModePreparation.source, AdaptiveCtxSharedModePreparation.independentSetup,
     AdaptiveCtxSharedModeFamily.sourceGame, fixed_source_selection, map_bind, bind_assoc, pure_bind, map_pure]
   simp only [erasePrepared, bind_pure_comp]
-  exact JointEagerTable.independent_comm ($ᵗ CtxKey) ($ᵗ (Fin count → CtxKey)) _
+  exact JointEagerTable.independent_comm_spmf ($ᵗ CtxKey) ($ᵗ (Fin count → CtxKey)) _
 
 
 def SelectionClass {count : Nat} (target : Fin (count + 1))
@@ -169,13 +169,13 @@ theorem source_view_selection {count : Nat} (target : Fin (count + 1))
     (targetReal : Bool) (targetDecode : RawDecoder) (real : Fin count → Bool)
     (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto)
     (client : OracleComp (SourceSpec count) Bool) :
-    𝒟[Prod.fst <$> sourceGame (join target targetReal real) (join target targetDecode decode) c client] =
-      𝒟[(fun result => result.2.1) <$> AdaptiveCtxSharedModePreparation.source
+    𝒮[Prod.fst <$> sourceGame (join target targetReal real) (join target targetDecode decode) c client] =
+      𝒮[(fun result => result.2.1) <$> AdaptiveCtxSharedModePreparation.source
         (AdaptiveCtxSharedModePreparation.independentSetup count ()) targetReal targetDecode real decode c
           (fun _ => simulateQ (select target) client)] := by
   have full := congrArg (fun distribution => Prod.fst <$> distribution)
     (source_prepared_selection target targetReal targetDecode real decode c client)
-  simpa only [← evalDist_map, Functor.map_map, erasePrepared] using full
+  simpa only [← evalSPMF_map, Functor.map_map, erasePrepared] using full
 
 open AdaptiveCtxSharedModeBounds CtxNonceAeadIntCtxt CtxNonceAeadIndDollarValidation
 open AdaptiveCtxQueryBounds
@@ -209,7 +209,19 @@ theorem selected_integrity {count : Nat} (target : Fin (count + 1))
     (fun _ => selection_bound target (TargetClass IsRawQuery) client qRaw rawBound) small
   have trueEq := source_view_selection target true targetDecode real decode c client
   have falseEq := source_view_selection target false targetDecode real decode c client
-  simpa only [ProbComp.boolDistAdvantage, probOutput_congr rfl trueEq, probOutput_congr rfl falseEq] using bound
+  have trueMass :
+      𝒟[Prod.fst <$> sourceGame (join target true real) (join target targetDecode decode) c client] {true} =
+        𝒟[(fun result => result.2.1) <$> AdaptiveCtxSharedModePreparation.source
+          (AdaptiveCtxSharedModePreparation.independentSetup count ()) true targetDecode real decode c
+            (fun _ => simulateQ (select target) client)] {true} := by
+    simpa only [evalDist_apply_singleton] using probOutput_congr rfl trueEq
+  have falseMass :
+      𝒟[Prod.fst <$> sourceGame (join target false real) (join target targetDecode decode) c client] {true} =
+        𝒟[(fun result => result.2.1) <$> AdaptiveCtxSharedModePreparation.source
+          (AdaptiveCtxSharedModePreparation.independentSetup count ()) false targetDecode real decode c
+            (fun _ => simulateQ (select target) client)] {true} := by
+    simpa only [evalDist_apply_singleton] using probOutput_congr rfl falseEq
+  simpa only [ProbComp.boolDistAdvantage, trueMass, falseMass] using bound
 
 end BeaconcryptCore.Computational.AdaptiveCtxSharedKeySelection
 

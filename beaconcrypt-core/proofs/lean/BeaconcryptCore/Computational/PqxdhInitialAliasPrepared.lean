@@ -44,10 +44,12 @@ theorem cache_free (secret : KemSK) (challenge : MlKem768Ciphertext)
     PqxdhInitialPendingCurrent.selector, PqxdhInitialBeaconAmbient.lift, StateT.run]
   all_goals simp only [Functor.map_map]
   · rfl
-  · let work := simulateQ (PqxdhInitialRootFreeCallbacks.publicOnly baseImpl kem secret challenge)
+  · change StateT.run _ cache = (fun a => (a.1, cache)) <$> StateT.run _ (∅ : RootOracle.QueryCache)
+    rw [StateT.run_map, StateT.run_map]
+    let work := simulateQ (PqxdhInitialRootFreeCallbacks.publicOnly baseImpl kem secret challenge)
       (PqxdhPhase2PostScheduler.publicWork ((borrowedSelector attachedVerify primitives 1 query).run state.2))
     change (fun result => ((result.1.1, state.1, result.1.2), result.2)) <$> ((fun result => (result, cache)) <$> work) =
-      (fun a => (a.1, cache)) <$> ((fun result => ((result.1.1, state.1, result.1.2), result.2)) <$> ((fun result => (result, ∅)) <$> work))
+      (fun a => (a.1, cache)) <$> ((fun result => ((result.1.1, state.1, result.1.2), result.2)) <$> ((fun result => (result, (∅ : RootOracle.QueryCache))) <$> work))
     simp only [Functor.map_map]
 
 variable (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain)

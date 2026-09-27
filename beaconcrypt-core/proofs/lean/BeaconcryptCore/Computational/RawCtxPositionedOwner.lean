@@ -90,14 +90,18 @@ theorem raw_positions {Metadata Auxiliary : Type}
     Positioned source.crypto sendOrigin receiveOrigin result.1.2.owner.kernel := by
   unfold RawCtxWholeOwner.rawGame RawCtxWholeOwner.rawReceive StateT.run at present
   split at present
-  · simp only [simulateQ_pure] at present
+  · change result ∈ support ((simulateQ (receiveNative source)
+        (pure (RawCtxWholeOwner.publish state (state.owner.kernel, .None)))).run primitive) at present
+    simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at present
     subst result
     exact invariant
   · split at present
-    · simp only [simulateQ_pure] at present
+    · change result ∈ support ((simulateQ (receiveNative source)
+          (pure (RawCtxWholeOwner.publish state (state.owner.kernel, .None)))).run primitive) at present
+      simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at present
       subst result
       exact invariant
-    · dsimp only at present
+    · unfold StateT.run at present
       split at present
       · rw [simulateQ_bind] at present
         change result ∈ support (StateT.run _ primitive) at present
@@ -106,7 +110,9 @@ theorem raw_positions {Metadata Auxiliary : Type}
         obtain ⟨opened, hopen, rfl⟩ := present
         apply receive_positions source sendOrigin receiveOrigin state.owner.kernel _ _ invariant primitive opened
         simpa only [receiveNative, RawCtxSourceOpen.ownerAdapter, QueryImpl.simulateQ_compose] using hopen
-      · simp only [simulateQ_pure] at present
+      · change result ∈ support ((simulateQ (receiveNative source)
+            (pure (RawCtxWholeOwner.publish state (state.owner.kernel, .None)))).run primitive) at present
+        simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at present
         subst result
         exact invariant
 
@@ -130,12 +136,21 @@ theorem sendOwner_positions {Metadata Auxiliary : Type}
     Positioned source.crypto sendOrigin receiveOrigin result.1.2.owner.kernel := by
   unfold RawCtxSourceSend.sendGame RawCtxSourceSend.sendOwner StateT.run at present
   split at present
-  all_goals change result ∈ support ((simulateQ (sendNative source writer) _).run primitive) at present
-  all_goals simp only [simulateQ_bind, simulateQ_pure, StateT.run_bind, StateT.run_pure,
-    mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at present
-  · subst result
+  · change result ∈ support ((simulateQ (sendNative source writer) (pure (none, state))).run primitive) at present
+    simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at present
+    subst result
     exact invariant
-  · obtain ⟨sealed, hseal, rfl⟩ := present
+  · change result ∈ support ((simulateQ (sendNative source writer) (do
+        let sealed ← simulateQ RawCtxSourceSend.adapter (RawCtxSourceSend.send state.owner.kernel {
+          plaintext := plaintext, targetId := state.owner.expectedSender,
+          senderId := sender, associatedData := state.owner.associatedData })
+        pure (sealed.2, { state with owner := { state.owner with kernel := sealed.1 } }))).run
+          primitive) at present
+    rw [simulateQ_bind] at present
+    change result ∈ support (StateT.run _ primitive) at present
+    simp only [StateT.run_bind, simulateQ_pure, StateT.run_pure, mem_support_bind_iff,
+      support_pure, Set.mem_singleton_iff] at present
+    obtain ⟨sealed, hseal, rfl⟩ := present
     apply send_positions source writer sendOrigin receiveOrigin state.owner.kernel _ invariant primitive sealed
     simpa only [sendNative, QueryImpl.simulateQ_compose] using hseal
 

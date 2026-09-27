@@ -111,6 +111,8 @@ theorem sample_uniform (qPrior : Nat) (priorBound : prior.IsTotalQueryBound qPri
   cases context with
   | inl decision => trivial
   | inr input =>
+    dsimp only
+    rw [bind_pure_comp]
     apply (isQueryBound_map_iff _ _ _ _ _).2
     have caps := sourceCaps input.val input.property
     exact PqxdhInitialSourcePreparedSecrecy.sample_uniform source writer input.val.selectedMessage zeroRoot

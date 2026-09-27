@@ -69,7 +69,6 @@ theorem live_handler (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
         (RawCtxSelectiveFamilyLog.handler source writer stage query).run state.1 := by
   simp only [handler, bare, erase, StateT.run, inputs, RawCtxSelectiveFamilyLog.handler,
     bind_assoc, pure_bind, map_bind, map_pure]
-  rfl
 
 /-- An actual external callback retains the complete selective table and prior-input list while updating the actual shared, identity and root-cache state. -/
 theorem external_handler (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer) (stage : Nat)

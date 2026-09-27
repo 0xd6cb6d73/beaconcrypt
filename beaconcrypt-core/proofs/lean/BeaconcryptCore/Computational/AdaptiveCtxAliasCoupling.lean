@@ -21,13 +21,13 @@ def postLoggedReply (decode : RawDecoder) (raw : Pqxdh.Bytes)
 /-- Both source raw kernels perform the same actual private lookup; replacing the replay-only optional reply with its logged opening recovers the exact logged kernel and full next state. -/
 theorem loggedRaw_eq_replayRaw (decode : RawDecoder) (raw : Pqxdh.Bytes)
     (state : AdaptiveCtxReceive.ReceiveState) :
-    𝒟[loggedRaw decode raw state] =
-      𝒟[(fun result => (postLoggedReply decode raw result.2, result.2)) <$> replayRaw decode raw state] := by
+    𝒮[loggedRaw decode raw state] =
+      𝒮[(fun result => (postLoggedReply decode raw result.2, result.2)) <$> replayRaw decode raw state] := by
   cases parsed : decode raw with
   | none => simp [loggedRaw, replayRaw, postLoggedReply, parsed]
   | some target =>
     simp only [loggedRaw, replayRaw, parsed, map_bind, map_pure]
-    apply evalDist_bind_congr
+    apply evalSPMF_bind_congr
     intro lookup supported
     have installed := suffixStep_installs _ _ lookup supported
     simp only [postLoggedReply, parsed, installed, Option.some.injEq]
@@ -198,8 +198,8 @@ def sourceProjection {Result : Type} (result : Result × (AdaptiveCtxReceive.Rec
 /-- The exact complete query result projects to the intended source kernel in both worlds. -/
 theorem flagged_query_projection (logged : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
     (query : ReceiveSpec.Domain) (state : AdaptiveCtxReceive.ReceiveState × Bool) :
-    𝒟[sourceProjection <$> (flaggedImpl logged decode c key query).run state] =
-      𝒟[(sourceImpl logged decode c key query).run state.1] := by
+    𝒮[sourceProjection <$> (flaggedImpl logged decode c key query).run state] =
+      𝒮[(sourceImpl logged decode c key query).run state.1] := by
   cases query with
   | inl request =>
     cases request <;> cases logged <;>
@@ -213,35 +213,40 @@ theorem flagged_query_projection (logged : Bool) (decode : RawDecoder) (c : Pqxd
     | true =>
       simp only [flaggedImpl, sourceImpl, ↓reduceIte, StateT.run,
         map_bind, map_pure, sourceProjection, loggedImpl]
-      exact (loggedRaw_eq_replayRaw decode raw state.1).symm
+      change 𝒮[do
+        let result ← replayRaw decode raw state.1
+        pure (postLoggedReply decode raw result.2, result.2)] =
+          𝒮[loggedRaw decode raw state.1]
+      simpa only [map_eq_bind_pure_comp, Function.comp_def] using
+        (loggedRaw_eq_replayRaw decode raw state.1).symm
 
 /-- Full adaptive source simulation preserves every reply, cache, log and counter, projecting only the ghost discrepancy flag. -/
 theorem flagged_run_projection {Result : Type} (logged : Bool) (decode : RawDecoder)
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (state : AdaptiveCtxReceive.ReceiveState × Bool) :
-    𝒟[sourceProjection <$> (simulateQ (flaggedImpl logged decode c key) adversary).run state] =
-      𝒟[(simulateQ (sourceImpl logged decode c key) adversary).run state.1] := by
+    𝒮[sourceProjection <$> (simulateQ (flaggedImpl logged decode c key) adversary).run state] =
+      𝒮[(simulateQ (sourceImpl logged decode c key) adversary).run state.1] := by
   induction adversary using OracleComp.inductionOn generalizing state with
   | pure value => simp [sourceProjection]
   | query_bind query next ih =>
     simp only [simulateQ_query_bind, StateT.run_bind, map_bind, OracleQuery.input_query]
-    change 𝒟[do
+    change 𝒮[do
       let result ← (flaggedImpl logged decode c key query).run state
       sourceProjection <$> (simulateQ (flaggedImpl logged decode c key) (next result.1)).run result.2] = _
     calc
-      _ = 𝒟[do
+      _ = 𝒮[do
         let result ← (flaggedImpl logged decode c key query).run state
         (simulateQ (sourceImpl logged decode c key) (next result.1)).run result.2.1] := by
-          apply evalDist_bind_congr
+          apply evalSPMF_bind_congr
           intro result supported
           exact ih result.1 result.2
-      _ = 𝒟[do
+      _ = 𝒮[do
         let result ← sourceProjection <$> (flaggedImpl logged decode c key query).run state
         (simulateQ (sourceImpl logged decode c key) (next result.1)).run result.2] := by
           rw [bind_map_left]
           rfl
       _ = _ := by
-        rw [evalDist_bind, flagged_query_projection, ← evalDist_bind]
+        rw [evalSPMF_bind, flagged_query_projection, ← evalSPMF_bind]
         rfl
 
 /-- Both full optional-plaintext games encounter their first discrepancy with the same probability, even though later adversarial continuations may differ. -/

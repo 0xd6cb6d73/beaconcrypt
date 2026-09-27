@@ -88,6 +88,9 @@ theorem pre_step
         ((fun reply => (reply, auxiliary)) <$> (Option.map rootArray <$>
           ((MlKemCCAOracleSpec baseSpec).query (.inr (PqxdhPhase2InputBytes.ciphertext value)) : OracleComp (MlKemCCAOracleSpec baseSpec) _))) = _
       rw [simulateQ_map, simulateQ_map]
+      unfold nativePre
+      simp only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+        StateT.run, bind_pure_comp]
       exact congrArg (fun work => (fun reply => (reply, auxiliary)) <$> (Option.map rootArray <$> work))
         (simulateQ_spec_query (localKemPreChallengeImpl kem secret) (.inr (PqxdhPhase2InputBytes.ciphertext value)))
 
@@ -138,8 +141,8 @@ theorem pre_step_bound
     cases key with
     | some prior => exact (auxBound _ auxiliary).mono (Nat.le_add_right _ _)
     | none =>
-      change ((fun reply => (reply, auxiliary)) <$> (Option.map rootArray <$>
-        ((MlKemCCAOracleSpec baseSpec).query (.inr (PqxdhPhase2InputBytes.ciphertext value)) : OracleComp (MlKemCCAOracleSpec baseSpec) _))).IsQueryBoundP predicate _
+      change OracleComp.IsQueryBoundP ((fun reply => (reply, auxiliary)) <$> (Option.map rootArray <$>
+        ((MlKemCCAOracleSpec baseSpec).query (.inr (PqxdhPhase2InputBytes.ciphertext value)) : OracleComp (MlKemCCAOracleSpec baseSpec) _))) predicate _
       rw [isQueryBoundP_map_iff, isQueryBoundP_map_iff]
       exact (isQueryBoundP_query_iff (spec := MlKemCCAOracleSpec baseSpec) (p := predicate)
         (.inr (PqxdhPhase2InputBytes.ciphertext value)) _).2 (by

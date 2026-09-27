@@ -119,6 +119,7 @@ noncomputable def rootResume {setup : StatefulPhase1Setup baseSpec}
   simulateQ (rootPost env.source baseImpl kem prepared.secretKey prepared.ciphertext)
     (resume env attachedVerify primitives program post prepared.ciphertext prepared.state root)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The enriched current root continuation retains the exact initial root request and every later correlated root cache request before source interpretation. -/
 theorem rootResume_source {setup : StatefulPhase1Setup baseSpec}
     (env : PqxdhAuthenticatedRootExperiment.Environment setup M P I K X Response A S B)

@@ -36,7 +36,7 @@ theorem evalKem_query_uniform_bound
   · change (simulateQ (kemAmbientImpl baseImpl)
       ((unifSpec + baseSpec).query (.inl coin))).IsTotalQueryBound 1
     rw [simulateQ_spec_query]
-    change (unifSpec.query coin : ProbComp _).IsTotalQueryBound 1
+    change OracleComp.IsTotalQueryBound (unifSpec.query coin : ProbComp _) 1
     exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
   · change (simulateQ (kemAmbientImpl baseImpl)
       ((unifSpec + baseSpec).query (.inr query))).IsTotalQueryBound qBase

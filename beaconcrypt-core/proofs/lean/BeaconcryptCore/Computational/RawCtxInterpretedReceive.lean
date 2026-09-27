@@ -170,10 +170,11 @@ theorem native_resume {Context : Type} (pending : Kdf RatchetMaterial Context)
     (response : RatchetKdfResponse) :
     ReceiveKdf.resume (nativeKdf pending) response =
       nativeEffect <$> resume pending (nativeStep response) := by
+  simp only [nativeKdf]
   by_cases zero : pending.remaining = 0#u8
-  · simp only [ReceiveKdf.resume, nativeKdf, resume, zero, if_true, receive_rejected,
+  · simp only [ReceiveKdf.resume, resume, zero, if_true, receive_rejected,
       rejected, rust_map_ok, nativeEffect]
-  · simp only [ReceiveKdf.resume, nativeKdf, resume, zero, if_false, nativeStep,
+  · simp only [ReceiveKdf.resume, resume, zero, if_false, nativeStep,
       bind_map_left]
     by_cases last : pending.remaining = 1#u8 <;>
       simp only [last, if_true, if_false, map_bind]
@@ -182,7 +183,9 @@ theorem native_resume {Context : Type} (pending : Kdf RatchetMaterial Context)
       funext advanced
       cases present : advanced.sequence
     all_goals simp only [receive_rejected, rejected, rust_map_ok, nativeEffect, map_bind, map_branch, toNative]
-    all_goals cases slot : advanced.slot
+    all_goals first
+      | cases slot : advanced.slot
+      | skip
     all_goals simp only [map_bind, map_branch, rust_map_ok, nativeEffect, nativeKdf]
 
 def mapKdf {Material Value Context : Type} (interpret : Material → Value)

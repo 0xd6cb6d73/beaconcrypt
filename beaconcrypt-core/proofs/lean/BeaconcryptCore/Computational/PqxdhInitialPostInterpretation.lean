@@ -15,6 +15,7 @@ noncomputable def work {State Value : Type} (interpret : QueryImpl spec m)
     (computation : StateT State (OracleComp spec) Value) : StateT State m Value :=
   fun state => simulateQ interpret (computation.run state)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Evaluating the private initializer service retains each original record, selector and whole-owner operation with its complete poststate. -/
 theorem native_step
     (interpret : QueryImpl spec m)
@@ -35,7 +36,8 @@ theorem native_step
     simp only [QueryImpl.mapStateTBase, nativePost, StateT.run, StateT.mk, simulateQ_map]
   case inr =>
     cases query
-    simp only [QueryImpl.mapStateTBase, nativePost, work, StateT.run, StateT.mk, simulateQ_map]
+    simp only [QueryImpl.mapStateTBase, nativePost, work, StateT.run, StateT.mk]
+    rw [simulateQ_map]
 
 /-- The entire original adaptive post client evaluates in the same ambient initializer/cache interpreter with every intermediate private state retained. -/
 theorem native_schedule

@@ -57,12 +57,13 @@ theorem random_comparison :
     𝒟[independentFullGame (joint env baseImpl kem attachedVerify primitives program post)
       (observer env baseImpl kem attachedVerify primitives program post)] =
       𝒟[random env baseImpl kem attachedVerify primitives program post] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [independentFullGame, joint, RawCtxInitialSecrecy.joint, bind_map_left, random]
-  refine evalDist_bind_congr' (m := ProbComp) _ (fun pair => ?_)
+  refine evalSPMF_bind_congr' (m := ProbComp) _ (fun pair => ?_)
   have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>= fun output =>
-    𝒟[observe env baseImpl kem attachedVerify primitives program post pair.1
+    𝒮[observe env baseImpl kem attachedVerify primitives program post pair.1
       (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform
-  simpa only [← evalDist_bind, bind_map_left, observer] using projected
+  simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
 
 /-- The current protocol's actual uniform-root endpoint reduces with coefficient one to fixed-salt Extract at its exact joint sampler and ordinary uniform-secret HMAC PRF. The one selected initializer response remains shared across all repeated source requests. -/
 theorem primitive_bound (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac) :
@@ -79,10 +80,9 @@ theorem primitive_bound (hmac : HmacSha512) (correct : SourceFullCorrect env.sou
       (hmacPrfRandomGame (fullExpandReduction .ratchet
         (joint env baseImpl kem attachedVerify primitives program post)
         (observer env baseImpl kem attachedVerify primitives program post))) := by
-  have realLaw := OracleComp.probOutput_congr (x := true) rfl
-    (PqxdhInitialLegalObserver.current_game env baseImpl kem attachedVerify primitives program post)
-  have randomLaw := OracleComp.probOutput_congr (x := true) rfl
-    (random_comparison env baseImpl kem attachedVerify primitives program post)
+  have realLaw :=
+    PqxdhInitialLegalObserver.current_game env baseImpl kem attachedVerify primitives program post
+  have randomLaw := random_comparison env baseImpl kem attachedVerify primitives program post
   simpa only [source_game, ProbComp.boolDistAdvantage, realLaw, randomLaw] using
     sourceFullAdvantage_le_extract_add_hmac env.source hmac correct .ratchet
       (joint env baseImpl kem attachedVerify primitives program post)

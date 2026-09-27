@@ -201,8 +201,8 @@ theorem borrowedPrefix_target
 
 /-- An unused total probabilistic computation changes no continued output distribution. -/
 theorem evalDist_discard {A B : Type} (work : ProbComp A) (next : ProbComp B) :
-    𝒟[work >>= fun _ => next] = 𝒟[next] := by
-  exact evalDist_ext (fun output => by simp)
+    𝒮[work >>= fun _ => next] = 𝒮[next] := by
+  exact evalSPMF_ext (fun output => by simp)
 
 /-- Dispatch completes every non-target oracle interaction before the challenge; the pending branch uses the exact blocked handler. -/
 theorem dispatch_finish_eq_source
@@ -228,7 +228,8 @@ theorem dispatch_finish_eq_source
           (target, kemSk, mode) true)] =
     𝒟[sourceContinuation source baseImpl kem setup selector verifyFn protocol true
       (identitySk, result, kemSk)] := by
-  apply evalDist_ext
+  apply evalDist_eq_of_evalSPMF_eq
+  apply evalSPMF_ext
   intro output
   cases admitted : admission verifyFn result <;>
     by_cases bad : result.badBit verifyFn = true <;>
@@ -257,18 +258,20 @@ theorem sourceGame_filtered_eq_initializerReal
     𝒟[sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol true] =
       𝒟[initializerRealGame source baseImpl kem
         (rootInitializer sigAlg kem setup selector verifyFn protocol)] := by
+  apply evalDist_eq_of_evalSPMF_eq
   unfold sourceGame
   rw [privateSourcePrefix_borrowed_complete]
   simp only [initializerRealGame, oneKeyBranchMain, oneKeyPrefix,
     toKemOneKeyAdversary, rootInitializer, conditionalPrefix,
     simulateQ_bind, bind_assoc, pure_bind]
-  apply evalDist_bind_congr'
+  apply evalSPMF_bind_congr'
   intro pair
-  apply evalDist_bind_congr
+  apply evalSPMF_bind_congr
   intro retained supported
+  apply evalSPMF_eq_of_evalDist_eq
   exact (dispatch_finish_eq_source source baseImpl sigAlg kem setup selector verifyFn protocol
-    pair.1 pair.2 retained.1 retained.2
-    (borrowedPrefix_target baseImpl sigAlg kem setup selector pair.1 pair.2 retained supported)).symm
+      pair.1 pair.2 retained.1 retained.2
+      (borrowedPrefix_target baseImpl sigAlg kem setup selector pair.1 pair.2 retained supported)).symm
 
 /-- One unfiltered source-shaped root execution has four explicit coefficient-one reductions, with no honest-selection premise. -/
 theorem authenticatedRootAdvantage_le_euf_add_kem_add_extract_add_hmac
@@ -308,7 +311,7 @@ theorem authenticatedRootAdvantage_le_euf_add_kem_add_extract_add_hmac
         (rootInitializer sigAlg kem setup selector verifyFn protocol)).boolDistAdvantage
         (independentInitializerGame source baseImpl kem
           (rootInitializer sigAlg kem setup selector verifyFn protocol)) := by
-    simp only [ProbComp.boolDistAdvantage, probOutput_def, heq]
+    simp only [ProbComp.boolDistAdvantage, heq]
   have composed := (ProbComp.boolDistAdvantage_triangle
     (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol false)
     (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol true)

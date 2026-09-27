@@ -34,8 +34,8 @@ theorem nativeContinued_keyfirst {Result : Type}
     (setup : StatefulPhase1Setup baseSpec) (driver : Driver setup)
     (next : KemSK → Outcome (Retained setup Unit driver.State) × BareState 1 → ProbComp Result)
     (fallback : Result) :
-    𝒟[nativeContinued attachedVerify primitives baseImpl kem setup driver next fallback] =
-      𝒟[do let pair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
+    𝒮[nativeContinued attachedVerify primitives baseImpl kem setup driver next fallback] =
+      𝒮[do let pair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
            let prepared ← evalKem baseImpl kem pair.2
              (borrowedPrefix attachedVerify primitives setup driver pair.1)
            next pair.2 prepared] := by

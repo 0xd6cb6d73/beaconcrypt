@@ -29,9 +29,9 @@ theorem localCoins_uniform {Result : Type} (client : ProbComp Result) (q : Nat)
   | query_bind coin next ih =>
       rw [isTotalQueryBound_query_bind_iff] at bound
       simp only [localCoins, simulateQ_bind, simulateQ_spec_query]
-      change (((LocalPostSpec baseSpec).query (.inl (.inl (.inl coin))) :
+      change OracleComp.IsQueryBoundP (((LocalPostSpec baseSpec).query (.inl (.inl (.inl coin))) :
         OracleComp (LocalPostSpec baseSpec) ((LocalPostSpec baseSpec).Range (.inl (.inl (.inl coin))))) >>=
-        fun answer => localCoins (next answer)).IsQueryBoundP (Uniform (baseSpec := baseSpec)) q
+        fun answer => localCoins (next answer)) (Uniform (baseSpec := baseSpec)) q
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inr bound.1, ?_⟩
       intro answer
@@ -47,9 +47,9 @@ theorem localCoins_excluded {Result : Type} (client : ProbComp Result)
   | pure value => simp [localCoins]
   | query_bind coin next ih =>
       simp only [localCoins, simulateQ_bind, simulateQ_spec_query]
-      change (((LocalPostSpec baseSpec).query (.inl (.inl (.inl coin))) :
+      change OracleComp.IsQueryBoundP (((LocalPostSpec baseSpec).query (.inl (.inl (.inl coin))) :
         OracleComp (LocalPostSpec baseSpec) ((LocalPostSpec baseSpec).Range (.inl (.inl (.inl coin))))) >>=
-        fun answer => localCoins (next answer)).IsQueryBoundP predicate 0
+        fun answer => localCoins (next answer)) predicate 0
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inl (excluded coin), ?_⟩
       intro answer
@@ -176,10 +176,10 @@ theorem sourcePost_step
               (if predicate request then 1 else 0)
               ((isQueryBoundP_query_iff (spec := MlKemCCAOracleSpec baseSpec) (p := predicate) request _).2 (by split_ifs <;> simp_all))
   | inr request =>
-      change (((MlKemCCAOracleSpec baseSpec).query (.inr request.ciphertext) :
+      change OracleComp.IsQueryBoundP (((MlKemCCAOracleSpec baseSpec).query (.inr request.ciphertext) :
         OracleComp (MlKemCCAOracleSpec baseSpec) (Option MlKemSharedSecret)) >>=
         fun (recovered : Option MlKemSharedSecret) => pure
-          (recovered.map (PqxdhHiddenRoot.productionHiddenRoot source request.coordinates))).IsQueryBoundP
+          (recovered.map (PqxdhHiddenRoot.productionHiddenRoot source request.coordinates)))
         predicate (if predicate (.inr request.ciphertext) then 1 else 0)
       simp only [isQueryBoundP_query_bind_iff, isQueryBoundP_pure]
       split <;> simp_all

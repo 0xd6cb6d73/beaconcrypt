@@ -44,7 +44,8 @@ theorem real_step (hmac : HmacSha512) (joint : Primitives) (dh : DhInterface joi
     ((realImpl hmac joint dh seed scalar query).run state).IsTotalQueryBound (realCost (classify query)) := by
   cases query with
   | inl coin =>
-      change ((unifSpec.query coin : ProbComp _) >>= fun value => pure (value, state)).IsTotalQueryBound 1
+      change OracleComp.IsTotalQueryBound
+        ((unifSpec.query coin : ProbComp _) >>= fun value => pure (value, state)) 1
       exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
   | inr request =>
       cases request with
@@ -61,7 +62,8 @@ theorem ideal_step (hmac : HmacSha512) (joint : Primitives) (dh : DhInterface jo
     ((idealImpl hmac joint dh seed scalar query).run state).IsTotalQueryBound (idealCost (classify query)) := by
   cases query with
   | inl coin =>
-      change ((unifSpec.query coin : ProbComp _) >>= fun value => pure (value, state)).IsTotalQueryBound 1
+      change OracleComp.IsTotalQueryBound
+        ((unifSpec.query coin : ProbComp _) >>= fun value => pure (value, state)) 1
       exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
   | inr request =>
       cases request with

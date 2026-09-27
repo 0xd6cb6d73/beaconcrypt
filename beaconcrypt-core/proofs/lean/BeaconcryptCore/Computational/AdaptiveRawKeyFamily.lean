@@ -70,10 +70,11 @@ theorem interpretation {count : Nat} (targetReal : Bool) (targetDecode : RawDeco
       simp only [QueryImpl.flattenStateT, QueryImpl.mapStateTBase, reductionImpl, sourceImpl,
         StateT.run, StateT.mk, bind_pure_comp, simulateQ_map, simulateQ_query, OracleQuery.input_query]
       change (fun x => (x.1.1, x.1.2, x.2)) <$>
-        (((fun a => (a, state.1)) <$> ((OracleSpec.query target).cont <$> adaptiveImpl targetReal targetDecode c targetKey target)).run state.2) = _
-      rw [StateT.run_map, StateT.run_map]
+        (((fun a => (a, state.1)) <$> ((OracleSpec.query target).cont <$>
+          adaptiveImpl targetReal targetDecode c targetKey (OracleSpec.query target).input)).run state.2) = _
+      simp only [OracleQuery.input_query, OracleQuery.cont_query, id_map]
+      rw [StateT.run_map]
       simp only [Functor.map_map, StateT.run]
-      rfl
   | inr other =>
       simp only [QueryImpl.flattenStateT, QueryImpl.mapStateTBase, reductionImpl, sourceImpl,
         StateT.run, StateT.mk, bind_pure_comp, simulateQ_map]
@@ -137,9 +138,10 @@ theorem target_step_bound {count : Nat} (real : Fin count → Bool)
       simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, TargetClass]
       exact (isQueryBoundP_query_iff p target _).mpr (by intro hit; simp [hit])
   | inr other =>
-      simpa only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff,
-        TargetClass, if_false] using lift_no_class p noUniform
-          ((adaptiveImpl (real other.1) (decode other.1) c (keys other.1) other.2).run (state other.1))
+      simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff]
+      rw [if_neg (by simp only [TargetClass, not_false_eq_true])]
+      exact lift_no_class p noUniform
+        ((adaptiveImpl (real other.1) (decode other.1) c (keys other.1) other.2).run (state other.1))
 
 /-- Target resource caps survive every possible adaptive continuation. -/
 theorem wrapped_target_bound {count : Nat} (real : Fin count → Bool)

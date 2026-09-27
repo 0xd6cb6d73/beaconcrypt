@@ -57,7 +57,8 @@ theorem ctx_binding_bound_tight_512 {queryBudget : ℕ}
     Pr[fun result => result.1 = true | ctxBindingGame adversary] ≤
       (((queryBudget * (queryBudget - 1) + 2 : ℕ) : ℝ≥0∞) /
         (2 * ((2 ^ 512 : ℕ) : ℝ≥0∞))) := by
-  simpa only [CtxDigest, card_bitVec] using ctx_binding_bound_tight adversary
+  simpa only [CtxDigest, ← FinEnum.card_eq_fintypeCard, FinEnum.card_bitVec] using
+    ctx_binding_bound_tight adversary
 
 /-- The looser collision-resistance-chain theorem bounds a win via at most `queryBudget + 2` lazy-ROM queries. -/
 theorem ctx_binding_bound {queryBudget : ℕ} (adversary : CtxAdversary queryBudget) :
@@ -71,7 +72,8 @@ theorem ctx_binding_bound_512 {queryBudget : ℕ} (adversary : CtxAdversary quer
     Pr[fun result => result.1 = true | ctxBindingGame adversary] ≤
       ((((queryBudget + 2) * (queryBudget + 1) : ℕ) : ℝ≥0∞) /
         (2 * ((2 ^ 512 : ℕ) : ℝ≥0∞))) := by
-  simpa only [CtxDigest, card_bitVec] using ctx_binding_bound adversary
+  simpa only [CtxDigest, ← FinEnum.card_eq_fintypeCard, FinEnum.card_bitVec] using
+    ctx_binding_bound adversary
 
 /-- The game-level byte type is definitionally the byte field of the Aeneas-extracted production type. -/
 def extractedTranscriptBytes (transcript : commitment.CommitmentTranscript) : CtxTranscript :=

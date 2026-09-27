@@ -432,9 +432,7 @@ theorem canonical_directRandom_advantage_bound (decode : RawDecoder) (c : Pqxdh.
 end BeaconcryptCore.Computational.AdaptiveCtxDirectReplay
 
 /--
-info: 'BeaconcryptCore.Computational.AdaptiveCtxDirectReplay.runLogged_eq_adapter' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
+info: 'BeaconcryptCore.Computational.AdaptiveCtxDirectReplay.runLogged_eq_adapter' depends on axioms: [propext, Quot.sound]
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.AdaptiveCtxDirectReplay.runLogged_eq_adapter

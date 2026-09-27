@@ -15,11 +15,11 @@ import sys
 
 NAME = re.compile(r"[A-Za-z_][A-Za-z_0-9.]*\Z")
 DECLARATION = re.compile(r"^(?:@\[[^\]]*\]\s*)?def\s+([\w.]+)", re.M)
-IDEAL_MODEL_DIGEST = "7cabf87898aedecef9f3049dff88bc8f169c69c6a644b1a67d6932863b98f7cc"
+IDEAL_MODEL_DIGEST = "92278ec925928ba1b0162d12a15b738c7f05cdd8f76e4d7d7b2cbddc07e48d3c"
 
 
 def check_models(proof_root: Path) -> None:
-    """Pin the reviewed model: the HB-88 alias addition and authorized HB-95 policy."""
+    """Pin the reviewed composition model plus Lean-port elaboration rewrites."""
     model_root = proof_root / "BeaconcryptCore/Model"
     digest = hashlib.sha256()
     for path in sorted(model_root.rglob("*.lean")):

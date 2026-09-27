@@ -84,7 +84,8 @@ theorem sourceImpl_uniform_step (routed : Bool) (decode : RawDecoder) (c : Pqxdh
     cases query with
     | inl coin =>
       cases routed <;>
-        change ((fun answer => (answer, state)) <$> (unifSpec.query coin : ProbComp _)).IsTotalQueryBound 1 <;>
+        change OracleComp.IsTotalQueryBound
+          ((fun answer => (answer, state)) <$> (unifSpec.query coin : ProbComp _)) 1 <;>
         apply (OracleComp.isQueryBoundP_true_iff _ _).mp <;>
         simp only [OracleComp.isQueryBoundP_map_iff] <;>
         exact (OracleComp.isQueryBoundP_query_iff (spec := unifSpec) (p := fun _ => True) coin 1).mpr (by intro _; decide)

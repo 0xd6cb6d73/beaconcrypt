@@ -65,10 +65,21 @@ theorem local_bound {Context Auxiliary Result : Type}
     (privateGame source writer continuation context target output).boolDistAdvantage
       (observer source writer continuation context output) ≤
       Pr[= true | bad source writer continuation context target output].toReal := by
-  simpa only [privateGame, observer, observed, candidates, bad, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq]
-    using RawCtxSelectedParentPrivateEvents.local_bound source writer (continuation.prior context.1) context.2 output target
-      (RawCtxSelectedParentPrivateRealization.realView source) (continuation.program context)
-      (continuation.initial context) (continuation.event context)
+  have bound := RawCtxSelectedParentPrivateEvents.local_bound source writer
+    (continuation.prior context.1) context.2 output target
+    (RawCtxSelectedParentPrivateRealization.realView source) (continuation.program context)
+    (continuation.initial context) (continuation.event context)
+  have event :
+      Pr[fun result => target ∈ candidates result |
+        observed source writer continuation context output] =
+        Pr[= true | bad source writer continuation context target output] := by
+    simp only [bad, ← probEvent_eq_eq_probOutput, probEvent_map]
+    apply OracleComp.probEvent_congr' _ rfl
+    intro result _
+    simp only [Function.comp_def, decide_eq_true_eq]
+  rw [privateGame, observer]
+  exact bound.trans_eq (by
+    simpa only [observed, candidates] using congrArg ENNReal.toReal event)
 
 noncomputable def actual {Context Auxiliary Result : Type}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

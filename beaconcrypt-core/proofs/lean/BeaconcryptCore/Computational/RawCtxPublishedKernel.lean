@@ -32,9 +32,9 @@ theorem owner (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
     subst result
     cases published
   · simp only [empty, Bool.false_eq_true, if_false, bind_pure_comp] at supported
-    change result ∈ support ((fun reply => ((reply.1.2, {entry with kernel := reply.1.1}), reply.2)) <$>
-      (calls.send entry.kernel ⟨plaintext, entry.expectedSender, sender, entry.associatedData⟩).run state) at supported
-    rw [support_map] at supported
+    change result ∈ support (((fun reply => (reply.2, {entry with kernel := reply.1})) <$>
+      calls.send entry.kernel ⟨plaintext, entry.expectedSender, sender, entry.associatedData⟩).run state) at supported
+    rw [StateT.run_map, support_map] at supported
     obtain ⟨reply, reached, rfl⟩ := supported
     exact law _ _ _ reply reached sent published
 
@@ -62,11 +62,12 @@ theorem server (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
           cases published
       | some before =>
           simp only [peerFound, bind_pure_comp] at supported
-          change result ∈ support ((fun reply =>
-            ((reply.1.1, ⟨RawCtxGenericServer.putPeer entry.server peer before reply.1.2.kernel, reply.1.2.rawAttempts⟩), reply.2)) <$>
-              ((RawCtxChainOwner.sendOwner calls (sender entry.server.metadata) plaintext).run
+          change result ∈ support (((fun reply =>
+            (reply.1, ⟨RawCtxGenericServer.putPeer entry.server peer before reply.2.kernel,
+              reply.2.rawAttempts⟩)) <$>
+              (RawCtxChainOwner.sendOwner calls (sender entry.server.metadata) plaintext).run
                 (RawCtxGenericServer.selectedOwner peer ad before entry.rawAttempts)).run state) at supported
-          rw [support_map] at supported
+          rw [StateT.run_map, support_map] at supported
           obtain ⟨reply, reached, rfl⟩ := supported
           exact ⟨reply.1.2.kernel, by simp only [RawCtxGenericServer.putPeer, Function.update_self, Option.map_some],
             owner calls sequence law _ _ _ _ _ reached sent published⟩
@@ -84,11 +85,11 @@ theorem beacon (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
   case established control ad kernel =>
     rw [RawCtxGenericBeacon.established calls decode (.inl plaintext) entry control ad kernel phase] at supported
     simp only [RawCtxChainOwner.ownerImpl, bind_pure_comp] at supported
-    change result ∈ support ((fun reply =>
-      ((reply.1.1, RawCtxGenericBeacon.reinstall entry control ad reply.1.2), reply.2)) <$>
-        ((RawCtxChainOwner.sendOwner calls entry.beacon.identityKeyId plaintext).run
+    change result ∈ support (((fun reply =>
+      (reply.1, RawCtxGenericBeacon.reinstall entry control ad reply.2)) <$>
+        (RawCtxChainOwner.sendOwner calls entry.beacon.identityKeyId plaintext).run
           (RawCtxGenericBeacon.selected entry control ad kernel)).run state) at supported
-    rw [support_map] at supported
+    rw [StateT.run_map, support_map] at supported
     obtain ⟨reply, reached, rfl⟩ := supported
     exact ⟨control, ad, reply.1.2.kernel, rfl, owner calls sequence law _ _ _ _ _ reached sent published⟩
   all_goals
@@ -115,10 +116,10 @@ theorem live (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
       rcases request with ⟨plaintext, peer⟩
       simp only [RawCtxGenericFamilyLive.impl, RawCtxGenericFamilyFrontend.impl, RawCtxGenericServer.serverImpl,
         StateT.run, bind_pure_comp, Functor.map_map] at supported
-      change result ∈ support ((fun reply =>
-        ((reply.1.1, ((Function.update entry.1.1 index reply.1.2, entry.1.2), tick entry.2)), reply.2)) <$>
-          (RawCtxGenericServer.sendServer calls sender plaintext peer (entry.1.1 index)).run state) at supported
-      rw [support_map] at supported
+      change result ∈ support (((fun reply =>
+        (reply.1, ((Function.update entry.1.1 index reply.2, entry.1.2), tick entry.2))) <$>
+          RawCtxGenericServer.sendServer calls sender plaintext peer (entry.1.1 index)).run state) at supported
+      rw [StateT.run_map, support_map] at supported
       obtain ⟨reply, reached, rfl⟩ := supported
       cases published : reply.1.1 with
       | none => simp only [RawCtxPublishedRecords.record, published, List.not_mem_nil] at recorded
@@ -133,10 +134,10 @@ theorem live (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
     | inl plaintext =>
       simp only [RawCtxGenericFamilyLive.impl, RawCtxGenericFamilyFrontend.impl,
         StateT.run, bind_pure_comp, Functor.map_map] at supported
-      change result ∈ support ((fun reply =>
-        ((reply.1.1, ((entry.1.1, Function.update entry.1.2 index reply.1.2), tick entry.2)), reply.2)) <$>
-          ((RawCtxGenericBeacon.impl calls decode (.inl plaintext)).run (entry.1.2 index)).run state) at supported
-      rw [support_map] at supported
+      change result ∈ support (((fun reply =>
+        (reply.1, ((entry.1.1, Function.update entry.1.2 index reply.2), tick entry.2))) <$>
+          (RawCtxGenericBeacon.impl calls decode (.inl plaintext)).run (entry.1.2 index)).run state) at supported
+      rw [StateT.run_map, support_map] at supported
       obtain ⟨reply, reached, rfl⟩ := supported
       cases published : reply.1.1 with
       | none => simp only [RawCtxPublishedRecords.record, published, List.not_mem_nil] at recorded
@@ -151,7 +152,7 @@ theorem live (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
 
 end BeaconcryptCore.Computational.RawCtxPublishedKernel
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxPublishedKernel.owner' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxPublishedKernel.owner' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxPublishedKernel.owner
 

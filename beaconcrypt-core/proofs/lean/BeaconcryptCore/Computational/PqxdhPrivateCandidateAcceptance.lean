@@ -161,7 +161,6 @@ info: 'BeaconcryptCore.Computational.PqxdhPrivateCandidateAcceptance.compiledCan
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhPrivateCandidateAcceptance.compiledCandidate_last' depends on axioms: [propext,
- Classical.choice,
  Quot.sound]
 -/
 #guard_msgs in

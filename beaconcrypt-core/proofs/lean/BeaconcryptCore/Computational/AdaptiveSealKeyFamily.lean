@@ -79,10 +79,11 @@ theorem interpretation {count : Nat} (targetReal : Bool) (real : Fin count → B
       simp only [QueryImpl.flattenStateT, QueryImpl.mapStateTBase, reductionImpl, splitImpl,
         StateT.run, StateT.mk, bind_pure_comp, simulateQ_map, simulateQ_query, OracleQuery.input_query]
       change (fun x => (x.1.1, x.1.2, x.2)) <$>
-        (((fun a => (a, state.1)) <$> ((OracleSpec.query target).cont <$> localImpl targetReal c targetKey target)).run state.2) = _
-      rw [StateT.run_map, StateT.run_map]
+        (((fun a => (a, state.1)) <$> ((OracleSpec.query target).cont <$>
+          localImpl targetReal c targetKey (OracleSpec.query target).input)).run state.2) = _
+      simp only [OracleQuery.input_query, OracleQuery.cont_query, id_map]
+      rw [StateT.run_map]
       simp only [Functor.map_map, StateT.run]
-      rfl
   | inr other =>
       simp only [QueryImpl.flattenStateT, QueryImpl.mapStateTBase, reductionImpl, splitImpl,
         StateT.run, StateT.mk, bind_pure_comp, simulateQ_map]

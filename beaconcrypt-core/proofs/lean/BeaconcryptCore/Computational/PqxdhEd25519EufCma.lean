@@ -1,4 +1,5 @@
 import BeaconcryptCore.Model.Pqxdh.Primitives
+import ToMathlib.MeasureTheory.Measure.Bool
 import VCVio.CryptoFoundations.SignatureAlg
 import VCVio.OracleComp.QueryTracking.SubSpec
 import VCVio.OracleComp.SimSemantics.StateT.StateSeparating
@@ -15,7 +16,7 @@ The reduction selects the first changed canonical message in server verification
 No Ed25519 algorithm or implementation security, Cap'n Proto/libsodium/FFI refinement, signature uniqueness or strong EUF, public-key uniqueness, multiple successful bundle coherence, multi-user lifting, attacker-owned registration exclusion, reveal safety, QPT claim, or end-to-end protocol theorem is proved here. In particular, generic EUF-CMA does not simulate production's later Ed25519-to-X25519 related-key conversion; this stage stops at attached-field origin authentication. The equality between production attached verification and exact 64-byte splitting plus detached verification is an explicit adapter premise.
 -/
 
-open OracleSpec OracleComp ENNReal
+open OracleSpec OracleComp ENNReal MeasureTheory
 
 set_option relaxedAutoImplicit false
 set_option autoImplicit false
@@ -928,7 +929,7 @@ noncomputable def phase1FieldSubstitutionExp {ι : Type}
     (materialGenerator : Phase1MaterialGenerator baseSpec Context)
     (adversary : Phase1Adversary baseSpec Context)
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool) :
-    SPMF Bool :=
+    Measure Bool :=
   runtime.evalDist
     (phase1WriterJoint sigAlg materialGenerator adversary >>= fun joint =>
       pure (phase1SourceBadBit verifyFn (phase1WriterToShared joint)))
@@ -941,8 +942,8 @@ noncomputable def Phase1FieldSubstitutionAdvantage {ι : Type}
     (adversary : Phase1Adversary baseSpec Context)
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool) :
     ℝ≥0∞ :=
-  Pr[= true | phase1FieldSubstitutionExp runtime sigAlg materialGenerator
-    adversary verifyFn]
+  phase1FieldSubstitutionExp runtime sigAlg materialGenerator adversary verifyFn
+    {true}
 
 theorem phase1FieldSubstitutionExp_eq_shared {ι : Type}
     {baseSpec : OracleSpec ι} {Context SecretKey : Type}
@@ -950,24 +951,24 @@ theorem phase1FieldSubstitutionExp_eq_shared {ι : Type}
     (sigAlg : Ed25519Scheme baseSpec SecretKey)
     (materialGenerator : Phase1MaterialGenerator baseSpec Context)
     (adversary : Phase1Adversary baseSpec Context)
-    (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
-    (h_pull : ∀ {α β : Type} (f : α → β) (mx : OracleComp baseSpec α),
-      runtime.evalDist (mx >>= fun x => pure (f x)) =
-        f <$> runtime.evalDist mx) :
+    (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool) :
     phase1FieldSubstitutionExp runtime sigAlg materialGenerator adversary verifyFn =
-      phase1SourceBadBit verifyFn <$>
-        runtime.evalDist
-          (phase1SharedJoint sigAlg materialGenerator adversary) := by
-  unfold phase1FieldSubstitutionExp
-  rw [h_pull]
-  change (phase1SourceBadBit verifyFn ∘ phase1WriterToShared) <$>
-      runtime.evalDist (phase1WriterJoint sigAlg materialGenerator adversary) = _
-  rw [LawfulFunctor.comp_map, ← h_pull]
-  change phase1SourceBadBit verifyFn <$>
       runtime.evalDist
-        (phase1WriterToShared <$>
-          phase1WriterJoint sigAlg materialGenerator adversary) = _
-  rw [phase1WriterJoint_toShared]
+        (phase1SharedJoint sigAlg materialGenerator adversary >>= fun joint =>
+          pure (phase1SourceBadBit verifyFn joint)) := by
+  unfold phase1FieldSubstitutionExp
+  apply congrArg runtime.evalDist
+  calc
+    _ = phase1SourceBadBit verifyFn <$>
+        (phase1WriterToShared <$> phase1WriterJoint sigAlg materialGenerator adversary) := by
+      rw [Functor.map_map, map_eq_bind_pure_comp]
+      rfl
+    _ = phase1SourceBadBit verifyFn <$>
+        phase1SharedJoint sigAlg materialGenerator adversary := by
+      rw [phase1WriterJoint_toShared]
+    _ = _ := by
+      rw [map_eq_bind_pure_comp]
+      rfl
 
 noncomputable def phase1EufBody {ι : Type} {baseSpec : OracleSpec ι}
     {Context SecretKey : Type} (sigAlg : Ed25519Scheme baseSpec SecretKey)
@@ -1042,30 +1043,17 @@ theorem unforgeableExp_phase1ToEUFCMA_eq_shared {ι : Type}
     (materialGenerator : Phase1MaterialGenerator baseSpec Context)
     (adversary : Phase1Adversary baseSpec Context)
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
-    (deterministic : HasDeterministicVerification sigAlg verifyFn)
-    (h_pull : ∀ {α β : Type} (f : α → β) (mx : OracleComp baseSpec α),
-      runtime.evalDist (mx >>= fun x => pure (f x)) =
-        f <$> runtime.evalDist mx) :
+    (deterministic : HasDeterministicVerification sigAlg verifyFn) :
     SignatureAlg.unforgeableExp runtime
         (phase1ToEUFCMA sigAlg materialGenerator adversary) =
-      phase1EufBit verifyFn <$>
-        runtime.evalDist
-          (phase1SharedJoint sigAlg materialGenerator adversary) := by
-  rw [unforgeableExp_phase1ToEUFCMA runtime sigAlg materialGenerator adversary,
-    phase1EufBody_eq_shared sigAlg materialGenerator adversary verifyFn
-      deterministic]
-  rw [map_eq_bind_pure_comp]
-  have bindEquality :
-      (phase1SharedJoint sigAlg materialGenerator adversary >>=
-          pure ∘ phase1EufBit verifyFn) =
+      runtime.evalDist
         (phase1SharedJoint sigAlg materialGenerator adversary >>= fun joint =>
           pure (phase1EufBit verifyFn joint)) := by
-    apply bind_congr
-    intro joint
-    rfl
-  rw [bindEquality]
-  exact h_pull (phase1EufBit verifyFn)
-    (phase1SharedJoint sigAlg materialGenerator adversary)
+  rw [unforgeableExp_phase1ToEUFCMA runtime sigAlg materialGenerator adversary,
+    phase1EufBody_eq_shared sigAlg materialGenerator adversary verifyFn
+      deterministic,
+    map_eq_bind_pure_comp]
+  rfl
 
 /-- A same-target accepted field substitution is one weak-EUF-CMA forgery, with no guessed-field loss. -/
 theorem phase1FieldSubstitutionAdvantage_le_eufCma {ι : Type}
@@ -1075,22 +1063,26 @@ theorem phase1FieldSubstitutionAdvantage_le_eufCma {ι : Type}
     (materialGenerator : Phase1MaterialGenerator baseSpec Context)
     (adversary : Phase1Adversary baseSpec Context)
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
-    (deterministic : HasDeterministicVerification sigAlg verifyFn)
-    (h_pull : ∀ {α β : Type} (f : α → β) (mx : OracleComp baseSpec α),
-      runtime.evalDist (mx >>= fun x => pure (f x)) =
-        f <$> runtime.evalDist mx) :
+    (deterministic : HasDeterministicVerification sigAlg verifyFn) :
     Phase1FieldSubstitutionAdvantage runtime sigAlg materialGenerator adversary
         verifyFn ≤
       (phase1ToEUFCMA sigAlg materialGenerator adversary).advantage runtime := by
+  letI : MeasurableSpace (Phase1SharedResult Context) := ⊤
+  letI : DiscreteMeasurableSpace (Phase1SharedResult Context) :=
+    ⟨fun _ => by simp⟩
   unfold Phase1FieldSubstitutionAdvantage SignatureAlg.unforgeableAdv.advantage
   rw [phase1FieldSubstitutionExp_eq_shared runtime sigAlg materialGenerator
-      adversary verifyFn h_pull,
+      adversary verifyFn,
     unforgeableExp_phase1ToEUFCMA_eq_shared runtime sigAlg materialGenerator
-      adversary verifyFn deterministic h_pull,
-    ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput,
-    probEvent_map, probEvent_map]
-  exact probEvent_mono'' fun joint =>
-    phase1SourceBadBit_implies_eufBit verifyFn joint
+      adversary verifyFn deterministic,
+    runtime.evalDist_bind_pure _ (phase1SourceBadBit verifyFn) Measurable.of_discrete,
+    runtime.evalDist_bind_pure _ (phase1EufBit verifyFn) Measurable.of_discrete,
+    Measure.map_apply Measurable.of_discrete (measurableSet_singleton true),
+    Measure.map_apply Measurable.of_discrete (measurableSet_singleton true)]
+  apply measure_mono
+  intro joint hjoint
+  simp only [Set.mem_preimage, Set.mem_singleton_iff] at hjoint ⊢
+  exact phase1SourceBadBit_implies_eufBit verifyFn joint hjoint
 
 /-- Base-oracle queries made syntactically by the material generator or source adversary. -/
 def IsPhase1BaseQuery {ι : Type} :
@@ -1329,52 +1321,113 @@ theorem ed25519AttachedSignatureCorrectness_iff_perfectlyComplete {ι : Type}
       sigAlg.PerfectlyComplete runtime := by
   rfl
 
-/-- Every supported honest key/signature pair verifies and the exact attached adapter opens it to the original message. -/
+/-- A positive-mass honest key/signature path verifies and the exact attached adapter opens it to the original message. -/
+private theorem measure_bind_apply_singleton_ne_zero
+    {α β : Type} [MeasurableSpace α] [DiscreteMeasurableSpace α]
+    [MeasurableSpace β] [MeasurableSingletonClass β]
+    (μ : Measure α) (f : α → Measure β) (a : α) (b : β)
+    (ha : μ {a} ≠ 0) (hb : f a {b} ≠ 0) : (μ.bind f) {b} ≠ 0 := by
+  rw [Measure.bind_apply (measurableSet_singleton b) Measurable.of_discrete.aemeasurable]
+  apply ne_of_gt
+  rw [lintegral_pos_iff_support Measurable.of_discrete]
+  apply lt_of_lt_of_le (pos_iff_ne_zero.mpr ha)
+  apply measure_mono
+  intro x hx
+  have hxa : x = a := Set.mem_singleton_iff.mp hx
+  subst x
+  exact hb
+
+section attachedCorrectness
+
+variable {SecretKey : Type}
+
+local instance : MeasurableSpace Pqxdh.Bytes := ⊤
+local instance : DiscreteMeasurableSpace Pqxdh.Bytes := ⟨fun _ => by simp⟩
+local instance : MeasurableSpace Ed25519PublicKey := ⊤
+local instance : DiscreteMeasurableSpace Ed25519PublicKey := ⟨fun _ => by simp⟩
+local instance : MeasurableSpace SecretKey := ⊤
+local instance : DiscreteMeasurableSpace SecretKey := ⟨fun _ => by simp⟩
+local instance : MeasurableSpace (Ed25519PublicKey × SecretKey) := ⊤
+local instance : DiscreteMeasurableSpace (Ed25519PublicKey × SecretKey) :=
+  ⟨fun _ => by simp⟩
+local instance : MeasurableSpace Ed25519Signature := ⊤
+local instance : DiscreteMeasurableSpace Ed25519Signature := ⟨fun _ => by simp⟩
+
 theorem ed25519AttachedSignatureCorrectness_opens_supported {ι : Type}
-    {baseSpec : OracleSpec ι} {SecretKey : Type}
+    {baseSpec : OracleSpec ι}
     (sigAlg : Ed25519Scheme baseSpec SecretKey)
     (runtime : ProbCompRuntime (OracleComp baseSpec))
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
     (deterministic : HasDeterministicVerification sigAlg verifyFn)
-    (heval_pure : ∀ {α : Type} (value : α),
-      runtime.evalDist (pure value : OracleComp baseSpec α) = pure value)
-    (heval_bind : ∀ {α β : Type} (computation : OracleComp baseSpec α)
+    (heval_pure : ∀ {α : Type} [MeasurableSpace α] (value : α),
+      runtime.evalDist (pure value : OracleComp baseSpec α) =
+        Measure.dirac value)
+    (heval_bind : ∀ {α β : Type} [MeasurableSpace α] [MeasurableSpace β]
+      (computation : OracleComp baseSpec α)
       (continuation : α → OracleComp baseSpec β),
+      Measurable (fun value => runtime.evalDist (continuation value)) →
       runtime.evalDist (computation >>= continuation) =
-        runtime.evalDist computation >>= fun value =>
+        Measure.bind (runtime.evalDist computation) fun value =>
           runtime.evalDist (continuation value))
     (correct : Ed25519AttachedSignatureCorrectness sigAlg runtime)
     {pk : Ed25519PublicKey} {sk : SecretKey}
-    (keygenSupport : (pk, sk) ∈ support (runtime.evalDist sigAlg.keygen))
+    (keygenSupport : runtime.evalDist sigAlg.keygen {(pk, sk)} ≠ 0)
     {message : Pqxdh.Bytes} {signature : Ed25519Signature}
-    (signSupport : signature ∈
-      support (runtime.evalDist (sigAlg.sign pk sk message))) :
+    (signSupport : runtime.evalDist (sigAlg.sign pk sk message) {signature} ≠ 0) :
     verifyFn pk message signature = true ∧
       splitAttachedSignature (attachSignature signature message) =
         some (signature, message) ∧
       openAttached verifyFn pk (attachSignature signature message) = some message := by
-  have verificationSupport : verifyFn pk message signature ∈
-      support (runtime.evalDist (sigAlg.verify pk message signature)) := by
-    rw [deterministic, heval_pure]
+  let : EvalDistSemantics (OracleComp baseSpec) := {
+    denote computation := runtime.evalDist computation
+    apply_univ_le_one computation :=
+      runtime.evalDist_apply_univ_le_one computation }
+  let : LawfulEvalDistSemantics (OracleComp baseSpec) := {
+    denote_pure value := heval_pure value
+    denote_bind computation continuation measurable :=
+      heval_bind computation continuation measurable }
+  have evalDist_eq_runtime {α : Type} [MeasurableSpace α]
+      (computation : OracleComp baseSpec α) :
+      𝒟[computation] = runtime.evalDist computation := rfl
+  have keygenMass : 𝒟[sigAlg.keygen] {(pk, sk)} ≠ 0 := by
+    rwa [evalDist_eq_runtime]
+  have signMass : 𝒟[sigAlg.sign pk sk message] {signature} ≠ 0 := by
+    rwa [evalDist_eq_runtime]
+  have verificationMass :
+      𝒟[sigAlg.verify pk message signature] {verifyFn pk message signature} ≠ 0 := by
+    rw [deterministic, evalDist_pure]
     simp
-  have outputSupport : verifyFn pk message signature ∈ support
-      (runtime.evalDist do
-        let (generatedPk, generatedSk) ← sigAlg.keygen
-        let generatedSignature ← sigAlg.sign generatedPk generatedSk message
-        sigAlg.verify generatedPk message generatedSignature) := by
-    simp only [heval_bind, support_bind, Set.mem_iUnion, exists_prop,
-      Prod.exists]
-    exact ⟨pk, sk, keygenSupport, signature, signSupport,
-      verificationSupport⟩
+  let correctnessGame : OracleComp baseSpec Bool := do
+    let (generatedPk, generatedSk) ← sigAlg.keygen
+    let generatedSignature ← sigAlg.sign generatedPk generatedSk message
+    sigAlg.verify generatedPk message generatedSignature
+  have outputMass :
+      𝒟[correctnessGame] {verifyFn pk message signature} ≠ 0 := by
+    dsimp [correctnessGame]
+    rw [evalDist_bind_of_discrete]
+    refine measure_bind_apply_singleton_ne_zero _ _ (pk, sk) _ keygenMass ?_
+    rw [evalDist_bind_of_discrete]
+    refine measure_bind_apply_singleton_ne_zero _ _ signature _ signMass ?_
+    exact verificationMass
+  have trueMass : 𝒟[correctnessGame] {true} = 1 := by
+    rw [evalDist_eq_runtime]
+    exact correct message
+  have falseMass : 𝒟[correctnessGame] {false} = 0 := by
+    have totalMass := evalDist_apply_univ_le_one correctnessGame
+    rw [← Measure.apply_true_add_apply_false, trueMass] at totalMass
+    apply le_zero_iff.mp
+    apply (ENNReal.add_le_add_iff_left ENNReal.one_ne_top).mp
+    simpa using totalMass
   have verified : verifyFn pk message signature = true := by
-    simpa [Ed25519AttachedSignatureCorrectness,
-      ((probOutput_eq_one_iff (mx := runtime.evalDist do
-        let (generatedPk, generatedSk) ← sigAlg.keygen
-        let generatedSignature ← sigAlg.sign generatedPk generatedSk message
-        sigAlg.verify generatedPk message generatedSignature)
-        (x := true)).mp (correct message)).2] using outputSupport
+    cases hvalue : verifyFn pk message signature with
+    | false =>
+      rw [hvalue, falseMass] at outputMass
+      exact (outputMass rfl).elim
+    | true => rfl
   exact ⟨verified, splitAttachedSignature_attach signature message, by
     simp [openAttached, verified]⟩
+
+end attachedCorrectness
 
 theorem attachedVerificationAdapter_opens_honest
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes)

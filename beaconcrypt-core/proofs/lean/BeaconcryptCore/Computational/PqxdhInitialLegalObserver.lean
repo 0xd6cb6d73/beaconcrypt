@@ -171,7 +171,8 @@ theorem first_miss_observer {setup : StatefulPhase1Setup baseSpec}
   | completed decision =>
       simp only [observe, mode, PqxdhInitialRootContext.firstMiss, protocol,
         PqxdhInitialRootContext.afterRoot, simulateQ_pure, StateT.run_pure, map_pure]
-      exact OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure _ _
+      apply evalDist_eq_of_evalSPMF_eq
+      exact OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure _ _
   | pending prepared ephemeral =>
       simp only [observe, mode, PqxdhInitialRootContext.firstMiss, protocol,
         PqxdhInitialRootContext.afterRoot, map_bind]
@@ -206,7 +207,8 @@ theorem current_game {setup : StatefulPhase1Setup baseSpec}
       𝒟[uniformGame (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
         (protocol env kem attachedVerify primitives program post))] := by
   simp only [sample, bind_assoc, pure_bind, PqxdhInitialRootContext.current_game, map_bind]
-  exact evalDist_bind_congr' (m := ProbComp) _ (first_miss_observer env baseImpl kem attachedVerify primitives program post)
+  apply evalDist_bind_congr
+  exact first_miss_observer env baseImpl kem attachedVerify primitives program post
 
 end Current
 end BeaconcryptCore.Computational.PqxdhInitialLegalObserver

@@ -109,28 +109,29 @@ theorem uniform_source (selected : RawCtxProtocolReveals.Owner S (B + 1)) (numbe
     𝒟[uniformGame (rootReduction env.source baseImpl kem
       (protocol env attachedVerify primitives program post kem selected number ancestors disclosed))] =
     𝒟[PqxdhInitialPreparedSourceInput.uniformRoot env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [uniformGame, StateT.run'_eq, PqxdhInitialRootContext.reduction_complete,
     PqxdhInitialPreparedSourceInput.uniformRoot, PqxdhInitialSourceInitialSecrecy.real,
     PqxdhInitialPreparedSourceInput.prior, PqxdhCorrelatedExtractFamily.prepare,
     bind_assoc, pure_bind, map_bind, map_pure]
-  refine evalDist_bind_congr (fun keys _ => ?_)
-  refine evalDist_bind_congr (fun mode _ => ?_)
-  refine evalDist_bind_congr (fun pair _ => ?_)
+  refine evalSPMF_bind_congr' _ (fun keys => ?_)
+  refine evalSPMF_bind_congr' _ (fun mode => ?_)
+  refine evalSPMF_bind_congr' _ (fun pair => ?_)
   cases mode with
   | completed decision =>
     simp only [PqxdhInitialRootContext.firstMiss, protocol, PqxdhAuthenticatedRootExperiment.protocol,
       PqxdhInitialRootContext.afterRoot, PqxdhInitialPreparedSourceInput.input,
       simulateQ_pure, StateT.run_pure, map_pure]
-    exact (OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure
+    exact (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure
       ($ᵗ RootOutput) (pure decision : ProbComp Bool)).symm
   | pending prepared ephemeral =>
     simp only [PqxdhInitialRootContext.firstMiss, protocol, PqxdhAuthenticatedRootExperiment.protocol,
       PqxdhInitialRootContext.afterRoot, PqxdhInitialPreparedSourceInput.input, map_bind]
-    refine evalDist_bind_congr (fun root _ => ?_)
+    refine evalSPMF_bind_congr' _ (fun root => ?_)
     have same := source_uniform env attachedVerify primitives program post prepared
       (PqxdhPrivateAcceptedRoot.ready env.server env.application prepared.1.context.publicIdentity.ed25519
         prepared.1.context.generated.after.publicKey ephemeral pair.1 root) baseImpl kem keys.2 selected number ancestors disclosed
-    exact congrArg evalDist same.symm
+    exact congrArg evalSPMF same.symm
 
 end BeaconcryptCore.Computational.PqxdhInitialRootEventAccepted
 

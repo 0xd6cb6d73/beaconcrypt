@@ -91,14 +91,19 @@ theorem instrument_query_bound (primitives : Primitives) (predicate : ProtocolSp
       (if IsSourceClass predicate query then 1 else 0) := by
   cases query with
   | inl request =>
-    change (ProtocolSpec.query (.inl request) : OracleComp ProtocolSpec _).IsQueryBoundP predicate
+    change OracleComp.IsQueryBoundP
+      (ProtocolSpec.query (.inl request) : OracleComp ProtocolSpec _) predicate
       (if predicate (.inl request) then 1 else 0)
     rw [OracleComp.isQueryBoundP_query_iff]
     split <;> simp_all
   | inr candidate =>
     simp only [instrument, bind_pure_comp, OracleComp.isQueryBoundP_map_iff,
-      OracleComp.isQueryBoundP_query_iff, IsSourceClass, sourceQuery]
-    split <;> simp_all
+      OracleComp.isQueryBoundP_query_iff]
+    by_cases selected : IsSourceClass predicate (.inr candidate)
+    · rw [ite_eq_left selected]
+      exact fun _ => Nat.zero_lt_one
+    · intro accepted
+      exact (selected (show IsSourceClass predicate (.inr candidate) from accepted)).elim
 
 /-- Every original class is retained through every possible optional acceptance response and subsequent continuation. -/
 theorem instrumentedClient_query_bound (primitives : Primitives) {Result : Type}

@@ -603,7 +603,9 @@ end BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds.compiled_work
 
-/-- info: 'BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds.work_indicator' depends on axioms: [propext] -/
+/-- info: 'BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds.work_indicator' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds.work_indicator
 
@@ -616,6 +618,7 @@ end BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds
 #print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds.work_add
 
 /-- info: 'BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds.source_aggregate' depends on axioms: [propext,
+ Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.AdaptiveCtxSharedReplayCompilerBounds.source_aggregate

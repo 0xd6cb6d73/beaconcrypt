@@ -56,9 +56,9 @@ theorem raw (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
       simp only [decoded] at supported
       split at supported
       · simp only [bind_pure_comp] at supported
-        change result ∈ support ((fun reply => (RawCtxChainOwner.publish entry reply.1, reply.2)) <$>
-          (calls.receive entry.kernel frame.sequence ⟨bytes, frame, entry.associatedData⟩).run state) at supported
-        rw [support_map] at supported
+        change result ∈ support ((RawCtxChainOwner.publish entry <$>
+          calls.receive entry.kernel frame.sequence ⟨bytes, frame, entry.associatedData⟩).run state) at supported
+        rw [StateT.run_map, support_map] at supported
         obtain ⟨reply, reached, rfl⟩ := supported
         exact rules.receive _ _ _ _ reply reached
       · change result ∈ support (pure (RawCtxChainOwner.publish entry (entry.kernel, .None), state)) at supported
@@ -81,9 +81,9 @@ theorem send (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
     subst result
     exact ⟨rules.refl _, id⟩
   · simp only [bind_pure_comp] at supported
-    change result ∈ support ((fun reply => ((reply.1.2, {entry with kernel := reply.1.1}), reply.2)) <$>
-      (calls.send entry.kernel ⟨plaintext, entry.expectedSender, sender, entry.associatedData⟩).run state) at supported
-    rw [support_map] at supported
+    change result ∈ support (((fun reply => (reply.2, {entry with kernel := reply.1})) <$>
+      calls.send entry.kernel ⟨plaintext, entry.expectedSender, sender, entry.associatedData⟩).run state) at supported
+    rw [StateT.run_map, support_map] at supported
     obtain ⟨reply, reached, rfl⟩ := supported
     exact rules.send _ _ _ reply reached
 
@@ -226,10 +226,11 @@ theorem beacon (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
   cases phase : entry.beacon.phase
   case established control ad kernel =>
     simp only [RawCtxGenericBeacon.impl, StateT.run, phase, bind_pure_comp] at supported
-    change result ∈ support ((fun reply => ((reply.1.1, RawCtxGenericBeacon.reinstall entry control ad reply.1.2), reply.2)) <$>
-      ((RawCtxChainOwner.ownerImpl calls entry.beacon.identityKeyId decode query).run
-        (RawCtxGenericBeacon.selected entry control ad kernel)).run state) at supported
-    rw [support_map] at supported
+    change result ∈ support (((fun reply =>
+      (reply.1, RawCtxGenericBeacon.reinstall entry control ad reply.2)) <$>
+        (RawCtxChainOwner.ownerImpl calls entry.beacon.identityKeyId decode query).run
+          (RawCtxGenericBeacon.selected entry control ad kernel)).run state) at supported
+    rw [StateT.run_map, support_map] at supported
     obtain ⟨reply, reached, rfl⟩ := supported
     have step := owner calls le valid rules entry.beacon.identityKeyId decode query
       (RawCtxGenericBeacon.selected entry control ad kernel) state reply reached
@@ -268,9 +269,10 @@ theorem family (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
   rcases query with ⟨index, request⟩ | (⟨index, request⟩ | request)
   case inl =>
     simp only [RawCtxGenericFamilyFrontend.impl, StateT.run, bind_pure_comp] at supported
-    change result ∈ support ((fun reply => ((reply.1.1, (Function.update entry.1 index reply.1.2, entry.2)), reply.2)) <$>
-      ((RawCtxGenericServer.serverImpl calls sender route decode request).run (entry.1 index)).run state) at supported
-    rw [support_map] at supported
+    change result ∈ support (((fun reply =>
+      (reply.1, (Function.update entry.1 index reply.2, entry.2))) <$>
+        (RawCtxGenericServer.serverImpl calls sender route decode request).run (entry.1 index)).run state) at supported
+    rw [StateT.run_map, support_map] at supported
     obtain ⟨reply, reached, rfl⟩ := supported
     have extension := (server calls le valid rules sender route decode request (entry.1 index) state reply reached 0#u64).1
     refine ⟨extension, ?_⟩
@@ -285,9 +287,10 @@ theorem family (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
     | beacon _ => exact holds_mono rules _ _ _ extension
   case inr.inl =>
     simp only [RawCtxGenericFamilyFrontend.impl, StateT.run, bind_pure_comp] at supported
-    change result ∈ support ((fun reply => ((reply.1.1, (entry.1, Function.update entry.2 index reply.1.2)), reply.2)) <$>
-      ((RawCtxGenericBeacon.impl calls decode request).run (entry.2 index)).run state) at supported
-    rw [support_map] at supported
+    change result ∈ support (((fun reply =>
+      (reply.1, (entry.1, Function.update entry.2 index reply.2))) <$>
+        (RawCtxGenericBeacon.impl calls decode request).run (entry.2 index)).run state) at supported
+    rw [StateT.run_map, support_map] at supported
     obtain ⟨reply, reached, rfl⟩ := supported
     have step := beacon calls le valid rules decode request (entry.2 index) state reply reached
     refine ⟨step.1, ?_⟩
@@ -301,8 +304,8 @@ theorem family (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
           exact holds_mono rules _ _ _ step.1
   case inr.inr =>
     simp only [RawCtxGenericFamilyFrontend.impl, StateT.run, bind_pure_comp] at supported
-    change result ∈ support ((fun reply => ((reply.1, entry), reply.2)) <$> (publicCalls request).run state) at supported
-    rw [support_map] at supported
+    change result ∈ support (((fun reply => (reply, entry)) <$> publicCalls request).run state) at supported
+    rw [StateT.run_map, support_map] at supported
     obtain ⟨reply, reached, rfl⟩ := supported
     have extension := publicPreserved _ _ _ reached
     exact ⟨extension, holds_mono rules _ _ _ extension⟩
@@ -325,16 +328,21 @@ theorem live (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
   cases query with
   | inl request =>
       simp only [RawCtxGenericFamilyLive.impl, StateT.run, bind_pure_comp] at supported
-      change result ∈ support ((fun reply => ((reply.1.1, (reply.1.2, RawCtxProtocolReveals.tick entry.2)), reply.2)) <$>
-        ((RawCtxGenericFamilyFrontend.impl calls publicCalls sender route decode request).run entry.1).run state) at supported
-      rw [support_map] at supported
+      change result ∈ support (((fun reply =>
+        (reply.1, (reply.2, RawCtxProtocolReveals.tick entry.2))) <$>
+          (RawCtxGenericFamilyFrontend.impl calls publicCalls sender route decode request).run entry.1).run state) at supported
+      rw [StateT.run_map, support_map] at supported
       obtain ⟨reply, reached, rfl⟩ := supported
       exact family calls le valid rules publicCalls publicPreserved sender route decode request entry.1 state reply reached selected
   | inr request =>
       simp only [RawCtxGenericFamilyLive.impl, StateT.run, bind_pure_comp] at supported
-      change result ∈ support ((fun reply => ((reply.1, (entry.1, RawCtxProtocolReveals.note ⟨request, reply.1⟩ entry.2)), reply.2)) <$>
-        (reader (request, RawCtxGenericRoleFamily.selectedKernel (RawCtxGenericFamilyRead.requestOwner request) entry.1)).run state) at supported
-      rw [support_map] at supported
+      change result ∈ support (((fun reply : (RawCtxGenericFamilyRead.ReadSpec Kernel S B).Range
+          (request, RawCtxGenericRoleFamily.selectedKernel
+            (RawCtxGenericFamilyRead.requestOwner request) entry.1) =>
+        (reply, (entry.1, RawCtxProtocolReveals.note ⟨request, reply⟩ entry.2))) <$>
+          reader (request,
+            RawCtxGenericRoleFamily.selectedKernel (RawCtxGenericFamilyRead.requestOwner request) entry.1)).run state) at supported
+      rw [StateT.run_map, support_map] at supported
       obtain ⟨reply, reached, rfl⟩ := supported
       have extension := readPreserved _ _ _ reached
       exact ⟨extension, holds_mono rules _ _ _ extension⟩

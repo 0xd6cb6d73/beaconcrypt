@@ -43,6 +43,7 @@ theorem publish_cached_receive_exact {SendChain ReceiveChain Material : Type}
     intro i hi
     simp_lists [Std.Array.set_val_eq]
     split_ifs <;> simp_all
+  all_goals simp_lists
 
 end beaconcrypt_core.ratchet.refined
 

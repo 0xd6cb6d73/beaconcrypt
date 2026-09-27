@@ -135,6 +135,7 @@ theorem simulateQ_initializedChainsWrapperMain_real
     JointKdfViewQuery.project, JointKdfProjection.project,
     JointKdfViewQuery.address, FixedHkdfDomain.address,
     PqxdhJointKdf.ratchetAddress, PqxdhJointKdf.initialProjection]
+  rfl
 
 /-! ## Exact logical query accounting -/
 
@@ -442,13 +443,19 @@ theorem initializerRealGame_initializedChains_eq_production
   apply congrArg (simulateQ (kemAmbientImpl baseImpl))
   apply bind_congr
   intro preState
+  change MlKem768PublicKey × SK × observer.State at preState
   unfold oneKeyFinish
   apply bind_congr
   intro encapsulation
   apply bind_congr
   intro kRand
-  rw [toKemOneKeyAdversary_initializedChains_postChallenge]
-  rfl
+  exact congrArg
+    (simulateQ (kem.IND_CCA_postChallengeImpl preState.2.1
+      encapsulation.1))
+    (toKemOneKeyAdversary_initializedChains_postChallenge source kem observer
+      (⟨preState.1, encapsulation.1, preState.2.2⟩ :
+        MlKemChallengeTranscript observer.State)
+      (if true = true then encapsulation.2 else kRand))
 
 /-- Readable terminal game: after the independent root is sampled, one lazy 76-byte stream at its canonical ratchet address supplies both directional chains and remains cached for the observer. -/
 noncomputable def independentRootInitializedChainsGame

@@ -540,6 +540,7 @@ theorem begin_receive_cached_refines
     omega
   have htargetEntryBound : targetSlot.val <
       kernel.refined.control.receive_cache.entries.val.length := by
+    rw [kernel.refined.control.receive_cache.entries.property]
     simpa using htargetSlot50
   have htargetEntryGet := htargetEntry
   rw [List.getElem!_eq_getElem?_getD,
@@ -549,6 +550,7 @@ theorem begin_receive_cached_refines
     simpa using htargetEntryGet
   have hlastEntryBound : lastSlot.val <
       kernel.refined.control.receive_cache.entries.val.length := by
+    rw [kernel.refined.control.receive_cache.entries.property]
     simpa using hlastSlot50
   have hlastCachedSequenceGet := hlastCachedSequence
   rw [List.getElem!_eq_getElem?_getD,
@@ -563,7 +565,7 @@ theorem begin_receive_cached_refines
       ratchet.control.SequenceCache.entry, lift,
       ratchet.control.capacity_eq_ok, htargetSlot, htargetSlot50,
       ratchet.control.entries_index_eq_ok]
-    exact htargetEntryGet'
+    simpa [List.getElem?_eq_getElem htargetEntryBound] using htargetEntryGet'
   have hlastReceiveKey :
       ratchet.control.RatchetState.receive_key_at kernel.refined.control lastSlot =
         ok (core.option.Option.Some
@@ -578,6 +580,7 @@ theorem begin_receive_cached_refines
         ok (core.option.Option.Some cached) := by
     have htargetSlotsBound : targetSlot.val <
         kernel.refined.receive_slots.val.length := by
+      rw [kernel.refined.receive_slots.property]
       simpa using htargetSlot50
     have htargetCachedGet := htargetCached
     rw [List.getElem!_eq_getElem?_getD,
@@ -591,6 +594,7 @@ theorem begin_receive_cached_refines
         ok (core.option.Option.Some lastCached) := by
     have hlastSlotsBound : lastSlot.val <
         kernel.refined.receive_slots.val.length := by
+      rw [kernel.refined.receive_slots.property]
       simpa using hlastSlot50
     have hlastCachedGet := hlastCached
     rw [List.getElem!_eq_getElem?_getD,
@@ -684,6 +688,7 @@ theorem CachedOpenRefines.material_exact
     omega
   have hlen : prepared.target_slot.val <
       pending.entry.refined.receive_slots.val.length := by
+    rw [pending.entry.refined.receive_slots.property]
     simpa using hslot50
   have hcached' :
       pending.entry.refined.receive_slots.val[prepared.target_slot.val]'hlen =
@@ -693,7 +698,9 @@ theorem CachedOpenRefines.material_exact
     simpa using hcached
   simp [ratchet.concrete.ReceiveOpen.material, hphase,
     ratchet.control.RECEIVE_CACHE_CAPACITY, lift, Array.index_usize,
-    core.option.Option.as_ref, hslot50, hcached', hcachedSequence, hcachedMaterial]
+    core.option.Option.as_ref]
+  rw [if_neg (by omega), List.getElem?_eq_getElem hlen]
+  simp [hcached', hcachedSequence, hcachedMaterial]
 
 theorem CachedOpenRefines.openReply_some
     (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)

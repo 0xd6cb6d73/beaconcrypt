@@ -194,9 +194,7 @@ end BeaconcryptCore.Computational.RawCtxPendingMixedPrefix
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxPendingMixedPrefix.scan_finish
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxPendingMixedPrefix.pending_selected' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxPendingMixedPrefix.pending_selected' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxPendingMixedPrefix.pending_selected
 

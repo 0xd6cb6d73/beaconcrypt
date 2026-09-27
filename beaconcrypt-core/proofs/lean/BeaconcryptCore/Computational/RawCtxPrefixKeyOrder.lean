@@ -16,16 +16,16 @@ theorem initial_cache : initialSource.cache = ∅ := rfl
 theorem complete {Context Result : Type} (real : Bool) (decode : AdaptiveCtxReceive.RawDecoder)
     (c : Pqxdh.Crypto) (prelude : OracleComp HashSpec Context)
     (continuation : CtxKey → Context → SourceState → ProbComp Result) :
-    𝒟[(do
+    𝒮[(do
       let result ← (simulateQ AdaptiveCtxSharedTarget.sharedImpl prelude).run (∅, [])
       let key ← $ᵗ CtxKey
       continuation key result.1 (install initialSource result.2))] =
-    𝒟[(do
+    𝒮[(do
       let key ← $ᵗ CtxKey
       let result ← (simulateQ (sourceImpl real decode c key) (simulateQ forward prelude)).run initialSource
       continuation key result.1 result.2)] := by
   simp_rw [forward_complete, bind_map_left]
-  exact JointEagerTable.independent_comm
+  exact JointEagerTable.independent_comm_spmf
     ((simulateQ AdaptiveCtxSharedTarget.sharedImpl prelude).run (∅, [])) ($ᵗ CtxKey)
     (fun result key => continuation key result.1 (install initialSource result.2))
 
@@ -33,8 +33,8 @@ theorem complete {Context Result : Type} (real : Bool) (decode : AdaptiveCtxRece
 theorem source_game {Context Result : Type} (real : Bool) (decode : AdaptiveCtxReceive.RawDecoder)
     (c : Pqxdh.Crypto) (prelude : OracleComp HashSpec Context)
     (suffix : Context → OracleComp Spec Result) :
-    𝒟[sourceGame real decode c (simulateQ forward prelude >>= suffix)] =
-      𝒟[(do
+    𝒮[sourceGame real decode c (simulateQ forward prelude >>= suffix)] =
+      𝒮[(do
         let result ← (simulateQ AdaptiveCtxSharedTarget.sharedImpl prelude).run (∅, [])
         let key ← $ᵗ CtxKey
         (simulateQ (sourceImpl real decode c key) (suffix result.1)).run (install initialSource result.2))] := by

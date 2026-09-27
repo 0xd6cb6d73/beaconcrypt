@@ -110,6 +110,7 @@ noncomputable def bad (context : Context × Entry) (target : RootOutput) (output
   exact (fun result => decide (target ∈ candidates result)) <$>
     observed source writer mark sender route decode continuation context output
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The original routed, native-reader continuation and the ordinary stopped observer pay the same complete masked candidate event; the clear-bit event retains the actual origin trace. -/
 theorem local_bound (context : Context × Entry) (target : RootOutput) (output : FullOutput) :
     (privateGame source writer mark sender route decode continuation context target output).boolDistAdvantage
@@ -119,7 +120,8 @@ theorem local_bound (context : Context × Entry) (target : RootOutput) (output :
     (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
     (continuation.selector context.1) (continuation.aux context.1) target
     (program mark sender route decode continuation context) (continuation.initial context) (continuation.event context)
-  rw [privateGame, observer, ProbComp.boolDistAdvantage, decision_probability, decision_probability, agreement]
+  rw [privateGame, observer, ProbComp.boolDistAdvantage, evalDist_apply_singleton,
+    evalDist_apply_singleton, decision_probability, decision_probability, agreement]
   have variation := (abs_probOutput_toReal_sub_le_tvDist
     (decision (continuation.event context) <$>
       (simulateQ (PqxdhInitialParentObserverAliases.observed source writer (continuation.prior context.1) context.2 output

@@ -24,8 +24,8 @@ def sampleFamily : (count : ℕ) → ProbComp (Fin count → IdentitySeed)
 /-- Moving a chosen identity's independent seed draw preserves every complete evaluated continuation. -/
 theorem sampleFamily_target_first {Result : Type} (count : ℕ) (target : Fin (count + 1))
     (next : (Fin (count + 1) → IdentitySeed) → ProbComp Result) :
-    𝒟[sampleFamily (count + 1) >>= next] =
-    𝒟[do
+    𝒮[sampleFamily (count + 1) >>= next] =
+    𝒮[do
       let seed ← sampleSeed
       let rest ← sampleFamily count
       next (target.insertNth seed rest)] := by
@@ -39,21 +39,21 @@ theorem sampleFamily_target_first {Result : Type} (count : ℕ) (target : Fin (c
       | zero => simp [sampleFamily, Fin.insertNth_zero']
       | succ target =>
           calc
-            _ = 𝒟[do
+            _ = 𝒮[do
               let first ← sampleSeed
               let chosen ← sampleSeed
               let rest ← sampleFamily count
               next (Fin.cons first (target.insertNth chosen rest))] := by
-                change 𝒟[(do
+                change 𝒮[(do
                   let first ← sampleSeed
                   let rest ← sampleFamily (count + 1)
                   pure (Fin.cons first rest)) >>= next] = _
                 simp only [bind_assoc, pure_bind]
-                apply evalDist_bind_congr'
+                apply evalSPMF_bind_congr'
                 intro first
                 exact ih target (fun rest => next (Fin.cons first rest))
             _ = _ := by
-              rw [PqxdhSecretInputKdf.evalDist_sample_comm sampleSeed sampleSeed]
+              rw [PqxdhSecretInputKdf.evalSPMF_sample_comm sampleSeed sampleSeed]
               simp [sampleFamily, Fin.insertNth_succ_cons, bind_assoc]
 
 /-- Exact family generation cost, including every byte of each independent identity seed. -/
@@ -236,16 +236,16 @@ def familyTest (primitives : Primitives) {count : ℕ}
 theorem targetGame_eq_reduction (primitives : Primitives) {count : ℕ} (target : Fin (count + 1))
     (adversary : (Fin (count + 1) → PublicIdentity) →
       OracleComp (FamilyAdversarySpec (count + 1)) (FamilyForgery (count + 1))) :
-    𝒟[targetTest primitives target <$> familyRun primitives (count + 1) adversary] =
-      𝒟[game primitives (reduction primitives target adversary)] := by
+    𝒮[targetTest primitives target <$> familyRun primitives (count + 1) adversary] =
+      𝒮[game primitives (reduction primitives target adversary)] := by
   simp only [familyRun, map_bind, map_pure]
   rw [sampleFamily_target_first count target]
   simp only [game, run, reduction, simulateQ_bind, StateT.run_bind, simulateQ_pure,
     StateT.run_pure, simulate_joint_uniform,
     bind_map_left, pure_bind, bind_assoc]
-  apply evalDist_bind_congr'
+  apply evalSPMF_bind_congr'
   intro seed
-  apply evalDist_bind_congr'
+  apply evalSPMF_bind_congr'
   intro others
   rw [familyPublic_insertNth]
   rw [← combineHistory_empty target, ← targetRouting_complete]
@@ -269,7 +269,7 @@ theorem family_advantage_le_sum (primitives : Primitives) (count : ℕ)
     _ = _ := by
       apply Finset.sum_congr rfl
       intro target _
-      have same := evalDist_ext_iff.mp (targetGame_eq_reduction primitives target adversary) true
+      have same := evalSPMF_ext_iff.mp (targetGame_eq_reduction primitives target adversary) true
       simpa [advantage, probOutput_map] using same
 
 /-- A uniform per-reduction assumption incurs exactly the number of generated identities. -/
@@ -305,15 +305,15 @@ theorem reductionImpl_query_bound (primitives : Primitives) {count : ℕ}
   cases query with
   | inl coin =>
     simp [reductionImpl, StateT.run, familyClass, bind_pure_comp]
-    exact (OracleComp.isQueryBoundP_query_iff (spec := AdversarySpec)
-      (p := predicate) (.inl coin) _).mpr (fun selected => by simp [selected])
+    intro selected
+    simp [selected]
   | inr query =>
     rcases query with ⟨index, request⟩
     induction index using Fin.succAboveCases target with
     | x =>
       simp [reductionImpl, StateT.run, familyClass, bind_pure_comp]
-      exact (OracleComp.isQueryBoundP_query_iff (spec := AdversarySpec)
-        (p := predicate) (.inr request) _).mpr (fun selected => by simp [selected])
+      intro selected
+      simp [selected]
     | p other => simp [reductionImpl, StateT.run]
 
 /-- The complete adaptive routing inherits each source oracle class separately. -/
@@ -471,8 +471,8 @@ theorem jointImpl_uniform_step (primitives : Primitives) (seed : IdentitySeed)
       (if IsClass .uniform query then 1 else 0) := by
   cases query with
   | inl coin =>
-    change ((fun answer => (answer, history)) <$> (unifSpec.query coin : ProbComp _)).IsQueryBoundP
-      (fun _ => True) 1
+    change OracleComp.IsQueryBoundP
+      ((fun answer => (answer, history)) <$> (unifSpec.query coin : ProbComp _)) (fun _ => True) 1
     simp only [OracleComp.isQueryBoundP_map_iff]
     exact (OracleComp.isQueryBoundP_query_iff (spec := unifSpec) (p := fun _ => True) coin 1).mpr (by simp)
   | inr request =>

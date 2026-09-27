@@ -164,15 +164,15 @@ theorem generators_complete_continuation {Result : Type}
     (baseImpl : QueryImpl baseSpec ProbComp) (primitives : Primitives)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (setup : StatefulPhase1Setup baseSpec)
     (next : IdentitySeed → Generated setup KemSK → ProbComp Result) :
-    𝒟[do let seed ← sampleSeed
+    𝒮[do let seed ← sampleSeed
          let generated ← generate baseImpl kem setup (primitives.publicKeys seed).ed25519
          next seed generated] =
-      𝒟[do let pair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
+      𝒮[do let pair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
            let retained ← identityPreSample baseImpl primitives setup
            let after ← simulateQ (kemAmbientImpl baseImpl)
              (setup.oneTime (primitives.publicKeys retained.1).ed25519 retained.2 pair.1)
            next retained.1 ⟨retained.2, pair.1, pair.2, after⟩] := by
-  have commute := PqxdhSecretInputKdf.evalDist_sample_comm (identityPreSample baseImpl primitives setup)
+  have commute := PqxdhSecretInputKdf.evalSPMF_sample_comm (identityPreSample baseImpl primitives setup)
     (simulateQ (kemAmbientImpl baseImpl) kem.keygen)
     (fun retained pair => do
       let after ← simulateQ (kemAmbientImpl baseImpl)
@@ -195,6 +195,12 @@ theorem evalKem_ambient {Result : Type} (baseImpl : QueryImpl baseSpec ProbComp)
   | pure value => rfl
   | query_bind query next ih =>
       simp only [ccaAmbient, simulateQ_bind, simulateQ_spec_query, evalKem]
+      have baseQuery :
+          simulateQ (kemAmbientImpl baseImpl) (localKemPreChallengeImpl kem secret (.inl query)) =
+            kemAmbientImpl baseImpl query := by
+        unfold localKemPreChallengeImpl KEMScheme.IND_CCA_preChallengeImpl QueryImpl.add
+        simp only [HasQuery.toQueryImpl_apply, simulateQ_HasQuery_query]
+      rw [baseQuery]
       change (kemAmbientImpl baseImpl query >>= fun answer =>
         evalKem baseImpl kem secret (ccaAmbient (next answer))) = _
       simp only [ih]
@@ -202,9 +208,7 @@ theorem evalKem_ambient {Result : Type} (baseImpl : QueryImpl baseSpec ProbComp)
 end BeaconcryptCore.Computational.PqxdhPrivateKemSource
 
 /--
-info: 'BeaconcryptCore.Computational.PqxdhPrivateKemSource.generate_key_support' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
+info: 'BeaconcryptCore.Computational.PqxdhPrivateKemSource.generate_key_support' depends on axioms: [propext, Quot.sound]
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhPrivateKemSource.generate_key_support

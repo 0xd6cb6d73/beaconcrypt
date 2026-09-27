@@ -38,6 +38,7 @@ theorem bound {Context : Type} (sampler : ProbComp Context) (left right : Contex
     simp only [ENNReal.toReal_add probOutput_ne_top infinite] at forwardReal backwardReal
     rw [← ENNReal.ofReal_toReal infinite]
     apply ENNReal.ofReal_le_ofReal
+    simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton]
     exact abs_le.mpr ⟨by linarith, by linarith⟩
 
 end BeaconcryptCore.Computational.RawCtxSupportedMixture

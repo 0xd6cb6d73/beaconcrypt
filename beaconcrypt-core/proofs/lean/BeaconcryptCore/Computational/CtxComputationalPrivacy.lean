@@ -1053,12 +1053,14 @@ theorem ofReal_ctxPrivacyAdvantage_le_viewAdvantage_add_secretPrefix
           (ctxPrivacyDirectSampleGame c adversary) ≤
         (ctxPrivacySecretPrefixProbability c adversary).toReal := by
     refine (show
-      |(Pr[= true | ctxPrivacyRealGame c adversary]).toReal -
-        (Pr[= true |
-          ctxPrivacyDirectSampleGame c adversary]).toReal| ≤
+      |(𝒟[ctxPrivacyRealGame c adversary] {true}).toReal -
+        (𝒟[ctxPrivacyDirectSampleGame c adversary] {true}).toReal| ≤
           tvDist (ctxPrivacyRealGame c adversary)
             (ctxPrivacyDirectSampleGame c adversary) from ?_).trans ?_
-    · exact abs_probOutput_toReal_sub_le_tvDist _ _
+    · simpa only [evalDist_apply_singleton] using
+        abs_probOutput_toReal_sub_le_tvDist
+          (ctxPrivacyRealGame c adversary)
+          (ctxPrivacyDirectSampleGame c adversary)
     · exact tvDist_ctxPrivacyRealGame_directSample_le_secretPrefix
         c adversary
   have hview :

@@ -128,6 +128,9 @@ theorem guard_query_complete (decode : RawDecoder) (c : Pqxdh.Crypto) (key : Ctx
     have same : replayImpl decode c key (.inl request) state = loggedImpl decode c key (.inl request) state := by
       cases request <;> rfl
     rw [same]
+    change (((fun a => (a, recordReply (.inl request) a state.ctx.successfulSeals)) <$>
+      loggedImpl decode c key (.inl request)).run state) = _
+    rw [StateT.run_map]
     change (fun result => ((result.1, recordReply (.inl request) result.1 state.ctx.successfulSeals), result.2)) <$>
       loggedImpl decode c key (.inl request) state = _
     simp only [← bind_pure_comp]
@@ -137,6 +140,9 @@ theorem guard_query_complete (decode : RawDecoder) (c : Pqxdh.Crypto) (key : Ctx
   | inr raw =>
     simp only [guard, StateT.run, bind_pure_comp, simulateQ_map,
       simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map]
+    change (((fun _ => (publicReply decode state.ctx.successfulSeals raw,
+      state.ctx.successfulSeals)) <$> loggedImpl decode c key (.inr raw)).run state) = _
+    rw [StateT.run_map]
     change (fun result => ((publicReply decode state.ctx.successfulSeals raw, state.ctx.successfulSeals), result.2)) <$>
       loggedRaw decode raw state =
       (fun result => ((result.1, result.2.ctx.successfulSeals), result.2)) <$> replayRaw decode raw state
@@ -260,7 +266,7 @@ theorem canonical_replay_advantage_bound (decode : RawDecoder) (c : Pqxdh.Crypto
       tvDist left right := by
     simpa only [ProbComp.boolDistAdvantage, canonicalView, replayView, left, right, decision,
       Functor.map_map, AdaptiveCtxPrefixValidation.canonicalProjection, Prod.map_apply,
-      Function.comp_def, Prod.map_fst, id_eq] using variation
+      Function.comp_def, Prod.map_fst, id_eq, evalDist_apply_singleton] using variation
   exact (ENNReal.ofReal_le_ofReal projected).trans
     (canonical_replay_distance_bound decode c fallback adversary qHash qSeal qRaw
       hashBound sealBound rawBound small)

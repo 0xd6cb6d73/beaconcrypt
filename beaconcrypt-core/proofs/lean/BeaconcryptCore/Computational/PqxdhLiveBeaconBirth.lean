@@ -246,11 +246,13 @@ theorem step_uniform
       (if IsBirth request then 32 + (qPrekey + qKeygen) else qOwner) := by
   cases request with
   | create binding =>
-    simpa only [impl, StateT.run, IsBirth, if_true, bind_pure_comp,
+    have birth : IsBirth (Request.create binding : Request localSpec) := True.intro
+    simpa only [impl, StateT.run, ite_eq_left birth, bind_pure_comp,
       IsTotalQueryBound, isQueryBound_map_iff] using
       create_uniform baseImpl primitives kem setup qPrekey qKeygen prekeyBound keygenBound
   | owner index request =>
-    simp only [impl, StateT.run, IsBirth, if_false]
+    have noBirth : ¬ IsBirth (Request.owner index request : Request localSpec) := id
+    simp only [impl, StateT.run, ite_eq_right noBirth]
     cases present : state.1[index]? with
     | none => trivial
     | some beacon =>
@@ -291,11 +293,20 @@ theorem schedule_uniform {Result : Type}
       rw [← Nat.mul_succ]
       congr 1
       omega
-    cases request <;> simp only [IsBirth, not_true_eq_false, not_false_eq_true,
-      if_true, if_false] at *
-    · have exactBill := predecessor (32 + (qPrekey + qKeygen)) qBirth (by tauto)
+    cases request with
+    | create binding =>
+      have birth : IsBirth (Request.create binding : Request localSpec) := True.intro
+      have noCall : ¬ ¬ IsBirth (Request.create binding : Request localSpec) :=
+        not_not_intro birth
+      simp only [ite_eq_left birth, ite_eq_right noCall]
+      simp only [IsBirth, not_true_eq_false, false_or] at b
+      have exactBill := predecessor (32 + (qPrekey + qKeygen)) qBirth (by tauto)
       omega
-    · have exactBill := predecessor qOwner qCall (by tauto)
+    | owner index request =>
+      have noBirth : ¬ IsBirth (Request.owner index request : Request localSpec) := id
+      simp only [ite_eq_right noBirth, ite_eq_left noBirth]
+      simp only [IsBirth, not_false_eq_true] at c
+      have exactBill := predecessor qOwner qCall (by tauto)
       omega
 
 /-- Only actual construction extends the private owner family; service calls keep its length even when rejected. -/
@@ -352,9 +363,9 @@ theorem schedule_length {Result : Type}
     have rest := ih called.1 _ (births.2 called.1) called.2 result later
     by_cases hit : IsBirth request
     · have positive := births.1.resolve_left (not_not_intro hit)
-      rw [if_pos hit] at step rest
+      rw [ite_eq_left hit] at step rest
       omega
-    · rw [if_neg hit] at step rest
+    · rw [ite_eq_right hit] at step rest
       omega
 
 /-- Any actually present owner selected after the schedule lies in its derived finite catalogue. Public-key collisions are irrelevant to index allocation and are not excluded. -/

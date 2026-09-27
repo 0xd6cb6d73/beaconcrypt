@@ -33,8 +33,11 @@ def mapRefined {SendChain ReceiveChain Material Value : Type} (interpret : Mater
 theorem mapArray_index {Material Value : Type} {size : Std.Usize} (interpret : Material → Value)
     (array : Std.Array Material size) (index : Std.Usize) :
     Array.index_usize (mapArray interpret array) index = interpret <$> Array.index_usize array index := by
-  simp only [Array.index_usize, mapArray, Array.getElem?_Usize_eq, List.getElem?_map]
-  cases found : array.val[index.val]? <;> rfl
+  have indexed : (mapArray interpret array)[index]? = interpret <$> array[index]? := by
+    change (array.val.map interpret)[index.val]? = interpret <$> array.val[index.val]?
+    exact List.getElem?_map
+  simp only [Array.index_usize, indexed]
+  cases found : array[index]? <;> rfl
 
 /-- The actual tagged lookup commutes with arbitrary material interpretation, including rejection. -/
 theorem receive_key_map {SendChain ReceiveChain Material Value : Type} (interpret : Material → Value)
@@ -138,8 +141,11 @@ theorem mapArray_update {Material Value : Type} {size : Std.Usize} (interpret : 
     (array : Std.Array Material size) (index : Std.Usize) (value : Material) :
     Std.Array.update (mapArray interpret array) index (interpret value) =
       mapArray interpret <$> Std.Array.update array index value := by
-  simp only [Std.Array.update, mapArray, Array.getElem?_Usize_eq, List.getElem?_map]
-  cases found : array.val[index.val]? with
+  have indexed : (mapArray interpret array)[index]? = interpret <$> array[index]? := by
+    change (array.val.map interpret)[index.val]? = interpret <$> array.val[index.val]?
+    exact List.getElem?_map
+  simp only [Std.Array.update, indexed]
+  cases found : array[index]? with
   | none => rfl
   | some original =>
     change RustM.ok _ = RustM.ok _

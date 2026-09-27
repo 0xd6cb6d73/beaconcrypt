@@ -39,6 +39,7 @@ noncomputable def sourceImpl {Metadata Auxiliary : Type} {serverCount beaconCoun
       let reply := nativeRead read (some state.1.1.owner.kernel)
       pure (reply, (state.1, RawCtxProtocolReveals.note (observation owner read reply) state.2))
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The full original fixed-source record/public/read step is recovered by removing only private slots and added candidate/exposure instrumentation. -/
 theorem source_step {Metadata Auxiliary : Type} {serverCount beaconCount : Nat}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

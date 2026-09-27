@@ -66,6 +66,7 @@ noncomputable def post : QueryImpl (PqxdhInitialGenericPost.Spec extra S B)
   PqxdhInitialGenericPost.post (PqxdhInitialGenericRecords.records calls publicCalls reader sender route decode)
     selector (PqxdhInitialGenericBeacon.owner pre finishCalls application initial decode)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Any original post request preserves the selected terminal Beacon, including repeated finish attempts and selector calls with arbitrary effects on their private state. -/
 theorem step_closed (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
     (entry : PqxdhInitialGenericPost.State Kernel M P I D K A N S B) (selected : Fin B)

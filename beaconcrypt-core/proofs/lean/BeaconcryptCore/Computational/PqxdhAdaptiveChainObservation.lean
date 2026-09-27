@@ -84,8 +84,11 @@ theorem sourceView_tapeView {Result : Type} (source : FixedHkdfSha512NoSaltSourc
       have positive : 0 < budget := (or_iff_right (by simp [IsNext])).mp bound.1
       obtain ⟨remaining, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt positive)
       apply ih
-      simpa [IsNext] using bound.2 (material (PqxdhJointKdf.productionStream source.crypto
-        (FixedHkdfDomain.ratchet.address chain.toList)))
+      convert bound.2 (material (PqxdhJointKdf.productionStream source.crypto
+        (FixedHkdfDomain.ratchet.address chain.toList))) using 1
+      · change next (id _) = next _
+        rfl
+      · simp [IsNext]
 
 /-- The finite-history observer executes the original adaptive client and its complete final observation. -/
 def tapeObserver {Context Result : Type} (fallback : Material)
@@ -133,12 +136,12 @@ theorem sourceGame_eq_hybrid {Context Result : Type} (source : FixedHkdfSha512No
 theorem final_hybrid_eq_eager {Context Result : Type} (source : FixedHkdfSha512NoSaltSource)
     (fallback : Material) (sample : ProbComp Context) (client : Context → OracleComp ChainSpec Result)
     (finish : Context → Result × Nat → ProbComp Bool) (budget : Nat) :
-    𝒟[hybrid source sample (tapeObserver fallback client finish) budget budget] =
-      𝒟[eagerGame fallback sample client finish budget] := by
+    𝒮[hybrid source sample (tapeObserver fallback client finish) budget budget] =
+      𝒮[eagerGame fallback sample client finish budget] := by
   simp only [hybrid, eagerGame, tapeObserver, Nat.sub_self, realEvolution, List.append_nil]
-  refine evalDist_bind_congr' sample (fun context => ?_)
-  refine evalDist_bind_congr' (sampleMaterials budget) (fun records => ?_)
-  exact OracleComp.DeferredSampling.evalDist_bind_const_neverFails ($ᵗ RootOutput) (by simp) _
+  refine evalSPMF_bind_congr' sample (fun context => ?_)
+  refine evalSPMF_bind_congr' (sampleMaterials budget) (fun records => ?_)
+  exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp) _
 
 /-- Adaptive stopping incurs no selection loss: the same budget-many ordered Extract/HMAC reductions apply. -/
 theorem adaptive_advantage_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -150,7 +153,7 @@ theorem adaptive_advantage_bound {Context Result : Type} (source : FixedHkdfSha5
       (eagerGame fallback sample client finish budget) ≤
       ∑ cut ∈ Finset.range budget,
         hopLoss source hmac sample (tapeObserver fallback client finish) cut (budget - cut - 1) := by
-  have random := OracleComp.probOutput_congr (x := true) rfl
+  have random := evalDist_eq_of_evalSPMF_eq _ _
     (final_hybrid_eq_eager source fallback sample client finish budget)
   simpa only [sourceGame_eq_hybrid source fallback sample client finish budget bound,
     ProbComp.boolDistAdvantage, random] using
@@ -370,7 +373,6 @@ info: 'BeaconcryptCore.Computational.PqxdhAdaptiveChainObservation.tapeObserver_
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhAdaptiveChainObservation.sourceImpl_requests' depends on axioms: [propext,
- Classical.choice,
  Quot.sound]
 -/
 #guard_msgs in

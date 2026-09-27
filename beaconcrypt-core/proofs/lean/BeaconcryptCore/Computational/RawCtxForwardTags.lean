@@ -124,6 +124,6 @@ end BeaconcryptCore.Computational.RawCtxForwardTags
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxForwardTags.lift_all
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxForwardTags.scan_all' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxForwardTags.scan_all' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxForwardTags.scan_all

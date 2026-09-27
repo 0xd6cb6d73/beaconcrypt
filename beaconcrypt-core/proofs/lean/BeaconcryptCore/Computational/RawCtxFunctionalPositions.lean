@@ -117,6 +117,8 @@ theorem receive_erase (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT
     Prod.map Located.kernel id <$> (calls cr execute opening sealing).receive entry target context =
       simulateQ (bareReceiveImpl execute opening) (RawCtxOwnerOracle.receive entry.kernel target context) := by
   funext state
+  change (Prod.map Located.kernel id <$> (calls cr execute opening sealing).receive entry target context).run state = _
+  rw [StateT.run_map]
   change (Prod.map (Prod.map Located.kernel id) id) <$> ((calls cr execute opening sealing).receive entry target context).run state = _
   simp only [calls, StateT.run, Functor.map_map, Prod.map_apply, id_eq]
   exact RawCtxSupportedSample.erase _ _ _
@@ -129,6 +131,8 @@ theorem send_erase (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT) (
     Prod.map Located.kernel id <$> (calls cr execute opening sealing).send entry context =
       simulateQ (bareSendImpl execute sealing) (RawCtxSourceSend.send entry.kernel context) := by
   funext state
+  change (Prod.map Located.kernel id <$> (calls cr execute opening sealing).send entry context).run state = _
+  rw [StateT.run_map]
   change (Prod.map (Prod.map Located.kernel id) id) <$> ((calls cr execute opening sealing).send entry context).run state = _
   simp only [calls, StateT.run, Functor.map_map, Prod.map_apply, id_eq]
   exact RawCtxSupportedSample.erase _ _ _

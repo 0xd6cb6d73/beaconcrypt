@@ -40,6 +40,7 @@ def projected (entry : Entry) (target : RootOutput) :
 theorem projection_parts (entry : Entry) (target : RootOutput) (projection : JointKdfProjection) :
     projection.project (realize entry target) = projected entry target projection := by
   cases projection <;> simp [realize, projected]
+  all_goals rfl
 
 noncomputable def publicReply (source : FixedHkdfSha512NoSaltSource) (entry : Entry)
     (target : RootOutput) (query : JointKdfViewQuery) : JointKdfViewSpec.Range query :=
@@ -72,6 +73,7 @@ theorem public_exposed (source : FixedHkdfSha512NoSaltSource) (entry : Entry)
   cases projection <;> simp_all [publicExposure, publicReply, projected]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Retaining a real initializer response leaves every public evaluation exactly the fixed source. -/
 theorem public_source (source : FixedHkdfSha512NoSaltSource) (address : JointKdfAddress)
     (query : JointKdfViewQuery) :

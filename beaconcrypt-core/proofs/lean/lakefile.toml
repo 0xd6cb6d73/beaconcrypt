@@ -17,7 +17,7 @@ subDir = "backends/lean"
 [[require]]
 name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4.git"
-rev = "v4.31.0"
+rev = "v4.34.0"
 
 [[require]]
 name = "Hax"
@@ -27,4 +27,4 @@ rev = "v0.3.17"
 [[require]]
 name = "VCVio"
 git = "https://github.com/Verified-zkEVM/VCVio.git"
-rev = "cbd4144b51d92da00dd50f05e068b2348fa6e529"
+rev = "98dc1089129086b776129c79d88c0c561b8d8d1a"

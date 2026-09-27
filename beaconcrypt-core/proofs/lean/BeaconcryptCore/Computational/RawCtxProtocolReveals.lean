@@ -184,6 +184,7 @@ theorem chain_reveal_exact {Metadata PeerMetadata Identity DhPair KemPair : Type
       kernel.receive_chain = ok kernel.refined.receive_chain := by
   simp [reveal, selected, ConcreteRatchetKernel.send_chain, ConcreteRatchetKernel.receive_chain,
     refined.RefinedRatchet.impl.send_chain, refined.RefinedRatchet.impl.receive_chain]
+  exact ⟨rfl, rfl⟩
 
 /-- A disclosed skipped result is the actual guarded lookup, including absent or mismatched material. -/
 theorem skipped_reveal_exact {Metadata PeerMetadata Identity DhPair KemPair : Type}
@@ -202,7 +203,8 @@ theorem missing_reveals {Metadata PeerMetadata Identity DhPair KemPair : Type}
     (missing : selectedKernel owner roles = none) (sequence : Std.U64) :
     reveal (.sendChain owner) roles = .None ∧ reveal (.receiveChain owner) roles = .None ∧
       reveal (.skippedKey owner sequence) roles = .None := by
-  simp only [reveal, missing, and_self]
+  simp only [reveal, missing]
+  exact ⟨rfl, rfl, rfl⟩
 
 /-- Actual source compromise reads also preserve the complete shared auxiliary/cache state. -/
 theorem source_reveal_step {Metadata PeerMetadata Identity DhPair KemPair Auxiliary : Type}

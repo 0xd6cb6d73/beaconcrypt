@@ -37,17 +37,18 @@ theorem route_step
   cases request with
   | inl request =>
       simp only [route, RoutedClass]
-      split <;> simp_all
+      by_cases selected : predicate request <;> simp [selected]
   | inr request =>
       by_cases same : request.ciphertext = challenge
-      · simp only [route, same, if_true, pure_bind]
+      · simp only [route, same, ite_true, pure_bind]
         trivial
-      · simp only [route, same, if_false, RoutedClass]
-        change (((MlKemCCAOracleSpec baseSpec).query (.inr request.ciphertext) :
-          OracleComp (MlKemCCAOracleSpec baseSpec) (Option MlKemSharedSecret)) >>=
-          fun (recovered : Option MlKemSharedSecret) =>
-            pure (recovered.map (productionHiddenRoot source request.coordinates))).IsQueryBoundP
-              predicate (if predicate (.inr request.ciphertext) then 1 else 0)
+      · simp only [route, same, ite_false, RoutedClass]
+        change OracleComp.IsQueryBoundP
+          (((MlKemCCAOracleSpec baseSpec).query (.inr request.ciphertext) :
+            OracleComp (MlKemCCAOracleSpec baseSpec) (Option MlKemSharedSecret)) >>=
+            fun (recovered : Option MlKemSharedSecret) =>
+              pure (recovered.map (productionHiddenRoot source request.coordinates)))
+          predicate (if predicate (.inr request.ciphertext) then 1 else 0)
         simp only [isQueryBoundP_query_bind_iff, isQueryBoundP_pure]
         split <;> simp_all
 
@@ -69,9 +70,9 @@ theorem route_class_bound {Result : Type}
       apply combined.mono
       by_cases selected : RoutedClass predicate request
       · have positive := bounded.1.resolve_left (not_not.mpr selected)
-        simp only [selected, if_true]
+        simp only [selected, ite_true]
         omega
-      · simp only [selected, if_false, Nat.zero_add, le_refl]
+      · simp only [selected, ite_false, Nat.zero_add, le_refl]
 
 /-- A class of original public CCA requests; private requests do not belong to it. -/
 def PublicClass (predicate : (MlKemCCAOracleSpec baseSpec).Domain → Prop) :
@@ -197,23 +198,49 @@ theorem actual_step_uniform
        (if PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery request then qBase else 0) +
        (if RoutedClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery request then qDecap else 0)) := by
   rcases request with ((coin | query) | ciphertext) | privateRequest
-  all_goals simp only [actualImpl, PublicClass, RoutedClass, IsMlKemUniformQuery, IsMlKemBaseQuery,
-    IsMlKemLogicalDecapsulationQuery, if_true, if_false, Nat.zero_add, Nat.add_zero]
-  · change (simulateQ (kemAmbientImpl baseImpl)
+  · simp only [
+      ite_eq_left (show PublicClass (baseSpec := baseSpec) IsMlKemUniformQuery
+        (.inl (.inl (.inl coin))) from True.intro),
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery
+        (.inl (.inl (.inl coin))) from id),
+      ite_eq_right (show ¬ RoutedClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery
+        (.inl (.inl (.inl coin))) from id), Nat.add_zero]
+    change (simulateQ (kemAmbientImpl baseImpl)
       ((unifSpec + baseSpec).query (.inl coin))).IsTotalQueryBound 1
     rw [simulateQ_spec_query]
     exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
-  · change (simulateQ (kemAmbientImpl baseImpl)
+  · simp only [
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemUniformQuery
+        (.inl (.inl (.inr query))) from id),
+      ite_eq_left (show PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery
+        (.inl (.inl (.inr query))) from True.intro),
+      ite_eq_right (show ¬ RoutedClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery
+        (.inl (.inl (.inr query))) from id), Nat.zero_add, Nat.add_zero]
+    change (simulateQ (kemAmbientImpl baseImpl)
       ((unifSpec + baseSpec).query (.inr query))).IsTotalQueryBound qBase
     rw [simulateQ_spec_query]
     exact baseBound query
-  · change (simulateQ (kemAmbientImpl baseImpl)
+  · simp only [
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemUniformQuery
+        (.inl (.inr ciphertext)) from id),
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery
+        (.inl (.inr ciphertext)) from id),
+      ite_eq_left (show RoutedClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery
+        (.inl (.inr ciphertext)) from True.intro), Nat.zero_add]
+    change (simulateQ (kemAmbientImpl baseImpl)
       (if ciphertext = challenge then pure none else kem.decaps secret ciphertext)).IsTotalQueryBound qDecap
     split
     · simp only [simulateQ_pure]
       trivial
     · exact decapBound ciphertext
-  · simpa only [simulateQ_bind, simulateQ_pure, bind_pure_comp, simulateQ_map, IsTotalQueryBound,
+  · simp only [
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemUniformQuery
+        (.inr privateRequest) from id),
+      ite_eq_right (show ¬ PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery
+        (.inr privateRequest) from id),
+      ite_eq_left (show RoutedClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery
+        (.inr privateRequest) from True.intro), Nat.zero_add]
+    simpa only [actualImpl, simulateQ_bind, simulateQ_pure, bind_pure_comp, simulateQ_map, IsTotalQueryBound,
       isQueryBound_map_iff] using decapBound privateRequest.ciphertext
 
 /-- The actual adaptive source interpreter has its own sampling ledger; no cost is transported through evaluated distribution equality. -/

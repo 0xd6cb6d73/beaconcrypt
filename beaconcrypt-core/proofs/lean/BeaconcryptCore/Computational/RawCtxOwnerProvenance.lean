@@ -179,7 +179,7 @@ theorem raw_success {Metadata PrimitiveState : Type} {ι : Type} {base : OracleS
   unfold rawGame rawReceive StateT.run at hsupport
   split at hsupport
   all_goals repeat' split at hsupport
-  all_goals dsimp only at hsupport
+  all_goals try unfold StateT.run at hsupport
   all_goals try split at hsupport
   all_goals change result ∈ support ((simulateQ impl _).run primitive) at hsupport
   all_goals simp only [simulateQ_bind, simulateQ_pure, StateT.run_bind, StateT.run_pure,

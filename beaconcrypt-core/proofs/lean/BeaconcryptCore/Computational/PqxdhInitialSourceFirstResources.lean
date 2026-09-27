@@ -132,9 +132,9 @@ theorem bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (fun context output => (observed_bounds source writer sender route decode prior qPost qCheck qKnown qPre qApplication
       qSelector qAux caps context output).2)
   rw [actual_erase, random_erase] at result
-  have realLaw := OracleComp.probOutput_congr (x := true) rfl
+  have realLaw := congrArg (fun μ : MeasureTheory.Measure Bool => μ {true})
     (PqxdhInitialSourceFirstSecrecy.actual_source source writer sender route decode prior)
-  have randomLaw := OracleComp.probOutput_congr (x := true) rfl
+  have randomLaw := congrArg (fun μ : MeasureTheory.Measure Bool => μ {true})
     (PqxdhInitialSourceFirstSecrecy.random_source source writer sender route decode prior positive)
   simpa only [ProbComp.boolDistAdvantage, ← realLaw, ← randomLaw, loss, observer, aliasTester] using result
 

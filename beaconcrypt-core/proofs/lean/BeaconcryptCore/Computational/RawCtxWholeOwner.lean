@@ -153,7 +153,7 @@ theorem rawGame_publication {Metadata PrimitiveState : Type} {ι : Type} {base :
           (pure (publish state (state.owner.kernel, .None)))).run primitive) at hsupport
       simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at hsupport
       exact ⟨state.owner.kernel, .None, congrArg Prod.fst hsupport, fun _ => rfl⟩
-    · dsimp only at hsupport
+    · unfold StateT.run at hsupport
       split at hsupport
       · rw [simulateQ_bind] at hsupport
         change result ∈ support (StateT.run _ primitive) at hsupport

@@ -68,6 +68,7 @@ theorem publicEvaluation_advantage (source : FixedHkdfSha512NoSaltSource)
       (publicEvaluationAdversary source address) =
       |1 - ((Fintype.card JointKdfStream : ℝ≥0∞)⁻¹).toReal| := by
   unfold fixedHkdfSha512JointStreamAdvantage ProbComp.boolDistAdvantage
+  rw [evalDist_apply_singleton, evalDist_apply_singleton]
   rw [publicEvaluation_random_probability]
   simp [fixedHkdfSha512JointStreamRealExp, publicEvaluationAdversary, publicEvaluation_real]
 

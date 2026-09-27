@@ -96,6 +96,7 @@ def prepare {Message Root : Type} (reader : Reader Message Root)
           let context ← record.OpenFrameContext.from_frame payload ad sender
           ok (projectOption (fun context => (⟨⟨reader.sequence root, sender, sliceBytes payload⟩, context⟩ : Prepared)) context)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The extracted framing and payload gates instantiate the complete computational prelude, including every rejection. -/
 theorem prepare_exact {Message Root : Type} (reader : Reader Message Root)
     (ad : Std.Array Std.U8 153#usize) (expected : Std.U64) (raw : Pqxdh.Bytes) :

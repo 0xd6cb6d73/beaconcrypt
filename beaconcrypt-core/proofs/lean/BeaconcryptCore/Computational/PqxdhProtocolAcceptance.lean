@@ -37,9 +37,26 @@ theorem coordinates_valid (c : Pqxdh.Crypto) (server : Pqxdh.ServerState)
     (valid : rootFailure c server.ikSk ephemeral.toList identity keys.prekey keys.oneTime = none) :
     Pqxdh.dhNonZero (absDHs (shared
       (serverCoordinates c server.ikSk ephemeral.toList identity keys.prekey keys.oneTime) secret)) := by
-  cases conversion : c.xpkConv identity.toList
-  all_goals simp_all [rootFailure, absDHs, shared, serverCoordinates,
-    PqxdhRootTableInitialization.rootArray_bytes, Pqxdh.serverDHs]
+  cases conversion : c.xpkConv identity.toList with
+  | none => simp [rootFailure, conversion] at valid
+  | some converted =>
+      have nonzero : Pqxdh.dhNonZero (Pqxdh.serverDHs c server.ikSk ephemeral.toList converted
+          keys.prekey.toList keys.oneTime.toList) := by
+        simpa [rootFailure, conversion] using valid
+      have coordinatesEq :
+          ((serverCoordinates c server.ikSk ephemeral.toList identity keys.prekey keys.oneTime).dh1.toList,
+            (serverCoordinates c server.ikSk ephemeral.toList identity keys.prekey keys.oneTime).dh2.toList,
+            (serverCoordinates c server.ikSk ephemeral.toList identity keys.prekey keys.oneTime).dh3.toList,
+            (serverCoordinates c server.ikSk ephemeral.toList identity keys.prekey keys.oneTime).dh4.toList) =
+            Pqxdh.serverDHs c server.ikSk ephemeral.toList converted keys.prekey.toList
+              keys.oneTime.toList := by
+        simp [serverCoordinates, conversion, Pqxdh.serverDHs]
+      simp only [absDHs, shared]
+      rw [PqxdhRootTableInitialization.rootArray_bytes,
+        PqxdhRootTableInitialization.rootArray_bytes,
+        PqxdhRootTableInitialization.rootArray_bytes,
+        PqxdhRootTableInitialization.rootArray_bytes, coordinatesEq]
+      exact nonzero
 
 variable {M P I D K A : Type} {S B : Nat}
 

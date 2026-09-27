@@ -54,25 +54,25 @@ theorem full_continuation (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (prior : ProbComp Context) (input : Context → Input M P I D K A S B)
     (aux : Context → QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (sender : M → Std.U64) (next : Context → HmacBlock → Built M P I D K A S B → ProbComp Result) :
-    𝒟[(do let context ← prior
+    𝒮[(do let context ← prior
           let output ← $ᵗ HmacBlock
           let result ← sourceBuilder source writer (aux context) sender (input context) output
           next context output result)] =
-      𝒟[(do let context ← prior
+      𝒮[(do let context ← prior
             let output ← $ᵗ FullOutput
             let result ← selectedBuilder source writer (aux context) sender (input context)
               (PqxdhOrderedChainHybrids.material output).1 (PqxdhOrderedChainHybrids.nextChain output)
               (PqxdhOrderedChainHybrids.material output).2
             next context (join (input context).second (PqxdhOrderedChainHybrids.material output).1
               (PqxdhOrderedChainHybrids.nextChain output)) result)] := by
-  apply evalDist_bind_congr' prior
+  apply evalSPMF_bind_congr' prior
   intro context
   have halves := initial_observed (input context).second
     (fun other target => do
       let result ← sourceBuilder source writer (aux context) sender (input context) (join (input context).second other target)
       next context (join (input context).second other target) result)
   simp only [join_parts] at halves
-  refine halves.trans (evalDist_bind_congr' ($ᵗ FullOutput) (fun output => ?_))
+  refine halves.trans (evalSPMF_bind_congr' ($ᵗ FullOutput) (fun output => ?_))
   rw [source_halves source writer (aux context) sender (input context) _ _ (PqxdhOrderedChainHybrids.material output).2]
 
 /-- The literal actual source builder pays its derived one-commitment plus five-auxiliary-call bill for every supplied64 response. -/

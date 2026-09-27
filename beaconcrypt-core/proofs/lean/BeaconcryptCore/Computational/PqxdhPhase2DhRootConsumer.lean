@@ -82,6 +82,7 @@ theorem root_source (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
   have inputEq := beacon_source dh domain seed scalar pending.collected references converted
     original.candidate.root_key_input related.2.2.2.2
   simp only [root, simulateQ_map, simulateQ_spec_query, sourceImpl]
+  rw [StateT.run_map]
   change (fun result => (Option.map PqxdhRootTableInitialization.rootArray result.1, result.2)) <$>
     (sourceRoot source hmac joint dh seed scalar (beaconMessage (challenge joint dh seed scalar) pending.collected)).run state = _
   simp only [sourceRoot, inputEq, StateT.run, map_pure, Option.map_some, native_root]

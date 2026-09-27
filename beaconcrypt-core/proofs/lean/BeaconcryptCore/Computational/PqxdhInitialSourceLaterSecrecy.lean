@@ -110,7 +110,8 @@ theorem normalized_bound (hmac : HmacSha512) (correct : SourceFullCorrect source
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth
   have laterEq := PqxdhInitialSourceLaterMixture.resumed_normalized source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth
-  simpa only [ProbComp.boolDistAdvantage, probOutput_congr rfl earlyEq, probOutput_congr rfl laterEq] using complete
+  simpa only [ProbComp.boolDistAdvantage, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) earlyEq,
+    congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) laterEq] using complete
 
 include bounded preBound applicationBound selectorBound auxBound in
 /-- One complete later chain transition in the original source experiment reduces to the constructed Extract/HMAC games, two explicit prior-input collision charges and the coefficient-one cached-prefix sum. Both sides use the identical selected publication and actual full-history freshness event. -/

@@ -21,7 +21,21 @@ theorem honest_decapsulation
     (generated : (pk, sk) ∈ support (simulateQ (kemAmbientImpl baseImpl) kem.keygen))
     {ciphertext : MlKem768Ciphertext} {secret : MlKemSharedSecret}
     (encapsulated : (ciphertext, secret) ∈ support (simulateQ (kemAmbientImpl baseImpl) (kem.encaps pk))) :
-    𝒟[simulateQ (kemAmbientImpl baseImpl) (kem.decaps sk ciphertext)] = pure (some secret) := by
+    𝒮[simulateQ (kemAmbientImpl baseImpl) (kem.decaps sk ciphertext)] = pure (some secret) := by
+  letI : MeasurableSpace MlKem768PublicKey := ⊤
+  letI : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace MlKem768Ciphertext := ⊤
+  letI : DiscreteMeasurableSpace MlKem768Ciphertext := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace MlKemSharedSecret := ⊤
+  letI : DiscreteMeasurableSpace MlKemSharedSecret := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace KemSK := ⊤
+  letI : DiscreteMeasurableSpace KemSK := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace (MlKem768PublicKey × KemSK) := ⊤
+  letI : DiscreteMeasurableSpace (MlKem768PublicKey × KemSK) := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⊤
+  letI : DiscreteMeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⟨fun _ => by simp⟩
+  letI : MeasurableSpace (Option MlKemSharedSecret) := ⊤
+  letI : DiscreteMeasurableSpace (Option MlKemSharedSecret) := ⟨fun _ => by simp⟩
   let decapsulation := simulateQ (kemAmbientImpl baseImpl) (kem.decaps sk ciphertext)
   have unique : ∀ recovered ∈ support decapsulation, recovered = some secret := by
     intro recovered supported
@@ -29,26 +43,23 @@ theorem honest_decapsulation
       (runtimeOfImpl (kemAmbientImpl baseImpl))
       (runtimeOfImpl_evalDist_pure _) (runtimeOfImpl_evalDist_bind _) correct
       (pk := pk) (sk := sk)
-      ((mem_support_iff_of_evalDist_eq (show
-        𝒟[simulateQ (kemAmbientImpl baseImpl) kem.keygen] =
-        𝒟[(runtimeOfImpl (kemAmbientImpl baseImpl)).evalDist kem.keygen] from rfl) _).mp generated)
-      ((mem_support_iff_of_evalDist_eq (show
-        𝒟[simulateQ (kemAmbientImpl baseImpl) (kem.encaps pk)] =
-        𝒟[(runtimeOfImpl (kemAmbientImpl baseImpl)).evalDist (kem.encaps pk)] from rfl) _).mp encapsulated)
-      ((mem_support_iff_of_evalDist_eq (show
-        𝒟[decapsulation] =
-        𝒟[(runtimeOfImpl (kemAmbientImpl baseImpl)).evalDist (kem.decaps sk ciphertext)] from rfl) _).mp supported)
+      (by simpa only [runtimeOfImpl_evalDist, evalDist_apply_singleton] using
+        probOutput_ne_zero_of_mem_support generated)
+      (by simpa only [runtimeOfImpl_evalDist, evalDist_apply_singleton] using
+        probOutput_ne_zero_of_mem_support encapsulated)
+      (by simpa only [runtimeOfImpl_evalDist, evalDist_apply_singleton] using
+        probOutput_ne_zero_of_mem_support supported)
   have certain : Pr[= some secret | decapsulation] = 1 :=
     probOutput_eq_one_of_support_subset_singleton (by simp) unique
-  rw [← evalDist_pure (m := ProbComp) (some secret)]
-  apply evalDist_ext
+  apply SPMF.ext
   intro recovered
+  change Pr[= recovered | decapsulation] = (pure (some secret) : SPMF _) recovered
   by_cases same : recovered = some secret
   · subst recovered
-    simpa only [probOutput_pure_self] using certain
+    simpa only [SPMF.pure_apply_self] using certain
   · have absent : Pr[= recovered | decapsulation] = 0 :=
       (probOutput_eq_zero_iff _ _).mpr (fun supported => same (unique _ supported))
-    simpa only [probOutput_pure, if_neg same] using absent
+    simpa only [SPMF.pure_apply, if_neg same] using absent
 
 /-- A functional primitive implementation uses no ambient oracle effects during decapsulation. -/
 structure FunctionalDecapsulation
@@ -68,9 +79,9 @@ theorem honest_decapsulation_program
     (encapsulated : (ciphertext, secret) ∈ support (simulateQ (kemAmbientImpl baseImpl) (kem.encaps pk))) :
     kem.decaps sk ciphertext = pure (some secret) := by
   have evaluated := honest_decapsulation baseImpl kem correct generated encapsulated
-  simp only [functional.exact, simulateQ_pure, evalDist_pure] at evaluated
-  have values := congrArg support evaluated
-  simp only [support_pure, Set.singleton_eq_singleton_iff] at values
+  simp only [functional.exact, simulateQ_pure, evalSPMF_pure] at evaluated
+  have values := congrArg SPMF.support evaluated
+  simp only [SPMF.support_pure, Set.singleton_eq_singleton_iff] at values
   rw [functional.exact, values]
 
 /-- A private protocol request carries the actual ciphertext and all four actual DH coordinates. -/
@@ -191,7 +202,6 @@ theorem route_challenge (source : FixedHkdfSha512NoSaltSource)
     route (baseSpec := baseSpec) source challenge supplied (.inr ⟨challenge, coordinates⟩) =
       pure (some (productionHiddenRoot source coordinates supplied)) := by
   simp only [route, if_true, pure_bind, Option.map_some]
-  rfl
 
 /-- The complete private protocol context and continuation are internal to the reduction. Only the eventual Boolean is the game observation. -/
 structure Protocol (baseSpec : OracleSpec ι) where
@@ -241,16 +251,17 @@ theorem native_eq_real
       oneKeyBranch kem (runtimeOfImpl (kemAmbientImpl baseImpl)) (reduction source kem protocol) true := by
   simp only [nativeMain, oneKeyBranch, runtimeOfImpl_evalDist, oneKeyBranchMain, oneKeyPrefix,
     oneKeyFinish, reduction, if_true, simulateQ_bind, pure_bind, bind_assoc]
-  apply evalDist_bind_congr
+  apply evalDist_eq_of_evalSPMF_eq
+  apply evalSPMF_bind_congr
   rintro ⟨publicKey, secretKey⟩ generated
-  apply evalDist_bind_congr
-  intro state _
-  apply evalDist_bind_congr
+  apply evalSPMF_bind_congr'
+  intro state
+  apply evalSPMF_bind_congr
   rintro ⟨ciphertext, secret⟩ encapsulated
-  apply evalDist_bind_congr
-  intro unused _
+  apply evalSPMF_bind_congr'
+  intro unused
   have agreement := honest_decapsulation_program baseImpl kem functional correct generated encapsulated
-  apply congrArg evalDist
+  apply congrArg evalSPMF
   apply congrArg (simulateQ (kemAmbientImpl baseImpl))
   exact (route_complete source kem secretKey ciphertext secret agreement _).symm
 
@@ -291,11 +302,11 @@ theorem correlated_indCCA
     (protocol : Protocol baseSpec) :
     kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
       (reduction source kem protocol).toINDCCA =
-      SPMF.boolDistAdvantage
-        (𝒟[simulateQ (kemAmbientImpl baseImpl)
-          (nativeMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)])
-        (𝒟[simulateQ (kemAmbientImpl baseImpl)
-          (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)]) := by
+      (simulateQ (kemAmbientImpl baseImpl)
+        (nativeMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)).boolDistAdvantage
+        (simulateQ (kemAmbientImpl baseImpl)
+          (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)) := by
+  simp only [ProbComp.boolDistAdvantage]
   rw [native_eq_real source baseImpl kem functional correct, random_eq_branch]
   exact oneKey_indCCAAdvantage_eq_branchDist kem (runtimeOfImpl (kemAmbientImpl baseImpl))
     (reduction source kem protocol)
@@ -323,15 +334,16 @@ theorem source_eq_native
     𝒟[simulateQ (kemAmbientImpl baseImpl) (sourceMain source kem protocol)] =
       𝒟[simulateQ (kemAmbientImpl baseImpl)
         (nativeMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [sourceMain, nativeMain, simulateQ_bind, runtimeOfImpl_liftProbComp,
     simulateQ_kemAmbient_liftProbComp]
-  apply evalDist_bind_congr
-  rintro ⟨publicKey, secretKey⟩ _
-  apply evalDist_bind_congr
-  intro state _
-  apply evalDist_bind_congr
-  rintro ⟨ciphertext, secret⟩ _
-  apply evalDist_ext
+  apply evalSPMF_bind_congr'
+  rintro ⟨publicKey, secretKey⟩
+  apply evalSPMF_bind_congr'
+  intro state
+  apply evalSPMF_bind_congr'
+  rintro ⟨ciphertext, secret⟩
+  apply evalSPMF_ext
   intro decision
   simp only [probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
 
@@ -345,10 +357,10 @@ theorem source_correlated_indCCA
     (protocol : Protocol baseSpec) :
     kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
       (reduction source kem protocol).toINDCCA =
-      SPMF.boolDistAdvantage
-        (𝒟[simulateQ (kemAmbientImpl baseImpl) (sourceMain source kem protocol)])
-        (𝒟[simulateQ (kemAmbientImpl baseImpl)
-          (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)]) := by
+      (simulateQ (kemAmbientImpl baseImpl) (sourceMain source kem protocol)).boolDistAdvantage
+        (simulateQ (kemAmbientImpl baseImpl)
+          (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)) := by
+  simp only [ProbComp.boolDistAdvantage]
   rw [source_eq_native]
   exact correlated_indCCA source baseImpl kem functional correct protocol
 

@@ -230,10 +230,11 @@ theorem nativeTarget_eq_total
       (nativeTargetContinuation kem parameters attachedVerify primitives setup observer prepared)] =
       𝒟[evalKem baseImpl kem secret
         (totalTargetContinuation kem parameters attachedVerify primitives setup observer prepared)] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [nativeTargetContinuation, totalTargetContinuation, evalKem_bind, evalKem_ambient]
-  apply evalDist_bind_congr'
+  apply evalSPMF_bind_congr'
   intro ephemeral
-  rw [evalDist_bind, compatible _ supported, ← evalDist_bind]
+  rw [evalSPMF_bind, compatible _ supported, ← evalSPMF_bind]
   simp only [bind_map_left]
 
 /-- Only the internally recognized unchanged target uses the ordinary total KEM presentation. Arbitrary selected public keys still use the optional source operation. -/
@@ -258,16 +259,18 @@ theorem actualGame_eq_total
     𝒟[actualGame baseImpl kem parameters attachedVerify primitives setup selector observer] =
       𝒟[continuedSource attachedVerify primitives baseImpl kem setup selector
         (totalNext kem parameters attachedVerify primitives setup observer) false] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [actualGame, continuedSource, program_complete, bind_assoc, pure_bind]
-  apply evalDist_bind_congr'
+  apply evalSPMF_bind_congr'
   intro seed
-  apply evalDist_bind_congr
+  apply evalSPMF_bind_congr
   intro generated generatedSupport
-  apply evalDist_bind_congr'
+  apply evalSPMF_bind_congr'
   intro selected
   simp only [nativeNext, totalNext]
   split
-  · apply nativeTarget_eq_total baseImpl kem parameters compatible attachedVerify primitives setup observer
+  · apply evalSPMF_eq_of_evalDist_eq
+    apply nativeTarget_eq_total baseImpl kem parameters compatible attachedVerify primitives setup observer
     exact generate_key_support baseImpl kem setup _ generated generatedSupport
   · rfl
 
@@ -388,14 +391,15 @@ theorem dispatch_complete_eq_source
           target secret mode)] =
       𝒟[evalKem baseImpl kem secret
         (filteredNext kem parameters attachedVerify primitives setup observer prepared)] := by
+  apply evalDist_eq_of_evalSPMF_eq
   by_cases bad : changedBit (some prepared.1, prepared.2) = true
-  · apply evalDist_ext
+  · apply evalSPMF_ext
     intro output
     simp [dispatch, filteredNext, bad, evalKem, complete, rootProtocol]
   · by_cases eligible : targetEligible parameters prepared = true
-    · simp only [dispatch, filteredNext, bad, Bool.false_eq_true, if_false, eligible, if_true,
+    · simp only [dispatch, filteredNext, bad, Bool.false_eq_true, ite_false, eligible, ite_true,
         totalNext, totalTargetContinuation, evalKem_bind, evalKem_ambient, bind_assoc]
-      apply evalDist_bind_congr'
+      apply evalSPMF_bind_congr'
       intro ephemeral
       cases failure : rootFailure parameters.source.crypto parameters.server.ikSk ephemeral.toList
         prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.before.publicKey
@@ -406,12 +410,12 @@ theorem dispatch_complete_eq_source
       | some reason =>
           simp only [evalKem_bind, evalKem_ambient, evalKem_pure, bind_assoc, pure_bind,
             targetAfterEncapsulation, failure]
-          apply evalDist_bind_congr'
+          apply evalSPMF_bind_congr'
           intro encapsulated
-          apply evalDist_ext
+          apply evalSPMF_ext
           intro output
           simp [complete, rootProtocol, probOutput_bind_eq_tsum]
-    · apply evalDist_ext
+    · apply evalSPMF_ext
       intro output
       simp [dispatch, filteredNext, bad, eligible, totalNext, evalKem, complete,
         rootProtocol, probOutput_bind_eq_tsum]
@@ -428,12 +432,14 @@ theorem filteredSource_eq_sourceMain
       (filteredNext kem parameters attachedVerify primitives setup observer) false] =
       𝒟[simulateQ (kemAmbientImpl baseImpl) (sourceMain parameters.source kem
         (rootProtocol kem parameters attachedVerify primitives setup selector observer))] := by
+  apply evalDist_eq_of_evalSPMF_eq
   rw [continuedSource_keyfirst]
   simp only [sourceMain, rootProtocol, simulateQ_bind, bind_assoc, evalKem_bind]
-  apply evalDist_bind_congr'
+  apply evalSPMF_bind_congr'
   intro pair
-  apply evalDist_bind_congr
+  apply evalSPMF_bind_congr
   intro prepared supported
+  apply evalSPMF_eq_of_evalDist_eq
   simpa only [complete, rootProtocol, simulateQ_bind, evalKem, localKemPreChallengeImpl] using
     (dispatch_complete_eq_source baseImpl kem parameters attachedVerify primitives setup selector
     observer prepared pair.1 pair.2
@@ -497,7 +503,7 @@ theorem authentication_hop
     rw [continuedSource_filtered]
     exact auth
   have output := (abs_probOutput_toReal_sub_le_tvDist _ _).trans totalBound
-  simpa only [ProbComp.boolDistAdvantage, probOutput_def,
+  simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton, probOutput_def,
     actualGame_eq_total baseImpl kem parameters compatible attachedVerify primitives setup selector observer,
     ← filteredSource_eq_sourceMain baseImpl kem parameters attachedVerify primitives setup selector observer] using output
 

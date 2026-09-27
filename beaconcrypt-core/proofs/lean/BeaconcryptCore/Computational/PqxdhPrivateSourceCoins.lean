@@ -93,6 +93,10 @@ theorem compile_step (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Opti
                   rw [compile_create, private_create]
                   simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, simulateQ_pure,
                     StateT.run_pure, bare_create, bind_map_left, map_bind, map_pure]
+                  rw [bind_pure_comp]
+                  apply congrArg (fun transform : IdentitySeed → Option (Nat × PublicIdentity) × BareState count =>
+                    transform <$> sampleSeed)
+                  funext seed
                   rfl
               | service identity request =>
                   simp only [compile, StateT.run, simulateQ_bind, simulateQ_spec_query, simulateQ_pure]
@@ -130,19 +134,22 @@ theorem compile_step_bound (predicate : SourceSpec.Domain → Prop) [DecidablePr
     ((compile query).run transcript).IsQueryBoundP predicate (if predicate (translated query) then 1 else 0) := by
   cases query with
   | inl coin =>
-      change ((SourceSpec.query (.inl (.inl coin)) : OracleComp SourceSpec _) >>= _).IsQueryBoundP _ _
+      change OracleComp.IsQueryBoundP
+        ((SourceSpec.query (.inl (.inl coin)) : OracleComp SourceSpec _) >>= _) _ _
       rw [bind_pure_comp, isQueryBoundP_map_iff, isQueryBoundP_query_iff]
       intro chosen
       simp [translated, chosen]
   | inr request =>
       cases request with
       | inl request =>
-          change ((SourceSpec.query (.inl request) : OracleComp SourceSpec _) >>= _).IsQueryBoundP _ _
+          change OracleComp.IsQueryBoundP
+            ((SourceSpec.query (.inl request) : OracleComp SourceSpec _) >>= _) _ _
           rw [bind_pure_comp, isQueryBoundP_map_iff, isQueryBoundP_query_iff]
           intro chosen
           simp [translated, chosen]
       | inr candidate =>
-          change ((SourceSpec.query (.inr candidate) : OracleComp SourceSpec _) >>= _).IsQueryBoundP _ _
+          change OracleComp.IsQueryBoundP
+            ((SourceSpec.query (.inr candidate) : OracleComp SourceSpec _) >>= _) _ _
           rw [bind_pure_comp, isQueryBoundP_map_iff, isQueryBoundP_query_iff]
           intro chosen
           simp [translated, chosen]

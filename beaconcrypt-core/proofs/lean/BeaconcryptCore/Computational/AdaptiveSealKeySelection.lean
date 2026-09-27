@@ -110,8 +110,8 @@ theorem prepared_run {count : Nat} (target : Fin (count + 1)) (targetReal : Bool
 theorem source_prepared_selection {count : Nat} (target : Fin (count + 1))
     (targetReal : Bool) (real : Fin count → Bool) (c : Pqxdh.Crypto)
     {Result : Type} (client : OracleComp (Spec (count + 1)) Result) :
-    𝒟[sourceGame (join target targetReal real) c client] =
-      𝒟[do
+    𝒮[sourceGame (join target targetReal real) c client] =
+      𝒮[do
         let key ← $ᵗ CtxKey
         reconstruct target <$> (simulateQ (localImpl targetReal c key)
           (prepared target real c client)).run emptyModifiedNonceAeadHandlerState] := by

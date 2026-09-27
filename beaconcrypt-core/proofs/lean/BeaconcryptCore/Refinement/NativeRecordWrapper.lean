@@ -28,6 +28,7 @@ def PayloadView (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
   context.commitment.val = payload.val.drop (payload.val.length - 64) ∧
   context.associated_data = ad ∧ context.sender_kid = sender
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Every payload returns normally and retains its exact original slices and metadata, or rejects at the strict length boundary. -/
 theorem payload_views (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
     (sender : Std.U64) :

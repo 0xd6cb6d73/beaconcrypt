@@ -32,8 +32,13 @@ theorem root_free (fixed : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl ba
       cases query with
       | inr request => simp [IsPrivateRoot] at noRoot
       | inl query =>
+          have notPrivate : ¬ IsPrivateRoot (baseSpec := baseSpec) (.inl query) := by
+            simp only [IsPrivateRoot, not_false_eq_true]
+          have budget :
+              (if IsPrivateRoot (baseSpec := baseSpec) (.inl query) then 0 - 1 else 0) = 0 :=
+            Lean.Sym.ite_false _ _ _ (ht := notPrivate)
           have remaining : ∀ answer, (next answer).IsQueryBoundP (IsPrivateRoot (baseSpec := baseSpec)) 0 := by
-            simpa only [IsPrivateRoot, if_false, Nat.sub_zero] using noRoot.2
+            simpa only [budget] using noRoot.2
           simp only [simulateQ_bind, simulateQ_spec_query, rootPost, publicOnly, rootCoins, liftComp_bind]
           apply bind_congr
           intro answer

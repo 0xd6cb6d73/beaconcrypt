@@ -386,7 +386,6 @@ theorem owner_complete {I D K X Response A Result : Type}
   | some preparedValue =>
       simp only [simulateQ_bind, StateT.run_bind, ← QueryImpl.simulateQ_compose,
         tailAdapter, simulateQ_pure, StateT.run_pure, bind_assoc, pure_bind]
-      rfl
 
 /-- Every successful original API call derives its active phase, actual prepared candidate, full private tail, authenticated sequence one and exact final publication from the same supported execution. -/
 theorem owner_success {I D K X Response A : Type}

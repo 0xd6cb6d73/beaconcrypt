@@ -116,7 +116,7 @@ theorem beaconWrongSequenceAdvantage_le_blake2b_cr
   unfold beaconWrongSequenceAdvantage beaconWrongSequenceExp
     CollisionResistance.crAdvantage CollisionResistance.crExp
     beaconWrongSequenceCollisionReduction
-  simp only [monad_norm]
+  simp only [evalDist_apply_singleton, monad_norm]
   refine probOutput_bind_mono fun claim _ => ?_
   apply probOutput_pure_bool_le
   intro hwin
@@ -269,7 +269,7 @@ theorem beaconCrossSessionAdvantage_le_blake2b_cr
   unfold beaconCrossSessionAdvantage beaconCrossSessionExp
     CollisionResistance.crAdvantage CollisionResistance.crExp
     beaconCrossSessionCollisionReduction
-  simp only [monad_norm]
+  simp only [evalDist_apply_singleton, monad_norm]
   refine probOutput_bind_mono fun claim _ => ?_
   apply probOutput_pure_bool_le
   intro hwin

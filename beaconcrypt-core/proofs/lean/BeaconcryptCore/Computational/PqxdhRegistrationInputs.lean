@@ -233,18 +233,18 @@ theorem build_normal {Metadata PeerMetadata Consumed : Type}
     (pending : UsedInput)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    Normal (build source pending root data metadata state) := by
+    PqxdhServerRegistrationPublication.Normal (build source pending root data metadata state) := by
   obtain ⟨next, hnext⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok state.control
   simp only [build, hnext, continueRust]
   cases next with
-  | Err => simp [Normal]
+  | Err => simp [PqxdhServerRegistrationPublication.Normal]
   | Ok next =>
     obtain ⟨prepared, hprepared⟩ := prepare_ok
       state.control pending ⟨state.server.identity, state.identityKeyId⟩
       (if (state.server.peers next).isSome then pqxdh.KeyIdAvailability.Occupied else .Available)
     simp only [hprepared]
     cases prepared with
-    | Err => simp [Normal]
+    | Err => simp [PqxdhServerRegistrationPublication.Normal]
     | Ok candidate => exact candidate_normal source candidate root data metadata state
 
 

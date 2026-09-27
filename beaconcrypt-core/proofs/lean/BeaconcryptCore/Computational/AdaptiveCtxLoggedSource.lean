@@ -580,7 +580,15 @@ theorem loggedImpl_uniform_step (decode : RawDecoder) (c : Pqxdh.Crypto) (key : 
       (if AdaptiveCtxQueryBounds.SourceUniform query then 1 else 64) := by
   cases query with
   | inl request =>
-    cases request <;>
+    cases request with
+    | inl coin =>
+      have computation : (loggedImpl decode c key (.inl (.inl coin))).run state =
+          (AdaptiveCtxPrefix.sourceImpl false decode c key (.inl (.inl coin))).run state := by
+        unfold loggedImpl AdaptiveCtxPrefix.sourceImpl AdaptiveCtxIndependent.independentImpl
+        rfl
+      exact computation.symm ▸ AdaptiveCtxPrefixQueryBounds.sourceImpl_uniform_step
+        false decode c key (.inl (.inl coin)) state
+    | inr query =>
       exact AdaptiveCtxPrefixQueryBounds.sourceImpl_uniform_step false decode c key _ state
   | inr raw =>
     exact (OracleComp.isQueryBoundP_true_iff _ _).mpr (loggedRaw_uniform_bound decode raw state)

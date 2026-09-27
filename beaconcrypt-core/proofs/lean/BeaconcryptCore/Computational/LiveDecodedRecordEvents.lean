@@ -214,9 +214,21 @@ theorem decoded_openings_positions (history : History) :
   | nil => rfl
   | cons call rest ih =>
       cases call with
-      | «seal» input reply => simpa [decodedOpenings, decodedOpening, openedPositions, callPosition] using ih
+      | «seal» input reply =>
+          change (decodedOpenings rest).map (fun observation => observation.record.sequence.val - 1) =
+            openedPositions rest
+          exact ih
       | openFrame input reply =>
-          cases reply <;> simp_all [decodedOpenings, decodedOpening, openedPositions, callPosition, opened]
+          cases reply with
+          | none =>
+              change (decodedOpenings rest).map (fun observation => observation.record.sequence.val - 1) =
+                openedPositions rest
+              exact ih
+          | some plaintext =>
+              change (input.sequence.val - 1) ::
+                  (decodedOpenings rest).map (fun observation => observation.record.sequence.val - 1) =
+                (input.sequence.val - 1) :: openedPositions rest
+              exact congrArg (List.cons (input.sequence.val - 1)) ih
 
 /-- The same source consumption history excludes every position consumed before this continuation. -/
 theorem worker_opened_fresh {AD PT CT Metadata PrimitiveState ι : Type} {base : OracleSpec ι}
@@ -308,7 +320,7 @@ info: 'BeaconcryptCore.Computational.LiveDecodedRecordEvents.worker_trace_decode
 #print axioms BeaconcryptCore.Computational.LiveDecodedRecordEvents.worker_trace_decoded
 
 /--
-info: 'BeaconcryptCore.Computational.LiveDecodedRecordEvents.spent_positions' depends on axioms: [propext, Quot.sound]
+info: 'BeaconcryptCore.Computational.LiveDecodedRecordEvents.spent_positions' depends on axioms: [propext]
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.LiveDecodedRecordEvents.spent_positions

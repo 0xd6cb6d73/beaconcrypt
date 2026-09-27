@@ -53,12 +53,16 @@ theorem live_owner_raw_prelude {Metadata PrimitiveState : Type} {ι : Type}
         result = (RawCtxWholeOwner.publish state received.1, received.2) := by
   unfold RawCtxWholeOwner.rawGame RawCtxWholeOwner.rawReceive StateT.run at actual
   split at actual
-  · simp only [simulateQ_pure] at actual
+  · change result ∈ support ((simulateQ impl
+        (pure (RawCtxWholeOwner.publish state (state.owner.kernel, .None)))).run primitive) at actual
+    simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at actual
     exact Or.inl actual
   · split at actual
-    · simp only [simulateQ_pure] at actual
+    · change result ∈ support ((simulateQ impl
+          (pure (RawCtxWholeOwner.publish state (state.owner.kernel, .None)))).run primitive) at actual
+      simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at actual
       exact Or.inl actual
-    · dsimp only at actual
+    · unfold StateT.run at actual
       split at actual
       · rw [simulateQ_bind] at actual
         change result ∈ support (StateT.run _ primitive) at actual
@@ -68,7 +72,9 @@ theorem live_owner_raw_prelude {Metadata PrimitiveState : Type} {ι : Type}
         rw [← QueryImpl.simulateQ_compose] at called
         refine Or.inr ⟨_, received, ?_, ?_, ?_, called, rfl⟩
         all_goals simp_all
-      · simp only [simulateQ_pure] at actual
+      · change result ∈ support ((simulateQ impl
+            (pure (RawCtxWholeOwner.publish state (state.owner.kernel, .None)))).run primitive) at actual
+        simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at actual
         exact Or.inl actual
 
 /-- Every nonempty send supplies stored AD and target plus the fixed local sender, retaining the complete source send result even on failure. -/
@@ -88,9 +94,17 @@ theorem live_owner_send_prelude {Metadata PrimitiveState : Type} {ι : Type}
         result = ((sent.1.2, { state with owner := { state.owner with kernel := sent.1.1 } }), sent.2) := by
   unfold RawCtxSourceSend.sendGame RawCtxSourceSend.sendOwner StateT.run at actual
   split at actual
-  · simp only [simulateQ_pure] at actual
+  all_goals change result ∈ support ((simulateQ impl _).run primitive) at actual
+  · change result ∈ support ((simulateQ impl (pure (none, state))).run primitive) at actual
+    simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at actual
     exact Or.inl actual
-  · rw [simulateQ_bind] at actual
+  · change result ∈ support ((simulateQ impl (do
+        let sent ← simulateQ RawCtxSourceSend.adapter (RawCtxSourceSend.send state.owner.kernel {
+          plaintext := plaintext, targetId := state.owner.expectedSender,
+          senderId := sender, associatedData := state.owner.associatedData })
+        pure (sent.2, { state with owner := { state.owner with kernel := sent.1 } }))).run
+          primitive) at actual
+    rw [simulateQ_bind] at actual
     change result ∈ support (StateT.run _ primitive) at actual
     simp only [StateT.run_bind, simulateQ_pure, StateT.run_pure, mem_support_bind_iff,
       support_pure, Set.mem_singleton_iff] at actual

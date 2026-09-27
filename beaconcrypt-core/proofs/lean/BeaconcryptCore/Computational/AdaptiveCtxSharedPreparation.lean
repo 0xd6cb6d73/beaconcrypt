@@ -52,14 +52,14 @@ theorem prepared_interpretation {Context Result : Type} {count : Nat}
     (prepare : ProbComp (Prepared Context count)) (selectedDecode : RawDecoder)
     (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto)
     (client : Context → OracleComp (FamilySpec count) Result) :
-    𝒟[source prepare selectedDecode decode c client] =
-      𝒟[do
+    𝒮[source prepare selectedDecode decode c client] =
+      𝒮[do
         let selectedKey ← $ᵗ CtxKey
         reassociate <$> canonicalGame selectedDecode c selectedKey (wrapped prepare decode c client)] := by
   simp only [source, uniform_interpretation, wrapped, canonicalGame, simulateQ_bind,
     StateT.run_bind, simulateQ_pure, StateT.run_pure, canonical_uniform, map_bind,
     bind_assoc, bind_map_left, map_pure]
-  exact JointEagerTable.independent_comm prepare ($ᵗ CtxKey) _
+  exact JointEagerTable.independent_comm_spmf prepare ($ᵗ CtxKey) _
 
 /-- Preparation uniform draws consume no target nonuniform resource. -/
 theorem lift_no_class (p : ReceiveSpec.Domain → Prop) [DecidablePred p]
@@ -150,11 +150,12 @@ theorem prepared_view_eq {Context : Type} {count : Nat}
     (prepare : ProbComp (Prepared Context count)) (selectedDecode : RawDecoder)
     (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto)
     (client : Context → OracleComp (FamilySpec count) Bool) :
-    𝒟[(fun result => result.2.1) <$> source prepare selectedDecode decode c client] =
-      𝒟[AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c (decisionClient prepare decode c client)] := by
-  have full := congrArg (fun distribution => (fun result => result.2.1) <$> distribution)
+    𝒮[(fun result => result.2.1) <$> source prepare selectedDecode decode c client] =
+      𝒮[AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c (decisionClient prepare decode c client)] := by
+  have full := congrArg (fun distribution =>
+      (fun (result : Prepared Context count × (Bool × SourceState count)) => result.2.1) <$> distribution)
     (prepared_interpretation prepare selectedDecode decode c client)
-  simpa only [← evalDist_map, map_bind, Functor.map_map, reassociate,
+  simpa only [← evalSPMF_map, map_bind, Functor.map_map, reassociate,
     AdaptiveCtxPrivacyGuard.canonicalView, AdaptiveCtxPrefixValidation.retainedCanonicalGame,
     canonicalGame, decisionClient, simulateQ_map, StateT.run_map, bind_pure_comp] using full
 
@@ -256,7 +257,12 @@ theorem prepared_integrity_bound {Context : Type} {count : Nat}
   have bound := AdaptiveCtxPrivacyGuard.canonical_replay_advantage_bound selectedDecode c fallback
     (decisionClient prepare decode c client) qHash qSeal qRaw budgets.2.1 budgets.2.2.1 budgets.2.2.2 small
   have equal := prepared_view_eq prepare selectedDecode decode c client
-  simpa only [ProbComp.boolDistAdvantage, probOutput_congr rfl equal] using bound
+  have equal_true :
+      𝒟[(fun result => result.2.1) <$> source prepare selectedDecode decode c client] {true} =
+        𝒟[AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c
+          (decisionClient prepare decode c client)] {true} := by
+    simpa only [evalDist_apply_singleton] using probOutput_congr rfl equal
+  simpa only [ProbComp.boolDistAdvantage, equal_true] using bound
 
 /-- The prepared source privacy hop additionally charges the ordinary ciphertext-view reduction. -/
 theorem prepared_privacy_bound {Context : Type} {count : Nat}
@@ -285,7 +291,12 @@ theorem prepared_privacy_bound {Context : Type} {count : Nat}
   have bound := AdaptiveCtxPrivacyGuard.canonical_random_advantage_bound selectedDecode c fallback
     (decisionClient prepare decode c client) qHash qSeal qRaw budgets.2.1 budgets.2.2.1 budgets.2.2.2 small
   have equal := prepared_view_eq prepare selectedDecode decode c client
-  simpa only [ProbComp.boolDistAdvantage, probOutput_congr rfl equal] using bound
+  have equal_true :
+      𝒟[(fun result => result.2.1) <$> source prepare selectedDecode decode c client] {true} =
+        𝒟[AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c
+          (decisionClient prepare decode c client)] {true} := by
+    simpa only [evalDist_apply_singleton] using probOutput_congr rfl equal
+  simpa only [ProbComp.boolDistAdvantage, equal_true] using bound
 
 /-- All prepared ordinary reductions pay their setup, uniform and selected-encryption costs. -/
 theorem prepared_reduction_bounds {Context : Type} {count : Nat}

@@ -150,7 +150,8 @@ theorem labelled_step (fixed : FixedHkdfSha512NoSaltSource) (selected : PqxdhCor
       ((if IsCoin query then 1 else 0) + (if IsService query then 32 else 0)) := by
   cases query with
   | inl coin =>
-      change ((unifSpec.query coin : ProbComp _) >>= fun answer => pure (answer, cache)).IsTotalQueryBound 1
+      change ((fun answer => (answer, cache)) <$>
+        (liftM (unifSpec.query coin) : ProbComp _)).IsTotalQueryBound 1
       exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
   | inr query =>
       simp only [labelledFull, QueryImpl.add_apply_inr, IsCoin, IsService, if_true, if_false, Nat.zero_add]
@@ -161,8 +162,7 @@ theorem labelled_step (fixed : FixedHkdfSha512NoSaltSource) (selected : PqxdhCor
           · simp only [labelled, same, if_true]
             trivial
           · simp only [labelled, same, if_false]
-            change ((fun pair => (realInitial fixed pair.1, pair.2)) <$>
-              (uniformImpl (.inr message)).run cache).IsTotalQueryBound 32
+            simp only [native, StateT.run, bind_pure_comp]
             rw [IsTotalQueryBound, isQueryBound_map_iff]
             exact PqxdhCorrelatedExpandQueryBounds.cached_step ($ᵗ RootOutput) 32
               (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 32) (.inr message) cache

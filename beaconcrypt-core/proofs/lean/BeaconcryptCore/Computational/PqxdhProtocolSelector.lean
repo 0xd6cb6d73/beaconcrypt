@@ -103,15 +103,13 @@ theorem compiler_interpretation
           (coins ((PqxdhRegistrationProtocolState.sourceImpl source writer senderId route decode request).run state.1))).run state.2 = _
       rw [selector_coins]
       simp only [Functor.map_map, directImpl, StateT.run, bind_pure_comp]
-      rfl
   | inr request =>
       simp only [QueryImpl.flattenStateT, QueryImpl.mapStateTBase, compiler, directImpl,
         StateT.run, StateT.mk, bind_pure_comp, simulateQ_map, simulateQ_spec_query]
-      change (fun x => (x.1.1, (x.1.2, x.2))) <$>
-        ((fun a => ((a.1, state.1), a.2)) <$>
-          (selectorImpl attachedVerify primitives count baseImpl kem secret request).run state.2) = _
-      simp only [Functor.map_map]
-      rfl
+      simpa only [StateT.run, Functor.map_map, OracleSpec.add_apply_inr, OracleSpec.Range] using
+        congrArg (Functor.map (fun x => (x.1.1, (x.1.2, x.2))))
+          (StateT.run_map (fun a => (a, state.1))
+            (selectorImpl attachedVerify primitives count baseImpl kem secret request) state.2)
 
 /-- The arbitrary adaptive prefix transports its full source roles, primitive cache and joint identity history together. -/
 theorem compiler_complete {Result : Type}
@@ -176,9 +174,9 @@ theorem coins_excluded {Result : Type} (predicate : (SelectorSpec baseSpec).Doma
   induction work using OracleComp.inductionOn with
   | pure value => simp [coins]
   | query_bind query next ih =>
-      change ((do
+      change OracleComp.IsQueryBoundP (do
         let answer ← ((SelectorSpec baseSpec).query (.inr (.inl (.inl query))) : OracleComp (SelectorSpec baseSpec) _)
-        coins (next answer))).IsQueryBoundP predicate 0
+        coins (next answer)) predicate 0
       rw [isQueryBoundP_query_bind_iff]
       exact ⟨by simp [excluded query], fun answer => by simpa only [if_neg (excluded query)] using ih answer⟩
 

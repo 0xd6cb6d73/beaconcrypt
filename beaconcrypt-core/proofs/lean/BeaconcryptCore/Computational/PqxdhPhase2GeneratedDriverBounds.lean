@@ -128,11 +128,11 @@ theorem authentication_continuation_bound {KemSK Result : Type} {setup : Statefu
     (fallback : DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery)
     (next onChanged : Option (PqxdhPrivateCandidateAcceptance.Outcome
       (Retained setup KemSK (driver env program).State)) × PqxdhPhase1AcceptanceOracle.BareState 1 → ProbComp Result) :
-    (𝒟[privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program)) >>= next]).tvDist
-      (𝒟[privateRun attachedVerify primitives 1
+    tvDist (privateRun attachedVerify primitives 1
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program)) >>= next)
+      (privateRun attachedVerify primitives 1
         (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program)) >>= fun state =>
-        if changedBit state then onChanged state else next state]) ≤
+        if changedBit state then onChanged state else next state) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup (driver env program) fallback ordinaryFallback)).toReal := by
   exact PqxdhGeneratedPhase1Prefix.authentication_continuation_bound attachedVerify primitives adapter baseImpl kem setup

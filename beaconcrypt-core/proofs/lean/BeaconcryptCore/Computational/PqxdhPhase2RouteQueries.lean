@@ -80,9 +80,11 @@ theorem routedHandles_decap
     ((routedHandles source challenge supplied aux (.inl (.decapsulate value none))).run auxiliary) =
       (fun reply => (reply, auxiliary)) <$>
         ordinaryDecapsulate challenge (PqxdhPhase2InputBytes.ciphertext value) := by
-  change simulateQ (route source challenge supplied)
-    ((fun reply => (reply, auxiliary)) <$> PqxdhPhase2InputBytes.decapCall challenge value) = _
+  simp only [routedHandles, QueryImpl.mapStateTBase, StateT.run_mk, handles]
+  simp only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+    StateT.run, bind_pure_comp]
   rw [simulateQ_map, decapCall_route]
+  rfl
 
 /-- Every private root becomes a local computation, including the challenge-matching case. -/
 theorem rootCall_route_bound
@@ -133,9 +135,8 @@ theorem routedHandles_bound
           exact (isQueryBoundP_map_iff (p := predicate) _ (fun reply => (reply, auxiliary)) _).mpr
             (ordinaryDecapsulate_bound challenge (PqxdhPhase2InputBytes.ciphertext value) predicate)
       | some prior =>
-          change (simulateQ (route source challenge supplied)
-            ((fun pair => (Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) pair.1, pair.2)) <$>
-              (sharedAux aux (.localDecapsulation value prior)).run auxiliary)).IsQueryBoundP predicate qAux
+          simp only [routedHandles, QueryImpl.mapStateTBase, StateT.run_mk, handles,
+            StateT.run_map, callbackCost]
           rw [simulateQ_map, isQueryBoundP_map_iff]
           exact sharedAux_route_bound source challenge supplied aux _ auxiliary predicate qAux (auxBound _ auxiliary)
     case eraseShared =>
@@ -147,9 +148,10 @@ theorem routedHandles_bound
         | exact sharedAux_route_bound source challenge supplied aux _ auxiliary predicate qAux (auxBound _ auxiliary)
         | skip
       case root secrets =>
-        change (simulateQ (route source challenge supplied)
-          ((fun reply => (reply, auxiliary)) <$>
-            PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4)).IsQueryBoundP predicate 0
+        simp only [routedHandles, QueryImpl.mapStateTBase, StateT.run_mk, handles,
+          callbackCost]
+        simp only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+          StateT.run, bind_pure_comp]
         rw [simulateQ_map, isQueryBoundP_map_iff]
         exact rootCall_route_bound source challenge supplied secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4 predicate
 

@@ -366,7 +366,7 @@ end BeaconcryptCore.Computational.PqxdhLiveKemBirth
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhLiveKemBirth.coins_class
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhLiveKemBirth.coins_bills' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhLiveKemBirth.coins_bills' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhLiveKemBirth.coins_bills
 

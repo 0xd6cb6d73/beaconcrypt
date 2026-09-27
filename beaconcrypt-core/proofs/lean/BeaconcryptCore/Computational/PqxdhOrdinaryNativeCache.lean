@@ -39,6 +39,8 @@ theorem native_cache (query : (NativeSpec I D K X Response).Domain) (admitted : 
     | decapsulate value key =>
         cases key with
         | none =>
+            simp only [native, PqxdhPhase2NativeSource.native, liftM, MonadLiftT.monadLift,
+              MonadLift.monadLift, StateT.lift, StateT.run, bind_pure_comp]
             change ((fun result => (result, replace cache state)) <$>
               (Option.map PqxdhRootTableInitialization.rootArray <$>
                 simulateQ (kemAmbientImpl baseImpl) (kem.decaps secret (PqxdhPhase2InputBytes.ciphertext value)))) =

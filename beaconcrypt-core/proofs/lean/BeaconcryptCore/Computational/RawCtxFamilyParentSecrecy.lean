@@ -62,9 +62,17 @@ theorem local_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
     (native source writer continuation context target output).boolDistAdvantage
       (RawCtxSelectedParentHop.observer source writer (parent continuation) context output) ≤
       3 * Pr[= true | RawCtxSelectedParentHop.bad source writer (parent continuation) context target output].toReal := by
+  have event :
+      Pr[fun result => target ∈ RawCtxSelectedParentHop.candidates result |
+        RawCtxSelectedParentHop.observed source writer (parent continuation) context output] =
+        Pr[= true | RawCtxSelectedParentHop.bad source writer (parent continuation) context target output] := by
+    simp only [RawCtxSelectedParentHop.bad, ← probEvent_eq_eq_probOutput, probEvent_map]
+    apply OracleComp.probEvent_congr' _ rfl
+    intro result _
+    simp only [Function.comp_def, decide_eq_true_eq]
+  rw [← event]
   simpa only [native, RawCtxSelectedParentHop.observer, RawCtxSelectedParentHop.observed,
-    RawCtxSelectedParentHop.bad, RawCtxSelectedParentHop.candidates, parent, parameters, masked,
-    ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq] using
+    RawCtxSelectedParentHop.candidates, parent, parameters, masked] using
       completion_bound (parameters source writer continuation context target output)
         continuation.sender continuation.route continuation.decode (continuation.tail context).blocked
         (continuation.tail context).disclosed (continuation.tail context).history (continuation.tail context).outside
@@ -176,6 +184,13 @@ theorem random_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
           (RawCtxSelectedParentHop.observed source writer (parent continuation))
           RawCtxSelectedParentHop.candidates qCandidates bounded)) (by norm_num))
 
+private theorem loss_sum {adv first middle last mainExtract mainHmac testExtract testHmac image guess : ℝ}
+    (triangle : adv ≤ first + (middle + last))
+    (front : first ≤ 3 * (image + testExtract + testHmac))
+    (center : middle ≤ mainExtract + mainHmac) (back : last ≤ 3 * guess) :
+    adv ≤ mainExtract + mainHmac + 3 * (testExtract + testHmac + image + guess) := by
+  linarith
+
 /-- One full parent-to-child secrecy hop with the actual family freshness decision pays its constructed main Extract/HMAC pair and three copies of the tester, image and independent-input terms. -/
 theorem bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (writer : RawCtxMixedShared.Writer) (continuation : Continuation Context M P I D K A Value S B)
@@ -213,8 +228,7 @@ theorem bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) (correc
         (random source writer continuation sample address) ≤ 3 * ((qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
     simpa only [ProbComp.boolDistAdvantage, abs_sub_comm] using
       random_bound source writer continuation sample address qCandidates bounded
-  simpa only [mul_add, add_assoc, add_comm, add_left_comm] using triangle.trans
-    (add_le_add (actual_bound source hmac correct writer continuation sample address) (add_le_add main back))
+  exact loss_sum triangle (actual_bound source hmac correct writer continuation sample address) main back
 
 /-- The two constructed freshness observers each use two HMAC challenges and the full sampler/parent/observer bill; the real-input tester separately pays its candidate-count full HKDF evaluations. -/
 theorem reduction_queries

@@ -71,7 +71,6 @@ theorem source_shared {Auxiliary : Type}
         (RawCtxSourceSeal.sealInput input)).run state := by
   simp only [LiveRecordEvents.sourceSealing, RawCtxMixedOwner.sendAdapter,
     RawCtxSourceSeal.nativeAdapter, sharedImpl, QueryImpl.compose, QueryImpl.simulateQ_compose]
-  rfl
 
 /-- The same theorem consumes the actual source callback used by the public live service. -/
 theorem source_publication {Auxiliary : Type}
@@ -180,7 +179,6 @@ theorem pending_publication {Auxiliary : Type}
     pure (p.1.map (RawCtxSourceSend.encrypted (RawCtxSourceSend.arguments pending)), p.2)) = _
   rw [source_publication source lengths writer encode writes (RawCtxSourceSend.arguments pending) had bounded auxiliary cache]
   simp only [bind_assoc, pure_bind, Option.map_some]
-  rfl
 
 /-- Every subsequent adaptive computation receives the actual Some bytes and same complete primitive state. -/
 theorem source_continued {Auxiliary Result : Type}

@@ -19,8 +19,10 @@ theorem material_slots_index {Material : Type}
     (slot : Std.U8) (hslot : slot.val < 50) :
     slots.index_usize (Std.UScalar.cast .Usize slot) = ok slots.val[slot.val]! := by
   have hcast : (Std.UScalar.cast .Usize slot).val = slot.val := by simp_scalar
-  simpa [hcast, List.getElem?_eq_getElem (show slot.val < slots.val.length from by simpa using hslot)]
-    using array_index_eq_ok slots (Std.UScalar.cast .Usize slot) (by simp [hcast]; exact hslot)
+  simpa [hcast, List.getElem?_eq_getElem
+      (show slot.val < slots.val.length from by simpa [Array.length_eq] using hslot)]
+    using array_index_eq_ok slots (Std.UScalar.cast .Usize slot)
+      (by simp [hcast, Array.length_eq]; exact hslot)
 
 theorem receive_entry_at_value {SendChain ReceiveChain Material : Type}
     (state : ratchet.refined.RefinedRatchet SendChain ReceiveChain Material)

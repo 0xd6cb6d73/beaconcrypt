@@ -39,6 +39,7 @@ theorem selected_nonce (key : RootOutput) (nonce : NonceOutput) (sequence : Std.
   simp [RawCtxSourceOpen.sourceNonce, nativeInput, interpret, RawCtxFreshChainCut.concreteMaterial,
     absMaterial, absBytes, List.map_map, Function.comp_def]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The selected raw challenger returns exactly the native optional plaintext on the same reached source frame and complete shared state. -/
 theorem selected_open (key : RootOutput) (nonce : NonceOutput) (sequence : Std.U64)
     (context : RawCtxWholeOwner.OpenContext) (read : RawCtxReceive.FrameDecoder) (expected : Std.U64)

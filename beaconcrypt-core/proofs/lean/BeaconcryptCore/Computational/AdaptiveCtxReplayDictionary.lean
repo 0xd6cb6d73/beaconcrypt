@@ -193,7 +193,6 @@ theorem abstractSuffix_projection (address : Suffix) (cache : SplitCache)
   | none =>
     rw [QueryImpl.withCaching_run_none _ cached]
     simp [ctxKeyFreeSuffixStep, aligned address, cached, Functor.map_map]
-    rfl
   | some digest =>
     rw [QueryImpl.withCaching_run_some _ cached]
     have present : cache.suffixCache address.toList = some digest := (aligned address).trans cached
@@ -402,7 +401,6 @@ theorem dictionaryLinked_projection (decode : RawDecoder) (c : Pqxdh.Crypto) (ke
         OracleQuery.input_query, OracleQuery.cont_query, id_map, Functor.map_map]
       change ((fun answer => (answer, state)) <$> (unifSpec.query coin : ProbComp _)) = _
       simp only [replayImpl, StateT.run, bind_pure_comp]
-      rfl
 
 /-- Independent public hashing changes only the public cache and public observation log. -/
 theorem independentHash_preserves_suffix (c : Pqxdh.Crypto) (key : CtxKey)

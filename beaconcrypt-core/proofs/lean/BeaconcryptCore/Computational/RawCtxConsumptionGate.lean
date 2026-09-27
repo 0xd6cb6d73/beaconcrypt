@@ -86,7 +86,6 @@ theorem tracked_raw_spent {Metadata Auxiliary : Type}
   simp only [rawGame_spent source.crypto sendOrigin receiveOrigin state.1 spent invariant
     _ state.2 decode raw frame decoded consumed, pure_bind, recordSource, recordReply,
     RawCtxWholeOwner.publish]
-  rfl
 
 noncomputable def gatedImpl {Metadata Auxiliary : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

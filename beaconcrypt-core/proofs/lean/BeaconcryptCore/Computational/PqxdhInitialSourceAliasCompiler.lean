@@ -84,12 +84,14 @@ theorem step (query : (SourceSpec (extra := extra) (I := I) (D := D) (K := K) (X
       simp only [compiler, StateT.run, bind_pure_comp, simulateQ_map, simulateQ_spec_query,
         PqxdhInitialRootLabelService.labelledFull, QueryImpl.add_apply_inr]
       have mapped := congrArg (fun work => (fun result => (result.1.1, (((result.1.2.1, state.1.1.2), state.1.2), (result.1.2.2, result.2)))) <$> work) erased
-      change restore <$> ((fun a => ((some (PqxdhInitialRootAudit.kernel (List.Vector.replicate 32 0, a.1)).refined, state), a.2)) <$>
-        ((PqxdhInitialRootLabelService.labelled source selected response (PqxdhInitialRootLabelBridge.request source secrets)).run cache)) = _
+      change restore <$> ((fun a => (some (PqxdhInitialRootAudit.kernel (List.Vector.replicate 32 0, a)).refined, state)) <$>
+        PqxdhInitialRootLabelService.labelled source selected response (PqxdhInitialRootLabelBridge.request source secrets)).run cache = _
+      rw [StateT.run_map]
       change _ = (fun result => (result.1.1, (((result.1.2.1, state.1.1.2), state.1.2), (result.1.2.2, result.2)))) <$>
-        (fun result => ((result.1.1.2, result.1.2), result.2)) <$>
-          ((PqxdhInitialNativeInitializer.initial source selected previousRoot response secrets (state.1.1.1, state.2)).run cache)
-      simpa only [Functor.map_map, restore, attach] using mapped.symm
+        ((Prod.snd <$> PqxdhInitialNativeInitializer.initial source selected previousRoot response secrets).run
+          (state.1.1.1, state.2)).run cache
+      rw [StateT.run_map, StateT.run_map]
+      simpa only [Functor.map_map, restore, attach, StateT.run, Prod.eta] using mapped.symm
     · simp only [compiler, externalCoins, PqxdhInitialOriginFinishPath.withInitial, plainExternal,
         StateT.run, Functor.map_map]
       rw [PqxdhInitialCurrentBeacon.coins_labelled]
@@ -178,7 +180,7 @@ theorem client_initial (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQ
       PqxdhInitialObserverCallbackBudgets.IsService (1 + (7 + qPost * 67)) := by
   unfold client
   apply isQueryBoundP_bind
-    (show (PqxdhInitialLabelCompiler.Spec.query (.inr (.family selected)) : OracleComp PqxdhInitialLabelCompiler.Spec _).IsQueryBoundP PqxdhInitialObserverCallbackBudgets.IsService 1 by
+    (show OracleComp.IsQueryBoundP (PqxdhInitialLabelCompiler.Spec.query (.inr (.family selected)) : OracleComp PqxdhInitialLabelCompiler.Spec _) PqxdhInitialObserverCallbackBudgets.IsService 1 by
       simp [PqxdhInitialObserverCallbackBudgets.IsService])
   intro response _
   apply program_initial

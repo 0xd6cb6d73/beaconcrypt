@@ -206,7 +206,8 @@ theorem stopAtRaw_query_bound {Result : Type} (decode : RawDecoder)
           rw [OracleComp.isQueryBoundP_query_bind_iff] at bounded
           have later : ∀ answer, (next answer).IsQueryBoundP (primitiveClass p) bound := by
             intro answer
-            simpa only [primitiveClass, if_neg (show ¬False from id)] using bounded.2 answer
+            simpa only [ite_eq_right (show ¬ primitiveClass p (.inr raw) from id)] using
+              bounded.2 answer
           cases index with
           | zero =>
               rw [stopAtRaw_receive]
@@ -351,7 +352,8 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
           intro result supported
           rw [OracleComp.isQueryBoundP_query_bind_iff] at bounded
           exact ih result.1 count result.2
-            (by simpa only [IsRawQuery, if_neg (show ¬False from id)] using bounded.2 result.1)
+            (by simpa only [ite_eq_right (show ¬ IsRawQuery (.inl primitive) from id)] using
+              bounded.2 result.1)
             (primitive_preserves_historyCorrect c key primitive state correct result supported)
       | inr raw =>
           rw [OracleComp.isQueryBoundP_query_bind_iff] at bounded
@@ -375,7 +377,7 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
           · rw [if_neg discrepancy]
             have remainingBound : (next (simulatedOpen decode state.successfulSeals raw)).IsQueryBoundP
                 IsRawQuery remaining := by
-              simpa only [IsRawQuery, if_pos trivial, Nat.succ_sub_one] using
+              simpa only [ite_eq_left (show IsRawQuery (.inr raw) from trivial), Nat.succ_sub_one] using
                 bounded.2 (simulatedOpen decode state.successfulSeals raw)
             have tail := ih (simulatedOpen decode state.successfulSeals raw) remaining state remainingBound correct
             rw [Finset.sum_range_succ']

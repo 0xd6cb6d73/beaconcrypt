@@ -85,10 +85,17 @@ theorem native_step
   case inl.decapsulate value key =>
     cases key with
     | none =>
-        change simulateQ (kemAmbientImpl baseImpl)
-          ((fun reply => (reply, state)) <$> (Option.map rootArray <$>
-            kem.decaps secret (PqxdhPhase2InputBytes.ciphertext value))) = _
-        exact (simulateQ_map _ _ _).trans (congrArg (Functor.map (fun reply => (reply, state))) (simulateQ_map _ _ _))
+        rw [show PqxdhBeaconPhase2Routed.native source kem secret challenge
+          (borrowedAux attachedVerify primitives count source localImpl)
+            (.inl (.decapsulate value none)) =
+          liftM (Option.map rootArray <$>
+            kem.decaps secret (PqxdhPhase2InputBytes.ciphertext value)) by rfl]
+        rw [show PqxdhPhase2NativeSource.native source baseImpl kem secret
+          (directAux attachedVerify primitives count source localImpl)
+            (.inl (.decapsulate value none)) =
+          liftM (Option.map rootArray <$> simulateQ (kemAmbientImpl baseImpl)
+            (kem.decaps secret (PqxdhPhase2InputBytes.ciphertext value))) by rfl]
+        simp only [StateT.run_monadLift, monadLift_self, bind_pure_comp, simulateQ_map]
     | some prior =>
         exact (QueryImpl.simulateQ_compose _ _ _).symm.trans
           (auxiliary_step attachedVerify primitives count source localImpl baseImpl kem secret challenge _ state)

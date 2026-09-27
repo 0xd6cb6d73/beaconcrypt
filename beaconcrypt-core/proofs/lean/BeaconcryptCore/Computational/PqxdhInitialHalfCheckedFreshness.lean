@@ -124,6 +124,7 @@ theorem good_bound (earlier : List RatchetChain)
         disclosed state candidates result supported).1 actual,
       fun value present => actual value (List.mem_cons_of_mem _ present)⟩
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The Boolean source observation retains its publication gate and unconditioned original freshness event. -/
 theorem decision_bound (earlier : List RatchetChain)
     (gate : Trace M P I D K A N C Result Origin S B → Prop)
@@ -132,7 +133,7 @@ theorem decision_bound (earlier : List RatchetChain)
     (actualDecision target earlier disclosed gate <$> run).boolDistAdvantage
       (decision (remainingEvent earlier disclosed gate) <$> run) ≤
       (Pr[fun result => target ∈ result.2.1.2 ∧ result.2.2 = false | run]).toReal := by
-  simpa only [ProbComp.boolDistAdvantage, decision_probability, ← probEvent_eq_eq_probOutput,
+  simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton, decision_probability, ← probEvent_eq_eq_probOutput,
     probEvent_map, Function.comp_def, actualDecision, decision, decide_eq_true_eq, remainingEvent, Proxy,
     and_assoc, and_left_comm, and_comm] using
       good_bound source writer prior entry pre application initializer selector aux mark sender route decode execution depth target output disclosed state candidates
@@ -155,7 +156,8 @@ theorem proxy_bound (event : Trace M P I D K A N C Result Origin S B → Prop) :
   have agreement := PqxdhInitialHalfPrivateObserver.event_good source writer prior entry output
     pre application initializer
     selector aux target client initialState event
-  rw [ProbComp.boolDistAdvantage, decision_probability, decision_probability, nativeRun, agreement]
+  rw [ProbComp.boolDistAdvantage, evalDist_apply_singleton, evalDist_apply_singleton,
+    decision_probability, decision_probability, nativeRun, agreement]
   have variation := (abs_probOutput_toReal_sub_le_tvDist
     (decision event <$> partialMasked)
     (decision event <$> maskedRun source writer prior entry pre application initializer selector aux mark sender route decode execution depth output disclosed state candidates)).trans
@@ -173,7 +175,7 @@ theorem good_alias_bound :
         maskedRun source writer prior entry pre application initializer selector aux mark sender route decode execution depth output disclosed state candidates]).toReal := by
   have bound := proxy_bound source writer prior entry pre application initializer selector aux mark sender route decode execution depth target output disclosed state candidates
     (fun result => target ∈ result.2.1.2)
-  simp only [ProbComp.boolDistAdvantage, decision_probability] at bound
+  simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton, decision_probability] at bound
   have contained := ENNReal.toReal_mono probEvent_ne_top (probEvent_mono
     (mx := maskedRun source writer prior entry pre application initializer selector aux mark sender route decode execution depth output disclosed state candidates)
     (fun result _ (hit : target ∈ result.2.1.2 ∧ result.2.2 = false) => hit.1))

@@ -44,11 +44,12 @@ theorem point_source (context : Context) (output : HmacBlock) :
 /-- Discarding the private earlier root preserves the complete source event distribution, after the whole client and shared64 response have been retained. -/
 theorem left_source (prior : ProbComp Context) :
     𝒟[leftGame fixed selected client event prior] = 𝒟[sourceGame fixed selected client event prior] := by
+  apply evalDist_eq_of_evalSPMF_eq
   simp only [leftGame, sampleCut, left, decision, Functor.map_map, bind_assoc, pure_bind]
   simp only [point_source]
-  apply evalDist_bind_congr' prior
+  apply evalSPMF_bind_congr' prior
   intro context
-  exact OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure ($ᵗ RootOutput) _
+  exact OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ RootOutput) _
 
 /-- The same source event differs from its value-consistent private initializer by at most one independent-root guess for each actual initializer query, while every public HKDF evaluation remains real. -/
 theorem bound (prior : ProbComp Context) (qInitial : Nat)
@@ -65,8 +66,10 @@ theorem bound (prior : ProbComp Context) (qInitial : Nat)
     apply mixture.trans
     apply ENNReal.toReal_mono (ENNReal.div_ne_top (ENNReal.natCast_ne_top _) (pow_ne_zero _ (by norm_num)))
     exact candidates_bound fixed selected client prior qInitial bounded
-  have erased := OracleComp.probOutput_congr (x := true) rfl (left_source fixed selected client event prior)
-  simpa only [ProbComp.boolDistAdvantage, erased] using (abs_probOutput_toReal_sub_le_tvDist _ _).trans tv
+  have erased := OracleComp.probOutput_congr (x := true) rfl
+    (evalSPMF_eq_of_evalDist_eq _ _ (left_source fixed selected client event prior))
+  simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton, erased] using
+    (abs_probOutput_toReal_sub_le_tvDist _ _).trans tv
 
 end BeaconcryptCore.Computational.PqxdhInitialAliasEvent
 

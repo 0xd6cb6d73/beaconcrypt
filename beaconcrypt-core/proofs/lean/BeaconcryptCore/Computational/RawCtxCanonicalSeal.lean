@@ -100,7 +100,8 @@ theorem shared_step {Auxiliary : Type} (c : Pqxdh.Crypto) (writer : RawCtxMixedS
   all_goals simp [sharedImpl, QueryImpl.compose, RawCtxSourceSeal.sealLift,
     RawCtxMixedOwner.sendLift, OracleSpec.query, romAdapter]
   · exact RawCtxMixedShared.shared_sealing c writer kdf input (auxiliary, cache)
-  · convert RawCtxMixedShared.shared_hash c writer kdf bytes (auxiliary, cache) using 1 <;> rfl
+  · convert RawCtxMixedShared.shared_hash c writer kdf bytes (auxiliary, cache) using 1
+    simp [map_eq_bind_pure_comp, ctxRandomOracle, QueryImpl.withCaching]
   · exact RawCtxMixedShared.shared_writing c writer kdf frame (auxiliary, cache)
 
 /-- Arbitrary sealing continuations retain the full shared cache, including a miss followed by writer failure. -/

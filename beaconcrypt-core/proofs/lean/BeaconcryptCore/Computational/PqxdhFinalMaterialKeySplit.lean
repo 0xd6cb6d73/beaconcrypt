@@ -16,8 +16,8 @@ theorem reconstruct (output : FullOutput) :
 
 /-- The exact source continuation, including final private-state checks, is preserved after the selected message-key draw is placed last. -/
 theorem complete {Result : Type} (continuation : FullOutput → ProbComp Result) :
-    𝒟[($ᵗ FullOutput) >>= continuation] =
-      𝒟[(do let nonce ← $ᵗ NonceOutput
+    𝒮[($ᵗ FullOutput) >>= continuation] =
+      𝒮[(do let nonce ← $ᵗ NonceOutput
              let chain ← $ᵗ RootOutput
              let key ← $ᵗ RootOutput
              continuation (materialChainEquiv.symm ((key, nonce), chain)))] := by

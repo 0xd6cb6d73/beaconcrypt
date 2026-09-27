@@ -52,8 +52,8 @@ theorem decapsulate_native
   classical
   by_cases same : ciphertext = challenge
   · subst ciphertext
-    simp only [decapsulate, if_true, simulateQ_pure, map_pure, Option.map_some, materialize, agreement]
-  · simp only [decapsulate, if_neg same, simulateQ_map, Functor.map_map]
+    simp only [decapsulate, ite_true, simulateQ_pure, map_pure, Option.map_some, materialize, agreement]
+  · simp only [decapsulate, ite_eq_right same, simulateQ_map, Functor.map_map]
     have mapped : (fun a => Option.map (materialize supplied) (Option.map Shared.known a)) = id := by
       funext value
       cases value <;> rfl
@@ -73,7 +73,7 @@ theorem derive_native
   cases shared with
   | challenge =>
       exact (simulateQ_spec_query (actualImpl source kem secret challenge) (.inr ⟨challenge, coordinates⟩)).trans
-        (by simp only [actualImpl, agreement, pure_bind, Option.map_some, materialize]; rfl)
+        (by simp only [actualImpl, agreement, pure_bind, Option.map_some, materialize])
   | known value => exact simulateQ_pure _ _
 
 /-- The existing ordinary reduction resolves the opaque marker only at the private root callback. -/
@@ -116,8 +116,8 @@ theorem decapsulate_bound
       (if ciphertext = challenge then 0 else if predicate (.inl (.inr ciphertext)) then 1 else 0) := by
   classical
   by_cases same : ciphertext = challenge
-  · simp only [decapsulate, if_pos same, isQueryBoundP_pure]
-  · simp only [decapsulate, if_neg same, isQueryBoundP_map_iff]
+  · simp only [decapsulate, ite_eq_left same, isQueryBoundP_pure]
+  · simp only [decapsulate, ite_eq_right same, isQueryBoundP_map_iff]
     exact (isQueryBoundP_query_iff (spec := LocalPostSpec baseSpec) (p := predicate)
       (.inl (.inr ciphertext)) _).2 (by split_ifs <;> simp_all)
 
@@ -153,8 +153,8 @@ theorem decapsulate_reduction
       (decapsulate challenge ciphertext) = ordinaryDecapsulate challenge ciphertext := by
   classical
   by_cases same : ciphertext = challenge
-  · simp only [decapsulate, ordinaryDecapsulate, if_pos same, simulateQ_pure]
-  · simp only [decapsulate, ordinaryDecapsulate, if_neg same, simulateQ_map]
+  · simp only [decapsulate, ordinaryDecapsulate, ite_eq_left same, simulateQ_pure]
+  · simp only [decapsulate, ordinaryDecapsulate, ite_eq_right same, simulateQ_map]
     exact congrArg (Functor.map (Option.map Shared.known))
       (simulateQ_spec_query (route (baseSpec := baseSpec) source challenge supplied) (.inl (.inr ciphertext)))
 
@@ -166,8 +166,8 @@ theorem ordinaryDecapsulate_bound
       (if ciphertext = challenge then 0 else if predicate (.inr ciphertext) then 1 else 0) := by
   classical
   by_cases same : ciphertext = challenge
-  · simp only [ordinaryDecapsulate, if_pos same, isQueryBoundP_pure]
-  · simp only [ordinaryDecapsulate, if_neg same, isQueryBoundP_map_iff]
+  · simp only [ordinaryDecapsulate, ite_eq_left same, isQueryBoundP_pure]
+  · simp only [ordinaryDecapsulate, ite_eq_right same, isQueryBoundP_map_iff]
     exact (isQueryBoundP_query_iff (spec := MlKemCCAOracleSpec baseSpec) (p := predicate)
       (.inr ciphertext) _).2 (by split_ifs <;> simp_all)
 

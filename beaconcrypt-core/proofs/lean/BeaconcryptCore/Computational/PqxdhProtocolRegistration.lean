@@ -70,7 +70,11 @@ theorem native_complete {Result : Type}
   have complete := map_run_simulateQ_eq_of_query_map_eq
     (PqxdhRegistrationProtocolState.registrationImpl source writer aux)
     (nativeImpl source writer aux) (fun primitive => { state with primitive := primitive })
-    (fun query before => by rfl) client state.primitive
+    (fun query before => by
+      simp only [nativeImpl, StateT.run, map_eq_bind_pure_comp]
+      apply bind_congr
+      intro result
+      rfl) client state.primitive
   exact complete.symm
 
 abbrev Output (setup : PqxdhStatefulPhase1EufCma.StatefulPhase1Setup baseSpec) (Selection : Type) :=

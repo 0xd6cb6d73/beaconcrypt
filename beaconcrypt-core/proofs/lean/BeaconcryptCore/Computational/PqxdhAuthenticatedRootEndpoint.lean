@@ -54,10 +54,11 @@ theorem routed_eq_real (source : FixedHkdfSha512NoSaltSource)
     oneKeyBranchMain, oneKeyPrefix, oneKeyFinish, PqxdhChallengeSecretRouting.reduction,
     simulateQ_bind, pure_bind, bind_assoc, runtimeOfImpl_liftProbComp,
     simulateQ_kemAmbient_liftProbComp]
-  refine evalDist_bind_congr (fun keys _ => ?_)
-  refine evalDist_bind_congr (fun state _ => ?_)
-  refine evalDist_bind_congr (fun pair _ => ?_)
-  refine evalDist_ext (fun decision => ?_)
+  apply evalDist_eq_of_evalSPMF_eq
+  refine evalSPMF_bind_congr (fun keys _ => ?_)
+  refine evalSPMF_bind_congr (fun state _ => ?_)
+  refine evalSPMF_bind_congr (fun pair _ => ?_)
+  refine evalSPMF_ext (fun decision => ?_)
   simp only [publicImpl, probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
   rfl
 
@@ -70,9 +71,7 @@ theorem routed_indCCA (source : FixedHkdfSha512NoSaltSource)
         (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)) =
       kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA := by
-  change SPMF.boolDistAdvantage 𝒟[routedMain source baseImpl kem protocol]
-    𝒟[simulateQ (kemAmbientImpl baseImpl)
-      (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)] = _
+  simp only [ProbComp.boolDistAdvantage]
   rw [routed_eq_real, random_eq_branch]
   exact (oneKey_indCCAAdvantage_eq_branchDist kem (runtimeOfImpl (kemAmbientImpl baseImpl))
     (PqxdhChallengeSecretRouting.reduction source kem protocol)
@@ -100,6 +99,7 @@ theorem actual_routed_bound (source : FixedHkdfSha512NoSaltSource)
     (PqxdhAuthenticatedRootCorrectness.main baseImpl kem (protocolPrefix protocol) actual).boolDistAdvantage
       (routedMain source baseImpl kem protocol) ≤
       Pr[= true | simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)].toReal := by
+  rw [ProbComp.boolDistAdvantage, evalDist_apply_singleton, evalDist_apply_singleton]
   exact (abs_probOutput_toReal_sub_le_tvDist _ _).trans
     (PqxdhAuthenticatedRootCorrectness.main_bound baseImpl kem functional (protocolPrefix protocol)
       actual (routedAfter source baseImpl kem protocol)

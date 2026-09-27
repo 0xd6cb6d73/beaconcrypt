@@ -27,7 +27,8 @@ theorem local_uniform_bound (real : Bool) (c : Pqxdh.Crypto) (key : CtxKey)
   | true =>
       cases query with
       | inl coin =>
-          change ((fun answer => (answer, state)) <$> (unifSpec.query coin : ProbComp _)).IsTotalQueryBound 1
+          change OracleComp.IsTotalQueryBound
+            ((fun answer => (answer, state)) <$> (unifSpec.query coin : ProbComp _)) 1
           simp only [IsTotalQueryBound, isQueryBound_map_iff, isQueryBound_query_iff]
           decide
       | inr input =>
@@ -53,7 +54,8 @@ theorem reduction_seal_step {count : Nat} (real : Fin count → Bool)
       simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, TargetClass]
       exact (isQueryBoundP_query_iff _ query _).mpr (by intro hit; simp [hit])
   | inr other =>
-      simpa only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, TargetClass, if_false] using
+      simpa only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff,
+        ite_eq_right (show ¬TargetClass IsModifiedNonceAeadSealQuery (.inr other) from id)] using
         liftProbComp_no_modifiedNonceAeadSealQueries
           ((localImpl (real other.1) c (keys other.1) other.2).run (state other.1))
 
@@ -272,20 +274,56 @@ theorem work_of_global_caps {Result : Type} {K : Nat}
   | query_bind query next ih =>
       rw [isQueryBoundP_query_bind_iff] at coinBound sealBound
       rw [WorkBound, isQueryBound_query_bind_iff] at bytesBound ⊢
-      have nextBound := fun answer => ih answer _ _ _ (coinBound.2 answer) (bytesBound.2 answer) (sealBound.2 answer)
       have charged := costBound query
       obtain ⟨index, query⟩ := query
       cases query with
       | inl coin =>
+          have uniform : IsModifiedNonceAeadUniformQuery (.inl coin) := trivial
+          have noSeal : ¬IsModifiedNonceAeadSealQuery (.inl coin) := id
+          have coinPositive : 0 < qUniform := by
+            simpa only [uniform, not_true_eq_false, false_or] using coinBound.1
+          have coinRest (answer) :
+              (next answer).IsQueryBoundP
+                (fun query => IsModifiedNonceAeadUniformQuery query.2) (qUniform - 1) := by
+            simpa only [ite_eq_left uniform] using coinBound.2 answer
+          have bytesRest (answer) :
+              WorkBound (fun query => plaintextCost query.2) (next answer) qBytes := by
+            rw [WorkBound]
+            simpa only [plaintextCost, Nat.sub_zero] using bytesBound.2 answer
+          have sealRest (answer) :
+              (next answer).IsQueryBoundP
+                (fun query => IsModifiedNonceAeadSealQuery query.2) qSeal := by
+            simpa only [ite_eq_right noSeal] using sealBound.2 answer
+          have nextBound := fun answer =>
+            ih answer (qUniform - 1) qBytes qSeal
+              (coinRest answer) (bytesRest answer) (sealRest answer)
           simp only [localUniformCost] at charged
-          simp only [IsModifiedNonceAeadUniformQuery, IsModifiedNonceAeadSealQuery, plaintextCost,
-            if_true, if_false, Nat.sub_zero, not_true_eq_false, false_or, not_false_eq_true, true_or] at coinBound sealBound bytesBound nextBound
           refine ⟨by omega, fun answer => work_mono cost (next answer) (nextBound answer) ?_⟩
           omega
       | inr input =>
-          simp only [localUniformCost, Bool.false_eq_true, if_false] at charged
-          simp only [IsModifiedNonceAeadUniformQuery, IsModifiedNonceAeadSealQuery, plaintextCost,
-            if_true, if_false, not_true_eq_false, false_or, not_false_eq_true, true_or] at coinBound sealBound bytesBound nextBound
+          have noUniform : ¬IsModifiedNonceAeadUniformQuery (.inr input) := id
+          have sealQuery : IsModifiedNonceAeadSealQuery (.inr input) := trivial
+          have bytesAllowed : input.plaintext.length ≤ qBytes := by
+            simpa only [plaintextCost] using bytesBound.1
+          have sealPositive : 0 < qSeal := by
+            simpa only [sealQuery, not_true_eq_false, false_or] using sealBound.1
+          have coinRest (answer) :
+              (next answer).IsQueryBoundP
+                (fun query => IsModifiedNonceAeadUniformQuery query.2) qUniform := by
+            simpa only [ite_eq_right noUniform] using coinBound.2 answer
+          have bytesRest (answer) :
+              WorkBound (fun query => plaintextCost query.2) (next answer)
+                (qBytes - input.plaintext.length) := by
+            rw [WorkBound]
+            simpa only [plaintextCost] using bytesBound.2 answer
+          have sealRest (answer) :
+              (next answer).IsQueryBoundP
+                (fun query => IsModifiedNonceAeadSealQuery query.2) (qSeal - 1) := by
+            simpa only [ite_eq_left sealQuery] using sealBound.2 answer
+          have nextBound := fun answer =>
+            ih answer qUniform (qBytes - input.plaintext.length) (qSeal - 1)
+              (coinRest answer) (bytesRest answer) (sealRest answer)
+          simp only [localUniformCost, Bool.false_eq_true, ite_false] at charged
           refine ⟨by omega, fun answer => work_mono cost (next answer) (nextBound answer) ?_⟩
           omega
 

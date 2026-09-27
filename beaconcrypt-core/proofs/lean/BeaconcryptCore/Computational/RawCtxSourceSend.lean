@@ -287,13 +287,23 @@ theorem sendGame_publication {Metadata PrimitiveState : Type} {ι : Type} {base 
       result.1.2.owner.expectedSender = state.owner.expectedSender ∧
       result.1.2.owner.associatedData = state.owner.associatedData ∧
       result.1.2.owner.metadata = state.owner.metadata := by
-  unfold sendGame sendOwner StateT.run at hsupport
+  unfold sendGame sendOwner at hsupport
   split at hsupport
   all_goals change result ∈ support ((simulateQ impl _).run primitive) at hsupport
-  all_goals simp only [simulateQ_bind, simulateQ_pure, StateT.run_bind, StateT.run_pure,
-    mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at hsupport
-  · simp only [hsupport, and_self]
-  · obtain ⟨_, _, rfl⟩ := hsupport
+  · change result ∈ support ((simulateQ impl (pure (none, state))).run primitive) at hsupport
+    rw [simulateQ_pure] at hsupport
+    simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at hsupport
+    simp only [hsupport, and_self]
+  · change result ∈ support ((simulateQ impl (do
+      let sent ← simulateQ adapter (send state.owner.kernel {
+        plaintext := plaintext, targetId := state.owner.expectedSender,
+        senderId := senderId, associatedData := state.owner.associatedData })
+      pure (sent.2, { state with owner := { state.owner with kernel := sent.1 } }))).run
+        primitive) at hsupport
+    rw [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at hsupport
+    obtain ⟨sent, _, hresult⟩ := hsupport
+    simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at hresult
+    subst result
     exact ⟨rfl, rfl, rfl, rfl⟩
 
 /-- The adapter preserves either private query category without treating the frame executor's work as free. -/
@@ -401,11 +411,16 @@ theorem sendGame_active_state {Metadata PrimitiveState : Type} {ι : Type} {base
       result.1.2.owner.kernel.refined.receive_slots = state.owner.kernel.refined.receive_slots := by
   unfold sendGame sendOwner at hsupport
   simp only [hnonempty, Bool.false_eq_true, ↓reduceIte] at hsupport
-  unfold StateT.run at hsupport
-  change result ∈ support ((simulateQ impl _).run primitive) at hsupport
-  simp only [simulateQ_bind, simulateQ_pure, StateT.run_bind, StateT.run_pure,
-    mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at hsupport
-  obtain ⟨sent, hsent, rfl⟩ := hsupport
+  change result ∈ support ((simulateQ impl (do
+    let sent ← simulateQ adapter (send state.owner.kernel {
+      plaintext := plaintext, targetId := state.owner.expectedSender,
+      senderId := senderId, associatedData := state.owner.associatedData })
+    pure (sent.2, { state with owner := { state.owner with kernel := sent.1 } }))).run
+      primitive) at hsupport
+  rw [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at hsupport
+  obtain ⟨sent, hsent, hresult⟩ := hsupport
+  simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at hresult
+  subst result
   rw [← QueryImpl.simulateQ_compose] at hsent
   obtain ⟨_, _, _, _, _, _, _, _, _, _, hstate⟩ :=
     send_nonexhausted_support (impl ∘ₛ adapter) state.owner.kernel _ primitive hmax sent hsent

@@ -107,16 +107,25 @@ theorem records
   simp only [PqxdhInitialEvaluatedPost.records, PqxdhInitialEvaluatedRecords.lift,
     PqxdhInitialGenericRecords.records, PqxdhInitialPostPacking.record,
     StateT.run, bind_pure_comp]
-  let execution := ((RawCtxGenericFamilyLive.impl
+  let implementation : QueryImpl (RawCtxProtocolReveals.SourceSpec S B)
+      (StateT (RawCtxGenericFamilyLive.State RawCtxSelectedChain.Kernel M P
+        (PqxdhGeneratedBeaconState.IdentityHandle I) D (PqxdhGeneratedBeaconState.KemHandle K) S B) (Base A)) :=
+    RawCtxGenericFamilyLive.impl
     (RawCtxSelectedParentCalls.labelCalls fixed writer prior entry (RawCtxSelectedParentCalls.childResponse prior entry target))
     (PqxdhInitialSelectedRecords.backend fixed writer prior entry target ∘ₛ RawCtxServerServices.publicLift)
     (RawCtxGenericFamilyRead.nativeReader (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)))
-    sender route decode query).run before.roles).run before.primitive
+    sender route decode
+  let work := (implementation query).run before.roles
+  let execution := work.run before.primitive
+  have cache_run :
+      (PqxdhInitialPendingAmbient.cacheLive implementation query before.roles before.primitive).run cache =
+        (fun result => (result, cache)) <$> execution := rfl
   change (fun result => (result, cache)) <$> ((fun a => (a.1.1,
     { before with roles := a.1.2, primitive := a.2 })) <$> execution) =
-    (fun result => ((result.1.1.1, { before with roles := result.1.1.2, primitive := result.1.2 }), result.2)) <$>
-      ((fun result => (result, cache)) <$> execution)
-  simp only [Functor.map_map]
+    (((fun a => (a.1.1, { before with roles := a.1.2, primitive := a.2 })) <$>
+      PqxdhInitialPendingAmbient.cacheLive implementation query before.roles before.primitive).run cache)
+  rw [StateT.run_map, cache_run]
+  simp only [Functor.map_map, Function.comp_def]
 
 
 section Current

@@ -26,7 +26,16 @@ theorem replayImpl_uniform_step (decode : RawDecoder) (c : Pqxdh.Crypto) (key : 
       (if SourceUniform query then 1 else 64) := by
   cases query with
   | inl request =>
-    cases request <;> exact AdaptiveCtxPrefixQueryBounds.sourceImpl_uniform_step false decode c key _ state
+    cases request with
+    | inl coin =>
+      have computation : (replayImpl decode c key (.inl (.inl coin))).run state =
+          (AdaptiveCtxPrefix.sourceImpl false decode c key (.inl (.inl coin))).run state := by
+        unfold replayImpl AdaptiveCtxPrefix.sourceImpl AdaptiveCtxIndependent.independentImpl
+        rfl
+      exact computation.symm ▸ AdaptiveCtxPrefixQueryBounds.sourceImpl_uniform_step
+        false decode c key (.inl (.inl coin)) state
+    | inr query =>
+      exact AdaptiveCtxPrefixQueryBounds.sourceImpl_uniform_step false decode c key _ state
   | inr raw => exact (OracleComp.isQueryBoundP_true_iff _ _).mpr (replayRaw_uniform_bound decode raw state)
 
 /-- The actual complete replay-only source retains every declared source uniform/hash/seal/raw budget. The analysis-only reserved total table is not part of this concrete runtime source. -/
@@ -85,8 +94,8 @@ theorem honestOnlyImpl_private_step (decode : RawDecoder) (c : Pqxdh.Crypto) (ke
   | inl request =>
     cases request with
     | inl coin =>
-      change ((fun answer => (answer, state)) <$>
-        (DictionarySpec.query (.inl coin) : OracleComp DictionarySpec _)).IsQueryBoundP IsPrivate 0
+      change OracleComp.IsQueryBoundP ((fun answer => (answer, state)) <$>
+        (DictionarySpec.query (.inl coin) : OracleComp DictionarySpec _)) IsPrivate 0
       rw [OracleComp.isQueryBoundP_map_iff, OracleComp.isQueryBoundP_query_iff]
       simp [IsPrivate]
     | inr operation =>
@@ -125,8 +134,8 @@ theorem abstractImpl_private_step (decode : RawDecoder) (c : Pqxdh.Crypto) (key 
   | inl request =>
     cases request with
     | inl coin =>
-      change ((fun answer => (answer, state)) <$>
-        (DictionarySpec.query (.inl coin) : OracleComp DictionarySpec _)).IsQueryBoundP IsPrivate 0
+      change OracleComp.IsQueryBoundP ((fun answer => (answer, state)) <$>
+        (DictionarySpec.query (.inl coin) : OracleComp DictionarySpec _)) IsPrivate 0
       rw [OracleComp.isQueryBoundP_map_iff, OracleComp.isQueryBoundP_query_iff]
       simp [IsPrivate]
     | inr operation =>

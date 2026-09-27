@@ -283,8 +283,9 @@ theorem ctxDirectSampleIndependentTagImpl_publicInputs_length_step
       if IsCtxPublicQuery query then 1 else 0 := by
   rcases query with query | input
   · have hpublic := ctxIndependentPublicOracle_publicInputs query state result hresult
-    simp only [IsCtxPublicQuery, if_true]
+    simp only [IsCtxPublicQuery]
     rw [hpublic, List.length_cons]
+    rfl
   · have hpublic := ctxDirectSampleKeyFreeSealOracle_publicInputs
       c key input state result hresult
     simp [IsCtxPublicQuery, hpublic]

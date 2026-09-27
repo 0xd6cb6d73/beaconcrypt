@@ -73,8 +73,11 @@ structure FutureKdfRefines
 theorem array_set_get! {α : Type} [Inhabited α] {n : Std.Usize}
     (a : Array α n) (slot : Std.Usize) (value : α) (i : Nat) (hi : i < a.length) :
     (a.set slot value).val[i]! = if slot.val = i then value else a.val[i]! := by
-  by_cases heq : slot.val = i <;>
-    simp [Array.set_val_eq, heq, show i < n.val by simpa using hi]
+  by_cases heq : slot.val = i
+  · simpa only [if_pos heq, ← Array.getElem!_Nat_eq] using
+      (Array.getElem!_Nat_set_eq a slot i value ⟨heq, hi⟩)
+  · simpa only [if_neg heq, ← Array.getElem!_Nat_eq] using
+      (Array.getElem!_Nat_set_ne a slot i value heq)
 
 /-- Appending a skipped derivation preserves the exact control-prefix relation. -/
 theorem FutureControlRefines.advance
@@ -122,7 +125,7 @@ theorem FutureStagedRefines.append
     · rw [array_set_get! _ _ _ _ (by scalar_tac), if_neg (by omega)]
       exact h.staged j (by omega)
   · intro i hi hout
-    rw [array_set_get! _ _ _ _ (by simpa using hi), if_neg (by omega)]
+    rw [array_set_get! _ _ _ _ (by simpa [Array.length_eq] using hi), if_neg (by omega)]
     exact h.empty i hi (by omega)
 
 /-- A live bounded logical slot exposes its exact cached sequence. -/

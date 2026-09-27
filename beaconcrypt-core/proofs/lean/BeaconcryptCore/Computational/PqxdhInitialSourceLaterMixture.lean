@@ -20,7 +20,8 @@ theorem supported_event_bound {Context : Type} (sampler : ProbComp Context)
     ENNReal.ofReal ((sampler >>= left).boolDistAdvantage (sampler >>= right)) ≤ Pr[bad | sampler] := by
   let annotation := RawCtxSupportedSample.certify sampler (fun context => context ∈ support sampler) (fun _ supported => supported)
   have bound := ofReal_tvDist_bind_left_event_le annotation (fun context => left context.val) (fun context => right context.val)
-    (fun context => bad context.val) (fun context good => agree context.val context.property good)
+    (fun context => bad context.val) (fun context good =>
+      evalSPMF_eq_of_evalDist_eq _ _ (agree context.val context.property good))
   have erased : Subtype.val <$> annotation = sampler := RawCtxSupportedSample.erase sampler _ _
   have leftSame : (annotation >>= fun context => left context.val) = sampler >>= left := RawCtxSupportedSample.run sampler _ _ left
   have rightSame : (annotation >>= fun context => right context.val) = sampler >>= right := RawCtxSupportedSample.run sampler _ _ right
@@ -29,7 +30,8 @@ theorem supported_event_bound {Context : Type} (sampler : ProbComp Context)
     simpa only [probEvent_map, Function.comp_def] using
       congrArg (fun work : ProbComp Context => Pr[bad | work]) erased
   rw [probability] at bound
-  exact (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist _ _)).trans bound
+  simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton] using
+    (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist (sampler >>= left) (sampler >>= right))).trans bound
 
 variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
   (selectedMessage : Message) (previousRoot : RootOutput) (response64 : PqxdhInitialRootLabelService.Response)
@@ -81,13 +83,14 @@ theorem resumed_prepared (stage : Nat) (afterDepth : depth < stage) :
     𝒟[sourceSample >>= fun context => ($ᵗ FullOutput) >>= continuation stage context] =
     𝒟[PqxdhInitialPreparedParent.prepare source writer (pre other) (application other) initial (selector other) (aux other)
       mark sender route decode observation execution depth state >>= resume stage] := by
+  apply evalDist_eq_of_evalSPMF_eq
   rw [← PqxdhInitialPreparedResources.sample_run source writer (pre other) (application other) initial (selector other) (aux other)
     mark sender route decode observation execution depth state (resume stage)]
-  apply evalDist_bind_congr
+  apply evalSPMF_bind_congr
   intro context supported
   cases context with
   | inl decision =>
-    exact OracleComp.DeferredSampling.evalDist_bind_const_neverFails ($ᵗ FullOutput) (by simp) (pure decision)
+    exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput) (by simp) (pure decision)
   | inr input =>
     have original : Sum.inr input.val ∈ support
         (PqxdhInitialPreparedParent.prepare source writer (pre other) (application other) initial (selector other) (aux other)
@@ -101,7 +104,7 @@ theorem resumed_prepared (stage : Nat) (afterDepth : depth < stage) :
     simp only [Sum.map_inr, PqxdhInitialPreparedParent.resume, PqxdhInitialPreparedParent.finish,
       PqxdhInitialNativeAdjacent.continued, RawCtxForwardScan.pack, RawCtxPendingMixedPrefix.finish,
       drawn, bind_map_left, bind_assoc]
-    apply evalDist_bind_congr' ($ᵗ FullOutput)
+    apply evalSPMF_bind_congr' ($ᵗ FullOutput)
     intro parent
     unfold resumed PqxdhInitialSourceLaterEndpoints.afterParent PqxdhInitialSourcePreparedSecrecy.observe
     rw [bind_pure_comp]
@@ -196,7 +199,8 @@ theorem random_bound (position : number.val = (depth + 1) + remaining + 1) :
           exact same ▸ reached
         cases context with
         | inl decision =>
-          exact (OracleComp.DeferredSampling.evalDist_bind_const_neverFails ($ᵗ FullOutput) (by simp) (pure decision)).symm
+          apply evalDist_eq_of_evalSPMF_eq
+          exact (OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput) (by simp) (pure decision)).symm
         | inr input =>
           exact PqxdhInitialSourceLaterEndpoints.random_endpoint source writer selectedMessage previousRoot response64 other
             sender route decode index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining

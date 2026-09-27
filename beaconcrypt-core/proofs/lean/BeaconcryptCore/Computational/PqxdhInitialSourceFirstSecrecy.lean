@@ -36,20 +36,21 @@ theorem actual_source (prior : ProbComp (Context extra M P I D K X Response A N 
     𝒟[PqxdhInitialHalfSecrecy.actual source writer (mark source) sender route decode (view source) prior address] := by
   simp only [PqxdhInitialSourceSampled.game, PqxdhInitialHalfSecrecy.actual,
     RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
-  apply evalDist_bind_congr' prior
+  apply evalDist_bind_congr
   intro context
   cases context with
   | inl decision =>
       simp only [PqxdhInitialSourceSampled.observe, PqxdhInitialHalfSecrecy.native]
-      exact (OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure ($ᵗ HmacBlock) (pure decision)).trans
-        (OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure ($ᵗ FullOutput) (pure decision)).symm
+      apply evalDist_eq_of_evalSPMF_eq
+      exact (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ HmacBlock) (pure decision)).trans
+        (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ FullOutput) (pure decision)).symm
   | inr input =>
       have sampled := initial_observed (second input.selected) (fun other target =>
         PqxdhInitialSourceInitialSecrecy.sourceGame source writer sender route decode input zeroRoot
           (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) 0)
       simp only [join_parts] at sampled
-      refine sampled.trans ?_
-      apply evalDist_bind_congr' ($ᵗ FullOutput)
+      refine (evalDist_eq_of_evalSPMF_eq _ _ sampled).trans ?_
+      apply evalDist_bind_congr
       intro output
       simpa only [address, RawCtxSelectedParentEntry.fromOutput, RawCtxInitialSentinel.entry, RawCtxInitialSentinel.sentinel,
         target_source] using congrArg evalDist (real_native source writer sender route decode input
@@ -63,22 +64,23 @@ theorem random_source (prior : ProbComp (Context extra M P I D K X Response A N 
     𝒟[PqxdhInitialHalfSecrecy.random source writer (mark source) sender route decode (view source) prior address] := by
   simp only [PqxdhInitialSourceSampled.game, PqxdhInitialHalfSecrecy.random,
     RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
-  apply evalDist_bind_congr
+  apply evalDist_bind_congr_of_support
   intro context supported
   cases context with
   | inl decision =>
       simp only [PqxdhInitialSourceSampled.observe, PqxdhInitialHalfSecrecy.native]
-      exact (OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure ($ᵗ HmacBlock) (pure decision)).trans
-        ((OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure ($ᵗ FullOutput)
+      apply evalDist_eq_of_evalSPMF_eq
+      exact (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ HmacBlock) (pure decision)).trans
+        ((OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ FullOutput)
           (($ᵗ FullOutput) >>= fun _ => pure decision)).trans
-          (OracleComp.ProgramLogic.Relational.evalDist_bind_const_of_no_failure ($ᵗ FullOutput) (pure decision))).symm
+          (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ FullOutput) (pure decision))).symm
   | inr input =>
       have sampled := initial_observed (second input.selected) (fun other target =>
         PqxdhInitialSourceInitialSecrecy.sourceGame source writer sender route decode input zeroRoot
           (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) 1)
       simp only [join_parts] at sampled
-      refine sampled.trans ?_
-      apply evalDist_bind_congr' ($ᵗ FullOutput)
+      refine (evalDist_eq_of_evalSPMF_eq _ _ sampled).trans ?_
+      apply evalDist_bind_congr
       intro output
       exact random_native source writer sender route decode input (positive input supported)
         (PqxdhOrderedChainHybrids.material output).1 (PqxdhOrderedChainHybrids.nextChain output)

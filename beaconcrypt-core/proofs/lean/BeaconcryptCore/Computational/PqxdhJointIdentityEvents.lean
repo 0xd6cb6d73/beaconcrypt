@@ -367,8 +367,7 @@ theorem reportingImpl_uniform_bound (primitives : Primitives) {count : ℕ} (see
       (if sourceClass (globalClass (IsClass .uniform)) query then 1 else 0) := by
   cases query with
   | inl request =>
-    change ((fun result => (result.1, { state with publicState := result.2 })) <$>
-      (sourceImpl primitives seeds request).run state.publicState).IsQueryBoundP (fun _ => True) _
+    simp only [reportingImpl, StateT.run, sourceClass, bind_pure_comp]
     simp only [OracleComp.isQueryBoundP_map_iff]
     exact sourceImpl_uniform_bound primitives seeds request state.publicState
   | inr candidate =>

@@ -49,13 +49,14 @@ theorem localSelector_uniform_step
        (if SelectorCCA (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery query then qDecap else 0)) := by
   cases query with
   | inl request =>
-      simp only [localSelector, SelectorCCA, SelectorSource, if_false, Nat.add_zero]
+      simp only [localSelector, SelectorCCA, SelectorSource]
       apply publicSource_bound
       apply (isQueryBoundP_query_iff (spec := SourceSpec) (p := SourceUniform) request _).2
       split_ifs <;> simp_all
   | inr request =>
-      simp only [localSelector, SelectorCCA, SelectorSource, if_false, Nat.zero_add]
-      exact localCoins_uniform _ _
+      simp only [localSelector, SelectorCCA]
+      simpa only [ite_eq_right (show ¬ SelectorSource (baseSpec := baseSpec) SourceUniform
+        (.inr request) from id), Nat.zero_add] using localCoins_uniform _ _
         (evalKem_query_uniform_bound baseImpl kem secret qBase qDecap baseBound decapBound request)
 
 /-- The syntactic private selector budget retains every possible source and CCA reply, without charging source creation twice. -/

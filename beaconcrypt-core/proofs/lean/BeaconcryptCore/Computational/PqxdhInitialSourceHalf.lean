@@ -177,7 +177,7 @@ theorem random_native (input : Input extra M P I D K X Response A N S B)
   rw [PqxdhInitialSourceRandom.game_source source writer input.selectedMessage zeroRoot _ input.other
     sender route decode input.index input.metadata _ input.post input.before input.selected
     input.shared input.privateState input.cache input.number positive]
-  apply evalDist_bind_congr' ($ᵗ FullOutput)
+  refine congrArg evalDist (bind_congr ?_)
   intro output
   rw [← retained_native source writer sender route decode input other target padding output]
   unfold PqxdhInitialSourceRandom.decision PqxdhInitialSourceRandom.randomRun

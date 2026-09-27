@@ -37,8 +37,13 @@ The generated Lean project lives under:
 ```text
 proofs/lean/
 ├── BeaconcryptCore.lean
+├── apply-dependency-patches.sh            # verifies and applies reviewed Lean 4.34.0 overlays
 ├── lakefile.toml
 ├── lean-toolchain
+├── patches/
+│   ├── README.md
+│   ├── aeneas-lean-4.34.patch
+│   └── hax-lean-4.34.patch
 ├── BeaconcryptCore/
 │   ├── Assumptions/
 │   │   └── FunsExternal.lean            # maintained external assumptions
@@ -116,18 +121,21 @@ The default production core is first-order at its cryptographic boundary and is 
 cargo hax -C --locked ';' into lean
 ```
 
-This includes `ratchet::control`, `ratchet::refined`, the production `ratchet::concrete` effect phases, deterministic PQXDH logic, and the `pqxdh::concrete` initial-KDF phases. Translation coverage is not theorem coverage: successful extraction shows that Charon and Aeneas accepted the Rust source, while `lake build` checks the generated definitions and imported handwritten files. A refinement theorem is still needed before a newly translated transition can be called verified against the handwritten ideal model.
+This command uses the retained cargo-hax 0.4.0 extraction path, including `ratchet::control`, `ratchet::refined`, the production `ratchet::concrete` effect phases, deterministic PQXDH logic, and the `pqxdh::concrete` initial-KDF phases. Translation coverage is not theorem coverage: successful extraction shows that Charon and Aeneas accepted the Rust source, while the prepared Lean build checks the generated definitions and imported handwritten files. A refinement theorem is still needed before a newly translated transition can be called verified against the handwritten ideal model.
 
 ### Build the generated Lean project
 
-After extraction:
+From `beaconcrypt-core`, run the Lean-only Make target:
 
 ```bash
-cd proofs/lean
-lake build
+make check-lean
 ```
 
-A successful build verifies that the generated Aeneas model is accepted by the pinned Lean toolchain.
+`check-lean` first runs `prepare-lean-dependencies`, which verifies the root configuration and exact Lake dependency revisions, materializes missing package checkouts from the immutable manifest, applies the reviewed Aeneas and Hax-Lean compatibility overlays, checks their patch and resulting-diff hashes, and then executes `lake --rehash build`. Run `make prepare-lean-dependencies` independently only when a prepared package checkout is needed without a build. Do not substitute a direct `lake build`, because it bypasses these preparation and assurance checks.
+
+The retained cargo-hax 0.4.0 extraction configuration selects Aeneas `nightly-2026.09.03-6852e64`, Charon `nightly-2026.09.02`, and Hax-Lean v0.3.17. The Lake manifest resolves Aeneas to `6852e6474ec508930acba4df79977b3483a10d10` and Hax-Lean to `b49608d5e402577b400569ee989c3f1b69e4aaf3`. Those Lean-library revisions do not compile unmodified under Lean/Mathlib 4.34.0. The reviewed Aeneas overlay forward-ports the upstream Lean 4.33 work, adapts the Lean 4.34 `bv_decide` interface and direct BitVec proofs, and preserves its `RustM` and partial-specification interfaces; the Hax-Lean overlay supplies two focused elaboration adaptations. The Aeneas package sets `preferReleaseBuild := false` so Lake cannot replace the patched source checkout with an upstream archive, and it disables only the weak `dupNamespace`, `defProp`, and `ambiguousOpen` style linters. These options do not disable Lean kernel checking.
+
+A successful prepared build verifies that the generated Aeneas model and all maintained Lean modules are accepted by the pinned Lean 4.34.0 toolchain and reviewed dependency sources.
 
 The imported `Computational/PqxdhJointKdf.lean` module models the production HKDF-SHA-512/no-salt wrapper as one canonical 76-byte stream for each exact `(info, input)` address. The typed public projection surface has only the source constants `INFO_PQ` and `INFO_R`: the PQXDH root is `first32` under `INFO_PQ`, the initial ratchet output is `first64` under `INFO_R` split into `first32` and `second32`, and a ratchet step at the same `INFO_R` address is `first32`, `second32`, and `final12`. It proves exact output widths, domain/address separation, same-address cache consistency, initial/step projection equality, and exact 64/76-byte prefix consistency without inventing phase, role, direction, sequence, session, peer, or output-length tags. `ProductionHkdfPrefixConsistent` is an explicit functional/source contract relating the fixed production wrapper calls, not a cryptographic-security theorem or an axiom strengthening `Pqxdh.Crypto`.
 
@@ -165,7 +173,7 @@ The imported `Computational/CtxComputationalSecurity.lean` module defines the ac
 
 The imported `Computational/CtxComputationalPrivacy.lean` module proves component-level confidentiality preservation for the same modified-CTX sealing surface. A bounded Boolean adversary receives adaptive access to the consistent public lazy ROM and a nonce-rejecting chosen-plaintext seal oracle, then returns one decision bit. The real game samples one hidden 256-bit key and returns the actual `C || T || T*` record; the ideal game preserves plaintext length and nonce-reuse leakage while sampling each fresh body, 16-byte base tag, and 64-byte outer commitment independently, without conditioning away natural collisions. Split-cache isolation charges the public hidden-key-prefix event exactly once, honest outer commitments become one exact independent `CtxDigest` sample per successful fresh seal with zero loss, and a Boolean view reduction has exact real and random primitive-game equalities. The structural bound is `ofReal(Adv_CTX-privacy) ≤ ofReal(Adv_IND$(R_view)) + Pr[prefix]`; substitution gives the specialized `ofReal(Adv_CTX-privacy) ≤ ofReal(Adv_IND$(R_view)) + ofReal(Adv_IND$-probe(R_prefix)) + qH / 2^256` and, for `qE < 2^96`, the conventional `ofReal(Adv_CTX-privacy) ≤ ofReal(Adv_IND$(R_view)) + ofReal(Adv_IND$(R_validate)) + qH / 2^128`. These are two distinct primitive reductions. There is no INT-CTXT, collision-resistance, birthday, `2^-512`, or commitment-guessing term in the privacy theorem. Accounting proves source total `qH + qE`, `qE` primitive seals for the view and probe reductions, `qE + 1` for validation, `64(qH + qE)` reduction-side uniform-byte calls, and primitive-interface totals `64qH + 65qE` or `64qH + 65qE + 1`. Those fixed counts deliberately exclude challenger-private length-matched bodies and 16-byte tags; a complete ideal-world coin bound needs a total plaintext-byte budget. This is a one-key seal/public-ROM privacy ingredient. A computational interpretation of ProVerif's `seal_frame`/`open_frame` interface still requires key-distribution, decryption and adaptive execution composition; neither the component theorem nor the symbolic analysis proves those steps.
 
-The imported `Computational/VCVioFeasibility.lean` pilot uses the immutable VCVio v4.31.0 commit recorded in `lakefile.toml` and the manifest. It specializes VCVio's tight and looser collision-resistance-chain bounded adaptive random-oracle binding theorems to the Aeneas-extracted 229-byte commitment-transcript type and a 512-bit digest, and it checks exact one- and two-call behavior for a linked private consuming-key store. It is feasibility evidence, not a checked embedding of beaconcrypt's CTX game, a complete state-separated composition, or a production security theorem; see [`../../../doc/impl/vcvio-feasibility.md`](../../../doc/impl/vcvio-feasibility.md).
+The imported `Computational/VCVioFeasibility.lean` pilot uses stable VCVio v4.34.0 commit `98dc1089129086b776129c79d88c0c561b8d8d1a`, recorded immutably in `lakefile.toml` and the manifest alongside Mathlib 4.34.0. VCVio 4.34 makes measure-valued `evalDist` semantics primary and retains `evalSPMF` for explicitly discrete arguments; the adapted Beaconcrypt reductions use the measure interface for the public KEM, signature, and initializer games while preserving the discrete compatibility interface where finitary proofs still need it. The pilot specializes VCVio's tight and looser collision-resistance-chain bounded adaptive random-oracle binding theorems to the Aeneas-extracted 229-byte commitment-transcript type and a 512-bit digest, and it checks exact one- and two-call behavior for a linked private consuming-key store. It is feasibility evidence, not a checked embedding of beaconcrypt's CTX game, a complete state-separated composition, or a production security theorem; see [`../../../doc/impl/vcvio-feasibility.md`](../../../doc/impl/vcvio-feasibility.md).
 
 The imported `RatchetEffect.lean` layer proves structural laws directly against generated phase definitions: exact initial requests and role starts, core-owned response partitioning, exact send/receive requests, context preservation, entry-state recovery on cancellation/rejection/failed open, advanced-state return on either seal result, and publication of the same successful plaintext.
 
@@ -195,8 +203,7 @@ rm -rf proofs/lean/.lake/build
 
 cargo hax -C --locked ';' into lean
 
-cd proofs/lean
-lake build
+make check-lean
 ```
 
 Do **not** remove the entire `proofs/lean/BeaconcryptCore/` directory because it contains the maintained `Assumptions/`, `Model/`, `Refinement/`, and `Verification/` trees.
@@ -208,14 +215,17 @@ The Makefile exposes separate Lean verification targets:
 ```make
 LEAN_DIR := proofs/lean
 
-.PHONY: extract-lean check-lean verify-lean verify-lean-in-shell
+.PHONY: extract-lean prepare-lean-dependencies check-lean verify-lean verify-lean-in-shell
 
 extract-lean:
 	rm -rf $(LEAN_DIR)/llbc
 	cargo hax -C --locked ';' into lean
 
-check-lean:
-	cd $(LEAN_DIR) && lake build
+prepare-lean-dependencies:
+	bash $(LEAN_DIR)/apply-dependency-patches.sh
+
+check-lean: prepare-lean-dependencies check-lean-policy check-lean-root
+	cd $(LEAN_DIR) && lake --rehash build
 
 verify-lean:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -455,13 +465,13 @@ beaconcrypt-core
     └── refined                extracted
 ```
 
-“Extracted” here means translated by Charon/Aeneas. The maintained root additionally checks all 269 unconditional panic-freedom contracts, exact phase semantics, complete cached and future publication, finite send/receive driver composition, structural validity and replay properties, conditional ideal and paired-session preservation, and generic plus conditional canonical restoration. Structural theorems need only valid control/material alignment; ideal provenance theorems state their stronger chain/key assumptions explicitly. The primitive, adapter, compiler, and persistence boundaries above remain external.
+“Extracted” here means translated by Charon/Aeneas. The maintained root additionally checks all 279 unconditional panic-freedom contracts, exact phase semantics, complete cached and future publication, finite send/receive driver composition, structural validity and replay properties, conditional ideal and paired-session preservation, and generic plus conditional canonical restoration. Structural theorems need only valid control/material alignment; ideal provenance theorems state their stronger chain/key assumptions explicitly. The primitive, adapter, compiler, and persistence boundaries above remain external.
 
 Any change that reintroduces higher-order executor plumbing or unsupported mutable-array operations should be expected to require source-level normalization. Reintroducing exclusions would reduce production coverage and must be documented as a trust-boundary regression rather than treated as a routine extractor workaround.
 
 ## Extracted-core panic freedom
 
-`BeaconcryptCore.PanicFreedom.API` certifies normal return for all 269 non-helper `RustM` operations in the current default extraction, universally over their complete typed inputs. The generated contracts have no state-validity or faithful-response premises. Their manifest is `panic-freedom.json`; regenerate the aggregate module with `python3 scripts/check_lean_panic_freedom.py --write` from the repository root after reviewing an extraction change. `make -C beaconcrypt-core check-lean` checks coverage, signatures, checker regressions, policy, and compilation. The ideal PQXDH and ratchet models remain fixed at the migration baseline.
+`BeaconcryptCore.PanicFreedom.API` certifies normal return for all 279 non-helper `RustM` operations in the current default extraction, universally over their complete typed inputs. The generated contracts have no state-validity or faithful-response premises. Their manifest is `panic-freedom.json`; regenerate the aggregate module with `python3 scripts/check_lean_panic_freedom.py --write` from the repository root after reviewing an extraction change. `make -C beaconcrypt-core check-lean` checks coverage, signatures, checker regressions, policy, and compilation. The current composition baseline pins the complete reviewed eleven-file ideal model set, including the HB-88 response-encoding witness and HB-95 sequence-one transition and admission theorem. Three theorem bodies retain elaboration-only rewrites introduced during the reviewed Lean 4.33.1 port; the Lean 4.34 migration leaves every model definition and theorem statement unchanged, while the eleven-file digest records those proof-body changes.
 
 See [`../../../doc/formal-verification-analysis.md`](../../../doc/formal-verification-analysis.md) for proof scope and validation, and [`../../../doc/impl/ratchet-fstar-coverage.md`](../../../doc/impl/ratchet-fstar-coverage.md) for the historical F* declaration comparison. Runtime/compiler correspondence and adapter or primitive panics remain outside the extracted-core guarantee.
 

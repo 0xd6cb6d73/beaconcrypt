@@ -42,24 +42,24 @@ theorem single_uniform {ι State Result : Type} {spec : OracleSpec ι}
     (source : FixedHkdfSha512NoSaltSource) (other : QueryImpl spec (StateT State ProbComp))
     (client : OracleComp (spec + JointKdfRO) Result) (state : State) (cache : Table) (cursor : Cursor)
     (missing : cache (cursorAddress cursor) = none) :
-    𝒟[(fun result => (result.1, result.2.1)) <$>
+    𝒮[(fun result => (result.1, result.2.1)) <$>
       (simulateQ (handler source (cursor.depth + 1) other) client).run (state, (cache, cursor))] =
-      𝒟[(($ᵗ FullOutput) >>= fun output =>
+      𝒮[(($ᵗ FullOutput) >>= fun output =>
         (simulateQ (viewImpl (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other) client).run state)] := by
   induction client using OracleComp.inductionOn generalizing state cache cursor with
   | pure value =>
-    change 𝒟[(pure (value, state) : ProbComp (Result × State))] =
-      𝒟[(($ᵗ FullOutput) >>= fun _ => pure (value, state))]
-    exact (OracleComp.DeferredSampling.evalDist_bind_const_neverFails ($ᵗ FullOutput)
+    change 𝒮[(pure (value, state) : ProbComp (Result × State))] =
+      𝒮[(($ᵗ FullOutput) >>= fun _ => pure (value, state))]
+    exact (OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput)
       probFailure_eq_zero (pure (value, state))).symm
   | query_bind query next ih =>
     cases query with
     | inl query =>
       simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
       simp only [handler, viewImpl, StateT.run, bind_assoc, pure_bind, map_bind]
-      refine (evalDist_bind_congr' ((other query).run state)
+      refine (evalSPMF_bind_congr' ((other query).run state)
         (fun result => ih result.1 result.2 cache cursor missing)).trans ?_
-      exact (OracleComp.DeferredSampling.evalDist_bind_comm ($ᵗ FullOutput) ((other query).run state)
+      exact (OracleComp.DeferredSampling.evalSPMF_bind_comm ($ᵗ FullOutput) ((other query).run state)
         (fun output result => (simulateQ (viewImpl
           (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other)
           (next result.1)).run result.2)).symm
@@ -72,13 +72,13 @@ theorem single_uniform {ι State Result : Type} {spec : OracleSpec ι}
           private_selected source (cursor.depth + 1) (cursorAddress cursor) (cache, cursor) missing chosen (Nat.lt_succ_self _),
           bind_map_left, pure_bind, map_bind, bind_assoc]
         simp only [view, QueryCache.cacheQuery_self, Option.getD_some]
-        refine evalDist_bind_congr' ($ᵗ FullOutput) (fun output => ?_)
-        change 𝒟[(fun result => (result.1, result.2.1)) <$>
+        refine evalSPMF_bind_congr' ($ᵗ FullOutput) (fun output => ?_)
+        change 𝒮[(fun result => (result.1, result.2.1)) <$>
           (simulateQ (handler source (cursor.depth + 1) other) (next output)).run
             (state, (cache.cacheQuery (cursorAddress cursor) output, advance cursor (cursorAddress cursor) output))] =
-          𝒟[(simulateQ (viewImpl (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other)
+          𝒮[(simulateQ (viewImpl (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other)
             (next output)).run state]
-        exact congrArg evalDist (saturated_view source (cursor.depth + 1) other (next output) state
+        exact congrArg evalSPMF (saturated_view source (cursor.depth + 1) other (next output) state
           (cache.cacheQuery (cursorAddress cursor) output) (advance cursor (cursorAddress cursor) output)
           (by simp [advance_depth, chosen]))
       · have unchosen : matched cursor request = false := by simp [matched, same]
@@ -90,11 +90,11 @@ theorem single_uniform {ι State Result : Type} {spec : OracleSpec ι}
               view (productionStream source.crypto) cache request := by
           simp only [view, QueryCache.cacheQuery_of_ne (spec := JointKdfRO) cache output same]
         simp only [response]
-        change 𝒟[(fun result => (result.1, result.2.1)) <$>
+        change 𝒮[(fun result => (result.1, result.2.1)) <$>
           (simulateQ (handler source (cursor.depth + 1) other)
             (next (view (productionStream source.crypto) cache request))).run
             (state, (cache.cacheQuery request (view (productionStream source.crypto) cache request), cursor))] =
-          𝒟[(($ᵗ FullOutput) >>= fun output =>
+          𝒮[(($ᵗ FullOutput) >>= fun output =>
             (simulateQ (viewImpl (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other)
               (next (view (productionStream source.crypto) cache request))).run state)]
         have stillMissing : (cache.cacheQuery request (view (productionStream source.crypto) cache request)) (cursorAddress cursor) = none := by

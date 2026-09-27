@@ -30,9 +30,10 @@ theorem step_bound
     cases key with
     | some prior => exact (auxBound (.localDecapsulation value prior) state).mono (Nat.le_add_right _ _)
     | none =>
-      change ((fun reply => (Option.map PqxdhRootTableInitialization.rootArray reply, state)) <$>
+      change OracleComp.IsQueryBoundP
+        ((fun reply => (Option.map PqxdhRootTableInitialization.rootArray reply, state)) <$>
         (((SelectorSpec baseSpec).query (.inr (.inr (PqxdhPhase2InputBytes.ciphertext value)))) :
-          OracleComp (SelectorSpec baseSpec) (Option MlKemSharedSecret))).IsQueryBoundP predicate _
+          OracleComp (SelectorSpec baseSpec) (Option MlKemSharedSecret))) predicate _
       rw [isQueryBoundP_map_iff]
       exact (isQueryBoundP_query_iff (spec := SelectorSpec baseSpec) (p := predicate)
         (.inr (.inr (PqxdhPhase2InputBytes.ciphertext value))) _).2 (by

@@ -218,7 +218,8 @@ theorem real_eq_correlated
       𝒟[simulateQ (kemAmbientImpl baseImpl)
         (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)] := by
   simp only [realGame, reduction_real source hmac correct]
-  rw [evalDist_sample_comm ($ᵗ MlKemSharedSecret) (prepare baseImpl kem protocol)]
+  apply evalDist_eq_of_evalSPMF_eq
+  rw [evalSPMF_sample_comm ($ᵗ MlKemSharedSecret) (prepare baseImpl kem protocol)]
   simp only [prepare, randomMain, runtimeOfImpl_liftProbComp, simulateQ_bind,
     simulateQ_kemAmbient_liftProbComp, bind_assoc, pure_bind]
 

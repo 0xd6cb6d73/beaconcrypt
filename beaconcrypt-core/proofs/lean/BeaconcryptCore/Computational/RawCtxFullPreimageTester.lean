@@ -312,11 +312,11 @@ end BeaconcryptCore.Computational.RawCtxFullPreimageTester
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxFullPreimageTester.evaluate_queries
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxFullPreimageTester.tester_uniform' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxFullPreimageTester.tester_uniform' does not depend on any axioms -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxFullPreimageTester.tester_uniform
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxFullPreimageTester.byteSampler_uniform' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.RawCtxFullPreimageTester.byteSampler_uniform' does not depend on any axioms -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxFullPreimageTester.byteSampler_uniform
 

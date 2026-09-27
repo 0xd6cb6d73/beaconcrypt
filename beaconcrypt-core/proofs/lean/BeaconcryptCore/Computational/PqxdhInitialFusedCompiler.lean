@@ -94,7 +94,8 @@ theorem private_native
       (fun reply => (reply, state)) <$> PqxdhPhase2InputBytes.rootCall fixed challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4 := by
     simp only [PqxdhPhase2PostScheduler.handles, QueryImpl.compose,
       PqxdhPhase2SharedKemHandles.full, simulateQ_spec_query, PqxdhBeaconPhase2Routed.handles]
-    rfl
+    simp only [StateT.run_monadLift, monadLift_eq_self, map_eq_bind_pure_comp]
+    congr 1
   unfold native
   simp only [PqxdhInitialFusedOwner.native, PqxdhInitialFusedBeacon.native,
     simulateQ_bind, simulateQ_spec_query, PqxdhBeaconPhase2Shared.tailLift, StateT.run_bind]

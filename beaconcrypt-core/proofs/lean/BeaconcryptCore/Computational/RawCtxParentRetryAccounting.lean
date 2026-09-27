@@ -58,6 +58,7 @@ theorem parent_retry_logged (reader : RawCtxSelectedLiveTrace.Reader) (target : 
         ((state, candidates ++ [RawCtxSelectedQueryTrace.rootVector chain]), flag)) := by
   rw [known_logged]
   simp only [if_neg different, RawCtxSelectedParentTable.step, if_pos parent]
+  rfl
 
 /-- The concrete hidden send request reuses its one full child response without inventing a known-input candidate. -/
 theorem hidden_logged (reader : RawCtxSelectedLiveTrace.Reader) (target : RootOutput)

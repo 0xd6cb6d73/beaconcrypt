@@ -40,11 +40,33 @@ theorem handles_root_step
     case decapsulate value key =>
       cases key with
       | none =>
+          have handled :
+              (handles source challenge aux (.inl (.decapsulate value none))).run auxiliary =
+                (fun reply => (reply, auxiliary)) <$>
+                  PqxdhPhase2InputBytes.decapCall challenge value := by
+            rw [show handles source challenge aux (.inl (.decapsulate value none)) =
+              liftM (PqxdhPhase2InputBytes.decapCall challenge value) by rfl]
+            simp only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+              StateT.run, bind_pure_comp]
+          rw [handled]
           apply (isQueryBoundP_map_iff (p := IsPrivateRoot (baseSpec := baseSpec))
             (PqxdhPhase2InputBytes.decapCall challenge value) (fun reply => (reply, auxiliary)) 0).mpr
-          simpa only [IsPrivateRoot, if_false, ite_self] using
-            PqxdhPhase2InputBytes.decapCall_bound challenge value (IsPrivateRoot (baseSpec := baseSpec))
+          apply (PqxdhPhase2InputBytes.decapCall_bound challenge value
+            (IsPrivateRoot (baseSpec := baseSpec))).mono
+          by_cases selected : PqxdhPhase2InputBytes.ciphertext value = challenge <;>
+            simp [selected, IsPrivateRoot]
       | some prior =>
+          have handled :
+              (handles source challenge aux (.inl (.decapsulate value (some prior)))).run auxiliary =
+                (fun pair =>
+                  (Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) pair.1,
+                    pair.2)) <$>
+                  (sharedAux aux (.localDecapsulation value prior)).run auxiliary := by
+            rw [show handles source challenge aux (.inl (.decapsulate value (some prior))) =
+              Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) <$>
+                sharedAux aux (.localDecapsulation value prior) by rfl]
+            exact StateT.run_map _ _ _
+          rw [handled]
           exact (isQueryBoundP_map_iff (p := IsPrivateRoot (baseSpec := baseSpec))
             ((sharedAux aux (.localDecapsulation value prior)).run auxiliary)
             (fun pair => (Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) pair.1, pair.2)) 0).mpr
@@ -54,6 +76,17 @@ theorem handles_root_step
     · cases tail <;> simp only [rootCall, isRoot, Bool.false_eq_true, if_false, if_true]
       all_goals first | exact sharedAux_no_root aux _ auxiliary | skip
       case root secrets =>
+        have handled :
+            (handles source challenge aux (.inr (.inr (.root secrets)))).run auxiliary =
+              (fun reply => (reply, auxiliary)) <$>
+                PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1
+                  secrets.dh2 secrets.dh3 secrets.dh4 := by
+          rw [show handles source challenge aux (.inr (.inr (.root secrets))) =
+            liftM (PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1
+              secrets.dh2 secrets.dh3 secrets.dh4) by rfl]
+          simp only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+            StateT.run, bind_pure_comp]
+        rw [handled]
         apply (isQueryBoundP_map_iff (p := IsPrivateRoot (baseSpec := baseSpec))
           (PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4)
           (fun reply => (reply, auxiliary)) 1).mpr
@@ -134,11 +167,38 @@ theorem handles_public_step
     case decapsulate value key =>
       cases key with
       | none =>
+          have handled :
+              (handles source challenge aux (.inl (.decapsulate value none))).run auxiliary =
+                (fun reply => (reply, auxiliary)) <$>
+                  PqxdhPhase2InputBytes.decapCall challenge value := by
+            rw [show handles source challenge aux (.inl (.decapsulate value none)) =
+              liftM (PqxdhPhase2InputBytes.decapCall challenge value) by rfl]
+            simp only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+              StateT.run, bind_pure_comp]
+          rw [handled]
+          change ((fun reply => (reply, auxiliary)) <$>
+            PqxdhPhase2InputBytes.decapCall challenge value).IsQueryBoundP
+              (PublicClass predicate) qDecapsulation
           apply (isQueryBoundP_map_iff (p := PublicClass predicate)
             (PqxdhPhase2InputBytes.decapCall challenge value) (fun reply => (reply, auxiliary)) qDecapsulation).mpr
           apply (PqxdhPhase2InputBytes.decapCall_bound challenge value (PublicClass predicate)).mono
           split <;> first | exact Nat.zero_le _ | exact decapsulationBound _
       | some prior =>
+          have handled :
+              (handles source challenge aux (.inl (.decapsulate value (some prior)))).run auxiliary =
+                (fun pair =>
+                  (Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) pair.1,
+                    pair.2)) <$>
+                  (sharedAux aux (.localDecapsulation value prior)).run auxiliary := by
+            rw [show handles source challenge aux (.inl (.decapsulate value (some prior))) =
+              Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) <$>
+                sharedAux aux (.localDecapsulation value prior) by rfl]
+            exact StateT.run_map _ _ _
+          rw [handled]
+          change ((fun pair =>
+            (Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) pair.1,
+              pair.2)) <$> (sharedAux aux (.localDecapsulation value prior)).run auxiliary).IsQueryBoundP
+                (PublicClass predicate) qAux
           exact (isQueryBoundP_map_iff (p := PublicClass predicate)
             ((sharedAux aux (.localDecapsulation value prior)).run auxiliary)
             (fun pair => (Option.map (fun value => Shared.known (PqxdhPhase2InputBytes.word value)) pair.1, pair.2)) qAux).mpr
@@ -148,6 +208,20 @@ theorem handles_public_step
     · cases tail
       all_goals first | exact sharedAux_public aux _ auxiliary predicate qAux (auxBound _ auxiliary) | skip
       case root secrets =>
+        have handled :
+            (handles source challenge aux (.inr (.inr (.root secrets)))).run auxiliary =
+              (fun reply => (reply, auxiliary)) <$>
+                PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1
+                  secrets.dh2 secrets.dh3 secrets.dh4 := by
+          rw [show handles source challenge aux (.inr (.inr (.root secrets))) =
+            liftM (PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1
+              secrets.dh2 secrets.dh3 secrets.dh4) by rfl]
+          simp only [liftM, MonadLiftT.monadLift, MonadLift.monadLift, StateT.lift,
+            StateT.run, bind_pure_comp]
+        rw [handled]
+        change ((fun reply => (reply, auxiliary)) <$>
+          PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1
+            secrets.dh2 secrets.dh3 secrets.dh4).IsQueryBoundP (PublicClass predicate) 0
         apply (isQueryBoundP_map_iff (p := PublicClass predicate)
           (PqxdhPhase2InputBytes.rootCall source challenge secrets.shared secrets.dh1 secrets.dh2 secrets.dh3 secrets.dh4)
           (fun reply => (reply, auxiliary)) 0).mpr

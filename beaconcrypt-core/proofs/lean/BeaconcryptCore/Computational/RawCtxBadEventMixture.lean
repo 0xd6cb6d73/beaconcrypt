@@ -37,6 +37,7 @@ theorem bind_bound {Context : Type} (sample : ProbComp Context)
   have forwardReal := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨probOutput_ne_top, probOutput_ne_top⟩) forward
   have backwardReal := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨probOutput_ne_top, probOutput_ne_top⟩) backward
   simp only [ENNReal.toReal_add probOutput_ne_top probOutput_ne_top] at forwardReal backwardReal
+  simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton]
   exact abs_le.mpr ⟨by linarith, by linarith⟩
 
 end BeaconcryptCore.Computational.RawCtxBadEventMixture

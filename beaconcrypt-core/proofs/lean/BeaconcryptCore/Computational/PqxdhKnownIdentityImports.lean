@@ -187,7 +187,7 @@ theorem wrapper_query_step (primitives : Primitives) (kind : Cost) (query : Owne
           simp only [bind_pure_comp, OracleComp.isQueryBoundP_map_iff,
             OracleComp.isQueryBoundP_query_iff]
           cases request <;> simp only [ForwardedCost, forwardedCost, IsCost, requestCost] <;>
-            split <;> simp_all
+            intro same <;> simp_all
     | reveal handle =>
       simp only [wrapper, StateT.run]
       cases found : state.owners[handle]? with
