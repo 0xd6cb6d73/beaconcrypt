@@ -93,6 +93,8 @@ jobs:
             target: verify-proverif-live-material
           - name: ProVerif private application origin and disclosure controls
             target: verify-proverif-live-private-application
+          - name: ProVerif arbitrary KEM authentication and controls
+            target: verify-proverif-kem-controller-auth
           - name: Formal proof inventory
             target: check-inventory
 

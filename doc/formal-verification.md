@@ -6,6 +6,8 @@ HB-111 closes the authenticated-root composition for one actual source-generated
 
 # Formal verification
 
+HB-125 adds an authentication-only symbolic controller that removes all KEM constructors and equations while retaining the original nine authentication correspondences. It also checks the concrete native KEM controller, a selected-key-free raw receive compiler, and the complete later-record prefix resource ledger. These are composition components; the whole adaptive suffix, global selection losses and computational-symbolic event map remain unfinished. See [the current analysis](formal-verification-analysis.md#hb-125-kem-independent-symbolic-authentication-and-concrete-source-consumers).
+
 The active computational-symbolic proof covers live protocol execution and the specified key-compromise interfaces. The user explicitly excluded snapshots, persistence, restoration and their consequences on 2026-09-08. No storage or restore interface, guarantee or deployment premise is required for this proof; earlier records of separate restoration or persistence work are historical and do not expand its scope.
 
 Lean verifies panic freedom for the complete default `beaconcrypt-core` extraction and behavioral refinement for the documented synchronous core API semantics against the existing ideal PQXDH and symmetric-ratchet models. The extraction uses Hax, Charon, and Aeneas. ProVerif supplies symbolic results, and Lean/VCVio supplies the computational reductions with their stated interfaces and assumptions. Concrete primitive implementations, adapters, codecs, persistence, and compiler correspondence remain outside the extracted-core proof.

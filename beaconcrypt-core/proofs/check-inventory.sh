@@ -48,12 +48,12 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=904
-	[handwritten-proverif]=86
+	[handwritten-lean]=917
+	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=13
+	[validation]=16
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -112,6 +112,9 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/check-general-registration.py \
 	proofs/pro-verif/generate-general-registration.py \
 	proofs/pro-verif/test-general-registration-checker.py \
+	proofs/pro-verif/generate-kem-controller-auth.py \
+	proofs/pro-verif/check-kem-controller-auth.py \
+	proofs/pro-verif/test-kem-controller-auth.py \
 	tests/general_registration_admission.rs \
 	tests/proverif_transcript_fidelity.rs \
 	> "$tmp_dir/validation"
@@ -14379,5 +14382,180 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhLiveKemS
 require_line_count 1 '^theorem other_index([[:space:]]|$)' "$selected_source_module" "PqxdhLiveKemSelection theorem other_index"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhLiveKemSelection.selected_uniform$' "$selected_source_module" "PqxdhLiveKemSelection dependency selected_uniform"
 require_line_count 1 '^theorem selected_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhLiveKemSelection theorem selected_uniform"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSharedPrefixCompletion.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSharedPrefixCompletion$' proofs/lean/BeaconcryptCore.lean "RawCtxSharedPrefixCompletion root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "RawCtxSharedPrefixCompletion theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "RawCtxSharedPrefixCompletion guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSharedPrefixCompletion.scan_finish$' "$selected_source_module" "RawCtxSharedPrefixCompletion dependency scan_finish"
+require_line_count 1 '^theorem scan_finish([[:space:]]|$)' "$selected_source_module" "RawCtxSharedPrefixCompletion theorem scan_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSharedPrefixCompletion.prefix_bound$' "$selected_source_module" "RawCtxSharedPrefixCompletion dependency prefix_bound"
+require_line_count 1 '^theorem prefix_bound([[:space:]]|$)' "$selected_source_module" "RawCtxSharedPrefixCompletion theorem prefix_bound"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhSharedParentResources.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhSharedParentResources$' proofs/lean/BeaconcryptCore.lean "PqxdhSharedParentResources root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhSharedParentResources theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhSharedParentResources guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSharedParentResources.carried_finish$' "$selected_source_module" "PqxdhSharedParentResources dependency carried_finish"
+require_line_count 1 '^theorem carried_finish([[:space:]]|$)' "$selected_source_module" "PqxdhSharedParentResources theorem carried_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSharedParentResources.collect_finish$' "$selected_source_module" "PqxdhSharedParentResources dependency collect_finish"
+require_line_count 1 '^theorem collect_finish([[:space:]]|$)' "$selected_source_module" "PqxdhSharedParentResources theorem collect_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSharedParentResources.prepared_finish$' "$selected_source_module" "PqxdhSharedParentResources dependency prepared_finish"
+require_line_count 1 '^theorem prepared_finish([[:space:]]|$)' "$selected_source_module" "PqxdhSharedParentResources theorem prepared_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSharedParentResources.prepared_bound$' "$selected_source_module" "PqxdhSharedParentResources dependency prepared_bound"
+require_line_count 1 '^theorem prepared_bound([[:space:]]|$)' "$selected_source_module" "PqxdhSharedParentResources theorem prepared_bound"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhPreparedSharedParentBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhPreparedSharedParentBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhPreparedSharedParentBounds root import"
+require_line_count 1 '^theorem ' "$selected_source_module" "PqxdhPreparedSharedParentBounds theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "PqxdhPreparedSharedParentBounds guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhPreparedSharedParentBounds.bills$' "$selected_source_module" "PqxdhPreparedSharedParentBounds dependency bills"
+require_line_count 1 '^theorem bills([[:space:]]|$)' "$selected_source_module" "PqxdhPreparedSharedParentBounds theorem bills"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterSharedMessageResources.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterSharedMessageResources$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterSharedMessageResources root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhLaterSharedMessageResources theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterSharedMessageResources guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhLaterSharedMessageResources.after$' "$selected_source_module" "PqxdhLaterSharedMessageResources dependency after"
+require_line_count 1 '^theorem after([[:space:]]|$)' "$selected_source_module" "PqxdhLaterSharedMessageResources theorem after"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhLaterSharedMessageResources.later$' "$selected_source_module" "PqxdhLaterSharedMessageResources dependency later"
+require_line_count 1 '^theorem later([[:space:]]|$)' "$selected_source_module" "PqxdhLaterSharedMessageResources theorem later"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhLaterSharedMessageResources.forwarded$' "$selected_source_module" "PqxdhLaterSharedMessageResources dependency forwarded"
+require_line_count 1 '^theorem forwarded([[:space:]]|$)' "$selected_source_module" "PqxdhLaterSharedMessageResources theorem forwarded"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhLaterSharedMessageResources.evaluated$' "$selected_source_module" "PqxdhLaterSharedMessageResources dependency evaluated"
+require_line_count 1 '^theorem evaluated([[:space:]]|$)' "$selected_source_module" "PqxdhLaterSharedMessageResources theorem evaluated"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhKemCoordinateController.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhKemCoordinateController$' proofs/lean/BeaconcryptCore.lean "PqxdhKemCoordinateController root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhKemCoordinateController theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhKemCoordinateController guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemCoordinateController.step_source$' "$selected_source_module" "PqxdhKemCoordinateController dependency step_source"
+require_line_count 1 '^theorem step_source([[:space:]]|$)' "$selected_source_module" "PqxdhKemCoordinateController theorem step_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemCoordinateController.program_source$' "$selected_source_module" "PqxdhKemCoordinateController dependency program_source"
+require_line_count 1 '^theorem program_source([[:space:]]|$)' "$selected_source_module" "PqxdhKemCoordinateController theorem program_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemCoordinateController.continuation_source$' "$selected_source_module" "PqxdhKemCoordinateController dependency continuation_source"
+require_line_count 1 '^theorem continuation_source([[:space:]]|$)' "$selected_source_module" "PqxdhKemCoordinateController theorem continuation_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemCoordinateController.uniform_iff$' "$selected_source_module" "PqxdhKemCoordinateController dependency uniform_iff"
+require_line_count 1 '^theorem uniform_iff([[:space:]]|$)' "$selected_source_module" "PqxdhKemCoordinateController theorem uniform_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemCoordinateController.concrete_only_kem$' "$selected_source_module" "PqxdhKemCoordinateController dependency concrete_only_kem"
+require_line_count 1 '^theorem concrete_only_kem([[:space:]]|$)' "$selected_source_module" "PqxdhKemCoordinateController theorem concrete_only_kem"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhKemControllerSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhKemControllerSource$' proofs/lean/BeaconcryptCore.lean "PqxdhKemControllerSource root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhKemControllerSource theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhKemControllerSource guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerSource.server_source$' "$selected_source_module" "PqxdhKemControllerSource dependency server_source"
+require_line_count 1 '^theorem server_source([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerSource theorem server_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerSource.beacon_source$' "$selected_source_module" "PqxdhKemControllerSource dependency beacon_source"
+require_line_count 1 '^theorem beacon_source([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerSource theorem beacon_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerSource.server_root_source$' "$selected_source_module" "PqxdhKemControllerSource dependency server_root_source"
+require_line_count 1 '^theorem server_root_source([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerSource theorem server_root_source"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhKemControllerBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhKemControllerBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhKemControllerBounds root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhKemControllerBounds theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhKemControllerBounds guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerBounds.server_verification$' "$selected_source_module" "PqxdhKemControllerBounds dependency server_verification"
+require_line_count 1 '^theorem server_verification([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerBounds theorem server_verification"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerBounds.server_prepared$' "$selected_source_module" "PqxdhKemControllerBounds dependency server_prepared"
+require_line_count 1 '^theorem server_prepared([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerBounds theorem server_prepared"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerBounds.server_collect$' "$selected_source_module" "PqxdhKemControllerBounds dependency server_collect"
+require_line_count 1 '^theorem server_collect([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerBounds theorem server_collect"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerBounds.beacon_collect$' "$selected_source_module" "PqxdhKemControllerBounds dependency beacon_collect"
+require_line_count 1 '^theorem beacon_collect([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerBounds theorem beacon_collect"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerBounds.beacon_after$' "$selected_source_module" "PqxdhKemControllerBounds dependency beacon_after"
+require_line_count 1 '^theorem beacon_after([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerBounds theorem beacon_after"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerBounds.beacon_prepare$' "$selected_source_module" "PqxdhKemControllerBounds dependency beacon_prepare"
+require_line_count 1 '^theorem beacon_prepare([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerBounds theorem beacon_prepare"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerBounds.beacon_owner$' "$selected_source_module" "PqxdhKemControllerBounds dependency beacon_owner"
+require_line_count 1 '^theorem beacon_owner([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerBounds theorem beacon_owner"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerBounds.server_interpreted$' "$selected_source_module" "PqxdhKemControllerBounds dependency server_interpreted"
+require_line_count 1 '^theorem server_interpreted([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerBounds theorem server_interpreted"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemControllerBounds.beacon_interpreted$' "$selected_source_module" "PqxdhKemControllerBounds dependency beacon_interpreted"
+require_line_count 1 '^theorem beacon_interpreted([[:space:]]|$)' "$selected_source_module" "PqxdhKemControllerBounds theorem beacon_interpreted"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhKemCreationController.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhKemCreationController$' proofs/lean/BeaconcryptCore.lean "PqxdhKemCreationController root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhKemCreationController theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhKemCreationController guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemCreationController.step_source$' "$selected_source_module" "PqxdhKemCreationController dependency step_source"
+require_line_count 1 '^theorem step_source([[:space:]]|$)' "$selected_source_module" "PqxdhKemCreationController theorem step_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemCreationController.program_source$' "$selected_source_module" "PqxdhKemCreationController dependency program_source"
+require_line_count 1 '^theorem program_source([[:space:]]|$)' "$selected_source_module" "PqxdhKemCreationController theorem program_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemCreationController.uniform_iff$' "$selected_source_module" "PqxdhKemCreationController dependency uniform_iff"
+require_line_count 1 '^theorem uniform_iff([[:space:]]|$)' "$selected_source_module" "PqxdhKemCreationController theorem uniform_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemCreationController.constructor_source$' "$selected_source_module" "PqxdhKemCreationController dependency constructor_source"
+require_line_count 1 '^theorem constructor_source([[:space:]]|$)' "$selected_source_module" "PqxdhKemCreationController theorem constructor_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhKemCreationController.generation_source$' "$selected_source_module" "PqxdhKemCreationController dependency generation_source"
+require_line_count 1 '^theorem generation_source([[:space:]]|$)' "$selected_source_module" "PqxdhKemCreationController theorem generation_source"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhSelectedMessageBeacon.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhSelectedMessageBeacon$' proofs/lean/BeaconcryptCore.lean "PqxdhSelectedMessageBeacon root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhSelectedMessageBeacon theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhSelectedMessageBeacon guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSelectedMessageBeacon.known_roundtrip$' "$selected_source_module" "PqxdhSelectedMessageBeacon dependency known_roundtrip"
+require_line_count 1 '^theorem known_roundtrip([[:space:]]|$)' "$selected_source_module" "PqxdhSelectedMessageBeacon theorem known_roundtrip"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSelectedMessageBeacon.receive_map$' "$selected_source_module" "PqxdhSelectedMessageBeacon dependency receive_map"
+require_line_count 1 '^theorem receive_map([[:space:]]|$)' "$selected_source_module" "PqxdhSelectedMessageBeacon theorem receive_map"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSelectedMessageBeacon.owner_source$' "$selected_source_module" "PqxdhSelectedMessageBeacon dependency owner_source"
+require_line_count 1 '^theorem owner_source([[:space:]]|$)' "$selected_source_module" "PqxdhSelectedMessageBeacon theorem owner_source"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhSelectedMessageBuilder.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhSelectedMessageBuilder$' proofs/lean/BeaconcryptCore.lean "PqxdhSelectedMessageBuilder root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhSelectedMessageBuilder theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhSelectedMessageBuilder guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSelectedMessageBuilder.send_source$' "$selected_source_module" "PqxdhSelectedMessageBuilder dependency send_source"
+require_line_count 1 '^theorem send_source([[:space:]]|$)' "$selected_source_module" "PqxdhSelectedMessageBuilder theorem send_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSelectedMessageBuilder.ready_source$' "$selected_source_module" "PqxdhSelectedMessageBuilder dependency ready_source"
+require_line_count 1 '^theorem ready_source([[:space:]]|$)' "$selected_source_module" "PqxdhSelectedMessageBuilder theorem ready_source"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedChallengeFamily.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedChallengeFamily$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedChallengeFamily root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "RawCtxSelectedChallengeFamily theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "RawCtxSelectedChallengeFamily guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedChallengeFamily.receive_prior$' "$selected_source_module" "RawCtxSelectedChallengeFamily dependency receive_prior"
+require_line_count 1 '^theorem receive_prior([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedChallengeFamily theorem receive_prior"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedChallengeFamily.public_hkdf$' "$selected_source_module" "RawCtxSelectedChallengeFamily dependency public_hkdf"
+require_line_count 1 '^theorem public_hkdf([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedChallengeFamily theorem public_hkdf"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedChallengeFamily.read_step$' "$selected_source_module" "RawCtxSelectedChallengeFamily dependency read_step"
+require_line_count 1 '^theorem read_step([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedChallengeFamily theorem read_step"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedChallengeFamily.read_not_fresh$' "$selected_source_module" "RawCtxSelectedChallengeFamily dependency read_not_fresh"
+require_line_count 1 '^theorem read_not_fresh([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedChallengeFamily theorem read_not_fresh"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedChallengeFamily.candidates_result$' "$selected_source_module" "RawCtxSelectedChallengeFamily dependency candidates_result"
+require_line_count 1 '^theorem candidates_result([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedChallengeFamily theorem candidates_result"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedChallengeFamily.step_candidates$' "$selected_source_module" "RawCtxSelectedChallengeFamily dependency step_candidates"
+require_line_count 1 '^theorem step_candidates([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedChallengeFamily theorem step_candidates"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedChallengeFamily.client_candidates$' "$selected_source_module" "RawCtxSelectedChallengeFamily dependency client_candidates"
+require_line_count 1 '^theorem client_candidates([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedChallengeFamily theorem client_candidates"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedReceiveScope.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedReceiveScope$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedReceiveScope root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "RawCtxSelectedReceiveScope theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "RawCtxSelectedReceiveScope guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveScope.scope_native$' "$selected_source_module" "RawCtxSelectedReceiveScope dependency scope_native"
+require_line_count 1 '^theorem scope_native([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveScope theorem scope_native"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveScope.begin_scope$' "$selected_source_module" "RawCtxSelectedReceiveScope dependency begin_scope"
+require_line_count 1 '^theorem begin_scope([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveScope theorem begin_scope"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveScope.resume_scope$' "$selected_source_module" "RawCtxSelectedReceiveScope dependency resume_scope"
+require_line_count 1 '^theorem resume_scope([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveScope theorem resume_scope"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveScope.program_projection$' "$selected_source_module" "RawCtxSelectedReceiveScope dependency program_projection"
+require_line_count 1 '^theorem program_projection([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveScope theorem program_projection"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedReceiveCompiler.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler$' proofs/lean/BeaconcryptCore.lean "RawCtxSelectedReceiveCompiler root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "RawCtxSelectedReceiveCompiler guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.opening_native$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency opening_native"
+require_line_count 1 '^theorem opening_native([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem opening_native"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.opening_project$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency opening_project"
+require_line_count 1 '^theorem opening_project([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem opening_project"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.derive_project$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency derive_project"
+require_line_count 1 '^theorem derive_project([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem derive_project"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.receive_project$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency receive_project"
+require_line_count 1 '^theorem receive_project([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem receive_project"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.evaluated_program$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency evaluated_program"
+require_line_count 1 '^theorem evaluated_program([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem evaluated_program"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.receive_source$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency receive_source"
+require_line_count 1 '^theorem receive_source([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem receive_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.evaluated_map$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency evaluated_map"
+require_line_count 1 '^theorem evaluated_map([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem evaluated_map"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.raw_source$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency raw_source"
+require_line_count 1 '^theorem raw_source([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem raw_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.native_raw$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency native_raw"
+require_line_count 1 '^theorem native_raw([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem native_raw"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.service_queries$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency service_queries"
+require_line_count 1 '^theorem service_queries([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem service_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.receive_queries$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency receive_queries"
+require_line_count 1 '^theorem receive_queries([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem receive_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedReceiveCompiler.raw_queries$' "$selected_source_module" "RawCtxSelectedReceiveCompiler dependency raw_queries"
+require_line_count 1 '^theorem raw_queries([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedReceiveCompiler theorem raw_queries"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

@@ -108,6 +108,7 @@ LEAN_GENERATED_PATHS := \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
 	verify-proverif-live-material check-proverif-live-material $(PROVERIF_MATERIAL_TARGETS) \
 	verify-proverif-live-private-application check-proverif-live-private-application $(PROVERIF_APPLICATION_TARGETS) \
+	verify-proverif-kem-controller-auth check-proverif-kem-controller-auth \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
@@ -152,6 +153,11 @@ verify-proverif-live-private-application:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
 		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
 		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO=live-private-application
+
+verify-proverif-kem-controller-auth:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-scenario-in-shell PROVERIF_SCENARIO=kem-controller-auth
 
 $(PROVERIF_VERIFY_TARGETS): verify-proverif-%:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -442,6 +448,14 @@ check-proverif-live-material-endpoint-origin: check-proverif-live-material-%: ch
 $(PROVERIF_APPLICATION_TARGETS): check-proverif-transcript-fidelity
 check-proverif-live-private-application: $(PROVERIF_APPLICATION_TARGETS)
 check-proverif: check-proverif-live-private-application
+
+# HB-125: original authentication queries under arbitrary public KEM replies.
+# This auxiliary gate leaves the main scenario roster and secrecy gates intact.
+check-proverif: check-proverif-kem-controller-auth
+check-proverif-kem-controller-auth: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-kem-controller-auth.py
+	python3 $(PROVERIF_DIR)/check-kem-controller-auth.py \
+		--proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
 
 check-proverif-live-private-application-origin check-proverif-live-private-application-no-api \
 check-proverif-live-private-application-no-key: check-proverif-live-private-application-%: check-proverif-extraction
