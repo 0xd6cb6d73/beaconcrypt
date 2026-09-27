@@ -1,0 +1,124 @@
+# Audit 0b4039e remediation: re-baseline at 2bccc01 and milestone plan
+
+This record re-baselines the independent proof audit of commit `0b4039e` (report kept outside this branch, in the audit worktree at `doc/impl/proof-audit-0b4039e.md`) against branch `codex/full-proof-composition` at `2bccc01`, and orders the remediation milestones. It adds no proof. Path abbreviations follow the audit: `L/` is `beaconcrypt-core/proofs/lean/BeaconcryptCore/`, `C/` is `L/Computational/`, and `PV/` is `beaconcrypt-core/proofs/pro-verif/`. Line numbers refer to `2bccc01` unless stated otherwise.
+
+## 1. What changed in 0b4039e..2bccc01
+
+The range has 21 commits dated 2026-09-27 (HB-126 and HB-127). It adds 71 Lean modules (24 for HB-126, 47 for HB-127), 71 root imports, 49 guides under `doc/impl/`, appended sections in six maintained documents, and 642 guarded statements (185 + 457). No existing Lean file, Rust source, Cap'n Proto schema, ProVerif file, Makefile or CI workflow changed. The only non-appending edits are one count in `beaconcrypt-core/proofs/check-inventory.sh` (`[handwritten-lean]=917` to `988`) and three refreshed hashes in `beaconcrypt-core/proofs/reviewed-inventory.txt`. `doc/formal-verification.md` gained a two-line paragraph at l.9, so audit line numbers at or after l.9 in that file move by two.
+
+- HB-126 compiles the native adaptive record family (send, raw receive, public services, reveals and the attempted Beacon finish) into the selected CTX client interface and attributes selected nonce refusals to repeated visits of the selected sending-chain input. Its headline, `RawCtxSelectedSourceSendInputs.executable_distance` (`C/RawCtxSelectedSourceSendInputs.lean:209-230`), bounds the total-variation distance between the source stopping game and the executable CTX client by `Pr[RepeatedInput target]` in the same run. It has no advantage term. Every key, role state, decoder and client is universally quantified, and the source side is the retained selected-KDF hybrid, whose private table answers the target with supplied `(key, nonce, next)` (`C/RawCtxSelectedMessageStopping.lean:220-228`). The repeated-input event can have probability one for arbitrary supplied roles (`doc/composition-assumptions.md:144`).
+- HB-127 adds private indexed KEM routing and finish cost ledgers, saved Post and pending-role compilers, initializer and occurrence receipts, directional path and nonce-history lemmas, and selected-record authentication and confidentiality observers. Its headline, `RawCtxSelectedProtocolOriginEvent.source_bound` (`C/RawCtxSelectedProtocolOriginEvent.lean:248-268`), bounds the probability that a role accepts a record that is neither on a known route nor matched by an earlier selected production by `IND$ + q/2^128 + 2·Σ_{i<q} INT-CTXT_i + q/2^512`, each term the advantage of a constructed reduction. Its game `AdaptiveCtxDynamicKnownKeys.sourceGame` samples an independent uniform selected key (`C/AdaptiveCtxDynamicKnownKeys.lean:147-151`), not a protocol-derived key, and its guide says so (`doc/impl/selected-protocol-production-event.md:3`). The companion `RawCtxSelectedConfidentialityObserver.privacy_source_bound` is the matching real-versus-random-view bound.
+
+## 2. Appendix A checks at 2bccc01
+
+All checks ran through `lean_run_code` against a `.lake` rebuilt at `2bccc01` (`lake build`, 4,529 jobs, after 14 modules were out of date).
+
+1. Axiom sweep. With `import BeaconcryptCore`, every constant in a module with prefix `BeaconcryptCore` was checked with `Lean.collectAxioms`. The root import closure has 993 modules, 986 of which contain declarations: 46,208 constants, including 27,079 theorems (4,452 of them axiom-free). Every constant depends only on `propext`, `Classical.choice` and `Quot.sound`. None depends on `sorryAx`, `Lean.ofReduceBool` or `Lean.trustCompiler`. There are 994 `.lean` files under `BeaconcryptCore/`; the only two outside the closure are the empty `Extraction/*External_Template.lean` files.
+2. Definition reachability. A traversal from each headline statement followed types and definition bodies, but not proofs, through `BeaconcryptCore` constants, and was intersected with the 451 non-internal definitions of `BeaconcryptCore.Extraction.Funs`.
+
+| Headline | Statement | Extracted definitions reached | Assumption or game names reached |
+| --- | --- | --- | --- |
+| HB-111 | `PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound` | 130 | correlated Extract family, HMAC PRF games, KEM correctness error, VCVio `IND_CCA_Advantage` |
+| HB-112 | `PqxdhAuthenticatedEvolvingSecrecy.bound` | 131 | as HB-111, plus the secret-input Extract games and the selective chain game |
+| HB-126 | `RawCtxSelectedSourceSendInputs.executable_distance` | 85 | none (a bad-event coupling) |
+| HB-127 | `RawCtxSelectedProtocolOriginEvent.source_bound` | 81 | modified nonce-AEAD INT-CTXT and IND$, `AdaptiveCtxDynamicKnownKeys.sourceGame` |
+
+HB-126 and HB-127 reach no extracted definition that HB-112 does not; the union over all four headlines is still 131. None of the four reaches `validate_init_kex`, `server_accept`, `server_prepare_commit`, `server_commit`, `beacon_start`, `beacon_commit`, `registration_id`, `build_commitment_transcript`, `SendSeal.finish` or any `beaconcrypt_core.record.*` function. None reaches `fixedHkdfSha512JointStreamAdvantage`, a related-DH, Gap-DH or hidden-root advantage.
+
+3. `Pqxdh.Crypto` laws. Following proofs as well, HB-111 reaches only the length laws, HB-112 and HB-127 reach `aead_open_seal` and the length laws, and HB-126 reaches only length laws. No headline reaches `decap_encap`. HB-127's `source_bound` nevertheless quantifies over a `c : Pqxdh.Crypto`, and HB-111 and HB-112 receive one through `env.source.crypto`, so instantiating any of them still requires a structure whose `decap_encap` field production ML-KEM-768 cannot supply (F6).
+
+## 3. Status of findings F1-F16 at 2bccc01
+
+Each row was produced by a finder and then independently re-read by a skeptical verifier against `git show 2bccc01:<path>`. Every pre-existing Lean file, ProVerif file and README cited by the audit is byte-identical at `2bccc01`.
+
+| Id | Status | Evidence at 2bccc01 | Effect of HB-126 and HB-127 |
+| --- | --- | --- | --- |
+| F1 | Still applies | `C/PqxdhAuthenticatedRootExperiment.lean:22-31` (server state in the quantified environment) and l.104, 111, 139, 195 (the only reads of `env.server.ikSk`); `C/PqxdhAuthenticatedEvolvingSecrecy.lean:21, 24, 88` (`env` bound before `program`/`post`); `C/PqxdhJointDhExtractRoot.lean:167-168`; `C/PqxdhJointGapDh.lean:525`; `doc/composition-assumptions.md:39-46` (no pinned-server row), 102, 122; `doc/formal-verification-analysis.md:1497, 2318` | None of the 71 modules samples a server identity or states impersonation resistance. HB-127's authentication bound is over an independent uniform key (`C/AdaptiveCtxDynamicKnownKeys.lean:150`), and its docstring leaves installation and session agreement open (`C/RawCtxSelectedProtocolOriginEvent.lean:4`). |
+| F2 | Still applies | `PV/environment.pvl:613, 680, 721, 745` (sequences 1, 3, 2, 4); l.453-486 (guard process); l.875 and 1182 (origin tables); `PV/passive-strong-secrecy.pv:3`; `beaconcrypt-core/Makefile:468-482` | No ProVerif change. |
+| F3 | Still applies | `PV/main-registration-control-queries.pvl:23-25`; `PV/check-results.awk:494`; `PV/environment.pvl:648-649, 2801` (both emissions beside the 18-field transcript); `doc/formal-verification-analysis.md:46, 591, 909, 1225`; `beaconcrypt-core/README.md:88`; `PV/check-phase2-x25519-alias.py` runs only the three `BeaconCommitted`/`BeaconRegistrationCompleted` bodies, so the `BeaconAnyCommitted` variant was never run under the alias theory | None. |
+| F4 | Still applies, wider scope | `C/PqxdhAuthenticatedRootExperiment.lean:28-29`; `C/RawCtxSharedPrimitive.lean:3-4, 26-40`; `C/RawCtxServerServices.lean:51-55, 76-86`; `C/CtxRomAuth.lean:39-44`; `C/AdaptiveCtxSharedHash.lean:37-38`; claim sites `doc/formal-verification.md:3, 5, 9, 46, 97-99`, `doc/composition-assumptions.md:11, 13, 43, 142, 154`, `doc/protocol.md:86`, `doc/formal-verification-analysis.md:2320, 2411`, `beaconcrypt-core/proofs/trusted-boundary.md:13, 503-515` | HB-126 compares two runs in the same BLAKE2b random-oracle world, and HB-127's game is in it too. Only `doc/composition-assumptions.md:154` mentions "ROM contracts". |
+| F5 | Still applies | `doc/impl/authenticated-root-composition.md:34` ("uses extracted acceptance"); `doc/formal-verification.md:3, 5, 9, 46, 99`; `C/RawCtxSourceSeal.lean:48-60, 131-140` (hand-written seal input linked by a separate lemma); `C/PqxdhBeaconPhase2Publication.lean:140-152, 481-483` (hand-written `nativeOwner`, called "actual extracted" in `doc/impl/live-phase2-native-services.md:7`); `C/RawCtxServerRouting.lean:60` and `C/PqxdhJointIdentity.lean:136` are still not premises | HB-126/127 quantify the decoder, router, writer, initial roles and crypto, and their claim sites call the paths "actual", "native" or "literal". |
+| F6 | Still applies | `L/Model/Pqxdh/Primitives.lean:224-225` (`decap_encap`); `L/Model/Pqxdh/Instance.lean:58` (toy HKDF cannot satisfy `SourceFullCorrect`); `L/Model/Pqxdh/Acceptance.lean:149, 193` use `decap_encap`; no `example` or witness for the HB-111/HB-112 bundle anywhere | The new modules add only decidability and measurable-space instances. |
+| F7 | Still applies | `beaconcrypt/src/server.rs:31, 355-361, 415`; `C/AdaptiveCtxReplayDictionary.lean:11-14`; `C/AdaptiveCtxSharedModes.lean:18-23`; `C/RawCtxReceive.lean:181` | HB-127's `Failure` excludes any acceptance matching an earlier selected production, so it is a non-injective origin bound; no new module uses `rawReceive_success_replay`. |
+| F8 | Still applies | "distribution-specific" at `doc/impl/authenticated-root-composition.md:32`, `doc/formal-verification-analysis.md:2210`, `doc/impl/proverif-vcvio-component-closure.md:24`, `doc/impl/kem-controller-authentication.md:48`; "that exact reduction" at `doc/impl/authenticated-root-composition.md:37`; consolidated list `doc/formal-verification-analysis.md:782-797` omits the joint Ed25519/X25519 contract, IND-CCA, the KEM error and the BLAKE2b random oracle; `beaconcrypt-core/proofs/trusted-boundary.md:13` | New text repeats "exact-joint fixed-salt Extract endpoints" without saying what they are (`doc/formal-verification-analysis.md:2607`, `doc/composition-assumptions.md:146, 154`). |
+| F9 | Still applies | `doc/formal-verification.md:46`; `doc/protocol.md:86` | HB-127 record bounds are for an independent key only. |
+| F10 | Still applies | `C/PqxdhAuthenticatedRootBudgets.lean:38-47`; `C/PqxdhPhase2SourceSchedulerBounds.lean:122-126` | HB-127's dynamic KEM components budget identity creation instead of forbidding it, but HB-111/112 do not use them. Budgets are worst-case caps over all replies, so only adversaries without a uniform cap lack a certificate. |
+| F11 | Still applies | `C/CtxTransitionReduction.lean:94, 109-110`; `L/Model/Pqxdh/Commit.lean:247-249`; `PV/environment.pvl:1470-1473` | HB-126's headline has no security content by itself because its bad event can be certain; this is disclosed. |
+| F12 | Still applies | `doc/ctx-commitment.md:57, 122, 135`; `C/CtxComputationalSecurity.lean:35-41`; `C/CtxUnclaimedAcceptance.lean:549-558` | None. |
+| F13 | Still applies | `PV/crypto.pvl:27-53`; `beaconcrypt-core/src/pqxdh.rs:374-389`; `PV/check-general-registration.py:23-117, 624-682` | None. |
+| F14 | Still applies | `L/Model/Pqxdh/Kdf.lean:109-112`; `beaconcrypt-core/src/record.rs:13-14, 40-42` (the audit's l.178-180 citation was already off); `L/Model/Pqxdh/Protocol.lean:268-286`; `beaconcrypt/src/server.rs:375` and `beaconcrypt/src/beacon.rs:433` (fallible key conversion) | None. |
+| F15 | Still applies | "269" at `README.md:45`, `beaconcrypt-core/README.md:17`, `doc/deployment-boundary.md:39`, `beaconcrypt-core/proofs/trusted-boundary.md:268`; `beaconcrypt-core/proofs/lean/pqxdh_spec.md:807`; `beaconcrypt-core/README.md:112`; `beaconcrypt-core/proofs/lean/README.md:180, 184, 387, 468`; the "covers live protocol execution" sentence at six sites (`doc/formal-verification.md:13`, `doc/composition-assumptions.md:15`, `doc/formal-verification-analysis.md:5`, `beaconcrypt-core/proofs/trusted-boundary.md:9`, `doc/impl/proverif-vcvio-component-closure.md:9`, `doc/impl/security-gap-remediation-plan.md:5`); "seven injective" at `beaconcrypt-core/README.md:87` against nine required by `PV/check-results.awk:469-479` | None. |
+| F16 | Still applies | `beaconcrypt-core/Makefile:586-601`; `check-inventory` is a separate target (l.176), not part of `verify` (l.123-136); `C/CtxComputationalSecurity.lean`, `C/CtxReduction.lean` and `L/Refinement/CommitmentSurface.lean` have no `#print axioms` guard | The 642 new statements are all guarded; the whole-environment sweep above still shows only standard axioms. |
+
+## 4. Milestone order
+
+1. Milestone A, accuracy of existing claims (F3, F4, F8, F12, F15). It is small, needs no new assumption and removes one symbolic claim that production refutes.
+2. Milestone B, server authentication to the Beacon (F1). It needs new assumptions, so only its experiment, winning event, negative control and assumption definitions are built before review. No bound is proved from a new assumption until the review in section 6 is answered.
+3. Milestone C, record security for protocol-derived keys (F7, F9). It is independent of B and is planned with the existing assumptions only. It proceeds while B waits for review.
+4. Milestone D, implementation link (F5, F6), as time allows.
+
+`make -C beaconcrypt-core verify` and `make -C beaconcrypt-core check-inventory` run once per milestone. `nix-collect-garbage` is not run on this shared machine.
+
+## 5. Milestone A
+
+- F3. Replace the required exact `inj-event(BeaconAnyCommitted(t)) ==> inj-event(ServerCommitted(t))` query in `main-registration-controls` by the same property over the HB-89 eleven-field projection: every completion, on either scheduling branch, agrees with the Server's sequence-one authenticated record and assigned ID. Move the exact query verbatim to `exact-registration-origin-queries.pvl`, where `check-phase2-x25519-alias.py` must find it TRUE under the canonical theory and FALSE with a reconstructed public-bit-flip trace under the alias theory. Add the projected query to the alias checker's projected set as well. Update `check-results.awk`, the inventory gates, the transcript-fidelity test and the doc claim sites (`doc/formal-verification-analysis.md:909, 1225`, `beaconcrypt-core/README.md:88`).
+- F4. At every HB-111, HB-112, HB-126 and HB-127 claim site listed in the F4 row, state that the actual game models BLAKE2b as a programmable classical random oracle the adversary can query, next to the existing statement that public HKDF stays real.
+- F8. Replace "distribution-specific" by an accurate description of the correlated Extract family (a generic adaptive split-key PRF game on zero-salt HMAC-SHA-512 with a hidden uniform 32-byte suffix), add a plausibility note and literature context, and extend the consolidated assumption list with the joint Ed25519/X25519 contract, ML-KEM IND-CCA, the KEM correctness error, the HMAC PRF and Extract PRG-type games, and the BLAKE2b random oracle. Flag the Extract term in the HB-111 summary row.
+- F12. Rename the typed forgery probability, point to the ciphertext-only variant, update the stale "open" statements about multi-key and adaptive raw decryption, and generalise the shared-tag sentence.
+- F15. Correct the stale operation counts (keeping historical records as history), `pqxdh_spec.md:807`, the later-registration description, the Lean README contradictions, the "covers live protocol execution" phrasing and the correspondence count.
+
+## 6. Milestone B: design and review request
+
+### Experiment
+
+The experiment samples the Server's Ed25519 identity seed inside the game and gives the adversary only its public key. The target Beacon's identity seed, signed prekey scalar, one-time scalar and ML-KEM key pair are also sampled inside the game, and its Phase 1 is published. The adversary may:
+
+- ask the honest Server to process any Phase 1 bytes, any number of times up to a declared budget, receiving the Phase 2 response (the Server computes DH1 = DH(IK_S, SPK), DH2 = DH(EK, IK), DH3 = DH(EK, SPK), DH4 = DH(EK, OPK), encapsulates to the supplied ML-KEM key, derives the root from the 192-byte input `FF^32 || DH1 || DH2 || DH3 || DH4 || SS`, and seals the sequence-one registration record);
+- deliver any Phase 2 bytes to the target Beacon's finish;
+- query the idealised functions (below) and the public real HMAC;
+- reveal the root or chains of any Server session that is not a partner of the target (partners are Server sessions whose root input equals the target Beacon's).
+
+The winning event is: the target Beacon completes registration, and no Server session processed the target's exact Phase 1 and produced a response equal to the accepted one after clearing the high bit of the ephemeral encoding (the documented X25519 alias). A second stage extends the event to later records the Beacon accepts, using Milestone C.
+
+Negative control: the same experiment with a flag that also gives the adversary the Server seed. An explicit adversary then computes a fresh Phase 2 for the target's Phase 1 itself, and the event must be reachable with probability at least one minus the KEM correctness error. This is checked in Lean from the functional correctness laws, so the authentication statement cannot be vacuous.
+
+### Why a new assumption is needed
+
+Only DH1 is unknown to an adversary that chooses its own ephemeral and encapsulates to the Beacon's KEM key itself. The KEM, the existing HB-111 root game and the existing joint weak-EUF game therefore do not help. The adversary also gets Server sessions on Phase 1 bundles containing the Beacon's own prekey (or its X25519 aliases) under its own identity, so the reduction must answer those sessions without the Server key.
+
+### Proposed assumptions (review required before use)
+
+Recommended route R1, standard assumptions in the random-oracle model:
+
+1. Extract random oracle. Zero-salt HKDF-Extract, that is HMAC-SHA-512 with the 64-byte zero key, restricted to 192-byte PQXDH root inputs, is modelled as a programmable classical random oracle that the adversary can query. HKDF-Expand and every other HMAC use stay real and keep the existing HMAC-PRF and Extract games. This is an idealisation, not a consequence of any existing assumption, and it would be stated at every claim site together with the existing BLAKE2b random oracle.
+2. Anchored two-sided strong CDH on X25519, stated by the existing generic game `PqxdhJointGapDh.game` (`C/PqxdhJointGapDh.lean:98-107`): given the Server's identity public key and the Beacon's prekey, with decision services answering whether a supplied candidate equals the DH of a chosen peer with one of the two hidden secrets, output their cross DH. The reduction makes no signing request, so it uses only the CDH-with-two-fixed-secret-decision-oracles part of that game. This is implied by Gap-DH (Okamoto and Pointcheval, PKC 2001), and each service is the strong-DH oracle of Abdalla, Bellare and Rogaway (CT-RSA 2001). It is new as a headline assumption in this repository and would be added to both assumption lists.
+3. A functional X25519 class law, not a hardness assumption: if two peer encodings give the same X25519 output under one scalar, they give the same output under every scalar. For clamped X25519 this holds because equal outputs imply that the two points differ by a cofactor-torsion point or by negation, which every clamped scalar maps to the same output. The reduction needs it to decide, without either secret, whether two Server sessions share a root input. It would be added as an explicit primitive contract beside `dh_comm`.
+
+The bound would then be the Gap-DH recovery advantage of an explicit scanning reduction, plus the existing joint weak-EUF, Extract PRG-type, HMAC PRF and CTX INT-CTXT/IND$ advantages for the first-record key, collision terms, and the KEM correctness error.
+
+Alternatives for the reviewer:
+
+- R2: a PRF-ODH-style assumption stated directly on zero-salt HMAC-SHA-512 over `FF^32 || DH(s, V) || m` with the same two anchored oracles, in the standard model. It avoids the random oracle but is stronger and less standard; Brendel, Fischlin, Günther and Janson (CRYPTO 2017) relate such PRF-ODH variants to strong-DH-type assumptions only in the random-oracle model.
+- R3: keep the existing related-DH Extract endpoint (`C/PqxdhJointDhExtractFamily.lean`) and prove that its random-oracle version is bounded by the Gap-DH recovery advantage of a scanning reduction, using the existing two-coordinate matcher (`C/PqxdhJointGapDh.lean:252-490`). The endpoint as currently defined keeps HMAC real in both worlds, so it cannot be shown small without an idealisation; R3 is R1 applied to that endpoint, reusing its exact source equalities.
+
+Open design choices for the reviewer: whether partners are defined by equal root input (as above) or by the exact Phase 1, whether the Beacon's identity, one-time and KEM secrets may be revealed (authentication only relies on DH1, so allowing them would give key-compromise-impersonation resistance), and the per-experiment budget on Server sessions.
+
+## 7. Milestone C plan
+
+No new cryptographic assumption is expected. The route, from an exploration of the HB-112 and HB-126/127 code, is:
+
+- S0. Start from `PqxdhAuthenticatedEvolvingSecrecy.coordinate_bound` (`C/PqxdhAuthenticatedEvolvingSecrecy.lean:58-85`), whose ideal is the eager sampled game, rather than from `bound`, whose alias-consistent ideal moves away from the eager endpoints.
+- S1. Specialise the existing adaptive target lemmas (`PqxdhAdaptiveMessageKeySource.first_bound`/`later_bound`, `C/PqxdhAdaptiveMessageKeySource.lean:109, 125`) to one preselected target, keeping the branches without an eligible target explicit.
+- S2. Use the existing exact key-first reorderings (`PqxdhFirstSharedMessagePrefix.adaptive_endpoint`, `PqxdhLaterSharedMessagePrefix.adaptive_endpoint`), which draw `key ← $CtxKey` before a key-free prefix run under `AdaptiveCtxDynamicKnownKeys.sourceImpl`.
+- S3. New: identify the remaining native continuation with HB-127's saved Post compiler state (`C/PqxdhSelectedPostCompiler.lean:51-118`), including the publication trace needed for the target gate.
+- S4. Use `PqxdhSelectedPostDisclosure.event_fresh` to remove hidden disclosure.
+- S5. New: bound the repeated-input nonce event for the eager uniform target chain by a collision term, averaged over the eager draw.
+- S6. Integrity: compose the prefix and the Post compiler into one client and apply `RawCtxSelectedAuthenticationObserver.authentication_bound`, then combine with the extracted receive driver's replay rejection (`C/RawCtxReceive.lean:181`) so that exact replays of the target record are also excluded (F7).
+- S7. Confidentiality: a left-or-right variant of `privacy_bound` for the target record, with the restrictions that the challenge plaintexts have equal length and the target ciphertext is not delivered to its receiver (the receive oracle returns plaintext). Both restrictions must be justified in the documentation.
+
+Public HKDF stays real, and every HB-112 and HB-127 term stays explicit in the final bound.
+
+## 8. Milestone D plan
+
+- F5: for each glue replacement listed by the audit, either run the extracted function in the experiment or make the bridging equality a conjunct of the headline statement, and stop describing glue as actual execution.
+- F6: build one checked instance that satisfies the HB-111/HB-112 hypothesis bundle jointly (toy primitives whose HKDF is the RFC 5869 construction over a concrete HMAC function, a deterministic toy KEM, a trivial adversary and its certificate). For `decap_encap`, document that no headline statement or proof uses it, and add an instance-transfer lemma showing that the headline games do not read the ideal model's KEM fields, so production can use any perfectly correct placeholder there while its real KEM enters through the separate `kem` parameter and the explicit correctness-error term.
