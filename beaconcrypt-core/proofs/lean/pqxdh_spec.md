@@ -804,7 +804,7 @@ The ratchet record must satisfy all ordinary BeaconCrypt record checks, includin
 3. valid CTX commitment;
 4. valid ChaCha20-Poly1305 authentication under the selected ratchet material.
 
-The implementation's **honest server** emits sequence \(1\). The beacon acceptance code, however, is defined through the general receive-ratchet transition rather than an explicit `seq == 1` test. Therefore the formal acceptance relation should be stated as “a valid admissible initial receive-ratchet record,” not artificially restricted to sequence 1. 
+The implementation's **honest server** emits sequence \(1\). Since HB-95, the beacon also requires the authenticated sequence to be exactly \(1\): `Beacon::finish_registration` rejects every other authenticated initial sequence after the successful open and before plaintext binding or publication, and `Pqxdh.beaconRecordAdmitted_sequence` proves that every accepted or subsequent plaintext-format outcome of the model has sequence \(1\). The formal acceptance relation is therefore “a valid admissible initial receive-ratchet record at sequence 1.” Established sessions keep the general receive-ratchet transition and its out-of-order admission. Before HB-95, acceptance was defined only through the general receive-ratchet transition, and this specification then stated the relation without the sequence-one restriction.
 
 Let successful decryption return:
 
