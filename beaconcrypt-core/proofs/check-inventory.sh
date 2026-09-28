@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=993
+	[handwritten-lean]=994
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -16419,5 +16419,58 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRec
 require_line_count 1 '^theorem source_input_bound([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem source_input_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.source_history_distance$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency source_history_distance"
 require_line_count 1 '^theorem source_history_distance([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem source_history_distance"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhFirstBeaconRecordIntegrity.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity$' proofs/lean/BeaconcryptCore.lean "PqxdhFirstBeaconRecordIntegrity root import"
+require_line_count 24 '^theorem ' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem inventory"
+require_line_count 24 '^#guard_msgs in$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.logged_queries$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency logged_queries"
+require_line_count 1 '^theorem logged_queries([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem logged_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.firstSent_insert$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency firstSent_insert"
+require_line_count 1 '^theorem firstSent_insert([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem firstSent_insert"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.firstSent_erase$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency firstSent_erase"
+require_line_count 1 '^theorem firstSent_erase([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem firstSent_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.split_insert$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency split_insert"
+require_line_count 1 '^theorem split_insert([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem split_insert"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.split_append$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency split_append"
+require_line_count 1 '^theorem split_append([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem split_append"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.forged_insert$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency forged_insert"
+require_line_count 1 '^theorem forged_insert([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem forged_insert"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.forged_single$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency forged_single"
+require_line_count 1 '^theorem forged_single([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem forged_single"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.replay_not_counted$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency replay_not_counted"
+require_line_count 1 '^theorem replay_not_counted([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem replay_not_counted"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.forgery_query_bound$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency forgery_query_bound"
+require_line_count 1 '^theorem forgery_query_bound([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem forgery_query_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.true_bind_le$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency true_bind_le"
+require_line_count 1 '^theorem true_bind_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem true_bind_le"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.map_le_tvDist$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency map_le_tvDist"
+require_line_count 1 '^theorem map_le_tvDist([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem map_le_tvDist"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.setOf_bool$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency setOf_bool"
+require_line_count 1 '^theorem setOf_bool([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem setOf_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.map_mono$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency map_mono"
+require_line_count 1 '^theorem map_mono([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem map_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.flagged_run$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency flagged_run"
+require_line_count 1 '^theorem flagged_run([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem flagged_run"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.flagged_absent$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency flagged_absent"
+require_line_count 1 '^theorem flagged_absent([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem flagged_absent"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.unflagged_eq$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency unflagged_eq"
+require_line_count 1 '^theorem unflagged_eq([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem unflagged_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.restricted_le$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency restricted_le"
+require_line_count 1 '^theorem restricted_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem restricted_le"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.post_le_full$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency post_le_full"
+require_line_count 1 '^theorem post_le_full([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem post_le_full"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.post_le_undisclosed$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency post_le_undisclosed"
+require_line_count 1 '^theorem post_le_undisclosed([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem post_le_undisclosed"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.post_le$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency post_le"
+require_line_count 1 '^theorem post_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem post_le"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.first_le$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency first_le"
+require_line_count 1 '^theorem first_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem first_le"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.pending_ideal_le$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency pending_ideal_le"
+require_line_count 1 '^theorem pending_ideal_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem pending_ideal_le"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.pending_forgery_le$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency pending_forgery_le"
+require_line_count 1 '^theorem pending_forgery_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem pending_forgery_le"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.first_beacon_forgery_le$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency first_beacon_forgery_le"
+require_line_count 1 '^theorem first_beacon_forgery_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem first_beacon_forgery_le"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
