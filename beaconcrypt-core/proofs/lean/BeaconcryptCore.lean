@@ -982,6 +982,7 @@ import BeaconcryptCore.Computational.PqxdhSelectedFirstRecord
 import BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop
 import BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity
 import BeaconcryptCore.Computational.PqxdhFirstRecordStopBound
+import BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCtx
 /-!
 # Beaconcrypt-core verification root
 
