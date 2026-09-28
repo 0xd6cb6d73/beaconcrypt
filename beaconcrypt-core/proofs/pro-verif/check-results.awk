@@ -491,8 +491,7 @@ END {
       require_exact("Query not event(" main_candidate ") is false.", "main invalid candidate emission")
       require_exact("Query not (event(" main_candidate ") && event(BeaconRegistrationCompleted(" main_completion "))) is true.", "main exact invalid candidate rejection")
     }
-    require_exact("Query inj-event(BeaconAnyCommitted(main_transcript)) ==> inj-event(ServerCommitted(main_transcript)) is true.", "exact first-response correspondence")
-    require_exact("Query not event(MainRegistrationRelabelCompleted(main_agreement,main_payload,main_frame,main_response_2)) is true.", "later authenticated-prefix outer-ID relabel rejection")
+    require_exact("Query inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence,main_payload,main_frame,main_claimed)) is true.", "projected sequence-one response correspondence")    require_exact("Query not event(MainRegistrationRelabelCompleted(main_agreement,main_payload,main_frame,main_response_2)) is true.", "later authenticated-prefix outer-ID relabel rejection")
     require_exact("Query event(BeaconRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_response_2,main_claimed)) ==> main_sequence = first_sequence is true.", "all initial completions use sequence one")
     require_exact("Query not event(MainRegistrationLaterOpened(next_sequence(next_sequence(first_sequence)),main_payload,main_frame)) is false.", "later opening before admission rejection")
   } else if (scenario == "reachability") {

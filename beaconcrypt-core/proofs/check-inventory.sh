@@ -464,6 +464,18 @@ require_occurrence_count 1 \
 	"historical complete establishment transcript correspondence query" \
 	proofs/pro-verif/exact-registration-origin-queries.pvl
 require_occurrence_count 1 \
+	'query\s+main_transcript: establishment_transcript_t;\s*inj-event\(BeaconAnyCommitted\(main_transcript\)\)\s*==>\s*inj-event\(ServerCommitted\(main_transcript\)\)\.' \
+	"historical any-branch establishment transcript correspondence query" \
+	proofs/pro-verif/exact-registration-origin-queries.pvl
+require_occurrence_count 0 \
+	'inj-event\(BeaconAnyCommitted\(' \
+	"alias-refuted exact transcript query outside the alias-aware controls" \
+	proofs/pro-verif/main-registration-control-queries.pvl proofs/pro-verif/queries.pvl
+require_occurrence_count 1 \
+	'inj\-event\(BeaconAuthenticatedRegistrationCompleted\(main_agreement,\s*main_sequence,\s*main_payload,\s*main_frame,\s*main_claimed\)\)\s*==>\s*inj\-event\(AuthenticatedRegistrationRecordSent\(main_agreement,\s*first_sequence\(\),\s*main_payload,\s*main_frame,\s*main_claimed\)\)\.' \
+	"projected any-branch sequence-one registration control query" \
+	proofs/pro-verif/main-registration-control-queries.pvl
+require_occurrence_count 1 \
 	'type\s*authenticated_registration_session_t\.' \
 	"authenticated session projection type" \
 	proofs/pro-verif/environment.pvl
@@ -503,7 +515,7 @@ require_occurrence_count 1 \
 	'inj\-event\(BeaconAuthenticatedRegistrationCompleted\(main_agreement,\s*main_sequence,\s*main_payload,\s*main_frame,\s*main_claimed\)\)\s*==>\s*inj\-event\(AuthenticatedRegistrationRecordSent\(main_agreement,\s*main_sequence,\s*main_payload,\s*main_frame,\s*main_server_assigned\)\)\.' \
 	"projected registration authentication query AuthenticatedRegistrationRecordSent" \
 	proofs/pro-verif/queries.pvl
-require_line_count 3 '^query ' proofs/pro-verif/exact-registration-origin-queries.pvl \
+require_line_count 4 '^query ' proofs/pro-verif/exact-registration-origin-queries.pvl \
 	"preserved historical exact-registration query bodies"
 require_occurrence_count 1 \
 	'query\s+bundle: authenticated_init_bundle_t;\s*inj-event\(ServerBundleAccepted\(bundle\)\)\s*==>\s*inj-event\(BeaconBundleInitiated\(bundle\)\)\.' \

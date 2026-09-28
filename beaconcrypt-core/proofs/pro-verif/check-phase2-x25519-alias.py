@@ -18,6 +18,15 @@ def compact(source: str) -> str:
     return re.sub(r"\s+", "", without_comments(source))
 
 
+# Antecedent and destination of each historical exact query, in file order.
+HISTORICAL_DESTINATIONS = (
+    ("BeaconCommitted", "ServerCommitted"),
+    ("BeaconRegistrationCompleted", "ServerRegistrationSessionCommitted"),
+    ("BeaconRegistrationCompleted", "RegistrationRecordSent"),
+    ("BeaconAnyCommitted", "ServerCommitted"),
+)
+
+
 EXPECTED_X25519 = """
 fun x25519_public(bitstring): bitstring.
 reduc forall identity_secret: bitstring;
@@ -43,13 +52,15 @@ def selected_queries(directory: Path) -> str:
         for query in queries
         if "inj-event(BeaconCommitted(" in query
         or "inj-event(BeaconRegistrationCompleted(" in query
+        or "inj-event(BeaconAnyCommitted(" in query
     ]
-    if len(selected) != 3:
-        raise ValueError("expected exactly three unchanged registration queries")
+    if len(selected) != len(HISTORICAL_DESTINATIONS):
+        raise ValueError("expected exactly four unchanged registration queries")
     destinations = (
         "inj-event(ServerCommitted(transcript))",
         "inj-event(ServerRegistrationSessionCommitted(main_agreement,main_server_assigned))",
         "inj-event(RegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned))",
+        "inj-event(BeaconAnyCommitted(main_transcript))==>inj-event(ServerCommitted(main_transcript))",
     )
     if any(
         destination not in compact(query)
@@ -81,10 +92,23 @@ def selected_projected_queries(directory: Path) -> str:
     ]
     if len(selected) != 3:
         raise ValueError("expected exactly three projected registration queries")
+    controls = without_comments(
+        (directory / "main-registration-control-queries.pvl").read_text()
+    )
+    selected.extend(
+        query
+        for query in re.findall(r"\bquery\b.*?\.", controls, flags=re.S)
+        if "inj-event(BeaconAuthenticatedRegistrationCompleted(" in query
+    )
+    if len(selected) != 4:
+        raise ValueError(
+            "expected exactly one projected main-registration control query"
+        )
     destinations = (
         "inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence(),main_payload,main_frame,main_claimed))",
         "inj-event(ServerAuthenticatedSessionCommitted(main_agreement,main_server_assigned))",
         "inj-event(AuthenticatedRegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned))",
+        "inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed))==>inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence(),main_payload,main_frame,main_claimed))",
     )
     if any(
         destination not in compact(query)
@@ -100,6 +124,7 @@ PROJECTED_RESULTS = (
     "RESULT inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,first_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence,main_payload,main_frame,main_claimed)) is true.",
     "RESULT inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(ServerAuthenticatedSessionCommitted(main_agreement,main_server_assigned)) is true.",
     "RESULT inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(AuthenticatedRegistrationRecordSent(main_agreement,main_sequence,main_payload,main_frame,main_server_assigned)) is true.",
+    "RESULT inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed)) ==> inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence,main_payload,main_frame,main_claimed)) is true.",
 )
 
 
@@ -107,7 +132,7 @@ def check_projected_run(output: str) -> None:
     results = tuple(line for line in output.splitlines() if line.startswith("RESULT "))
     if results != PROJECTED_RESULTS:
         raise ValueError(
-            f"expected all three exact projected correspondences: {results}"
+            f"expected all four exact projected correspondences: {results}"
         )
 
 
@@ -115,20 +140,17 @@ def check_run(output: str, expected: str) -> None:
     results = [
         line for line in output.splitlines() if line.startswith("RESULT inj-event(")
     ]
-    if len(results) != 3 or any(
+    count = len(HISTORICAL_DESTINATIONS)
+    if len(results) != count or any(
         not line.endswith(f" is {expected}.") for line in results
     ):
         raise ValueError(
-            f"expected exactly three {expected} correspondence results: {results}"
+            f"expected exactly {count} {expected} correspondence results: {results}"
         )
-    destinations = (
-        "ServerCommitted",
-        "ServerRegistrationSessionCommitted",
-        "RegistrationRecordSent",
-    )
     if any(
-        f"==> inj-event({destination}(" not in result
-        for destination, result in zip(destinations, results)
+        not result.startswith(f"RESULT inj-event({antecedent}(")
+        or f"==> inj-event({destination}(" not in result
+        for (antecedent, destination), result in zip(HISTORICAL_DESTINATIONS, results)
     ):
         raise ValueError(
             "missing, duplicated, reordered, or changed correspondence result"
@@ -139,7 +161,7 @@ def check_run(output: str, expected: str) -> None:
             output,
             flags=re.S,
         )
-        if len(traces) != 3:
+        if len(traces) != count:
             raise ValueError(
                 "a concrete trace must be reconstructed for each false correspondence"
             )
@@ -158,29 +180,25 @@ def check_run(output: str, expected: str) -> None:
 
 
 def self_test() -> None:
-    destinations = (
-        "ServerCommitted",
-        "ServerRegistrationSessionCommitted",
-        "RegistrationRecordSent",
-    )
     lines = [
-        f"RESULT inj-event(BeaconCommitted(t)) ==> inj-event({destination}(t)) is false."
-        for destination in destinations
+        f"RESULT inj-event({antecedent}(t)) ==> inj-event({destination}(t)) is false."
+        for antecedent, destination in HISTORICAL_DESTINATIONS
     ]
     evidence = (
         "\nA more detailed output of the traces is available with\n"
         "in(c, kex_response(x25519_flip_high_bit(p))) with p = x25519_high_bit_alias(s)\n"
         "A trace has been found.\n"
-    ) * 3
+    ) * len(HISTORICAL_DESTINATIONS)
     valid = "\n".join(lines) + evidence
     check_run(valid, "false")
     check_run("\n".join(lines).replace("false.", "true."), "true")
     invalid = (
-        "\n".join(lines[:2]) + evidence,
+        "\n".join(lines[:3]) + evidence,
         valid.replace("false.", "true.", 1),
-        "\n".join([lines[0], lines[0], lines[2]]) + evidence,
+        "\n".join([lines[0], lines[0], lines[2], lines[3]]) + evidence,
         valid.replace("A trace has been found.", "No reconstructed trace."),
         valid.replace("x25519_flip_high_bit", "not_the_alias_operation"),
+        valid.replace("BeaconAnyCommitted", "BeaconCommitted"),
     )
     for mutated in invalid:
         try:
@@ -188,18 +206,29 @@ def self_test() -> None:
         except ValueError:
             continue
         raise AssertionError("negative result-checker control was accepted")
-    print("phase2-x25519-alias checker: five negative controls rejected")
+    print("phase2-x25519-alias checker: six negative controls rejected")
     projected = "\n".join(PROJECTED_RESULTS)
     check_projected_run(projected)
     invalid_projected = (
-        "\n".join(PROJECTED_RESULTS[:2]),
+        "\n".join(PROJECTED_RESULTS[:3]),
         projected.replace("true.", "false.", 1),
         projected.replace("true.", "unknown.", 1),
-        "\n".join((PROJECTED_RESULTS[0], PROJECTED_RESULTS[0], PROJECTED_RESULTS[2])),
+        "\n".join(
+            (
+                PROJECTED_RESULTS[0],
+                PROJECTED_RESULTS[0],
+                PROJECTED_RESULTS[2],
+                PROJECTED_RESULTS[3],
+            )
+        ),
         projected.replace(
             "main_claimed)) is true.", "main_server_assigned)) is true.", 1
         ),
         projected + "\nRESULT Observational equivalence is true.",
+        projected.replace(
+            "(main_agreement,first_sequence,main_payload,main_frame,main_claimed)) is true.",
+            "(main_agreement,main_sequence,main_payload,main_frame,main_claimed)) is true.",
+        ),
     )
     for mutated in invalid_projected:
         try:
@@ -207,7 +236,7 @@ def self_test() -> None:
         except ValueError:
             continue
         raise AssertionError("negative projected-result control was accepted")
-    print("projected registration checker: six negative controls rejected")
+    print("projected registration checker: seven negative controls rejected")
 
 
 def main() -> None:
@@ -264,7 +293,7 @@ def main() -> None:
             else:
                 check_run(result.stdout, expected)
             print(
-                f"phase2-x25519-alias {label}: three checked correspondences {expected}"
+                f"phase2-x25519-alias {label}: four checked correspondences {expected}"
             )
 
 

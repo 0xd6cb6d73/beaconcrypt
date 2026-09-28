@@ -2985,7 +2985,7 @@ fn validate_x25519_alias_runner(
 	let script = compact(runner);
 	for (wanted, label) in [
 		(
-			r#"source=without_comments((directory/"exact-registration-origin-queries.pvl").read_text())queries=re.findall(r"\bquery\b.*?\.",source,flags=re.S)selected=[queryforqueryinqueriesif"inj-event(BeaconCommitted("inqueryor"inj-event(BeaconRegistrationCompleted("inquery]iflen(selected)!=3:"#,
+			r#"source=without_comments((directory/"exact-registration-origin-queries.pvl").read_text())queries=re.findall(r"\bquery\b.*?\.",source,flags=re.S)selected=[queryforqueryinqueriesif"inj-event(BeaconCommitted("inqueryor"inj-event(BeaconRegistrationCompleted("inqueryor"inj-event(BeaconAnyCommitted("inquery]iflen(selected)!=len(HISTORICAL_DESTINATIONS):"#,
 			"X25519 alias unchanged baseline query selection",
 		),
 		(
@@ -3025,7 +3025,7 @@ fn validate_x25519_alias_runner(
 	}
 	// Pin the independently reviewed runner as well as its readable wiring above.
 	// Extra code must not silently bypass a check or rewrite the selected queries.
-	if stable_text_hash(runner) != 4_157_415_351_679_264_816 {
+	if stable_text_hash(runner) != 12_041_226_837_296_030_277 {
 		return Err("X25519 alias reviewed runner changed; review the complete runner".to_owned());
 	}
 	let control = compact(&uncommented_pv(control)?);
@@ -3041,6 +3041,7 @@ fn validate_x25519_alias_runner(
 		.filter(|query| {
 			query.contains("inj-event(BeaconCommitted(")
 				|| query.contains("inj-event(BeaconRegistrationCompleted(")
+				|| query.contains("inj-event(BeaconAnyCommitted(")
 		})
 		.map(|query| stable_text_hash(&format!("query{query}")))
 		.collect::<Vec<_>>();
@@ -3049,8 +3050,9 @@ fn validate_x25519_alias_runner(
 			5_922_842_905_554_828_522,
 			1_537_735_056_464_180_222,
 			9_278_209_781_568_601_116,
+			8_380_481_376_099_052_960,
 		] {
-		return Err("X25519 alias three exact baseline correspondences changed".to_owned());
+		return Err("X25519 alias four exact baseline correspondences changed".to_owned());
 	}
 	Ok(())
 }
@@ -7923,6 +7925,7 @@ fn check_x25519_alias_runner_mutations() {
 			"\"exact-registration-origin-queries.pvl\"",
 			"\"other-queries.pvl\"",
 		),
+		("\n        or \"inj-event(BeaconAnyCommitted(\" in query", ""),
 		(
 			"\"canonical\", directory / \"crypto.pvl\", queries, \"true\", False",
 			"\"canonical\", alias, queries, \"true\", False",
@@ -20494,9 +20497,10 @@ fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
 		[
 			5_922_842_905_554_828_522,
 			1_537_735_056_464_180_222,
-			9_278_209_781_568_601_116
+			9_278_209_781_568_601_116,
+			8_380_481_376_099_052_960
 		],
-		"all three historical exact-field query bodies remain unchanged controls"
+		"all four historical exact-field query bodies remain unchanged controls"
 	);
 	for conclusion in [
 		"inj-event(ServerAuthenticatedSessionCommitted(main_agreement,main_server_assigned))",
@@ -20520,8 +20524,19 @@ fn main_registration_completion_schedules_preserve_the_checked_prefixes() {
 
 	require_once(
 		&controls,
+		"inj-event(BeaconAuthenticatedRegistrationCompleted(main_agreement,main_sequence,main_payload,main_frame,main_claimed))==>inj-event(AuthenticatedRegistrationRecordSent(main_agreement,first_sequence(),main_payload,main_frame,main_claimed))",
+		"projected sequence-one response correspondence",
+	)
+	.unwrap();
+	assert_eq!(
+		count(&controls, "inj-event(BeaconAnyCommitted("),
+		0,
+		"the alias-refuted exact transcript query stays among the historical controls"
+	);
+	require_once(
+		&exact_queries,
 		"inj-event(BeaconAnyCommitted(main_transcript))==>inj-event(ServerCommitted(main_transcript))",
-		"sequence-one exact-response correspondence",
+		"historical any-branch exact-transcript control",
 	)
 	.unwrap();
 	require_once(
