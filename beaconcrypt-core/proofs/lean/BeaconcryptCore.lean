@@ -977,6 +977,7 @@ import BeaconcryptCore.Computational.RawCtxSelectedRoleReceipt
 import BeaconcryptCore.Computational.RawCtxSelectedSealReceipt
 import BeaconcryptCore.Computational.PqxdhHypothesisWitness
 import BeaconcryptCore.Computational.PqxdhHeadlineBridges
+import BeaconcryptCore.Computational.PqxdhFirstRecordTarget
 /-!
 # Beaconcrypt-core verification root
 

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=990
+	[handwritten-lean]=991
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -16242,5 +16242,42 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHeadline
 require_line_count 1 '^theorem evolving_bound_bridged_full([[:space:]]|$)' "$selected_source_module" "PqxdhHeadlineBridges theorem evolving_bound_bridged_full"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHeadlineBridges.evolving_extracted_bound$' "$selected_source_module" "PqxdhHeadlineBridges dependency evolving_extracted_bound"
 require_line_count 1 '^theorem evolving_extracted_bound([[:space:]]|$)' "$selected_source_module" "PqxdhHeadlineBridges theorem evolving_extracted_bound"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhFirstRecordTarget.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhFirstRecordTarget$' proofs/lean/BeaconcryptCore.lean "PqxdhFirstRecordTarget root import"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhFirstRecordTarget theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhFirstRecordTarget guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.true_bind_split$' "$selected_source_module" "PqxdhFirstRecordTarget dependency true_bind_split"
+require_line_count 1 '^theorem true_bind_split([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem true_bind_split"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.after_split$' "$selected_source_module" "PqxdhFirstRecordTarget dependency after_split"
+require_line_count 1 '^theorem after_split([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem after_split"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.next_split$' "$selected_source_module" "PqxdhFirstRecordTarget dependency next_split"
+require_line_count 1 '^theorem next_split([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem next_split"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.actual_split$' "$selected_source_module" "PqxdhFirstRecordTarget dependency actual_split"
+require_line_count 1 '^theorem actual_split([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem actual_split"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.mapPost_choose$' "$selected_source_module" "PqxdhFirstRecordTarget dependency mapPost_choose"
+require_line_count 1 '^theorem mapPost_choose([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem mapPost_choose"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.mapPost_snd$' "$selected_source_module" "PqxdhFirstRecordTarget dependency mapPost_snd"
+require_line_count 1 '^theorem mapPost_snd([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem mapPost_snd"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.first_target$' "$selected_source_module" "PqxdhFirstRecordTarget dependency first_target"
+require_line_count 1 '^theorem first_target([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem first_target"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.ideal_split$' "$selected_source_module" "PqxdhFirstRecordTarget dependency ideal_split"
+require_line_count 1 '^theorem ideal_split([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem ideal_split"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.completed_uniform$' "$selected_source_module" "PqxdhFirstRecordTarget dependency completed_uniform"
+require_line_count 1 '^theorem completed_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem completed_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.reject_sampler_bounds$' "$selected_source_module" "PqxdhFirstRecordTarget dependency reject_sampler_bounds"
+require_line_count 1 '^theorem reject_sampler_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem reject_sampler_bounds"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.reject_root_queries$' "$selected_source_module" "PqxdhFirstRecordTarget dependency reject_root_queries"
+require_line_count 1 '^theorem reject_root_queries([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem reject_root_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.completed_bound$' "$selected_source_module" "PqxdhFirstRecordTarget dependency completed_bound"
+require_line_count 1 '^theorem completed_bound([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem completed_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.target_split$' "$selected_source_module" "PqxdhFirstRecordTarget dependency target_split"
+require_line_count 1 '^theorem target_split([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem target_split"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.true_ne_top$' "$selected_source_module" "PqxdhFirstRecordTarget dependency true_ne_top"
+require_line_count 1 '^theorem true_ne_top([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem true_ne_top"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.pending_bound$' "$selected_source_module" "PqxdhFirstRecordTarget dependency pending_bound"
+require_line_count 1 '^theorem pending_bound([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem pending_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordTarget.pending_le$' "$selected_source_module" "PqxdhFirstRecordTarget dependency pending_le"
+require_line_count 1 '^theorem pending_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordTarget theorem pending_le"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
