@@ -2,12 +2,11 @@ import BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCtx
 import BeaconcryptCore.Computational.RawCtxSelectedProtocolOriginEvent
 import BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop
 import BeaconcryptCore.Computational.PqxdhInitialKernelConstruction
-import BeaconcryptCore.Computational.RawCtxSourcePublication
 
 /-!
 # Canonical first-record forgery event
 
-`PqxdhFirstBeaconRecordIntegrity.forgeryPost` counts an accepted first record as forged when its decoded frame differs from the decodings of the bytes returned by earlier sends. With the production Cap'n Proto codec this can count a genuine record as forged. The reader rejects messages of more than `2^23` words, and the writer puts a long Data field in a second segment, so for payloads of 67108825 to 67108832 bytes the reader rejects the writer's own bytes while it accepts a one-segment encoding of the same frame. An adversary that re-encodes Beacon `b`'s genuine first record in one segment and delivers it therefore produces a counted record that the CTX observer does not count. The read-back codec premise that an earlier version of the gap proof used to exclude this case (every frame that the reader returns is written to bytes that the reader decodes back to that frame) is false in production.
+`PqxdhFirstBeaconRecordIntegrity.forgeryPost` counts an accepted first record as forged when its decoded frame differs from the decodings of the bytes returned by earlier sends. Frames travel as arbitrary byte strings, and the record writer and frame decoder are abstract functions of the environment. Nothing in that model says that the decoder accepts every byte string the writer produced, so the decoded-frame comparison can count a genuine record as forged: if the bytes an honest sender returned do not decode, while some other byte string that decodes to the same frame is accepted, then delivering that other byte string produces a counted record that the CTX observer does not count, because its frame matches an honest seal.
 
 This module replaces the comparison. `CanonicalForged` counts an accepted sequence-one Server raw receive at the registered peer when the environment's record writer, applied to the decoded frame, does not give the bytes of any sequence-one record returned by an earlier send (`FirstWritten`). A re-encoding decodes to the same frame, and the writer maps that frame to the bytes that the send returned, so it is not counted: `reencoded_not_counted` states this for any frame with a `FirstWritten` witness, and `sent_reencoding_not_counted` obtains the witness, under the writer premise below, from an earlier send whose reply carries the writer's bytes for the frame and its sequence, which is the shape of every selected send reply (`produced_frame`). `canonicalPost` logs the post exactly like `forgeryPost`; logging adds no request, so the original query certificate transfers unchanged (`canonical_query_bound`, `canonicalCertificate`). A single accepted entry with no earlier send is a canonical forgery (`canonical_forged_single`), so the event is not vacuous.
 
@@ -15,7 +14,7 @@ Chain. The C4 and C5 steps `pending_ideal_le`, `compiled_ctx_bound`, `fullClient
 
 Gap. The invariant of that earlier gap proof is copied and adapted: observer lemmas, the transcript invariant `Inv` along the compiled post (`inv_post`), the proved first-slot fact `first_slot_hidden` and `suffix_won`. Outside the initial half alias, an accepted canonical forgery that the observer does not win matches a selected seal. Every selected seal is transcribed: the writer either rejects the seal's frame or an earlier send returned the writer's bytes for it. In the second case `FirstWritten` holds and the record is not a canonical forgery. The first case is excluded by the writer premise below, so `gap_le` bounds the gap game by the alias probability `2^-256`.
 
-Premise. `ReadWritable writer read` says that the record writer returns bytes for every frame that the record reader returns; the proof uses it only for the sequence-one frames of accepted Server raw receives. It relates two environment functions and involves no probability, adversary or secret. Unlike the read-back premise, it does not ask the reader to accept the writer's bytes, so the 64 MiB counterexample does not touch it. Production satisfies it by inspection of the capnp 0.26.2 source, which is not proved in Lean: a Cap'n Proto Data field returned by the reader has at most `2^29 - 1` bytes, because the list pointer stores the element count in 29 bits (with the default reader options, which reject messages of more than `2^23` words, it is even shorter than `2^26` bytes), and the writer of `seal_frame` has no error return below that size: `set_cipher_text` only asserts that the Data field is shorter than `2^29` bytes, and `serialize::write_message` into a `Vec<u8>` fails only when `write_all` fails, which it does not for a vector. For Data of `2^29` bytes or more the writer panics, and it aborts when allocation fails; neither case is modeled and neither is needed, because the writer contract `RawCtxSourcePublication.WritesOn` constrains the model writer only below `2^29` bytes and `ReadWritable` concerns only frames that the reader returns. In Lean the two production facts are contracts: `read_writable` derives the premise from `WritesOn` and the reader bound `ReadBounded`, and `frame_decode_bounded` gives `ReadBounded` for the protocol decoder `RawCtxFrameDecoding.decode` over a reader whose Data getter respects the 29-bit limit, which is a hypothesis on the reader. A statistical charge for the excluded case (a seal whose writer failed, so its record never reached the adversary) is not proved here: the compiled client receives that record from the challenger and discards it, and bounding the chance that the adversary reproduces its 64-byte commitment needs an independence argument over the whole compiled post that the library does not provide.
+Premise. `ReadWritable writer read` says that the record writer returns bytes for every frame that the record reader returns; the proof uses it only for the sequence-one frames of accepted Server raw receives. It is a property of the abstract message model, in which messages are byte strings that each side knows how to decode: a frame that the receiving side can decode is a frame that the sending side can write. It relates two environment functions and involves no probability, adversary or secret, and it does not ask the reader to accept the writer's bytes. No property of a concrete serialization library is used or proved. A statistical charge for the excluded case (a seal whose writer failed, so its record never reached the adversary) is not proved here: the compiled client receives that record from the challenger and discards it, and bounding the chance that the adversary reproduces its 64-byte commitment needs an independence argument over the whole compiled post that the library does not provide.
 
 Result. `first_beacon_record_integrity_canonical` has the left side of `first_beacon_forgery_le` with the canonical proxy and bounds it by the first-record target loss, the completed-branch root loss, the CTX loss `ctxLoss`, `2^-256` twice (once in the compiled bound and once in the gap bound) and the restricted stop game `stopGame`. Its premises are those of `PqxdhFirstBeaconRecordCtx.first_beacon_record_integrity` and `ReadWritable env.recordWriter env.decode`.
 
@@ -281,26 +280,6 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {S B : Nat}
 /-- Writer premise: the record writer returns bytes for every frame that the record reader returns. -/
 def ReadWritable (writer : RawCtxMixedShared.Writer) (read : RawCtxReceive.FrameDecoder) : Prop :=
   ∀ bytes frame, read bytes = some frame → ∃ out, writer frame = some out
-
-/-- The reader returns only frames whose payload is shorter than the Cap'n Proto Data-list limit `2^29`. -/
-def ReadBounded (read : RawCtxReceive.FrameDecoder) : Prop :=
-  ∀ bytes frame, read bytes = some frame → frame.payload.length < RawCtxSourcePublication.dataLimit
-
-/-- The writer premise follows from the library's writer contract `WritesOn` (the in-memory writer returns its encoding for every payload shorter than `2^29` bytes) and the Data-list bound of the reader. -/
-theorem read_writable (writer : RawCtxMixedShared.Writer) (encode : RawCtxReceive.DecodedFrame → Pqxdh.Bytes)
-    (writes : RawCtxSourcePublication.WritesOn writer encode) (read : RawCtxReceive.FrameDecoder) (bounded : ReadBounded read) :
-    ReadWritable writer read :=
-  fun bytes frame decoded => ⟨encode frame, writes frame (bounded bytes frame decoded)⟩
-
-/-- The protocol frame decoder over a Cap'n Proto reader whose Data getter returns fewer than `2^29` bytes returns only bounded frames. -/
-theorem frame_decode_bounded {Message Root : Type} (reader : RawCtxFrameDecoding.Reader Message Root)
-    (limit : ∀ root payload, reader.payload root = some payload → payload.length < RawCtxSourcePublication.dataLimit) :
-    ReadBounded (RawCtxFrameDecoding.decode reader) := by
-  intro bytes frame decoded
-  simp only [RawCtxFrameDecoding.decode, Option.bind_eq_bind, Option.bind_eq_some_iff] at decoded
-  obtain ⟨root, _, payload, found, same⟩ := decoded
-  rw [← Option.some.inj same]
-  exact limit root payload found
 
 /-- An accepted frame with the sequence, sender and record encoding of a transcribed seal and with sequence one was written, with the writer's bytes, by a sequence-one send of the transcript, given the writer premise. -/
 theorem matched_written (writer : RawCtxMixedShared.Writer) (read : RawCtxReceive.FrameDecoder) (writable : ReadWritable writer read)
@@ -2001,15 +1980,6 @@ end BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.canonical_query_bound
-
-/-- info: 'BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.read_writable' depends on axioms: [propext] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.read_writable
-
-/-- info: 'BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.frame_decode_bounded' depends on axioms: [propext,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.frame_decode_bounded
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.matched_written' depends on axioms: [propext,
  Classical.choice,

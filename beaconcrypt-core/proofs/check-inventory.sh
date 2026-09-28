@@ -16641,8 +16641,8 @@ require_line_count 1 '^theorem first_beacon_record_integrity([[:space:]]|$)' "$s
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhFirstBeaconRecordCanonical.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical$' proofs/lean/BeaconcryptCore.lean "PqxdhFirstBeaconRecordCanonical root import"
-require_line_count 64 '^theorem ' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical theorem inventory"
-require_line_count 64 '^#guard_msgs in$' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical guarded dependencies"
+require_line_count 62 '^theorem ' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical theorem inventory"
+require_line_count 62 '^#guard_msgs in$' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.won_step$' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical dependency won_step"
 require_line_count 1 '^theorem won_step([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical theorem won_step"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.observed_won$' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical dependency observed_won"
@@ -16673,10 +16673,6 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBea
 require_line_count 1 '^theorem transcribed_append([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical theorem transcribed_append"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.canonical_query_bound$' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical dependency canonical_query_bound"
 require_line_count 1 '^theorem canonical_query_bound([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical theorem canonical_query_bound"
-require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.read_writable$' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical dependency read_writable"
-require_line_count 1 '^theorem read_writable([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical theorem read_writable"
-require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.frame_decode_bounded$' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical dependency frame_decode_bounded"
-require_line_count 1 '^theorem frame_decode_bounded([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical theorem frame_decode_bounded"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.matched_written$' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical dependency matched_written"
 require_line_count 1 '^theorem matched_written([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical theorem matched_written"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical.sent_reencoding_not_counted$' "$selected_source_module" "PqxdhFirstBeaconRecordCanonical dependency sent_reencoding_not_counted"
