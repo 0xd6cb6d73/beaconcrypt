@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=992
+	[handwritten-lean]=993
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -16376,5 +16376,48 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSelected
 require_line_count 1 '^theorem prepared_lifted([[:space:]]|$)' "$selected_source_module" "PqxdhSelectedFirstRecord theorem prepared_lifted"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhSelectedFirstRecord.randomRun_prepared$' "$selected_source_module" "PqxdhSelectedFirstRecord dependency randomRun_prepared"
 require_line_count 1 '^theorem randomRun_prepared([[:space:]]|$)' "$selected_source_module" "PqxdhSelectedFirstRecord theorem randomRun_prepared"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhFirstRecordNonceStop.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop$' proofs/lean/BeaconcryptCore.lean "PqxdhFirstRecordNonceStop root import"
+require_line_count 19 '^theorem ' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem inventory"
+require_line_count 19 '^#guard_msgs in$' "$selected_source_module" "PqxdhFirstRecordNonceStop guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.external_nonseal$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency external_nonseal"
+require_line_count 1 '^theorem external_nonseal([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem external_nonseal"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.finish_nonseal$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency finish_nonseal"
+require_line_count 1 '^theorem finish_nonseal([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem finish_nonseal"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.evaluate_quiet$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency evaluate_quiet"
+require_line_count 1 '^theorem evaluate_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem evaluate_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.step_used$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency step_used"
+require_line_count 1 '^theorem step_used([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem step_used"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.erased_step$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency erased_step"
+require_line_count 1 '^theorem erased_step([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem erased_step"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.erased_program$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency erased_program"
+require_line_count 1 '^theorem erased_program([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem erased_program"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.observed_source$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency observed_source"
+require_line_count 1 '^theorem observed_source([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem observed_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.source_erased_program$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency source_erased_program"
+require_line_count 1 '^theorem source_erased_program([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem source_erased_program"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.source_observed_step$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency source_observed_step"
+require_line_count 1 '^theorem source_observed_step([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem source_observed_step"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.source_observed_program$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency source_observed_program"
+require_line_count 1 '^theorem source_observed_program([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem source_observed_program"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.marked_step_consistent$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency marked_step_consistent"
+require_line_count 1 '^theorem marked_step_consistent([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem marked_step_consistent"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.marked_program_consistent$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency marked_program_consistent"
+require_line_count 1 '^theorem marked_program_consistent([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem marked_program_consistent"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.marked_step_erased$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency marked_step_erased"
+require_line_count 1 '^theorem marked_step_erased([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem marked_step_erased"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.marked_program_erased$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency marked_program_erased"
+require_line_count 1 '^theorem marked_program_erased([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem marked_program_erased"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.routed_input$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency routed_input"
+require_line_count 1 '^theorem routed_input([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem routed_input"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.input_bound$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency input_bound"
+require_line_count 1 '^theorem input_bound([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem input_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.source_input_distance$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency source_input_distance"
+require_line_count 1 '^theorem source_input_distance([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem source_input_distance"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.source_input_bound$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency source_input_bound"
+require_line_count 1 '^theorem source_input_bound([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem source_input_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop.source_history_distance$' "$selected_source_module" "PqxdhFirstRecordNonceStop dependency source_history_distance"
+require_line_count 1 '^theorem source_history_distance([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordNonceStop theorem source_history_distance"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
