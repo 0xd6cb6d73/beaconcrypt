@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=994
+	[handwritten-lean]=995
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -16472,5 +16472,58 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBea
 require_line_count 1 '^theorem pending_forgery_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem pending_forgery_le"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity.first_beacon_forgery_le$' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity dependency first_beacon_forgery_le"
 require_line_count 1 '^theorem first_beacon_forgery_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstBeaconRecordIntegrity theorem first_beacon_forgery_le"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhFirstRecordStopBound.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhFirstRecordStopBound$' proofs/lean/BeaconcryptCore.lean "PqxdhFirstRecordStopBound root import"
+require_line_count 24 '^theorem ' "$selected_source_module" "PqxdhFirstRecordStopBound theorem inventory"
+require_line_count 24 '^#guard_msgs in$' "$selected_source_module" "PqxdhFirstRecordStopBound guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.kept_input_bound$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency kept_input_bound"
+require_line_count 1 '^theorem kept_input_bound([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem kept_input_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.bind_le$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency bind_le"
+require_line_count 1 '^theorem bind_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem bind_le"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.stop_le$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency stop_le"
+require_line_count 1 '^theorem stop_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem stop_le"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.retains_iff$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency retains_iff"
+require_line_count 1 '^theorem retains_iff([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem retains_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.retained_retains$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency retained_retains"
+require_line_count 1 '^theorem retained_retains([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem retained_retains"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.native_retains$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency native_retains"
+require_line_count 1 '^theorem native_retains([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem native_retains"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.role_step_only$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency role_step_only"
+require_line_count 1 '^theorem role_step_only([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem role_step_only"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.source_step_only$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency source_step_only"
+require_line_count 1 '^theorem source_step_only([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem source_step_only"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.compiler_step_only$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency compiler_step_only"
+require_line_count 1 '^theorem compiler_step_only([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem compiler_step_only"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.compiler_only$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency compiler_only"
+require_line_count 1 '^theorem compiler_only([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem compiler_only"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.existing_retains$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency existing_retains"
+require_line_count 1 '^theorem existing_retains([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem existing_retains"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.map_retains$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency map_retains"
+require_line_count 1 '^theorem map_retains([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem map_retains"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.start_only$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency start_only"
+require_line_count 1 '^theorem start_only([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem start_only"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.driver_only$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency driver_only"
+require_line_count 1 '^theorem driver_only([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem driver_only"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.dispatch_pending$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency dispatch_pending"
+require_line_count 1 '^theorem dispatch_pending([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem dispatch_pending"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.prepare_only$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency prepare_only"
+require_line_count 1 '^theorem prepare_only([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem prepare_only"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.build_only$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency build_only"
+require_line_count 1 '^theorem build_only([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem build_only"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.collect_shared$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency collect_shared"
+require_line_count 1 '^theorem collect_shared([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem collect_shared"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.prepare_unmarked$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency prepare_unmarked"
+require_line_count 1 '^theorem prepare_unmarked([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem prepare_unmarked"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.existing_unchallenged$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency existing_unchallenged"
+require_line_count 1 '^theorem existing_unchallenged([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem existing_unchallenged"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.existing_unmarked$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency existing_unmarked"
+require_line_count 1 '^theorem existing_unmarked([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem existing_unmarked"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.stopGame_le$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency stopGame_le"
+require_line_count 1 '^theorem stopGame_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem stopGame_le"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.first_beacon_source_le$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency first_beacon_source_le"
+require_line_count 1 '^theorem first_beacon_source_le([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem first_beacon_source_le"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordStopBound.front_only$' "$selected_source_module" "PqxdhFirstRecordStopBound dependency front_only"
+require_line_count 1 '^theorem front_only([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordStopBound theorem front_only"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
