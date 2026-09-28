@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=988
+	[handwritten-lean]=989
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -16140,5 +16140,38 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelecte
 require_line_count 1 '^theorem full_tuple_fields([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedSealReceipt theorem full_tuple_fields"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.RawCtxSelectedSealReceipt.production_source$' "$selected_source_module" "RawCtxSelectedSealReceipt dependency production_source"
 require_line_count 1 '^theorem production_source([[:space:]]|$)' "$selected_source_module" "RawCtxSelectedSealReceipt theorem production_source"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhHypothesisWitness.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhHypothesisWitness$' proofs/lean/BeaconcryptCore.lean "PqxdhHypothesisWitness root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhHypothesisWitness theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhHypothesisWitness guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.hkdfOf_length$' "$selected_source_module" "PqxdhHypothesisWitness dependency hkdfOf_length"
+require_line_count 1 '^theorem hkdfOf_length([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem hkdfOf_length"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.hkdfOf_prefix$' "$selected_source_module" "PqxdhHypothesisWitness dependency hkdfOf_prefix"
+require_line_count 1 '^theorem hkdfOf_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem hkdfOf_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.hkdfOf_full$' "$selected_source_module" "PqxdhHypothesisWitness dependency hkdfOf_full"
+require_line_count 1 '^theorem hkdfOf_full([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem hkdfOf_full"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.hkdfOf_root$' "$selected_source_module" "PqxdhHypothesisWitness dependency hkdfOf_root"
+require_line_count 1 '^theorem hkdfOf_root([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem hkdfOf_root"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.toy_prefixConsistent$' "$selected_source_module" "PqxdhHypothesisWitness dependency toy_prefixConsistent"
+require_line_count 1 '^theorem toy_prefixConsistent([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem toy_prefixConsistent"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.toy_full_correct$' "$selected_source_module" "PqxdhHypothesisWitness dependency toy_full_correct"
+require_line_count 1 '^theorem toy_full_correct([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem toy_full_correct"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.toy_root_correct$' "$selected_source_module" "PqxdhHypothesisWitness dependency toy_root_correct"
+require_line_count 1 '^theorem toy_root_correct([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem toy_root_correct"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.toy_compatible$' "$selected_source_module" "PqxdhHypothesisWitness dependency toy_compatible"
+require_line_count 1 '^theorem toy_compatible([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem toy_compatible"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.toy_adapter$' "$selected_source_module" "PqxdhHypothesisWitness dependency toy_adapter"
+require_line_count 1 '^theorem toy_adapter([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem toy_adapter"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.toy_root_fields$' "$selected_source_module" "PqxdhHypothesisWitness dependency toy_root_fields"
+require_line_count 1 '^theorem toy_root_fields([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem toy_root_fields"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.hb112_instance$' "$selected_source_module" "PqxdhHypothesisWitness dependency hb112_instance"
+require_line_count 1 '^theorem hb112_instance([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem hb112_instance"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.hb111_instance$' "$selected_source_module" "PqxdhHypothesisWitness dependency hb111_instance"
+require_line_count 1 '^theorem hb111_instance([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem hb111_instance"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.actual_withKem$' "$selected_source_module" "PqxdhHypothesisWitness dependency actual_withKem"
+require_line_count 1 '^theorem actual_withKem([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem actual_withKem"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhHypothesisWitness.rootActual_withKem$' "$selected_source_module" "PqxdhHypothesisWitness dependency rootActual_withKem"
+require_line_count 1 '^theorem rootActual_withKem([[:space:]]|$)' "$selected_source_module" "PqxdhHypothesisWitness theorem rootActual_withKem"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
