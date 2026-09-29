@@ -111,6 +111,8 @@ Because the experiment's KDF idealisation itself depends on the route the review
 
 Open design choices for the reviewer: whether partners are defined by equal root input and key ID (recommended) or by the validated Phase 1 fields, whether the Beacon's identity, one-time and KEM secrets may be revealed (authentication only relies on DH1, so allowing them would give key-compromise-impersonation resistance), and the per-experiment budget on Server sessions.
 
+Review decision (2026-09-29). The reviewer chose route R1: the CTX proofs already work in the random-oracle model, and Signal's PQXDH specification assumes Gap-DH. Key-compromise-impersonation resistance is not wanted, so the experiment does not reveal the Beacon's long-term secrets; the remaining reveal set and the partnering rule must follow what the Rust reference implementation actually stores, exposes and binds, because the claim covers both the protocol and its reference implementation. The Server-session budget stays a parameter of the bound and is evaluated in the documentation at a few tens of sessions.
+
 ## 7. Milestone C plan
 
 No new cryptographic assumption is expected. The route, from an exploration of the HB-112 and HB-126/127 code, is:
