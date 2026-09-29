@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1001
+	[handwritten-lean]=1002
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -17433,5 +17433,20 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenCont
 require_line_count 1 '^theorem decoded_receive_native([[:space:]]|$)' "$selected_source_module" "PqxdhOpenContextBridge theorem decoded_receive_native"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenContextBridge.decoded_after_root$' "$selected_source_module" "PqxdhOpenContextBridge dependency decoded_after_root"
 require_line_count 1 '^theorem decoded_after_root([[:space:]]|$)' "$selected_source_module" "PqxdhOpenContextBridge theorem decoded_after_root"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhReceiveHeadlineBridges.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhReceiveHeadlineBridges$' proofs/lean/BeaconcryptCore.lean "PqxdhReceiveHeadlineBridges root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhReceiveHeadlineBridges theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhReceiveHeadlineBridges guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhReceiveHeadlineBridges.receive_bridge$' "$selected_source_module" "PqxdhReceiveHeadlineBridges dependency receive_bridge"
+require_line_count 1 '^theorem receive_bridge([[:space:]]|$)' "$selected_source_module" "PqxdhReceiveHeadlineBridges theorem receive_bridge"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhReceiveHeadlineBridges.authenticated_native_root_bound_bridged_receive$' "$selected_source_module" "PqxdhReceiveHeadlineBridges dependency authenticated_native_root_bound_bridged_receive"
+require_line_count 1 '^theorem authenticated_native_root_bound_bridged_receive([[:space:]]|$)' "$selected_source_module" "PqxdhReceiveHeadlineBridges theorem authenticated_native_root_bound_bridged_receive"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhReceiveHeadlineBridges.authenticated_extracted_root_bound_receive$' "$selected_source_module" "PqxdhReceiveHeadlineBridges dependency authenticated_extracted_root_bound_receive"
+require_line_count 1 '^theorem authenticated_extracted_root_bound_receive([[:space:]]|$)' "$selected_source_module" "PqxdhReceiveHeadlineBridges theorem authenticated_extracted_root_bound_receive"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhReceiveHeadlineBridges.evolving_bound_bridged_receive$' "$selected_source_module" "PqxdhReceiveHeadlineBridges dependency evolving_bound_bridged_receive"
+require_line_count 1 '^theorem evolving_bound_bridged_receive([[:space:]]|$)' "$selected_source_module" "PqxdhReceiveHeadlineBridges theorem evolving_bound_bridged_receive"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhReceiveHeadlineBridges.evolving_extracted_bound_receive$' "$selected_source_module" "PqxdhReceiveHeadlineBridges dependency evolving_extracted_bound_receive"
+require_line_count 1 '^theorem evolving_extracted_bound_receive([[:space:]]|$)' "$selected_source_module" "PqxdhReceiveHeadlineBridges theorem evolving_extracted_bound_receive"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
