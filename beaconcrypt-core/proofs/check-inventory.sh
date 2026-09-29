@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1008
+	[handwritten-lean]=1009
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -18145,5 +18145,56 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAu
 require_line_count 1 '^theorem serverGapDhAdvantage_eq([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem serverGapDhAdvantage_eq"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.candidate_eq_serverGapDh$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency candidate_eq_serverGapDh"
 require_line_count 1 '^theorem candidate_eq_serverGapDh([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem candidate_eq_serverGapDh"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhExtractRomFamily.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhExtractRomFamily$' proofs/lean/BeaconcryptCore.lean "PqxdhExtractRomFamily root import"
+require_line_count 23 '^theorem ' "$selected_source_module" "PqxdhExtractRomFamily theorem inventory"
+require_line_count 23 '^#guard_msgs in$' "$selected_source_module" "PqxdhExtractRomFamily guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_coin$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_coin"
+require_line_count 1 '^theorem rom_coin([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_coin"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_sign$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_sign"
+require_line_count 1 '^theorem rom_sign([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_sign"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_public_real$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_public_real"
+require_line_count 1 '^theorem rom_public_real([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_public_real"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_public_oracle$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_public_oracle"
+require_line_count 1 '^theorem rom_public_oracle([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_public_oracle"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_hit$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_hit"
+require_line_count 1 '^theorem rom_hit([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_hit"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_miss$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_miss"
+require_line_count 1 '^theorem rom_miss([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_miss"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_rejected$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_rejected"
+require_line_count 1 '^theorem rom_rejected([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_rejected"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_derive_oracle$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_derive_oracle"
+require_line_count 1 '^theorem rom_derive_oracle([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_derive_oracle"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_derive_hit$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_derive_hit"
+require_line_count 1 '^theorem rom_derive_hit([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_derive_hit"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_derive_miss$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_derive_miss"
+require_line_count 1 '^theorem rom_derive_miss([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_derive_miss"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_side$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_side"
+require_line_count 1 '^theorem rom_side([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_side"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rootExpand_outside$' "$selected_source_module" "PqxdhExtractRomFamily dependency rootExpand_outside"
+require_line_count 1 '^theorem rootExpand_outside([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rootExpand_outside"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_root$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_root"
+require_line_count 1 '^theorem rom_root([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_root"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_forward$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_forward"
+require_line_count 1 '^theorem rom_forward([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_forward"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_history_append$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_history_append"
+require_line_count 1 '^theorem rom_history_append([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_history_append"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_reduction_history_append$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_reduction_history_append"
+require_line_count 1 '^theorem rom_reduction_history_append([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_reduction_history_append"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.oracle_step$' "$selected_source_module" "PqxdhExtractRomFamily dependency oracle_step"
+require_line_count 1 '^theorem oracle_step([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem oracle_step"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_cache_mono$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_cache_mono"
+require_line_count 1 '^theorem rom_cache_mono([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_cache_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_reduction_cache_mono$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_reduction_cache_mono"
+require_line_count 1 '^theorem rom_reduction_cache_mono([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_reduction_cache_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_public_patch$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_public_patch"
+require_line_count 1 '^theorem rom_public_patch([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_public_patch"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.rom_derive_patch$' "$selected_source_module" "PqxdhExtractRomFamily dependency rom_derive_patch"
+require_line_count 1 '^theorem rom_derive_patch([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem rom_derive_patch"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.derive_then_public$' "$selected_source_module" "PqxdhExtractRomFamily dependency derive_then_public"
+require_line_count 1 '^theorem derive_then_public([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem derive_then_public"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.public_then_derive$' "$selected_source_module" "PqxdhExtractRomFamily dependency public_then_derive"
+require_line_count 1 '^theorem public_then_derive([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem public_then_derive"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

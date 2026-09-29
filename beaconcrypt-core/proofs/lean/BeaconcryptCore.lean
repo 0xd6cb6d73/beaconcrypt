@@ -995,6 +995,7 @@ import BeaconcryptCore.Computational.PqxdhFirstRecordFinishBound
 import BeaconcryptCore.Computational.PqxdhFirstRecordConfidentialityComplete
 import BeaconcryptCore.Computational.PqxdhExtractRomSeparation
 import BeaconcryptCore.Computational.PqxdhServerAuthAssumptions
+import BeaconcryptCore.Computational.PqxdhExtractRomFamily
 /-!
 # Beaconcrypt-core verification root
 
