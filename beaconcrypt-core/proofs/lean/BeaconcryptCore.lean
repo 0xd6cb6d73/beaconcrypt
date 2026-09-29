@@ -989,6 +989,7 @@ import BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCtx
 import BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical
 import BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged
 import BeaconcryptCore.Computational.PqxdhFirstRecordReplay
+import BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality
 /-!
 # Beaconcrypt-core verification root
 
