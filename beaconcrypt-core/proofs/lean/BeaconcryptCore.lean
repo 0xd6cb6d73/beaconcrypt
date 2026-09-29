@@ -978,6 +978,7 @@ import BeaconcryptCore.Computational.RawCtxSelectedSealReceipt
 import BeaconcryptCore.Computational.PqxdhHypothesisWitness
 import BeaconcryptCore.Computational.PqxdhHeadlineBridges
 import BeaconcryptCore.Computational.PqxdhOpenBridges
+import BeaconcryptCore.Computational.PqxdhOpenContextBridge
 import BeaconcryptCore.Computational.PqxdhFirstRecordTarget
 import BeaconcryptCore.Computational.PqxdhSelectedFirstRecord
 import BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop
