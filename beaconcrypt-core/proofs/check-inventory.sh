@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1009
+	[handwritten-lean]=1010
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -18196,5 +18196,64 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractR
 require_line_count 1 '^theorem derive_then_public([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem derive_then_public"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomFamily.public_then_derive$' "$selected_source_module" "PqxdhExtractRomFamily dependency public_then_derive"
 require_line_count 1 '^theorem public_then_derive([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomFamily theorem public_then_derive"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthKeySchedule.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule$' proofs/lean/BeaconcryptCore.lean "PqxdhServerAuthKeySchedule root import"
+require_line_count 27 '^theorem ' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem inventory"
+require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "PqxdhServerAuthKeySchedule guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.initializer_eq$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency initializer_eq"
+require_line_count 1 '^theorem initializer_eq([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem initializer_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.step_eq$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency step_eq"
+require_line_count 1 '^theorem step_eq([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem step_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.keySchedule_hmac$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency keySchedule_hmac"
+require_line_count 1 '^theorem keySchedule_hmac([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem keySchedule_hmac"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.fromRoot_model$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency fromRoot_model"
+require_line_count 1 '^theorem fromRoot_model([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem fromRoot_model"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.keySchedule_extract$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency keySchedule_extract"
+require_line_count 1 '^theorem keySchedule_extract([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem keySchedule_extract"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.advantage_congr$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency advantage_congr"
+require_line_count 1 '^theorem advantage_congr([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem advantage_congr"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.rootExpand_real$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency rootExpand_real"
+require_line_count 1 '^theorem rootExpand_real([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem rootExpand_real"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.rootExpand_random$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency rootExpand_random"
+require_line_count 1 '^theorem rootExpand_random([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem rootExpand_random"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.initExtract_real$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency initExtract_real"
+require_line_count 1 '^theorem initExtract_real([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem initExtract_real"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.initExtract_uniform$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency initExtract_uniform"
+require_line_count 1 '^theorem initExtract_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem initExtract_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.initExpand_real$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency initExpand_real"
+require_line_count 1 '^theorem initExpand_real([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem initExpand_real"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.initExpand_random$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency initExpand_random"
+require_line_count 1 '^theorem initExpand_random([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem initExpand_random"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.init_split$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency init_split"
+require_line_count 1 '^theorem init_split([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem init_split"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.stepExtract_real$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency stepExtract_real"
+require_line_count 1 '^theorem stepExtract_real([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem stepExtract_real"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.stepExtract_uniform$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency stepExtract_uniform"
+require_line_count 1 '^theorem stepExtract_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem stepExtract_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.stepExpand_real$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency stepExpand_real"
+require_line_count 1 '^theorem stepExpand_real([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem stepExpand_real"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.stepExpand_random$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency stepExpand_random"
+require_line_count 1 '^theorem stepExpand_random([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem stepExpand_random"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.rootExpand_hop$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency rootExpand_hop"
+require_line_count 1 '^theorem rootExpand_hop([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem rootExpand_hop"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.initExtract_hop$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency initExtract_hop"
+require_line_count 1 '^theorem initExtract_hop([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem initExtract_hop"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.initExpand_hop$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency initExpand_hop"
+require_line_count 1 '^theorem initExpand_hop([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem initExpand_hop"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.stepExtract_hop$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency stepExtract_hop"
+require_line_count 1 '^theorem stepExtract_hop([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem stepExtract_hop"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.stepExpand_hop$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency stepExpand_hop"
+require_line_count 1 '^theorem stepExpand_hop([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem stepExpand_hop"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.keySchedule_bound$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency keySchedule_bound"
+require_line_count 1 '^theorem keySchedule_bound([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem keySchedule_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.keySchedule_bound_context$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency keySchedule_bound_context"
+require_line_count 1 '^theorem keySchedule_bound_context([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem keySchedule_bound_context"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.rootExpandReduction_query_bound$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency rootExpandReduction_query_bound"
+require_line_count 1 '^theorem rootExpandReduction_query_bound([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem rootExpandReduction_query_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.initExpandReduction_query_bound$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency initExpandReduction_query_bound"
+require_line_count 1 '^theorem initExpandReduction_query_bound([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem initExpandReduction_query_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.stepExpandReduction_query_bound$' "$selected_source_module" "PqxdhServerAuthKeySchedule dependency stepExpandReduction_query_bound"
+require_line_count 1 '^theorem stepExpandReduction_query_bound([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthKeySchedule theorem stepExpandReduction_query_bound"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
