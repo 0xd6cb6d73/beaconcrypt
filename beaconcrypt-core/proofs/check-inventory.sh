@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=999
+	[handwritten-lean]=1000
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -17327,5 +17327,44 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRec
 require_line_count 1 '^theorem reaccepted_zero([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordReplay theorem reaccepted_zero"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordReplay.first_beacon_record_integrity_replay$' "$selected_source_module" "PqxdhFirstRecordReplay dependency first_beacon_record_integrity_replay"
 require_line_count 1 '^theorem first_beacon_record_integrity_replay([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordReplay theorem first_beacon_record_integrity_replay"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhOpenBridges.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhOpenBridges$' proofs/lean/BeaconcryptCore.lean "PqxdhOpenBridges root import"
+require_line_count 17 '^theorem ' "$selected_source_module" "PqxdhOpenBridges theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "PqxdhOpenBridges guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.standInOpen_source$' "$selected_source_module" "PqxdhOpenBridges dependency standInOpen_source"
+require_line_count 1 '^theorem standInOpen_source([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem standInOpen_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.standInOpen_callback$' "$selected_source_module" "PqxdhOpenBridges dependency standInOpen_callback"
+require_line_count 1 '^theorem standInOpen_callback([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem standInOpen_callback"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.sourceOpen_rejected$' "$selected_source_module" "PqxdhOpenBridges dependency sourceOpen_rejected"
+require_line_count 1 '^theorem sourceOpen_rejected([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem sourceOpen_rejected"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.mixed_step$' "$selected_source_module" "PqxdhOpenBridges dependency mixed_step"
+require_line_count 1 '^theorem mixed_step([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem mixed_step"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.mixed_callback$' "$selected_source_module" "PqxdhOpenBridges dependency mixed_callback"
+require_line_count 1 '^theorem mixed_callback([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem mixed_callback"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.bindResult_ok$' "$selected_source_module" "PqxdhOpenBridges dependency bindResult_ok"
+require_line_count 1 '^theorem bindResult_ok([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem bindResult_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.material_withContext$' "$selected_source_module" "PqxdhOpenBridges dependency material_withContext"
+require_line_count 1 '^theorem material_withContext([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem material_withContext"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.sequence_withContext$' "$selected_source_module" "PqxdhOpenBridges dependency sequence_withContext"
+require_line_count 1 '^theorem sequence_withContext([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem sequence_withContext"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.context_withContext$' "$selected_source_module" "PqxdhOpenBridges dependency context_withContext"
+require_line_count 1 '^theorem context_withContext([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem context_withContext"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.entry_withContext$' "$selected_source_module" "PqxdhOpenBridges dependency entry_withContext"
+require_line_count 1 '^theorem entry_withContext([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem entry_withContext"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.finish_withContext$' "$selected_source_module" "PqxdhOpenBridges dependency finish_withContext"
+require_line_count 1 '^theorem finish_withContext([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem finish_withContext"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.executeOpen_source$' "$selected_source_module" "PqxdhOpenBridges dependency executeOpen_source"
+require_line_count 1 '^theorem executeOpen_source([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem executeOpen_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.open_bridge$' "$selected_source_module" "PqxdhOpenBridges dependency open_bridge"
+require_line_count 1 '^theorem open_bridge([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem open_bridge"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.authenticated_native_root_bound_bridged_open$' "$selected_source_module" "PqxdhOpenBridges dependency authenticated_native_root_bound_bridged_open"
+require_line_count 1 '^theorem authenticated_native_root_bound_bridged_open([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem authenticated_native_root_bound_bridged_open"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.authenticated_extracted_root_bound_open$' "$selected_source_module" "PqxdhOpenBridges dependency authenticated_extracted_root_bound_open"
+require_line_count 1 '^theorem authenticated_extracted_root_bound_open([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem authenticated_extracted_root_bound_open"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.evolving_bound_bridged_open$' "$selected_source_module" "PqxdhOpenBridges dependency evolving_bound_bridged_open"
+require_line_count 1 '^theorem evolving_bound_bridged_open([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem evolving_bound_bridged_open"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhOpenBridges.evolving_extracted_bound_open$' "$selected_source_module" "PqxdhOpenBridges dependency evolving_extracted_bound_open"
+require_line_count 1 '^theorem evolving_extracted_bound_open([[:space:]]|$)' "$selected_source_module" "PqxdhOpenBridges theorem evolving_extracted_bound_open"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
