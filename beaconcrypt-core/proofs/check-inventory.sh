@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1006
+	[handwritten-lean]=1008
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -18089,5 +18089,61 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRec
 require_line_count 1 '^theorem first_record_confidentiality_complete([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordConfidentialityComplete theorem first_record_confidentiality_complete"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhFirstRecordConfidentialityComplete.first_record_confidentiality_complete_budget$' "$selected_source_module" "PqxdhFirstRecordConfidentialityComplete dependency first_record_confidentiality_complete_budget"
 require_line_count 1 '^theorem first_record_confidentiality_complete_budget([[:space:]]|$)' "$selected_source_module" "PqxdhFirstRecordConfidentialityComplete theorem first_record_confidentiality_complete_budget"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhExtractRomSeparation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhExtractRomSeparation$' proofs/lean/BeaconcryptCore.lean "PqxdhExtractRomSeparation root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhExtractRomSeparation theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhExtractRomSeparation guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomSeparation.eval_other$' "$selected_source_module" "PqxdhExtractRomSeparation dependency eval_other"
+require_line_count 1 '^theorem eval_other([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomSeparation theorem eval_other"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomSeparation.romHmac_extract$' "$selected_source_module" "PqxdhExtractRomSeparation dependency romHmac_extract"
+require_line_count 1 '^theorem romHmac_extract([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomSeparation theorem romHmac_extract"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomSeparation.ratchet_input_ne$' "$selected_source_module" "PqxdhExtractRomSeparation dependency ratchet_input_ne"
+require_line_count 1 '^theorem ratchet_input_ne([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomSeparation theorem ratchet_input_ne"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomSeparation.root_input_eq$' "$selected_source_module" "PqxdhExtractRomSeparation dependency root_input_eq"
+require_line_count 1 '^theorem root_input_eq([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomSeparation theorem root_input_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomSeparation.extract_other$' "$selected_source_module" "PqxdhExtractRomSeparation dependency extract_other"
+require_line_count 1 '^theorem extract_other([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomSeparation theorem extract_other"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomSeparation.extract_root$' "$selected_source_module" "PqxdhExtractRomSeparation dependency extract_root"
+require_line_count 1 '^theorem extract_root([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomSeparation theorem extract_root"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomSeparation.expandRoot_same$' "$selected_source_module" "PqxdhExtractRomSeparation dependency expandRoot_same"
+require_line_count 1 '^theorem expandRoot_same([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomSeparation theorem expandRoot_same"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomSeparation.expandFull_same$' "$selected_source_module" "PqxdhExtractRomSeparation dependency expandFull_same"
+require_line_count 1 '^theorem expandFull_same([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomSeparation theorem expandFull_same"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomSeparation.production_ratchet_unchanged$' "$selected_source_module" "PqxdhExtractRomSeparation dependency production_ratchet_unchanged"
+require_line_count 1 '^theorem production_ratchet_unchanged([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomSeparation theorem production_ratchet_unchanged"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhExtractRomSeparation.root_under_patch$' "$selected_source_module" "PqxdhExtractRomSeparation dependency root_under_patch"
+require_line_count 1 '^theorem root_under_patch([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomSeparation theorem root_under_patch"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthAssumptions.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhServerAuthAssumptions$' proofs/lean/BeaconcryptCore.lean "PqxdhServerAuthAssumptions root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhServerAuthAssumptions theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhServerAuthAssumptions guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.class_iff$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency class_iff"
+require_line_count 1 '^theorem class_iff([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem class_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.optional_inj$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency optional_inj"
+require_line_count 1 '^theorem optional_inj([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem optional_inj"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.optional_congr$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency optional_congr"
+require_line_count 1 '^theorem optional_congr([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem optional_congr"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.sourceScalarDh_eq_iff$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency sourceScalarDh_eq_iff"
+require_line_count 1 '^theorem sourceScalarDh_eq_iff([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem sourceScalarDh_eq_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.sourceDhReply_eq_iff$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency sourceDhReply_eq_iff"
+require_line_count 1 '^theorem sourceDhReply_eq_iff([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem sourceDhReply_eq_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.static_iff$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency static_iff"
+require_line_count 1 '^theorem static_iff([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem static_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.scalar_iff$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency scalar_iff"
+require_line_count 1 '^theorem scalar_iff([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem scalar_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.classEquivalence$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency classEquivalence"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.scalar_agreement$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency scalar_agreement"
+require_line_count 1 '^theorem scalar_agreement([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem scalar_agreement"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.sourceScalarDh_nonzero$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency sourceScalarDh_nonzero"
+require_line_count 1 '^theorem sourceScalarDh_nonzero([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem sourceScalarDh_nonzero"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.honest_accepts$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency honest_accepts"
+require_line_count 1 '^theorem honest_accepts([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem honest_accepts"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.honest_candidate$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency honest_candidate"
+require_line_count 1 '^theorem honest_candidate([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem honest_candidate"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.serverGapDhAdvantage_eq$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency serverGapDhAdvantage_eq"
+require_line_count 1 '^theorem serverGapDhAdvantage_eq([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem serverGapDhAdvantage_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthAssumptions.candidate_eq_serverGapDh$' "$selected_source_module" "PqxdhServerAuthAssumptions dependency candidate_eq_serverGapDh"
+require_line_count 1 '^theorem candidate_eq_serverGapDh([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthAssumptions theorem candidate_eq_serverGapDh"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
