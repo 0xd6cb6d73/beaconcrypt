@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1017
+	[handwritten-lean]=1018
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -19184,5 +19184,42 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAu
 require_line_count 1 '^theorem scalar_card([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCollision theorem scalar_card"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCollision.collB_probability$' "$selected_source_module" "PqxdhServerAuthCollision dependency collB_probability"
 require_line_count 1 '^theorem collB_probability([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCollision theorem collB_probability"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthBeaconFactor.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor$' proofs/lean/BeaconcryptCore.lean "PqxdhServerAuthBeaconFactor root import"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhServerAuthBeaconFactor guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.pending_window$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency pending_window"
+require_line_count 1 '^theorem pending_window([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem pending_window"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.no_cached$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency no_cached"
+require_line_count 1 '^theorem no_cached([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem no_cached"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.resume_ready$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency resume_ready"
+require_line_count 1 '^theorem resume_ready([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem resume_ready"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.begin_ready$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency begin_ready"
+require_line_count 1 '^theorem begin_ready([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem begin_ready"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.finish_ready$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency finish_ready"
+require_line_count 1 '^theorem finish_ready([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem finish_ready"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.program_settlement$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency program_settlement"
+require_line_count 1 '^theorem program_settlement([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem program_settlement"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.raw_settlement$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency raw_settlement"
+require_line_count 1 '^theorem raw_settlement([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem raw_settlement"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.primitive_receive$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency primitive_receive"
+require_line_count 1 '^theorem primitive_receive([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem primitive_receive"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.initial_exact$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency initial_exact"
+require_line_count 1 '^theorem initial_exact([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem initial_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.initial_source$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency initial_source"
+require_line_count 1 '^theorem initial_source([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem initial_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.receive_adapter$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency receive_adapter"
+require_line_count 1 '^theorem receive_adapter([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem receive_adapter"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.primitive_factor$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency primitive_factor"
+require_line_count 1 '^theorem primitive_factor([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem primitive_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.native_tail$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency native_tail"
+require_line_count 1 '^theorem native_tail([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem native_tail"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.native_kdf$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency native_kdf"
+require_line_count 1 '^theorem native_kdf([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem native_kdf"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.beacon_afterRoot_factor$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency beacon_afterRoot_factor"
+require_line_count 1 '^theorem beacon_afterRoot_factor([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem beacon_afterRoot_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.beacon_afterRoot_run$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency beacon_afterRoot_run"
+require_line_count 1 '^theorem beacon_afterRoot_run([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem beacon_afterRoot_run"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
