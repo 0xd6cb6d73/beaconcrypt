@@ -2902,3 +2902,10 @@ Every main experiment fixes `revealSeed=false` and preserves the approved no-KCI
 ### Ordinary registration-tail CTX query bounds
 
 `PqxdhServerAuthCtxNativeBounds` proves that the actual ordinary Server builder and Beacon post-root continuation each forward at most one attempted commitment-hash request through the shared CTX interface, including writer, parser, validation and opening failures. The complete builder and all adaptive ordinary Beacon-tail programs also issue zero selected-seal, selected-raw and explicit uniform requests. The proofs consume the original sealing and raw-receive budgets and retain every deterministic KDF/AEAD/codec operation and full optional state result; these local costs and the hash interpreter's sampling remain separate. This introduces no security or no-alias premise and supplies only the ordinary branches of the upcoming adaptive selected-key compiler. The exact scope and the separate at-most-51 receive derivations are explained in `doc/impl/server-authentication-ctx-native-bounds.md`.
+
+
+## Audit remediation F16: mandatory inventory and legacy dependency guards
+
+The full `verify-in-shell` target now runs `check-inventory` after extraction and Lean checking, so a successful full Make verification also certifies the reviewed proof/source file inventory. The standalone target remains available, and the inventory checker requires this call in the full verification recipe. Existing extraction and proof gates are retained in their original order.
+
+The three legacy modules `CtxComputationalSecurity`, `CtxReduction` and `CommitmentSurface` now guard the actual axiom dependency report of every existing public theorem: 63, 17 and 9 statements respectively. Their definitions, theorem statements and proof bodies are unchanged. The reports use only `propext`, `Classical.choice` and `Quot.sound` or a subset, and their exact guarded names and counts are registered in the inventory checker. This changes verification coverage, not cryptographic assumptions, reduction terms, query accounting or advertised protocol scope. The final full Make run remains required on the integrated result.

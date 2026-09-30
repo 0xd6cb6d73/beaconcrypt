@@ -133,6 +133,7 @@ verify-in-shell:
 	$(MAKE) check-proverif
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
+	$(MAKE) check-inventory
 
 verify-proverif:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \

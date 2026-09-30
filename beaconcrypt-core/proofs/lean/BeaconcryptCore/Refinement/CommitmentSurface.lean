@@ -136,3 +136,49 @@ theorem encode_u64_le_is_injective (left right : Std.U64)
       (hl.2.symm.trans ((congrArg absBytes hbytes).trans hr.2)))
 
 end BeaconcryptCore.Refinement.CommitmentSurface
+
+/-! ## Checked theorem dependencies -/
+
+/-- info: 'BeaconcryptCore.Refinement.CommitmentSurface.productionInput_spec' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.CommitmentSurface.productionInput_spec
+/-- info: 'BeaconcryptCore.Refinement.CommitmentSurface.productionInput_abs' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.CommitmentSurface.productionInput_abs
+/-- info: 'BeaconcryptCore.Refinement.CommitmentSurface.fields_well_formed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.CommitmentSurface.fields_well_formed
+/-- info: 'BeaconcryptCore.Refinement.CommitmentSurface.fields_ext' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.CommitmentSurface.fields_ext
+/-- info: 'BeaconcryptCore.Refinement.CommitmentSurface.production_commitment_input_is_injective' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.CommitmentSurface.production_commitment_input_is_injective
+/-- info: 'BeaconcryptCore.Refinement.CommitmentSurface.ctx_distinct_openings_imply_hash_collision' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.CommitmentSurface.ctx_distinct_openings_imply_hash_collision
+/-- info: 'BeaconcryptCore.Refinement.CommitmentSurface.decode_u64_le_of_abs' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.CommitmentSurface.decode_u64_le_of_abs
+/-- info: 'BeaconcryptCore.Refinement.CommitmentSurface.decode_encode_u64_le' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.CommitmentSurface.decode_encode_u64_le
+/-- info: 'BeaconcryptCore.Refinement.CommitmentSurface.encode_u64_le_is_injective' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.CommitmentSurface.encode_u64_le_is_injective

@@ -641,3 +641,79 @@ theorem ctxCrossSessionAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
       (CtxCrossSessionClaim.toRelabelClaim <$> adversary)
 
 end BeaconcryptCore.Computational.CtxReduction
+
+/-! ## Checked theorem dependencies -/
+
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxMisattribution_implies_blake2b_collision' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxMisattribution_implies_blake2b_collision
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxMisattributionAdvantage_le_blake2b_cr' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxMisattributionAdvantage_le_blake2b_cr
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxFullCommitment_implies_misattribution' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxFullCommitment_implies_misattribution
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxFullCommitment_implies_blake2b_collision' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxFullCommitment_implies_blake2b_collision
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxFullCommitmentAdvantage_le_blake2b_cr' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxFullCommitmentAdvantage_le_blake2b_cr
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxRelabelAttempt_win_of_open' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxRelabelAttempt_win_of_open
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.successful_relabel_yields_blake2b_collision' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.successful_relabel_yields_blake2b_collision
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.successful_wrong_sequence_open_yields_blake2b_collision' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.successful_wrong_sequence_open_yields_blake2b_collision
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.successful_wrong_sender_open_yields_blake2b_collision' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.successful_wrong_sender_open_yields_blake2b_collision
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.successful_cross_session_open_yields_blake2b_collision' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.successful_cross_session_open_yields_blake2b_collision
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxRelabelAdvantage_le_blake2b_cr' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxRelabelAdvantage_le_blake2b_cr
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxWrongSequenceSuccess_implies_blake2b_collision' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxWrongSequenceSuccess_implies_blake2b_collision
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxWrongSequenceAdvantage_le_blake2b_cr' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxWrongSequenceAdvantage_le_blake2b_cr
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxWrongSenderSuccess_implies_blake2b_collision' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxWrongSenderSuccess_implies_blake2b_collision
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxWrongSenderAdvantage_le_blake2b_cr' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxWrongSenderAdvantage_le_blake2b_cr
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxCrossSessionSuccess_implies_blake2b_collision' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxCrossSessionSuccess_implies_blake2b_collision
+/-- info: 'BeaconcryptCore.Computational.CtxReduction.ctxCrossSessionAdvantage_le_blake2b_cr' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxReduction.ctxCrossSessionAdvantage_le_blake2b_cr

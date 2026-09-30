@@ -1446,3 +1446,317 @@ theorem ctxComputationalSecurity_query_accounting
   typedVerifier := ctxTypedFullFreshVerifier_totalQueryBound c
 
 end BeaconcryptCore.Computational.CtxComputationalSecurity
+
+/-! ## Checked theorem dependencies -/
+
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxIndependentPublicOracle_preserves_commitmentsCached' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxIndependentPublicOracle_preserves_commitmentsCached
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleKeyFreeSealOracle_preserves_commitmentsCached' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleKeyFreeSealOracle_preserves_commitmentsCached
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTagImpl_preserves_full_invariant' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTagImpl_preserves_full_invariant
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTag_run_commitmentsCached' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTag_run_commitmentsCached
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.independentTrackedProjection_commitmentsCached' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.independentTrackedProjection_commitmentsCached
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTagGame_commitmentsCached' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTagGame_commitmentsCached
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.acceptedTypedFullFreshAt_implies_classified_of_cache_sound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.acceptedTypedFullFreshAt_implies_classified_of_cache_sound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSample_alias_suffix_fresh' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSample_alias_suffix_fresh
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedVerifier_le_inv_of_direct_support' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedVerifier_le_inv_of_direct_support
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshVerifier_le_classified_of_cache_sound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshVerifier_le_classified_of_cache_sound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectTypedFullFreshForgeryGame_le_classified_of_cache_sound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectTypedFullFreshForgeryGame_le_classified_of_cache_sound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectClassifiedForgeryGame_le_retained_add_inv' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectClassifiedForgeryGame_le_retained_add_inv
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedForgeryGame_le_direct_add_prefix' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedForgeryGame_le_direct_add_prefix
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryGame_le_direct_add_prefix' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryGame_le_direct_add_prefix
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedForgeryProbability_le_intCtxt_add_prefix_add_inv' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedForgeryProbability_le_intCtxt_add_prefix_add_inv
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryProbability_le_intCtxt_add_prefix_add_inv_of_cache_sound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryProbability_le_intCtxt_add_prefix_add_inv_of_cache_sound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryProbability_le_intCtxt_add_prefix_add_inv' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryProbability_le_intCtxt_add_prefix_add_inv
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedForgeryProbability_le_intCtxt_add_indDollar_add_guesses' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedForgeryProbability_le_intCtxt_add_indDollar_add_guesses
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryProbability_le_intCtxt_add_indDollar_add_guesses' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryProbability_le_intCtxt_add_indDollar_add_guesses
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryProbability_le_intCtxt_add_booleanIndDollar_add_guesses' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryProbability_le_intCtxt_add_booleanIndDollar_add_guesses
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.uniformUInt8_isTotalQueryBound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.uniformUInt8_isTotalQueryBound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.liftProbComp_uniform_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.liftProbComp_uniform_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRandomOracle_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRandomOracle_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxIndependentPublicOracle_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxIndependentPublicOracle_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBasePublicOracle_uniform_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBasePublicOracle_uniform_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.queryModifiedNonceAeadSeal_no_uniform_queries' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.queryModifiedNonceAeadSeal_no_uniform_queries
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadDigest_uniform_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadDigest_uniform_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseSealOracle_uniform_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseSealOracle_uniform_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.OracleComp.IsQueryBoundP.simulateQ_run_StateT_of_step_le_total' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.OracleComp.IsQueryBoundP.simulateQ_run_StateT_of_step_le_total
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReductionImpl_uniform_query_bound_step' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReductionImpl_uniform_query_bound_step
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReduction_seal_query_bound_of_main' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReduction_seal_query_bound_of_main
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReduction_uniform_query_bound_of_main' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReduction_uniform_query_bound_of_main
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReduction_uniform_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReduction_uniform_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.isTotalQueryBound_of_modified_uniform_and_seal_bounds' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.isTotalQueryBound_of_modified_uniform_and_seal_bounds
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReduction_total_query_bound_of_main' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReduction_total_query_bound_of_main
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReduction_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxRetainedBaseReduction_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxPrefixToModifiedNonceAeadINDDollarReduction_uniform_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxPrefixToModifiedNonceAeadINDDollarReduction_uniform_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxPrefixToModifiedNonceAeadINDDollarReduction_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxPrefixToModifiedNonceAeadINDDollarReduction_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxPrefixToBooleanINDDollarReduction_uniform_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxPrefixToBooleanINDDollarReduction_uniform_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxPrefixToBooleanINDDollarReduction_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxPrefixToBooleanINDDollarReduction_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTImpl_total_query_bound_step' depends on axioms: [propext,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTImpl_total_query_bound_step
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTImpl_uniform_to_total_query_bound_step' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTImpl_uniform_to_total_query_bound_step
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTImpl_run_total_of_uniform_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTImpl_run_total_of_uniform_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTBeforeVerifyInner_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTBeforeVerifyInner_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTBeforeVerifyInner_total_of_uniform_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTBeforeVerifyInner_total_of_uniform_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTGame_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTGame_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTGame_total_of_uniform_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTGame_total_of_uniform_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTGame_retainedReduction_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTGame_retainedReduction_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTGame_retainedReduction_uniform_draw_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINTCTXTGame_retainedReduction_uniform_draw_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINDDollarRealProbeExp_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINDDollarRealProbeExp_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINDDollarRealProbeExp_total_of_uniform_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINDDollarRealProbeExp_total_of_uniform_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINDDollarRealProbeExp_prefixReduction_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINDDollarRealProbeExp_prefixReduction_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINDDollarRealProbeExp_prefixReduction_uniform_draw_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.modifiedNonceAeadINDDollarRealProbeExp_prefixReduction_uniform_draw_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleKeyFreeSealOracle_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleKeyFreeSealOracle_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTagImpl_total_query_bound_step' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTagImpl_total_query_bound_step
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTagBeforeVerifyInner_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTagBeforeVerifyInner_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTagGame_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectSampleIndependentTagGame_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedVerifier_totalQueryBound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedVerifier_totalQueryBound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshVerifier_totalQueryBound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshVerifier_totalQueryBound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectClassifiedForgeryGame_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectClassifiedForgeryGame_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectTypedFullFreshForgeryGame_total_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxDirectTypedFullFreshForgeryGame_total_query_bound
+/-- info: 'BeaconcryptCore.Computational.CtxComputationalSecurity.ctxComputationalSecurity_query_accounting' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CtxComputationalSecurity.ctxComputationalSecurity_query_accounting
