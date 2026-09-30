@@ -131,6 +131,10 @@ Sessions and roles. The Server identity key is long-term and the Server accepts 
 
 Assumption detail. libsodium is the canonical cryptographic library of beaconcrypt and is assumed correct; nothing about it is proved, and the proof does not reason about its point validation (its documentation states that it rejects malformed points). The Gap-DH game used by R1 (`PqxdhJointGapDh.game`) is stated on libsodium's X25519 function as a black box over 32-byte strings; its plausibility is the Gap-DH assumption on Curve25519 that Signal's PQXDH specification makes. The X25519 class law is still needed for the reduction to decide DH1 equality with its own scalar. The only zero-salt HKDF-Extract on a 192-byte input is the root derivation (`pqxdh.rs:50`; the ratchet's Extract calls take 32-byte inputs, `ratchet.rs:89`), so the random oracle can be restricted to 192-byte inputs.
 
+### Milestone B status (2026-09-30, paused)
+
+The staged Lean design is in `server-authentication-design.md`. Committed stages: B1 `PqxdhExtractRomSeparation`, B2 `PqxdhServerAuthAssumptions`, B3a `PqxdhExtractRomFamily`, B8a `PqxdhServerAuthKeySchedule`, B9a `PqxdhPhase2LocalMatching`, B4a `PqxdhServerAuthExperiment` and the gate B5a `PqxdhServerAuthNegativeControl`, each reviewed. No server-authentication theorem is stated yet. Next, in order: B6 (Gap-DH reduction), B7 (session collision with the spread law), B8b (per-entry key factoring, the largest stage), B9b (CTX step), B10a/B10 (headline), B5b (witness), B3b/B4b (equality with extracted code), then documentation and one `verify` run.
+
 ## 7. Milestone C plan
 
 No new cryptographic assumption is expected. The route, from an exploration of the HB-112 and HB-126/127 code, is:
