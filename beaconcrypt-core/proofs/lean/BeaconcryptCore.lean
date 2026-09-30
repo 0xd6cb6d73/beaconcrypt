@@ -1036,6 +1036,11 @@ import BeaconcryptCore.Computational.PqxdhServerAuthEntryResourceHandlers
 import BeaconcryptCore.Computational.PqxdhServerAuthEntryResourceGame
 import BeaconcryptCore.Computational.PqxdhServerAuthEntryReductionResources
 
+import BeaconcryptCore.Computational.PqxdhServerAuthNative
+import BeaconcryptCore.Computational.PqxdhServerAuthCtxNative
+import BeaconcryptCore.Computational.PqxdhServerAuthCtxNativeBounds
+import BeaconcryptCore.Computational.PqxdhServerAuthIntermediate
+
 /-!
 # Beaconcrypt-core verification root
 
