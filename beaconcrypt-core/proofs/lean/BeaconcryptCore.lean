@@ -1041,6 +1041,12 @@ import BeaconcryptCore.Computational.PqxdhServerAuthCtxNative
 import BeaconcryptCore.Computational.PqxdhServerAuthCtxNativeBounds
 import BeaconcryptCore.Computational.PqxdhServerAuthIntermediate
 
+import BeaconcryptCore.Computational.PqxdhServerAuthWitnessDh
+import BeaconcryptCore.Computational.PqxdhServerAuthJointWitness
+import BeaconcryptCore.Computational.PqxdhServerAuthBuildMap
+import BeaconcryptCore.Computational.PqxdhServerAuthBuildProgram
+import BeaconcryptCore.Computational.PqxdhServerAuthBuildProgramBounds
+
 /-!
 # Beaconcrypt-core verification root
 
