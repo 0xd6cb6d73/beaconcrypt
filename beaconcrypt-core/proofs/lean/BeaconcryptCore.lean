@@ -1002,6 +1002,7 @@ import BeaconcryptCore.Computational.PqxdhServerAuthExperiment
 import BeaconcryptCore.Computational.PqxdhServerAuthNegativeControl
 import BeaconcryptCore.Computational.PqxdhServerAuthSendFactor
 import BeaconcryptCore.Computational.PqxdhServerAuthGapDh
+import BeaconcryptCore.Computational.PqxdhServerAuthLoggedSendFactor
 /-!
 # Beaconcrypt-core verification root
 
