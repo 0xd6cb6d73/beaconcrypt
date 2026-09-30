@@ -1,6 +1,6 @@
 # Milestone B: staged Lean design for server authentication (working copy)
 
-This is the staged design used to build the Milestone B proof (route R1), copied from the working scratch file so the plan survives the session. Owner decisions are recorded in `audit-0b4039e-remediation-plan.md` section 6. Status on 2026-09-30: stages B1, B2, B3a, B8a, B9a, B4a and B5a are committed (`PqxdhExtractRomSeparation`, `PqxdhServerAuthAssumptions`, `PqxdhExtractRomFamily`, `PqxdhServerAuthKeySchedule`, `PqxdhPhase2LocalMatching`, `PqxdhServerAuthExperiment`, `PqxdhServerAuthNegativeControl`). Stage B6 is now proved in `PqxdhServerAuthGapDh` (138 guarded theorems; see `server-authentication-gap-dh.md`). The source Server-send factor is integrated in `PqxdhServerAuthSendFactor` (24 guarded theorems). B7 (session-collision bound), the remaining B8b adaptive entry factor, and concrete source/reduction resource accounting are in progress; B9b, B10a, B10, B3b/B4b, B5b and documentation stage B11 remain open. Section 10 records the spike that de-risked B8b, and the notes appended after it record review obligations for later stages.
+This is the staged design used to build the Milestone B proof (route R1), copied from the working scratch file so the plan survives the session. Owner decisions are recorded in `audit-0b4039e-remediation-plan.md` section 6. Status on 2026-09-30: stages B1, B2, B3a, B8a, B9a, B4a and B5a are committed (`PqxdhExtractRomSeparation`, `PqxdhServerAuthAssumptions`, `PqxdhExtractRomFamily`, `PqxdhServerAuthKeySchedule`, `PqxdhPhase2LocalMatching`, `PqxdhServerAuthExperiment`, `PqxdhServerAuthNegativeControl`). Stage B6 is now proved in `PqxdhServerAuthGapDh` (138 guarded theorems; see `server-authentication-gap-dh.md`). The source Server-send factor is integrated in `PqxdhServerAuthSendFactor` (24 guarded theorems). B7 is now proved in `PqxdhServerAuthCollision` (36 guarded theorems; original adaptive collision bound `choose(Q,2)*64/2^256`). The actual logged Server build factor is integrated in `PqxdhServerAuthLoggedSendFactor` (12 guarded theorems). The remaining B8b adaptive entry and Beacon factors, and concrete source/reduction resource accounting are in progress; B9b, B10a, B10, B3b/B4b, B5b and documentation stage B11 remain open. Section 10 records the spike that de-risked B8b, and the notes appended after it record review obligations for later stages.
 
 
 Worktree `/tmp/beaconcrypt-authenticated-root-completion`, branch `codex/full-proof-composition`. The design was written at `fbe31f9`. The worktree is now at `1c9aa50`; the two new commits are Milestone C work, and plan section 6 is unchanged. All paths below are relative to `beaconcrypt-core/proofs/lean/BeaconcryptCore/` unless they start with `doc/` or `beaconcrypt/`. The authoritative source is `doc/impl/audit-0b4039e-remediation-plan.md` section 6, including "Review decision (2026-09-29)" and "Design grounded in the Rust implementation (2026-09-29)". Where the older section 6 text differs (partnering on validated Phase 1 fields, reveals only of non-partners, an event stated modulo the ephemeral encoding, "implied by Gap-DH"), this design follows the two 2026-09-29 subsections and section 6.1 below.
@@ -388,7 +388,7 @@ noncomputable def sessionCollGame (setup) (codec) (checks) (adversary) : ℝ :=
   (Pr[fun (seed, scalar, final, _) => CollB setup seed scalar final.ghost |
     gameState setup codec checks false adversary]).toReal
 
-/-- Pairwise Server-session root-input collision, from the scalar-spread law (pending approval, 8.1.1). -/
+/-- Pairwise Server-session root-input collision, from the approved scalar-spread law (8.1.1). -/
 noncomputable def serverCollision (Q : Nat) : ℝ := (Q.choose 2 : ℝ) * 64 / 2 ^ 256
 
 /-- Per-entry loss for table entry j (session j < Q, or the Beacon's own entry j = Q). -/
@@ -674,7 +674,7 @@ Plausibility, for real X25519 on 32-byte inputs with clamped `k`, where `2^254 �
 
 The reduction uses the law to decide DH1 equality with its own scalar. It is the premise already used in `Model/Pqxdh/ResponseEncodingAlias.lean`. Literature: RFC 7748; Bernstein, PKC 2006.
 
-### 6.4 X25519 scalar spread (functional contract; pending approval, 8.1.1; used only by B7/B10)
+### 6.4 X25519 scalar spread (approved functional contract, 8.1.1; used only by B7/B10)
 
 ```lean
 def X25519ScalarSpread (c : Pqxdh.Crypto) : Prop :=
@@ -691,7 +691,7 @@ Plausibility:
 
 The review confirmed this count. Literature: RFC 7748; Bernstein, PKC 2006.
 
-### 6.5 Nonzero honest DH (functional contract; pending approval, 8.1.2; negative controls only)
+### 6.5 Nonzero honest DH (approved functional contract, 8.1.2; negative controls only)
 
 ```lean
 def NonzeroHonestDh (c : Pqxdh.Crypto) : Prop := ∀ a b, c.x25519 a (c.xpub b) ≠ Pqxdh.zero32
