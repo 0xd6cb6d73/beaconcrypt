@@ -133,7 +133,7 @@ Assumption detail. libsodium is the canonical cryptographic library of beaconcry
 
 ### Milestone B status (2026-09-30, paused)
 
-The staged Lean design is in `server-authentication-design.md`. Committed stages: B1 `PqxdhExtractRomSeparation`, B2 `PqxdhServerAuthAssumptions`, B3a `PqxdhExtractRomFamily`, B8a `PqxdhServerAuthKeySchedule`, B9a `PqxdhPhase2LocalMatching`, B4a `PqxdhServerAuthExperiment` and the gate B5a `PqxdhServerAuthNegativeControl`, each reviewed. No server-authentication theorem is stated yet. Next, in order: B6 (Gap-DH reduction), B7 (session collision with the spread law), B8b (per-entry key factoring, the largest stage), B9b (CTX step), B10a/B10 (headline), B5b (witness), B3b/B4b (equality with extracted code), then documentation and one `verify` run.
+The staged Lean design is in `server-authentication-design.md`. Committed stages: B1 `PqxdhExtractRomSeparation`, B2 `PqxdhServerAuthAssumptions`, B3a `PqxdhExtractRomFamily`, B8a `PqxdhServerAuthKeySchedule`, B9a `PqxdhPhase2LocalMatching`, B4a `PqxdhServerAuthExperiment` and the gate B5a `PqxdhServerAuthNegativeControl`, each reviewed. No server-authentication theorem is stated yet. Next, in order: B6 (Gap-DH reduction), B7 (session collision with the spread law), B8b (per-entry key factoring, the largest stage), B9b (CTX step), B10a/B10 (headline), B5b (witness), B3b/B4b (equality with extracted code), then documentation and one `verify` run. The handover for the next agent, with the in-progress work of B6, B7 and B8b, is `doc/impl/handover/milestone-b/README.md`.
 
 ## 7. Milestone C plan
 
