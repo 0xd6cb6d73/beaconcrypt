@@ -1000,6 +1000,7 @@ import BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule
 import BeaconcryptCore.Computational.PqxdhPhase2LocalMatching
 import BeaconcryptCore.Computational.PqxdhServerAuthExperiment
 import BeaconcryptCore.Computational.PqxdhServerAuthNegativeControl
+import BeaconcryptCore.Computational.PqxdhServerAuthSendFactor
 /-!
 # Beaconcrypt-core verification root
 
@@ -1009,4 +1010,3 @@ Hax creates this file only when it is absent; subsequent extraction leaves it un
 
 Keep every handwritten proof family reachable from this module so `import BeaconcryptCore` checks and exposes the complete reviewed proof surface.
 -/
-import BeaconcryptCore.Computational.PqxdhServerAuthSendFactor
