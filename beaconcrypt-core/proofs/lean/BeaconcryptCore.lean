@@ -1009,3 +1009,4 @@ Hax creates this file only when it is absent; subsequent extraction leaves it un
 
 Keep every handwritten proof family reachable from this module so `import BeaconcryptCore` checks and exposes the complete reviewed proof surface.
 -/
+import BeaconcryptCore.Computational.PqxdhServerAuthSendFactor

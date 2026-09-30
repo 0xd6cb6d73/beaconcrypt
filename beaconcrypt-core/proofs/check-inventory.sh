@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1013
+	[handwritten-lean]=1014
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -18744,5 +18744,58 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAu
 require_line_count 1 '^theorem relay_live_bound([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthNegativeControl theorem relay_live_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthNegativeControl.relay_live$' "$selected_source_module" "PqxdhServerAuthNegativeControl dependency relay_live"
 require_line_count 1 '^theorem relay_live([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthNegativeControl theorem relay_live"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthSendFactor.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhServerAuthSendFactor$' proofs/lean/BeaconcryptCore.lean "PqxdhServerAuthSendFactor root import"
+require_line_count 24 '^theorem ' "$selected_source_module" "PqxdhServerAuthSendFactor theorem inventory"
+require_line_count 24 '^#guard_msgs in$' "$selected_source_module" "PqxdhServerAuthSendFactor guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.native_known$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency native_known"
+require_line_count 1 '^theorem native_known([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem native_known"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.settled_native$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency settled_native"
+require_line_count 1 '^theorem settled_native([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem settled_native"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.native_embed$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency native_embed"
+require_line_count 1 '^theorem native_embed([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem native_embed"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.embed_settled$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency embed_settled"
+require_line_count 1 '^theorem embed_settled([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem embed_settled"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.native_settled$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency native_settled"
+require_line_count 1 '^theorem native_settled([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem native_settled"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.publish_settled$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency publish_settled"
+require_line_count 1 '^theorem publish_settled([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem publish_settled"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.initial_factor$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency initial_factor"
+require_line_count 1 '^theorem initial_factor([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem initial_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.cut_source$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency cut_source"
+require_line_count 1 '^theorem cut_source([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem cut_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.build_native$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency build_native"
+require_line_count 1 '^theorem build_native([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem build_native"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.send_begin$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency send_begin"
+require_line_count 1 '^theorem send_begin([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem send_begin"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.initial_ok$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency initial_ok"
+require_line_count 1 '^theorem initial_ok([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem initial_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.send_shape$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency send_shape"
+require_line_count 1 '^theorem send_shape([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem send_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.settle_after$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency settle_after"
+require_line_count 1 '^theorem settle_after([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem settle_after"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.settle_candidate$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency settle_candidate"
+require_line_count 1 '^theorem settle_candidate([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem settle_candidate"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.settle_generic$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency settle_generic"
+require_line_count 1 '^theorem settle_generic([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem settle_generic"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.settle_build$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency settle_build"
+require_line_count 1 '^theorem settle_build([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem settle_build"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.server_send_factor$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency server_send_factor"
+require_line_count 1 '^theorem server_send_factor([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem server_send_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.prim_send_source$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency prim_send_source"
+require_line_count 1 '^theorem prim_send_source([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem prim_send_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.address_ratchet$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency address_ratchet"
+require_line_count 1 '^theorem address_ratchet([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem address_ratchet"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.concreteChain_bytes$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency concreteChain_bytes"
+require_line_count 1 '^theorem concreteChain_bytes([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem concreteChain_bytes"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.factor_bytes$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency factor_bytes"
+require_line_count 1 '^theorem factor_bytes([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem factor_bytes"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.root_only_through_factor$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency root_only_through_factor"
+require_line_count 1 '^theorem root_only_through_factor([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem root_only_through_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.initial_factor_beacon$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency initial_factor_beacon"
+require_line_count 1 '^theorem initial_factor_beacon([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem initial_factor_beacon"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthSendFactor.beacon_receive_factor$' "$selected_source_module" "PqxdhServerAuthSendFactor dependency beacon_receive_factor"
+require_line_count 1 '^theorem beacon_receive_factor([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthSendFactor theorem beacon_receive_factor"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
