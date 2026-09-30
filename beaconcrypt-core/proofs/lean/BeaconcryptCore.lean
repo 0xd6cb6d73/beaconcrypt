@@ -997,6 +997,7 @@ import BeaconcryptCore.Computational.PqxdhExtractRomSeparation
 import BeaconcryptCore.Computational.PqxdhServerAuthAssumptions
 import BeaconcryptCore.Computational.PqxdhExtractRomFamily
 import BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule
+import BeaconcryptCore.Computational.PqxdhPhase2LocalMatching
 /-!
 # Beaconcrypt-core verification root
 
