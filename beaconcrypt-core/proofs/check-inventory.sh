@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1018
+	[handwritten-lean]=1019
 	[handwritten-proverif]=88
 	[inventory]=2
 	[lean-control]=12
@@ -19221,5 +19221,26 @@ require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAu
 require_line_count 1 '^theorem beacon_afterRoot_factor([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem beacon_afterRoot_factor"
 require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor.beacon_afterRoot_run$' "$selected_source_module" "PqxdhServerAuthBeaconFactor dependency beacon_afterRoot_run"
 require_line_count 1 '^theorem beacon_afterRoot_run([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthBeaconFactor theorem beacon_afterRoot_run"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxMaterial.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial$' proofs/lean/BeaconcryptCore.lean "PqxdhServerAuthCtxMaterial root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhServerAuthCtxMaterial theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhServerAuthCtxMaterial guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.factor_decoded$' "$selected_source_module" "PqxdhServerAuthCtxMaterial dependency factor_decoded"
+require_line_count 1 '^theorem factor_decoded([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCtxMaterial theorem factor_decoded"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.initializer_prefix$' "$selected_source_module" "PqxdhServerAuthCtxMaterial dependency initializer_prefix"
+require_line_count 1 '^theorem initializer_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCtxMaterial theorem initializer_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.initial_chains$' "$selected_source_module" "PqxdhServerAuthCtxMaterial dependency initial_chains"
+require_line_count 1 '^theorem initial_chains([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCtxMaterial theorem initial_chains"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.factor_source$' "$selected_source_module" "PqxdhServerAuthCtxMaterial dependency factor_source"
+require_line_count 1 '^theorem factor_source([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCtxMaterial theorem factor_source"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.output_decoded$' "$selected_source_module" "PqxdhServerAuthCtxMaterial dependency output_decoded"
+require_line_count 1 '^theorem output_decoded([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCtxMaterial theorem output_decoded"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.key_first$' "$selected_source_module" "PqxdhServerAuthCtxMaterial dependency key_first"
+require_line_count 1 '^theorem key_first([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCtxMaterial theorem key_first"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.key_first_context$' "$selected_source_module" "PqxdhServerAuthCtxMaterial dependency key_first_context"
+require_line_count 1 '^theorem key_first_context([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCtxMaterial theorem key_first_context"
+require_line_count 1 '^#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.residual_bound$' "$selected_source_module" "PqxdhServerAuthCtxMaterial dependency residual_bound"
+require_line_count 1 '^theorem residual_bound([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCtxMaterial theorem residual_bound"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
