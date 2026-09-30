@@ -1006,6 +1006,11 @@ import BeaconcryptCore.Computational.PqxdhServerAuthLoggedSendFactor
 import BeaconcryptCore.Computational.PqxdhServerAuthCollision
 import BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor
 import BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial
+import BeaconcryptCore.Computational.PqxdhServerAuthSourceCosts
+import BeaconcryptCore.Computational.PqxdhServerAuthPendingBudget
+import BeaconcryptCore.Computational.PqxdhServerAuthTailCosts
+import BeaconcryptCore.Computational.PqxdhServerAuthBodyCosts
+
 /-!
 # Beaconcrypt-core verification root
 
