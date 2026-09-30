@@ -1001,6 +1001,7 @@ import BeaconcryptCore.Computational.PqxdhPhase2LocalMatching
 import BeaconcryptCore.Computational.PqxdhServerAuthExperiment
 import BeaconcryptCore.Computational.PqxdhServerAuthNegativeControl
 import BeaconcryptCore.Computational.PqxdhServerAuthSendFactor
+import BeaconcryptCore.Computational.PqxdhServerAuthGapDh
 /-!
 # Beaconcrypt-core verification root
 
