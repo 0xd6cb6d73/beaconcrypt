@@ -73,6 +73,8 @@ jobs:
             target: check-generated-proverif-registration-set-admission
           - name: ProVerif arbitrary registration response boundary
             target: check-generated-proverif-registration-set-response
+          - name: ProVerif arbitrary Beacon registration admission
+            target: check-generated-proverif-registration-beacon-admission
           - name: ProVerif later-sequence registration
             target: check-generated-proverif-later-sequence-registration
           - name: ProVerif main registration controls

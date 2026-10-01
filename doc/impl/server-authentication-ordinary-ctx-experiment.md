@@ -1,0 +1,25 @@
+# Exact ordinary CTX experiment for the authentication entry
+
+`PqxdhServerAuthCtxExperiment` constructs the actual one-key CTX client for the uniformly replaced authentication entry. It samples the complete source context and the 76-byte residual factor, then executes the original adaptive adversary through the checked stopped compiler. The original uniform-entry decision has exactly this client's decision distribution under the ordinary CTX source endpoint. This is a checked experiment equality; the acceptance-to-forgery implication is a separate consumer.
+
+## Executable continuation and exact retained state
+
+`execution` runs the actual complete stopped handler from the literal empty annotations and retains its optional terminal result and full local state. `decision` computes the original entry event from those annotations. `decision_project` proves that installing the actual component-owned shared cache cannot affect that event. Thus the executable `continuation` can compute the original decision without observing the component's private state.
+
+`continuation_source` applies the proved reservation and source coupling to this exact executable. The component interpreter supplies the explicit selected key; the executable has no selected-key argument. This interface statement permits arbitrary correlations and equal known-key bytes in its other inputs. The theorem retains the actual public input, source private context, pending tokens, logs, table and all optional callback outcomes. It neither substitutes an adversary-selected event nor conditions the continuation on success.
+
+## Context and joint-factor sampling
+
+`sample_source` proves that forwarding any complete source sampler through the component uniform interface returns the original result and preserves the entire component state. Every source random request remains present. The concrete `client` uses this interface to sample `contextSample` in the original R1 experiment order, then samples the residual nonce12, next-chain32 and opposite initial-chain32. The existing `PqxdhServerAuthNative.constructor_order`, `actual_source_order` and `source_order_game` results connect that original context and its complete evaluated continuation to the production constructor order; this module does not silently identify the two syntactic sampling orders. It does not redraw projections of the same expansion.
+
+`client_source` preserves these complete samplers and their full reply-dependent continuation under the actual component interpreter. `stopped_game` then applies the existing complete-continuation `key_first_context` theorem to the literal source context and joint 108-byte factor. The ordinary endpoint samples the selected 32-byte key, while the client samples the other 76 bytes. The argument equates evaluated complete continuations, not just marginal keypair distributions. It keeps the original correlated factor coordinates and adds no guessing or statistical term.
+
+`uniform_game` composes this equality with the proved source stopping theorem. The unchanged original `uniformEntryGame` and the ordinary one-key source game with this constructed client have the same Boolean distribution. The original entry owner, source W1/W2 observation, no-bad condition and no-KCI setting (`revealSeed = false`) are unchanged. This result does not yet say that the ordinary forgery observer wins whenever this decision does.
+
+## Query counts and remaining reduction
+
+`continuation_bills` retains the complete stopped compiler's caps of one selected seal and one selected raw opening. `client_record_bills` proves the same caps for the full concrete client, because the actual context and residual samplers issue no selected record request. Every attempted call, including work before refusal, remains counted. The two samplers still perform all of their uniform work; zero selected calls does not mean zero cost.
+
+These eight statements add no security assumption, oracle request, reduction loss or session-selection factor. The context sampler, residual76, direct/base KEM work, public HMAC/table work, shared hashing and local computation remain present. The exact global hash, explicit-uniform and interpreted-uniform bounds are assembled by the next resource consumer. The final authentication consumer also needs the original-event-to-all-attempt-observer implication and the existing modified AEAD/CTX endpoint reductions. This module does not infer protocol authentication merely from a uniform selected key.
+
+The approved primitive and joint-use contracts, restricted programmable Extract, shared CTX/BLAKE2b ROM, abstract codec and external compiler boundary remain unchanged. No primitive implementation, serialization implementation, saved-state or persistence proof is added. The topic builds on reservation checkpoint `f57d5d12c0c99fcab9bfbdca6001f78d083e3517`; all eight public theorem axiom reports are guarded. Focused checks and independent semantic reviews precede publication, with shared import and inventory updates deferred to the next reviewed integration.

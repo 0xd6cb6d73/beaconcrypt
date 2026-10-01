@@ -65,6 +65,7 @@ PROVERIF_SCENARIOS := \
 	general-registration-admission \
 	registration-set-admission \
 	registration-set-response \
+	registration-beacon-admission \
 	later-sequence-registration \
 	post-registration-ratchet \
 	main-registration-controls \
@@ -409,6 +410,12 @@ check-proverif-registration-set-admission: check-proverif-extraction
 check-proverif-registration-set-response: check-proverif-extraction
 	python3 $(PROVERIF_DIR)/test-registration-response-checker.py
 	python3 $(PROVERIF_DIR)/check-registration-response.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
+
+check-proverif-registration-beacon-admission: check-proverif-extraction
+	python3 $(PROVERIF_DIR)/test-registration-beacon-checker.py
+	@logdir=$$(mktemp -d); \
+		trap 'rm -rf "$$logdir"' EXIT; \
+		python3 $(PROVERIF_DIR)/check-registration-beacon.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)' --logdir "$$logdir"
 
 check-proverif-later-sequence-registration: check-proverif-extraction
 	@set -o pipefail; \
