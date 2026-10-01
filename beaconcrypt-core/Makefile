@@ -63,6 +63,8 @@ PROVERIF_SCENARIOS := \
 	phase2-assigned-id-weak \
 	phase2-x25519-alias \
 	general-registration-admission \
+	registration-set-admission \
+	registration-set-response \
 	later-sequence-registration \
 	post-registration-ratchet \
 	main-registration-controls \
@@ -399,6 +401,14 @@ check-proverif-phase2-x25519-alias: check-proverif-extraction
 check-proverif-general-registration-admission: check-proverif-extraction
 	python3 $(PROVERIF_DIR)/test-general-registration-checker.py
 	python3 $(PROVERIF_DIR)/check-general-registration.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
+
+check-proverif-registration-set-admission: check-proverif-extraction
+	python3 $(PROVERIF_DIR)/test-registration-set-checker.py
+	python3 $(PROVERIF_DIR)/check-registration-set.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
+
+check-proverif-registration-set-response: check-proverif-extraction
+	python3 $(PROVERIF_DIR)/test-registration-response-checker.py
+	python3 $(PROVERIF_DIR)/check-registration-response.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'
 
 check-proverif-later-sequence-registration: check-proverif-extraction
 	@set -o pipefail; \

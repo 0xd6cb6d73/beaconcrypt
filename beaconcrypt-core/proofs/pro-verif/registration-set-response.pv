@@ -1,0 +1,12 @@
+(* SPDX-License-Identifier: 0BSD *)
+process
+  in(c, (initial_counter: nat, maximum_counter: nat));
+  if initial_counter <= maximum_counter then
+  new owner: bitstring; new mutex: channel; new counter: channel;
+  let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
+  let server_id = registration_response_identifier(initial_counter) in
+  (out(c, (server_identity, server_id, maximum_counter)) |
+   out(mutex, registration_set_mutex()) | out(counter, initial_counter) |
+   RegistrationSetServer(owner, SERVER_IDENTITY_SECRET, mutex) |
+   RegistrationResponseBuilder(owner, server_identity, server_id, maximum_counter, mutex, counter) |
+   !RegistrationSetHonestBundle())

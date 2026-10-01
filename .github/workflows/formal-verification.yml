@@ -69,6 +69,10 @@ jobs:
           - name: ProVerif complete registration admission boundary
             target: check-generated-proverif-general-registration-admission
             timeout: 240
+          - name: ProVerif arbitrary registration-set admission
+            target: check-generated-proverif-registration-set-admission
+          - name: ProVerif arbitrary registration response boundary
+            target: check-generated-proverif-registration-set-response
           - name: ProVerif later-sequence registration
             target: check-generated-proverif-later-sequence-registration
           - name: ProVerif main registration controls

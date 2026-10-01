@@ -1,0 +1,23 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+set preciseActions = true.
+free ADV_ID:bitstring.
+free ADV_ONE:bitstring.
+free ADV_OTHER:bitstring.
+query owner:bitstring, attempt:bitstring;
+ event(RegistrationSetReturned(owner,attempt,
+  beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(ed_public(ADV_ID),x25519_public(ADV_ONE))))).
+query owner:bitstring, first:bitstring, second:bitstring;
+ event(RegistrationSetConsumed(owner,first,
+  beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(ed_public(ADV_ID),x25519_public(ADV_ONE))))) &&
+ event(RegistrationSetConsumed(owner,second,
+  beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(ed_public(ADV_ID),x25519_public(ADV_OTHER))))).
+query owner:bitstring, attempt:bitstring, rid:beaconcrypt_core__pqxdh__t_RegistrationId;
+ event(RegistrationSetReplay(owner,attempt,rid)).
+query owner:bitstring, attempt:bitstring;
+ event(RegistrationSetFailed(owner,attempt)).
+query owner:bitstring, failed:bitstring, attempt:bitstring;
+ event(RegistrationSetFreshFailed(owner,failed,
+  beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(ed_public(ADV_ID),x25519_public(ADV_ONE))))) &&
+ event(RegistrationSetReturned(owner,attempt,
+  beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(ed_public(ADV_ID),x25519_public(ADV_ONE))))).

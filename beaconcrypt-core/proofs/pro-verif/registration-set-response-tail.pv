@@ -1,0 +1,5 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Concrete supplied-root component controls only; not the unbounded service. *)
+process
+ new owner:bitstring;new token:bitstring;new mutex:channel;new counter:channel;
+ RegistrationResponseTail(owner,token,c,mutex,counter,0,1,ed_public(SERVER_IDENTITY_SECRET),registration_response_identifier(0),ed_public(CONTROL_ID),CONTROL_EPHEMERAL,CONTROL_CT,CONTROL_ROOT,registration_response_nonempty(CONTROL_PAYLOAD),0)
