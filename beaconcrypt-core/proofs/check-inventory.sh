@@ -883,7 +883,7 @@ require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable source fixture"
-require_line_count 17 '^#\[test\]$' \
+require_line_count 18 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -902,7 +902,8 @@ for fidelity_test_name in \
 	main_registration_completion_schedules_preserve_the_checked_prefixes \
 	phase1_registration_mutation_matrix_is_complete_and_rejected \
 	requested_transcript_mutations_are_rejected \
-	record_opening_source_mutations_are_rejected; do
+	record_opening_source_mutations_are_rejected \
+	registration_boundary_make_runners_are_checked; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
 		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
 done

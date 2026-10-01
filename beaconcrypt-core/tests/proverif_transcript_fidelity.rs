@@ -3206,9 +3206,9 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 		"auxiliary ProVerif fidelity prerequisite",
 	)?;
 	let scenarios = scenario_names(makefile)?;
-	if scenarios.len() != 32 {
+	if scenarios.len() != 35 {
 		return Err(format!(
-			"expected 32 ProVerif scenarios, found {}",
+			"expected 35 ProVerif scenarios, found {}",
 			scenarios.len()
 		));
 	}
@@ -3260,6 +3260,32 @@ fn validate_makefile(makefile: &str) -> Result<(), String> {
 				X25519_ALIAS_CONTROL,
 				EXACT_REGISTRATION_ORIGIN_QUERIES,
 			)?;
+			continue;
+		}
+		let registration_checker = match scenario.as_str() {
+			"registration-set-admission" => Some("registration-set"),
+			"registration-set-response" => Some("registration-response"),
+			"registration-beacon-admission" => Some("registration-beacon"),
+			_ => None,
+		};
+		if let Some(checker) = registration_checker {
+			let prefix = format!(
+				"check-proverif-{scenario}: check-proverif-extraction\npython3 $(PROVERIF_DIR)/test-{checker}-checker.py\n"
+			);
+			let runner = if checker == "registration-beacon" {
+				r#"@logdir=$$(mktemp -d); \
+					trap 'rm -rf "$$logdir"' EXIT; \
+					python3 $(PROVERIF_DIR)/check-registration-beacon.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)' --logdir "$$logdir""#.to_owned()
+			} else {
+				format!(
+					"python3 $(PROVERIF_DIR)/check-{checker}.py --proverif '$(PROVERIF)' --timeout '$(PROVERIF_TIMEOUT)'"
+				)
+			};
+			if compact(block) != compact(&(prefix + &runner)) {
+				return Err(format!(
+					"{scenario} exact Make runner and self-test wiring changed"
+				));
+			}
 			continue;
 		}
 		let loaders = [
@@ -7925,7 +7951,10 @@ fn check_x25519_alias_runner_mutations() {
 			"\"exact-registration-origin-queries.pvl\"",
 			"\"other-queries.pvl\"",
 		),
-		("\n        or \"inj-event(BeaconAnyCommitted(\" in query", ""),
+		(
+			"\n        or \"inj-event(BeaconAnyCommitted(\" in query",
+			"",
+		),
 		(
 			"\"canonical\", directory / \"crypto.pvl\", queries, \"true\", False",
 			"\"canonical\", alias, queries, \"true\", False",
@@ -11553,7 +11582,7 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 			"later_registration_make_scenario_removed",
 			"\tlater-sequence-registration \\\n",
 			"",
-			"expected 32 ProVerif scenarios",
+			"expected 35 ProVerif scenarios",
 		),
 		(
 			"later_registration_make_extraction_prerequisite_removed",
@@ -20780,4 +20809,36 @@ fn record_opening_source_mutations_are_rejected() {
 		checked += 1;
 	}
 	assert_eq!(checked, 30);
+}
+
+#[test]
+fn registration_boundary_make_runners_are_checked() {
+	validate_makefile(CORE_MAKEFILE).unwrap();
+	for (scenario, checker) in [
+		("registration-set-admission", "registration-set"),
+		("registration-set-response", "registration-response"),
+		("registration-beacon-admission", "registration-beacon"),
+	] {
+		for (from, to) in [
+			(
+				format!("check-proverif-{scenario}: check-proverif-extraction"),
+				format!("check-proverif-{scenario}:"),
+			),
+			(
+				format!("python3 $(PROVERIF_DIR)/test-{checker}-checker.py"),
+				"true".to_owned(),
+			),
+			(
+				format!("python3 $(PROVERIF_DIR)/check-{checker}.py"),
+				"true".to_owned(),
+			),
+		] {
+			let mut changed = CORE_MAKEFILE.to_owned();
+			replace_once(&mut changed, &from, &to);
+			assert_eq!(
+				validate_makefile(&changed).unwrap_err(),
+				format!("{scenario} exact Make runner and self-test wiring changed")
+			);
+		}
+	}
 }
