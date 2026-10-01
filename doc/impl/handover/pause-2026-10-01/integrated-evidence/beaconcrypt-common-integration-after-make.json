@@ -1,0 +1,43 @@
+{
+  "head": "edc701e73d167b885bade97233bf16a69975a17a",
+  "baseline": "ac096ede255ab7e6961e957fb0d4b538167edda2",
+  "files": 156,
+  "source_manifest_sha256": "1d85e73cbac832effc5b0e28187a400879c01de4f5de6c52375d2a4246c681e3",
+  "preserved_old_files": {
+    "lean": 1097,
+    "proverif": 116,
+    "rust": 36,
+    "schema": 3
+  },
+  "guarded_targets": 9976,
+  "lake_jobs": 4728,
+  "inventory_rows": 1375,
+  "inventory_categories": {
+    "adapter-rust": 13,
+    "adapter-schema": 3,
+    "control": 13,
+    "core-rust": 10,
+    "generated-lean": 7,
+    "generated-proverif": 1,
+    "handwritten-lean": 1186,
+    "handwritten-proverif": 102,
+    "inventory": 2,
+    "lean-control": 12,
+    "lean-dependency-overlay": 4,
+    "validation": 22
+  },
+  "make_log": {
+    "path": "/tmp/beaconcrypt-common-integration-verify-edc701e.log",
+    "sha256": "61fd5f169c25ad2baa07ae91b508cd938b0dfdd992ac23a7e1f18ce9358c3f9d",
+    "exit_code": 0
+  },
+  "rust_log": {
+    "path": "/tmp/beaconcrypt-common-integration-rust-matrix.log",
+    "sha256": "a45cc740bdb8915b62d263907769c32db23becd9000b2d0246b4e90c4fd84b4e",
+    "exit_code": 0,
+    "workspace_tests": 298,
+    "separate_fidelity": 18
+  },
+  "tracked_tree_unchanged": true,
+  "all_frozen_hashes_unchanged": true
+}

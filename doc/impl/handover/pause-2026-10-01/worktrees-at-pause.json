@@ -1,0 +1,27 @@
+[
+  {
+    "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+    "head": "871d1867433fbf337138be5ba339e09c5eab23f2",
+    "status": ""
+  },
+  {
+    "worktree": "/tmp/beaconcrypt-registration-symbolic-schedule",
+    "head": "49e241b9fdd281ce539fa2b00cc1d729142e49e2",
+    "status": "?? beaconcrypt-core/proofs/pro-verif/registration-joint-allocation-control.pv\n?? beaconcrypt-core/proofs/pro-verif/registration-joint-bundle-retry-control.pv\n?? beaconcrypt-core/proofs/pro-verif/registration-joint-control-queries.pvl\n?? beaconcrypt-core/proofs/pro-verif/registration-joint-control.pv\n?? beaconcrypt-core/proofs/pro-verif/registration-joint-failed-allocation-control.pv\n?? beaconcrypt-core/proofs/pro-verif/registration-joint-future-pending-control.pv\n?? beaconcrypt-core/proofs/pro-verif/registration-joint-happy-control.pv\n?? beaconcrypt-core/proofs/pro-verif/registration-joint-owner-control.pv\n?? beaconcrypt-core/proofs/pro-verif/registration-joint-pending-control.pv\n?? doc/impl/registration-symbolic-transition-plan.md\n"
+  },
+  {
+    "worktree": "/tmp/beaconcrypt-evolving-record-composition",
+    "head": "4a9453c1df3ac2e49d356e1d2c47c90d585ba1ff",
+    "status": "?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBuilderContinuation.lean\n?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedContinuation.lean\n?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengePreparedContinuation.lean\n?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSavedMonitor.lean\n"
+  },
+  {
+    "worktree": "/tmp/beaconcrypt-evolving-record-pause-2026-10-01",
+    "head": "b4fce6d84287027aa403abf0f9ce0e9364bb8dba",
+    "status": ""
+  },
+  {
+    "worktree": "/tmp/beaconcrypt-registration-r1-common-restriction",
+    "head": "f4cf3b205933e24c5451e149dd369d031b3fa4d2",
+    "status": ""
+  }
+]

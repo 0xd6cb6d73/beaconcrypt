@@ -1,0 +1,46 @@
+{
+  "beaconcrypt-common-integration-manifest.json": {
+    "source_path": "/tmp/beaconcrypt-common-integration-manifest.json",
+    "sha256": "1d85e73cbac832effc5b0e28187a400879c01de4f5de6c52375d2a4246c681e3"
+  },
+  "beaconcrypt-common-integration-verify-edc701e.log": {
+    "source_path": "/tmp/beaconcrypt-common-integration-verify-edc701e.log",
+    "sha256": "61fd5f169c25ad2baa07ae91b508cd938b0dfdd992ac23a7e1f18ce9358c3f9d"
+  },
+  "beaconcrypt-common-integration-rust-matrix.log": {
+    "source_path": "/tmp/beaconcrypt-common-integration-rust-matrix.log",
+    "sha256": "a45cc740bdb8915b62d263907769c32db23becd9000b2d0246b4e90c4fd84b4e"
+  },
+  "beaconcrypt-common-integration-after-make.json": {
+    "source_path": "/tmp/beaconcrypt-common-integration-after-make.json",
+    "sha256": "b8440ba0cada5c751948b9501a76f3f32523c4bc9505d5f8a0598411258ee5b1"
+  },
+  "beaconcrypt-common-integration-validation-record.json": {
+    "source_path": "/tmp/beaconcrypt-common-integration-validation-record.json",
+    "sha256": "ecd22c3d3c95aa3bfa24859bbad3df9395f56598ff5cea30ac721bbf9ffa067b"
+  },
+  "beaconcrypt-common-integration-full-publication.json": {
+    "source_path": "/tmp/beaconcrypt-common-integration-full-publication.json",
+    "sha256": "b5b566d94bbff840705d8fef479aab3164dbc87f2352ba47c4c844c1d6329c13"
+  },
+  "beaconcrypt-common-validation-native-review.json": {
+    "source_path": "/tmp/beaconcrypt-common-validation-native-review.json",
+    "sha256": "6840fed6bc44955583a833647c36ebcfed8dddbf1bc5a1db00a92c026d1b1def"
+  },
+  "beaconcrypt-common-integration-dependency-overlays.json": {
+    "source_path": "/tmp/beaconcrypt-common-integration-dependency-overlays.json",
+    "sha256": "b5347d4ba047cb00c3451fd54ee1b797fb9401b213cd362d50ac029f4aec46cd"
+  },
+  "beaconcrypt-f10-capability-map.md": {
+    "source_path": "/tmp/beaconcrypt-f10-capability-map.md",
+    "sha256": "ff916a02d3bd224bc346ec518961663cc3e1d87dd3fe33c856705dfca2c1b6d2"
+  },
+  "beaconcrypt-f2-post-registration-seam.md": {
+    "source_path": "/tmp/beaconcrypt-f2-post-registration-seam.md",
+    "sha256": "d70066171cacd1513562e562d6db725d91db866b8f11835c5e723d7905ea8305"
+  },
+  "symbolic-interface-audit.tar.gz": {
+    "source_path": "/tmp/beaconcrypt-symbolic-interface-audit",
+    "sha256": "f5937c01aefdd800c2e7110d924628c0274b94acdf5245ed1faa73512be25f3e"
+  }
+}

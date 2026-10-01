@@ -1,0 +1,31 @@
+{
+  "reviewer": "/root/native_suffix",
+  "verdict": "approve",
+  "manifest": "/tmp/beaconcrypt-common-integration-validation-record.json",
+  "manifest_sha256": "ecd22c3d3c95aa3bfa24859bbad3df9395f56598ff5cea30ac721bbf9ffa067b",
+  "tested_head": "edc701e73d167b885bade97233bf16a69975a17a",
+  "record_sha256": "e66a785552a327fb61b2107f040cbe292f84044f6810b0c7049de520318a51f8",
+  "appendix_sha256": "d5153b703ede626b5028015643245da46753fe5a6e93e5d6e9282226328d3593",
+  "make_log_sha256": "61fd5f169c25ad2baa07ae91b508cd938b0dfdd992ac23a7e1f18ce9358c3f9d",
+  "rust_log_sha256": "a45cc740bdb8915b62d263907769c32db23becd9000b2d0246b4e90c4fd84b4e",
+  "static_sha256": "b8440ba0cada5c751948b9501a76f3f32523c4bc9505d5f8a0598411258ee5b1",
+  "verified": {
+    "only_validation_record_modified": true,
+    "record_is_append_only": true,
+    "all_156_frozen_hashes_unchanged": true,
+    "lake_jobs": 4728,
+    "axiom_targets_recounted": 9976,
+    "inventory_rows": 1375,
+    "registration_family_cases_recounted": 53,
+    "registration_family_results_recounted": 2444,
+    "rust_workspace_tests_recounted": 298,
+    "rust_separate_fidelity_tests": 18,
+    "make_and_rust_exit_files": 0,
+    "initial_missing_make_attempt_exit": 101,
+    "charon_sysroot_fallback_disclosed": true,
+    "unknown_and_negative_controls_not_promoted": true,
+    "full_proof_head_is_ancestor": true,
+    "full_proof_dirty_submodules": ["rooterberg", "wycheproof"]
+  },
+  "scope": "The new appendix accurately reports the reviewed one-session R1 common11 plus decoded-record authentication result and retained contracts; global replicated computational/symbolic closure remains open. Approve committing this exact receipt and normal fast-forward integration of the tested tree plus receipt, preserving both dirty submodule worktrees. No proof or validation code changed, and no new build was run for this review."
+}
