@@ -3,14 +3,6 @@
     "source_path": "/tmp/beaconcrypt-common-integration-manifest.json",
     "sha256": "1d85e73cbac832effc5b0e28187a400879c01de4f5de6c52375d2a4246c681e3"
   },
-  "beaconcrypt-common-integration-verify-edc701e.log": {
-    "source_path": "/tmp/beaconcrypt-common-integration-verify-edc701e.log",
-    "sha256": "61fd5f169c25ad2baa07ae91b508cd938b0dfdd992ac23a7e1f18ce9358c3f9d"
-  },
-  "beaconcrypt-common-integration-rust-matrix.log": {
-    "source_path": "/tmp/beaconcrypt-common-integration-rust-matrix.log",
-    "sha256": "a45cc740bdb8915b62d263907769c32db23becd9000b2d0246b4e90c4fd84b4e"
-  },
   "beaconcrypt-common-integration-after-make.json": {
     "source_path": "/tmp/beaconcrypt-common-integration-after-make.json",
     "sha256": "b8440ba0cada5c751948b9501a76f3f32523c4bc9505d5f8a0598411258ee5b1"
@@ -42,5 +34,17 @@
   "symbolic-interface-audit.tar.gz": {
     "source_path": "/tmp/beaconcrypt-symbolic-interface-audit",
     "sha256": "f5937c01aefdd800c2e7110d924628c0274b94acdf5245ed1faa73512be25f3e"
+  },
+  "beaconcrypt-common-integration-rust-matrix.log.gz": {
+    "source_path": "/tmp/beaconcrypt-common-integration-rust-matrix.log",
+    "sha256": "b2b044f872d4b4b5555bfebc34f93531cd8d0bb939e4da4bd7e600259a8ea448",
+    "uncompressed_sha256": "a45cc740bdb8915b62d263907769c32db23becd9000b2d0246b4e90c4fd84b4e",
+    "encoding": "gzip; decompression recovers the byte-exact original log"
+  },
+  "beaconcrypt-common-integration-verify-edc701e.log.gz": {
+    "source_path": "/tmp/beaconcrypt-common-integration-verify-edc701e.log",
+    "sha256": "47323f3377fe642df53fe4cff7d0084e4c43515c7783e5129a65715765e49be0",
+    "uncompressed_sha256": "61fd5f169c25ad2baa07ae91b508cd938b0dfdd992ac23a7e1f18ce9358c3f9d",
+    "encoding": "gzip; decompression recovers the byte-exact original log"
   }
 }
