@@ -21330,6 +21330,11 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 		"\nPROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760\n",
 		"fs per-run address-space cap",
 	)?;
+	require_once(
+		makefile,
+		"\nPROVERIF_FS_LOG_DIR ?=\n",
+		"fs optional log directory",
+	)?;
 	let fs_scenarios = makefile_list(
 		makefile,
 		"PROVERIF_FS_SCENARIOS :=",
@@ -21366,7 +21371,8 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
 			python3 $(PROVERIF_DIR)/check-free-schedule.py --proverif '$(PROVERIF)' \\
 			--timeout '$(PROVERIF_FS_TIMEOUT)' \\
-			--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)'",
+			--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+			$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')",
 		) {
 		return Err("fs-registration exact Make runner and self-test wiring changed".to_owned());
 	}
@@ -21567,7 +21573,7 @@ fn validate_fs_model(files: &FsFiles) -> Result<(), String> {
 		if !source.starts_with("(* SPDX-License-Identifier: 0BSD *)\n") {
 			return Err(format!("{file} lacks its SPDX header"));
 		}
-		let text = uncommented_pv(source)?;
+		let text = proverif_text(source).map_err(|error| format!("{file}: {error}"))?;
 		for (_, word) in fs_words(&text) {
 			if [
 				"table",
@@ -21781,7 +21787,10 @@ fn fs_query_files_on_disk() -> Vec<String> {
 	files
 }
 
-fn proverif_source_files() -> Vec<(String, String)> {
+/// Every file whose text can reach ProVerif: the .pv and .pvl files under proofs/pro-verif,
+/// including the generated extraction library, and the Python checkers, generators and tests there,
+/// which write ProVerif text at run time.
+fn declaration_source_files() -> Vec<(String, String)> {
 	let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
 	let mut pending = vec![base.join("proofs/pro-verif")];
 	let mut files = Vec::new();
@@ -21794,7 +21803,7 @@ fn proverif_source_files() -> Vec<(String, String)> {
 			}
 			if !matches!(
 				path.extension().and_then(|extension| extension.to_str()),
-				Some("pv" | "pvl")
+				Some("pv" | "pvl" | "py")
 			) {
 				continue;
 			}
@@ -21838,12 +21847,58 @@ const ALLOWLISTED_DECLARATIONS: [&str; 7] = [
 
 type DeclarationCounts = std::collections::BTreeMap<(String, String, String), usize>;
 
+/// ProVerif text with its comments removed as ProVerif 2.05 removes them: comments nest, and each
+/// comment separates the tokens on either side, so it becomes one space.
+fn proverif_text(source: &str) -> Result<String, String> {
+	let mut text = String::with_capacity(source.len());
+	let mut depth = 0usize;
+	let mut rest = source;
+	while !rest.is_empty() {
+		if rest.starts_with("(*") {
+			if depth == 0 {
+				text.push(' ');
+			}
+			depth += 1;
+			rest = &rest[2..];
+		} else if depth > 0 && rest.starts_with("*)") {
+			depth -= 1;
+			rest = &rest[2..];
+		} else {
+			let character = rest.chars().next().unwrap();
+			if depth == 0 {
+				text.push(character);
+			}
+			rest = &rest[character.len_utf8()..];
+		}
+	}
+	if depth != 0 {
+		return Err("unterminated (* comment".to_owned());
+	}
+	Ok(text)
+}
+
+fn proverif_declaration_end(path: &str, word: &str, rest: &str) -> Result<usize, String> {
+	rest.char_indices()
+		.find(|(index, character)| {
+			*character == '.'
+				&& rest[index + 1..]
+					.chars()
+					.next()
+					.is_none_or(char::is_whitespace)
+		})
+		.map(|(index, _)| index)
+		.ok_or_else(|| format!("{path}: unterminated {word} declaration"))
+}
+
 fn scan_declarations(
 	path: &str,
 	source: &str,
 	found: &mut DeclarationCounts,
 ) -> Result<(), String> {
-	let text = uncommented_pv(source)?;
+	if path.ends_with(".py") {
+		return scan_python_declarations(path, source, found);
+	}
+	let text = proverif_text(source).map_err(|error| format!("{path}: {error}"))?;
 	for (start, word) in fs_words(&text) {
 		if FORBIDDEN_DECLARATIONS.contains(&word) {
 			return Err(format!(
@@ -21858,22 +21913,17 @@ fn scan_declarations(
 			continue;
 		}
 		let rest = &text[start..];
-		let end = rest
-			.char_indices()
-			.find(|(index, character)| {
-				*character == '.'
-					&& rest[index + 1..]
-						.chars()
-						.next()
-						.is_none_or(char::is_whitespace)
-			})
-			.map(|(index, _)| index)
-			.ok_or_else(|| format!("{path}: unterminated {word} declaration"))?;
+		let end = proverif_declaration_end(path, word, rest)?;
 		*found
 			.entry((path.to_owned(), word.to_owned(), normalized(&rest[..=end])))
 			.or_default() += 1;
 	}
-	let precise = compact(&text).matches("[precise]").count();
+	count_precise(path, &text, found);
+	Ok(())
+}
+
+fn count_precise(path: &str, text: &str, found: &mut DeclarationCounts) {
+	let precise = compact(text).matches("[precise]").count();
 	if precise != 0 {
 		*found
 			.entry((
@@ -21883,7 +21933,278 @@ fn scan_declarations(
 			))
 			.or_default() += precise;
 	}
+}
+
+/// Python files under proofs/pro-verif write ProVerif text at run time from their string
+/// literals and from the scanned .pv and .pvl files. Every string literal, docstrings included,
+/// is scanned like ProVerif text. A declaration keyword counts when it starts the literal or
+/// follows a format placeholder, a `.`, `{`, `}` or the end `*)` of a ProVerif comment, because
+/// run-time text may be joined there. Forbidden declarations fail; every other declaration and
+/// every `[precise]` needs an allowlist entry under the Python file's path. Secrecy assumptions
+/// (`not`) are not scanned here: literals quote expected `RESULT not ...` lines, and ProVerif
+/// verifies every secrecy assumption itself, stopping with an error when it cannot.
+fn scan_python_declarations(
+	path: &str,
+	source: &str,
+	found: &mut DeclarationCounts,
+) -> Result<(), String> {
+	let literals = python_literals(source).map_err(|error| format!("{path}: {error}"))?;
+	for literal in &literals {
+		for (start, word) in fs_words(literal) {
+			let kind_allowlisted = ALLOWLISTED_DECLARATIONS.contains(&word) && word != "not";
+			if !(FORBIDDEN_DECLARATIONS.contains(&word) || kind_allowlisted) {
+				continue;
+			}
+			let before = literal[..start].trim_end();
+			if !(before.is_empty() || before.ends_with(['.', '{', '}']) || before.ends_with("*)")) {
+				continue;
+			}
+			if FORBIDDEN_DECLARATIONS.contains(&word) {
+				return Err(format!(
+					"{path} contains the forbidden ProVerif declaration {word} in a string literal"
+				));
+			}
+			let rest = &literal[start..];
+			let end = proverif_declaration_end(path, word, rest).map_or(rest.len(), |end| end + 1);
+			*found
+				.entry((path.to_owned(), word.to_owned(), normalized(&rest[..end])))
+				.or_default() += 1;
+		}
+		count_precise(path, literal, found);
+	}
 	Ok(())
+}
+
+/// The decoded text of every Python string literal in source order. Escape sequences are
+/// decoded, and every format placeholder (an f-string replacement field or a `%` conversion)
+/// becomes `{}`. Literals nested in replacement fields are returned on their own. Anything the
+/// lexer does not understand is an error, so that no literal is silently skipped.
+fn python_literals(source: &str) -> Result<Vec<String>, String> {
+	let characters = source.chars().collect::<Vec<_>>();
+	let mut literals = Vec::new();
+	let mut index = 0;
+	python_code(&characters, &mut index, false, &mut literals)?;
+	Ok(literals
+		.into_iter()
+		.map(|literal| python_percent_placeholders(&literal))
+		.collect())
+}
+
+fn python_code(
+	characters: &[char],
+	index: &mut usize,
+	field: bool,
+	literals: &mut Vec<String>,
+) -> Result<(), String> {
+	let mut depth = 0usize;
+	while let Some(&character) = characters.get(*index) {
+		match character {
+			'#' if !field => {
+				while characters
+					.get(*index)
+					.is_some_and(|character| *character != '\n')
+				{
+					*index += 1;
+				}
+			}
+			'(' | '[' | '{' => {
+				depth += 1;
+				*index += 1;
+			}
+			')' | ']' | '}' => {
+				*index += 1;
+				if depth == 0 {
+					if field && character == '}' {
+						return Ok(());
+					}
+					return Err(format!("unbalanced {character} in Python code"));
+				}
+				depth -= 1;
+			}
+			'\'' | '"' => python_string(characters, index, "", literals)?,
+			_ if character.is_alphanumeric() || character == '_' => {
+				let start = *index;
+				while characters
+					.get(*index)
+					.is_some_and(|character| character.is_alphanumeric() || *character == '_')
+				{
+					*index += 1;
+				}
+				let word = characters[start..*index]
+					.iter()
+					.collect::<String>()
+					.to_ascii_lowercase();
+				if characters
+					.get(*index)
+					.is_some_and(|character| matches!(character, '\'' | '"'))
+				{
+					if !["r", "u", "b", "f", "t", "br", "rb", "fr", "rf", "tr", "rt"]
+						.contains(&word.as_str())
+					{
+						return Err(format!("unknown Python string prefix {word}"));
+					}
+					python_string(characters, index, &word, literals)?;
+				}
+			}
+			_ => *index += 1,
+		}
+	}
+	if field {
+		return Err("unterminated f-string replacement field".to_owned());
+	}
+	if depth != 0 {
+		return Err("unbalanced brackets in Python code".to_owned());
+	}
+	Ok(())
+}
+
+fn python_string(
+	characters: &[char],
+	index: &mut usize,
+	prefix: &str,
+	literals: &mut Vec<String>,
+) -> Result<(), String> {
+	let raw = prefix.contains('r');
+	let formatted = prefix.contains('f') || prefix.contains('t');
+	let bytes = prefix.contains('b');
+	let quote = characters[*index];
+	let triple =
+		characters.get(*index + 1) == Some(&quote) && characters.get(*index + 2) == Some(&quote);
+	*index += if triple { 3 } else { 1 };
+	let mut text = String::new();
+	loop {
+		let Some(&character) = characters.get(*index) else {
+			return Err("unterminated Python string literal".to_owned());
+		};
+		if character == quote
+			&& (!triple
+				|| (characters.get(*index + 1) == Some(&quote)
+					&& characters.get(*index + 2) == Some(&quote)))
+		{
+			*index += if triple { 3 } else { 1 };
+			break;
+		}
+		if character == '\n' && !triple {
+			return Err("unterminated Python string literal".to_owned());
+		}
+		if character == '\\' {
+			let Some(&next) = characters.get(*index + 1) else {
+				return Err("unterminated Python string literal".to_owned());
+			};
+			*index += 2;
+			if raw {
+				text.push('\\');
+				text.push(next);
+				continue;
+			}
+			let digits = |index: &mut usize, radix: u32, most: usize| {
+				let start = *index;
+				while *index - start < most
+					&& characters
+						.get(*index)
+						.is_some_and(|digit| digit.is_digit(radix))
+				{
+					*index += 1;
+				}
+				u32::from_str_radix(&characters[start..*index].iter().collect::<String>(), radix)
+					.ok()
+					.and_then(char::from_u32)
+			};
+			let decoded = match next {
+				'\n' => continue,
+				'n' => '\n',
+				't' => '\t',
+				'r' => '\r',
+				'f' => '\u{c}',
+				'v' => '\u{b}',
+				'a' => '\u{7}',
+				'b' => '\u{8}',
+				'\\' | '\'' | '"' => next,
+				'x' => digits(index, 16, 2).ok_or("invalid \\x escape")?,
+				'0'..='7' => {
+					*index -= 1;
+					digits(index, 8, 3).ok_or("invalid octal escape")?
+				}
+				'u' if !bytes => digits(index, 16, 4).ok_or("invalid \\u escape")?,
+				'U' if !bytes => digits(index, 16, 8).ok_or("invalid \\U escape")?,
+				'N' if !bytes => return Err("named Unicode escapes are not supported".to_owned()),
+				_ => {
+					text.push('\\');
+					next
+				}
+			};
+			text.push(decoded);
+			continue;
+		}
+		if formatted && character == '{' {
+			*index += 1;
+			if characters.get(*index) == Some(&'{') {
+				*index += 1;
+				text.push('{');
+			} else {
+				python_code(characters, index, true, literals)?;
+				text.push_str("{}");
+			}
+			continue;
+		}
+		if formatted && character == '}' {
+			if characters.get(*index + 1) != Some(&'}') {
+				return Err("single } in an f-string".to_owned());
+			}
+			*index += 2;
+			text.push('}');
+			continue;
+		}
+		text.push(character);
+		*index += 1;
+	}
+	literals.push(text);
+	Ok(())
+}
+
+/// Replace every `%` conversion of a literal by `{}`, since `%` formatting substitutes text there.
+fn python_percent_placeholders(literal: &str) -> String {
+	let characters = literal.chars().collect::<Vec<_>>();
+	let mut text = String::with_capacity(literal.len());
+	let mut index = 0;
+	while let Some(&character) = characters.get(index) {
+		index += 1;
+		if character != '%' {
+			text.push(character);
+			continue;
+		}
+		if characters.get(index) == Some(&'%') {
+			index += 1;
+			text.push('%');
+			continue;
+		}
+		let mut end = index;
+		if characters.get(end) == Some(&'(') {
+			while characters
+				.get(end)
+				.is_some_and(|character| *character != ')')
+			{
+				end += 1;
+			}
+			end += 1;
+		}
+		while characters
+			.get(end)
+			.is_some_and(|character| "-+ #0123456789*.hlL".contains(*character))
+		{
+			end += 1;
+		}
+		if characters
+			.get(end)
+			.is_some_and(|character| "diouxXeEfFgGcrsab".contains(*character))
+		{
+			index = end + 1;
+			text.push_str("{}");
+		} else {
+			text.push('%');
+		}
+	}
+	text
 }
 
 fn validate_declarations(
@@ -22019,6 +22340,18 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 			"--timeout '$(PROVERIF_TIMEOUT)'",
 			"fs-registration exact Make runner",
 		),
+		(
+			"fs log directory forced to a temporary directory",
+			"PROVERIF_FS_LOG_DIR ?=\n",
+			"PROVERIF_FS_LOG_DIR ?= $(shell mktemp -d)\n",
+			"fs optional log directory",
+		),
+		(
+			"fs log directory dropped from the runner",
+			" \\\n\t\t$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')\n",
+			"\n",
+			"fs-registration exact Make runner",
+		),
 	] {
 		let mut changed = CORE_MAKEFILE.to_owned();
 		replace_once(&mut changed, from, to);
@@ -22030,7 +22363,7 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		);
 		checked += 1;
 	}
-	assert_eq!(checked, 10);
+	assert_eq!(checked, 12);
 }
 
 #[test]
@@ -22263,7 +22596,7 @@ fn free_schedule_checker_loader_and_targets_are_pinned() {
 
 #[test]
 fn proverif_declarations_are_allowlisted() {
-	let files = proverif_source_files();
+	let files = declaration_source_files();
 	assert!(
 		files
 			.iter()
@@ -22348,6 +22681,102 @@ fn proverif_declarations_are_allowlisted() {
 			"let P() = in(c, x: bitstring) [precise]; 0.",
 			"allowlisted 3 times",
 		),
+		(
+			"axiom glued to a comment",
+			"proofs/pro-verif/fs-registration.pvl",
+			"axiom(* c *)x: bitstring; attacker(x) ==> false.",
+			"forbidden ProVerif declaration axiom",
+		),
+		(
+			"restriction glued to a comment",
+			"proofs/pro-verif/queries.pvl",
+			"restriction(* hidden *)x: bitstring; event(E(x)).",
+			"forbidden ProVerif declaration restriction",
+		),
+		(
+			"nounif glued to a comment",
+			"proofs/pro-verif/fs-common.pvl",
+			"nounif(* r *)x: bitstring; attacker(x).",
+			"not on the reviewed allowlist",
+		),
+		(
+			"setting glued to a comment",
+			"proofs/pro-verif/fs-common.pvl",
+			"set(* r *)preciseActions = true.",
+			"not on the reviewed allowlist",
+		),
+		(
+			"declaration after a nested comment",
+			"proofs/pro-verif/fs-common.pvl",
+			"(* outer (* inner *) still outer *)axiom x: bitstring; attacker(x).",
+			"forbidden ProVerif declaration axiom",
+		),
+		(
+			"unterminated nested comment",
+			"proofs/pro-verif/fs-common.pvl",
+			"(* outer (* inner *) still open",
+			"unterminated (* comment",
+		),
+		(
+			"axiom in a Python literal",
+			"proofs/pro-verif/check-registration-set.py",
+			"EXTRA = \"axiom x: bitstring; attacker(x) ==> false.\"",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"restriction after an escaped newline",
+			"proofs/pro-verif/check-registration-response.py",
+			"EXTRA = \"query x: bitstring; attacker(x).\\nrestriction event(E) ==> false.\"",
+			"forbidden ProVerif declaration restriction in a string literal",
+		),
+		(
+			"axiom after an f-string placeholder",
+			"proofs/pro-verif/check-free-schedule.py",
+			"EXTRA = f\"{HERE}axiom x: bitstring; attacker(x).\"",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"axiom after a percent placeholder",
+			"proofs/pro-verif/check-general-registration.py",
+			"EXTRA = \"%saxiom x: bitstring; attacker(x).\" % HERE",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"axiom after a comment end",
+			"proofs/pro-verif/generate-general-registration.py",
+			"EXTRA = '(* c *)axiom x: bitstring; attacker(x).'",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"elimtrue in a bytes literal",
+			"proofs/pro-verif/test-free-schedule-checker.py",
+			"EXTRA = b'elimtrue x: bitstring; attacker(x).'",
+			"forbidden ProVerif declaration elimtrue in a string literal",
+		),
+		(
+			"new setting in a checker",
+			"proofs/pro-verif/check-registration-set.py",
+			"EXTRA = \"set maxHyp = 3.\"",
+			"not on the reviewed allowlist",
+		),
+		(
+			"nounif in a generator",
+			"proofs/pro-verif/generate-kem-controller-auth.py",
+			"EXTRA = \"\"\"\nnounif y: bitstring; attacker(y).\n\"\"\"",
+			"not on the reviewed allowlist",
+		),
+		(
+			"precise input in a checker",
+			"proofs/pro-verif/check-free-schedule.py",
+			"EXTRA = \"in(c, x: bitstring) [precise];\"",
+			"not on the reviewed allowlist",
+		),
+		(
+			"unterminated Python literal",
+			"proofs/pro-verif/check-free-schedule.py",
+			"EXTRA = \"open",
+			"unterminated Python string literal",
+		),
 	] {
 		let error =
 			validate_declarations(&with(path, extra), DECLARATION_ALLOWLIST, FORMAL_ANALYSIS)
@@ -22357,15 +22786,51 @@ fn proverif_declarations_are_allowlisted() {
 			"{name}: wrong diagnostic {error}"
 		);
 	}
-	validate_declarations(
-		&with(
+	for (path, extra) in [
+		(
 			"proofs/pro-verif/fs-common.pvl",
 			"(* axiom restriction nounif in a comment *)",
 		),
-		DECLARATION_ALLOWLIST,
-		FORMAL_ANALYSIS,
-	)
-	.unwrap();
+		(
+			"proofs/pro-verif/fs-common.pvl",
+			"(* outer (* inner *) axiom x: bitstring; attacker(x) ==> false. *)",
+		),
+		(
+			"proofs/pro-verif/check-free-schedule.py",
+			"# axiom x: bitstring; attacker(x) ==> false.",
+		),
+		(
+			"proofs/pro-verif/check-free-schedule.py",
+			"\"\"\"Prose about a schedule restriction, an axiom and a lemma.\"\"\"",
+		),
+	] {
+		validate_declarations(&with(path, extra), DECLARATION_ALLOWLIST, FORMAL_ANALYSIS)
+			.unwrap_or_else(|error| panic!("{extra}: {error}"));
+	}
+	let generated = "proofs/pro-verif/check-registration-response.py";
+	let changed = files
+		.iter()
+		.map(|(name, source)| {
+			let mut source = source.clone();
+			if name == generated {
+				replace_once(&mut source, "set maxHyp=2.", "set maxHyp=none.");
+			}
+			(name.clone(), source)
+		})
+		.collect::<Vec<_>>();
+	let error = validate_declarations(&changed, DECLARATION_ALLOWLIST, FORMAL_ANALYSIS)
+		.expect_err("mutation survived: generated setting changed");
+	assert!(
+		error.contains("not on the reviewed allowlist"),
+		"generated setting changed: wrong diagnostic {error}"
+	);
+	assert_eq!(
+		python_literals(
+			"x = 'a\\'b' + \"c\\n\" + r'\\d' + f\"{d['k']!r:>{w}}z{{\" + '''t\nu''' # 'no'\ny = b'\\x41%s%%'"
+		)
+		.unwrap(),
+		["a'b", "c\n", "\\d", "k", "{}z{", "t\nu", "A{}%"]
+	);
 	let nx = "proofs/pro-verif/fs-common.pvl\tnounif\t1\tnounif y: bitstring; attacker(x25519_public(y)).\tdoc/formal-verification-analysis.md#the-fs-selection-heuristic-nx\n";
 	assert_eq!(count(DECLARATION_ALLOWLIST, nx), 1);
 	for (name, allowlist, diagnostic) in [

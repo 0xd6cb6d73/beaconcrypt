@@ -21,6 +21,7 @@ import os
 from pathlib import Path
 import re
 import resource
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -270,7 +271,10 @@ def check_target(proverif, target, logdir, timeout, address_space_kib):
         raise ValueError(f"{target.name}: timeout after {timeout} s ({log_path})")
     if returncode:
         raise ValueError(f"{target.name}: ProVerif exited {returncode} ({log_path})")
-    check_output(log_path.read_text(), target)
+    try:
+        check_output(log_path.read_text(), target)
+    except ValueError as error:
+        raise ValueError(f"{error} ({log_path})") from error
     return seconds, peak
 
 
@@ -313,6 +317,27 @@ def run(proverif, targets, logdir, timeout, address_space_kib, results_path):
     )
 
 
+def run_logged(
+    proverif, targets, log_dir, timeout, address_space_kib, results_path, scratch=None
+):
+    """Run with logs in log_dir, or in a temporary directory that is removed only on success.
+
+    Every failure message names the log of the failing target, so a failed run keeps its
+    temporary directory and says where it is.
+    """
+    if log_dir:
+        log_dir.mkdir(parents=True, exist_ok=True)
+        run(proverif, targets, log_dir, timeout, address_space_kib, results_path)
+        return
+    directory = Path(tempfile.mkdtemp(prefix="beaconcrypt-fs-logs-", dir=scratch))
+    try:
+        run(proverif, targets, directory, timeout, address_space_kib, results_path)
+    except BaseException:
+        print(f"fs ProVerif logs kept in {directory}", file=sys.stderr, flush=True)
+        raise
+    shutil.rmtree(directory)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--proverif", default="proverif")
@@ -323,7 +348,11 @@ def main():
         default=0,
         help="address-space cap per ProVerif run in KiB, as for ulimit -v (0: none)",
     )
-    parser.add_argument("--log-dir", type=Path)
+    parser.add_argument(
+        "--log-dir",
+        type=Path,
+        help="keep every ProVerif log here (default: a temporary directory, kept on failure)",
+    )
     parser.add_argument("--results", type=Path, help="write a TSV of times and peaks")
     parser.add_argument(
         "--only", action="append", default=[], help="run only this target"
@@ -344,26 +373,14 @@ def main():
         if unknown:
             parser.error(f"unknown target: {sorted(unknown)}")
         targets = tuple(target for target in TARGETS if target.name in args.only)
-    if args.log_dir:
-        args.log_dir.mkdir(parents=True, exist_ok=True)
-        run(
-            args.proverif,
-            targets,
-            args.log_dir,
-            args.timeout,
-            args.address_space_kib,
-            args.results,
-        )
-    else:
-        with tempfile.TemporaryDirectory(prefix="beaconcrypt-fs-logs-") as directory:
-            run(
-                args.proverif,
-                targets,
-                Path(directory),
-                args.timeout,
-                args.address_space_kib,
-                args.results,
-            )
+    run_logged(
+        args.proverif,
+        targets,
+        args.log_dir,
+        args.timeout,
+        args.address_space_kib,
+        args.results,
+    )
 
 
 if __name__ == "__main__":

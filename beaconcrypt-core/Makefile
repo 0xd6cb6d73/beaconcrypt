@@ -81,9 +81,12 @@ PROVERIF_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_SCENARIOS))
 # Free-schedule (fs) scenarios run serially, one query per ProVerif process,
 # outside the parallel PROVERIF_SCENARIOS roster. Each target may need up to
 # PROVERIF_FS_TIMEOUT seconds and a PROVERIF_FS_ADDRESS_SPACE_KIB address space,
-# so the fs group must run alone on the machine.
+# so the fs group must run alone on the machine. The checker keeps the logs of a
+# failed run in the temporary directory its error message names; set
+# PROVERIF_FS_LOG_DIR to keep every ProVerif log of the group in that directory.
 PROVERIF_FS_TIMEOUT ?= 1800
 PROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760
+PROVERIF_FS_LOG_DIR ?=
 PROVERIF_FS_SCENARIOS := \
 	fs-registration
 PROVERIF_FS_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_FS_SCENARIOS))
@@ -254,7 +257,8 @@ check-proverif-fs-registration: check-proverif-extraction check-proverif-transcr
 	python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
 	python3 $(PROVERIF_DIR)/check-free-schedule.py --proverif '$(PROVERIF)' \
 		--timeout '$(PROVERIF_FS_TIMEOUT)' \
-		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)'
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')
 
 check-proverif-aead-commitment: check-proverif-extraction
 	@set -o pipefail; \

@@ -134,8 +134,10 @@ event FsServerReplayRejected(
 
 (* get_shared_secret on obj returned None at a failure after the consumed
    check and before the insertion; the set is unchanged (witness use only).
-   Under crypto.pvl the only such failures are the identity conversion and
-   the four DH calls on inputs that are not X25519 public keys. *)
+   Under crypto.pvl the event arises only when the prekey or the one-time key
+   is not an X25519 public key (DH1 and DH3, or DH4, fail).  The identity
+   conversion and DH2 cannot fail, because the identity verified the
+   signatures and is therefore an Ed25519 public key. *)
 event FsServerAcceptFailed(
   bitstring,
   bitstring,

@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: 0BSD
 """Reject misleading or incomplete free-schedule (fs) ProVerif receipts."""
 
+import contextlib
 import dataclasses
 import importlib.util
+import io
 import os
 from pathlib import Path
 import shutil
@@ -277,6 +279,57 @@ class ProcessTests(unittest.TestCase):
             with self.assertRaises(ValueError) as caught:
                 CHECKER.check_target(fake, each, Path(directory), 60, 0)
             self.assertIn("exited 3", str(caught.exception))
+
+    def test_failed_targets_keep_the_named_log(self):
+        each = target("R3")
+        wrong = receipt(each).replace("is false.", "is true.")
+        for name, body in (
+            ("exit", f"import sys\nsys.stdout.write({receipt(each)!r})\nsys.exit(2)"),
+            ("receipt", f"import sys\nsys.stdout.write({wrong!r})"),
+            (
+                "timeout",
+                "import sys, time\nprint('started', flush=True)\ntime.sleep(30)",
+            ),
+        ):
+            with self.subTest(name), tempfile.TemporaryDirectory() as directory:
+                fake = self.fake(directory, body)
+                scratch = Path(directory) / "scratch"
+                scratch.mkdir()
+                errors = io.StringIO()
+                with contextlib.redirect_stdout(io.StringIO()):
+                    with contextlib.redirect_stderr(errors):
+                        with self.assertRaises(SystemExit) as caught:
+                            CHECKER.run_logged(
+                                fake, (each,), None, 1, 0, None, scratch=scratch
+                            )
+                logs = list(scratch.glob("beaconcrypt-fs-logs-*/R3.log"))
+                self.assertEqual(len(logs), 1)
+                self.assertIn(f"({logs[0]})", str(caught.exception))
+                self.assertIn(f"logs kept in {logs[0].parent}", errors.getvalue())
+                self.assertTrue(logs[0].read_text())
+
+    def test_successful_run_removes_its_temporary_logs(self):
+        each = target("R3")
+        with tempfile.TemporaryDirectory() as directory:
+            fake = self.fake(
+                directory, f"import sys\nsys.stdout.write({receipt(each)!r})"
+            )
+            scratch = Path(directory) / "scratch"
+            scratch.mkdir()
+            with contextlib.redirect_stdout(io.StringIO()):
+                CHECKER.run_logged(fake, (each,), None, 60, 0, None, scratch=scratch)
+            self.assertEqual(list(scratch.iterdir()), [])
+
+    def test_log_dir_keeps_every_log(self):
+        each = target("R3")
+        with tempfile.TemporaryDirectory() as directory:
+            fake = self.fake(
+                directory, f"import sys\nsys.stdout.write({receipt(each)!r})"
+            )
+            logs = Path(directory) / "logs"
+            with contextlib.redirect_stdout(io.StringIO()):
+                CHECKER.run_logged(fake, (each,), logs, 60, 0, None)
+            self.assertEqual((logs / "R3.log").read_text(), receipt(each))
 
     def test_command_loads_every_library_once(self):
         each = target("C-NOCHECK")

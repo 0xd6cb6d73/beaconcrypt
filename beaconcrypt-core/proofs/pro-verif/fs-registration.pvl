@@ -23,7 +23,8 @@
      same.
    - Accept and build are separate Rust calls; here a successful accept is
      followed at once, on the same object, by an attacker-chosen build or
-     drop (obligation L1).
+     drop.  That this covers every Rust order is the pending paper
+     obligation L1.
    - Under crypto.pvl a DH destructor fails exactly on inputs that are not
      X25519 public keys, and a DH output is a private constructor term that
      never equals a public constant.  The core all-zero check
@@ -35,7 +36,9 @@
      in the same terminal abort with no output.  The nonempty-payload check
      (beacon.rs:473-475) can only reject and is not modelled.
    - The registration payload is a fresh name per build (an application
-     choice restricted to fresh values). *)
+     choice restricted to fresh values).  The default payload of a build
+     with data = None, the public byte REGISTRATION_WITNESS (server.rs:459),
+     is not covered. *)
 
 def FS_REG_STEP(Cur, Next) {
 let Cur(
@@ -201,8 +204,9 @@ let Cur(
       )
       else
       (
-        (* A conversion or DH failure after the consumed check: the set is
-           unchanged. *)
+        (* A DH failure after the consumed check (under crypto.pvl only a
+           prekey or one-time key that is not an X25519 public key): the set
+           is unchanged. *)
         event FsServerAcceptFailed(obj, server_identity, identity, registration_id);
         Next(obj, kid_next, slot_1, slot_2)
       )
