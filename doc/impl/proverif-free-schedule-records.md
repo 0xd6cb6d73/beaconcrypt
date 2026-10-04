@@ -16,7 +16,7 @@ The Rust basis is branch `codex/full-proof-composition` at `9e588c6`, whose Rust
 - `FsReceiveRejected` emitted only in the rejection branches that the witnesses need ([step 9](#model-steps-and-their-justifications)).
 - C-STALE, C-FAILMUT and the replay-rejected witness measured, with C-FAILMUT to be dropped under the plan's rule if ProVerif could not decide it within the caps. ProVerif decides it in seconds at K_r = 2, so it is kept.
 - The fail-stop form of the receive worker measured ([Fail-stop measurement](#fail-stop-measurement)), but C1 and C3 kept in the form in which failures are interleaved; no target uses fail-stop.
-- L6 item 4 (adversary-chosen plaintexts): a tasking form with whole adversary-chosen plaintexts for the authentication claims if it fits the caps. It fits (C1, the largest, uses 63% of the time cap and of the memory cap), so it is used ([step 5](#model-steps-and-their-justifications)).
+- L6 item 4 (adversary-chosen plaintexts): a tasking form with whole adversary-chosen plaintexts for the authentication claims if it fits the caps. It fits (C1, the largest, used 62% of the time cap and 66% of the address-space cap in the verification pass), so it is used ([step 5](#model-steps-and-their-justifications)).
 - The record-form A1 together with C-NOGATE covers the HB-95 class (the sequence-one gate), and C-NOGATE keeps its application-prefix input.
 
 ## Pending paper arguments
@@ -147,28 +147,32 @@ Measured traces of the FALSE results (all in one honest session unless stated): 
 
 ## Results of the serial verification pass
 
-The verification record is one serial run of `make -C beaconcrypt-core check-proverif-fs`, the registration targets followed by the record targets, recorded with the commit after the one that adds this scenario. Before it, every record target ran once as its own ProVerif process, one after another, in development runs with the checker's loader, the shared ProVerif lock, the 1800 s timeout and the 10 GiB address-space cap (`ulimit -v`), timed by GNU `time`; each gave its exact expected result lines and trace count. The C1 and C4 runs used the same model before the receive step was moved into its own file, which changed only the file layout.
+The verification record is one serial run of `make -C beaconcrypt-core check-proverif-fs PROVERIF_FS_LOG_DIR=<dir>`, the fifteen registration targets followed by the sixteen record targets, from 2026-10-04 23:33 to 2026-10-05 01:18 (+02:00), on the tree of commit `63369de`, which adds this scenario; the commit that records the pass changes only files under `doc/`. It ran inside the locked proof shell (entered through a copy of `flake.nix` and `flake.lock` whose SHA-256 match the repository files), holding the shared ProVerif lock, with ProVerif 2.05, `PROVERIF_FS_TIMEOUT` = 1800 s and `PROVERIF_FS_ADDRESS_SPACE_KIB` = 10485760, on a 16 GB machine. The transcript-fidelity test (24 tests) and the checker regression test (48 tests) passed first. Every target ran as its own ProVerif process, one after another, gave its exact expected result lines and trace count and left its own log, thirty-one in all. The peak address space (`VmPeak` in `/proc/<pid>/status`) was sampled every quarter second by a separate script, as in P1; the script wrote an entry only after it saw the process end, and it stopped before it wrote the entry of the last target, C-FAILMUT. `check-inventory`, run through Make in the same locked shell environment, reported that the inventory matches the reviewed boundary.
 
-| Target | Class | K_r | Verdict | ProVerif time (s) | Peak RSS (KiB) |
-| --- | --- | --- | --- | --- | --- |
-| s2b-A1 | security | 3 | TRUE | 0.70 | 135932 |
-| s2b-A2 | security | 3 | TRUE | 0.77 | 132016 |
-| s2b-C1 | security | 3 | TRUE | 1138.57 | 6631280 |
-| s2b-C3 | security | 3 | TRUE | 982.00 | 6111364 |
-| s2b-C4 | security | 3 | TRUE | 247.66 | 2043420 |
-| s2b-S1 | security | 3 | TRUE | 0.50 | 125220 |
-| s2b-A3 | witness | 1 | FALSE (reachable) | 0.16 | 33832 |
-| s2b-C5a | witness | 2 | FALSE (reachable) | 20.40 | 671808 |
-| s2b-C5b | witness | 2 | FALSE (reachable) | 26.31 | 945956 |
-| s2b-C5c | witness | 2 | FALSE (reachable) | 18.16 | 671076 |
-| s2b-S4 | witness | 1 | FALSE (reachable) | 0.12 | 27564 |
-| s2b-C-RETAIN-C1 | control | 3 | FALSE (expected) | 517.13 | 4397480 |
-| s2b-C-RETAIN-C3 | control | 3 | FALSE (expected) | 389.97 | 4096096 |
-| s2b-C-NOGATE | control | 1 | FALSE (expected) | 0.39 | 52728 |
-| s2b-C-STALE | control | 3 | FALSE (expected) | 401.60 | 4104360 |
-| s2b-C-FAILMUT | control | 2 | TRUE (expected, inverted) | 23.65 | 888228 |
+Before the pass, every record target ran once as its own ProVerif process, one after another, in development runs with the checker's loader, the shared ProVerif lock, the 1800 s timeout and the 10 GiB address-space cap (`ulimit -v`), timed by GNU `time`; each gave the same exact result lines and trace count. The last column gives their ProVerif time. The development runs of C1 and C4 used the same model before the receive step was moved into its own file, which changed only the file layout.
 
-The record targets took 3768.1 s of ProVerif time in these runs (62.8 minutes). The largest runs, the security results C1 and C3 in the chosen tasking form, peaked at 6.63 and 6.11 million KiB resident, about 63% and 58% of the 10 GiB cap, and C1 used 63% of the 1800 s cap. At K_r = 2 the C5 witnesses and C-FAILMUT take seconds, where P0 needed 1369 s and 92% of the memory cap for C5b at K_r = 3.
+| Target | Class | K_r | Verdict | ProVerif time (s) | Peak RSS (KiB) | Peak address space (KiB) | Development run (s) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| s2b-A1 | security | 3 | TRUE | 0.67 | 135908 | 398208 | 0.70 |
+| s2b-A2 | security | 3 | TRUE | 0.76 | 131812 | 395424 | 0.77 |
+| s2b-C1 | security | 3 | TRUE | 1107.98 | 6626788 | 6890984 | 1138.57 |
+| s2b-C3 | security | 3 | TRUE | 936.83 | 6158820 | 6423076 | 982.00 |
+| s2b-C4 | security | 3 | TRUE | 227.34 | 2060004 | 2323620 | 247.66 |
+| s2b-S1 | security | 3 | TRUE | 0.49 | 125540 | 382268 | 0.50 |
+| s2b-A3 | witness | 1 | FALSE (reachable) | 0.17 | 57824 | 288708 | 0.16 |
+| s2b-C5a | witness | 2 | FALSE (reachable) | 19.64 | 669380 | 928776 | 20.40 |
+| s2b-C5b | witness | 2 | FALSE (reachable) | 24.77 | 953796 | 1217416 | 26.31 |
+| s2b-C5c | witness | 2 | FALSE (reachable) | 17.28 | 673476 | 927304 | 18.16 |
+| s2b-S4 | witness | 1 | FALSE (reachable) | 0.13 | 57824 | 284036 | 0.12 |
+| s2b-C-RETAIN-C1 | control | 3 | FALSE (expected) | 429.12 | 4331076 | 4594816 | 517.13 |
+| s2b-C-RETAIN-C3 | control | 3 | FALSE (expected) | 365.04 | 4111428 | 4375232 | 389.97 |
+| s2b-C-NOGATE | control | 1 | FALSE (expected) | 0.38 | 57824 | 310308 | 0.39 |
+| s2b-C-STALE | control | 3 | FALSE (expected) | 367.39 | 4110532 | 4374276 | 401.60 |
+| s2b-C-FAILMUT | control | 2 | TRUE (expected, inverted) | 22.58 | 890596 | not recorded | 23.65 |
+
+The record targets took 3520.6 s of ProVerif time (58.7 minutes; 2274.1 s for the six security results), against 3768.1 s in the development runs; per-target times differ from the development runs by at most 9% for every run longer than one second, except C-RETAIN on C1 (17% faster). In the same pass the fifteen registration targets gave the exact results of P1 in 2788.9 s of ProVerif time (46.5 minutes; the P1 record took 2614.0 s); their per-target times were within about 7% of the P1 record for every run longer than one second except S3-server (96.71 s against 86.24 s) and S3-beacon (462.38 s against 378.41 s). The whole pass took 6309.5 s of ProVerif time and 6344.4 s (1 h 46 min) of wall time for the Make target, including both transcript-fidelity runs, both checker regression runs and the shell start. That is 59% of the about 3 h of the fs budget (OD7), and leaves about 4450 s (74 minutes) for the Beacon-to-Server record scenario.
+
+The largest record run, C1, used 62% of the 1800 s cap and peaked at 6626788 KiB resident (6.32 GiB, 63.2% of the 10 GiB cap) and 6890984 KiB of address space (6.57 GiB, 65.7%); C3 peaked at 6423076 KiB of address space (61.3%). The registration A1 stays the critical run of the group: in this pass it took 1080.45 s and its peak address space was 10136556 KiB (9.67 GiB), 96.7% of the 10485760 KiB cap, which leaves 349204 KiB (0.33 GiB, 3.3%) of headroom, slightly less than the 355028 KiB of the P1 record. Peak resident figures of 57824 KiB for the three shortest record runs are the floor of the measurement: the checker reads the peak resident memory of the child process with `wait4`, which includes the forked checker before it starts ProVerif. C-FAILMUT's address space was not recorded, but its resident peak, 0.85 GiB, is far below the cap. At K_r = 2 the C5 witnesses and C-FAILMUT take seconds, where P0 needed 1369 s and 92% of the memory cap for C5b at K_r = 3.
 
 ## Fail-stop measurement
 
@@ -180,7 +184,7 @@ The fail-stop form (E21) ends the receive worker after a failed open of a parsed
 | C3 | TRUE, 982.00 s, 6111364 KiB | TRUE, 219.29 s, 2349528 KiB |
 | C4 | TRUE, 247.66 s, 2043420 KiB | TRUE, 71.05 s, 1006156 KiB |
 
-Fail-stop is about four times cheaper here and gives the same verdicts. It is not used: the failure-interleaving form fits the caps, it needs no trace-mapping argument (E21, which rests on the pending failure neutrality L3), and it is the only form that can express C5b, C5c, C-STALE and C-FAILMUT. If later stages need the time, fail-stop is the measured option for the claims that do not mention `FsReceiveRejected`, together with a written E21 argument. The times in the first column are those of the development runs listed above.
+Fail-stop is about four times cheaper here and gives the same verdicts. It is not used: the failure-interleaving form fits the caps, it needs no trace-mapping argument (E21, which rests on the pending failure neutrality L3), and it is the only form that can express C5b, C5c, C-STALE and C-FAILMUT. If later stages need the time, fail-stop is the measured option for the claims that do not mention `FsReceiveRejected`, together with a written E21 argument. The figures in the first column are those of the development runs; in the verification pass C1, C3 and C4 took 1107.98 s, 936.83 s and 227.34 s ([Results](#results-of-the-serial-verification-pass)).
 
 ## What the bounds do not cover
 
@@ -219,5 +223,5 @@ In this scenario a Beacon outputs nothing after its bundle: its finish and its r
 - E3 for the b2s Server-side security claims: Beacons send frames after a pin-dependent finish, so pin independence is open there, A2 re-proved in b2s included.
 - The b2s half of the direction-split argument E19, and a review of the two arguments written in this guide (E20 and the s2b half of E19).
 - The paper obligations L1 to L5, on which every Rust reading of the fs results rests.
-- The budget: the record targets take about an hour of serial ProVerif time and the registration targets about 44 minutes, so the fs group needs about 1.8 h of the 3 h of OD7, which leaves about 1.2 h for `fs-records-b2s` (G0 measured 5 to 44 minutes for its formulations). The final pass of this stage records the exact figure.
+- The budget: the verification pass of the whole fs group took 6344.4 s (1 h 46 min) of wall time, 3520.6 s of ProVerif time for the record targets and 2788.9 s for the registration targets, so about 74 minutes of the 3 h of OD7 remain for `fs-records-b2s` (G0 measured 5 to 44 minutes for its formulations). The registration A1 keeps only 3.3% of the address-space cap as headroom, and C1 about a third.
 - Stage P4 (the all-zero check and a theory with low-order points) and stage P5 (strong secrecy, which must publish the `Some`/`None` bit of receives and finishes).
