@@ -154,11 +154,19 @@ FORBIDDEN = (
 )
 
 
+def log_name(target):
+    """The log file of one target; R1' and R1 must not share a log."""
+    stem = re.sub(r"[^A-Za-z0-9]+", "-", target.name.replace("'", "prime"))
+    return stem.strip("-") + ".log"
+
+
 def validate_targets(targets=TARGETS, directory=HERE):
     """Check the manifest itself: classes, bounds, libraries and query files."""
     names = [target.name for target in targets]
     if len(set(names)) != len(names):
         raise ValueError("duplicate fs target name")
+    if len({log_name(target) for target in targets}) != len(targets):
+        raise ValueError("two fs targets share a log file")
     used_queries = set()
     for target in targets:
         if target.cls not in CLASSES:
@@ -263,7 +271,7 @@ def run_process(arguments, log_path, timeout, address_space_kib):
 
 
 def check_target(proverif, target, logdir, timeout, address_space_kib):
-    log_path = logdir / (re.sub(r"[^A-Za-z0-9]+", "-", target.name).strip("-") + ".log")
+    log_path = logdir / log_name(target)
     seconds, peak, returncode, timed_out = run_process(
         command(proverif, target), log_path, timeout, address_space_kib
     )

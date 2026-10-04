@@ -161,29 +161,29 @@ Measured traces of the FALSE results: R3, an honest bundle accepted and built on
 
 ## Results of the serial verification pass
 
-The verification record is one serial run of `make -C beaconcrypt-core check-proverif-fs` on 2026-10-04 at commit `7518974`, inside the locked proof shell (entered through a copy of `flake.nix` and `flake.lock` whose SHA-256 match the repository files), holding the shared ProVerif lock, with ProVerif 2.05, `PROVERIF_FS_TIMEOUT` = 1800 s and `PROVERIF_FS_ADDRESS_SPACE_KIB` = 10485760, on a 16 GB machine used by this run alone. The transcript-fidelity test (23 tests) and the checker regression test (32 tests) passed first. Every target ran as its own ProVerif process, one after another, and gave its exact expected result lines:
+The verification record is one serial run of `make -C beaconcrypt-core check-proverif-fs PROVERIF_FS_LOG_DIR=<dir>` on 2026-10-04 from 18:09 to 18:53 (+02:00), on the tree of the commit that records it: commit `f85e7c3` plus that commit's fix of the checker's log file names, with every file outside `doc/` identical to the recording commit. It ran inside the locked proof shell (entered through a copy of `flake.nix` and `flake.lock` whose SHA-256 match the repository files), holding the shared ProVerif lock, with ProVerif 2.05, `PROVERIF_FS_TIMEOUT` = 1800 s and `PROVERIF_FS_ADDRESS_SPACE_KIB` = 10485760, on a 16 GB machine used by this run alone. The transcript-fidelity test (23 tests) and the checker regression test (36 tests) passed first. Every target ran as its own ProVerif process, one after another, gave its exact expected result lines and left its own log, fifteen in all. The peak address space (`VmPeak` in `/proc/<pid>/status`) was sampled every quarter second by a separate script; runs shorter than about a second can end between two samples.
 
-| Target | Class | K_reg | Verdict | ProVerif time (s) | Peak RSS (KiB) |
-| --- | --- | --- | --- | --- | --- |
-| A1 | security | 3 | TRUE | 1038.33 | 9918052 |
-| A2 | security | 3 | TRUE | 109.37 | 5759460 |
-| R1 | security | 3 | TRUE | 415.31 | 5838180 |
-| R1' | security | 3 | TRUE | 569.21 | 5822308 |
-| S3-server | security | 3 | TRUE | 88.00 | 4995940 |
-| S3-beacon | security | 3 | TRUE | 404.81 | 5285092 |
-| R2 | definitional | 2 | TRUE | 2.34 | 259428 |
-| R3 | witness | 2 | FALSE (reachable) | 1.54 | 164804 |
-| R5 | witness | 2 | FALSE (reachable) | 2.68 | 296772 |
-| W1 | witness | 1 | FALSE (reachable) | 0.08 | 37140 |
-| W2 | witness | 2 | FALSE (reachable) | 1.97 | 180292 |
-| W3 | witness | 1 | FALSE (reachable) | 0.04 | 37140 |
-| R4 | limitation | 1 | FALSE (expected) | 0.04 | 37140 |
-| C-NOCHECK | control | 2 | FALSE (expected) | 1.61 | 182468 |
-| C-UKS | control | 1 | FALSE (expected) | 0.08 | 37140 |
+| Target | Class | K_reg | Verdict | ProVerif time (s) | Peak RSS (KiB) | Peak address space (KiB) |
+| --- | --- | --- | --- | --- | --- | --- |
+| A1 | security | 3 | TRUE | 1029.12 | 9866724 | 10130732 |
+| A2 | security | 3 | TRUE | 113.69 | 5711716 | 5975116 |
+| R1 | security | 3 | TRUE | 413.70 | 5826020 | 6053932 |
+| R1' | security | 3 | TRUE | 582.24 | 5849956 | 6113356 |
+| S3-server | security | 3 | TRUE | 86.24 | 5022692 | 5286348 |
+| S3-beacon | security | 3 | TRUE | 378.41 | 5284324 | 5549260 |
+| R2 | definitional | 2 | TRUE | 2.44 | 259428 | 519752 |
+| R3 | witness | 2 | FALSE (reachable) | 1.49 | 168644 | 424488 |
+| R5 | witness | 2 | FALSE (reachable) | 2.69 | 295876 | 559464 |
+| W1 | witness | 1 | FALSE (reachable) | 0.07 | 37236 | not sampled |
+| W2 | witness | 2 | FALSE (reachable) | 2.01 | 180548 | 442184 |
+| W3 | witness | 1 | FALSE (reachable) | 0.04 | 37236 | not sampled |
+| R4 | limitation | 1 | FALSE (expected) | 0.04 | 37236 | 281412 |
+| C-NOCHECK | control | 2 | FALSE (expected) | 1.70 | 182340 | 443560 |
+| C-UKS | control | 1 | FALSE (expected) | 0.08 | 37236 | not sampled |
 
-The run took 2635.4 s of ProVerif time (2625.0 s for the six security results) and 2666.4 s of wall time for the whole Make target, including both transcript-fidelity runs and the shell start, which is within the share of about one hour of the 3 h fs budget (OD7). `check-inventory`, run afterwards through Make in the same shell, reported that the inventory matches the reviewed boundary.
+The run took 2614.0 s of ProVerif time (2603.4 s for the six security results) and 2642.0 s (44 minutes) of wall time for the whole Make target, including both transcript-fidelity runs and the shell start, which is within the share of about one hour of the 3 h fs budget (OD7). Two earlier serial passes gave the same fifteen exact results: one at commit `7518974`, the record of the first P1 commit (2635.4 s of ProVerif time), and one at commit `f85e7c3` before the log-name fix (2587.5 s), in which R1 and R1' wrote the same log file; that collision is what the fix removes. Per-target times of the three passes agree within about 7%. `check-inventory`, run afterwards through Make in the same locked shell environment, reported that the inventory matches the reviewed boundary.
 
-A1 is the critical run. Its peak resident memory was 9918052 KiB (9.46 GiB), 94.6% of the 10485760 KiB (10 GiB) cap. The cap is an `RLIMIT_AS` limit on the address space (virtual memory), which is always at least the resident memory; a review run of R1 measured the address space about 264000 KiB (0.25 GiB) above the resident memory throughout, which puts A1 at about 97% of the cap and leaves about 3% (about 0.29 GiB) of headroom. A model change that enlarges the Server step can push it over the cap; the recorded fallback is A1 at K_reg = 2 (3.4 s), which would be a weakening. The other security results peaked at 4995940-5838180 KiB (4.76-5.57 GiB) resident. Peak figures of 37140 KiB for the shortest runs are the floor of the measurement: the checker reads the peak resident memory of the child process with `wait4`, which includes the forked checker before it starts ProVerif. Development runs of the same targets with GNU `time` agree within about 4% (A1: 1002.6 s, 9917344 KiB), and the P0 spike measured A1 at K_reg = 3 in 1071.7 s and about 9.80 million KiB.
+A1 is the critical run. The cap is an `RLIMIT_AS` limit on the address space (virtual memory), which is always at least the resident memory. A1's peak address space was 10130732 KiB (9.66 GiB), 96.6% of the 10485760 KiB (10 GiB) cap, in this pass and in the pass at `f85e7c3`, so A1 keeps 355028 KiB (0.34 GiB, 3.4%) of headroom; its peak resident memory was 9866724 KiB (9.41 GiB), 94.1% of the cap. A model change that enlarges the Server step can push it over the cap; the recorded fallback is A1 at K_reg = 2 (3.4 s), which would be a weakening. The other security results peaked at 5022692-5849956 KiB (4.79-5.58 GiB) resident and 5286348-6113356 KiB (5.04-5.83 GiB) of address space. Peak resident figures of about 37200 KiB for the shortest runs are the floor of the measurement: the checker reads the peak resident memory of the child process with `wait4`, which includes the forked checker before it starts ProVerif. The P0 spike measured A1 at K_reg = 3 in 1071.7 s and about 9.80 million KiB resident.
 
 ## What the bounds do not cover
 
@@ -200,7 +200,7 @@ Bundles carry no Server field (`pqxdh.rs:304-321`), and a Rust Beacon can pin an
 ## Gates and wiring
 
 - `check-proverif-fs` runs `$(PROVERIF_FS_CHECK_TARGETS)` with `-j1`; it depends on the transcript-fidelity test and is never a prerequisite of `check-proverif`. `PROVERIF_FS_SCENARIOS` holds `fs-registration` only; the parallel `PROVERIF_SCENARIOS` roster still has its 35 scenarios.
-- `check-proverif-fs-registration` runs the checker regression test, then the checker with `--timeout $(PROVERIF_FS_TIMEOUT)` (1800), `--address-space-kib $(PROVERIF_FS_ADDRESS_SPACE_KIB)` (10485760) and, when `PROVERIF_FS_LOG_DIR` is set, `--log-dir $(PROVERIF_FS_LOG_DIR)`. Without it, a failed target's log stays at the path its error message names, and the checker regression test checks this for a non-zero exit, a wrong receipt and a timeout.
+- `check-proverif-fs-registration` runs the checker regression test, then the checker with `--timeout $(PROVERIF_FS_TIMEOUT)` (1800), `--address-space-kib $(PROVERIF_FS_ADDRESS_SPACE_KIB)` (10485760) and, when `PROVERIF_FS_LOG_DIR` is set, `--log-dir $(PROVERIF_FS_LOG_DIR)`. Without it, a failed target's log stays at the path its error message names, and the checker regression test checks this for a non-zero exit, a wrong receipt and a timeout. Every target writes its own log file (`R1'` writes `R1prime.log`), and the checker rejects a manifest in which two targets would share one.
 - `verify-in-shell` and `verify-proverif-in-shell` run `check-proverif-fs` right after `check-proverif`.
 - The checker loads, in this order, `production-transcript-interface.pvl`, `crypto.pvl`, `extraction/lib.pvl`, `fs-common.pvl`, the consumed-set library, the binding library, `fs-registration.pvl` and the bound file, then the query file. It never loads `environment.pvl`. The legacy rule that the interface and `crypto.pvl` appear once in the Makefile is unchanged, because the fs loader lives in the checker.
 - New transcript-fidelity tests: `free_schedule_roster_and_serial_wiring_are_pinned`, `free_schedule_rust_fidelity_annotations_are_exact`, `free_schedule_vocabulary_and_registration_model_are_pinned`, `free_schedule_checker_loader_and_targets_are_pinned` and `proverif_declarations_are_allowlisted`. Each also applies mutations and requires them to be rejected. The declaration test strips comments as ProVerif does (nested, each comment a token separator), so a declaration keyword glued to a comment is found, and it also scans the string literals of the Python files under `proofs/pro-verif`, which write ProVerif text at run time; [the policy](../formal-verification-analysis.md#proverif-declaration-policy) states exactly what that scan covers.

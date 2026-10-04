@@ -219,6 +219,16 @@ class ManifestTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             CHECKER.validate_targets(CHECKER.TARGETS + (CHECKER.TARGETS[0],))
 
+    def test_every_target_has_its_own_log(self):
+        names = [CHECKER.log_name(each) for each in CHECKER.TARGETS]
+        self.assertEqual(len(set(names)), len(names))
+        self.assertEqual(CHECKER.log_name(target("R1'")), "R1prime.log")
+        self.assertEqual(CHECKER.log_name(target("R1")), "R1.log")
+        clash = dataclasses.replace(target("R1"), name="R1-")
+        with self.assertRaises(ValueError) as caught:
+            CHECKER.validate_targets(CHECKER.TARGETS + (clash,))
+        self.assertIn("share a log file", str(caught.exception))
+
 
 class ProcessTests(unittest.TestCase):
     """Exercise the runner with a stand-in executable instead of ProVerif."""
