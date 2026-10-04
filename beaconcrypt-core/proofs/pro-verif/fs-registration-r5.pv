@@ -1,0 +1,15 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration R5, witness, K_reg = 2 (expected FALSE, written as a
+   correspondence because ProVerif 2.05 rejects time inequalities in
+   reachability queries): a failure after the consumed check leaves the set
+   unchanged, so a later attempt with the same registration ID is accepted by
+   the same object.  The counterexample is a failure at i followed by an
+   acceptance at j > i. *)
+query obj: bitstring, s: bitstring, b: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+      rid: beaconcrypt_core__pqxdh__t_RegistrationId, root: bitstring, i: time, j: time;
+  event(FsServerAcceptFailed(obj, s, b, rid))@i
+  && event(FsServerAccepted(obj, s, b, init, rid, root))@j
+  ==> i > j.
+
+process FsRegistrationMain()

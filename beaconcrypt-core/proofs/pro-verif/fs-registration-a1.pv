@@ -1,0 +1,13 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration A1, security result, K_reg = 3: injective registration
+   agreement.  Every Beacon that finished registration with the pinned
+   Server key is matched by its own, distinct Server build with the same
+   identities, verified key tuple, assigned key ID, root, associated data and
+   payload.  Also the target of the control C-UKS (K_reg = 1). *)
+query obj: bitstring, s: bitstring, b: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+      kid: key_id, root: bitstring, ad: bitstring, p: bitstring;
+  inj-event(FsBeaconEstablished(s, b, init, kid, root, ad, p))
+  ==> inj-event(FsServerCommitted(obj, s, b, init, kid, root, ad, p)).
+
+process FsRegistrationMain()

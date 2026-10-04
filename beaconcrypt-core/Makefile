@@ -78,6 +78,15 @@ PROVERIF_SCENARIOS := \
 	failed-receive-compromise \
 	failed-receive-compromise-reachability
 PROVERIF_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_SCENARIOS))
+# Free-schedule (fs) scenarios run serially, one query per ProVerif process,
+# outside the parallel PROVERIF_SCENARIOS roster. Each target may need up to
+# PROVERIF_FS_TIMEOUT seconds and a PROVERIF_FS_ADDRESS_SPACE_KIB address space,
+# so the fs group must run alone on the machine.
+PROVERIF_FS_TIMEOUT ?= 1800
+PROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760
+PROVERIF_FS_SCENARIOS := \
+	fs-registration
+PROVERIF_FS_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_FS_SCENARIOS))
 PROVERIF_VERIFY_TARGETS := $(addprefix verify-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_GENERATED_TARGETS := $(addprefix check-generated-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_MATERIAL_TARGETS := \
@@ -115,7 +124,7 @@ LEAN_GENERATED_PATHS := \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
-	extract-proverif check-proverif \
+	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
 	check-proverif-extraction check-generated check-generated-lean \
 	$(PROVERIF_CHECK_TARGETS) $(PROVERIF_VERIFY_TARGETS) \
 	$(PROVERIF_GENERATED_TARGETS) extract-lean prepare-lean-dependencies check-lean verify-lean \
@@ -134,6 +143,7 @@ verify-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+	$(MAKE) check-proverif-fs
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 	$(MAKE) check-inventory
@@ -147,6 +157,7 @@ verify-proverif-in-shell:
 	$(MAKE) check-toolchain
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
+	$(MAKE) check-proverif-fs
 
 verify-proverif-live-material:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -233,6 +244,17 @@ check-proverif-passive-reachability check-proverif-quantum-capabilities: check-p
 check-proverif: check-proverif-transcript-fidelity
 	+$(MAKE) --no-print-directory -j$(words $(PROVERIF_SCENARIOS)) \
 		$(PROVERIF_CHECK_TARGETS)
+
+# The fs group is serial: -j1 here, and each scenario runs its queries one at a
+# time. It is never a prerequisite of check-proverif.
+check-proverif-fs: check-proverif-transcript-fidelity
+	+$(MAKE) --no-print-directory -j1 $(PROVERIF_FS_CHECK_TARGETS)
+
+check-proverif-fs-registration: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
+	python3 $(PROVERIF_DIR)/check-free-schedule.py --proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_FS_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)'
 
 check-proverif-aead-commitment: check-proverif-extraction
 	@set -o pipefail; \

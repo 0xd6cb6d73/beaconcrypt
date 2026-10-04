@@ -20842,3 +20842,1567 @@ fn registration_boundary_make_runners_are_checked() {
 		}
 	}
 }
+
+// Free-schedule (fs) ProVerif family. The fs group is pinned separately from the 35-scenario
+// parallel roster: its own scenario list, serial Make target, per-target timeout and address-space
+// cap, the Python result checker's loader and target manifest, the vocabulary copied from
+// environment.pvl, the Rust file:line fidelity annotations and the repository-wide declaration
+// allowlist.
+
+const FS_COMMON: &str = include_str!("../proofs/pro-verif/fs-common.pvl");
+const FS_REGISTRATION: &str = include_str!("../proofs/pro-verif/fs-registration.pvl");
+const FS_REGISTRATION_CONSUMED: &str =
+	include_str!("../proofs/pro-verif/fs-registration-consumed.pvl");
+const FS_CONTROL_NOCHECK: &str = include_str!("../proofs/pro-verif/fs-control-nocheck.pvl");
+const FS_REGISTRATION_BINDING: &str =
+	include_str!("../proofs/pro-verif/fs-registration-binding.pvl");
+const FS_CONTROL_UKS: &str = include_str!("../proofs/pro-verif/fs-control-uks.pvl");
+const FS_REGISTRATION_BOUNDS: [&str; 3] = [
+	include_str!("../proofs/pro-verif/fs-registration-k1.pvl"),
+	include_str!("../proofs/pro-verif/fs-registration-k2.pvl"),
+	include_str!("../proofs/pro-verif/fs-registration-k3.pvl"),
+];
+const FS_CHECKER: &str = include_str!("../proofs/pro-verif/check-free-schedule.py");
+const FS_CHECKER_TESTS: &str = include_str!("../proofs/pro-verif/test-free-schedule-checker.py");
+const DECLARATION_ALLOWLIST: &str = include_str!("../proofs/pro-verif/declaration-allowlist.tsv");
+const FORMAL_ANALYSIS: &str = include_str!("../../doc/formal-verification-analysis.md");
+
+const FS_SCENARIOS: [&str; 1] = ["fs-registration"];
+const FS_FIDELITY_PREFIX: &str = "(* @beaconcrypt-fs-fidelity ";
+
+/// Every Rust fidelity annotation of the fs files: (file, key, cited range). Within one file the
+/// annotations must appear in this order.
+const FS_FIDELITY: &[(&str, &str, &str)] = &[
+	(
+		"fs-registration-consumed.pvl",
+		"consumed.contains",
+		"beaconcrypt/src/server.rs:355-360",
+	),
+	(
+		"fs-common.pvl",
+		"common.kid_counter_start",
+		"beaconcrypt/src/server.rs:164-164",
+	),
+	(
+		"fs-common.pvl",
+		"common.kid_next",
+		"beaconcrypt-core/src/pqxdh.rs:838-844",
+	),
+	(
+		"fs-registration-binding.pvl",
+		"binding.root_input",
+		"beaconcrypt-core/src/pqxdh.rs:391-405",
+	),
+	(
+		"fs-registration-binding.pvl",
+		"binding.associated_data",
+		"beaconcrypt-core/src/pqxdh.rs:928-947",
+	),
+	(
+		"fs-registration.pvl",
+		"server.accept",
+		"beaconcrypt/src/server.rs:332-336",
+	),
+	(
+		"fs-registration.pvl",
+		"server.identity_tag",
+		"beaconcrypt/src/server.rs:337-342",
+	),
+	(
+		"fs-registration.pvl",
+		"server.signatures",
+		"beaconcrypt/src/server.rs:343-346",
+	),
+	(
+		"fs-registration.pvl",
+		"server.validate_init_kex",
+		"beaconcrypt/src/server.rs:347-353",
+	),
+	(
+		"fs-registration.pvl",
+		"core.validate_init_kex",
+		"beaconcrypt-core/src/pqxdh.rs:325-345",
+	),
+	(
+		"fs-registration.pvl",
+		"server.registration_id",
+		"beaconcrypt/src/server.rs:354-354",
+	),
+	(
+		"fs-registration.pvl",
+		"core.registration_id",
+		"beaconcrypt-core/src/pqxdh.rs:195-204",
+	),
+	(
+		"fs-registration.pvl",
+		"core.registration_id_replacement",
+		"beaconcrypt-core/src/pqxdh.rs:218-220",
+	),
+	(
+		"fs-registration.pvl",
+		"server.consumed_status",
+		"beaconcrypt/src/server.rs:355-360",
+	),
+	(
+		"fs-registration.pvl",
+		"core.replay_status",
+		"beaconcrypt-core/src/pqxdh.rs:245-251",
+	),
+	(
+		"fs-registration.pvl",
+		"server.fresh_ephemeral",
+		"beaconcrypt/src/server.rs:368-368",
+	),
+	(
+		"fs-registration.pvl",
+		"server.encapsulate",
+		"beaconcrypt/src/server.rs:373-373",
+	),
+	(
+		"fs-registration.pvl",
+		"server.identity_conversion",
+		"beaconcrypt/src/server.rs:374-375",
+	),
+	(
+		"fs-registration.pvl",
+		"server.dh",
+		"beaconcrypt/src/server.rs:376-394",
+	),
+	(
+		"fs-registration.pvl",
+		"server.accept_root_input",
+		"beaconcrypt/src/server.rs:395-411",
+	),
+	(
+		"fs-registration.pvl",
+		"server.root",
+		"beaconcrypt/src/server.rs:414-414",
+	),
+	(
+		"fs-registration.pvl",
+		"server.insert",
+		"beaconcrypt/src/server.rs:415-416",
+	),
+	(
+		"fs-registration.pvl",
+		"server.accept_return",
+		"beaconcrypt/src/server.rs:418-421",
+	),
+	(
+		"fs-registration.pvl",
+		"server.build",
+		"beaconcrypt/src/server.rs:424-428",
+	),
+	(
+		"fs-registration.pvl",
+		"server.next_key_id",
+		"beaconcrypt/src/server.rs:434-439",
+	),
+	(
+		"fs-registration.pvl",
+		"server.prepare_commit",
+		"beaconcrypt/src/server.rs:440-449",
+	),
+	(
+		"fs-registration.pvl",
+		"core.prepare_commit",
+		"beaconcrypt-core/src/pqxdh.rs:847-858",
+	),
+	(
+		"fs-registration.pvl",
+		"core.prepare_commit_ad",
+		"beaconcrypt-core/src/pqxdh.rs:877-880",
+	),
+	(
+		"fs-registration.pvl",
+		"server.ratchet_start",
+		"beaconcrypt/src/server.rs:456-457",
+	),
+	(
+		"fs-registration.pvl",
+		"server.associated_data",
+		"beaconcrypt/src/server.rs:458-458",
+	),
+	(
+		"fs-registration.pvl",
+		"server.payload",
+		"beaconcrypt/src/server.rs:459-462",
+	),
+	(
+		"fs-registration.pvl",
+		"server.binding",
+		"beaconcrypt/src/server.rs:463-470",
+	),
+	(
+		"fs-registration.pvl",
+		"server.seal",
+		"beaconcrypt/src/server.rs:471-479",
+	),
+	(
+		"fs-registration.pvl",
+		"server.commit",
+		"beaconcrypt/src/server.rs:489-497",
+	),
+	(
+		"fs-registration.pvl",
+		"server.build_return",
+		"beaconcrypt/src/server.rs:498-501",
+	),
+	(
+		"fs-registration.pvl",
+		"server.token_consumed",
+		"beaconcrypt/src/server.rs:113-118",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.new",
+		"beaconcrypt/src/beacon.rs:65-83",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.one_time",
+		"beaconcrypt/src/beacon.rs:301-305",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.start",
+		"beaconcrypt/src/beacon.rs:335-345",
+	),
+	(
+		"fs-registration.pvl",
+		"core.beacon_start",
+		"beaconcrypt-core/src/pqxdh.rs:304-321",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.sign",
+		"beaconcrypt/src/beacon.rs:349-357",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.bundle_return",
+		"beaconcrypt/src/beacon.rs:398-398",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.finish",
+		"beaconcrypt/src/beacon.rs:402-406",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.decode",
+		"beaconcrypt/src/beacon.rs:422-431",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.identity_conversion",
+		"beaconcrypt/src/beacon.rs:432-433",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.decapsulate",
+		"beaconcrypt/src/beacon.rs:434-434",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.dh",
+		"beaconcrypt/src/beacon.rs:435-449",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.prepare",
+		"beaconcrypt/src/beacon.rs:450-457",
+	),
+	(
+		"fs-registration.pvl",
+		"core.pin_check",
+		"beaconcrypt-core/src/pqxdh.rs:545-547",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.root",
+		"beaconcrypt/src/beacon.rs:458-458",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.ratchet_start",
+		"beaconcrypt/src/beacon.rs:459-460",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.associated_data",
+		"beaconcrypt/src/beacon.rs:461-461",
+	),
+	(
+		"fs-registration.pvl",
+		"core.finish_ad",
+		"beaconcrypt-core/src/pqxdh.rs:552-555",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.receive",
+		"beaconcrypt/src/beacon.rs:462-467",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.sequence_one",
+		"beaconcrypt/src/beacon.rs:468-470",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.binding",
+		"beaconcrypt/src/beacon.rs:476-484",
+	),
+	(
+		"fs-registration.pvl",
+		"core.binding",
+		"beaconcrypt-core/src/pqxdh.rs:616-628",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.pin_checks",
+		"beaconcrypt/src/beacon.rs:493-502",
+	),
+	(
+		"fs-registration.pvl",
+		"beacon.commit",
+		"beaconcrypt/src/beacon.rs:503-509",
+	),
+];
+
+/// The fs-registration result targets: (name, class, K_reg bound, query file, mutant library).
+const FS_REGISTRATION_TARGETS: [(&str, &str, &str, &str, &str); 15] = [
+	("A1", "security", "3", "fs-registration-a1.pv", ""),
+	("A2", "security", "3", "fs-registration-a2.pv", ""),
+	("R1", "security", "3", "fs-registration-r1.pv", ""),
+	("R1'", "security", "3", "fs-registration-r1prime.pv", ""),
+	(
+		"S3-server",
+		"security",
+		"3",
+		"fs-registration-s3-server.pv",
+		"",
+	),
+	(
+		"S3-beacon",
+		"security",
+		"3",
+		"fs-registration-s3-beacon.pv",
+		"",
+	),
+	("R2", "definitional", "2", "fs-registration-r2.pv", ""),
+	("R3", "witness", "2", "fs-registration-r3.pv", ""),
+	("R5", "witness", "2", "fs-registration-r5.pv", ""),
+	("W1", "witness", "1", "fs-registration-w1.pv", ""),
+	("W2", "witness", "2", "fs-registration-w2.pv", ""),
+	("W3", "witness", "1", "fs-registration-w3.pv", ""),
+	("R4", "limitation", "1", "fs-registration-r4.pv", ""),
+	(
+		"C-NOCHECK",
+		"control",
+		"2",
+		"fs-registration-r1.pv",
+		"consumed=NOCHECK",
+	),
+	(
+		"C-UKS",
+		"control",
+		"1",
+		"fs-registration-a1.pv",
+		"binding=UKS",
+	),
+];
+
+const FS_EVENTS: [&str; 11] = [
+	"event FsBeaconStarted(bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId).",
+	"event FsServerAccepted(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId, bitstring).",
+	"event FsServerReplayRejected(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).",
+	"event FsServerAcceptFailed(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).",
+	"event FsServerCommitted(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, key_id, bitstring, bitstring, bitstring).",
+	"event FsBeaconEstablished(bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, key_id, bitstring, bitstring, bitstring).",
+	"event FsBeaconFinishOpenedLater(bitstring, bitstring, nat).",
+	"event FsSent(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).",
+	"event FsReceived(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).",
+	"event FsFarAccepted(direction, bitstring, bitstring, key_id, bitstring, nat).",
+	"event FsReceiveRejected(direction, bitstring, bitstring, key_id, bitstring, nat).",
+];
+
+/// Declarations copied verbatim from environment.pvl into the self-contained fs-common.pvl.
+const FS_COPIED_DECLARATIONS: [&str; 5] = [
+	"free SERVER_IDENTITY_SECRET:",
+	"free SERVER_KEY_ID:",
+	"fun signed_init_kex(",
+	"fun registration_payload(",
+	"fun kex_response(",
+];
+
+struct FsFiles {
+	common: String,
+	registration: String,
+	consumed: String,
+	nocheck: String,
+	binding: String,
+	uks: String,
+	bounds: [String; 3],
+}
+
+impl FsFiles {
+	fn production() -> Self {
+		Self {
+			common: FS_COMMON.to_owned(),
+			registration: FS_REGISTRATION.to_owned(),
+			consumed: FS_REGISTRATION_CONSUMED.to_owned(),
+			nocheck: FS_CONTROL_NOCHECK.to_owned(),
+			binding: FS_REGISTRATION_BINDING.to_owned(),
+			uks: FS_CONTROL_UKS.to_owned(),
+			bounds: FS_REGISTRATION_BOUNDS.map(str::to_owned),
+		}
+	}
+
+	fn annotated(&self) -> [(&'static str, &str); 4] {
+		[
+			("fs-common.pvl", &self.common),
+			("fs-registration-consumed.pvl", &self.consumed),
+			("fs-registration-binding.pvl", &self.binding),
+			("fs-registration.pvl", &self.registration),
+		]
+	}
+
+	fn all(&self) -> Vec<(&'static str, &str)> {
+		let mut files = self.annotated().to_vec();
+		files.push(("fs-control-nocheck.pvl", &self.nocheck));
+		files.push(("fs-control-uks.pvl", &self.uks));
+		for (index, bound) in self.bounds.iter().enumerate() {
+			files.push((
+				[
+					"fs-registration-k1.pvl",
+					"fs-registration-k2.pvl",
+					"fs-registration-k3.pvl",
+				][index],
+				bound,
+			));
+		}
+		files
+	}
+}
+
+fn normalized(source: &str) -> String {
+	source.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+fn makefile_list(makefile: &str, start: &str, end: &str) -> Result<Vec<String>, String> {
+	let section = section_between(makefile, start, end, start)?;
+	Ok(section
+		.lines()
+		.skip(1)
+		.map(|line| line.trim().trim_end_matches('\\').trim())
+		.filter(|line| !line.is_empty())
+		.map(str::to_owned)
+		.collect())
+}
+
+fn make_recipe(makefile: &str, rule: &str) -> Result<Vec<String>, String> {
+	let lines = makefile.lines().collect::<Vec<_>>();
+	let positions = lines
+		.iter()
+		.enumerate()
+		.filter(|(_, line)| **line == rule)
+		.map(|(index, _)| index)
+		.collect::<Vec<_>>();
+	let &[position] = positions.as_slice() else {
+		return Err(format!("expected exactly one Make rule line: {rule}"));
+	};
+	Ok(lines[position + 1..]
+		.iter()
+		.take_while(|line| line.starts_with('\t'))
+		.map(|line| line.trim().to_owned())
+		.collect())
+}
+
+fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
+	require_once(
+		makefile,
+		"\nPROVERIF_FS_TIMEOUT ?= 1800\n",
+		"fs per-target timeout",
+	)?;
+	require_once(
+		makefile,
+		"\nPROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760\n",
+		"fs per-run address-space cap",
+	)?;
+	let fs_scenarios = makefile_list(
+		makefile,
+		"PROVERIF_FS_SCENARIOS :=",
+		"\nPROVERIF_FS_CHECK_TARGETS :=",
+	)?;
+	if fs_scenarios != FS_SCENARIOS {
+		return Err(format!("fs scenario roster changed: {fs_scenarios:?}"));
+	}
+	require_once(
+		makefile,
+		"\nPROVERIF_FS_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_FS_SCENARIOS))\n",
+		"fs check-target list",
+	)?;
+	let roster = scenario_names(makefile)?;
+	if roster
+		.iter()
+		.any(|scenario| scenario.starts_with("fs-") || FS_SCENARIOS.contains(&scenario.as_str()))
+	{
+		return Err("an fs scenario joined the parallel PROVERIF_SCENARIOS roster".to_owned());
+	}
+	if make_recipe(
+		makefile,
+		"check-proverif-fs: check-proverif-transcript-fidelity",
+	)? != ["+$(MAKE) --no-print-directory -j1 $(PROVERIF_FS_CHECK_TARGETS)"]
+	{
+		return Err("serial fs group recipe changed".to_owned());
+	}
+	let registration = make_recipe(
+		makefile,
+		"check-proverif-fs-registration: check-proverif-extraction check-proverif-transcript-fidelity",
+	)?;
+	if compact(&registration.join("\n"))
+		!= compact(
+			"python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
+			python3 $(PROVERIF_DIR)/check-free-schedule.py --proverif '$(PROVERIF)' \\
+			--timeout '$(PROVERIF_FS_TIMEOUT)' \\
+			--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)'",
+		) {
+		return Err("fs-registration exact Make runner and self-test wiring changed".to_owned());
+	}
+	let invoked = |steps: &[&str]| {
+		steps
+			.iter()
+			.map(|step| format!("$(MAKE) {step}"))
+			.collect::<Vec<_>>()
+	};
+	if make_recipe(makefile, "verify-in-shell:")?
+		!= invoked(&[
+			"check-toolchain",
+			"extract-proverif",
+			"check-proverif",
+			"check-proverif-fs",
+			"extract-lean",
+			"check-lean",
+			"check-inventory",
+		]) {
+		return Err("verify-in-shell must run check-proverif-fs after check-proverif".to_owned());
+	}
+	if make_recipe(makefile, "verify-proverif-in-shell:")?
+		!= invoked(&[
+			"check-toolchain",
+			"extract-proverif",
+			"check-proverif",
+			"check-proverif-fs",
+		]) {
+		return Err(
+			"verify-proverif-in-shell must run check-proverif-fs after check-proverif".to_owned(),
+		);
+	}
+	if makefile
+		.lines()
+		.any(|line| line.starts_with("check-proverif:") && line.contains("fs"))
+	{
+		return Err("the fs group must never be a prerequisite of check-proverif".to_owned());
+	}
+	if count(makefile, "check-proverif-fs") != 5 {
+		return Err("unexpected reference to the fs group in the Makefile".to_owned());
+	}
+	require_once(
+		makefile,
+		"\textract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \\\n",
+		"fs phony targets",
+	)
+}
+
+fn fs_rust_source(path: &str) -> Option<&'static str> {
+	match path {
+		"beaconcrypt/src/server.rs" => Some(ADAPTER_SERVER),
+		"beaconcrypt/src/beacon.rs" => Some(ADAPTER_BEACON),
+		"beaconcrypt-core/src/pqxdh.rs" => Some(CORE_PQXDH),
+		_ => None,
+	}
+}
+
+fn parse_fs_fidelity(source: &str) -> Result<Vec<(String, String, String)>, String> {
+	let mut annotations = Vec::new();
+	for line in source.lines() {
+		if !line.contains("@beaconcrypt-fs-fidelity") {
+			continue;
+		}
+		let payload = line
+			.trim()
+			.strip_prefix(FS_FIDELITY_PREFIX)
+			.and_then(|line| line.strip_suffix(" *)"))
+			.ok_or_else(|| format!("malformed fs fidelity annotation: {line}"))?;
+		let (key, rest) = payload
+			.strip_prefix("key=")
+			.and_then(|rest| rest.split_once(" src="))
+			.ok_or_else(|| format!("fs fidelity annotation lacks key or src: {payload}"))?;
+		let (src, anchor) = rest
+			.split_once(" anchor=")
+			.ok_or_else(|| format!("fs fidelity annotation lacks an anchor: {payload}"))?;
+		annotations.push((key.to_owned(), src.to_owned(), anchor.to_owned()));
+	}
+	Ok(annotations)
+}
+
+fn check_fs_citation(src: &str, anchor: &str) -> Result<(), String> {
+	let (path, range) = src
+		.split_once(':')
+		.ok_or_else(|| format!("fs citation lacks a line range: {src}"))?;
+	let source =
+		fs_rust_source(path).ok_or_else(|| format!("fs citation names an unknown file: {src}"))?;
+	let (start, end) = range
+		.split_once('-')
+		.and_then(|(start, end)| Some((start.parse::<usize>().ok()?, end.parse::<usize>().ok()?)))
+		.ok_or_else(|| format!("malformed fs citation range: {src}"))?;
+	let lines = source.lines().collect::<Vec<_>>();
+	if start == 0 || end < start || end > lines.len() || end - start > 40 {
+		return Err(format!("fs citation range is invalid: {src}"));
+	}
+	if anchor.len() < 8 || !lines[start - 1].trim_start().starts_with(anchor) {
+		return Err(format!(
+			"fs citation {src} no longer starts with {anchor:?}: found {:?}",
+			lines[start - 1].trim()
+		));
+	}
+	Ok(())
+}
+
+fn validate_fs_fidelity(files: &FsFiles) -> Result<(), String> {
+	for (file, source) in files.all() {
+		let parsed = parse_fs_fidelity(source)?;
+		let expected = FS_FIDELITY
+			.iter()
+			.filter(|(name, _, _)| *name == file)
+			.map(|(_, key, src)| ((*key).to_owned(), (*src).to_owned()))
+			.collect::<Vec<_>>();
+		let actual = parsed
+			.iter()
+			.map(|(key, src, _)| (key.clone(), src.clone()))
+			.collect::<Vec<_>>();
+		if actual != expected {
+			return Err(format!(
+				"fs fidelity annotations of {file} changed: expected {expected:?}, found {actual:?}"
+			));
+		}
+		for (_, src, anchor) in parsed {
+			check_fs_citation(&src, &anchor)?;
+		}
+	}
+	Ok(())
+}
+
+fn declaration_text<'a>(source: &'a str, marker: &str, label: &str) -> Result<&'a str, String> {
+	if count(source, marker) != 1 {
+		return Err(format!(
+			"{label}: expected one declaration starting {marker}"
+		));
+	}
+	let start = source.find(marker).unwrap();
+	let end = source[start..]
+		.find('.')
+		.ok_or_else(|| format!("{label}: unterminated declaration {marker}"))?;
+	Ok(&source[start..=start + end])
+}
+
+fn fs_words(source: &str) -> Vec<(usize, &str)> {
+	let mut words = Vec::new();
+	let mut start = None;
+	for (index, character) in source.char_indices() {
+		let word = character.is_ascii_alphanumeric() || character == '_' || character == '\'';
+		match (word, start) {
+			(true, None) => start = Some(index),
+			(false, Some(begin)) => {
+				words.push((begin, &source[begin..index]));
+				start = None;
+			}
+			_ => {}
+		}
+	}
+	if let Some(begin) = start {
+		words.push((begin, &source[begin..]));
+	}
+	words
+}
+
+fn validate_fs_model(files: &FsFiles) -> Result<(), String> {
+	let common = uncommented_pv(&files.common)?;
+	let environment = uncommented_pv(ENVIRONMENT_MODEL)?;
+	for marker in FS_COPIED_DECLARATIONS {
+		let copy = declaration_text(&common, marker, "fs-common copy")?;
+		let source = declaration_text(&environment, marker, "environment source")?;
+		if compact(copy) != compact(source) {
+			return Err(format!(
+				"fs-common copy of {marker} differs from environment.pvl"
+			));
+		}
+	}
+	for (wanted, label) in [
+		("fun fs_kid(nat): key_id [data].", "fs key-ID bridge"),
+		("fun fs_seq(nat): sequence [data].", "fs sequence bridge"),
+		(
+			"fun fs_no_rid(): beaconcrypt_core__pqxdh__t_RegistrationId [data].",
+			"fs empty consumed slot",
+		),
+		("fun fs_build(): bitstring [data].", "fs build control"),
+		(
+			"nounif y: bitstring; attacker(x25519_public(y)).",
+			"fs selection heuristic nx",
+		),
+	] {
+		require_once(&normalized(&common), wanted, label)?;
+	}
+	let events = normalized(&common)
+		.split(". ")
+		.filter(|declaration| declaration.starts_with("event "))
+		.map(|declaration| format!("{}.", declaration.trim_end_matches('.')))
+		.map(|declaration| declaration.replace("( ", "(").replace(" )", ")"))
+		.collect::<Vec<_>>();
+	if events != FS_EVENTS {
+		return Err(format!("fs event vocabulary changed: {events:?}"));
+	}
+	for (file, source) in files.all() {
+		if !source.starts_with("(* SPDX-License-Identifier: 0BSD *)\n") {
+			return Err(format!("{file} lacks its SPDX header"));
+		}
+		let text = uncommented_pv(source)?;
+		for (_, word) in fs_words(&text) {
+			if [
+				"table",
+				"insert",
+				"get",
+				"honest_origin",
+				"malicious_origin",
+				"MaliciousServer",
+				"MaliciousBeacon",
+				"phase",
+				"sync",
+			]
+			.contains(&word)
+			{
+				return Err(format!(
+					"{file} uses {word}; honesty belongs only in queries"
+				));
+			}
+		}
+	}
+	let registration = normalized(&uncommented_pv(&files.registration)?);
+	require_ordered_once(
+		&registration,
+		&[
+			"in(c, bundle: bitstring) [precise];",
+			"let init = beaconcrypt_core__pqxdh__VerifiedInitKex( identity, prekey, one_time, pq ) in",
+			"if fs_reg_consumed(registration_id, slot_1, slot_2) then",
+			"event FsServerReplayRejected(obj, server_identity, identity, registration_id);",
+			"new ephemeral_secret: bitstring;",
+			"new kem_coins: bitstring;",
+			"x25519_server_dh(ephemeral_secret, x25519_public_from_ed(identity)),",
+			"fs_root_dh2(dh2, dh3), dh3, dh4, mlkem_shared_secret(pq, kem_coins)",
+			"let next_slot_1 = if slot_1 = fs_no_rid() then registration_id else slot_1 in",
+			"event FsServerAccepted( obj, server_identity, identity, init, registration_id, root );",
+			"in(c, control: bitstring) [precise];",
+			"let assigned_key_id = fs_kid(kid_next) in",
+			"let associated_data = fs_associated_data(server_identity, identity) in",
+			"new payload: bitstring;",
+			"fs_seq(1), SERVER_KEY_ID, registration_payload(binding, payload)",
+			"event FsServerCommitted( obj, server_identity, identity, init, assigned_key_id, root, associated_data, payload );",
+			"Next(obj, kid_next + 1, next_slot_1, next_slot_2)",
+			"Next(obj, kid_next, next_slot_1, next_slot_2)",
+			"event FsServerAcceptFailed(obj, server_identity, identity, registration_id);",
+			"let FsBeacon() =",
+			"let init = beaconcrypt_core__pqxdh__VerifiedInitKex( beacon_identity, beacon_prekey, beacon_one_time, beacon_pq ) in",
+			"event FsBeaconStarted(server_identity, beacon_identity, init, registration_id);",
+			"in(c, response: bitstring) [precise];",
+			"let kem_secret = mlkem_decapsulate(kem_ciphertext, beacon_pq_secret) in",
+			"if response_server_identity = server_identity then",
+			"fs_root_dh2(dh2, dh3), dh3, dh4, kem_secret",
+			"let associated_data = fs_associated_data(server_identity, beacon_identity) in",
+			"if frame_sender = SERVER_KEY_ID then",
+			"if frame_sequence = fs_seq(1) then",
+			"if binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding( key_id_encoding(assigned_key_id) ) then",
+			"event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ).",
+		],
+		"fs-registration Rust-ordered process",
+	)?;
+	for (file, source, wanted) in [
+		(
+			"fs-registration-consumed.pvl",
+			&files.consumed,
+			"registration_id = slot_1 || registration_id = slot_2.",
+		),
+		("fs-control-nocheck.pvl", &files.nocheck, "false."),
+	] {
+		let text = normalized(&uncommented_pv(source)?);
+		let expected = format!(
+			"letfun fs_reg_consumed( registration_id: beaconcrypt_core__pqxdh__t_RegistrationId, slot_1: beaconcrypt_core__pqxdh__t_RegistrationId, slot_2: beaconcrypt_core__pqxdh__t_RegistrationId ) = {wanted}"
+		);
+		if text != expected {
+			return Err(format!("{file} consumed-set test changed: {text}"));
+		}
+	}
+	for (file, source, expected) in [
+		(
+			"fs-registration-binding.pvl",
+			&files.binding,
+			"letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh2. letfun fs_associated_data(server_identity: bitstring, beacon_identity: bitstring) = beaconcrypt_core__pqxdh__build_associated_data(server_identity, beacon_identity).",
+		),
+		(
+			"fs-control-uks.pvl",
+			&files.uks,
+			"fun fs_uks_ad(bitstring): bitstring. letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh3. letfun fs_associated_data(server_identity: bitstring, beacon_identity: bitstring) = fs_uks_ad(server_identity).",
+		),
+	] {
+		let text = normalized(&uncommented_pv(source)?);
+		if text != expected {
+			return Err(format!("{file} session binding changed: {text}"));
+		}
+	}
+	let main = "let FsRegistrationMain() = out(c, ed_public(SERVER_IDENTITY_SECRET)); ( (!(new obj: bitstring; FsServerReg1(obj, 1, fs_no_rid(), fs_no_rid()))) | (!FsBeacon()) ).";
+	for (index, source) in files.bounds.iter().enumerate() {
+		let bound = index + 1;
+		let mut expansions = vec![format!(
+			"expand FS_REG_STEP(FsServerReg{bound}, FsServerRegStop)."
+		)];
+		for step in (1..bound).rev() {
+			expansions.push(format!(
+				"expand FS_REG_STEP(FsServerReg{step}, FsServerReg{}).",
+				step + 1
+			));
+		}
+		let expected = format!("{} {main}", expansions.join(" "));
+		if normalized(&uncommented_pv(source)?) != expected {
+			return Err(format!("fs-registration bound K_reg = {bound} changed"));
+		}
+	}
+	Ok(())
+}
+
+fn validate_fs_checker(checker: &str, tests: &str) -> Result<(), String> {
+	for (wanted, label) in [
+		(
+			"COMMON_LOADER = (\"production-transcript-interface.pvl\",\"crypto.pvl\",\"extraction/lib.pvl\",\"fs-common.pvl\",)",
+			"fs common loader",
+		),
+		(
+			"CLASSES = (\"security\", \"definitional\", \"witness\", \"control\", \"limitation\")",
+			"fs result classes",
+		),
+		(
+			"TRUE_CLASSES = (\"security\", \"definitional\")",
+			"fs TRUE classes",
+		),
+		(
+			"REGISTRATION_SECURITY_BOUND = 3",
+			"fs-registration security bound",
+		),
+		("\"cannot be proved\",", "inconclusive-result rejection"),
+		("\"I could not confirm\",", "unconfirmed-trace rejection"),
+		(
+			"REGISTRATION_PROCESS = \"fs-registration.pvl\"",
+			"fs-registration process library",
+		),
+		(
+			"f\"fs-registration-k{self.bound}.pvl\",",
+			"fs-registration bound library",
+		),
+	] {
+		// The loader tuple is compared without whitespace; the other lines are exact.
+		if label == "fs common loader" {
+			require_once(&compact(checker), &compact(wanted), label)?;
+		} else {
+			require_once(checker, wanted, label)?;
+		}
+	}
+	forbid(checker, "environment.pvl", "fs loader of environment.pvl")?;
+	let section = section_between(checker, "TARGETS = (", "\nFORBIDDEN = (", "fs targets")?;
+	let mut targets = Vec::new();
+	let mut cursor = 0;
+	while let Some(relative) = section[cursor..].find("registration(") {
+		let open = cursor + relative + "registration".len();
+		let (arguments, end) = parse_call(section, open)?;
+		let arguments = arguments
+			.iter()
+			.map(|argument| argument.trim().to_owned())
+			.collect::<Vec<_>>();
+		if arguments.len() < 5 {
+			return Err(format!("malformed fs target: {arguments:?}"));
+		}
+		let mutant = arguments[5..]
+			.iter()
+			.filter(|argument| !argument.is_empty())
+			.cloned()
+			.collect::<Vec<_>>()
+			.join(",");
+		targets.push((
+			arguments[0].trim_matches('"').to_owned(),
+			arguments[1].trim_matches('"').to_owned(),
+			arguments[2].clone(),
+			arguments[3].trim_matches('"').to_owned(),
+			mutant,
+		));
+		cursor = end;
+	}
+	let expected = FS_REGISTRATION_TARGETS
+		.iter()
+		.map(|(name, class, bound, query, mutant)| {
+			(
+				(*name).to_owned(),
+				(*class).to_owned(),
+				(*bound).to_owned(),
+				(*query).to_owned(),
+				(*mutant).to_owned(),
+			)
+		})
+		.collect::<Vec<_>>();
+	if targets != expected {
+		return Err(format!(
+			"fs-registration target manifest changed: {targets:?}"
+		));
+	}
+	require(
+		&compact(tests),
+		&compact(
+			"{\"security\": 6, \"definitional\": 1, \"witness\": 5, \"control\": 2, \"limitation\": 1,}",
+		),
+		"fs checker class-count regression",
+	)
+}
+
+fn fs_query_files_on_disk() -> Vec<String> {
+	let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("proofs/pro-verif");
+	let mut files = std::fs::read_dir(directory)
+		.unwrap()
+		.map(|entry| entry.unwrap().file_name().into_string().unwrap())
+		.filter(|name| name.starts_with("fs-") && name.ends_with(".pv"))
+		.collect::<Vec<_>>();
+	files.sort();
+	files
+}
+
+fn proverif_source_files() -> Vec<(String, String)> {
+	let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+	let mut pending = vec![base.join("proofs/pro-verif")];
+	let mut files = Vec::new();
+	while let Some(directory) = pending.pop() {
+		for entry in std::fs::read_dir(&directory).unwrap() {
+			let path = entry.unwrap().path();
+			if path.is_dir() {
+				pending.push(path);
+				continue;
+			}
+			if !matches!(
+				path.extension().and_then(|extension| extension.to_str()),
+				Some("pv" | "pvl")
+			) {
+				continue;
+			}
+			let relative = path
+				.strip_prefix(base)
+				.unwrap()
+				.to_str()
+				.unwrap()
+				.replace('\\', "/");
+			files.push((relative, std::fs::read_to_string(&path).unwrap()));
+		}
+	}
+	files.sort();
+	files
+}
+
+fn markdown_slugs(markdown: &str) -> std::collections::BTreeSet<String> {
+	markdown
+		.lines()
+		.filter(|line| line.starts_with('#'))
+		.map(|line| {
+			line.trim_start_matches('#')
+				.trim()
+				.to_lowercase()
+				.chars()
+				.filter_map(|character| match character {
+					' ' => Some('-'),
+					'-' | '_' => Some(character),
+					_ if character.is_alphanumeric() => Some(character),
+					_ => None,
+				})
+				.collect()
+		})
+		.collect()
+}
+
+const FORBIDDEN_DECLARATIONS: [&str; 4] = ["axiom", "restriction", "elimtrue", "clauses"];
+const ALLOWLISTED_DECLARATIONS: [&str; 7] = [
+	"set", "param", "nounif", "select", "noselect", "lemma", "not",
+];
+
+type DeclarationCounts = std::collections::BTreeMap<(String, String, String), usize>;
+
+fn scan_declarations(
+	path: &str,
+	source: &str,
+	found: &mut DeclarationCounts,
+) -> Result<(), String> {
+	let text = uncommented_pv(source)?;
+	for (start, word) in fs_words(&text) {
+		if FORBIDDEN_DECLARATIONS.contains(&word) {
+			return Err(format!(
+				"{path} contains the forbidden ProVerif declaration {word}"
+			));
+		}
+		if !ALLOWLISTED_DECLARATIONS.contains(&word) {
+			continue;
+		}
+		let before = text[..start].trim_end();
+		if !(before.is_empty() || before.ends_with(['.', '{', '}'])) {
+			continue;
+		}
+		let rest = &text[start..];
+		let end = rest
+			.char_indices()
+			.find(|(index, character)| {
+				*character == '.'
+					&& rest[index + 1..]
+						.chars()
+						.next()
+						.is_none_or(char::is_whitespace)
+			})
+			.map(|(index, _)| index)
+			.ok_or_else(|| format!("{path}: unterminated {word} declaration"))?;
+		*found
+			.entry((path.to_owned(), word.to_owned(), normalized(&rest[..=end])))
+			.or_default() += 1;
+	}
+	let precise = compact(&text).matches("[precise]").count();
+	if precise != 0 {
+		*found
+			.entry((
+				path.to_owned(),
+				"precise".to_owned(),
+				"[precise]".to_owned(),
+			))
+			.or_default() += precise;
+	}
+	Ok(())
+}
+
+fn validate_declarations(
+	files: &[(String, String)],
+	allowlist: &str,
+	documentation: &str,
+) -> Result<(), String> {
+	let mut found = DeclarationCounts::new();
+	for (path, source) in files {
+		scan_declarations(path, source, &mut found)?;
+	}
+	let slugs = markdown_slugs(documentation);
+	let mut allowed = DeclarationCounts::new();
+	for line in allowlist.lines() {
+		if line.is_empty() || line.starts_with('#') {
+			continue;
+		}
+		let fields = line.split('\t').collect::<Vec<_>>();
+		let &[path, kind, occurrences, declaration, anchor] = fields.as_slice() else {
+			return Err(format!("malformed declaration allowlist line: {line}"));
+		};
+		let occurrences = occurrences
+			.parse::<usize>()
+			.ok()
+			.filter(|occurrences| *occurrences > 0)
+			.ok_or_else(|| format!("invalid allowlist count: {line}"))?;
+		if !(ALLOWLISTED_DECLARATIONS.contains(&kind) || kind == "precise") {
+			return Err(format!("unknown allowlist kind: {line}"));
+		}
+		let slug = anchor
+			.strip_prefix("doc/formal-verification-analysis.md#")
+			.ok_or_else(|| format!("allowlist entry lacks a documentation anchor: {line}"))?;
+		if !slugs.contains(slug) {
+			return Err(format!(
+				"allowlist documentation anchor does not exist: {anchor}"
+			));
+		}
+		if allowed
+			.insert(
+				(path.to_owned(), kind.to_owned(), declaration.to_owned()),
+				occurrences,
+			)
+			.is_some()
+		{
+			return Err(format!("duplicate allowlist entry: {line}"));
+		}
+	}
+	for (key, occurrences) in &found {
+		match allowed.get(key) {
+			Some(expected) if expected == occurrences => {}
+			Some(expected) => {
+				return Err(format!(
+					"declaration {key:?} occurs {occurrences} times but is allowlisted {expected} times"
+				));
+			}
+			None => {
+				return Err(format!(
+					"declaration is not on the reviewed allowlist: {key:?}"
+				));
+			}
+		}
+	}
+	if let Some(stale) = allowed.keys().find(|key| !found.contains_key(*key)) {
+		return Err(format!("stale declaration allowlist entry: {stale:?}"));
+	}
+	Ok(())
+}
+
+#[test]
+fn free_schedule_roster_and_serial_wiring_are_pinned() {
+	validate_free_schedule_makefile(CORE_MAKEFILE).unwrap();
+	// The 35-scenario parallel roster is checked on its own and is unaffected by the fs group.
+	validate_makefile(CORE_MAKEFILE).unwrap();
+	let mut checked = 0;
+	for (name, from, to, diagnostic) in [
+		(
+			"fs scenario added to the parallel roster",
+			"\tfailed-receive-compromise-reachability\n",
+			"\tfailed-receive-compromise-reachability \\\n\tfs-registration\n",
+			"joined the parallel PROVERIF_SCENARIOS roster",
+		),
+		(
+			"fs group made a prerequisite of check-proverif",
+			"check-proverif: check-proverif-live-material\n",
+			"check-proverif: check-proverif-live-material check-proverif-fs\n",
+			"never be a prerequisite of check-proverif",
+		),
+		(
+			"fs group run in parallel",
+			"-j1 $(PROVERIF_FS_CHECK_TARGETS)",
+			"-j$(words $(PROVERIF_FS_SCENARIOS)) $(PROVERIF_FS_CHECK_TARGETS)",
+			"serial fs group recipe changed",
+		),
+		(
+			"fs group dropped from verify-in-shell",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) extract-lean\n",
+			"verify-in-shell must run check-proverif-fs",
+		),
+		(
+			"fs group dropped from verify-proverif-in-shell",
+			"\t$(MAKE) check-proverif-fs\n\nverify-proverif-live-material:",
+			"\nverify-proverif-live-material:",
+			"verify-proverif-in-shell must run check-proverif-fs",
+		),
+		(
+			"fs timeout lowered to the roster timeout",
+			"PROVERIF_FS_TIMEOUT ?= 1800",
+			"PROVERIF_FS_TIMEOUT ?= 240",
+			"fs per-target timeout",
+		),
+		(
+			"fs address-space cap removed",
+			"PROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760",
+			"PROVERIF_FS_ADDRESS_SPACE_KIB ?= 0",
+			"fs per-run address-space cap",
+		),
+		(
+			"fs scenario removed",
+			"PROVERIF_FS_SCENARIOS := \\\n\tfs-registration\n",
+			"PROVERIF_FS_SCENARIOS := \\\n\tfs-other\n",
+			"fs scenario roster changed",
+		),
+		(
+			"fs checker self-test skipped",
+			"\tpython3 $(PROVERIF_DIR)/test-free-schedule-checker.py\n",
+			"",
+			"fs-registration exact Make runner",
+		),
+		(
+			"fs checker uses the roster timeout",
+			"--timeout '$(PROVERIF_FS_TIMEOUT)'",
+			"--timeout '$(PROVERIF_TIMEOUT)'",
+			"fs-registration exact Make runner",
+		),
+	] {
+		let mut changed = CORE_MAKEFILE.to_owned();
+		replace_once(&mut changed, from, to);
+		let error = validate_free_schedule_makefile(&changed)
+			.expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+		checked += 1;
+	}
+	assert_eq!(checked, 10);
+}
+
+#[test]
+fn free_schedule_rust_fidelity_annotations_are_exact() {
+	let files = FsFiles::production();
+	validate_fs_fidelity(&files).unwrap();
+	assert_eq!(FS_FIDELITY.len(), 59);
+	for (name, mutate, diagnostic) in [
+		(
+			"cited line moved",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"src=beaconcrypt/src/server.rs:415-416",
+					"src=beaconcrypt/src/server.rs:414-416",
+				)
+			}) as Box<dyn Fn(&mut FsFiles)>,
+			"fs fidelity annotations of fs-registration.pvl changed",
+		),
+		(
+			"anchor no longer on the cited line",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"anchor=let inserted = self.consumed_registrations.insert(registration_id);",
+					"anchor=let inserted = self.consumed_registrations.remove(registration_id);",
+				)
+			}),
+			"no longer starts with",
+		),
+		(
+			"annotation removed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"(* @beaconcrypt-fs-fidelity key=beacon.sequence_one",
+					"(* beacon.sequence_one",
+				)
+			}),
+			"fs fidelity annotations of fs-registration.pvl changed",
+		),
+		(
+			"annotation added to a control",
+			Box::new(|files: &mut FsFiles| {
+				files.nocheck.push_str("(* @beaconcrypt-fs-fidelity key=x src=beaconcrypt/src/server.rs:355-360 anchor=let registration_status *)\n");
+			}),
+			"fs fidelity annotations of fs-control-nocheck.pvl changed",
+		),
+		(
+			"malformed annotation",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.common,
+					"key=common.kid_next src=",
+					"key=common.kid_next source=",
+				)
+			}),
+			"lacks key or src",
+		),
+	] {
+		let mut changed = FsFiles::production();
+		mutate(&mut changed);
+		let error =
+			validate_fs_fidelity(&changed).expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+	}
+	assert_eq!(
+		check_fs_citation("beaconcrypt/src/server.rs:415-416", "let inserted"),
+		Ok(())
+	);
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:416-415", "let inserted").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:1-415", "let inserted").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/other.rs:415-416", "let inserted").is_err());
+	assert!(check_fs_citation("beaconcrypt/src/server.rs:415-416", "let").is_err());
+}
+
+#[test]
+fn free_schedule_vocabulary_and_registration_model_are_pinned() {
+	validate_fs_model(&FsFiles::production()).unwrap();
+	for (name, mutate, diagnostic) in [
+		(
+			"copied declaration drifts from environment.pvl",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.common,
+					"free SERVER_KEY_ID: key_id.",
+					"free SERVER_KEY_ID: key_id [private].",
+				)
+			}) as Box<dyn Fn(&mut FsFiles)>,
+			"differs from environment.pvl",
+		),
+		(
+			"event signature changed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.common,
+					"event FsBeaconFinishOpenedLater(bitstring, bitstring, nat).",
+					"event FsBeaconFinishOpenedLater(bitstring, nat).",
+				)
+			}),
+			"fs event vocabulary changed",
+		),
+		(
+			"origin table added",
+			Box::new(|files: &mut FsFiles| {
+				files.common.push_str("table honest_origin(bitstring).\n")
+			}),
+			"honesty belongs only in queries",
+		),
+		(
+			"consumed check moved after the ephemeral",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/server.rs:368-368 anchor=let ephemeral = crypto_kx::KeyPair::generate().ok()?; *)\n      new ephemeral_secret: bitstring;\n",
+					"    new ephemeral_secret: bitstring;\n    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/server.rs:368-368 anchor=let ephemeral = crypto_kx::KeyPair::generate().ok()?; *)\n",
+				)
+			}),
+			"fs-registration Rust-ordered process changed",
+		),
+		(
+			"init built from raw signed blobs",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"      identity,\n      prekey,\n      one_time,\n      pq\n    ) in",
+					"      identity,\n      signed_prekey,\n      signed_one_time,\n      signed_pq\n    ) in",
+				)
+			}),
+			"fs-registration Rust-ordered process changed",
+		),
+		(
+			"sequence-one gate removed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.registration,
+					"  if frame_sequence = fs_seq(1) then\n",
+					"",
+				)
+			}),
+			"fs-registration Rust-ordered process changed",
+		),
+		(
+			"real consumed test weakened",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.consumed,
+					"registration_id = slot_1 || registration_id = slot_2.",
+					"registration_id = slot_1.",
+				)
+			}),
+			"fs-registration-consumed.pvl consumed-set test changed",
+		),
+		(
+			"real binding drops the Beacon identity",
+			Box::new(|files: &mut FsFiles| replace_once(&mut files.binding, "= dh2.", "= dh3.")),
+			"fs-registration-binding.pvl session binding changed",
+		),
+		(
+			"bound file loses a step",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.bounds[2],
+					"expand FS_REG_STEP(FsServerReg3, FsServerRegStop).\nexpand FS_REG_STEP(FsServerReg2, FsServerReg3).\n",
+					"expand FS_REG_STEP(FsServerReg2, FsServerRegStop).\n",
+				)
+			}),
+			"fs-registration bound K_reg = 3 changed",
+		),
+	] {
+		let mut changed = FsFiles::production();
+		mutate(&mut changed);
+		let error = validate_fs_model(&changed).expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+	}
+}
+
+#[test]
+fn free_schedule_checker_loader_and_targets_are_pinned() {
+	validate_fs_checker(FS_CHECKER, FS_CHECKER_TESTS).unwrap();
+	let mut queries = FS_REGISTRATION_TARGETS
+		.iter()
+		.map(|(_, _, _, query, _)| (*query).to_owned())
+		.collect::<Vec<_>>();
+	queries.sort();
+	queries.dedup();
+	assert_eq!(fs_query_files_on_disk(), queries);
+	for (name, from, to) in [
+		(
+			"security bound lowered",
+			"REGISTRATION_SECURITY_BOUND = 3",
+			"REGISTRATION_SECURITY_BOUND = 2",
+		),
+		("inconclusive accepted", "    \"cannot be proved\",\n", ""),
+		(
+			"security target weakened to K_reg = 2",
+			"registration(\"A1\", \"security\", 3,",
+			"registration(\"A1\", \"security\", 2,",
+		),
+		(
+			"security reclassified as witness",
+			"\"R1'\", \"security\",",
+			"\"R1'\", \"witness\",",
+		),
+		(
+			"control without its mutant",
+			"consumed=NOCHECK",
+			"consumed=CONSUMED",
+		),
+		(
+			"environment.pvl loaded",
+			"    \"fs-common.pvl\",\n)",
+			"    \"fs-common.pvl\",\n    \"environment.pvl\",\n)",
+		),
+	] {
+		let mut changed = FS_CHECKER.to_owned();
+		replace_once(&mut changed, from, to);
+		assert!(
+			validate_fs_checker(&changed, FS_CHECKER_TESTS).is_err(),
+			"mutation survived: {name}"
+		);
+	}
+}
+
+#[test]
+fn proverif_declarations_are_allowlisted() {
+	let files = proverif_source_files();
+	assert!(
+		files
+			.iter()
+			.any(|(path, _)| path == "proofs/pro-verif/extraction/lib.pvl")
+	);
+	assert!(
+		files
+			.iter()
+			.any(|(path, _)| path == "proofs/pro-verif/fs-common.pvl")
+	);
+	validate_declarations(&files, DECLARATION_ALLOWLIST, FORMAL_ANALYSIS).unwrap();
+	let with = |path: &str, extra: &str| {
+		files
+			.iter()
+			.map(|(name, source)| {
+				if name == path {
+					(name.clone(), format!("{source}\n{extra}\n"))
+				} else {
+					(name.clone(), source.clone())
+				}
+			})
+			.collect::<Vec<_>>()
+	};
+	for (name, path, extra, diagnostic) in [
+		(
+			"axiom",
+			"proofs/pro-verif/fs-common.pvl",
+			"axiom x: bitstring; attacker(x).",
+			"forbidden ProVerif declaration axiom",
+		),
+		(
+			"restriction",
+			"proofs/pro-verif/crypto.pvl",
+			"restriction x: bitstring; event(E(x)).",
+			"forbidden ProVerif declaration restriction",
+		),
+		(
+			"elimtrue",
+			"proofs/pro-verif/queries.pvl",
+			"elimtrue x: bitstring; attacker(x).",
+			"forbidden ProVerif declaration elimtrue",
+		),
+		(
+			"axiom in generated file",
+			"proofs/pro-verif/extraction/lib.pvl",
+			"axiom x: bitstring; attacker(x).",
+			"forbidden ProVerif declaration axiom",
+		),
+		(
+			"new nounif",
+			"proofs/pro-verif/fs-registration.pvl",
+			"nounif x: bitstring; attacker(x).",
+			"not on the reviewed allowlist",
+		),
+		(
+			"lemma",
+			"proofs/pro-verif/fs-registration.pvl",
+			"lemma x: bitstring; event(FsBuild(x)) ==> attacker(x).",
+			"not on the reviewed allowlist",
+		),
+		(
+			"select",
+			"proofs/pro-verif/fs-common.pvl",
+			"select x: bitstring; attacker(x).",
+			"not on the reviewed allowlist",
+		),
+		(
+			"secrecy assumption",
+			"proofs/pro-verif/fs-common.pvl",
+			"not attacker(SERVER_IDENTITY_SECRET).",
+			"not on the reviewed allowlist",
+		),
+		(
+			"precision setting",
+			"proofs/pro-verif/fs-common.pvl",
+			"set preciseActions = true.",
+			"not on the reviewed allowlist",
+		),
+		(
+			"extra precise input",
+			"proofs/pro-verif/fs-registration.pvl",
+			"let P() = in(c, x: bitstring) [precise]; 0.",
+			"allowlisted 3 times",
+		),
+	] {
+		let error =
+			validate_declarations(&with(path, extra), DECLARATION_ALLOWLIST, FORMAL_ANALYSIS)
+				.expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+	}
+	validate_declarations(
+		&with(
+			"proofs/pro-verif/fs-common.pvl",
+			"(* axiom restriction nounif in a comment *)",
+		),
+		DECLARATION_ALLOWLIST,
+		FORMAL_ANALYSIS,
+	)
+	.unwrap();
+	let nx = "proofs/pro-verif/fs-common.pvl\tnounif\t1\tnounif y: bitstring; attacker(x25519_public(y)).\tdoc/formal-verification-analysis.md#the-fs-selection-heuristic-nx\n";
+	assert_eq!(count(DECLARATION_ALLOWLIST, nx), 1);
+	for (name, allowlist, diagnostic) in [
+		(
+			"entry removed",
+			DECLARATION_ALLOWLIST.replace(nx, ""),
+			"not on the reviewed allowlist",
+		),
+		(
+			"stale entry",
+			format!(
+				"{DECLARATION_ALLOWLIST}{}",
+				nx.replace("fs-common", "fs-other")
+			),
+			"stale declaration allowlist entry",
+		),
+		(
+			"missing anchor",
+			DECLARATION_ALLOWLIST.replace("#the-fs-selection-heuristic-nx", "#no-such-paragraph"),
+			"anchor does not exist",
+		),
+		(
+			"duplicate entry",
+			format!("{DECLARATION_ALLOWLIST}{nx}"),
+			"duplicate allowlist entry",
+		),
+		(
+			"count changed",
+			DECLARATION_ALLOWLIST.replace("\tnounif\t1\t", "\tnounif\t2\t"),
+			"allowlisted 2 times",
+		),
+	] {
+		let error = validate_declarations(&files, &allowlist, FORMAL_ANALYSIS)
+			.expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+	}
+}

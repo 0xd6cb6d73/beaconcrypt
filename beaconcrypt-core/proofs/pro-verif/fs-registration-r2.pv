@@ -1,0 +1,12 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration R2, definitional check, K_reg = 2: a replay rejection on
+   an object follows an acceptance of that registration ID on the same
+   object.  It holds by construction (the rejection branch reads slots that
+   only the accept step writes), so it is not counted as evidence. *)
+query obj: bitstring, s: bitstring, b: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+      rid: beaconcrypt_core__pqxdh__t_RegistrationId, root: bitstring;
+  event(FsServerReplayRejected(obj, s, b, rid))
+  ==> event(FsServerAccepted(obj, s, b, init, rid, root)).
+
+process FsRegistrationMain()

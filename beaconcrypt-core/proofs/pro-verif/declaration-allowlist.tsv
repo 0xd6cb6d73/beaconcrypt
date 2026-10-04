@@ -1,0 +1,53 @@
+# Reviewed allowlist of ProVerif resolution heuristics, precision settings and output settings. The transcript-fidelity test scans every .pv and .pvl file under proofs/pro-verif, including generated files, after removing comments. It fails on any axiom, restriction, elimtrue or clauses declaration, and it requires every set, param, nounif, select, noselect, lemma and secrecy-assumption (not) declaration and every [precise] input to match exactly one entry below, with no stale entries.
+# Columns, separated by one tab: path, kind, occurrence count in that file, declaration with whitespace collapsed (or [precise]), and the documentation paragraph that explains why the entry does not change what a verdict means.
+proofs/pro-verif/fs-common.pvl	nounif	1	nounif y: bitstring; attacker(x25519_public(y)).	doc/formal-verification-analysis.md#the-fs-selection-heuristic-nx
+proofs/pro-verif/fs-registration.pvl	precise	3	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/general-registration-admission.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/general-registration-admission.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/general-registration-admission.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/general-registration-admission.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/general-registration-admission.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/general-registration-admission.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/general-registration-public-witness.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/kem-controller-interface.pvl	set	1	set preciseActions = true.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/live-material-endpoint-origin.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-endpoint-origin.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-endpoint-origin.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-endpoint-origin.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-endpoint-origin.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-no-disclosure.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-no-disclosure.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-no-disclosure.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-no-disclosure.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-no-disclosure.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-origin.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-origin.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-origin.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-origin.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-origin.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-reachable.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-reachable.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-reachable.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-reachable.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-reachable.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-wrong-sequence.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-wrong-sequence.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-wrong-sequence.pv	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-wrong-sequence.pv	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-material-wrong-sequence.pv	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-private-application-service.pvl	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-private-application-service.pvl	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-private-application-service.pvl	set	1	set verboseClauses = none.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-private-application-service.pvl	set	1	set verboseGoalReachable = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/live-private-application-service.pvl	set	1	set verboseRules = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
+proofs/pro-verif/registration-beacon-admission-queries.pvl	set	1	set maxHyp = 2.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-admission-queries.pvl	set	1	set preciseActions = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-admission-queries.pvl	set	1	set preciseLetExpand = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-control-queries.pvl	set	1	set maxHyp = none.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-control-queries.pvl	set	1	set preciseActions = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-control-queries.pvl	set	1	set preciseLetExpand = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-beacon-control.pv	precise	1	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-set-admission-queries.pvl	set	1	set preciseActions = true.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-set-admission-reachability.pvl	set	1	set preciseActions = true.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-set-response-queries.pvl	set	1	set maxHyp = 2.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/registration-set-response-queries.pvl	set	1	set preciseActions = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings

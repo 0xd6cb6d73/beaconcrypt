@@ -1,0 +1,17 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration R4, documented limitation, K_reg = 1 (expected FALSE):
+   two Server objects built from the same identity key have separate
+   consumed sets, so both accept the bundle of one honest Beacon (the
+   FsBeaconStarted premise selects honest bundles).  This is the expected
+   consequence of owner decision OD2: replay claims are per live Server
+   state, and R1 and R1' are stated per object. *)
+query s: bitstring, s2: bitstring, b: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+      o1: bitstring, o2: bitstring, i1: beaconcrypt_core__pqxdh__t_VerifiedInitKex, i2: beaconcrypt_core__pqxdh__t_VerifiedInitKex, rid: beaconcrypt_core__pqxdh__t_RegistrationId,
+      r1: bitstring, r2: bitstring, i: time, j: time;
+  event(FsBeaconStarted(s2, b, init, rid))
+  && event(FsServerAccepted(o1, s, b, i1, rid, r1))@i
+  && event(FsServerAccepted(o2, s, b, i2, rid, r2))@j
+  ==> i = j.
+
+process FsRegistrationMain()

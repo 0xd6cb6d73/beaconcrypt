@@ -49,11 +49,11 @@ declare -A expected_category_counts=(
 	[generated-lean]=7
 	[generated-proverif]=1
 	[handwritten-lean]=1186
-	[handwritten-proverif]=102
+	[handwritten-proverif]=124
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=22
+	[validation]=25
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -121,6 +121,9 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/test-registration-response-checker.py \
 	proofs/pro-verif/check-registration-beacon.py \
 	proofs/pro-verif/test-registration-beacon-checker.py \
+	proofs/pro-verif/check-free-schedule.py \
+	proofs/pro-verif/test-free-schedule-checker.py \
+	proofs/pro-verif/declaration-allowlist.tsv \
 	tests/general_registration_admission.rs \
 	tests/proverif_transcript_fidelity.rs \
 	> "$tmp_dir/validation"
@@ -311,10 +314,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 16 \
+require_occurrence_count 18 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 19 '_to_bitstring' \
+require_occurrence_count 21 '_to_bitstring' \
 	"all handwritten _to_bitstring tokens including three initial-ratchet manifest facts" \
 	"${handwritten_proverif[@]}"
 
@@ -883,7 +886,7 @@ require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable source fixture"
-require_line_count 18 '^#\[test\]$' \
+require_line_count 23 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -903,7 +906,12 @@ for fidelity_test_name in \
 	phase1_registration_mutation_matrix_is_complete_and_rejected \
 	requested_transcript_mutations_are_rejected \
 	record_opening_source_mutations_are_rejected \
-	registration_boundary_make_runners_are_checked; do
+	registration_boundary_make_runners_are_checked \
+	free_schedule_roster_and_serial_wiring_are_pinned \
+	free_schedule_rust_fidelity_annotations_are_exact \
+	free_schedule_vocabulary_and_registration_model_are_pinned \
+	free_schedule_checker_loader_and_targets_are_pinned \
+	proverif_declarations_are_allowlisted; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
 		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
 done
@@ -20307,6 +20315,24 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhServer
 require_line_count 1 '^theorem authentication_intermediate_with_resources([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthIntermediate theorem authentication_intermediate_with_resources"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhServerAuthIntermediate\.authentication_intermediate_scalar_with_resources$' "$selected_source_module" "PqxdhServerAuthIntermediate dependency BeaconcryptCore.Computational.PqxdhServerAuthIntermediate.authentication_intermediate_scalar_with_resources"
 require_line_count 1 '^theorem authentication_intermediate_scalar_with_resources([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthIntermediate theorem authentication_intermediate_scalar_with_resources"
+
+# Free-schedule (fs) ProVerif group: serial, outside the parallel roster, run by the full
+# verification recipe, and free of axiom, restriction and elimtrue declarations. The
+# transcript-fidelity test checks the complete wiring and the declaration allowlist.
+require_line_count 1 '^check-proverif-fs: check-proverif-transcript-fidelity$' Makefile \
+	"serial fs ProVerif group"
+require_line_count 1 '^\t\+\$\(MAKE\) --no-print-directory -j1 \$\(PROVERIF_FS_CHECK_TARGETS\)$' Makefile \
+	"serial fs ProVerif group recipe"
+require_line_count 1 '^PROVERIF_FS_TIMEOUT \?= 1800$' Makefile "fs per-target timeout"
+require_line_count 0 '^check-proverif:.*fs' Makefile "fs group outside the parallel roster"
+awk '
+	/^verify-in-shell:/ { active = 1; next }
+	active && /^[^[:space:]#]/ { active = 0 }
+	active && $0 == "\t$(MAKE) check-proverif-fs" { found = 1 }
+	END { exit !found }
+' Makefile || fail "verify-in-shell must invoke check-proverif-fs"
+reject_matches "ProVerif axiom, restriction or elimtrue declaration" \
+	'(?m)^\s*(?:axiom|restriction|elimtrue)\b' "${handwritten_proverif[@]}" "$generated_proverif"
 
 # Audit F16: the full verification recipe must finish by checking the reviewed boundary.
 awk '

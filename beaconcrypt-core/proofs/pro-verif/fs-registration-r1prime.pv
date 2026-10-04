@@ -1,0 +1,16 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-registration R1', security result, K_reg = 3: one Server object
+   accepts an honest identity at most once, whatever the registration ID,
+   because an honest Beacon signs exactly one one-time key and the consumed
+   set refuses its second use.  The query does not mention the Beacon's
+   pin. *)
+query obj: bitstring, s: bitstring, k: bitstring,
+      i1: beaconcrypt_core__pqxdh__t_VerifiedInitKex, i2: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+      rid1: beaconcrypt_core__pqxdh__t_RegistrationId, rid2: beaconcrypt_core__pqxdh__t_RegistrationId,
+      r1: bitstring, r2: bitstring, i: time, j: time;
+  event(FsServerAccepted(obj, s, ed_public(k), i1, rid1, r1))@i
+  && event(FsServerAccepted(obj, s, ed_public(k), i2, rid2, r2))@j
+  ==> i = j || attacker(k).
+
+process FsRegistrationMain()
