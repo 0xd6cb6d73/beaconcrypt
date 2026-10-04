@@ -20857,6 +20857,23 @@ const FS_CONTROL_NOCHECK: &str = include_str!("../proofs/pro-verif/fs-control-no
 const FS_REGISTRATION_BINDING: &str =
 	include_str!("../proofs/pro-verif/fs-registration-binding.pvl");
 const FS_CONTROL_UKS: &str = include_str!("../proofs/pro-verif/fs-control-uks.pvl");
+const FS_RECORDS_S2B: &str = include_str!("../proofs/pro-verif/fs-records-s2b.pvl");
+const FS_RECORDS_S2B_RECEIVE: &str = include_str!("../proofs/pro-verif/fs-records-s2b-receive.pvl");
+const FS_RECORDS_S2B_BOUNDS: [&str; 3] = [
+	include_str!("../proofs/pro-verif/fs-records-s2b-kr1.pvl"),
+	include_str!("../proofs/pro-verif/fs-records-s2b-kr2.pvl"),
+	include_str!("../proofs/pro-verif/fs-records-s2b-kr3.pvl"),
+];
+const FS_RECORDS_S2B_WINDOW: &str = include_str!("../proofs/pro-verif/fs-records-s2b-window.pvl");
+const FS_CONTROL_RETAIN: &str = include_str!("../proofs/pro-verif/fs-control-retain.pvl");
+const FS_CONTROL_STALE: &str = include_str!("../proofs/pro-verif/fs-control-stale.pvl");
+const FS_CONTROL_FAILMUT: &str = include_str!("../proofs/pro-verif/fs-control-failmut.pvl");
+const FS_RECORDS_S2B_GATE: &str = include_str!("../proofs/pro-verif/fs-records-s2b-gate.pvl");
+const FS_CONTROL_NOGATE: &str = include_str!("../proofs/pro-verif/fs-control-nogate.pvl");
+const FS_RECORDS_S2B_TASKINGS: &str =
+	include_str!("../proofs/pro-verif/fs-records-s2b-taskings.pvl");
+const FS_RECORDS_S2B_TASKINGS_CHOSEN: &str =
+	include_str!("../proofs/pro-verif/fs-records-s2b-taskings-chosen.pvl");
 const FS_REGISTRATION_BOUNDS: [&str; 3] = [
 	include_str!("../proofs/pro-verif/fs-registration-k1.pvl"),
 	include_str!("../proofs/pro-verif/fs-registration-k2.pvl"),
@@ -20867,7 +20884,7 @@ const FS_CHECKER_TESTS: &str = include_str!("../proofs/pro-verif/test-free-sched
 const DECLARATION_ALLOWLIST: &str = include_str!("../proofs/pro-verif/declaration-allowlist.tsv");
 const FORMAL_ANALYSIS: &str = include_str!("../../doc/formal-verification-analysis.md");
 
-const FS_SCENARIOS: [&str; 1] = ["fs-registration"];
+const FS_SCENARIOS: [&str; 2] = ["fs-registration", "fs-records-s2b"];
 const FS_FIDELITY_PREFIX: &str = "(* @beaconcrypt-fs-fidelity ";
 
 /// Every Rust fidelity annotation of the fs files: (file, key, cited range). Within one file the
@@ -21168,6 +21185,426 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 		"beacon.commit",
 		"beaconcrypt/src/beacon.rs:503-509",
 	),
+	(
+		"fs-records-s2b-window.pvl",
+		"window.cached_removal",
+		"beaconcrypt-core/src/ratchet/refined.rs:700-721",
+	),
+	(
+		"fs-records-s2b-window.pvl",
+		"window.failure_keeps_entry",
+		"beaconcrypt-core/src/ratchet/concrete.rs:436-443",
+	),
+	(
+		"fs-records-s2b-gate.pvl",
+		"gate.sequence_one",
+		"beaconcrypt/src/beacon.rs:468-470",
+	),
+	(
+		"fs-records-s2b-gate.pvl",
+		"gate.abort",
+		"beaconcrypt/src/beacon.rs:488-491",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.encrypt",
+		"beaconcrypt/src/server.rs:224-228",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.seal",
+		"beaconcrypt/src/ratchet.rs:414-444",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.allocate",
+		"beaconcrypt-core/src/ratchet/concrete.rs:133-155",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.advance",
+		"beaconcrypt-core/src/ratchet/concrete.rs:171-182",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.stays_advanced",
+		"beaconcrypt-core/src/ratchet/concrete.rs:206-209",
+	),
+	(
+		"fs-records-s2b-taskings.pvl",
+		"taskings.snapshot",
+		"beaconcrypt/src/server.rs:504-514",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.encrypt",
+		"beaconcrypt/src/server.rs:224-228",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.seal",
+		"beaconcrypt/src/ratchet.rs:414-444",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.allocate",
+		"beaconcrypt-core/src/ratchet/concrete.rs:133-155",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.advance",
+		"beaconcrypt-core/src/ratchet/concrete.rs:171-182",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.stays_advanced",
+		"beaconcrypt-core/src/ratchet/concrete.rs:206-209",
+	),
+	(
+		"fs-records-s2b-taskings-chosen.pvl",
+		"taskings.snapshot",
+		"beaconcrypt/src/server.rs:504-514",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"beacon.decrypt",
+		"beaconcrypt/src/beacon.rs:164-174",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"ratchet.decode_sender",
+		"beaconcrypt/src/ratchet.rs:505-516",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"record.frame_context",
+		"beaconcrypt-core/src/record.rs:35-61",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.begin_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:259-268",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.plan_receive",
+		"beaconcrypt-core/src/ratchet/control.rs:223-245",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.cached_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:270-280",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"refined.prepare_cached",
+		"beaconcrypt-core/src/ratchet/refined.rs:317-330",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"ratchet.open",
+		"beaconcrypt/src/ratchet.rs:449-482",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"record.commitment",
+		"beaconcrypt-core/src/record.rs:80-98",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.open_finish",
+		"beaconcrypt-core/src/ratchet/concrete.rs:436-454",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"control.cached_removal",
+		"beaconcrypt-core/src/ratchet/control.rs:435-461",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"refined.publish_cached",
+		"beaconcrypt-core/src/ratchet/refined.rs:700-721",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.open_reject",
+		"beaconcrypt-core/src/ratchet/concrete.rs:440-443",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"core.future_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:282-300",
+	),
+	(
+		"fs-records-s2b-receive.pvl",
+		"refined.publish_future",
+		"beaconcrypt-core/src/ratchet/refined.rs:755-778",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.fresh_ephemeral",
+		"beaconcrypt/src/server.rs:368-368",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.encapsulate",
+		"beaconcrypt/src/server.rs:373-373",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.accept",
+		"beaconcrypt/src/server.rs:332-336",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.identity_tag",
+		"beaconcrypt/src/server.rs:337-342",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.signatures",
+		"beaconcrypt/src/server.rs:343-346",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.validate_init_kex",
+		"beaconcrypt/src/server.rs:347-353",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.validate_init_kex",
+		"beaconcrypt-core/src/pqxdh.rs:325-345",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.registration_id",
+		"beaconcrypt/src/server.rs:354-354",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.registration_id",
+		"beaconcrypt-core/src/pqxdh.rs:195-204",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.consumed_status",
+		"beaconcrypt/src/server.rs:355-360",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.identity_conversion",
+		"beaconcrypt/src/server.rs:374-375",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.dh",
+		"beaconcrypt/src/server.rs:376-394",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.accept_root_input",
+		"beaconcrypt/src/server.rs:395-411",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.root_input",
+		"beaconcrypt-core/src/pqxdh.rs:391-405",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.root",
+		"beaconcrypt/src/server.rs:414-414",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.insert",
+		"beaconcrypt/src/server.rs:415-416",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.accept_return",
+		"beaconcrypt/src/server.rs:418-421",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.build",
+		"beaconcrypt/src/server.rs:424-428",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.next_key_id",
+		"beaconcrypt/src/server.rs:434-439",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.prepare_commit",
+		"beaconcrypt/src/server.rs:440-449",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.prepare_commit_ad",
+		"beaconcrypt-core/src/pqxdh.rs:877-880",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.ratchet_start",
+		"beaconcrypt/src/server.rs:456-457",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.associated_data",
+		"beaconcrypt/src/server.rs:458-458",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.associated_data",
+		"beaconcrypt-core/src/pqxdh.rs:928-947",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.payload",
+		"beaconcrypt/src/server.rs:459-462",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.binding",
+		"beaconcrypt/src/server.rs:463-470",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.seal",
+		"beaconcrypt/src/server.rs:471-479",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.commit",
+		"beaconcrypt/src/server.rs:489-497",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"server.build_return",
+		"beaconcrypt/src/server.rs:498-501",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.new",
+		"beaconcrypt/src/beacon.rs:65-83",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.one_time",
+		"beaconcrypt/src/beacon.rs:301-305",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.start",
+		"beaconcrypt/src/beacon.rs:335-345",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.beacon_start",
+		"beaconcrypt-core/src/pqxdh.rs:304-321",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.sign",
+		"beaconcrypt/src/beacon.rs:349-357",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.bundle_return",
+		"beaconcrypt/src/beacon.rs:398-398",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.finish",
+		"beaconcrypt/src/beacon.rs:402-406",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.decode",
+		"beaconcrypt/src/beacon.rs:422-431",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.identity_conversion",
+		"beaconcrypt/src/beacon.rs:432-433",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.decapsulate",
+		"beaconcrypt/src/beacon.rs:434-434",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.dh",
+		"beaconcrypt/src/beacon.rs:435-449",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.prepare",
+		"beaconcrypt/src/beacon.rs:450-457",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.pin_check",
+		"beaconcrypt-core/src/pqxdh.rs:545-547",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.root",
+		"beaconcrypt/src/beacon.rs:458-458",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.ratchet_start",
+		"beaconcrypt/src/beacon.rs:459-460",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.associated_data",
+		"beaconcrypt/src/beacon.rs:461-461",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.finish_ad",
+		"beaconcrypt-core/src/pqxdh.rs:552-555",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.receive",
+		"beaconcrypt/src/beacon.rs:462-467",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"ratchet.decrypt",
+		"beaconcrypt/src/ratchet.rs:499-536",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.sequence_one",
+		"beaconcrypt/src/beacon.rs:468-470",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.binding",
+		"beaconcrypt/src/beacon.rs:476-484",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"core.binding",
+		"beaconcrypt-core/src/pqxdh.rs:616-628",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.pin_checks",
+		"beaconcrypt/src/beacon.rs:493-502",
+	),
+	(
+		"fs-records-s2b.pvl",
+		"beacon.commit",
+		"beaconcrypt/src/beacon.rs:503-509",
+	),
 ];
 
 /// The fs-registration result targets: (name, class, K_reg bound, query file, mutant library).
@@ -21213,6 +21650,87 @@ const FS_REGISTRATION_TARGETS: [(&str, &str, &str, &str, &str); 15] = [
 	),
 ];
 
+/// The fs-records-s2b result targets: (name, class, K_r bound, query file, hook and form keywords
+/// sorted).
+const FS_S2B_TARGETS: [(&str, &str, &str, &str, &str); 16] = [
+	(
+		"s2b-A1",
+		"security",
+		"3",
+		"fs-records-s2b-a1.pv",
+		"taskings=CHOSEN",
+	),
+	(
+		"s2b-A2",
+		"security",
+		"3",
+		"fs-records-s2b-a2.pv",
+		"taskings=CHOSEN",
+	),
+	(
+		"s2b-C1",
+		"security",
+		"3",
+		"fs-records-s2b-c1.pv",
+		"taskings=CHOSEN",
+	),
+	(
+		"s2b-C3",
+		"security",
+		"3",
+		"fs-records-s2b-c3.pv",
+		"taskings=CHOSEN",
+	),
+	(
+		"s2b-C4",
+		"security",
+		"3",
+		"fs-records-s2b-c4.pv",
+		"taskings=CHOSEN",
+	),
+	("s2b-S1", "security", "3", "fs-records-s2b-s1.pv", ""),
+	("s2b-A3", "witness", "1", "fs-records-s2b-a3.pv", ""),
+	("s2b-C5a", "witness", "2", "fs-records-s2b-c5a.pv", ""),
+	("s2b-C5b", "witness", "2", "fs-records-s2b-c5b.pv", ""),
+	("s2b-C5c", "witness", "2", "fs-records-s2b-c5c.pv", ""),
+	("s2b-S4", "witness", "1", "fs-records-s2b-s4.pv", ""),
+	(
+		"s2b-C-RETAIN-C1",
+		"control",
+		"3",
+		"fs-records-s2b-c1.pv",
+		"window=RETAIN",
+	),
+	(
+		"s2b-C-RETAIN-C3",
+		"control",
+		"3",
+		"fs-records-s2b-c3.pv",
+		"window=RETAIN",
+	),
+	(
+		"s2b-C-NOGATE",
+		"control",
+		"1",
+		"fs-records-s2b-a1.pv",
+		"gate=NOGATE",
+	),
+	(
+		"s2b-C-STALE",
+		"control",
+		"3",
+		"fs-records-s2b-c3.pv",
+		"window=STALE",
+	),
+	(
+		"s2b-C-FAILMUT",
+		"control",
+		"2",
+		"fs-records-s2b-c5b.pv",
+		"inverted=True,window=FAILMUT",
+	),
+];
+
 const FS_EVENTS: [&str; 11] = [
 	"event FsBeaconStarted(bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId).",
 	"event FsServerAccepted(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId, bitstring).",
@@ -21244,6 +21762,17 @@ struct FsFiles {
 	binding: String,
 	uks: String,
 	bounds: [String; 3],
+	s2b: String,
+	receive: String,
+	s2b_bounds: [String; 3],
+	window: String,
+	retain: String,
+	stale: String,
+	failmut: String,
+	gate: String,
+	nogate: String,
+	taskings: String,
+	chosen: String,
 }
 
 impl FsFiles {
@@ -21256,15 +21785,32 @@ impl FsFiles {
 			binding: FS_REGISTRATION_BINDING.to_owned(),
 			uks: FS_CONTROL_UKS.to_owned(),
 			bounds: FS_REGISTRATION_BOUNDS.map(str::to_owned),
+			s2b: FS_RECORDS_S2B.to_owned(),
+			receive: FS_RECORDS_S2B_RECEIVE.to_owned(),
+			s2b_bounds: FS_RECORDS_S2B_BOUNDS.map(str::to_owned),
+			window: FS_RECORDS_S2B_WINDOW.to_owned(),
+			retain: FS_CONTROL_RETAIN.to_owned(),
+			stale: FS_CONTROL_STALE.to_owned(),
+			failmut: FS_CONTROL_FAILMUT.to_owned(),
+			gate: FS_RECORDS_S2B_GATE.to_owned(),
+			nogate: FS_CONTROL_NOGATE.to_owned(),
+			taskings: FS_RECORDS_S2B_TASKINGS.to_owned(),
+			chosen: FS_RECORDS_S2B_TASKINGS_CHOSEN.to_owned(),
 		}
 	}
 
-	fn annotated(&self) -> [(&'static str, &str); 4] {
+	fn annotated(&self) -> [(&'static str, &str); 10] {
 		[
 			("fs-common.pvl", &self.common),
 			("fs-registration-consumed.pvl", &self.consumed),
 			("fs-registration-binding.pvl", &self.binding),
 			("fs-registration.pvl", &self.registration),
+			("fs-records-s2b-window.pvl", &self.window),
+			("fs-records-s2b-gate.pvl", &self.gate),
+			("fs-records-s2b-taskings.pvl", &self.taskings),
+			("fs-records-s2b-taskings-chosen.pvl", &self.chosen),
+			("fs-records-s2b-receive.pvl", &self.receive),
+			("fs-records-s2b.pvl", &self.s2b),
 		]
 	}
 
@@ -21272,6 +21818,20 @@ impl FsFiles {
 		let mut files = self.annotated().to_vec();
 		files.push(("fs-control-nocheck.pvl", &self.nocheck));
 		files.push(("fs-control-uks.pvl", &self.uks));
+		files.push(("fs-control-retain.pvl", &self.retain));
+		files.push(("fs-control-stale.pvl", &self.stale));
+		files.push(("fs-control-failmut.pvl", &self.failmut));
+		files.push(("fs-control-nogate.pvl", &self.nogate));
+		for (index, bound) in self.s2b_bounds.iter().enumerate() {
+			files.push((
+				[
+					"fs-records-s2b-kr1.pvl",
+					"fs-records-s2b-kr2.pvl",
+					"fs-records-s2b-kr3.pvl",
+				][index],
+				bound,
+			));
+		}
 		for (index, bound) in self.bounds.iter().enumerate() {
 			files.push((
 				[
@@ -21362,19 +21922,26 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 	{
 		return Err("serial fs group recipe changed".to_owned());
 	}
-	let registration = make_recipe(
-		makefile,
-		"check-proverif-fs-registration: check-proverif-extraction check-proverif-transcript-fidelity",
-	)?;
-	if compact(&registration.join("\n"))
-		!= compact(
-			"python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
-			python3 $(PROVERIF_DIR)/check-free-schedule.py --proverif '$(PROVERIF)' \\
-			--timeout '$(PROVERIF_FS_TIMEOUT)' \\
-			--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
-			$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')",
-		) {
-		return Err("fs-registration exact Make runner and self-test wiring changed".to_owned());
+	for scenario in FS_SCENARIOS {
+		let runner = make_recipe(
+			makefile,
+			&format!(
+				"check-proverif-{scenario}: check-proverif-extraction check-proverif-transcript-fidelity"
+			),
+		)?;
+		if compact(&runner.join("\n"))
+			!= compact(&format!(
+				"python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
+				python3 $(PROVERIF_DIR)/check-free-schedule.py --scenario {scenario} \\
+				--proverif '$(PROVERIF)' \\
+				--timeout '$(PROVERIF_FS_TIMEOUT)' \\
+				--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+				$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')"
+			)) {
+			return Err(format!(
+				"{scenario} exact Make runner and self-test wiring changed"
+			));
+		}
 	}
 	let invoked = |steps: &[&str]| {
 		steps
@@ -21411,7 +21978,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 	{
 		return Err("the fs group must never be a prerequisite of check-proverif".to_owned());
 	}
-	if count(makefile, "check-proverif-fs") != 5 {
+	if count(makefile, "check-proverif-fs") != 4 + FS_SCENARIOS.len() {
 		return Err("unexpected reference to the fs group in the Makefile".to_owned());
 	}
 	require_once(
@@ -21425,7 +21992,12 @@ fn fs_rust_source(path: &str) -> Option<&'static str> {
 	match path {
 		"beaconcrypt/src/server.rs" => Some(ADAPTER_SERVER),
 		"beaconcrypt/src/beacon.rs" => Some(ADAPTER_BEACON),
+		"beaconcrypt/src/ratchet.rs" => Some(ADAPTER_RATCHET),
 		"beaconcrypt-core/src/pqxdh.rs" => Some(CORE_PQXDH),
+		"beaconcrypt-core/src/record.rs" => Some(CORE_RECORD),
+		"beaconcrypt-core/src/ratchet/concrete.rs" => Some(CORE_RATCHET_CONCRETE),
+		"beaconcrypt-core/src/ratchet/control.rs" => Some(CORE_RATCHET_CONTROL),
+		"beaconcrypt-core/src/ratchet/refined.rs" => Some(CORE_RATCHET_REFINED),
 		_ => None,
 	}
 }
@@ -21682,6 +22254,170 @@ fn validate_fs_model(files: &FsFiles) -> Result<(), String> {
 			return Err(format!("fs-registration bound K_reg = {bound} changed"));
 		}
 	}
+	validate_fs_records_s2b(files)
+}
+
+/// The receive-window hooks of fs-records-s2b: the real library and the three negative controls.
+const FS_S2B_WINDOWS: [(&str, &str, &str, &str); 4] = [
+	("fs-records-s2b-window.pvl", "false", "r", "cached_2"),
+	("fs-control-retain.pvl", "cached_2", "r", "cached_2"),
+	("fs-control-stale.pvl", "false", "1", "false"),
+	(
+		"fs-control-failmut.pvl",
+		"false",
+		"if target <= r then r else target",
+		"if target = 2 then false else if r = 1 && target = 3 then true else cached_2",
+	),
+];
+
+const FS_S2B_FINISH_LATER: &str = "let FsS2bFinishLater( server_identity: bitstring, beacon_identity: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex, assigned_key_id: key_id, root: bitstring, associated_data: bitstring, expected_binding: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding, later_plaintext: bitstring ) =";
+
+fn fs_s2b_send(position: usize) -> String {
+	format!(
+		"in(c, app_prefix_{position}: beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding) [precise]; new tasking_body_{position}: bitstring; let tasking_{position} = registration_payload(app_prefix_{position}, tasking_body_{position}) in event FsSent( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, {position}, tasking_{position} ); out( c, seal_frame( ratchet_material(send_chain_{position}), associated_data, fs_seq({position}), SERVER_KEY_ID, tasking_{position} ) )"
+	)
+}
+
+fn validate_fs_records_s2b(files: &FsFiles) -> Result<(), String> {
+	let receive = normalized(&uncommented_pv(&files.receive)?);
+	require_ordered_once(
+		&receive,
+		&[
+			"fun fs_far_chain(bitstring, nat): bitstring.",
+			"def FS_S2B_RECV_STEP(Cur, Next) {",
+			"in(c, frame: bitstring) [precise];",
+			"fs_seq(t: nat), =SERVER_KEY_ID ) = frame in",
+			"if t <= r then",
+			"if t = 2 && cached_2 then",
+			"fs_s2b_cached_after_success(cached_2) )",
+			"else if t = 2 then",
+			"else if t = 3 then",
+			"if r = 1 then Next( server_identity, beacon_identity, assigned_key_id, root, associated_data, receive_material_2, receive_material_3, far_anchor, 3, true )",
+			"open_frame( ratchet_material(fs_far_chain(far_anchor, t)), associated_data, fs_seq(t), SERVER_KEY_ID, frame ) in event FsFarAccepted( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, t ) else Next(",
+			"let FsS2bRecvStop( server_identity: bitstring, beacon_identity: bitstring, assigned_key_id: key_id, root: bitstring, associated_data: bitstring, receive_material_2: bitstring, receive_material_3: bitstring, far_anchor: bitstring, r: nat, cached_2: bool ) = 0.",
+		],
+		"fs-records-s2b receive step",
+	)?;
+	for (wanted, expected, label) in [
+		("event FsReceived(", 3, "accepted records"),
+		("event FsReceiveRejected(", 4, "rejections at t <= T_max"),
+		("event FsFarAccepted(", 1, "far acceptance"),
+		(
+			"fs_s2b_failed_r(r, 2), fs_s2b_failed_cached_2(r, 2, cached_2) )",
+			2,
+			"failed opens at position 2",
+		),
+		(
+			"fs_s2b_failed_r(r, 3), fs_s2b_failed_cached_2(r, 3, cached_2) )",
+			1,
+			"failed opens at position 3",
+		),
+		("[precise]", 1, "attacker inputs"),
+	] {
+		if count(&receive, wanted) != expected {
+			return Err(format!("fs-records-s2b receive step {label} changed"));
+		}
+	}
+	for (index, source) in files.s2b_bounds.iter().enumerate() {
+		let bound = index + 1;
+		let mut expansions = vec![format!(
+			"expand FS_S2B_RECV_STEP(FsS2bRecv{bound}, FsS2bRecvStop)."
+		)];
+		for step in (1..bound).rev() {
+			expansions.push(format!(
+				"expand FS_S2B_RECV_STEP(FsS2bRecv{step}, FsS2bRecv{}).",
+				step + 1
+			));
+		}
+		if normalized(&uncommented_pv(source)?) != expansions.join(" ") {
+			return Err(format!("fs-records-s2b bound K_r = {bound} changed"));
+		}
+	}
+	let s2b = normalized(&uncommented_pv(&files.s2b)?);
+	require_ordered_once(
+		&s2b,
+		&[
+			"let FsS2bServer(obj: bitstring) = let server_identity = ed_public(SERVER_IDENTITY_SECRET) in new ephemeral_secret: bitstring; new kem_coins: bitstring; in(c, bundle: bitstring) [precise];",
+			"let init = beaconcrypt_core__pqxdh__VerifiedInitKex( identity, prekey, one_time, pq ) in",
+			"x25519_server_dh(ephemeral_secret, x25519_public_from_ed(identity)),",
+			"dh1, dh2, dh3, dh4, mlkem_shared_secret(pq, kem_coins)",
+			"event FsServerAccepted( obj, server_identity, identity, init, registration_id, root ); in(c, build_request: bitstring) [precise]; let assigned_key_id = fs_kid(1) in",
+			"let associated_data = beaconcrypt_core__pqxdh__build_associated_data( server_identity, identity ) in new payload: bitstring;",
+			"fs_seq(1), SERVER_KEY_ID, response_plaintext ) in event FsServerCommitted( obj, server_identity, identity, init, assigned_key_id, root, associated_data, payload ); event FsSent( server_to_beacon(), server_identity, identity, assigned_key_id, root, 1, response_plaintext );",
+			"FsS2bTaskings( server_identity, identity, assigned_key_id, root, associated_data, send_chain_2, send_chain_3 ).",
+			"let FsS2bBeacon() =",
+			"event FsBeaconStarted(server_identity, beacon_identity, init, registration_id);",
+			"in(c, response: bitstring) [precise];",
+			"if response_server_identity = server_identity then",
+			"let associated_data = beaconcrypt_core__pqxdh__build_associated_data( server_identity, beacon_identity ) in",
+			"fs_seq(frame_t: nat), =SERVER_KEY_ID ) = initial_frame in if frame_t = 1 then",
+			"let registration_payload( =expected_binding, application_payload: bitstring ) = finish_plaintext in event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ); event FsReceived( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, finish_plaintext ); FsS2bRecv1( server_identity, beacon_identity, assigned_key_id, root, associated_data, ratchet_material(receive_chain_2), ratchet_material(receive_chain_3), receive_chain_4, 1, false )",
+			"else if frame_t = 2 then",
+			"event FsBeaconFinishOpenedLater(server_identity, beacon_identity, 2); FsS2bFinishLater(",
+			"else if frame_t = 3 then",
+			"event FsBeaconFinishOpenedLater(server_identity, beacon_identity, 3); FsS2bFinishLater(",
+			"let FsRecordsS2bMain() = out(c, ed_public(SERVER_IDENTITY_SECRET)); ( (!(new obj: bitstring; FsS2bServer(obj))) | (!FsS2bBeacon()) ).",
+		],
+		"fs-records-s2b Rust-ordered process",
+	)?;
+	for (wanted, expected, label) in [
+		("event FsReceived(", 1, "accepted records"),
+		("event FsReceiveRejected(", 0, "rejections"),
+		("[precise]", 3, "attacker inputs"),
+	] {
+		if count(&s2b, wanted) != expected {
+			return Err(format!("fs-records-s2b {label} changed"));
+		}
+	}
+	for (file, success, failed_r, failed_cached) in FS_S2B_WINDOWS {
+		let source = match file {
+			"fs-records-s2b-window.pvl" => &files.window,
+			"fs-control-retain.pvl" => &files.retain,
+			"fs-control-stale.pvl" => &files.stale,
+			_ => &files.failmut,
+		};
+		let expected = format!(
+			"letfun fs_s2b_cached_after_success(cached_2: bool) = {success}. letfun fs_s2b_failed_r(r: nat, target: nat) = {failed_r}. letfun fs_s2b_failed_cached_2(r: nat, target: nat, cached_2: bool) = {failed_cached}."
+		);
+		if normalized(&uncommented_pv(source)?) != expected {
+			return Err(format!("{file} receive-window hooks changed"));
+		}
+	}
+	for (file, source, body) in [
+		("fs-records-s2b-gate.pvl", &files.gate, "0."),
+		(
+			"fs-control-nogate.pvl",
+			&files.nogate,
+			"let registration_payload( =expected_binding, application_payload: bitstring ) = later_plaintext in event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ).",
+		),
+	] {
+		if normalized(&uncommented_pv(source)?) != format!("{FS_S2B_FINISH_LATER} {body}") {
+			return Err(format!("{file} finish gate changed"));
+		}
+	}
+	let header = "let FsS2bTaskings( server_identity: bitstring, beacon_identity: bitstring, assigned_key_id: key_id, root: bitstring, associated_data: bitstring, send_chain_2: bitstring, send_chain_3: bitstring ) =";
+	if normalized(&uncommented_pv(&files.taskings)?)
+		!= format!("{header} {}; {}.", fs_s2b_send(2), fs_s2b_send(3))
+	{
+		return Err("fs-records-s2b-taskings.pvl fresh taskings changed".to_owned());
+	}
+	let chosen = normalized(&uncommented_pv(&files.chosen)?);
+	require_ordered_once(
+		&chosen,
+		&[
+			"fun fs_chosen_tasking(): bitstring [data].",
+			"let FsS2bTasking3(",
+			"in(c, app_mode_3: bitstring) [precise]; if app_mode_3 = fs_chosen_tasking() then ( in(c, app_plaintext_3: bitstring) [precise]; event FsSent( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 3, app_plaintext_3 ); out( c, seal_frame( ratchet_material(send_chain_3), associated_data, fs_seq(3), SERVER_KEY_ID, app_plaintext_3 ) ) ) else (",
+			&fs_s2b_send(3),
+			header,
+			"in(c, app_mode_2: bitstring) [precise]; if app_mode_2 = fs_chosen_tasking() then ( in(c, app_plaintext_2: bitstring) [precise]; event FsSent( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 2, app_plaintext_2 ); out( c, seal_frame( ratchet_material(send_chain_2), associated_data, fs_seq(2), SERVER_KEY_ID, app_plaintext_2 ) ); FsS2bTasking3(",
+			&fs_s2b_send(2),
+		],
+		"fs-records-s2b-taskings-chosen.pvl taskings",
+	)?;
+	if count(&chosen, "[precise]") != 6 || count(&chosen, "event FsSent(") != 4 {
+		return Err("fs-records-s2b-taskings-chosen.pvl taskings changed".to_owned());
+	}
 	Ok(())
 }
 
@@ -21773,6 +22509,97 @@ fn validate_fs_checker(checker: &str, tests: &str) -> Result<(), String> {
 			"{\"security\": 6, \"definitional\": 1, \"witness\": 5, \"control\": 2, \"limitation\": 1,}",
 		),
 		"fs checker class-count regression",
+	)?;
+	validate_fs_s2b_checker(checker, tests, section)
+}
+
+fn validate_fs_s2b_checker(checker: &str, tests: &str, section: &str) -> Result<(), String> {
+	for wanted in [
+		"REGISTRATION = \"fs-registration\"",
+		"RECORDS_S2B = \"fs-records-s2b\"",
+		"SCENARIOS = (REGISTRATION, RECORDS_S2B)",
+		"WINDOW = \"fs-records-s2b-window.pvl\"",
+		"RETAIN = \"fs-control-retain.pvl\"",
+		"STALE = \"fs-control-stale.pvl\"",
+		"FAILMUT = \"fs-control-failmut.pvl\"",
+		"GATE = \"fs-records-s2b-gate.pvl\"",
+		"NOGATE = \"fs-control-nogate.pvl\"",
+		"TASKINGS = \"fs-records-s2b-taskings.pvl\"",
+		"CHOSEN = \"fs-records-s2b-taskings-chosen.pvl\"",
+		"S2B_RECEIVE = \"fs-records-s2b-receive.pvl\"",
+		"S2B_PROCESS = \"fs-records-s2b.pvl\"",
+		"S2B_SECURITY_BOUND = 3",
+		"f\"fs-records-s2b-kr{self.bound}.pvl\",",
+		"S2B_FRESH_ONLY = (\"fs-records-s2b-s1.pv\", \"fs-records-s2b-s4.pv\")",
+		"raise ValueError(f\"{target.name}: security results run at K_r = 3\")",
+		"if target.cls == \"security\" and target.bound != S2B_SECURITY_BOUND:",
+		"if target.inverted and target.cls != \"control\":",
+		"verdict = \" is true.\" if target.expected_true() else \" is false.\"",
+	] {
+		require_once(checker, wanted, "fs-records-s2b checker rule")?;
+	}
+	require_once(
+		&compact(checker),
+		&compact(
+			"HOOKS = {
+			REGISTRATION: ((CONSUMED, NOCHECK), (BINDING, UKS)),
+			RECORDS_S2B: ((WINDOW, RETAIN, STALE, FAILMUT), (GATE, NOGATE), (TASKINGS, CHOSEN)),
+			}",
+		),
+		"fs scenario hook libraries",
+	)?;
+	require_once(
+		&compact(checker),
+		&compact(
+			"def records_s2b( name, cls, bound, query, results, window=WINDOW, gate=GATE, taskings=TASKINGS, inverted=False, ):",
+		),
+		"fs-records-s2b default libraries",
+	)?;
+	let mut targets = Vec::new();
+	let mut cursor = 0;
+	while let Some(relative) = section[cursor..].find("records_s2b(") {
+		let open = cursor + relative + "records_s2b".len();
+		let (arguments, end) = parse_call(section, open)?;
+		let arguments = arguments
+			.iter()
+			.map(|argument| argument.trim().to_owned())
+			.filter(|argument| !argument.is_empty())
+			.collect::<Vec<_>>();
+		if arguments.len() < 5 {
+			return Err(format!("malformed fs-records-s2b target: {arguments:?}"));
+		}
+		let mut keywords = arguments[5..].to_vec();
+		keywords.sort();
+		targets.push((
+			arguments[0].trim_matches('"').to_owned(),
+			arguments[1].trim_matches('"').to_owned(),
+			arguments[2].clone(),
+			arguments[3].trim_matches('"').to_owned(),
+			keywords.join(","),
+		));
+		cursor = end;
+	}
+	let expected = FS_S2B_TARGETS
+		.iter()
+		.map(|(name, class, bound, query, keywords)| {
+			(
+				(*name).to_owned(),
+				(*class).to_owned(),
+				(*bound).to_owned(),
+				(*query).to_owned(),
+				(*keywords).to_owned(),
+			)
+		})
+		.collect::<Vec<_>>();
+	if targets != expected {
+		return Err(format!(
+			"fs-records-s2b target manifest changed: {targets:?}"
+		));
+	}
+	require(
+		&compact(tests),
+		&compact("{\"security\": 6, \"witness\": 5, \"control\": 5,}"),
+		"fs-records-s2b checker class-count regression",
 	)
 }
 
@@ -22376,9 +23203,21 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		),
 		(
 			"fs scenario removed",
+			"PROVERIF_FS_SCENARIOS := \\\n\tfs-registration \\\n\tfs-records-s2b\n",
 			"PROVERIF_FS_SCENARIOS := \\\n\tfs-registration\n",
-			"PROVERIF_FS_SCENARIOS := \\\n\tfs-other\n",
 			"fs scenario roster changed",
+		),
+		(
+			"fs record runner without its scenario selection",
+			"--scenario fs-records-s2b \\\n",
+			"\\\n",
+			"fs-records-s2b exact Make runner",
+		),
+		(
+			"fs record runner checks the registration targets",
+			"--scenario fs-records-s2b",
+			"--scenario fs-registration",
+			"fs-records-s2b exact Make runner",
 		),
 		(
 			"fs checker self-test skipped",
@@ -22415,14 +23254,14 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		);
 		checked += 1;
 	}
-	assert_eq!(checked, 12);
+	assert_eq!(checked, 14);
 }
 
 #[test]
 fn free_schedule_rust_fidelity_annotations_are_exact() {
 	let files = FsFiles::production();
 	validate_fs_fidelity(&files).unwrap();
-	assert_eq!(FS_FIDELITY.len(), 59);
+	assert_eq!(FS_FIDELITY.len(), 143);
 	for (name, mutate, diagnostic) in [
 		(
 			"cited line moved",
@@ -22600,11 +23439,148 @@ fn free_schedule_vocabulary_and_registration_model_are_pinned() {
 }
 
 #[test]
+fn free_schedule_records_s2b_model_is_pinned() {
+	validate_fs_records_s2b(&FsFiles::production()).unwrap();
+	for (name, mutate, diagnostic) in [
+		(
+			"early coins drawn after the bundle input",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(&mut files.s2b, "  new kem_coins: bitstring;\n", "");
+				replace_once(
+					&mut files.s2b,
+					"  in(c, bundle: bitstring) [precise];\n",
+					"  in(c, bundle: bitstring) [precise];\n  new kem_coins: bitstring;\n",
+				);
+			}) as Box<dyn Fn(&mut FsFiles)>,
+			"fs-records-s2b Rust-ordered process changed",
+		),
+		(
+			"sequence-one gate removed from the real gate library",
+			Box::new(|files: &mut FsFiles| files.gate = files.nogate.clone()),
+			"fs-records-s2b-gate.pvl finish gate changed",
+		),
+		(
+			"cached key retained by the real window",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.window,
+					"fs_s2b_cached_after_success(cached_2: bool) = false.",
+					"fs_s2b_cached_after_success(cached_2: bool) = cached_2.",
+				)
+			}),
+			"fs-records-s2b-window.pvl receive-window hooks changed",
+		),
+		(
+			"failed open consumes the target in the real window",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.window,
+					"fs_s2b_failed_r(r: nat, target: nat) = r.",
+					"fs_s2b_failed_r(r: nat, target: nat) = target.",
+				)
+			}),
+			"fs-records-s2b-window.pvl receive-window hooks changed",
+		),
+		(
+			"stale control restores nothing",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.stale,
+					"fs_s2b_failed_r(r: nat, target: nat) = 1.",
+					"fs_s2b_failed_r(r: nat, target: nat) = r.",
+				)
+			}),
+			"fs-control-stale.pvl receive-window hooks changed",
+		),
+		(
+			"rejection event dropped from one branch",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.receive,
+					"event FsReceiveRejected(\n",
+					"event FsReceiveRejectedElsewhere(\n",
+				)
+			}),
+			"fs-records-s2b receive step rejections at t <= T_max changed",
+		),
+		(
+			"far acceptance counted as a record",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.receive,
+					"event FsFarAccepted(\n",
+					"event FsReceived(\n",
+				)
+			}),
+			"fs-records-s2b receive step",
+		),
+		(
+			"receive attempt removed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.s2b_bounds[2],
+					"expand FS_S2B_RECV_STEP(FsS2bRecv3, FsS2bRecvStop).\nexpand FS_S2B_RECV_STEP(FsS2bRecv2, FsS2bRecv3).\n",
+					"expand FS_S2B_RECV_STEP(FsS2bRecv2, FsS2bRecvStop).\n",
+				)
+			}),
+			"fs-records-s2b bound K_r = 3 changed",
+		),
+		(
+			"far anchor lowered to a materialised chain",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.s2b,
+					"      receive_chain_4,\n      1,\n      false\n",
+					"      receive_chain_3,\n      1,\n      false\n",
+				)
+			}),
+			"fs-records-s2b Rust-ordered process changed",
+		),
+		(
+			"fresh tasking made adversary-known",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.taskings,
+					"registration_payload(app_prefix_2, tasking_body_2)",
+					"registration_payload(app_prefix_2, app_prefix_2)",
+				)
+			}),
+			"fs-records-s2b-taskings.pvl fresh taskings changed",
+		),
+		(
+			"chosen form loses its fresh branch",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.chosen,
+					"registration_payload(app_prefix_2, tasking_body_2)",
+					"app_prefix_2",
+				)
+			}),
+			"fs-records-s2b-taskings-chosen.pvl taskings changed",
+		),
+	] {
+		let mut changed = FsFiles::production();
+		mutate(&mut changed);
+		let error =
+			validate_fs_records_s2b(&changed).expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+	}
+}
+
+#[test]
 fn free_schedule_checker_loader_and_targets_are_pinned() {
 	validate_fs_checker(FS_CHECKER, FS_CHECKER_TESTS).unwrap();
 	let mut queries = FS_REGISTRATION_TARGETS
 		.iter()
 		.map(|(_, _, _, query, _)| (*query).to_owned())
+		.chain(
+			FS_S2B_TARGETS
+				.iter()
+				.map(|(_, _, _, query, _)| (*query).to_owned()),
+		)
 		.collect::<Vec<_>>();
 	queries.sort();
 	queries.dedup();
@@ -22635,6 +23611,31 @@ fn free_schedule_checker_loader_and_targets_are_pinned() {
 			"environment.pvl loaded",
 			"    \"fs-common.pvl\",\n)",
 			"    \"fs-common.pvl\",\n    \"environment.pvl\",\n)",
+		),
+		(
+			"record security result moved to the fresh taskings",
+			"        \"fs-records-s2b-c1.pv\",\n        [S2B_C1 + \" is true.\"],\n        taskings=CHOSEN,\n",
+			"        \"fs-records-s2b-c1.pv\",\n        [S2B_C1 + \" is true.\"],\n",
+		),
+		(
+			"record control without its mutant",
+			"        window=STALE,\n",
+			"",
+		),
+		(
+			"inverted control made an ordinary control",
+			"        inverted=True,\n",
+			"",
+		),
+		(
+			"record secrecy rule dropped",
+			"S2B_FRESH_ONLY = (\"fs-records-s2b-s1.pv\", \"fs-records-s2b-s4.pv\")",
+			"S2B_FRESH_ONLY = (\"fs-records-s2b-s4.pv\",)",
+		),
+		(
+			"record default taskings switched",
+			"    taskings=TASKINGS,\n    inverted=False,\n):",
+			"    taskings=CHOSEN,\n    inverted=False,\n):",
 		),
 	] {
 		let mut changed = FS_CHECKER.to_owned();

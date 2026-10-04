@@ -17,7 +17,9 @@
    functional contract, persistence is out of scope, and the proof Server is
    an idealisation with perfect key management and no backup or restore
    (owner decision OD2).  doc/impl/proverif-free-schedule-registration.md
-   explains the family, its bounds and the meaning of every event. *)
+   and doc/impl/proverif-free-schedule-records.md explain the scenarios and
+   their bounds, and doc/impl/proverif-fs-event-meaning.md fixes the meaning
+   of every event as a Rust API outcome. *)
 
 (* Bridges.  fs_kid(n) stands for server_kid + n with n >= 1: the Rust
    peer-ID counter starts at server_kid and every successful build returns
@@ -88,22 +90,24 @@ fun fs_build(): bitstring [data].
    payload the registration application plaintext, dir a direction, t a frame
    sequence and m a record plaintext.
 
-   Ghost fields.  Some fields are session labels that no Rust call returns:
-   root on FsServerCommitted and on every record event (the root from which
-   that ratchet was initialised; Rust drops it after deriving the chains),
-   init on FsServerCommitted (the init of the accept that produced the
-   token), rid on FsBeaconStarted (the Beacon never computes it) and kid on
-   Beacon receives (the Beacon's own assigned ID).  A claim that mentions a
-   ghost field quantifies over it as a function of the run history; Rust
-   cannot observe it.
+   Fields that the call does not return.  root on FsServerCommitted is a
+   field of the opaque token, and on every record event it is a ghost (the
+   root from which that ratchet was initialised; Rust drops it after
+   deriving the chains); init on FsServerCommitted is a ghost (the init of
+   the accept that produced the token); rid on FsBeaconStarted is derived
+   (the Beacon never computes it); kid on Beacon receives is the Beacon's
+   stored assigned ID, which the receive does not return.  A claim that
+   mentions such a field quantifies over it as a function of the run
+   history; no Rust caller observes it at that event.
 
    Failure-cause events (FsServerReplayRejected, FsServerAcceptFailed,
    FsBeaconFinishOpenedLater, FsReceiveRejected) are finer than the Rust
    outcome, which is the same None for every failure.  They are used only by
-   witnesses and definitional checks, never by security results. *)
+   witnesses, definitional checks and negative controls, never by security
+   results. *)
 
 (* get_registration_bundle returned Some(bundle): the Beacon signed its
-   tagged keys once and moved to InitSent.  rid is a ghost. *)
+   tagged keys once and moved to InitSent.  rid is derived. *)
 event FsBeaconStarted(
   bitstring,
   bitstring,
@@ -146,8 +150,9 @@ event FsServerAcceptFailed(
 ).
 
 (* build_registration_response on obj returned Some(response): the peer
-   (B, ratchet) was installed under kid and the counter advanced.  init and
-   root are ghosts taken from the accept that produced the token. *)
+   (B, ratchet) was installed under kid and the counter advanced.  init is a
+   ghost and root a token field, both from the accept that produced the
+   token. *)
 event FsServerCommitted(
   bitstring,
   bitstring,
@@ -193,8 +198,10 @@ event FsReceived(direction, bitstring, bitstring, key_id, bitstring, nat, bitstr
    the receive worker stops afterwards. *)
 event FsFarAccepted(direction, bitstring, bitstring, key_id, bitstring, nat).
 
-(* Witness only (record scenarios): a parsed frame with the expected sender
-   whose receive attempt returned None with the entry state preserved. *)
+(* Witnesses and controls only (record scenarios): a parsed frame with the
+   expected sender whose receive attempt returned None with the entry state
+   preserved.  A record scenario may emit it only in some rejection
+   branches; its documentation names them. *)
 event FsReceiveRejected(direction, bitstring, bitstring, key_id, bitstring, nat).
 
 (**************************************************************************)

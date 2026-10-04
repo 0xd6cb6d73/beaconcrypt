@@ -1,0 +1,14 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b C5b, witness written as a correspondence (expected FALSE):
+   failure neutrality.  "A rejected attempt at sequence t never precedes an
+   acceptance of t" is false: a forged frame at t is rejected and the
+   genuine frame at t is accepted afterwards.  Also the target of the
+   control C-FAILMUT, under which it must become TRUE. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat, m: bitstring,
+      i: time, j: time;
+  event(FsReceiveRejected(server_to_beacon(), s, b, kid, root, t))@i
+  && event(FsReceived(server_to_beacon(), s, b, kid, root, t, m))@j
+  ==> j < i.
+
+process FsRecordsS2bMain()

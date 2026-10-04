@@ -5,6 +5,10 @@ proofs/pro-verif/check-registration-response.py	set	1	set maxHyp=2.	doc/formal-v
 proofs/pro-verif/check-registration-response.py	set	1	set preciseActions=false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
 proofs/pro-verif/check-registration-set.py	set	1	set preciseActions = true.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
 proofs/pro-verif/fs-common.pvl	nounif	1	nounif y: bitstring; attacker(x25519_public(y)).	doc/formal-verification-analysis.md#the-fs-selection-heuristic-nx
+proofs/pro-verif/fs-records-s2b-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-records-s2b-taskings-chosen.pvl	precise	6	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-records-s2b-taskings.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-records-s2b.pvl	precise	3	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
 proofs/pro-verif/fs-registration.pvl	precise	3	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
 proofs/pro-verif/general-registration-admission.pv	set	1	set explainDerivation = false.	doc/formal-verification-analysis.md#proverif-output-only-settings
 proofs/pro-verif/general-registration-admission.pv	set	1	set traceDisplay = none.	doc/formal-verification-analysis.md#proverif-output-only-settings

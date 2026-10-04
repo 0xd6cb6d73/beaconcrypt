@@ -1,0 +1,15 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-s2b C5c, the replay-rejected witness, written as a
+   correspondence (expected FALSE): "every rejection at sequence t precedes
+   every acceptance of t" is false: after a Beacon accepted t, a parsed
+   frame at t from the pinned Server ID is rejected.  FsReceiveRejected
+   carries no frame, so this alone does not show that the rejected frame was
+   the genuine one; C3 does that. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat, m: bitstring,
+      i: time, j: time;
+  event(FsReceived(server_to_beacon(), s, b, kid, root, t, m))@i
+  && event(FsReceiveRejected(server_to_beacon(), s, b, kid, root, t))@j
+  ==> j < i.
+
+process FsRecordsS2bMain()

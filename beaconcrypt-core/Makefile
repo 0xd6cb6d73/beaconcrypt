@@ -88,7 +88,8 @@ PROVERIF_FS_TIMEOUT ?= 1800
 PROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760
 PROVERIF_FS_LOG_DIR ?=
 PROVERIF_FS_SCENARIOS := \
-	fs-registration
+	fs-registration \
+	fs-records-s2b
 PROVERIF_FS_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_FS_SCENARIOS))
 PROVERIF_VERIFY_TARGETS := $(addprefix verify-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_GENERATED_TARGETS := $(addprefix check-generated-proverif-,$(PROVERIF_SCENARIOS))
@@ -255,7 +256,16 @@ check-proverif-fs: check-proverif-transcript-fidelity
 
 check-proverif-fs-registration: check-proverif-extraction check-proverif-transcript-fidelity
 	python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
-	python3 $(PROVERIF_DIR)/check-free-schedule.py --proverif '$(PROVERIF)' \
+	python3 $(PROVERIF_DIR)/check-free-schedule.py --scenario fs-registration \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_FS_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')
+
+check-proverif-fs-records-s2b: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
+	python3 $(PROVERIF_DIR)/check-free-schedule.py --scenario fs-records-s2b \
+		--proverif '$(PROVERIF)' \
 		--timeout '$(PROVERIF_FS_TIMEOUT)' \
 		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
 		$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')

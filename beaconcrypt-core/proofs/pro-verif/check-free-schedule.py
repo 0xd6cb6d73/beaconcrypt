@@ -9,10 +9,11 @@ proved", unknown or inconclusive results, unconfirmed traces, errors and
 warnings, and it requires exactly one reconstructed trace for every FALSE
 result. Classes: security (TRUE, counted as evidence), definitional (TRUE by
 construction, never counted), witness (FALSE with a trace: the event is
-reachable), control (FALSE with a trace on a negative-control mutant) and
-limitation (FALSE with a trace: documented expected consequence of an owner
-decision). Every result is a symbolic result for a bounded process, never a
-computational bound.
+reachable), control (a negative-control mutant: FALSE with a trace when the
+mutant breaks a claim, or TRUE without a trace for an inverted control, whose
+mutant makes a witness unreachable) and limitation (FALSE with a trace:
+documented expected consequence of an owner decision). Every result is a
+symbolic result for a bounded process, never a computational bound.
 """
 
 import argparse
@@ -33,6 +34,10 @@ HERE = Path(__file__).resolve().parent
 CLASSES = ("security", "definitional", "witness", "control", "limitation")
 TRUE_CLASSES = ("security", "definitional")
 
+REGISTRATION = "fs-registration"
+RECORDS_S2B = "fs-records-s2b"
+SCENARIOS = (REGISTRATION, RECORDS_S2B)
+
 # Shared loader of every fs target, in this order, before the scenario libraries.
 COMMON_LOADER = (
     "production-transcript-interface.pvl",
@@ -51,6 +56,37 @@ REGISTRATION_PROCESS = "fs-registration.pvl"
 # limitations run at the smallest bound that exhibits them.
 REGISTRATION_SECURITY_BOUND = 3
 
+# fs-records-s2b: the receive-window, finish-gate and taskings libraries, the
+# receive step, the bound file with K_r receive attempts, then the process. One
+# bundle per Server object; K_s = 2 and T_max = 3 with the far branch are fixed in
+# the libraries. Security results run at K_r = 3; witnesses and controls run at
+# the smallest K_r that exhibits them.
+WINDOW = "fs-records-s2b-window.pvl"
+RETAIN = "fs-control-retain.pvl"
+STALE = "fs-control-stale.pvl"
+FAILMUT = "fs-control-failmut.pvl"
+GATE = "fs-records-s2b-gate.pvl"
+NOGATE = "fs-control-nogate.pvl"
+TASKINGS = "fs-records-s2b-taskings.pvl"
+CHOSEN = "fs-records-s2b-taskings-chosen.pvl"
+S2B_RECEIVE = "fs-records-s2b-receive.pvl"
+S2B_PROCESS = "fs-records-s2b.pvl"
+S2B_SECURITY_BOUND = 3
+# Secrecy and the witness that the attacker reads a tasking are false by
+# construction when the adversary chooses whole plaintexts, so they use the fresh
+# taskings.
+S2B_FRESH_ONLY = ("fs-records-s2b-s1.pv", "fs-records-s2b-s4.pv")
+
+# Each mutant library and the real library it replaces.
+MUTANTS = {
+    NOCHECK: CONSUMED,
+    UKS: BINDING,
+    RETAIN: WINDOW,
+    STALE: WINDOW,
+    FAILMUT: WINDOW,
+    NOGATE: GATE,
+}
+
 A1 = "inj-event(FsBeaconEstablished(s,b,init_1,kid,root_1,ad,p)) ==> inj-event(FsServerCommitted(obj_1,s,b,init_1,kid,root_1,ad,p))"
 A1_NON_INJECTIVE = "event(FsBeaconEstablished(s,b,init_1,kid,root_1,ad,p)) ==> event(FsServerCommitted(obj_1,s,b,init_1,kid,root_1,ad,p))"
 A2 = "event(FsServerAccepted(obj_1,s,ed_public(k),init_1,rid,root_1)) ==> event(FsBeaconStarted(s2,ed_public(k),init_1,rid)) || attacker(k)"
@@ -68,6 +104,20 @@ W1 = "not event(FsBeaconEstablished(s,b,init_1,fs_kid(1),root_1,ad,p))"
 W2 = "not event(FsBeaconEstablished(s,b,init_1,fs_kid(2),root_1,ad,p))"
 W3 = "not (event(FsServerAccepted(obj_1,s,ed_public(k),init_1,rid,root_1)) && attacker(k))"
 
+S2B_A1 = "inj-event(FsBeaconEstablished(s,b,init_2,kid,root_2,ad,p)) ==> inj-event(FsServerCommitted(obj_2,s,b,init_2,kid,root_2,ad,p))"
+S2B_A1_NON_INJECTIVE = "event(FsBeaconEstablished(s,b,init_2,kid,root_2,ad,p)) ==> event(FsServerCommitted(obj_2,s,b,init_2,kid,root_2,ad,p))"
+S2B_A2 = "event(FsServerAccepted(obj_2,s,ed_public(k),init_2,rid,root_2)) ==> event(FsBeaconStarted(s2,ed_public(k),init_2,rid)) || attacker(k)"
+S2B_C1 = "inj-event(FsReceived(server_to_beacon,s,b,kid,root_2,t,m)) ==> inj-event(FsSent(server_to_beacon,s,b,kid,root_2,t,m))"
+S2B_C1_NON_INJECTIVE = "event(FsReceived(server_to_beacon,s,b,kid,root_2,t,m)) ==> event(FsSent(server_to_beacon,s,b,kid,root_2,t,m))"
+S2B_C3 = "event(FsReceived(d,s,b,kid,root_2,t,m1))@i && event(FsReceived(d,s,b,kid,root_2,t,m2))@j ==> i = j"
+S2B_C4 = "not event(FsFarAccepted(server_to_beacon,s,b,kid,root_2,t))"
+S2B_S1 = "event(FsSent(server_to_beacon,s,ed_public(k),kid,root_2,t,m)) && attacker(m) ==> attacker(k)"
+S2B_A3 = "not event(FsBeaconFinishOpenedLater(s,b,t))"
+S2B_C5A = "event(FsReceived(server_to_beacon,s,b,kid,root_2,3,m3))@i && event(FsReceived(server_to_beacon,s,b,kid,root_2,2,m2))@j ==> i > j"
+S2B_C5B = "event(FsReceiveRejected(server_to_beacon,s,b,kid,root_2,t))@i && event(FsReceived(server_to_beacon,s,b,kid,root_2,t,m))@j ==> i > j"
+S2B_C5C = "event(FsReceived(server_to_beacon,s,b,kid,root_2,t,m))@i && event(FsReceiveRejected(server_to_beacon,s,b,kid,root_2,t))@j ==> i > j"
+S2B_S4 = "not (event(FsSent(server_to_beacon,s,b,kid,root_2,2,m)) && attacker(m))"
+
 
 @dataclass(frozen=True)
 class Target:
@@ -75,28 +125,71 @@ class Target:
     scenario: str
     cls: str
     bound: int
-    consumed: str
-    binding: str
+    hooks: tuple
     query: str
     results: tuple
+    inverted: bool = False
 
     def libraries(self):
-        if self.scenario != "fs-registration":
-            raise ValueError(f"unknown fs scenario: {self.scenario}")
-        return COMMON_LOADER + (
-            self.consumed,
-            self.binding,
-            REGISTRATION_PROCESS,
-            f"fs-registration-k{self.bound}.pvl",
-        )
+        if self.scenario == REGISTRATION:
+            return (
+                COMMON_LOADER
+                + self.hooks
+                + (
+                    REGISTRATION_PROCESS,
+                    f"fs-registration-k{self.bound}.pvl",
+                )
+            )
+        if self.scenario == RECORDS_S2B:
+            return (
+                COMMON_LOADER
+                + self.hooks
+                + (
+                    S2B_RECEIVE,
+                    f"fs-records-s2b-kr{self.bound}.pvl",
+                    S2B_PROCESS,
+                )
+            )
+        raise ValueError(f"unknown fs scenario: {self.scenario}")
+
+    def expected_true(self):
+        return self.cls in TRUE_CLASSES or self.inverted
 
     def expected_traces(self):
-        return 0 if self.cls in TRUE_CLASSES else 1
+        return 0 if self.expected_true() else 1
+
+    def bounds(self):
+        if self.scenario == RECORDS_S2B:
+            return f"K_reg = 1, (K_s, K_r, T_max) = (2, {self.bound}, 3)"
+        return f"K_reg = {self.bound}"
 
 
 def registration(name, cls, bound, query, results, consumed=CONSUMED, binding=BINDING):
     return Target(
-        name, "fs-registration", cls, bound, consumed, binding, query, tuple(results)
+        name, REGISTRATION, cls, bound, (consumed, binding), query, tuple(results)
+    )
+
+
+def records_s2b(
+    name,
+    cls,
+    bound,
+    query,
+    results,
+    window=WINDOW,
+    gate=GATE,
+    taskings=TASKINGS,
+    inverted=False,
+):
+    return Target(
+        name,
+        RECORDS_S2B,
+        cls,
+        bound,
+        (window, gate, taskings),
+        query,
+        tuple(results),
+        inverted,
     )
 
 
@@ -144,6 +237,105 @@ TARGETS = (
         [A1 + " is false.", "(even " + A1_NON_INJECTIVE + " is false.)"],
         binding=UKS,
     ),
+    records_s2b(
+        "s2b-A1",
+        "security",
+        3,
+        "fs-records-s2b-a1.pv",
+        [S2B_A1 + " is true."],
+        taskings=CHOSEN,
+    ),
+    records_s2b(
+        "s2b-A2",
+        "security",
+        3,
+        "fs-records-s2b-a2.pv",
+        [S2B_A2 + " is true."],
+        taskings=CHOSEN,
+    ),
+    records_s2b(
+        "s2b-C1",
+        "security",
+        3,
+        "fs-records-s2b-c1.pv",
+        [S2B_C1 + " is true."],
+        taskings=CHOSEN,
+    ),
+    records_s2b(
+        "s2b-C3",
+        "security",
+        3,
+        "fs-records-s2b-c3.pv",
+        [S2B_C3 + " is true."],
+        taskings=CHOSEN,
+    ),
+    records_s2b(
+        "s2b-C4",
+        "security",
+        3,
+        "fs-records-s2b-c4.pv",
+        [S2B_C4 + " is true."],
+        taskings=CHOSEN,
+    ),
+    records_s2b(
+        "s2b-S1", "security", 3, "fs-records-s2b-s1.pv", [S2B_S1 + " is true."]
+    ),
+    records_s2b(
+        "s2b-A3", "witness", 1, "fs-records-s2b-a3.pv", [S2B_A3 + " is false."]
+    ),
+    records_s2b(
+        "s2b-C5a", "witness", 2, "fs-records-s2b-c5a.pv", [S2B_C5A + " is false."]
+    ),
+    records_s2b(
+        "s2b-C5b", "witness", 2, "fs-records-s2b-c5b.pv", [S2B_C5B + " is false."]
+    ),
+    records_s2b(
+        "s2b-C5c", "witness", 2, "fs-records-s2b-c5c.pv", [S2B_C5C + " is false."]
+    ),
+    records_s2b(
+        "s2b-S4", "witness", 1, "fs-records-s2b-s4.pv", [S2B_S4 + " is false."]
+    ),
+    records_s2b(
+        "s2b-C-RETAIN-C1",
+        "control",
+        3,
+        "fs-records-s2b-c1.pv",
+        [S2B_C1 + " is false.", "(but " + S2B_C1_NON_INJECTIVE + " is true.)"],
+        window=RETAIN,
+    ),
+    records_s2b(
+        "s2b-C-RETAIN-C3",
+        "control",
+        3,
+        "fs-records-s2b-c3.pv",
+        [S2B_C3 + " is false."],
+        window=RETAIN,
+    ),
+    records_s2b(
+        "s2b-C-NOGATE",
+        "control",
+        1,
+        "fs-records-s2b-a1.pv",
+        [S2B_A1 + " is false.", "(even " + S2B_A1_NON_INJECTIVE + " is false.)"],
+        gate=NOGATE,
+    ),
+    records_s2b(
+        "s2b-C-STALE",
+        "control",
+        3,
+        "fs-records-s2b-c3.pv",
+        [S2B_C3 + " is false."],
+        window=STALE,
+    ),
+    records_s2b(
+        "s2b-C-FAILMUT",
+        "control",
+        2,
+        "fs-records-s2b-c5b.pv",
+        [S2B_C5B + " is true."],
+        window=FAILMUT,
+        inverted=True,
+    ),
 )
 
 FORBIDDEN = (
@@ -160,6 +352,38 @@ def log_name(target):
     return stem.strip("-") + ".log"
 
 
+# The real and mutant hook libraries each scenario accepts, position by position.
+HOOKS = {
+    REGISTRATION: ((CONSUMED, NOCHECK), (BINDING, UKS)),
+    RECORDS_S2B: ((WINDOW, RETAIN, STALE, FAILMUT), (GATE, NOGATE), (TASKINGS, CHOSEN)),
+}
+
+
+def validate_scenario(target):
+    """Check the scenario-specific bound and hook libraries of one target."""
+    if target.scenario not in SCENARIOS:
+        raise ValueError(f"{target.name}: unknown fs scenario {target.scenario}")
+    allowed = HOOKS[target.scenario]
+    if len(target.hooks) != len(allowed) or any(
+        hook not in choices for hook, choices in zip(target.hooks, allowed)
+    ):
+        raise ValueError(f"{target.name}: unknown scenario library")
+    if target.scenario == REGISTRATION:
+        if target.bound not in (1, 2, 3):
+            raise ValueError(f"{target.name}: unsupported bound {target.bound}")
+        if target.cls == "security" and target.bound != REGISTRATION_SECURITY_BOUND:
+            raise ValueError(f"{target.name}: security results run at K_reg = 3")
+    else:
+        if target.bound not in (1, 2, 3):
+            raise ValueError(f"{target.name}: unsupported bound {target.bound}")
+        if target.cls == "security" and target.bound != S2B_SECURITY_BOUND:
+            raise ValueError(f"{target.name}: security results run at K_r = 3")
+        if target.query in S2B_FRESH_ONLY and target.hooks[2] != TASKINGS:
+            raise ValueError(
+                f"{target.name}: adversary-chosen plaintexts make this query false by construction"
+            )
+
+
 def validate_targets(targets=TARGETS, directory=HERE):
     """Check the manifest itself: classes, bounds, libraries and query files."""
     names = [target.name for target in targets]
@@ -167,29 +391,21 @@ def validate_targets(targets=TARGETS, directory=HERE):
         raise ValueError("duplicate fs target name")
     if len({log_name(target) for target in targets}) != len(targets):
         raise ValueError("two fs targets share a log file")
-    used_queries = set()
+    used_queries = {scenario: set() for scenario in SCENARIOS}
     for target in targets:
         if target.cls not in CLASSES:
             raise ValueError(f"{target.name}: unknown class {target.cls}")
-        if target.bound not in (1, 2, 3):
-            raise ValueError(f"{target.name}: unsupported bound {target.bound}")
-        if target.cls == "security" and target.bound != REGISTRATION_SECURITY_BOUND:
-            raise ValueError(f"{target.name}: security results run at K_reg = 3")
-        mutants = [
-            lib for lib in (target.consumed, target.binding) if lib in (NOCHECK, UKS)
-        ]
-        if target.consumed not in (CONSUMED, NOCHECK) or target.binding not in (
-            BINDING,
-            UKS,
-        ):
-            raise ValueError(f"{target.name}: unknown scenario library")
+        validate_scenario(target)
+        mutants = [hook for hook in target.hooks if hook in MUTANTS]
         if (target.cls == "control") != (len(mutants) == 1):
             raise ValueError(
                 f"{target.name}: a control loads exactly one mutant, others none"
             )
+        if target.inverted and target.cls != "control":
+            raise ValueError(f"{target.name}: only a control can be inverted")
         if not target.results:
             raise ValueError(f"{target.name}: no expected result")
-        verdict = " is true." if target.cls in TRUE_CLASSES else " is false."
+        verdict = " is true." if target.expected_true() else " is false."
         if not target.results[0].endswith(verdict):
             raise ValueError(f"{target.name}: result polarity does not match its class")
         for line in target.results:
@@ -202,13 +418,17 @@ def validate_targets(targets=TARGETS, directory=HERE):
                 raise ValueError(f"{target.name}: missing library {library}")
         if not (directory / target.query).is_file():
             raise ValueError(f"{target.name}: missing query file {target.query}")
-        used_queries.add(target.query)
-    present = {path.name for path in directory.glob("fs-registration-*.pv")}
-    if present != used_queries:
-        raise ValueError(
-            f"fs query files and targets differ: unused={sorted(present - used_queries)} "
-            f"missing={sorted(used_queries - present)}"
-        )
+        if not target.query.startswith(target.scenario + "-"):
+            raise ValueError(f"{target.name}: query file of another scenario")
+        used_queries[target.scenario].add(target.query)
+    for scenario in SCENARIOS:
+        present = {path.name for path in directory.glob(f"{scenario}-*.pv")}
+        used = used_queries[scenario]
+        if present != used:
+            raise ValueError(
+                f"fs query files and targets differ: unused={sorted(present - used)} "
+                f"missing={sorted(used - present)}"
+            )
 
 
 def check_output(output, target):
@@ -299,20 +519,22 @@ def run(proverif, targets, logdir, timeout, address_space_kib, results_path):
             failures.append(str(error))
             print(f"FAILED {target.name}: {error}", flush=True)
             continue
-        verdict = "TRUE" if target.cls in TRUE_CLASSES else "FALSE"
+        verdict = "TRUE" if target.expected_true() else "FALSE"
         rows.append((target, verdict, seconds, peak))
         print(
-            f"{target.name}: {target.cls}, K_reg = {target.bound}: {verdict} as expected "
+            f"{target.name}: {target.cls}, {target.bounds()}: {verdict} as expected "
             f"in {seconds:.2f} s, peak RSS {peak} KiB",
             flush=True,
         )
     if results_path:
         with open(results_path, "w") as output:
-            output.write("target\tclass\tbound\tverdict\tseconds\tpeak_rss_kib\n")
+            output.write(
+                "target\tscenario\tclass\tbound\tverdict\tseconds\tpeak_rss_kib\n"
+            )
             for target, verdict, seconds, peak in rows:
                 output.write(
-                    f"{target.name}\t{target.cls}\tK_reg={target.bound}\t{verdict}\t"
-                    f"{seconds:.2f}\t{peak}\n"
+                    f"{target.name}\t{target.scenario}\t{target.cls}\t{target.bounds()}\t"
+                    f"{verdict}\t{seconds:.2f}\t{peak}\n"
                 )
     if failures:
         raise SystemExit("fs ProVerif check failed:\n" + "\n".join(failures))
@@ -363,24 +585,33 @@ def main():
     )
     parser.add_argument("--results", type=Path, help="write a TSV of times and peaks")
     parser.add_argument(
+        "--scenario",
+        choices=SCENARIOS,
+        help="run only the targets of this scenario (default: every scenario)",
+    )
+    parser.add_argument(
         "--only", action="append", default=[], help="run only this target"
     )
     parser.add_argument("--list", action="store_true", help="list the targets and exit")
     args = parser.parse_args()
     validate_targets()
+    targets = tuple(
+        target
+        for target in TARGETS
+        if args.scenario is None or target.scenario == args.scenario
+    )
     if args.list:
-        for target in TARGETS:
+        for target in targets:
             libraries = " ".join(target.libraries()[len(COMMON_LOADER) :])
             print(
-                f"{target.name}\t{target.cls}\tK_reg={target.bound}\t{target.query}\t{libraries}"
+                f"{target.name}\t{target.cls}\t{target.bounds()}\t{target.query}\t{libraries}"
             )
         return
-    targets = TARGETS
     if args.only:
-        unknown = set(args.only) - {target.name for target in TARGETS}
+        unknown = set(args.only) - {target.name for target in targets}
         if unknown:
             parser.error(f"unknown target: {sorted(unknown)}")
-        targets = tuple(target for target in TARGETS if target.name in args.only)
+        targets = tuple(target for target in targets if target.name in args.only)
     run_logged(
         args.proverif,
         targets,

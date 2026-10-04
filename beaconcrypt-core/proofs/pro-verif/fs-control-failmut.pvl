@@ -1,0 +1,19 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* NEGATIVE CONTROL C-FAILMUT for fs-records-s2b: a failed open at a target
+   t <= T_max consumes the target as a success would, without returning a
+   plaintext.  A failed cached open removes the cached key, and a failed
+   future open sets r := t and caches the skipped key of position 2 when it
+   skips it.  The far branch is unchanged.  Successful opens are unchanged.
+   Loaded instead of fs-records-s2b-window.pvl; the C5b witness (a rejected
+   attempt at t followed by the acceptance of t) must become unreachable,
+   so its correspondence becomes TRUE. *)
+letfun fs_s2b_cached_after_success(cached_2: bool) = false.
+
+letfun fs_s2b_failed_r(r: nat, target: nat) =
+  if target <= r then r else target.
+
+letfun fs_s2b_failed_cached_2(r: nat, target: nat, cached_2: bool) =
+  if target = 2 then false
+  else if r = 1 && target = 3 then true
+  else cached_2.
