@@ -18,7 +18,7 @@
    an idealisation with perfect key management and no backup or restore
    (owner decision OD2).  doc/impl/proverif-free-schedule-registration.md
    and doc/impl/proverif-free-schedule-records.md explain the scenarios and
-   their bounds, and doc/impl/proverif-fs-event-meaning.md fixes the meaning
+   their bounds, and doc/proverif-fs-event-meaning.md fixes the meaning
    of every event as a Rust API outcome. *)
 
 (* Bridges.  fs_kid(n) stands for server_kid + n with n >= 1: the Rust
