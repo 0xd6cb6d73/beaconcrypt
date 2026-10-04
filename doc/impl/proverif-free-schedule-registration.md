@@ -149,7 +149,29 @@ Measured traces of the FALSE results: R3, an honest bundle accepted and built on
 
 ## Results of the serial verification pass
 
-Recorded in the commit that follows the model commit.
+The verification record is one serial run of `make -C beaconcrypt-core check-proverif-fs` on 2026-10-04 at commit `7518974`, inside the locked proof shell (entered through a copy of `flake.nix` and `flake.lock` whose SHA-256 match the repository files), holding the shared ProVerif lock, with ProVerif 2.05, `PROVERIF_FS_TIMEOUT` = 1800 s and `PROVERIF_FS_ADDRESS_SPACE_KIB` = 10485760, on a 16 GB machine used by this run alone. The transcript-fidelity test (23 tests) and the checker regression test (32 tests) passed first. Every target ran as its own ProVerif process, one after another, and gave its exact expected result lines:
+
+| Target | Class | K_reg | Verdict | ProVerif time (s) | Peak RSS (KiB) |
+| --- | --- | --- | --- | --- | --- |
+| A1 | security | 3 | TRUE | 1038.33 | 9918052 |
+| A2 | security | 3 | TRUE | 109.37 | 5759460 |
+| R1 | security | 3 | TRUE | 415.31 | 5838180 |
+| R1' | security | 3 | TRUE | 569.21 | 5822308 |
+| S3-server | security | 3 | TRUE | 88.00 | 4995940 |
+| S3-beacon | security | 3 | TRUE | 404.81 | 5285092 |
+| R2 | definitional | 2 | TRUE | 2.34 | 259428 |
+| R3 | witness | 2 | FALSE (reachable) | 1.54 | 164804 |
+| R5 | witness | 2 | FALSE (reachable) | 2.68 | 296772 |
+| W1 | witness | 1 | FALSE (reachable) | 0.08 | 37140 |
+| W2 | witness | 2 | FALSE (reachable) | 1.97 | 180292 |
+| W3 | witness | 1 | FALSE (reachable) | 0.04 | 37140 |
+| R4 | limitation | 1 | FALSE (expected) | 0.04 | 37140 |
+| C-NOCHECK | control | 2 | FALSE (expected) | 1.61 | 182468 |
+| C-UKS | control | 1 | FALSE (expected) | 0.08 | 37140 |
+
+The run took 2635.4 s of ProVerif time (2625.0 s for the six security results) and 2666.4 s of wall time for the whole Make target, including both transcript-fidelity runs and the shell start, which is within the share of about one hour of the 3 h fs budget (OD7). `check-inventory`, run afterwards through Make in the same shell, reported that the inventory matches the reviewed boundary.
+
+A1 is the critical run: 9918052 KiB is 94.6% of the address-space cap. A model change that enlarges the Server step can push it over the cap; the recorded fallback is A1 at K_reg = 2 (3.4 s), which would be a weakening. The other security results need 5.0-5.9 GB. Peak figures of 37140 KiB for the shortest runs are the floor of the measurement: the checker reads the peak resident memory of the child process with `wait4`, which includes the forked checker before it starts ProVerif. Development runs of the same targets with GNU `time` agree within about 4% (A1: 1002.6 s, 9917344 KB), and the P0 spike measured A1 at K_reg = 3 in 1071.7 s and 9.80 GB.
 
 ## What the bounds do not cover
 
