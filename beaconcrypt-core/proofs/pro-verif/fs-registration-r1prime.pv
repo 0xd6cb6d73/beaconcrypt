@@ -2,9 +2,9 @@
 
 (* fs-registration R1', security result, K_reg = 3: one Server object
    accepts an honest identity at most once, whatever the registration ID,
-   because an honest Beacon signs exactly one one-time key and the consumed
-   set refuses its second use.  The query does not mention the Beacon's
-   pin. *)
+   because an honest Beacon outputs at most one signed bundle (so one
+   one-time key) and the consumed set refuses its second use.  The query
+   does not mention the Beacon's pin. *)
 query obj: bitstring, s: bitstring, k: bitstring,
       i1: beaconcrypt_core__pqxdh__t_VerifiedInitKex, i2: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
       rid1: beaconcrypt_core__pqxdh__t_RegistrationId, rid2: beaconcrypt_core__pqxdh__t_RegistrationId,

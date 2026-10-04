@@ -21937,12 +21937,14 @@ fn count_precise(path: &str, text: &str, found: &mut DeclarationCounts) {
 
 /// Python files under proofs/pro-verif write ProVerif text at run time from their string
 /// literals and from the scanned .pv and .pvl files. Every string literal, docstrings included,
-/// is scanned like ProVerif text. A declaration keyword counts when it starts the literal or
-/// follows a format placeholder, a `.`, `{`, `}` or the end `*)` of a ProVerif comment, because
-/// run-time text may be joined there. Forbidden declarations fail; every other declaration and
-/// every `[precise]` needs an allowlist entry under the Python file's path. Secrecy assumptions
-/// (`not`) are not scanned here: literals quote expected `RESULT not ...` lines, and ProVerif
-/// verifies every secrecy assumption itself, stopping with an error when it cannot.
+/// is scanned like ProVerif text, after the second decoding stage of a `re` replacement template
+/// (`python_template_text`). A declaration keyword counts when it starts the literal or follows
+/// a format placeholder, a group reference, a `.`, `{`, `}` or the end `*)` of a ProVerif
+/// comment, because run-time text may be joined there. Forbidden declarations fail; every other
+/// declaration and every `[precise]` needs an allowlist entry under the Python file's path.
+/// Secrecy assumptions (`not`) are not scanned here: literals quote expected `RESULT not ...`
+/// lines, and ProVerif verifies every secrecy assumption itself, stopping with an error when it
+/// cannot.
 fn scan_python_declarations(
 	path: &str,
 	source: &str,
@@ -21950,6 +21952,7 @@ fn scan_python_declarations(
 ) -> Result<(), String> {
 	let literals = python_literals(source).map_err(|error| format!("{path}: {error}"))?;
 	for literal in &literals {
+		let literal = &python_template_text(literal);
 		for (start, word) in fs_words(literal) {
 			let kind_allowlisted = ALLOWLISTED_DECLARATIONS.contains(&word) && word != "not";
 			if !(FORBIDDEN_DECLARATIONS.contains(&word) || kind_allowlisted) {
@@ -22202,6 +22205,55 @@ fn python_percent_placeholders(literal: &str) -> String {
 			text.push_str("{}");
 		} else {
 			text.push('%');
+		}
+	}
+	text
+}
+
+/// A literal as Python's `re` module reads it when it is used as a replacement template, a second
+/// decoding stage after the literal's own. A group reference (`\` followed by digits, or
+/// `\g<...>`) becomes the placeholder `{}`, and `\` followed by an ASCII letter becomes a space,
+/// since the template decodes it to a control character such as a newline or rejects it. An
+/// escaped backslash stays. Each change can only add places where a keyword counts, so the text
+/// is scanned for every literal, whether or not it is used as a template.
+fn python_template_text(literal: &str) -> String {
+	let characters = literal.chars().collect::<Vec<_>>();
+	let mut text = String::with_capacity(literal.len());
+	let mut index = 0;
+	while let Some(&character) = characters.get(index) {
+		index += 1;
+		if character != '\\' {
+			text.push(character);
+			continue;
+		}
+		match characters.get(index) {
+			Some('\\') => {
+				index += 1;
+				text.push_str("\\\\");
+			}
+			Some(next) if next.is_ascii_digit() => {
+				while characters.get(index).is_some_and(char::is_ascii_digit) {
+					index += 1;
+				}
+				text.push_str("{}");
+			}
+			Some('g') if characters.get(index + 1) == Some(&'<') => {
+				match characters[index..].iter().position(|next| *next == '>') {
+					Some(end) => {
+						index += end + 1;
+						text.push_str("{}");
+					}
+					None => {
+						index += 1;
+						text.push(' ');
+					}
+				}
+			}
+			Some(next) if next.is_ascii_alphabetic() => {
+				index += 1;
+				text.push(' ');
+			}
+			_ => text.push('\\'),
 		}
 	}
 	text
@@ -22748,6 +22800,24 @@ fn proverif_declarations_are_allowlisted() {
 			"forbidden ProVerif declaration axiom in a string literal",
 		),
 		(
+			"axiom after a template group reference",
+			"proofs/pro-verif/check-registration-set.py",
+			"EXTRA = re.sub(r\"(process)\", r\"\\1 axiom x: bitstring; attacker(x) ==> false.\", \"process\")",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"axiom after a template newline",
+			"proofs/pro-verif/check-registration-set.py",
+			"EXTRA = re.sub(r\"\\Z\", r\"\\naxiom x: bitstring; attacker(x) ==> false.\\n\", \"free c: channel.\")",
+			"forbidden ProVerif declaration axiom in a string literal",
+		),
+		(
+			"nounif after a named template group in a plain literal",
+			"proofs/pro-verif/check-registration-response.py",
+			"EXTRA = re.sub(\"(?P<p>\\\\Z)\", \"\\\\g<p>nounif x: bitstring; attacker(x).\", \"free c: channel.\")",
+			"not on the reviewed allowlist",
+		),
+		(
 			"elimtrue in a bytes literal",
 			"proofs/pro-verif/test-free-schedule-checker.py",
 			"EXTRA = b'elimtrue x: bitstring; attacker(x).'",
@@ -22830,6 +22900,10 @@ fn proverif_declarations_are_allowlisted() {
 		)
 		.unwrap(),
 		["a'b", "c\n", "\\d", "k", "{}z{", "t\nu", "A{}%"]
+	);
+	assert_eq!(
+		python_template_text("\\1a\\12b\\g<x>c\\nd\\\\e\\.f\\g<g"),
+		"{}a{}b{}c d\\\\e\\.f <g"
 	);
 	let nx = "proofs/pro-verif/fs-common.pvl\tnounif\t1\tnounif y: bitstring; attacker(x25519_public(y)).\tdoc/formal-verification-analysis.md#the-fs-selection-heuristic-nx\n";
 	assert_eq!(count(DECLARATION_ALLOWLIST, nx), 1);

@@ -3,7 +3,11 @@
 (* fs-registration W3, witness, K_reg = 1 (expected reachable): a Server
    object accepts a bundle for an identity whose secret the attacker holds,
    so attacker identities are really served by the same code and the
-   corruption disjuncts of A2, R1' and S3 are not vacuous. *)
+   corruption disjunct of A2 is not vacuous.  The corruption disjuncts of
+   R1' and of the Server form of S3 need more: a second accepted bundle of
+   the same attacker identity on that object, which follows after more
+   attacker inputs, and a build, which follows such an accept after one more
+   attacker choice.  No separate witness runs either. *)
 query obj: bitstring, s: bitstring, k: bitstring, init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
       rid: beaconcrypt_core__pqxdh__t_RegistrationId, root: bitstring;
   event(FsServerAccepted(obj, s, ed_public(k), init, rid, root)) && attacker(k).
