@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-10-05T23:17:24.524187+00:00",
+  "reviewer": "/root",
+  "decision": "APPROVE_SCOPED_OPERATIONAL_RESULT",
+  "manifest_sha256": "8d110ec66929f191e4cdc58e59a13fc1f6e26f3782325c35657923654cab1a15",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServerAccept.lean": "5af3c5b7c0f2d5aa233fe1b46df0375aefcb620faaf91b5fba126e5fb811fe7d",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointInitializedAccept.lean": "ade1dc274445098ba0505393003bc69fcb4f6c5904e2278a0030f1b4db7683b9",
+    "doc/impl/registration-joint-initialized-accept.md": "ce94afe93033d6edc069e501666e0acde3411da7f5d2f6e704b97ef417e6ffae",
+    "doc/formal-verification-analysis.md": "0e3ff9f18fc7fd0db1410538443aced6ced8e72608c5e073f17b81a679e94c4f"
+  },
+  "checks": [
+    "Read both complete modules and initialized-accept guide; verified all four frozen hashes,14 paired standard-only guards and two empty exit0 direct logs.",
+    "The actual nativeAccept collector/tail sequence, session allocation on failed attempts, exact consumed-list reinstall and successful pending publication are retained. No output marginal or honest-target premise replaces full program equality.",
+    "Constructor support derives the exact private slot and public identity; generated seed remains in source/private interpreter. Caller-known imports stay origin-distinct and no security eligibility is inferred.",
+    "Private arrays remain exact while actual history can change. Uniform map transport charges actual96+E accept and qInit plus generated32; original scalar/KEM/base/restricted Extract work remains explicit.",
+    "Remaining root/global service partition, HMAC/build/scheduler ownership, freshness/selection and crypto hops are explicitly open; source root uses the existing restricted ROM contract, not a new primitive conclusion."
+  ],
+  "new_builds": false,
+  "findings": []
+}
