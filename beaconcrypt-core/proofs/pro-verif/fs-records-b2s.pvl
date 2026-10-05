@@ -56,11 +56,11 @@
      which covers Beacons that pin the honest key as well as Beacons that
      pin any other key or ID.  Every trace of FsRecordsB2sMain is a trace of
      FsRecordsB2sMainAnyPin, in which the attacker chooses the honest pin
-     for every Beacon.  A1, A2, S2, C4, the definitional check C3-finish
-     and the witness PINREAD run in FsRecordsB2sMainAnyPin; the other
-     targets run in FsRecordsB2sMain, and the pin-independence argument E3
-     of the b2s guide (step 13, not yet reviewed) is what would carry the
-     security results C2, C3 and UKSr over to any Beacon pins. *)
+     for every Beacon.  A1, A2, S2, UKSr, C4, C3-finish, PINREAD and C-UKS
+     run in FsRecordsB2sMainAnyPin; the other targets run in
+     FsRecordsB2sMain, and the pin-independence argument E3 of the b2s
+     guide (step 13, not yet reviewed) is what would carry the security
+     results C2 and C3 over to any Beacon pins. *)
 
 (* One Server object: one registration in Rust order except for the early
    draw of the ephemeral secret and the KEM coins (v2), the response build on

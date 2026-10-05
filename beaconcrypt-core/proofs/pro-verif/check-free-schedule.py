@@ -115,6 +115,15 @@ B2S_FRESH_ONLY = (
 # plaintexts does not fit the caps: C2, which also runs with fresh plaintexts in the
 # failure-interleaving form (G0 option B), and C4.
 B2S_FAILSTOP_QUERIES = ("fs-records-b2s-c2.pv", "fs-records-b2s-c4.pv")
+# Every b2s query file ends with one of the two main processes (E3): the pin-free
+# process, in which the attacker chooses the pinned Server key and Server ID of every
+# Beacon, or the process in which every Beacon pins the honest key and ID. Every trace of
+# the second is a trace of the first, so a TRUE result of the first implies the same
+# query in the second, and a FALSE result of the second is one of the first. The b2s
+# guide (step 13) lists which targets run in which process; a security result that runs
+# only with honest pins rests, for other pins, on the simulation argument written there.
+B2S_ANY_PIN = "process FsRecordsB2sMainAnyPin()"
+B2S_HONEST_PIN = "process FsRecordsB2sMain()"
 
 # Each mutant library and the real library it replaces.
 MUTANTS = {
@@ -633,6 +642,22 @@ def validate_scenario(target):
             )
 
 
+def uncommented(text):
+    """ProVerif text without its (* ... *) comments, whitespace normalised."""
+    return " ".join(re.sub(r"\(\*.*?\*\)", " ", text, flags=re.S).split())
+
+
+def b2s_pins(text):
+    """The main process a b2s query file runs: "any" (pin-free) or "honest"."""
+    body = " " + uncommented(text)
+    if body.count(" process ") == 1:
+        if body.endswith(" " + B2S_ANY_PIN):
+            return "any"
+        if body.endswith(" " + B2S_HONEST_PIN):
+            return "honest"
+    raise ValueError("a b2s query file must end with one of the two main processes")
+
+
 def validate_targets(targets=TARGETS, directory=HERE):
     """Check the manifest itself: classes, bounds, libraries and query files."""
     names = [target.name for target in targets]
@@ -676,6 +701,11 @@ def validate_targets(targets=TARGETS, directory=HERE):
             )
         if not target.query.startswith(target.scenario + "-"):
             raise ValueError(f"{target.name}: query file of another scenario")
+        if target.scenario == RECORDS_B2S:
+            try:
+                b2s_pins((directory / target.query).read_text())
+            except ValueError as error:
+                raise ValueError(f"{target.name}: {error}") from error
         used_queries[target.scenario].add(target.query)
     for scenario in SCENARIOS:
         present = {path.name for path in directory.glob(f"{scenario}-*.pv")}

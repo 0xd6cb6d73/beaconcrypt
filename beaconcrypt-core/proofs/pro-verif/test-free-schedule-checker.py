@@ -26,6 +26,36 @@ def target(name):
     return next(target for target in CHECKER.TARGETS if target.name == name)
 
 
+# The main process of every b2s target: "any" for the pin-free process, "honest" for the
+# process in which every Beacon pins the honest Server key and ID. The security targets
+# with honest pins (C2 in both forms and C3) rest, for other pins, on the simulation
+# argument of b2s guide step 13; witnesses and controls need no pin argument.
+B2S_PINS = {
+    "any": {
+        "b2s-A1",
+        "b2s-A2",
+        "b2s-C4",
+        "b2s-S2",
+        "b2s-UKSr",
+        "b2s-C3-finish",
+        "b2s-PINREAD",
+        "b2s-C-UKS",
+    },
+    "honest": {
+        "b2s-C2",
+        "b2s-C2-chosen-fs",
+        "b2s-C3",
+        "b2s-C5a",
+        "b2s-C5b",
+        "b2s-C5c",
+        "b2s-S4",
+        "b2s-FAR",
+        "b2s-C-RETAIN",
+        "b2s-C-STALE",
+    },
+}
+
+
 def receipt(target, traces=None):
     traces = target.expected_traces() if traces is None else traces
     primary = "".join(f"RESULT {line}\n" for line in target.results)
@@ -302,6 +332,49 @@ class ManifestTests(unittest.TestCase):
         text = (CHECKER.HERE / security.query).read_text()
         self.assertIn("FsReceived(beacon_to_server(),", text)
         self.assertNotIn("FsReceived(d,", text)
+
+    def test_b2s_main_processes(self):
+        pins = {}
+        for each in CHECKER.TARGETS:
+            if each.scenario == CHECKER.RECORDS_B2S:
+                text = (CHECKER.HERE / each.query).read_text()
+                pins.setdefault(CHECKER.b2s_pins(text), set()).add(each.name)
+        self.assertEqual(pins, B2S_PINS)
+        # Comments do not count, and a query file needs exactly one of the two processes.
+        self.assertEqual(
+            CHECKER.b2s_pins(
+                "(* process FsRecordsB2sMain() *)\n" + CHECKER.B2S_ANY_PIN
+            ),
+            "any",
+        )
+        for text in (
+            "process 0",
+            "process FsRecordsS2bMain()",
+            CHECKER.B2S_ANY_PIN + "\n" + CHECKER.B2S_HONEST_PIN,
+            CHECKER.B2S_HONEST_PIN + " | 0",
+        ):
+            with self.assertRaises(ValueError):
+                CHECKER.b2s_pins("query x: bitstring; event(E(x)).\n" + text)
+
+    def test_b2s_query_needs_a_main_process(self):
+        with tempfile.TemporaryDirectory() as directory:
+            copy = Path(directory)
+            for path in CHECKER.HERE.glob("*.pv*"):
+                shutil.copy(path, copy / path.name)
+            (copy / "extraction").mkdir()
+            shutil.copy(
+                CHECKER.HERE / "extraction/lib.pvl", copy / "extraction/lib.pvl"
+            )
+            CHECKER.validate_targets(CHECKER.TARGETS, copy)
+            query = copy / "fs-records-b2s-uksr.pv"
+            query.write_text(
+                query.read_text().replace(
+                    CHECKER.B2S_ANY_PIN, "process FsB2sBeacon(a, b)"
+                )
+            )
+            with self.assertRaises(ValueError) as caught:
+                CHECKER.validate_targets(CHECKER.TARGETS, copy)
+            self.assertIn("b2s-UKSr", str(caught.exception))
 
     def test_loader_order(self):
         for each in CHECKER.TARGETS:

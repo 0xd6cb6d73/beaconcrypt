@@ -22249,6 +22249,19 @@ const FS_B2S_TARGETS: [(&str, &str, &str, &str, &str); 18] = [
 	),
 ];
 
+/// The fs-records-b2s query files that run the pin-free process `FsRecordsB2sMainAnyPin`, in
+/// which the attacker chooses every Beacon's pin (E3); every other b2s query file runs
+/// `FsRecordsB2sMain`, in which every Beacon pins the honest Server key and ID.
+const FS_B2S_PIN_FREE_QUERIES: [&str; 7] = [
+	"fs-records-b2s-a1.pv",
+	"fs-records-b2s-a2.pv",
+	"fs-records-b2s-c3-finish.pv",
+	"fs-records-b2s-c4.pv",
+	"fs-records-b2s-pinread.pv",
+	"fs-records-b2s-s2.pv",
+	"fs-records-b2s-uksr.pv",
+];
+
 const FS_EVENTS: [&str; 12] = [
 	"event FsBeaconStarted(bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId).",
 	"event FsServerAccepted(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId, bitstring).",
@@ -23440,6 +23453,8 @@ fn validate_fs_b2s_checker(checker: &str, tests: &str, section: &str) -> Result<
 		"if target.query in B2S_FRESH_ONLY and target.hooks[2] != SENDS:",
 		"B2S_RETAIN: B2S_WINDOW,",
 		"B2S_STALE: B2S_WINDOW,",
+		"B2S_ANY_PIN = \"process FsRecordsB2sMainAnyPin()\"",
+		"B2S_HONEST_PIN = \"process FsRecordsB2sMain()\"",
 	] {
 		require_once(checker, wanted, "fs-records-b2s checker rule")?;
 	}
@@ -23463,6 +23478,14 @@ fn validate_fs_b2s_checker(checker: &str, tests: &str, section: &str) -> Result<
 		(
 			"def records_b2s( name, cls, bound, query, results, window=B2S_WINDOW, binding=BINDING, sends=SENDS, failstop=False, ):",
 			"fs-records-b2s default libraries",
+		),
+		(
+			"if target.scenario == RECORDS_B2S: try: b2s_pins((directory / target.query).read_text()) except ValueError as error: raise ValueError(f\"{target.name}: {error}\") from error",
+			"fs-records-b2s main-process check",
+		),
+		(
+			"body = \" \" + uncommented(text) if body.count(\" process \") == 1: if body.endswith(\" \" + B2S_ANY_PIN): return \"any\" if body.endswith(\" \" + B2S_HONEST_PIN): return \"honest\" raise ValueError(",
+			"fs-records-b2s main-process rule",
 		),
 	] {
 		require_once(&compact(checker), &compact(wanted), label)?;
@@ -23513,6 +23536,35 @@ fn validate_fs_b2s_checker(checker: &str, tests: &str, section: &str) -> Result<
 		&compact("{\"security\": 8, \"definitional\": 1, \"witness\": 6, \"control\": 3,}"),
 		"fs-records-b2s checker class-count regression",
 	)
+}
+
+/// Each fs-records-b2s query file must end with the main process that `FS_B2S_PIN_FREE_QUERIES`
+/// gives it, and run no other process.
+fn validate_fs_b2s_pins(files: &[(String, String)]) -> Result<(), String> {
+	for (name, source) in files {
+		let text = format!(" {}", normalized(&uncommented_pv(source)?));
+		let wanted = if FS_B2S_PIN_FREE_QUERIES.contains(&name.as_str()) {
+			" process FsRecordsB2sMainAnyPin()"
+		} else {
+			" process FsRecordsB2sMain()"
+		};
+		if text.matches(" process ").count() != 1 || !text.ends_with(wanted) {
+			return Err(format!("{name}: fs-records-b2s main process changed"));
+		}
+	}
+	Ok(())
+}
+
+fn fs_b2s_query_sources() -> Vec<(String, String)> {
+	let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("proofs/pro-verif");
+	fs_query_files_on_disk()
+		.into_iter()
+		.filter(|name| name.starts_with("fs-records-b2s-"))
+		.map(|name| {
+			let source = std::fs::read_to_string(directory.join(&name)).unwrap();
+			(name, source)
+		})
+		.collect()
 }
 
 fn fs_query_files_on_disk() -> Vec<String> {
@@ -24841,6 +24893,46 @@ fn free_schedule_checker_loader_and_targets_are_pinned() {
 	queries.sort();
 	queries.dedup();
 	assert_eq!(fs_query_files_on_disk(), queries);
+	let b2s_queries = fs_b2s_query_sources();
+	assert_eq!(b2s_queries.len(), 14);
+	validate_fs_b2s_pins(&b2s_queries).unwrap();
+	for (name, from, to) in [
+		(
+			"pin-free UKSr moved back to honest pins",
+			"process FsRecordsB2sMainAnyPin()",
+			"process FsRecordsB2sMain()",
+		),
+		(
+			"honest-pin C3 moved to the pin-free process",
+			"process FsRecordsB2sMain()",
+			"process FsRecordsB2sMainAnyPin()",
+		),
+		(
+			"second process appended",
+			"process FsRecordsB2sMainAnyPin()",
+			"process FsRecordsB2sMainAnyPin()\nprocess FsRecordsB2sMain()",
+		),
+	] {
+		let target = if name.starts_with("honest-pin C3") {
+			"fs-records-b2s-c3.pv"
+		} else {
+			"fs-records-b2s-uksr.pv"
+		};
+		let changed = b2s_queries
+			.iter()
+			.map(|(file, source)| {
+				let mut source = source.clone();
+				if file == target {
+					replace_once(&mut source, from, to);
+				}
+				(file.clone(), source)
+			})
+			.collect::<Vec<_>>();
+		assert!(
+			validate_fs_b2s_pins(&changed).is_err(),
+			"mutation survived: {name}"
+		);
+	}
 	for (name, from, to) in [
 		(
 			"security bound lowered",
@@ -24967,6 +25059,16 @@ fn free_schedule_checker_loader_and_targets_are_pinned() {
 			"b2s definitional finish check counted as a security result",
 			"        \"b2s-C3-finish\",\n        \"definitional\",",
 			"        \"b2s-C3-finish\",\n        \"security\",",
+		),
+		(
+			"b2s main-process check dropped",
+			"        if target.scenario == RECORDS_B2S:\n            try:\n",
+			"        if False:\n            try:\n",
+		),
+		(
+			"b2s honest-pin process accepted as pin-free",
+			"            return \"honest\"\n",
+			"            return \"any\"\n",
 		),
 	] {
 		let mut changed = FS_CHECKER.to_owned();
