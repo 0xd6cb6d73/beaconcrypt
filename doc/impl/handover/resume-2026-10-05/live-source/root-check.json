@@ -1,0 +1,19 @@
+{
+  "command": [
+    "flock",
+    "/tmp/bc-arc-scratch/lean.lock",
+    "timeout",
+    "300",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+    "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+  ],
+  "lean_path": "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean:/tmp/beaconcrypt-pin-width-olean/svc:/tmp/beaconcrypt-registration-joint-service-check/olean:/tmp/beaconcrypt-publication-composition-check/olean:/tmp/beaconcrypt-server-auth-withheld-olean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/Cli/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/cslib/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/batteries/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/Qq/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/aesop/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/importGraph/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/plausible/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/PolyFun/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/aeneas/backends/lean/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/mathlib/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/Hax/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/packages/VCVio/.lake/build/lib/lean:/tmp/beaconcrypt-server-auth-ctx-observer-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean:/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/lib/lean",
+  "start": "2026-10-06T01:04:34.918964",
+  "end": "2026-10-06T01:04:37.467311",
+  "exit": 0,
+  "source_sha256": "b77afaa98f4131b049e4344e1c71e14a31ae3e3e237a7d75db2c97d6797e75d5",
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,32 @@
+{
+  "worktree": "/tmp/beaconcrypt-live-source-consumer-integration",
+  "base": "9be4f3ea1cb9b8a3f753b5cd96bc63b7a665c700",
+  "files": {
+    "beaconcrypt-core/proofs/check-inventory.sh": "57ba52c4d6e8d60ef7ec29363ab014f1ca5ee6af615c5a5ea21ca9b84c56c613",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "b77afaa98f4131b049e4344e1c71e14a31ae3e3e237a7d75db2c97d6797e75d5",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "ca936f010f5a78485ecb761b82e7bb8e8b5f2a5d56a7166ecde0f0811da546cc",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "757970c728116b7ae92f8dcb909f3f17162bc8c079a869c84f7e8eb8c27060a9",
+    "doc/formal-verification-analysis.md": "3f464c1a9d4b9394299556c6d7ffdd237e57b2bd21e4eb59991319e24c78f335",
+    "doc/impl/later-challenge-inside-source.md": "add5b78e07d5e3dd43e0eba5ff4b032444aa93b2873218faf8d33b5638f44e80",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFirst.lean": "4e1f8b06438deabb888dc569c0576c0b5691a8d83a4923f8281dc81b4082ba29",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideFirst.lean": "74e695f65afadf70123ab030a2fc47fcc891445ac2083eb4a41b3ac7db2fde56",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideRetained.lean": "45e09f9573268b1c0b8037bbf739bf4b07abb9a2c67a49f27f4b2711b70082de",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRetainedHead.lean": "ecc46b523ca421c5140c96b7fecdcd85747f3f9b1e2ad0619d758da492ac67a4",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRetainedSequence.lean": "1727d32cf5dbdf7e78ea83c2f945872b0745766418058f0600c768f14e8be963",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSampleFirst.lean": "52cf8bcdfce5b54ef0ae08dd087d802863e229970fb58172a41feeb6b1231bbd",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointLiveRead.lean": "c3866a86f826c1fdc57bf605f7f47832ce6f88344c747819aaa53af3915b76fb",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRevealCosts.lean": "4d3c68af53f81fa9479d184861d8536a52590a59aee0d7361fd08d27e079efc1",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRevealSchedule.lean": "0974d6dc4c3cc25fc12e9cc03fb39c0e1f86774884c8c03e066b807504c0bd47",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxForwardFirstCut.lean": "d68ee3e7b3fa103667df443cd9917e3ae3a3aaa82f4e8309061b563099db8fd9",
+    "doc/impl/later-challenge-inside-first.md": "a6493121bccbfe9718f2d390b44226db80c60bda54303ae85c108fb2734f3073",
+    "doc/impl/later-challenge-retained-executor.md": "f09b8a0d46440a6e848bd32615b6410a31322a59deaf5bdede2762b910210c12",
+    "doc/impl/live-source-consumer-integration.md": "458842d222348b508befca341840c8be33069707585e88d5747bf7a21f36bbdf",
+    "doc/impl/registration-joint-live-reveals.md": "4c49a46fdb20cd23c5bac3c899c8c5ea3feaa6b4dac485b6f994c536e813e723"
+  },
+  "proof_count": 43,
+  "new_modules": 10,
+  "retained_dependency_blobs": 977,
+  "retained_source_identical_artifacts": 1315,
+  "scope": "Current native field disclosures and full actual retained record callback/counter correspondence. Operational results only; no final secrecy/freshness/global bridge.",
+  "validation": "All ten direct Lean checks passed; combined root and inventory running, receipts in this directory."
+}

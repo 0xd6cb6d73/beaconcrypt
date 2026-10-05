@@ -1,0 +1,12 @@
+{
+  "PqxdhRegistrationJointLiveRead": 7,
+  "PqxdhRegistrationJointRevealSchedule": 6,
+  "PqxdhRegistrationJointRevealCosts": 8,
+  "RawCtxForwardFirstCut": 6,
+  "PqxdhLaterChallengeInsideFirst": 2,
+  "PqxdhLaterChallengeSampleFirst": 1,
+  "PqxdhLaterChallengeGeneratedFirst": 1,
+  "PqxdhLaterChallengeRetainedHead": 4,
+  "PqxdhLaterChallengeRetainedSequence": 6,
+  "PqxdhLaterChallengeInsideRetained": 2
+}

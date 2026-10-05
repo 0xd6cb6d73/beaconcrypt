@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1311
+	[handwritten-lean]=1321
 	[handwritten-proverif]=177
 	[inventory]=2
 	[lean-control]=12
@@ -25853,6 +25853,144 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem cost_total([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem cost_total"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.program_bound$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.program_bound"
 require_line_count 1 '^theorem program_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem program_bound"
+
+# Reviewed current-field reads and complete retained record continuations.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointLiveRead.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointLiveRead$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointLiveRead root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointLiveRead theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointLiveRead guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointLiveRead\.entry_source$' "$selected_source_module" "PqxdhRegistrationJointLiveRead dependency BeaconcryptCore.Computational.PqxdhRegistrationJointLiveRead.entry_source"
+require_line_count 1 '^theorem entry_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointLiveRead theorem entry_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointLiveRead\.entry_value$' "$selected_source_module" "PqxdhRegistrationJointLiveRead dependency BeaconcryptCore.Computational.PqxdhRegistrationJointLiveRead.entry_value"
+require_line_count 1 '^theorem entry_value([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointLiveRead theorem entry_value"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointLiveRead\.entry_slots$' "$selected_source_module" "PqxdhRegistrationJointLiveRead dependency BeaconcryptCore.Computational.PqxdhRegistrationJointLiveRead.entry_slots"
+require_line_count 1 '^theorem entry_slots([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointLiveRead theorem entry_slots"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointLiveRead\.read_source$' "$selected_source_module" "PqxdhRegistrationJointLiveRead dependency BeaconcryptCore.Computational.PqxdhRegistrationJointLiveRead.read_source"
+require_line_count 1 '^theorem read_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointLiveRead theorem read_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointLiveRead\.read_owned$' "$selected_source_module" "PqxdhRegistrationJointLiveRead dependency BeaconcryptCore.Computational.PqxdhRegistrationJointLiveRead.read_owned"
+require_line_count 1 '^theorem read_owned([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointLiveRead theorem read_owned"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointLiveRead\.read_projection$' "$selected_source_module" "PqxdhRegistrationJointLiveRead dependency BeaconcryptCore.Computational.PqxdhRegistrationJointLiveRead.read_projection"
+require_line_count 1 '^theorem read_projection([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointLiveRead theorem read_projection"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointLiveRead\.erased_client$' "$selected_source_module" "PqxdhRegistrationJointLiveRead dependency BeaconcryptCore.Computational.PqxdhRegistrationJointLiveRead.erased_client"
+require_line_count 1 '^theorem erased_client([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointLiveRead theorem erased_client"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRevealSchedule.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointRevealSchedule$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointRevealSchedule root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealSchedule\.query_source$' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealSchedule.query_source"
+require_line_count 1 '^theorem query_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule theorem query_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealSchedule\.query_owned$' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealSchedule.query_owned"
+require_line_count 1 '^theorem query_owned([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule theorem query_owned"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealSchedule\.program_source$' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealSchedule.program_source"
+require_line_count 1 '^theorem program_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule theorem program_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealSchedule\.generated_source$' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealSchedule.generated_source"
+require_line_count 1 '^theorem generated_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule theorem generated_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealSchedule\.query_projection$' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealSchedule.query_projection"
+require_line_count 1 '^theorem query_projection([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule theorem query_projection"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealSchedule\.program_projection$' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealSchedule.program_projection"
+require_line_count 1 '^theorem program_projection([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealSchedule theorem program_projection"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRevealCosts.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointRevealCosts root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointRevealCosts theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointRevealCosts guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealCosts\.entry_bound$' "$selected_source_module" "PqxdhRegistrationJointRevealCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts.entry_bound"
+require_line_count 1 '^theorem entry_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealCosts theorem entry_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealCosts\.read_bound$' "$selected_source_module" "PqxdhRegistrationJointRevealCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts.read_bound"
+require_line_count 1 '^theorem read_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealCosts theorem read_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealCosts\.query_bound$' "$selected_source_module" "PqxdhRegistrationJointRevealCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts.query_bound"
+require_line_count 1 '^theorem query_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealCosts theorem query_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealCosts\.cost_total$' "$selected_source_module" "PqxdhRegistrationJointRevealCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts.cost_total"
+require_line_count 1 '^theorem cost_total([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealCosts theorem cost_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealCosts\.program_bound$' "$selected_source_module" "PqxdhRegistrationJointRevealCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts.program_bound"
+require_line_count 1 '^theorem program_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealCosts theorem program_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealCosts\.query_uniform$' "$selected_source_module" "PqxdhRegistrationJointRevealCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts.query_uniform"
+require_line_count 1 '^theorem query_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealCosts theorem query_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealCosts\.program_uniform$' "$selected_source_module" "PqxdhRegistrationJointRevealCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts.program_uniform"
+require_line_count 1 '^theorem program_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealCosts theorem program_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointRevealCosts\.uniform_bill$' "$selected_source_module" "PqxdhRegistrationJointRevealCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts.uniform_bill"
+require_line_count 1 '^theorem uniform_bill([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointRevealCosts theorem uniform_bill"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/RawCtxForwardFirstCut.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.RawCtxForwardFirstCut$' proofs/lean/BeaconcryptCore.lean "RawCtxForwardFirstCut root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "RawCtxForwardFirstCut theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "RawCtxForwardFirstCut guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RawCtxForwardFirstCut\.pure_first$' "$selected_source_module" "RawCtxForwardFirstCut dependency BeaconcryptCore.Computational.RawCtxForwardFirstCut.pure_first"
+require_line_count 1 '^theorem pure_first([[:space:]]|$)' "$selected_source_module" "RawCtxForwardFirstCut theorem pure_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RawCtxForwardFirstCut\.query_first$' "$selected_source_module" "RawCtxForwardFirstCut dependency BeaconcryptCore.Computational.RawCtxForwardFirstCut.query_first"
+require_line_count 1 '^theorem query_first([[:space:]]|$)' "$selected_source_module" "RawCtxForwardFirstCut theorem query_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RawCtxForwardFirstCut\.map_first$' "$selected_source_module" "RawCtxForwardFirstCut dependency BeaconcryptCore.Computational.RawCtxForwardFirstCut.map_first"
+require_line_count 1 '^theorem map_first([[:space:]]|$)' "$selected_source_module" "RawCtxForwardFirstCut theorem map_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RawCtxForwardFirstCut\.mapTags_first$' "$selected_source_module" "RawCtxForwardFirstCut dependency BeaconcryptCore.Computational.RawCtxForwardFirstCut.mapTags_first"
+require_line_count 1 '^theorem mapTags_first([[:space:]]|$)' "$selected_source_module" "RawCtxForwardFirstCut theorem mapTags_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RawCtxForwardFirstCut\.lift_first$' "$selected_source_module" "RawCtxForwardFirstCut dependency BeaconcryptCore.Computational.RawCtxForwardFirstCut.lift_first"
+require_line_count 1 '^theorem lift_first([[:space:]]|$)' "$selected_source_module" "RawCtxForwardFirstCut theorem lift_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.RawCtxForwardFirstCut\.cut_start$' "$selected_source_module" "RawCtxForwardFirstCut dependency BeaconcryptCore.Computational.RawCtxForwardFirstCut.cut_start"
+require_line_count 1 '^theorem cut_start([[:space:]]|$)' "$selected_source_module" "RawCtxForwardFirstCut theorem cut_start"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideFirst.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeInsideFirst$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeInsideFirst root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeInsideFirst theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeInsideFirst guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeInsideFirst\.inside_first$' "$selected_source_module" "PqxdhLaterChallengeInsideFirst dependency BeaconcryptCore.Computational.PqxdhLaterChallengeInsideFirst.inside_first"
+require_line_count 1 '^theorem inside_first([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeInsideFirst theorem inside_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeInsideFirst\.cut_start$' "$selected_source_module" "PqxdhLaterChallengeInsideFirst dependency BeaconcryptCore.Computational.PqxdhLaterChallengeInsideFirst.cut_start"
+require_line_count 1 '^theorem cut_start([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeInsideFirst theorem cut_start"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSampleFirst.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeSampleFirst$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeSampleFirst root import"
+require_line_count 1 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeSampleFirst theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeSampleFirst guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeSampleFirst\.reached_first$' "$selected_source_module" "PqxdhLaterChallengeSampleFirst dependency BeaconcryptCore.Computational.PqxdhLaterChallengeSampleFirst.reached_first"
+require_line_count 1 '^theorem reached_first([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeSampleFirst theorem reached_first"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFirst.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFirst$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeGeneratedFirst root import"
+require_line_count 1 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeGeneratedFirst theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeGeneratedFirst guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeGeneratedFirst\.source_start$' "$selected_source_module" "PqxdhLaterChallengeGeneratedFirst dependency BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFirst.source_start"
+require_line_count 1 '^theorem source_start([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeGeneratedFirst theorem source_start"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRetainedHead.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedHead$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeRetainedHead root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeRetainedHead theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeRetainedHead guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeRetainedHead\.frame_step$' "$selected_source_module" "PqxdhLaterChallengeRetainedHead dependency BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedHead.frame_step"
+require_line_count 1 '^theorem frame_step([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeRetainedHead theorem frame_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeRetainedHead\.origin_step$' "$selected_source_module" "PqxdhLaterChallengeRetainedHead dependency BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedHead.origin_step"
+require_line_count 1 '^theorem origin_step([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeRetainedHead theorem origin_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeRetainedHead\.parent_step$' "$selected_source_module" "PqxdhLaterChallengeRetainedHead dependency BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedHead.parent_step"
+require_line_count 1 '^theorem parent_step([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeRetainedHead theorem parent_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeRetainedHead\.parent_execute$' "$selected_source_module" "PqxdhLaterChallengeRetainedHead dependency BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedHead.parent_execute"
+require_line_count 1 '^theorem parent_execute([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeRetainedHead theorem parent_execute"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRetainedSequence.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeRetainedSequence root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeRetainedSequence\.live_run$' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence dependency BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence.live_run"
+require_line_count 1 '^theorem live_run([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence theorem live_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeRetainedSequence\.records_run$' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence dependency BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence.records_run"
+require_line_count 1 '^theorem records_run([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence theorem records_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeRetainedSequence\.record_kernel$' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence dependency BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence.record_kernel"
+require_line_count 1 '^theorem record_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence theorem record_kernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeRetainedSequence\.origin_kernel$' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence dependency BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence.origin_kernel"
+require_line_count 1 '^theorem origin_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence theorem origin_kernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeRetainedSequence\.send_kernel$' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence dependency BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence.send_kernel"
+require_line_count 1 '^theorem send_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence theorem send_kernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeRetainedSequence\.challenge_kernel$' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence dependency BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence.challenge_kernel"
+require_line_count 1 '^theorem challenge_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeRetainedSequence theorem challenge_kernel"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideRetained.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeInsideRetained$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeInsideRetained root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeInsideRetained theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeInsideRetained guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeInsideRetained\.callback$' "$selected_source_module" "PqxdhLaterChallengeInsideRetained dependency BeaconcryptCore.Computational.PqxdhLaterChallengeInsideRetained.callback"
+require_line_count 1 '^theorem callback([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeInsideRetained theorem callback"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeInsideRetained\.resumed_kernel$' "$selected_source_module" "PqxdhLaterChallengeInsideRetained dependency BeaconcryptCore.Computational.PqxdhLaterChallengeInsideRetained.resumed_kernel"
+require_line_count 1 '^theorem resumed_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeInsideRetained theorem resumed_kernel"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
