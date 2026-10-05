@@ -49,11 +49,11 @@ declare -A expected_category_counts=(
 	[generated-lean]=7
 	[generated-proverif]=1
 	[handwritten-lean]=1186
-	[handwritten-proverif]=173
+	[handwritten-proverif]=177
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=25
+	[validation]=27
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -123,6 +123,8 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/test-registration-beacon-checker.py \
 	proofs/pro-verif/check-free-schedule.py \
 	proofs/pro-verif/test-free-schedule-checker.py \
+	proofs/pro-verif/check-primitive-fidelity.py \
+	proofs/pro-verif/test-primitive-fidelity-checker.py \
 	proofs/pro-verif/declaration-allowlist.tsv \
 	tests/general_registration_admission.rs \
 	tests/proverif_transcript_fidelity.rs \
@@ -314,10 +316,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 22 \
+require_occurrence_count 24 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 25 '_to_bitstring' \
+require_occurrence_count 27 '_to_bitstring' \
 	"all handwritten _to_bitstring tokens including three initial-ratchet manifest facts" \
 	"${handwritten_proverif[@]}"
 
@@ -23739,5 +23741,11 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhServer
 require_line_count 1 '^theorem common_authentication([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCommonAuthentication theorem common_authentication"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhServerAuthCommonAuthentication\.common_authentication_with_resources$' "$selected_source_module" "PqxdhServerAuthCommonAuthentication dependency BeaconcryptCore.Computational.PqxdhServerAuthCommonAuthentication.common_authentication_with_resources"
 require_line_count 1 '^theorem common_authentication_with_resources([[:space:]]|$)' "$selected_source_module" "PqxdhServerAuthCommonAuthentication theorem common_authentication_with_resources"
+
+
+# Separate primitive-fidelity profile: source guards, exact results and serial wiring.
+require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
+require_line_count 2 '^\t\$\(MAKE\) check-proverif-primitive-fidelity$' Makefile "primitive-fidelity verification steps"
+python3 proofs/pro-verif/check-primitive-fidelity.py --check-only
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

@@ -22523,6 +22523,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"extract-proverif",
 			"check-proverif",
 			"check-proverif-fs",
+			"check-proverif-primitive-fidelity",
 			"extract-lean",
 			"check-lean",
 			"check-inventory",
@@ -22535,6 +22536,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"extract-proverif",
 			"check-proverif",
 			"check-proverif-fs",
+			"check-proverif-primitive-fidelity",
 		]) {
 		return Err(
 			"verify-proverif-in-shell must run check-proverif-fs after check-proverif".to_owned(),
@@ -24143,14 +24145,14 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		),
 		(
 			"fs group dropped from verify-in-shell",
-			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) extract-lean\n",
-			"\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) extract-lean\n",
 			"verify-in-shell must run check-proverif-fs",
 		),
 		(
 			"fs group dropped from verify-proverif-in-shell",
-			"\t$(MAKE) check-proverif-fs\n\nverify-proverif-live-material:",
-			"\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\nverify-proverif-live-material:",
 			"verify-proverif-in-shell must run check-proverif-fs",
 		),
 		(
@@ -24889,6 +24891,7 @@ fn free_schedule_checker_loader_and_targets_are_pinned() {
 				.iter()
 				.map(|(_, _, _, query, _)| (*query).to_owned()),
 		)
+		.chain(["fs-encoding-zero-retry.pv".to_owned()])
 		.collect::<Vec<_>>();
 	queries.sort();
 	queries.dedup();

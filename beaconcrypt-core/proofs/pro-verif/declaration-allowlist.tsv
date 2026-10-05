@@ -65,3 +65,5 @@ proofs/pro-verif/registration-set-admission-queries.pvl	set	1	set preciseActions
 proofs/pro-verif/registration-set-admission-reachability.pvl	set	1	set preciseActions = true.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
 proofs/pro-verif/registration-set-response-queries.pvl	set	1	set maxHyp = 2.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
 proofs/pro-verif/registration-set-response-queries.pvl	set	1	set preciseActions = false.	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/fs-encoding-interface.pvl	nounif	1	nounif y: bitstring; attacker(x25519_high_bit_alias(y)).	doc/formal-verification-analysis.md#the-fs-encoding-profile
+proofs/pro-verif/fs-encoding-registration.pvl	precise	3	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings

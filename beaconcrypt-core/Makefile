@@ -87,6 +87,8 @@ PROVERIF_CHECK_TARGETS := $(addprefix check-proverif-,$(PROVERIF_SCENARIOS))
 PROVERIF_FS_TIMEOUT ?= 1800
 PROVERIF_FS_ADDRESS_SPACE_KIB ?= 10485760
 PROVERIF_FS_LOG_DIR ?=
+# Separate owner-approved primitive/strong-secrecy group (2026-10-05).
+PROVERIF_PRIMITIVE_LOG_DIR ?=
 PROVERIF_FS_SCENARIOS := \
 	fs-registration \
 	fs-records-s2b \
@@ -127,7 +129,7 @@ LEAN_GENERATED_PATHS := \
 	verify-proverif-live-private-application check-proverif-live-private-application $(PROVERIF_APPLICATION_TARGETS) \
 	verify-proverif-kem-controller-auth check-proverif-kem-controller-auth \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
-	check-proverif-transcript-fidelity \
+	check-proverif-transcript-fidelity check-proverif-primitive-fidelity \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
 	check-proverif-extraction check-generated check-generated-lean \
@@ -149,6 +151,7 @@ verify-in-shell:
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
 	$(MAKE) check-proverif-fs
+	$(MAKE) check-proverif-primitive-fidelity
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 	$(MAKE) check-inventory
@@ -163,6 +166,7 @@ verify-proverif-in-shell:
 	$(MAKE) extract-proverif
 	$(MAKE) check-proverif
 	$(MAKE) check-proverif-fs
+	$(MAKE) check-proverif-primitive-fidelity
 
 verify-proverif-live-material:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -278,6 +282,15 @@ check-proverif-fs-records-b2s: check-proverif-extraction check-proverif-transcri
 		--timeout '$(PROVERIF_FS_TIMEOUT)' \
 		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
 		$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')
+
+# Kept outside both the parallel roster and the existing three-hour fs group.
+check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-primitive-fidelity-checker.py
+	python3 $(PROVERIF_DIR)/check-primitive-fidelity.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_FS_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_PRIMITIVE_LOG_DIR),--log-dir '$(PROVERIF_PRIMITIVE_LOG_DIR)')
 
 check-proverif-aead-commitment: check-proverif-extraction
 	@set -o pipefail; \
