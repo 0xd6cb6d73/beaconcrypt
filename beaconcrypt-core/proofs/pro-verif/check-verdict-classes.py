@@ -68,7 +68,7 @@ def validate(rows, expected):
 
 
 def extension_class_scope(name, target, driver):
-    """Reviewed local groups: finite token operations and open CTX controls."""
+    """Reviewed added groups with their exact interface and control scopes."""
     if name == "check-pending-registration":
         fixture, caps = {
             "pending-CROSS": (
@@ -99,6 +99,35 @@ def extension_class_scope(name, target, driver):
             "replicated open contexts and raw frame; public weak-AEAD fixture; "
             f"process={target.process}; query={target.query}; libraries="
             + ";".join(driver.LIBRARIES)
+        )
+        return cls, scope
+    if name == "check-active-strong-secrecy":
+        # Equivalence and single-world disclosure controls have different
+        # observations; neither adds an optional-plaintext receive oracle.
+        cls = "negative-control" if target.control else "security"
+        profile = {
+            "b2s": "AnyPin; honest-Server-pin challenge eligibility; T_max = 2",
+            "s2b": "honest pins; deferred matching (kid,root) challenge slot; T_max = 3",
+        }[target.direction]
+        if target.control == "ungated":
+            profile = {
+                "b2s": "AnyPin; honest-Server-pin eligibility removed; T_max = 2",
+                "s2b": "honest pins; matching-partner wait removed; T_max = 3",
+            }[target.direction]
+        experiment = {
+            "": "two-world observational equivalence",
+            "leak": "single-world fresh-secret plaintext disclosure control",
+            "ungated": "single-world fresh-secret eligibility-removal control",
+        }[target.control]
+        query = driver.FS.uncommented((HERE / target.query).read_text())
+        processes = re.findall(r"\bprocess (\w+)\(\)", query)
+        if len(processes) != 1:
+            raise ValueError("strong-secrecy process selector changed")
+        scope = (
+            f"{experiment}; K_reg = 1, K_s = 2, K_r = {target.bound}; {profile}; "
+            "labelled finish/receive Some/None bits; no plaintext/reveal oracle; "
+            f"process={processes[0]}; query={target.query}; libraries="
+            + ";".join(target.libraries())
         )
         return cls, scope
     raise ValueError(f"unreviewed extension scope: {name}")
@@ -157,7 +186,11 @@ def validate_scope(rows):
                 raise ValueError(
                     f"fs class, bounds or profile differs: {row['target']}"
                 )
-    for name in ("check-pending-registration", "check-aead-differential"):
+    for name in (
+        "check-pending-registration",
+        "check-aead-differential",
+        "check-active-strong-secrecy",
+    ):
         driver = INVENTORY.module(name)
         targets = {target.name: target for target in driver.TARGETS}
         for row in rows:

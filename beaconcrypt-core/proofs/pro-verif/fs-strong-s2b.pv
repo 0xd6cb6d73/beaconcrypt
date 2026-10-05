@@ -1,0 +1,5 @@
+set simplifyProcess = false.
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Diff-equivalence; exact bounds live in check-active-strong-secrecy.py. *)
+process FsRecordsS2bMain()

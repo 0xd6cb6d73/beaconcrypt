@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-10-05T23:42:27.864164+00:00",
+  "base": "3ead9cb5ed44f9c54f038ac647fd063a2c2172cc",
+  "source_manifest_sha256": "c06fc3a0c20e41e825c6695e4b7e5e7d5bff1ea32a604b5f416fe94467a8f521",
+  "commands": [
+    {
+      "command": "nix --extra-experimental-features \"nix-command flakes\" develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c env CARGO_TARGET_DIR=/tmp/beaconcrypt-verdict-integration-cargo-target make -C beaconcrypt-core SHELL=/run/current-system/sw/bin/bash check-proverif-transcript-fidelity check-inventory",
+      "exit": 0,
+      "transcript_tests": 27,
+      "inventory": "pass;3159 expectation rows/security167",
+      "log_sha256": "1b6edca339842dbdc22724605148633c137e6efcc9fa82ddac6a0825c33e4b02",
+      "gzip_sha256": "552fd34f7c48448746e60c9f2bd61ffe7863aa0602382b7f66cc839df5740105"
+    }
+  ],
+  "metadata": "13 classification tests;12 unchanged P5 tests;cargo fmt;git diff --check all exit0",
+  "new_prover_search": false,
+  "archived_verdicts": "All six source-stage outputs rechecked with exact checker after27 solver inputs and full gzip/raw hashes matched",
+  "scope": "Focused metadata integration, not aggregate verification or a new computational theorem"
+}

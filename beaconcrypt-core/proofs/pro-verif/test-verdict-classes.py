@@ -156,6 +156,45 @@ class ClassificationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.check(rows)
 
+    def test_strong_secrecy_and_all_four_controls_are_required(self):
+        for target in (
+            "SS-b2s",
+            "SS-s2b",
+            "SS-b2s-leak",
+            "SS-b2s-ungated",
+            "SS-s2b-leak",
+            "SS-s2b-ungated",
+        ):
+            rows = [row for row in self.rows if row["target"] != target]
+            self.assertEqual(len(rows), len(self.rows) - 1)
+            with self.assertRaises(ValueError):
+                self.check(rows)
+
+    def test_strong_secrecy_process_bound_interface_and_classes_are_pinned(self):
+        for target in (
+            "SS-b2s",
+            "SS-s2b",
+            "SS-b2s-leak",
+            "SS-b2s-ungated",
+            "SS-s2b-leak",
+            "SS-s2b-ungated",
+        ):
+            original = next(row for row in self.rows if row["target"] == target)
+            for field, value in (
+                ("scope", original["scope"].replace("K_r = 1", "K_r = 3")),
+                ("scope", original["scope"].replace("process=", "unreviewed-process=")),
+                (
+                    "scope",
+                    original["scope"].replace("Some/None bits", "optional plaintext"),
+                ),
+                ("class", "definitional"),
+            ):
+                self.assertNotEqual(original[field], value)
+                rows = copy.deepcopy(self.rows)
+                next(row for row in rows if row["target"] == target)[field] = value
+                with self.assertRaises(ValueError):
+                    self.check(rows)
+
 
 if __name__ == "__main__":
     unittest.main()

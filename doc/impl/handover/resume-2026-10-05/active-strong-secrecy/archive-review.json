@@ -1,0 +1,18 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "verdict": "APPROVE_PORTABLE_P5_ARCHIVE",
+  "manifest": "/tmp/bc-arc-scratch/pv-work/p5-active/archive-review-manifest.json",
+  "manifest_sha256": "36af09247e2bc40bca6f177d9269a6c1dca9f084384844e04b348e7e4c674e17",
+  "source_commit": "4d519374c8b1c634b2f606d6533224aceb394e8d",
+  "findings": [],
+  "checks": [
+    "Verified17 archive file hashes.",
+    "Verified all27 solver input hashes against exact published Git source_commit.",
+    "Verified11 compressed and decompressed hashes, including all six successful logs, Make and inventory metadata, original failed input archive and two original diagnostic logs.",
+    "Checked every archived original input text against the failed-group receipts and both archived original diagnostic raw log hashes; original s2b remains explicitly failed/time out.",
+    "Read README and validation in full; precise working-tree-before-commit provenance, only documentation changes afterwards, no false committed-source rerun or aggregate claim.",
+    "Included source and final-pass independent review receipts match previously issued evidence; full successful receipts already exact-check reviewed."
+  ],
+  "scope": "Portable publication evidence only. Earlier complete source and final-pass semantic restrictions unchanged; no computational/global protocol proof claimed.",
+  "new_builds_or_solver_runs": 0
+}

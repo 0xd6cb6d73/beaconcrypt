@@ -70,3 +70,16 @@ proofs/pro-verif/fs-encoding-registration.pvl	precise	3	[precise]	doc/formal-ver
 proofs/pro-verif/check-pending-registration.py	precise	2	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
 proofs/pro-verif/fs-pending-registration.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
 proofs/pro-verif/fs-pending-fixtures.pvl	precise	16	[precise]	doc/formal-verification-analysis.md#proverif-precision-and-approximation-settings
+proofs/pro-verif/active-strong-secrecy-models.py	precise	8	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-b2s-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-b2s-sends.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-b2s.pvl	precise	5	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-control-b2s-leak.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-control-b2s-ungated.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-control-s2b-leak.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-control-s2b-ungated.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-s2b-taskings.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-common.pvl	nounif	1	nounif x:bitstring, y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/check-active-strong-secrecy.py	nounif	1	nounif x:bitstring, y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/active-strong-secrecy-models.py	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/fs-strong-s2b.pv	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments

@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-05T23:43:19.405787+00:00",
+  "reviewer": "Codex root",
+  "status": "APPROVE_PORTABLE_RECEIPT",
+  "archive_manifest_sha256": "b727e46ca1af5b720b40abc357a913c6079bebd77d5948e1417b74b8e3ec6332",
+  "verified_files": 7,
+  "source_freeze_unchanged": true,
+  "findings": [],
+  "scope": "Exact integration source/audit/review copies and focused raw/gzip log; independent prior review checked52 source files and archived verdicts. README accurately separates27 current FT tests from historical25 and asserts no new prover/Lean aggregate result."
+}

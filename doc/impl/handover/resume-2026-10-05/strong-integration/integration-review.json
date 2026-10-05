@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-10-05T23:41:30.676945+00:00",
+  "reviewer": "Codex root (independent integration review; P5 source separately reviewed by R1)",
+  "status": "APPROVE_SCOPED_INTEGRATION",
+  "manifest_sha256": "c06fc3a0c20e41e825c6695e4b7e5e7d5bff1ea32a604b5f416fe94467a8f521",
+  "source_files_verified": 52,
+  "published_source_files_verified": 21,
+  "published_archive_files_verified": 18,
+  "unchanged_lean_related_files": 1342,
+  "unchanged_tsv_prefix_rows": 3153,
+  "added_expectations": 6,
+  "security_expectations": 167,
+  "archived_verdicts_rechecked": 6,
+  "checks": {
+    "check-verdict-classes.py": {
+      "exit": 0,
+      "stdout": "Classified 3159 expected verdicts: definitional=2836, diagnostic=8, differential-control=19, limitation=20, negative-control=26, security=167, witness=83\nThese are classified expectations, not new ProVerif validation receipts or independent theorem counts.\n",
+      "stderr": ""
+    },
+    "test-verdict-classes.py": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ".............\n----------------------------------------------------------------------\nRan 13 tests in 1.400s\n\nOK\n"
+    },
+    "test-active-strong-secrecy-checker.py": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": "............\n----------------------------------------------------------------------\nRan 12 tests in 0.137s\n\nOK\n"
+    }
+  },
+  "semantic_findings": [],
+  "scope": [
+    "No changes to reviewed P5 input bytes or primitive model; original 3153 rows preserved exactly.",
+    "Two bounded equivalence expectations and four single-world fresh-secret controls correctly separated; Some/None bits never reinterpreted as optional plaintext.",
+    "Exact process, library order, query, caps and direction-specific eligibility (or its deliberate removal) remain mechanically pinned.",
+    "Shared full verification gates, source-fidelity arrays and declaration allowlist retained; inventory accounts for all new files and converter occurrences.",
+    "No Lean source, production Rust, security assumption or computational query allowance changed; no new prover search or full aggregate validation claimed."
+  ],
+  "review_tool_note": "Initial read-only archived-output replay reversed check_output argument order and raised AttributeError before checker evaluation. Corrected to check_output(output,target); all six exact outputs then pass. No source edit or solver run."
+}

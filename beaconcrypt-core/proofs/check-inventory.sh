@@ -49,11 +49,11 @@ declare -A expected_category_counts=(
 	[generated-lean]=7
 	[generated-proverif]=1
 	[handwritten-lean]=1321
-	[handwritten-proverif]=188
+	[handwritten-proverif]=205
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=35
+	[validation]=38
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -129,6 +129,9 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/test-pending-registration-checker.py \
 	proofs/pro-verif/check-aead-differential.py \
 	proofs/pro-verif/test-aead-differential-checker.py \
+	proofs/pro-verif/active-strong-secrecy-models.py \
+	proofs/pro-verif/check-active-strong-secrecy.py \
+	proofs/pro-verif/test-active-strong-secrecy-checker.py \
 	proofs/pro-verif/declaration-allowlist.tsv \
 	proofs/pro-verif/verdict-classes.tsv \
 	proofs/pro-verif/verdict-inventory.py \
@@ -324,10 +327,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 24 \
+require_occurrence_count 28 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 27 '_to_bitstring' \
+require_occurrence_count 31 '_to_bitstring' \
 	"all handwritten _to_bitstring tokens including three initial-ratchet manifest facts" \
 	"${handwritten_proverif[@]}"
 
@@ -26021,5 +26024,10 @@ python3 proofs/pro-verif/check-pending-registration.py --check-only
 require_line_count 1 '^check-proverif-aead-differential: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "open CTX serial runner"
 require_line_count 2 '^\t\$\(MAKE\) check-proverif-aead-differential$' Makefile "open CTX verification steps"
 python3 proofs/pro-verif/check-aead-differential.py --check-only
+
+# Separate bounded equivalence and fresh-secret control group.
+require_line_count 1 '^check-proverif-active-strong-secrecy: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "active strong-secrecy serial runner"
+require_line_count 2 '^\t\$\(MAKE\) check-proverif-active-strong-secrecy$' Makefile "active strong-secrecy verification steps"
+python3 proofs/pro-verif/check-active-strong-secrecy.py --check-only
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

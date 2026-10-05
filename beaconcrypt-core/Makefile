@@ -90,6 +90,7 @@ PROVERIF_FS_LOG_DIR ?=
 # Separate owner-approved primitive/strong-secrecy group (2026-10-05).
 PROVERIF_OPEN_CTX_LOG_DIR ?=
 PROVERIF_PRIMITIVE_LOG_DIR ?=
+PROVERIF_STRONG_LOG_DIR ?=
 # Finite pending-token operational checks; separate from security groups.
 PROVERIF_PENDING_TIMEOUT ?= 180
 PROVERIF_PENDING_LOG_DIR ?=
@@ -133,7 +134,7 @@ LEAN_GENERATED_PATHS := \
 	verify-proverif-live-private-application check-proverif-live-private-application $(PROVERIF_APPLICATION_TARGETS) \
 	verify-proverif-kem-controller-auth check-proverif-kem-controller-auth \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
-	check-proverif-transcript-fidelity check-proverif-primitive-fidelity \
+	check-proverif-transcript-fidelity check-proverif-primitive-fidelity check-proverif-active-strong-secrecy \
 	check-proverif-pending-registration check-proverif-aead-differential \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
@@ -157,6 +158,7 @@ verify-in-shell:
 	$(MAKE) check-proverif
 	$(MAKE) check-proverif-fs
 	$(MAKE) check-proverif-primitive-fidelity
+	$(MAKE) check-proverif-active-strong-secrecy
 	$(MAKE) check-proverif-pending-registration
 	$(MAKE) check-proverif-aead-differential
 	$(MAKE) extract-lean
@@ -174,6 +176,7 @@ verify-proverif-in-shell:
 	$(MAKE) check-proverif
 	$(MAKE) check-proverif-fs
 	$(MAKE) check-proverif-primitive-fidelity
+	$(MAKE) check-proverif-active-strong-secrecy
 	$(MAKE) check-proverif-pending-registration
 	$(MAKE) check-proverif-aead-differential
 
@@ -301,6 +304,15 @@ check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-tran
 		--timeout '$(PROVERIF_FS_TIMEOUT)' \
 		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
 		$(if $(PROVERIF_PRIMITIVE_LOG_DIR),--log-dir '$(PROVERIF_PRIMITIVE_LOG_DIR)')
+
+# A separate serial group with explicit bounded equivalence and traced controls.
+check-proverif-active-strong-secrecy: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-active-strong-secrecy-checker.py
+	python3 $(PROVERIF_DIR)/check-active-strong-secrecy.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_FS_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_STRONG_LOG_DIR),--log-dir '$(PROVERIF_STRONG_LOG_DIR)')
 
 check-proverif-pending-registration: check-proverif-extraction check-proverif-transcript-fidelity
 	python3 $(PROVERIF_DIR)/test-pending-registration-checker.py
