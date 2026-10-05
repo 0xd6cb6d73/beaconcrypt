@@ -6,14 +6,15 @@ Every target is one ProVerif process with one query, run serially. The checker
 requires the exact expected RESULT line or lines of the target's class, both in
 the primary output and in the verification summary. It rejects "cannot be
 proved", unknown or inconclusive results, unconfirmed traces, errors, and every
-warning except ProVerif's termination warnings (see TERMINATION_WARNING), and it
-requires exactly one reconstructed trace for every FALSE result. Classes: security (TRUE, counted as evidence), definitional (TRUE by
-construction, never counted), witness (FALSE with a trace: the event is
-reachable), control (a negative-control mutant: FALSE with a trace when the
-mutant breaks a claim, or TRUE without a trace for an inverted control, whose
-mutant makes a witness unreachable) and limitation (FALSE with a trace:
-documented expected consequence of an owner decision). Every result is a
-symbolic result for a bounded process, never a computational bound.
+warning except ProVerif's termination warnings (see TERMINATION_WARNING), and
+it requires exactly one reconstructed trace for every FALSE result. Classes:
+security (TRUE, counted as evidence), definitional (TRUE by construction, never
+counted), witness (FALSE with a trace: the event is reachable), control (a
+negative-control mutant: FALSE with a trace when the mutant breaks a claim, or
+TRUE without a trace for an inverted control, whose mutant makes a witness
+unreachable) and limitation (FALSE with a trace: documented expected
+consequence of an owner decision). Every result is a symbolic result for a
+bounded process, never a computational bound.
 """
 
 import argparse
@@ -348,15 +349,18 @@ FORBIDDEN = (
 # ProVerif 2.05 starts every error line with "Error: " and every input, simplification
 # and lemma warning line with "Warning: "; the checker rejects both, and any other line
 # that mentions a warning. The one exception is the termination warning of the
-# resolution selection function (selfun.ml): ProVerif prints "Termination warning: ",
-# a clause and "Selecting <n>" when the only hypotheses it can select in that clause
-# are ones that a nounif declaration (the reviewed heuristic nx, or one that ProVerif
-# adds itself) or a match with the clause's conclusion marks as best avoided, so that
-# saturation might not terminate. The selection function only decides the order of
-# resolution and is not an assumption: such a line concerns whether saturation ends,
-# not the meaning of a verdict that ProVerif reports after saturation ended. A run
-# whose saturation does not end hits the timeout or the address-space cap and fails.
-# These lines are therefore accepted, in any number and for any target.
+# resolution selection function (selfun.ml), which comes in two forms, both accepted
+# here and both fed by test-free-schedule-checker.py: "Termination warning: " followed
+# by a clause and "Selecting <n>", or "Termination warning: Selecting an hypothesis
+# matching the conclusion." followed by a suggested noselect declaration. ProVerif
+# prints them when the only hypotheses it can select in a clause are ones that a nounif
+# declaration (the reviewed heuristic nx, or one that ProVerif adds itself) marks as
+# best avoided or that match the clause's conclusion, so that saturation might not
+# terminate. The selection function only decides the order of resolution and is not an
+# assumption: such a line concerns whether saturation ends, not the meaning of a verdict
+# that ProVerif reports after saturation ended. A run whose saturation does not end hits
+# the timeout or the address-space cap and fails. These lines are therefore accepted, in
+# any number and for any target.
 TERMINATION_WARNING = "Termination warning: "
 
 
