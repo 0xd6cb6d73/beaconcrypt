@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-10-05T23:47:18.357427+00:00",
+  "parents": [
+    "18e6ed6fd6ee73851b2d5d3c977305b58cdf1754",
+    "ab295447b4628bded76dc82090975c5a1b20aedf"
+  ],
+  "command": "nix --extra-experimental-features \"nix-command flakes\" develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c env CARGO_TARGET_DIR=/tmp/beaconcrypt-verdict-integration-cargo-target make -C beaconcrypt-core SHELL=/run/current-system/sw/bin/bash check-inventory",
+  "exit": 0,
+  "log_sha256": "fa0b8d589bab6617def91cd2828aed805c67dbbbec0cbf3e02552830b8e3113b",
+  "gzip_sha256": "1633dcb5976f77c10e405c91e1f7ac03f5535645d75af1d8a00b0b783d8be3d5",
+  "counts": {
+    "handwritten_lean": 1335,
+    "handwritten_proverif": 205,
+    "validation": 38,
+    "verdict_expectations": 3159,
+    "security_class": 167
+  },
+  "scope": "Normal merge metadata only; no Lean/ProVerif rebuild or aggregate test claim."
+}

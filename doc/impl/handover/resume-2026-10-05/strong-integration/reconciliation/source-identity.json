@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-10-05T23:46:18.723778+00:00",
+  "central": "ab295447b4628bded76dc82090975c5a1b20aedf",
+  "topic": "18e6ed6fd6ee73851b2d5d3c977305b58cdf1754",
+  "unchanged": {
+    "lean": {
+      "files": 1356,
+      "source": "ab295447b4628bded76dc82090975c5a1b20aedf"
+    },
+    "proverif": {
+      "files": 235,
+      "source": "18e6ed6fd6ee73851b2d5d3c977305b58cdf1754"
+    }
+  },
+  "retained_guard_lines": {
+    "ab295447b4628bded76dc82090975c5a1b20aedf": 19986,
+    "18e6ed6fd6ee73851b2d5d3c977305b58cdf1754": 19834
+  },
+  "reviewed_count_adjustments": [
+    {
+      "source": "ab295447b4628bded76dc82090975c5a1b20aedf",
+      "old": "require_occurrence_count 24 \\",
+      "retained_reviewed_replacement": "require_occurrence_count 28 \\"
+    },
+    {
+      "source": "ab295447b4628bded76dc82090975c5a1b20aedf",
+      "old": "require_occurrence_count 27 '_to_bitstring' \\",
+      "retained_reviewed_replacement": "require_occurrence_count 31 '_to_bitstring' \\"
+    }
+  ],
+  "scope": "Only four metadata/document conflict resolutions; exact central Lean/root and exact published P5/P6/pending/CTX symbolic inputs preserved. The two converter-count changes are the already reviewed P5 additions, not disabled gates. No fresh Lean or ProVerif run."
+}

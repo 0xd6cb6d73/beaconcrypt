@@ -1,0 +1,19 @@
+{
+  "modules": [
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointServerPrefix",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointServerPrefixCosts",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointServerBirth",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointInitializedPrefix",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointServerBirthCosts",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointServerAccept",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointInitializedAccept",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeInsideCache",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeSampleActive",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeInsidePublication",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeInsideExcluded",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeSampleExcluded",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedExcluded",
+    "BeaconcryptCore.Computational.PqxdhLaterChallengeSourceExcluded"
+  ],
+  "forbidden_matches": {}
+}

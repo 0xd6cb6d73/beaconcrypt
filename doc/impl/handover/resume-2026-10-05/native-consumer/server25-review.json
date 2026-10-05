@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-10-05T23:01:48.059870+00:00",
+  "reviewer": "evolving_source_join",
+  "decision": "APPROVE_SCOPED_OPERATIONAL_RESULT",
+  "manifest": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/server25-manifest.json",
+  "manifest_sha256": "ac926863a87bb672a9ab215deeec6393e06f9f7adbdc7aeff1266df6884925fe",
+  "checks": [
+    "Read all five modules and initialization guide/analysis append",
+    "Verified seven frozen hashes, all25 exact guarded statements and five empty direct logs",
+    "Inspected native constructor, source static-DH callback and collector order, primitive/base query accounting dependencies",
+    "Constructor initialization then generated sampler or exact caller-known imported seed; no generated seed returned in executable owner",
+    "Same-run owned slot derived from actual full source constructor support, not honest-target premise",
+    "Full native prefix equality retains complete pool/history/auxiliary state and consumed registration state; arbitrary complete continuation preserved",
+    "Logical caps: initialize1, chosen create/import at most1, staticDH1, auxiliary21, unrelated0",
+    "Evaluated uniform cap (qInit + optional32) + (32 + encapsUniform + baseUniform*encapsBase), with all-runtime initialization and actual KEM contracts",
+    "Imported origin retained and enlarged pool explicitly not asserted all-generated; no security endpoint applied to imported secret",
+    "No security hop, source scheduler closure, freshness or complete protocol advantage claimed"
+  ],
+  "remaining": [
+    "Whole Server accept/root/pending/build and raw scheduler consumer",
+    "Origin-aware freshness and actual target replacement",
+    "Existing native primitive/codec boundaries remain contracts"
+  ],
+  "new_builds": false
+}

@@ -1,0 +1,5 @@
+# Normal reconciliation with initialized acceptance and inside-event proofs
+
+The normal merge joins the published P5 integration `18e6ed6fd6ee73851b2d5d3c977305b58cdf1754` with central `ab295447b4628bded76dc82090975c5a1b20aedf`. Four shared inventory/document conflicts retain both reviewed contributions. All 1,356 central Lean-related files, including the complete root, and all 235 published ProVerif-related files remain byte-identical to their corresponding parent. Every prior checker guard remains, apart from the two already reviewed P5 converter-token counts increasing by four. No proof source, query, model or assumption changed during reconciliation.
+
+The merged inventory passed with 1,335 handwritten Lean files, 205 handwritten ProVerif files and 38 validation files. The 3,159 expectation rows retain their existing 167 security classifications. The attached source audit and compressed log record this focused check; unchanged Lean and ProVerif proofs were not rerun. This is not an aggregate verification result.
