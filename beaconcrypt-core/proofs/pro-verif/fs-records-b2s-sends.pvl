@@ -1,0 +1,67 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s: the Beacon records after establishment, at sequences 1
+   and 2 (K_s = 2), each sent when the attacker schedules it.  The
+   application's plaintext is fresh bytes.  Each FsSent is the allocation of
+   its sequence: the send counter and chain advance before the seal and stay
+   advanced when the seal fails.  The fresh names carry no session arguments
+   (the "na" form): this coarsens only ProVerif's internal abstraction of
+   names, not the process.  Exactly one of this file and
+   fs-records-b2s-sends-chosen.pvl is loaded; the secrecy target S2, the
+   record identity agreement UKSr and the witnesses use this one. *)
+(* @beaconcrypt-fs-fidelity key=sends.encrypt src=beaconcrypt/src/beacon.rs:152-163 anchor=pub fn encrypt_message(&mut self, b: &[u8]) -> Option<crate::Encrypted> { *)
+(* @beaconcrypt-fs-fidelity key=sends.seal src=beaconcrypt/src/ratchet.rs:414-444 anchor=pub(crate) fn encrypt_message_with_ratchet( *)
+(* @beaconcrypt-fs-fidelity key=sends.allocate src=beaconcrypt-core/src/ratchet/concrete.rs:133-155 anchor=pub fn begin_send<Context>(kernel: ConcreteRatchetKernel, context: Context) -> SendStart<Context> { *)
+(* @beaconcrypt-fs-fidelity key=sends.advance src=beaconcrypt-core/src/ratchet/concrete.rs:171-182 anchor=pub fn resume(mut self, response: RatchetKdfResponse) -> SendSeal<Context> { *)
+(* @beaconcrypt-fs-fidelity key=sends.stays_advanced src=beaconcrypt-core/src/ratchet/concrete.rs:206-209 anchor=pub fn finish<Output>(self, sealed: Option<Output>) -> (ConcreteRatchetKernel, Option<Output>) { *)
+let FsB2sSends(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  send_chain_1: bitstring,
+  send_chain_2: bitstring
+) =
+  in(c, send_request_1: bitstring) [precise];
+  new record_1[]: bitstring;
+  event FsSent(
+    beacon_to_server(),
+    server_identity,
+    beacon_identity,
+    assigned_key_id,
+    root,
+    1,
+    record_1
+  );
+  out(
+    c,
+    seal_frame(
+      ratchet_material(send_chain_1),
+      associated_data,
+      fs_seq(1),
+      assigned_key_id,
+      record_1
+    )
+  );
+  in(c, send_request_2: bitstring) [precise];
+  new record_2[]: bitstring;
+  event FsSent(
+    beacon_to_server(),
+    server_identity,
+    beacon_identity,
+    assigned_key_id,
+    root,
+    2,
+    record_2
+  );
+  out(
+    c,
+    seal_frame(
+      ratchet_material(send_chain_2),
+      associated_data,
+      fs_seq(2),
+      assigned_key_id,
+      record_2
+    )
+  ).

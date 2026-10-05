@@ -1,0 +1,16 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s C2, security result, (K_s, K_r, T_max) = (2, 3, 2):
+   injective record agreement at the Server.  Every acceptance of sequence t
+   with plaintext m by a Server object, from the peer it installed for the
+   identity ed_public(k), is matched by its own, distinct allocation of
+   sequence t for m by a Beacon with that identity, pinning that Server key,
+   in the same session (same key ID and root), unless the attacker holds k.
+   Run twice: with fresh record plaintexts in the receive form in which
+   failed opens are interleaved, and with adversary-chosen plaintexts in the
+   fail-stop receive form (E21). *)
+query s: bitstring, k: bitstring, kid: key_id, root: bitstring, t: nat, m: bitstring;
+  inj-event(FsReceived(beacon_to_server(), s, ed_public(k), kid, root, t, m))
+  ==> inj-event(FsSent(beacon_to_server(), s, ed_public(k), kid, root, t, m)) || attacker(k).
+
+process FsRecordsB2sMain()

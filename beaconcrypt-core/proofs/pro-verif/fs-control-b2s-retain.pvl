@@ -1,0 +1,11 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* NEGATIVE CONTROL C-RETAIN for fs-records-b2s: a successful cached open
+   keeps the cached key instead of removing it.  Failed opens are unchanged.
+   Loaded instead of fs-records-b2s-window.pvl; C3 must become FALSE through
+   a replay of the cached frame. *)
+letfun fs_b2s_cached_after_success(cached_1: bool) = cached_1.
+
+letfun fs_b2s_failed_r(r: nat, target: nat) = r.
+
+letfun fs_b2s_failed_cached_1(r: nat, target: nat, cached_1: bool) = cached_1.

@@ -49,7 +49,7 @@ declare -A expected_category_counts=(
 	[generated-lean]=7
 	[generated-proverif]=1
 	[handwritten-lean]=1186
-	[handwritten-proverif]=148
+	[handwritten-proverif]=172
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
@@ -314,10 +314,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 20 \
+require_occurrence_count 22 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 23 '_to_bitstring' \
+require_occurrence_count 25 '_to_bitstring' \
 	"all handwritten _to_bitstring tokens including three initial-ratchet manifest facts" \
 	"${handwritten_proverif[@]}"
 
@@ -886,7 +886,7 @@ require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable source fixture"
-require_line_count 24 '^#\[test\]$' \
+require_line_count 25 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -912,6 +912,7 @@ for fidelity_test_name in \
 	free_schedule_vocabulary_and_registration_model_are_pinned \
 	free_schedule_checker_loader_and_targets_are_pinned \
 	free_schedule_records_s2b_model_is_pinned \
+	free_schedule_records_b2s_model_is_pinned \
 	proverif_declarations_are_allowlisted; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
 		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
@@ -20327,7 +20328,10 @@ require_line_count 1 '^\t\+\$\(MAKE\) --no-print-directory -j1 \$\(PROVERIF_FS_C
 require_line_count 1 '^PROVERIF_FS_TIMEOUT \?= 1800$' Makefile "fs per-target timeout"
 require_line_count 1 '^check-proverif-fs-records-s2b: check-proverif-extraction check-proverif-transcript-fidelity$' \
 	Makefile "fs-records-s2b runner"
-require_line_count 1 '^\tfs-records-s2b$' Makefile "fs-records-s2b in the serial fs roster"
+require_line_count 1 '^\tfs-records-s2b \\$' Makefile "fs-records-s2b in the serial fs roster"
+require_line_count 1 '^check-proverif-fs-records-b2s: check-proverif-extraction check-proverif-transcript-fidelity$' \
+	Makefile "fs-records-b2s runner"
+require_line_count 1 '^\tfs-records-b2s$' Makefile "fs-records-b2s in the serial fs roster"
 require_line_count 0 '^check-proverif:.*fs' Makefile "fs group outside the parallel roster"
 awk '
 	/^verify-in-shell:/ { active = 1; next }

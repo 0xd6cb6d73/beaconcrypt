@@ -1,0 +1,14 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s UKSr, security result, (K_s, K_r, T_max) = (2, 3, 2):
+   record identity agreement.  A Server object never accepts a fresh record
+   that a Beacon pinning its key allocated from a peer installed for another
+   identity: the identity of the accepting peer is that of the sending
+   Beacon.  Also the target of the control C-UKS. *)
+query s: bitstring, b1: bitstring, b2: bitstring, kid1: key_id, kid2: key_id, root1: bitstring,
+      root2: bitstring, t1: nat, t2: nat, m: bitstring;
+  event(FsReceived(beacon_to_server(), s, b1, kid1, root1, t1, m))
+  && event(FsSent(beacon_to_server(), s, b2, kid2, root2, t2, m))
+  ==> b1 = b2.
+
+process FsRecordsB2sMain()

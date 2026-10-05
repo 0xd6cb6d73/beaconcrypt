@@ -1,0 +1,12 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s PINREAD, witness (expected reachable): with the attacker
+   choosing the pinned Server key and Server ID of every Beacon, a Beacon
+   that pins a key of the attacker finishes registration and sends a record
+   whose fresh plaintext the attacker reads.  The pin-free process therefore
+   contains Beacons with other pins that finish and send, and the second
+   disjunct of PIN is reachable. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat, m: bitstring;
+  event(FsSent(beacon_to_server(), s, b, kid, root, t, m)) && attacker(m).
+
+process FsRecordsB2sMainAnyPin()

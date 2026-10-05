@@ -1,0 +1,150 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s: the Beacon records after establishment, at sequences 1
+   and 2 (K_s = 2), each sent when the attacker schedules it.  For each
+   record the adversary chooses the application's plaintext form: either
+   fresh bytes (the form of fs-records-b2s-sends.pvl) or a whole plaintext of
+   its choice.  Every trace of the fresh form is a trace of this form.  Each
+   FsSent is the allocation of its sequence, as in the fresh form.  Exactly
+   one of this file and fs-records-b2s-sends.pvl is loaded; the
+   authentication targets use this one, and S2 and UKSr cannot, because an
+   adversary-chosen plaintext makes them false by construction. *)
+(* @beaconcrypt-fs-fidelity key=sends.encrypt src=beaconcrypt/src/beacon.rs:152-163 anchor=pub fn encrypt_message(&mut self, b: &[u8]) -> Option<crate::Encrypted> { *)
+(* @beaconcrypt-fs-fidelity key=sends.seal src=beaconcrypt/src/ratchet.rs:414-444 anchor=pub(crate) fn encrypt_message_with_ratchet( *)
+(* @beaconcrypt-fs-fidelity key=sends.allocate src=beaconcrypt-core/src/ratchet/concrete.rs:133-155 anchor=pub fn begin_send<Context>(kernel: ConcreteRatchetKernel, context: Context) -> SendStart<Context> { *)
+(* @beaconcrypt-fs-fidelity key=sends.advance src=beaconcrypt-core/src/ratchet/concrete.rs:171-182 anchor=pub fn resume(mut self, response: RatchetKdfResponse) -> SendSeal<Context> { *)
+(* @beaconcrypt-fs-fidelity key=sends.stays_advanced src=beaconcrypt-core/src/ratchet/concrete.rs:206-209 anchor=pub fn finish<Output>(self, sealed: Option<Output>) -> (ConcreteRatchetKernel, Option<Output>) { *)
+
+(* The application's choice of a whole adversary-chosen plaintext; any other
+   mode input selects the fresh form.  A model-only control value, like
+   fs_build. *)
+fun fs_chosen_record(): bitstring [data].
+
+let FsB2sSend2(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  send_chain_2: bitstring
+) =
+  in(c, record_mode_2: bitstring) [precise];
+  if record_mode_2 = fs_chosen_record() then
+  (
+    in(c, chosen_record_2: bitstring) [precise];
+    event FsSent(
+      beacon_to_server(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      2,
+      chosen_record_2
+    );
+    out(
+      c,
+      seal_frame(
+        ratchet_material(send_chain_2),
+        associated_data,
+        fs_seq(2),
+        assigned_key_id,
+        chosen_record_2
+      )
+    )
+  )
+  else
+  (
+    new record_2[]: bitstring;
+    event FsSent(
+      beacon_to_server(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      2,
+      record_2
+    );
+    out(
+      c,
+      seal_frame(
+        ratchet_material(send_chain_2),
+        associated_data,
+        fs_seq(2),
+        assigned_key_id,
+        record_2
+      )
+    )
+  ).
+
+let FsB2sSends(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  send_chain_1: bitstring,
+  send_chain_2: bitstring
+) =
+  in(c, record_mode_1: bitstring) [precise];
+  if record_mode_1 = fs_chosen_record() then
+  (
+    in(c, chosen_record_1: bitstring) [precise];
+    event FsSent(
+      beacon_to_server(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      1,
+      chosen_record_1
+    );
+    out(
+      c,
+      seal_frame(
+        ratchet_material(send_chain_1),
+        associated_data,
+        fs_seq(1),
+        assigned_key_id,
+        chosen_record_1
+      )
+    );
+    FsB2sSend2(
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      associated_data,
+      send_chain_2
+    )
+  )
+  else
+  (
+    new record_1[]: bitstring;
+    event FsSent(
+      beacon_to_server(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      1,
+      record_1
+    );
+    out(
+      c,
+      seal_frame(
+        ratchet_material(send_chain_1),
+        associated_data,
+        fs_seq(1),
+        assigned_key_id,
+        record_1
+      )
+    );
+    FsB2sSend2(
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      associated_data,
+      send_chain_2
+    )
+  ).

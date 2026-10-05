@@ -37,7 +37,8 @@ TRUE_CLASSES = ("security", "definitional")
 
 REGISTRATION = "fs-registration"
 RECORDS_S2B = "fs-records-s2b"
-SCENARIOS = (REGISTRATION, RECORDS_S2B)
+RECORDS_B2S = "fs-records-b2s"
+SCENARIOS = (REGISTRATION, RECORDS_S2B, RECORDS_B2S)
 
 # Shared loader of every fs target, in this order, before the scenario libraries.
 COMMON_LOADER = (
@@ -78,6 +79,42 @@ S2B_SECURITY_BOUND = 3
 # taskings.
 S2B_FRESH_ONLY = ("fs-records-s2b-s1.pv", "fs-records-s2b-s4.pv")
 
+# fs-records-b2s: the receive-window, binding and sends libraries, the Server receive
+# step, the bound file with K_r receive attempts, then the process. One bundle per
+# Server object; K_s = 2 and T_max = 2 with the far branch are fixed in the libraries.
+# The binding libraries are those of fs-registration, so that the record-form C-UKS
+# control is the same mutant. Security results run at K_r = 3; witnesses and controls
+# run at the smallest K_r that exhibits them.
+B2S_WINDOW = "fs-records-b2s-window.pvl"
+B2S_RETAIN = "fs-control-b2s-retain.pvl"
+B2S_STALE = "fs-control-b2s-stale.pvl"
+SENDS = "fs-records-b2s-sends.pvl"
+SENDS_CHOSEN = "fs-records-b2s-sends-chosen.pvl"
+B2S_RECEIVE = "fs-records-b2s-receive.pvl"
+B2S_PROCESS = "fs-records-b2s.pvl"
+B2S_SECURITY_BOUND = 3
+# Record secrecy, record identity agreement and the witness that the attacker reads a
+# record of a Beacon with another pin are false (or reachable) by construction when the
+# adversary chooses whole Beacon plaintexts: it knows its own plaintext, and it can seal
+# the plaintext it chose for an honest Beacon on a peer it registered itself. They use
+# the fresh sends.
+B2S_FRESH_ONLY = (
+    "fs-records-b2s-s2.pv",
+    "fs-records-b2s-uksr.pv",
+    "fs-records-b2s-pinread.pv",
+)
+# The fail-stop form of the Server receive (E21): the bound file
+# fs-records-b2s-kr3-failstop.pvl ends a receive worker at its first failed open. In the
+# failure-interleaving form a failed open keeps the exact entry state, outputs nothing
+# and emits only FsReceiveRejected, so deleting it from a trace leaves a trace of the
+# fail-stop form with every other event; a query that does not mention FsReceiveRejected
+# that holds in the fail-stop form therefore holds in the failure-interleaving form too
+# (the deletion argument of the b2s guide, not yet reviewed). The form is used only for
+# these security results, whose failure-interleaving form with adversary-chosen
+# plaintexts does not fit the caps: C2, which also runs with fresh plaintexts in the
+# failure-interleaving form (G0 option B), and C4.
+B2S_FAILSTOP_QUERIES = ("fs-records-b2s-c2.pv", "fs-records-b2s-c4.pv")
+
 # Each mutant library and the real library it replaces.
 MUTANTS = {
     NOCHECK: CONSUMED,
@@ -86,6 +123,8 @@ MUTANTS = {
     STALE: WINDOW,
     FAILMUT: WINDOW,
     NOGATE: GATE,
+    B2S_RETAIN: B2S_WINDOW,
+    B2S_STALE: B2S_WINDOW,
 }
 
 A1 = "inj-event(FsBeaconEstablished(s,b,init_1,kid,root_1,ad,p)) ==> inj-event(FsServerCommitted(obj_1,s,b,init_1,kid,root_1,ad,p))"
@@ -119,6 +158,22 @@ S2B_C5B = "event(FsReceiveRejected(server_to_beacon,s,b,kid,root_2,t,f))@i && ev
 S2B_C5C = "event(FsReceivedFrame(server_to_beacon,s,b,kid,root_2,t,f))@i && event(FsReceiveRejected(server_to_beacon,s,b,kid,root_2,t,f))@j ==> i > j"
 S2B_S4 = "not (event(FsSent(server_to_beacon,s,b,kid,root_2,2,m)) && attacker(m))"
 
+B2S_A1 = "inj-event(FsBeaconEstablished(ed_public(SERVER_IDENTITY_SECRET[]),b,init_2,kid,root_2,ad,p)) ==> inj-event(FsServerCommitted(obj_2,ed_public(SERVER_IDENTITY_SECRET[]),b,init_2,kid,root_2,ad,p))"
+B2S_A2 = "event(FsServerAccepted(obj_2,s,ed_public(k),init_2,rid,root_2)) ==> event(FsBeaconStarted(s2,ed_public(k),init_2,rid)) || attacker(k)"
+B2S_C2 = "inj-event(FsReceived(beacon_to_server,s,ed_public(k),kid,root_2,t,m)) ==> inj-event(FsSent(beacon_to_server,s,ed_public(k),kid,root_2,t,m)) || attacker(k)"
+B2S_C3 = "event(FsReceived(d,s,b,kid,root_2,t,m1))@i && event(FsReceived(d,s,b,kid,root_2,t,m2))@j ==> i = j"
+B2S_C4 = (
+    "event(FsFarAccepted(beacon_to_server,s,ed_public(k),kid,root_2,t)) ==> attacker(k)"
+)
+B2S_S2 = "not (event(FsSent(beacon_to_server,ed_public(SERVER_IDENTITY_SECRET[]),b,kid,root_2,t,m)) && attacker(m))"
+B2S_PINREAD = "not (event(FsSent(beacon_to_server,s,b,kid,root_2,t,m)) && attacker(m))"
+B2S_UKSR = "event(FsReceived(beacon_to_server,s,b1,kid1,root1,t1,m)) && event(FsSent(beacon_to_server,s,b2,kid2,root2,t2,m)) ==> b1 = b2"
+B2S_C5A = "event(FsReceived(beacon_to_server,s,b,kid,root_2,2,m2))@i && event(FsReceived(beacon_to_server,s,b,kid,root_2,1,m1))@j && event(FsSent(beacon_to_server,s,b,kid,root_2,1,m1)) && event(FsSent(beacon_to_server,s,b,kid,root_2,2,m2)) ==> i > j"
+B2S_C5B = "event(FsReceiveRejected(beacon_to_server,s,b,kid,root_2,t,f))@i && event(FsReceived(beacon_to_server,s,b,kid,root_2,t,m))@j && event(FsSent(beacon_to_server,s,b,kid,root_2,t,m)) ==> i > j"
+B2S_C5C = "event(FsReceivedFrame(beacon_to_server,s,b,kid,root_2,t,f))@i && event(FsReceiveRejected(beacon_to_server,s,b,kid,root_2,t,f))@j && event(FsReceived(beacon_to_server,s,b,kid,root_2,t,m)) && event(FsSent(beacon_to_server,s,b,kid,root_2,t,m)) ==> i > j"
+B2S_S4 = "not (event(FsReceived(beacon_to_server,s,ed_public(k),kid,root_2,t,m)) && attacker(k))"
+B2S_FAR = "not (event(FsFarAccepted(beacon_to_server,s,ed_public(k),kid,root_2,t)) && attacker(k))"
+
 
 @dataclass(frozen=True)
 class Target:
@@ -130,6 +185,7 @@ class Target:
     query: str
     results: tuple
     inverted: bool = False
+    failstop: bool = False
 
     def libraries(self):
         if self.scenario == REGISTRATION:
@@ -151,6 +207,17 @@ class Target:
                     S2B_PROCESS,
                 )
             )
+        if self.scenario == RECORDS_B2S:
+            form = "-failstop" if self.failstop else ""
+            return (
+                COMMON_LOADER
+                + self.hooks
+                + (
+                    B2S_RECEIVE,
+                    f"fs-records-b2s-kr{self.bound}{form}.pvl",
+                    B2S_PROCESS,
+                )
+            )
         raise ValueError(f"unknown fs scenario: {self.scenario}")
 
     def expected_true(self):
@@ -162,6 +229,9 @@ class Target:
     def bounds(self):
         if self.scenario == RECORDS_S2B:
             return f"K_reg = 1, (K_s, K_r, T_max) = (2, {self.bound}, 3)"
+        if self.scenario == RECORDS_B2S:
+            form = ", fail-stop" if self.failstop else ""
+            return f"K_reg = 1, (K_s, K_r, T_max) = (2, {self.bound}, 2){form}"
         return f"K_reg = {self.bound}"
 
 
@@ -191,6 +261,29 @@ def records_s2b(
         query,
         tuple(results),
         inverted,
+    )
+
+
+def records_b2s(
+    name,
+    cls,
+    bound,
+    query,
+    results,
+    window=B2S_WINDOW,
+    binding=BINDING,
+    sends=SENDS,
+    failstop=False,
+):
+    return Target(
+        name,
+        RECORDS_B2S,
+        cls,
+        bound,
+        (window, binding, sends),
+        query,
+        tuple(results),
+        failstop=failstop,
     )
 
 
@@ -337,6 +430,103 @@ TARGETS = (
         window=FAILMUT,
         inverted=True,
     ),
+    records_b2s(
+        "b2s-A1",
+        "security",
+        3,
+        "fs-records-b2s-a1.pv",
+        [B2S_A1 + " is true."],
+        sends=SENDS_CHOSEN,
+    ),
+    records_b2s(
+        "b2s-A2",
+        "security",
+        3,
+        "fs-records-b2s-a2.pv",
+        [B2S_A2 + " is true."],
+        sends=SENDS_CHOSEN,
+    ),
+    records_b2s(
+        "b2s-C2", "security", 3, "fs-records-b2s-c2.pv", [B2S_C2 + " is true."]
+    ),
+    records_b2s(
+        "b2s-C2-chosen-fs",
+        "security",
+        3,
+        "fs-records-b2s-c2.pv",
+        [B2S_C2 + " is true."],
+        sends=SENDS_CHOSEN,
+        failstop=True,
+    ),
+    records_b2s(
+        "b2s-C3",
+        "security",
+        3,
+        "fs-records-b2s-c3.pv",
+        [B2S_C3 + " is true."],
+        sends=SENDS_CHOSEN,
+    ),
+    records_b2s(
+        "b2s-C4",
+        "security",
+        3,
+        "fs-records-b2s-c4.pv",
+        [B2S_C4 + " is true."],
+        sends=SENDS_CHOSEN,
+        failstop=True,
+    ),
+    records_b2s(
+        "b2s-S2", "security", 3, "fs-records-b2s-s2.pv", [B2S_S2 + " is true."]
+    ),
+    records_b2s(
+        "b2s-UKSr", "security", 3, "fs-records-b2s-uksr.pv", [B2S_UKSR + " is true."]
+    ),
+    records_b2s(
+        "b2s-C5a", "witness", 2, "fs-records-b2s-c5a.pv", [B2S_C5A + " is false."]
+    ),
+    records_b2s(
+        "b2s-C5b", "witness", 2, "fs-records-b2s-c5b.pv", [B2S_C5B + " is false."]
+    ),
+    records_b2s(
+        "b2s-C5c", "witness", 2, "fs-records-b2s-c5c.pv", [B2S_C5C + " is false."]
+    ),
+    records_b2s(
+        "b2s-S4", "witness", 1, "fs-records-b2s-s4.pv", [B2S_S4 + " is false."]
+    ),
+    records_b2s(
+        "b2s-FAR", "witness", 1, "fs-records-b2s-far.pv", [B2S_FAR + " is false."]
+    ),
+    records_b2s(
+        "b2s-PINREAD",
+        "witness",
+        1,
+        "fs-records-b2s-pinread.pv",
+        [B2S_PINREAD + " is false."],
+    ),
+    records_b2s(
+        "b2s-C-UKS",
+        "control",
+        1,
+        "fs-records-b2s-uksr.pv",
+        [B2S_UKSR + " is false."],
+        binding=UKS,
+    ),
+    records_b2s(
+        "b2s-C-RETAIN",
+        "control",
+        3,
+        "fs-records-b2s-c3.pv",
+        [B2S_C3 + " is false."],
+        window=B2S_RETAIN,
+    ),
+    records_b2s(
+        "b2s-C-STALE",
+        "control",
+        3,
+        "fs-records-b2s-c3.pv",
+        [B2S_C3 + " is false."],
+        window=B2S_STALE,
+    ),
 )
 
 FORBIDDEN = (
@@ -374,6 +564,11 @@ def log_name(target):
 HOOKS = {
     REGISTRATION: ((CONSUMED, NOCHECK), (BINDING, UKS)),
     RECORDS_S2B: ((WINDOW, RETAIN, STALE, FAILMUT), (GATE, NOGATE), (TASKINGS, CHOSEN)),
+    RECORDS_B2S: (
+        (B2S_WINDOW, B2S_RETAIN, B2S_STALE),
+        (BINDING, UKS),
+        (SENDS, SENDS_CHOSEN),
+    ),
 }
 
 
@@ -386,12 +581,14 @@ def validate_scenario(target):
         hook not in choices for hook, choices in zip(target.hooks, allowed)
     ):
         raise ValueError(f"{target.name}: unknown scenario library")
+    if target.failstop and target.scenario != RECORDS_B2S:
+        raise ValueError(f"{target.name}: only fs-records-b2s has a fail-stop form")
     if target.scenario == REGISTRATION:
         if target.bound not in (1, 2, 3):
             raise ValueError(f"{target.name}: unsupported bound {target.bound}")
         if target.cls == "security" and target.bound != REGISTRATION_SECURITY_BOUND:
             raise ValueError(f"{target.name}: security results run at K_reg = 3")
-    else:
+    elif target.scenario == RECORDS_S2B:
         if target.bound not in (1, 2, 3):
             raise ValueError(f"{target.name}: unsupported bound {target.bound}")
         if target.cls == "security" and target.bound != S2B_SECURITY_BOUND:
@@ -399,6 +596,25 @@ def validate_scenario(target):
         if target.query in S2B_FRESH_ONLY and target.hooks[2] != TASKINGS:
             raise ValueError(
                 f"{target.name}: adversary-chosen plaintexts make this query false by construction"
+            )
+    else:
+        if target.bound not in (1, 2, 3):
+            raise ValueError(f"{target.name}: unsupported bound {target.bound}")
+        if target.cls == "security" and target.bound != B2S_SECURITY_BOUND:
+            raise ValueError(f"{target.name}: b2s security results run at K_r = 3")
+        if target.query in B2S_FRESH_ONLY and target.hooks[2] != SENDS:
+            raise ValueError(
+                f"{target.name}: adversary-chosen plaintexts make this query false by construction"
+            )
+        if target.failstop and (
+            target.cls != "security"
+            or target.bound != B2S_SECURITY_BOUND
+            or target.hooks[2] != SENDS_CHOSEN
+            or target.query not in B2S_FAILSTOP_QUERIES
+        ):
+            raise ValueError(
+                f"{target.name}: the fail-stop form only extends a listed security result "
+                "to adversary-chosen plaintexts"
             )
 
 
@@ -436,6 +652,13 @@ def validate_targets(targets=TARGETS, directory=HERE):
                 raise ValueError(f"{target.name}: missing library {library}")
         if not (directory / target.query).is_file():
             raise ValueError(f"{target.name}: missing query file {target.query}")
+        if (
+            target.failstop
+            and "FsReceiveRejected" in (directory / target.query).read_text()
+        ):
+            raise ValueError(
+                f"{target.name}: a fail-stop target cannot mention FsReceiveRejected"
+            )
         if not target.query.startswith(target.scenario + "-"):
             raise ValueError(f"{target.name}: query file of another scenario")
         used_queries[target.scenario].add(target.query)

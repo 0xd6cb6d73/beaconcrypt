@@ -1,0 +1,10 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s S4 (Beacon-to-Server half), witness (expected reachable):
+   a Server object accepts a record from a peer whose identity secret the
+   attacker holds: the same Server code serves peers that the adversary
+   registered. *)
+query s: bitstring, k: bitstring, kid: key_id, root: bitstring, t: nat, m: bitstring;
+  event(FsReceived(beacon_to_server(), s, ed_public(k), kid, root, t, m)) && attacker(k).
+
+process FsRecordsB2sMain()

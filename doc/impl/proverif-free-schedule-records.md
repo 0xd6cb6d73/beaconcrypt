@@ -197,6 +197,8 @@ In this scenario a Beacon outputs nothing after its bundle: its finish and its r
 
 ## Gates and wiring
 
+This section describes the gates as P2 left them; stage P3 added the Beacon-to-Server record scenario, and the [b2s guide](proverif-free-schedule-records-b2s.md#gates-and-wiring) gives the current figures.
+
 - `PROVERIF_FS_SCENARIOS` holds `fs-registration` and `fs-records-s2b`; `check-proverif-fs` runs both runners with `-j1`, so every target of the group runs one after another. The parallel 35-scenario roster is unchanged.
 - `check-proverif-fs-records-s2b` runs the checker regression test and then `check-free-schedule.py --scenario fs-records-s2b` with the fs timeout, address-space cap and optional log directory; `check-proverif-fs-registration` now passes `--scenario fs-registration`. Without `--scenario` the checker runs every target.
 - The checker loads `production-transcript-interface.pvl`, `crypto.pvl`, `extraction/lib.pvl`, `fs-common.pvl`, the window, gate and taskings libraries, `fs-records-s2b-receive.pvl`, the bound file and `fs-records-s2b.pvl`, then the query file. It rejects any target that loads a mutant library unless it is a control, a control that loads none or more than one, a security result below K_r = 3, S1 or S4 with adversary-chosen plaintexts, an inverted target that is not a control, a query file of another scenario, and any record query file that no target uses. Before the P2 review the mutant rule let a security or witness target load two mutants, although this guide already said that it rejected them; no target did, and the regression test now covers the case for security, witness and control targets of both scenarios.
@@ -232,6 +234,8 @@ Three reviews of P2 (fidelity, soundness and integration) approved it with nits;
 - **The message of commit `c08dbf3`** says that all relative links and anchors in the documents it changed resolve. Two anchors in `doc/formal-verification-analysis.md`, both present before P2, do not: `impl/formal-verification-stage-4.md#L123-L127` (a line anchor into a rendered Markdown file) and `persistence.md#server-state-persistence` (`doc/persistence.md` has no such heading). They are left for a separate change.
 
 ## Open items for P3
+
+Stage P3 took up these items; the [fs-records-b2s guide](proverif-free-schedule-records-b2s.md) records what it did and what remains open.
 
 - The record scenario `fs-records-b2s`: the Beacon send worker and the Server receive worker with routing on the claimed sender, C2, C3 and C4 for Server receives, UKSr, S2, the b2s half of S4, the record-form C-UKS on UKSr, and A1 and A2 re-proved. It can reuse the receive-window hook style, the frame-carrying receive events and the checker's scenario selection of P2. Adversary-chosen Beacon plaintexts (E7) can follow the chosen tasking form here, with S2 and UKSr kept on fresh plaintexts (the L6 review's finding 1).
 - Sizing of the far branch: C4 is meaningful only while no honest sender seals above T_max, because the far branch opens with model-only key material ([step 8](#model-steps-and-their-justifications)); b2s must keep every honest Beacon send at or below its T_max.

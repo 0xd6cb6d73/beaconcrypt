@@ -20874,6 +20874,21 @@ const FS_RECORDS_S2B_TASKINGS: &str =
 	include_str!("../proofs/pro-verif/fs-records-s2b-taskings.pvl");
 const FS_RECORDS_S2B_TASKINGS_CHOSEN: &str =
 	include_str!("../proofs/pro-verif/fs-records-s2b-taskings-chosen.pvl");
+const FS_RECORDS_B2S: &str = include_str!("../proofs/pro-verif/fs-records-b2s.pvl");
+const FS_RECORDS_B2S_RECEIVE: &str = include_str!("../proofs/pro-verif/fs-records-b2s-receive.pvl");
+const FS_RECORDS_B2S_BOUNDS: [&str; 3] = [
+	include_str!("../proofs/pro-verif/fs-records-b2s-kr1.pvl"),
+	include_str!("../proofs/pro-verif/fs-records-b2s-kr2.pvl"),
+	include_str!("../proofs/pro-verif/fs-records-b2s-kr3.pvl"),
+];
+const FS_RECORDS_B2S_FAILSTOP: &str =
+	include_str!("../proofs/pro-verif/fs-records-b2s-kr3-failstop.pvl");
+const FS_RECORDS_B2S_WINDOW: &str = include_str!("../proofs/pro-verif/fs-records-b2s-window.pvl");
+const FS_CONTROL_B2S_RETAIN: &str = include_str!("../proofs/pro-verif/fs-control-b2s-retain.pvl");
+const FS_CONTROL_B2S_STALE: &str = include_str!("../proofs/pro-verif/fs-control-b2s-stale.pvl");
+const FS_RECORDS_B2S_SENDS: &str = include_str!("../proofs/pro-verif/fs-records-b2s-sends.pvl");
+const FS_RECORDS_B2S_SENDS_CHOSEN: &str =
+	include_str!("../proofs/pro-verif/fs-records-b2s-sends-chosen.pvl");
 const FS_REGISTRATION_BOUNDS: [&str; 3] = [
 	include_str!("../proofs/pro-verif/fs-registration-k1.pvl"),
 	include_str!("../proofs/pro-verif/fs-registration-k2.pvl"),
@@ -20884,7 +20899,7 @@ const FS_CHECKER_TESTS: &str = include_str!("../proofs/pro-verif/test-free-sched
 const DECLARATION_ALLOWLIST: &str = include_str!("../proofs/pro-verif/declaration-allowlist.tsv");
 const FORMAL_ANALYSIS: &str = include_str!("../../doc/formal-verification-analysis.md");
 
-const FS_SCENARIOS: [&str; 2] = ["fs-registration", "fs-records-s2b"];
+const FS_SCENARIOS: [&str; 3] = ["fs-registration", "fs-records-s2b", "fs-records-b2s"];
 const FS_FIDELITY_PREFIX: &str = "(* @beaconcrypt-fs-fidelity ";
 
 /// Every Rust fidelity annotation of the fs files: (file, key, cited range). Within one file the
@@ -21605,6 +21620,426 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 		"beacon.commit",
 		"beaconcrypt/src/beacon.rs:503-509",
 	),
+	(
+		"fs-records-b2s-window.pvl",
+		"window.cached_removal",
+		"beaconcrypt-core/src/ratchet/refined.rs:700-721",
+	),
+	(
+		"fs-records-b2s-window.pvl",
+		"window.failure_keeps_entry",
+		"beaconcrypt-core/src/ratchet/concrete.rs:436-443",
+	),
+	(
+		"fs-records-b2s-sends.pvl",
+		"sends.encrypt",
+		"beaconcrypt/src/beacon.rs:152-163",
+	),
+	(
+		"fs-records-b2s-sends.pvl",
+		"sends.seal",
+		"beaconcrypt/src/ratchet.rs:414-444",
+	),
+	(
+		"fs-records-b2s-sends.pvl",
+		"sends.allocate",
+		"beaconcrypt-core/src/ratchet/concrete.rs:133-155",
+	),
+	(
+		"fs-records-b2s-sends.pvl",
+		"sends.advance",
+		"beaconcrypt-core/src/ratchet/concrete.rs:171-182",
+	),
+	(
+		"fs-records-b2s-sends.pvl",
+		"sends.stays_advanced",
+		"beaconcrypt-core/src/ratchet/concrete.rs:206-209",
+	),
+	(
+		"fs-records-b2s-sends-chosen.pvl",
+		"sends.encrypt",
+		"beaconcrypt/src/beacon.rs:152-163",
+	),
+	(
+		"fs-records-b2s-sends-chosen.pvl",
+		"sends.seal",
+		"beaconcrypt/src/ratchet.rs:414-444",
+	),
+	(
+		"fs-records-b2s-sends-chosen.pvl",
+		"sends.allocate",
+		"beaconcrypt-core/src/ratchet/concrete.rs:133-155",
+	),
+	(
+		"fs-records-b2s-sends-chosen.pvl",
+		"sends.advance",
+		"beaconcrypt-core/src/ratchet/concrete.rs:171-182",
+	),
+	(
+		"fs-records-b2s-sends-chosen.pvl",
+		"sends.stays_advanced",
+		"beaconcrypt-core/src/ratchet/concrete.rs:206-209",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"server.decrypt",
+		"beaconcrypt/src/server.rs:229-231",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"server.route",
+		"beaconcrypt/src/server.rs:237-245",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"ratchet.frame_sender",
+		"beaconcrypt/src/ratchet.rs:360-362",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"server.peer_associated_data",
+		"beaconcrypt/src/server.rs:218-223",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"ratchet.decode_sender",
+		"beaconcrypt/src/ratchet.rs:505-516",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"record.frame_context",
+		"beaconcrypt-core/src/record.rs:35-61",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.begin_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:259-268",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.plan_receive",
+		"beaconcrypt-core/src/ratchet/control.rs:223-245",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.cached_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:270-280",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"refined.prepare_cached",
+		"beaconcrypt-core/src/ratchet/refined.rs:317-330",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"ratchet.open",
+		"beaconcrypt/src/ratchet.rs:449-482",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"record.commitment",
+		"beaconcrypt-core/src/record.rs:80-98",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.open_finish",
+		"beaconcrypt-core/src/ratchet/concrete.rs:436-454",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"control.cached_removal",
+		"beaconcrypt-core/src/ratchet/control.rs:435-461",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"refined.publish_cached",
+		"beaconcrypt-core/src/ratchet/refined.rs:700-721",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"server.accepted",
+		"beaconcrypt/src/server.rs:246-249",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.open_reject",
+		"beaconcrypt-core/src/ratchet/concrete.rs:440-443",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"core.future_receive",
+		"beaconcrypt-core/src/ratchet/concrete.rs:282-300",
+	),
+	(
+		"fs-records-b2s-receive.pvl",
+		"refined.publish_future",
+		"beaconcrypt-core/src/ratchet/refined.rs:755-778",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.fresh_ephemeral",
+		"beaconcrypt/src/server.rs:368-368",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.encapsulate",
+		"beaconcrypt/src/server.rs:373-373",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.accept",
+		"beaconcrypt/src/server.rs:332-336",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.identity_tag",
+		"beaconcrypt/src/server.rs:337-342",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.signatures",
+		"beaconcrypt/src/server.rs:343-346",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.validate_init_kex",
+		"beaconcrypt/src/server.rs:347-353",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.validate_init_kex",
+		"beaconcrypt-core/src/pqxdh.rs:325-345",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.registration_id",
+		"beaconcrypt/src/server.rs:354-354",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.registration_id",
+		"beaconcrypt-core/src/pqxdh.rs:195-204",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.consumed_status",
+		"beaconcrypt/src/server.rs:355-360",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.identity_conversion",
+		"beaconcrypt/src/server.rs:374-375",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.dh",
+		"beaconcrypt/src/server.rs:376-394",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.accept_root_input",
+		"beaconcrypt/src/server.rs:395-411",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.root",
+		"beaconcrypt/src/server.rs:414-414",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.insert",
+		"beaconcrypt/src/server.rs:415-416",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.accept_return",
+		"beaconcrypt/src/server.rs:418-421",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.build",
+		"beaconcrypt/src/server.rs:424-428",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.next_key_id",
+		"beaconcrypt/src/server.rs:434-439",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.prepare_commit",
+		"beaconcrypt/src/server.rs:440-449",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.ratchet_start",
+		"beaconcrypt/src/server.rs:456-457",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.server_ratchets",
+		"beaconcrypt-core/src/pqxdh.rs:432-435",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.associated_data",
+		"beaconcrypt/src/server.rs:458-458",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.prepare_commit_ad",
+		"beaconcrypt-core/src/pqxdh.rs:877-880",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.payload",
+		"beaconcrypt/src/server.rs:459-462",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.binding",
+		"beaconcrypt/src/server.rs:463-470",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.seal",
+		"beaconcrypt/src/server.rs:471-479",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.commit",
+		"beaconcrypt/src/server.rs:489-497",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"server.build_return",
+		"beaconcrypt/src/server.rs:498-501",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.receive_counter_start",
+		"beaconcrypt-core/src/ratchet/concrete.rs:39-41",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.new",
+		"beaconcrypt/src/beacon.rs:65-83",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.one_time",
+		"beaconcrypt/src/beacon.rs:301-305",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.start",
+		"beaconcrypt/src/beacon.rs:335-345",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.beacon_start",
+		"beaconcrypt-core/src/pqxdh.rs:304-321",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.sign",
+		"beaconcrypt/src/beacon.rs:349-357",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.bundle_return",
+		"beaconcrypt/src/beacon.rs:398-398",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.finish",
+		"beaconcrypt/src/beacon.rs:402-406",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.decode",
+		"beaconcrypt/src/beacon.rs:422-431",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.identity_conversion",
+		"beaconcrypt/src/beacon.rs:432-433",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.decapsulate",
+		"beaconcrypt/src/beacon.rs:434-434",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.dh",
+		"beaconcrypt/src/beacon.rs:435-449",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.prepare",
+		"beaconcrypt/src/beacon.rs:450-457",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.pin_check",
+		"beaconcrypt-core/src/pqxdh.rs:545-547",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.root",
+		"beaconcrypt/src/beacon.rs:458-458",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.ratchet_start",
+		"beaconcrypt/src/beacon.rs:459-460",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.beacon_ratchets",
+		"beaconcrypt-core/src/pqxdh.rs:428-431",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.associated_data",
+		"beaconcrypt/src/beacon.rs:461-461",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.finish_ad",
+		"beaconcrypt-core/src/pqxdh.rs:552-555",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.receive",
+		"beaconcrypt/src/beacon.rs:462-467",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.sequence_one",
+		"beaconcrypt/src/beacon.rs:468-470",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.binding",
+		"beaconcrypt/src/beacon.rs:476-484",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"core.binding",
+		"beaconcrypt-core/src/pqxdh.rs:616-628",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.pin_checks",
+		"beaconcrypt/src/beacon.rs:493-502",
+	),
+	(
+		"fs-records-b2s.pvl",
+		"beacon.commit",
+		"beaconcrypt/src/beacon.rs:503-509",
+	),
 ];
 
 /// The fs-registration result targets: (name, class, K_reg bound, query file, mutant library).
@@ -21731,6 +22166,82 @@ const FS_S2B_TARGETS: [(&str, &str, &str, &str, &str); 16] = [
 	),
 ];
 
+/// The fs-records-b2s result targets: (name, class, K_r bound, query file, hook and form keywords
+/// sorted).
+const FS_B2S_TARGETS: [(&str, &str, &str, &str, &str); 17] = [
+	(
+		"b2s-A1",
+		"security",
+		"3",
+		"fs-records-b2s-a1.pv",
+		"sends=SENDS_CHOSEN",
+	),
+	(
+		"b2s-A2",
+		"security",
+		"3",
+		"fs-records-b2s-a2.pv",
+		"sends=SENDS_CHOSEN",
+	),
+	("b2s-C2", "security", "3", "fs-records-b2s-c2.pv", ""),
+	(
+		"b2s-C2-chosen-fs",
+		"security",
+		"3",
+		"fs-records-b2s-c2.pv",
+		"failstop=True,sends=SENDS_CHOSEN",
+	),
+	(
+		"b2s-C3",
+		"security",
+		"3",
+		"fs-records-b2s-c3.pv",
+		"sends=SENDS_CHOSEN",
+	),
+	(
+		"b2s-C4",
+		"security",
+		"3",
+		"fs-records-b2s-c4.pv",
+		"failstop=True,sends=SENDS_CHOSEN",
+	),
+	("b2s-S2", "security", "3", "fs-records-b2s-s2.pv", ""),
+	("b2s-UKSr", "security", "3", "fs-records-b2s-uksr.pv", ""),
+	("b2s-C5a", "witness", "2", "fs-records-b2s-c5a.pv", ""),
+	("b2s-C5b", "witness", "2", "fs-records-b2s-c5b.pv", ""),
+	("b2s-C5c", "witness", "2", "fs-records-b2s-c5c.pv", ""),
+	("b2s-S4", "witness", "1", "fs-records-b2s-s4.pv", ""),
+	("b2s-FAR", "witness", "1", "fs-records-b2s-far.pv", ""),
+	(
+		"b2s-PINREAD",
+		"witness",
+		"1",
+		"fs-records-b2s-pinread.pv",
+		"",
+	),
+	(
+		"b2s-C-UKS",
+		"control",
+		"1",
+		"fs-records-b2s-uksr.pv",
+		"binding=UKS",
+	),
+	(
+		"b2s-C-RETAIN",
+		"control",
+		"3",
+		"fs-records-b2s-c3.pv",
+		"window=B2S_RETAIN",
+	),
+	(
+		"b2s-C-STALE",
+		"control",
+		"3",
+		"fs-records-b2s-c3.pv",
+		"window=B2S_STALE",
+	),
+];
+
 const FS_EVENTS: [&str; 12] = [
 	"event FsBeaconStarted(bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId).",
 	"event FsServerAccepted(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId, bitstring).",
@@ -21774,6 +22285,15 @@ struct FsFiles {
 	nogate: String,
 	taskings: String,
 	chosen: String,
+	b2s: String,
+	b2s_receive: String,
+	b2s_bounds: [String; 3],
+	b2s_failstop: String,
+	b2s_window: String,
+	b2s_retain: String,
+	b2s_stale: String,
+	sends: String,
+	sends_chosen: String,
 }
 
 impl FsFiles {
@@ -21797,10 +22317,19 @@ impl FsFiles {
 			nogate: FS_CONTROL_NOGATE.to_owned(),
 			taskings: FS_RECORDS_S2B_TASKINGS.to_owned(),
 			chosen: FS_RECORDS_S2B_TASKINGS_CHOSEN.to_owned(),
+			b2s: FS_RECORDS_B2S.to_owned(),
+			b2s_receive: FS_RECORDS_B2S_RECEIVE.to_owned(),
+			b2s_bounds: FS_RECORDS_B2S_BOUNDS.map(str::to_owned),
+			b2s_failstop: FS_RECORDS_B2S_FAILSTOP.to_owned(),
+			b2s_window: FS_RECORDS_B2S_WINDOW.to_owned(),
+			b2s_retain: FS_CONTROL_B2S_RETAIN.to_owned(),
+			b2s_stale: FS_CONTROL_B2S_STALE.to_owned(),
+			sends: FS_RECORDS_B2S_SENDS.to_owned(),
+			sends_chosen: FS_RECORDS_B2S_SENDS_CHOSEN.to_owned(),
 		}
 	}
 
-	fn annotated(&self) -> [(&'static str, &str); 10] {
+	fn annotated(&self) -> [(&'static str, &str); 15] {
 		[
 			("fs-common.pvl", &self.common),
 			("fs-registration-consumed.pvl", &self.consumed),
@@ -21812,6 +22341,11 @@ impl FsFiles {
 			("fs-records-s2b-taskings-chosen.pvl", &self.chosen),
 			("fs-records-s2b-receive.pvl", &self.receive),
 			("fs-records-s2b.pvl", &self.s2b),
+			("fs-records-b2s-window.pvl", &self.b2s_window),
+			("fs-records-b2s-sends.pvl", &self.sends),
+			("fs-records-b2s-sends-chosen.pvl", &self.sends_chosen),
+			("fs-records-b2s-receive.pvl", &self.b2s_receive),
+			("fs-records-b2s.pvl", &self.b2s),
 		]
 	}
 
@@ -21823,6 +22357,19 @@ impl FsFiles {
 		files.push(("fs-control-stale.pvl", &self.stale));
 		files.push(("fs-control-failmut.pvl", &self.failmut));
 		files.push(("fs-control-nogate.pvl", &self.nogate));
+		files.push(("fs-control-b2s-retain.pvl", &self.b2s_retain));
+		files.push(("fs-control-b2s-stale.pvl", &self.b2s_stale));
+		for (index, bound) in self.b2s_bounds.iter().enumerate() {
+			files.push((
+				[
+					"fs-records-b2s-kr1.pvl",
+					"fs-records-b2s-kr2.pvl",
+					"fs-records-b2s-kr3.pvl",
+				][index],
+				bound,
+			));
+		}
+		files.push(("fs-records-b2s-kr3-failstop.pvl", &self.b2s_failstop));
 		for (index, bound) in self.s2b_bounds.iter().enumerate() {
 			files.push((
 				[
@@ -22255,7 +22802,8 @@ fn validate_fs_model(files: &FsFiles) -> Result<(), String> {
 			return Err(format!("fs-registration bound K_reg = {bound} changed"));
 		}
 	}
-	validate_fs_records_s2b(files)
+	validate_fs_records_s2b(files)?;
+	validate_fs_records_b2s(files)
 }
 
 /// The receive-window hooks of fs-records-s2b: the real library and the three negative controls.
@@ -22439,6 +22987,231 @@ fn validate_fs_records_s2b(files: &FsFiles) -> Result<(), String> {
 	Ok(())
 }
 
+/// The receive-window hooks of fs-records-b2s: the real library and the two negative controls.
+const FS_B2S_WINDOWS: [(&str, &str, &str, &str); 3] = [
+	("fs-records-b2s-window.pvl", "false", "r", "cached_1"),
+	("fs-control-b2s-retain.pvl", "cached_1", "r", "cached_1"),
+	("fs-control-b2s-stale.pvl", "false", "0", "false"),
+];
+
+const FS_B2S_SENDS_HEADER: &str = "let FsB2sSends( server_identity: bitstring, beacon_identity: bitstring, assigned_key_id: key_id, root: bitstring, associated_data: bitstring, send_chain_1: bitstring, send_chain_2: bitstring ) =";
+
+const FS_B2S_RECV_STATE: &str = "server_identity, beacon_identity, assigned_key_id, root, associated_data, receive_material_1, receive_material_2, far_anchor";
+
+fn fs_b2s_record(position: usize, record: &str) -> String {
+	format!(
+		"event FsSent( beacon_to_server(), server_identity, beacon_identity, assigned_key_id, root, {position}, {record} ); out( c, seal_frame( ratchet_material(send_chain_{position}), associated_data, fs_seq({position}), assigned_key_id, {record} ) )"
+	)
+}
+
+fn fs_b2s_send(position: usize) -> String {
+	format!(
+		"in(c, send_request_{position}: bitstring) [precise]; new record_{position}[]: bitstring; {}",
+		fs_b2s_record(position, &format!("record_{position}"))
+	)
+}
+
+fn validate_fs_records_b2s(files: &FsFiles) -> Result<(), String> {
+	let receive = normalized(&uncommented_pv(&files.b2s_receive)?);
+	require_ordered_once(
+		&receive,
+		&[
+			"fun fs_far_chain(bitstring, nat): bitstring.",
+			"def FS_B2S_RECV_STEP(Cur, Next, Failed) {",
+			"in(c, frame: bitstring) [precise];",
+			"fs_seq(t: nat), =assigned_key_id ) = frame in",
+			"if t <= r then",
+			"if t = 1 && cached_1 then",
+			"fs_b2s_cached_after_success(cached_1) )",
+			"else if t = 1 then",
+			&format!("Next( {FS_B2S_RECV_STATE}, 1, cached_1 )"),
+			"else if t = 2 then",
+			&format!(
+				"if r = 0 then Next( {FS_B2S_RECV_STATE}, 2, true ) else Next( {FS_B2S_RECV_STATE}, 2, cached_1 )"
+			),
+			&format!(
+				"open_frame( ratchet_material(fs_far_chain(far_anchor, t)), associated_data, fs_seq(t), assigned_key_id, frame ) in event FsFarAccepted( beacon_to_server(), server_identity, beacon_identity, assigned_key_id, root, t ) else Failed( {FS_B2S_RECV_STATE}, r, cached_1 ) ) ) else Next( {FS_B2S_RECV_STATE}, r, cached_1 ). }}"
+			),
+			"let FsB2sRecvStop( server_identity: bitstring, beacon_identity: bitstring, assigned_key_id: key_id, root: bitstring, associated_data: bitstring, receive_material_1: bitstring, receive_material_2: bitstring, far_anchor: bitstring, r: nat, cached_1: bool ) = 0.",
+		],
+		"fs-records-b2s receive step",
+	)?;
+	for (wanted, expected, label) in [
+		("event FsReceived(", 3, "accepted records"),
+		("event FsReceivedFrame(", 3, "accepted frames"),
+		(
+			"root, 1, plaintext ); event FsReceivedFrame( beacon_to_server(), server_identity, beacon_identity, assigned_key_id, root, 1, frame );",
+			2,
+			"accepted frames at position 1",
+		),
+		(
+			"root, 2, plaintext ); event FsReceivedFrame( beacon_to_server(), server_identity, beacon_identity, assigned_key_id, root, 2, frame );",
+			1,
+			"accepted frames at position 2",
+		),
+		("event FsReceiveRejected(", 4, "rejections at t <= T_max"),
+		(
+			"event FsReceiveRejected( beacon_to_server(), server_identity, beacon_identity, assigned_key_id, root, t, frame );",
+			4,
+			"refused frames at t <= T_max",
+		),
+		("event FsFarAccepted(", 1, "far acceptance"),
+		("open_frame(", 4, "opens"),
+		(
+			"associated_data, fs_seq(1), assigned_key_id, frame ) in",
+			2,
+			"opens at position 1 with the routed sender",
+		),
+		(
+			"associated_data, fs_seq(2), assigned_key_id, frame ) in",
+			1,
+			"opens at position 2 with the routed sender",
+		),
+		(
+			"fs_b2s_failed_r(r, 1), fs_b2s_failed_cached_1(r, 1, cached_1) )",
+			2,
+			"failed opens at position 1",
+		),
+		(
+			"fs_b2s_failed_r(r, 2), fs_b2s_failed_cached_1(r, 2, cached_1) )",
+			1,
+			"failed opens at position 2",
+		),
+		("Failed(", 4, "continuations after a failed open"),
+		(
+			&format!("frame ); Failed( {FS_B2S_RECV_STATE}, fs_b2s_failed_r(r, "),
+			3,
+			"rejections followed by the failed-open continuation",
+		),
+		(
+			&format!("frame ); Next( {FS_B2S_RECV_STATE}, r, cached_1 )"),
+			1,
+			"rejected old targets, which open nothing",
+		),
+		("Next(", 6, "continuations with the next attempt"),
+		("[precise]", 1, "attacker inputs"),
+	] {
+		if count(&receive, wanted) != expected {
+			return Err(format!("fs-records-b2s receive step {label} changed"));
+		}
+	}
+	for (index, source) in files.b2s_bounds.iter().enumerate() {
+		let bound = index + 1;
+		let mut expansions = vec![format!(
+			"expand FS_B2S_RECV_STEP(FsB2sRecv{bound}, FsB2sRecvStop, FsB2sRecvStop)."
+		)];
+		for step in (1..bound).rev() {
+			expansions.push(format!(
+				"expand FS_B2S_RECV_STEP(FsB2sRecv{step}, FsB2sRecv{next}, FsB2sRecv{next}).",
+				next = step + 1
+			));
+		}
+		if normalized(&uncommented_pv(source)?) != expansions.join(" ") {
+			return Err(format!("fs-records-b2s bound K_r = {bound} changed"));
+		}
+	}
+	if normalized(&uncommented_pv(&files.b2s_failstop)?)
+		!= "expand FS_B2S_RECV_STEP(FsB2sRecv3, FsB2sRecvStop, FsB2sRecvStop). expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecvStop). expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecv2, FsB2sRecvStop)."
+	{
+		return Err("fs-records-b2s fail-stop bound K_r = 3 changed".to_owned());
+	}
+	let b2s = normalized(&uncommented_pv(&files.b2s)?);
+	require_ordered_once(
+		&b2s,
+		&[
+			"let FsB2sServer(obj: bitstring) = let server_identity = ed_public(SERVER_IDENTITY_SECRET) in new ephemeral_secret: bitstring; new kem_coins: bitstring; in(c, bundle: bitstring) [precise];",
+			"let init = beaconcrypt_core__pqxdh__VerifiedInitKex( identity, prekey, one_time, pq ) in",
+			"x25519_server_dh(ephemeral_secret, x25519_public_from_ed(identity)),",
+			"dh1, fs_root_dh2(dh2, dh3), dh3, dh4, mlkem_shared_secret(pq, kem_coins)",
+			"event FsServerAccepted( obj, server_identity, identity, init, registration_id, root ); in(c, build_request: bitstring) [precise]; let assigned_key_id = fs_kid(1) in",
+			"let send_chain_1 = server_to_beacon_chain(root) in let receive_chain_1 = beacon_to_server_chain(root) in let receive_chain_2 = ratchet_next(receive_chain_1) in let receive_chain_3 = ratchet_next(receive_chain_2) in let associated_data = fs_associated_data(server_identity, identity) in new payload: bitstring;",
+			"fs_seq(1), SERVER_KEY_ID, response_plaintext ) in event FsServerCommitted( obj, server_identity, identity, init, assigned_key_id, root, associated_data, payload ); event FsSent( server_to_beacon(), server_identity, identity, assigned_key_id, root, 1, response_plaintext );",
+			"FsB2sRecv1( server_identity, identity, assigned_key_id, root, associated_data, ratchet_material(receive_chain_1), ratchet_material(receive_chain_2), receive_chain_3, 0, false ).",
+			"let FsB2sBeacon(server_identity: bitstring, server_key_id: key_id) =",
+			"event FsBeaconStarted(server_identity, beacon_identity, init, registration_id);",
+			"in(c, response: bitstring) [precise];",
+			"if response_server_identity = server_identity then",
+			"dh1, fs_root_dh2(dh2, dh3), dh3, dh4, kem_secret",
+			"let receive_chain_1 = server_to_beacon_chain(root) in let send_chain_1 = beacon_to_server_chain(root) in let send_chain_2 = ratchet_next(send_chain_1) in let associated_data = fs_associated_data(server_identity, beacon_identity) in",
+			"fs_seq(frame_t: nat), =server_key_id ) = initial_frame in if frame_t = 1 then let finish_plaintext = open_frame( ratchet_material(receive_chain_1), associated_data, fs_seq(1), server_key_id, initial_frame ) in",
+			"let registration_payload( =expected_binding, application_payload: bitstring ) = finish_plaintext in event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ); event FsReceived( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, finish_plaintext ); event FsReceivedFrame( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, initial_frame ); FsB2sSends( server_identity, beacon_identity, assigned_key_id, root, associated_data, send_chain_1, send_chain_2 ).",
+			"let FsRecordsB2sMain() = out(c, ed_public(SERVER_IDENTITY_SECRET)); ( (!(new obj: bitstring; FsB2sServer(obj))) | (!FsB2sBeacon(ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID)) ).",
+			"let FsRecordsB2sMainAnyPin() = out(c, ed_public(SERVER_IDENTITY_SECRET)); ( (!(new obj: bitstring; FsB2sServer(obj))) | (!( in(c, pinned_identity: bitstring) [precise]; in(c, pinned_key_id: key_id) [precise]; FsB2sBeacon(pinned_identity, pinned_key_id) )) ).",
+		],
+		"fs-records-b2s process (Rust order except the v2 draw)",
+	)?;
+	for (wanted, expected, label) in [
+		("event FsReceived(", 1, "accepted records"),
+		("event FsReceivedFrame(", 1, "accepted frames"),
+		("event FsReceiveRejected(", 0, "rejections"),
+		("SERVER_KEY_ID", 2, "uses of the Server's own ID"),
+		("[precise]", 5, "attacker inputs"),
+	] {
+		if count(&b2s, wanted) != expected {
+			return Err(format!("fs-records-b2s {label} changed"));
+		}
+	}
+	for (file, success, failed_r, failed_cached) in FS_B2S_WINDOWS {
+		let source = match file {
+			"fs-records-b2s-window.pvl" => &files.b2s_window,
+			"fs-control-b2s-retain.pvl" => &files.b2s_retain,
+			_ => &files.b2s_stale,
+		};
+		let expected = format!(
+			"letfun fs_b2s_cached_after_success(cached_1: bool) = {success}. letfun fs_b2s_failed_r(r: nat, target: nat) = {failed_r}. letfun fs_b2s_failed_cached_1(r: nat, target: nat, cached_1: bool) = {failed_cached}."
+		);
+		if normalized(&uncommented_pv(source)?) != expected {
+			return Err(format!("{file} receive-window hooks changed"));
+		}
+	}
+	if normalized(&uncommented_pv(&files.sends)?)
+		!= format!(
+			"{FS_B2S_SENDS_HEADER} {}; {}.",
+			fs_b2s_send(1),
+			fs_b2s_send(2)
+		) {
+		return Err("fs-records-b2s-sends.pvl fresh records changed".to_owned());
+	}
+	let chosen = normalized(&uncommented_pv(&files.sends_chosen)?);
+	let chosen_send = |position: usize| {
+		format!(
+			"in(c, record_mode_{position}: bitstring) [precise]; if record_mode_{position} = fs_chosen_record() then ( in(c, chosen_record_{position}: bitstring) [precise]; {}",
+			fs_b2s_record(position, &format!("chosen_record_{position}"))
+		)
+	};
+	let fresh_send = |position: usize| {
+		format!(
+			"else ( new record_{position}[]: bitstring; {}",
+			fs_b2s_record(position, &format!("record_{position}"))
+		)
+	};
+	let second = "FsB2sSend2( server_identity, beacon_identity, assigned_key_id, root, associated_data, send_chain_2 )";
+	require_ordered(
+		&chosen,
+		&[
+			"fun fs_chosen_record(): bitstring [data].",
+			"let FsB2sSend2(",
+			&chosen_send(2),
+			&fresh_send(2),
+			FS_B2S_SENDS_HEADER,
+			&chosen_send(1),
+			second,
+			&fresh_send(1),
+			second,
+		],
+		"fs-records-b2s-sends-chosen.pvl records",
+	)?;
+	if count(&chosen, "[precise]") != 4
+		|| count(&chosen, "event FsSent(") != 4
+		|| count(&chosen, "new record_") != 2
+		|| count(&chosen, second) != 2
+		|| count(&chosen, "let FsB2sSend2(") != 1
+	{
+		return Err("fs-records-b2s-sends-chosen.pvl records changed".to_owned());
+	}
+	Ok(())
+}
+
 fn validate_fs_checker(checker: &str, tests: &str) -> Result<(), String> {
 	for (wanted, label) in [
 		(
@@ -22540,14 +23313,15 @@ fn validate_fs_checker(checker: &str, tests: &str) -> Result<(), String> {
 		),
 		"fs checker class-count regression",
 	)?;
-	validate_fs_s2b_checker(checker, tests, section)
+	validate_fs_s2b_checker(checker, tests, section)?;
+	validate_fs_b2s_checker(checker, tests, section)
 }
 
 fn validate_fs_s2b_checker(checker: &str, tests: &str, section: &str) -> Result<(), String> {
 	for wanted in [
 		"REGISTRATION = \"fs-registration\"",
 		"RECORDS_S2B = \"fs-records-s2b\"",
-		"SCENARIOS = (REGISTRATION, RECORDS_S2B)",
+		"SCENARIOS = (REGISTRATION, RECORDS_S2B, RECORDS_B2S)",
 		"WINDOW = \"fs-records-s2b-window.pvl\"",
 		"RETAIN = \"fs-control-retain.pvl\"",
 		"STALE = \"fs-control-stale.pvl\"",
@@ -22574,6 +23348,11 @@ fn validate_fs_s2b_checker(checker: &str, tests: &str, section: &str) -> Result<
 			"HOOKS = {
 			REGISTRATION: ((CONSUMED, NOCHECK), (BINDING, UKS)),
 			RECORDS_S2B: ((WINDOW, RETAIN, STALE, FAILMUT), (GATE, NOGATE), (TASKINGS, CHOSEN)),
+			RECORDS_B2S: (
+				(B2S_WINDOW, B2S_RETAIN, B2S_STALE),
+				(BINDING, UKS),
+				(SENDS, SENDS_CHOSEN),
+			),
 			}",
 		),
 		"fs scenario hook libraries",
@@ -22630,6 +23409,102 @@ fn validate_fs_s2b_checker(checker: &str, tests: &str, section: &str) -> Result<
 		&compact(tests),
 		&compact("{\"security\": 6, \"witness\": 5, \"control\": 5,}"),
 		"fs-records-s2b checker class-count regression",
+	)
+}
+
+fn validate_fs_b2s_checker(checker: &str, tests: &str, section: &str) -> Result<(), String> {
+	for wanted in [
+		"RECORDS_B2S = \"fs-records-b2s\"",
+		"B2S_WINDOW = \"fs-records-b2s-window.pvl\"",
+		"B2S_RETAIN = \"fs-control-b2s-retain.pvl\"",
+		"B2S_STALE = \"fs-control-b2s-stale.pvl\"",
+		"SENDS = \"fs-records-b2s-sends.pvl\"",
+		"SENDS_CHOSEN = \"fs-records-b2s-sends-chosen.pvl\"",
+		"B2S_RECEIVE = \"fs-records-b2s-receive.pvl\"",
+		"B2S_PROCESS = \"fs-records-b2s.pvl\"",
+		"B2S_SECURITY_BOUND = 3",
+		"raise ValueError(f\"{target.name}: b2s security results run at K_r = 3\")",
+		"f\"fs-records-b2s-kr{self.bound}{form}.pvl\",",
+		"form = \"-failstop\" if self.failstop else \"\"",
+		"failstop: bool = False",
+		"if target.failstop and target.scenario != RECORDS_B2S:",
+		"or target.query not in B2S_FAILSTOP_QUERIES",
+		"if target.cls == \"security\" and target.bound != B2S_SECURITY_BOUND:",
+		"if target.query in B2S_FRESH_ONLY and target.hooks[2] != SENDS:",
+		"B2S_RETAIN: B2S_WINDOW,",
+		"B2S_STALE: B2S_WINDOW,",
+	] {
+		require_once(checker, wanted, "fs-records-b2s checker rule")?;
+	}
+	for (wanted, label) in [
+		(
+			"B2S_FRESH_ONLY = (\"fs-records-b2s-s2.pv\", \"fs-records-b2s-uksr.pv\", \"fs-records-b2s-pinread.pv\",)",
+			"fs-records-b2s fresh-only queries",
+		),
+		(
+			"B2S_FAILSTOP_QUERIES = (\"fs-records-b2s-c2.pv\", \"fs-records-b2s-c4.pv\")",
+			"fs-records-b2s fail-stop queries",
+		),
+		(
+			"if ( target.failstop and \"FsReceiveRejected\" in (directory / target.query).read_text() ): raise ValueError(",
+			"fs-records-b2s fail-stop queries without rejections",
+		),
+		(
+			"if target.failstop and ( target.cls != \"security\" or target.bound != B2S_SECURITY_BOUND or target.hooks[2] != SENDS_CHOSEN or target.query not in B2S_FAILSTOP_QUERIES ):",
+			"fs-records-b2s fail-stop rule",
+		),
+		(
+			"def records_b2s( name, cls, bound, query, results, window=B2S_WINDOW, binding=BINDING, sends=SENDS, failstop=False, ):",
+			"fs-records-b2s default libraries",
+		),
+	] {
+		require_once(&compact(checker), &compact(wanted), label)?;
+	}
+	let mut targets = Vec::new();
+	let mut cursor = 0;
+	while let Some(relative) = section[cursor..].find("records_b2s(") {
+		let open = cursor + relative + "records_b2s".len();
+		let (arguments, end) = parse_call(section, open)?;
+		let arguments = arguments
+			.iter()
+			.map(|argument| argument.trim().to_owned())
+			.filter(|argument| !argument.is_empty())
+			.collect::<Vec<_>>();
+		if arguments.len() < 5 {
+			return Err(format!("malformed fs-records-b2s target: {arguments:?}"));
+		}
+		let mut keywords = arguments[5..].to_vec();
+		keywords.sort();
+		targets.push((
+			arguments[0].trim_matches('"').to_owned(),
+			arguments[1].trim_matches('"').to_owned(),
+			arguments[2].clone(),
+			arguments[3].trim_matches('"').to_owned(),
+			keywords.join(","),
+		));
+		cursor = end;
+	}
+	let expected = FS_B2S_TARGETS
+		.iter()
+		.map(|(name, class, bound, query, keywords)| {
+			(
+				(*name).to_owned(),
+				(*class).to_owned(),
+				(*bound).to_owned(),
+				(*query).to_owned(),
+				(*keywords).to_owned(),
+			)
+		})
+		.collect::<Vec<_>>();
+	if targets != expected {
+		return Err(format!(
+			"fs-records-b2s target manifest changed: {targets:?}"
+		));
+	}
+	require(
+		&compact(tests),
+		&compact("{\"security\": 8, \"witness\": 6, \"control\": 3,}"),
+		"fs-records-b2s checker class-count regression",
 	)
 }
 
@@ -23233,9 +24108,15 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		),
 		(
 			"fs scenario removed",
+			"PROVERIF_FS_SCENARIOS := \\\n\tfs-registration \\\n\tfs-records-s2b \\\n\tfs-records-b2s\n",
 			"PROVERIF_FS_SCENARIOS := \\\n\tfs-registration \\\n\tfs-records-s2b\n",
-			"PROVERIF_FS_SCENARIOS := \\\n\tfs-registration\n",
 			"fs scenario roster changed",
+		),
+		(
+			"b2s record runner checks the s2b targets",
+			"--scenario fs-records-b2s",
+			"--scenario fs-records-s2b",
+			"fs-records-b2s exact Make runner",
 		),
 		(
 			"fs record runner without its scenario selection",
@@ -23284,14 +24165,14 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		);
 		checked += 1;
 	}
-	assert_eq!(checked, 14);
+	assert_eq!(checked, 15);
 }
 
 #[test]
 fn free_schedule_rust_fidelity_annotations_are_exact() {
 	let files = FsFiles::production();
 	validate_fs_fidelity(&files).unwrap();
-	assert_eq!(FS_FIDELITY.len(), 143);
+	assert_eq!(FS_FIDELITY.len(), 227);
 	for (name, mutate, diagnostic) in [
 		(
 			"cited line moved",
@@ -23634,6 +24515,306 @@ fn free_schedule_records_s2b_model_is_pinned() {
 }
 
 #[test]
+fn free_schedule_records_b2s_model_is_pinned() {
+	validate_fs_records_b2s(&FsFiles::production()).unwrap();
+	let mut checked = 0;
+	for (name, mutate, diagnostic) in [
+		(
+			"early coins drawn after the bundle input",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(&mut files.b2s, "  new kem_coins: bitstring;\n", "");
+				replace_once(
+					&mut files.b2s,
+					"  in(c, bundle: bitstring) [precise];\n",
+					"  in(c, bundle: bitstring) [precise];\n  new kem_coins: bitstring;\n",
+				);
+			}) as Box<dyn Fn(&mut FsFiles)>,
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"Server root bypasses the binding hook",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"      fs_root_dh2(dh2, dh3),\n      dh3,\n      dh4,\n      mlkem_shared_secret(pq, kem_coins)\n",
+					"      dh2,\n      dh3,\n      dh4,\n      mlkem_shared_secret(pq, kem_coins)\n",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"Beacon associated data bypasses the binding hook",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"let associated_data = fs_associated_data(server_identity, beacon_identity) in",
+					"let associated_data = fs_uks_ad(server_identity) in",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"Server receive starts after sequence one",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"    receive_chain_3,\n    0,\n    false\n",
+					"    receive_chain_3,\n    1,\n    false\n",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"far anchor lowered to a materialised chain",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"    receive_chain_3,\n    0,\n    false\n",
+					"    receive_chain_2,\n    0,\n    false\n",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"Beacon sends on its receive chain",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"let send_chain_1 = beacon_to_server_chain(root) in",
+					"let send_chain_1 = server_to_beacon_chain(root) in",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"honest main pins another Server ID",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"FsB2sBeacon(ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID)",
+					"FsB2sBeacon(ed_public(SERVER_IDENTITY_SECRET), fs_kid(1))",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"routing check removed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"    fs_seq(t: nat),\n    =assigned_key_id\n  ) = frame in",
+					"    fs_seq(t: nat),\n    claimed_sender: key_id\n  ) = frame in",
+				)
+			}),
+			"fs-records-b2s receive step changed",
+		),
+		(
+			"open under the Server's own ID",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"          fs_seq(1),\n          assigned_key_id,\n          frame\n",
+					"          fs_seq(1),\n          SERVER_KEY_ID,\n          frame\n",
+				)
+			}),
+			"fs-records-b2s receive step opens at position 1 with the routed sender changed",
+		),
+		(
+			"skipped key not cached",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"            far_anchor,\n            2,\n            true\n",
+					"            far_anchor,\n            2,\n            false\n",
+				)
+			}),
+			"fs-records-b2s receive step changed",
+		),
+		(
+			"cached key retained by the real window",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_window,
+					"fs_b2s_cached_after_success(cached_1: bool) = false.",
+					"fs_b2s_cached_after_success(cached_1: bool) = cached_1.",
+				)
+			}),
+			"fs-records-b2s-window.pvl receive-window hooks changed",
+		),
+		(
+			"failed open consumes the target in the real window",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_window,
+					"fs_b2s_failed_r(r: nat, target: nat) = r.",
+					"fs_b2s_failed_r(r: nat, target: nat) = target.",
+				)
+			}),
+			"fs-records-b2s-window.pvl receive-window hooks changed",
+		),
+		(
+			"stale control restores nothing",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_stale,
+					"fs_b2s_failed_r(r: nat, target: nat) = 0.",
+					"fs_b2s_failed_r(r: nat, target: nat) = r.",
+				)
+			}),
+			"fs-control-b2s-stale.pvl receive-window hooks changed",
+		),
+		(
+			"rejection event dropped from one branch",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"event FsReceiveRejected(\n",
+					"event FsReceiveRejectedElsewhere(\n",
+				)
+			}),
+			"fs-records-b2s receive step rejections at t <= T_max changed",
+		),
+		(
+			"refused frame dropped from a rejection",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"            t,\n            frame\n",
+					"            t,\n            associated_data\n",
+				)
+			}),
+			"fs-records-b2s receive step refused frames at t <= T_max changed",
+		),
+		(
+			"accepted frame replaced by the plaintext",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"          2,\n          frame\n",
+					"          2,\n          plaintext\n",
+				)
+			}),
+			"fs-records-b2s receive step accepted frames at position 2 changed",
+		),
+		(
+			"far acceptance counted as a record",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"event FsFarAccepted(\n",
+					"event FsReceived(\n",
+				)
+			}),
+			"fs-records-b2s receive step",
+		),
+		(
+			"receive attempt removed",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_bounds[2],
+					"expand FS_B2S_RECV_STEP(FsB2sRecv3, FsB2sRecvStop, FsB2sRecvStop).\nexpand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecv3).\n",
+					"expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecvStop, FsB2sRecvStop).\n",
+				)
+			}),
+			"fs-records-b2s bound K_r = 3 changed",
+		),
+		(
+			"real bound stops after a failed open",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_bounds[2],
+					"expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecv2, FsB2sRecv2).",
+					"expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecv2, FsB2sRecvStop).",
+				)
+			}),
+			"fs-records-b2s bound K_r = 3 changed",
+		),
+		(
+			"fail-stop bound continues after a failed open",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_failstop,
+					"expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecvStop).",
+					"expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecv3).",
+				)
+			}),
+			"fs-records-b2s fail-stop bound K_r = 3 changed",
+		),
+		(
+			"failed far open bypasses the failed-open continuation",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s_receive,
+					"      else\n        Failed(\n",
+					"      else\n        Next(\n",
+				)
+			}),
+			"fs-records-b2s receive step",
+		),
+		(
+			"pin-free main fixes the pinned Server ID",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.b2s,
+					"FsB2sBeacon(pinned_identity, pinned_key_id)",
+					"FsB2sBeacon(pinned_identity, SERVER_KEY_ID)",
+				)
+			}),
+			"fs-records-b2s process (Rust order except the v2 draw) changed",
+		),
+		(
+			"fresh record made adversary-known",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.sends,
+					"    1,\n    record_1\n  );",
+					"    1,\n    send_request_1\n  );",
+				)
+			}),
+			"fs-records-b2s-sends.pvl fresh records changed",
+		),
+		(
+			"record sealed under the Server's own ID",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.sends,
+					"      fs_seq(2),\n      assigned_key_id,\n",
+					"      fs_seq(2),\n      SERVER_KEY_ID,\n",
+				)
+			}),
+			"fs-records-b2s-sends.pvl fresh records changed",
+		),
+		(
+			"chosen form loses its fresh branch",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.sends_chosen,
+					"    new record_1[]: bitstring;\n",
+					"",
+				);
+				replace_once(
+					&mut files.sends_chosen,
+					"      1,\n      record_1\n    );",
+					"      1,\n      record_mode_1\n    );",
+				);
+			}),
+			"fs-records-b2s-sends-chosen.pvl records changed",
+		),
+	] {
+		let mut changed = FsFiles::production();
+		mutate(&mut changed);
+		let error =
+			validate_fs_records_b2s(&changed).expect_err(&format!("mutation survived: {name}"));
+		assert!(
+			error.contains(diagnostic),
+			"{name}: wrong diagnostic {error}"
+		);
+		checked += 1;
+	}
+	assert_eq!(checked, 25);
+}
+
+#[test]
 fn free_schedule_checker_loader_and_targets_are_pinned() {
 	validate_fs_checker(FS_CHECKER, FS_CHECKER_TESTS).unwrap();
 	let mut queries = FS_REGISTRATION_TARGETS
@@ -23641,6 +24822,11 @@ fn free_schedule_checker_loader_and_targets_are_pinned() {
 		.map(|(_, _, _, query, _)| (*query).to_owned())
 		.chain(
 			FS_S2B_TARGETS
+				.iter()
+				.map(|(_, _, _, query, _)| (*query).to_owned()),
+		)
+		.chain(
+			FS_B2S_TARGETS
 				.iter()
 				.map(|(_, _, _, query, _)| (*query).to_owned()),
 		)
@@ -23719,6 +24905,56 @@ fn free_schedule_checker_loader_and_targets_are_pinned() {
 			"replay witness moved back to K_r = 2",
 			"\"s2b-C5c\", \"witness\", 1,",
 			"\"s2b-C5c\", \"witness\", 2,",
+		),
+		(
+			"b2s security bound lowered",
+			"B2S_SECURITY_BOUND = 3",
+			"B2S_SECURITY_BOUND = 2",
+		),
+		(
+			"b2s chosen record agreement moved to the fresh sends",
+			"        \"fs-records-b2s-c2.pv\",\n        [B2S_C2 + \" is true.\"],\n        sends=SENDS_CHOSEN,\n",
+			"        \"fs-records-b2s-c2.pv\",\n        [B2S_C2 + \" is true.\"],\n",
+		),
+		(
+			"b2s identity control without its mutant",
+			"        binding=UKS,\n    ),\n    records_b2s(",
+			"    ),\n    records_b2s(",
+		),
+		(
+			"b2s secrecy rule dropped",
+			"    \"fs-records-b2s-s2.pv\",\n    \"fs-records-b2s-uksr.pv\",\n    \"fs-records-b2s-pinread.pv\",\n)",
+			"    \"fs-records-b2s-s2.pv\",\n)",
+		),
+		(
+			"b2s default sends switched",
+			"    sends=SENDS,\n    failstop=False,\n):",
+			"    sends=SENDS_CHOSEN,\n    failstop=False,\n):",
+		),
+		(
+			"b2s default form switched to fail-stop",
+			"    failstop=False,\n):",
+			"    failstop=True,\n):",
+		),
+		(
+			"b2s fail-stop queries widened",
+			"B2S_FAILSTOP_QUERIES = (\"fs-records-b2s-c2.pv\", \"fs-records-b2s-c4.pv\")",
+			"B2S_FAILSTOP_QUERIES = (\"fs-records-b2s-c2.pv\", \"fs-records-b2s-c3.pv\", \"fs-records-b2s-c4.pv\")",
+		),
+		(
+			"b2s fail-stop target moved to the failure-interleaving bound",
+			"        \"fs-records-b2s-c4.pv\",\n        [B2S_C4 + \" is true.\"],\n        sends=SENDS_CHOSEN,\n        failstop=True,\n",
+			"        \"fs-records-b2s-c4.pv\",\n        [B2S_C4 + \" is true.\"],\n        sends=SENDS_CHOSEN,\n",
+		),
+		(
+			"b2s fail-stop bound file ignored",
+			"form = \"-failstop\" if self.failstop else \"\"",
+			"form = \"\"",
+		),
+		(
+			"b2s control dropped",
+			"    records_b2s(\n        \"b2s-C-STALE\",",
+			"    records_s2b(\n        \"b2s-C-STALE\",",
 		),
 	] {
 		let mut changed = FS_CHECKER.to_owned();

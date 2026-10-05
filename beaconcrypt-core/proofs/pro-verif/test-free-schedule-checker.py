@@ -154,15 +154,28 @@ class ReceiptTests(unittest.TestCase):
             "Termination warning: Selecting an hypothesis matching the conclusion.\n"
             "In case of non-termination, try a noselect declaration implying the following one:\n"
         )
-        for name in ("s2b-A2", "s2b-S1", "s2b-C5c", "R4"):
+        for name in ("s2b-A2", "s2b-S1", "s2b-C5c", "R4", "b2s-C2", "b2s-S2"):
             each = target(name)
             CHECKER.check_output(lines + receipt(each), each)
 
     def test_record_targets_need_their_exact_lines(self):
-        for name in ("s2b-C1", "s2b-C5b", "s2b-C-RETAIN-C1", "s2b-C-NOGATE"):
+        for name in (
+            "s2b-C1",
+            "s2b-C5b",
+            "s2b-C-RETAIN-C1",
+            "s2b-C-NOGATE",
+            "b2s-C2",
+            "b2s-C5c",
+            "b2s-UKSr",
+            "b2s-C-UKS",
+        ):
             each = target(name)
             CHECKER.check_output(receipt(each), each)
-            text = receipt(each).replace("root_2", "root_1")
+            if each.scenario == CHECKER.RECORDS_B2S:
+                text = receipt(each).replace("beacon_to_server", "server_to_beacon")
+            else:
+                text = receipt(each).replace("root_2", "root_1")
+            self.assertNotEqual(text, receipt(each))
             with self.assertRaises(ValueError):
                 CHECKER.check_output(text, each)
 
@@ -173,6 +186,21 @@ class ReceiptTests(unittest.TestCase):
             text = receipt(each).replace("RESULT " + each.results[1] + "\n", "")
             with self.assertRaises(ValueError):
                 CHECKER.check_output(text, each)
+
+    def test_b2s_controls_reuse_their_targets(self):
+        # Each b2s control runs the query of the claim it controls, with the opposite
+        # verdict and a trace.
+        for control, claim in (
+            ("b2s-C-UKS", "b2s-UKSr"),
+            ("b2s-C-RETAIN", "b2s-C3"),
+            ("b2s-C-STALE", "b2s-C3"),
+        ):
+            each, security = target(control), target(claim)
+            self.assertEqual(each.query, security.query)
+            self.assertEqual(
+                each.results, (security.results[0][: -len("true.")] + "false.",)
+            )
+            self.assertEqual(each.expected_traces(), 1)
 
     def test_inverted_control_is_true_without_a_trace(self):
         each = target("s2b-C-FAILMUT")
@@ -219,6 +247,14 @@ class ManifestTests(unittest.TestCase):
                 "control": 5,
             },
         )
+        self.assertEqual(
+            counts[CHECKER.RECORDS_B2S],
+            {
+                "security": 8,
+                "witness": 6,
+                "control": 3,
+            },
+        )
 
     def test_loader_order(self):
         for each in CHECKER.TARGETS:
@@ -230,7 +266,7 @@ class ManifestTests(unittest.TestCase):
                     libraries[-2:],
                     ("fs-registration.pvl", f"fs-registration-k{each.bound}.pvl"),
                 )
-            else:
+            elif each.scenario == CHECKER.RECORDS_S2B:
                 self.assertEqual(len(libraries), 10)
                 self.assertEqual(
                     libraries[-3:],
@@ -238,6 +274,17 @@ class ManifestTests(unittest.TestCase):
                         "fs-records-s2b-receive.pvl",
                         f"fs-records-s2b-kr{each.bound}.pvl",
                         "fs-records-s2b.pvl",
+                    ),
+                )
+            else:
+                form = "-failstop" if each.failstop else ""
+                self.assertEqual(len(libraries), 10)
+                self.assertEqual(
+                    libraries[-3:],
+                    (
+                        "fs-records-b2s-receive.pvl",
+                        f"fs-records-b2s-kr{each.bound}{form}.pvl",
+                        "fs-records-b2s.pvl",
                     ),
                 )
 
@@ -263,6 +310,25 @@ class ManifestTests(unittest.TestCase):
             },
         )
         self.assertEqual(target("s2b-C-FAILMUT").bound, target("s2b-C5b").bound)
+        bounds = {
+            each.name: each.bound
+            for each in CHECKER.TARGETS
+            if each.scenario == CHECKER.RECORDS_B2S and each.cls != "security"
+        }
+        self.assertEqual(
+            bounds,
+            {
+                "b2s-C5a": 2,
+                "b2s-C5b": 2,
+                "b2s-C5c": 2,
+                "b2s-S4": 1,
+                "b2s-FAR": 1,
+                "b2s-PINREAD": 1,
+                "b2s-C-UKS": 1,
+                "b2s-C-RETAIN": 3,
+                "b2s-C-STALE": 3,
+            },
+        )
 
     def test_record_forms(self):
         chosen = {
@@ -273,6 +339,31 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(chosen, {"s2b-A1", "s2b-A2", "s2b-C1", "s2b-C3", "s2b-C4"})
         inverted = {each.name for each in CHECKER.TARGETS if each.inverted}
         self.assertEqual(inverted, {"s2b-C-FAILMUT"})
+        chosen = {
+            each.name
+            for each in CHECKER.TARGETS
+            if each.scenario == CHECKER.RECORDS_B2S
+            and CHECKER.SENDS_CHOSEN in each.hooks
+        }
+        self.assertEqual(
+            chosen,
+            {
+                "b2s-A1",
+                "b2s-A2",
+                "b2s-C2-chosen-fs",
+                "b2s-C3",
+                "b2s-C4",
+            },
+        )
+        failstop = {each.name for each in CHECKER.TARGETS if each.failstop}
+        self.assertEqual(failstop, {"b2s-C2-chosen-fs", "b2s-C4"})
+        # C2 also runs, with fresh plaintexts, in the failure-interleaving form (G0
+        # option B keeps C2 and C3 there).
+        self.assertEqual(target("b2s-C2").query, target("b2s-C2-chosen-fs").query)
+        self.assertEqual(target("b2s-C2").results, target("b2s-C2-chosen-fs").results)
+        self.assertFalse(target("b2s-C2").failstop)
+        self.assertIn(CHECKER.SENDS, target("b2s-C2").hooks)
+        self.assertFalse(target("b2s-C3").failstop)
 
     def mutated(self, name, **changes):
         targets = tuple(
@@ -288,6 +379,10 @@ class ManifestTests(unittest.TestCase):
     def test_security_cannot_load_a_mutant(self):
         self.mutated("R1", hooks=(CHECKER.NOCHECK, CHECKER.BINDING))
         self.mutated("s2b-C1", hooks=(CHECKER.RETAIN, CHECKER.GATE, CHECKER.CHOSEN))
+        self.mutated(
+            "b2s-C2", hooks=(CHECKER.B2S_RETAIN, CHECKER.BINDING, CHECKER.SENDS_CHOSEN)
+        )
+        self.mutated("b2s-UKSr", hooks=(CHECKER.B2S_WINDOW, CHECKER.UKS, CHECKER.SENDS))
 
     def test_two_mutants_are_rejected(self):
         self.mutated("A1", hooks=(CHECKER.NOCHECK, CHECKER.UKS))
@@ -301,10 +396,17 @@ class ManifestTests(unittest.TestCase):
         self.mutated(
             "s2b-C-NOGATE", hooks=(CHECKER.RETAIN, CHECKER.NOGATE, CHECKER.TASKINGS)
         )
+        self.mutated(
+            "b2s-C3", hooks=(CHECKER.B2S_STALE, CHECKER.UKS, CHECKER.SENDS_CHOSEN)
+        )
+        self.mutated(
+            "b2s-C-UKS", hooks=(CHECKER.B2S_RETAIN, CHECKER.UKS, CHECKER.SENDS)
+        )
 
     def test_witness_cannot_load_a_mutant(self):
         self.mutated("W1", hooks=(CHECKER.NOCHECK, CHECKER.BINDING))
         self.mutated("s2b-C5c", hooks=(CHECKER.RETAIN, CHECKER.GATE, CHECKER.TASKINGS))
+        self.mutated("b2s-C5c", hooks=(CHECKER.B2S_WINDOW, CHECKER.UKS, CHECKER.SENDS))
 
     def test_control_needs_its_mutant(self):
         self.mutated("C-UKS", hooks=(CHECKER.CONSUMED, CHECKER.BINDING))
@@ -314,19 +416,81 @@ class ManifestTests(unittest.TestCase):
         self.mutated(
             "s2b-C-NOGATE", hooks=(CHECKER.RETAIN, CHECKER.NOGATE, CHECKER.TASKINGS)
         )
+        self.mutated(
+            "b2s-C-UKS", hooks=(CHECKER.B2S_WINDOW, CHECKER.BINDING, CHECKER.SENDS)
+        )
+        self.mutated(
+            "b2s-C-RETAIN", hooks=(CHECKER.B2S_WINDOW, CHECKER.BINDING, CHECKER.SENDS)
+        )
 
     def test_hooks_must_fit_the_scenario(self):
         self.mutated("s2b-A3", hooks=(CHECKER.CONSUMED, CHECKER.GATE, CHECKER.TASKINGS))
         self.mutated("R2", hooks=(CHECKER.CONSUMED, CHECKER.BINDING, CHECKER.TASKINGS))
         self.mutated("s2b-A3", scenario="fs-records-b2s")
+        self.mutated("b2s-S4", hooks=(CHECKER.WINDOW, CHECKER.GATE, CHECKER.TASKINGS))
+        self.mutated(
+            "b2s-C-STALE", hooks=(CHECKER.STALE, CHECKER.BINDING, CHECKER.SENDS)
+        )
+        self.mutated("b2s-S4", scenario="fs-records-s2b")
 
     def test_record_security_bound_cannot_drop(self):
         self.mutated("s2b-C3", bound=2)
         self.mutated("s2b-C5b", bound=4)
+        self.mutated("b2s-UKSr", bound=2)
+        self.mutated("b2s-C2", bound=1)
+        self.mutated("b2s-C5a", bound=4)
+
+    def test_failstop_only_extends_listed_security_results(self):
+        self.mutated("b2s-C3", failstop=True)
+        self.mutated("b2s-C5a", failstop=True)
+        self.mutated("b2s-C-RETAIN", failstop=True)
+        self.mutated(
+            "b2s-C2-chosen-fs",
+            hooks=(CHECKER.B2S_WINDOW, CHECKER.BINDING, CHECKER.SENDS),
+        )
+        self.mutated("b2s-C2-chosen-fs", bound=2)
+        self.mutated("b2s-C4", cls="witness")
+        self.mutated("s2b-C1", failstop=True)
+        self.mutated("A1", failstop=True)
+
+    def test_failstop_query_cannot_mention_rejections(self):
+        with tempfile.TemporaryDirectory() as directory:
+            copy = Path(directory)
+            for path in CHECKER.HERE.glob("*.pv*"):
+                shutil.copy(path, copy / path.name)
+            (copy / "extraction").mkdir()
+            shutil.copy(
+                CHECKER.HERE / "extraction/lib.pvl", copy / "extraction/lib.pvl"
+            )
+            CHECKER.validate_targets(CHECKER.TARGETS, copy)
+            query = copy / "fs-records-b2s-c4.pv"
+            query.write_text(
+                query.read_text().replace(
+                    "process FsRecordsB2sMainAnyPin()",
+                    "(* FsReceiveRejected *)\nprocess FsRecordsB2sMainAnyPin()",
+                )
+            )
+            with self.assertRaises(ValueError) as caught:
+                CHECKER.validate_targets(CHECKER.TARGETS, copy)
+            self.assertIn("FsReceiveRejected", str(caught.exception))
 
     def test_secrecy_cannot_use_chosen_plaintexts(self):
         self.mutated("s2b-S1", hooks=(CHECKER.WINDOW, CHECKER.GATE, CHECKER.CHOSEN))
         self.mutated("s2b-S4", hooks=(CHECKER.WINDOW, CHECKER.GATE, CHECKER.CHOSEN))
+        self.mutated(
+            "b2s-S2", hooks=(CHECKER.B2S_WINDOW, CHECKER.BINDING, CHECKER.SENDS_CHOSEN)
+        )
+        self.mutated(
+            "b2s-UKSr",
+            hooks=(CHECKER.B2S_WINDOW, CHECKER.BINDING, CHECKER.SENDS_CHOSEN),
+        )
+        self.mutated(
+            "b2s-C-UKS", hooks=(CHECKER.B2S_WINDOW, CHECKER.UKS, CHECKER.SENDS_CHOSEN)
+        )
+        self.mutated(
+            "b2s-PINREAD",
+            hooks=(CHECKER.B2S_WINDOW, CHECKER.BINDING, CHECKER.SENDS_CHOSEN),
+        )
 
     def test_only_controls_are_inverted(self):
         self.mutated("s2b-C5b", inverted=True)
@@ -334,6 +498,7 @@ class ManifestTests(unittest.TestCase):
 
     def test_query_of_another_scenario(self):
         self.mutated("s2b-A2", query="fs-registration-a2.pv")
+        self.mutated("b2s-A2", query="fs-records-s2b-a2.pv")
 
     def test_unknown_class(self):
         self.mutated("R2", cls="evidence")
@@ -358,7 +523,11 @@ class ManifestTests(unittest.TestCase):
                 CHECKER.HERE / "extraction/lib.pvl", copy / "extraction/lib.pvl"
             )
             CHECKER.validate_targets(CHECKER.TARGETS, copy)
-            for unused in ("fs-registration-unused.pv", "fs-records-s2b-unused.pv"):
+            for unused in (
+                "fs-registration-unused.pv",
+                "fs-records-s2b-unused.pv",
+                "fs-records-b2s-unused.pv",
+            ):
                 (copy / unused).write_text("process 0\n")
                 with self.assertRaises(ValueError):
                     CHECKER.validate_targets(CHECKER.TARGETS, copy)
@@ -537,6 +706,52 @@ class ProcessTests(unittest.TestCase):
             ],
         )
         self.assertEqual(Path(arguments[-1]).name, "fs-records-s2b-a1.pv")
+
+    def test_b2s_command_loads_the_binding_mutant(self):
+        each = target("b2s-C-UKS")
+        arguments = CHECKER.command("proverif", each)
+        libraries = [
+            Path(arguments[i + 1]).name
+            for i, arg in enumerate(arguments)
+            if arg == "-lib"
+        ]
+        self.assertEqual(
+            libraries,
+            [
+                "production-transcript-interface.pvl",
+                "crypto.pvl",
+                "lib.pvl",
+                "fs-common.pvl",
+                "fs-records-b2s-window.pvl",
+                "fs-control-uks.pvl",
+                "fs-records-b2s-sends.pvl",
+                "fs-records-b2s-receive.pvl",
+                "fs-records-b2s-kr1.pvl",
+                "fs-records-b2s.pvl",
+            ],
+        )
+        self.assertEqual(Path(arguments[-1]).name, "fs-records-b2s-uksr.pv")
+
+    def test_b2s_failstop_command_loads_the_failstop_bound(self):
+        each = target("b2s-C2-chosen-fs")
+        arguments = CHECKER.command("proverif", each)
+        libraries = [
+            Path(arguments[i + 1]).name
+            for i, arg in enumerate(arguments)
+            if arg == "-lib"
+        ]
+        self.assertEqual(
+            libraries[4:],
+            [
+                "fs-records-b2s-window.pvl",
+                "fs-registration-binding.pvl",
+                "fs-records-b2s-sends-chosen.pvl",
+                "fs-records-b2s-receive.pvl",
+                "fs-records-b2s-kr3-failstop.pvl",
+                "fs-records-b2s.pvl",
+            ],
+        )
+        self.assertEqual(Path(arguments[-1]).name, "fs-records-b2s-c2.pv")
 
     def test_scenario_selection(self):
         for scenario in CHECKER.SCENARIOS:

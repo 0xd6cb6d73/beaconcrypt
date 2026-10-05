@@ -1,0 +1,400 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(**************************************************************************)
+(* fs-records-b2s: the Server peer receive attempt                       *)
+(**************************************************************************)
+
+(* One attacker-scheduled receive attempt of the peer that a Server object
+   installed, as a step macro, and the stop process.  Loaded after the
+   receive-window library whose hooks it calls and before the bound file
+   fs-records-b2s-kr1.pvl, -kr2.pvl or -kr3.pvl, which expands K_r attempts.
+   Positions up to T_max = 2 are materialised; a frame above T_max goes to
+   the far branch.  FsReceiveRejected, with the refused frame, is emitted for
+   every parsed frame routed to the peer that is rejected at a target
+   t <= T_max (an old target that is not cached, a failed cached open or a
+   failed future open), and not for a failed far open; the entry state is
+   kept unless a control library says otherwise.  Every FsReceived is
+   followed by FsReceivedFrame with the accepted frame.
+
+   The macro takes the continuation after a failed open (a failed cached,
+   future or far open) as its own parameter Failed.  The bound files
+   fs-records-b2s-kr1.pvl, -kr2.pvl and -kr3.pvl pass the next attempt, so a
+   failed open keeps the worker running with the entry state, as in Rust;
+   the fail-stop bound file fs-records-b2s-kr3-failstop.pvl passes the stop
+   process, so a failed open ends the worker (E21).  A parse failure and a
+   rejected old target, which open nothing, always continue with the next
+   attempt. *)
+
+(* The far-target collapse (OD4): the public key schedule above the deepest
+   chain that any process materialises.  The anchor is the chain at position
+   T_max+1, which no process outputs. *)
+fun fs_far_chain(bitstring, nat): bitstring.
+
+(* One Server receive attempt for the installed peer (Server::decrypt_message
+   and its update wrappers).  State: r, the highest accepted sequence, and
+   cached_1, whether the key of position 1 is cached; position 2 is never
+   cached at T_max = 2.  Every other field is fixed by the response build.
+   Rust routes on the claimed sender ID: the frame's sender field selects
+   the installed peer, its identity gives the associated data, and the
+   ratchet open expects that same ID, so the check below is the routing
+   lookup.  Every record peer has the ID fs_kid(1), so the attacker decides
+   which object's peer receives a frame, and only the AEAD and CTX separate
+   the peers. *)
+def FS_B2S_RECV_STEP(Cur, Next, Failed) {
+let Cur(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  receive_material_1: bitstring,
+  receive_material_2: bitstring,
+  far_anchor: bitstring,
+  r: nat,
+  cached_1: bool
+) =
+  (* @beaconcrypt-fs-fidelity key=server.decrypt src=beaconcrypt/src/server.rs:229-231 anchor=pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> { *)
+  in(c, frame: bitstring) [precise];
+  (* Decode the claimed sender, route to the installed peer with that ID and
+     rebuild its associated data; then decode exactly one frame and require
+     that sender.  Anything else returns None before the ratchet is
+     touched. *)
+  (* @beaconcrypt-fs-fidelity key=server.route src=beaconcrypt/src/server.rs:237-245 anchor=let Some(k) = crate::ratchet::encrypted_frame_sender(b) else { *)
+  (* @beaconcrypt-fs-fidelity key=ratchet.frame_sender src=beaconcrypt/src/ratchet.rs:360-362 anchor=pub(crate) fn encrypted_frame_sender(data: &[u8]) -> Option<u64> { *)
+  (* @beaconcrypt-fs-fidelity key=server.peer_associated_data src=beaconcrypt/src/server.rs:218-223 anchor=pub(crate) fn associated_data(&self, k: u64) -> Option<[u8; AD_SIZE]> { *)
+  (* @beaconcrypt-fs-fidelity key=ratchet.decode_sender src=beaconcrypt/src/ratchet.rs:505-516 anchor=if data.is_empty() { *)
+  (* @beaconcrypt-fs-fidelity key=record.frame_context src=beaconcrypt-core/src/record.rs:35-61 anchor=pub fn from_frame( *)
+  let crypto_frame(
+    frame_cipher: bitstring,
+    frame_tag: bitstring,
+    frame_commitment: bitstring,
+    fs_seq(t: nat),
+    =assigned_key_id
+  ) = frame in
+  (
+    (* @beaconcrypt-fs-fidelity key=core.begin_receive src=beaconcrypt-core/src/ratchet/concrete.rs:259-268 anchor=pub fn begin_receive<Context>( *)
+    (* @beaconcrypt-fs-fidelity key=core.plan_receive src=beaconcrypt-core/src/ratchet/control.rs:223-245 anchor=pub(crate) fn plan_receive_until(state: RatchetState, target: u64) -> ReceivePlan { *)
+    if t <= r then
+    (
+      (* An old target opens only from the cache; every other old target,
+         sequence 0 included, is rejected before any open. *)
+      (* @beaconcrypt-fs-fidelity key=core.cached_receive src=beaconcrypt-core/src/ratchet/concrete.rs:270-280 anchor=if plan.derivations == 0 { *)
+      (* @beaconcrypt-fs-fidelity key=refined.prepare_cached src=beaconcrypt-core/src/ratchet/refined.rs:317-330 anchor=pub(super) fn prepare_cached_receive<SendChain, ReceiveChain, Material>( *)
+      if t = 1 && cached_1 then
+      (
+        (* @beaconcrypt-fs-fidelity key=ratchet.open src=beaconcrypt/src/ratchet.rs:449-482 anchor=fn execute_open( *)
+        (* @beaconcrypt-fs-fidelity key=record.commitment src=beaconcrypt-core/src/record.rs:80-98 anchor=pub fn begin_open(opening: ReceiveOpen<OpenFrameContext<'_>>) -> OpenStart<'_> { *)
+        let plaintext = open_frame(
+          receive_material_1,
+          associated_data,
+          fs_seq(1),
+          assigned_key_id,
+          frame
+        ) in
+        (
+          (* A successful cached open swap-removes the key. *)
+          (* @beaconcrypt-fs-fidelity key=core.open_finish src=beaconcrypt-core/src/ratchet/concrete.rs:436-454 anchor=pub fn finish<Plaintext>( *)
+          (* @beaconcrypt-fs-fidelity key=control.cached_removal src=beaconcrypt-core/src/ratchet/control.rs:435-461 anchor=if !authenticated { *)
+          (* @beaconcrypt-fs-fidelity key=refined.publish_cached src=beaconcrypt-core/src/ratchet/refined.rs:700-721 anchor=pub(super) fn publish_cached_receive<SendChain, ReceiveChain, Material>( *)
+          (* @beaconcrypt-fs-fidelity key=server.accepted src=beaconcrypt/src/server.rs:246-249 anchor=match decrypt_message_with_ratchet(b, k, &ad, ratchet) { *)
+          event FsReceived(
+            beacon_to_server(),
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            1,
+            plaintext
+          );
+          event FsReceivedFrame(
+            beacon_to_server(),
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            1,
+            frame
+          );
+          Next(
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            associated_data,
+            receive_material_1,
+            receive_material_2,
+            far_anchor,
+            r,
+            fs_b2s_cached_after_success(cached_1)
+          )
+        )
+        else
+        (
+          (* A failed open returns the exact entry state. *)
+          (* @beaconcrypt-fs-fidelity key=core.open_reject src=beaconcrypt-core/src/ratchet/concrete.rs:440-443 anchor=let plaintext = match opened { *)
+          event FsReceiveRejected(
+            beacon_to_server(),
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            t,
+            frame
+          );
+          Failed(
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            associated_data,
+            receive_material_1,
+            receive_material_2,
+            far_anchor,
+            fs_b2s_failed_r(r, 1),
+            fs_b2s_failed_cached_1(r, 1, cached_1)
+          )
+        )
+      )
+      else
+      (
+        event FsReceiveRejected(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          t,
+          frame
+        );
+        Next(
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          associated_data,
+          receive_material_1,
+          receive_material_2,
+          far_anchor,
+          r,
+          cached_1
+        )
+      )
+    )
+    else if t = 1 then
+    (
+      (* A future target r < 1, so r = 0: derived from the receive chain, no
+         skipped key. *)
+      (* @beaconcrypt-fs-fidelity key=core.future_receive src=beaconcrypt-core/src/ratchet/concrete.rs:282-300 anchor=let skipped = plan.derivations - 1; *)
+      let plaintext = open_frame(
+        receive_material_1,
+        associated_data,
+        fs_seq(1),
+        assigned_key_id,
+        frame
+      ) in
+      (
+        (* @beaconcrypt-fs-fidelity key=refined.publish_future src=beaconcrypt-core/src/ratchet/refined.rs:755-778 anchor=pub(super) fn publish_future_receive<SendChain, ReceiveChain, Material>( *)
+        event FsReceived(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          1,
+          plaintext
+        );
+        event FsReceivedFrame(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          1,
+          frame
+        );
+        Next(
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          associated_data,
+          receive_material_1,
+          receive_material_2,
+          far_anchor,
+          1,
+          cached_1
+        )
+      )
+      else
+      (
+        event FsReceiveRejected(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          t,
+          frame
+        );
+        Failed(
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          associated_data,
+          receive_material_1,
+          receive_material_2,
+          far_anchor,
+          fs_b2s_failed_r(r, 1),
+          fs_b2s_failed_cached_1(r, 1, cached_1)
+        )
+      )
+    )
+    else if t = 2 then
+    (
+      (* A future target r < 2: from r = 0 the key of position 1 is skipped
+         and cached; from r = 1 nothing is skipped. *)
+      let plaintext = open_frame(
+        receive_material_2,
+        associated_data,
+        fs_seq(2),
+        assigned_key_id,
+        frame
+      ) in
+      (
+        event FsReceived(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          2,
+          plaintext
+        );
+        event FsReceivedFrame(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          2,
+          frame
+        );
+        if r = 0 then
+          Next(
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            associated_data,
+            receive_material_1,
+            receive_material_2,
+            far_anchor,
+            2,
+            true
+          )
+        else
+          Next(
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            associated_data,
+            receive_material_1,
+            receive_material_2,
+            far_anchor,
+            2,
+            cached_1
+          )
+      )
+      else
+      (
+        event FsReceiveRejected(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          t,
+          frame
+        );
+        Failed(
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          associated_data,
+          receive_material_1,
+          receive_material_2,
+          far_anchor,
+          fs_b2s_failed_r(r, 2),
+          fs_b2s_failed_cached_1(r, 2, cached_1)
+        )
+      )
+    )
+    else
+    (
+      (* The far branch, t > T_max: Rust admits t <= r + 51 - |C|; the
+         model admits every t > T_max, an over-approximation of the admitted
+         sequences, but opens only with model-only material from the anchor,
+         which no process outputs and no process seals under (no honest
+         frame lies above T_max within these bounds: the Beacon sends
+         sequences 1 and 2).  A far acceptance emits only FsFarAccepted and
+         ends the worker; a failure keeps the state and emits no event. *)
+      let plaintext = open_frame(
+        ratchet_material(fs_far_chain(far_anchor, t)),
+        associated_data,
+        fs_seq(t),
+        assigned_key_id,
+        frame
+      ) in
+        event FsFarAccepted(
+          beacon_to_server(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          t
+        )
+      else
+        Failed(
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          associated_data,
+          receive_material_1,
+          receive_material_2,
+          far_anchor,
+          r,
+          cached_1
+        )
+    )
+  )
+  else
+    Next(
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      associated_data,
+      receive_material_1,
+      receive_material_2,
+      far_anchor,
+      r,
+      cached_1
+    ).
+}
+
+let FsB2sRecvStop(
+  server_identity: bitstring,
+  beacon_identity: bitstring,
+  assigned_key_id: key_id,
+  root: bitstring,
+  associated_data: bitstring,
+  receive_material_1: bitstring,
+  receive_material_2: bitstring,
+  far_anchor: bitstring,
+  r: nat,
+  cached_1: bool
+) = 0.

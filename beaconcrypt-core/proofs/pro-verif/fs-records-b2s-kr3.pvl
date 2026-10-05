@@ -1,0 +1,8 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s bound K_r = 3: three attacker-scheduled receive attempts of
+   each installed Server peer.  Used for the security results and the
+   controls C-RETAIN and C-STALE. *)
+expand FS_B2S_RECV_STEP(FsB2sRecv3, FsB2sRecvStop, FsB2sRecvStop).
+expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecv3).
+expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecv2, FsB2sRecv2).
