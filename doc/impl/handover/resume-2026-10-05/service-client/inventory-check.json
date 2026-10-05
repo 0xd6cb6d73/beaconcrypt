@@ -1,0 +1,19 @@
+{
+  "command": [
+    "nix",
+    "develop",
+    "--no-update-lock-file",
+    "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+    "-c",
+    "make",
+    "-C",
+    "/tmp/beaconcrypt-registration-service-client-integration/beaconcrypt-core",
+    "SHELL=/run/current-system/sw/bin/bash",
+    "check-inventory"
+  ],
+  "start": "2026-10-06T00:24:58.895952",
+  "end": "2026-10-06T00:26:00.827732",
+  "exit": 0,
+  "log_sha256": "573455346ccc7af172f928f756acb3f8f146570593303096b4607810b75b4f5c",
+  "inventory_sha256": "829fe919ec9c8554759a740ab65923b8736b365c6d084f88dbf28d13a184a7fc"
+}

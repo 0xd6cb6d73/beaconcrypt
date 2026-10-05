@@ -1303,6 +1303,11 @@ import BeaconcryptCore.Computational.PqxdhLaterSavedUniformBounds
 import BeaconcryptCore.Computational.PqxdhLaterExecutableResources
 import BeaconcryptCore.Computational.PqxdhLaterExecutableSourceBills
 
+import BeaconcryptCore.Computational.PqxdhRegistrationJointBundleCompiler
+import BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule
+import BeaconcryptCore.Computational.PqxdhRegistrationJointServiceCosts
+import BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger
+
 /-!
 # Beaconcrypt-core verification root
 

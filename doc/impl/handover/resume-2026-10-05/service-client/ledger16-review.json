@@ -1,0 +1,22 @@
+{
+  "reviewer": "root",
+  "time": "2026-10-05T22:11:06.705902+00:00",
+  "decision": "APPROVE",
+  "manifest_sha256": "9263a0dcfcc3b68aaf143168490d8a9a473f2d30d38b7e6efb81233427e0b742",
+  "original_manifest_sha256": "7d8876435ee4fb5e730be876cbdcb6d3c250b549d3aa956c0f0cfaa7d59e7bf6",
+  "files_verified": 5,
+  "statements": 16,
+  "resolved_findings": [
+    "Finish attempt descriptions now say at most one decapsulation and joint DH; only two prose corrections."
+  ],
+  "scope": "Complete emitted-service partition and all-reply adaptive weighted upper bounds for the actual typed client; retains separate full evaluated native/uniform source cost.",
+  "semantic_checks": [
+    "Read both complete proof modules, full ledger guide and prior service schedule/compiler. Counts include every optional reply, writer failure, missing owner and inactive phase; generated ownership is unnecessary for these structural bounds.",
+    "Constructor and bundle local uniform costs are32 each; actual ordered signatures cost at most3 per bundle, even on writer failure. Finish contributes at most1 logical decapsulation/1 joint DH/56 native-tail calls.",
+    "The fine global partition maps to the earlier finish partition only by predicate implication, retaining zero for all unused backend capabilities. All9source request classes enter the exact weighted sum; no class is dropped on rejection.",
+    "Closed-form total gives qCreate identity/KEM births each,3*qBundle signs,qFinish decaps/DH each,56*qFinish tail, qCoin+32*qCreate+32*qBundle local uniforms and separate qAccept/qBuild/qHmac/qHash/qRead native macro caps. Other backend calls are0, including unused reveals.",
+    "Native macros are explicitly not primitive assumptions; interpreted uniform bill and KEM/base work remain separately charged. Writer zero means no emitted backend requests, not zero computation. Runtime/Server initialization separate, unchanged.",
+    "Current proof adds no advantage/selection/freshness theorem and does not remove downstream noCreate/noSign restrictions. Live-field reveals, Server compiler, multiple Server state and final reductions remain open."
+  ],
+  "validation": "Five frozen file hashes match; sixteen exact standard-only guards and two direct empty successful logs verified. Changed Ledger docstring rechecked directly after review. No Rust/ProVerif input changed."
+}

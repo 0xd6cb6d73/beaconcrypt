@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1307
+	[handwritten-lean]=1311
 	[handwritten-proverif]=177
 	[inventory]=2
 	[lean-control]=12
@@ -25771,6 +25771,88 @@ require_line_count 1 '^theorem ' "$selected_source_module" "PqxdhLaterExecutable
 require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterExecutableSourceBills guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterExecutableSourceBills\.source_bills$' "$selected_source_module" "PqxdhLaterExecutableSourceBills dependency BeaconcryptCore.Computational.PqxdhLaterExecutableSourceBills.source_bills"
 require_line_count 1 '^theorem source_bills([[:space:]]|$)' "$selected_source_module" "PqxdhLaterExecutableSourceBills theorem source_bills"
+
+# Reviewed complete registration service client and all-reply query ledger.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBundleCompiler.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointBundleCompiler$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointBundleCompiler root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointBundleCompiler theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointBundleCompiler guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBundleCompiler\.compiler_interpreted$' "$selected_source_module" "PqxdhRegistrationJointBundleCompiler dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBundleCompiler.compiler_interpreted"
+require_line_count 1 '^theorem compiler_interpreted([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBundleCompiler theorem compiler_interpreted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBundleCompiler\.program_interpreted$' "$selected_source_module" "PqxdhRegistrationJointBundleCompiler dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBundleCompiler.program_interpreted"
+require_line_count 1 '^theorem program_interpreted([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBundleCompiler theorem program_interpreted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBundleCompiler\.bundle_source$' "$selected_source_module" "PqxdhRegistrationJointBundleCompiler dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBundleCompiler.bundle_source"
+require_line_count 1 '^theorem bundle_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBundleCompiler theorem bundle_source"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceSchedule.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointServiceSchedule root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.pool_program$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.pool_program"
+require_line_count 1 '^theorem pool_program([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem pool_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.finish_program$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.finish_program"
+require_line_count 1 '^theorem finish_program([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem finish_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.create_source$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.create_source"
+require_line_count 1 '^theorem create_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem create_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.bundle_source$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.bundle_source"
+require_line_count 1 '^theorem bundle_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem bundle_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.finish_source$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.finish_source"
+require_line_count 1 '^theorem finish_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem finish_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.shared_source$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.shared_source"
+require_line_count 1 '^theorem shared_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem shared_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.query_source$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.query_source"
+require_line_count 1 '^theorem query_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem query_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.execute_bind$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.execute_bind"
+require_line_count 1 '^theorem execute_bind([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem execute_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.program_source$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.program_source"
+require_line_count 1 '^theorem program_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem program_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.generated_source$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.generated_source"
+require_line_count 1 '^theorem generated_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem generated_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceSchedule\.program_uniform$' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.program_uniform"
+require_line_count 1 '^theorem program_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceSchedule theorem program_uniform"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceCosts.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointServiceCosts$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointServiceCosts root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointServiceCosts theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointServiceCosts guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceCosts\.coins_queries$' "$selected_source_module" "PqxdhRegistrationJointServiceCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceCosts.coins_queries"
+require_line_count 1 '^theorem coins_queries([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceCosts theorem coins_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceCosts\.creation_queries$' "$selected_source_module" "PqxdhRegistrationJointServiceCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceCosts.creation_queries"
+require_line_count 1 '^theorem creation_queries([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceCosts theorem creation_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceCosts\.signing_queries$' "$selected_source_module" "PqxdhRegistrationJointServiceCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceCosts.signing_queries"
+require_line_count 1 '^theorem signing_queries([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceCosts theorem signing_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceCosts\.writing_queries$' "$selected_source_module" "PqxdhRegistrationJointServiceCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceCosts.writing_queries"
+require_line_count 1 '^theorem writing_queries([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceCosts theorem writing_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceCosts\.after_queries$' "$selected_source_module" "PqxdhRegistrationJointServiceCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceCosts.after_queries"
+require_line_count 1 '^theorem after_queries([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceCosts theorem after_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceCosts\.bundle_queries$' "$selected_source_module" "PqxdhRegistrationJointServiceCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceCosts.bundle_queries"
+require_line_count 1 '^theorem bundle_queries([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceCosts theorem bundle_queries"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceLedger.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointServiceLedger root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.pool_queries$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.pool_queries"
+require_line_count 1 '^theorem pool_queries([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem pool_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.finish_partition$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.finish_partition"
+require_line_count 1 '^theorem finish_partition([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem finish_partition"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.finish_queries$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.finish_queries"
+require_line_count 1 '^theorem finish_queries([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem finish_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.finish_bound$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.finish_bound"
+require_line_count 1 '^theorem finish_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem finish_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.create_bound$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.create_bound"
+require_line_count 1 '^theorem create_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem create_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.bundle_bound$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.bundle_bound"
+require_line_count 1 '^theorem bundle_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem bundle_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.finish_owner_bound$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.finish_owner_bound"
+require_line_count 1 '^theorem finish_owner_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem finish_owner_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.query_bound$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.query_bound"
+require_line_count 1 '^theorem query_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem query_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.cost_total$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.cost_total"
+require_line_count 1 '^theorem cost_total([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem cost_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointServiceLedger\.program_bound$' "$selected_source_module" "PqxdhRegistrationJointServiceLedger dependency BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.program_bound"
+require_line_count 1 '^theorem program_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointServiceLedger theorem program_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-10-05T21:47:35.342856+00:00",
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "head": "1e1e1c49ff5a7e2c52f57b5e5add591fce5bd192",
+  "public_statements": 14,
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBundleCompiler.lean": "47549d81d9e94eda6dc081637de0fb0248573ef44a0bcaf7008ec89e843e7874",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServiceSchedule.lean": "a8d2d5c8bd7fa089f9fdc3a13bc575aa51578cf6407ab7c0ec858901ea3532de",
+    "doc/impl/registration-joint-service-schedule.md": "764cbab30cbe392b96f5ba6bf6388d4267e39a92e38542d46943294f3d8a145a",
+    "doc/formal-verification-analysis.md": "413145442aaf131bd69a51a41261cab687fd4e4d16c6d3bd08f4d43715a0f46d"
+  },
+  "checks": [
+    {
+      "module": "PqxdhRegistrationJointBundleCompiler",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/service14-PqxdhRegistrationJointBundleCompiler.log",
+      "bytes": 0
+    },
+    {
+      "module": "PqxdhRegistrationJointServiceSchedule",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/service14-PqxdhRegistrationJointServiceSchedule.log",
+      "bytes": 0
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-10-05T22:27:43.055350+00:00",
+  "reviewer": "/root/fs_source_abstraction",
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "manifest_sha256": "e639103f413f9066cd0438bb8bd2a4a50b3baba7398e966ff60329dfd8f0f253",
+  "base": "787319ade78ee9e0b599dc349fdc8b5cf6cbf7c0",
+  "published_source": "d93dfcfe875083ba84593ea99c434729ac2433f3",
+  "mechanical_checks": [
+    "All12 frozen hashes match. Four imported modules byte-match published source; independently traversed813 retained repository dependencies byte-match both source and integration base.",
+    "Exactly four new root imports, no prior import removed;30 public theorem guards and individually pinned checker entries match. All four direct source/artifact/log receipts and complete root source/log receipts match zero exits. Inventory log records final success.",
+    "All existing checker gates retained except expected count1307 replaced by1311. Rust, ProVerif, Make and CI byte-identical to base."
+  ],
+  "semantic_checks": [
+    "Read all four proof bodies, complete ledger and integration guides, source-schedule guide and both earlier independent cohort reviews.",
+    "Compiler and program source equalities retain complete encoded owners, both private pools/history, native shared state, optional replies and entire adaptive continuation. Constructor preserves source order; signing/writer failure effects remain. Generated source discharges slot ownership from empty owners and supported source transitions without restricting attacker requests.",
+    "Shared accept/build/HMAC/hash/current-kernel-read requests execute the existing native definitions. Their Server seed/internal cryptographic use remains an explicit later compiler obligation; these macros are not new primitive assumptions.",
+    "All-reply fine query partition covers every source class. Identity/KEM creation each qCreate; signing3qBundle; at most qFinish logical decap and joint DH;56qFinish tail; local uniforms qCoin+32qCreate+32qBundle; source accept/build/HMAC/hash/read caps separately retained; unused backend capabilities zero.",
+    "Full native interpreted uniform cost remains qCoin+(64+G)qCreate+32qBundle+(96+E)qAccept+64qBuild+69max(64,D)qFinish+64qHmac+64qHash, with KEM direct/base bills and separate initialization. Zero backend calls for optional writer do not mean zero computation.",
+    "Scope remains operational one-Server/many-Beacon typed interface. No crypto advantage, broader live-field reveal, multiple-Server import, freshness/selection or automatic evolving-record restriction removal is claimed."
+  ],
+  "limitations": [
+    "No heavy tools rerun by reviewer.",
+    "Only scoped service-client integration approved; no global computational/symbolic closure."
+  ]
+}
