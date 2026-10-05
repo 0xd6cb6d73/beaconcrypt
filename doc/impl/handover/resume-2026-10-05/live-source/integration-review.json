@@ -1,0 +1,24 @@
+{
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "reviewer": "/root/fs_source_abstraction",
+  "source_manifest_sha256": "c93cbd6dc67c7f02679ff61b26486323d7449c6b8ea58b36ea008f820cd916c6",
+  "archive_manifest_sha256": "ca1ca34e265d6f8a43d77497c437545b913452c0323c7ec81e7337ece0883315",
+  "checked": {
+    "source_files": 20,
+    "archive_files": 14,
+    "new_modules_byte_identical": 10,
+    "retained_dependency_blobs_identical": 977,
+    "theorems_and_standard_axiom_guards": 43,
+    "direct_checks_empty_exit_zero": 10,
+    "root_and_inventory_exit_zero_gzip_hashes": true,
+    "old_root_imports_and_inventory_guards_retained": true
+  },
+  "semantic_scope": [
+    "Read all three new disclosure modules, guides, integration diffs and exact archive metadata; reuse independent reviews of unchanged InsideFirst10 and personally reviewed RetainedExecutor12.",
+    "Current KEM handles are phase-gated before private pool lookup; local values reflect current native fields, complete protocol/private state and disclosure histories retained. Generated ownership is representational, not a no-compromise or authentication premise.",
+    "The arbitrary adaptive full continuation equality preserves the sum interface and all typed replies. The 14-coordinate bound adds only identity/KEM reveal attempts in the private other class. Full original uniform/native/base costs remain and initialization is explicitly separate.",
+    "Inside first-cut and actual retained executor/counter results remain operational; alias priority and existing statistical allowances unchanged. No final freshness, target event exclusion, stopped-state coupling, crypto hop or global proof claimed."
+  ],
+  "findings": [],
+  "builds_rerun": false
+}

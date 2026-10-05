@@ -1,0 +1,19 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "verdict": "APPROVE_SCOPED_NORMAL_RECONCILIATION",
+  "manifest": "/tmp/beaconcrypt-proverif-verdict-integration-notes/reconciliation-review-manifest.json",
+  "manifest_sha256": "cfb71f9e88fea6e379617bd9fef21b69c20248143b9a580bcb5d79e526882563",
+  "findings": [],
+  "checks": [
+    "Verified eight frozen resolution/archive hashes.",
+    "Independently compared all 1342 tracked Lean-related files with central e79d66c4ee0814c081ec03a6e6c4ff58a60da877 and all 215 ProVerif-related files with f61ef7df6b1d1a62ef6aaa0a47dff6e50fb29775; all byte-identical.",
+    "Read complete metadata and documentation delta; guards and explanations retain both reviewed sides.",
+    "Compared every require_ guard against both parents: no topic deletion; sole central difference is already-reviewed transcript test count 25 to 27.",
+    "Verified compressed inventory log and raw digest against validation receipt; classified 3153 expectations with 165 security-class entries and no increased security claim.",
+    "Read reconciliation README, source manifest and validation scope; accurately claims no new proof/solver run."
+  ],
+  "limitations": [
+    "No build or solver run performed by reviewer.",
+    "Review supplements prior semantic source-stage and joined metadata approvals; it does not establish a new global security result."
+  ]
+}

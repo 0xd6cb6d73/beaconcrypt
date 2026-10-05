@@ -1,0 +1,5 @@
+# Normal reconciliation with current central proof
+
+The reviewed ProVerif integration at `f61ef7df6b1d1a62ef6aaa0a47dff6e50fb29775` is normally merged with central `e79d66c4ee0814c081ec03a6e6c4ff58a60da877`. The four conflicts are the inventory script, reviewed digests, trust-boundary prose and analysis prose. Both sets of guards and explanations are retained; inventory counts become 1,321 handwritten Lean, 188 handwritten ProVerif and 35 validation files. The existing 27-test transcript count is retained.
+
+All 1,342 tracked Lean-related files, including the complete root, match the independently checked central tree exactly. All 215 ProVerif-related files match the published joined topic exactly. The final combined inventory passed. No new theorem, solver run or proof build is inferred from this merge; the previous exact source-stage and joined validation receipts remain unchanged. Current-field/retained-executor scope and full query bills remain those already reviewed centrally, and the six new symbolic expectation rows remain non-security results.

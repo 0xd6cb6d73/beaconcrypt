@@ -1,0 +1,222 @@
+[
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointLiveRead",
+    "start": "2026-10-06T01:03:09.405670",
+    "end": "2026-10-06T01:03:13.753449",
+    "exit": 0,
+    "source_sha256": "c3866a86f826c1fdc57bf605f7f47832ce6f88344c747819aaa53af3915b76fb",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointLiveRead.olean",
+      "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointLiveRead.lean"
+    ],
+    "artifact_sha256": "4fa1b1570e47d51a2387cd122f7dd1b6266f8519e8dbb7eb03da139dbd29b0aa"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointRevealSchedule",
+    "start": "2026-10-06T01:03:13.756231",
+    "end": "2026-10-06T01:03:24.497541",
+    "exit": 0,
+    "source_sha256": "0974d6dc4c3cc25fc12e9cc03fb39c0e1f86774884c8c03e066b807504c0bd47",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointRevealSchedule.olean",
+      "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRevealSchedule.lean"
+    ],
+    "artifact_sha256": "68ddb6447b0e083cafef6ff3d147fc7138b1c206ca1a5caa65187336b1318af1"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointRevealCosts",
+    "start": "2026-10-06T01:03:24.498260",
+    "end": "2026-10-06T01:03:30.039163",
+    "exit": 0,
+    "source_sha256": "4d3c68af53f81fa9479d184861d8536a52590a59aee0d7361fd08d27e079efc1",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointRevealCosts.olean",
+      "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointRevealCosts.lean"
+    ],
+    "artifact_sha256": "c89a5d6442ee09a3e23f549c3b59983dadcbb603781d1d602330ffc7b827e7e0"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.RawCtxForwardFirstCut",
+    "start": "2026-10-06T01:03:30.041624",
+    "end": "2026-10-06T01:03:32.464375",
+    "exit": 0,
+    "source_sha256": "d68ee3e7b3fa103667df443cd9917e3ae3a3aaa82f4e8309061b563099db8fd9",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean/BeaconcryptCore/Computational/RawCtxForwardFirstCut.olean",
+      "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxForwardFirstCut.lean"
+    ],
+    "artifact_sha256": "a991cb5aeae082486c36ddd024ada77a92ec064147c3637de1ef61dd92b57b7a"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeInsideFirst",
+    "start": "2026-10-06T01:03:32.465395",
+    "end": "2026-10-06T01:03:36.498634",
+    "exit": 0,
+    "source_sha256": "74e695f65afadf70123ab030a2fc47fcc891445ac2083eb4a41b3ac7db2fde56",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideFirst.olean",
+      "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideFirst.lean"
+    ],
+    "artifact_sha256": "9e789e1708908c2f0afaf356a59dfd7e1152c077378d23beefdfce08b3823e16"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeSampleFirst",
+    "start": "2026-10-06T01:03:36.499909",
+    "end": "2026-10-06T01:03:41.680048",
+    "exit": 0,
+    "source_sha256": "52cf8bcdfce5b54ef0ae08dd087d802863e229970fb58172a41feeb6b1231bbd",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeSampleFirst.olean",
+      "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSampleFirst.lean"
+    ],
+    "artifact_sha256": "05fbed244d88c4448090855472a2141b5b20cd29e4c57a33c603275d3b3ec553"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFirst",
+    "start": "2026-10-06T01:03:41.683771",
+    "end": "2026-10-06T01:03:53.685574",
+    "exit": 0,
+    "source_sha256": "4e1f8b06438deabb888dc569c0576c0b5691a8d83a4923f8281dc81b4082ba29",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFirst.olean",
+      "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFirst.lean"
+    ],
+    "artifact_sha256": "5003d435c2c4b2f6667c675fdb9c53a0a2b241c88359cd77c97129a3b1951136"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedHead",
+    "start": "2026-10-06T01:03:53.688006",
+    "end": "2026-10-06T01:03:57.290435",
+    "exit": 0,
+    "source_sha256": "ecc46b523ca421c5140c96b7fecdcd85747f3f9b1e2ad0619d758da492ac67a4",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeRetainedHead.olean",
+      "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRetainedHead.lean"
+    ],
+    "artifact_sha256": "40cd3acd3106451788bdef9f9b008501e87133ac53fa961144db4f1c7174b5d9"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence",
+    "start": "2026-10-06T01:03:57.291482",
+    "end": "2026-10-06T01:04:00.998758",
+    "exit": 0,
+    "source_sha256": "1727d32cf5dbdf7e78ea83c2f945872b0745766418058f0600c768f14e8be963",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeRetainedSequence.olean",
+      "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRetainedSequence.lean"
+    ],
+    "artifact_sha256": "a99436df99675575236b4742c99bf66b1e278624c6a33c2c9378953512fa752e"
+  },
+  {
+    "module": "BeaconcryptCore.Computational.PqxdhLaterChallengeInsideRetained",
+    "start": "2026-10-06T01:04:00.999945",
+    "end": "2026-10-06T01:04:11.827351",
+    "exit": 0,
+    "source_sha256": "45e09f9573268b1c0b8037bbf739bf4b07abb9a2c67a49f27f4b2711b70082de",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+      "flock",
+      "/tmp/bc-arc-scratch/lean.lock",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/resume-2026-10-05-codex/live-source-integration/olean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideRetained.olean",
+      "/tmp/beaconcrypt-live-source-consumer-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideRetained.lean"
+    ],
+    "artifact_sha256": "e0120a4213e5f72badf6ebcb43dc4042f5bff4c85fda69ac0d10a3b09004c80c"
+  }
+]

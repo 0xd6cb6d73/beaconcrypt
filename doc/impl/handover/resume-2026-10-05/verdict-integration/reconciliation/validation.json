@@ -1,0 +1,19 @@
+{
+  "parents": [
+    "f61ef7df6b1d1a62ef6aaa0a47dff6e50fb29775",
+    "e79d66c4ee0814c081ec03a6e6c4ff58a60da877"
+  ],
+  "inventory_exit": 0,
+  "inventory_raw_sha256": "37f943202600df93b70bcc11738c6391bb31e1ebfc43886ecedcffef83e9e798",
+  "inventory_gzip_sha256": "c9b7f581b81de4781999799be8e723f21022479639571debf02e0aef33ceabad",
+  "lean_source_files_identical_to_central": 1342,
+  "proverif_source_files_identical_to_topic": 215,
+  "root_identical_to_central": true,
+  "all_prior_gates_retained": true,
+  "handwritten_lean": 1321,
+  "handwritten_proverif": 188,
+  "validation_files": 35,
+  "new_prover_searches": 0,
+  "new_lean_builds": 0,
+  "scope": "Normal reconciliation of two independently validated source-identical groups, with four metadata/doc conflicts resolved by retaining both. The27FT and six archived prover-result validations from the previous checkpoint are unchanged."
+}

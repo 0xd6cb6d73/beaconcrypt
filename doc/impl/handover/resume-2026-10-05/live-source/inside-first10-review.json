@@ -1,0 +1,43 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "timestamp": "2026-10-05T22:08:29.460689+00:00",
+  "verdict": "APPROVE",
+  "manifest": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/inside-first-manifest.json",
+  "manifest_sha256": "3fc2706fb03320d8218b18c3ac716d8f4cf8890fe25e614c831243b43ab116cf",
+  "file_hashes_match": true,
+  "guards": 10,
+  "checks": [
+    {
+      "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxForwardFirstCut.lean",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/reviews/RawCtxForwardFirstCut.log",
+      "log_bytes": 0
+    },
+    {
+      "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeInsideFirst.lean",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/reviews/PqxdhLaterChallengeInsideFirst.log",
+      "log_bytes": 0
+    },
+    {
+      "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSampleFirst.lean",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/reviews/PqxdhLaterChallengeSampleFirst.log",
+      "log_bytes": 0
+    },
+    {
+      "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFirst.lean",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/reviews/PqxdhLaterChallengeGeneratedFirst.log",
+      "log_bytes": 0
+    }
+  ],
+  "semantic_review": [
+    "Read all four full modules, ten theorem statements/proofs, full inside-first guide, corresponding maintained docs and actual send/scan/Sound dependencies.",
+    "First requires absence of tags after the literal first query on every typed continuation; it does not assert that later primitive calls vanish. cut_start combines actual support, coverage and descriptor soundness to derive the complete unchanged incoming state and equality of the whole erased callback with the exact dependent frame query/continuation.",
+    "InsideFirst derives First through actual single-owner send, Server peer lookup, established Beacon, family/live forwarding and literal admitted wrapper callback. Empty/exhausted/missing/inactive branches remain pure; actual KDF is the first tagged query and the following optional seal is untagged. No earlier source callback is silently dropped.",
+    "SampleFirst reuses one Builder/frontend/history witness and substitutes the derived backend equality, retaining actual attach pending.2 after native state/cache at the source-prefix endpoint. GeneratedFirst uses actual evaluated generated carrier and its recorded adversary selection, no independently selected state or callback.",
+    "All full continuation and mutable state content retained. No state marginal argument, primitive assumption, ciphertext plaintext substitution, security-event conclusion, stopped-component/source coupling or probability transfer. Docs expressly leave actual retained seal counter relation, successful target exclusion, refusal/freshness/raw primitive/selection/resource joins open. Existing complete query budgets unchanged."
+  ],
+  "findings": []
+}
