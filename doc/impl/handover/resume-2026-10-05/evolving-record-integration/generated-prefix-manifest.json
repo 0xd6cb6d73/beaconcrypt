@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-05T20:55:12.131394+00:00",
+  "worktree": "/tmp/beaconcrypt-evolving-record-composition",
+  "head": "c23e160e4f58dce825e913e104074ef40eda72e8",
+  "public_statements": 10,
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSourceMonitor.lean": "000652911da7f8cdb563029095c8eebae71b0bb494d6e865b6858fa491e0ebd1",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSampleMonitor.lean": "29504a75dd03faef3d463b7f4400c54733be85bcbb585780aaedc8c8be7838a4",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedPrefix.lean": "ca4c5eca0ebd10c0fab16b3fb48a4d540d9ad830d05d873b500981dc459d9ab2",
+    "doc/impl/later-challenge-generated-prefix.md": "93163a2cf2bebf74652b0036fa591f78870b5169f42b24e41d97c17349ba9231",
+    "doc/impl/later-challenge-compiler-support.md": "ae26f0086c6fa249ae7a3840a6eb43aa38b1d8a41be036dd6904da6a3866874a",
+    "doc/formal-verification-analysis.md": "7b0bebb432c7f7950440b89c6f4a7d5b14a50964166c50763551b96f7e5adda2"
+  }
+}
