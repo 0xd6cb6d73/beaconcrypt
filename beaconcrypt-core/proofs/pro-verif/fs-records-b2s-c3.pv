@@ -1,14 +1,16 @@
 (* SPDX-License-Identifier: 0BSD *)
 
 (* fs-records-b2s C3, security result, (K_s, K_r, T_max) = (2, 3, 2): record
-   replay rejection.  A Server peer never accepts the same sequence twice in
-   one session, whoever registered it and whatever the plaintexts, and the
-   Beacon's finish accepts sequence one once.  Also the target of the
-   controls C-RETAIN and C-STALE. *)
-query d: direction, s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat,
+   replay rejection at the Server.  A Server peer never accepts the same
+   sequence twice in one session, whoever registered it and whatever the
+   plaintexts.  The direction is fixed to Beacon-to-Server, whose
+   FsReceived events only the Server receive emits; the Beacon's finish is
+   the definitional check C3-finish (fs-records-b2s-c3-finish.pv).  Also
+   the target of the controls C-RETAIN and C-STALE. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat,
       m1: bitstring, m2: bitstring, i: time, j: time;
-  event(FsReceived(d, s, b, kid, root, t, m1))@i
-  && event(FsReceived(d, s, b, kid, root, t, m2))@j
+  event(FsReceived(beacon_to_server(), s, b, kid, root, t, m1))@i
+  && event(FsReceived(beacon_to_server(), s, b, kid, root, t, m2))@j
   ==> i = j.
 
 process FsRecordsB2sMain()

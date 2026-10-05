@@ -1,0 +1,17 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* fs-records-b2s C3-finish, definitional check, (K_s, K_r, T_max) = (2, 1,
+   2), any Beacon pins: a Beacon's finish accepts sequence one once.  In this
+   scenario the only Server-to-Beacon FsReceived is the one that each Beacon
+   session emits at its finish, every Beacon session draws a fresh identity,
+   and there is no Beacon receive window (direction split E19), so the
+   check holds by construction and is not counted as evidence; its Rust
+   reading rests on the pending lifecycle argument L5.  The Server receive
+   bound does not reach the Beacon's finish, so it runs at K_r = 1. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat,
+      m1: bitstring, m2: bitstring, i: time, j: time;
+  event(FsReceived(server_to_beacon(), s, b, kid, root, t, m1))@i
+  && event(FsReceived(server_to_beacon(), s, b, kid, root, t, m2))@j
+  ==> i = j.
+
+process FsRecordsB2sMainAnyPin()

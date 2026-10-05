@@ -8,7 +8,8 @@ the primary output and in the verification summary. It rejects "cannot be
 proved", unknown or inconclusive results, unconfirmed traces, errors, and every
 warning except ProVerif's termination warnings (see TERMINATION_WARNING), and
 it requires exactly one reconstructed trace for every FALSE result. Classes:
-security (TRUE, counted as evidence), definitional (TRUE by construction, never
+security (TRUE, counted as evidence; one claim per query file, so a claim run in
+several forms counts once), definitional (TRUE by construction, never
 counted), witness (FALSE with a trace: the event is reachable), control (a
 negative-control mutant: FALSE with a trace when the mutant breaks a claim, or
 TRUE without a trace for an inverted control, whose mutant makes a witness
@@ -161,7 +162,13 @@ S2B_S4 = "not (event(FsSent(server_to_beacon,s,b,kid,root_2,2,m)) && attacker(m)
 B2S_A1 = "inj-event(FsBeaconEstablished(ed_public(SERVER_IDENTITY_SECRET[]),b,init_2,kid,root_2,ad,p)) ==> inj-event(FsServerCommitted(obj_2,ed_public(SERVER_IDENTITY_SECRET[]),b,init_2,kid,root_2,ad,p))"
 B2S_A2 = "event(FsServerAccepted(obj_2,s,ed_public(k),init_2,rid,root_2)) ==> event(FsBeaconStarted(s2,ed_public(k),init_2,rid)) || attacker(k)"
 B2S_C2 = "inj-event(FsReceived(beacon_to_server,s,ed_public(k),kid,root_2,t,m)) ==> inj-event(FsSent(beacon_to_server,s,ed_public(k),kid,root_2,t,m)) || attacker(k)"
-B2S_C3 = "event(FsReceived(d,s,b,kid,root_2,t,m1))@i && event(FsReceived(d,s,b,kid,root_2,t,m2))@j ==> i = j"
+# C3 is split. Its security target fixes the direction to Beacon-to-Server, whose
+# FsReceived events only the Server receive emits. The Server-to-Beacon instance, the
+# Beacon's finish at sequence one, holds by construction in this scenario (one finish
+# per Beacon session, a fresh identity per session, no Beacon receive window), so it is
+# the definitional check C3-finish and is never counted as evidence.
+B2S_C3 = "event(FsReceived(beacon_to_server,s,b,kid,root_2,t,m1))@i && event(FsReceived(beacon_to_server,s,b,kid,root_2,t,m2))@j ==> i = j"
+B2S_C3_FINISH = "event(FsReceived(server_to_beacon,s,b,kid,root_2,t,m1))@i && event(FsReceived(server_to_beacon,s,b,kid,root_2,t,m2))@j ==> i = j"
 B2S_C4 = (
     "event(FsFarAccepted(beacon_to_server,s,ed_public(k),kid,root_2,t)) ==> attacker(k)"
 )
@@ -482,6 +489,14 @@ TARGETS = (
         "b2s-UKSr", "security", 3, "fs-records-b2s-uksr.pv", [B2S_UKSR + " is true."]
     ),
     records_b2s(
+        "b2s-C3-finish",
+        "definitional",
+        1,
+        "fs-records-b2s-c3-finish.pv",
+        [B2S_C3_FINISH + " is true."],
+        sends=SENDS_CHOSEN,
+    ),
+    records_b2s(
         "b2s-C5a", "witness", 2, "fs-records-b2s-c5a.pv", [B2S_C5A + " is false."]
     ),
     records_b2s(
@@ -752,6 +767,20 @@ def check_target(proverif, target, logdir, timeout, address_space_kib):
     return seconds, peak
 
 
+def security_claims(targets):
+    """The distinct security claims among targets: one per scenario and query file.
+
+    A claim run in several forms has one query file and several security targets (in
+    fs-records-b2s, C2 runs with fresh records in the failure-interleaving receive and
+    with adversary-chosen records in the fail-stop receive); it counts once.
+    """
+    return {
+        (target.scenario, target.query)
+        for target in targets
+        if target.cls == "security"
+    }
+
+
 def run(proverif, targets, logdir, timeout, address_space_kib, results_path):
     validate_targets()
     rows = []
@@ -785,11 +814,14 @@ def run(proverif, targets, logdir, timeout, address_space_kib, results_path):
     if failures:
         raise SystemExit("fs ProVerif check failed:\n" + "\n".join(failures))
     total = sum(row[2] for row in rows)
-    evidence = sum(1 for row in rows if row[0].cls == "security")
+    checked = [row[0] for row in rows]
+    security = sum(1 for target in checked if target.cls == "security")
+    claims = len(security_claims(checked))
     print(
-        f"fs ProVerif targets: {len(rows)} exact results ({evidence} security results counted "
-        f"as evidence) in {total:.1f} s of serial ProVerif time; symbolic and bounded, not "
-        "computational bounds."
+        f"fs ProVerif targets: {len(rows)} exact results in {total:.1f} s of serial ProVerif "
+        f"time; counted as evidence: {security} security targets, {claims} distinct security "
+        "claims (one per query file; a claim run in several forms counts once); symbolic and "
+        "bounded, not computational bounds."
     )
 
 

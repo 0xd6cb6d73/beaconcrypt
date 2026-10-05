@@ -27,9 +27,10 @@
    plaintexts, or fs-records-b2s-sends-chosen.pvl, which also lets the
    application send adversary-chosen plaintexts), the receive step
    fs-records-b2s-receive.pvl and one bound file fs-records-b2s-kr1.pvl,
-   -kr2.pvl or -kr3.pvl (K_r receive attempts).
+   -kr2.pvl or -kr3.pvl (K_r receive attempts), or -kr3-failstop.pvl (three
+   attempts in the fail-stop form E21).
 
-   Model steps (justified in doc/impl/proverif-free-schedule-records.md):
+   Model steps (justified in doc/impl/proverif-free-schedule-records-b2s.md):
    - Early fresh Server coins (v2), as in fs-records-s2b: the Server
      ephemeral secret and the KEM coins are drawn when the object starts
      rather than at server.rs:368 and :373 (argument E20).
@@ -55,10 +56,11 @@
      which covers Beacons that pin the honest key as well as Beacons that
      pin any other key or ID.  Every trace of FsRecordsB2sMain is a trace of
      FsRecordsB2sMainAnyPin, in which the attacker chooses the honest pin
-     for every Beacon.  A1, A2, S2, C4 and the witness PINREAD run in
-     FsRecordsB2sMainAnyPin; the other targets run in FsRecordsB2sMain, and
-     the pin-independence argument E3 of the b2s guide carries their
-     security results over to any Beacon pins. *)
+     for every Beacon.  A1, A2, S2, C4, the definitional check C3-finish
+     and the witness PINREAD run in FsRecordsB2sMainAnyPin; the other
+     targets run in FsRecordsB2sMain, and the pin-independence argument E3
+     of the b2s guide (step 13, not yet reviewed) is what would carry the
+     security results C2, C3 and UKSr over to any Beacon pins. *)
 
 (* One Server object: one registration in Rust order except for the early
    draw of the ephemeral secret and the KEM coins (v2), the response build on

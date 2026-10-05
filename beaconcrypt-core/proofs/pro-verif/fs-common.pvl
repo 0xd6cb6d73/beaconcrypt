@@ -81,14 +81,15 @@ fun fs_build(): bitstring [data].
 
    Common fields.  S is the Server identity: on the Server side the object's
    identity key, on the Beacon side the Beacon's pinned Server key; in the
-   model it is always ed_public(SERVER_IDENTITY_SECRET).  B is the Beacon's
-   Ed25519 identity.  obj labels one live Server object.  init is the
-   verified key tuple VerifiedInitKex(identity, prekey, one_time, pq)
-   returned by validate_init_kex, never the raw signed blobs.  rid is the
-   64-byte RegistrationId identity || one_time.  kid is an assigned peer key
-   ID.  root is the 32-byte derived secret, ad the 153-byte associated data,
-   payload the registration application plaintext, dir a direction, t a frame
-   sequence and m a record plaintext.
+   model it is ed_public(SERVER_IDENTITY_SECRET), except for the pins that the
+   attacker chooses in FsRecordsB2sMainAnyPin.  B is the Beacon's Ed25519
+   identity.  obj labels one live Server object.  init is the verified key
+   tuple VerifiedInitKex(identity, prekey, one_time, pq) returned by
+   validate_init_kex, never the raw signed blobs.  rid is the 64-byte
+   RegistrationId identity || one_time.  kid is an assigned peer key ID.  root
+   is the 32-byte derived secret, ad the 153-byte associated data, payload the
+   registration application plaintext, dir a direction, t a frame sequence and
+   m a record plaintext.
 
    Fields that the call does not return.  root on FsServerCommitted is a
    field of the opaque token, and on every record event it is a ghost (the

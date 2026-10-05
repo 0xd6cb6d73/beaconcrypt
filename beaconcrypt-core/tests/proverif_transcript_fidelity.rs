@@ -22168,7 +22168,7 @@ const FS_S2B_TARGETS: [(&str, &str, &str, &str, &str); 16] = [
 
 /// The fs-records-b2s result targets: (name, class, K_r bound, query file, hook and form keywords
 /// sorted).
-const FS_B2S_TARGETS: [(&str, &str, &str, &str, &str); 17] = [
+const FS_B2S_TARGETS: [(&str, &str, &str, &str, &str); 18] = [
 	(
 		"b2s-A1",
 		"security",
@@ -22207,6 +22207,13 @@ const FS_B2S_TARGETS: [(&str, &str, &str, &str, &str); 17] = [
 	),
 	("b2s-S2", "security", "3", "fs-records-b2s-s2.pv", ""),
 	("b2s-UKSr", "security", "3", "fs-records-b2s-uksr.pv", ""),
+	(
+		"b2s-C3-finish",
+		"definitional",
+		"1",
+		"fs-records-b2s-c3-finish.pv",
+		"sends=SENDS_CHOSEN",
+	),
 	("b2s-C5a", "witness", "2", "fs-records-b2s-c5a.pv", ""),
 	("b2s-C5b", "witness", "2", "fs-records-b2s-c5b.pv", ""),
 	("b2s-C5c", "witness", "2", "fs-records-b2s-c5c.pv", ""),
@@ -23503,7 +23510,7 @@ fn validate_fs_b2s_checker(checker: &str, tests: &str, section: &str) -> Result<
 	}
 	require(
 		&compact(tests),
-		&compact("{\"security\": 8, \"witness\": 6, \"control\": 3,}"),
+		&compact("{\"security\": 8, \"definitional\": 1, \"witness\": 6, \"control\": 3,}"),
 		"fs-records-b2s checker class-count regression",
 	)
 }
@@ -24955,6 +24962,11 @@ fn free_schedule_checker_loader_and_targets_are_pinned() {
 			"b2s control dropped",
 			"    records_b2s(\n        \"b2s-C-STALE\",",
 			"    records_s2b(\n        \"b2s-C-STALE\",",
+		),
+		(
+			"b2s definitional finish check counted as a security result",
+			"        \"b2s-C3-finish\",\n        \"definitional\",",
+			"        \"b2s-C3-finish\",\n        \"security\",",
 		),
 	] {
 		let mut changed = FS_CHECKER.to_owned();

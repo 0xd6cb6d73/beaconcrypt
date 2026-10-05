@@ -9,7 +9,8 @@
    state, outputs nothing and emits only FsReceiveRejected, so deleting it
    from a trace leaves a trace of this form with every other event: a query
    that does not mention FsReceiveRejected and holds here holds there too
-   (the deletion argument E21 of the records guide).  Used only for C2 and
+   (the deletion argument E21, step 12 of
+   doc/impl/proverif-free-schedule-records-b2s.md).  Used only for C2 and
    for C4 with adversary-chosen plaintexts. *)
 expand FS_B2S_RECV_STEP(FsB2sRecv3, FsB2sRecvStop, FsB2sRecvStop).
 expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecvStop).

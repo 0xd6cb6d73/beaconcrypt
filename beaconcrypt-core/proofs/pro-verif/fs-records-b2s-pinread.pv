@@ -4,8 +4,8 @@
    choosing the pinned Server key and Server ID of every Beacon, a Beacon
    that pins a key of the attacker finishes registration and sends a record
    whose fresh plaintext the attacker reads.  The pin-free process therefore
-   contains Beacons with other pins that finish and send, and the second
-   disjunct of PIN is reachable. *)
+   contains Beacons with other pins that finish and send, which is the case
+   (c) of the pin-independence argument (b2s guide step 13). *)
 query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat, m: bitstring;
   event(FsSent(beacon_to_server(), s, b, kid, root, t, m)) && attacker(m).
 

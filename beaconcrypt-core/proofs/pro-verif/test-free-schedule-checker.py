@@ -251,10 +251,57 @@ class ManifestTests(unittest.TestCase):
             counts[CHECKER.RECORDS_B2S],
             {
                 "security": 8,
+                "definitional": 1,
                 "witness": 6,
                 "control": 3,
             },
         )
+
+    def test_security_claims_count_each_query_once(self):
+        # Evidence is counted per claim, one per scenario and query file: b2s C2 runs as
+        # two security targets with one query file and counts once.
+        claims = CHECKER.security_claims(CHECKER.TARGETS)
+        per_scenario = {
+            scenario: sum(1 for each in claims if each[0] == scenario)
+            for scenario in CHECKER.SCENARIOS
+        }
+        self.assertEqual(
+            per_scenario,
+            {
+                CHECKER.REGISTRATION: 6,
+                CHECKER.RECORDS_S2B: 6,
+                CHECKER.RECORDS_B2S: 7,
+            },
+        )
+        self.assertEqual(
+            CHECKER.security_claims((target("b2s-C2"), target("b2s-C2-chosen-fs"))),
+            {(CHECKER.RECORDS_B2S, "fs-records-b2s-c2.pv")},
+        )
+        self.assertEqual(
+            CHECKER.security_claims(
+                (target("R2"), target("b2s-C3-finish"), target("b2s-C-RETAIN"))
+            ),
+            set(),
+        )
+
+    def test_b2s_c3_counts_only_the_server_receive(self):
+        # The security target C3 fixes the direction to Beacon-to-Server; the Beacon's
+        # finish, which holds by construction in b2s, is the definitional check
+        # C3-finish and is never counted.
+        security, finish = target("b2s-C3"), target("b2s-C3-finish")
+        self.assertEqual(security.cls, "security")
+        self.assertEqual(finish.cls, "definitional")
+        self.assertIn("FsReceived(beacon_to_server,", security.results[0])
+        self.assertNotIn("server_to_beacon", security.results[0])
+        self.assertIn("FsReceived(server_to_beacon,", finish.results[0])
+        self.assertNotIn("beacon_to_server", finish.results[0])
+        self.assertEqual(
+            security.results[0].replace("beacon_to_server", "server_to_beacon"),
+            finish.results[0],
+        )
+        text = (CHECKER.HERE / security.query).read_text()
+        self.assertIn("FsReceived(beacon_to_server(),", text)
+        self.assertNotIn("FsReceived(d,", text)
 
     def test_loader_order(self):
         for each in CHECKER.TARGETS:
@@ -318,6 +365,7 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(
             bounds,
             {
+                "b2s-C3-finish": 1,
                 "b2s-C5a": 2,
                 "b2s-C5b": 2,
                 "b2s-C5c": 2,
@@ -353,6 +401,7 @@ class ManifestTests(unittest.TestCase):
                 "b2s-C2-chosen-fs",
                 "b2s-C3",
                 "b2s-C4",
+                "b2s-C3-finish",
             },
         )
         failstop = {each.name for each in CHECKER.TARGETS if each.failstop}
@@ -442,6 +491,7 @@ class ManifestTests(unittest.TestCase):
 
     def test_failstop_only_extends_listed_security_results(self):
         self.mutated("b2s-C3", failstop=True)
+        self.mutated("b2s-C3-finish", failstop=True)
         self.mutated("b2s-C5a", failstop=True)
         self.mutated("b2s-C-RETAIN", failstop=True)
         self.mutated(
@@ -647,6 +697,35 @@ class ProcessTests(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()):
                 CHECKER.run_logged(fake, (each,), None, 60, 0, None, scratch=scratch)
             self.assertEqual(list(scratch.iterdir()), [])
+
+    def test_summary_counts_security_targets_and_claims(self):
+        # Two security targets with one query file are one claim; a definitional check is
+        # never counted as evidence.
+        chosen = ("b2s-C2", "b2s-C2-chosen-fs", "b2s-C3-finish")
+        receipts = {target(name).query: receipt(target(name)) for name in chosen}
+        with tempfile.TemporaryDirectory() as directory:
+            fake = self.fake(
+                directory,
+                "import sys\n"
+                f"receipts = {receipts!r}\n"
+                "sys.stdout.write(receipts[sys.argv[-1].rsplit('/', 1)[-1]])",
+            )
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                CHECKER.run_logged(
+                    fake,
+                    tuple(target(name) for name in chosen),
+                    Path(directory) / "logs",
+                    60,
+                    0,
+                    None,
+                )
+        summary = output.getvalue().splitlines()[-1]
+        self.assertIn("fs ProVerif targets: 3 exact results in ", summary)
+        self.assertIn(
+            "counted as evidence: 2 security targets, 1 distinct security claims",
+            summary,
+        )
 
     def test_log_dir_keeps_every_log(self):
         each = target("R3")
