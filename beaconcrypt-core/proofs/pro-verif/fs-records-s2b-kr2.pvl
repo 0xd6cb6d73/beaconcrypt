@@ -2,6 +2,6 @@
 
 (* fs-records-s2b bound K_r = 2: two attacker-scheduled Beacon receive
    attempts after the finish.  Used for the witnesses that need two
-   receives (C5a, C5b, C5c) and for C-FAILMUT, the control of C5b. *)
+   receives (C5a, C5b) and for C-FAILMUT, the control of C5b. *)
 expand FS_S2B_RECV_STEP(FsS2bRecv2, FsS2bRecvStop).
 expand FS_S2B_RECV_STEP(FsS2bRecv1, FsS2bRecv2).

@@ -9,11 +9,12 @@
    whose hooks it calls and before the bound file fs-records-s2b-kr1.pvl,
    -kr2.pvl or -kr3.pvl, which expands K_r attempts.  Positions up to
    T_max = 3 are materialised; a frame above T_max goes to the far branch.
-   FsReceiveRejected is emitted for every parsed frame from the pinned Server
-   ID that is rejected at a target t <= T_max (an old target that is not
-   cached, a failed cached open or a failed future open), and not for a
-   failed far open; the entry state is kept unless a control library says
-   otherwise. *)
+   FsReceiveRejected, with the refused frame, is emitted for every parsed
+   frame from the pinned Server ID that is rejected at a target t <= T_max
+   (an old target that is not cached, a failed cached open or a failed
+   future open), and not for a failed far open; the entry state is kept
+   unless a control library says otherwise.  Every FsReceived is followed by
+   FsReceivedFrame with the accepted frame. *)
 
 (* The far-target collapse (OD4): the public key schedule above the deepest
    chain that any process materialises.  The anchor is the chain at position
@@ -84,6 +85,15 @@ let Cur(
             2,
             plaintext
           );
+          event FsReceivedFrame(
+            server_to_beacon(),
+            server_identity,
+            beacon_identity,
+            assigned_key_id,
+            root,
+            2,
+            frame
+          );
           Next(
             server_identity,
             beacon_identity,
@@ -107,7 +117,8 @@ let Cur(
             beacon_identity,
             assigned_key_id,
             root,
-            t
+            t,
+            frame
           );
           Next(
             server_identity,
@@ -131,7 +142,8 @@ let Cur(
           beacon_identity,
           assigned_key_id,
           root,
-          t
+          t,
+          frame
         );
         Next(
           server_identity,
@@ -170,6 +182,15 @@ let Cur(
           2,
           plaintext
         );
+        event FsReceivedFrame(
+          server_to_beacon(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          2,
+          frame
+        );
         Next(
           server_identity,
           beacon_identity,
@@ -191,7 +212,8 @@ let Cur(
           beacon_identity,
           assigned_key_id,
           root,
-          t
+          t,
+          frame
         );
         Next(
           server_identity,
@@ -228,6 +250,15 @@ let Cur(
           3,
           plaintext
         );
+        event FsReceivedFrame(
+          server_to_beacon(),
+          server_identity,
+          beacon_identity,
+          assigned_key_id,
+          root,
+          3,
+          frame
+        );
         if r = 1 then
           Next(
             server_identity,
@@ -263,7 +294,8 @@ let Cur(
           beacon_identity,
           assigned_key_id,
           root,
-          t
+          t,
+          frame
         );
         Next(
           server_identity,
@@ -281,10 +313,13 @@ let Cur(
     )
     else
     (
-      (* The far branch, t > T_max: Rust admits t <= r + 51 - |C| and the
-         model admits every such t, with material from the anchor.  A far
-         acceptance emits only FsFarAccepted and ends the worker; a failure
-         keeps the state and emits no event. *)
+      (* The far branch, t > T_max: Rust admits t <= r + 51 - |C|; the
+         model admits every t > T_max, an over-approximation of the admitted
+         sequences, but opens only with model-only material from the anchor,
+         which no process outputs and no process seals under (no honest
+         frame lies above T_max within these bounds).  A far acceptance
+         emits only FsFarAccepted and ends the worker; a failure keeps the
+         state and emits no event. *)
       let plaintext = open_frame(
         ratchet_material(fs_far_chain(far_anchor, t)),
         associated_data,

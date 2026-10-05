@@ -21692,7 +21692,7 @@ const FS_S2B_TARGETS: [(&str, &str, &str, &str, &str); 16] = [
 	("s2b-A3", "witness", "1", "fs-records-s2b-a3.pv", ""),
 	("s2b-C5a", "witness", "2", "fs-records-s2b-c5a.pv", ""),
 	("s2b-C5b", "witness", "2", "fs-records-s2b-c5b.pv", ""),
-	("s2b-C5c", "witness", "2", "fs-records-s2b-c5c.pv", ""),
+	("s2b-C5c", "witness", "1", "fs-records-s2b-c5c.pv", ""),
 	("s2b-S4", "witness", "1", "fs-records-s2b-s4.pv", ""),
 	(
 		"s2b-C-RETAIN-C1",
@@ -21731,7 +21731,7 @@ const FS_S2B_TARGETS: [(&str, &str, &str, &str, &str); 16] = [
 	),
 ];
 
-const FS_EVENTS: [&str; 11] = [
+const FS_EVENTS: [&str; 12] = [
 	"event FsBeaconStarted(bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId).",
 	"event FsServerAccepted(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_RegistrationId, bitstring).",
 	"event FsServerReplayRejected(bitstring, bitstring, bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).",
@@ -21741,8 +21741,9 @@ const FS_EVENTS: [&str; 11] = [
 	"event FsBeaconFinishOpenedLater(bitstring, bitstring, nat).",
 	"event FsSent(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).",
 	"event FsReceived(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).",
+	"event FsReceivedFrame(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).",
 	"event FsFarAccepted(direction, bitstring, bitstring, key_id, bitstring, nat).",
-	"event FsReceiveRejected(direction, bitstring, bitstring, key_id, bitstring, nat).",
+	"event FsReceiveRejected(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).",
 ];
 
 /// Declarations copied verbatim from environment.pvl into the self-contained fs-common.pvl.
@@ -22300,7 +22301,23 @@ fn validate_fs_records_s2b(files: &FsFiles) -> Result<(), String> {
 	)?;
 	for (wanted, expected, label) in [
 		("event FsReceived(", 3, "accepted records"),
+		("event FsReceivedFrame(", 3, "accepted frames"),
+		(
+			"root, 2, plaintext ); event FsReceivedFrame( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 2, frame );",
+			2,
+			"accepted frames at position 2",
+		),
+		(
+			"root, 3, plaintext ); event FsReceivedFrame( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 3, frame );",
+			1,
+			"accepted frames at position 3",
+		),
 		("event FsReceiveRejected(", 4, "rejections at t <= T_max"),
+		(
+			"event FsReceiveRejected( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, t, frame );",
+			4,
+			"refused frames at t <= T_max",
+		),
 		("event FsFarAccepted(", 1, "far acceptance"),
 		(
 			"fs_s2b_failed_r(r, 2), fs_s2b_failed_cached_2(r, 2, cached_2) )",
@@ -22351,17 +22368,18 @@ fn validate_fs_records_s2b(files: &FsFiles) -> Result<(), String> {
 			"if response_server_identity = server_identity then",
 			"let associated_data = beaconcrypt_core__pqxdh__build_associated_data( server_identity, beacon_identity ) in",
 			"fs_seq(frame_t: nat), =SERVER_KEY_ID ) = initial_frame in if frame_t = 1 then",
-			"let registration_payload( =expected_binding, application_payload: bitstring ) = finish_plaintext in event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ); event FsReceived( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, finish_plaintext ); FsS2bRecv1( server_identity, beacon_identity, assigned_key_id, root, associated_data, ratchet_material(receive_chain_2), ratchet_material(receive_chain_3), receive_chain_4, 1, false )",
+			"let registration_payload( =expected_binding, application_payload: bitstring ) = finish_plaintext in event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ); event FsReceived( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, finish_plaintext ); event FsReceivedFrame( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, initial_frame ); FsS2bRecv1( server_identity, beacon_identity, assigned_key_id, root, associated_data, ratchet_material(receive_chain_2), ratchet_material(receive_chain_3), receive_chain_4, 1, false )",
 			"else if frame_t = 2 then",
 			"event FsBeaconFinishOpenedLater(server_identity, beacon_identity, 2); FsS2bFinishLater(",
 			"else if frame_t = 3 then",
 			"event FsBeaconFinishOpenedLater(server_identity, beacon_identity, 3); FsS2bFinishLater(",
 			"let FsRecordsS2bMain() = out(c, ed_public(SERVER_IDENTITY_SECRET)); ( (!(new obj: bitstring; FsS2bServer(obj))) | (!FsS2bBeacon()) ).",
 		],
-		"fs-records-s2b Rust-ordered process",
+		"fs-records-s2b process (Rust order except the v2 draw)",
 	)?;
 	for (wanted, expected, label) in [
 		("event FsReceived(", 1, "accepted records"),
+		("event FsReceivedFrame(", 1, "accepted frames"),
 		("event FsReceiveRejected(", 0, "rejections"),
 		("[precise]", 3, "attacker inputs"),
 	] {
@@ -22448,6 +22466,18 @@ fn validate_fs_checker(checker: &str, tests: &str) -> Result<(), String> {
 		(
 			"f\"fs-registration-k{self.bound}.pvl\",",
 			"fs-registration bound library",
+		),
+		(
+			"if len(mutants) != (1 if target.cls == \"control\" else 0):",
+			"fs mutant-count rule",
+		),
+		(
+			"TERMINATION_WARNING = \"Termination warning: \"",
+			"fs accepted termination warnings",
+		),
+		(
+			"if \"warning\" in line.lower() and not line.startswith(TERMINATION_WARNING):",
+			"fs rejection of every other warning",
 		),
 	] {
 		// The loader tuple is compared without whitespace; the other lines are exact.
@@ -23452,7 +23482,7 @@ fn free_schedule_records_s2b_model_is_pinned() {
 					"  in(c, bundle: bitstring) [precise];\n  new kem_coins: bitstring;\n",
 				);
 			}) as Box<dyn Fn(&mut FsFiles)>,
-			"fs-records-s2b Rust-ordered process changed",
+			"fs-records-s2b process (Rust order except the v2 draw) changed",
 		),
 		(
 			"sequence-one gate removed from the real gate library",
@@ -23504,6 +23534,39 @@ fn free_schedule_records_s2b_model_is_pinned() {
 			"fs-records-s2b receive step rejections at t <= T_max changed",
 		),
 		(
+			"refused frame dropped from a rejection",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.receive,
+					"            t,\n            frame\n",
+					"            t,\n            associated_data\n",
+				)
+			}),
+			"fs-records-s2b receive step refused frames at t <= T_max changed",
+		),
+		(
+			"accepted frame replaced by the plaintext",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.receive,
+					"            2,\n            frame\n",
+					"            2,\n            plaintext\n",
+				)
+			}),
+			"fs-records-s2b receive step accepted frames at position 2 changed",
+		),
+		(
+			"accepted frame of the finish dropped",
+			Box::new(|files: &mut FsFiles| {
+				replace_once(
+					&mut files.s2b,
+					"    event FsReceivedFrame(\n",
+					"    event FsReceivedFrameElsewhere(\n",
+				)
+			}),
+			"fs-records-s2b process (Rust order except the v2 draw) changed",
+		),
+		(
 			"far acceptance counted as a record",
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
@@ -23534,7 +23597,7 @@ fn free_schedule_records_s2b_model_is_pinned() {
 					"      receive_chain_3,\n      1,\n      false\n",
 				)
 			}),
-			"fs-records-s2b Rust-ordered process changed",
+			"fs-records-s2b process (Rust order except the v2 draw) changed",
 		),
 		(
 			"fresh tasking made adversary-known",
@@ -23636,6 +23699,26 @@ fn free_schedule_checker_loader_and_targets_are_pinned() {
 			"record default taskings switched",
 			"    taskings=TASKINGS,\n    inverted=False,\n):",
 			"    taskings=CHOSEN,\n    inverted=False,\n):",
+		),
+		(
+			"two mutants accepted on a security or witness target",
+			"if len(mutants) != (1 if target.cls == \"control\" else 0):",
+			"if (target.cls == \"control\") != (len(mutants) == 1):",
+		),
+		(
+			"every warning accepted",
+			"if \"warning\" in line.lower() and not line.startswith(TERMINATION_WARNING):",
+			"if False:",
+		),
+		(
+			"termination-warning prefix widened",
+			"TERMINATION_WARNING = \"Termination warning: \"",
+			"TERMINATION_WARNING = \"\"",
+		),
+		(
+			"replay witness moved back to K_r = 2",
+			"\"s2b-C5c\", \"witness\", 1,",
+			"\"s2b-C5c\", \"witness\", 2,",
 		),
 	] {
 		let mut changed = FS_CHECKER.to_owned();

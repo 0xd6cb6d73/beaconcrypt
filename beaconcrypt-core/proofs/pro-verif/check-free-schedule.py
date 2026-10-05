@@ -5,9 +5,9 @@
 Every target is one ProVerif process with one query, run serially. The checker
 requires the exact expected RESULT line or lines of the target's class, both in
 the primary output and in the verification summary. It rejects "cannot be
-proved", unknown or inconclusive results, unconfirmed traces, errors and
-warnings, and it requires exactly one reconstructed trace for every FALSE
-result. Classes: security (TRUE, counted as evidence), definitional (TRUE by
+proved", unknown or inconclusive results, unconfirmed traces, errors, and every
+warning except ProVerif's termination warnings (see TERMINATION_WARNING), and it
+requires exactly one reconstructed trace for every FALSE result. Classes: security (TRUE, counted as evidence), definitional (TRUE by
 construction, never counted), witness (FALSE with a trace: the event is
 reachable), control (a negative-control mutant: FALSE with a trace when the
 mutant breaks a claim, or TRUE without a trace for an inverted control, whose
@@ -114,8 +114,8 @@ S2B_C4 = "not event(FsFarAccepted(server_to_beacon,s,b,kid,root_2,t))"
 S2B_S1 = "event(FsSent(server_to_beacon,s,ed_public(k),kid,root_2,t,m)) && attacker(m) ==> attacker(k)"
 S2B_A3 = "not event(FsBeaconFinishOpenedLater(s,b,t))"
 S2B_C5A = "event(FsReceived(server_to_beacon,s,b,kid,root_2,3,m3))@i && event(FsReceived(server_to_beacon,s,b,kid,root_2,2,m2))@j ==> i > j"
-S2B_C5B = "event(FsReceiveRejected(server_to_beacon,s,b,kid,root_2,t))@i && event(FsReceived(server_to_beacon,s,b,kid,root_2,t,m))@j ==> i > j"
-S2B_C5C = "event(FsReceived(server_to_beacon,s,b,kid,root_2,t,m))@i && event(FsReceiveRejected(server_to_beacon,s,b,kid,root_2,t))@j ==> i > j"
+S2B_C5B = "event(FsReceiveRejected(server_to_beacon,s,b,kid,root_2,t,f))@i && event(FsReceived(server_to_beacon,s,b,kid,root_2,t,m))@j ==> i > j"
+S2B_C5C = "event(FsReceivedFrame(server_to_beacon,s,b,kid,root_2,t,f))@i && event(FsReceiveRejected(server_to_beacon,s,b,kid,root_2,t,f))@j ==> i > j"
 S2B_S4 = "not (event(FsSent(server_to_beacon,s,b,kid,root_2,2,m)) && attacker(m))"
 
 
@@ -290,7 +290,7 @@ TARGETS = (
         "s2b-C5b", "witness", 2, "fs-records-s2b-c5b.pv", [S2B_C5B + " is false."]
     ),
     records_s2b(
-        "s2b-C5c", "witness", 2, "fs-records-s2b-c5c.pv", [S2B_C5C + " is false."]
+        "s2b-C5c", "witness", 1, "fs-records-s2b-c5c.pv", [S2B_C5C + " is false."]
     ),
     records_s2b(
         "s2b-S4", "witness", 1, "fs-records-s2b-s4.pv", [S2B_S4 + " is false."]
@@ -345,6 +345,20 @@ FORBIDDEN = (
     "I could not confirm",
 )
 
+# ProVerif 2.05 starts every error line with "Error: " and every input, simplification
+# and lemma warning line with "Warning: "; the checker rejects both, and any other line
+# that mentions a warning. The one exception is the termination warning of the
+# resolution selection function (selfun.ml): ProVerif prints "Termination warning: ",
+# a clause and "Selecting <n>" when the only hypotheses it can select in that clause
+# are ones that a nounif declaration (the reviewed heuristic nx, or one that ProVerif
+# adds itself) or a match with the clause's conclusion marks as best avoided, so that
+# saturation might not terminate. The selection function only decides the order of
+# resolution and is not an assumption: such a line concerns whether saturation ends,
+# not the meaning of a verdict that ProVerif reports after saturation ended. A run
+# whose saturation does not end hits the timeout or the address-space cap and fails.
+# These lines are therefore accepted, in any number and for any target.
+TERMINATION_WARNING = "Termination warning: "
+
 
 def log_name(target):
     """The log file of one target; R1' and R1 must not share a log."""
@@ -397,7 +411,7 @@ def validate_targets(targets=TARGETS, directory=HERE):
             raise ValueError(f"{target.name}: unknown class {target.cls}")
         validate_scenario(target)
         mutants = [hook for hook in target.hooks if hook in MUTANTS]
-        if (target.cls == "control") != (len(mutants) == 1):
+        if len(mutants) != (1 if target.cls == "control" else 0):
             raise ValueError(
                 f"{target.name}: a control loads exactly one mutant, others none"
             )
@@ -438,6 +452,11 @@ def check_output(output, target):
             raise ValueError(f"{target.name}: ProVerif output contains '{word}'")
     if re.search(r"^(Error|Warning)", output, re.M):
         raise ValueError(f"{target.name}: ProVerif reported an error or warning")
+    for line in output.splitlines():
+        if "warning" in line.lower() and not line.startswith(TERMINATION_WARNING):
+            raise ValueError(
+                f"{target.name}: ProVerif reported a warning: {line[:120]}"
+            )
     if output.count("Verification summary:") != 1:
         raise ValueError(f"{target.name}: missing or duplicated verification summary")
     primary, summary = output.split("Verification summary:")

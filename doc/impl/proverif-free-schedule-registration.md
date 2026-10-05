@@ -28,7 +28,7 @@ Every Rust reading in this guide, and the Rust readings of all six security resu
 
 | File | Role |
 | --- | --- |
-| `beaconcrypt-core/proofs/pro-verif/fs-common.pvl` | Shared vocabulary of the fs family: the `fs_kid` and `fs_seq` bridges, five declarations copied verbatim from `environment.pvl`, the empty-slot and build constants, all eleven fs events with their meaning, and the heuristic nx |
+| `beaconcrypt-core/proofs/pro-verif/fs-common.pvl` | Shared vocabulary of the fs family: the `fs_kid` and `fs_seq` bridges, five declarations copied verbatim from `environment.pvl`, the empty-slot and build constants, all eleven fs events of P1 with their meaning (P2 later added `FsReceivedFrame` and the frame field of `FsReceiveRejected`), and the heuristic nx |
 | `fs-registration.pvl` | The Server object step macro `FS_REG_STEP`, the stop process and the honest Beacon, with one `@beaconcrypt-fs-fidelity` citation per step |
 | `fs-registration-consumed.pvl`, `fs-control-nocheck.pvl` | The consumed-set test, and its negative control C-NOCHECK |
 | `fs-registration-binding.pvl`, `fs-control-uks.pvl` | How the root input and associated data bind the Beacon identity, and the negative control C-UKS |
@@ -43,17 +43,17 @@ Every Rust reading in this guide, and the Rust readings of all six security resu
 
 ## Running
 
-The fs group needs the machine to itself: each target may take up to 1800 s and a 10 GiB address space, and one pass takes about 45 minutes. Inside the locked proof shell, run:
+The fs group needs the machine to itself: each target may take up to 1800 s and a 10 GiB address space. In P1 the group held only fs-registration and one pass took about 45 minutes; since stage P2 it also holds the Server-to-Beacon record scenario, and one pass of the whole group takes about two hours (the [records guide](proverif-free-schedule-records.md#results-of-the-serial-verification-pass) records the current pass). Inside the locked proof shell, run:
 
 ```sh
 make -C beaconcrypt-core check-proverif-fs
 ```
 
-It runs the transcript-fidelity test, the checker regression test and then every fs-registration target, one ProVerif process at a time. The checker applies the per-target timeout and the address-space limit (the equivalent of `ulimit -v`) to each ProVerif process itself and prints the time and peak resident memory of each run. Without a log directory the checker writes the ProVerif logs into a temporary directory `beaconcrypt-fs-logs-*` under `$TMPDIR`: it removes the directory after a successful run, and after a failure it keeps it, names the failing target's log in every error message and prints the directory. `make -C beaconcrypt-core check-proverif-fs PROVERIF_FS_LOG_DIR=<dir>` keeps the log of every target in `<dir>`. To run the checker directly, for one target or with kept logs and a TSV of times:
+It runs the transcript-fidelity test, then the checker regression test and every fs-registration target, then the checker regression test again and every fs-records-s2b target, one ProVerif process at a time. `make -C beaconcrypt-core check-proverif-fs-registration` runs the fs-registration targets alone (about 47 minutes in the latest pass). The checker applies the per-target timeout and the address-space limit (the equivalent of `ulimit -v`) to each ProVerif process itself and prints the time and peak resident memory of each run. Without a log directory the checker writes the ProVerif logs into a temporary directory `beaconcrypt-fs-logs-*` under `$TMPDIR`: it removes the directory after a successful run, and after a failure it keeps it, names the failing target's log in every error message and prints the directory. `make -C beaconcrypt-core check-proverif-fs PROVERIF_FS_LOG_DIR=<dir>` keeps the log of every target in `<dir>`. To run the checker directly, for one target or with kept logs and a TSV of times:
 
 ```sh
-python3 beaconcrypt-core/proofs/pro-verif/check-free-schedule.py --list
-python3 beaconcrypt-core/proofs/pro-verif/check-free-schedule.py --only A1 --log-dir /tmp/fs-logs --results /tmp/fs-results.tsv --timeout 1800 --address-space-kib 10485760
+python3 beaconcrypt-core/proofs/pro-verif/check-free-schedule.py --scenario fs-registration --list
+python3 beaconcrypt-core/proofs/pro-verif/check-free-schedule.py --scenario fs-registration --only A1 --log-dir /tmp/fs-logs --results /tmp/fs-results.tsv --timeout 1800 --address-space-kib 10485760
 ```
 
 On a shared machine, run the fs group only when no other ProVerif, Lean or Rust build uses the memory, and never together with the parallel `check-proverif` roster.
@@ -216,7 +216,7 @@ This section describes the gates as P1 added them. Stage P2 added the Server-to-
 - **W3 is added** as the witness that attacker identities are served.
 - **No all-zero check** in the model under `crypto.pvl` (step 3 above).
 - **`verify-proverif-in-shell` also runs the fs group**, so that the ProVerif-only recipe checks every ProVerif result.
-- **No CI target.** The fs group needs a 10 GiB address space per run and about 45 minutes per pass; it is not added to the GitHub workflow.
+- **No CI target.** The fs group needs a 10 GiB address space per run and took about 45 minutes per pass in P1 (about two hours since P2 added the record scenario); it is not added to the GitHub workflow.
 - **P1 ran before the L6 review.** The plan's precondition for P1 and G0 section 10 item 8 ask for a review of the L6 event-meaning draft before P1, at least of its items 1-4. By orchestrator decision of 2026-10-04, P1 went ahead with the P0 draft (scratch `/tmp/bc-arc-scratch/pv-work/p0/l6/event-meaning.md`) not separately reviewed, following G0 item 8 only in part: the draft's items 1-4 were applied in P1, the allocation meaning of `FsSent` and the witness-only event `FsReceiveRejected` in `fs-common.pvl`, A2 and R1' left free of the Beacon pin, and, for registration, authentication recorded as shown for fresh application payloads (step 6; item 4 for the record scenarios is an open item below). The P1 fidelity review checked the fs events against the Rust code. A separate L6 review is scheduled at the start of P2, before any record claim relies on it. The draft is now committed as [the fs event-meaning reference](../proverif-fs-event-meaning.md), with every citation re-checked at `9e588c6` and the corrections listed in [its change record](../proverif-fs-event-meaning.md#changes-from-the-p0-draft). The separate review was made at the start of P2 and its findings are applied there ([review record](../proverif-fs-event-meaning.md#review-record)).
 
 ## Open items for P2

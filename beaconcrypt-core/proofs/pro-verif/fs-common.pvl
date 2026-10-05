@@ -102,7 +102,8 @@ fun fs_build(): bitstring [data].
 
    Failure-cause events (FsServerReplayRejected, FsServerAcceptFailed,
    FsBeaconFinishOpenedLater, FsReceiveRejected) are finer than the Rust
-   outcome, which is the same None for every failure.  They are used only by
+   outcome, which is the same None for every failure.  They, and the
+   frame-carrying twin FsReceivedFrame of FsReceived, are used only by
    witnesses, definitional checks and negative controls, never by security
    results. *)
 
@@ -194,15 +195,22 @@ event FsSent(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring)
    plaintext m (for t = 1 at the finish: emitted when the finish commits). *)
 event FsReceived(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).
 
+(* Witnesses only (record scenarios): emitted together with every FsReceived,
+   with the same fields except that the last one is the accepted frame (the
+   call argument) instead of the plaintext.  It lets a witness say which
+   frame was accepted. *)
+event FsReceivedFrame(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).
+
 (* Record scenarios only: the far-target branch (t > T_max) opened a frame;
    the receive worker stops afterwards. *)
 event FsFarAccepted(direction, bitstring, bitstring, key_id, bitstring, nat).
 
 (* Witnesses and controls only (record scenarios): a parsed frame with the
    expected sender whose receive attempt returned None with the entry state
-   preserved.  A record scenario may emit it only in some rejection
-   branches; its documentation names them. *)
-event FsReceiveRejected(direction, bitstring, bitstring, key_id, bitstring, nat).
+   preserved; the last field is that frame (the call argument).  A record
+   scenario may emit it only in some rejection branches; its documentation
+   names them. *)
+event FsReceiveRejected(direction, bitstring, bitstring, key_id, bitstring, nat, bitstring).
 
 (**************************************************************************)
 (* Resolution heuristic                                                   *)

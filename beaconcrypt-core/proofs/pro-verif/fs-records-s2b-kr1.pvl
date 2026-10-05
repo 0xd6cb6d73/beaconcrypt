@@ -2,5 +2,7 @@
 
 (* fs-records-s2b bound K_r = 1: one attacker-scheduled Beacon receive
    attempt after the finish.  Used for the witnesses and the control that
-   need no later receive (A3, S4, C-NOGATE). *)
+   need no later receive (A3, S4, C-NOGATE) and for the replay-rejected
+   witness C5c, whose replayed frame is the response frame that the finish
+   accepted. *)
 expand FS_S2B_RECV_STEP(FsS2bRecv1, FsS2bRecvStop).

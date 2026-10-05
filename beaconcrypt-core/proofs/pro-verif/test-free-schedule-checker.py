@@ -136,9 +136,27 @@ class ReceiptTests(unittest.TestCase):
 
     def test_errors_and_warnings_are_rejected(self):
         each = target("W2")
-        for line in ("Error: something\n", "Warning: something\n"):
+        for line in (
+            "Error: something\n",
+            "Warning: something\n",
+            'File "x.pvl", line 3, characters 1-2:\nWarning: identifier x rebound.\n',
+            "  Warning: indented\n",
+            "Another warning: a new class\n",
+            "Termination  warning: not the ProVerif prefix\n",
+        ):
             with self.assertRaises(ValueError):
                 CHECKER.check_output(line + receipt(each), each)
+
+    def test_termination_warnings_are_accepted(self):
+        lines = (
+            "Termination warning: attacker(x) && mess(c[],x) -> attacker(app_prefix)\n"
+            "Selecting 2\n"
+            "Termination warning: Selecting an hypothesis matching the conclusion.\n"
+            "In case of non-termination, try a noselect declaration implying the following one:\n"
+        )
+        for name in ("s2b-A2", "s2b-S1", "s2b-C5c", "R4"):
+            each = target(name)
+            CHECKER.check_output(lines + receipt(each), each)
 
     def test_record_targets_need_their_exact_lines(self):
         for name in ("s2b-C1", "s2b-C5b", "s2b-C-RETAIN-C1", "s2b-C-NOGATE"):
@@ -235,7 +253,7 @@ class ManifestTests(unittest.TestCase):
                 "s2b-A3": 1,
                 "s2b-C5a": 2,
                 "s2b-C5b": 2,
-                "s2b-C5c": 2,
+                "s2b-C5c": 1,
                 "s2b-S4": 1,
                 "s2b-C-RETAIN-C1": 3,
                 "s2b-C-RETAIN-C3": 3,
@@ -270,6 +288,23 @@ class ManifestTests(unittest.TestCase):
     def test_security_cannot_load_a_mutant(self):
         self.mutated("R1", hooks=(CHECKER.NOCHECK, CHECKER.BINDING))
         self.mutated("s2b-C1", hooks=(CHECKER.RETAIN, CHECKER.GATE, CHECKER.CHOSEN))
+
+    def test_two_mutants_are_rejected(self):
+        self.mutated("A1", hooks=(CHECKER.NOCHECK, CHECKER.UKS))
+        self.mutated("R3", hooks=(CHECKER.NOCHECK, CHECKER.UKS))
+        self.mutated("C-UKS", hooks=(CHECKER.NOCHECK, CHECKER.UKS))
+        self.mutated("s2b-C1", hooks=(CHECKER.RETAIN, CHECKER.NOGATE, CHECKER.CHOSEN))
+        self.mutated("s2b-A1", hooks=(CHECKER.STALE, CHECKER.NOGATE, CHECKER.CHOSEN))
+        self.mutated(
+            "s2b-C5b", hooks=(CHECKER.FAILMUT, CHECKER.NOGATE, CHECKER.TASKINGS)
+        )
+        self.mutated(
+            "s2b-C-NOGATE", hooks=(CHECKER.RETAIN, CHECKER.NOGATE, CHECKER.TASKINGS)
+        )
+
+    def test_witness_cannot_load_a_mutant(self):
+        self.mutated("W1", hooks=(CHECKER.NOCHECK, CHECKER.BINDING))
+        self.mutated("s2b-C5c", hooks=(CHECKER.RETAIN, CHECKER.GATE, CHECKER.TASKINGS))
 
     def test_control_needs_its_mutant(self):
         self.mutated("C-UKS", hooks=(CHECKER.CONSUMED, CHECKER.BINDING))

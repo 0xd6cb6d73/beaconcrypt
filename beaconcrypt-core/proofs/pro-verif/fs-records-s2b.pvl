@@ -31,9 +31,10 @@
    Model steps (justified in doc/impl/proverif-free-schedule-records.md):
    - Early fresh Server coins (v2): the Server ephemeral secret and the KEM
      coins are drawn when the object starts rather than at server.rs:368
-     and :373.  With one bundle per object their values are unobservable
-     until the response is output, and a failed accept discards them in
-     both orders (argument E20, written in the guide, not yet reviewed).
+     and :373.  With one bundle per object neither name is used before the
+     point where Rust draws it or output before the response, and a failed
+     accept discards them in both orders (argument E20, written in the
+     guide, not yet reviewed).
    - The direction split: no Beacon send worker and no Server receive
      worker (argument E19, written in the guide, not yet reviewed).
    - The far branch: a frame above T_max is opened with material derived
@@ -48,7 +49,8 @@
    - All the Server's own frames carry the sender SERVER_KEY_ID, and every
      peer gets the key ID fs_kid(1) (one build per object). *)
 
-(* One Server object: one registration in Rust order, the response build on
+(* One Server object: one registration in Rust order except for the early
+   draw of the ephemeral secret and the KEM coins (v2), the response build on
    an attacker-chosen input, then the taskings to the installed peer. *)
 let FsS2bServer(obj: bitstring) =
   let server_identity = ed_public(SERVER_IDENTITY_SECRET) in
@@ -338,6 +340,15 @@ let FsS2bBeacon() =
       root,
       1,
       finish_plaintext
+    );
+    event FsReceivedFrame(
+      server_to_beacon(),
+      server_identity,
+      beacon_identity,
+      assigned_key_id,
+      root,
+      1,
+      initial_frame
     );
     (* Established with receive sequence 1 and an empty cache. *)
     FsS2bRecv1(
