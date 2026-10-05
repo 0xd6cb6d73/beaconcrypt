@@ -1,0 +1,237 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.PqxdhRegistrationR1Initial
+
+/-! The actual raw constructor surface for a single allocated registration owner. Runtime initialization refusal remains an explicit outcome, and the public continuation retains missing-owner replies after rejected creation. Like Rust's `Beacon::try_new`, the scheduler model's pin parse checks only the 32-byte width, so the actual public identity always parses; see `parse_public`. -/
+
+open OracleComp OracleSpec CoreModels Aeneas
+open Aeneas.Std hiding namespace core alloc
+open RustM beaconcrypt_core PqxdhRefinement
+set_option autoImplicit false
+namespace BeaconcryptCore.Computational.PqxdhRegistrationR1Surface
+open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAuthNative
+open PqxdhRegistrationR1Restriction PqxdhRegistrationR1Initial
+open PqxdhRegistrationSchedule (SurfaceSpec SurfaceRequest IsConstructor)
+variable {ι KemSK Reader Response Result A : Type} {baseSpec : OracleSpec ι}
+
+/-- The restricted public suffix uses exactly the seven original API capabilities, with its finish routed to the single attempted owner address. -/
+def surfaceRoute : QueryImpl ServerAuthSpec (OracleComp SurfaceSpec)
+  | .inl coin => SurfaceSpec.query (.inl coin)
+  | .inr (.accept raw) => SurfaceSpec.query (.inr (.call ⟨.accept raw, by simp [IsConstructor]⟩))
+  | .inr (.build index payload) =>
+      SurfaceSpec.query (.inr (.call ⟨.build index payload, by simp [IsConstructor]⟩))
+  | .inr (.finish raw) => SurfaceSpec.query (.inr (.call ⟨.finish 0 raw, by simp [IsConstructor]⟩))
+  | .inr (.hmac key bytes) => SurfaceSpec.query (.inr (.call ⟨.hmac key bytes, by simp [IsConstructor]⟩))
+  | .inr (.hash bytes) => SurfaceSpec.query (.inr (.call ⟨.hash bytes, by simp [IsConstructor]⟩))
+  | .inr (.reveal index) => SurfaceSpec.query (.inr (.call ⟨.reveal index, by simp [IsConstructor]⟩))
+
+/-- Every suffix request runs the unchanged protocol callback and retains the separate runtime state. No initialization or creation query is smuggled into this restriction. -/
+theorem route_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (ensureInit : StateT A ProbComp Bool) (query : ServerAuthSpec.Domain) :
+    simulateQ (PqxdhRegistrationSchedule.surfaceHandler setup codec checks serverSeed ensureInit)
+      (surfaceRoute query) =
+    PqxdhRegistrationSchedule.onProtocol
+      (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks serverSeed) (route query)) := by
+  rcases query with coin | request
+  · simp only [surfaceRoute, route, simulateQ_spec_query, PqxdhRegistrationSchedule.surfaceHandler]
+  · cases request <;> simp only [surfaceRoute, route, simulateQ_spec_query, PqxdhRegistrationSchedule.surfaceHandler]
+
+
+set_option backward.isDefEq.respectTransparency false in
+/-- Every adaptive restricted suffix preserves the exact runtime coordinate and complete public reply/protocol state distribution. -/
+theorem route_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (ensureInit : StateT A ProbComp Bool)
+    (work : OracleComp ServerAuthSpec Result) (runtime : A) (state : PqxdhRegistrationSchedule.State KemSK) :
+    (simulateQ (PqxdhRegistrationSchedule.surfaceHandler setup codec checks serverSeed ensureInit)
+      (simulateQ surfaceRoute work)).run (runtime, state) =
+    (fun result => (result.1, runtime, result.2)) <$>
+      (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks serverSeed)
+        (simulateQ route work)).run state := by
+  induction work using OracleComp.inductionOn generalizing state with
+  | pure value => simp only [simulateQ_pure, StateT.run_pure, map_pure]
+  | query_bind query next ih =>
+      simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, route_source, map_bind]
+      simp only [StateT.run, PqxdhRegistrationSchedule.onProtocol, bind_map_left]
+      exact bind_congr fun reply => ih reply.1 reply.2
+
+
+/-- One actual raw creation and one actual bundle precede the restricted continuation. A rejected creation still leaves the subsequent missing-owner bundle/finish requests in the execution. -/
+def program (identity : PublicIdentity) (sender : Std.U64)
+    (work : AuthInput → OracleComp ServerAuthSpec Result) : OracleComp SurfaceSpec Result := do
+  let _ ← SurfaceSpec.query (.inr (.create identity.ed25519.toList sender))
+  let published ← SurfaceSpec.query (.inr (.call ⟨.bundle 0, by simp [IsConstructor]⟩))
+  simulateQ surfaceRoute (work ⟨identity, sender, published, none⟩)
+
+set_option backward.isDefEq.respectTransparency false in
+/-- Complete raw creation, optional bundle and adaptive source continuation, including the runtime poststate of rejected creation. -/
+theorem program_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (ensureInit : StateT A ProbComp Bool) (identity : PublicIdentity)
+    (sender : Std.U64) (work : AuthInput → OracleComp ServerAuthSpec Result)
+    (runtime : A) (state : PqxdhRegistrationSchedule.State KemSK) :
+    (simulateQ (PqxdhRegistrationSchedule.surfaceHandler setup codec checks serverSeed ensureInit)
+      (program identity sender work)).run (runtime, state) =
+    (do
+      let created ← (PqxdhRegistrationSchedule.rawCreate setup checks ensureInit identity.ed25519.toList sender).run
+        (runtime, state)
+      (fun result => (result.1, created.2.1, result.2)) <$> (do
+        let published ← (PqxdhRegistrationSchedule.bundle setup codec 0).run created.2.2
+        (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks serverSeed)
+          (simulateQ route (work ⟨identity, sender, published.1, none⟩))).run published.2)) := by
+  simp only [program, simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
+    PqxdhRegistrationSchedule.surfaceHandler, PqxdhRegistrationSchedule.handler]
+  refine bind_congr fun created => ?_
+  rw [show (PqxdhRegistrationSchedule.onProtocol
+    (PqxdhRegistrationSchedule.bundle setup codec 0)).run created.2 =
+    (fun result => (result.1, created.2.1, result.2)) <$>
+      (PqxdhRegistrationSchedule.bundle setup codec 0).run created.2.2 from rfl]
+  simp only [bind_map_left, route_program, map_bind]
+
+
+/-- A real public identity has exactly 32 bytes, so the scheduler model's pin parse, which like Rust's `Beacon::try_new` checks only the length, always accepts it. -/
+theorem parse_public (checks : Checks) (identity : PqxdhEd25519EufCma.Ed25519PublicKey) :
+    PqxdhRegistrationSchedule.parsePin checks identity.toList =
+      some (PqxdhRootTableInitialization.rootArray identity) := by
+  simp [PqxdhRegistrationSchedule.parsePin, toWord32]
+
+
+/-- The actual optional bundle and original restricted suffix, retaining every native outcome and poststate. -/
+noncomputable def tail (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (work : Option Pqxdh.Bytes → OracleComp ServerAuthSpec Result)
+    (state : PqxdhRegistrationSchedule.State KemSK) : ProbComp (Result × PqxdhRegistrationSchedule.State KemSK) := do
+  let published ← (PqxdhRegistrationSchedule.bundle setup codec 0).run state
+  (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks serverSeed)
+    (simulateQ route (work published.1))).run published.2
+
+/-- This private classification distinguishes actual constructor rejection from an actually allocated source owner. It is never an admission test. -/
+inductive PrefixOutcome (KemSK Result : Type) where
+  | rejected (result : Result × PqxdhRegistrationSchedule.State KemSK)
+  | created (audit : PqxdhRegistrationR1Initial.Audit KemSK Result)
+
+/-- Project a prefix outcome to the scheduler's public result and protocol state. Only the ghost/family histories are erased (`eraseShared` after refusal, `eraseObservers` inside `observe` after creation); the result, Server, owner slot, pending/control state and both primitive caches are retained. After creation the private audit witness fields (`material`, `oneTime`, `published`) are themselves dropped: `singleton` receives the seed, prekey and KEM public key of `material` explicitly, the shared compatibility Beacon slot is the supplied `compatibility` argument (installed by `withBeacon`) rather than a value of the native state, and every other owner value is observed in the erased native state's Beacon, namely its identity key ID, Server identity, raw attempts and phase, where `phaseValue` maps the `.inl ()` scalar handle to the supplied prekey, keeps stored scalar bytes such as the one-time scalar, and pairs the supplied KEM public key with the phase's own KEM secret key. -/
+def observePrefix (compatibility : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK) :
+    PrefixOutcome KemSK Result → Result × PqxdhRegistrationSchedule.State KemSK
+  | .rejected result => (result.1, eraseShared result.2)
+  | .created audit => observe compatibility audit
+
+/-- The same second initialization call gates the source-ordered audit; the scheduler model's 32-byte pin parse always accepts the actual public identity (`parse_public`), as Rust's length-only `Beacon::try_new` does. Creation refused by initialization retains its entire missing-owner continuation and draws no Beacon material. The returned runtime is the one after the second initialization call, which the restricted suffix leaves unchanged. -/
+noncomputable def prefixAudit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (origin : PqxdhLiveServerConstruction.Origin)
+    (ensureInit : StateT A ProbComp Bool) (work : AuthInput → OracleComp ServerAuthSpec Result) (runtime : A) :
+    ProbComp (PrefixOutcome KemSK Result × A) := do
+  let initialized ← ensureInit.run runtime
+  let publicIdentity := setup.joint.publicKeys serverSeed
+  let continuation := fun published => work ⟨publicIdentity, setup.serverKeyId, published, none⟩
+  let rejected := (fun result => (PrefixOutcome.rejected result, initialized.2)) <$>
+    tail setup codec checks serverSeed continuation (PqxdhRegistrationSchedule.initial
+      (PqxdhLiveServerConstruction.initialized setup.joint 0 setup.serverKeyId origin serverSeed))
+  if initialized.1 then
+    (fun audit => (PrefixOutcome.created audit, initialized.2)) <$>
+      audited setup codec checks serverSeed continuation
+  else rejected
+
+set_option backward.isDefEq.respectTransparency false in
+/-- The whole actual raw-surface prefix has this unconditioned audited distribution, including initialization failures (the actual public identity always passes the 32-byte pin parse) and complete runtime state. -/
+theorem initial_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (origin : PqxdhLiveServerConstruction.Origin)
+    (ensureInit : StateT A ProbComp Bool) (work : AuthInput → OracleComp ServerAuthSpec Result) (runtime : A) :
+    (fun result => (result.1, result.2.1, eraseShared result.2.2)) <$>
+      PqxdhRegistrationSchedule.surfaceExecute setup codec checks ensureInit
+        (fun identity sender => program identity sender work)
+        (PqxdhLiveServerConstruction.initialized setup.joint 0 setup.serverKeyId origin serverSeed) runtime =
+    (fun result => ((observePrefix (PqxdhRegistrationSchedule.bookkeeping
+        (PqxdhLiveServerConstruction.initialized setup.joint 0 setup.serverKeyId origin serverSeed)) result.1).1,
+      result.2, (observePrefix (PqxdhRegistrationSchedule.bookkeeping
+        (PqxdhLiveServerConstruction.initialized setup.joint 0 setup.serverKeyId origin serverSeed)) result.1).2)) <$>
+      prefixAudit setup codec checks serverSeed origin ensureInit work runtime := by
+  rw [PqxdhRegistrationSchedule.surfaceExecute, program_run]
+  simp only [prefixAudit, PqxdhRegistrationSchedule.rawCreate, StateT.run, map_bind, bind_assoc]
+  refine bind_congr fun initialized => ?_
+  rcases initialized with ⟨_ | _, afterRuntime⟩
+  all_goals simp only [Bool.false_eq_true, ite_false, ite_true, pure_bind, Functor.map_map]
+  all_goals first | rfl | rw [parse_public]
+  dsimp only [PqxdhLiveServerConstruction.initialized]
+  simp only [bind_map_left, observePrefix]
+  simpa only [map_bind, Functor.map_map, StateT.run, PqxdhLiveServerConstruction.initialized,
+    Prod.map, Function.comp_def, id_eq] using
+    congrArg (fun computation => (fun result => (result.1, afterRuntime, result.2)) <$> computation)
+      (typed_audit setup codec checks serverSeed origin
+        (fun published => work ⟨setup.joint.publicKeys serverSeed, setup.serverKeyId, published, none⟩))
+
+
+
+/-- Both real initialization calls and supplied/generated Server creation precede the private source classification. No skipped Beacon draw is introduced on a refusal branch. The output has exactly one runtime coordinate, the final runtime: the runtime after construction is only the input of the second initialization call, and on Server-constructor refusal (`construct` returns `none`) the final runtime is that post-construction runtime. -/
+noncomputable def auditedExperiment (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
+    (work : AuthInput → OracleComp ServerAuthSpec Result) (runtime : A) :
+    ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × PrefixOutcome KemSK Result) × A) := do
+  let started ← (PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit 0 setup.serverKeyId supplied).run runtime
+  match started.1 with
+  | none => pure (none, started.2)
+  | some created =>
+      (fun (result : PrefixOutcome KemSK Result × A) => (some (created, result.1), result.2)) <$>
+        (prefixAudit setup codec checks created.seed created.origin ensureInit work started.2)
+
+/-- Erase only the ghost/family histories (`eraseShared`) of the scheduler experiment's final protocol state, retaining the constructor value, the public result, every operational protocol field and the final runtime. -/
+def eraseExperiment (result : Option (PqxdhLiveServerConstruction.Created Unit ×
+    (Result × PqxdhRegistrationSchedule.State KemSK)) × A) :=
+  (result.1.map (fun entry => (entry.1, entry.2.1, eraseShared entry.2.2)), result.2)
+
+/-- Observe each audited outcome through `observePrefix` at the constructor's compatibility slot: only the ghost/family histories are erased (`eraseShared`/`eraseObservers`) and the private audit witness is projected away, while the constructor value, the public result, the operational protocol state and the final runtime are retained. -/
+def observeExperiment (result : Option (PqxdhLiveServerConstruction.Created Unit ×
+    PrefixOutcome KemSK Result) × A) :=
+  (result.1.map (fun entry => (entry.1,
+    observePrefix (PqxdhRegistrationSchedule.bookkeeping entry.1) entry.2)), result.2)
+
+/-- Exact full raw-surface singleton experiment, with real initialization and source seed classification. Every actual public result, protocol/cache state and the final runtime state are retained by the same-execution audit; no constructor-success or generated-seed premise is supplied. -/
+theorem experiment_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
+    (work : AuthInput → OracleComp ServerAuthSpec Result) (runtime : A) :
+    eraseExperiment <$> PqxdhRegistrationSchedule.surfaceExperiment setup codec checks ensureInit supplied
+      (fun identity sender => program identity sender work) runtime =
+    observeExperiment <$> auditedExperiment setup codec checks ensureInit supplied work runtime := by
+  simp only [PqxdhRegistrationSchedule.surfaceExperiment, auditedExperiment, map_bind]
+  apply OracleComp.bind_congr_of_forall_mem_support
+  rintro ⟨_ | created, afterRuntime⟩ supported
+  all_goals simp only [map_pure, Functor.map_map, eraseExperiment, observeExperiment, Option.map_none, Option.map_some]
+  obtain ⟨seed, rfl, -⟩ := PqxdhLiveServerConstruction.construct_origin setup.joint ensureInit 0
+    setup.serverKeyId supplied runtime afterRuntime created supported
+  have lifted := congrArg (fun computation => (fun result =>
+      (some (PqxdhLiveServerConstruction.initialized (P := Unit) setup.joint 0 setup.serverKeyId
+        (if supplied.isNone then .generated else .imported) seed, result.1, result.2.2), result.2.1)) <$>
+        computation)
+    (initial_audit setup codec checks seed (if supplied.isNone then .generated else .imported)
+      ensureInit work afterRuntime)
+  simp only [Functor.map_map] at lifted
+  exact lifted
+
+end BeaconcryptCore.Computational.PqxdhRegistrationR1Surface
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.route_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.route_source
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.route_program' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.route_program
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.program_run' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.program_run
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.parse_public' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.parse_public
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.initial_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.initial_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.experiment_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.experiment_audit

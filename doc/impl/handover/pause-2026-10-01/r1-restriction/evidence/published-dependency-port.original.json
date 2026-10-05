@@ -1,0 +1,16 @@
+{
+  "worktree": "/tmp/beaconcrypt-registration-r1-common-restriction",
+  "base": "ae279d74102240965d0ca39e70e97f3aecde0562",
+  "source_commit": "59fbc698bde476943c4565444f42995a6f21d292",
+  "creation_commit": "22580c5422f0c6988e9d2a3f86ba21738c8925ab",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointCreation.lean": "c1f6e9726dedca29aef2a7f60a556175c90b9ba16c152ec5100e614b6f384c10",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBundle.lean": "a122a40926294a71d72f24c255a3dab3c2b8df9c5490f5518d1465f0f8baabdf",
+    "doc/impl/registration-joint-creation.md": "f7364e5118a8068b044a3d7fbba9561b27cb740742590dac1b959a8b27d6d579",
+    "doc/impl/registration-joint-bundle.md": "a47c076102312942847d691eaf309f88dd0511a28403528b2d7ba118789bf272",
+    "doc/formal-verification-analysis.md": "6a70dcb5d930fe9b42904f07c93ade869473d4d8630e0c9a0948a392cdb92f83"
+  },
+  "analysis_prior_sha256": "3b69a369722e442892d5e3a0f2c6593943c0beb149293e91c16e34444204d574",
+  "analysis_append_sha256": "9165e8213008932ff6baeb1e797f12e030bd6a735c1b566f0f725b098e4050c7",
+  "scope": "Exact published dependency port only. Two local R1 WIP modules are excluded; no central metadata change."
+}

@@ -1,0 +1,4 @@
+import BeaconcryptCore.Computational.PqxdhRegistrationR1Surface
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.experiment_audit' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Surface.experiment_audit

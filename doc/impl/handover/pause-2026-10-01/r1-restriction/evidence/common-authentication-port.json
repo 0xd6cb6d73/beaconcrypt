@@ -1,0 +1,1211 @@
+{
+  "source_commit": "adabe9af29a9793400e1465e62989770482bde9d",
+  "entrypoints": [
+    "PqxdhServerAuthCommonAuthentication",
+    "PqxdhServerAuthRootObserved"
+  ],
+  "ported_count": 109,
+  "ported": [
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationTrace",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationTrace.lean",
+      "sha256": "8f3c17c7485c78306570a989ea64f49c7c603467b6634cec9caa1dcca39f3182",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationTrace.olean",
+        "sha256": "7a89ecc8e22fa0ce12f9409cdffcc3c85ef95204ab3d27d9c47dda9cf58ae6a3",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationTrace.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationCutoff",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationCutoff.lean",
+      "sha256": "8d33b9bbf09ab571c02b53f7b4f5719a8fb8415c3dcb4aba585b606670c85e00",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationCutoff.olean",
+        "sha256": "e6bf5c454ffc58b80d7f4594fca42c8252948834c8612ae470ba85a8df58e06d",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationCutoff.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxHandler",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxHandler.lean",
+      "sha256": "8737d6685209c59ee63b0f3718b1363713bc5b186eeb6f8d8b69b1db2f64c821",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxHandler.olean",
+        "sha256": "11d530a3eb8f448cc2994a85fccb5af3a5d9e156ddd3482ec1800e2d7a257e44",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxHandler.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxStateBounds",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxStateBounds.lean",
+      "sha256": "e2b5e3d16b62151b7287399649859e42b2bb6093037426a0025e0a985aadf448",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxStateBounds.olean",
+        "sha256": "d62ba27e1583da4a26be7bf606e0747f58c730199ddf91d68056656a521b4912",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxStateBounds.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxHandlerBounds",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxHandlerBounds.lean",
+      "sha256": "e05c1d118447cc54d832c2c532e87c4e6e263dd11107358aa45ef1684fba989d",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxHandlerBounds.olean",
+        "sha256": "2f9c38a43f18a3996ab6e8d1d5d80be146635d1359ac2f19db88e1eaf417f172",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxHandlerBounds.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxReserve",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxReserve.lean",
+      "sha256": "03c28b14333a985e5f145233647b64f62d71e4d39b8c0731403c341cad232c20",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxReserve.olean",
+        "sha256": "6c27122c1e3c51cf5f432a38686293a9f819dc4b3a3a64349a80fa980c7000c9",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxReserve.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxExperiment",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxExperiment.lean",
+      "sha256": "fc5f53214a9717f66e8ddaff60b7c6e406c4efd28ef3b84889d25825b4facceb",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxExperiment.olean",
+        "sha256": "1fe8c62d3ed1c6f00c6a3662b29d13ecd21f18383848db38b9c16fa3dc627617",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxExperiment.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxByteBounds",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxByteBounds.lean",
+      "sha256": "3a702adeba4f58fea7476cfab8b5126b758faa07d6d131d46691a90fc4f6286e",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxByteBounds.olean",
+        "sha256": "adf009a1cc1a5fc794efbeeb88ac83cf55c2581880f322576e4d26371c1db575",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxByteBounds.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxResources",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxResources.lean",
+      "sha256": "05e361085c448a8971189239a5df67332398a76eb5ea430f5114af6c2bd56feb",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxResources.olean",
+        "sha256": "aff9352eb8ca28b5e72f9acae155d848efbb06cb29382b8828056c9b876f9d89",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxResources.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationHandler",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationHandler.lean",
+      "sha256": "d6d5d1fca44a7600001c5ac5ed5c679fa2d8b13cd1b5748f41898372ddfa246f",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationHandler.olean",
+        "sha256": "74b0eb2cc9619b5ea286ff1c160eb7455fd195f3c4aa1c3b080c8401f6a8d4a7",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationHandler.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationSealHistory",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationSealHistory.lean",
+      "sha256": "b89d9e4b7b84bf6d7a92bac904ab5a08f9c04fa6fa709331c38d08af42316c27",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationSealHistory.olean",
+        "sha256": "f468be7c62b30ce089a893456e0f19b0ebf1d5b54518f81d7b866e47f2e606a2",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationSealHistory.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationWriter",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationWriter.lean",
+      "sha256": "0460ba6f5be22a6d9485e52fe5e7e5b1c75974739912b2419c90399b09217b49",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationWriter.olean",
+        "sha256": "f74e89a1b01785d07f876f6ee5fc9cfe0774cd64719e6e984d11d562f44dfcfe",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationWriter.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationResponseReceipt",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationResponseReceipt.lean",
+      "sha256": "ea03d11add5fbd91828701377d8130654b23a324e299dc8f3000cdb5e98bc338",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationResponseReceipt.olean",
+        "sha256": "c5885cb4a7e079354491de487e1774fe9359082a2a09aded1c2cba32745b6909",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationResponseReceipt.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthDecodedOrigin",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthDecodedOrigin.lean",
+      "sha256": "4a903ce60b5f5ef0263ab360038fcb47fadb58826f6a4b0dddeeecd805722a2a",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthDecodedOrigin.olean",
+        "sha256": "3fbf649276b220fad2594aed326b27bf466d16ae60ef2ab3e9504b38de75219c",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthDecodedOrigin.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationResponseRecord",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationResponseRecord.lean",
+      "sha256": "b1459b3a6327633499a80866e0342501435c470b14896cc537144aed529995da",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationResponseRecord.olean",
+        "sha256": "bebb5d1633e1c3e8c993534b340eea527db7d7c37c1029d193c5b29618222e28",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationResponseRecord.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxChronology",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxChronology.lean",
+      "sha256": "e06913dcc9a69323c25b4e510cf52ab73a5056c0bee06be553af7dbdfb9a85a3",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxChronology.olean",
+        "sha256": "9ce098013dfdc396c8892d8aa5c86bd875dcafde551ece999ed12dacd65ca63a",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxChronology.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxAcceptanceHistory.lean",
+      "sha256": "8c8328d02a657b5048f56d58f9bd0b02cec0c341775321b0b597cf049ac583cf",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxAcceptanceHistory.olean",
+        "sha256": "43c3ed2c87017b8ab3d586d729eb5692eb2b9a15ee60559f4f007c6438121694",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxAcceptanceHistory.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxObserverHistory",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxObserverHistory.lean",
+      "sha256": "94cd0cd0971f7c2e3fa41b3d057c2ce314653643fb682fbbba94bdb50b6b22d7",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxObserverHistory.olean",
+        "sha256": "e4b46c593a0ce48c00aea6953e495fa5c54e65a2509a7ba390442c8153c0da70",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxObserverHistory.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceCover",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxAcceptanceCover.lean",
+      "sha256": "1400b70d44e1d88bd28c28d0bc40b057a499eddf498bf70aa3c357f2539e58f0",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxAcceptanceCover.olean",
+        "sha256": "a407fb90522163c123bfddd6026b978cef7b8d8f032ede7e0c55b6ba9aff63f5",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxAcceptanceCover.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthDesignation",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthDesignation.lean",
+      "sha256": "da1b2a601de2ceb2c6bd3fa077eed44aa8f8f5fb67bc16c23677bc6f58a69004",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthDesignation.olean",
+        "sha256": "e488581cd174002b2174aea5bf0421a424e8be2d70df4139f324153a105da483",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthDesignation.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxObserverEvent",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxObserverEvent.lean",
+      "sha256": "a7bc6705bff772e70c2a1bb69e68858928b65f048e9143c1f97f29cf124782c8",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxObserverEvent.olean",
+        "sha256": "78e4a8ab7f55e9060f90c81ccc466cda1bdb7033b650e77c3166b9dab8259f98",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxObserverEvent.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationForcedFrame",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationForcedFrame.lean",
+      "sha256": "6638788194ff1be324027cea5bc07ab73a457d422f284e97b2e24d2a0e500a18",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationForcedFrame.olean",
+        "sha256": "f2695c494968b383d200545d4565f4b9998129f7b93c2cd6f7f873b4ce918edf",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationForcedFrame.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationGhost",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationGhost.lean",
+      "sha256": "a3743892f77bdaaaf8aeba71850b8b7af663ea1f6cf7babdffaa024219f3c570",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationGhost.olean",
+        "sha256": "e4de54e34d80eacdfe09c0a658a6272105449c6da17c4f69a2626a6e3a887702",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationGhost.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationReference",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReference.lean",
+      "sha256": "6c4fd10dbefcefdefaab4fa13d91fcecbc9914180a9e36ce06f1664255095fd0",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReference.olean",
+        "sha256": "e8b701096936eb99ef89261683d4ebd979f73ba35bdd4de1ff404092387a4dc5",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReference.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationBlind",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBlind.lean",
+      "sha256": "c8ef1c33c2498ad55e223586ea299bdf382904d507f6ef5c05fbaac27e50921f",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBlind.olean",
+        "sha256": "1f0271ed3c56134a8767b4dae9d422c16a90e42d630fa68d80c85dce80c06cb0",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBlind.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationBlindKnown",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBlindKnown.lean",
+      "sha256": "a04c4ace9a1f41fae116090bf713630dfbe2e618f0b8701199a37e60f6c786cc",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBlindKnown.olean",
+        "sha256": "5315955f7561a67f0322682c226795dfc6d4bc827ec137273e0b3514ec8d5bc9",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBlindKnown.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationPrivateView",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrivateView.lean",
+      "sha256": "74ec6c905244ff633d523129efe80b868e81ddb3d845bd162c2f1a0e4ff7bb1c",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrivateView.olean",
+        "sha256": "6ea32de2dddda0c4a24fab6d60f694f6ef5a2a4ed1a3c77cc04afb782db3930d",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrivateView.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationTag",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationTag.lean",
+      "sha256": "401e41fb00d60dbf3177b0c594c80fafdaed9276bc57ba978b47934b8b480a77",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationTag.olean",
+        "sha256": "5efc53e3e72cc51ee5892be143b3caa11ccb4081bf7aa8103ed025603d9b4d8a",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationTag.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationGuess",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationGuess.lean",
+      "sha256": "a1dec694fa87b1321ddc6b63f561350006531158045c09667df41d3776af1d44",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationGuess.olean",
+        "sha256": "eed0d17320003470cd8971274d02df703d4f1ffad14353ff674589781f84c09f",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationGuess.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationReferenceResources",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReferenceResources.lean",
+      "sha256": "d45e5ae4c4d987e0eadefe1f6cdc3f380ec114e5af4eb242b3426df5d93532ea",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReferenceResources.olean",
+        "sha256": "98ef5385453e47cd9ff0833db66b9d1aaad69baf9f5f6437704492ac6663a79b",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReferenceResources.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationReferenceBytes",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReferenceBytes.lean",
+      "sha256": "01b33482e47177d01e7cf5ba196d4f9f98b2fd7fc2ba562fe668f20d10f68747",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReferenceBytes.olean",
+        "sha256": "05a298b46416a4487391e412c0ad33c7ddde9d363c288de6bd732d7f066c3874",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReferenceBytes.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationRandom",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationRandom.lean",
+      "sha256": "1d73883ea2b1a44a6cf6ba10f2cf1d66661b5447f1874281e46bfa1eb22d47bd",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationRandom.olean",
+        "sha256": "d0fe4068df51f318cabff74e61192a261672932f4421d8e94eed613c65abc3f1",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationRandom.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationPrivacy",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrivacy.lean",
+      "sha256": "8fbc9901f4db88e1a515342870db193c9c34edb588454c6a2848dae07a16efe1",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrivacy.olean",
+        "sha256": "c1bc138568528b75f29eadcfa27fb3aa8a3e956d55939e62ba13bd7f5118dfed",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrivacy.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationCaptureSource",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationCaptureSource.lean",
+      "sha256": "a3d36a7d515d0120b1e125c52d8ebba2f6200c2be4975cb73ef71364a648b102",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationCaptureSource.olean",
+        "sha256": "653bcc939a30ff8d5298dd320703c0a19adc8b0c614aae3b1f338cde9cd8c004",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationCaptureSource.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationAcceptance",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationAcceptance.lean",
+      "sha256": "b1f59bda43af5059901cea559a4728031a6fd37d9da619018c3ea083e1b015b0",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationAcceptance.olean",
+        "sha256": "557df7662e1e3729a25284b642a79d25e5fa469178941f3ca27ffd3cfa251efb",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationAcceptance.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthAcceptedEntry",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthAcceptedEntry.lean",
+      "sha256": "0f6150ae08987af830832fa3f720f644149bbdc5831297d875d1cb148de29519",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthAcceptedEntry.olean",
+        "sha256": "fa34695318511909ddff1a9e704ebbf6054c00143908ab572aa2d07f6bef2148",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthAcceptedEntry.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthApiJournal",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthApiJournal.lean",
+      "sha256": "aa21ba03ec27612f319c9bfabf85568f51e0647c524c7e6fb14015f4a0d8aef4",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthApiJournal.olean",
+        "sha256": "0a8c9890df28617d83b69ac985c004ceafc85b63fc29d2f39a294cb865619db5",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthApiJournal.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthObservedEntry",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedEntry.lean",
+      "sha256": "473b31baab6f3e8355944424b2470b89ee63a2f1a8040e61aa890938068892bf",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedEntry.olean",
+        "sha256": "8a5ce8f9ec88bf9e0728a329ac9c726a9386072257c9b8ce8a0570c6935fd5fb",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthObservedEntry.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthObservedSchedule",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedSchedule.lean",
+      "sha256": "e8b25b51c344ba7cce8b602d8902f5365b9f57dc576fe3ac42471b207a9f116c",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedSchedule.olean",
+        "sha256": "3efe82c6fe4a904fb81c6f1198e2209a94de9feb212816141c06db2d55b33f13",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthObservedSchedule.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthObservedNative",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedNative.lean",
+      "sha256": "5a7d3aeb0a706776a5416826c79752d83d4111348a911c91873a5a2e8f18d32b",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedNative.olean",
+        "sha256": "c3277de84da52827c8037475fe880aa99bea1227212331e65c81119465cecd3d",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthObservedNative.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthObservedGame",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedGame.lean",
+      "sha256": "0b8872d997ea316e55e9084ee59d961fce0f12a369f829b10e9129e8391a43b4",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedGame.olean",
+        "sha256": "67cca5f71f38286c05c4804d762b9300d6cb4910cf9764ec99cd11208b1a5fa0",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthObservedGame.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthObservedPartition",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedPartition.lean",
+      "sha256": "aa269080d123e3bb94da96d6f0f67e621302e6eb82d98ed07114d42421c477a1",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedPartition.olean",
+        "sha256": "a29647c905ae312ee2edcd1c0ce4c27755664c6655fdef663d608f87615ee19d",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthObservedPartition.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthObservedExecution",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedExecution.lean",
+      "sha256": "cf14ebf3fbeec0b63f5682e494eccc7276cf299f53e7e144926db41c48f93049",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthObservedExecution.olean",
+        "sha256": "29bfa54732ae78ee6a060d15857f03a2f8fb960f5d70499c6f01d77654c7037e",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthObservedExecution.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationOwnerFamily",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationOwnerFamily.lean",
+      "sha256": "ccde918a41d4292072d6201479c78ec421aa24b30a6e0c2c83b54fc631f00c98",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationOwnerFamily.olean",
+        "sha256": "509918ea7b42a168e5b551c62890f89c04bad482617ab37ab5fc78e47e171087",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationOwnerFamily.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationOccurrence",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationOccurrence.lean",
+      "sha256": "37311b82c0928b4218a444a9dee8c06053db69eb5cae09423c3d53481719097f",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationOccurrence.olean",
+        "sha256": "a46afb8b95ec507a1db5b745a83a4c2b36c8a423b623cd697abcb876b18920fd",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationOccurrence.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationObservedCompiler",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationObservedCompiler.lean",
+      "sha256": "a58ba74caaa83e133574fd779eed4de3933d284488cf7b0fd28f9de3b765c5d7",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationObservedCompiler.olean",
+        "sha256": "1b5642d342125b3bd30bc0da767c83df6e310dca71d719ea34cefe998d878229",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationObservedCompiler.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationCaptureHistory",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationCaptureHistory.lean",
+      "sha256": "9448ddb7e2baf044d4a9ce3ba4ce7407f9011032f5d14cbd058308c2a175dd3a",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationCaptureHistory.olean",
+        "sha256": "f4860c6c59589a7b683ee4b0f39e4618397a7135945327b64915916b096e50c1",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationCaptureHistory.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationFailure",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationFailure.lean",
+      "sha256": "63899636234771d2c7321ebc700a1a55380b33ac97086255747d2e760d15d142",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationFailure.olean",
+        "sha256": "4d199b891038d5b74764f0eae2738fe4096bce68a52aa954b343445ef5522c81",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationFailure.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationFilter",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationFilter.lean",
+      "sha256": "6924ea8897aeb45690b5581d44962d3a514aeee98bba6178895b5c178e5ba741",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationFilter.olean",
+        "sha256": "d5e7fe43262a055f1935d781754908924a73a4ebdeb059cdbbe54e98c91c2f22",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationFilter.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationPruning",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPruning.lean",
+      "sha256": "3fe82612d1c49938ca190d3d296436b8b95050fa8e220d65fb3321935617c2d7",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPruning.olean",
+        "sha256": "bd0beae336387a4adc2fb7e0ac8ba612a537ab5b97e7b65fa40f94299a0d6ca5",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPruning.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationReferenceGhost",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReferenceGhost.lean",
+      "sha256": "5dc9619e6605511912e21543751470049d9e77eb0b812380391064786483ea25",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReferenceGhost.olean",
+        "sha256": "462fc191bb0aeb981e09d31aece81d8d4619bc186cfb24e4316958ba0ce7dab1",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationReferenceGhost.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationDominance",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationDominance.lean",
+      "sha256": "40fb24ea07fe18c8d0763b39af6a7f82e7148d4ca4162e2c5500b477d2b31358",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationDominance.olean",
+        "sha256": "d799ff5bb275e1bce0a643d3acaf25408e9836e9f4e4d93dc333ff9b613eb48c",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationDominance.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationPrefixStop",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrefixStop.lean",
+      "sha256": "8a24bebf5c75acfc7d6b14cda870ca63ab5d06be1415835aa69839ff90b3dada",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrefixStop.olean",
+        "sha256": "d8d7e5643eb01d1923a5366db859281e51b101fa0fc745a811028f367b2b5d98",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrefixStop.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationMarkedHistory",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationMarkedHistory.lean",
+      "sha256": "4d6f160ea20708da4a715cfd083021d4796b7f598ff4fff1985bef259139c859",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationMarkedHistory.olean",
+        "sha256": "0ab4adf82079c7726423e8420f5c0f0b1c4967f7fe6e980a1374bbcaa48bc7d2",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationMarkedHistory.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationPrefixSource",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrefixSource.lean",
+      "sha256": "5acffc447f68bf2aa0b3a3dd3dbb809fb4273ad26d34d83de6a46d3619112c14",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrefixSource.olean",
+        "sha256": "8b75e24235673f0a26c08692e61a8a23b8b2e29ccec34e47c47d3ed4f8957020",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrefixSource.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationJournalClean",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationJournalClean.lean",
+      "sha256": "13d1eb3bcd9a5a565898c3fd38925c19ea58850cab9c52dafeaf1de994b1320b",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationJournalClean.olean",
+        "sha256": "d8c8afbd25399e280ce44c6c62f48976c634c576455e4246e4feafcecec175fc",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationJournalClean.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationJournalClient",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationJournalClient.lean",
+      "sha256": "b5ed58d779aa9f804580cedb20062029e316731209db0cc7085f1a2e503b1dc1",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationJournalClient.olean",
+        "sha256": "ae404f67778770e90eb415e4f25381f1d32ad50c3adfc6365ad610ba23753efe",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationJournalClient.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationSingleBuild",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationSingleBuild.lean",
+      "sha256": "dc8cf6259102b7cf903ae3e0d30736d92492afe538eebc2f46deca9398933151",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationSingleBuild.olean",
+        "sha256": "99eb69b8f05798309157c46bdfe510a5389c12323ebc0b1998a72e21cd9ab3ed",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationSingleBuild.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationRecordReserve",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationRecordReserve.lean",
+      "sha256": "7c714224c710d161bf03c9570bb290e302bbbefcf5c7574443327ed498bb2430",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationRecordReserve.olean",
+        "sha256": "b680244b7489182aa39d6cae234b620b3045062094a966b2a678a44b3a61771a",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationRecordReserve.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuiltRecord",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBuiltRecord.lean",
+      "sha256": "553db3c37fd20549991e8944bf0852c6f46993f16a3d9954a610b111e95cf184",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBuiltRecord.olean",
+        "sha256": "7443e5a617088c819d1541577c73c0b9d8711a255b0ada90feedb284a5c6a8a8",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBuiltRecord.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBuildJournal.lean",
+      "sha256": "b39aa057583f9fce32b1c4c6f36d488ee6ddf0e41559113f16558155c0e6a379",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBuildJournal.olean",
+        "sha256": "861b3edfb4af9bdb6fee7e9040aa3f60d8d4227bfcacb19787a2635987cee2fa",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationBuildJournal.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationIdentity",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationIdentity.lean",
+      "sha256": "b98985590b045f663ff8033d88a21c4c0bc256da7026ccd3cf7110839d0633d0",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationIdentity.olean",
+        "sha256": "7868505010b780e2c177a4741671afaa206d15a605d42a2d7b53fbb34bdc10a4",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationIdentity.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPhase1Receipt",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Receipt.lean",
+      "sha256": "24f202610e37a23af90fa2c2696cfde47c778f5ed60b933b34671b44bf16c674",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Receipt.olean",
+        "sha256": "7de6addbc5aacd349745e222d9f71c77391352877691e00bbf2f6f3733e8db01",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Receipt.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPhase1Origins",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Origins.lean",
+      "sha256": "8bcbf1724e777e4d2cfe0b8ae622a5005da92695d42c6df69ade08ed7e0839a6",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Origins.olean",
+        "sha256": "a8aee416ca19beec50a0641404e021a69d3d817c9eeb31a70f08e9519a0be1ca",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Origins.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1BuildOrigins.lean",
+      "sha256": "47e217847a232f095d442634908e70109443cbbfc61fb77c8353e95fa6439cb7",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1BuildOrigins.olean",
+        "sha256": "86f7362980d1a0b4f0e51524ac246bc7bf2562905f504216d7dddb02cd01b57c",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPhase1BuildOrigins.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthBeaconIdentity",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthBeaconIdentity.lean",
+      "sha256": "9423d5eeaaf598088ce1dd7a21a2f146b3af82d60db6c6843a5b4309c3dd9df6",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthBeaconIdentity.olean",
+        "sha256": "7319708dddcacc2c263225653f50d58411c0708e02a54f6ba3573fda8caf36a8",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthBeaconIdentity.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPhase1Identity",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Identity.lean",
+      "sha256": "f46ec286ef3d49c9998649d614bddb147c87380874b346e7b2d471af85f97720",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Identity.olean",
+        "sha256": "42bb9197e7b198e2b6e118e0430eb325439d67676e70d8e3417b9a048dbc6e74",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Identity.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPhase1Projection",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Projection.lean",
+      "sha256": "dcf8ca2eaf96220445c38685b053419289980f36a9082bd8126cca307a9ca93e",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Projection.olean",
+        "sha256": "f6b4132e1d5bdcdd297da7c9cd6065ef7aabd2c6c084c65fe3cf17e5017e6909",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Projection.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPhase1Binding",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Binding.lean",
+      "sha256": "70e381bd1e3cf8c78f44157c6c10f79aa71e56ba51a6e7cc7636e5514ed70d08",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Binding.olean",
+        "sha256": "0dcb4210826f0f0ca80b4354711fa5bcf06100d63defcb4eb045db1efb0226b7",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Binding.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRootOccurrences",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootOccurrences.lean",
+      "sha256": "85bbdf5fc3c7fc1c17994c769695a61efdce1cd05e60f6d6c6a50a14b608c80d",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootOccurrences.olean",
+        "sha256": "35d7a391c19b141711841dca955f0c6d1e7fd4d214e246d156cb7f4e5647f775",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRootOccurrences.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootInitialization.lean",
+      "sha256": "9f2c735b7e8e61a1327583c36e01050fc24b2799d6b43f2f991605b3d98881f0",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootInitialization.olean",
+        "sha256": "734968bc0b1ee9d45813da26c0dec47c4fcf5aed4616b2b4874d4447952f9252",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRootInitialization.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPhase1Generation",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Generation.lean",
+      "sha256": "a373ee8ac9a45e9939228e66cf7e39608440ee43eb180686bc7c8cad03cb5e9d",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Generation.olean",
+        "sha256": "7f16346614251621cea6ac24358e86fdbe151eafd837c0485f034fc286018d46",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPhase1Generation.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootProvenance.lean",
+      "sha256": "8e8c3f2ae632fe51c325b0ae89503bc3d744fc47aa81a284b736daaa974470d5",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootProvenance.olean",
+        "sha256": "4c70b7a95968f17820d962eb74036383f8642257cedef3758ffa998061304024",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRootProvenance.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRootExecution",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootExecution.lean",
+      "sha256": "48d460a3fbebc1ec98e924600fc0e6cc881fbb15d260d9f0027475b9b31a45fb",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootExecution.olean",
+        "sha256": "f1337563582ce74e441842ed3bdfb7ffc4949179e9d5b86d13de1287e26084b9",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRootExecution.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRootSessionFields",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootSessionFields.lean",
+      "sha256": "352d2636d9b73884056aead08847711c446043fd113ebfda825d2c11026e77b5",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootSessionFields.olean",
+        "sha256": "922b3ee4e1e9feda6171038d97a4093eaa9f7dd8b8e64c6899099a1e6a42b394",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRootSessionFields.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRootAcceptance",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootAcceptance.lean",
+      "sha256": "ca16f175259e811c292f4551ce932037b7b479121b6c5ccdcb0ce8cf128886bd",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootAcceptance.olean",
+        "sha256": "72387e43ea85b8fd4ff2b6e55a875ea3211277092c28f89fe67a263d87076fed",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRootAcceptance.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityCompiler",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityCompiler.lean",
+      "sha256": "e97d8645944be63ce5687996dcc55fff09447df0d36588280c4db91b3f8db1ea",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityCompiler.olean",
+        "sha256": "9e200f9bdde05e4eb980e69b02e490147b556d448b891396f69dd28b5addcb09",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityCompiler.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityLog",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityLog.lean",
+      "sha256": "b58162fef1427faf7277f94a449c5b21f2be25dbd55c3e17534001b67b607585",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityLog.olean",
+        "sha256": "dc872f17da1caad97f779cb8cadc1164b7405404e6a4c26d6e2670f12319d57f",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityLog.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityEuf",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityEuf.lean",
+      "sha256": "1415eec27a6b5cda699b3431a209dfd7dd697a8e1478f3d1b20293619037af60",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityEuf.olean",
+        "sha256": "790be7ce1089641c6fbb536617ecdaa16d1e6480d5a35302f7f9899230618fba",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityEuf.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRootSession",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootSession.lean",
+      "sha256": "4bff0a0ca60498c38b45c546dbfaa01d38a9a55dee95373386c301504779b20e",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootSession.olean",
+        "sha256": "51bbf030ce5ffa2755cbcb005b2004278ece043e1c037587a9c4990b1665c00a",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRootSession.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRootJournal",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootJournal.lean",
+      "sha256": "fff0f42997aa88c0dfd9977dc8d7671510b221f4ab29f3b8cd171acb3bc935d1",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootJournal.olean",
+        "sha256": "c8b26c0c66e1051f1f374ca31e83e7ff3651fec61a6e6463a86ce36e1f68cc6e",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRootJournal.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRootObserved",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootObserved.lean",
+      "sha256": "30d16bc00ff81eba4c61d37d31daff43a04636e508723f5ab93a74998dabfe22",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootObserved.olean",
+        "sha256": "9458e8f371521028a7bf016c1be20cfdb680b13430b4387b9991aad8d3ca875d",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRootObserved.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRootCommon",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootCommon.lean",
+      "sha256": "0a4b660833539a6a5b5844ec2f1a135d7793ee2440d98e1553afb42db0950afd",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRootCommon.olean",
+        "sha256": "09fd3e5ac7a0e922f7802a9721a4027d537f99b980da4ef197313eba7d0502a4",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRootCommon.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationPrivacyResources",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrivacyResources.lean",
+      "sha256": "ca246e981062902dc52b9e90eb11b7c00988d043ccc68f0050779dec541ae59d",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrivacyResources.olean",
+        "sha256": "7b1d1dcf5588b83b7eaa0d181ebe94f406615a557b54182564a106d21d301b6e",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationPrivacyResources.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCtxPrimitiveResources",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxPrimitiveResources.lean",
+      "sha256": "cab6114a3000fdf40adc09bbbd7710f2b6e6cb538bb6825eeb747ea9f21e7db7",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCtxPrimitiveResources.olean",
+        "sha256": "8e42081d695c0b6cecd42a04a0d13ca757f09a6da9e189af777b76e5272d08bf",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCtxPrimitiveResources.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthentication",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthentication.lean",
+      "sha256": "7919931d10abdc8bce15dc17f90ead14b6014e25acf815157abeb0c7230ea867",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthentication.olean",
+        "sha256": "050d14efd6c991a12a7e27221cf619350c3781544f878e4d5ec20a26859b5d68",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthentication.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationComposition",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationComposition.lean",
+      "sha256": "6b55e95e351fbbbdf92a643473bd538bad9face875e54a451f23eda0e69d87e9",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationComposition.olean",
+        "sha256": "5e6a27596cdb1d4c69a999f964ecd66f4907999a70554f71c9fbac9931be9ff9",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationComposition.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationLoss",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationLoss.lean",
+      "sha256": "5662fa2c3df39512cc586f6865c2605ce288124333c48c617804052a8963429b",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationLoss.olean",
+        "sha256": "b92e633abcd68e79cb66f29cb3726607efe3fd3c4c9a85d3310ecd5e042254a9",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationLoss.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationResources",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationResources.lean",
+      "sha256": "afef6de202e2ee918394d3e3ec56b76b4466863b7549c2b3830cb79f65470672",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationResources.olean",
+        "sha256": "48ac9d118af65c6c98f8047237a3143e0df32b7744f523969e3be9d79f309810",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationResources.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationProbability",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationProbability.lean",
+      "sha256": "376d2e222d4e8510049f57c36f1aaddabc14d8b50bf88bb0fe3b3a3e5c245f90",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationProbability.olean",
+        "sha256": "75dc35b839e9c4b7249dc2655e873d04b50b7e6d206c9bdd62f84f525e0b3e55",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationProbability.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublication",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublication.lean",
+      "sha256": "724aa3d01e317f51279c92a7e71e231a3cd5b65e30d61ee18dff5b0d57aed88c",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublication.olean",
+        "sha256": "e44b9877974505bbc81c42b2e311b2062aa934981b18894abea7407de264928d",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublication.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRecordPublicationEvent",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRecordPublicationEvent.lean",
+      "sha256": "9b1745803b99b42678bc98b3a59e34ac94b0cf7b92d8c0cf8213d503ac946828",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRecordPublicationEvent.olean",
+        "sha256": "07950705f412610b3b0835b8c253aeca884f47890349ed99f484cf0a7b8802e7",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRecordPublicationEvent.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthFinishResponse",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthFinishResponse.lean",
+      "sha256": "c923dcdffb982c9df621568ed2ff36a8d9bef33f82fa22f3eb680e021a7f07fa",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthFinishResponse.olean",
+        "sha256": "9baef862511ab8bcf663444934ac22cab75cdde6e4bf94f25400290c657b78dc",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthFinishResponse.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthFinishFrameReceipt",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthFinishFrameReceipt.lean",
+      "sha256": "32eef18e6dfe2093f38e818a334e340fa2a05201ea0291eaf693e61ddac91751",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthFinishFrameReceipt.olean",
+        "sha256": "5c0eb8a5d742f74c6e61ca56b9d78a40f2086fcddf8f36db372b073eb9eb9f96",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthFinishFrameReceipt.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthFinishJournal",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthFinishJournal.lean",
+      "sha256": "024b871b835bd43cb411e1cfd20233e671d20b1d3f203c2404ff7c563534bcdb",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthFinishJournal.olean",
+        "sha256": "e577d6fba8430664c985c3d17ccb0089ffc755b1c8494c3b6c9b518630bf2f4b",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthFinishJournal.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthFinishJournalAcceptance",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthFinishJournalAcceptance.lean",
+      "sha256": "2d36c1b681f548696c511860ed6dff937ebc60044a9a80ba1b21b7bc3109f7af",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthFinishJournalAcceptance.olean",
+        "sha256": "8354a5cc92fe360cbfe29838fcefa692a7af33b95608dd1f607351701dcbe1a9",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthFinishJournalAcceptance.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRecordPublicationJoin",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRecordPublicationJoin.lean",
+      "sha256": "9b71a968843e9497326c77b658a6a2b4b0bc195ac1b965ff4a5abfd42535add8",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRecordPublicationJoin.olean",
+        "sha256": "24958f2f714c4bf8c316bbcfadaa44765b0a05e6c8c996a70e997d83006d1185",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRecordPublicationJoin.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthSessionRecordEvent",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecordEvent.lean",
+      "sha256": "1abd14920292e6bf49f8bc1273fed222f9ab12701295216823f9adb21fdb6e89",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecordEvent.olean",
+        "sha256": "28dd38fbd31451aceb6a16e71034cc650547cb87044b829df1dbcbea97883036",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecordEvent.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthPublicationObserverProjection",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationObserverProjection.lean",
+      "sha256": "cd67aa9c286af4e726d53dcc9e88d4680c54e0d2fda8bb9e17232780e212cdcc",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthPublicationObserverProjection.olean",
+        "sha256": "e8de8dc2da4ed9c3ae2d77399b4d4ca62f1505eefa90073c1dafe59e4a575bfb",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthPublicationObserverProjection.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthRecordPublicationProbability",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthRecordPublicationProbability.lean",
+      "sha256": "75912ac116dee57e25bc3c19bcea4393c3d743ac52cce00b534cac5ac6785ea7",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthRecordPublicationProbability.olean",
+        "sha256": "5de0b2481ac3ccd5a3f4ccf40941a1f33b0e6abc2d94e256dc653542f724e869",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthRecordPublicationProbability.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthSessionRecordProbability",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecordProbability.lean",
+      "sha256": "fb366044c456c53c4aec62e6a1e3e67176f345a4bcf28bf317bd8ad868dad5de",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecordProbability.olean",
+        "sha256": "660f88f59f041d91244c760203068b4bb4d10fe8bf6e505f9ffc8df436daf965",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecordProbability.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthSessionRecord",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecord.lean",
+      "sha256": "8d9be6eab98e7af519493367de0cad03931d736c9277cdce77ea7be0d7cfd5e9",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecord.olean",
+        "sha256": "04a2b76b55853ddd5d4e7afa370281248a3bf3485425f97c3cfec7b9cb9d6714",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecord.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCommonEvent",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCommonEvent.lean",
+      "sha256": "e6a68a4ab07723ae8a85b84b698c40f5285078369ad639676975dbc8d83a5da1",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCommonEvent.olean",
+        "sha256": "833729b61a3df788705229540db855c8c31e760d9473e227708147e8f034fa64",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCommonEvent.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCommonProbability",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCommonProbability.lean",
+      "sha256": "104880423dc7fe758a06f75c7b691d4f3127a127d14a3b445eeaa3e5ae27d980",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCommonProbability.olean",
+        "sha256": "774eeac87cd616a8470d26c48d6645b436865dedf982aac065ef4e81de345bf0",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCommonProbability.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityResources",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityResources.lean",
+      "sha256": "b294baa8b51f2f4632fe421705f3a0de3b30a8f4e51441d69ef2d86ecce46c93",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityResources.olean",
+        "sha256": "fcde201be3377b713417ecdc9c03df50ac9845c072d2034c2481f5ba5b4be800",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityResources.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityDhBudget",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityDhBudget.lean",
+      "sha256": "1a950ed7991c1cda159defe690efdf266b3ced010ead646ee5260cf45bc2c1b8",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityDhBudget.olean",
+        "sha256": "9ab57bbfea5d3054eca31be3cb0c9100743584545d6007d6ff922c8bf09de658",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityDhBudget.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthNativeUniformCosts",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthNativeUniformCosts.lean",
+      "sha256": "4cf642605922a22c0314efd48f3987c66002fd996fa5d81321440ad198d53a39",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthNativeUniformCosts.olean",
+        "sha256": "377ec6509032722c60ee77709c0738ce09cd6a090755a4f828216b449271090e",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthNativeUniformCosts.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityUniformCosts",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityUniformCosts.lean",
+      "sha256": "1a5f63f62a3d0b0350dca97f6ac18d2ba0f72175cf55422aac8ce51cf8eff739",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityUniformCosts.olean",
+        "sha256": "3d77c478db2de29c27839d0d35674b80ed03038ecedcec1ce0dbd965c15c57f1",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthJointIdentityUniformCosts.olean"
+      }
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhServerAuthCommonAuthentication",
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCommonAuthentication.lean",
+      "sha256": "7c0ce05e3f0982fd8c1e4f432929ab987180f5d2b804a5188e53ad15ec9f6980",
+      "artifact": {
+        "verified_integration": "edc701e73d167b885bade97233bf16a69975a17a",
+        "original": "/tmp/beaconcrypt-server-auth-common-integration/beaconcrypt-core/proofs/lean/.lake/build/lib/lean/BeaconcryptCore/Computational/PqxdhServerAuthCommonAuthentication.olean",
+        "sha256": "9e5257abedd51ad4f57a04d354e2c46555206ea2a5e1a7966de1519a2e0ae0c1",
+        "private_copy": "/tmp/beaconcrypt-pin-width-olean/r1/BeaconcryptCore/Computational/PqxdhServerAuthCommonAuthentication.olean"
+      }
+    }
+  ],
+  "existing_different": [],
+  "artifact_basis": "Exact unchanged source bytes and regular artifact copied from the completed edc701e integration build, whose full verification receipt is recorded in beaconcrypt-common-integration-validation-record.json. All 109 source bytes also equal adabe9a. No symlinked artifact was overwritten."
+}

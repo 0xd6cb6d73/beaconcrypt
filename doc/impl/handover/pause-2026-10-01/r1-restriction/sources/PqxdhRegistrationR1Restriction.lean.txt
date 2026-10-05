@@ -1,0 +1,434 @@
+-- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.PqxdhRegistrationScheduleExecution
+
+/-! Materialize the original R1 private handles in the actual registration scheduler. The comparison retains the complete source continuation and both real primitive caches; no source event or cryptographic condition is assumed by this representation map. -/
+
+open OracleComp OracleSpec CoreModels Aeneas
+open Aeneas.Std hiding namespace core alloc
+open RustM beaconcrypt_core PqxdhRefinement
+set_option autoImplicit false
+namespace BeaconcryptCore.Computational.PqxdhRegistrationR1Restriction
+open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAuthNative
+open PqxdhBeaconPhase2Preparation (Word32)
+variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
+
+/-- A selected prekey handle denotes the actual sampled scalar; ordinary one-time scalars retain their bytes. -/
+def scalarValue (selected : ScalarBytes) : Unit ⊕ ScalarBytes → ScalarBytes
+  | .inl () => selected
+  | .inr value => value
+
+/-- Retain every source phase field while interpreting its stored private key handles. -/
+def phaseValue (selected : ScalarBytes) (publicKey : PqxdhKemIndCca.MlKem768PublicKey) :
+    RawCtxBeaconLifecycle.Phase (Unit ⊕ ScalarBytes) KemSK ratchet.concrete.ConcreteRatchetKernel →
+      RawCtxBeaconLifecycle.Phase ScalarBytes (PqxdhKemIndCca.MlKem768PublicKey × KemSK)
+        ratchet.concrete.ConcreteRatchetKernel
+  | .fresh control prekey key => .fresh control (scalarValue selected prekey) (publicKey, key)
+  | .freshWithCoins control prekey oneTime key =>
+      .freshWithCoins control (scalarValue selected prekey) (scalarValue selected oneTime) (publicKey, key)
+  | .initSent control prekey oneTime key =>
+      .initSent control (scalarValue selected prekey) (scalarValue selected oneTime) (publicKey, key)
+  | .established control ad kernel => .established control ad kernel
+  | .aborted control => .aborted control
+
+/-- The target's identity seed belongs to the same fixed source context, not to the reduction's public input. Terminal phases retain their actual erased private fields. -/
+def ownerValue (identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (state : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK) :
+    PqxdhRegistrationSchedule.Owner KemSK :=
+  ⟨⟨identity, state.beacon.identityKeyId, state.beacon.serverIdentity,
+    phaseValue selected publicKey state.beacon.phase⟩, state.rawAttempts⟩
+
+/-- The hardest active-owner preparation branch is the same actual optional computation with concrete stored keys. It includes all parser, conversion, KEM and DH failures and performs no root callback early. -/
+theorem prepare_materialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identity : IdentitySeed) (selected oneTime : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey) (secretKey : KemSK)
+    (control : pqxdh.BeaconInitSent) (raw : Pqxdh.Bytes) :
+    simulateQ (PqxdhRegistrationSchedule.preparation setup codec)
+      (PqxdhBeaconPhase2Preparation.prepare control identity selected oneTime (publicKey, secretKey) raw) =
+      (simulateQ (sourceBeaconAux setup codec selected identity)
+        (PqxdhBeaconPhase2Preparation.prepare control () (.inl ()) (.inr oneTime) secretKey raw)).run' () := by
+  simp only [PqxdhBeaconPhase2Preparation.prepare, PqxdhBeaconPhase2Preparation.collect,
+    OptionT.run_bind, OptionT.run_mk, OptionT.run_pure, OptionT.run_monadLift,
+    Option.elimM, simulateQ_bind, simulateQ_spec_query, sourceBeaconAux,
+    PqxdhRegistrationSchedule.preparation, beaconAuxUnit, beaconAux]
+  simp only [StateT.run'_eq, StateT.run_bind, StateT.run_lift,
+    pure_bind, map_bind, bind_map_left]
+  cases decoded : codec.read2 raw <;>
+    simp only [Option.elim, simulateQ_pure, StateT.run_pure, pure_bind, map_pure]
+  repeat' first
+    | rfl
+    | simp_all only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure,
+        sourceBeaconAux, PqxdhRegistrationSchedule.preparation, beaconAuxUnit, beaconAux,
+        StateT.run_bind, StateT.run_lift, StateT.run_pure, pure_bind, map_pure,
+        bind_assoc, PqxdhBeaconPhase2Preparation.afterInputs,
+        Setup.dh, sourceInterface,
+        show PqxdhPhase2GapDhSource.word = PqxdhRootTableInitialization.rootArray from rfl]
+    | split
+    | (congr 1; funext reply; cases reply)
+
+/-- Lift a complete probabilistic callback program while retaining the ambient native state. -/
+private theorem native_coins_program {ι' Result : Type} {spec : OracleSpec ι'}
+    (handler : QueryImpl spec ProbComp) (work : OracleComp spec Result) :
+    simulateQ (fun query => nativeCoins (KemSK := KemSK) (handler query)) work =
+      nativeCoins (simulateQ handler work) := by
+  induction work using OracleComp.inductionOn
+  all_goals simp_all only [simulateQ_pure, simulateQ_bind, simulateQ_spec_query]
+  all_goals funext state
+  all_goals simp only [nativeCoins_bind, nativeCoins, map_bind, map_pure]
+  rfl
+
+/-- Interpreting private handles commutes with the actual final pin gates, publication and abort. -/
+theorem finish_materialized (identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (state : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (control : pqxdh.BeaconInitSent) (staged : Option PqxdhBeaconPhase2Publication.Staged) :
+    PqxdhBeaconPhase2Publication.finish control (ownerValue identity selected publicKey state) staged =
+      Prod.map id (ownerValue identity selected publicKey)
+        (PqxdhBeaconPhase2Publication.finish control state staged) := by
+  cases staged <;> simp only [PqxdhBeaconPhase2Publication.finish, ownerValue, phaseValue,
+    PqxdhBeaconPhase2Preparation.abort, PqxdhBeaconPhase2Publication.publish, Prod.map]
+  all_goals first | rfl | (split_ifs <;> simp_all)
+
+/-- Complete active native-owner interpretation, before an arbitrary subsequent scheduler continuation. Both actual primitive caches and all callback effects are retained. -/
+theorem native_owner_active (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identity : IdentitySeed) (selected oneTime : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey) (secretKey : KemSK)
+    (state : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (control : pqxdh.BeaconInitSent)
+    (active : state.beacon.phase = .initSent control (.inl ()) (.inr oneTime) secretKey)
+    (raw : Pqxdh.Bytes) (auxiliary : NativeState KemSK) :
+    (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
+      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw
+        (ownerValue identity selected publicKey state))).run auxiliary =
+      (fun result => (Prod.map id (ownerValue identity selected publicKey) result.1, result.2)) <$>
+        (simulateQ (sourceBeaconHandler setup codec selected identity)
+          (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw state)).run auxiliary := by
+  simp only [PqxdhBeaconPhase2Publication.nativeOwner, ← QueryImpl.simulateQ_compose]
+  simp only [PqxdhBeaconPhase2Publication.owner, active,
+    show (ownerValue identity selected publicKey state).beacon.phase =
+      .initSent control selected oneTime (publicKey, secretKey) from
+        congrArg (phaseValue selected publicKey) active,
+    simulateQ_bind, StateT.run_bind, map_bind]
+  simp only [← QueryImpl.simulateQ_compose]
+  have concretePre :
+      (PqxdhRegistrationSchedule.callbacks setup codec ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter) ∘ₛ
+        PqxdhBeaconPhase2Publication.preLift =
+      (fun query => nativeCoins (KemSK := KemSK) (PqxdhRegistrationSchedule.preparation setup codec query)) :=
+    funext fun query => by
+      simp only [QueryImpl.compose, PqxdhBeaconPhase2Publication.preLift,
+        PqxdhBeaconPhase2Publication.nativeAdapter, simulateQ_spec_query,
+        PqxdhRegistrationSchedule.callbacks]
+  have sourcePre :
+      (sourceBeaconHandler setup codec selected identity ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter) ∘ₛ
+        PqxdhBeaconPhase2Publication.preLift =
+      (fun query => nativeCoins (KemSK := KemSK) ((sourceBeaconAux setup codec selected identity query).run' ())) :=
+    funext fun query => by
+      simp only [QueryImpl.compose, PqxdhBeaconPhase2Publication.preLift,
+        PqxdhBeaconPhase2Publication.nativeAdapter, simulateQ_spec_query,
+        sourceBeaconHandler]
+  rw [concretePre, sourcePre, native_unit_program, native_coins_program, prepare_materialized]
+  apply bind_congr
+  rintro ⟨_ | prepared, after⟩
+  all_goals simp only [simulateQ_bind, simulateQ_pure, StateT.run_bind, StateT.run_pure,
+    map_bind, map_pure, finish_materialized]
+  have tailHandlers :
+      (PqxdhRegistrationSchedule.callbacks setup codec ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter) ∘ₛ
+        PqxdhBeaconPhase2Publication.tailLift =
+      (sourceBeaconHandler setup codec selected identity ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter) ∘ₛ
+        PqxdhBeaconPhase2Publication.tailLift :=
+    funext fun query => by
+      simp only [QueryImpl.compose, PqxdhBeaconPhase2Publication.tailLift,
+        simulateQ_spec_query, PqxdhBeaconPhase2Publication.nativeAdapter,
+        ← QueryImpl.simulateQ_compose]
+      congr 1
+  simp only [← QueryImpl.simulateQ_compose, tailHandlers]
+
+/-- All source owner phases have the same complete native execution after handle interpretation. The operational handle property is established by the original Phase 1 and retained by its complete source scheduler. -/
+theorem native_owner (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (state : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (handles : Handles state) (raw : Pqxdh.Bytes) (auxiliary : NativeState KemSK) :
+    (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
+      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw
+        (ownerValue identity selected publicKey state))).run auxiliary =
+      (fun result => (Prod.map id (ownerValue identity selected publicKey) result.1, result.2)) <$>
+        (simulateQ (sourceBeaconHandler setup codec selected identity)
+          (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw state)).run auxiliary := by
+  cases active : state.beacon.phase
+  case initSent control prekey oneTime secretKey =>
+    obtain ⟨rfl, scalar, rfl⟩ := handles control prekey oneTime secretKey active
+    exact native_owner_active setup codec identity selected scalar publicKey secretKey state control active raw auxiliary
+  all_goals simp [PqxdhBeaconPhase2Publication.nativeOwner,
+    PqxdhBeaconPhase2Publication.owner, ownerValue, phaseValue, active, Prod.map]
+
+/-- The equality keeps an arbitrary continuation of the actual reply, complete concrete owner and full shared primitive poststate. -/
+theorem native_owner_continuation {Result : Type}
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (state : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (handles : Handles state) (raw : Pqxdh.Bytes) (auxiliary : NativeState KemSK)
+    (next : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × NativeState KemSK → ProbComp Result) :
+    ((simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
+      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw
+        (ownerValue identity selected publicKey state))).run auxiliary >>= next) =
+      ((simulateQ (sourceBeaconHandler setup codec selected identity)
+        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw state)).run auxiliary >>=
+          fun result => next (Prod.map id (ownerValue identity selected publicKey) result.1, result.2)) := by
+  rw [native_owner setup codec identity selected publicKey state handles raw auxiliary, bind_map_left]
+
+/-- Change only the compatibility owner slot inside the shared state. The scheduler's actual owner lives in its owner list; all other protocol fields and both caches remain literal. -/
+def withBeacon (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (state : NativeState KemSK) : NativeState KemSK :=
+  (state.1, { state.2 with beacon := beacon })
+
+/-- Original preparation and tail callbacks do not read or alter the compatibility owner slot. -/
+theorem callback_beacon (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identity : IdentitySeed) (selected : ScalarBytes)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (query : (PqxdhBeaconPhase2Publication.NativeSpec Unit (Unit ⊕ ScalarBytes) KemSK Unit Response).Domain)
+    (state : NativeState KemSK) :
+    (Prod.map id (withBeacon beacon)) <$> ((sourceBeaconHandler setup codec selected identity query).run state) =
+      (sourceBeaconHandler setup codec selected identity query).run (withBeacon beacon state) := by
+  rcases query with query | (query | (input | request | response))
+  all_goals simp only [sourceBeaconHandler, sourceBeaconTail, PqxdhPhase2DhRootConsumer.withRoot,
+    nativeCoins, nativeCtx, sourceRoot, StateT.run, Functor.map_map, withBeacon]
+  all_goals rfl
+
+/-- The compatibility-slot change commutes with the complete adaptive callback program, including every refused reply and primitive poststate. -/
+theorem program_beacon {Result : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identity : IdentitySeed) (selected : ScalarBytes)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (work : OracleComp (PqxdhBeaconPhase2Publication.NativeSpec Unit (Unit ⊕ ScalarBytes) KemSK Unit Response) Result)
+    (state : NativeState KemSK) :
+    (Prod.map id (withBeacon beacon)) <$>
+        (simulateQ (sourceBeaconHandler setup codec selected identity) work).run state =
+      (simulateQ (sourceBeaconHandler setup codec selected identity) work).run (withBeacon beacon state) := by
+  exact map_run_simulateQ_eq_of_query_map_eq _ _ (withBeacon beacon)
+    (callback_beacon setup codec identity selected beacon) work state
+
+/-- Represent the single R1 owner in the scheduler's actual public slot zero, retaining every shared source field and using the supplied compatibility slot. -/
+def singleton (identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (state : NativeState KemSK) : PqxdhRegistrationSchedule.State KemSK :=
+  ⟨withBeacon beacon state, [ownerValue identity selected publicKey state.2.beacon]⟩
+
+/-- The actual present-slot scheduler finish equals the complete R1 source finish under the singleton representation. No callback is replayed and both optional rejection and successful installation retain their original shared effects. -/
+theorem finish_singleton (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (raw : Pqxdh.Bytes) (state : NativeState KemSK) (handles : Handles state.2.beacon) :
+    PqxdhRegistrationSchedule.finish setup codec 0 raw (singleton identity selected publicKey beacon state) =
+      (Prod.map id (singleton identity selected publicKey beacon)) <$>
+        sourceFinish setup codec selected identity raw state := by
+  rw [PqxdhRegistrationSchedule.finish_source setup codec 0 raw _ _ rfl,
+    native_owner setup codec identity selected publicKey state.2.beacon handles raw]
+  simp only [singleton, ← program_beacon setup codec identity selected beacon]
+  simp only [sourceFinish, native_bind_run, map_bind,
+    nativeModify, localState, pure_bind, native_pure_run, map_pure, Functor.map_map]
+  simp only [nativeGet, localState, pure_bind, bind_pure_comp]
+  rfl
+
+/-- The original annotated native finish has this exact scheduler result after erasing only its two analysis histories. The original handle invariant is retained explicitly here and discharged by source initialization in the complete-run consumer. -/
+theorem native_finish_singleton (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (seed identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (raw : Pqxdh.Bytes) (state : NativeState KemSK) (handles : Handles state.2.beacon) :
+    PqxdhRegistrationSchedule.finish setup codec 0 raw
+        (singleton identity selected publicKey beacon (eraseObservers state)) =
+      (Prod.map id (singleton identity selected publicKey beacon ∘ eraseObservers)) <$>
+        nativeFinish setup codec seed selected identity raw state := by
+  rw [finish_singleton setup codec identity selected publicKey beacon raw (eraseObservers state) handles,
+    ← finish_observation setup codec seed selected identity raw state handles, Functor.map_map]
+  rfl
+
+/-- Erase only the scheduler's inherited proof histories; retain every concrete owner and operational shared field. -/
+def eraseShared (state : PqxdhRegistrationSchedule.State KemSK) : PqxdhRegistrationSchedule.State KemSK :=
+  { state with shared := eraseObservers state.shared }
+
+/-- Ordinary acceptance preserves the singleton representation and exact public reply. The scalar used solely by the analysis binding interface can differ; the actual Server seed, source prefix and root-table calls stay the same. -/
+theorem accept_singleton (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (seed identity : IdentitySeed) (selected observed : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (raw : Pqxdh.Bytes) (state : NativeState KemSK) :
+    (Prod.map id eraseShared) <$>
+      (PqxdhRegistrationSchedule.onShared (nativeAccept setup codec checks seed observed raw)).run
+        (singleton identity selected publicKey beacon (eraseObservers state)) =
+      (Prod.map id (singleton identity selected publicKey beacon ∘ eraseObservers)) <$>
+        nativeAccept setup codec checks seed selected raw state := by
+  simp only [PqxdhRegistrationSchedule.onShared_run, nativeAccept,
+    native_bind_run, nativeCoins, map_bind, bind_map_left]
+  simp only [nativeGet, nativeSet, localState, pure_bind]
+  refine bind_congr fun collected => ?_
+  rcases collected with ⟨_ | input, consumed⟩
+  all_goals simp only [nativeClient, singleton, withBeacon, eraseObservers,
+    binding, challenge, native_bind_run, native_pure_run, map_pure, map_bind,
+    Functor.map_map]
+  all_goals first
+    | rfl
+    | cases accepted : PqxdhServerRelatedRootInput.accept state.2.server.control
+        (binding setup (challenge setup.joint setup.dh seed selected)) input
+  all_goals simp_all only [binding, challenge, native_pure_run, pure_bind, map_pure]
+  all_goals first
+    | rfl
+    | rename_i value
+  rcases value with ⟨⟨control, original⟩⟩ | error
+  all_goals simp only [loggedRoot, romRoot, romRootBytes, nativeTouch, nativeConsume,
+    nativeModify, localState, native_bind_run, native_pure_run, bind_map_left,
+    pure_bind, map_pure, bind_assoc]
+  all_goals rfl
+
+/-- The original optional builder consumes the same actual token and retains the complete returned Server and commitment cache under the singleton representation, including every writer failure. -/
+theorem build_singleton (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (index : Nat) (payload : Option Pqxdh.Bytes) (state : NativeState KemSK) :
+    (Prod.map id eraseShared) <$>
+      (PqxdhRegistrationSchedule.onShared (nativeBuild setup codec checks index payload)).run
+        (singleton identity selected publicKey beacon (eraseObservers state)) =
+      (Prod.map id (singleton identity selected publicKey beacon ∘ eraseObservers)) <$>
+        nativeBuild setup codec checks index payload state := by
+  simp only [PqxdhRegistrationSchedule.onShared_run, nativeBuild, native_bind_run,
+    nativeGet, localState, pure_bind]
+  cases pending : state.2.pending index
+  all_goals simp only [singleton, withBeacon, eraseObservers, pending, native_bind_run,
+    nativeCoins, nativeSet, localState, native_pure_run, pure_bind, map_bind,
+    bind_map_left, map_pure]
+  all_goals rfl
+
+/-- Public HMAC retains the same restricted Extract table and real outside-domain evaluations. Changing only the unused analysis scalar and private histories leaves the complete operational singleton result unchanged. -/
+theorem hmac_singleton (setup : Setup baseSpec KemSK)
+    (seed identity : IdentitySeed) (selected observed : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (key : PqxdhSecretInputKdf.HmacBlock) (message : Pqxdh.Bytes) (state : NativeState KemSK) :
+    (Prod.map id eraseShared) <$>
+      (PqxdhRegistrationSchedule.onShared (nativeHmac setup seed observed key message)).run
+        (singleton identity selected publicKey beacon (eraseObservers state)) =
+      (Prod.map id (singleton identity selected publicKey beacon ∘ eraseObservers)) <$>
+        nativeHmac setup seed selected key message state := by
+  simp only [PqxdhRegistrationSchedule.onShared_run, nativeHmac]
+  split_ifs with slice
+  all_goals simp only [nativeTouch, localState, native_bind_run,
+    PqxdhServerRelatedRootConsumer.familyImpl, QueryImpl.compose,
+    PqxdhJointDhExtractRoot.reduction, simulateQ_spec_query,
+    PqxdhExtractRomFamily.romImpl, slice, ite_false, StateT.run,
+    singleton, withBeacon, eraseObservers, pure_bind, Functor.map_map]
+  all_goals simp only [and_self, ite_true, map_bind, map_pure]
+  all_goals rfl
+
+/-- Public hashing retains the same complete shared CTX table under the operational singleton projection. -/
+theorem hash_singleton (identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (bytes : Pqxdh.Bytes) (state : NativeState KemSK) :
+    (Prod.map id eraseShared) <$>
+      (PqxdhRegistrationSchedule.onShared (nativeHash bytes)).run
+        (singleton identity selected publicKey beacon (eraseObservers state)) =
+      (Prod.map id (singleton identity selected publicKey beacon ∘ eraseObservers)) <$>
+        nativeHash bytes state := by
+  simp only [PqxdhRegistrationSchedule.onShared_run, nativeHash, singleton,
+    withBeacon, eraseObservers, Functor.map_map]
+  rfl
+
+/-- The reveal reply comes from the actual installed Server peer map, which the singleton representation preserves exactly. -/
+theorem reveal_singleton (identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (keyId : Std.U64) (state : NativeState KemSK) :
+    (Prod.map id eraseShared) <$>
+      (PqxdhRegistrationSchedule.onShared
+        (localState fun current => (revealKernel keyId current, current))).run
+        (singleton identity selected publicKey beacon (eraseObservers state)) =
+      (Prod.map id (singleton identity selected publicKey beacon ∘ eraseObservers)) <$>
+        (localState fun current => (revealKernel keyId current, current)) state := by
+  simp only [PqxdhRegistrationSchedule.onShared_run, localState, revealKernel, singleton,
+    withBeacon, eraseObservers, map_pure]
+  rfl
+
+/-- Syntactic singleton restriction: retain every original public request and direct each original finish to the actual owner at address zero. This introduces no extra creation or admission rule. -/
+def route : QueryImpl ServerAuthSpec (OracleComp PqxdhRegistrationSchedule.Spec)
+  | .inl coin => PqxdhRegistrationSchedule.Spec.query (.inl coin)
+  | .inr (.accept raw) => PqxdhRegistrationSchedule.Spec.query (.inr (.accept raw))
+  | .inr (.build index payload) => PqxdhRegistrationSchedule.Spec.query (.inr (.build index payload))
+  | .inr (.finish raw) => PqxdhRegistrationSchedule.Spec.query (.inr (.finish 0 raw))
+  | .inr (.hmac key message) => PqxdhRegistrationSchedule.Spec.query (.inr (.hmac key message))
+  | .inr (.hash bytes) => PqxdhRegistrationSchedule.Spec.query (.inr (.hash bytes))
+  | .inr (.reveal keyId) => PqxdhRegistrationSchedule.Spec.query (.inr (.reveal keyId))
+
+/-- A mathematical operational projection after each complete actual callback. Its full-run relation to the unmodified scheduler is proved separately; it does not give the adversary an audit log. -/
+noncomputable def normalized (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (checks : Checks) (seed : IdentitySeed) :
+    QueryImpl ServerAuthSpec (PqxdhRegistrationSchedule.Game KemSK) := fun query state =>
+  Prod.map id eraseShared <$>
+    (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed) (route query)).run state
+
+/-- Every actual singleton API callback agrees after the explicit audit projection. The stored handle condition concerns only the original source representation. -/
+theorem handler_singleton (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (checks : Checks) (seed identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (query : ServerAuthSpec.Domain) (state : NativeState KemSK)
+    (handles : Handles state.2.beacon) :
+    normalized setup codec checks seed query
+        (singleton identity selected publicKey beacon (eraseObservers state)) =
+      (Prod.map id (singleton identity selected publicKey beacon ∘ eraseObservers)) <$>
+        nativeHandler setup codec checks seed selected identity query state := by
+  rcases query with coin | (raw | ⟨index, payload⟩ | raw | ⟨key, message⟩ | bytes | keyId)
+  all_goals simp only [normalized, route, simulateQ_spec_query,
+    PqxdhRegistrationSchedule.handler, nativeHandler]
+  all_goals first
+    | exact accept_singleton setup codec checks seed identity selected _ publicKey beacon _ state
+    | exact build_singleton setup codec checks identity selected publicKey beacon _ _ state
+    | exact hmac_singleton setup seed identity selected _ publicKey beacon _ _ state
+    | exact hash_singleton identity selected publicKey beacon _ state
+    | exact reveal_singleton identity selected publicKey beacon _ state
+    | skip
+  case inr.finish =>
+    simp only [StateT.run, native_finish_singleton setup codec seed identity selected publicKey beacon raw state handles,
+      Functor.map_map]
+    rfl
+  simp only [PqxdhServerRelatedRootConsumer.familyImpl,
+    QueryImpl.compose, PqxdhJointDhExtractRoot.reduction, simulateQ_spec_query,
+    PqxdhExtractRomFamily.romImpl, StateT.run, StateT.lift, map_bind, map_pure]
+  rfl
+
+/-- The whole adaptive continuation retains its public result and complete operational singleton state. The original source invariant and private-handle invariant are carried through actual supported callbacks. -/
+theorem normalized_program {Result : Type}
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (checks : Checks) (seed identity : IdentitySeed) (selected : ScalarBytes)
+    (publicKey : PqxdhKemIndCca.MlKem768PublicKey)
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (work : OracleComp ServerAuthSpec Result) (state : NativeState KemSK)
+    (invariant : GameInv Reader Response setup (challenge setup.joint setup.dh seed selected) state.2)
+    (handles : Handles state.2.beacon) :
+    (simulateQ (normalized setup codec checks seed) work).run
+        (singleton identity selected publicKey beacon (eraseObservers state)) =
+      (Prod.map id (singleton identity selected publicKey beacon ∘ eraseObservers)) <$>
+        (simulateQ (nativeHandler setup codec checks seed selected identity) work).run state := by
+  refine (map_run_simulateQ_eq_of_query_map_eq_inv'
+    (nativeHandler setup codec checks seed selected identity)
+    (normalized setup codec checks seed)
+    (fun current => GameInv Reader Response setup
+      (challenge setup.joint setup.dh seed selected) current.2 ∧ Handles current.2.beacon)
+    (singleton identity selected publicKey beacon ∘ eraseObservers) ?_ ?_ work state
+    ⟨invariant, handles⟩).symm
+  case refine_2 =>
+    exact fun query current inv =>
+      (handler_singleton setup codec checks seed identity selected publicKey beacon query current inv.2).symm
+  intro query current inv result supported
+  have original := evaluate_support setup seed selected
+    (authHandler setup codec checks (challenge setup.joint setup.dh seed selected) identity query)
+    current result (by
+      simpa only [handler_native setup codec checks seed selected identity query current inv.1, StateT.run] using supported)
+  exact ⟨(authHandler_step codec checks identity query current.2 (result.1, result.2.2) original).1 inv.1,
+    handler_handles setup codec checks (challenge setup.joint setup.dh seed selected) identity query
+      current.2 (result.1, result.2.2) original inv.2⟩
+
+end BeaconcryptCore.Computational.PqxdhRegistrationR1Restriction

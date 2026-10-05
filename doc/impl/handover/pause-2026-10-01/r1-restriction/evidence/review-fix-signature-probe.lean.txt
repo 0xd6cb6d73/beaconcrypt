@@ -1,0 +1,5 @@
+import BeaconcryptCore.Computational.PqxdhRegistrationR1Journal
+open BeaconcryptCore.Computational
+set_option pp.fullNames true in
+#check @PqxdhRegistrationR1Initial.bundle_initial
+#print axioms PqxdhRegistrationR1Initial.bundle_initial
