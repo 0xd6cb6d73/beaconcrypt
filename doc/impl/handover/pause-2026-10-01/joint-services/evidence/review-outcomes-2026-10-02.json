@@ -1,0 +1,113 @@
+{
+  "date": "2026-10-02",
+  "dispatcher": "coordinator agent of the resumed full-proof effort",
+  "reviews": [
+    {
+      "target": "Compiler5",
+      "module": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointFinishCompiler.lean",
+      "statements": [
+        "compiler_interpreted",
+        "program_interpreted",
+        "pool_queries",
+        "tail_queries",
+        "prepare_queries"
+      ],
+      "reviewer": "independent read-only reviewer agent (Compiler5 semantic review)",
+      "verdict": "APPROVE",
+      "reviewed_commit": "871d1867433fbf337138be5ba339e09c5eab23f2",
+      "introduced_in": "fad3306f55932c86ad77bd4be3e42e317c7b525f",
+      "source_sha256": "c09c8eff96ac180c4cc57323b9983519e02d03ab9289d42bc7ba6487db1ea15e",
+      "manifest": "compiler-checkpoint-manifest.json",
+      "manifest_sha256": "6f24f2cf5575c3074392b9a8796ae2ad55a688ae03ec18145181e0c8112704c5",
+      "notes": "review-compiler5-notes.md",
+      "notes_original_path": "/tmp/bc-arc-scratch/c-work/review-pause/compiler5-notes.md",
+      "findings": [],
+      "scope_remarks": [
+        {
+          "remark": "compiler_interpreted targets the indexed JointFinish.callbacks; reaching native source callbacks still needs Finish15 owner_source/owner_original with their slot premises.",
+          "handling": "Acknowledged, no change required. CompiledOwner8 owner_source/owner_original instantiate exactly this for the compiled owner; the slot premises remain the next-step obligation in the handoff."
+        },
+        {
+          "remark": "PreparationCosts.Kind.localCall means 'local source callback (cap 13)' under classify but 'other private-service capability (cap 0)' under serviceClass.",
+          "handling": "Acknowledged, no change required. The compiled-owner bound uses serviceCap through cap/preCap as the reviewer confirmed; this record preserves the caution for later consumers."
+        }
+      ]
+    },
+    {
+      "target": "CompiledOwner8",
+      "lens": "semantic fidelity",
+      "module": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointCompiledOwner.lean",
+      "statements": [
+        "owner_queries",
+        "owner_interpreted",
+        "owner_source",
+        "owner_original",
+        "owner_continuation",
+        "owner_uniform",
+        "finish_source",
+        "finish_continuation"
+      ],
+      "reviewer": "independent read-only reviewer agent (semantic-fidelity lens)",
+      "verdict": "APPROVE_WITH_NITS",
+      "reviewed_commit": "8fd99de181bff6e778ce328d21a0aa188416be6a",
+      "source_sha256": "9be837ec9043c2c3dc1554028db555c7cb184c9e24be953c03905b213cfdf5ac",
+      "manifest": "compiled-owner-manifest.json (as committed in 8fd99de)",
+      "manifest_sha256": "801960b422d17c27200ddcc6840a6bba0bbf36d3d397e2df61a976c1bc6a265d",
+      "notes": "review-compiled-owner-semantics-notes.md",
+      "notes_original_path": "/tmp/bc-arc-scratch/c-work/review-compiled-owner/semantics-notes.md",
+      "nits": [
+        {
+          "nit": "Analysis paragraph says 'distribution and query-count equalities', but owner_queries and owner_uniform are upper bounds.",
+          "handling": "Module docstring and analysis paragraph now say 'distribution equalities and query-count/resource bounds' and state that owner_queries and owner_uniform are upper bounds, not exact counts."
+        },
+        {
+          "nit": "Lane handoff Exact restart point still says no whole-owner class theorem was started.",
+          "handling": "Lane handoff README updated: dated 2026-10-02 resumption note, corrected checkpoint list, proved scope, Exact restart point (next step is the dynamic scheduler joining constructor, bundle and finish with the private-slot ownership invariant) and Validation and review sections."
+        },
+        {
+          "nit": "finish_source/finish_continuation observe a lossy projection (reply, encoded reinstalled owner, shared state); documented, not an overclaim.",
+          "handling": "finish_source docstring, analysis paragraph and handoff now state that finish_source/finish_continuation observe only the public reply, the encoded reinstalled owner and the complete native shared poststate, and that consumers needing the raw scheduler poststate with all owners must combine them with Finish15 PqxdhRegistrationJointFinish.finish_source and annotated_program_slots. No full-state variant was added: the raw reinstalled owner (identity seed, KEM secret) is not a function of the compiled result, so it is not cheap or meaningful against the compiled run alone."
+        }
+      ]
+    },
+    {
+      "target": "CompiledOwner8",
+      "lens": "statement hygiene",
+      "module": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointCompiledOwner.lean",
+      "reviewer": "independent read-only reviewer agent (statement-hygiene lens)",
+      "verdict": "APPROVE_WITH_NITS",
+      "reviewed_commit": "8fd99de181bff6e778ce328d21a0aa188416be6a",
+      "source_sha256": "9be837ec9043c2c3dc1554028db555c7cb184c9e24be953c03905b213cfdf5ac",
+      "manifest": "compiled-owner-manifest.json (as committed in 8fd99de)",
+      "manifest_sha256": "801960b422d17c27200ddcc6840a6bba0bbf36d3d397e2df61a976c1bc6a265d",
+      "notes": "review-compiled-owner-hygiene-notes.md",
+      "notes_original_path": "/tmp/bc-arc-scratch/c-work/review-compiled-owner/hygiene-notes.md",
+      "nits": [
+        {
+          "nit": "Module docstring says 'resource equalities' and analysis paragraph says 'distribution and query-count equalities'; owner_queries and owner_uniform are upper bounds.",
+          "handling": "Module docstring and analysis paragraph now say 'distribution equalities and query-count/resource bounds' and state that owner_queries and owner_uniform are upper bounds, not exact counts."
+        },
+        {
+          "nit": "Lane handoff README line 32 is stale about the restart point.",
+          "handling": "Lane handoff README updated: dated 2026-10-02 resumption note, corrected checkpoint list, proved scope, Exact restart point (next step is the dynamic scheduler joining constructor, bundle and finish with the private-slot ownership invariant) and Validation and review sections."
+        },
+        {
+          "nit": "The 8fd99de commit message and analysis paragraph describe the Compiler5 review as pending; the Compiler5 approval is recorded only in scratch.",
+          "handling": "Compiler5 approval is now recorded in this file (with verbatim notes), in the handoff Validation and review section and in the analysis paragraph. The 8fd99de commit message is left unamended because local history is preserved; this record supersedes its review-status wording."
+        },
+        {
+          "nit": "Six of the eight names coincide with PqxdhRegistrationJointFinish names and two with PqxdhRegistrationSchedule names, so opening those namespaces whole is ambiguous.",
+          "handling": "Names kept so the approved statements stay unchanged apart from docstrings; the handoff tells later consumers to use selective opens or qualified names."
+        }
+      ]
+    }
+  ],
+  "post_fix": {
+    "change": "Docstrings of the module header and finish_source only; no statement, proof or guard changed.",
+    "source_sha256": "f1fc62b2bcd344bde1318fe6e1d0022d9e19ba7474bd8fc78764031bd2bdde54",
+    "guarded_exit": 0,
+    "guarded_log_empty": true,
+    "axioms_exit": 0,
+    "axioms_log_identical_to_reviewed": true
+  }
+}

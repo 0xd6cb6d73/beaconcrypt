@@ -1,0 +1,48 @@
+{
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "base": "f88498a3789366a3cc7e7e0cb3cb26e11e8e1005",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointFinish.lean": "321d0c010b0f5f0452883ae4753fb59a8557d21f9bb1b532ec15ffb5a0d0fd44",
+    "doc/impl/registration-joint-finish.md": "a93486c153bf788b17ed729c73c8fbf69902a9febf35d25436e2802fa6f66082",
+    "doc/formal-verification-analysis.md": "cab69977c49ff60bf55a88e9b06c92b0eb53333789b4f02660cadeeea2437def"
+  },
+  "theorems": [
+    "finish_map",
+    "pool_program",
+    "native_program",
+    "native_run",
+    "owner_source",
+    "annotated_query_erase",
+    "annotated_program_erase",
+    "owner_original",
+    "finish_source",
+    "finish_continuation",
+    "owner_continuation",
+    "annotated_query_slots",
+    "annotated_program_slots",
+    "annotated_program_queries",
+    "owner_uniform"
+  ],
+  "guards": 15,
+  "logs": {
+    "/tmp/beaconcrypt-registration-joint-finish-cleanup.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_file": "/tmp/beaconcrypt-registration-joint-finish-cleanup.exit",
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "exit_code": 0
+    },
+    "/tmp/beaconcrypt-registration-joint-finish-axioms.log": {
+      "sha256": "e9cd0727c30552933ac4826bfbab3422278af036d58d2b836c4c9feddf683e67",
+      "exit_file": "/tmp/beaconcrypt-registration-joint-finish-axioms.exit",
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "exit_code": 0
+    },
+    "/tmp/beaconcrypt-registration-joint-finish-guarded.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_file": "/tmp/beaconcrypt-registration-joint-finish-guarded.exit",
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "exit_code": 0
+    }
+  },
+  "scope": "Whole indexed native owner equals annotated literal source with all phases, complete service histories/native shared state and arbitrary continuations. Exact local identity and active KEM slot premises; native Schedule.finish reinstallation and annotation erasure/slot/query preservation. Original full uniform bound69*max64(decapsUniform+baseUniform*decapsBase). Existing restricted Extract/shared classical CTX ROM retained. No new primitive assumption; global compiler/lifecycle/reveal/freshness/selection/event consumer open."
+}

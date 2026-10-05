@@ -1,0 +1,120 @@
+{
+  "cohort": "JointSchedule30",
+  "date": "2026-10-05T21:18:22.956454+00:00",
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "base": "6ccf4b4bf06a760e9d94f0accf059cddeb848cca",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOwnership.lean": "b802789bbb7ff115b50464900a759b1405db75e0c2212d5105021043971ceaec",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointSchedule.lean": "a72e602efd878444dd16c522122b5d077cd33aa1121823b1ef9b710bcc3b4bb9",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointScheduleInvariant.lean": "072c8c815bfc3805cdb8fea94cc5fcaabf01a67297ce12b9f9868acbed352181",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointGeneratedFinish.lean": "b3c3be6a510e766412b185ddb6d4ea89509fef328e0d3af721db9fc5aa43e5d2",
+    "doc/impl/registration-joint-generated-ownership.md": "7674a3c0302ff92da0105b1eae188e6c5328b170bbe61d6252bb19b568fb49bc",
+    "doc/formal-verification-analysis.md": "abcb37e2a1a3abcafb9bfff0fb2ce178b53f8ba1e6730bfb0cae2e26d0001895",
+    "doc/impl/handover/pause-2026-10-01/joint-services/README.md": "f945755a17e7545ea45d277b0d6a5443aa6972d0f726ceb102560ab90ad78db1"
+  },
+  "statements": {
+    "PqxdhRegistrationJointOwnership": [
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointOwnership.owned_slots",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointOwnership.bundle_fields",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointOwnership.bundle_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointOwnership.finish_fields",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointOwnership.owner_fields",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointOwnership.owner_owned"
+    ],
+    "PqxdhRegistrationJointSchedule": [
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.initial_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.create_source",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.bundle_source",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.finish_source",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.shared_source",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.query_source",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.program_source"
+    ],
+    "PqxdhRegistrationJointScheduleInvariant": [
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.prior_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.birth_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.created_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.bundle_trace_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.updated_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.bundle_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.finish_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.shared_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.query_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.program_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.generated_owned",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.generated_slots"
+    ],
+    "PqxdhRegistrationJointGeneratedFinish": [
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointGeneratedFinish.generated_finish",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointGeneratedFinish.schedule_queries",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointGeneratedFinish.query_uniform",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointGeneratedFinish.schedule_uniform",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointGeneratedFinish.generated_compiled_resources"
+    ]
+  },
+  "guards": 30,
+  "checks": {
+    "PqxdhRegistrationJointOwnership": {
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/guarded-PqxdhRegistrationJointOwnership.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/beaconcrypt-pin-width-olean/svc/BeaconcryptCore/Computational/PqxdhRegistrationJointOwnership.olean",
+      "artifact_sha256": "11820ede5296c02dfbd8d7f146058e444265f966866ee4d30ccc68365f3fbe77",
+      "toolchain": "Lean 4.34.0",
+      "flags": [
+        "-j1",
+        "-M8000"
+      ],
+      "lock": "/tmp/bc-arc-scratch/lean.lock"
+    },
+    "PqxdhRegistrationJointSchedule": {
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/guarded-PqxdhRegistrationJointSchedule.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/beaconcrypt-pin-width-olean/svc/BeaconcryptCore/Computational/PqxdhRegistrationJointSchedule.olean",
+      "artifact_sha256": "02828733f796516e188fbe47ee309c41b4910e9a0ebf473d06ef3c8761ad5146",
+      "toolchain": "Lean 4.34.0",
+      "flags": [
+        "-j1",
+        "-M8000"
+      ],
+      "lock": "/tmp/bc-arc-scratch/lean.lock"
+    },
+    "PqxdhRegistrationJointScheduleInvariant": {
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/guarded-PqxdhRegistrationJointScheduleInvariant.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/beaconcrypt-pin-width-olean/svc/BeaconcryptCore/Computational/PqxdhRegistrationJointScheduleInvariant.olean",
+      "artifact_sha256": "13752584eef1760b5e92b69b31e4db8a04cc777e33f1c304cd408f7e4ee24bcb",
+      "toolchain": "Lean 4.34.0",
+      "flags": [
+        "-j1",
+        "-M8000"
+      ],
+      "lock": "/tmp/bc-arc-scratch/lean.lock"
+    },
+    "PqxdhRegistrationJointGeneratedFinish": {
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/guarded-PqxdhRegistrationJointGeneratedFinish.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/beaconcrypt-pin-width-olean/svc/BeaconcryptCore/Computational/PqxdhRegistrationJointGeneratedFinish.olean",
+      "artifact_sha256": "bf7fc6e3689650c2858cc650c2d83fbdd7855e2a5ab00ea815e250b144d506af",
+      "toolchain": "Lean 4.34.0",
+      "flags": [
+        "-j1",
+        "-M8000"
+      ],
+      "lock": "/tmp/bc-arc-scratch/lean.lock"
+    }
+  },
+  "scope": "Complete native dynamic typed schedule projection, actual generated exact private identity/KEM-slot ownership after arbitrary finite adaptive source schedules, full encoded selected finish consumer with both pools/all owners/shared state, complete source nine-class uniform ledger and selected compiled class/uniform caps. No added crypto/reveal primitive contracts; raw constructor/runtime and complete private-service scheduler/hybrids remain open.",
+  "reviews": "pending independent semantic review",
+  "no_changes": [
+    "Rust",
+    "ProVerif",
+    "root imports",
+    "shared checker",
+    "inventory"
+  ],
+  "full_build": false
+}

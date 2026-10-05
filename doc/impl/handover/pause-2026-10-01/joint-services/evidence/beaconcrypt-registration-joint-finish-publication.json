@@ -1,0 +1,19 @@
+{
+  "commit": "290ee8c2904f687b4dd5e12c19e53b512545ef6e",
+  "branch": "codex/registration-joint-service-composition",
+  "remote": "ssh://git@git.mschn.fr/amn/beaconcrypt",
+  "manifest": "/tmp/beaconcrypt-registration-joint-finish-manifest.json",
+  "manifest_sha256": "07823e1df0b84fdbb0b07a6006fc62595cdb8d1f80b88f8faa4f86b5ecf8b368",
+  "independent_reviews": [
+    "native_suffix: approved exact manifest",
+    "later_prefix_port: approved exact manifest"
+  ],
+  "local_HEAD": "290ee8c2904f687b4dd5e12c19e53b512545ef6e",
+  "fetched_origin": "290ee8c2904f687b4dd5e12c19e53b512545ef6e",
+  "direct_ls_remote": "290ee8c2904f687b4dd5e12c19e53b512545ef6e",
+  "push_result": "success; fast-forward from f88498a",
+  "excluded_WIP": [
+    "PqxdhRegistrationJointFinishCompiler.lean"
+  ],
+  "scope": "Finish15 complete local owner/source representation and inherited full query ledger; remaining global composition not claimed"
+}

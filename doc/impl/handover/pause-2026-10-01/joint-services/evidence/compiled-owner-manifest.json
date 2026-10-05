@@ -1,0 +1,33 @@
+{
+  "base": "871d1867433fbf337138be5ba339e09c5eab23f2",
+  "module": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointCompiledOwner.lean",
+  "source_sha256": "f1fc62b2bcd344bde1318fe6e1d0022d9e19ba7474bd8fc78764031bd2bdde54",
+  "imports": "BeaconcryptCore.Computational.PqxdhRegistrationJointFinishCompiler",
+  "public_theorems": [
+    "owner_queries",
+    "owner_interpreted",
+    "owner_source",
+    "owner_original",
+    "owner_continuation",
+    "owner_uniform",
+    "finish_source",
+    "finish_continuation"
+  ],
+  "guards": 8,
+  "guarded_exit": 0,
+  "axioms_exit": 0,
+  "check": "bash /tmp/beaconcrypt-registration-joint-service-check/check.sh PqxdhRegistrationJointCompiledOwner (Lean 4.34, -j1 -M8000, timeout 240, flock /tmp/bc-arc-scratch/lean.lock, lane-local olean)",
+  "scope": "Whole compiled-owner class bound (upper bounds: 1 decapsulation, 1 joint identity DH, 56 native-tail requests, 0 other private-service capabilities) and compiled-owner instances of program_interpreted plus the complete finish source/original/continuation/uniform results and the scheduler-finish observation of reply, encoded reinstalled owner and native shared poststate. The five compiler statements are unchanged. Approved with documentation nits by the semantic-fidelity and statement-hygiene lenses at 8fd99de; the nit follow-up changes only docstrings and was rechecked. Slot-ownership derivation, dynamic scheduler, reveal routing and global consumers remain unfinished.",
+  "evidence": {
+    "beaconcrypt-registration-joint-compiled-owner-axioms.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "beaconcrypt-registration-joint-compiled-owner-axioms.log": "abbb0fc290dea2d9d009be99141f717d61a46ead3e96d8e40c2a8a9388292834",
+    "beaconcrypt-registration-joint-compiled-owner-guarded.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "beaconcrypt-registration-joint-compiled-owner-guarded.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "review-compiled-owner-hygiene-notes.md": "ef66b089a7a3cea14cb30bed42bafe515b39f8dbcdd1f550dde31d6a7b49258c",
+    "review-compiled-owner-semantics-notes.md": "dd3f673f144205bb79988328920f9846767a895dc4fa354a1bfbafb78c168d4f",
+    "review-compiler5-notes.md": "e5f8530820fc4c1eacde1d1bf27f313109a094b24ac9ff7ecdbacad421cca97c",
+    "review-outcomes-2026-10-02.json": "6ac2767595c5673fc83d14b864f7978e1a2d6ec9e0009a82ff22e47116b04507"
+  },
+  "reviewed_commit": "8fd99de181bff6e778ce328d21a0aa188416be6a",
+  "reviewed_source_sha256": "9be837ec9043c2c3dc1554028db555c7cb184c9e24be953c03905b213cfdf5ac"
+}

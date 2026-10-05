@@ -1,0 +1,24 @@
+{
+  "reviewer": "root",
+  "time": "2026-10-05T23:20:14.351910",
+  "decision": "APPROVE",
+  "manifest_sha256": "196924b68fad25228cb10e4080182c419c59069fd536137cc62431384945cfde",
+  "hashes_verified": 7,
+  "guards": {
+    "PqxdhRegistrationJointOwnership": 6,
+    "PqxdhRegistrationJointSchedule": 7,
+    "PqxdhRegistrationJointScheduleInvariant": 12,
+    "PqxdhRegistrationJointGeneratedFinish": 5
+  },
+  "findings": [],
+  "scope": "Exact full native schedule annotation/projection and generated private identity/KEM-slot ownership; selected compiled finish on the same reached owner without slot premises; complete nine-class source uniform bill plus existing selected component class caps.",
+  "semantic_checks": [
+    "Read all definitions/statements/proofs in four modules and full plain-English guide. Native prefix equality is unconditioned; invariant is generated from empty owners under every request and complete supported poststate.",
+    "Fresh/FreshWithCoins/InitSent KEM fields are retained; terminal fields are not recovered from historical slots. Public address and both private indices are separate; key encoding collisions never identify an owner.",
+    "Failed writers retain exact signing history. Full finish retains both service histories, shared native caches, complete encoded owner list and original optional reply. There is no unavailable-secret recovery in this representation result.",
+    "Uniform and base-derived KEM costs retained; outer runtime/Server initialization excluded explicitly, not free. Per-attempt 1 decapsulation/1 joint identity DH/56 native-tail limits are not claimed to be the global service ledger.",
+    "No new primitive security advantage or authentication/freshness assumption. Reveal routing, full compiled global scheduler, Server related use, outer source surface and final hybrids remain explicitly open."
+  ],
+  "source_check": "Five relevant Rust source files byte-identical to current central73682c2. Source primitive implementations untouched.",
+  "validation": "Frozen seven-file hashes match; four direct guarded logs empty/exit0. Thirty exact standard-axiom guards present, no placeholder/custom axiom tokens. No redundant aggregate build."
+}

@@ -1,0 +1,6 @@
+{
+  "reviewed_manifest_sha256": "196924b68fad25228cb10e4080182c419c59069fd536137cc62431384945cfde",
+  "correction": "The schedule_uniform docstring now says failed writes and finishes; typed create has no rejection reply, whereas raw constructor/runtime failures are outside this interface. Guide explicitly preserves one Server/many Beacons and no cross-Server imported handle result.",
+  "reviewer": "/root",
+  "approval": "Root explicitly approved the prose-only follow-up on 2026-10-05 and required only a direct GeneratedFinish recheck. Theorem and proof bodies unchanged."
+}
