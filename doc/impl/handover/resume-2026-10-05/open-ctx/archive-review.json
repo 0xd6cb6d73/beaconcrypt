@@ -1,0 +1,16 @@
+{
+  "time": "2026-10-05T23:01:29.277282+00:00",
+  "reviewer": "evolving_source_join",
+  "decision": "APPROVE_PUBLICATION",
+  "manifest_sha256": "011122fee6a92b276da5587b962f63701d864814710a62fa35cec739ec2ffa1f",
+  "source_commit": "1e9a0e2db7bc25692e78d13c0a352a685fa21588",
+  "checks": [
+    "9 archive hashes exact",
+    "4 gzip/decompressed log digests roundtrip",
+    "12 reviewed source files match exact published source commit",
+    "2 ordered source receipt sets match published source commit",
+    "TRUE definitional and FALSE differential with reconstructed public trace; zero security claims",
+    "Make/inventory exit0, 25 transcript and9 checker tests represented accurately; failed warning diagnostic retained separately"
+  ],
+  "new_builds": false
+}

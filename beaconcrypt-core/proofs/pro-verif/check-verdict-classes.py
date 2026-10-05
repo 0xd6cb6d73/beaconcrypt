@@ -1,0 +1,217 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: 0BSD
+"""Check the complete classification of maintained ProVerif expectations.
+
+This is a metadata gate. It neither runs ProVerif nor asserts that an expected
+verdict was proved. Actual verdict gates and their evidence remain separate.
+"""
+
+import argparse
+from collections import Counter
+import csv
+import importlib.util
+from pathlib import Path
+import re
+import sys
+
+HERE = Path(__file__).resolve().parent
+SPEC = importlib.util.spec_from_file_location(
+    "verdict_inventory", HERE / "verdict-inventory.py"
+)
+INVENTORY = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = INVENTORY
+SPEC.loader.exec_module(INVENTORY)
+FIELDS = ("checker", "target", "position", "status", "formula_sha256", "class", "scope")
+CLASSES = {
+    "security",
+    "witness",
+    "negative-control",
+    "differential-control",
+    "definitional",
+    "limitation",
+    "diagnostic",
+}
+
+
+def validate(rows, expected):
+    wanted = {entry.key: entry for entry in expected}
+    found = {}
+    for row in rows:
+        if set(row) != set(FIELDS):
+            raise ValueError("classification columns changed")
+        key = row["checker"], row["target"], row["position"]
+        if key in found:
+            raise ValueError(f"duplicate classification: {key}")
+        if key not in wanted:
+            raise ValueError(f"unexpected classification: {key}")
+        entry = wanted[key]
+        if row["status"] != entry.status or row["formula_sha256"] != entry.digest:
+            raise ValueError(f"changed exact formula or status: {key}")
+        cls = row["class"]
+        if cls not in CLASSES or not row["scope"].strip():
+            raise ValueError(f"missing reviewed class/scope: {key}")
+        if (entry.status == "unknown") != (cls == "diagnostic"):
+            raise ValueError(f"unknown is only an unresolved diagnostic: {key}")
+        if cls == "security" and entry.status != "true":
+            raise ValueError(f"security evidence requires TRUE: {key}")
+        if (
+            cls in {"witness", "negative-control", "limitation"}
+            and entry.status != "false"
+        ):
+            raise ValueError(f"{cls} requires FALSE: {key}")
+        found[key] = row
+    if found.keys() != wanted.keys():
+        raise ValueError(
+            f"unclassified expected verdicts: {sorted(wanted.keys() - found.keys())}"
+        )
+    return Counter(row["class"] for row in rows)
+
+
+def extension_class_scope(name, target, driver):
+    """Reviewed local groups: finite token operations and open CTX controls."""
+    if name == "check-pending-registration":
+        fixture, caps = {
+            "pending-CROSS": (
+                "SchedCrossObjectWitness",
+                "objects=2, accept=1, build=1",
+            ),
+            "pending-REVERSE": ("SchedReverseWitness", "objects=1, accept=2, build=2"),
+            "pending-LINEAR": ("SchedLinearFixture", "objects=2, accept=1, build=2"),
+            "pending-C-REUSE": ("SchedLinearFixture", "objects=2, accept=1, build=2"),
+        }[target.name]
+        cls = {
+            "witness": "witness",
+            "definitional": "definitional",
+            "control": "negative-control",
+        }[target.cls]
+        scope = (
+            f"finite operational fixture {fixture}; {caps}; "
+            f"manifest bound={target.bound}; query={target.query}; libraries="
+            + ";".join(target.libraries())
+        )
+        return cls, scope
+    if name == "check-aead-differential":
+        cls = {
+            "definitional": "definitional",
+            "differential": "differential-control",
+        }[target.cls]
+        scope = (
+            "replicated open contexts and raw frame; public weak-AEAD fixture; "
+            f"process={target.process}; query={target.query}; libraries="
+            + ";".join(driver.LIBRARIES)
+        )
+        return cls, scope
+    raise ValueError(f"unreviewed extension scope: {name}")
+
+
+def validate_scope(rows):
+    """Pin reviewed exclusions and each fs target's actual bounds and libraries."""
+    for row in rows:
+        checker, target, position = row["checker"], row["target"], int(row["position"])
+        if row["status"] == "unknown":
+            continue
+        if checker == "check-general-registration.py":
+            initial, query = map(
+                int, re.search(r"target-(\d+)-query-(\d+)", target).groups()
+            )
+            inactive = (initial != 1 and query != 3) or (
+                initial == 1 and query in {10, 12, 14, 15, 16}
+            )
+            if inactive and row["class"] != "definitional":
+                raise ValueError(
+                    f"unreachable antecedent promoted to evidence: {target}"
+                )
+        fixture = checker in {
+            "check-registration-response.py",
+            "check-registration-beacon.py",
+        }
+        fixture |= checker == "check-results.awk" and (
+            target == "hkdf-prefix-conformance"
+            or (target == "failed-receive-compromise" and position in {7, 8})
+        )
+        if fixture and row["class"] != "definitional":
+            raise ValueError(
+                f"reviewed fixture promoted to evidence: {checker}/{target}/{position}"
+            )
+    for name in ("check-free-schedule", "check-primitive-fidelity"):
+        driver = INVENTORY.module(name)
+        targets = {target.name: target for target in driver.TARGETS}
+        for row in rows:
+            if row["checker"] != name + ".py":
+                continue
+            target = targets[row["target"]]
+            cls = {
+                "security": "security",
+                "definitional": "definitional",
+                "witness": "witness",
+                "limitation": "limitation",
+                "control": "negative-control",
+            }[target.cls]
+            if target.cls == "control" and row["status"] == "true":
+                cls = "differential-control"
+            scope = (
+                f"bounded {target.bounds()}; query={target.query}; libraries="
+                + ";".join(target.libraries())
+            )
+            if row["class"] != cls or row["scope"] != scope:
+                raise ValueError(
+                    f"fs class, bounds or profile differs: {row['target']}"
+                )
+    for name in ("check-pending-registration", "check-aead-differential"):
+        driver = INVENTORY.module(name)
+        targets = {target.name: target for target in driver.TARGETS}
+        for row in rows:
+            if row["checker"] != name + ".py":
+                continue
+            cls, scope = extension_class_scope(name, targets[row["target"]], driver)
+            if row["class"] != cls or row["scope"] != scope:
+                raise ValueError(
+                    f"operational/control class or exact scope differs: {row['target']}"
+                )
+
+
+def read_rows(path):
+    with path.open(newline="") as source:
+        reader = csv.DictReader(source, delimiter="\t")
+        if tuple(reader.fieldnames or ()) != FIELDS:
+            raise ValueError("classification header changed")
+        return list(reader)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--manifest", type=Path, default=HERE / "verdict-classes.tsv")
+    parser.add_argument(
+        "--show", action="store_true", help="print exact formulas and classes"
+    )
+    args = parser.parse_args()
+    expected = INVENTORY.expected_verdicts()
+    rows = read_rows(args.manifest)
+    counts = validate(rows, expected)
+    validate_scope(rows)
+    if args.show:
+        by_key = {(row["checker"], row["target"], row["position"]): row for row in rows}
+        for entry in expected:
+            row = by_key[entry.key]
+            print(
+                "\t".join(
+                    (
+                        *entry.key,
+                        entry.status,
+                        row["class"],
+                        entry.formula,
+                        row["scope"],
+                    )
+                )
+            )
+    print(
+        f"Classified {len(expected)} expected verdicts: "
+        + ", ".join(f"{name}={counts[name]}" for name in sorted(CLASSES))
+    )
+    print(
+        "These are classified expectations, not new ProVerif validation receipts or independent theorem counts."
+    )
+
+
+if __name__ == "__main__":
+    main()

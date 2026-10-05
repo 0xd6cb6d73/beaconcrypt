@@ -1,0 +1,267 @@
+{
+  "sources": [
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/verdict-classification/README.md",
+      "commit": "4a8f08a",
+      "sha256": "b4f8c64e573252c15e3d3a335f53d5c2e075e108513b398604d9b3af8b3a2dab"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/verdict-classification/format.log.gz",
+      "commit": "4a8f08a",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/verdict-classification/general-checker.log.gz",
+      "commit": "4a8f08a",
+      "sha256": "d30f0717f16b6529911292de8c5115d217c00750cf075783afa40ae0bbb2d290"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/verdict-classification/independent-review.json",
+      "commit": "4a8f08a",
+      "sha256": "2757b9d88b815759c86407e5b5a48f8b9bdba1f3498059366bc9471581701b24"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/verdict-classification/integrator-review.json",
+      "commit": "4a8f08a",
+      "sha256": "9fae143c535e11d6c5ab690639c3005f1dcb59127eaf0458480db51d99e4c072"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/verdict-classification/make.log.gz",
+      "commit": "4a8f08a",
+      "sha256": "c19cfded20d856413be05cf78f16a559b778b6ff162f7430dc014c624e3e5c19"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/verdict-classification/review-manifest.json",
+      "commit": "4a8f08a",
+      "sha256": "4f8365bda3ea39892451d0e87d539b48c8da9af9e616808ce91a52cb44ecdc46"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/verdict-classification/validation.json",
+      "commit": "4a8f08a",
+      "sha256": "8b5731b725f6a5c02a2d0bb708acf972c535da2f305530c523d33573bf70e892"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/check-pending-registration.py",
+      "commit": "69dbeeb",
+      "sha256": "5cca3a1973ecdf405fc2e9220cb03f051845ce7256f50974525e9d91aa00fac6"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-control-pending-reuse.pvl",
+      "commit": "69dbeeb",
+      "sha256": "7c599a2eaab90d25a0d61dda68ab1a7ab23594b76c5a4e9ea9711632a14a9120"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-pending-cross-object.pv",
+      "commit": "69dbeeb",
+      "sha256": "cfadfc68c1c16bbd207c873aba8b47f7b486700a73c0c3082b3db851346ecff9"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-pending-fixtures.pvl",
+      "commit": "69dbeeb",
+      "sha256": "68c4680911be1f2ba7fab457e9e0aaaa7e59ec95594229d0ec2586b5354b211f"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-pending-registration.pvl",
+      "commit": "69dbeeb",
+      "sha256": "b9a61bd2a03540bbee428489672c11b1767b4733ce86ea9fda107c6ff00f9a6e"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-pending-response.pvl",
+      "commit": "69dbeeb",
+      "sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-pending-reverse-builds.pv",
+      "commit": "69dbeeb",
+      "sha256": "d514f7faa0fa98937e6812e90cda442f48bbcf810ad5491e58a58b982661653e"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-pending-single-use.pv",
+      "commit": "69dbeeb",
+      "sha256": "64dafcbcebd057932c19b03a342943562de6e7551b86a97ac13671c80d36d393"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-pending-use.pvl",
+      "commit": "69dbeeb",
+      "sha256": "ebb7db7d04a5cb57d55a5ea2251f39ca5c33579b0d4b72084ad4e062bdfb8057"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/test-pending-registration-checker.py",
+      "commit": "69dbeeb",
+      "sha256": "28339d4d7dc2eca041e6abd97e560a7a5b599313791b331769479c8f363db3bb"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/README.md",
+      "commit": "69dbeeb",
+      "sha256": "474b3228d61701f93af002ccbfd664726b3f42076a076c69307273504680cf6e"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/committed-inventory.log.gz",
+      "commit": "69dbeeb",
+      "sha256": "403c67352810f4e0137eee267fcf9928c0eb8d238a319716f11c6a6ca48d86dd"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/committed-make-receipt.json",
+      "commit": "69dbeeb",
+      "sha256": "abd3a4271c005f5aa6b7821afe82e09bd91c368ec2b6c5ed5c20f6a6e3c45c93"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/committed-make.log.gz",
+      "commit": "69dbeeb",
+      "sha256": "df030634ec7c65db580582991e2e88fa8e42aeb298ff790318d902bfe9f7a886"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/independent-committed-receipt-review.json",
+      "commit": "69dbeeb",
+      "sha256": "6eddf1f02f01df64158a06b6e784ed62e342ef95ffc46304a67750c98e735899"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/independent-final-review.json",
+      "commit": "69dbeeb",
+      "sha256": "dcf762e9437408e93a92d2ad6f7fec3c66fa34dbd5989c2d89ea8f701c175e95"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/independent-service-review.json",
+      "commit": "69dbeeb",
+      "sha256": "28609a4d97a35fefba8b397651712c2ff86ba49c82cfa64dd387c0cc1773dc4d"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/make-pending-C-REUSE.log.gz",
+      "commit": "69dbeeb",
+      "sha256": "a1d01fbc3908efe8bbeddbd7ce998ff23be6d3d54998c0212e5663e9d486f026"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/make-pending-CROSS.log.gz",
+      "commit": "69dbeeb",
+      "sha256": "73fdad1c12b47ce44f3499f8eba5252da85a2ca1a30aba72225c16daf6447979"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/make-pending-LINEAR.log.gz",
+      "commit": "69dbeeb",
+      "sha256": "35c5e7d849219452b31d785f05f98e85fe57e414dd796a118decf923119f2b12"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/make-pending-REVERSE.log.gz",
+      "commit": "69dbeeb",
+      "sha256": "4504146adaf161f28dd24a3a73e582b1da809008e2160f86e6388b867ca4f0d5"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/pending-C-REUSE.log.gz",
+      "commit": "69dbeeb",
+      "sha256": "a1d01fbc3908efe8bbeddbd7ce998ff23be6d3d54998c0212e5663e9d486f026"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/pending-CROSS.log.gz",
+      "commit": "69dbeeb",
+      "sha256": "73fdad1c12b47ce44f3499f8eba5252da85a2ca1a30aba72225c16daf6447979"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/pending-LINEAR.log.gz",
+      "commit": "69dbeeb",
+      "sha256": "35c5e7d849219452b31d785f05f98e85fe57e414dd796a118decf923119f2b12"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/pending-REVERSE.log.gz",
+      "commit": "69dbeeb",
+      "sha256": "4504146adaf161f28dd24a3a73e582b1da809008e2160f86e6388b867ca4f0d5"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/receipts.json",
+      "commit": "69dbeeb",
+      "sha256": "36d6245b086292252daf1bd6c60d8f694bdcbff6ae73c3a87149e3f30a00784b"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/pending-registration/review-manifest.json",
+      "commit": "69dbeeb",
+      "sha256": "cff99d15d1d5141a6de236620901d0cd4e16c1b601367e4faf30288a787aa933"
+    },
+    {
+      "path": "doc/impl/proverif-pending-registration-schedule.md",
+      "commit": "69dbeeb",
+      "sha256": "b6852819a79b22927616ae36b1e30491bf0f37b82146da2c72ce51f90b97daff"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/check-aead-differential.py",
+      "commit": "0aa326a",
+      "sha256": "a3167e052b2f34b066a8b92c513e4d70d0fa7de99174062b04825dea07e9c653"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-aead-differential-ctx.pv",
+      "commit": "0aa326a",
+      "sha256": "0fbd3d750997e3eb456f69e4ff86c433e5065d9e597c9364a9742c1dcee60dd9"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-aead-differential-no-ctx.pv",
+      "commit": "0aa326a",
+      "sha256": "95f8bd6955a4c67092c181afe2480420a4cd13283e9e3f374d402549ddcceb2c"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/fs-aead-differential.pvl",
+      "commit": "0aa326a",
+      "sha256": "276c7f7fe7283eae52e99153811626979db99381581eb46da7d57c100d03f370"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/pro-verif/test-aead-differential-checker.py",
+      "commit": "0aa326a",
+      "sha256": "92f734f36ee30c68472893dd9399954ae79c10e71c5eaae7299af5fee1f5e464"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/open-ctx/CTX-open-no-commitment.log.gz",
+      "commit": "0aa326a",
+      "sha256": "81e05fa36a50fa31da3d4ff7a0fa234c5127943c282ab92aa2c9e5e0f6e10483"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/open-ctx/CTX-open.log.gz",
+      "commit": "0aa326a",
+      "sha256": "c9706497f5f67388b810ef10827dac89e2ce2212654cb670a2ecee08377f3559"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/open-ctx/README.md",
+      "commit": "0aa326a",
+      "sha256": "477535b81ad20ca3af090465774e06b3b00aad677454c3ed0b56e7291cfcfd18"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/open-ctx/archive-review.json",
+      "commit": "0aa326a",
+      "sha256": "fc9b43f8f50864a883fb9a9344bd973fb36871b2465f9c31cb49ac2a4a79bfa3"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/open-ctx/independent-review.json",
+      "commit": "0aa326a",
+      "sha256": "bc347c8f3283e0c5bce330a78000813b436da345741974d64fcf25767727a627"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/open-ctx/initial-warning-diagnostic.log.gz",
+      "commit": "0aa326a",
+      "sha256": "f2abe5f2d628eed00804948a7069f229017a16f82ceda292a20a0ae7499668f8"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/open-ctx/make.log.gz",
+      "commit": "0aa326a",
+      "sha256": "13f9c0b4977e7cf14e55d59fdee2fc2e96e6f9b8ec5de67a1ef966b852fb2a19"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/open-ctx/proverif-receipts.json",
+      "commit": "0aa326a",
+      "sha256": "b6c0cff40df26277b332454af5738d99bf9fa9b34db2d419c99f094db0a28abb"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/open-ctx/source-manifest.json",
+      "commit": "0aa326a",
+      "sha256": "6ca41c914dd732a65b10e378b44ae168831fbe751dcbf8efd00fa459517e555d"
+    },
+    {
+      "path": "doc/impl/handover/resume-2026-10-05/open-ctx/validation.json",
+      "commit": "0aa326a",
+      "sha256": "797c1ebe3adb9dd00e51d47adba858eb99895086757bd8e7fc432bcddce9d5c9"
+    },
+    {
+      "path": "doc/impl/proverif-open-ctx-controls.md",
+      "commit": "0aa326a",
+      "sha256": "fbf1928b2932e9a618920289eb19052efc976a823d74b3a00a7bde01dedbcb86"
+    }
+  ],
+  "unchanged_lean_files": 1332,
+  "six_archived_outputs_rechecked": true,
+  "old_classification_prefix_unchanged": true
+}

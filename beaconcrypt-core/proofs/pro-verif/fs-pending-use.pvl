@@ -1,0 +1,3 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* One moved token has one first-use input; later requests return None. *)
+letfun sched_reusable() = false.

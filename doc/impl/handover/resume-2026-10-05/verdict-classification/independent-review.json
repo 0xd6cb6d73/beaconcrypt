@@ -1,0 +1,24 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "decision": "APPROVE",
+  "timestamp": "2026-10-05T22:50:58.858414+00:00",
+  "manifest": "/tmp/beaconcrypt-proverif-verdict-fidelity-notes/review-manifest-final.json",
+  "manifest_sha256": "4f8365bda3ea39892451d0e87d539b48c8da9af9e616808ce91a52cb44ecdc46",
+  "frozen_file_hashes_verified": 13,
+  "findings": [],
+  "reviewed": [
+    "Complete collector, classifier, regression tests, guide, changed fidelity tests, build/inventory changes and documentation",
+    "Original/new general-registration expectation blocks independently AST-compared: identical except final return",
+    "Exact secondary KEM formulas and alias source-query selections agree with existing gates",
+    "All 3147 expected rows counted;165 security,2834 definitional,81 witness,21 negative-control,18 differential-control,20 limitation,8 diagnostic",
+    "Source event order/private handoff and empty-cache conditional cases support conservative per-query exclusion table; no vacuous origin/replay promotion",
+    "Exact fs bounds, query files and ordered primitive-library profiles required; unknown only diagnostic; fixture and vacuity promotion regressions present",
+    "27-test transcript-fidelity successful receipt inspected"
+  ],
+  "limitations": [
+    "No ProVerif solver or Lean build run for this metadata review",
+    "Classification counts are expectations, not new proof receipts or independent theorem counts",
+    "Existing general-family projection/rewrite assumptions remain; this stage does not establish common-experiment composition",
+    "Final focused Make receipt pending author completion; approval is semantic frozen-source approval"
+  ]
+}

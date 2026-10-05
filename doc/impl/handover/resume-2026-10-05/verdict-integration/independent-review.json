@@ -1,0 +1,25 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "timestamp": "2026-10-05T23:09:17.240759+00:00",
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "manifest": "/tmp/beaconcrypt-proverif-verdict-integration-notes/review-manifest-final.json",
+  "manifest_sha256": "d229da4d42600aed54403358887c5abaa25d0c6f9cb66bf116ce89c72b415c78",
+  "hashes_verified": 68,
+  "findings": [],
+  "resolved_nit": "Removed duplicate P6 analysis and pending trust-boundary insertions; source paragraph restored to source-abstraction context. Final delta only analysis/trusted-boundary/inventory hashes.",
+  "checks": [
+    "Reviewed complete classifier/collector/test extension against published P6; no fallback labels; new fixture/process/bounds/query/ordered-library scopes pinned",
+    "Independently verified52 added published files byte-identical to one of3 source checkpoints",
+    "All3147 prior TSV rows byte-identical; exactly6 non-security additions;3153 total/165 security/8 diagnostics",
+    "Read exact pending fixture schedules and open-CTX processes; finite operation counts and definitional/control classes match their actual interfaces",
+    "Shared Make/FT/inventory reconciliation retains old groups/guards and adds both new serial target groups",
+    "All1318 existing .lean source blobs independently compared to central base9be4f3e; unchanged",
+    "Read constituent independent review receipts and integration/source guides; no promotion of local fixtures into global security/source abstraction"
+  ],
+  "limits": [
+    "This review reuses unchanged published model evidence; no new prover or Lean/build invocation",
+    "Six exact metadata additions are witnesses/fixtures/controls, not new protocol security claims",
+    "Final doc-only inventory recheck remains author responsibility",
+    "Full scheduler, cross-object security transfer, raw optional plaintext/freshness and common computational/symbolic experiment remain open"
+  ]
+}

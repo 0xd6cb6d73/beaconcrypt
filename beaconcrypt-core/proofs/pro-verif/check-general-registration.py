@@ -775,6 +775,138 @@ let GeneralAdmissionContinueDirect(agreement: authenticated_registration_session
     return roles.replace(producer, call), continuation + direct
 
 
+def expected_results(target, query_indices, queries):
+    """Exact conclusive verdicts, shared by the gate and classification inventory."""
+    expected = [
+        (
+            "inj-event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,qga_frame,qga_response,qga_claimed)) ==> inj-event(GeneralAdmissionSessionOrigin(qga_agreement,qga_assigned))",
+            "true",
+        ),
+        (
+            "inj-event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,qga_frame,qga_response,qga_claimed)) ==> inj-event(GeneralAdmissionRecordOrigin(qga_agreement,qga_seq,qga_payload,qga_frame,qga_assigned))",
+            "true",
+        ),
+        (
+            "not event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,qga_frame,qga_response,qga_claimed))",
+            "false" if target == 1 else "true",
+        ),
+        (
+            "not event(GeneralAdmissionCompleted(qga_agreement,qga_seq,registration_payload(qga_binding,general_empty_suffix),qga_frame,qga_response,qga_claimed))",
+            "true",
+        ),
+        (
+            "not event(GeneralAdmissionCompleted(qga_agreement,qga_seq,general_short_payload(qga_body),qga_frame,qga_response,qga_claimed))",
+            "true",
+        ),
+        (
+            "not event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,general_short_payload(qga_body),qga_response,qga_claimed))",
+            "true",
+        ),
+        (
+            "not event(GeneralAdmissionRelabelled(qga_seq,qga_payload))",
+            "true",
+        ),
+        (
+            "event(GeneralAdmissionCompleted(qga_agreement,qga_seq,registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(qga_actual_prefix)),general_nonempty(qga_body)),qga_frame,qga_response,qga_claimed)) ==> qga_actual_prefix = qga_claimed",
+            "true",
+        ),
+        (
+            "inj-event(GeneralAdmissionPoststate(qga_agreement,qga_seq,qga_send_chain,qga_next_chain,qga_cache,qga_target_material)) ==> inj-event(GeneralAdmissionPlanOrigin(qga_agreement,qga_seq,qga_send_chain,qga_next_chain,qga_cache,qga_target_material))",
+            "true",
+        ),
+        (
+            "inj-event(GeneralCachedAccepted(qga_agreement,qga_seq,qga_payload,qga_frame)) ==> inj-event(GeneralAdmissionRecordOrigin(qga_agreement,qga_seq,qga_payload,qga_frame,qga_assigned))",
+            "true",
+        ),
+        (
+            "inj-event(GeneralFutureAccepted(qga_agreement,qga_seq,qga_payload,qga_frame)) ==> inj-event(GeneralAdmissionRecordOrigin(qga_agreement,qga_seq,qga_payload,qga_frame,qga_assigned))",
+            "true",
+        ),
+        (
+            "not event(GeneralCachedAccepted(qga_agreement,qga_seq,qga_payload,qga_frame))",
+            "true",
+        ),
+        (
+            "not event(GeneralFutureAccepted(qga_agreement,qga_seq,qga_payload,qga_frame))",
+            "false" if target == 1 else "true",
+        ),
+        ("not event(GeneralReplayAccepted(qga_agreement,qga_seq))", "true"),
+        (
+            "not event(GeneralReplayRejected(qga_agreement,qga_seq))",
+            "true",
+        ),
+        ("not event(GeneralInitialTargetRetained(qga_agreement,qga_seq))", "true"),
+        (
+            "inj-event(GeneralContinuationStarted(qga_agreement,qga_seq,qga_chain,qga_cache)) ==> inj-event(GeneralAdmissionPoststate(qga_agreement,qga_seq,qga_send_chain,qga_chain,qga_cache,qga_target_material))",
+            "true",
+        ),
+    ]
+    expected.extend(
+        [
+            (
+                "event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,qga_frame,qga_response,qga_claimed)) ==> qga_seq = CASE",
+                "true",
+            ),
+            (
+                "event(GeneralAdmissionPoststate(qga_agreement,qga_seq,qga_send_chain,qga_next_chain,qga_cache,qga_target_material)) ==> qga_seq = CASE",
+                "true",
+            ),
+            (
+                "event(GeneralFutureAccepted(qga_agreement,qga_seq,qga_payload,qga_frame)) ==> qga_seq = next_sequence(CASE)",
+                "true",
+            ),
+            (
+                "event(GeneralInitialTargetRetained(qga_agreement,qga_seq)) ==> qga_seq = CASE",
+                "true",
+            ),
+            (
+                "event(GeneralContinuationStarted(qga_agreement,qga_seq,qga_chain,qga_cache)) ==> qga_seq = CASE",
+                "true",
+            ),
+        ]
+    )
+    coverage_event = (
+        "event(GeneralCachedAccepted(qga_agreement,qga_seq,qga_payload,qga_frame))"
+    )
+    conclusion = cached_coverage_conclusion(target, printed=True)
+    expected.append(
+        (
+            (
+                coverage_event + " ==> " + conclusion
+                if conclusion is not None
+                else "not " + coverage_event
+            ),
+            "true",
+        )
+    )
+    instantiated = []
+    for index in query_execution_order(query_indices):
+        name, polarity = expected[index - 1]
+        if index == 23 and 1 <= target <= 51:
+            _, (name, polarity) = local_cached_range(queries[index - 1], target)
+        if index in INITIAL_SPECIALIZED | FUTURE_SPECIALIZED:
+            value = sequence(target + (index in FUTURE_SPECIALIZED)).replace("()", "")
+            name = re.sub(r"\bqga_seq\b", value, name)
+        name = name.replace("CASE", sequence(target).replace("()", ""))
+        if (payload := selected_witness_payload(index, target)) is not None:
+            printed_payload = payload.replace(
+                "SERVER_KEY_ID", "SERVER_KEY_ID[]"
+            ).replace("INITIAL_SECRET", "INITIAL_SECRET[]")
+            name = re.sub(r"\bqga_payload\b", printed_payload, name)
+
+        if index in query_indices:
+            for cached_target in cached_query_cases(index, target):
+                selected_name = (
+                    name
+                    if cached_target is None
+                    else re.sub(
+                        r"\bqga_seq\b", sequence(cached_target).replace("()", ""), name
+                    )
+                )
+                instantiated.append((selected_name, polarity))
+    return instantiated
+
+
 def check_case(proverif, timeout, target, log_dir, query_indices):
     main = (HERE / "general-registration-admission.pv").read_text()
     anchor = "GeneralAdmissionBeacon(BEACON_RECORD_SECRET, first_sequence(), true)"
@@ -936,134 +1068,7 @@ def check_case(proverif, timeout, target, log_dir, query_indices):
                     )
                 results.extend(found)
     # Full result strings protect against a different proved event being counted.
-    expected = [
-        (
-            "inj-event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,qga_frame,qga_response,qga_claimed)) ==> inj-event(GeneralAdmissionSessionOrigin(qga_agreement,qga_assigned))",
-            "true",
-        ),
-        (
-            "inj-event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,qga_frame,qga_response,qga_claimed)) ==> inj-event(GeneralAdmissionRecordOrigin(qga_agreement,qga_seq,qga_payload,qga_frame,qga_assigned))",
-            "true",
-        ),
-        (
-            "not event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,qga_frame,qga_response,qga_claimed))",
-            "false" if target == 1 else "true",
-        ),
-        (
-            "not event(GeneralAdmissionCompleted(qga_agreement,qga_seq,registration_payload(qga_binding,general_empty_suffix),qga_frame,qga_response,qga_claimed))",
-            "true",
-        ),
-        (
-            "not event(GeneralAdmissionCompleted(qga_agreement,qga_seq,general_short_payload(qga_body),qga_frame,qga_response,qga_claimed))",
-            "true",
-        ),
-        (
-            "not event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,general_short_payload(qga_body),qga_response,qga_claimed))",
-            "true",
-        ),
-        (
-            "not event(GeneralAdmissionRelabelled(qga_seq,qga_payload))",
-            "true",
-        ),
-        (
-            "event(GeneralAdmissionCompleted(qga_agreement,qga_seq,registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(qga_actual_prefix)),general_nonempty(qga_body)),qga_frame,qga_response,qga_claimed)) ==> qga_actual_prefix = qga_claimed",
-            "true",
-        ),
-        (
-            "inj-event(GeneralAdmissionPoststate(qga_agreement,qga_seq,qga_send_chain,qga_next_chain,qga_cache,qga_target_material)) ==> inj-event(GeneralAdmissionPlanOrigin(qga_agreement,qga_seq,qga_send_chain,qga_next_chain,qga_cache,qga_target_material))",
-            "true",
-        ),
-        (
-            "inj-event(GeneralCachedAccepted(qga_agreement,qga_seq,qga_payload,qga_frame)) ==> inj-event(GeneralAdmissionRecordOrigin(qga_agreement,qga_seq,qga_payload,qga_frame,qga_assigned))",
-            "true",
-        ),
-        (
-            "inj-event(GeneralFutureAccepted(qga_agreement,qga_seq,qga_payload,qga_frame)) ==> inj-event(GeneralAdmissionRecordOrigin(qga_agreement,qga_seq,qga_payload,qga_frame,qga_assigned))",
-            "true",
-        ),
-        (
-            "not event(GeneralCachedAccepted(qga_agreement,qga_seq,qga_payload,qga_frame))",
-            "true",
-        ),
-        (
-            "not event(GeneralFutureAccepted(qga_agreement,qga_seq,qga_payload,qga_frame))",
-            "false" if target == 1 else "true",
-        ),
-        ("not event(GeneralReplayAccepted(qga_agreement,qga_seq))", "true"),
-        (
-            "not event(GeneralReplayRejected(qga_agreement,qga_seq))",
-            "true",
-        ),
-        ("not event(GeneralInitialTargetRetained(qga_agreement,qga_seq))", "true"),
-        (
-            "inj-event(GeneralContinuationStarted(qga_agreement,qga_seq,qga_chain,qga_cache)) ==> inj-event(GeneralAdmissionPoststate(qga_agreement,qga_seq,qga_send_chain,qga_chain,qga_cache,qga_target_material))",
-            "true",
-        ),
-    ]
-    expected.extend(
-        [
-            (
-                "event(GeneralAdmissionCompleted(qga_agreement,qga_seq,qga_payload,qga_frame,qga_response,qga_claimed)) ==> qga_seq = CASE",
-                "true",
-            ),
-            (
-                "event(GeneralAdmissionPoststate(qga_agreement,qga_seq,qga_send_chain,qga_next_chain,qga_cache,qga_target_material)) ==> qga_seq = CASE",
-                "true",
-            ),
-            (
-                "event(GeneralFutureAccepted(qga_agreement,qga_seq,qga_payload,qga_frame)) ==> qga_seq = next_sequence(CASE)",
-                "true",
-            ),
-            (
-                "event(GeneralInitialTargetRetained(qga_agreement,qga_seq)) ==> qga_seq = CASE",
-                "true",
-            ),
-            (
-                "event(GeneralContinuationStarted(qga_agreement,qga_seq,qga_chain,qga_cache)) ==> qga_seq = CASE",
-                "true",
-            ),
-        ]
-    )
-    coverage_event = (
-        "event(GeneralCachedAccepted(qga_agreement,qga_seq,qga_payload,qga_frame))"
-    )
-    conclusion = cached_coverage_conclusion(target, printed=True)
-    expected.append(
-        (
-            (
-                coverage_event + " ==> " + conclusion
-                if conclusion is not None
-                else "not " + coverage_event
-            ),
-            "true",
-        )
-    )
-    instantiated = []
-    for index in query_execution_order(query_indices):
-        name, polarity = expected[index - 1]
-        if index == 23 and 1 <= target <= 51:
-            _, (name, polarity) = local_cached_range(queries[index - 1], target)
-        if index in INITIAL_SPECIALIZED | FUTURE_SPECIALIZED:
-            value = sequence(target + (index in FUTURE_SPECIALIZED)).replace("()", "")
-            name = re.sub(r"\bqga_seq\b", value, name)
-        name = name.replace("CASE", sequence(target).replace("()", ""))
-        if (payload := selected_witness_payload(index, target)) is not None:
-            printed_payload = payload.replace(
-                "SERVER_KEY_ID", "SERVER_KEY_ID[]"
-            ).replace("INITIAL_SECRET", "INITIAL_SECRET[]")
-            name = re.sub(r"\bqga_payload\b", printed_payload, name)
-
-        if index in query_indices:
-            for cached_target in cached_query_cases(index, target):
-                selected_name = (
-                    name
-                    if cached_target is None
-                    else re.sub(
-                        r"\bqga_seq\b", sequence(cached_target).replace("()", ""), name
-                    )
-                )
-                instantiated.append((selected_name, polarity))
-    expected = instantiated
+    expected = expected_results(target, query_indices, queries)
     if results != expected:
         raise ValueError(f"target {target}: exact query results differ: {results!r}")
     return target, len(results)

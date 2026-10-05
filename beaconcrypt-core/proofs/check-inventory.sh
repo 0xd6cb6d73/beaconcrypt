@@ -49,11 +49,11 @@ declare -A expected_category_counts=(
 	[generated-lean]=7
 	[generated-proverif]=1
 	[handwritten-lean]=1311
-	[handwritten-proverif]=177
+	[handwritten-proverif]=188
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=27
+	[validation]=35
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -125,7 +125,15 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/test-free-schedule-checker.py \
 	proofs/pro-verif/check-primitive-fidelity.py \
 	proofs/pro-verif/test-primitive-fidelity-checker.py \
+	proofs/pro-verif/check-pending-registration.py \
+	proofs/pro-verif/test-pending-registration-checker.py \
+	proofs/pro-verif/check-aead-differential.py \
+	proofs/pro-verif/test-aead-differential-checker.py \
 	proofs/pro-verif/declaration-allowlist.tsv \
+	proofs/pro-verif/verdict-classes.tsv \
+	proofs/pro-verif/verdict-inventory.py \
+	proofs/pro-verif/check-verdict-classes.py \
+	proofs/pro-verif/test-verdict-classes.py \
 	tests/general_registration_admission.rs \
 	tests/proverif_transcript_fidelity.rs \
 	> "$tmp_dir/validation"
@@ -888,7 +896,7 @@ require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable source fixture"
-require_line_count 25 '^#\[test\]$' \
+require_line_count 27 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -25858,5 +25866,22 @@ require_line_count 1 '^theorem program_bound([[:space:]]|$)' "$selected_source_m
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
 require_line_count 2 '^\t\$\(MAKE\) check-proverif-primitive-fidelity$' Makefile "primitive-fidelity verification steps"
 python3 proofs/pro-verif/check-primitive-fidelity.py --check-only
+
+# Exact classification is metadata validation, independent of solver evidence.
+for name in proverif_verdict_classes_cover_every_checker_and_profile hkdf_prefix_smoke_has_an_exact_source_projection_check; do
+	require_line_count 1 "^fn ${name}\(\)" "$fidelity_test" "P6 verdict/source fidelity test"
+done
+require_line_count 1 '^[[:space:]]+python3 .*test-verdict-classes.py$' Makefile "P6 metadata regressions in transcript gate"
+python3 proofs/pro-verif/check-verdict-classes.py
+
+# Finite pending-token operations retain their separate, non-security scope.
+require_line_count 1 '^check-proverif-pending-registration: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "pending-registration serial runner"
+require_line_count 2 '^\t\$\(MAKE\) check-proverif-pending-registration$' Makefile "pending-registration verification steps"
+python3 proofs/pro-verif/check-pending-registration.py --check-only
+
+# Open CTX differential controls remain separate from counted security results.
+require_line_count 1 '^check-proverif-aead-differential: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "open CTX serial runner"
+require_line_count 2 '^\t\$\(MAKE\) check-proverif-aead-differential$' Makefile "open CTX verification steps"
+python3 proofs/pro-verif/check-aead-differential.py --check-only
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

@@ -3145,7 +3145,7 @@ fn validate_general_registration_runner(
 		require(&script, wanted, label)?;
 	}
 	for (text, expected, label) in [
-		(runner, 16_793_361_920_611_321_656, "runner"),
+		(runner, 13_194_149_787_668_207_466, "runner"),
 		(generator, 1_953_512_261_811_404_212, "generator"),
 		(checker_tests, 16_505_210_370_524_032_298, "checker tests"),
 	] {
@@ -22524,6 +22524,8 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"check-proverif",
 			"check-proverif-fs",
 			"check-proverif-primitive-fidelity",
+			"check-proverif-pending-registration",
+			"check-proverif-aead-differential",
 			"extract-lean",
 			"check-lean",
 			"check-inventory",
@@ -22537,6 +22539,8 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"check-proverif",
 			"check-proverif-fs",
 			"check-proverif-primitive-fidelity",
+			"check-proverif-pending-registration",
+			"check-proverif-aead-differential",
 		]) {
 		return Err(
 			"verify-proverif-in-shell must run check-proverif-fs after check-proverif".to_owned(),
@@ -24145,14 +24149,14 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		),
 		(
 			"fs group dropped from verify-in-shell",
-			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) extract-lean\n",
-			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) extract-lean\n",
 			"verify-in-shell must run check-proverif-fs",
 		),
 		(
 			"fs group dropped from verify-proverif-in-shell",
-			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\nverify-proverif-live-material:",
-			"\t$(MAKE) check-proverif-primitive-fidelity\n\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\nverify-proverif-live-material:",
 			"verify-proverif-in-shell must run check-proverif-fs",
 		),
 		(
@@ -24891,7 +24895,14 @@ fn free_schedule_checker_loader_and_targets_are_pinned() {
 				.iter()
 				.map(|(_, _, _, query, _)| (*query).to_owned()),
 		)
-		.chain(["fs-encoding-zero-retry.pv".to_owned()])
+		.chain([
+			"fs-encoding-zero-retry.pv".to_owned(),
+			"fs-aead-differential-ctx.pv".to_owned(),
+			"fs-aead-differential-no-ctx.pv".to_owned(),
+			"fs-pending-cross-object.pv".to_owned(),
+			"fs-pending-reverse-builds.pv".to_owned(),
+			"fs-pending-single-use.pv".to_owned(),
+		])
 		.collect::<Vec<_>>();
 	queries.sort();
 	queries.dedup();
@@ -25380,5 +25391,93 @@ fn proverif_declarations_are_allowlisted() {
 			error.contains(diagnostic),
 			"{name}: wrong diagnostic {error}"
 		);
+	}
+}
+
+#[test]
+fn proverif_verdict_classes_cover_every_checker_and_profile() {
+	let checker = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+		.join("proofs/pro-verif/check-verdict-classes.py");
+	let output = std::process::Command::new("python3")
+		.arg(checker)
+		.output()
+		.expect("Python is required for the ProVerif expectation inventory");
+	assert!(
+		output.status.success(),
+		"verdict classification failed:\n{}\n{}",
+		String::from_utf8_lossy(&output.stdout),
+		String::from_utf8_lossy(&output.stderr)
+	);
+}
+
+fn validate_hkdf_prefix_source_fidelity(crypto: &str, native: &str) -> Result<(), String> {
+	let crypto = compact(&uncommented_pv(crypto)?);
+	for definition in [
+		"letfun server_to_beacon_chain(root:bitstring) = hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+		"letfun beacon_to_server_chain(root:bitstring) = hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+		"letfun ratchet_next(chain:bitstring) = hkdf_second_32(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain())).",
+		"letfun ratchet_material(chain:bitstring) = ratchet_key_nonce(hkdf_first_32(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain())),hkdf_final_12(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain()))).",
+	] {
+		require_once(
+			&crypto,
+			&compact(definition),
+			"shared initial/step HKDF projection",
+		)?;
+	}
+	let native = compact(native);
+	let actual = section_between(
+		&native,
+		"fnratchet_step_from_response(",
+		"///Firstphaseofanownedsendtransaction.",
+		"native complete step response projection",
+	)?;
+	let expected = compact(
+		r#"fn ratchet_step_from_response(
+			response: RatchetKdfResponse,
+		) -> RatchetStep<RatchetChain, RatchetMaterial> {
+			let output = split_ratchet_kdf_output(response.as_bytes());
+			RatchetStep {
+				chain: output.next_chain,
+				material: RatchetMaterial { key: output.key, nonce: output.nonce, },
+			}
+		}"#,
+	);
+	if actual != expected {
+		return Err(
+			"native full response no longer uses the same next-chain/key/nonce projections".into(),
+		);
+	}
+	Ok(())
+}
+
+#[test]
+fn hkdf_prefix_smoke_has_an_exact_source_projection_check() {
+	validate_hkdf_prefix_source_fidelity(CRYPTO_MODEL, CORE_RATCHET_CONCRETE).unwrap();
+	for (model, native) in [
+		(
+			CRYPTO_MODEL.replace(
+				"letfun ratchet_next(chain: bitstring) =\n  hkdf_second_32(",
+				"letfun ratchet_next(chain: bitstring) =\n  hkdf_first_32(",
+			),
+			CORE_RATCHET_CONCRETE.to_owned(),
+		),
+		(
+			CRYPTO_MODEL.replace("hkdf_final_12(", "hkdf_second_32("),
+			CORE_RATCHET_CONCRETE.to_owned(),
+		),
+		(
+			CRYPTO_MODEL.to_owned(),
+			CORE_RATCHET_CONCRETE.replace("chain: output.next_chain", "chain: output.key"),
+		),
+		(
+			CRYPTO_MODEL.to_owned(),
+			CORE_RATCHET_CONCRETE.replace("key: output.key", "key: replacement_key"),
+		),
+		(
+			CRYPTO_MODEL.to_owned(),
+			CORE_RATCHET_CONCRETE.replace("nonce: output.nonce", "nonce: replacement_nonce"),
+		),
+	] {
+		assert!(validate_hkdf_prefix_source_fidelity(&model, &native).is_err());
 	}
 }

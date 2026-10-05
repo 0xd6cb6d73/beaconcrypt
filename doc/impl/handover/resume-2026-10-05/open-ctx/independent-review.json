@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-10-05T22:53:41.143361+00:00",
+  "reviewer": "/root/evolving_source_join",
+  "decision": "APPROVE_PUBLICATION",
+  "manifest_sha256": "6ca41c914dd732a65b10e378b44ae168831fbe751dcbf8efd00fa459517e555d",
+  "files": {
+    "beaconcrypt-core/Makefile": "69c1f5d992db7f5b02a8d7e1fa8ca454fec788eb9cbc43f29f5f0b85b2046978",
+    "beaconcrypt-core/proofs/check-inventory.sh": "ca54f1a81ab4bc50b8a944e644b356f9fe95ab1c6fc73c8e49126c6117516cf3",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "1c190d23f27df45a242f9202e293611f0c364afd73a1e74d5fab606e3dfb416f",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "8cb8f3eed18eb9f929d4a602b73e29d96d7d560a5f92557bc20a27db726d05e0",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "b675e36414f734f8eb5abd2c49be126500d29221f34da1a35da31a40313bf405",
+    "doc/formal-verification-analysis.md": "72c4a31c82ba27d6c852fc086644c9debe6ec020c26130ab5211a298f1b17cc8",
+    "beaconcrypt-core/proofs/pro-verif/check-aead-differential.py": "a3167e052b2f34b066a8b92c513e4d70d0fa7de99174062b04825dea07e9c653",
+    "beaconcrypt-core/proofs/pro-verif/fs-aead-differential-ctx.pv": "0fbd3d750997e3eb456f69e4ff86c433e5065d9e597c9364a9742c1dcee60dd9",
+    "beaconcrypt-core/proofs/pro-verif/fs-aead-differential-no-ctx.pv": "95f8bd6955a4c67092c181afe2480420a4cd13283e9e3f374d402549ddcceb2c",
+    "beaconcrypt-core/proofs/pro-verif/fs-aead-differential.pvl": "276c7f7fe7283eae52e99153811626979db99381581eb46da7d57c100d03f370",
+    "beaconcrypt-core/proofs/pro-verif/test-aead-differential-checker.py": "92f734f36ee30c68472893dd9399954ae79c10e71c5eaae7299af5fee1f5e464",
+    "doc/impl/proverif-open-ctx-controls.md": "fbf1928b2932e9a618920289eb19052efc976a823d74b3a00a7bde01dedbcb86"
+  },
+  "validation": {
+    "Make_and_inventory_exit": 0,
+    "Make_log_sha256": "25b948800ea02fabdfb600b089e0f7187dcda68bf631ac7e6ff43db2209c0e10",
+    "receipts_sha256": "dc8b3e1879c7e6d745d1e5306771d6c232013514ec486dca4f10c0b3f1a9f1e1",
+    "alpha_rename": "sequence variable to frame_sequence; no operation or theorem change",
+    "scope": "2 definitional/differential targets; zero security claims"
+  },
+  "checks": [
+    "All 12 frozen hashes match; final Make/receipt/log hashes match; both source-bound verifier receipts strict-checked again read-only with current checker; no warnings, exact TRUE and FALSE with one trace.",
+    "Only process semantic delta from prior review is bound-variable alpha rename sequence to frame_sequence. Corresponding pinned digest/test anchor updated; result classification, query, checks and weak fixture preserved.",
+    "Final guide accurately records the successful focused Make, 25 transcript tests, nine regression tests, inventory, and retained initial warning diagnostics. Zero protocol security claims retained."
+  ],
+  "new_builds": false
+}

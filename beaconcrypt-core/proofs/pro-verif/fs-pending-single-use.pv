@@ -1,0 +1,5 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+query first: bitstring, second: bitstring, token: bitstring, i: time, j: time;
+ event(SchedTokenConsumed(first, token))@i && event(SchedTokenConsumed(second, token))@j ==> i = j.
+process SchedLinearFixture()

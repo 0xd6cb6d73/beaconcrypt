@@ -1,0 +1,3 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Deliberately invalid lifetime: permit one second consumption. *)
+letfun sched_reusable() = true.

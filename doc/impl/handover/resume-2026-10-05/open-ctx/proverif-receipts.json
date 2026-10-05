@@ -1,0 +1,48 @@
+[
+  {
+    "name": "CTX-open",
+    "class": "definitional",
+    "start": "2026-10-05T22:58:15.281615+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "aead-commitment-negative-control.pvl": "1f653bc4f3f7224d0966cc1657d2e4b1b5902451263aae3890de50ea9c4602ae",
+      "fs-aead-differential.pvl": "276c7f7fe7283eae52e99153811626979db99381581eb46da7d57c100d03f370",
+      "fs-aead-differential-ctx.pv": "0fbd3d750997e3eb456f69e4ff86c433e5065d9e597c9364a9742c1dcee60dd9"
+    },
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-05T22:58:15.290542+00:00",
+    "seconds": 0.008894131984561682,
+    "peak_rss_kib": 14152,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "994515e58b9213787e2216dee612f4211063b339890ef5183fc76d5f97a1586f",
+    "checked": true
+  },
+  {
+    "name": "CTX-open-no-commitment",
+    "class": "differential",
+    "start": "2026-10-05T22:58:15.291494+00:00",
+    "sources": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "aead-commitment-negative-control.pvl": "1f653bc4f3f7224d0966cc1657d2e4b1b5902451263aae3890de50ea9c4602ae",
+      "fs-aead-differential.pvl": "276c7f7fe7283eae52e99153811626979db99381581eb46da7d57c100d03f370",
+      "fs-aead-differential-no-ctx.pv": "95f8bd6955a4c67092c181afe2480420a4cd13283e9e3f374d402549ddcceb2c"
+    },
+    "limits": {
+      "seconds": 1800,
+      "address_space_kib": 10485760
+    },
+    "end": "2026-10-05T22:58:15.299673+00:00",
+    "seconds": 0.008154755923897028,
+    "peak_rss_kib": 14276,
+    "exit": 0,
+    "timed_out": false,
+    "log_sha256": "3c16586492f42a0a735482ddbe0a6d43962630c9115ac4b5d2a4a24ac22ad13f",
+    "checked": true
+  }
+]

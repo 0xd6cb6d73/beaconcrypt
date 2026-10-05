@@ -1,0 +1,93 @@
+{
+  "recorded": "2026-10-05T22:44:25.679652+00:00",
+  "exact_validated_commit": "282cc719bfa18e078875758c41c7eaf36a8529f5",
+  "scope": "Four finite operational targets; no new protocol security theorem",
+  "source_files": {
+    "beaconcrypt/src/server.rs": "40efdd7a1a86e5dac0afee4bfa2c2433a66cf86e4fbdca640e2464241e1c0569",
+    "beaconcrypt-core/Makefile": "ca9dd0b5f00465503c33bc81136303fee15a5b769f639acad5b3af5e32c38d2d",
+    "beaconcrypt-core/proofs/pro-verif/check-free-schedule.py": "4384a9b91a906ec11c4715c41f9f254b0d15512e9ffbe363b9b6352818f4f759",
+    "beaconcrypt-core/proofs/pro-verif/check-pending-registration.py": "5cca3a1973ecdf405fc2e9220cb03f051845ce7256f50974525e9d91aa00fac6",
+    "beaconcrypt-core/proofs/pro-verif/crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+    "beaconcrypt-core/proofs/pro-verif/extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+    "beaconcrypt-core/proofs/pro-verif/fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+    "beaconcrypt-core/proofs/pro-verif/fs-control-pending-reuse.pvl": "7c599a2eaab90d25a0d61dda68ab1a7ab23594b76c5a4e9ea9711632a14a9120",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-cross-object.pv": "cfadfc68c1c16bbd207c873aba8b47f7b486700a73c0c3082b3db851346ecff9",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-fixtures.pvl": "68c4680911be1f2ba7fab457e9e0aaaa7e59ec95594229d0ec2586b5354b211f",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-registration.pvl": "b9a61bd2a03540bbee428489672c11b1767b4733ce86ea9fda107c6ff00f9a6e",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-reverse-builds.pv": "d514f7faa0fa98937e6812e90cda442f48bbcf810ad5491e58a58b982661653e",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-single-use.pv": "64dafcbcebd057932c19b03a342943562de6e7551b86a97ac13671c80d36d393",
+    "beaconcrypt-core/proofs/pro-verif/fs-pending-use.pvl": "ebb7db7d04a5cb57d55a5ea2251f39ca5c33579b0d4b72084ad4e062bdfb8057",
+    "beaconcrypt-core/proofs/pro-verif/fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+    "beaconcrypt-core/proofs/pro-verif/fs-registration-consumed.pvl": "e55de96a05977010190d0e0b88c97efc197d452de435ac1467cf76700c996048",
+    "beaconcrypt-core/proofs/pro-verif/fs-registration.pvl": "b057af70842b17d27743139f3595b361ccad7ce1bf1fcd3f988cf90ec6d6df19",
+    "beaconcrypt-core/proofs/pro-verif/production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+    "beaconcrypt-core/proofs/pro-verif/registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+    "beaconcrypt-core/proofs/pro-verif/test-pending-registration-checker.py": "28339d4d7dc2eca041e6abd97e560a7a5b599313791b331769479c8f363db3bb"
+  },
+  "targets": [
+    {
+      "target": "pending-CROSS",
+      "expected": [
+        "event(SchedBuilt(origin_1,owner_4,token_2,next_1)) ==> origin_1 = owner_4 is false."
+      ],
+      "exact_checked": true,
+      "log": "make-pending-CROSS.log.gz",
+      "log_sha256": "160715a576ea296f7ea27053a892b059988057c005328ec4d506c556182da0ea",
+      "gzip_sha256": "73fdad1c12b47ce44f3499f8eba5252da85a2ca1a30aba72225c16daf6447979"
+    },
+    {
+      "target": "pending-REVERSE",
+      "expected": [
+        "not event(SchedBuilt(owner_9,owner_9,sched_token(0),2)) is false."
+      ],
+      "exact_checked": true,
+      "log": "make-pending-REVERSE.log.gz",
+      "log_sha256": "b57fff78a54df502aa17ab3735f5aaaadf1cf6613c82df98580fde2f08a15dd3",
+      "gzip_sha256": "4504146adaf161f28dd24a3a73e582b1da809008e2160f86e6388b867ca4f0d5"
+    },
+    {
+      "target": "pending-LINEAR",
+      "expected": [
+        "event(SchedTokenConsumed(first,token_3))@i && event(SchedTokenConsumed(second,token_3))@j ==> i = j is true."
+      ],
+      "exact_checked": true,
+      "log": "make-pending-LINEAR.log.gz",
+      "log_sha256": "f48ce25a8f0be9be31fb0004a884a48102b29a9f1b41d311aa45b9dfb3027900",
+      "gzip_sha256": "35c5e7d849219452b31d785f05f98e85fe57e414dd796a118decf923119f2b12"
+    },
+    {
+      "target": "pending-C-REUSE",
+      "expected": [
+        "event(SchedTokenConsumed(first,token_3))@i && event(SchedTokenConsumed(second,token_3))@j ==> i = j is false."
+      ],
+      "exact_checked": true,
+      "log": "make-pending-C-REUSE.log.gz",
+      "log_sha256": "e67aa729886ff986a72ca91472dc3b59b6f5c1786152cc0df44f6d79c885a4d0",
+      "gzip_sha256": "a1d01fbc3908efe8bbeddbd7ce998ff23be6d3d54998c0212e5663e9d486f026"
+    }
+  ],
+  "command": "locked minimal-flake proof shell: make -C beaconcrypt-core SHELL=/run/current-system/sw/bin/bash check-proverif-pending-registration",
+  "limits": {
+    "seconds_per_target": 180,
+    "address_space_kib": 10485760
+  },
+  "prerequisite_transcript_tests": 25,
+  "checker_regressions": 25,
+  "logs": {
+    "make": {
+      "log": "committed-make.log.gz",
+      "log_sha256": "b79226fe8db0d73f677160866dea1a686181e09be8656b7f87ab8257d8bfeeb6",
+      "gzip_sha256": "df030634ec7c65db580582991e2e88fa8e42aeb298ff790318d902bfe9f7a886",
+      "exit_code": 0
+    },
+    "inventory": {
+      "log": "committed-inventory.log.gz",
+      "log_sha256": "d7be0d02f3e3725edadff6995f055fc5270a6430f048ed326dfa6bb30cd4a45a",
+      "gzip_sha256": "403c67352810f4e0137eee267fcf9928c0eb8d238a319716f11c6a6ca48d86dd",
+      "exit_code": 0
+    }
+  },
+  "aggregate_verify": false,
+  "mutation_campaign": false
+}
