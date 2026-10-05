@@ -141,29 +141,33 @@ Measured traces of the FALSE results: C5a, an honest Beacon sends records 1 and 
 
 ## Results
 
-Every target ran once in development runs on 2026-10-05, each as its own ProVerif process under the shared ProVerif lock, with ProVerif 2.05, a 1800 s timeout and a 10485760 KiB address-space cap, on the 16 GB machine with no other ProVerif run, through a scratch runner that loads the same libraries in the same order as the checker; time and peak resident memory come from GNU `time`. Every run gave the exact expected result line and trace count of its target; no run printed "cannot be proved", an unknown or inconclusive result, or a warning. The serial verification pass of the whole fs group is recorded in the next commit.
+The verification record is one serial run of `make -C beaconcrypt-core check-proverif-fs PROVERIF_FS_LOG_DIR=<dir>`, the fifteen registration targets, then the sixteen Server-to-Beacon record targets, then the seventeen Beacon-to-Server record targets, from 2026-10-05 07:03 to 09:45 (+02:00), on the tree of commit `c122164`, which adds this scenario; the commit that records the pass changes only files under `doc/`. It ran inside the locked proof shell (entered through a copy of `flake.nix` and `flake.lock` whose SHA-256 match the repository files), holding the shared ProVerif lock, so that no other ProVerif process ran, with ProVerif 2.05, `PROVERIF_FS_TIMEOUT` = 1800 s and `PROVERIF_FS_ADDRESS_SPACE_KIB` = 10485760, on the 16 GB machine. The transcript-fidelity test (25 tests) passed first, and the checker regression test (56 tests) passed before each scenario. Every target ran as its own ProVerif process, one after another, gave its exact expected result lines and trace count and left its own log, forty-eight in all; the whole Make target exited with status 0. No b2s run printed "cannot be proved", an unknown or inconclusive result or any warning (the only warnings of the pass are the known termination warnings of s2b-A2 and s2b-S1). The peak address space (`VmPeak` in `/proc/<pid>/status`) was sampled every quarter second by a separate script, as in P1 and P2; runs shorter than the sampling interval have no entry.
 
-| Target | Class | K_r | Verdict | ProVerif time (s) | Peak RSS (KiB) |
-| --- | --- | --- | --- | --- | --- |
-| b2s-A1 | security | 3 | TRUE | 4.19 | 411552 |
-| b2s-A2 | security | 3 | TRUE | 2.11 | 299316 |
-| b2s-C2 | security | 3 | TRUE | 902.50 | 6631808 |
-| b2s-C2-chosen-fs | security | 3 | TRUE | 238.53 | 2511484 |
-| b2s-C3 | security | 3 | TRUE | 399.49 | 2758904 |
-| b2s-C4 | security | 3 | TRUE | 1063.49 | 3284472 |
-| b2s-S2 | security | 3 | TRUE | 1.47 | 258152 |
-| b2s-UKSr | security | 3 | TRUE | 313.41 | 1669736 |
-| b2s-C5a | witness | 2 | FALSE (reachable) | 9.70 | 401648 |
-| b2s-C5b | witness | 2 | FALSE (reachable) | 11.75 | 514928 |
-| b2s-C5c | witness | 2 | FALSE (reachable) | 22.62 | 640880 |
-| b2s-S4 | witness | 1 | FALSE (reachable) | 0.65 | 72552 |
-| b2s-FAR | witness | 1 | FALSE (reachable) | 0.52 | 59648 |
-| b2s-PINREAD | witness | 1 | FALSE (reachable) | 1.15 | 111996 |
-| b2s-C-UKS | control | 1 | FALSE (expected) | 0.52 | 70012 |
-| b2s-C-RETAIN | control | 3 | FALSE (expected) | 258.00 | 2364924 |
-| b2s-C-STALE | control | 3 | FALSE (expected) | 265.53 | 2383088 |
+Before the pass every b2s target had run once in development runs on 2026-10-05, each as its own ProVerif process under the same lock, timeout and cap, through a scratch runner that loads the same libraries in the same order as the checker, timed by GNU `time`; each gave the same exact result line and trace count, and the last column gives its ProVerif time. Every b2s target printed exactly the same sequence of saturation statistics in the pass as in its development run, and every registration and s2b target exactly the same as in the P2 record (the pass on `f18a089`), which confirms that the pass ran the same clause sets and that the P3 changes left the other two scenarios untouched. S2 (K_r = 3) and PINREAD (K_r = 1) also print the same statistics as each other: both run in the pin-free process with fresh records, neither query mentions a Server event, and the Server receive worker outputs nothing, so the receive bound adds no clause to their saturation.
 
-The seventeen targets took 3495.6 s of ProVerif time (58.3 minutes; 2925.2 s for the eight security results), within the about 77 minutes that remained for this scenario under OD7. The largest run, C2 with fresh records, used 50% of the time cap and peaked at 6631808 KiB resident (6.32 GiB, 63.2% of the cap); the pin-free C4 took 1063 s (59% of the time cap) at 3284472 KiB. Without the pin-free process C4 in the same form took 98 s.
+| Target | Class | K_r | Verdict | ProVerif time (s) | Peak RSS (KiB) | Peak address space (KiB) | Development run (s) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| b2s-A1 | security | 3 | TRUE | 4.30 | 410888 | 674496 | 4.19 |
+| b2s-A2 | security | 3 | TRUE | 2.22 | 298888 | 549504 | 2.11 |
+| b2s-C2 | security | 3 | TRUE | 910.71 | 6626568 | 6890532 | 902.50 |
+| b2s-C2-chosen-fs | security | 3 | TRUE | 241.92 | 2513672 | 2777708 | 238.53 |
+| b2s-C3 | security | 3 | TRUE | 383.96 | 2765448 | 3029220 | 399.49 |
+| b2s-C4 | security | 3 | TRUE | 1056.68 | 3249544 | 3513608 | 1063.49 |
+| b2s-S2 | security | 3 | TRUE | 1.53 | 257672 | 513884 | 1.47 |
+| b2s-UKSr | security | 3 | TRUE | 308.03 | 1667080 | 1931008 | 313.41 |
+| b2s-C5a | witness | 2 | FALSE (reachable) | 9.79 | 401800 | 626120 | 9.70 |
+| b2s-C5b | witness | 2 | FALSE (reachable) | 11.28 | 515720 | 755912 | 11.75 |
+| b2s-C5c | witness | 2 | FALSE (reachable) | 22.58 | 644232 | 878920 | 22.62 |
+| b2s-S4 | witness | 1 | FALSE (reachable) | 0.67 | 74504 | 336100 | 0.65 |
+| b2s-FAR | witness | 1 | FALSE (reachable) | 0.48 | 59016 | 320100 | 0.52 |
+| b2s-PINREAD | witness | 1 | FALSE (reachable) | 1.11 | 109576 | 372100 | 1.15 |
+| b2s-C-UKS | control | 1 | FALSE (expected) | 0.53 | 70536 | 324964 | 0.52 |
+| b2s-C-RETAIN | control | 3 | FALSE (expected) | 269.25 | 2367240 | 2631076 | 258.00 |
+| b2s-C-STALE | control | 3 | FALSE (expected) | 263.26 | 2389000 | 2652740 | 265.53 |
+
+The b2s targets took 3488.3 s of ProVerif time (58.1 minutes; 2909.4 s for the eight security results), against 3495.6 s in the development runs; every run longer than one second differs from its development run by at most 5.2% (A2; C-RETAIN +4.4%, C5b -4.0%, C3 -3.9%). The b2s part of the Make target, from the end of the last s2b run to the end of the last b2s run, took about 3491 s (58 minutes) of wall time, within the about 77 minutes that remained for this scenario under OD7. In the same pass the fifteen registration targets gave the exact results of P1 in 2658.4 s of ProVerif time (44.3 minutes; 2641.5 s in the P2 record) and the sixteen s2b targets the exact results of P2 in 3531.4 s (58.9 minutes; 3521.2 s in the P2 record); every run of these two scenarios longer than one second was within 6.2% of the P2 record (W2, 2.07 s against 1.95 s, and S3-beacon, 407.25 s against 390.43 s, +4.3%; every other within 3.5%). The whole pass took 9678.1 s of ProVerif time and 9716.7 s (2 h 42 min) of wall time for the Make target, including the transcript-fidelity run, the three checker regression runs and the shell start: 90% of the about 3 h of the fs budget (OD7), which leaves about 1080 s (18 minutes).
+
+The largest b2s run, C4 (pin-free, fail-stop), used 58.7% of the 1800 s cap and peaked at 3513608 KiB of address space (3.35 GiB, 33.5% of the cap); without the pin-free process C4 in the same form took 98 s. The largest b2s run in memory, C2 with fresh records, used 50.6% of the time cap and peaked at 6626568 KiB resident (6.32 GiB, 63.2% of the 10 GiB cap) and 6890532 KiB of address space (6.57 GiB, 65.7%). In the whole group, the s2b C1 is the longest run (1113.29 s, 61.8% of the time cap; 6922152 KiB of address space, 66.0%), and the registration A1 stays the critical run for memory: it took 1043.72 s and its peak address space was 10138604 KiB (9.67 GiB), 96.7% of the 10485760 KiB cap, which leaves 347156 KiB (0.33 GiB, 3.3%) of headroom, against 346516 KiB in the P2 record. The resident figures of the runs shorter than about a second are dominated by the measurement, as in P2: the checker reads the peak resident memory of the child process with `wait4`, which includes the forked checker before it starts ProVerif.
 
 ## Fail-stop and pin-free measurements
 
@@ -207,7 +211,7 @@ The security results hold for unbounded Server objects, honest Beacons and attac
 - **Adversary-chosen records in the failure-interleaving form.** C2 and C4 with adversary-chosen records do not fit the caps in the failure-interleaving form and are covered through the fail-stop form and the deletion argument. A selection heuristic (plan ladder step 7, through the declaration allowlist) that lets them run in that form directly is open, as is any cheaper pin-free formulation of C2, C3 and UKSr.
 - **The root step of E3.** ProVerif cannot discharge `attacker(root)` in the conclusion of the correspondence that states it, so step 13 (c) is on paper; a formulation that ProVerif can prove (for example through a witness-only event at the Beacon's finish that names its pin) would need a reviewed event change. The same holds for step 13 (b): a statement through `FsReceivedFrame` did not finish within about 17 minutes ([measurements](#fail-stop-and-pin-free-measurements)).
 - **Controls not run in b2s.** C-RETAIN on C2 (the injective part of record agreement) and a b2s C-FAILMUT were not run; the plan lists C-FAILMUT for s2b only.
-- **Budget (OD7).** With this scenario the fs group uses most of the about 3 h of OD7 ([Results](#results)), and the registration A1 still keeps only about 3% of the address-space cap as headroom. Further fs targets in P4 to P7 need either a budget decision or a separate serial group.
+- **Budget (OD7).** With this scenario one pass of the fs group takes 2 h 42 min of wall time, 90% of the about 3 h of OD7, which leaves about 18 minutes ([Results](#results)), and the registration A1 still keeps only 3.3% of the address-space cap as headroom. Further fs targets in P4 to P7 need either a budget decision or a separate serial group.
 - **P4 (F13).** The theory with low-order points and the all-zero check (an event that distinguishes the all-zero check from a DH refusal) for the record scenarios; same-role DH equalities are still not shown.
 - **P5.** Strong secrecy of Beacon records (SS1), which must publish the `Some`/`None` bit of every receive and finish (E11), and SS2.
 - **P6.** The verdict-classes manifest must include the seventeen b2s targets with their classes, the two fail-stop targets and the pin-free process.
