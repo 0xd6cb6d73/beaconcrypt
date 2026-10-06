@@ -1,0 +1,6 @@
+query candidate_key: bitstring,
+ candidate_init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+ candidate_rid: beaconcrypt_core__pqxdh__t_RegistrationId;
+ event(ProvAccepted(ed_public(candidate_key), candidate_init, candidate_rid))
+ ==> event(ProvPublished(ed_public(candidate_key), candidate_init, candidate_rid)) || attacker(candidate_key).
+process ProvMain(false)

@@ -83,3 +83,5 @@ proofs/pro-verif/fs-strong-common.pvl	nounif	1	nounif x:bitstring, y:bitstring; 
 proofs/pro-verif/check-active-strong-secrecy.py	nounif	1	nounif x:bitstring, y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
 proofs/pro-verif/active-strong-secrecy-models.py	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
 proofs/pro-verif/fs-strong-s2b.pv	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
+proofs/pro-verif/registration-provenance.pvl	precise	3	[precise]	doc/formal-verification-analysis.md#signature-origin-across-registration-schedules
+proofs/pro-verif/registration-provenance-wrong-purpose.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#signature-origin-across-registration-schedules

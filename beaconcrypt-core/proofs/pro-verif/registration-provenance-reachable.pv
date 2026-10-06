@@ -1,0 +1,6 @@
+query published_key: bitstring,
+ published_init: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
+ published_rid: beaconcrypt_core__pqxdh__t_RegistrationId;
+ event(ProvAccepted(published_key, published_init, published_rid)) &&
+ event(ProvPublished(published_key, published_init, published_rid)).
+process ProvMain(false)

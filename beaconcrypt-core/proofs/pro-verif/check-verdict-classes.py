@@ -130,6 +130,21 @@ def extension_class_scope(name, target, driver):
             + ";".join(target.libraries())
         )
         return cls, scope
+    if name == "check-registration-provenance":
+        profile = (
+            "wrong one-time purpose parser"
+            if target.wrong_purpose
+            else "exact source-purpose parser"
+        )
+        publications = 2 if target.process == "ProvMain(true)" else 1
+        scope = (
+            f"T0 signature-only source-profile projection; publications_per_identity = {publications}; "
+            f"replicated owners, role-DH and verification observers; {profile}; "
+            "no snapshot/persistence or native-byte/computational conclusion; "
+            f"process={target.process}; query={target.query}; libraries="
+            + ";".join(target.libraries())
+        )
+        return target.cls, scope
     raise ValueError(f"unreviewed extension scope: {name}")
 
 
@@ -190,6 +205,7 @@ def validate_scope(rows):
         "check-pending-registration",
         "check-aead-differential",
         "check-active-strong-secrecy",
+        "check-registration-provenance",
     ):
         driver = INVENTORY.module(name)
         targets = {target.name: target for target in driver.TARGETS}

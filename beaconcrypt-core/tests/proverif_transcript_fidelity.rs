@@ -22527,6 +22527,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"check-proverif-active-strong-secrecy",
 			"check-proverif-pending-registration",
 			"check-proverif-aead-differential",
+			"check-proverif-registration-provenance",
 			"extract-lean",
 			"check-lean",
 			"check-inventory",
@@ -22543,6 +22544,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"check-proverif-active-strong-secrecy",
 			"check-proverif-pending-registration",
 			"check-proverif-aead-differential",
+			"check-proverif-registration-provenance",
 		]) {
 		return Err(
 			"verify-proverif-in-shell must run check-proverif-fs after check-proverif".to_owned(),
@@ -24151,14 +24153,14 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		),
 		(
 			"fs group dropped from verify-in-shell",
-			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) extract-lean\n",
-			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) extract-lean\n",
 			"verify-in-shell must run check-proverif-fs",
 		),
 		(
 			"fs group dropped from verify-proverif-in-shell",
-			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\nverify-proverif-live-material:",
-			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\nverify-proverif-live-material:",
 			"verify-proverif-in-shell must run check-proverif-fs",
 		),
 		(

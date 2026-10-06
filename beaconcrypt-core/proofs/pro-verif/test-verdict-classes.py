@@ -195,6 +195,22 @@ class ClassificationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.check(rows)
 
+    def test_registration_provenance_scope_and_complete_roster(self):
+        driver = CHECK.INVENTORY.module("check-registration-provenance")
+        for target in driver.TARGETS:
+            rows = [row for row in self.rows if row["target"] != target.name]
+            self.assertEqual(len(rows), len(self.rows) - 1)
+            with self.assertRaises(ValueError):
+                self.check(rows)
+            for field, value in (
+                ("class", "definitional"),
+                ("scope", "full protocol security without scope conditions"),
+            ):
+                rows = copy.deepcopy(self.rows)
+                next(row for row in rows if row["target"] == target.name)[field] = value
+                with self.assertRaises(ValueError):
+                    self.check(rows)
+
 
 if __name__ == "__main__":
     unittest.main()

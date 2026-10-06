@@ -90,6 +90,8 @@ PROVERIF_FS_LOG_DIR ?=
 # Separate owner-approved primitive/strong-secrecy group (2026-10-05).
 PROVERIF_OPEN_CTX_LOG_DIR ?=
 PROVERIF_PRIMITIVE_LOG_DIR ?=
+PROVERIF_PROVENANCE_TIMEOUT ?= 180
+PROVERIF_PROVENANCE_LOG_DIR ?=
 PROVERIF_STRONG_LOG_DIR ?=
 # Finite pending-token operational checks; separate from security groups.
 PROVERIF_PENDING_TIMEOUT ?= 180
@@ -135,7 +137,7 @@ LEAN_GENERATED_PATHS := \
 	verify-proverif-kem-controller-auth check-proverif-kem-controller-auth \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity check-proverif-primitive-fidelity check-proverif-active-strong-secrecy \
-	check-proverif-pending-registration check-proverif-aead-differential \
+	check-proverif-pending-registration check-proverif-aead-differential check-proverif-registration-provenance \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
 	check-proverif-extraction check-generated check-generated-lean \
@@ -161,6 +163,7 @@ verify-in-shell:
 	$(MAKE) check-proverif-active-strong-secrecy
 	$(MAKE) check-proverif-pending-registration
 	$(MAKE) check-proverif-aead-differential
+	$(MAKE) check-proverif-registration-provenance
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 	$(MAKE) check-inventory
@@ -179,6 +182,7 @@ verify-proverif-in-shell:
 	$(MAKE) check-proverif-active-strong-secrecy
 	$(MAKE) check-proverif-pending-registration
 	$(MAKE) check-proverif-aead-differential
+	$(MAKE) check-proverif-registration-provenance
 
 verify-proverif-live-material:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -321,6 +325,15 @@ check-proverif-pending-registration: check-proverif-extraction check-proverif-tr
 		--timeout '$(PROVERIF_PENDING_TIMEOUT)' \
 		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
 		$(if $(PROVERIF_PENDING_LOG_DIR),--log-dir '$(PROVERIF_PENDING_LOG_DIR)')
+
+# Exact T0 provenance and independently reviewed source-profile lifting.
+check-proverif-registration-provenance: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-registration-provenance-checker.py
+	python3 $(PROVERIF_DIR)/check-registration-provenance.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_PROVENANCE_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_PROVENANCE_LOG_DIR),--log-dir '$(PROVERIF_PROVENANCE_LOG_DIR)')
 
 # Open differential controls: no additional protocol security claims.
 check-proverif-aead-differential: check-proverif-extraction check-proverif-transcript-fidelity

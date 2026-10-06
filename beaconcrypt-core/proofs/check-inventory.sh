@@ -49,11 +49,11 @@ declare -A expected_category_counts=(
 	[generated-lean]=7
 	[generated-proverif]=1
 	[handwritten-lean]=1335
-	[handwritten-proverif]=205
+	[handwritten-proverif]=213
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=38
+	[validation]=41
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -132,6 +132,9 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/active-strong-secrecy-models.py \
 	proofs/pro-verif/check-active-strong-secrecy.py \
 	proofs/pro-verif/test-active-strong-secrecy-checker.py \
+	proofs/pro-verif/registration-provenance-theory.py \
+	proofs/pro-verif/check-registration-provenance.py \
+	proofs/pro-verif/test-registration-provenance-checker.py \
 	proofs/pro-verif/declaration-allowlist.tsv \
 	proofs/pro-verif/verdict-classes.tsv \
 	proofs/pro-verif/verdict-inventory.py \
@@ -26213,5 +26216,10 @@ python3 proofs/pro-verif/check-aead-differential.py --check-only
 require_line_count 1 '^check-proverif-active-strong-secrecy: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "active strong-secrecy serial runner"
 require_line_count 2 '^\t\$\(MAKE\) check-proverif-active-strong-secrecy$' Makefile "active strong-secrecy verification steps"
 python3 proofs/pro-verif/check-active-strong-secrecy.py --check-only
+
+# Exact signature-origin projection and protected-term syntax audit.
+require_line_count 1 '^check-proverif-registration-provenance: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "signature-provenance serial runner"
+require_line_count 2 '^\t\$\(MAKE\) check-proverif-registration-provenance$' Makefile "signature-provenance verification steps"
+python3 proofs/pro-verif/check-registration-provenance.py --check-only
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
