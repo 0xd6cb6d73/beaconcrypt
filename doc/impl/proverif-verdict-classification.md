@@ -16,7 +16,7 @@ The source test `proverif_verdict_classes_cover_every_checker_and_profile` invok
 
 The six D7 classes are retained: `security`, `witness`, `negative-control`, `differential-control`, `definitional`, and `limitation`. Functional fixtures are the `definitional` class with an explicit fixture scope. The manifest adds one necessary category: `diagnostic` is reserved for an existing `unknown`/`cannot be proved` expectation. Unknowns count as neither a proof nor a counterexample. A TRUE inverted control or residual weaker statement in a control run is labelled `differential-control`; it is not described as a reconstructed attack. The original checkers retain their exact trace requirements.
 
-The current manifest contains 3,172 expected statements: 172 security-class entries, 2,836 definitional/fixture entries, 85 witnesses, 32 negative-control entries, 19 differential-control entries, 20 limitations and eight diagnostics. The original 3,147 rows and their classifications remain unchanged. These are counts of classified expectations, not new validation receipts or counts of independent protocol theorems. In particular, the general-registration family includes many conditional statements with unreachable antecedents; repeated targets and projections must not be added together as independent security guarantees. Only `security` rows may be counted when reporting security-query results, and their actual receipts, theory and scope must accompany that report.
+At source basis `4d4ecf0cf15097c3a53e609ac7d874a6fa8f48a1`, the current manifest contains 3,198 expected statements: 185 security-class entries, 2,836 definitional/fixture entries, 88 witnesses, 42 negative-control entries, 19 differential-control entries, 20 limitations and eight diagnostics. The [source-scope ledger](../proverif-source-scope.md) distinguishes the current source transfers from auxiliary checks and historical process results. The original 3,147 rows and their classifications remain unchanged. These are counts of classified expectations, not new validation receipts or counts of independent protocol theorems. In particular, the general-registration family includes many conditional statements with unreachable antecedents; repeated targets and projections must not be added together as independent security guarantees. Only `security` rows may be counted when reporting security-query results, and their actual receipts, theory and scope must accompany that report.
 
 | Checker | Security-class expectations | Other expectations | Exact scope |
 | --- | ---: | ---: | --- |
@@ -33,6 +33,12 @@ The current manifest contains 3,172 expected statements: 172 security-class entr
 | Open CTX pair | 0 | 2 | Definitional context binding and weak-AEAD differential control with arbitrary public contexts/frame |
 | Active strong secrecy | 2 | 4 | Exact bounded directional equivalence; labelled result bits; separate single-world fresh-secret controls |
 | Signature provenance | 3 | 3 | Exact T0 single-publication and role-DH projection, source-profile A2 lift, auxiliary identity secrecy and purpose/triple controls |
+| Delayed initial response | 2 | 5 | Delayed/moved one-use tokens, literal IDs, selected initial origin and auxiliary completed-root secrecy; controls include secondary verdict lines |
+| Exact far material | 2 | 3 | Both literal 51-target HKDF families, hidden-reply C4 projection, public-chain controls and attacker-owned far witness |
+| Exact-ID b2s origin | 2 | 2 | Selected near positions 1/2, three receives, actual optional plaintext; auxiliary identity and separate paper injectivity |
+| Exact-ID s2b origin | 3 | 2 | Selected near positions 2/3 after initial 1, three receives, actual optional plaintext; same-process initial origin and auxiliary identity |
+| Private application secrecy | 2 | 2 | Selected fresh successful near publications, public result bits/private plaintext/no-echo profile and exact plaintext-leak controls |
+| Exact-interface strong secrecy | 4 | 4 | Two Kr3 equivalences and two auxiliary response-origin checks; four fresh-secret controls, delayed build and paired source/context interpretation |
 
 ## Correct interpretation of the fixtures
 

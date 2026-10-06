@@ -812,3 +812,8 @@ The thirty modules in [this integration](../../doc/impl/native-origin-cut-integr
 ### Actual getter availability and observation scope
 
 The [getter/source profile](../../doc/impl/live-getter-source-profile.md) checks all twenty Beacon secret-field/phase cases and the Server identity getter against the existing current-field projections. Full source pins retain the reviewed terminal-lifetime argument. This proves field availability at the stated abstract representation boundary, not physical erasure or post-compromise secrecy. A native Ed25519 secret object is not equated with the model's seed bytes. The latest approved deployment excludes running-code access and protected Server disclosure; richer component read/freshness interfaces do not enable those actions in the symbolic experiment. Pending Server roots and transient Beacon roots remain distinct from unavailable historical roots. No new model, primitive contract or security verdict is introduced.
+
+
+## Current symbolic source-claim ledger
+
+The [source-scope ledger](../../doc/proverif-source-scope.md) records exactly which maintained symbolic results have claim-specific source interpretations and distinguishes solver verdicts, reviewed paper transfers and unresolved computational composition. Its catalog retains literal identity/own-ID/assigned-ID fields, successful-publication versus allocation events, directional near bounds, public optional-plaintext authentication versus private-application confidentiality, auxiliary checks and explicit T0 idealizations. It adds no proof, contract, capability or validation result. The historical models, all 3,198 classified expected lines and their gates remain unchanged.

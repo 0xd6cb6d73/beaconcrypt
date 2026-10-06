@@ -6,6 +6,8 @@ The phrase “preserves state” below names the state it preserves. Native allo
 
 ## Status of the obligations
 
+The table records the original audit and the remaining unrestricted source-to-fs relation. Later claim-specific projections do not require that whole relation: their current events, exact bounds, observation rules and auxiliary checks are consolidated in the [source-scope ledger](../proverif-source-scope.md). In particular, delayed/moved-token A1 and exact-ID near origins have reviewed source transfers, while a blanket all-query trace equivalence remains unproved. The appended milestone sections below retain their detailed history.
+
 | Obligation | Result established here | Remaining global obligation |
 | --- | --- | --- |
 | L1, Server decomposition and accept/build scheduling | Exact state footprints; complete builder independence from consumed context, checked in Lean; source counterexamples to an event-preserving adjacency or object-renaming argument; [pending-token scheduler extension](proverif-pending-registration-schedule.md) | A checked global pending-token security result or a claim-specific violation-preserving simulation covering arbitrary accept/build order and cross-object token transfer |
@@ -19,7 +21,7 @@ The phrase “preserves state” below names the state it preserves. Native allo
 | E19, direction split | The exact state-separation premise and remaining proof obligations are identified | A deduction-preserving simulation is still required |
 | E3, arbitrary pins | The independently reviewed [origin and violation-transfer argument](proverif-pin-origin.md) covers exact bounded b2s C2/C3 | Finite syntax gates maintain its premises; no Rust/API/global/computational lift follows |
 
-These statements require independent review before their status is used elsewhere. In particular, writing a local paper proof does not remove the existing “pending abstraction” qualifier from an fs security result.
+The detailed maintained milestone guides record their independent reviews and finite premise checks. A local paper proof removes a pending qualifier only for the exact claim and profile it transfers; it does not remove that qualifier from unrelated original fs results.
 
 ## L1: exact footprints and the accept/build distinction
 
