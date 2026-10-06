@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-06T02:07:59.800001+00:00",
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "manifest_sha256": "f6deeaec0d0708fd0853f0a975fc306ff11f95b7a9ec1a293c14b067eaee2390",
+  "files": {
+    "beaconcrypt-core/Makefile": "3650f2864b7abb3d2f9966a2c1914350768744b25f95bacb943c355d018296e7",
+    "beaconcrypt-core/proofs/check-inventory.sh": "43da228a3b72af1506dd5f03993c175dd359f5a7d426eced9428ee81c6df6f82",
+    "beaconcrypt-core/proofs/pro-verif/declaration-allowlist.tsv": "9cc7a10575f77cf93cc0b8c3a3cb0a20825cb6463d0f56d26125f92bd1c8951e",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "9a5b9cc8da26245c5e1d6493d1fe01ce7bf60c44c5f587cc570fc13763420ec6",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "8dbf4e827462fe711d10b55c23a49b8f69fa9e49736d2336d3291ad4b42ecf7b",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "c9174defea8fa043f4cf7b3449e627658db52d2c7277a32dd8c038a19a462da5",
+    "doc/formal-verification-analysis.md": "92158baea84b2f73eaa8a2b329d26843ec0fb6d8e2f91538ec93b5dc74e4f643",
+    "doc/impl/proverif-free-schedule-records-b2s.md": "5e28e516566df491f3e61dfc8c82683f524da1cf15b3f9d22db13e6709b1f58a",
+    "doc/impl/proverif-free-schedule-records.md": "d4e370038b3b0101de778db83408f0058a6cc64c181b36ef8e31f2cbc47fe144",
+    "doc/impl/proverif-fs-source-abstraction.md": "7328223f81d75991d696d05c5303304d805227e2579a3909f79b2a5d12d20acf",
+    "beaconcrypt-core/proofs/pro-verif/symbolic-name-order.py": "dba5ccd7689cbeebf15b6731382466120de9a752a89c7723254795debd304f14",
+    "beaconcrypt-core/proofs/pro-verif/test-symbolic-name-order.py": "862165d4f31bcc80af94fc6798e37c591de977b401a6f195cad1629904956986",
+    "doc/impl/proverif-symbolic-name-order.md": "6715e4f823c8d0024f9c27e446d382506e3ece9bc1e24947afcb9103e40b1445"
+  },
+  "scope": "Exact local E20 one-attempt symbolic fresh-name argument and finite maintenance gates. No computational generator interchange, private-history/query-bill equality, global source simulation, new ProVerif verdict or added security count.",
+  "reviewed": [
+    "All 13 frozen file hashes match; three prior approved paper/checker/test files are identical.",
+    "Read full Make, inventory, declaration-allowlist, transcript-fidelity and documentation delta. Both record recipes retain all old gates and prepend the finite audit and its seven regression groups.",
+    "Omission regression checks each of two occurrences separately for each added gate; count is corrected to 30 transcript-fidelity tests.",
+    "Two new allowlist entries are precise string literals in Python checker/tests, not symbolic annotations or solver setting changes.",
+    "All inventory row hashes independently verified, validation category 50.",
+    "Independently compared all retained 1381 Lean files, 225 PV/PVL files, 34 non-core-test Rust files and full verdict-class TSV to the base: byte-identical.",
+    "Docs consistently retain symbolic versus computational/source/global boundary; E19, exact-ID routing and other open lifts remain explicit."
+  ],
+  "validation_scope": "No new builds or prover run by reviewer. Root final focused FT/inventory receipts and portable archive remain to be reviewed.",
+  "findings": []
+}

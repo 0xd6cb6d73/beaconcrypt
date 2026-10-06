@@ -22497,6 +22497,11 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 				"check-proverif-{scenario}: check-proverif-extraction check-proverif-transcript-fidelity"
 			),
 		)?;
+		let name_order = if scenario == "fs-records-s2b" || scenario == "fs-records-b2s" {
+			"python3 $(PROVERIF_DIR)/test-symbolic-name-order.py\npython3 $(PROVERIF_DIR)/symbolic-name-order.py --check-only\n"
+		} else {
+			""
+		};
 		let pin_origin = if scenario == "fs-records-b2s" {
 			"python3 $(PROVERIF_DIR)/test-pin-origin-checker.py\npython3 $(PROVERIF_DIR)/pin-origin-theory.py --check-only\n"
 		} else {
@@ -22504,7 +22509,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 		};
 		if compact(&runner.join("\n"))
 			!= compact(&format!(
-				"{pin_origin}python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
+				"{name_order}{pin_origin}python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
 				python3 $(PROVERIF_DIR)/check-free-schedule.py --scenario {scenario} \\
 				--proverif '$(PROVERIF)' \\
 				--timeout '$(PROVERIF_FS_TIMEOUT)' \\
@@ -24133,6 +24138,22 @@ fn validate_declarations(
 		return Err(format!("stale declaration allowlist entry: {stale:?}"));
 	}
 	Ok(())
+}
+
+#[test]
+fn symbolic_name_order_gates_cannot_be_omitted() {
+	for line in [
+		"\tpython3 $(PROVERIF_DIR)/test-symbolic-name-order.py\n",
+		"\tpython3 $(PROVERIF_DIR)/symbolic-name-order.py --check-only\n",
+	] {
+		assert_eq!(CORE_MAKEFILE.matches(line).count(), 2);
+		for (index, matched) in CORE_MAKEFILE.match_indices(line) {
+			let mut changed = CORE_MAKEFILE.to_owned();
+			changed.replace_range(index..index + matched.len(), "");
+			let error = validate_free_schedule_makefile(&changed).unwrap_err();
+			assert!(error.contains("exact Make runner and self-test wiring changed"));
+		}
+	}
 }
 
 #[test]

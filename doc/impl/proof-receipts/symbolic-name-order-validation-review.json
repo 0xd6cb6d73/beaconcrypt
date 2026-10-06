@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-06T02:08:54.644259+00:00",
+  "decision": "APPROVE_SCOPED_VALIDATION_RECEIPT",
+  "receipt_sha256": "262973b22028b3299cc3491bc4252ca71ef2697121797f5095dd0d76252b4f95",
+  "source_manifest_sha256": "f6deeaec0d0708fd0853f0a975fc306ff11f95b7a9ec1a293c14b067eaee2390",
+  "checks": [
+    "All 13 source hashes match the approved final freeze and current files.",
+    "All embedded cheap, final and diagnostic log SHA256 values reproduced.",
+    "Combined Make exit2 is accurately retained despite all16 classifier and30 fidelity tests passing, followed by corrected inventory-only exit0.",
+    "Initial naming, mutation fixture, literal allowlist and expected-count errors are retained with accurate resolutions.",
+    "No aggregate or unchanged-solver/Lean validation claim. No tests rerun by this receipt review."
+  ],
+  "findings": []
+}
