@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1475
+	[handwritten-lean]=1477
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28265,6 +28265,60 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem ideal_close([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawGame theorem ideal_close"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawGame\.real_le_ideal$' "$selected_source_module" "PqxdhRegistrationJointKemRawGame dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.real_le_ideal"
 require_line_count 1 '^theorem real_le_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawGame theorem real_le_ideal"
+
+# Accept/KEM join stage B (M8): proof-carrying raw-ordinal KEM adversary, its T3 advantage and its query bills.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawCertified.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemRawCertified root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawCertified\.prefix_erase$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.prefix_erase"
+require_line_count 1 '^theorem prefix_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem prefix_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawCertified\.branch_erase$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.branch_erase"
+require_line_count 1 '^theorem branch_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem branch_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawCertified\.advantage$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.advantage"
+require_line_count 1 '^theorem advantage([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem advantage"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawBills.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemRawBills root import"
+require_line_count 18 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem inventory"
+require_line_count 18 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.hides_refl$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_refl"
+require_line_count 1 '^theorem hides_refl([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem hides_refl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.hides_all$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_all"
+require_line_count 1 '^theorem hides_all([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem hides_all"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.hides_bind$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_bind"
+require_line_count 1 '^theorem hides_bind([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem hides_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.hides_bound$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_bound"
+require_line_count 1 '^theorem hides_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem hides_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.exposeAt_hides$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.exposeAt_hides"
+require_line_count 1 '^theorem exposeAt_hides([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem exposeAt_hides"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.exposeAt_bills$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.exposeAt_bills"
+require_line_count 1 '^theorem exposeAt_bills([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem exposeAt_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.residual_hook$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.residual_hook"
+require_line_count 1 '^theorem residual_hook([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem residual_hook"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.preRaw_bound$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.preRaw_bound"
+require_line_count 1 '^theorem preRaw_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem preRaw_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.saved$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.saved"
+require_line_count 1 '^theorem saved([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem saved"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.uniform_cap$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.uniform_cap"
+require_line_count 1 '^theorem uniform_cap([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem uniform_cap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.adversary_post$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.adversary_post"
+require_line_count 1 '^theorem adversary_post([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem adversary_post"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.scan_bills$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.scan_bills"
+require_line_count 1 '^theorem scan_bills([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem scan_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.pre_uniform$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_uniform"
+require_line_count 1 '^theorem pre_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem pre_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.pre_excluded$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_excluded"
+require_line_count 1 '^theorem pre_excluded([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem pre_excluded"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.pre_decapsulations$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_decapsulations"
+require_line_count 1 '^theorem pre_decapsulations([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem pre_decapsulations"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.pre_base$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_base"
+require_line_count 1 '^theorem pre_base([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem pre_base"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.annotated_bound$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.annotated_bound"
+require_line_count 1 '^theorem annotated_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem annotated_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.adversary_bound$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.adversary_bound"
+require_line_count 1 '^theorem adversary_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem adversary_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
