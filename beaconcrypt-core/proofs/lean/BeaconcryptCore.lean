@@ -1522,6 +1522,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration
 
 import BeaconcryptCore.Computational.PqxdhDeploymentCompileStep
 
+import BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint
+
 /-!
 # Beaconcrypt-core verification root
 

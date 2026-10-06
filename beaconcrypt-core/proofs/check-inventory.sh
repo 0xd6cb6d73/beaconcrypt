@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1496
+	[handwritten-lean]=1497
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28770,6 +28770,37 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem compile_simulation([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileStep theorem compile_simulation"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileStep\.compile_run$' "$selected_source_module" "PqxdhDeploymentCompileStep dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileStep.compile_run"
 require_line_count 1 '^theorem compile_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileStep theorem compile_run"
+
+# CE-3 trial footprints: accept, build, bundle, finish, HMAC and BLAKE2b effects needed for the public reconstruction invariant.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileFootprint.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentCompileFootprint root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompileFootprint guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.hmac_fixed$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.hmac_fixed"
+require_line_count 1 '^theorem hmac_fixed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem hmac_fixed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.hash_fixed$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.hash_fixed"
+require_line_count 1 '^theorem hash_fixed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem hash_fixed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.identityOf_receipt$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.identityOf_receipt"
+require_line_count 1 '^theorem identityOf_receipt([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem identityOf_receipt"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.accept_footprint$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.accept_footprint"
+require_line_count 1 '^theorem accept_footprint([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem accept_footprint"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.build_footprint$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.build_footprint"
+require_line_count 1 '^theorem build_footprint([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem build_footprint"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.signing_run$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.signing_run"
+require_line_count 1 '^theorem signing_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem signing_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.writing_run$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.writing_run"
+require_line_count 1 '^theorem writing_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem writing_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.bundle_owner$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.bundle_owner"
+require_line_count 1 '^theorem bundle_owner([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem bundle_owner"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.prepare_finish_fields$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.prepare_finish_fields"
+require_line_count 1 '^theorem prepare_finish_fields([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem prepare_finish_fields"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.authenticate_candidate$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.authenticate_candidate"
+require_line_count 1 '^theorem authenticate_candidate([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem authenticate_candidate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.collect_inputs$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.collect_inputs"
+require_line_count 1 '^theorem collect_inputs([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem collect_inputs"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.finish_owner$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.finish_owner"
+require_line_count 1 '^theorem finish_owner([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem finish_owner"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
