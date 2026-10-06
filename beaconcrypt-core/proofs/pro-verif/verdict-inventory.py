@@ -191,6 +191,7 @@ def expected_verdicts(directory=HERE):
         "check-record-origin",
         "check-tasking-origin",
         "check-application-secrecy",
+        "check-exact-interface-strong",
     ):
         driver = module(name, directory)
         if name != "check-primitive-fidelity":

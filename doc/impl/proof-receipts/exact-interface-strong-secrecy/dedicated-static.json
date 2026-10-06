@@ -1,0 +1,27 @@
+[
+  {
+    "command": [
+      "python3",
+      "beaconcrypt-core/proofs/pro-verif/test-exact-interface-strong-checker.py"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit": 0
+  }
+]

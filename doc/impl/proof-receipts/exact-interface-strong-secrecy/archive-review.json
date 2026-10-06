@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-06T05:02:14.173489+00:00",
+  "reviewer": "root independent archive review",
+  "manifest_sha256": "83ae7e5b6d00ac0f13ff6e4705c2e7a79094fa118001e682b4b049a86a22b988",
+  "decision": "approved for scoped topic publication and fast-forward integration after fetch",
+  "checks": {
+    "archive_files": 56,
+    "portable_input_files": 232,
+    "all_gzip_raw_roundtrips": "passed",
+    "maintained_exact_source_sets_and_strict_verdicts": 8,
+    "results": "2 equivalence TRUE,2 origin TRUE,4 reachability FALSE with confirmed traces",
+    "resource_limits": "each1800s/10GiB",
+    "diagnostics": "unknown/timeouts explicitly excluded",
+    "initial_metadata_failure": "preserved separately from final inventory success"
+  },
+  "limits": "Symbolic bounded selected-source private-application scope only. No full global/computational security claim."
+}

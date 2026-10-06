@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-06T04:29:54.893865+00:00",
+  "reviewer": "evolving_source_join",
+  "decision": "APPROVE_SCOPED_PAIRED_ROUTING_AND_PURE_FACTORING",
+  "manifest": "/tmp/bc-arc-scratch/pv-work/exact-interface-strong-secrecy/paired-paper-freeze.json",
+  "manifest_sha256": "53cc2db6241ae76d4491e87c0256323f9dd4c6338ee110121bb3bf044e0b0252",
+  "verified_files": 75,
+  "read": [
+    "host-routing.md",
+    "paired-source-argument.md",
+    "factored-receive-argument.md",
+    "both original and factored receiver files",
+    "both complete main and send files",
+    "both response-origin main deltas and exact query",
+    "actual server.rs build commit/availability/insert sequence",
+    "exact T0 relevant KDF/AEAD constructor declarations"
+  ],
+  "findings": [
+    {
+      "status": "fixed",
+      "finding": "Factored b2s receiver incorrectly used undeclared b2s_* receive/reply constructors instead of the original l2_* interface; restored and final hash verified."
+    },
+    {
+      "status": "fixed",
+      "finding": "Host routing paper retained stale no-response-origin status; corrected to ordinary-projection auxiliary evidence."
+    }
+  ],
+  "approved_scope": [
+    "One bit-independent public host/token/worker routing algorithm retains actual identities, own/assigned IDs, failed consumption, occupied-ID rejection and successful install point.",
+    "One exact public response lookup can consume the two scoped ordinary-projection response/root origin safety facts; response equality implies identical omitted chain recipes only under explicit T0 constructor idealization.",
+    "Both receiver factorizations preserve complete original opening arguments, guard partition for every natural r/t and cache Bool, Some/None paths, recovered private plaintext, event order and full continuation; introduced plan is total.",
+    "S2b original/factored external interface matches; corrected b2s external interface matches."
+  ],
+  "limits": [
+    "Positive Kr3 equivalence has not been proved and this review certifies no source-equivalence theorem.",
+    "Other-pin public-recipe extension under the current additional chain disclosures remains an explicit proof obligation.",
+    "Per-world reachability safety does not itself prove paired contextual equivalence.",
+    "Only selected-identity bounded near-record private-app/no-echo/result-bit profile; no public optional-plaintext IND$, computational constructor guarantee, global-session abstraction or CPU bound.",
+    "No solver or Lean builds were run in this read-only semantic review; reported auxiliary verdicts remain their separate receipt obligations."
+  ]
+}

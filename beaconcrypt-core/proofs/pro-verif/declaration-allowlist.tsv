@@ -101,3 +101,28 @@ proofs/pro-verif/application-secrecy-b2s.pvl	precise	2	[precise]	doc/formal-veri
 proofs/pro-verif/application-secrecy-s2b.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext
 proofs/pro-verif/application-secrecy-models.py	precise	2	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext
 proofs/pro-verif/test-application-secrecy-checker.py	precise	1	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext
+proofs/pro-verif/exact-interface-strong-b2s-auxiliary.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-control-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-leak-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-origin-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-origin-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-origin.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s-ungated-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s.pv	nounif	1	nounif x:bitstring,y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-b2s.pv	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-auxiliary.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-control-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-leak-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-origin-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-origin-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-origin.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b-ungated-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b.pv	nounif	1	nounif x:bitstring,y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-s2b.pv	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-models.py	precise	3	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/test-exact-interface-strong-checker.py	precise	1	[precise]	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-models.py	nounif	1	nounif x:bitstring,y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/test-exact-interface-strong-checker.py	nounif	1	nounif x:bitstring,y:bitstring; attacker(choice[x25519_public(x),x25519_public(y)]).	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces
+proofs/pro-verif/exact-interface-strong-models.py	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#active-strong-secrecy-with-exact-source-interfaces

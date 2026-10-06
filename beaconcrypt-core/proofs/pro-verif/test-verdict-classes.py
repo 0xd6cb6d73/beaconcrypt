@@ -338,6 +338,35 @@ class ClassificationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.check(rows)
 
+    def test_exact_interface_strong_scope_and_roster_are_explicit(self):
+        driver = CHECK.INVENTORY.module("check-exact-interface-strong")
+        for target in driver.TARGETS:
+            selected = [
+                row
+                for row in self.rows
+                if row["checker"] == "check-exact-interface-strong.py"
+                and row["target"] == target.name
+            ]
+            self.assertEqual(len(selected), 1)
+            with self.assertRaises(ValueError):
+                self.check([row for row in self.rows if row is not selected[0]])
+            for field, value in (
+                ("class", "definitional"),
+                (
+                    "scope",
+                    "global public-plaintext equivalence for unbounded schedules and every identity",
+                ),
+            ):
+                rows = copy.deepcopy(self.rows)
+                next(
+                    row
+                    for row in rows
+                    if row["checker"] == "check-exact-interface-strong.py"
+                    and row["target"] == target.name
+                )[field] = value
+                with self.assertRaises(ValueError):
+                    self.check(rows)
+
 
 if __name__ == "__main__":
     unittest.main()

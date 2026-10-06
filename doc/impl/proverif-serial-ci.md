@@ -25,3 +25,6 @@ The selected Server-to-Beacon origin addition runs five targets after exact-ID r
 
 
 The trusted-application secrecy gate appends four serial targets after tasking origin: two ordinary fresh-name secrecy formulas at Kr3 and their identical-formula plaintext-leak controls. It retains public optional-result bits, the private application/no-echo scope, 180-second/10-GiB target ceilings, exact omission regressions and the existing overall extension allowance. No old target or observational-equivalence result is replaced.
+
+
+The exact-interface strong-secrecy gate adds eight serial targets after ordinary application secrecy: two Kr3/Ks2 observational equivalences, two exact full-response/root origin auxiliaries and four confirmed fresh-secret controls. It retains 1,800-second/10-GiB per-target ceilings and the existing overall extension allowance. The complete paired host-context/private-application source scope is recorded separately; no public optional-plaintext or global computational result is inferred. Exact invocation and negative omission checks retain the full new gate and its fourteen regression tests without replacing old targets.

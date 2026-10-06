@@ -204,6 +204,28 @@ def extension_class_scope(name, target, driver):
             + ";".join(target.libraries())
         )
         return target.cls, scope
+    if name == "check-exact-interface-strong":
+        claim = {
+            "equivalence": "active chosen-message observational equivalence",
+            "origin": "auxiliary same-process exact public response/root finish origin",
+            "leak": "fresh-secret test publication leaked; confirmed reachability counterexample",
+            "ungated": "test eligibility removed; confirmed fresh-secret reachability counterexample",
+        }[target.kind]
+        scope = (
+            f"exact T0 paired private-application selected-source profile; {claim}; "
+            f"direction={target.direction}; K_s=2, K_r={target.bound}; b2s near1/2, s2b near2/3 after registration1; "
+            "AnyPin, selected fresh Beacon and protected Server signing identity; "
+            "eligible b2s iff exact protected pin, eligible s2b iff exact selected peer identity; "
+            "ordinary/ineligible calls left-left, eligible alternatives equal-length nonempty; "
+            "private application/no echo or secret-dependent action, actual result bits; "
+            "delayed one-use builds, arbitrary candidates, literal own/assigned IDs, failed-seal allocations; "
+            "opposite/post-near chains and other-identity roots disclosed; "
+            "single paired host context, exact T0 constructor idealizations explicit; "
+            "no public optional-plaintext, reveals, unbounded schedule or global computational claim; "
+            f"process={target.process}; query={target.query}; libraries="
+            + ";".join(target.libraries())
+        )
+        return target.cls, scope
     if name == "check-application-secrecy":
         claim = {
             "App-b2s": "selected fresh successful Beacon publication secrecy",
@@ -306,6 +328,7 @@ def validate_scope(rows):
         "check-record-origin",
         "check-tasking-origin",
         "check-application-secrecy",
+        "check-exact-interface-strong",
     ):
         driver = INVENTORY.module(name)
         targets = {target.name: target for target in driver.TARGETS}

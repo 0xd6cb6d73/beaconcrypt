@@ -22543,6 +22543,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"check-proverif-record-origin",
 			"check-proverif-tasking-origin",
 			"check-proverif-application-secrecy",
+			"check-proverif-exact-interface-strong",
 			"extract-lean",
 			"check-lean",
 			"check-inventory",
@@ -22565,6 +22566,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"check-proverif-record-origin",
 			"check-proverif-tasking-origin",
 			"check-proverif-application-secrecy",
+			"check-proverif-exact-interface-strong",
 		]) {
 		return Err(
 			"verify-proverif-in-shell must run check-proverif-fs after check-proverif".to_owned(),
@@ -24202,14 +24204,14 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		),
 		(
 			"fs group dropped from verify-in-shell",
-			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) extract-lean\n",
-			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\t$(MAKE) extract-lean\n",
 			"verify-in-shell must run check-proverif-fs",
 		),
 		(
 			"fs group dropped from verify-proverif-in-shell",
-			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\nverify-proverif-live-material:",
-			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) check-proverif-tasking-origin\n\t$(MAKE) check-proverif-application-secrecy\n\t$(MAKE) check-proverif-exact-interface-strong\n\nverify-proverif-live-material:",
 			"verify-proverif-in-shell must run check-proverif-fs",
 		),
 		(
@@ -25565,6 +25567,7 @@ fn validate_serial_proverif_ci(makefile: &str, workflow: &str) -> Result<(), Str
 				"check-proverif-record-origin",
 				"check-proverif-tasking-origin",
 				"check-proverif-application-secrecy",
+				"check-proverif-exact-interface-strong",
 			],
 		),
 	] {
@@ -25653,6 +25656,19 @@ fn validate_serial_proverif_ci(makefile: &str, workflow: &str) -> Result<(), Str
 	if compact(&application_secrecy.join("\n")) != compact(expected_application_secrecy) {
 		return Err("application-secrecy exact runner and checker gates changed".to_owned());
 	}
+	let exact_interface_strong = make_recipe(
+		makefile,
+		"check-proverif-exact-interface-strong: check-proverif-extraction check-proverif-transcript-fidelity",
+	)?;
+	let expected_exact_interface_strong = "python3 $(PROVERIF_DIR)/test-exact-interface-strong-checker.py
+		python3 $(PROVERIF_DIR)/check-exact-interface-strong.py \\
+		--proverif '$(PROVERIF)' \\
+		--timeout '$(PROVERIF_EXACT_INTERFACE_STRONG_TIMEOUT)' \\
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+		$(if $(PROVERIF_EXACT_INTERFACE_STRONG_LOG_DIR),--log-dir '$(PROVERIF_EXACT_INTERFACE_STRONG_LOG_DIR)')";
+	if compact(&exact_interface_strong.join("\n")) != compact(expected_exact_interface_strong) {
+		return Err("exact-interface-strong exact runner and checker gates changed".to_owned());
+	}
 	let drift = make_recipe(makefile, "check-proverif-generated-drift:")?;
 	let expected_drift = "git diff --exit-code -- proofs/pro-verif/extraction
 		@untracked=\"$$(git ls-files --others --exclude-standard -- \\
@@ -25679,6 +25695,7 @@ fn validate_serial_proverif_ci(makefile: &str, workflow: &str) -> Result<(), Str
 			"record-origin",
 			"tasking-origin",
 			"application-secrecy",
+			"exact-interface-strong",
 		]
 		.contains(&scenario.as_str())
 		{
@@ -25700,6 +25717,17 @@ fn validate_serial_proverif_ci(makefile: &str, workflow: &str) -> Result<(), Str
 fn serial_proverif_ci_preserves_every_gate_and_separate_group() {
 	validate_serial_proverif_ci(CORE_MAKEFILE, FORMAL_WORKFLOW).unwrap();
 	for (label, changed) in [
+		(
+			"omit exact-interface strong secrecy",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-exact-interface-strong\n", ""),
+		),
+		(
+			"omit exact-interface strong checker regressions",
+			CORE_MAKEFILE.replace(
+				"\tpython3 $(PROVERIF_DIR)/test-exact-interface-strong-checker.py\n",
+				"",
+			),
+		),
 		(
 			"omit trusted application secrecy",
 			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-application-secrecy\n", ""),

@@ -1,0 +1,159 @@
+(* SPDX-License-Identifier: 0BSD *)
+(* Exact-T0 selected near record origin. Source classification, actual IDs,
+   public-computation projection, freshness and replay composition are scoped
+   in doc/impl/proverif-tasking-origin.md. Public labels never expose roots. *)
+fun a1_public(bitstring,bitstring,bitstring,bitstring): bitstring [data].
+fun a1_identifier(nat): key_id [data].
+fun a1_token(nat): bitstring [data].
+fun a1_accept(bitstring,bitstring,key_id,bitstring,bitstring): bitstring [data].
+fun a1_build(bitstring,bitstring,bitstring,key_id,key_id,bitstring,bitstring,bool): bitstring [data].
+fun a1_reply(bitstring,bitstring): bitstring [data].
+fun a1_some(bitstring): bitstring [data].
+fun a1_none(): bitstring [data].
+event A1Root(bitstring).
+event S2bSelectedIdentity(bitstring).
+
+let A1Pending(token: bitstring, accepted_id:key_id, verified: beaconcrypt_core__pqxdh__t_VerifiedInitKex, identity: bitstring, ephemeral: bitstring, ciphertext: bitstring, root: bitstring, selected_identity:bitstring) =
+ in(c, a1_build(=token, builder:bitstring, builder_identity:bitstring, builder_id:key_id, assigned:key_id, data:bitstring, build_call:bitstring, fail_build:bool));
+ if builder_identity = ed_public(SERVER_IDENTITY_SECRET) && builder_id = accepted_id && fail_build = false then (
+  let plaintext = registration_response_plaintext(data) in (
+   let ad = fs_associated_data(ed_public(SERVER_IDENTITY_SECRET),identity) in
+   let binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(key_id_encoding(assigned)) in
+   let frame = seal_frame(ratchet_material(server_to_beacon_chain(root)),ad,fs_seq(1),accepted_id,registration_payload(binding,plaintext)) in
+   let response = kex_response(ed_public(SERVER_IDENTITY_SECRET),ephemeral,ciphertext,frame,assigned) in
+   event FsServerCommitted(builder,ed_public(SERVER_IDENTITY_SECRET),identity,verified,assigned,root,ad,plaintext);
+   out(c,a1_reply(build_call,a1_some(response)));
+   S2bSend2(builder,ed_public(SERVER_IDENTITY_SECRET),identity,accepted_id,assigned,root,ad,ratchet_next(server_to_beacon_chain(root)),selected_identity)
+  ) else out(c,a1_reply(build_call,a1_none()))
+ ) else out(c,a1_reply(build_call,a1_none())).
+
+let A1Accept(selected_identity:bitstring,leak_initial:bool) =
+ !in(c,a1_accept(token:bitstring,accept_owner:bitstring,accepted_id:key_id,raw:bitstring,accept_call:bitstring));
+ let (core:beaconcrypt_core__pqxdh__t_InitKex,verified:beaconcrypt_core__pqxdh__t_VerifiedInitKex,identity:bitstring,prekey:bitstring,onetime:bitstring,pq:bitstring) = registration_set_verify(raw) in (
+  let (ephemeral:bitstring,ciphertext:bitstring,root_input:beaconcrypt_core__pqxdh__t_RootKeyInput,root:bitstring) = registration_set_root(SERVER_IDENTITY_SECRET,identity,prekey,onetime,pq,0) in (
+   (if leak_initial then out(c,ratchet_next(server_to_beacon_chain(root)))) |
+   (if identity <> selected_identity then out(c,root)) |
+   (out(c,(beacon_to_server_chain(root),ratchet_next(ratchet_next(ratchet_next(server_to_beacon_chain(root))))));
+   out(c,a1_reply(accept_call,a1_some(token)));
+   A1Pending(token,accepted_id,verified,identity,ephemeral,ciphertext,root,selected_identity))
+  ) else out(c,a1_reply(accept_call,a1_none()))
+ ) else out(c,a1_reply(accept_call,a1_none())).
+
+letfun A1Finish(server_key_id:key_id, server_identity: bitstring, beacon_identity: bitstring, beacon_prekey_secret: bitstring, beacon_identity_secret: bitstring, beacon_one_time_secret: bitstring, beacon_pq_secret: bitstring, response: bitstring) =
+  (* @beaconcrypt-fs-fidelity key=beacon.decode src=beaconcrypt/src/beacon.rs:422-431 anchor=let reader = capnp::serialize_packed::read_message(bytes, ReaderOptions::new()).ok()?; *)
+  let kex_response(
+    response_server_identity,
+    server_ephemeral,
+    kem_ciphertext,
+    initial_frame,
+    assigned_key_id
+  ) = response in
+  (* @beaconcrypt-fs-fidelity key=beacon.identity_conversion src=beaconcrypt/src/beacon.rs:432-433 anchor=let server_kex_id = crypto_sign::ed25519_pk_to_curve25519(&response_server).ok()?; *)
+  let server_identity_x = x25519_public_from_ed(response_server_identity) in
+  (* @beaconcrypt-fs-fidelity key=beacon.decapsulate src=beaconcrypt/src/beacon.rs:434-434 anchor=let kem_shared = crypto_kem::mlkem768::decapsulate(&kem_ciphertext, pq_secret).ok()?; *)
+  let kem_secret = mlkem_decapsulate(kem_ciphertext, beacon_pq_secret) in
+  (* @beaconcrypt-fs-fidelity key=beacon.dh src=beaconcrypt/src/beacon.rs:435-449 anchor=let dh1: DhSecret = *)
+  let dh1 = x25519_beacon_dh(beacon_prekey_secret, server_identity_x) in
+  let dh2 = x25519_beacon_dh(beacon_identity_secret, server_ephemeral) in
+  let dh3 = x25519_beacon_dh(beacon_prekey_secret, server_ephemeral) in
+  let dh4 = x25519_beacon_dh(beacon_one_time_secret, server_ephemeral) in
+  (* @beaconcrypt-fs-fidelity key=beacon.prepare src=beaconcrypt/src/beacon.rs:450-457 anchor=let mut finish_inputs = verified_pqxdh::BeaconFinishInputs { *)
+  (* @beaconcrypt-fs-fidelity key=core.pin_check src=beaconcrypt-core/src/pqxdh.rs:545-547 anchor=if !(state.expected_server_binding.identity_public_key == inputs.response_server_identity) { *)
+  if response_server_identity = server_identity then
+  (* @beaconcrypt-fs-fidelity key=beacon.root src=beaconcrypt/src/beacon.rs:458-458 anchor=let derived_secret = derive_root_key_input(candidate.root_key_input_mut())?; *)
+  let root = pqxdh_root(
+    beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(
+      beaconcrypt_core__pqxdh__build_root_key_input(
+        beaconcrypt_core__pqxdh__PqxdhSharedSecrets(
+          dh1,
+          fs_root_dh2(dh2, dh3),
+          dh3,
+          dh4,
+          kem_secret
+        )
+      )
+    )
+  ) in
+  (* @beaconcrypt-fs-fidelity key=beacon.ratchet_start src=beaconcrypt/src/beacon.rs:459-460 anchor=let pending = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array()); *)
+  let server_material_1 = ratchet_material(server_to_beacon_chain(root)) in
+  (* @beaconcrypt-fs-fidelity key=beacon.associated_data src=beaconcrypt/src/beacon.rs:461-461 anchor=let associated_data = *candidate.associated_data(); *)
+  (* @beaconcrypt-fs-fidelity key=core.finish_ad src=beaconcrypt-core/src/pqxdh.rs:552-555 anchor=let associated_data = build_associated_data( *)
+  let associated_data = fs_associated_data(server_identity, beacon_identity) in
+  (* @beaconcrypt-fs-fidelity key=beacon.receive src=beaconcrypt/src/beacon.rs:462-467 anchor=let decrypted = decrypt_message_with_ratchet( *)
+  let crypto_frame(
+    frame_cipher: bitstring,
+    frame_tag: bitstring,
+    frame_commitment: bitstring,
+    frame_sequence: sequence,
+    frame_sender: key_id
+  ) = initial_frame in
+  if frame_sender = server_key_id then
+  (* @beaconcrypt-fs-fidelity key=beacon.sequence_one src=beaconcrypt/src/beacon.rs:468-470 anchor=if decrypted.seq != 1 { *)
+  if frame_sequence = fs_seq(1) then
+  let registration_payload(binding, application_payload) = open_frame(
+    server_material_1,
+    associated_data,
+    frame_sequence,
+    frame_sender,
+    initial_frame
+  ) in
+  (* @beaconcrypt-fs-fidelity key=beacon.binding src=beaconcrypt/src/beacon.rs:476-484 anchor=let plaintext = *)
+  (* @beaconcrypt-fs-fidelity key=core.binding src=beaconcrypt-core/src/pqxdh.rs:616-628 anchor=pub fn authenticate_registration_key_id_binding( *)
+  if binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
+    key_id_encoding(assigned_key_id)
+  ) then
+  (* The adapter pin checks cannot fail after the core pin check: the
+     candidate's binding is the expected binding. *)
+  (* @beaconcrypt-fs-fidelity key=beacon.pin_checks src=beaconcrypt/src/beacon.rs:493-502 anchor=let server_binding = authenticated.server_binding(); *)
+  (* @beaconcrypt-fs-fidelity key=beacon.commit src=beaconcrypt/src/beacon.rs:503-509 anchor=self.identity_key_kid = authenticated.assigned_key_id(); *)
+  (assigned_key_id, root, associated_data, application_payload).
+
+let A1Beacon(beacon_identity_secret:bitstring,beacon_prekey_secret:bitstring,beacon_pq_secret:bitstring,beacon_one_time_secret:bitstring) =
+  (* @beaconcrypt-fs-fidelity key=beacon.new src=beaconcrypt/src/beacon.rs:65-83 anchor=pub fn try_new(server_kid: u64, server_id_pk: &[u8]) -> Result<Self, crate::KeyGenError> { *)
+  (* @beaconcrypt-fs-fidelity key=beacon.one_time src=beaconcrypt/src/beacon.rs:301-305 anchor=let mut generated_onetime = if matches!(&self.state, BeaconState::Fresh { .. }) { *)
+  in(c,(beacon_owner:bitstring,server_identity:bitstring,server_key_id:key_id));
+  let beacon_identity = ed_public(beacon_identity_secret) in
+  let beacon_prekey = x25519_public(beacon_prekey_secret) in
+  let beacon_one_time = x25519_public(beacon_one_time_secret) in
+  let beacon_pq = mlkem_public(beacon_pq_secret) in
+  let init = beaconcrypt_core__pqxdh__VerifiedInitKex(
+    beacon_identity,
+    beacon_prekey,
+    beacon_one_time,
+    beacon_pq
+  ) in
+  let registration_id = beaconcrypt_core__pqxdh__registration_id(init) in
+  (* @beaconcrypt-fs-fidelity key=beacon.start src=beaconcrypt/src/beacon.rs:335-345 anchor=let started = verified_pqxdh::beacon_start( *)
+  (* @beaconcrypt-fs-fidelity key=core.beacon_start src=beaconcrypt-core/src/pqxdh.rs:304-321 anchor=pub fn beacon_start( *)
+  out(c, a1_public(beacon_identity, beacon_prekey, beacon_one_time, beacon_pq));
+  in(c, start_call: bitstring);
+  event FsBeaconStarted(server_identity, beacon_identity, init, registration_id);
+  (* @beaconcrypt-fs-fidelity key=beacon.sign src=beaconcrypt/src/beacon.rs:349-357 anchor=let prekey_sig = crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?; *)
+  (* @beaconcrypt-fs-fidelity key=beacon.bundle_return src=beaconcrypt/src/beacon.rs:398-398 anchor=Some(buffer) *)
+  out(
+    c,
+    signed_init_kex(
+      tag_ed25519(beacon_identity),
+      sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+      sign(tag_mlkem768(beacon_pq), beacon_identity_secret)
+    )
+  );
+  (* @beaconcrypt-fs-fidelity key=beacon.finish src=beaconcrypt/src/beacon.rs:402-406 anchor=fn finish_registration(&mut self, bytes: &[u8]) -> Option<Vec<u8>> { *)
+  in(c, (finish_call: bitstring, response: bitstring));
+  let (assigned_key_id: key_id, root: bitstring, associated_data: bitstring, application_payload: bitstring) = A1Finish(server_key_id,server_identity, beacon_identity, beacon_prekey_secret, beacon_identity_secret, beacon_one_time_secret, beacon_pq_secret, response) in (
+    event A1Root(root);
+    event FsBeaconEstablished(server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload);
+    out(c, a1_reply(finish_call, a1_some(application_payload)));
+    S2bRecv1(beacon_owner,server_identity,beacon_identity,server_key_id,assigned_key_id,root,associated_data,ratchet_material(ratchet_next(server_to_beacon_chain(root))),ratchet_material(ratchet_next(ratchet_next(server_to_beacon_chain(root)))),ratchet_next(ratchet_next(ratchet_next(server_to_beacon_chain(root)))),1,false)
+  ) else out(c, a1_reply(finish_call, a1_none())).
+
+let S2bMain(leak_initial:bool)=
+ out(c,ed_public(SERVER_IDENTITY_SECRET));
+ new selected_identity_secret:bitstring;
+ event S2bSelectedIdentity(selected_identity_secret);
+ new selected_prekey_secret:bitstring;
+ new selected_pq_secret:bitstring;
+ new selected_onetime_secret:bitstring;
+ (A1Accept(ed_public(selected_identity_secret),leak_initial) |
+ A1Beacon(selected_identity_secret,selected_prekey_secret,selected_pq_secret,selected_onetime_secret)).
