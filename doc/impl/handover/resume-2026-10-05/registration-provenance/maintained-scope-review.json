@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-10-06T00:12:17.827897+00:00",
+  "reviewer": "/root/evolving_source_join",
+  "decision": "APPROVE_MAINTAINED_SYMBOLIC_ARGUMENT",
+  "manifest": "/tmp/beaconcrypt-registration-provenance-notes/review-manifest.json",
+  "manifest_sha256": "99939010e23e124651614385d9f7b346620049d9eb84094eaaccfea9d0d3f139",
+  "checks": [
+    "All25frozen source hashes match",
+    "Guide diff contains only approved status/scope and validation reporting",
+    "Core28 rules+38base data constructors unchanged;6newpublic request/reply data constructors add no barriers",
+    "Maintained audit reproduces28rules44data without writes",
+    "PV process unchanged except openingcomment;6queryfiles identical to reviewed development probes"
+  ],
+  "scope": "Follows a2-source-lifting.json; root reviews full integration/checker/Make receipt provenance separately. No native-byte, whole-transcript, computational or global-security theorem inferred.",
+  "findings": [],
+  "builds": "None"
+}

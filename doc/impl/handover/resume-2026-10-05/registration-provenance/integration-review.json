@@ -1,0 +1,21 @@
+{
+  "decision": "APPROVE",
+  "reviewer": "root independent integration review",
+  "manifest_sha256": "99939010e23e124651614385d9f7b346620049d9eb84094eaaccfea9d0d3f139",
+  "files": 25,
+  "evidence": [
+    "All frozen file hashes match; all six complete logs, input hashes and exact verdict/trace checks reproduced read-only.",
+    "All 3,159 retained TSV rows are an exact byte prefix; six new rows individually scoped, two auxiliary identity-secrecy rows not protocol correspondences.",
+    "Reviewed source signing lifecycle and accept verification order directly; only one returned bundle per honest Beacon identity, three source-purpose signatures, arbitrary delayed/cross-object build irrelevant to tuple-origin projection.",
+    "Reviewed exact owner/DH/observer models, single-publication and wrong-purpose controls, source hash pins, fail-closed 180-second/10-GiB serial runner, rule-audit checks and regressions.",
+    "Protected-name argument covers secret-key reflection under added knowledge; backward signature occurrence argument covers compound/attacker-owned candidate keys without an honest-target premise.",
+    "Exact T0 audit: 28 reductions, 38 base data constructors plus six public request/reply constructors. No signing-producing RHS; public projections cannot remove a barrier.",
+    "Make and inventory gates preserve existing runs; serial CI extension reconciliation is still required against current integration."
+  ],
+  "scope": [
+    "T0 abstract-message source-profile A2 projection only; honest independent Server imports/key management and independent application inputs explicit.",
+    "No full source transcript/distribution equivalence, cryptographic reduction, global experiment, assigned-ID theorem or snapshot/persistence result.",
+    "Focused verification only; no new full Lean/PV/mutation result claimed."
+  ],
+  "blocking_findings": []
+}

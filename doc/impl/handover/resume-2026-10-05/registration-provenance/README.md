@@ -1,0 +1,7 @@
+# Registration signature-provenance checkpoint
+
+Source commit `04c9213cdd71892192077ae3e656a439f9606014` adds the reviewed exact-T0 A2 projection and source-profile counterexample transformation. The full 25-file source manifest, independent argument/scope/integration reviews, 28-rule/44-data-constructor audit and exact committed-tree validation are retained here. This is neither a native-byte correspondence nor computational or end-to-end security. The three security rows comprise one projected protocol origin implication and two auxiliary identity-secrecy checks.
+
+All six ProVerif 2.05 targets passed under a per-target shared lock, a 180-second maximum wall limit and a 10-GiB address-space cap. The witness and both negative controls have exact FALSE verdicts and one confirmed trace each. The source hashes and measured resources in `receipts.json` bind every query to its ordered library inputs; compressed complete logs retain their checked raw hashes in `validation.json`. The exact-commit Make gate passed its 27 transcript tests, 13 dedicated checker regressions and 14 classification regressions. The separate committed-tree inventory gate also passed. No unchanged Lean or historical ProVerif group was rerun.
+
+The topic was published with equality of local HEAD, tracking ref and direct private-remote ref. Central serial-CI/fail-stop reconciliation is a later checkpoint; this archive records the source scope and checks on the exact commit above.

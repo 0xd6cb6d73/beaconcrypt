@@ -1,0 +1,586 @@
+{
+  "files": {
+    "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+    "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+    "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+    "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+    "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+    "registration-provenance.pvl": "422edd04d7f8a7d7fcb0ac18d04fe4daeb9cbe2620d6b017037fee3b5ff792ba",
+    "registration-provenance-wrong-purpose.pvl": "432a01a33110b78c69d9fbcb361b9f9d371de872bdb0cb83a61b3530d755e174"
+  },
+  "barriers": {
+    "ed_public": [
+      0
+    ],
+    "x25519_public": [
+      0
+    ],
+    "x25519_shared": [
+      0,
+      1
+    ],
+    "sign": [
+      1
+    ]
+  },
+  "reductions": [
+    {
+      "file": "crypto.pvl",
+      "head": "verify_signature",
+      "lhs_exposed": [
+        "message"
+      ],
+      "rhs_exposed": [
+        "message"
+      ]
+    },
+    {
+      "file": "crypto.pvl",
+      "head": "x25519_public_from_ed",
+      "lhs_exposed": [],
+      "rhs_exposed": []
+    },
+    {
+      "file": "crypto.pvl",
+      "head": "x25519_server_dh",
+      "lhs_exposed": [
+        "server_secret"
+      ],
+      "rhs_exposed": []
+    },
+    {
+      "file": "crypto.pvl",
+      "head": "x25519_beacon_dh",
+      "lhs_exposed": [
+        "beacon_secret"
+      ],
+      "rhs_exposed": []
+    },
+    {
+      "file": "crypto.pvl",
+      "head": "mlkem_decapsulate",
+      "lhs_exposed": [
+        "coins",
+        "secret_key"
+      ],
+      "rhs_exposed": [
+        "coins",
+        "secret_key"
+      ]
+    },
+    {
+      "file": "crypto.pvl",
+      "head": "material_key",
+      "lhs_exposed": [
+        "key",
+        "nonce"
+      ],
+      "rhs_exposed": [
+        "key"
+      ]
+    },
+    {
+      "file": "crypto.pvl",
+      "head": "material_nonce",
+      "lhs_exposed": [
+        "key",
+        "nonce"
+      ],
+      "rhs_exposed": [
+        "nonce"
+      ]
+    },
+    {
+      "file": "crypto.pvl",
+      "head": "open_frame",
+      "lhs_exposed": [
+        "associated_data",
+        "key",
+        "message_sequence",
+        "nonce",
+        "plaintext",
+        "sender_id"
+      ],
+      "rhs_exposed": [
+        "plaintext"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "construct_fail",
+      "lhs_exposed": [],
+      "rhs_exposed": []
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_InitKex_beaconcrypt_core__pqxdh__f_identity_key",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_identity_key",
+        "beaconcrypt_core__pqxdh__f_one_time_key",
+        "beaconcrypt_core__pqxdh__f_pq_key",
+        "beaconcrypt_core__pqxdh__f_prekey"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_identity_key"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_InitKex_beaconcrypt_core__pqxdh__f_prekey",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_identity_key",
+        "beaconcrypt_core__pqxdh__f_one_time_key",
+        "beaconcrypt_core__pqxdh__f_pq_key",
+        "beaconcrypt_core__pqxdh__f_prekey"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_prekey"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_InitKex_beaconcrypt_core__pqxdh__f_one_time_key",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_identity_key",
+        "beaconcrypt_core__pqxdh__f_one_time_key",
+        "beaconcrypt_core__pqxdh__f_pq_key",
+        "beaconcrypt_core__pqxdh__f_prekey"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_one_time_key"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_InitKex_beaconcrypt_core__pqxdh__f_pq_key",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_identity_key",
+        "beaconcrypt_core__pqxdh__f_one_time_key",
+        "beaconcrypt_core__pqxdh__f_pq_key",
+        "beaconcrypt_core__pqxdh__f_prekey"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_pq_key"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_VerifiedInitKex_beaconcrypt_core__pqxdh__f_beacon_identity_public_key",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_beacon_identity_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_one_time_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_pq_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_prekey_public_key"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_beacon_identity_public_key"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_VerifiedInitKex_beaconcrypt_core__pqxdh__f_beacon_prekey_public_key",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_beacon_identity_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_one_time_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_pq_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_prekey_public_key"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_beacon_prekey_public_key"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_VerifiedInitKex_beaconcrypt_core__pqxdh__f_beacon_one_time_public_key",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_beacon_identity_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_one_time_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_pq_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_prekey_public_key"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_beacon_one_time_public_key"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_VerifiedInitKex_beaconcrypt_core__pqxdh__f_beacon_pq_public_key",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_beacon_identity_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_one_time_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_pq_public_key",
+        "beaconcrypt_core__pqxdh__f_beacon_prekey_public_key"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_beacon_pq_public_key"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_RegistrationId_beaconcrypt_core__pqxdh__f_bytes",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_bytes"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_bytes"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_beaconcrypt_core__pqxdh__f_dh1",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_dh1",
+        "beaconcrypt_core__pqxdh__f_dh2",
+        "beaconcrypt_core__pqxdh__f_dh3",
+        "beaconcrypt_core__pqxdh__f_dh4",
+        "beaconcrypt_core__pqxdh__f_kem_shared_secret"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_dh1"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_beaconcrypt_core__pqxdh__f_dh2",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_dh1",
+        "beaconcrypt_core__pqxdh__f_dh2",
+        "beaconcrypt_core__pqxdh__f_dh3",
+        "beaconcrypt_core__pqxdh__f_dh4",
+        "beaconcrypt_core__pqxdh__f_kem_shared_secret"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_dh2"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_beaconcrypt_core__pqxdh__f_dh3",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_dh1",
+        "beaconcrypt_core__pqxdh__f_dh2",
+        "beaconcrypt_core__pqxdh__f_dh3",
+        "beaconcrypt_core__pqxdh__f_dh4",
+        "beaconcrypt_core__pqxdh__f_kem_shared_secret"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_dh3"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_beaconcrypt_core__pqxdh__f_dh4",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_dh1",
+        "beaconcrypt_core__pqxdh__f_dh2",
+        "beaconcrypt_core__pqxdh__f_dh3",
+        "beaconcrypt_core__pqxdh__f_dh4",
+        "beaconcrypt_core__pqxdh__f_kem_shared_secret"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_dh4"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_PqxdhSharedSecrets_beaconcrypt_core__pqxdh__f_kem_shared_secret",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_dh1",
+        "beaconcrypt_core__pqxdh__f_dh2",
+        "beaconcrypt_core__pqxdh__f_dh3",
+        "beaconcrypt_core__pqxdh__f_dh4",
+        "beaconcrypt_core__pqxdh__f_kem_shared_secret"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_kem_shared_secret"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_RootKeyInput_beaconcrypt_core__pqxdh__f_bytes",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_bytes"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_bytes"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "accessor_beaconcrypt_core__pqxdh__t_RegistrationKeyIdBinding_beaconcrypt_core__pqxdh__f_bytes",
+      "lhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_bytes"
+      ],
+      "rhs_exposed": [
+        "beaconcrypt_core__pqxdh__f_bytes"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "beaconcrypt_core__pqxdh__registration_id",
+      "lhs_exposed": [
+        "identity",
+        "one_time",
+        "pq",
+        "prekey"
+      ],
+      "rhs_exposed": [
+        "identity",
+        "one_time"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "beaconcrypt_core__pqxdh__build_root_key_input",
+      "lhs_exposed": [
+        "dh1",
+        "dh2",
+        "dh3",
+        "dh4",
+        "kem"
+      ],
+      "rhs_exposed": [
+        "dh1",
+        "dh2",
+        "dh3",
+        "dh4",
+        "kem"
+      ]
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "head": "beaconcrypt_core__pqxdh__build_associated_data",
+      "lhs_exposed": [
+        "beacon_identity",
+        "server_identity"
+      ],
+      "rhs_exposed": [
+        "beacon_identity",
+        "server_identity"
+      ]
+    }
+  ],
+  "data_constructors": [
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "sequence_le64",
+      "arity": 1
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "sender_id_le64",
+      "arity": 1
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "tag_ed25519",
+      "arity": 1
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "tag_x25519_prekey",
+      "arity": 1
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "tag_x25519_one_time",
+      "arity": 1
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "tag_mlkem768",
+      "arity": 1
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "pqxdh_ff32_padding",
+      "arity": 0
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "pqxdh_root_input",
+      "arity": 6
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "pqxdh_domain",
+      "arity": 0
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "symmetric_ratchet_domain",
+      "arity": 0
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "beaconcrypt_associated_data",
+      "arity": 4
+    },
+    {
+      "file": "production-transcript-interface.pvl",
+      "constructor": "ctx_preimage",
+      "arity": 6
+    },
+    {
+      "file": "crypto.pvl",
+      "constructor": "first_sequence",
+      "arity": 0
+    },
+    {
+      "file": "crypto.pvl",
+      "constructor": "next_sequence",
+      "arity": 1
+    },
+    {
+      "file": "crypto.pvl",
+      "constructor": "server_to_beacon",
+      "arity": 0
+    },
+    {
+      "file": "crypto.pvl",
+      "constructor": "beacon_to_server",
+      "arity": 0
+    },
+    {
+      "file": "crypto.pvl",
+      "constructor": "beacon_role",
+      "arity": 0
+    },
+    {
+      "file": "crypto.pvl",
+      "constructor": "server_role",
+      "arity": 0
+    },
+    {
+      "file": "crypto.pvl",
+      "constructor": "registration_identifier",
+      "arity": 2
+    },
+    {
+      "file": "crypto.pvl",
+      "constructor": "crypto_frame",
+      "arity": 5
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "constructor": "Some",
+      "arity": 1
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "constructor": "None",
+      "arity": 0
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "constructor": "beaconcrypt_core__pqxdh__InitKex",
+      "arity": 4
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "constructor": "beaconcrypt_core__pqxdh__VerifiedInitKex",
+      "arity": 4
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "constructor": "beaconcrypt_core__pqxdh__RegistrationId",
+      "arity": 1
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "constructor": "beaconcrypt_core__pqxdh__PqxdhSharedSecrets",
+      "arity": 5
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "constructor": "beaconcrypt_core__pqxdh__RootKeyInput",
+      "arity": 1
+    },
+    {
+      "file": "extraction/lib.pvl",
+      "constructor": "beaconcrypt_core__pqxdh__RegistrationKeyIdBinding",
+      "arity": 1
+    },
+    {
+      "file": "fs-common.pvl",
+      "constructor": "fs_kid",
+      "arity": 1
+    },
+    {
+      "file": "fs-common.pvl",
+      "constructor": "fs_seq",
+      "arity": 1
+    },
+    {
+      "file": "fs-common.pvl",
+      "constructor": "signed_init_kex",
+      "arity": 4
+    },
+    {
+      "file": "fs-common.pvl",
+      "constructor": "registration_payload",
+      "arity": 2
+    },
+    {
+      "file": "fs-common.pvl",
+      "constructor": "kex_response",
+      "arity": 5
+    },
+    {
+      "file": "fs-common.pvl",
+      "constructor": "fs_no_rid",
+      "arity": 0
+    },
+    {
+      "file": "fs-common.pvl",
+      "constructor": "fs_build",
+      "arity": 0
+    },
+    {
+      "file": "registration-set-admission.pvl",
+      "constructor": "registration_set_success",
+      "arity": 1
+    },
+    {
+      "file": "registration-set-admission.pvl",
+      "constructor": "registration_set_failure",
+      "arity": 0
+    },
+    {
+      "file": "registration-set-admission.pvl",
+      "constructor": "registration_set_mutex",
+      "arity": 0
+    },
+    {
+      "file": "registration-provenance.pvl",
+      "constructor": "prov_server_owner",
+      "arity": 0
+    },
+    {
+      "file": "registration-provenance.pvl",
+      "constructor": "prov_publish",
+      "arity": 6
+    },
+    {
+      "file": "registration-provenance.pvl",
+      "constructor": "prov_dh",
+      "arity": 4
+    },
+    {
+      "file": "registration-provenance.pvl",
+      "constructor": "prov_reply",
+      "arity": 2
+    },
+    {
+      "file": "registration-provenance.pvl",
+      "constructor": "prov_none",
+      "arity": 0
+    },
+    {
+      "file": "registration-provenance.pvl",
+      "constructor": "prov_observe",
+      "arity": 2
+    }
+  ],
+  "scope": "Finite syntax conditions only; arbitrary-substitution and source-ledger arguments are separate."
+}
