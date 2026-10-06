@@ -20,7 +20,7 @@ open PqxdhRegistrationJointServerBirth (ClientCreated)
 open PqxdhRegistrationJointKemOpaqueResume (liftImpl clientNative forwardClient)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X R : Type}
 
-/-- The KEM cut of `exposeAt` with its active case described by source parameters instead of a closure: the raw bytes of the selected raw accept, the verified record of their attached verification, the ephemeral value and consumed set after the steps before encapsulation, the native state and owner list at the selected accept, and the client continuation after it. Every field is fixed before the selected encapsulation, so no field holds its ciphertext or shared secret. These are private values of the reduction context, not public context. -/
+/-- The KEM cut of `exposeAt` with its active case described by source parameters instead of the Server's saved continuation `AcceptKemCut.rawResume`, which `toCut` rebuilds: the raw bytes of the selected raw accept, the verified record of their attached verification, the ephemeral value and consumed set after the steps before encapsulation, the native state and owner list at the selected accept, and the client continuation after it. Every field is fixed before the selected encapsulation, so no field holds its ciphertext or shared secret. These are private values of the reduction context, not public context. -/
 inductive OpaqueCut (Reader KemSK X R : Type) where
   | complete (outcome : Outcome KemSK R)
   | pending (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader)
@@ -300,7 +300,7 @@ theorem post_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
           rw [PqxdhRegistrationJointKemOpaqueResume.resume_post]
         · simp only [post, opaquePost, toContext, toCut, Option.map_some, active, ↓reduceIte]
 
-/-- The opaque raw-ordinal branch: `KemRawGame.branch` with the opaque prephase and the opaque postchallenge step. With `real = false` it is the opaque form of the KEM-ideal game: the uniform candidate held by the challenger enters only the private client interpreter of the opaque resumption and the router's decapsulation of the exact challenge ciphertext. -/
+/-- The opaque raw-ordinal branch: `KemRawGame.branch` with the opaque prephase and the opaque postchallenge step. With `real = false` it is the opaque form of the KEM-ideal game: the uniform candidate held by the challenger is an argument only of the private client interpreter of the opaque resumption and of the router, which hands it to the source's own Beacon-finish code only on a decapsulation of the exact challenge ciphertext under the selected key. -/
 noncomputable def opaqueBranch (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
     (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)
