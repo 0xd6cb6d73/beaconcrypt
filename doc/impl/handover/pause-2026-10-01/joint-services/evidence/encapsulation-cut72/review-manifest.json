@@ -1,0 +1,382 @@
+{
+  "cohort": "EncapsulationCut72",
+  "frozen_at": "2026-10-06T04:56:00.837853+00:00",
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "base_commit": "5895e99c4aa64e506dc2c2565532a4e782e9e839",
+  "files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEncapsulation.lean",
+      "sha256": "d06d9cdafd3c814fe620335735c1debf15f61484bd677977bc85bbbbae9fbc24"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCut.lean",
+      "sha256": "01d9bd704d6e7b31116712e1a7d678bfb477d0384a08de2634c0c5aa51b79eb5"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemChallenge.lean",
+      "sha256": "34e0d31fb7d1bd3fbcbc03a05dd66ab9ec950b12546a5fe5abf8c36d5573c314"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemResume.lean",
+      "sha256": "18d44db7c7e2d3975fd57560b7eef9fc8bfcff6d16858958d835a4a05e8220c8"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemGame.lean",
+      "sha256": "5843d1315aee0302e55c154323c2798a06a7dae157178cf6bb3410bfdc20a955"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemExposedCounts.lean",
+      "sha256": "5e6e66a03ced181edc31c3fea4bbd6da055ad1056ed0957a3ebed1cc1c4f1cdf"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemExposedPrivate.lean",
+      "sha256": "51eac66ef58eef2c7ceabfc82b217af71827c83b8f9817de4c149d76ec5087de"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemExposedUniform.lean",
+      "sha256": "e4ae1ba06e893f47159c1f92d3b2a7b2acd384b1701c7c3fe4ab761702e1be6b"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCutBounds.lean",
+      "sha256": "4178b3a4bc703c0807ccd0eb4db666ae263fcf115941e9d3f1ad0f38c7e23ff2"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCertified.lean",
+      "sha256": "795974547b2d96e0d3c1d1025399515e791cbcf1ed482b4756fd8135016d201e"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCutSupport.lean",
+      "sha256": "3ab01b0b15d5b10beede72e7d8254ab746e8d5d122cc12e896e0b9dab4de9ec5"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemProgramBills.lean",
+      "sha256": "a5742f66f253021a1f20672072231881a0be0334deeb4ea951647bef7f9a1ae3"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCutInterpreted.lean",
+      "sha256": "0c94dacc714d4541b85a545f4b27ef1b3ee3a54e669f2eb91459d3ae0541e843"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSavedBills.lean",
+      "sha256": "0a2c43d40c75de7a06b2cb417f9ea88fb225f3c537b505e5af3b977129134aab"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostBills.lean",
+      "sha256": "8d97a27d6d40b35a8f21e92b6fa5f6e9201009733e2686841b81d35282d09a62"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPreBills.lean",
+      "sha256": "83524c1c621e9a957d6a24c86ea9b5e6c8c37a012a65351d4ea34873f3784877"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemReductionBills.lean",
+      "sha256": "eff267af611f2d569b6bd0f8c4473a9ff4fe14853efd54074cb12aa4770cab0d"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCutSelection.lean",
+      "sha256": "e1a3ff061171fceeead77f48a47a78831ee0df848d02f245daa6341a7af1b42d"
+    },
+    {
+      "path": "doc/impl/registration-encapsulation-cut.md",
+      "sha256": "f660b458d6c1a68d54910c08a377fcde13fb6f0659c538628c51a74915fadfa1"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "f4c1410bfc85ee43496341af2e9a24001d9abb88c6846151c3fd63e7da238821"
+    }
+  ],
+  "theorems": {
+    "PqxdhRegistrationJointKemEncapsulation": [
+      "forward_actual",
+      "prefix_query",
+      "prefix_program",
+      "prepare_actual",
+      "lift_actual",
+      "accept_actual",
+      "query_actual",
+      "program_actual",
+      "commands_actual"
+    ],
+    "PqxdhRegistrationJointKemCut": [
+      "scan_target",
+      "scan_prior",
+      "scan_other",
+      "scan_finish",
+      "commands_cut"
+    ],
+    "PqxdhRegistrationJointKemChallenge": [
+      "pre_source"
+    ],
+    "PqxdhRegistrationJointKemResume": [
+      "post_source",
+      "supported_source"
+    ],
+    "PqxdhRegistrationJointKemGame": [
+      "branch_source",
+      "branch_real",
+      "advantage"
+    ],
+    "PqxdhRegistrationJointKemExposedCounts": [
+      "forward_bound",
+      "lift_no_encapsulation",
+      "prefix_step",
+      "prefix_bound",
+      "accept_bound",
+      "backend_step",
+      "command_bound"
+    ],
+    "PqxdhRegistrationJointKemExposedPrivate": [
+      "lift_bound",
+      "prefix_step",
+      "prefix_bound",
+      "prepare_bound",
+      "accept_bound",
+      "backend_step",
+      "backend_program",
+      "command_bound"
+    ],
+    "PqxdhRegistrationJointKemExposedUniform": [
+      "lift_bound",
+      "prefix_step",
+      "prefix_bound",
+      "prepare_bound",
+      "accept_bound",
+      "backend_step",
+      "command_bound"
+    ],
+    "PqxdhRegistrationJointKemCutBounds": [
+      "bind_prefix",
+      "actual_bound",
+      "scan_bound",
+      "residual"
+    ],
+    "PqxdhRegistrationJointKemCertified": [
+      "prefix_erase",
+      "branch_erase",
+      "advantage"
+    ],
+    "PqxdhRegistrationJointKemCutSupport": [
+      "successful_support",
+      "pre_bound"
+    ],
+    "PqxdhRegistrationJointKemProgramBills": [
+      "creates_class",
+      "decaps_class",
+      "count_private",
+      "commands"
+    ],
+    "PqxdhRegistrationJointKemCutInterpreted": [
+      "encaps_private",
+      "encaps_uniform",
+      "actual_bills",
+      "scan_bills"
+    ],
+    "PqxdhRegistrationJointKemSavedBills": [
+      "saved",
+      "pending"
+    ],
+    "PqxdhRegistrationJointKemPostBills": [
+      "post_bound",
+      "adversary_post"
+    ],
+    "PqxdhRegistrationJointKemPreBills": [
+      "scan_bills",
+      "uniform",
+      "excluded",
+      "decapsulations",
+      "base"
+    ],
+    "PqxdhRegistrationJointKemReductionBills": [
+      "annotated_bound",
+      "adversary_bound"
+    ],
+    "PqxdhRegistrationJointKemCutSelection": [
+      "occurrence_lt",
+      "source_occurrence"
+    ]
+  },
+  "guards": 72,
+  "checks": [
+    {
+      "module": "PqxdhRegistrationJointKemEncapsulation",
+      "sha256": "d06d9cdafd3c814fe620335735c1debf15f61484bd677977bc85bbbbae9fbc24",
+      "start": "2026-10-06T04:52:11.789304+00:00",
+      "end": "2026-10-06T04:52:17.196786+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemEncapsulation-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemCut",
+      "sha256": "01d9bd704d6e7b31116712e1a7d678bfb477d0384a08de2634c0c5aa51b79eb5",
+      "start": "2026-10-06T04:52:17.197186+00:00",
+      "end": "2026-10-06T04:52:24.357805+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCut-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemChallenge",
+      "sha256": "34e0d31fb7d1bd3fbcbc03a05dd66ab9ec950b12546a5fe5abf8c36d5573c314",
+      "start": "2026-10-06T04:52:24.358058+00:00",
+      "end": "2026-10-06T04:52:27.791632+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemChallenge-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemResume",
+      "sha256": "18d44db7c7e2d3975fd57560b7eef9fc8bfcff6d16858958d835a4a05e8220c8",
+      "start": "2026-10-06T04:52:27.791962+00:00",
+      "end": "2026-10-06T04:52:42.532687+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemResume-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemGame",
+      "sha256": "5843d1315aee0302e55c154323c2798a06a7dae157178cf6bb3410bfdc20a955",
+      "start": "2026-10-06T04:52:42.533054+00:00",
+      "end": "2026-10-06T04:52:46.169174+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemGame-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemExposedCounts",
+      "sha256": "5e6e66a03ced181edc31c3fea4bbd6da055ad1056ed0957a3ebed1cc1c4f1cdf",
+      "start": "2026-10-06T04:52:46.169532+00:00",
+      "end": "2026-10-06T04:52:52.388413+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemExposedCounts-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemExposedPrivate",
+      "sha256": "51eac66ef58eef2c7ceabfc82b217af71827c83b8f9817de4c149d76ec5087de",
+      "start": "2026-10-06T04:52:52.388771+00:00",
+      "end": "2026-10-06T04:53:00.265263+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemExposedPrivate-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemExposedUniform",
+      "sha256": "e4ae1ba06e893f47159c1f92d3b2a7b2acd384b1701c7c3fe4ab761702e1be6b",
+      "start": "2026-10-06T04:53:00.265570+00:00",
+      "end": "2026-10-06T04:53:11.002351+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemExposedUniform-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemCutBounds",
+      "sha256": "4178b3a4bc703c0807ccd0eb4db666ae263fcf115941e9d3f1ad0f38c7e23ff2",
+      "start": "2026-10-06T04:53:11.002657+00:00",
+      "end": "2026-10-06T04:53:13.861786+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCutBounds-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemCertified",
+      "sha256": "795974547b2d96e0d3c1d1025399515e791cbcf1ed482b4756fd8135016d201e",
+      "start": "2026-10-06T04:53:13.862167+00:00",
+      "end": "2026-10-06T04:53:16.601456+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCertified-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemCutSupport",
+      "sha256": "3ab01b0b15d5b10beede72e7d8254ab746e8d5d122cc12e896e0b9dab4de9ec5",
+      "start": "2026-10-06T04:53:16.601764+00:00",
+      "end": "2026-10-06T04:53:19.264482+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCutSupport-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemProgramBills",
+      "sha256": "a5742f66f253021a1f20672072231881a0be0334deeb4ea951647bef7f9a1ae3",
+      "start": "2026-10-06T04:53:19.264902+00:00",
+      "end": "2026-10-06T04:53:21.865439+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemProgramBills-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemCutInterpreted",
+      "sha256": "0c94dacc714d4541b85a545f4b27ef1b3ee3a54e669f2eb91459d3ae0541e843",
+      "start": "2026-10-06T04:53:21.865808+00:00",
+      "end": "2026-10-06T04:53:24.422150+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCutInterpreted-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemSavedBills",
+      "sha256": "0a2c43d40c75de7a06b2cb417f9ea88fb225f3c537b505e5af3b977129134aab",
+      "start": "2026-10-06T04:53:24.422598+00:00",
+      "end": "2026-10-06T04:53:27.005784+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemSavedBills-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemPostBills",
+      "sha256": "8d97a27d6d40b35a8f21e92b6fa5f6e9201009733e2686841b81d35282d09a62",
+      "start": "2026-10-06T04:53:27.006122+00:00",
+      "end": "2026-10-06T04:53:29.675585+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemPostBills-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemPreBills",
+      "sha256": "83524c1c621e9a957d6a24c86ea9b5e6c8c37a012a65351d4ea34873f3784877",
+      "start": "2026-10-06T04:53:29.675912+00:00",
+      "end": "2026-10-06T04:53:32.477915+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemPreBills-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemReductionBills",
+      "sha256": "eff267af611f2d569b6bd0f8c4473a9ff4fe14853efd54074cb12aa4770cab0d",
+      "start": "2026-10-06T04:53:32.478260+00:00",
+      "end": "2026-10-06T04:53:38.859486+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemReductionBills-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemCutSelection",
+      "sha256": "e1a3ff061171fceeead77f48a47a78831ee0df848d02f245daa6341a7af1b42d",
+      "start": "2026-10-06T04:53:38.860035+00:00",
+      "end": "2026-10-06T04:53:41.490680+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/PqxdhRegistrationJointKemCutSelection-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "actual_axioms": {
+    "path": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/encapsulation-cut72/axioms.log",
+    "sha256": "dcf1b212de5cfbf94e44fbb34e7526e6d3fe1171ac83b17ca3f71991a8e7c0f1",
+    "allowed": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ]
+  },
+  "prior_dependency_scope": {
+    "commit": "5895e99c4aa64e506dc2c2565532a4e782e9e839",
+    "cohort": "SelectedKemSource39",
+    "guide": "doc/impl/registration-selected-kem-source.md",
+    "review": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/independent-review.json",
+    "scope": "Full initialized source14 creation-index reservation/order and native CCA router, ordinary recipient correctness/functional decapsulation and explicit primitive query caps; unchanged prior files."
+  },
+  "scope": "Actual source14 encapsulation hook and ordinal scan; full native/private/owner continuation preserved; selected secret confined to mathematical CCA interpreters; source-derived support-certified ordinary one-key adversary with exact coefficient-one filtered game equality and six explicit all-reply phase caps. No runtime support test or honest-target premise.",
+  "limits": "Creation/occurrence selection event sum, actual source authentication/freshness join, real secret-input HKDF join and global symbolic/computational interpretation remain. Restricted native Extract-ROM backend unchanged. One Server/many Beacons source14, not all Rust API methods. No total pure-computation PPT claim.",
+  "validation": "18 final direct guarded module checks, 72 actual standard-axiom probes, forbidden scan and diff check. No full build/root import/inventory/Rust/ProVerif/mutation run; parent owns central integration."
+}

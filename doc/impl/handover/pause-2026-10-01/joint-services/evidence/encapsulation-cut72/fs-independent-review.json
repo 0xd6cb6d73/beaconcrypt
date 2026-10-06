@@ -1,0 +1,30 @@
+{
+  "reviewer": "/root/fs_source_abstraction",
+  "date": "2026-10-06T04:58:05.122686+00:00",
+  "decision": "APPROVE_SCOPED_ACTUAL_ENCAPSULATION_CUT_AND_ORDINARY_KEM_HOP",
+  "manifest_sha256": "ea3feba86a0629c484147b58983503ccea516721d225d57666700a7f1c2a5083",
+  "source_files": 20,
+  "modules": 18,
+  "guards": 72,
+  "scope": [
+    "Read all18 modules and the complete statement/resource guide, with retained ordinary OneKeyAdversary/KemCaps/FunctionalDecapsulation/router/support-annotation endpoints.",
+    "The hook exposes the literal raw registration candidate and verified PQ argument at the actual encapsulation callback; interpreting/scanning/resuming recovers the complete program and native/owner/private state. Arbitrary failures and reply continuations are retained.",
+    "The reduction prephase has only the selected public key; selected secret is confined to mathematical source/CCA interpretation. Dynamic selected-slot postdecapsulation substitutes the supplied candidate only for its exact blocked challenge ciphertext, with other owners and ciphertexts routed through original paths.",
+    "The sourceReal-to-random equality is coefficient one for a fixed creation/encapsulation-occurrence filtered decision. Active selection is an executable public-key equality filter; inactive/failed/reveal-stopped branches returnfalse rather than assuming an honest candidate. Ordinary supported correctness plus the explicitly existing pure functional-decapsulation contract establishes the real source equality.",
+    "Forward support certification has exact erasure and all-typed-reply support, not a runtime reachability predicate or desired authenticity premise. Every saved context of the declared adversary type has derived continuation caps.",
+    "Full resource accounting includes actual initialization, all sampled unselected reservations, joint identity work, native uniform/base callback work and actual local encapsulations. SourceqFinish is distinct from conservative per-phaseqFinish (at most2qFinish total); two additional challenger fixed-branch primitive operations and ghostdraw are explicitly separate.",
+    "Occurrence indices lie belowqAccept, but no global selection sum/factor is applied yet. Existing source14 and restricted Extract-ROM backend limits and remaining authentication/real-HKDF/global joins are accurately stated."
+  ],
+  "verification": [
+    "All20 source/doc hashes matched finalfreeze.",
+    "All72 named theoremguards match manifest;18 finalempty guardedlogs match hashes; actualaxiomlog onlystandardthreeaxioms.",
+    "No changed preexisting Lean dependency source vs5895 baseline; no placeholder/customaxiom found in18 modules.",
+    "No build, solver or source mutation performed byreviewer."
+  ],
+  "findings": [],
+  "limits": [
+    "This is a filtered bounded one-Server/many-Beacons source14 KEMhop, not an unfiltered global secrecy/authentication theorem.",
+    "Primitive correctness/functional interface and resource contracts remain external; native algorithms and total PPT pure-computation bounds are not proved.",
+    "Source authentication/freshness event and creation/session/occurrence selection, corrected secret-input real-HKDF and global symbolic/computational composition remain open."
+  ]
+}

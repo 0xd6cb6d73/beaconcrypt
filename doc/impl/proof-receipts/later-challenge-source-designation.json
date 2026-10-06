@@ -1,0 +1,122 @@
+{
+  "cohort": "marked-source13",
+  "source_base": "ba8a904487c90b0012af511514d2de47ac1316c4",
+  "fetched_origin_vcvio": "8330cdef4f4659931b6764a026cd90c4caf833a4",
+  "source_manifest_sha256": "c74e275e843651629c1e62db0917d26eabaa5cce3c77d342f484a8b44d1a8776",
+  "source_files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeMarkedTrace.lean": "c65e72aaeaa574c71039c301a8367afde547d6094e787d31abfbcccdcee267b8",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeMarkedAddress.lean": "25e0ec75b02088e76e98a4f5909f34863c4849189eb3eb648b2912bfa22ca334",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeMarkedBuilder.lean": "032ee2b3b3f4ec539aadd4cb27b4c249a84e594b38ba9fd04d54528085aa3f38",
+    "doc/impl/later-challenge-source-designation.md": "373d787b5f3dc6dea22243dc66e70754b0c84bb8098177c6ae6a64701a60708b",
+    "doc/formal-verification-analysis.md": "0ddb7270973d3568d7d5af1899404272e0293ea1c649571e36347842fcf8a3de"
+  },
+  "public_theorems": {
+    "PqxdhLaterChallengeMarkedTrace": [
+      "Reaches.source",
+      "program_source",
+      "program_nested",
+      "recorded",
+      "original_supported",
+      "recorded_support",
+      "origin",
+      "annotated_view"
+    ],
+    "PqxdhLaterChallengeMarkedAddress": [
+      "sampled_marker"
+    ],
+    "PqxdhLaterChallengeMarkedBuilder": [
+      "source",
+      "marked",
+      "event_marked",
+      "event_filter"
+    ]
+  },
+  "direct_checks": [
+    {
+      "module": "PqxdhLaterChallengeMarkedTrace",
+      "source_sha256": "c65e72aaeaa574c71039c301a8367afde547d6094e787d31abfbcccdcee267b8",
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 8,
+      "end": "2026-10-06T04:49:55.338000+00:00",
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeMarkedAddress",
+      "source_sha256": "25e0ec75b02088e76e98a4f5909f34863c4849189eb3eb648b2912bfa22ca334",
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 1,
+      "end": "2026-10-06T04:52:13.070000+00:00",
+      "log_content": ""
+    },
+    {
+      "module": "PqxdhLaterChallengeMarkedBuilder",
+      "source_sha256": "032ee2b3b3f4ec539aadd4cb27b4c249a84e594b38ba9fd04d54528085aa3f38",
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_bytes": 0,
+      "guards": 4,
+      "end": "2026-10-06T04:52:27.054000+00:00",
+      "log_content": ""
+    }
+  ],
+  "restored_published_modules": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSourceSharedRom.lean": {
+      "HEAD_sha256": "ecf6b8785f4c7d7f5cf4e42cee9ea27d0f75e4d633565b3ea1a58e516d20a32f",
+      "working_sha256": "ecf6b8785f4c7d7f5cf4e42cee9ea27d0f75e4d633565b3ea1a58e516d20a32f"
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedBefore.lean": {
+      "HEAD_sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6",
+      "working_sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6"
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeConsumer.lean": {
+      "HEAD_sha256": "57aad9c64f9626f8b2c0476f745ace4ce5c37b4c8328406475f7b3c30bbde2d2",
+      "working_sha256": "57aad9c64f9626f8b2c0476f745ace4ce5c37b4c8328406475f7b3c30bbde2d2"
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSourceBills.lean": {
+      "HEAD_sha256": "3df336e701ea19406b6b18e24cfdbf0f712b6678c5a2940cbeedc3b1ecadc202",
+      "working_sha256": "3df336e701ea19406b6b18e24cfdbf0f712b6678c5a2940cbeedc3b1ecadc202"
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedContinuation.lean": {
+      "HEAD_sha256": "4db129fb221d6fefaef7ac2b921f2734abf041f1ed6ad6ddf3f48489e9b3cca9",
+      "working_sha256": "4db129fb221d6fefaef7ac2b921f2734abf041f1ed6ad6ddf3f48489e9b3cca9"
+    }
+  },
+  "review_sha256": "f2815bf3a259fea27698e4ce3e7ca80c65f35d1099cf943b00121028ea58d0d4",
+  "independent_review": {
+    "date": "2026-10-06T04:57:51.556776+00:00",
+    "reviewer": "root; independent of evolving_source_join author",
+    "manifest": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/marked-source13-manifest.json",
+    "manifest_sha256": "c74e275e843651629c1e62db0917d26eabaa5cce3c77d342f484a8b44d1a8776",
+    "decision": "approved for stated operational source-designation scope",
+    "files": 5,
+    "modules": 3,
+    "statements": 13,
+    "review": [
+      "Origin retains the same annotated execution prefix and actual reply-dependent suffix; no unrelated existential witness is substituted.",
+      "Annotation delegates unchanged original handler and records request-time predicate; erasure retains complete native/private state.",
+      "Literal first Builder derives initial operational validity and absent later publication; no assumed final-marker fact.",
+      "Target depth+2 and sampled-input alias exclusion remain explicit; equality is event probability with arbitrary full-native freshness predicate retained.",
+      "No new primitive reduction, loss or query count claimed; all source calls retained. Predicate instrumentation is not declared CPU-free.",
+      "Zero-root retained-table start and supported sample are explicit intermediate experiment; saved original source/stopped interpreter and raw/dead-state filters remain open in guide."
+    ],
+    "checks": {
+      "frozen_hashes": "all match",
+      "guarded_module_logs": "three exit0 empty logs with matching source/artifact provenance",
+      "theorem_guards": 13
+    },
+    "findings": [],
+    "remaining": [
+      "Sampled input-alias probability and nonce refusal",
+      "Actual saved-source/stopped-interpreter event join",
+      "Inside/used/complementary phases and global target/freshness losses"
+    ]
+  },
+  "scope": "Exact same annotated original source path and full Builder/post erasure; source event plus arbitrary full-native freshness test receives the selected marker under explicit sampled-input alias exclusion. No alias/refusal probability or stopped-source/global secrecy join is asserted.",
+  "forbidden_scan": "No sorry/admit/sorryAx/custom axiom/native_decide; 13 exact guards, only propext/Classical.choice/Quot.sound",
+  "diff_check": "git diff --check exit0",
+  "validation_limits": "Focused Lean checks only; parent central integration owns root/inventory/full verification. No Rust changes; no mutation run."
+}
