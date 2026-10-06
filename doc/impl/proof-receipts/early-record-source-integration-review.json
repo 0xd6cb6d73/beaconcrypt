@@ -1,0 +1,57 @@
+{
+  "status": "APPROVE_SCOPED_INTEGRATION",
+  "date": "2026-10-06T04:22:52.446778+00:00",
+  "reviewer": "/root/fs_source_abstraction",
+  "base": "6c7aaee212b1e76ad860f17c5cd6e41b43781e5e",
+  "manifest_sha256": "0c8492fef8940b74a0e44c19c44ebf0e885ab092dba91661879f87c445c18f95",
+  "receipt_sha256": "0a1e51b95217982e3dbfc1184458da0d410ca0875392b1c843dca01646fe4d77",
+  "independent_audit": {
+    "frozen_files": 23,
+    "modules": 13,
+    "guards": 40,
+    "published_source_matches": {
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeResources.lean": "ee97549874d72711cfdf36d169f18a389358d8b4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBuilderBills.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBuilderConsumer.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBuilderObservation.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBuilderSource.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlyCertified.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlyCompiled.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlyConsumer.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlyPrivacy.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlyResources.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeEarlySource.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeRandomEarly.lean": "ba8a904487c90b0012af511514d2de47ac1316c4",
+      "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSourceBills.lean": "ee97549874d72711cfdf36d169f18a389358d8b4"
+    },
+    "old_gate_count": 21084,
+    "retained": {
+      "nonrootLean": 1424,
+      "pvRust": 284
+    },
+    "inventory_rows": 1817,
+    "inventory_counts": {
+      "adapter-rust": 13,
+      "adapter-schema": 3,
+      "control": 13,
+      "core-rust": 10,
+      "generated-lean": 7,
+      "generated-proverif": 1,
+      "handwritten-lean": 1431,
+      "handwritten-proverif": 262,
+      "inventory": 2,
+      "lean-control": 12,
+      "lean-dependency-overlay": 4,
+      "validation": 59
+    },
+    "receipt_hash": "0a1e51b95217982e3dbfc1184458da0d410ca0875392b1c843dca01646fe4d77"
+  },
+  "review": [
+    "Read full integration, source-bill and joint early-consumer guides and actual EarlyPrivacy.source/loss/source_random/pair statements/proofs. The pair concerns both bit worlds, not a combined protocol-direction theorem. Root corrected this one prose ambiguity; no proof changes.",
+    "Actual complete original-interface bounds retain all source callbacks/private services/publication failures and full-prefix coupling. Every hash/seal/raw/uniform bill and both explicit modified-CTX losses are stated, including nonce range precondition.",
+    "Public compiled source filters missing/non-early/alias/freshness/refusal outcomes to false; all mass retained but no unfiltered secrecy or zero bad-event inference. Common source-event/freshness/complementary-phase/global selection joins remain open.",
+    "All thirteen modules match already independently reviewed published source. Verified exact40guards/imports/checker anchors and retained old gates; no old proof/model/production source changed.",
+    "Verified portable13directsource/artifact+emptylog outcomes, rootempty0, inventoryoutputhash/0 and staticchecks. No build or solver rerun."
+  ],
+  "findings": []
+}
