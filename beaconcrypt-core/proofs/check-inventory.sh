@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1478
+	[handwritten-lean]=1479
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28352,6 +28352,43 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem reported_result([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem reported_result"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.resume_tag$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.resume_tag"
 require_line_count 1 '^theorem resume_tag([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem resume_tag"
+
+# Accept/KEM join stage C (M9a): the decision program of the raw-ordinal KEM games as the result map of the tagged program at every command, exposure and KEM-scan layer, exact coins and the finished pending cut under the stopped selected-KEM router, and the router-run split.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawNatural.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemRawNatural root import"
+require_line_count 15 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem inventory"
+require_line_count 15 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.router_split$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.router_split"
+require_line_count 1 '^theorem router_split([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem router_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.router_map$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.router_map"
+require_line_count 1 '^theorem router_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem router_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.router_support$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.router_support"
+require_line_count 1 '^theorem router_support([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem router_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.coins_stopped$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.coins_stopped"
+require_line_count 1 '^theorem coins_stopped([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem coins_stopped"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.finish_stopped$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.finish_stopped"
+require_line_count 1 '^theorem finish_stopped([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem finish_stopped"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.commands_map$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.commands_map"
+require_line_count 1 '^theorem commands_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem commands_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.program_map$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.program_map"
+require_line_count 1 '^theorem program_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem program_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.decision_program$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.decision_program"
+require_line_count 1 '^theorem decision_program([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem decision_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.hide_map$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.hide_map"
+require_line_count 1 '^theorem hide_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem hide_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.exposeAt_map$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.exposeAt_map"
+require_line_count 1 '^theorem exposeAt_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem exposeAt_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.exposeAt_tag$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.exposeAt_tag"
+require_line_count 1 '^theorem exposeAt_tag([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem exposeAt_tag"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.initialization_map$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.initialization_map"
+require_line_count 1 '^theorem initialization_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem initialization_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.selectedFirst_map$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.selectedFirst_map"
+require_line_count 1 '^theorem selectedFirst_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem selectedFirst_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.scan_map$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.scan_map"
+require_line_count 1 '^theorem scan_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem scan_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.rawScan_map$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.rawScan_map"
+require_line_count 1 '^theorem rawScan_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem rawScan_map"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
