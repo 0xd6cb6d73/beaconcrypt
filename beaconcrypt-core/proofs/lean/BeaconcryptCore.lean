@@ -1510,6 +1510,8 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque
 
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
+import BeaconcryptCore.Computational.PqxdhDeploymentNative
+
 /-!
 # Beaconcrypt-core verification root
 

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1490
+	[handwritten-lean]=1491
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28580,6 +28580,23 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem observe_serverRaw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem observe_serverRaw"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentInterface\.observe_beaconRaw$' "$selected_source_module" "PqxdhDeploymentInterface dependency BeaconcryptCore.Computational.PqxdhDeploymentInterface.observe_beaconRaw"
 require_line_count 1 '^theorem observe_beaconRaw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem observe_beaconRaw"
+
+# Common deployment experiment native semantics (CE-2 subset for the CE-3 trial): live Server and owners, record ghost counters, generated-seed game.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentNative.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentNative$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentNative root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhDeploymentNative theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentNative guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentNative\.record_run$' "$selected_source_module" "PqxdhDeploymentNative dependency BeaconcryptCore.Computational.PqxdhDeploymentNative.record_run"
+require_line_count 1 '^theorem record_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentNative theorem record_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentNative\.record_support$' "$selected_source_module" "PqxdhDeploymentNative dependency BeaconcryptCore.Computational.PqxdhDeploymentNative.record_support"
+require_line_count 1 '^theorem record_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentNative theorem record_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentNative\.create_width$' "$selected_source_module" "PqxdhDeploymentNative dependency BeaconcryptCore.Computational.PqxdhDeploymentNative.create_width"
+require_line_count 1 '^theorem create_width([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentNative theorem create_width"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentNative\.serverStep_fields$' "$selected_source_module" "PqxdhDeploymentNative dependency BeaconcryptCore.Computational.PqxdhDeploymentNative.serverStep_fields"
+require_line_count 1 '^theorem serverStep_fields([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentNative theorem serverStep_fields"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentNative\.beaconStep_fields$' "$selected_source_module" "PqxdhDeploymentNative dependency BeaconcryptCore.Computational.PqxdhDeploymentNative.beaconStep_fields"
+require_line_count 1 '^theorem beaconStep_fields([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentNative theorem beaconStep_fields"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
