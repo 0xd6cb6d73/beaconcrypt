@@ -53,7 +53,7 @@ declare -A expected_category_counts=(
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=62
+	[validation]=64
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -104,6 +104,8 @@ printf '%s\n' proofs/check-inventory.sh proofs/trusted-boundary.md \
 compare_set inventory "$tmp_dir/inventory"
 
 printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
+	proofs/source/getter-profile.py \
+	proofs/source/test-getter-profile.py \
 	../beaconcrypt/tests/registration_completion.rs \
 	../beaconcrypt/tests/record_opening.rs \
 	../beaconcrypt/tests/raw_receive.rs ../beaconcrypt/tests/construction.rs \
@@ -28076,5 +28078,9 @@ done
 require_line_count 2 '^\t\$\(MAKE\) check-proverif-generated-drift$' Makefile "serial CI generated-drift steps"
 require_line_count 1 '^check-proverif-generated-drift:$' Makefile "serial CI generated-drift gate"
 require_line_count 1 '^fn validate_serial_proverif_ci\(' "$fidelity_test" "serial CI source validation"
+
+# Reviewed actual getter availability, distinct from network compromise powers.
+python3 proofs/source/test-getter-profile.py
+python3 proofs/source/getter-profile.py
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'

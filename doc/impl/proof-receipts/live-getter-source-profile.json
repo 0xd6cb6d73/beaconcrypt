@@ -1,0 +1,340 @@
+{
+  "date": "2026-10-06T05:23:22.992037+00:00",
+  "scope": "Finite source getter availability and reviewed lifetime/capability mapping; no new security theorem or adversary capability.",
+  "source_manifest_sha256": "f16d3bc03f2bc98b68c7b40740a388291c71d4c0463f61f9bd3b6e080c080cae",
+  "source_manifest": {
+    "basis": "64dcf4ad49a3299ae91b9c487bcddff4f70ef3d9",
+    "source_design_basis": "34122c10635ce334fe6260ab05cd315ac1aa6a7e",
+    "worktree": "/tmp/beaconcrypt-live-getter-source-profile",
+    "files": {
+      "beaconcrypt-core/proofs/check-inventory.sh": "6b442842c42b0d2d4704d0f387602c5f5ff582b29e3f7215cdc42b60f1afbad6",
+      "beaconcrypt-core/proofs/reviewed-inventory.txt": "b6177b494cdc1f4d815277ebfc3730fd2e5c0b5fbb95247dbc2dbe9a8c7f6b2c",
+      "beaconcrypt-core/proofs/source/getter-profile.py": "0ccefaf3034a8019b722781f324ba772775ad3d42974069fa0abe65fea152e9f",
+      "beaconcrypt-core/proofs/source/test-getter-profile.py": "b160b86c26288051ae90d1010c54f5076fd31d6173465896f5ed3aad27558eba",
+      "beaconcrypt-core/proofs/trusted-boundary.md": "d5c6853a7ed2ce723340f522b6ffc6b876adbe58cd3a62c2054d8781ccb1baba",
+      "doc/formal-verification-analysis.md": "7e1a0501adfc1345b7a44eb636471b71cdab988812034b7fffe76e6e07afe9b0",
+      "doc/impl/live-getter-source-profile.md": "d8029c6e9c8da66df94eeec6537b8693dc0266c456ad807594b40cc2515d9d12"
+    },
+    "scope": "Finite source getter availability and reviewed lifetime/capability mapping; no new security theorem or adversary capability."
+  },
+  "semantic_review_sha256": "ab841bbda5d8db75e6462b890d43e82c58aec1680539feb895240a63745ec52a",
+  "semantic_review": {
+    "reviewer": "/root/evolving_source_join",
+    "date": "2026-10-06T05:18:22.421926+00:00",
+    "status": "APPROVE_SCOPED_LIVE_GETTER_SOURCE_PROFILE",
+    "manifest": "/tmp/bc-arc-scratch/pv-work/live-reveal-profile/paper-review-manifest-v2.json",
+    "manifest_sha256": "b7f881ecb8e3fc6e6f05b60c1f36d4ad1176b3e6248c1500dc1cc1eacba5e2f6",
+    "source_files": {
+      "doc/impl/live-getter-source-profile.md": "d8029c6e9c8da66df94eeec6537b8693dc0266c456ad807594b40cc2515d9d12",
+      "beaconcrypt-core/proofs/source/getter-profile.py": "0ccefaf3034a8019b722781f324ba772775ad3d42974069fa0abe65fea152e9f",
+      "beaconcrypt-core/proofs/source/test-getter-profile.py": "b160b86c26288051ae90d1010c54f5076fd31d6173465896f5ed3aad27558eba"
+    },
+    "review": [
+      "Read complete guide, checker and all nine regression definitions; verified three frozen hashes,14 full source pins and complete 20 Beacon plus1Server phase comparison without compiler/solver builds.",
+      "Inspected complete native getters, BeaconState fields and finish/delete/regeneration lifetime branches; KEM is Some in all three active registration phases, None terminal; identity remains live; failed pre-phase finish does not erase.",
+      "Server pending root stays in private by-value RegistrationOutput until consumed/dropped; Beacon root is staged local; installed states have chain/cache rather than retained root. No token/accessibility conflation.",
+      "Existing complete Lean value/localValue/activeKey projections agree in field availability; statement explicitly excludes byte equality between primitive64-byte signing secret and modeled32-byte seed and any inverse reveal simulation.",
+      "Plaintext/private application, arbitrary current-field reusable read interfaces, source freshness and approved network threat profile remain distinct. No stronger P7 compromise or post-compromise recovery claim, no global budget or free-work assumption.",
+      "Pinned source/finite grammar check is accurately presented as a maintained correspondence tripwire and reviewed lifetime argument, not Rust compiler or representation proof."
+    ],
+    "findings": [],
+    "limits": [
+      "Maintained shared inventory wiring and final archive belong to root review. Excluded snapshot/state-export/security behavior not assessed."
+    ]
+  },
+  "checked_availability_cases": [
+    {
+      "owner": "Beacon",
+      "field": "identity",
+      "phase": "Fresh",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "identity",
+      "phase": "FreshWithCoins",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "identity",
+      "phase": "InitSent",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "identity",
+      "phase": "Established",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "identity",
+      "phase": "Aborted",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "kem",
+      "phase": "Fresh",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "kem",
+      "phase": "FreshWithCoins",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "kem",
+      "phase": "InitSent",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "kem",
+      "phase": "Established",
+      "present": false
+    },
+    {
+      "owner": "Beacon",
+      "field": "kem",
+      "phase": "Aborted",
+      "present": false
+    },
+    {
+      "owner": "Beacon",
+      "field": "prekey",
+      "phase": "Fresh",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "prekey",
+      "phase": "FreshWithCoins",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "prekey",
+      "phase": "InitSent",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "prekey",
+      "phase": "Established",
+      "present": false
+    },
+    {
+      "owner": "Beacon",
+      "field": "prekey",
+      "phase": "Aborted",
+      "present": false
+    },
+    {
+      "owner": "Beacon",
+      "field": "oneTime",
+      "phase": "Fresh",
+      "present": false
+    },
+    {
+      "owner": "Beacon",
+      "field": "oneTime",
+      "phase": "FreshWithCoins",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "oneTime",
+      "phase": "InitSent",
+      "present": true
+    },
+    {
+      "owner": "Beacon",
+      "field": "oneTime",
+      "phase": "Established",
+      "present": false
+    },
+    {
+      "owner": "Beacon",
+      "field": "oneTime",
+      "phase": "Aborted",
+      "present": false
+    },
+    {
+      "owner": "Server",
+      "field": "identity",
+      "phase": "live",
+      "present": true
+    }
+  ],
+  "source_pin_count": 14,
+  "checks": [
+    {
+      "name": "getters",
+      "command": [
+        "python3",
+        "beaconcrypt-core/proofs/source/getter-profile.py"
+      ],
+      "start": "2026-10-06T05:21:33.083068+00:00",
+      "elapsed": 0.04873013682663441,
+      "exit": 0,
+      "log_sha256": "089db9a5a80276dcab0500e5384231393c34c8d351f3effea5e0830d530e7866"
+    },
+    {
+      "name": "regressions",
+      "command": [
+        "python3",
+        "beaconcrypt-core/proofs/source/test-getter-profile.py"
+      ],
+      "start": "2026-10-06T05:21:33.132167+00:00",
+      "elapsed": 0.0806938810274005,
+      "exit": 0,
+      "log_sha256": "0b91efbf18bf599405ac2d4b15a2eefd01b926339e841af31a3da4aa2361e4f9"
+    },
+    {
+      "name": "inventory",
+      "command": [
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "beaconcrypt-core",
+        "SHELL=/run/current-system/sw/bin/bash",
+        "check-inventory"
+      ],
+      "start": "2026-10-06T05:21:33.213244+00:00",
+      "elapsed": 63.79118259018287,
+      "exit": 0,
+      "log_sha256": "fd923373d49c57b9b3f5d25b44877d74989e425d059d0c3ada8479b84e2b014c"
+    },
+    {
+      "name": "diff",
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "start": "2026-10-06T05:22:37.004829+00:00",
+      "elapsed": 0.021329453913494945,
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "logs": {
+    "getters": {
+      "sha256": "089db9a5a80276dcab0500e5384231393c34c8d351f3effea5e0830d530e7866",
+      "utf8": "Getter profile: 20 Beacon phase cases agree; Server identity remains live. No secrecy or network-compromise claim.\n"
+    },
+    "regressions": {
+      "sha256": "0b91efbf18bf599405ac2d4b15a2eefd01b926339e841af31a3da4aa2361e4f9",
+      "utf8": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.029s\n\nOK\n"
+    },
+    "inventory": {
+      "sha256": "fd923373d49c57b9b3f5d25b44877d74989e425d059d0c3ada8479b84e2b014c",
+      "utf8": "make: Entering directory '/tmp/beaconcrypt-live-getter-source-profile/beaconcrypt-core'\nbash proofs/check-inventory.sh\nPin-origin argument inputs: 14 files, 28 reductions, 36 data constructors; scoped paper C2/C3 transfer, no new solver verdict.\nSymbolic name-order premises: 2 complete Server continuations; paper trace argument only, no computational reorder or new solver verdict.\nprimitive-fidelity manifest: 9 targets checked\nClassified 3198 expected verdicts: definitional=2836, diagnostic=8, differential-control=19, limitation=20, negative-control=42, security=185, witness=88\nThese are classified expectations, not new ProVerif validation receipts or independent theorem counts.\npending registration manifest: 4 focused targets checked\nOpen CTX manifest: 2 targets, 0 protocol security claims.\nactive strong-secrecy manifest: 6 targets checked\nSignature provenance manifest: 6 targets, 28 reductions, 44 data constructors.\nDelayed response manifest: 5 targets, 7 exact verdict lines; retained finish/control comparison.\nRecord origin manifest: 4 targets; Kr3 security, Kr2 cache-prefix witness, scoped paper replay composition.\nTasking origin manifest: 5 targets; Kr3 origin and initial seam, Kr2 cache-prefix witness, single-worker uniqueness.\nApplication secrecy manifest: 4 targets; both directions Kr3, private application plaintext with public optional-result bits.\nExact-interface strong secrecy manifest: 8 targets: both Kr3 equivalences, exact public response/root origin, four confirmed-trace controls.\n.........\n----------------------------------------------------------------------\nRan 9 tests in 0.034s\n\nOK\nGetter profile: 20 Beacon phase cases agree; Server identity remains live. No secrecy or network-compromise claim.\nFormal-verification inventory matches the reviewed boundary.\nmake: Leaving directory '/tmp/beaconcrypt-live-getter-source-profile/beaconcrypt-core'\n"
+    },
+    "diff": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utf8": ""
+    }
+  },
+  "python_formatting": [
+    {
+      "command": [
+        "/home/user/.cache/uv/archive-v0/sw5nejM3PvZ9kzGp/bin/black",
+        "--check",
+        "--target-version",
+        "py311",
+        "beaconcrypt-core/proofs/source/getter-profile.py"
+      ],
+      "exit": 0,
+      "output": "All done! \u2728 \ud83c\udf70 \u2728\n1 file would be left unchanged.\n"
+    },
+    {
+      "command": [
+        "/home/user/.cache/uv/archive-v0/sw5nejM3PvZ9kzGp/bin/black",
+        "--check",
+        "--target-version",
+        "py311",
+        "beaconcrypt-core/proofs/source/test-getter-profile.py"
+      ],
+      "exit": 0,
+      "output": "All done! \u2728 \ud83c\udf70 \u2728\n1 file would be left unchanged.\n"
+    }
+  ],
+  "preservation": {
+    "basis": "64dcf4ad49a3299ae91b9c487bcddff4f70ef3d9",
+    "source_files_unchanged": {
+      "lean": 1482,
+      "proverif": 345,
+      "production_rust": 22
+    },
+    "all_existing_require_guards_unchanged": 22191,
+    "files_digest_sha256": "447ea9aceb9491a90f30e1b48cffae88d411cbb9c75dc6ee8a2a15a9173514b8"
+  },
+  "earlier_basis_checks": [
+    {
+      "name": "getters",
+      "command": [
+        "python3",
+        "beaconcrypt-core/proofs/source/getter-profile.py"
+      ],
+      "start": "2026-10-06T05:19:03.798897+00:00",
+      "elapsed": 0.04826123407110572,
+      "exit": 0,
+      "log_sha256": "089db9a5a80276dcab0500e5384231393c34c8d351f3effea5e0830d530e7866"
+    },
+    {
+      "name": "regressions",
+      "command": [
+        "python3",
+        "beaconcrypt-core/proofs/source/test-getter-profile.py"
+      ],
+      "start": "2026-10-06T05:19:03.847517+00:00",
+      "elapsed": 0.08008609991520643,
+      "exit": 0,
+      "log_sha256": "9a6edf8ef37706071598674e7255ea7542fa59703e7d9d8e750067baebe400c4"
+    },
+    {
+      "name": "inventory",
+      "command": [
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "beaconcrypt-core",
+        "SHELL=/run/current-system/sw/bin/bash",
+        "check-inventory"
+      ],
+      "start": "2026-10-06T05:19:03.927919+00:00",
+      "elapsed": 64.70866017602384,
+      "exit": 0,
+      "log_sha256": "b11f4f02609960265e2a7533e4909b3041d6f3c4b9006b8b06cf3ad1a25bc8d4"
+    },
+    {
+      "name": "diff",
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "start": "2026-10-06T05:20:08.636957+00:00",
+      "elapsed": 0.021344803040847182,
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "reconciliation": "Own7 staged files preserved in named stash and exact scratch copies; topic fast-forwarded34122\u219264dc, only local getter metadata additions replayed. The3 reviewed guide/checker files remained byte-exact. No parent worktree touched.",
+  "limits": "No source, Lean or ProVerif process changed. No Rust tests, mutation suite, new solver target, aggregate Lean build or full matrix run. Finite table is checked; surrounding lifecycle/capability interpretation is independently reviewed prose. No new security theorem or primitive contract."
+}
