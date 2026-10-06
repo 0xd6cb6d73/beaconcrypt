@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-06T03:59:30.403429+00:00",
+  "reviewer": "root",
+  "decision": "approve_scoped_selected_kem_source_and_resources",
+  "findings": [],
+  "review_manifest_sha256": "dcf0a139f8622e6877ba6326a98924fbd4d94ff59e0a82cf4479a11d40b1449f",
+  "files_verified": 10,
+  "statements_reviewed": 39,
+  "final_empty_checks": 8,
+  "axioms_log_sha256": "40838f3ef3d3ff24a861bc6f33c61b487d7ff20aceab486a39a95c83fb599ee7",
+  "review": [
+    "Read all eight complete module definitions, theorem statements and proof bodies plus full guide and analysis scope.",
+    "Complete selected-first equality retains actual initializer rejection, imported/generated origin, full private/native/runtime state, and whole continuation. Lossless discarded chosen draw on initialization failure is explicitly counted.",
+    "Issued-PQ-or-unissued alternative retains actual source attempt provenance and concrete created-prefix reservation premise; no keyinjectivity or honestcandidate implication.",
+    "Ordinary pre/post simulation keeps selected secret only in interpreter and prevents exact challenge ciphertext being forwarded; actual candidate nonexposure and encapsulation cut remain open.",
+    "Actual KEM-disclosure stopping is distinguished from signature freshness; missing/future queries retain optional rejection.",
+    "All-reply OpenUniform derives actual source compiler bill; keygen reservation and constructor/identity/local decapsulation work separately counted. Forwarded base counts distinguished from already evaluated local base.",
+    "Uniform cap qInit+32*g+keygenCost*n+32*qCreate+U+decapsUniform*qFinish; logical qFinish; forwardedbase decapsBase*qFinish. Primitive operation/resource correctness stays explicit existing contract.",
+    "No new IND-CCA advantage or global authenticatedroot conclusion; challenge cut, root192-byte context, Extract/HMAC composition and selection losses remain documented. Native restrictedExtract-ROM analysis is not claimed as real publicHKDF."
+  ],
+  "validation_scope": "Manifest/artifact/log checks and semantic inspection only; no redundant build. Root/import/inventory integration separately required."
+}

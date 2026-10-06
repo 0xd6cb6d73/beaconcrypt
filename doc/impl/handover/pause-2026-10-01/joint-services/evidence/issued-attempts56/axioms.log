@@ -1,0 +1,154 @@
+'BeaconcryptCore.Computational.PqxdhRegistrationJointIssuedAttempts.history_append' depends on axioms: [propext]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointIssuedAttempts.prekey_member' depends on axioms: [propext,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointIssuedAttempts.oneTime_member' depends on axioms: [propext,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointIssuedAttempts.pq_member' depends on axioms: [propext, Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointIssuedAttempts.accepted_messages' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointIssuedAttempts.accepted_origin' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointIssuedAttempts.absent_fieldOrigin' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptTrace.trace_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptTrace.issued_basis' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptTrace.after_basis' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptTrace.after_history' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptTrace.after_fixed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptTrace.finish_basis' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointSigningTranscript.append' depends on axioms: [propext]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointSigningTranscript.signed' depends on axioms: [propext]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointSigningTranscript.history_step' depends on axioms: [propext,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointSigningTranscript.source_step' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointSigningTranscript.source_program' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointSigningTranscript.attempt_after' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointSigningTranscript.attempt_other' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointNonSigningHistory.program' depends on axioms: [propext, Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointNonSigningHistory.preparation' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointNonSigningHistory.finish_query' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointNonSigningHistory.finish' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointNonSigningHistory.server_prefix' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointNonSigningHistory.server_prepare' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointNonSigningHistory.server_accept' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointNonSigningHistory.entry_read' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointNonSigningHistory.live_read' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger.bundle_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger.create_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger.lift_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger.query_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger.program_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptProperties.after_good' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptProperties.trace_good' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInvariant.future_empty' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInvariant.created_messages' depends on axioms: [propext,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInvariant.initial_invariant' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInvariant.created_invariant' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInvariant.bundle_result' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInvariant.bundle_invariant' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptPreservation.retained' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptPreservation.finish' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptPreservation.accept' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptPreservation.read' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptPreservation.shared' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptSchedule.query_invariant' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptSchedule.program_invariant' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInitialized.source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInitialized.install_messages' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInitialized.invariant' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInitialized.generated_invariant' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInitialized.source_witness' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptOrigin.absent_unissued' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptOrigin.raw_origin' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]

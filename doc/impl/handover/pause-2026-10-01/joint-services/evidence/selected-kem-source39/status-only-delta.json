@@ -1,0 +1,6 @@
+{
+  "path": "doc/impl/registration-selected-kem-source.md",
+  "reviewed_sha256": "71eb1924934c189d25cf3c61d34aa28bb86f82fe50dc1d811df2dc53d69dc553",
+  "published_sha256": "f195631a72be729bd5fa123e3ffca46cd0f370cd4d556e398baa4982335a8358",
+  "change": "Review-status sentence only; no theorem, assumption, scope or count changed."
+}

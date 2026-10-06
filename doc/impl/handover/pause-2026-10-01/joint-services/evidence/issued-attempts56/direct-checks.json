@@ -1,0 +1,90 @@
+[
+  {
+    "module": "PqxdhRegistrationJointIssuedAttempts",
+    "started": "2026-10-06T03:13:42.202958+00:00",
+    "finished": "2026-10-06T03:13:44.729227+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointIssuedAttempts-final.log",
+    "bytes": 0
+  },
+  {
+    "module": "PqxdhRegistrationJointAttemptTrace",
+    "started": "2026-10-06T03:13:44.729618+00:00",
+    "finished": "2026-10-06T03:13:48.534970+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptTrace-final.log",
+    "bytes": 0
+  },
+  {
+    "module": "PqxdhRegistrationJointSigningTranscript",
+    "started": "2026-10-06T03:13:48.535473+00:00",
+    "finished": "2026-10-06T03:13:52.696220+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointSigningTranscript-final.log",
+    "bytes": 0
+  },
+  {
+    "module": "PqxdhRegistrationJointNonSigningHistory",
+    "started": "2026-10-06T03:13:52.696668+00:00",
+    "finished": "2026-10-06T03:14:28.585623+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointNonSigningHistory-final.log",
+    "bytes": 0
+  },
+  {
+    "module": "PqxdhRegistrationJointAttemptLedger",
+    "started": "2026-10-06T03:14:28.585993+00:00",
+    "finished": "2026-10-06T03:14:50.838053+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptLedger-final.log",
+    "bytes": 0
+  },
+  {
+    "module": "PqxdhRegistrationJointAttemptProperties",
+    "started": "2026-10-06T03:14:50.838462+00:00",
+    "finished": "2026-10-06T03:15:09.371116+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptProperties-final.log",
+    "bytes": 0
+  },
+  {
+    "module": "PqxdhRegistrationJointAttemptInvariant",
+    "started": "2026-10-06T03:15:09.371577+00:00",
+    "finished": "2026-10-06T03:15:32.091541+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptInvariant-final.log",
+    "bytes": 0
+  },
+  {
+    "module": "PqxdhRegistrationJointAttemptPreservation",
+    "started": "2026-10-06T03:15:32.091934+00:00",
+    "finished": "2026-10-06T03:15:35.313030+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptPreservation-final.log",
+    "bytes": 0
+  },
+  {
+    "module": "PqxdhRegistrationJointAttemptSchedule",
+    "started": "2026-10-06T03:15:35.313539+00:00",
+    "finished": "2026-10-06T03:15:38.500936+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptSchedule-final.log",
+    "bytes": 0
+  },
+  {
+    "module": "PqxdhRegistrationJointAttemptInitialized",
+    "started": "2026-10-06T03:15:38.501483+00:00",
+    "finished": "2026-10-06T03:15:42.390129+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptInitialized-final.log",
+    "bytes": 0
+  },
+  {
+    "module": "PqxdhRegistrationJointAttemptOrigin",
+    "started": "2026-10-06T03:15:42.390639+00:00",
+    "finished": "2026-10-06T03:15:45.478035+00:00",
+    "exit_code": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptOrigin-final.log",
+    "bytes": 0
+  }
+]

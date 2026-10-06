@@ -1,0 +1,80 @@
+{
+  "PqxdhRegistrationJointIssuedAttempts": [
+    "history_append",
+    "prekey_member",
+    "oneTime_member",
+    "pq_member",
+    "accepted_messages",
+    "accepted_origin",
+    "absent_fieldOrigin"
+  ],
+  "PqxdhRegistrationJointAttemptTrace": [
+    "trace_source",
+    "issued_basis",
+    "after_basis",
+    "after_history",
+    "after_fixed",
+    "finish_basis"
+  ],
+  "PqxdhRegistrationJointSigningTranscript": [
+    "append",
+    "signed",
+    "history_step",
+    "source_step",
+    "source_program",
+    "attempt_after",
+    "attempt_other"
+  ],
+  "PqxdhRegistrationJointNonSigningHistory": [
+    "program",
+    "preparation",
+    "finish_query",
+    "finish",
+    "server_prefix",
+    "server_prepare",
+    "server_accept",
+    "entry_read",
+    "live_read"
+  ],
+  "PqxdhRegistrationJointAttemptLedger": [
+    "bundle_source",
+    "create_source",
+    "lift_source",
+    "query_source",
+    "program_source"
+  ],
+  "PqxdhRegistrationJointAttemptProperties": [
+    "after_good",
+    "trace_good"
+  ],
+  "PqxdhRegistrationJointAttemptInvariant": [
+    "future_empty",
+    "created_messages",
+    "initial_invariant",
+    "created_invariant",
+    "bundle_result",
+    "bundle_invariant"
+  ],
+  "PqxdhRegistrationJointAttemptPreservation": [
+    "retained",
+    "finish",
+    "accept",
+    "read",
+    "shared"
+  ],
+  "PqxdhRegistrationJointAttemptSchedule": [
+    "query_invariant",
+    "program_invariant"
+  ],
+  "PqxdhRegistrationJointAttemptInitialized": [
+    "source",
+    "install_messages",
+    "invariant",
+    "generated_invariant",
+    "source_witness"
+  ],
+  "PqxdhRegistrationJointAttemptOrigin": [
+    "absent_unissued",
+    "raw_origin"
+  ]
+}

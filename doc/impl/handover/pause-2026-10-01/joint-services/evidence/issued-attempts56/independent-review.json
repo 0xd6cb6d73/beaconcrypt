@@ -1,0 +1,78 @@
+{
+  "reviewer": "Codex /root, independent of implementing lane",
+  "date_utc": "2026-10-06T03:19:09.771408+00:00",
+  "decision": "APPROVE_SCOPED_SOURCE_ISSUED_ATTEMPT_ORIGIN",
+  "manifest_sha256": "f882135adc72e657fb2766cc11d8abec8ac978452365d3c43ae2a1c3ecf78b81",
+  "files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIssuedAttempts.lean",
+      "sha256": "8ee4582e787bed005898fb60d731bd92a88b0b56f08cc516073cabb227857a23"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptTrace.lean",
+      "sha256": "528d99a02793ff55bb147a20f6917d7068b6cd49d58760a2766812dc9d3374a7"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointSigningTranscript.lean",
+      "sha256": "73c8a5650e0294d45dcf5f37d2c94a06bd3809969775aa3de27bddbbcc4d1464"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointNonSigningHistory.lean",
+      "sha256": "a3b8554eb515c9538eea519b8349fc670a39fe82ebf64a37422ef4f97402c586"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptLedger.lean",
+      "sha256": "edf7ba75b270688a31b789585753120061c37f2412120098b3dbffc594e05eea"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptProperties.lean",
+      "sha256": "23d4c181190e45386c1577b8e23e96b13d0a9f56ba8869b778f8b4d855065828"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptInvariant.lean",
+      "sha256": "129b9c9dd9ed12a574e8cd148bdd4b976686a56fffbd01621261b61f0aec5a83"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptPreservation.lean",
+      "sha256": "9d71bf3f6cf2663bf42dd488b89a37117a3cffccde83f0687975919076ee0570"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptSchedule.lean",
+      "sha256": "b871823792bec3047ddb42677e8c31d7586d9ef139df83acb7603f9d1bbc5953"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptInitialized.lean",
+      "sha256": "393aed3828b3611fc2e1df5148750eafd8c4bbe2ab8ed41f879e949097576b47"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptOrigin.lean",
+      "sha256": "9b2b974a8f9260b06eba8c42d9940560506dbcfda1de71f63fba11b6753c96c3"
+    },
+    {
+      "path": "doc/impl/registration-issued-attempt-origin.md",
+      "sha256": "98fe6f6b6ebaa98fea8a33f0d050728a2bb4af933d91c46649c1f71d0a7016d7"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "2153bd5450a82088c175fe0528c12bd0f7805778d4b2ac538cd3889c51d86bc4"
+    }
+  ],
+  "inspection": "Read all eleven full modules, every theorem statement and proof, source guide and analysis scope. Checked each frozen file,56 guarded outputs and eleven empty successful direct-check receipts.",
+  "findings": [],
+  "semantic_findings": [
+    "Literal source identity/prekey/KEM constructor ordering and private creation indices retained; immutable receipt fields are analysis-only and have complete source erasure.",
+    "All source signing attempts append prekey,one-time,PQ before either publication result. Failed Fresh writers may generate another one-time value later; origin is any earlier complete attempt, never latest successful bundle.",
+    "Canonical byte-purpose tags justify tuple reconstruction with fixed constructor prekey/PQ. No cryptographic constructor/public-key/secret/signature injectivity premise is used.",
+    "Complete initialized source support supplies the invariant and same-execution ledger witness, including known or generated Server initialization, all fourteen command classes, current-field disclosures, failed acceptance/finish and native erasure.",
+    "raw_origin retains literal raw fields, actual verification, original KEM slot and native live-field relation; it does not itself establish that a candidate identity equals the addressed owner identity. The generated-key report match and no-reveal condition remain explicit later obligations.",
+    "No added protocol queries; exact program erasure preserves original interpreted work. Existing generated g+qCreate,sign3qBundle,DHqAccept+qFinish,reportNqAccept caps cited with their existing scope.",
+    "No security conclusion hidden in an invariant premise. absent_fieldOrigin explicitly needs matching generated key,exact report history and freshness; no probabilistic authentication/root/global closure claimed."
+  ],
+  "remaining": [
+    "Actual generated/imported registry\u2192report-time signing and reveal history correspondence",
+    "Coefficient-one field-origin/target-sum charge for absent tuple at actual acceptance",
+    "Selected KEM/root/KDF and global event,selection,query composition",
+    "Wider raw constructor/regeneration/deletion/full-record interface and final integration matrix"
+  ],
+  "validation_scope": "Read-only semantic and evidence review; no redundant builds or mutations."
+}

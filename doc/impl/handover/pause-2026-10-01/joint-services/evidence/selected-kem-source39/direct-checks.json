@@ -1,0 +1,74 @@
+[
+  {
+    "module": "PqxdhRegistrationJointKemCommands",
+    "sha256": "80816d3d4813f01cfbad95cc576c379806465a0782a1f3d36c3f97d0b3be507a",
+    "start": "2026-10-06T03:54:45.347631+00:00",
+    "end": "2026-10-06T03:54:48.709533+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemCommands-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemInitialization",
+    "sha256": "c70a30ded00172cd6bf8d4889d7561e1304c63c5bc1be2c96050e84be0039b6b",
+    "start": "2026-10-06T03:54:48.709831+00:00",
+    "end": "2026-10-06T03:54:52.096406+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemInitialization-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemOrigin",
+    "sha256": "323615ef4d7e46643819831ad775a6398a5de92cf0c10e533d2b698b85fe9773",
+    "start": "2026-10-06T03:54:52.096756+00:00",
+    "end": "2026-10-06T03:54:55.463119+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemOrigin-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemRouting",
+    "sha256": "6499b51369d73da55eacae1ab403fbbdb0a83cf72d9c9cf87f26cca64e3fd7bb",
+    "start": "2026-10-06T03:54:55.463413+00:00",
+    "end": "2026-10-06T03:54:58.616276+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemRouting-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointOpenUniform",
+    "sha256": "8adebf298aea89783d1bef5bca75ea7cb78aaa020da59551f022b38c16149412",
+    "start": "2026-10-06T03:54:58.616623+00:00",
+    "end": "2026-10-06T03:55:03.458633+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointOpenUniform-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemCosts",
+    "sha256": "1a00fdb67560f89e2a5e04c927273dbf3c8550ad2ef5d70134f178a5b2adae22",
+    "start": "2026-10-06T03:55:03.459224+00:00",
+    "end": "2026-10-06T03:55:06.677201+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemCosts-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemInitializedRouter",
+    "sha256": "0ccba62c57c427cc125a40a85b9335bfc90653c08be6c4b7e1586d84923bc5c4",
+    "start": "2026-10-06T03:55:06.677507+00:00",
+    "end": "2026-10-06T03:55:10.106288+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemInitializedRouter-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointKemInitializedCosts",
+    "sha256": "a299cf8baf0f40bdda309134f28154c02d43d41c7647d6e94387445f0e1a927f",
+    "start": "2026-10-06T03:55:10.106650+00:00",
+    "end": "2026-10-06T03:55:13.338058+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/kem-source/PqxdhRegistrationJointKemInitializedCosts-final.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

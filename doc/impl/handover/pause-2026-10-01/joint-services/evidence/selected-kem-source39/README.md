@@ -1,0 +1,7 @@
+# Selected-KEM source-routing checkpoint
+
+These receipts bind eight exact Lean modules and two scope documents to 39 standard-axiom guards and independent semantic review. All eight final direct checks passed with empty output on the frozen source bytes before commit. The only later source-document change is the review-status sentence listed in `status-only-delta.json`; no proof or scope changed. The exact same Lean bytes are committed without a redundant postcommit rebuild.
+
+The result connects the actual initialized source14 registration compiler to selected creation-index reservation, complete generator-order equality, actual KEM disclosure stopping and the ordinary CCA interface. The executable initialized pre wrapper has no selected-secret input. Its full-prefix all-reply resource bill includes constructor, identity, local key generation and decapsulation work. Actual selected encapsulation, identity-authentication/freshness transport, exact root/KDF context and global selection/hybrid losses remain unfinished. The maintained guide is `doc/impl/registration-selected-kem-source.md`.
+
+`check-svc.sh` records the original focused command and scratch paths: Lean 4.34, `-j1 -M8000`, shared Lean lock. JSON paths refer to the original scratch receipts; their byte-identical logs and axiom output are archived here. Central integration owns root imports, dependency reconciliation and trust inventory. No Rust/model, primitive implementation, snapshot or persistence changes are included.

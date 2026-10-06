@@ -1,0 +1,316 @@
+{
+  "cohort": "IssuedAttempts56",
+  "frozen_at": "2026-10-06T03:18:23.731540+00:00",
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "base_commit": "1bed4193f867ac543c5559a7533dd8ca9880e43e",
+  "files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIssuedAttempts.lean",
+      "sha256": "8ee4582e787bed005898fb60d731bd92a88b0b56f08cc516073cabb227857a23"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptTrace.lean",
+      "sha256": "528d99a02793ff55bb147a20f6917d7068b6cd49d58760a2766812dc9d3374a7"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointSigningTranscript.lean",
+      "sha256": "73c8a5650e0294d45dcf5f37d2c94a06bd3809969775aa3de27bddbbcc4d1464"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointNonSigningHistory.lean",
+      "sha256": "a3b8554eb515c9538eea519b8349fc670a39fe82ebf64a37422ef4f97402c586"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptLedger.lean",
+      "sha256": "edf7ba75b270688a31b789585753120061c37f2412120098b3dbffc594e05eea"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptProperties.lean",
+      "sha256": "23d4c181190e45386c1577b8e23e96b13d0a9f56ba8869b778f8b4d855065828"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptInvariant.lean",
+      "sha256": "129b9c9dd9ed12a574e8cd148bdd4b976686a56fffbd01621261b61f0aec5a83"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptPreservation.lean",
+      "sha256": "9d71bf3f6cf2663bf42dd488b89a37117a3cffccde83f0687975919076ee0570"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptSchedule.lean",
+      "sha256": "b871823792bec3047ddb42677e8c31d7586d9ef139df83acb7603f9d1bbc5953"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptInitialized.lean",
+      "sha256": "393aed3828b3611fc2e1df5148750eafd8c4bbe2ab8ed41f879e949097576b47"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAttemptOrigin.lean",
+      "sha256": "9b2b974a8f9260b06eba8c42d9940560506dbcfda1de71f63fba11b6753c96c3"
+    },
+    {
+      "path": "doc/impl/registration-issued-attempt-origin.md",
+      "sha256": "98fe6f6b6ebaa98fea8a33f0d050728a2bb4af933d91c46649c1f71d0a7016d7"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "2153bd5450a82088c175fe0528c12bd0f7805778d4b2ac538cd3889c51d86bc4"
+    }
+  ],
+  "guard_count": 56,
+  "theorems": {
+    "PqxdhRegistrationJointIssuedAttempts": [
+      "history_append",
+      "prekey_member",
+      "oneTime_member",
+      "pq_member",
+      "accepted_messages",
+      "accepted_origin",
+      "absent_fieldOrigin"
+    ],
+    "PqxdhRegistrationJointAttemptTrace": [
+      "trace_source",
+      "issued_basis",
+      "after_basis",
+      "after_history",
+      "after_fixed",
+      "finish_basis"
+    ],
+    "PqxdhRegistrationJointSigningTranscript": [
+      "append",
+      "signed",
+      "history_step",
+      "source_step",
+      "source_program",
+      "attempt_after",
+      "attempt_other"
+    ],
+    "PqxdhRegistrationJointNonSigningHistory": [
+      "program",
+      "preparation",
+      "finish_query",
+      "finish",
+      "server_prefix",
+      "server_prepare",
+      "server_accept",
+      "entry_read",
+      "live_read"
+    ],
+    "PqxdhRegistrationJointAttemptLedger": [
+      "bundle_source",
+      "create_source",
+      "lift_source",
+      "query_source",
+      "program_source"
+    ],
+    "PqxdhRegistrationJointAttemptProperties": [
+      "after_good",
+      "trace_good"
+    ],
+    "PqxdhRegistrationJointAttemptInvariant": [
+      "future_empty",
+      "created_messages",
+      "initial_invariant",
+      "created_invariant",
+      "bundle_result",
+      "bundle_invariant"
+    ],
+    "PqxdhRegistrationJointAttemptPreservation": [
+      "retained",
+      "finish",
+      "accept",
+      "read",
+      "shared"
+    ],
+    "PqxdhRegistrationJointAttemptSchedule": [
+      "query_invariant",
+      "program_invariant"
+    ],
+    "PqxdhRegistrationJointAttemptInitialized": [
+      "source",
+      "install_messages",
+      "invariant",
+      "generated_invariant",
+      "source_witness"
+    ],
+    "PqxdhRegistrationJointAttemptOrigin": [
+      "absent_unissued",
+      "raw_origin"
+    ]
+  },
+  "direct_checks": [
+    {
+      "module": "PqxdhRegistrationJointIssuedAttempts",
+      "started": "2026-10-06T03:13:42.202958+00:00",
+      "finished": "2026-10-06T03:13:44.729227+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointIssuedAttempts-final.log",
+      "bytes": 0,
+      "source_sha256": "8ee4582e787bed005898fb60d731bd92a88b0b56f08cc516073cabb227857a23",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointIssuedAttempts"
+      ]
+    },
+    {
+      "module": "PqxdhRegistrationJointAttemptTrace",
+      "started": "2026-10-06T03:13:44.729618+00:00",
+      "finished": "2026-10-06T03:13:48.534970+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptTrace-final.log",
+      "bytes": 0,
+      "source_sha256": "528d99a02793ff55bb147a20f6917d7068b6cd49d58760a2766812dc9d3374a7",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointAttemptTrace"
+      ]
+    },
+    {
+      "module": "PqxdhRegistrationJointSigningTranscript",
+      "started": "2026-10-06T03:13:48.535473+00:00",
+      "finished": "2026-10-06T03:13:52.696220+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointSigningTranscript-final.log",
+      "bytes": 0,
+      "source_sha256": "73c8a5650e0294d45dcf5f37d2c94a06bd3809969775aa3de27bddbbcc4d1464",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointSigningTranscript"
+      ]
+    },
+    {
+      "module": "PqxdhRegistrationJointNonSigningHistory",
+      "started": "2026-10-06T03:13:52.696668+00:00",
+      "finished": "2026-10-06T03:14:28.585623+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointNonSigningHistory-final.log",
+      "bytes": 0,
+      "source_sha256": "a3b8554eb515c9538eea519b8349fc670a39fe82ebf64a37422ef4f97402c586",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointNonSigningHistory"
+      ]
+    },
+    {
+      "module": "PqxdhRegistrationJointAttemptLedger",
+      "started": "2026-10-06T03:14:28.585993+00:00",
+      "finished": "2026-10-06T03:14:50.838053+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptLedger-final.log",
+      "bytes": 0,
+      "source_sha256": "edf7ba75b270688a31b789585753120061c37f2412120098b3dbffc594e05eea",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointAttemptLedger"
+      ]
+    },
+    {
+      "module": "PqxdhRegistrationJointAttemptProperties",
+      "started": "2026-10-06T03:14:50.838462+00:00",
+      "finished": "2026-10-06T03:15:09.371116+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptProperties-final.log",
+      "bytes": 0,
+      "source_sha256": "23d4c181190e45386c1577b8e23e96b13d0a9f56ba8869b778f8b4d855065828",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointAttemptProperties"
+      ]
+    },
+    {
+      "module": "PqxdhRegistrationJointAttemptInvariant",
+      "started": "2026-10-06T03:15:09.371577+00:00",
+      "finished": "2026-10-06T03:15:32.091541+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptInvariant-final.log",
+      "bytes": 0,
+      "source_sha256": "129b9c9dd9ed12a574e8cd148bdd4b976686a56fffbd01621261b61f0aec5a83",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointAttemptInvariant"
+      ]
+    },
+    {
+      "module": "PqxdhRegistrationJointAttemptPreservation",
+      "started": "2026-10-06T03:15:32.091934+00:00",
+      "finished": "2026-10-06T03:15:35.313030+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptPreservation-final.log",
+      "bytes": 0,
+      "source_sha256": "9d71bf3f6cf2663bf42dd488b89a37117a3cffccde83f0687975919076ee0570",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointAttemptPreservation"
+      ]
+    },
+    {
+      "module": "PqxdhRegistrationJointAttemptSchedule",
+      "started": "2026-10-06T03:15:35.313539+00:00",
+      "finished": "2026-10-06T03:15:38.500936+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptSchedule-final.log",
+      "bytes": 0,
+      "source_sha256": "b871823792bec3047ddb42677e8c31d7586d9ef139df83acb7603f9d1bbc5953",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointAttemptSchedule"
+      ]
+    },
+    {
+      "module": "PqxdhRegistrationJointAttemptInitialized",
+      "started": "2026-10-06T03:15:38.501483+00:00",
+      "finished": "2026-10-06T03:15:42.390129+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptInitialized-final.log",
+      "bytes": 0,
+      "source_sha256": "393aed3828b3611fc2e1df5148750eafd8c4bbe2ab8ed41f879e949097576b47",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointAttemptInitialized"
+      ]
+    },
+    {
+      "module": "PqxdhRegistrationJointAttemptOrigin",
+      "started": "2026-10-06T03:15:42.390639+00:00",
+      "finished": "2026-10-06T03:15:45.478035+00:00",
+      "exit_code": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/PqxdhRegistrationJointAttemptOrigin-final.log",
+      "bytes": 0,
+      "source_sha256": "9b2b974a8f9260b06eba8c42d9940560506dbcfda1de71f63fba11b6753c96c3",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "bash",
+        "/tmp/bc-arc-scratch/c-work/pin-gate/helpers/check-svc.sh",
+        "PqxdhRegistrationJointAttemptOrigin"
+      ]
+    }
+  ],
+  "axioms_probe": {
+    "path": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/issued-attempts/axioms.log",
+    "sha256": "65db6cb5961e10bd465ed7a5ec12339e0a4d28d07ae261b4b689f60b63989ad6",
+    "scope": "All 56 public statements use only standard Lean axioms; each has exact guarded print in frozen source."
+  },
+  "diff_check": 0,
+  "scope": "Same-run actual initialized 14-class source signing-attempt invariant and raw accepted tuple-or-unissued-field alternative; immutable constructor fields and all failed writer signing retained. No new cryptographic hop, global source-report history/freshness join, selected KEM/root composition, raw-create/full-record scope or substituted challenger all-reply uniform cap claimed.",
+  "query_accounting": "No new source requests; whole program erasure retains prior g+qCreate generated identity, 3*qBundle sign, qAccept+qFinish static-DH bounds; existing reporter cap N*qAccept unchanged."
+}

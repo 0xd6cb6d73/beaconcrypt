@@ -1,0 +1,80 @@
+{
+  "frozen_at": "2026-10-06T03:19:48.890141+00:00",
+  "review_manifest_sha256": "f882135adc72e657fb2766cc11d8abec8ac978452365d3c43ae2a1c3ecf78b81",
+  "independent_review_sha256": "1eb9bc8f4207cbb09834c50a2ba72dba3bbb8d7835823ce1681cee82d2f50959",
+  "source_unchanged_from_review": true,
+  "files": [
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointAttemptInitialized-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointAttemptInvariant-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointAttemptLedger-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointAttemptOrigin-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointAttemptPreservation-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointAttemptProperties-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointAttemptSchedule-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointAttemptTrace-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointIssuedAttempts-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointNonSigningHistory-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/PqxdhRegistrationJointSigningTranscript-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/README.md",
+      "sha256": "c8288d4c46aa08ff45d0ab777cdcf5a8c16446afbb41f7000c2766bc9957da47"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/axioms.log",
+      "sha256": "65db6cb5961e10bd465ed7a5ec12339e0a4d28d07ae261b4b689f60b63989ad6"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/check-svc.sh",
+      "sha256": "47dd4a8160375a9c0fba0a22f36655e5f57cdd0711dd9102c6056adc81f94760"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/direct-checks.json",
+      "sha256": "0fdc1fd907c26f6ff0b927ec4472d5967d8e7482740939168fd8c1c4a84bb65b"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/independent-review.json",
+      "sha256": "1eb9bc8f4207cbb09834c50a2ba72dba3bbb8d7835823ce1681cee82d2f50959"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/review-manifest.json",
+      "sha256": "f882135adc72e657fb2766cc11d8abec8ac978452365d3c43ae2a1c3ecf78b81"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/issued-attempts56/theorems.json",
+      "sha256": "aef6daeab17c10ba15e3d0b15762e5aee03a20c8024642a9e335b9bd1c0deca3"
+    }
+  ]
+}
