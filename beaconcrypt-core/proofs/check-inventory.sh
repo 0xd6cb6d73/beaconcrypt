@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1497
+	[handwritten-lean]=1498
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28801,6 +28801,61 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem collect_inputs([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem collect_inputs"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileFootprint\.finish_owner$' "$selected_source_module" "PqxdhDeploymentCompileFootprint dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint.finish_owner"
 require_line_count 1 '^theorem finish_owner([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileFootprint theorem finish_owner"
+
+# CE-3 trial simulation invariant: public reconstruction of peers and owners preserved by every compiled step under Phase1ReadBack and Phase2ReadBack; native CE-COMPILE.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileInvariant.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentCompileInvariant root import"
+require_line_count 24 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem inventory"
+require_line_count 24 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompileInvariant guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_inv$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_inv"
+require_line_count 1 '^theorem good_inv([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_inv"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.shared_footprint$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.shared_footprint"
+require_line_count 1 '^theorem shared_footprint([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem shared_footprint"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_frame$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_frame"
+require_line_count 1 '^theorem good_frame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_frame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_public$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_public"
+require_line_count 1 '^theorem good_public([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.ownerShape_accepts$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.ownerShape_accepts"
+require_line_count 1 '^theorem ownerShape_accepts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem ownerShape_accepts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.peerView_accept$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.peerView_accept"
+require_line_count 1 '^theorem peerView_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem peerView_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_accept$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_accept"
+require_line_count 1 '^theorem good_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.ownerShape_builds$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.ownerShape_builds"
+require_line_count 1 '^theorem ownerShape_builds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem ownerShape_builds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_build$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_build"
+require_line_count 1 '^theorem good_build([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_build"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.ownerView_extend$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.ownerView_extend"
+require_line_count 1 '^theorem ownerView_extend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem ownerView_extend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.ownerShape_extend$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.ownerShape_extend"
+require_line_count 1 '^theorem ownerShape_extend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem ownerShape_extend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_create$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_create"
+require_line_count 1 '^theorem good_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_create"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.ownerShape_bundle$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.ownerShape_bundle"
+require_line_count 1 '^theorem ownerShape_bundle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem ownerShape_bundle"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.identityOf_bundle$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.identityOf_bundle"
+require_line_count 1 '^theorem identityOf_bundle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem identityOf_bundle"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_bundle$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_bundle"
+require_line_count 1 '^theorem good_bundle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_bundle"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.ownerShape_finish$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.ownerShape_finish"
+require_line_count 1 '^theorem ownerShape_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem ownerShape_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_finish$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_finish"
+require_line_count 1 '^theorem good_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.serverLocal_support$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.serverLocal_support"
+require_line_count 1 '^theorem serverLocal_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem serverLocal_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.beaconLocal_support$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.beaconLocal_support"
+require_line_count 1 '^theorem beaconLocal_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem beaconLocal_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_server_record$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_server_record"
+require_line_count 1 '^theorem good_server_record([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_server_record"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_beacon_record$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_beacon_record"
+require_line_count 1 '^theorem good_beacon_record([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_beacon_record"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_step$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_step"
+require_line_count 1 '^theorem good_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.good_initial$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.good_initial"
+require_line_count 1 '^theorem good_initial([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem good_initial"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileInvariant\.compile_native$' "$selected_source_module" "PqxdhDeploymentCompileInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.compile_native"
+require_line_count 1 '^theorem compile_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileInvariant theorem compile_native"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
