@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1472
+	[handwritten-lean]=1473
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28188,6 +28188,57 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem root_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem root_reply"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSourceSuffix\.accept_ordered$' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.accept_ordered"
 require_line_count 1 '^theorem accept_ordered([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem accept_ordered"
+
+# Accept/KEM join stage B (M5): only the encapsulation of the selected raw accept exposed, its KEM cut shape and rejection before encapsulation.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptKemCut.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointAcceptKemCut root import"
+require_line_count 22 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem inventory"
+require_line_count 22 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.handler_eq$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.handler_eq"
+require_line_count 1 '^theorem handler_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem handler_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.actual_hide$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.actual_hide"
+require_line_count 1 '^theorem actual_hide([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem actual_hide"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.free_hide$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.free_hide"
+require_line_count 1 '^theorem free_hide([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem free_hide"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.scan_free_bind$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.scan_free_bind"
+require_line_count 1 '^theorem scan_free_bind([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem scan_free_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.scan_bind_zero$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.scan_bind_zero"
+require_line_count 1 '^theorem scan_bind_zero([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem scan_bind_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.support_simulate$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.support_simulate"
+require_line_count 1 '^theorem support_simulate([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem support_simulate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.commands_support$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.commands_support"
+require_line_count 1 '^theorem commands_support([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem commands_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.hide_free$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.hide_free"
+require_line_count 1 '^theorem hide_free([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem hide_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.scan_hide$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.scan_hide"
+require_line_count 1 '^theorem scan_hide([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem scan_hide"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.before_callbacks$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.before_callbacks"
+require_line_count 1 '^theorem before_callbacks([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem before_callbacks"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.before_free$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.before_free"
+require_line_count 1 '^theorem before_free([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem before_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.ordered_cut$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.ordered_cut"
+require_line_count 1 '^theorem ordered_cut([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem ordered_cut"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.ordered_complete$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.ordered_complete"
+require_line_count 1 '^theorem ordered_complete([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem ordered_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.tail_none$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.tail_none"
+require_line_count 1 '^theorem tail_none([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem tail_none"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.exposeAt_scan$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_scan"
+require_line_count 1 '^theorem exposeAt_scan([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem exposeAt_scan"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.accept_scan$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.accept_scan"
+require_line_count 1 '^theorem accept_scan([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem accept_scan"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.exposeAt_commands$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_commands"
+require_line_count 1 '^theorem exposeAt_commands([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem exposeAt_commands"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.exposeAt_actual$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_actual"
+require_line_count 1 '^theorem exposeAt_actual([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem exposeAt_actual"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.rawCut_finish$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.rawCut_finish"
+require_line_count 1 '^theorem rawCut_finish([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem rawCut_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.exposeAt_bound$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_bound"
+require_line_count 1 '^theorem exposeAt_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem exposeAt_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.rawCut_shape$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.rawCut_shape"
+require_line_count 1 '^theorem rawCut_shape([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem rawCut_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptKemCut\.accepted_reached$' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.accepted_reached"
+require_line_count 1 '^theorem accepted_reached([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptKemCut theorem accepted_reached"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
