@@ -159,7 +159,7 @@ theorem protected_report_failure (setup : Setup baseSpec KemSK) (codec : Codec R
       chosen_mapped setup codec checks chosenOwner fallback reached encoded raw next value finished pending attached,
       forged⟩
 
-/-- Every reached cut satisfies at least one of five cases. The cases are not exclusive: for example two generated owners with equal identity public keys can make one cut honest through one owner and a report failure through the other. Attacker-owned, imported, revealed, missing and other-index candidates fall in the third case and are only classified. -/
+/-- Every reached cut satisfies at least one of five cases. The cases are not exclusive: for example two generated owners with equal identity public keys can make one cut honest through one owner and a report failure through the other. Attacker-owned, imported, revealed, missing and other-index candidates, or a generated owner outside the report range (impossible under capacity), fall in the third case and are only classified. -/
 theorem classify (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (shortRejects : ∀ (publicKey : Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)

@@ -15,13 +15,13 @@
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutTag.lean": "2039de27128c55378a8de5921879dc9bddc1729f1f23d512b7f47bbf3881fc2d",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutReports.lean": "487938b4fcbe04eda00f3d883a44cafbdfd1edf9051e8a394d06c4fe122bb35a",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutEuf.lean": "1a901172c325e23254abc56f22c02ed10e48559486d291a8d7650c353ef3e77c",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptOrigin.lean": "c6f6dd5f293381e8c3bd767b5aa7f68dc672dcad4dd780cbcd61b5862768e818",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptOrigin.lean": "49be92d8220a15217a75d67c36e23d98f1bc24fadf10f24ad42888296971d63e",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "c7f3fa431b4db9807e8b7e50dd5e37331d11032b9ba6968af0becd8a84272f50",
     "beaconcrypt-core/proofs/check-inventory.sh": "59c94a5c12933cb586844b33a10d9959554c8332117de66d6a54beb6f7bacbdf",
-    "beaconcrypt-core/proofs/reviewed-inventory.txt": "596f24d98ab1998670ab0a3743c21bd4bee63f63296ce11015ccfd972f16aa13",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "8feab564e5635e1cb6832e9e94eb630bfca902a2401a01f52c97e38c6a79ebfc",
     "beaconcrypt-core/proofs/trusted-boundary.md": "3c4e192b22f559deec73fed9da653a4de753a8426ca3e5181ac7c727b49f6527",
-    "doc/formal-verification-analysis.md": "e148eadc9ac8e65f61d206b9206fb06073c1610b8c4ef6be51477778b89382d4",
-    "doc/impl/registration-accept-kem-join.md": "74d666b2691ed68f13e063ff9a4b73d629bc5b38f19b0f614ed17ff9cba27b2a"
+    "doc/formal-verification-analysis.md": "7dcef046b672e984bd016a8defa3e580b8751b8ceb6c2b8bd7f17403eac848bc",
+    "doc/impl/registration-accept-kem-join.md": "ecf7fc4c59ff4e8eb19b488dd9623f6c217c61d0fd01c0d5892a764069f2303e"
   },
   "modules": {
     "PqxdhRegistrationJointAcceptCutTag": [
@@ -190,10 +190,10 @@
     },
     {
       "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin",
-      "start": "2026-10-06T11:05:40.928337+00:00",
-      "end": "2026-10-06T11:05:44.264399+00:00",
+      "start": "2026-10-06T11:28:55.052192+00:00",
+      "end": "2026-10-06T11:28:58.362149+00:00",
       "exit": 0,
-      "source_sha256": "c6f6dd5f293381e8c3bd767b5aa7f68dc672dcad4dd780cbcd61b5862768e818",
+      "source_sha256": "49be92d8220a15217a75d67c36e23d98f1bc24fadf10f24ad42888296971d63e",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "command": [
         "flock",
@@ -209,7 +209,8 @@
         "/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptOrigin.lean"
       ],
       "leanpath_sha256": "4bdf85b7b37a54aad9c67033c58a02200a750ca51ed99322e6891f0376d1eb1a",
-      "artifact_sha256": "7a2c2fcb04b9f7fa84edf02eaa2c2e0793ff438978cb00790ef9dbed5082c949"
+      "artifact_sha256": "f7d5e0ddb84b5d5aaea9e096a4162ee3b0f0fa372464e678bbb9ab22dbf61cae",
+      "note": "Recheck after the docstring-only change to classify in the review follow-up; the other three modules are unchanged and keep the results above."
     }
   ],
   "root_check": {
@@ -217,7 +218,7 @@
       "flock",
       "/tmp/bc-arc-scratch/lean.lock",
       "timeout",
-      "600",
+      "180",
       "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
       "-j1",
       "-M8000",
@@ -225,8 +226,11 @@
       "/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
     ],
     "source_sha256": "c7f3fa431b4db9807e8b7e50dd5e37331d11032b9ba6968af0becd8a84272f50",
+    "start": "2026-10-06T11:29:02Z",
+    "end": "2026-10-06T11:29:04Z",
     "exit": 0,
-    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "note": "Rerun in the review follow-up with the standard 180 s limit (the first run used 600 s, which was not needed), against the rechecked AcceptOrigin artifact."
   },
   "hygiene": {
     "constants": "hygiene/Consts.lean: no axiom or opaque constants in the four modules (exit 0)",
@@ -247,15 +251,15 @@
       "-c",
       "make",
       "-C",
-      "beaconcrypt-core",
+      "/tmp/beaconcrypt-accept-cut-join/beaconcrypt-core",
       "check-inventory",
       "SHELL=bash"
     ],
-    "state": "all changes except this receipt staged",
+    "state": "all review follow-up changes staged, including this receipt; only this focused_inventory record was edited afterwards",
     "exit": 0,
-    "start": "2026-10-06T11:06:11Z",
-    "end": "2026-10-06T11:07:16Z",
-    "log_sha256": "6f0ed79503204715735c8c798c9e1e13a102aa83ea944f97d7acc1f48b56b0fe",
+    "start": "2026-10-06T11:32:42Z",
+    "end": "2026-10-06T11:33:46Z",
+    "log_sha256": "261ae6d4218af9275b1fe5712266ae2e96d6206ac802cededd17200ad9bae5f7",
     "comm_warnings": 0,
     "handwritten_lean_count": 1469
   },
@@ -273,12 +277,30 @@
     "No planned statement was false or unprovable; none was weakened."
   ],
   "not_proved": [
+    "Rejection after successful attached verification (Rust get_shared_secret after validate_init_kex: consumed registration status, try_reserve, prekey and one-time key parses, ephemeral generation, PQ key parse, encapsulate, key conversions and DH steps, shared_secrets, server_accept, derive_root_key_input) is not separated by classify: such a cut lands in cases 3-5 and is excluded only later through accepted = false (accepted_reached, stage B) and classify_final (stage C).",
     "Stage B: lane port L1, exposeAt, handler_eq against the ported KemSourceSuffix, scan_free_bind, rawCut_shape, accepted_reached, preRaw_source, branchRaw_source, branchRaw_real_error, advantageRaw_error and the KEM adversary bills.",
-    "Stage C: key-list monotonicity (M4), KEM-side naturality (M9a), the source-to-KEM bridge (M9), and the main theorem T5 with its bills companion T5b (M10).",
+    "Stage C: key-list monotonicity (M4), KEM-side naturality (M9a), the source-to-KEM bridge (M9), and in M10 the main theorem T5 with its bills companion T5b and the final classification classify_final (T1 plus accepted_reached).",
     "Stage D: lane port L2 and the opaque KEM-ideal continuation (M11).",
-    "Owner decisions 1-6 of the plan, including the freshness reading (a)/(b)/(c) and confirmation of the owner designation.",
+    "Owner decisions 2 (KDF backend for item 2), 5 (review before integration and publication) and 6 (confirmation of the existential owner address and the unread owner constant) of the plan.",
     "Handoff items 2-8, including the Extract/HKDF hybrid and context secrecy of the candidate, and the final validation matrix."
   ],
   "checks_not_run": "No lake build, make verify, nix-collect-garbage, ProVerif, Rust or mutation run; no production Rust or ProVerif change.",
-  "review": "Not independently reviewed; review pending before publication. Not pushed."
+  "review": "Independently reviewed under a semantic and a hygiene lens (both APPROVE_WITH_NITS; findings in /tmp/bc-arc-scratch/accept-cut-join/stage-a/review.json). The review follow-up addresses every finding; the follow-up itself is not yet reviewed. Not pushed.",
+  "owner_decisions_2026_10_06": [
+    "Decision 1: freshness for T5 is read at the accept (option (a)), as ProtectedAt and Protected implement.",
+    "Decision 3: fixed public (i, k) target designation with no selection loss; an adversary-chosen test session is left to handoff item 3.",
+    "Decision 4: the top-level statement may carry the inherited contracts shortRejects, setup.wiring and FunctionalDecapsulation; stage A uses only shortRejects and setup.wiring."
+  ],
+  "review_followup": {
+    "date": "2026-10-06",
+    "basis": "5b819a4e242c1e3e4ae2ff1636a27beec4b756ce",
+    "changes": [
+      "Guide and analysis: rejection after successful attached verification is not separated by classify (cases 3-5) and is excluded only through accepted_reached and classify_final; classify_final added to the stage C open list here and in the guide.",
+      "classify docstring and guide case-3 list: a generated owner outside the report range (impossible under capacity). Docstring-only Lean change; AcceptOrigin rechecked (exit 0, empty log, guards unchanged) and its source hash refreshed here and in reviewed-inventory.txt. The axiom output and hygiene scans above were taken before this docstring change; the module guards recheck the exact axiom output.",
+      "Analysis: VerifyRejected described as a raw registration that fails the Server's attached verification (parsing, identity-key or signature checks).",
+      "Guide: Names for consumers paragraph listing the short-name collisions (found by grep) and requiring selective open or qualified names.",
+      "Root import check rerun with timeout 180 (exit 0, empty log).",
+      "Guide: owner decisions of 2026-10-06 recorded (decisions 1, 3 and 4)."
+    ]
+  }
 }
