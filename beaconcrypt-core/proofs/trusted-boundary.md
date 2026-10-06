@@ -786,3 +786,8 @@ The [source continuation allowance integration](../../doc/impl/source-continuati
 ## Selected Server-to-Beacon source origin
 
 The [tasking-origin guide](../../doc/impl/proverif-tasking-origin.md) records the independently reviewed selected near-event source projection under T0 and the existing abstract message contract. Three same-process TRUE formulas cover ordinary publication origin, earlier initial-finish root provenance and auxiliary identity secrecy. A separate single-receiver argument supplies injectivity for near positions two and three at Kr3. Actual own/assigned IDs, optional plaintext and failed-seal allocation remain explicit; the negative control and cache witness are separately classified. The finite reconstruction/transition checker pins this scoped boundary, not a general source equivalence. Primitive/related-use idealizations and global computational work accounting remain external obligations; codec internals and snapshots remain outside this proof work.
+
+
+## Private-application fresh-record secrecy
+
+The [application-secrecy projection](../../doc/impl/proverif-application-secrecy.md) proves two ordinary fresh-name secrecy formulas under the existing trusted application's private-plaintext/no-echo profile, with public result bits and exact bounded source state. A dedicated reviewed induction preserves the target name; exact process comparisons and leak controls maintain its scope. This application premise is not a primitive contract and does not describe a public optional-plaintext decryption oracle. Finite-byte guessing, strong secrecy, reveals and the global computational join remain separate.

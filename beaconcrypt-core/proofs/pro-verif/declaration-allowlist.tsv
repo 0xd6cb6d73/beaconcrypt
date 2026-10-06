@@ -97,3 +97,7 @@ proofs/pro-verif/record-origin-models.py	precise	3	[precise]	doc/formal-verifica
 proofs/pro-verif/tasking-origin.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#server-to-beacon-source-origin-with-actual-replies
 proofs/pro-verif/tasking-origin-cache.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#server-to-beacon-source-origin-with-actual-replies
 proofs/pro-verif/tasking-origin-models.py	precise	1	[precise]	doc/formal-verification-analysis.md#server-to-beacon-source-origin-with-actual-replies
+proofs/pro-verif/application-secrecy-b2s.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext
+proofs/pro-verif/application-secrecy-s2b.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext
+proofs/pro-verif/application-secrecy-models.py	precise	2	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext
+proofs/pro-verif/test-application-secrecy-checker.py	precise	1	[precise]	doc/formal-verification-analysis.md#fresh-record-secrecy-with-private-application-plaintext

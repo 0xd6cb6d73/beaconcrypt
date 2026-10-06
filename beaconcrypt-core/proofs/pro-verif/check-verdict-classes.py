@@ -204,6 +204,26 @@ def extension_class_scope(name, target, driver):
             + ";".join(target.libraries())
         )
         return target.cls, scope
+    if name == "check-application-secrecy":
+        claim = {
+            "App-b2s": "selected fresh successful Beacon publication secrecy",
+            "App-s2b": "selected fresh successful Server publication secrecy",
+            "App-b2s-C-leak": "identical b2s query with explicit fresh-plaintext disclosure and confirmed trace",
+            "App-s2b-C-leak": "identical s2b query with explicit fresh-plaintext disclosure and confirmed trace",
+        }[target.name]
+        scope = (
+            f"exact T0 trusted-application source-profile; {claim}; "
+            f"direction={target.direction}; K_s=2, K_r={target.bound}; b2s near1/2, s2b near2/3 after registration1; "
+            "AnyPin selected fresh Beacon, exact protected Server signing identity in query; "
+            "private application plaintext/no echo or target-dependent public action; actual optional-result bits; "
+            "arbitrary-candidate replicated accepts, one-use delayed builds, actual own/assigned IDs and failed-seal allocations; "
+            "literal opposite/post-near chains and other-identity roots disclosed; "
+            "target application name preserved by reviewed source paper; "
+            "no public-plaintext confidentiality, strong secrecy, finite-byte guessing or global computational theorem; "
+            f"process={target.process}; query={target.query}; libraries="
+            + ";".join(target.libraries())
+        )
+        return target.cls, scope
     if name == "check-exact-far":
         profile = "AnyPin" if target.base == "b2s-C4" else "honest pins"
         start = driver.first_far(target.direction)
@@ -285,6 +305,7 @@ def validate_scope(rows):
         "check-exact-far",
         "check-record-origin",
         "check-tasking-origin",
+        "check-application-secrecy",
     ):
         driver = INVENTORY.module(name)
         targets = {target.name: target for target in driver.TARGETS}

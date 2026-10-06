@@ -190,6 +190,7 @@ def expected_verdicts(directory=HERE):
         "check-exact-far",
         "check-record-origin",
         "check-tasking-origin",
+        "check-application-secrecy",
     ):
         driver = module(name, directory)
         if name != "check-primitive-fidelity":

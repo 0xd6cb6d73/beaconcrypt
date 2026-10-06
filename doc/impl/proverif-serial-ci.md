@@ -22,3 +22,6 @@ The exact-ID near-record addition appends four targets after exact-far in the sa
 
 
 The selected Server-to-Beacon origin addition runs five targets after exact-ID record origin in the same extension recipe. Ordinary near origin, initial-finish origin and auxiliary identity secrecy use Kr3; the identical-formula chain disclosure control confirms failure, and a Kr2 selected cache witness has a checked Kr3 prefix embedding. Single-worker injectivity is a reviewed paper result, not an extra solver verdict. The checker preserves the 180-second/10-GiB target ceilings, overall group allowance, earlier rosters and exact omission regressions.
+
+
+The trusted-application secrecy gate appends four serial targets after tasking origin: two ordinary fresh-name secrecy formulas at Kr3 and their identical-formula plaintext-leak controls. It retains public optional-result bits, the private application/no-echo scope, 180-second/10-GiB target ceilings, exact omission regressions and the existing overall extension allowance. No old target or observational-equivalence result is replaced.

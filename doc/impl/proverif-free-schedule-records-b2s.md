@@ -243,3 +243,6 @@ The [reviewed exact-far argument](proverif-exact-far-material.md) now supplies t
 ## Claim-specific exact-ID companion
 
 The separate [record-origin companion](proverif-record-origin.md) establishes near publication origin with actual signing identities, own/assigned IDs, optional opening plaintext and the selected source-profile classification. Its final security model keeps Kr3 and two selected sends; ordinary origin combines with separately reviewed T0 replay uniqueness for injectivity. The original fs C2/C3 queries and result scopes above remain unchanged. This companion does not retroactively make the old hidden-reply direction split a full API theorem, and its computational/global source bridge remains separate.
+
+
+The separate [trusted-application secrecy projection](proverif-application-secrecy.md) now covers selected fresh b2s publications at positions one and two with public Some/None, AnyPin, actual IDs and delayed builds. Its dedicated source ledger preserves the target name under the existing private application/no-echo premise; the query fixes the exact protected Server identity. It leaves public-plaintext confidentiality, arbitrary target-dependent applications and computational/strong secrecy separate. Every original S2 query remains unchanged.

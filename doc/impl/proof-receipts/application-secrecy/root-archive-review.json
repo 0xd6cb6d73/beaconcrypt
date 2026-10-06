@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-06T03:48:58.179578+00:00",
+  "reviewer": "root",
+  "decision": "approve",
+  "findings": [],
+  "scope": "Archive integrity, maintained evidence/source binding, preservation against ac3, source target-name projection and documentation limits; independent source/process and wiring peer reviews remain separately required.",
+  "source_manifest_sha256": "745d72a199dbc3c4cd1f2d60d84889990855db9ecf93892a8c789998904cf4dc",
+  "archive_manifest_sha256": "7cd3a9c58db4c72762b2a8767c1a08e519bf9f1ba9bee8354b93a973280a0a53",
+  "validation": {
+    "freeze_counts": {
+      "maintained-review-manifest.json": 31,
+      "archive-review-manifest.json": 27
+    },
+    "preserved": 1683,
+    "bundle_files": 108,
+    "maintained": [
+      {
+        "name": "App-b2s",
+        "result": "RESULT not (event(L2FreshPublished(beacon_to_server,ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),kid,root_4,t,m)) && event(L2SelectedIdentity(k)) && attacker(m)) is true.",
+        "seconds": 10.768175462028012
+      },
+      {
+        "name": "App-s2b",
+        "result": "RESULT not (event(S2bFreshPublished(server_to_beacon,ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),kid,root_4,t,m)) && event(S2bSelectedIdentity(k)) && attacker(m)) is true.",
+        "seconds": 0.8585678739473224
+      },
+      {
+        "name": "App-b2s-C-leak",
+        "result": "RESULT not (event(L2FreshPublished(beacon_to_server,ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),kid,root_4,t,m)) && event(L2SelectedIdentity(k)) && attacker(m)) is false.",
+        "seconds": 13.4828568440862
+      },
+      {
+        "name": "App-s2b-C-leak",
+        "result": "RESULT not (event(S2bFreshPublished(server_to_beacon,ed_public(SERVER_IDENTITY_SECRET[]),ed_public(k),kid,root_4,t,m)) && event(S2bSelectedIdentity(k)) && attacker(m)) is false.",
+        "seconds": 0.9335923150647432
+      }
+    ]
+  },
+  "probe_receipts": 9,
+  "probe_input_bindings": 108,
+  "unknown_excluded": [
+    "b2s",
+    "b2s-precise",
+    "b2s-precise-accept",
+    "s2b"
+  ],
+  "semantics": [
+    "Target fresh name preserved through chronological retained/omitted source projection; no-echo/private-application premise explicit.",
+    "Actual Some/None mask retains successful opening and state transitions; ghost publication only successful fresh seal.",
+    "Kr3, two sender allocations, exact ID distinction, delayed pending calls and first-far-success cutoff remain explicit.",
+    "Earlier public-plaintext origin is used only for root/identity provenance, not target secrecy.",
+    "No observational equivalence, public optional-plaintext IND$, finite-byte guessing, assigned-ID equality or global computational inference.",
+    "All omitted/ambient source operations remain billed; no constant total bound from symbolic replication."
+  ],
+  "logs_read": [
+    "focused-make.log.gz:19classification30FTinventory3190/security181",
+    "dedicated-checks.log.gz:13regressions"
+  ],
+  "prior_files_verified": 1683
+}

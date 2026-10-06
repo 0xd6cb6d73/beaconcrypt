@@ -135,3 +135,8 @@ The later [selected near-record origin projection](proverif-record-origin.md) di
 ## Selected reverse-direction near-origin addition
 
 The [tasking-origin projection](proverif-tasking-origin.md) separately handles selected Server-to-Beacon near positions two and three after consumed registration sequence one. It retains actual Server own-ID routing, distinct assigned-ID events, delayed one-use builders, successful publication and optional plaintext, with a same-process initial-origin seam for omitted-direction recipes. Its single selected receiver gives local uniqueness without a cross-accept root-injectivity assumption. This closes a claim-specific C1 origin projection at Kr3 under its explicit source/key-management profile. It does not replace the old model with full API equivalence or transfer S1/S2 through public plaintext replies. Native argument provenance, global freshness/releases, session selection and computational query accounting still need their common experiment.
+
+
+## Selected trusted-application message secrecy
+
+The [application-secrecy projection](proverif-application-secrecy.md) supplies dedicated target-name preservation for selected fresh b2s1/2 and s2b2/3 publications at Kr3, retaining actual result bits and the source-ID/build/state boundaries from the origin projections. It uses the existing S1/S2 private-application/no-echo profile and proved exact stronger observations. It does not transfer unrestricted secrecy through the earlier public-plaintext origin interface, extend beyond the first-far cutoff, or close the computational target-release/freshness experiment.

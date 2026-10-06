@@ -309,6 +309,35 @@ class ClassificationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.check(rows)
 
+    def test_application_secrecy_scope_and_roster_are_explicit(self):
+        driver = CHECK.INVENTORY.module("check-application-secrecy")
+        for target in driver.TARGETS:
+            selected = [
+                row
+                for row in self.rows
+                if row["checker"] == "check-application-secrecy.py"
+                and row["target"] == target.name
+            ]
+            self.assertEqual(len(selected), 1)
+            with self.assertRaises(ValueError):
+                self.check([row for row in self.rows if row is not selected[0]])
+            for field, value in (
+                ("class", "definitional"),
+                (
+                    "scope",
+                    "unrestricted public-plaintext confidentiality and strong secrecy",
+                ),
+            ):
+                rows = copy.deepcopy(self.rows)
+                next(
+                    row
+                    for row in rows
+                    if row["checker"] == "check-application-secrecy.py"
+                    and row["target"] == target.name
+                )[field] = value
+                with self.assertRaises(ValueError):
+                    self.check(rows)
+
 
 if __name__ == "__main__":
     unittest.main()

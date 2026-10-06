@@ -98,6 +98,8 @@ PROVERIF_RECORD_ORIGIN_TIMEOUT ?= 180
 PROVERIF_RECORD_ORIGIN_LOG_DIR ?=
 PROVERIF_TASKING_ORIGIN_TIMEOUT ?= 180
 PROVERIF_TASKING_ORIGIN_LOG_DIR ?=
+PROVERIF_APPLICATION_SECRECY_TIMEOUT ?= 180
+PROVERIF_APPLICATION_SECRECY_LOG_DIR ?=
 PROVERIF_EXACT_FAR_LOG_DIR ?=
 PROVERIF_DELAYED_LOG_DIR ?=
 PROVERIF_STRONG_LOG_DIR ?=
@@ -147,7 +149,7 @@ LEAN_GENERATED_PATHS := \
 	verify-proverif-kem-controller-auth check-proverif-kem-controller-auth \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity check-proverif-primitive-fidelity check-proverif-active-strong-secrecy \
-	check-proverif-pending-registration check-proverif-aead-differential check-proverif-registration-provenance check-proverif-delayed-response check-proverif-exact-far check-proverif-record-origin check-proverif-tasking-origin \
+	check-proverif-pending-registration check-proverif-aead-differential check-proverif-registration-provenance check-proverif-delayed-response check-proverif-exact-far check-proverif-record-origin check-proverif-tasking-origin check-proverif-application-secrecy \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
 	check-proverif-extraction check-generated check-generated-lean \
@@ -178,6 +180,7 @@ verify-in-shell:
 	$(MAKE) check-proverif-exact-far
 	$(MAKE) check-proverif-record-origin
 	$(MAKE) check-proverif-tasking-origin
+	$(MAKE) check-proverif-application-secrecy
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 	$(MAKE) check-inventory
@@ -201,6 +204,7 @@ verify-proverif-in-shell:
 	$(MAKE) check-proverif-exact-far
 	$(MAKE) check-proverif-record-origin
 	$(MAKE) check-proverif-tasking-origin
+	$(MAKE) check-proverif-application-secrecy
 
 verify-proverif-live-material:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -392,6 +396,14 @@ check-proverif-tasking-origin: check-proverif-extraction check-proverif-transcri
 		--timeout '$(PROVERIF_TASKING_ORIGIN_TIMEOUT)' \
 		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
 		$(if $(PROVERIF_TASKING_ORIGIN_LOG_DIR),--log-dir '$(PROVERIF_TASKING_ORIGIN_LOG_DIR)')
+
+check-proverif-application-secrecy: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-application-secrecy-checker.py
+	python3 $(PROVERIF_DIR)/check-application-secrecy.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_APPLICATION_SECRECY_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_APPLICATION_SECRECY_LOG_DIR),--log-dir '$(PROVERIF_APPLICATION_SECRECY_LOG_DIR)')
 
 # Open differential controls: no additional protocol security claims.
 check-proverif-aead-differential: check-proverif-extraction check-proverif-transcript-fidelity
@@ -894,6 +906,7 @@ verify-proverif-extensions-in-shell:
 	$(MAKE) check-proverif-exact-far
 	$(MAKE) check-proverif-record-origin
 	$(MAKE) check-proverif-tasking-origin
+	$(MAKE) check-proverif-application-secrecy
 	$(MAKE) check-proverif-generated-drift
 
 check-proverif-generated-drift:
