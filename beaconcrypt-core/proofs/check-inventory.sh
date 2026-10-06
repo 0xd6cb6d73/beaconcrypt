@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1488
+	[handwritten-lean]=1489
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28542,6 +28542,31 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem client_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts theorem client_uniform"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueCosts\.tail_calls$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.tail_calls"
 require_line_count 1 '^theorem tail_calls([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts theorem tail_calls"
+
+# Accept/KEM join stage D (M11): the opaque form of the raw-ordinal KEM games (theorem T6), the explicit opaque scan and prephase, the opaque resumption of the active cut through KemOpaqueResume.resume_reply and resume_post, and theorem T5 with its KEM-ideal game in opaque form.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawOpaque.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemRawOpaque root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawOpaque\.scan_opaque$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.scan_opaque"
+require_line_count 1 '^theorem scan_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem scan_opaque"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawOpaque\.rawResume_opaque$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.rawResume_opaque"
+require_line_count 1 '^theorem rawResume_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem rawResume_opaque"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawOpaque\.rawCut_resume$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.rawCut_resume"
+require_line_count 1 '^theorem rawCut_resume([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem rawCut_resume"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawOpaque\.rejectRun_complete$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.rejectRun_complete"
+require_line_count 1 '^theorem rejectRun_complete([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem rejectRun_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawOpaque\.opaque_pending$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.opaque_pending"
+require_line_count 1 '^theorem opaque_pending([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem opaque_pending"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawOpaque\.preRaw_opaque$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.preRaw_opaque"
+require_line_count 1 '^theorem preRaw_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem preRaw_opaque"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawOpaque\.post_opaque$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.post_opaque"
+require_line_count 1 '^theorem post_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem post_opaque"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawOpaque\.branchRaw_opaque$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.branchRaw_opaque"
+require_line_count 1 '^theorem branchRaw_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem branchRaw_opaque"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawOpaque\.authenticated_selected_opaque$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.authenticated_selected_opaque"
+require_line_count 1 '^theorem authenticated_selected_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem authenticated_selected_opaque"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
