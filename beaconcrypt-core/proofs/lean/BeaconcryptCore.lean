@@ -1494,6 +1494,8 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone
 
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural
 
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge
+
 /-!
 # Beaconcrypt-core verification root
 

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1479
+	[handwritten-lean]=1480
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28389,6 +28389,33 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem scan_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem scan_map"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawNatural\.rawScan_map$' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural.rawScan_map"
 require_line_count 1 '^theorem rawScan_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawNatural theorem rawScan_map"
+
+# Accept/KEM join stage C (M9): the actual initialized execution of the tagged program bounded by the raw-ordinal KEM real game (theorem T4), after the source-order equality, with the active-cut, monitor and router steps, and the verified-tag property of accepted selected accepts.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawBridge.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemRawBridge root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBridge\.rawResume_tag$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.rawResume_tag"
+require_line_count 1 '^theorem rawResume_tag([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem rawResume_tag"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBridge\.program_tag$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.program_tag"
+require_line_count 1 '^theorem program_tag([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem program_tag"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBridge\.good_source$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.good_source"
+require_line_count 1 '^theorem good_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem good_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBridge\.prefix_lookup$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.prefix_lookup"
+require_line_count 1 '^theorem prefix_lookup([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem prefix_lookup"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBridge\.selected_lookup$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.selected_lookup"
+require_line_count 1 '^theorem selected_lookup([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem selected_lookup"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBridge\.active_raw$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.active_raw"
+require_line_count 1 '^theorem active_raw([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem active_raw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBridge\.run_le_real$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.run_le_real"
+require_line_count 1 '^theorem run_le_real([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem run_le_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBridge\.commands_le_real$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.commands_le_real"
+require_line_count 1 '^theorem commands_le_real([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem commands_le_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBridge\.actual_le_real$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.actual_le_real"
+require_line_count 1 '^theorem actual_le_real([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem actual_le_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBridge\.client_tag$' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge.client_tag"
+require_line_count 1 '^theorem client_tag([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBridge theorem client_tag"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
