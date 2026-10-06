@@ -1,17 +1,6 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(* fs-records-b2s bound K_r = 3 in the fail-stop form (E21): three
-   attacker-scheduled receive attempts of each installed Server peer, where
-   a failed open of a parsed frame ends the worker instead of continuing
-   with the entry state.  A parse failure and a rejected old target still
-   continue.  Every trace of this form is a trace of fs-records-b2s-kr3.pvl.
-   Conversely, a failed open of fs-records-b2s-kr3.pvl keeps the exact entry
-   state, outputs nothing and emits only FsReceiveRejected, so deleting it
-   from a trace leaves a trace of this form with every other event: a query
-   that does not mention FsReceiveRejected and holds here holds there too
-   (the deletion argument E21, step 12 of
-   doc/impl/proverif-free-schedule-records-b2s.md).  Used only for C2 and
-   for C4 with adversary-chosen plaintexts. *)
+(* E21: K_r = 3, with a failed open ending the worker. The reviewed argument in doc/impl/proverif-failstop-trace-simulation.md transfers only the existing chosen-message C2/C4 formulas to failure-interleaving. It deletes failed opens, preserving all ten worker parameters, honest outputs, attacker knowledge and non-rejection events; receive-input consumption and call labels are outside the projection. Parse/routing failures and rejected old targets still continue. No optional-reply/source-global equivalence is claimed. *)
 expand FS_B2S_RECV_STEP(FsB2sRecv3, FsB2sRecvStop, FsB2sRecvStop).
 expand FS_B2S_RECV_STEP(FsB2sRecv2, FsB2sRecv3, FsB2sRecvStop).
 expand FS_B2S_RECV_STEP(FsB2sRecv1, FsB2sRecv2, FsB2sRecvStop).

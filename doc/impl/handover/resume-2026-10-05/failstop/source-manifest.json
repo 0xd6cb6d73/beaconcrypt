@@ -1,0 +1,13 @@
+{
+  "worktree": "/tmp/beaconcrypt-proverif-failstop-trace-simulation",
+  "base": "c5f3fdd741aa487ebf8f07aef20a3809cf02ab5d",
+  "files": {
+    "beaconcrypt-core/proofs/pro-verif/check-free-schedule.py": "e4410668e3347fb2aecb77aea2b84dfd5f46add8c961a2210da5c223129d794e",
+    "beaconcrypt-core/proofs/pro-verif/fs-records-b2s-kr3-failstop.pvl": "43fe2441d55173dee5883cbd5923480a48d02b2e0c2711fbd7156424aea72071",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "37d38c004782113cc5032adcb5baff6b5f5f2f465aef0bd94c63be1198a1bb20",
+    "doc/formal-verification-analysis.md": "cfe47cd98cac7fdf52ee963f5546cbb3ef4e956a8bb507762b0f9961505a6613",
+    "doc/impl/proverif-free-schedule-records-b2s.md": "03955d576d0a099153ac31f07b904a6659f4b368160387dce66342a816447de0",
+    "doc/proverif-fs-event-meaning.md": "06ca07e848d95ca82c99ba01cd3d5de19a1a7d93b660bd3fbdb9fb22fff18345",
+    "doc/impl/proverif-failstop-trace-simulation.md": "2064d590354259d1942850ca875e554f978e0771f3d91e713768d7ef2953a91a"
+  }
+}

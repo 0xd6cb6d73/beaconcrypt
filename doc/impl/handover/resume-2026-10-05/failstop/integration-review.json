@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-10-05T23:59:50.093991+00:00",
+  "reviewer": "/root/fs_source_abstraction",
+  "decision": "APPROVE_SCOPED_INTEGRATION",
+  "manifest_sha256": "faa1f865735bfde865e649dd8ac0de0c909381d6c5828d8b2381c360c279f599",
+  "checks": [
+    "All14 frozen source/archive hashes match; maintained guide is byte-identical to approved symbolic argument.",
+    "Independently compared Python AST and noncomment PV tokens to c5f3fdd: unchanged. Exact C2/C4 formulas,target caps,pins and prior checker behavior remain.",
+    "Read all scope/document changes including both historical duplicate analysis paragraphs; comments now restrict transfer to exact formulas and hidden receive observations, with input consumption labels explicitly excluded. No Rust/global/computational equivalence claimed.",
+    "Only two corresponding comment-file inventory digests changed; reviewed guide has no proof-source change.",
+    "61 checker tests and inventory exit0 receipts match decompressed logs/hashes; no new solver or Lean build performed."
+  ],
+  "findings": [],
+  "new_builds": false
+}
