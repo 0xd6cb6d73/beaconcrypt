@@ -723,7 +723,7 @@ The corpus does not prove:
   resistance, or memory safety of the concrete primitive implementations;
 - constant-time or information-flow behavior of the selected pure core or its
   adapters; even the redundant all-zero-DH array comparison has no formal
-  timing guarantee ([documented limitation](impl/formal-verification-stage-4.md#L123-L127));
+  timing guarantee ([documented limitation](impl/formal-verification-stage-4.md#message-and-transcript-construction));
 - a complete behavioral specification for every extracted function and error
   path; extraction checks generated safety conditions, but the beacon abort
   helpers and arbitrary malformed/finishing errors have no handwritten semantic
@@ -756,7 +756,7 @@ The corpus also does not prove:
 - byte-level equivalence between ProVerif's admitted symbolic frame and production Cap'n Proto parsing, sender lookup/checks, overhead-length validation, commitment slicing, or malformed-input rejection;
 - behavior through direct beaconcrypt-core construction or test-only/crate-private receive-ratchet, peer-map, reset, compatibility, or mutation helpers outside the documented high-level API trace;
 - security after an unsafe retained copy, bypass of the affine high-level API, use of an independent store, or rollback of counters and replay history; those cases can repeat the same canonical sequence material even though supported operational types are not `Clone`; or
-- physical deletion of old keys. Server snapshots contain current ratchet chains and cached receive keys and are explicitly documented as weakening server-side forward secrecy ([persistence overview](persistence.md#server-state-persistence)). The trusted store, not snapshot cryptography, supplies their integrity and provenance.
+- physical deletion of old keys. Server snapshots contain current ratchet chains and cached receive keys and are explicitly documented as weakening server-side forward secrecy ([persistence overview](persistence.md#overview)). The trusted store, not snapshot cryptography, supplies their integrity and provenance.
 
 The persistent consumed-registration history is also unbounded. A party able
 to submit many cryptographically valid registrations can grow memory and stored
@@ -3944,3 +3944,7 @@ Four single-world controls replace a challenge with a newly generated private se
 ### Active strong-secrecy results in the complete verdict ledger
 
 The [P5 integration](impl/proverif-strong-secrecy-integration.md) preserves all 3,153 prior expected-verdict rows and appends the two exact bounded observational-equivalence results plus four single-world fresh-secret controls. The ledger totals 3,159 expectations, with 167 security-class entries. Every new scope fixes its main process, query, ordered libraries, one receive-attempt bound, directional eligibility or explicit control removal, and the labelled success/failure interface. Two added regressions reject omitted controls, altered bounds/processes, incorrect plaintext-oracle claims and class changes. The original P5 source and result checker remain byte-identical; shared metadata reconciliation retains every prior gate and all Lean sources. The integration supplies no new primitive advantage, query exemption, reveal/freshness monitor or global symbolic/computational correspondence.
+
+## Serial ProVerif verification in CI
+
+The [serial CI wiring](impl/proverif-serial-ci.md) adds explicit workflow jobs for the existing free-schedule group and the separate primitive encoding, active strong-secrecy, pending-token and open CTX group. Both enter the pinned proof environment, verify its toolchain, regenerate extraction, run the complete maintained gates in order and reject tracked or untracked generated drift. All legacy matrix entries and exact expected verdicts are retained. The focused source-level regression checks reject omitted or parallelized group steps, missing CI entries and disabled drift detection. These checks establish validation coverage, not a new symbolic result or computational theorem; actual solver and Lean evidence remains bound to the final checked source revision.

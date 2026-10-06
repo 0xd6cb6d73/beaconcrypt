@@ -1,0 +1,14 @@
+{
+  "worktree": "/tmp/beaconcrypt-proverif-serial-ci",
+  "base": "c5f3fdd741aa487ebf8f07aef20a3809cf02ab5d",
+  "files": {
+    ".github/workflows/formal-verification.yml": "9df90becb32e70eb3ae4e800066d9d1ceec538cd56680efd29eaf38b9ff2615f",
+    "beaconcrypt-core/Makefile": "b0d61ef7f486f70570254e8cf984362ac86c14b0670276eb64c4663415e462cc",
+    "beaconcrypt-core/proofs/check-inventory.sh": "3b546d54ea2016c136bfb1d57e211486e36bc31e0316dce98eddfd261a05047f",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "351fd364275defbed7d52b5ec5d0f07fab702809a61ae03608de992ceffff418",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "642d96243fea5583f2b09ab96f515455bab86218268154bd73d6b8d9406cb625",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "db3b40dbe7480678ee56be0b272a8867b75dce278b1696dfe8d8e38b918ef7f3",
+    "doc/formal-verification-analysis.md": "040868f9f38c402c8242bb18adb80585cc26e32f7b8579d6a02c84457c351077",
+    "doc/impl/proverif-serial-ci.md": "64fdaf015a9b52c9c327bf43b6f1366d1e5c49f24e0b9f48d7a865a2c37e8266"
+  }
+}
