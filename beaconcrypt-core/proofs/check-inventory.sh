@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1465
+	[handwritten-lean]=1469
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28055,6 +28055,94 @@ require_line_count 1 '^theorem ' "$selected_source_module" "PqxdhRegistrationJoi
 require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointCutVerification guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointCutVerification\.verified_pure$' "$selected_source_module" "PqxdhRegistrationJointCutVerification dependency BeaconcryptCore.Computational.PqxdhRegistrationJointCutVerification.verified_pure"
 require_line_count 1 '^theorem verified_pure([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointCutVerification theorem verified_pure"
+
+# Raw-accept cut joined to the initialized report compiler and the Phase-1 EUF bound (stage A: tag, report split, EUF instantiation, cut-time classification and authentication bound).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutTag.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointAcceptCutTag root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutTag\.tag_split$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.tag_split"
+require_line_count 1 '^theorem tag_split([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag theorem tag_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutTag\.finish_erase$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.finish_erase"
+require_line_count 1 '^theorem finish_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag theorem finish_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutTag\.tag_erase$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.tag_erase"
+require_line_count 1 '^theorem tag_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag theorem tag_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutTag\.tag_bound$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.tag_bound"
+require_line_count 1 '^theorem tag_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag theorem tag_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutTag\.decision_bound$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.decision_bound"
+require_line_count 1 '^theorem decision_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag theorem decision_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutTag\.accept_lt$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.accept_lt"
+require_line_count 1 '^theorem accept_lt([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag theorem accept_lt"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutTag\.accept_source$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag.accept_source"
+require_line_count 1 '^theorem accept_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutTag theorem accept_source"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutReports.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointAcceptCutReports root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.commands_initialized_bind$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.commands_initialized_bind"
+require_line_count 1 '^theorem commands_initialized_bind([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem commands_initialized_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.initialized_bind$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.initialized_bind"
+require_line_count 1 '^theorem initialized_bind([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem initialized_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.run_bind$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.run_bind"
+require_line_count 1 '^theorem run_bind([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem run_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.cut_split$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.cut_split"
+require_line_count 1 '^theorem cut_split([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem cut_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.split_snd$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.split_snd"
+require_line_count 1 '^theorem split_snd([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem split_snd"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.split_fst$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.split_fst"
+require_line_count 1 '^theorem split_fst([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem split_fst"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.commands_initialized_map$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.commands_initialized_map"
+require_line_count 1 '^theorem commands_initialized_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem commands_initialized_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.reduction_map$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.reduction_map"
+require_line_count 1 '^theorem reduction_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem reduction_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.initialized_map$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.initialized_map"
+require_line_count 1 '^theorem initialized_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem initialized_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.run_map$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.run_map"
+require_line_count 1 '^theorem run_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem run_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.selected_run$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.selected_run"
+require_line_count 1 '^theorem selected_run([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem selected_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.sourceResult_map$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.sourceResult_map"
+require_line_count 1 '^theorem sourceResult_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem sourceResult_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutReports\.raw_eq$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports.raw_eq"
+require_line_count 1 '^theorem raw_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutReports theorem raw_eq"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutEuf.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointAcceptCutEuf root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutEuf\.selected_certified$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_certified"
+require_line_count 1 '^theorem selected_certified([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf theorem selected_certified"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutEuf\.selected_report_bound$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_report_bound"
+require_line_count 1 '^theorem selected_report_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf theorem selected_report_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutEuf\.selected_service_bound$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_service_bound"
+require_line_count 1 '^theorem selected_service_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf theorem selected_service_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutEuf\.selected_reports_bound$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_reports_bound"
+require_line_count 1 '^theorem selected_reports_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf theorem selected_reports_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutEuf\.selected_client_uniform$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_client_uniform"
+require_line_count 1 '^theorem selected_client_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf theorem selected_client_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutEuf\.selected_reduction_uniform$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_reduction_uniform"
+require_line_count 1 '^theorem selected_reduction_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf theorem selected_reduction_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutEuf\.selected_game_uniform$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf.selected_game_uniform"
+require_line_count 1 '^theorem selected_game_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutEuf theorem selected_game_uniform"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptOrigin.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointAcceptOrigin root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptOrigin\.attached_detached$' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.attached_detached"
+require_line_count 1 '^theorem attached_detached([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin theorem attached_detached"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptOrigin\.protected_origin$' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.protected_origin"
+require_line_count 1 '^theorem protected_origin([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin theorem protected_origin"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptOrigin\.chosen_mapped$' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.chosen_mapped"
+require_line_count 1 '^theorem chosen_mapped([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin theorem chosen_mapped"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptOrigin\.protected_report_failure$' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.protected_report_failure"
+require_line_count 1 '^theorem protected_report_failure([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin theorem protected_report_failure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptOrigin\.classify$' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.classify"
+require_line_count 1 '^theorem classify([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin theorem classify"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptOrigin\.protected_bound$' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.protected_bound"
+require_line_count 1 '^theorem protected_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin theorem protected_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
