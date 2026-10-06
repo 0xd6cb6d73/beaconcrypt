@@ -295,6 +295,8 @@ check-proverif-fs-records-s2b: check-proverif-extraction check-proverif-transcri
 		$(if $(PROVERIF_FS_LOG_DIR),--log-dir '$(PROVERIF_FS_LOG_DIR)')
 
 check-proverif-fs-records-b2s: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-pin-origin-checker.py
+	python3 $(PROVERIF_DIR)/pin-origin-theory.py --check-only
 	python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
 	python3 $(PROVERIF_DIR)/check-free-schedule.py --scenario fs-records-b2s \
 		--proverif '$(PROVERIF)' \

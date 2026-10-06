@@ -53,7 +53,7 @@ declare -A expected_category_counts=(
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=41
+	[validation]=43
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -123,6 +123,8 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/test-registration-beacon-checker.py \
 	proofs/pro-verif/check-free-schedule.py \
 	proofs/pro-verif/test-free-schedule-checker.py \
+	proofs/pro-verif/pin-origin-theory.py \
+	proofs/pro-verif/test-pin-origin-checker.py \
 	proofs/pro-verif/check-primitive-fidelity.py \
 	proofs/pro-verif/test-primitive-fidelity-checker.py \
 	proofs/pro-verif/check-pending-registration.py \
@@ -902,7 +904,7 @@ require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable source fixture"
-require_line_count 28 '^#\[test\]$' \
+require_line_count 29 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -20349,6 +20351,9 @@ require_line_count 1 '^\tfs-records-s2b \\$' Makefile "fs-records-s2b in the ser
 require_line_count 1 '^check-proverif-fs-records-b2s: check-proverif-extraction check-proverif-transcript-fidelity$' \
 	Makefile "fs-records-b2s runner"
 require_line_count 1 '^\tfs-records-b2s$' Makefile "fs-records-b2s in the serial fs roster"
+require_line_count 1 '^\tpython3 \$\(PROVERIF_DIR\)/test-pin-origin-checker\.py$' Makefile "pin-origin gate regression checks"
+require_line_count 1 '^\tpython3 \$\(PROVERIF_DIR\)/pin-origin-theory\.py --check-only$' Makefile "pin-origin finite syntax gate"
+python3 proofs/pro-verif/pin-origin-theory.py --check-only
 require_line_count 0 '^check-proverif:.*fs' Makefile "fs group outside the parallel roster"
 awk '
 	/^verify-in-shell:/ { active = 1; next }

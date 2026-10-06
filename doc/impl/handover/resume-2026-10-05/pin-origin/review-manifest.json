@@ -1,0 +1,32 @@
+{
+  "base": "851fd63873760df4b4d458b10877b8c26fd384b1",
+  "files": {
+    "beaconcrypt-core/Makefile": "3ebccb05ccea592aef41a5db55b41f0eb1543e5f8ffe4d2e7650165872906b4f",
+    "beaconcrypt-core/proofs/check-inventory.sh": "781cec41fa8d4078528b80d9812fb32f5b36f2e3393269e167fb33f56df72cfd",
+    "beaconcrypt-core/proofs/pro-verif/fs-records-b2s.pvl": "6ccd89e45f3dc7f98e4d7fa8314e4c51bd91cf5f41d51df03d2dcf7cb66085bc",
+    "beaconcrypt-core/proofs/pro-verif/pin-origin-theory.py": "fc878b5fbe01e753c20625a8638a76ff1f61665ecae32f3688d5c23f34bf3a77",
+    "beaconcrypt-core/proofs/pro-verif/test-pin-origin-checker.py": "4d62ee4411fe5c22e68df2b69053b171d198321398cbd88b7508a79c620086ce",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "0d55a85b9c2849435c87eced85ec4a4ebadc2f43c8f5d0076183af6c94c9c060",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "67284d248eb4bf316612013b84fce8a5ce6a62ecd136bbba606c2ffc8b824ff7",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "f9630eddd40a421fb04c161eb7a06d0d2f9cc141b408c93144afb3d4d8ecdfda",
+    "doc/formal-verification-analysis.md": "2e57bb965bb408ddf54a3c97e18e49603ef86efad2f4098c18713901d7f44e75",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/README.md": "5dc09937f71d29eaa6925febeb8e1a2b8242de32ae7046a421a1c88e70b3fcae",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/argument-review.json": "a705caec548d33b5821cea9b7035ea930359d71796ea08d4390fa34bebbf2991",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/classification.log": "9cdc21da8d6e14b2d6ed8b5fcd52e683d92779ff1bcfeda54131fb469d447d9d",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/diff.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/fidelity-inventory-final.log": "96f3acbabdaa46fba0ce34281ad1a90dc49982221ab65954c431407b1d5aae4e",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/fidelity-inventory.log": "54440097e7052542e99a85f444b722e0783cf544fb8d5a1c9904102eb09b5c2d",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/free-checker.log": "087817c4f0e11cc638b0ed115dc4444806150e58c5a05cb5e2cde2400ffb5463",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/inventory-final.log": "5ab2d8cfcb2f77a034bde50e25acd8cf388231b6ca4562656c2a41dcced8df79",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/pin-origin-tests.log": "3d83e2376eb6d414127f9e181ad40210dbeeb37f2158636cfbab5682c6d309d3",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/reviewed-argument.md": "d39d26729c9f272d6267fcbb13aa5de9af8835374647755b053981a1f1b1d3f8",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/reviewed-inputs.json": "6c55861c12df46237237465f01e3389b2f5e3a6955e8e20eadca6d4efe98bae7",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/syntax.log": "26c02e05c5f37981ca029c121dc45af3f669f2c635ff9a5c492b7628ac9f9561",
+    "doc/impl/handover/resume-2026-10-05/pin-origin/validation.json": "c48c5b2db72231eadc82eea87912b801df2bd50c2f66ef2c244907a9ea856da8",
+    "doc/impl/proverif-free-schedule-records-b2s.md": "e386c3ced395c2011beceda4200ca782253a807ba509be37ebdee83ba27aac5c",
+    "doc/impl/proverif-fs-source-abstraction.md": "7d5a0dfd35a22dcafb1d1bf9936f88a81cf049ab10b7cb4b4f11d3aeb55498e1",
+    "doc/impl/proverif-pin-origin.md": "f3d9887c24b54e2ef94418b93605a4b82458211cc5fe754947062caf1c622df9",
+    "doc/proverif-fs-event-meaning.md": "cfd8517e8ff3d3a74d7f98fd51dcdc3e47cc2fdf75386f14bd16efac5e4aebab"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "reviewer": "fs_source_abstraction",
+  "decision": "APPROVE_SCOPED_SYMBOLIC_ARGUMENT",
+  "argument_sha256": "d39d26729c9f272d6267fcbb13aa5de9af8835374647755b053981a1f1b1d3f8",
+  "inputs_manifest_sha256": "6c55861c12df46237237465f01e3389b2f5e3a6955e8e20eadca6d4efe98bae7",
+  "scope": "Exact current bounded b2s honest-pin/AnyPin processes, C2 and C3 only; no Rust/global/direction-split/computational/optional-reply theorem. Independent formal maintenance and syntax-gate integration remain separate.",
+  "evidence": [
+    "Read exact output sites in b2s main and both send variants, exact C2/C3 formulas, primitives, open and CTX declarations.",
+    "All14 referenced input hashes match reviewed parent sources.",
+    "Inspected28 explicit reductions: no HKDF, aead_cipher or blake2b512 creating RHS; data ctx_preimage projection exposes key only if preimage itself is known.",
+    "KDF ancestor and cipher occurrence inductions trace chosen plaintext back to earlier attacker input, avoiding assuming all opaque subterms known.",
+    "Protected Server/prekey atoms plus no honest shared-value release justify unavailable static DH; directional first/second projection distinction excludes Beacon ciphertext origin in a finish.",
+    "Wrong-ID case now separately proves commitment origin, so copying honest ciphertext and replacing commitment is covered.",
+    "Finite replacement releases fresh other-pin plaintext only at original output cut when original known root permits decoding; knowledge reflection preserves the attacker(k) disjunct, including compound candidate terms.",
+    "All Server receive occurrences and all potentially matching honest-Server sends retained with order/multiplicity; unrelated other-pin FsBeaconStarted/finish/send fields explicitly outside projection."
+  ],
+  "resolved_findings": [
+    "Initial draft inferred sender equality from ciphertext origin; author added independent hash/preimage occurrence argument and exact sender field equality."
+  ],
+  "remaining_findings": [],
+  "checks_not_run": [
+    "No ProVerif search",
+    "No Lean or Rust build",
+    "No model/source edits"
+  ]
+}

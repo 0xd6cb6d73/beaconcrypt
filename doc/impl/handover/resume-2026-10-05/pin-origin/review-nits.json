@@ -1,0 +1,17 @@
+[
+  {
+    "path": "beaconcrypt-core/proofs/reviewed-inventory.txt",
+    "old": "a3bd3870842b928ed956a3b1acc81dad16d16cdea4f6fff460674c164af8f919",
+    "new": "0d55a85b9c2849435c87eced85ec4a4ebadc2f43c8f5d0076183af6c94c9c060"
+  },
+  {
+    "path": "beaconcrypt-core/proofs/trusted-boundary.md",
+    "old": "8df934efed9c225d28c8b002b6bc833fad21df24f555d3f7012fdd2dc0188b95",
+    "new": "67284d248eb4bf316612013b84fce8a5ce6a62ecd136bbba606c2ffc8b824ff7"
+  },
+  {
+    "path": "doc/proverif-fs-event-meaning.md",
+    "old": "7ea41ab034cde8fa04618fc912658b1bfffbf8edfdea35f335cd8f8db908cdc8",
+    "new": "cfd8517e8ff3d3a74d7f98fd51dcdc3e47cc2fdf75386f14bd16efac5e4aebab"
+  }
+]

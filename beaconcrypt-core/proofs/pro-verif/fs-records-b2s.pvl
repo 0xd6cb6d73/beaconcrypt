@@ -59,8 +59,9 @@
      for every Beacon.  A1, A2, S2, UKSr, C4, C3-finish, PINREAD and C-UKS
      run in FsRecordsB2sMainAnyPin; the other targets run in
      FsRecordsB2sMain, and the pin-independence argument E3 of the b2s
-     guide (step 13, not yet reviewed) is what would carry the security
-     results C2 and C3 over to any Beacon pins. *)
+     guide (step 13; reviewed local argument in proverif-pin-origin.md)
+     transfers exactly C2 and C3 to any Beacon pins in this same bounded
+     symbolic process; source/global/computational lifts remain separate. *)
 
 (* One Server object: one registration in Rust order except for the early
    draw of the ephemeral secret and the KEM coins (v2), the response build on

@@ -22497,9 +22497,14 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 				"check-proverif-{scenario}: check-proverif-extraction check-proverif-transcript-fidelity"
 			),
 		)?;
+		let pin_origin = if scenario == "fs-records-b2s" {
+			"python3 $(PROVERIF_DIR)/test-pin-origin-checker.py\npython3 $(PROVERIF_DIR)/pin-origin-theory.py --check-only\n"
+		} else {
+			""
+		};
 		if compact(&runner.join("\n"))
 			!= compact(&format!(
-				"python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
+				"{pin_origin}python3 $(PROVERIF_DIR)/test-free-schedule-checker.py
 				python3 $(PROVERIF_DIR)/check-free-schedule.py --scenario {scenario} \\
 				--proverif '$(PROVERIF)' \\
 				--timeout '$(PROVERIF_FS_TIMEOUT)' \\
@@ -24124,6 +24129,19 @@ fn validate_declarations(
 		return Err(format!("stale declaration allowlist entry: {stale:?}"));
 	}
 	Ok(())
+}
+
+#[test]
+fn pin_origin_syntax_gate_cannot_be_omitted() {
+	for line in [
+		"\tpython3 $(PROVERIF_DIR)/test-pin-origin-checker.py\n",
+		"\tpython3 $(PROVERIF_DIR)/pin-origin-theory.py --check-only\n",
+	] {
+		assert_eq!(CORE_MAKEFILE.matches(line).count(), 1);
+		let changed = CORE_MAKEFILE.replacen(line, "", 1);
+		let error = validate_free_schedule_makefile(&changed).unwrap_err();
+		assert!(error.contains("fs-records-b2s exact Make runner and self-test wiring changed"));
+	}
 }
 
 #[test]

@@ -1,0 +1,20 @@
+make: Entering directory '/tmp/beaconcrypt-proverif-pin-origin/beaconcrypt-core'
+python3 proofs/pro-verif/test-verdict-classes.py
+E
+======================================================================
+ERROR: setUpClass (__main__.ClassificationTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/beaconcrypt-proverif-pin-origin/beaconcrypt-core/proofs/pro-verif/test-verdict-classes.py", line 21, in setUpClass
+    cls.expected = CHECK.INVENTORY.expected_verdicts()
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/tmp/beaconcrypt-proverif-pin-origin/beaconcrypt-core/proofs/pro-verif/verdict-inventory.py", line 262, in expected_verdicts
+    raise ValueError(f"unclassified checker entry point: {actual ^ supported}")
+ValueError: unclassified checker entry point: {'check-pin-origin.py', 'check-results.awk'}
+
+----------------------------------------------------------------------
+Ran 0 tests in 0.335s
+
+FAILED (errors=1)
+make: *** [Makefile:266: check-proverif-transcript-fidelity] Error 1
+make: Leaving directory '/tmp/beaconcrypt-proverif-pin-origin/beaconcrypt-core'
