@@ -1483,6 +1483,8 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix
 
 import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut
 
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawChallenge
+
 /-!
 # Beaconcrypt-core verification root
 
