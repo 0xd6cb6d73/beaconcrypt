@@ -1496,6 +1496,8 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawNatural
 
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge
 
+import BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem
+
 /-!
 # Beaconcrypt-core verification root
 
