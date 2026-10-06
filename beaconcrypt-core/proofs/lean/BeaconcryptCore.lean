@@ -1467,6 +1467,11 @@ import BeaconcryptCore.Computational.PqxdhLaterChallengeMarkedTrace
 import BeaconcryptCore.Computational.PqxdhLaterChallengeMarkedAddress
 import BeaconcryptCore.Computational.PqxdhLaterChallengeMarkedBuilder
 
+import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCut
+import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutSource
+import BeaconcryptCore.Computational.PqxdhRegistrationJointNativeKemOrigin
+import BeaconcryptCore.Computational.PqxdhRegistrationJointCutVerification
+
 /-!
 # Beaconcrypt-core verification root
 
