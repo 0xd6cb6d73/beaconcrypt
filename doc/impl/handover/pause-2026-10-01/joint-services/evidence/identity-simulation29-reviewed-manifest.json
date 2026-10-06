@@ -1,0 +1,22 @@
+{
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "base": "d90be005b812aa39a6ab269214e76422a70b7d70",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIdentityRouting.lean": "3ba29d58ad57b32e5a2b7459d334e84d4421707d81c579d192214f1bf9d77a45",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIdentityCompiler.lean": "27171146644aa07ff20272818ed730960e36b54ec2fcef1ae1ed510afe4c41a0",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIdentityCosts.lean": "b621a611a52c2edfc4283f93847117d45f35e78845974de03d17756ed0335821",
+    "doc/impl/registration-joint-identity-simulation.md": "5cfd2153ca0c549b45c7fe286f9f6bd16ec36dc8e5d9aaa87c23bfba2af70097",
+    "doc/formal-verification-analysis.md": "618de3e053a813bf4ffa84611479d96c695a897f1b3cfc15da155c2e600931a6"
+  },
+  "guards": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIdentityRouting.lean": 13,
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIdentityCompiler.lean": 8,
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIdentityCosts.lean": 8
+  },
+  "total_guards": 29,
+  "checks": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/identity-simulation29/checks.json",
+  "scope": "Complete actual initialized14-command simulator against ordinary dynamic joint identity endpoint; known/generated source-index routing, all-reply private caps and complete evaluated real uniform bill. Actual accepted-signature event, report freshness/selection and crypto hop remain open.",
+  "prior_reviewed_open31_manifest": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/open-services31/review-manifest.json",
+  "prior_analysis_sha256": "89288a6bd33ba527fdb67d98bc40f3fb82170cbdb40aab7857d460237863d889",
+  "analysis_delta": "Appended Ordinary joint-identity simulation of actual initialized registration section only; all prior reviewed prose is retained."
+}

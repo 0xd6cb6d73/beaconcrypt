@@ -1,0 +1,32 @@
+{
+  "reviewer": "/root",
+  "time": "2026-10-06T00:59:40.873504+00:00",
+  "decision": "APPROVE_SCOPED_OPERATIONAL_COMPILER_AND_COUNTS",
+  "manifest_sha256": "b47bacc01db44f3058ad566cb3b15e5ae047a372975e3ec2057ec306027adc57",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenBackend.lean": "4352a0d049a98cb643752138e2f3eaf8da18a560b656c0f2de3a391472751bc5",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenInitialization.lean": "19a68320d9fbcc00741dec05cbc46122ad6e2d9fc0140f2a5ea752082545719a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenCosts.lean": "8c5c13eae3adab47c1f0d457cbc39e7143b8702d39a601c049e09779b9b9b9b8",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenInitializedCosts.lean": "33a2337ef250b9f2ced2f796fe26f020b68644b177ab6069879a3ba5583b77b6",
+    "doc/impl/registration-joint-open-services.md": "eb490aba6fb0d0c5ecff7b62af8faa9a1e83bcba59a61eb448f8a14dc642abb4",
+    "doc/formal-verification-analysis.md": "89288a6bd33ba527fdb67d98bc40f3fb82170cbdb40aab7857d460237863d889"
+  },
+  "guarded_statements": 31,
+  "findings": [],
+  "evidence": [
+    "Read all four modules, guide and analysis additions, including actual raw-collector/native accept wrappers and initialized public-command compiler.",
+    "Whole private/native/owner/runtime results and adaptive continuation are retained by evaluated equalities; generated private pools remain interpreter state rather than compiler inputs.",
+    "All-attempt budget certificates quantify every typed reply. Native work is excluded only from private-capability counts; full uniform/native/base bill remains a separate proved initialized bound.",
+    "Signing3qBundle, staticDHqAccept+qFinish, generated creationqCreate+isNone, KEMcreateqCreate, decapsulationqFinish, identity/KEMreadsum, initialization1 and suppliedimport\u2264isSome match actual classes; accepts add exactly one DH allowance.",
+    "Known imported Server material remains distinct from generated identity admission; no public-byte uniqueness or honest-target premise used.",
+    "Six source hashes, four empty successful direct-check logs and31 exact standard-axiom guards verified; no placeholder/custom axiom.",
+    "Documentation limits claim to existing14-class one-Server surface and identifies remaining actual event/freshness/target-selection and real-public-HKDF security simulations."
+  ],
+  "remaining_obligations": [
+    "Source-index registry for generated versus known-imported identities",
+    "Actual verified signed-field forgery report/history and fresh target selection",
+    "Cryptographic adjacent hops with complete native Extract/HMAC/CTX query partition",
+    "Extended multi-Server/raw create/key-management/record interfaces"
+  ],
+  "reruns": "No Lean compile rerun; reviewed successful exact direct-module receipts and statements."
+}

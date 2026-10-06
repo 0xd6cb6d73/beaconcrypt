@@ -1,0 +1,21 @@
+{
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "base": "d90be005b812aa39a6ab269214e76422a70b7d70",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenBackend.lean": "4352a0d049a98cb643752138e2f3eaf8da18a560b656c0f2de3a391472751bc5",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenInitialization.lean": "19a68320d9fbcc00741dec05cbc46122ad6e2d9fc0140f2a5ea752082545719a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenCosts.lean": "8c5c13eae3adab47c1f0d457cbc39e7143b8702d39a601c049e09779b9b9b9b8",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenInitializedCosts.lean": "33a2337ef250b9f2ced2f796fe26f020b68644b177ab6069879a3ba5583b77b6",
+    "doc/impl/registration-joint-open-services.md": "eb490aba6fb0d0c5ecff7b62af8faa9a1e83bcba59a61eb448f8a14dc642abb4",
+    "doc/formal-verification-analysis.md": "89288a6bd33ba527fdb67d98bc40f3fb82170cbdb40aab7857d460237863d889"
+  },
+  "guards": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenBackend.lean": 10,
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenInitialization.lean": 4,
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenCosts.lean": 11,
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOpenInitializedCosts.lean": 6
+  },
+  "total_guards": 31,
+  "checks": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/open-services31/checks.json",
+  "scope": "Actual initialized existing14-command open joint/KEM service program, complete source/private/native/runtime equality, expanded nonuniform private query caps and complete evaluated uniform bill. No crypto hop, target freshness/selection or global protocol conclusion."
+}

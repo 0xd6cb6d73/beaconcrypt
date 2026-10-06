@@ -1,0 +1,31 @@
+{
+  "time": "2026-10-06T01:25:30.855715+00:00",
+  "reviewer": "/root",
+  "status": "APPROVE_SCOPED_OPERATIONAL_SIMULATION_AND_COUNTS",
+  "manifest": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/identity-simulation29/review-manifest.json",
+  "manifest_sha256": "1831ca0fce7d7724f348d166777dff043f14d1fd780b71130bbe50c572c6487c",
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIdentityRouting.lean": "3ba29d58ad57b32e5a2b7459d334e84d4421707d81c579d192214f1bf9d77a45",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIdentityCompiler.lean": "27171146644aa07ff20272818ed730960e36b54ec2fcef1ae1ed510afe4c41a0",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointIdentityCosts.lean": "b621a611a52c2edfc4283f93847117d45f35e78845974de03d17756ed0335821",
+    "doc/impl/registration-joint-identity-simulation.md": "5cfd2153ca0c549b45c7fe286f9f6bd16ec36dc8e5d9aaa87c23bfba2af70097",
+    "doc/formal-verification-analysis.md": "618de3e053a813bf4ffa84611479d96c695a897f1b3cfc15da155c2e600931a6"
+  },
+  "reviewed": [
+    "Full source-index/challenger-index distinction; known imports do not allocate generated target indices; no public-key injectivity premise.",
+    "Generated seed material used only by mathematical post-interpreter projection; executable client obtains private seed only through explicit reveal query.",
+    "Creation uses same challenger draw with complete state and transcript, validity preserved on supported replies; arbitrary complete continuations proved by induction.",
+    "Native KEM/runtime work remains local and evaluated, every native field and source audit retained by actual initialized scheduler equality.",
+    "All-reply nonuniform class bounds through both compilers; known operations emit no external identity query, not a free total-work claim.",
+    "Evaluated real uniform bill preserves all prior source costs; no replaced-challenger all-reply uniform bound advertised.",
+    "Exact joint-use primitive endpoint retained; no ordinary EUF implies converted-DH claim or protocol conclusion assumed."
+  ],
+  "scope_limits": [
+    "Operational 14-command one-Server surface only.",
+    "Actual raw acceptance signature reports, source event/history freshness, generated target selection and probability bound still pending.",
+    "General multi-Server/full-record scheduling and complete global logical Extract/HMAC/CTX ledger open."
+  ],
+  "theorem_guards": 29,
+  "new_axioms": false,
+  "notes": "No new Lean rerun: inspected final guarded direct-check records and exact source hashes; changed integration will check direct modules."
+}

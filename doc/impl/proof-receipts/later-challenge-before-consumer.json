@@ -1,0 +1,89 @@
+{
+  "cohort": "before-consumer15",
+  "source_base": "78fa1bcab99cad2bfbbd2c2a2ddaf9e80d623332",
+  "fetched_origin_vcvio": "8330cdef4f4659931b6764a026cd90c4caf833a4",
+  "source_manifest_sha256": "eb7345039cbd847f0c3c794502e62938c1420e606a6277d277582a8f60de1155",
+  "source_files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCollectorBefore.lean": "2ffaad76eb6063d2703863c1f17adf1d3986af1be00ce99d3a4b684c8493563f",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedBeforeObservation.lean": "b858409bcdeaec4bc1c4244ac5503b01d7883936db0e91d2c409307d96681b96",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeConsumer.lean": "57aad9c64f9626f8b2c0476f745ace4ce5c37b4c8328406475f7b3c30bbde2d2",
+    "doc/impl/later-challenge-before-consumer.md": "4323751fc2dd0560f478ce553d0987a01abf790efa4c25e59e83cfb7cf37b03e",
+    "doc/formal-verification-analysis.md": "6ea058c2fe2d778ec72e613583bfca2abfab1bc2605b7a8035b1733f1d754703"
+  },
+  "restoration": {
+    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedBefore.lean",
+    "head_blob_sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6",
+    "working_sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6",
+    "exact_match": true
+  },
+  "direct_checks": [
+    {
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeCollectorBefore-final.log",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "guards": 5,
+      "module": "PqxdhLaterChallengeCollectorBefore",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeCollectorBefore"
+    },
+    {
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeGeneratedBeforeObservation-final.log",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "guards": 6,
+      "module": "PqxdhLaterChallengeGeneratedBeforeObservation",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeGeneratedBeforeObservation"
+    },
+    {
+      "log": "/tmp/beaconcrypt-evolving-record-check/resume-2026-10-05/logs/PqxdhLaterChallengeBeforeConsumer-final.log",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "guards": 4,
+      "module": "PqxdhLaterChallengeBeforeConsumer",
+      "log_content": "",
+      "command": "bash /tmp/beaconcrypt-evolving-record-check/check.sh PqxdhLaterChallengeBeforeConsumer"
+    }
+  ],
+  "review": {
+    "sha256": "4caf5b398352e5d0053791b2bf1506ca3bb205661f00694befb94380ea19fb6d",
+    "content": {
+      "time": "2026-10-06T01:39:28.337589+00:00",
+      "reviewer": "/root",
+      "decision": "APPROVE_SCOPED_BEFORE_OBSERVATION_AND_RANDOM_CONTINUATION",
+      "manifest_sha256": "eb7345039cbd847f0c3c794502e62938c1420e606a6277d277582a8f60de1155",
+      "files": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCollectorBefore.lean": "2ffaad76eb6063d2703863c1f17adf1d3986af1be00ce99d3a4b684c8493563f",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedBeforeObservation.lean": "b858409bcdeaec4bc1c4244ac5503b01d7883936db0e91d2c409307d96681b96",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeConsumer.lean": "57aad9c64f9626f8b2c0476f745ace4ce5c37b4c8328406475f7b3c30bbde2d2",
+        "doc/impl/later-challenge-before-consumer.md": "4323751fc2dd0560f478ce553d0987a01abf790efa4c25e59e83cfb7cf37b03e",
+        "doc/formal-verification-analysis.md": "6ea058c2fe2d778ec72e613583bfca2abfab1bc2605b7a8035b1733f1d754703"
+      },
+      "guarded_statements": 15,
+      "findings": [],
+      "evidence": [
+        "Read all three modules, concrete source-derived consumer, its argument/result statements and guide.",
+        "Complete collector residual mass maps to None; equality is unconditioned and includes private source packet, full native/cache state, correlated materials and actual selection.",
+        "Only stored bit-specific outside wrapper is omitted from observation; concrete client rebuilds actual callbacks from source credentials and uses captured descriptor plus each original outside wrapper.",
+        "generated_pre consumes actual GeneratedContinuation support and prior source chronology; no unused-wrapper premise introduced.",
+        "generated_random compares from the same entire supplied RandomState, not independently reached cache marginals or reset state.",
+        "Fits checks both complete appended wrappers, and monitor erasure yields all-reply selected seal/raw/hash caps each1+qPost. Native/uniform work remains separate.",
+        "All five source hashes, fifteen standard guards, three empty final focused-check logs and exact restoration of original GeneratedBefore module verified."
+      ],
+      "scope_limits": [
+        "Global interpreted forwarded public-hash history must be retained and joined to actual continuation; not yet established.",
+        "Resource Fits is a noncomputable guarded-game condition until global certificates discharge it; no efficient ordinary full-protocol reduction follows here.",
+        "Alias and refused/Dead branches have no new quantitative bound; freshness event implication and initial-Builder/inside/used/global source branches still require composition."
+      ],
+      "restoration": {
+        "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedBefore.lean",
+        "head_blob_sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6",
+        "working_sha256": "8e4d8c729e1609aab98fd0217fc09d70b4da63546ee2a3a6cd5fc905a9378ab6",
+        "exact_match": true
+      },
+      "reruns": "No unchanged Lean rebuild; reviewed exact successful source-bound receipts."
+    }
+  },
+  "scope": "Complete unconditioned before observation and source-derived concrete saved continuation; supplied full random state preserved, both full outside wrappers billed; forwarded history/global source event/refusal/alias join remains.",
+  "full_matrix": "Deferred to integration; focused Lean-only stage; no Rust changes or mutation run."
+}

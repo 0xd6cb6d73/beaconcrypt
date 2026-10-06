@@ -1,0 +1,30 @@
+[
+  {
+    "module": "PqxdhRegistrationJointOpenBackend",
+    "start": "2026-10-06T00:54:25.817780+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/open-services31/PqxdhRegistrationJointOpenBackend.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointOpenInitialization",
+    "start": "2026-10-06T00:54:30.027714+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/open-services31/PqxdhRegistrationJointOpenInitialization.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointOpenCosts",
+    "start": "2026-10-06T00:54:33.321953+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/open-services31/PqxdhRegistrationJointOpenCosts.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "module": "PqxdhRegistrationJointOpenInitializedCosts",
+    "start": "2026-10-06T00:54:46.441631+00:00",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/open-services31/PqxdhRegistrationJointOpenInitializedCosts.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]
