@@ -166,6 +166,22 @@ def extension_class_scope(name, target, driver):
             + ";".join(target.libraries())
         )
         return target.cls, scope
+    if name == "check-exact-far":
+        profile = "AnyPin" if target.base == "b2s-C4" else "honest pins"
+        start = driver.first_far(target.direction)
+        claim = (
+            "same fresh honest identity far-event witness"
+            if target.name == "far-b2s-C-public"
+            else "exact C4 or attacker-owned reachability"
+        )
+        scope = (
+            f"T0 exact public HKDF recipes at first-far targets {start}..{start + 50}; "
+            f"K_reg=1, K_s=2, K_r=1; {profile}; {claim}; "
+            f"public_chain_control={target.public_chain}; hidden receive replies; "
+            "reviewed event/knowledge projection only, no global source/API/computational theorem; "
+            f"query={target.query}; libraries=" + ";".join(target.libraries())
+        )
+        return target.cls, scope
     raise ValueError(f"unreviewed extension scope: {name}")
 
 
@@ -228,6 +244,7 @@ def validate_scope(rows):
         "check-active-strong-secrecy",
         "check-registration-provenance",
         "check-delayed-response",
+        "check-exact-far",
     ):
         driver = INVENTORY.module(name)
         targets = {target.name: target for target in driver.TARGETS}

@@ -1,0 +1,7 @@
+(* SPDX-License-Identifier: 0BSD *)
+
+(* Public-far-chain control; K_r=1. Scope and trace transfer: doc/impl/proverif-exact-far-material.md. *)
+query s: bitstring, b: bitstring, kid: key_id, root: bitstring, t: nat;
+  event(FsFarAccepted(server_to_beacon(), s, b, kid, root, t)).
+
+process FsRecordsS2bMain()

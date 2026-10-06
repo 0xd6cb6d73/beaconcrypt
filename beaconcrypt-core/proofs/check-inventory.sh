@@ -49,11 +49,11 @@ declare -A expected_category_counts=(
 	[generated-lean]=7
 	[generated-proverif]=1
 	[handwritten-lean]=1347
-	[handwritten-proverif]=220
+	[handwritten-proverif]=225
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=46
+	[validation]=48
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -139,6 +139,8 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/check-delayed-response.py \
 	proofs/pro-verif/delayed-response-models.py \
 	proofs/pro-verif/test-delayed-response-checker.py \
+	proofs/pro-verif/check-exact-far.py \
+	proofs/pro-verif/test-exact-far-checker.py \
 	proofs/pro-verif/test-registration-provenance-checker.py \
 	proofs/pro-verif/declaration-allowlist.tsv \
 	proofs/pro-verif/verdict-classes.tsv \

@@ -245,3 +245,8 @@ Stage P3 took up these items; the [fs-records-b2s guide](proverif-free-schedule-
 - The paper obligations L1 to L5, on which every Rust reading of the fs results rests.
 - The budget: the verification pass of the whole fs group took 6194.1 s (1 h 43 min) of wall time, 3521.2 s of ProVerif time for the record targets and 2641.5 s for the registration targets, so about 77 minutes of the 3 h of OD7 remain for `fs-records-b2s` (G0 measured 5 to 44 minutes for its formulations). The registration A1 keeps only 3.3% of the address-space cap as headroom, and C1 about a third.
 - Stage P4 (the all-zero check and a theory with low-order points) and stage P5 (strong secrecy, which must publish the `Some`/`None` bit of receives and finishes).
+
+
+## Literal-material supplement for L3
+
+The [reviewed exact-far argument](proverif-exact-far-material.md) now supplies the local far-material step by running the complete finite family of actual HKDF terms and preserving the exact C4 formula. It does not identify the original free `fs_far_chain` constructor with the actual iterated chain. The original target files remain unchanged, and their old far-collapse explanation is superseded for source interpretation by that separate literal-material result and the non-far event/knowledge projection. The projection retains the same near-path continuation; chosen b2s C2 additionally uses E21. All remaining L1/L2/E19/global source obligations remain explicit, and no optional plaintext or result-bit equivalence follows.

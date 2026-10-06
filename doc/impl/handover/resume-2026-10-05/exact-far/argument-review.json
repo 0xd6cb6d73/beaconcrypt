@@ -1,0 +1,44 @@
+{
+  "time": "2026-10-06T01:22:22.796878+00:00",
+  "decision": "APPROVE_SCOPED_SYMBOLIC_ARGUMENT",
+  "scope": "Exact hidden-reply first-far material and claim-specific finite-trace projection; no native/global/raw-API/computational or new solver run claim.",
+  "reviewed": {
+    "argument.md": "2f6ab6822979a56cdebbb0484f69f09d3b26bc40f3215190ce4d3c4e4fc4387e",
+    "probe.py": "07e27a7a5827dc747c1ee20266013df7ea253fe5e2043392239b7c636a7c244b",
+    "probe-s2b.py": "c1f68927316e1c826c50398da095e76add3294367fe726ac3312094e54583744",
+    "controls.py": "34c92e2d09ee7435ba69b0e070dc7bb0eaa027f0b6bf043bb8e226d8d0d4b150"
+  },
+  "checks": [
+    {
+      "receipt": "c4-kr1-receipt",
+      "seconds": 89.2836474829819,
+      "input_count": 11
+    },
+    {
+      "receipt": "s2b-c4-kr1-receipt",
+      "seconds": 88.19398913905025,
+      "input_count": 11
+    },
+    {
+      "receipt": "b2s-public-control-receipt",
+      "seconds": 3.7573990989476442,
+      "input_count": 11
+    },
+    {
+      "receipt": "s2b-public-control-receipt",
+      "seconds": 3.7298195131588727,
+      "input_count": 11
+    },
+    {
+      "receipt": "b2s-literal-witness-receipt",
+      "seconds": 48.30567519296892,
+      "input_count": 11
+    }
+  ],
+  "findings_resolved": [
+    "Near continuation preserved; E21 separately required for fail-stop.",
+    "Conservative helper recipe normalization preserves identical ground messages under exact T0."
+  ],
+  "control_scope": "Public-far-key b2s control is positive conjunction with fresh BeaconStarted origin, not original negative-attacker-disjunct query; latter inconclusive result remains diagnostic. s2b original forbidden far event is false; literal b2s attacker-owned FAR witness is false.",
+  "remaining": "Maintained generator/checker completeness, precise source material_exact reference, query-by-query classification, source hash and gate integration require later independent review."
+}

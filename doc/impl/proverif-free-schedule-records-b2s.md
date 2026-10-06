@@ -234,3 +234,8 @@ The security results hold for unbounded Server objects, honest Beacons and attac
 - **P6.** The verdict-classes manifest must include the eighteen b2s targets with their classes (eight security targets for seven claims, and the definitional C3-finish), the two fail-stop targets and the pin-free process.
 - **P7.** Compromise and reveals between worker steps; the b2s Server receive worker is the place where a revealed peer state would matter.
 - **P8.** The documentation consolidation should state, wherever the fs record results are cited, which targets are pin-free and which rest on E3 and E21.
+
+
+## Literal-material supplement for L3
+
+The [reviewed exact-far argument](proverif-exact-far-material.md) now supplies the local far-material step by running the complete finite family of actual HKDF terms and preserving the exact C4 formula. It does not identify the original free `fs_far_chain` constructor with the actual iterated chain. The original target files remain unchanged, and their old far-collapse explanation is superseded for source interpretation by that separate literal-material result and the non-far event/knowledge projection. The projection retains the same near-path continuation; chosen b2s C2 additionally uses E21. All remaining L1/L2/E19/global source obligations remain explicit, and no optional plaintext or result-bit equivalence follows.

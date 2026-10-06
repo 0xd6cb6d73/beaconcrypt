@@ -1,0 +1,7 @@
+{
+  "command": "nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C beaconcrypt-core SHELL=/run/current-system/sw/bin/bash check-inventory",
+  "exit_code": 0,
+  "log_sha256": "14de61fc010280e9ef6a3a7417bbc3689ad7b458a77407adc4f8fd64bf5d9179",
+  "compressed_sha256": "d3d4b6ac2567aaef24bd1d6888d9b4f2af9820eed7aa2a2a819174ccf6aeae19",
+  "scope": "Final comment-only query corrections and matching inventory hashes; no solver rebuild."
+}

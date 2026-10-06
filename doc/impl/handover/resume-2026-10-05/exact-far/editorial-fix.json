@@ -1,0 +1,14 @@
+{
+  "beaconcrypt-core/proofs/pro-verif/exact-far-b2s-control.pv": {
+    "old_sha256": "335f48b7f9039f93ad4b1dadffc0b10b6f015b4ce13a5f66ba71e674879ae3ec",
+    "new_sha256": "fc600ec52d80ae1b66824893b26f77c787436c3decbe6a4b3e82fac17c31c94b",
+    "token_sha256": "8faff51d67972a3cc332ff4434468236c3e0d5e8fa5d15511e044c1e6d49c2c3",
+    "scope": "Comment only; lexical model/query tokens identical to checked target input."
+  },
+  "beaconcrypt-core/proofs/pro-verif/exact-far-s2b-control.pv": {
+    "old_sha256": "590f59dab09b31cd6c43ca81f4a70bbc1c9eafa79dd0ca23c3b5dabc55654f6e",
+    "new_sha256": "6e16c108eea939676cf0585eb5fbf7fde4ad57dfe5fac57f6a6c714f20b23c20",
+    "token_sha256": "d67011809ae315532c2b341ff1c70d2c5df60b4f1538fcc253cc0a5f751eb3b5",
+    "scope": "Comment only; lexical model/query tokens identical to checked target input."
+  }
+}

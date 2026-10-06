@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-06T01:33:50.656228+00:00",
+  "decision": "APPROVE_SCOPED_PUBLICATION",
+  "archive_sha256": "514c31eb0dc9420007986627c77535a6b2143d65853a97ac0278695084814fcc",
+  "source_manifest_sha256": "847745a200f2261d150f361d784302402448759a3d08440ee324ec5ef9126fe9",
+  "checks": [
+    "All50 archive hashes and22 final source hashes",
+    "Two control comments plus inventory digests are sole semantic-source freeze delta; query tokens identical",
+    "Every content-addressed input gzip round-trip;9 target/diagnostic gzip hashes and5 strict target verdict replays",
+    "Focused29FT/16classification/inventory receipt scoped correctly; final inventory0"
+  ],
+  "scope": "Same independently reviewed local hidden-reply exact-far projection; no additional proof claim or solver run."
+}

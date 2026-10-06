@@ -1,0 +1,60 @@
+{
+  "scope": "Focused content-bound validation, no aggregate closure claim.",
+  "solver_targets": 5,
+  "true_lines": 2,
+  "false_lines": 3,
+  "confirmed_traces": 3,
+  "total_solver_seconds": 234.04241382167675,
+  "peak_rss_kib": 1527408,
+  "focused_tests": {
+    "dedicated_checker": 10,
+    "verdict_classification": 16,
+    "transcript_fidelity": 29,
+    "inventory_exit": 0,
+    "cargo_fmt_exit": 0,
+    "diff_check_exit": 0
+  },
+  "archive_logs": {
+    "targets/far-b2s-C4.log.gz": {
+      "uncompressed_sha256": "3744f001e515d748f0936515d5ad1612ce70edf171485718321a062c48ad0b3e",
+      "compressed_sha256": "d4e83be4bf5a5d33b7fc94918b7bd997905a86a3c2b8a98da7b4f05736c74fc0"
+    },
+    "targets/far-s2b-C4.log.gz": {
+      "uncompressed_sha256": "3f95b6971b4f24b9ae16825bc18ba60f972cd43f2fe29751ea639f724e536ed4",
+      "compressed_sha256": "3b42b950e2e06d80447933c75bbdfc7342f0069aa7e5fef6e8664f4f20bb4a41"
+    },
+    "targets/far-b2s-C-public.log.gz": {
+      "uncompressed_sha256": "f1ef846c327a9e72676e7ee939c741e813c906a82e9d57a35dc110565fb4ec80",
+      "compressed_sha256": "77b8ef31d44c8411f2abded96129eeb054592daff3f693d133432e540d1b7158"
+    },
+    "targets/far-s2b-C-public.log.gz": {
+      "uncompressed_sha256": "ceabafd8117b7113047d19a5685de95b3b7ac6b0b3820f7d12e6f94fdc0d7b83",
+      "compressed_sha256": "2c84ae103995e121262894ba0cdadb7ced9eab46fc3e688b80d8c3e3cb4dc84a"
+    },
+    "targets/far-b2s-owned.log.gz": {
+      "uncompressed_sha256": "4dab7e3971796b05238be332477fede42541bc6aebe3f615c8ccc6349580daaf",
+      "compressed_sha256": "53d52ddb2e740af3ebfce0dec8071ec3c123eddee17c620d6bf6ba36cc709e32"
+    },
+    "diagnostics/c4-kr1-parser.log.gz": {
+      "uncompressed_sha256": "3526511775f41de23bc3a977edc2c27e5e056e6853ac0569a2e37eede4b34e83",
+      "compressed_sha256": "5cd238f93e7e25d7ade505d5b760c537c005fb767041796ef96094188bd11c25"
+    },
+    "diagnostics/c4-kr1-ordered-parser.log.gz": {
+      "uncompressed_sha256": "16906bbbacd92c1fab5ee281e7d982835e7554f300a1ee9cf344d63525e8b503",
+      "compressed_sha256": "4cc36c091221a9bfa3d0a282c74040047087e03a448b514a5b6715247f1437ed"
+    },
+    "diagnostics/b2s-public-control-type-error.log.gz": {
+      "uncompressed_sha256": "55522e6945a9129a2cf7cae82de6567ba2c09fba985044210627cb7c271e6585",
+      "compressed_sha256": "28ff5e6c24244663f24b69a52bad5cf975f0b2b81dd956f2b4629289d69d9459"
+    },
+    "diagnostics/b2s-public-control-inconclusive.log.gz": {
+      "uncompressed_sha256": "088b92a1e2c03ade8ddbc0a1f60a9ee798a42fc2a97d156120b40bd51406316d",
+      "compressed_sha256": "259c0cd6c610fcd563b10cb52c43f42f59cf3a685f7121f866682d1a5ddfe817"
+    }
+  },
+  "final_parser_recheck": "All five logs and all exact input SHA-256 maps passed final stronger parser; no solver rerun for parser-only strictness.",
+  "diagnostics": "Initial b2s direct implication control inconclusive; maintained positive fresh-identity conjunction has confirmed trace. First synthetic-log test caught trailing result/trace acceptance in reused parser; extension now rejects it. Syntax/type failures are diagnostics only.",
+  "primitive_implementations": "unchanged",
+  "rust_mutations": "not run; production Rust unchanged",
+  "snapshot_persistence": "excluded"
+}
