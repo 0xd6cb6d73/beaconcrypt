@@ -120,6 +120,40 @@ theorem advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
   exact PqxdhRegistrationJointKemRawGame.advantageRaw_error setup functional codec checks ensureInit supplied
     decision work runtime count selected index
 
+/-- The two raw-ordinal games are close for the proof-carrying adversary: the absolute difference of their `true` probabilities is at most its ordinary one-key IND-CCA advantage plus the ordinary correctness error. `KemRawGame.ideal_close` is the same bound for the plain adversary, which has no proved query bills. -/
+theorem ideal_close (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
+    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
+    (codec : PqxdhServerAuthExperiment.Codec Reader Response) (checks : PqxdhServerAuthExperiment.Checks)
+    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
+    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)
+    (count : Nat) (selected : Fin (count + 1)) (index : Nat) :
+    |(𝒟[PqxdhRegistrationJointKemRawGame.sourceReal setup codec checks ensureInit supplied decision work runtime count
+        selected index] {true}).toReal -
+      (𝒟[PqxdhRegistrationJointKemRawGame.branch setup codec checks ensureInit supplied decision work runtime count
+        selected index false] {true}).toReal| ≤
+      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA +
+        PqxdhRegistrationJointKemRawGame.correctnessError setup :=
+  advantage setup functional codec checks ensureInit supplied decision work runtime count selected index
+
+/-- One-sided form of `ideal_close` for the proof-carrying adversary, whose bills `KemRawBills.adversary_bound` states: the real raw-ordinal game wins with at most the probability of the KEM-ideal branch plus its IND-CCA advantage and the correctness error. `KemRawGame.real_le_ideal` is the same bound for the plain adversary. -/
+theorem real_le_ideal (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
+    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
+    (codec : PqxdhServerAuthExperiment.Codec Reader Response) (checks : PqxdhServerAuthExperiment.Checks)
+    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
+    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)
+    (count : Nat) (selected : Fin (count + 1)) (index : Nat) :
+    𝒟[PqxdhRegistrationJointKemRawGame.sourceReal setup codec checks ensureInit supplied decision work runtime count
+      selected index] {true} ≤
+      𝒟[PqxdhRegistrationJointKemRawGame.branch setup codec checks ensureInit supplied decision work runtime count
+        selected index false] {true} +
+        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+          (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA +
+          PqxdhRegistrationJointKemRawGame.correctnessError setup) :=
+  (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage _ _).trans (add_le_add le_rfl
+    (ENNReal.ofReal_le_ofReal (advantage setup functional codec checks ensureInit supplied decision work runtime
+      count selected index)))
+
 end BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.prefix_erase' depends on axioms: [propext,
@@ -139,3 +173,15 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.advantage
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.ideal_close' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.ideal_close
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.real_le_ideal' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.real_le_ideal

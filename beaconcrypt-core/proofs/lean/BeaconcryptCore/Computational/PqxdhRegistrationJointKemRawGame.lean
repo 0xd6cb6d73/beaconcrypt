@@ -2,6 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawChallenge
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemGame
 import BeaconcryptCore.Computational.PqxdhKemCorrectnessStopped
+import BeaconcryptCore.Computational.PqxdhServerAuthNegativeControl
 
 /-! One ordinary one-key ML-KEM IND-CCA adversary runs the initialized source prefix up to the encapsulation of the raw accept at the designated raw-accept ordinal and resumes its exact callback. The real branch is compared with the real stopped-source game through the ordinary ML-KEM correctness-error experiment, not through perfect correctness: no statement here takes a recipient-correctness premise. These games filter inactive selection and selected-key reveal stops exactly as `KemGame` does; they are not a global protocol secrecy assertion. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -18,6 +19,11 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X : Typ
 /-- The ordinary ML-KEM correctness-error probability: one actual key pair, one encapsulation to its public key and one actual decapsulation, won by rejection or by recovery of a different secret. -/
 noncomputable def correctnessError (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) : ℝ :=
   (𝒟[simulateQ (kemAmbientImpl setup.baseImpl) (PqxdhKemCorrectnessError.errorExperiment setup.kem)] {true}).toReal
+
+/-- The correctness error of the raw-ordinal KEM hop is the existing correctness-error term `PqxdhServerAuthNegativeControl.kemError`: both are the probability that the same error experiment returns `true` under the experiment's ambient coins, so consumers have one quantity, not two. -/
+theorem correctnessError_eq_kemError (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) :
+    correctnessError setup = PqxdhServerAuthNegativeControl.kemError setup := by
+  simp only [correctnessError, PqxdhServerAuthNegativeControl.kemError, evalDist_apply_singleton]
 
 /-- The constructed ordinary adversary receives only a public challenge key and a candidate reply, runs the actual initialized source compiler up to the encapsulation of the selected raw accept and resumes the saved callback. -/
 noncomputable def adversary (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
@@ -184,7 +190,7 @@ theorem advantageRaw_error (setup : PqxdhServerAuthExperiment.Setup baseSpec Kem
   rw [hop] at triangle
   linarith
 
-/-- The two raw-ordinal games are close: the absolute difference of their `true` probabilities is at most the ordinary IND-CCA advantage plus the ordinary correctness error. -/
+/-- The two raw-ordinal games are close: the absolute difference of their `true` probabilities is at most the ordinary IND-CCA advantage of the plain adversary plus the ordinary correctness error. The plain adversary has no proved query bills; `KemRawCertified.ideal_close` is the same bound for the proof-carrying adversary. -/
 theorem ideal_close (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (checks : PqxdhServerAuthExperiment.Checks)
@@ -198,7 +204,7 @@ theorem ideal_close (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
         correctnessError setup :=
   advantageRaw_error setup functional codec checks ensureInit supplied decision work runtime count selected index
 
-/-- One-sided form of `ideal_close`: the real raw-ordinal game wins with at most the probability of the KEM-ideal branch plus the IND-CCA advantage and the correctness error. -/
+/-- One-sided form of `ideal_close` for the plain adversary: the real raw-ordinal game wins with at most the probability of the KEM-ideal branch plus the IND-CCA advantage and the correctness error. Consumers that also need query bills use `KemRawCertified.real_le_ideal`. -/
 theorem real_le_ideal (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (checks : PqxdhServerAuthExperiment.Checks)
@@ -215,6 +221,12 @@ theorem real_le_ideal (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
       runtime count selected index)))
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.correctnessError_eq_kemError' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.correctnessError_eq_kemError
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branchRaw_source' depends on axioms: [propext,
  Classical.choice,

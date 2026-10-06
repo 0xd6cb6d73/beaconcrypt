@@ -28253,8 +28253,10 @@ require_line_count 1 '^theorem preRaw_source([[:space:]]|$)' "$selected_source_m
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawGame.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemRawGame root import"
-require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemRawGame theorem inventory"
-require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemRawGame guarded dependencies"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemRawGame theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemRawGame guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawGame\.correctnessError_eq_kemError$' "$selected_source_module" "PqxdhRegistrationJointKemRawGame dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.correctnessError_eq_kemError"
+require_line_count 1 '^theorem correctnessError_eq_kemError([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawGame theorem correctnessError_eq_kemError"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawGame\.branchRaw_source$' "$selected_source_module" "PqxdhRegistrationJointKemRawGame dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branchRaw_source"
 require_line_count 1 '^theorem branchRaw_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawGame theorem branchRaw_source"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawGame\.branchRaw_real_error$' "$selected_source_module" "PqxdhRegistrationJointKemRawGame dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branchRaw_real_error"
@@ -28266,18 +28268,22 @@ require_line_count 1 '^theorem ideal_close([[:space:]]|$)' "$selected_source_mod
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawGame\.real_le_ideal$' "$selected_source_module" "PqxdhRegistrationJointKemRawGame dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.real_le_ideal"
 require_line_count 1 '^theorem real_le_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawGame theorem real_le_ideal"
 
-# Accept/KEM join stage B (M8): proof-carrying raw-ordinal KEM adversary, its T3 advantage and its query bills.
+# Accept/KEM join stage B (M8): proof-carrying raw-ordinal KEM adversary, its T3 advantage with its absolute and one-sided forms, and its query bills.
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawCertified.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemRawCertified root import"
-require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem inventory"
-require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified guarded dependencies"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawCertified\.prefix_erase$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.prefix_erase"
 require_line_count 1 '^theorem prefix_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem prefix_erase"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawCertified\.branch_erase$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.branch_erase"
 require_line_count 1 '^theorem branch_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem branch_erase"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawCertified\.advantage$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.advantage"
 require_line_count 1 '^theorem advantage([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem advantage"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawCertified\.ideal_close$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.ideal_close"
+require_line_count 1 '^theorem ideal_close([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem ideal_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawCertified\.real_le_ideal$' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.real_le_ideal"
+require_line_count 1 '^theorem real_le_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawCertified theorem real_le_ideal"
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawBills.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemRawBills root import"
