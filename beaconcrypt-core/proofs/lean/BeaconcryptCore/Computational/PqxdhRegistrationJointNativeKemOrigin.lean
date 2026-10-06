@@ -20,7 +20,7 @@ theorem selected_source (codec : Codec Reader Response) {count : Nat}
   obtain ⟨original, found, rfl⟩ := Option.map_eq_some_iff.mp finished
   simp only [selected, found, Option.bind_some, PqxdhRegistrationJointOpenInitialization.attach]
 
-/-- Every protected addressed generated owner has either the exact issued tuple and native KEM public key, or the already defined coefficient-one authentication failure. No premise selects an honest incoming tuple. -/
+/-- Every protected addressed generated owner has either the exact issued tuple and native KEM public key, or the already defined native tuple-origin failure, which `NativeOriginEvent.transport` bounds by the final-report detector with coefficient one. No premise selects an honest incoming tuple. Acceptance is the detached `acceptPhase1Candidate setup.joint.verify` interface under the owner's source identity key, not the attached source verification. -/
 theorem key_or_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (count : Nat)
     (program : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Choice) (runtime : A)

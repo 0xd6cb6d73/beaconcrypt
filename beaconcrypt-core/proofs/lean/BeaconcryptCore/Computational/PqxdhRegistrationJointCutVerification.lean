@@ -14,7 +14,7 @@ noncomputable def handler (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   PqxdhRegistrationJointKemEncapsulation.prefixImpl setup codec checks raw ∘ₛ
     PqxdhRegistrationJointServerPrefix.compiler identityIndex
 
-/-- Verification in the literal exposed collector is the original public source verification and changes no consumed entry, pool, signing log or reveal state. The equality holds before any private interpreter is chosen. -/
+/-- Verification in the literal exposed collector is the original public source verification and changes no consumed entry, pool, signing log or reveal state. The equality holds before any private interpreter is chosen. Its result is the attached source interface `RawSignatures.verified`; the detached `acceptPhase1Candidate setup.joint.verify` form is reached only through `RawSignatures.verified_detached` and its existing `shortRejects` premise, which this theorem does not take. -/
 theorem verified_pure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (raw : Pqxdh.Bytes) (consumed : List Pqxdh.Bytes) :
     (simulateQ (handler setup codec checks identityIndex raw)
