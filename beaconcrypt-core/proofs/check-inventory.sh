@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1494
+	[handwritten-lean]=1495
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28678,6 +28678,73 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem mergeOwner_rawAttempts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem mergeOwner_rawAttempts"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.beacon_record$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beacon_record"
 require_line_count 1 '^theorem beacon_record([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem beacon_record"
+
+# CE-3 trial item a: every source14 registration command commutes with merging the compiled program's live kernel copies.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileRegistration.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentCompileRegistration root import"
+require_line_count 30 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem inventory"
+require_line_count 30 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompileRegistration guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.pure_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.pure_commutes"
+require_line_count 1 '^theorem pure_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem pure_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.bind_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.bind_commutes"
+require_line_count 1 '^theorem bind_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem bind_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.lift_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.lift_commutes"
+require_line_count 1 '^theorem lift_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem lift_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.modify_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.modify_commutes"
+require_line_count 1 '^theorem modify_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem modify_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.session_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.session_commutes"
+require_line_count 1 '^theorem session_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem session_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.simulate_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.simulate_commutes"
+require_line_count 1 '^theorem simulate_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem simulate_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.accept_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.accept_commutes"
+require_line_count 1 '^theorem accept_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem accept_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.hmac_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.hmac_commutes"
+require_line_count 1 '^theorem hmac_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem hmac_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.hash_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.hash_commutes"
+require_line_count 1 '^theorem hash_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem hash_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.prepare_key$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.prepare_key"
+require_line_count 1 '^theorem prepare_key([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem prepare_key"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.publish_override$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.publish_override"
+require_line_count 1 '^theorem publish_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem publish_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.afterInitialization_override$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.afterInitialization_override"
+require_line_count 1 '^theorem afterInitialization_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem afterInitialization_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.candidateTail_override$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.candidateTail_override"
+require_line_count 1 '^theorem candidateTail_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem candidateTail_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.build_override$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.build_override"
+require_line_count 1 '^theorem build_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem build_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.settle_override$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.settle_override"
+require_line_count 1 '^theorem settle_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem settle_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.build_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.build_commutes"
+require_line_count 1 '^theorem build_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem build_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.evaluate_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.evaluate_commutes"
+require_line_count 1 '^theorem evaluate_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem evaluate_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.merge_native$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.merge_native"
+require_line_count 1 '^theorem merge_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem merge_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.onShared_merge$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.onShared_merge"
+require_line_count 1 '^theorem onShared_merge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem onShared_merge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.shared_merge$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.shared_merge"
+require_line_count 1 '^theorem shared_merge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem shared_merge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.create_merge$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.create_merge"
+require_line_count 1 '^theorem create_merge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem create_merge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.merge_set$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.merge_set"
+require_line_count 1 '^theorem merge_set([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem merge_set"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.set_found$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.set_found"
+require_line_count 1 '^theorem set_found([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem set_found"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.mergeOwner_none$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.mergeOwner_none"
+require_line_count 1 '^theorem mergeOwner_none([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem mergeOwner_none"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.mergeOwner_terminal$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.mergeOwner_terminal"
+require_line_count 1 '^theorem mergeOwner_terminal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem mergeOwner_terminal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.uncopied$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.uncopied"
+require_line_count 1 '^theorem uncopied([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem uncopied"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.bundle_merge$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.bundle_merge"
+require_line_count 1 '^theorem bundle_merge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem bundle_merge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.callback_commutes$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.callback_commutes"
+require_line_count 1 '^theorem callback_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem callback_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.callbacks_commute$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.callbacks_commute"
+require_line_count 1 '^theorem callbacks_commute([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem callbacks_commute"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRegistration\.finish_merge$' "$selected_source_module" "PqxdhDeploymentCompileRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.finish_merge"
+require_line_count 1 '^theorem finish_merge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRegistration theorem finish_merge"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
