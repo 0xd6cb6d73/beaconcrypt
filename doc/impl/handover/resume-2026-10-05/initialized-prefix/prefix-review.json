@@ -1,0 +1,18 @@
+{
+  "decision": "APPROVE_WITH_NIT",
+  "reviewer": "root independent semantic review",
+  "manifest_sha256": "a450d96cf6b9013975425c46f82ee3b25207217769ee7fc3f069e66986f47f2a",
+  "checks": [
+    "Read all17 statement proofs and all5 definitions/modules, complete prepared-prefix theorem, measured corollary and guides.",
+    "Original scans factor at full callback and Builder results with actual frontend, trace, private state and reached ROM cache. No generator marginal interchange.",
+    "Before requests use the identical full callback and recurse from actual supported replies; admission assigns the pair even on send refusal.",
+    "Product coupling retains both unconditioned post-admission distributions in the explicit Late branch. It proves no post-admission value/state equality.",
+    "Builder coupling includes unsuccessful results and pending callbacks. Prepared instantiation uses same input/output/cache; generated carrier sampling remains explicitly pending.",
+    "beforeKey retains full shared request/callback and native state at a before cut; explicit None collects Builder/complete/inside/used mass, without normalization or assuming zero mass.",
+    "Existing source-event exclusions are not used to delete arbitrary outcomes; freshness/alias/nonce refusal/raw reduction and global ledger remain open.",
+    "All8 frozen hashes and5empty successful direct-check logs verified;17standard guarded statements, no placeholders/custom axioms."
+  ],
+  "nit": "ScanCoupling.coupled docstring says residual probability mass is not equated. Prefer saying no equality of individual post-admission values/states is asserted: the coupling does preserve marginal masses and its later observation theorem equates the total complementary None mass. Proof and maintained guide already have the right meaning.",
+  "blocking_findings": [],
+  "tests_rerun": []
+}

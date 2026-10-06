@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-10-05T23:42:35.486285+00:00",
+  "reviewer": "Codex root",
+  "status": "APPROVE_SCOPED_SOURCE_CONTINUATION",
+  "manifest_sha256": "e365f7d07a3fd00660b2189ee282e9bd536a6189874c72c3bfe3bf3da6acfd65",
+  "frozen_files_verified": 5,
+  "public_guarded_statements": 6,
+  "recorded_direct_checks": 3,
+  "findings": [],
+  "review": [
+    "Read all three modules, guide and new analysis; checked original SavedMonitor.resume/complete_append/resume_budget, Monitor.Dead/program_pre and compiler support interface.",
+    "before_unused classifies actual handler results: ordinary callbacks preserve pair and unequal-length challenges reject; no successful cryptographic reply assumed.",
+    "resume_pre binds the identical entire callback in both worlds, retaining none with its completed state; every successful result is traced back to the same callback support before applying the monitored outside continuation.",
+    "carried_source preserves actual stored prepared-start equality and selected adversary along with full chronology; it does not substitute equal-marginal keys or another prefix.",
+    "generated_before uses the same actual generated marked source event at depth+2; generated_event_pre keeps supported source run, original completion/publication, both Fits obligations, component state and target/parent inequality explicit.",
+    "The relation is monitored Pre with Dead predicates, not unconditional full two-world equality. These are same-packet continuation results, not distribution equality of independently generated prefixes or a bound dropping phase/refusal mass.",
+    "No new cryptographic assumption or free ambient cost. Existing full query-tree resume_budget applies; no independent source-global query reduction is claimed.",
+    "Guide correctly leaves global prefix distribution, descriptor/world identification, alias and nonce-refusal mass, freshness/event implication and adaptive raw reduction open."
+  ],
+  "validation": "Five hashes and six guards verified; three recorded empty successful direct-check logs verified. No redundant compiler run."
+}

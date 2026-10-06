@@ -1,0 +1,30 @@
+{
+  "base": "6bbf6bc46e5a16d267bcd358fd0f9135f422f613",
+  "topics": [
+    "d90be005b812aa39a6ab269214e76422a70b7d70",
+    "603decc65b678cb18bccf58bb12d756e97b61059"
+  ],
+  "files": {
+    "beaconcrypt-core/proofs/check-inventory.sh": "ccec5dcf19c76d76f1c3ede657a300ba955df4bfcafc86a0ec272d5e597e9034",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "65dbcddd585d6299c4b35a2aac9c38bf88b0b2bcf4e5e8de8e39bbdf262a08db",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "c0b23e12269c46e0486d32cb4cf25abd7dfeeabde12cd22bc3771353568ae695",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "045a50a20f1a4fc6b5985f0a10836c30a6511d748e111a6b0d6f8d4ba3ae3448",
+    "doc/formal-verification-analysis.md": "681100dfb613ad56e7a03e4ba045d871317f1f30d77d743638ab55684d4c62d0",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeResume.lean": "9e87bf1de48945a192cb39117867844e5bb397e6753d893b7fd9da47d46aaee3",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBuilderCoupling.lean": "5836872a1cf0e872de671a7db15467f750b94b5c31788278ff87f7b1a6df7f01",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCarriedSource.lean": "8918619affa180e258a3e94486bbeb0dccd8e4a60d7ef43b7c0a354f2b512c99",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengePrefixCoupling.lean": "d951867f08e73873c5cd9c9498d8b3dc5252006d462c7b192bb05b654c6031d2",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengePrefixMass.lean": "5397b9559cd4e6a91f40fd04f654323645c7b9d85233da1eaebaf0db89f7493c",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeScanCoupling.lean": "abf069ff3d6735f3e5495622804db25a589ab00ebe55da714c4757db9dfe56a9",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeScanPhase.lean": "420483d26c8afa97421633419448e6925e816f51db8a42f851273806580ec8ad",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSourceBefore.lean": "769338f3bf41841062c4d95377a8b2a00f9ae9d62facf818e15f148bd51ae115",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointInitializedSchedule.lean": "298d3cd09e357ded8fff42c9fd78912ef6fa316077acf6e2c59897705ff99b13",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointPublicShared.lean": "d425021b375f564b555fbd45ff0e3896517dbbfbce00323970753eab80ecaf05",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServerClient.lean": "5b99c440d02365941b7af8c9fdbe5f1f671bb0106f7651c9742f694d5aa936fc",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointServerSchedule.lean": "3fa1be5bc21ee7cfbdb94a0985502b9f823714aea3c3fbef7c78b8c61486f7ca",
+    "doc/impl/initialized-prefix-composition-integration.md": "545e618630387587d10c858c4bdf0a93fc77fb39f0e81805be90d5b1b9695cca",
+    "doc/impl/later-challenge-before-resume.md": "600bfe16e598aa3eeb203842f55850dbdb4ac1e8a2d291cdc30de711af6dd1ad",
+    "doc/impl/later-challenge-full-prefix-coupling.md": "9442b18db21f80e1afb63d6f95a383c3eee9a4deda1dd3954429a2ccb73aedce",
+    "doc/impl/registration-joint-initialized-schedule.md": "3c784e16029d402314fb1af3d62b0d3b4d20e5064777e067c02872af0c970070"
+  }
+}

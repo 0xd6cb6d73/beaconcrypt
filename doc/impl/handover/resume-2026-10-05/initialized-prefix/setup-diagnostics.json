@@ -1,0 +1,47 @@
+{
+  "initial_import_attempt": [
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointPublicShared",
+      "start": "2026-10-06T02:31:49.660509",
+      "end": "2026-10-06T02:31:49.770809",
+      "exit": 1,
+      "source_sha256": "d425021b375f564b555fbd45ff0e3896517dbbfbce00323970753eab80ecaf05",
+      "log_sha256": "0ea646ff54684d919f6c3b8ffb524b23a949f754ae8ed0006a6c352eed183fd4",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-initialized-prefix-composition-integration/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-05-codex/initialized-prefix-integration/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointPublicShared.olean",
+        "/tmp/beaconcrypt-initialized-prefix-composition-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointPublicShared.lean"
+      ]
+    }
+  ],
+  "import_diagnostic": "/tmp/beaconcrypt-initialized-prefix-composition-integration/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointPublicShared.lean:2:0: error: object file '/tmp/bc-arc-scratch/resume-2026-10-05-codex/initialized-prefix-integration/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointInitializedAccept.olean' of module BeaconcryptCore.Computational.PqxdhRegistrationJointInitializedAccept does not exist\n",
+  "resolution": "Lean resolves an imported package in one module root; link the source/hash-verified retained artifacts into the fresh output root. No proof source changed; twelve final direct checks and complete root passed.",
+  "initial_nix_attempt": {
+    "command": [
+      "nix",
+      "develop",
+      "--no-update-lock-file",
+      "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+      "-c",
+      "make",
+      "-C",
+      "beaconcrypt-core",
+      "SHELL=/run/current-system/sw/bin/bash",
+      "check-inventory"
+    ],
+    "start": "2026-10-06T02:33:34.781167",
+    "end": "2026-10-06T02:33:34.798351",
+    "exit": 1,
+    "log_sha256": "738631727e0e0edfc9e9a65d9be163488590c952b835b18dc43a8c05d51b9958"
+  },
+  "nix_diagnostic": "error:\n       \u2026 while fetching the input 'path:/tmp/bc-arc-scratch/proof-flake'\n\n       error: cannot connect to socket at '/nix/var/nix/daemon-socket/socket': Operation not permitted\n",
+  "nix_resolution": "Run the same minimal-flake inventory command with authorized daemon-socket access; final check passed."
+}
