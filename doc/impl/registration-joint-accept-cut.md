@@ -1,6 +1,6 @@
 # Raw-accept source cut and native KEM origin
 
-Status: four modules and nine statements pass direct single-module Lean 4.34 checks with exact `#print axioms` guards that permit only `propext`, `Classical.choice` and `Quot.sound`. The root module also checks against the retained artifacts. These modules were independently reviewed on 2026-10-06 (semantic and hygiene lenses, APPROVE_WITH_NITS) at commit 5f712e7a, and the nits were fixed in the follow-up commit "Record accept-cut review and clarify join step". They are source-correspondence components; they do not join the authenticated root theorem and give no probability bound of their own.
+Status: four modules and nine statements pass direct single-module Lean 4.34 checks with exact `#print axioms` guards that permit only `propext`, `Classical.choice` and `Quot.sound`. The root module also checks against the retained artifacts. These modules were independently reviewed on 2026-10-06 (semantic and hygiene lenses, APPROVE_WITH_NITS) at commit 5f712e7a, and its findings (one minor, three nits) were addressed in the follow-up commit "Record accept-cut review and clarify join step", except the namespace-collision nit, which is recorded below as a rule for consumers rather than fixed by renaming; a confirming review of that commit approved it. They are source-correspondence components; they do not join the authenticated root theorem and give no probability bound of their own.
 
 ## Modules and statements
 
