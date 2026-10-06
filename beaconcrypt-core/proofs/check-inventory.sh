@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1491
+	[handwritten-lean]=1492
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28597,6 +28597,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem serverStep_fields([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentNative theorem serverStep_fields"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentNative\.beaconStep_fields$' "$selected_source_module" "PqxdhDeploymentNative dependency BeaconcryptCore.Computational.PqxdhDeploymentNative.beaconStep_fields"
 require_line_count 1 '^theorem beaconStep_fields([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentNative theorem beaconStep_fields"
+
+# CE-3 trial item g: record primitives answered through the source14 hash command equal the native record execution.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRecordCache.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentRecordCache$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentRecordCache root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentRecordCache theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentRecordCache guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordCache\.primitives_kdf$' "$selected_source_module" "PqxdhDeploymentRecordCache dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordCache.primitives_kdf"
+require_line_count 1 '^theorem primitives_kdf([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordCache theorem primitives_kdf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordCache\.primitives_open$' "$selected_source_module" "PqxdhDeploymentRecordCache dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordCache.primitives_open"
+require_line_count 1 '^theorem primitives_open([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordCache theorem primitives_open"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordCache\.local_query$' "$selected_source_module" "PqxdhDeploymentRecordCache dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordCache.local_query"
+require_line_count 1 '^theorem local_query([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordCache theorem local_query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordCache\.setCtx_setCtx$' "$selected_source_module" "PqxdhDeploymentRecordCache dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordCache.setCtx_setCtx"
+require_line_count 1 '^theorem setCtx_setCtx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordCache theorem setCtx_setCtx"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordCache\.setCtx_ctx$' "$selected_source_module" "PqxdhDeploymentRecordCache dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordCache.setCtx_ctx"
+require_line_count 1 '^theorem setCtx_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordCache theorem setCtx_ctx"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordCache\.local_record$' "$selected_source_module" "PqxdhDeploymentRecordCache dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordCache.local_record"
+require_line_count 1 '^theorem local_record([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordCache theorem local_record"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

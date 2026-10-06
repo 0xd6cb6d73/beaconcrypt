@@ -1512,6 +1512,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative
 
+import BeaconcryptCore.Computational.PqxdhDeploymentRecordCache
+
 /-!
 # Beaconcrypt-core verification root
 
