@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1477
+	[handwritten-lean]=1478
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28325,6 +28325,33 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem annotated_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem annotated_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawBills\.adversary_bound$' "$selected_source_module" "PqxdhRegistrationJointKemRawBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.adversary_bound"
 require_line_count 1 '^theorem adversary_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawBills theorem adversary_bound"
+
+# Accept/KEM join stage C (M4): private KEM key-list monotonicity along the report-run continuation after the selected raw accept, and the recorded raw bytes of the final tag.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutMonotone.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointAcceptCutMonotone root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.simulate_result$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.simulate_result"
+require_line_count 1 '^theorem simulate_result([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem simulate_result"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.pool_keys$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.pool_keys"
+require_line_count 1 '^theorem pool_keys([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem pool_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.impl_keys$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.impl_keys"
+require_line_count 1 '^theorem impl_keys([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem impl_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.extend_keys$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.extend_keys"
+require_line_count 1 '^theorem extend_keys([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem extend_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.program_keys$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.program_keys"
+require_line_count 1 '^theorem program_keys([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem program_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.reduction_keys$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.reduction_keys"
+require_line_count 1 '^theorem reduction_keys([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem reduction_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.continuation_keys$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.continuation_keys"
+require_line_count 1 '^theorem continuation_keys([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem continuation_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.resume_keys_prefix$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.resume_keys_prefix"
+require_line_count 1 '^theorem resume_keys_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem resume_keys_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.reported_result$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.reported_result"
+require_line_count 1 '^theorem reported_result([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem reported_result"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutMonotone\.resume_tag$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone.resume_tag"
+require_line_count 1 '^theorem resume_tag([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutMonotone theorem resume_tag"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
