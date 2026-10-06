@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1493
+	[handwritten-lean]=1494
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28625,6 +28625,59 @@ require_line_count 1 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompi
 require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompile guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompile\.merge_empty$' "$selected_source_module" "PqxdhDeploymentCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentCompile.merge_empty"
 require_line_count 1 '^theorem merge_empty([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompile theorem merge_empty"
+
+# CE-3 trial items b and c: compiled Server and Beacon record commands equal the native ones under public reconstruction.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileRecords.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentCompileRecords root import"
+require_line_count 23 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem inventory"
+require_line_count 23 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompileRecords guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.serverImpl_peer$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.serverImpl_peer"
+require_line_count 1 '^theorem serverImpl_peer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem serverImpl_peer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.serverImpl_absent$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.serverImpl_absent"
+require_line_count 1 '^theorem serverImpl_absent([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem serverImpl_absent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.beaconImpl_established$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beaconImpl_established"
+require_line_count 1 '^theorem beaconImpl_established([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem beaconImpl_established"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.reveal_run$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.reveal_run"
+require_line_count 1 '^theorem reveal_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem reveal_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.kernel_run$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.kernel_run"
+require_line_count 1 '^theorem kernel_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem kernel_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.record_map$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.record_map"
+require_line_count 1 '^theorem record_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem record_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.record_pure$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.record_pure"
+require_line_count 1 '^theorem record_pure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem record_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.serverStep_run$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.serverStep_run"
+require_line_count 1 '^theorem serverStep_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem serverStep_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.serverLocal_none$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.serverLocal_none"
+require_line_count 1 '^theorem serverLocal_none([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem serverLocal_none"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.serverLocal_some$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.serverLocal_some"
+require_line_count 1 '^theorem serverLocal_some([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem serverLocal_some"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.mergePeer_identity$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.mergePeer_identity"
+require_line_count 1 '^theorem mergePeer_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem mergePeer_identity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.mergePeer_kernel$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.mergePeer_kernel"
+require_line_count 1 '^theorem mergePeer_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem mergePeer_kernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.merge_put$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.merge_put"
+require_line_count 1 '^theorem merge_put([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem merge_put"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.server_record$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.server_record"
+require_line_count 1 '^theorem server_record([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem server_record"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.beaconLocal_absent$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beaconLocal_absent"
+require_line_count 1 '^theorem beaconLocal_absent([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem beaconLocal_absent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.beaconLocal_present$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beaconLocal_present"
+require_line_count 1 '^theorem beaconLocal_present([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem beaconLocal_present"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.beaconStep_present$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beaconStep_present"
+require_line_count 1 '^theorem beaconStep_present([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem beaconStep_present"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.beaconStep_absent$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beaconStep_absent"
+require_line_count 1 '^theorem beaconStep_absent([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem beaconStep_absent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.merge_owner$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.merge_owner"
+require_line_count 1 '^theorem merge_owner([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem merge_owner"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.merge_owner_put$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.merge_owner_put"
+require_line_count 1 '^theorem merge_owner_put([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem merge_owner_put"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.mergeOwner_identityKeyId$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.mergeOwner_identityKeyId"
+require_line_count 1 '^theorem mergeOwner_identityKeyId([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem mergeOwner_identityKeyId"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.mergeOwner_rawAttempts$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.mergeOwner_rawAttempts"
+require_line_count 1 '^theorem mergeOwner_rawAttempts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem mergeOwner_rawAttempts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileRecords\.beacon_record$' "$selected_source_module" "PqxdhDeploymentCompileRecords dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beacon_record"
+require_line_count 1 '^theorem beacon_record([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileRecords theorem beacon_record"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
