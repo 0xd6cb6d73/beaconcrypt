@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1461
+	[handwritten-lean]=1465
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28015,6 +28015,46 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterC
 require_line_count 1 '^theorem event_marked([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeMarkedBuilder theorem event_marked"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeMarkedBuilder\.event_filter$' "$selected_source_module" "PqxdhLaterChallengeMarkedBuilder dependency BeaconcryptCore.Computational.PqxdhLaterChallengeMarkedBuilder.event_filter"
 require_line_count 1 '^theorem event_filter([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeMarkedBuilder theorem event_filter"
+
+# Raw-accept source cut, attached public verification and native KEM origin (open join to the initialized report compiler).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCut.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCut$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointAcceptCut root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointAcceptCut theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointAcceptCut guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCut\.scan_finish$' "$selected_source_module" "PqxdhRegistrationJointAcceptCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCut.scan_finish"
+require_line_count 1 '^theorem scan_finish([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCut theorem scan_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCut\.scan_bound$' "$selected_source_module" "PqxdhRegistrationJointAcceptCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCut.scan_bound"
+require_line_count 1 '^theorem scan_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCut theorem scan_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCut\.selected_bound$' "$selected_source_module" "PqxdhRegistrationJointAcceptCut dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCut.selected_bound"
+require_line_count 1 '^theorem selected_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCut theorem selected_bound"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptCutSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutSource$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointAcceptCutSource root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointAcceptCutSource theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutSource guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutSource\.commands_bind$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutSource dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutSource.commands_bind"
+require_line_count 1 '^theorem commands_bind([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutSource theorem commands_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutSource\.commands_resume$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutSource dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutSource.commands_resume"
+require_line_count 1 '^theorem commands_resume([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutSource theorem commands_resume"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptCutSource\.pending_command$' "$selected_source_module" "PqxdhRegistrationJointAcceptCutSource dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutSource.pending_command"
+require_line_count 1 '^theorem pending_command([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptCutSource theorem pending_command"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointNativeKemOrigin.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointNativeKemOrigin$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointNativeKemOrigin root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointNativeKemOrigin theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointNativeKemOrigin guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointNativeKemOrigin\.selected_source$' "$selected_source_module" "PqxdhRegistrationJointNativeKemOrigin dependency BeaconcryptCore.Computational.PqxdhRegistrationJointNativeKemOrigin.selected_source"
+require_line_count 1 '^theorem selected_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointNativeKemOrigin theorem selected_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointNativeKemOrigin\.key_or_failure$' "$selected_source_module" "PqxdhRegistrationJointNativeKemOrigin dependency BeaconcryptCore.Computational.PqxdhRegistrationJointNativeKemOrigin.key_or_failure"
+require_line_count 1 '^theorem key_or_failure([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointNativeKemOrigin theorem key_or_failure"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointCutVerification.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointCutVerification$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointCutVerification root import"
+require_line_count 1 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointCutVerification theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointCutVerification guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointCutVerification\.verified_pure$' "$selected_source_module" "PqxdhRegistrationJointCutVerification dependency BeaconcryptCore.Computational.PqxdhRegistrationJointCutVerification.verified_pure"
+require_line_count 1 '^theorem verified_pure([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointCutVerification theorem verified_pure"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
