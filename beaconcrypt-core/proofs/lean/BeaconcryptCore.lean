@@ -1508,6 +1508,8 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts
 
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque
 
+import BeaconcryptCore.Computational.PqxdhDeploymentInterface
+
 /-!
 # Beaconcrypt-core verification root
 
