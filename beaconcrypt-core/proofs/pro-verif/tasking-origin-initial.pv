@@ -1,0 +1,5 @@
+(* SPDX-License-Identifier: 0BSD *)
+query obj:bitstring,k:bitstring,init:beaconcrypt_core__pqxdh__t_VerifiedInitKex,kid:key_id,root:bitstring,ad:bitstring,p:bitstring;
+ event(FsBeaconEstablished(ed_public(SERVER_IDENTITY_SECRET),ed_public(k),init,kid,root,ad,p)) && event(S2bSelectedIdentity(k))
+ ==> event(FsServerCommitted(obj,ed_public(SERVER_IDENTITY_SECRET),ed_public(k),init,kid,root,ad,p)).
+process S2bMain(false)

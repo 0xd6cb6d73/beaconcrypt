@@ -250,3 +250,8 @@ Stage P3 took up these items; the [fs-records-b2s guide](proverif-free-schedule-
 ## Literal-material supplement for L3
 
 The [reviewed exact-far argument](proverif-exact-far-material.md) now supplies the local far-material step by running the complete finite family of actual HKDF terms and preserving the exact C4 formula. It does not identify the original free `fs_far_chain` constructor with the actual iterated chain. The original target files remain unchanged, and their old far-collapse explanation is superseded for source interpretation by that separate literal-material result and the non-far event/knowledge projection. The projection retains the same near-path continuation; chosen b2s C2 additionally uses E21. All remaining L1/L2/E19/global source obligations remain explicit, and no optional plaintext or result-bit equivalence follows.
+
+
+## Later selected source-origin projection
+
+The separate [tasking-origin model and argument](proverif-tasking-origin.md) establish ordinary selected Server-to-Beacon publication origin for later positions two and three at three receive attempts, and derive injectivity from the single receiver's target consumption. This comparison retains actual own/assigned IDs, delayed builds and actual optional plaintext. A same-process initial-finish correspondence supplies the exact root provenance for omitted-direction observations. These new scoped results leave every older free-schedule query unchanged; they do not assert later assigned-ID equality or transfer old message-secrecy formulas to the public-plaintext interface.

@@ -184,6 +184,26 @@ def extension_class_scope(name, target, driver):
             + ";".join(target.libraries())
         )
         return target.cls, scope
+    if name == "check-tasking-origin":
+        claim = {
+            "S2b-origin": "ordinary later successful-publication origin; injectivity additionally uses reviewed single-worker uniqueness, not a solver verdict",
+            "S2b-initial": "same-process initial-finish origin supplies the omitted-direction root provenance",
+            "S2b-identity": "auxiliary selected-identity seed secrecy",
+            "S2b-C-chain": "Server chain2 disclosure negative control with unchanged ordinary-origin formula",
+            "S2b-cache": "selected honest-context sequence3 then cached2 reachability; Kr2 prefix embeds into Kr3",
+        }[target.name]
+        scope = (
+            f"exact T0 source-profile Server-to-Beacon near-event projection; {claim}; "
+            f"K_s=2, K_r={target.bound}; near positions2/3 after consumed registration1; "
+            "AnyPin selected fresh Beacon, protected Server signing identity required by origin antecedents; "
+            "replicated arbitrary-candidate accepts and delayed one-use builds; actual Server own ID distinct from assigned event ID; "
+            "actual near optional plaintext; literal b2s chain1 and s2b chain4 disclosed, nonselected-identity roots disclosed; "
+            "selected private identity/prekey/onetime/KEM and Server identity/root/s2b ancestors protected except named control; "
+            "no unrestricted plaintext secrecy or full raw API/native-byte/computational theorem; "
+            f"process={target.process}; query={target.query}; libraries="
+            + ";".join(target.libraries())
+        )
+        return target.cls, scope
     if name == "check-exact-far":
         profile = "AnyPin" if target.base == "b2s-C4" else "honest pins"
         start = driver.first_far(target.direction)
@@ -264,6 +284,7 @@ def validate_scope(rows):
         "check-delayed-response",
         "check-exact-far",
         "check-record-origin",
+        "check-tasking-origin",
     ):
         driver = INVENTORY.module(name)
         targets = {target.name: target for target in driver.TARGETS}

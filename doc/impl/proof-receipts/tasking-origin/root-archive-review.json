@@ -1,0 +1,29 @@
+{
+  "reviewer": "Codex /root",
+  "date_utc": "2026-10-06T03:28:26.262582+00:00",
+  "decision": "APPROVE_SCOPED_S2B_ARCHIVE_AND_PUBLICATION",
+  "archive_manifest_sha256": "234b3514a22ae04b9eddd88c6082d4c1c612e5b00333484b692191e2d00d3b31",
+  "source_manifest_sha256": "d3b659b2cc5207c35f6fdd3fe5412ff8a18ef10f6a59147146e8f39b8d00fc3d",
+  "checked": {
+    "frozen_archive_files": 84,
+    "frozen_source_files": 31,
+    "gzip_roundtrips": 65,
+    "maintained_exact_verdicts": 5,
+    "preserved_prior_files": 1670,
+    "old_classification_rows": 3181,
+    "focused_classification_tests": 18,
+    "transcript_fidelity_tests": 30,
+    "dedicated_tests": 14
+  },
+  "scope_review": "Read entire maintained source-lifting/uniqueness/privacy-boundary guide and archive README. Cross-checked source-pinned target evidence and independent paper/semantic and maintained wiring reviews.",
+  "semantic_scope": [
+    "Two protocol origin formulas and auxiliary identity secrecy atKr3, one same-query chain control andKr2cache witness with exactprefix embedding. No sixth injectivity solver result.",
+    "Initial origin from the same stronger process supplies the omitted b2s root recipe seam; before-finish Server b2s calls are already public-computable per actualaccept disclosure.",
+    "Single selected one-usefinish/receiverstate proves per-sequence uniqueness without cross-root KEM/HKDF injectivity; ordinary solver origin still uses explicit T0 primitive idealizations.",
+    "Literalown/assignedIDs, actualsuccesspublication, rawoptionalplaintext and claimed event/knowledgeprojection scopes retained; noassignedIDequality or nativefullAPI/global claim.",
+    "Every omitted attempt remains a computational query obligation; publicplaintext release requires explicit separate message privacy experiment, not auth-as-freshness."
+  ],
+  "findings": [],
+  "diagnostics": "Unannotated ordinary unknown with assumed hypotheses and direct injective timeout archived with exact inputs, excluded from security results.",
+  "validation_scope": "Focused same-byte evidence only; no full aggregate, mutation suite or garbage collection run."
+}

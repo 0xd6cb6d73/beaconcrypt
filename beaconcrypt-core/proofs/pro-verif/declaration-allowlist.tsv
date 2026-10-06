@@ -94,3 +94,6 @@ proofs/pro-verif/record-origin-cache.pvl	precise	5	[precise]	doc/formal-verifica
 proofs/pro-verif/record-origin-cache-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies
 proofs/pro-verif/record-origin-cache-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies
 proofs/pro-verif/record-origin-models.py	precise	3	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies
+proofs/pro-verif/tasking-origin.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#server-to-beacon-source-origin-with-actual-replies
+proofs/pro-verif/tasking-origin-cache.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#server-to-beacon-source-origin-with-actual-replies
+proofs/pro-verif/tasking-origin-models.py	precise	1	[precise]	doc/formal-verification-analysis.md#server-to-beacon-source-origin-with-actual-replies
