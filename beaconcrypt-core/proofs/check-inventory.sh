@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1492
+	[handwritten-lean]=1493
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28616,6 +28616,15 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem setCtx_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordCache theorem setCtx_ctx"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordCache\.local_record$' "$selected_source_module" "PqxdhDeploymentRecordCache dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordCache.local_record"
 require_line_count 1 '^theorem local_record([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordCache theorem local_record"
+
+# CE-3 trial compiled program: public log, local peer and owner copies from one kernel read each, and the merge projection.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompile.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentCompile$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentCompile root import"
+require_line_count 1 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompile theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompile guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompile\.merge_empty$' "$selected_source_module" "PqxdhDeploymentCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentCompile.merge_empty"
+require_line_count 1 '^theorem merge_empty([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompile theorem merge_empty"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
