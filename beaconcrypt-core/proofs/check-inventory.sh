@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1384
+	[handwritten-lean]=1390
 	[handwritten-proverif]=237
 	[inventory]=2
 	[lean-control]=12
@@ -26961,6 +26961,76 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterC
 require_line_count 1 '^theorem source_random([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeBeforePrivacy theorem source_random"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeBeforePrivacy\.pair$' "$selected_source_module" "PqxdhLaterChallengeBeforePrivacy dependency BeaconcryptCore.Computational.PqxdhLaterChallengeBeforePrivacy.pair"
 require_line_count 1 '^theorem pair([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeBeforePrivacy theorem pair"
+
+# Reviewed source-certified complete continuation allowance.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCapturedFits.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeCapturedFits root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeCapturedFits theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeCapturedFits guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeCapturedFits\.append_fits$' "$selected_source_module" "PqxdhLaterChallengeCapturedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits.append_fits"
+require_line_count 1 '^theorem append_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeCapturedFits theorem append_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeCapturedFits\.wrapped_total$' "$selected_source_module" "PqxdhLaterChallengeCapturedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits.wrapped_total"
+require_line_count 1 '^theorem wrapped_total([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeCapturedFits theorem wrapped_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeCapturedFits\.handler_total$' "$selected_source_module" "PqxdhLaterChallengeCapturedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits.handler_total"
+require_line_count 1 '^theorem handler_total([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeCapturedFits theorem handler_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeCapturedFits\.captured_fits$' "$selected_source_module" "PqxdhLaterChallengeCapturedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits.captured_fits"
+require_line_count 1 '^theorem captured_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeCapturedFits theorem captured_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeCapturedFits\.builder_fits$' "$selected_source_module" "PqxdhLaterChallengeCapturedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits.builder_fits"
+require_line_count 1 '^theorem builder_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeCapturedFits theorem builder_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeCapturedFits\.shared_fits$' "$selected_source_module" "PqxdhLaterChallengeCapturedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits.shared_fits"
+require_line_count 1 '^theorem shared_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeCapturedFits theorem shared_fits"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengePreparedFits.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengePreparedFits$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengePreparedFits root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhLaterChallengePreparedFits theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengePreparedFits guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengePreparedFits\.prefix_fits$' "$selected_source_module" "PqxdhLaterChallengePreparedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengePreparedFits.prefix_fits"
+require_line_count 1 '^theorem prefix_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengePreparedFits theorem prefix_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengePreparedFits\.run_fits$' "$selected_source_module" "PqxdhLaterChallengePreparedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengePreparedFits.run_fits"
+require_line_count 1 '^theorem run_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengePreparedFits theorem run_fits"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeSamplerFits.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeSamplerFits$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeSamplerFits root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeSamplerFits theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeSamplerFits guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeSamplerFits\.prepared_fits$' "$selected_source_module" "PqxdhLaterChallengeSamplerFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeSamplerFits.prepared_fits"
+require_line_count 1 '^theorem prepared_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeSamplerFits theorem prepared_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeSamplerFits\.after_fits$' "$selected_source_module" "PqxdhLaterChallengeSamplerFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeSamplerFits.after_fits"
+require_line_count 1 '^theorem after_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeSamplerFits theorem after_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeSamplerFits\.run_fits$' "$selected_source_module" "PqxdhLaterChallengeSamplerFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeSamplerFits.run_fits"
+require_line_count 1 '^theorem run_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeSamplerFits theorem run_fits"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeGeneratedFits.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFits$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeGeneratedFits root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeGeneratedFits theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeGeneratedFits guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeGeneratedFits\.run_fits$' "$selected_source_module" "PqxdhLaterChallengeGeneratedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFits.run_fits"
+require_line_count 1 '^theorem run_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeGeneratedFits theorem run_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeGeneratedFits\.adversary_total$' "$selected_source_module" "PqxdhLaterChallengeGeneratedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFits.adversary_total"
+require_line_count 1 '^theorem adversary_total([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeGeneratedFits theorem adversary_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeGeneratedFits\.certified_erase$' "$selected_source_module" "PqxdhLaterChallengeGeneratedFits dependency BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFits.certified_erase"
+require_line_count 1 '^theorem certified_erase([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeGeneratedFits theorem certified_erase"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeBeforeUnguarded.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeUnguarded$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeBeforeUnguarded root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeBeforeUnguarded theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeBeforeUnguarded guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeBeforeUnguarded\.key_fits$' "$selected_source_module" "PqxdhLaterChallengeBeforeUnguarded dependency BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeUnguarded.key_fits"
+require_line_count 1 '^theorem key_fits([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeBeforeUnguarded theorem key_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeBeforeUnguarded\.client_eq$' "$selected_source_module" "PqxdhLaterChallengeBeforeUnguarded dependency BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeUnguarded.client_eq"
+require_line_count 1 '^theorem client_eq([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeBeforeUnguarded theorem client_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeBeforeUnguarded\.compiled_eq$' "$selected_source_module" "PqxdhLaterChallengeBeforeUnguarded dependency BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeUnguarded.compiled_eq"
+require_line_count 1 '^theorem compiled_eq([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeBeforeUnguarded theorem compiled_eq"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhLaterChallengeCertifiedPrivacy.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhLaterChallengeCertifiedPrivacy$' proofs/lean/BeaconcryptCore.lean "PqxdhLaterChallengeCertifiedPrivacy root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhLaterChallengeCertifiedPrivacy theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhLaterChallengeCertifiedPrivacy guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeCertifiedPrivacy\.bills$' "$selected_source_module" "PqxdhLaterChallengeCertifiedPrivacy dependency BeaconcryptCore.Computational.PqxdhLaterChallengeCertifiedPrivacy.bills"
+require_line_count 1 '^theorem bills([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeCertifiedPrivacy theorem bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhLaterChallengeCertifiedPrivacy\.pair$' "$selected_source_module" "PqxdhLaterChallengeCertifiedPrivacy dependency BeaconcryptCore.Computational.PqxdhLaterChallengeCertifiedPrivacy.pair"
+require_line_count 1 '^theorem pair([[:space:]]|$)' "$selected_source_module" "PqxdhLaterChallengeCertifiedPrivacy theorem pair"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

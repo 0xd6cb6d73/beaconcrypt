@@ -1,0 +1,36 @@
+{
+  "reviewer": "/root/fs_source_abstraction",
+  "date": "2026-10-06T03:03:40.220234+00:00",
+  "decision": "APPROVE_SCOPED_SOURCE_ALLOWANCE_INTEGRATION",
+  "manifest": "/tmp/bc-arc-scratch/resume-2026-10-05-codex/source-continuation-allowance-integration/review-freeze.json",
+  "manifest_sha256": "a8ba14d014ea8d2048a9c31f083bec7dd4a1bf703f448b13c4630c7a644b82ef",
+  "verified": {
+    "frozen_files": 14,
+    "source_exact_modules": 6,
+    "guards": 19,
+    "inventory_rows": 1745,
+    "prior_sources_unchanged": {
+      "lean": 1390,
+      "pv": 282,
+      "rust": 22
+    },
+    "prior_inventory_digest_changes": [
+      "proofs/lean/BeaconcryptCore.lean",
+      "proofs/check-inventory.sh",
+      "proofs/trusted-boundary.md"
+    ],
+    "legacy_require_lines_preserved": 20650,
+    "direct_checks": 6,
+    "root_exit": 0,
+    "inventory_exit": 0,
+    "portable_validation_sha256": "3ed9122f3663495be8e70e3915b04728d6db809af87bf7001c43acfdf86d6d24"
+  },
+  "semantic_scope": [
+    "Read six modules, statement and integration guides and R1 independent source review. Original per-kind all-reply budget supplies total q; both complete saved wrappers receive1+q, retaining quiet inner certificates.",
+    "Certificate attaches to actual syntactic support and erases exactly; compiled equality preserves full prefix+continuation query tree for both bit pairs. No semantic Fits test remains in this before client.",
+    "Selected seal/raw caps2+q and routed hash qHashPre+2+q match final bills; prefix uniform bounds remain premises, not a complete uniform/native bill. Paired privacyLoss retains concrete reductions and component/statistical terms.",
+    "Address alias exclusion, absent Builder metadata, source event/freshness, nonce refusal, other phases and global selection/accounting remain explicit. No global security or primitive implementation result inferred."
+  ],
+  "tests_run": "No new proof build or solver run; read existing direct/root/inventory receipts and performed read-only hash/source/guard checks.",
+  "findings": []
+}

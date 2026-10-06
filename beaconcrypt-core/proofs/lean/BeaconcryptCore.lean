@@ -1386,6 +1386,13 @@ import BeaconcryptCore.Computational.PqxdhLaterChallengeRandomConsumer
 import BeaconcryptCore.Computational.PqxdhLaterChallengeRandomCompiled
 import BeaconcryptCore.Computational.PqxdhLaterChallengeBeforePrivacy
 
+import BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits
+import BeaconcryptCore.Computational.PqxdhLaterChallengePreparedFits
+import BeaconcryptCore.Computational.PqxdhLaterChallengeSamplerFits
+import BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFits
+import BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeUnguarded
+import BeaconcryptCore.Computational.PqxdhLaterChallengeCertifiedPrivacy
+
 /-!
 # Beaconcrypt-core verification root
 
