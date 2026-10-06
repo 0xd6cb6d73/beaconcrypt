@@ -1,0 +1,518 @@
+{
+  "date": "2026-10-06T14:08:32.436270+00:00",
+  "scope": "Port of lane cohort opaque-source31 (L2 of the accept/KEM join plan): PqxdhRegistrationJointKemOpaqueSuffix, KemOpaqueCore, KemOpaqueClient, KemOpaqueReal, KemOpaqueTail, KemOpaqueResume and KemOpaqueCosts, unchanged, onto the composition topic, with root imports, check-inventory module blocks, reviewed-inventory rows, a trusted-boundary section, the carried-over guide and evidence and a hand-merged analysis section.",
+  "basis": "12c5c8c00e4008e5fd697e4053892383d2f26717",
+  "topic": {
+    "branch": "codex/accept-opaque-continuation",
+    "worktree": "/tmp/beaconcrypt-accept-opaque"
+  },
+  "source": {
+    "lane_branch": "codex/registration-opaque-kem-source",
+    "lane_head": "158e11aef9058012a3eb1eeef14414150bdbcec4",
+    "module_commit": "97cb784e3cad922e489500218a50588be67de1ec",
+    "guide_commit": "158e11aef9058012a3eb1eeef14414150bdbcec4",
+    "lane_parent_cohort": "1881878f3cbf21febd1020f04a0d44e2b318c78c",
+    "note": "97cb784e adds the seven modules, the evidence archive, the guide and the analysis section; 158e11ae changes only the guide (review status sentence). The L1 cohort 1881878f is already on the topic (port 11b16e43)."
+  },
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.lean": {
+      "lane_blob": "3263f22d3aab1477bdb41b92a314c9f5a608b3de",
+      "last_lane_commit": "97cb784e3cad922e489500218a50588be67de1ec",
+      "sha256": "3bd066ba1c3ef7065bd018bfdc0b49f21a94126ceb5c7114f724e1bb590be390",
+      "byte_identical_to_lane": true
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.lean": {
+      "lane_blob": "1d89a082399879f4c3aa16111e9719f6b610a369",
+      "last_lane_commit": "97cb784e3cad922e489500218a50588be67de1ec",
+      "sha256": "0f68ea01bb39a0f3c41f075aec4ec1a7c6ec61a7103430cc15d8833ad0a3a5e4",
+      "byte_identical_to_lane": true
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.lean": {
+      "lane_blob": "f1a75ec712a68b9bba1bee43cf2a04715f1d2011",
+      "last_lane_commit": "97cb784e3cad922e489500218a50588be67de1ec",
+      "sha256": "f1cb023bb74341edf3d5d86ab5d5bcf0cc816afe29796a672dad71bfa3ccc321",
+      "byte_identical_to_lane": true
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.lean": {
+      "lane_blob": "9556953f6f3ddefd23defcb01c9e2c19b708f226",
+      "last_lane_commit": "97cb784e3cad922e489500218a50588be67de1ec",
+      "sha256": "83862712472163d750c4da5adcad854564a95cc429efe02ddd8d6deb060e1e30",
+      "byte_identical_to_lane": true
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.lean": {
+      "lane_blob": "76ce788fab01abf14f79dc526a7995369e413dd6",
+      "last_lane_commit": "97cb784e3cad922e489500218a50588be67de1ec",
+      "sha256": "b507275343b7e88b411e83fb678768c8573b65229de17dcd224f87d385601be7",
+      "byte_identical_to_lane": true
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.lean": {
+      "lane_blob": "dc56f3e305518f1cd3cd859bf8811d866f8c2c3b",
+      "last_lane_commit": "97cb784e3cad922e489500218a50588be67de1ec",
+      "sha256": "6ebeae2006d3f510b0f9cb99a270423b66f8c68d8580c37664fb42030465aa72",
+      "byte_identical_to_lane": true
+    },
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.lean": {
+      "lane_blob": "40e6028cef629157f16615dcea22b47be818a0a5",
+      "last_lane_commit": "97cb784e3cad922e489500218a50588be67de1ec",
+      "sha256": "0bf28f4642bf67315aa20f91e0c4457bafbc5127239b7f711cd1e5d7bad6b444",
+      "byte_identical_to_lane": true
+    }
+  },
+  "carried_over": {
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/Axioms.lean": {
+      "sha256": "e5c55d9a9106a18b39a177b9360bbe0e01445493bd0224867a6bb93c2e2971e7",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/GuardLiveness.lean": {
+      "sha256": "d5749519ad832fac8a38b51311ec2b5d6fddb18520370a9fdbac9ade2fd5f030",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueClient-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueCore-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueCosts-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueReal-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueResume-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueSuffix-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/PqxdhRegistrationJointKemOpaqueTail-final.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/README.md": {
+      "sha256": "2f7922730298d71bd1c3d56a7dcddb3d78b55997a1c282e0654d4a181c9dfea2",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/archive-manifest.json": {
+      "sha256": "a1c9780e937313f628ab4da0ea6c80d1092c99adc0cde8159935f0eac460f34c",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/axioms.log": {
+      "sha256": "f497457d2d0c95119a1afcbd408ce82328ee27fd5b241e0778e8da46aeb02af7",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/check-inventory.log": {
+      "sha256": "e4063f976a8419821527fbf915ae261f10187701a62c60da7bee8a8c27aedd23",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/check-lean-policy.log": {
+      "sha256": "4300703d417a0a485afdf76cd62d52c20f4c46ff788472ca9090358b0822f168",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/check.py": {
+      "sha256": "1c5cea8c9f4a8b5b0e9e905219e1232716f5e0f9ad30bb332255fddee7dc287c",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/direct-checks.json": {
+      "sha256": "9e861a09d6772f55113db79474cfd41ec5144c75b18f53b60af72da741dfa88e",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/finding-responses.json": {
+      "sha256": "93d553583290e171f66ddc84018c4dc82967ada94634e6e2f7ecf9423932d5f2",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/guard-liveness.log": {
+      "sha256": "d2815a84d5be08cc44b110367c6d6423e32198b33b41060be245485afcf02bbb",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/leanpath": {
+      "sha256": "6e33d8b1c006a0450319b8688ae4c907563bb979336c80f1230ea0f5cbe2527c",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/review-manifest.json": {
+      "sha256": "6860611f3355ff58c040592b4eb41975fb30aaadaa3df2239c9719f9753720f5",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/handover/pause-2026-10-01/joint-services/evidence/opaque-source31/theorems.json": {
+      "sha256": "1468d5de6c16770db758bdf9983ea0551d7cf801bd72b1642de8f86516c49509",
+      "byte_identical_to_lane": true
+    },
+    "doc/impl/registration-opaque-kem-source.md": {
+      "sha256": "e208a953e20a34a37ddc0492ce4530079943e0334349250e04d6233a58eca49c",
+      "byte_identical_to_lane": true,
+      "last_lane_commit": "158e11aef9058012a3eb1eeef14414150bdbcec4"
+    }
+  },
+  "analysis_merge": "The lane section \"Actual Server continuation with an opaque KEM value\" of doc/formal-verification-analysis.md (added by 97cb784e, unchanged by 158e11ae) is appended at the end of the file with its two paragraphs verbatim and its heading raised from ### to ##, because it now follows the stage C section rather than the source-suffix section, followed by one new paragraph recording the port.",
+  "closure_check": "The transitive BeaconcryptCore import closure of the seven modules at lane commit 158e11ae has 881 modules (laneclosure.py); the only modules absent from the topic basis are the seven ported modules, every other module is byte-identical between the topic and the lane, and none of the 23 lane-only modules of /tmp/bc-arc-scratch/accept-cut-join/critique-work/lane-only.txt outside L1/L2 is imported. No other lane dependency needed porting.",
+  "superseded_manifest": {
+    "path": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/opaque-source22/review-manifest.json",
+    "sha256": "09612f506a2cf2873c50721882df0339f628ae7c77806dac03236032327425d4",
+    "status": "superseded by the lane revision 97cb784e/158e11ae ported here",
+    "byte_changes": "KemOpaqueSuffix, KemOpaqueCore, KemOpaqueClient, KemOpaqueResume, KemOpaqueCosts, the guide and the analysis file differ from the frozen manifest hashes; KemOpaqueReal and KemOpaqueTail are identical.",
+    "statement_diff": {
+      "Suffix": {
+        "frozen": 4,
+        "ported": 4,
+        "deleted": [],
+        "changed": [],
+        "new": []
+      },
+      "Core": {
+        "frozen": 4,
+        "ported": 4,
+        "deleted": [],
+        "changed": [],
+        "new": []
+      },
+      "Client": {
+        "frozen": 3,
+        "ported": 3,
+        "deleted": [],
+        "changed": [],
+        "new": []
+      },
+      "Real": {
+        "frozen": 2,
+        "ported": 2,
+        "deleted": [],
+        "changed": [],
+        "new": []
+      },
+      "Tail": {
+        "frozen": 2,
+        "ported": 2,
+        "deleted": [],
+        "changed": [],
+        "new": []
+      },
+      "Resume": {
+        "frozen": 3,
+        "ported": 12,
+        "deleted": [],
+        "changed": [],
+        "new": [
+          "lift_prefix",
+          "lift_tail",
+          "resume_lift",
+          "forward_client",
+          "resume_client",
+          "resume_actual",
+          "resume_service",
+          "resume_reply",
+          "resume_post"
+        ]
+      },
+      "Costs": {
+        "frozen": 4,
+        "ported": 4,
+        "deleted": [],
+        "changed": [],
+        "new": []
+      }
+    },
+    "statement_diff_method": "stmtdiff.py: theorem text from the name to the first := with whitespace normalized, frozen WIP files (hashes checked against the frozen manifest) versus the ported files. The 22 original statements are unchanged in text; the 9 new statements are all in KemOpaqueResume. Outside statements, KemOpaqueResume adds the definitions liftImpl, Client, clientNative, forwardClient, serviceNative and serviceImpl, reproves resume_native as the identity-morphism case of resume_lift and rewrites docstrings, while its existing definitions prefixLift, tailLift, impl and resume are unchanged; KemOpaqueSuffix, KemOpaqueCore, KemOpaqueClient and KemOpaqueCosts differ only in docstrings, trailing spaces and blank lines."
+  },
+  "statements": {
+    "PqxdhRegistrationJointKemOpaqueSuffix": [
+      "after_replace",
+      "materialize_erase",
+      "program_native",
+      "compiled_native"
+    ],
+    "PqxdhRegistrationJointKemOpaqueCore": [
+      "cleared_shape",
+      "cleared_replace",
+      "accept_native",
+      "accepted_original"
+    ],
+    "PqxdhRegistrationJointKemOpaqueClient": [
+      "accepted_bytes",
+      "rom_root_native",
+      "client_native"
+    ],
+    "PqxdhRegistrationJointKemOpaqueReal": [
+      "root_source",
+      "client_source"
+    ],
+    "PqxdhRegistrationJointKemOpaqueTail": [
+      "forward_run",
+      "tail_native"
+    ],
+    "PqxdhRegistrationJointKemOpaqueResume": [
+      "prefix_run",
+      "tail_run",
+      "lift_prefix",
+      "lift_tail",
+      "resume_lift",
+      "resume_native",
+      "forward_client",
+      "resume_client",
+      "resume_actual",
+      "resume_service",
+      "resume_reply",
+      "resume_post"
+    ],
+    "PqxdhRegistrationJointKemOpaqueCosts": [
+      "client_root",
+      "client_calls",
+      "client_uniform",
+      "tail_calls"
+    ]
+  },
+  "statement_count": 31,
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "guards": "Every theorem keeps its lane #guard_msgs/#print axioms guard with exactly [propext, Classical.choice, Quot.sound]; the empty direct-check logs confirm them.",
+  "leanpath": {
+    "manifest": "/tmp/bc-arc-scratch/accept-cut-join/stage-d/leanpath",
+    "sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+    "note": "The stage C LEAN_PATH with its first entry replaced by a fresh scratch prefix (stage-d/olean) that mirrors the 1515 stage C artifacts as resolved symlinks, minus one stale KemOpaqueSuffix artifact of an older work tree; the port artifacts are written only there. A later LEAN_PATH entry still holds stale KemOpaque artifacts, so the modules were checked strictly in import order (l2.sh stops at the first failure) and each import resolved to the fresh prefix."
+  },
+  "direct_checks": [
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix",
+      "start": "2026-10-06T14:02:46.750969+00:00",
+      "end": "2026-10-06T14:02:50.868281+00:00",
+      "exit": 0,
+      "source_sha256": "3bd066ba1c3ef7065bd018bfdc0b49f21a94126ceb5c7114f724e1bb590be390",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.olean",
+        "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.lean"
+      ],
+      "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+      "artifact_sha256": "e06f3922bf5eb54c7979e0c80c87a797751a9d6077c51d6f02493e66878b6249"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore",
+      "start": "2026-10-06T14:02:50.902650+00:00",
+      "end": "2026-10-06T14:02:54.695931+00:00",
+      "exit": 0,
+      "source_sha256": "0f68ea01bb39a0f3c41f075aec4ec1a7c6ec61a7103430cc15d8833ad0a3a5e4",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.olean",
+        "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.lean"
+      ],
+      "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+      "artifact_sha256": "77b6dec1144dbd470ae84d6a1857e5ed8f614dc3ca83dd97fa671c93beda2323"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient",
+      "start": "2026-10-06T14:02:54.725315+00:00",
+      "end": "2026-10-06T14:02:58.469511+00:00",
+      "exit": 0,
+      "source_sha256": "f1cb023bb74341edf3d5d86ab5d5bcf0cc816afe29796a672dad71bfa3ccc321",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.olean",
+        "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.lean"
+      ],
+      "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+      "artifact_sha256": "9392e29345bdedf525f8d15a2c46ef901e54ca1a8644b8f89de4ef1dea36c803"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal",
+      "start": "2026-10-06T14:02:58.499595+00:00",
+      "end": "2026-10-06T14:03:02.172518+00:00",
+      "exit": 0,
+      "source_sha256": "83862712472163d750c4da5adcad854564a95cc429efe02ddd8d6deb060e1e30",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.olean",
+        "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.lean"
+      ],
+      "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+      "artifact_sha256": "27c454e34f792988536d0a376325952807e1b0ede4bb7e8481a867a7eb5c6572"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail",
+      "start": "2026-10-06T14:03:02.204281+00:00",
+      "end": "2026-10-06T14:03:06.172352+00:00",
+      "exit": 0,
+      "source_sha256": "b507275343b7e88b411e83fb678768c8573b65229de17dcd224f87d385601be7",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.olean",
+        "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.lean"
+      ],
+      "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+      "artifact_sha256": "e5cf4f514c5224f330129bd5c619b6f40d873a3f3837023c13deadf49a96b511"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume",
+      "start": "2026-10-06T14:03:06.202712+00:00",
+      "end": "2026-10-06T14:03:10.379805+00:00",
+      "exit": 0,
+      "source_sha256": "6ebeae2006d3f510b0f9cb99a270423b66f8c68d8580c37664fb42030465aa72",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.olean",
+        "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.lean"
+      ],
+      "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+      "artifact_sha256": "6bc209766088e8077e91144ca15dc845ead9d613e5abb13630cfe18950193d37"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts",
+      "start": "2026-10-06T14:03:10.409770+00:00",
+      "end": "2026-10-06T14:03:14.988775+00:00",
+      "exit": 0,
+      "source_sha256": "0bf28f4642bf67315aa20f91e0c4457bafbc5127239b7f711cd1e5d7bad6b444",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/accept-cut-join/stage-d/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.olean",
+        "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.lean"
+      ],
+      "leanpath_sha256": "b9defa55ce91cd479ff67b65cc1bf33ec17d5ee01db7039a04c1759c9f1b3199",
+      "artifact_sha256": "b7ca155efc2d801dcecff519e02d8960de771727607d4551c29e83778c923a3d"
+    }
+  ],
+  "root_check": {
+    "command": "LEAN_TIMEOUT=180 root.sh (flock lean.lock timeout 180 lean -j1 -M8000 --root=<worktree>/beaconcrypt-core/proofs/lean BeaconcryptCore.lean, no -o)",
+    "source_sha256": "abd6597e9e53cc66c6edb96aee55af2f406df39f1d62a404c33ca27375067f4d",
+    "exit": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0
+  },
+  "hygiene": {
+    "consts": {
+      "source": "/tmp/bc-arc-scratch/accept-cut-join/stage-d/hygiene/ConstsL2.lean",
+      "exit": 0,
+      "result": "no axiom or opaque constant in the seven modules"
+    },
+    "guard_liveness": {
+      "source": "/tmp/bc-arc-scratch/accept-cut-join/stage-d/hygiene/L2Liveness.lean",
+      "exit": 1,
+      "guard_errors": 7,
+      "expected": "one deliberately wrong guard per module fails (7 errors, exit 1)"
+    }
+  },
+  "focused_inventory": {
+    "command": [
+      "nix",
+      "develop",
+      "--no-update-lock-file",
+      "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+      "-c",
+      "make",
+      "-C",
+      "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core",
+      "check-inventory",
+      "SHELL=bash"
+    ],
+    "environment": "PYTHONDONTWRITEBYTECODE=1",
+    "state": "all port files staged except this receipt",
+    "exit": 0,
+    "start": "2026-10-06T14:05:17Z",
+    "end": "2026-10-06T14:06:24Z",
+    "log_sha256": "592c385ae81e42dec9db296d1484b1f8d2727ce29695c4bdcb6da8298add68a4",
+    "comm_warnings": 0,
+    "handwritten_lean_count": "1481 -> 1488"
+  },
+  "forbidden_scan": "zero matches of \\b(?:sorry|admit|axiom)\\b (outside guards)|sorryAx|native_decide|implemented_by|@[extern|unsafe|set_option linter in the seven modules",
+  "correctness_scan": "zero matches of MlKem768RecipientCorrectness, supported_source, branch_real, KemGame.advantage or KemCertified.advantage in the seven modules; four modules open the PqxdhSecretInputKdf namespace for the restricted-ROM root types, and none mentions a Context.",
+  "diff_check": "git diff --cached --check clean",
+  "review": "The cohort was independently reviewed on the lane: the first review of the 22-statement version rejected resume_native (finding-responses.json); the confirming semantic review of 97cb784e (/tmp/bc-arc-scratch/resume-2026-10-06/opaque/confirm/NOTES.md) returned APPROVE_WITH_NITS for a stale review-status sentence, fixed by 158e11ae. The evidence README carried over verbatim still says that review is pending; the guide records it. The port itself (byte-identical modules, new inventory rows and documentation) is not yet independently reviewed. Not pushed.",
+  "not_proved": [
+    "Extract/HMAC games, context secrecy of the candidate and the actual joint input/public-context sampler",
+    "transport of the existing prefix uniform charges to the resumed program",
+    "dynamic Beacon finish routing with repeated challenge-ciphertext use under one joint sampler",
+    "freshness, target selection and global composition"
+  ],
+  "focused_inventory_with_receipt": {
+    "command": [
+      "nix",
+      "develop",
+      "--no-update-lock-file",
+      "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+      "-c",
+      "make",
+      "-C",
+      "/tmp/beaconcrypt-accept-opaque/beaconcrypt-core",
+      "check-inventory",
+      "SHELL=bash"
+    ],
+    "environment": "PYTHONDONTWRITEBYTECODE=1",
+    "state": "every port file staged, including this receipt",
+    "exit": 0,
+    "start": "2026-10-06T14:07:22Z",
+    "end": "2026-10-06T14:08:27Z",
+    "log_sha256": "7f61403fc8a02782e59720323c59b1c3805ab47e7a9255e151cf02b08b751580",
+    "comm_warnings": 0,
+    "handwritten_lean_count": "1481 -> 1488"
+  }
+}

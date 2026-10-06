@@ -1,0 +1,201 @@
+{
+  "cohort_checks": [
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix",
+      "source_sha256": "3bd066ba1c3ef7065bd018bfdc0b49f21a94126ceb5c7114f724e1bb590be390",
+      "start": "2026-10-06T09:12:25.702866+00:00",
+      "end": "2026-10-06T09:12:29.005704+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueSuffix-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.olean",
+      "artifact_sha256": "e06f3922bf5eb54c7979e0c80c87a797751a9d6077c51d6f02493e66878b6249",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore",
+      "source_sha256": "0f68ea01bb39a0f3c41f075aec4ec1a7c6ec61a7103430cc15d8833ad0a3a5e4",
+      "start": "2026-10-06T09:12:29.047283+00:00",
+      "end": "2026-10-06T09:12:32.252318+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueCore-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.olean",
+      "artifact_sha256": "77b6dec1144dbd470ae84d6a1857e5ed8f614dc3ca83dd97fa671c93beda2323",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient",
+      "source_sha256": "f1cb023bb74341edf3d5d86ab5d5bcf0cc816afe29796a672dad71bfa3ccc321",
+      "start": "2026-10-06T09:12:32.298522+00:00",
+      "end": "2026-10-06T09:12:35.667255+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueClient-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.olean",
+      "artifact_sha256": "9392e29345bdedf525f8d15a2c46ef901e54ca1a8644b8f89de4ef1dea36c803",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal",
+      "source_sha256": "83862712472163d750c4da5adcad854564a95cc429efe02ddd8d6deb060e1e30",
+      "start": "2026-10-06T09:12:35.710856+00:00",
+      "end": "2026-10-06T09:12:39.073685+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueReal-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.olean",
+      "artifact_sha256": "27c454e34f792988536d0a376325952807e1b0ede4bb7e8481a867a7eb5c6572",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail",
+      "source_sha256": "b507275343b7e88b411e83fb678768c8573b65229de17dcd224f87d385601be7",
+      "start": "2026-10-06T09:12:39.121058+00:00",
+      "end": "2026-10-06T09:12:42.456348+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueTail-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.olean",
+      "artifact_sha256": "e5cf4f514c5224f330129bd5c619b6f40d873a3f3837023c13deadf49a96b511",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume",
+      "source_sha256": "6ebeae2006d3f510b0f9cb99a270423b66f8c68d8580c37664fb42030465aa72",
+      "start": "2026-10-06T09:12:42.507251+00:00",
+      "end": "2026-10-06T09:12:46.234678+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueResume-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.olean",
+      "artifact_sha256": "6bc209766088e8077e91144ca15dc845ead9d613e5abb13630cfe18950193d37",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.lean"
+      ]
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts",
+      "source_sha256": "0bf28f4642bf67315aa20f91e0c4457bafbc5127239b7f711cd1e5d7bad6b444",
+      "start": "2026-10-06T09:12:46.279838+00:00",
+      "end": "2026-10-06T09:12:50.043591+00:00",
+      "exit": 0,
+      "log": "PqxdhRegistrationJointKemOpaqueCosts-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.olean",
+      "artifact_sha256": "b7ca155efc2d801dcecff519e02d8960de771727607d4551c29e83778c923a3d",
+      "command": [
+        "flock",
+        "/tmp/bc-arc-scratch/lean.lock",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/resume-2026-10-06/opaque/impl/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.olean",
+        "/tmp/beaconcrypt-opaque-kem-source/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.lean"
+      ]
+    }
+  ],
+  "rebuilt_dependencies": [
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected",
+      "source_sha256": "74439aad5721d31837a0e87ae45c7644d1643a0e7138c5b8c86c4ae4b85a6ecd",
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "a34ef442985971598ed9a98cbbeb52aae978eb62e4c1b47d56a31c068b533bbc",
+      "start": "2026-10-06T09:04:37.147082+00:00",
+      "end": "2026-10-06T09:04:41.194563+00:00"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes",
+      "source_sha256": "54da6ff697362600a5d5651c5571c0df8f73685fbb300459f1fbd15103e9ee97",
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "4630ab9838532997e30f4583d58440f4c0eb84a62aff175a0fd8ba6a55de3f16",
+      "start": "2026-10-06T09:04:41.223497+00:00",
+      "end": "2026-10-06T09:04:44.398429+00:00"
+    },
+    {
+      "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix",
+      "source_sha256": "3eaee131c18f7d3999eb0bfc6e9ebd009bb1720d2861c6b852556426d520c358",
+      "exit": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_sha256": "5924e56ae9429073cc0b0d3520150e858df15e7eb4352aad204383552db5530e",
+      "start": "2026-10-06T09:04:44.430719+00:00",
+      "end": "2026-10-06T09:04:48.064720+00:00"
+    }
+  ]
+}

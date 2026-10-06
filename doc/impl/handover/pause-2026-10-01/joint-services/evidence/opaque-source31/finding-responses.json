@@ -1,0 +1,30 @@
+[
+  {
+    "finding": "semantic/major: resume_native fixed to NativeGame; whole-source join not established",
+    "response": "Generalized: liftImpl/lift_prefix/lift_tail/resume_lift quantify over any monad m with LawfulMonad, any MonadHom NativeGame KemSK ->m m and any prefix interpreter in m. resume_native is the MonadHom.id case (statement unchanged). Instantiations: resume_client (KemEncapsulation client monad, clientNative = KemEncapsulation.lift . OpenBackend.native, forwardClient), resume_actual (KemEncapsulation.actual, OpenBackend.prefixImpl), resume_service (Finish.State with onPool (LiveKemBirth.impl o actual) and onNative), resume_reply (suffix_cut continuation at KemResume.reply with the challenge marker), resume_post (DynamicKemJointRouter.post o actual, as in KemResume.post). Prose narrowed; scan-to-accept-form join and charge transport recorded as open."
+  },
+  {
+    "finding": "semantic/nit: Resume docstring secret-dependent runtime test",
+    "response": "Reworded to selected-KEM argument and selected-KEM-dependent runtime test, noting that executable steps still branch on private DH-derived values."
+  },
+  {
+    "finding": "semantic+hygiene/nit: trailing whitespace and missing spaces",
+    "response": "Removed four trailing spaces in OpaqueClient; extracted 192-byte, possible 64-byte, existing 64-byte; doubled blank lines collapsed."
+  },
+  {
+    "finding": "hygiene/major: imports missing at central 7a19acf4",
+    "response": "Ported onto the lane branch from 1881878f, which contains the SourceSuffix14 modules; the three dependencies were rebuilt into the scratch prefix."
+  },
+  {
+    "finding": "hygiene/minor: broken guide link and wholesale analysis copy",
+    "response": "On the lane the link target registration-encapsulation-source-suffix.md exists; links verified. The analysis append was applied as a hunk, not copied."
+  },
+  {
+    "finding": "hygiene/minor: manifest lacks LEAN_PATH/root/artifacts/toolchain/flags",
+    "response": "Recorded in review-manifest.json (lean section) with artifact hashes per module."
+  },
+  {
+    "finding": "semantic/major (guide line 17): uncited claim that whole-program equalities preserve previously established charges",
+    "response": "Sentence replaced: the charges are not re-derived or transported; that remains a separate obligation."
+  }
+]

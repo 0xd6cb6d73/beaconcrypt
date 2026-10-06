@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1481
+	[handwritten-lean]=1488
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28443,6 +28443,105 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem authenticated_selected_kem([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAuthenticatedSelectedKem theorem authenticated_selected_kem"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAuthenticatedSelectedKem\.authenticated_selected_kem_bills$' "$selected_source_module" "PqxdhRegistrationJointAuthenticatedSelectedKem dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.authenticated_selected_kem_bills"
 require_line_count 1 '^theorem authenticated_selected_kem_bills([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAuthenticatedSelectedKem theorem authenticated_selected_kem_bills"
+
+# Ported opaque-source31 cohort (lane commits 97cb784e and 158e11ae): opaque KEM marker in the actual saved Server suffix, cleared acceptance, private-root client, real fixed-HKDF interpretation, accept tail, interpreter-generic resumption and interface request bounds.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueSuffix.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemOpaqueSuffix root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueSuffix theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueSuffix guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueSuffix\.after_replace$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.after_replace"
+require_line_count 1 '^theorem after_replace([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueSuffix theorem after_replace"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueSuffix\.materialize_erase$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.materialize_erase"
+require_line_count 1 '^theorem materialize_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueSuffix theorem materialize_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueSuffix\.program_native$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.program_native"
+require_line_count 1 '^theorem program_native([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueSuffix theorem program_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueSuffix\.compiled_native$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix.compiled_native"
+require_line_count 1 '^theorem compiled_native([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueSuffix theorem compiled_native"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCore.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemOpaqueCore root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCore theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCore guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueCore\.cleared_shape$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCore dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore.cleared_shape"
+require_line_count 1 '^theorem cleared_shape([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCore theorem cleared_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueCore\.cleared_replace$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCore dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore.cleared_replace"
+require_line_count 1 '^theorem cleared_replace([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCore theorem cleared_replace"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueCore\.accept_native$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCore dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore.accept_native"
+require_line_count 1 '^theorem accept_native([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCore theorem accept_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueCore\.accepted_original$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCore dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore.accepted_original"
+require_line_count 1 '^theorem accepted_original([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCore theorem accepted_original"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueClient.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemOpaqueClient root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueClient theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueClient guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueClient\.accepted_bytes$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueClient dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.accepted_bytes"
+require_line_count 1 '^theorem accepted_bytes([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueClient theorem accepted_bytes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueClient\.rom_root_native$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueClient dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.rom_root_native"
+require_line_count 1 '^theorem rom_root_native([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueClient theorem rom_root_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueClient\.client_native$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueClient dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient.client_native"
+require_line_count 1 '^theorem client_native([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueClient theorem client_native"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueReal.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemOpaqueReal root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueReal theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueReal guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueReal\.root_source$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueReal dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal.root_source"
+require_line_count 1 '^theorem root_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueReal theorem root_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueReal\.client_source$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueReal dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal.client_source"
+require_line_count 1 '^theorem client_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueReal theorem client_source"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueTail.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemOpaqueTail root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueTail theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueTail guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueTail\.forward_run$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueTail dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail.forward_run"
+require_line_count 1 '^theorem forward_run([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueTail theorem forward_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueTail\.tail_native$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueTail dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail.tail_native"
+require_line_count 1 '^theorem tail_native([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueTail theorem tail_native"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueResume.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemOpaqueResume root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.prefix_run$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.prefix_run"
+require_line_count 1 '^theorem prefix_run([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem prefix_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.tail_run$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.tail_run"
+require_line_count 1 '^theorem tail_run([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem tail_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.lift_prefix$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.lift_prefix"
+require_line_count 1 '^theorem lift_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem lift_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.lift_tail$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.lift_tail"
+require_line_count 1 '^theorem lift_tail([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem lift_tail"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.resume_lift$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_lift"
+require_line_count 1 '^theorem resume_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem resume_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.resume_native$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_native"
+require_line_count 1 '^theorem resume_native([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem resume_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.forward_client$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.forward_client"
+require_line_count 1 '^theorem forward_client([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem forward_client"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.resume_client$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_client"
+require_line_count 1 '^theorem resume_client([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem resume_client"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.resume_actual$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_actual"
+require_line_count 1 '^theorem resume_actual([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem resume_actual"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.resume_service$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_service"
+require_line_count 1 '^theorem resume_service([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem resume_service"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.resume_reply$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_reply"
+require_line_count 1 '^theorem resume_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem resume_reply"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueResume\.resume_post$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume.resume_post"
+require_line_count 1 '^theorem resume_post([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueResume theorem resume_post"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemOpaqueCosts.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemOpaqueCosts root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueCosts\.client_root$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.client_root"
+require_line_count 1 '^theorem client_root([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts theorem client_root"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueCosts\.client_calls$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.client_calls"
+require_line_count 1 '^theorem client_calls([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts theorem client_calls"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueCosts\.client_uniform$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.client_uniform"
+require_line_count 1 '^theorem client_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts theorem client_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemOpaqueCosts\.tail_calls$' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts.tail_calls"
+require_line_count 1 '^theorem tail_calls([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemOpaqueCosts theorem tail_calls"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

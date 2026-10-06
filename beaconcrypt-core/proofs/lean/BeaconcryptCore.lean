@@ -1498,6 +1498,14 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge
 
 import BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem
 
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueSuffix
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCore
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueClient
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueReal
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueTail
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueResume
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts
+
 /-!
 # Beaconcrypt-core verification root
 
