@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1500
+	[handwritten-lean]=1501
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28884,6 +28884,33 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem kernel_unreported([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReadHistory theorem kernel_unreported"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReadHistory\.reveal_unreported$' "$selected_source_module" "PqxdhDeploymentReadHistory dependency BeaconcryptCore.Computational.PqxdhDeploymentReadHistory.reveal_unreported"
 require_line_count 1 '^theorem reveal_unreported([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReadHistory theorem reveal_unreported"
+
+# CE-3 trial budget transport: source14 query caps of the compiled program from per-command caps of the deployment adversary.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileBudget.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentCompileBudget root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompileBudget guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.local_bound$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.local_bound"
+require_line_count 1 '^theorem local_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem local_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.single_bound$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.single_bound"
+require_line_count 1 '^theorem single_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem single_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.server_hashes$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.server_hashes"
+require_line_count 1 '^theorem server_hashes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem server_hashes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.beacon_hashes$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.beacon_hashes"
+require_line_count 1 '^theorem beacon_hashes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem beacon_hashes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.peerKernel_bound$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.peerKernel_bound"
+require_line_count 1 '^theorem peerKernel_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem peerKernel_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.ownerKernel_bound$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.ownerKernel_bound"
+require_line_count 1 '^theorem ownerKernel_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem ownerKernel_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.serverLocal_bound$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.serverLocal_bound"
+require_line_count 1 '^theorem serverLocal_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem serverLocal_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.beaconLocal_bound$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.beaconLocal_bound"
+require_line_count 1 '^theorem beaconLocal_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem beaconLocal_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.step_bound$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.step_bound"
+require_line_count 1 '^theorem step_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem step_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.compile_bound$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.compile_bound"
+require_line_count 1 '^theorem compile_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem compile_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
