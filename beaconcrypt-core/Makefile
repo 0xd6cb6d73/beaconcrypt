@@ -132,6 +132,8 @@ LEAN_GENERATED_PATHS := \
 
 .PHONY: verify verify-in-shell \
 	verify-proverif verify-proverif-in-shell verify-proverif-scenario-in-shell \
+	verify-proverif-fs verify-proverif-extensions verify-proverif-fs-in-shell \
+	verify-proverif-extensions-in-shell check-proverif-generated-drift \
 	verify-proverif-live-material check-proverif-live-material $(PROVERIF_MATERIAL_TARGETS) \
 	verify-proverif-live-private-application check-proverif-live-private-application $(PROVERIF_APPLICATION_TARGETS) \
 	verify-proverif-kem-controller-auth check-proverif-kem-controller-auth \
@@ -557,7 +559,7 @@ check-proverif-main-registration-controls: check-proverif-extraction
 		awk -v scenario=main-registration-controls -f '$(PROVERIF_CHECKER)'
 
 # HB-103: exact ideal protected-record origin and four reachable negative controls.
-# This primitive component is separate from the 32 production scenario roster.
+# This primitive component is separate from the legacy parallel scenario roster.
 $(PROVERIF_MATERIAL_TARGETS): check-proverif-transcript-fidelity
 check-proverif-live-material: $(PROVERIF_MATERIAL_TARGETS)
 check-proverif: check-proverif-live-material
@@ -572,7 +574,7 @@ check-proverif-live-material-endpoint-origin: check-proverif-live-material-%: ch
 		awk -v scenario=live-material-$* -f '$(PROVERIF_CHECKER)'
 
 # HB-116: target-relative ideal private-message origin and two disclosure controls.
-# This supplemental component does not change the 32 production scenario roster.
+# This supplemental component does not change the legacy parallel scenario roster.
 $(PROVERIF_APPLICATION_TARGETS): check-proverif-transcript-fidelity
 check-proverif-live-private-application: $(PROVERIF_APPLICATION_TARGETS)
 check-proverif: check-proverif-live-private-application
@@ -808,6 +810,38 @@ check-generated: verify
 		$(LEAN_GENERATED_PATHS))"; \
 		if [[ -n "$$untracked" ]]; then \
 			echo 'untracked generated proof artifacts:' >&2; \
+			printf '%s\n' "$$untracked" >&2; \
+			exit 1; \
+		fi
+
+# Serial groups have independent CI jobs and never join the parallel legacy roster.
+verify-proverif-fs verify-proverif-extensions: verify-proverif-%:
+	$(NIX) --extra-experimental-features 'nix-command flakes' \
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \
+		$(MAKE) verify-proverif-$*-in-shell
+
+verify-proverif-fs-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) extract-proverif
+	$(MAKE) check-proverif-fs
+	$(MAKE) check-proverif-generated-drift
+
+verify-proverif-extensions-in-shell:
+	$(MAKE) check-toolchain
+	$(MAKE) extract-proverif
+	$(MAKE) check-proverif-primitive-fidelity
+	$(MAKE) check-proverif-active-strong-secrecy
+	$(MAKE) check-proverif-pending-registration
+	$(MAKE) check-proverif-aead-differential
+	$(MAKE) check-proverif-registration-provenance
+	$(MAKE) check-proverif-generated-drift
+
+check-proverif-generated-drift:
+	git diff --exit-code -- proofs/pro-verif/extraction
+	@untracked="$$(git ls-files --others --exclude-standard -- \
+		proofs/pro-verif/extraction)"; \
+		if [[ -n "$$untracked" ]]; then \
+			echo 'untracked generated ProVerif proof artifacts:' >&2; \
 			printf '%s\n' "$$untracked" >&2; \
 			exit 1; \
 		fi

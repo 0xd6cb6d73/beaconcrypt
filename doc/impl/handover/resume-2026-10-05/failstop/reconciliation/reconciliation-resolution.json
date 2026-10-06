@@ -1,0 +1,10 @@
+{
+  "parents": [
+    "71e23c56c52134d86103e08674197ab724404976",
+    "d074f31a337c1fd99a621e430e21778a75c6e422"
+  ],
+  "manual_conflicts": [
+    "doc/formal-verification-analysis.md"
+  ],
+  "resolution": "Retain both exact independently reviewed appended sections; all other changes merged normally. All monitored digests match."
+}

@@ -1,0 +1,20 @@
+{
+  "parents": [
+    "01bc3b5a1460982aab49b6ae43ef5404dd793a02",
+    "7abf30ae48ccd7c84f4d72f1dae6c51574a5199d"
+  ],
+  "central_lean_source_files_exact": 1356,
+  "proverif_related_files_exact_from_reviewed_parents": 246,
+  "e21_comment_only_files_from_central": [
+    "beaconcrypt-core/proofs/pro-verif/check-free-schedule.py",
+    "beaconcrypt-core/proofs/pro-verif/fs-records-b2s-kr3-failstop.pvl"
+  ],
+  "central_workflow_exact": true,
+  "prior_portable_archive_files_exact": 205,
+  "central_require_guards_preserved": true,
+  "new_guard_lines": [
+    "require_line_count 1 '^check-proverif-registration-provenance: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile \"signature-provenance serial runner\"",
+    "require_line_count 3 '^\\t\\$\\(MAKE\\) check-proverif-registration-provenance$' Makefile \"signature-provenance verification steps\""
+  ],
+  "scope": "No existing proof semantics changed. Only source-hash inventory/document reconciliation and an exact serial CI gate plus omission regression."
+}

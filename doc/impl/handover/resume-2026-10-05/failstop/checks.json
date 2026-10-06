@@ -1,0 +1,44 @@
+[
+  {
+    "label": "checker-tests",
+    "command": [
+      "/run/current-system/sw/bin/python3",
+      "beaconcrypt-core/proofs/pro-verif/test-free-schedule-checker.py"
+    ],
+    "start": "2026-10-05T23:55:47.578698+00:00",
+    "end": "2026-10-05T23:55:50.156729+00:00",
+    "exit": 0,
+    "log_sha256": "206162194b09f70138d6b998c4514e0521d8fdfe19c5900dcaa18b6da45b7345"
+  },
+  {
+    "label": "inventory",
+    "command": [
+      "nix",
+      "develop",
+      "--no-update-lock-file",
+      "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+      "-c",
+      "make",
+      "-C",
+      "beaconcrypt-core",
+      "SHELL=/run/current-system/sw/bin/bash",
+      "check-inventory"
+    ],
+    "start": "2026-10-05T23:55:50.157032+00:00",
+    "end": "2026-10-05T23:56:51.630224+00:00",
+    "exit": 0,
+    "log_sha256": "e21cd1a19b01dedb03f0f085c6291309e84ab52956d9e5921ac873b8bd003917"
+  },
+  {
+    "label": "diff-check",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "start": "2026-10-05T23:56:51.630631+00:00",
+    "end": "2026-10-05T23:56:51.887837+00:00",
+    "exit": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

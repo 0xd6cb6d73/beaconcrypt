@@ -1,0 +1,7 @@
+# Serial CI wiring validation
+
+The source manifest fixes eight changed files on the published strong-secrecy/native-proof integration. The final focused Make run passed 28 transcript tests and inventory; a separate Make dry-run displayed the complete ordered free-schedule and extension commands, including both extraction-drift checks. Formatting and diff checks passed. Five monitored digests changed, with every proof/model source and inventory category count unchanged.
+
+The initial focused run passed 27 tests and failed the existing exact-reference-count check because the new serial recipe adds one call to the fs group. That expected count is now five plus the maintained scenario count; no check was disabled. The final run passed all 28 tests. Its log and the initial diagnostic are distinguished by filename. No solver search, Lean build or full aggregate verification was performed for these wiring changes. The final serial proof matrix remains required on the final integrated result.
+
+After the successful focused check, independent review requested one prose clarification: 1,800 seconds is the ceiling, while pending-token checks keep their stricter 180-second default. Only the guide, trusted-boundary paragraph and its inventory digest changed. All tested Make, workflow, checker and Rust test bytes remain identical. The final manifest hashes are verified after that clarification; no duplicate proof/test run is attributed to it.

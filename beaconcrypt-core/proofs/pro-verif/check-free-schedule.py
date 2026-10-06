@@ -104,16 +104,7 @@ B2S_FRESH_ONLY = (
     "fs-records-b2s-uksr.pv",
     "fs-records-b2s-pinread.pv",
 )
-# The fail-stop form of the Server receive (E21): the bound file
-# fs-records-b2s-kr3-failstop.pvl ends a receive worker at its first failed open. In the
-# failure-interleaving form a failed open keeps the exact entry state, outputs nothing
-# and emits only FsReceiveRejected, so deleting it from a trace leaves a trace of the
-# fail-stop form with every other event; a query that does not mention FsReceiveRejected
-# that holds in the fail-stop form therefore holds in the failure-interleaving form too
-# (the deletion argument of the b2s guide, not yet reviewed). The form is used only for
-# these security results, whose failure-interleaving form with adversary-chosen
-# plaintexts does not fit the caps: C2, which also runs with fresh plaintexts in the
-# failure-interleaving form (G0 option B), and C4.
+# E21: the reviewed finite symbolic trace argument transfers exactly the two C2/C4 formulas below from chosen-message fail-stop to failure-interleaving at K_r=3. Failed opens preserve all worker state and produce no public reply; deletion/reindexing preserves honest outputs, attacker knowledge and non-rejection events, excluding input-consumption labels. This is not an optional-result-bit/raw-plaintext or source-global equivalence. See doc/impl/proverif-failstop-trace-simulation.md.
 B2S_FAILSTOP_QUERIES = ("fs-records-b2s-c2.pv", "fs-records-b2s-c4.pv")
 # Every b2s query file ends with one of the two main processes (E3): the pin-free
 # process, in which the attacker chooses the pinned Server key and Server ID of every

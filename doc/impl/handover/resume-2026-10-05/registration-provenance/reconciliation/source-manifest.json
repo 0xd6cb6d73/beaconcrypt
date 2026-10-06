@@ -1,0 +1,16 @@
+{
+  "parents": [
+    "01bc3b5a1460982aab49b6ae43ef5404dd793a02",
+    "7abf30ae48ccd7c84f4d72f1dae6c51574a5199d"
+  ],
+  "scope": "A2/CI/E21 normal reconciliation; unchanged1356Lean and246reviewedPV files; newserialprovenancegate/omissionregression only",
+  "files": {
+    "beaconcrypt-core/Makefile": "e26baba713289f30f69e11c55b2618d0c932eb436f58c6b1170d347be40a4c68",
+    "beaconcrypt-core/proofs/check-inventory.sh": "1b54279ef9f5e29904e03a05bc371e5ce231b8fcebd9575b5fba05334da923e9",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "44ece392985454acc05e52025e52a716d01a701f1a4baa000d7d276300356c2c",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "0527bd77515fb3b3143e0ef3dca9fd289e6f0a89cc889b3057df50a5202f611e",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "f594ab245852bbbd9c03889db5ce4a1aea83e8e18a687ab6b093433bca959cc9",
+    "doc/formal-verification-analysis.md": "98771527d3e0e494575a12105bfe67ae61cfe2d85e1ad07e1a6f0875d6764538",
+    "doc/impl/proverif-serial-ci.md": "87c9393f3f5abd73d2ef11d446137210a4b314c5dc81c9d96a7ffeffa9bd69ce"
+  }
+}

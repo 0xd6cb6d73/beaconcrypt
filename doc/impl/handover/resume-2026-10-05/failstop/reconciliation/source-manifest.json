@@ -1,0 +1,15 @@
+{
+  "parents": [
+    "71e23c56c52134d86103e08674197ab724404976",
+    "d074f31a337c1fd99a621e430e21778a75c6e422"
+  ],
+  "files": {
+    "doc/formal-verification-analysis.md": "a0fabad0f78ebdf79d3897f81aa5c842c21d392f4de5a13eb493352560b4bf05",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "cad992f7847835b294b3b9c8e32fbc8ae5703ea59ddc6c1217464229b73fcc57",
+    "doc/impl/handover/resume-2026-10-05/failstop/reconciliation/README.md": "4af9cd874faa18141231b2bf3fcf1afe014f8d164a7cb98a71bc2df0f8da123d",
+    "doc/impl/handover/resume-2026-10-05/failstop/reconciliation/reconciliation-resolution.json": "1db9153add43f6f1df1bd2ca447c68578fc216da4e1eca33ce6833dc2249abe9",
+    "doc/impl/handover/resume-2026-10-05/failstop/reconciliation/reconciliation-source-identity.json": "63436c30370e0dd0045c6399cdd1f2ffbce16d6cf852ba46b7a2a0fc539c7ef3",
+    "doc/impl/handover/resume-2026-10-05/failstop/reconciliation/reconciliation-validation.json": "207f90629653aa14aef719815d357264ada8aae3fe0e44efd1511e5bcfa00970",
+    "doc/impl/handover/resume-2026-10-05/failstop/reconciliation/validation.log.gz": "372861a5c7a79db9ad62a150db4d641dbfc7fe3eddfab709e373104a05009024"
+  }
+}

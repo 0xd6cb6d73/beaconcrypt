@@ -1,0 +1,31 @@
+{
+  "parents": [
+    "01bc3b5a1460982aab49b6ae43ef5404dd793a02",
+    "7abf30ae48ccd7c84f4d72f1dae6c51574a5199d"
+  ],
+  "results": {
+    "transcript_fidelity": {
+      "exit": 0,
+      "passed": 28
+    },
+    "inventory": 0,
+    "serial_recipe_dryrun": 0,
+    "cargo_fmt": 0,
+    "git_diff_check": 0
+  },
+  "gzip_roundtrips": {
+    "ft": {
+      "raw_sha256": "c56c64a87f1c1cda11122618e82be03a6b54a34bfee980984d26490feb10cd66",
+      "gzip_sha256": "40609ca0715354f8a5a106baaa69ed90ef54e97d381fcedb1dd29670aa5d13c3"
+    },
+    "inventory": {
+      "raw_sha256": "ac4e1d69d609df44b01c4570dbc8d33f3cbb58bc63c01dd4ebaeceea2fe54031",
+      "gzip_sha256": "979c2aa633e3e5e181d04456bde9a92f29fe0c101369edf84037524145f55c6d"
+    },
+    "dryrun": {
+      "raw_sha256": "e34269e0dcf160c28b79468f7458ac2a89a6bff9d8a806f0af3e1e4952d7a323",
+      "gzip_sha256": "e53dd4b3bd8c4a69c671fa72bc5da1653be3ad764a3d33ddd5f839139260998f"
+    }
+  },
+  "scope": "Normal reconciliation of exact reviewed parents. Only CI gate/omission regression, shared docs and inventory changed. All1356 central Lean and246reviewedPV files retained exactly; no unchanged prover or Lean rerun. One comma corrected in non-inventoried CI guide after passing checks; source manifest records that final text."
+}

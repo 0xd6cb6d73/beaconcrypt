@@ -1,0 +1,14 @@
+{
+  "exact_source_trees": {
+    "beaconcrypt-core/proofs/lean": {
+      "parent": "d074f31a337c1fd99a621e430e21778a75c6e422",
+      "files": 1356
+    },
+    "beaconcrypt-core/proofs/pro-verif": {
+      "parent": "71e23c56c52134d86103e08674197ab724404976",
+      "files": 235
+    }
+  },
+  "ci_workflow_make_checker_test_trust_exact": true,
+  "scope": "No new proof, query, checker behavior or CI code change; only joined documentation and combined inventory entries."
+}
