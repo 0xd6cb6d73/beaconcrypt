@@ -145,6 +145,27 @@ def extension_class_scope(name, target, driver):
             + ";".join(target.libraries())
         )
         return target.cls, scope
+    if name == "check-delayed-response":
+        observation = (
+            "initial Server chain disclosed"
+            if target.process == "A1Main(true)"
+            else "post-initial Server chain and initial Beacon chain disclosed"
+        )
+        claim = (
+            "auxiliary completed-root secrecy"
+            if target.name == "A1-root"
+            else "initial-response origin/projection witness or control"
+        )
+        scope = (
+            f"exact T0 fresh target source-event/knowledge projection; {claim}; "
+            "one selected fresh Beacon; unbounded accepts and delayed one-use private pending contexts; "
+            "arbitrary actual builder/own/assigned IDs; selected identity/prekey/onetime/KEM and Server identity protected; "
+            f"{observation}; binding_removed={target.wrong_binding}; "
+            "no full API/native-byte/computational theorem; "
+            f"process={target.process}; query={target.query}; libraries="
+            + ";".join(target.libraries())
+        )
+        return target.cls, scope
     raise ValueError(f"unreviewed extension scope: {name}")
 
 
@@ -206,6 +227,7 @@ def validate_scope(rows):
         "check-aead-differential",
         "check-active-strong-secrecy",
         "check-registration-provenance",
+        "check-delayed-response",
     ):
         driver = INVENTORY.module(name)
         targets = {target.name: target for target in driver.TARGETS}

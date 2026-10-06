@@ -1,0 +1,31 @@
+{
+  "base": "e47f17fc81daf28f67442365f2fb0c19981e3196",
+  "timestamp": "2026-10-06T01:03:13.908107+00:00",
+  "files": {
+    "beaconcrypt-core/Makefile": "b9a85b46f890e62d9a8eab6a4a75577bb530c0c46b1de92f8b63ac48eefb3f34",
+    "beaconcrypt-core/proofs/check-inventory.sh": "145d5409183ecf977cadd985f8c83a6b9b74b063e076871ba8c483170dd7e8b0",
+    "beaconcrypt-core/proofs/pro-verif/check-delayed-response.py": "d6409dfd19709400e28dc236d422a349124a0df86500e4c6be3c52e42ea004c8",
+    "beaconcrypt-core/proofs/pro-verif/check-verdict-classes.py": "5925e39c790f1c7c9e01e852775afa53b6257c2446f30f66649168644e8cccd7",
+    "beaconcrypt-core/proofs/pro-verif/declaration-allowlist.tsv": "595f98855df27c5c5041a1089e0468af5763316598ed2afd848931c1022d9d4b",
+    "beaconcrypt-core/proofs/pro-verif/delayed-response-a1.pv": "6ce32fc14ac2716c2156d6d3dc23a763d502f3f02f3e396e2ebc923b8397ad4c",
+    "beaconcrypt-core/proofs/pro-verif/delayed-response-control-binding.pv": "cea28de64c7146d76febd4dae014497e121f46a9b0849d977de446f23ea9d9a1",
+    "beaconcrypt-core/proofs/pro-verif/delayed-response-control-chain.pv": "063ce329ec18130afabb3175ebbf04fa9984383a9687e1f371a9ab29e90ed117",
+    "beaconcrypt-core/proofs/pro-verif/delayed-response-models.py": "3bcdbfdcdf3856dc64d30c4bf0bf44a3a50678959d66c6e1b2dc4a789e9ccf1a",
+    "beaconcrypt-core/proofs/pro-verif/delayed-response-reachable.pv": "ad9f9274e9bc9c40d12bc1f26f97cc5a50ffaf56344c84cd78a71e403fa58270",
+    "beaconcrypt-core/proofs/pro-verif/delayed-response-root.pv": "ca2cd0a40a8277dab920f79d6a02e1ff68c816d59e6d4d9054dfed167d37d43c",
+    "beaconcrypt-core/proofs/pro-verif/delayed-response-wrong-binding.pvl": "e17f0f3756fa79f6b9ede9fc038d30edadbc7f97b232222068f19f3f1cba5187",
+    "beaconcrypt-core/proofs/pro-verif/delayed-response.pvl": "2c4da8d9d58371d4be7484b26cfb73c860fbc58c68ec3eb11b0820dbba2ec900",
+    "beaconcrypt-core/proofs/pro-verif/test-delayed-response-checker.py": "31c3e9c350957cd65a8f6707ecb723402e544b0286a748ce39976de37c8a2b74",
+    "beaconcrypt-core/proofs/pro-verif/test-verdict-classes.py": "4528b5795fa0542dccf18f218e78f4c863f707c8c91575c5377d79cb2e09ae25",
+    "beaconcrypt-core/proofs/pro-verif/verdict-classes.tsv": "328bdb684765591d290431272771cb4d124157075911612f189b89ec0436d26d",
+    "beaconcrypt-core/proofs/pro-verif/verdict-inventory.py": "f65fb97e7fd1757aeb56cfb48ecc64e63108118dff96619f7a1e5ff10f8946ea",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "3e85bbdacb7e8aa2db224851943ebe4530f4863cbeb910181e677dcc8c55fd2f",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "94abbd0e2a008bb13c14e75995469c9c54aa789085170f2899a360f65f8a5b0b",
+    "beaconcrypt-core/tests/proverif_transcript_fidelity.rs": "fb1beac29633a25c3b22360dae272e1788b876196adba82a86ac4e51191d3c1b",
+    "doc/formal-verification-analysis.md": "3b319d9e793dfb986599d8107551314e16476f13e216b8518349e521c48c36aa",
+    "doc/impl/proverif-delayed-response.md": "d2f840777093c08bfcec68de99cc6a7ad426728ebebef844094df759091ee03e",
+    "doc/impl/proverif-fs-source-abstraction.md": "335c79ceca94aa35726ba29299b8fe998255ca20ac758d050bbd48df17af6ea5",
+    "doc/impl/proverif-serial-ci.md": "1e8953bc9df716c6124d89456dec8ca75fb0a71801b47327cdc431bf83cf8358",
+    "doc/impl/proverif-verdict-classification.md": "8c08e150706b7da932482becf600d6f4eef9846387cabfd7e6cfa5dee489e652"
+  }
+}

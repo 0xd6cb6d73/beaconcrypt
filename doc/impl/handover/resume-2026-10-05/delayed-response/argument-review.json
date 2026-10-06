@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-10-06T00:47:34.013069+00:00",
+  "reviewer": "/root/evolving_source_join",
+  "decision": "APPROVE_SCOPED_SYMBOLIC_SOURCE_PROJECTION",
+  "scope": "A1 initial response origin and finite injective lifting under the declared T0/message, source freshness and OD2 interfaces; prototype review only, not maintained integration or computational security.",
+  "files": {
+    "/tmp/beaconcrypt-proverif-delayed-response-origin/beaconcrypt-core/proofs/pro-verif/production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+    "/tmp/beaconcrypt-proverif-delayed-response-origin/beaconcrypt-core/proofs/pro-verif/crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+    "/tmp/beaconcrypt-proverif-delayed-response-origin/beaconcrypt-core/proofs/pro-verif/extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+    "/tmp/beaconcrypt-proverif-delayed-response-origin/beaconcrypt-core/proofs/pro-verif/fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+    "/tmp/beaconcrypt-proverif-delayed-response-origin/beaconcrypt-core/proofs/pro-verif/fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+    "/tmp/beaconcrypt-proverif-delayed-response-origin/beaconcrypt-core/proofs/pro-verif/registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+    "/tmp/beaconcrypt-proverif-delayed-response-origin/beaconcrypt-core/proofs/pro-verif/fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/model.pvl": "453c71d0f554628d9e0924f63b56360a88a4cc5ceef3d38e1fe49a34dd4304d9",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/a1.pv": "6ce32fc14ac2716c2156d6d3dc23a763d502f3f02f3e396e2ebc923b8397ad4c",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/a1.log": "68cd356aedca97976d971a4a41800374a286f52ec9993d355380c53f7e169421",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/root.pv": "ca2cd0a40a8277dab920f79d6a02e1ff68c816d59e6d4d9054dfed167d37d43c",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/root.log": "bf16511b832441f7ace31893d15d8ad7bbac6547f6230862feb94b49a09d71b3",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/witness.pv": "ad9f9274e9bc9c40d12bc1f26f97cc5a50ffaf56344c84cd78a71e403fa58270",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/witness.log": "a1a73f64ad624795ab5d68335f532734e9ccb74e7bdcf60f3cbfd54472bfc91c",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/wrong-binding.pvl": "7ddef1c11cc756475e1c0c7b3c256dc0c465ec08240ab7d0757744cd06d8693e",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/control-binding.pv": "cea28de64c7146d76febd4dae014497e121f46a9b0849d977de446f23ea9d9a1",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/control-binding.log": "75cbce3b29397640dc40a279168dd112d53ec328cd4325af479fa2f205acfb03",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/control-initial-chain.pv": "063ce329ec18130afabb3175ebbf04fa9984383a9687e1f371a9ab29e90ed117",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/control-initial-chain.log": "bf5c4fde5e3f79c588e91b17a05a6f5ee2951784ba8fd9f6fd38c0b0e9ab3630",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/source-lifting.md": "11bafa38bf8bf6190193fa6f2cbd9c1e1a836412db469fc7277beb59305e1a11",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/receipts.json": "91e02bc68827c13b716713c6ff2d4ad55bdb12b8c83efc92046fb403fbd14c3b",
+    "/tmp/bc-arc-scratch/pv-work/a1-delayed-build/probe-v3/libs.txt": "5d0e046e6490373cb0970dd08b912589641142770d10deb8e4b9f4907b69ec7d"
+  },
+  "checks": [
+    "Read entire source-lifting argument, exact model and binding-control variant; checked actual Beacon active failure abortion and Server by-value build consumption/source sequence-one response arguments.",
+    "Verified every recorded input and all five log hashes/result lines; A1 and root TRUE, nonvacuous fs_kid(1) completion FALSE, both origin controls FALSE with weaker correspondence FALSE. No builds.",
+    "Selected freshness keeps the long-term/nonidentity/root/initial Server material private; descendant disclosure uses exact correlated HKDF terms and is covered by A1 process query, not presumed harmless.",
+    "Counterexample projection creates commits only at actual mapped successful source builds; dropping irrelevant operations therefore cannot invent a matching origin event. Actual own/assigned IDs and moved pending binding retained.",
+    "Per-fresh-Beacon identity and one successful finish yield injectivity in T0; no computational identity collision claim.",
+    "Known nonselected materials justify other Server/Beacon and later-record recipe reproduction; same selected Server identity remains handled by accepting service. Public predictable labels and optional outputs are a knowledge/event projection, not full API bisimulation."
+  ],
+  "findings": [],
+  "limits": [
+    "Maintained checker and integration review still required after conversion.",
+    "Native complete-input byte/curve interpretation and cryptographic injectivity/ROM/joint-key contracts remain explicit unresolved bridge work.",
+    "Projection does not equate execution distributions or discard source query costs.",
+    "Target profile is conservative; does not establish arbitrary-reveal authentication or later assigned-ID agreement."
+  ]
+}

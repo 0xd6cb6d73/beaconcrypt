@@ -211,6 +211,29 @@ class ClassificationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.check(rows)
 
+    def test_delayed_origin_exact_scope_and_all_secondary_results(self):
+        driver = CHECK.INVENTORY.module("check-delayed-response")
+        for target in driver.TARGETS:
+            selected = [row for row in self.rows if row["target"] == target.name]
+            self.assertEqual(len(selected), len(target.results))
+            for original in selected:
+                rows = [row for row in self.rows if row is not original]
+                with self.assertRaises(ValueError):
+                    self.check(rows)
+                for field, value in (
+                    ("class", "definitional"),
+                    ("scope", "unconditional full protocol authentication"),
+                ):
+                    rows = copy.deepcopy(self.rows)
+                    next(
+                        row
+                        for row in rows
+                        if row["target"] == target.name
+                        and row["position"] == original["position"]
+                    )[field] = value
+                    with self.assertRaises(ValueError):
+                        self.check(rows)
+
 
 if __name__ == "__main__":
     unittest.main()

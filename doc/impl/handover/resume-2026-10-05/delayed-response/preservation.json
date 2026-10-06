@@ -1,0 +1,23 @@
+{
+  "lean_sources": {
+    "count": 1354,
+    "sha256": "ec75777894bb57bead835130afa167186f06d80192174e6c876994c02078d0a1",
+    "all_byte_identical_to": "e47f17fc81daf28f67442365f2fb0c19981e3196"
+  },
+  "existing_pv_models_queries": {
+    "count": 213,
+    "sha256": "ebb2c5d54b19aee279cb77a371632faa22df8bce1110cafb23bba337784d5e98",
+    "all_byte_identical_to": "e47f17fc81daf28f67442365f2fb0c19981e3196"
+  },
+  "production_rust": {
+    "count": 22,
+    "sha256": "46daf8c7f28539d2bd49231c7f0bf67767300f9fc07c0fad4e3af3a21e001c8f",
+    "all_byte_identical_to": "e47f17fc81daf28f67442365f2fb0c19981e3196"
+  },
+  "prior_verdicts": {
+    "rows": 3165,
+    "prefix_sha256": "f2ad5fc45229aed5a0c67795abe16b427342add83e4ec650fff0936b7701e108",
+    "unchanged": true,
+    "added": 7
+  }
+}

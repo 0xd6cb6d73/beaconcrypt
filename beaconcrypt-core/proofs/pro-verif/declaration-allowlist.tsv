@@ -85,3 +85,6 @@ proofs/pro-verif/active-strong-secrecy-models.py	set	1	set simplifyProcess = fal
 proofs/pro-verif/fs-strong-s2b.pv	set	1	set simplifyProcess = false.	doc/formal-verification-analysis.md#bounded-active-strong-secrecy-experiments
 proofs/pro-verif/registration-provenance.pvl	precise	3	[precise]	doc/formal-verification-analysis.md#signature-origin-across-registration-schedules
 proofs/pro-verif/registration-provenance-wrong-purpose.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#signature-origin-across-registration-schedules
+proofs/pro-verif/delayed-response.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#claim-specific-delayed-initial-response-origin
+proofs/pro-verif/delayed-response-wrong-binding.pvl	precise	4	[precise]	doc/formal-verification-analysis.md#claim-specific-delayed-initial-response-origin
+proofs/pro-verif/delayed-response-models.py	precise	3	[precise]	doc/formal-verification-analysis.md#claim-specific-delayed-initial-response-origin

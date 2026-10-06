@@ -92,6 +92,8 @@ PROVERIF_OPEN_CTX_LOG_DIR ?=
 PROVERIF_PRIMITIVE_LOG_DIR ?=
 PROVERIF_PROVENANCE_TIMEOUT ?= 180
 PROVERIF_PROVENANCE_LOG_DIR ?=
+PROVERIF_DELAYED_TIMEOUT ?= 180
+PROVERIF_DELAYED_LOG_DIR ?=
 PROVERIF_STRONG_LOG_DIR ?=
 # Finite pending-token operational checks; separate from security groups.
 PROVERIF_PENDING_TIMEOUT ?= 180
@@ -139,7 +141,7 @@ LEAN_GENERATED_PATHS := \
 	verify-proverif-kem-controller-auth check-proverif-kem-controller-auth \
 	check-proverif-passive-reachability check-proverif-quantum-capabilities \
 	check-proverif-transcript-fidelity check-proverif-primitive-fidelity check-proverif-active-strong-secrecy \
-	check-proverif-pending-registration check-proverif-aead-differential check-proverif-registration-provenance \
+	check-proverif-pending-registration check-proverif-aead-differential check-proverif-registration-provenance check-proverif-delayed-response \
 	check-toolchain check-lean-policy check-lean-root check-lean-panic-freedom check-inventory \
 	extract-proverif check-proverif check-proverif-fs $(PROVERIF_FS_CHECK_TARGETS) \
 	check-proverif-extraction check-generated check-generated-lean \
@@ -166,6 +168,7 @@ verify-in-shell:
 	$(MAKE) check-proverif-pending-registration
 	$(MAKE) check-proverif-aead-differential
 	$(MAKE) check-proverif-registration-provenance
+	$(MAKE) check-proverif-delayed-response
 	$(MAKE) extract-lean
 	$(MAKE) check-lean
 	$(MAKE) check-inventory
@@ -185,6 +188,7 @@ verify-proverif-in-shell:
 	$(MAKE) check-proverif-pending-registration
 	$(MAKE) check-proverif-aead-differential
 	$(MAKE) check-proverif-registration-provenance
+	$(MAKE) check-proverif-delayed-response
 
 verify-proverif-live-material:
 	$(NIX) --extra-experimental-features 'nix-command flakes' \
@@ -338,6 +342,15 @@ check-proverif-registration-provenance: check-proverif-extraction check-proverif
 		--timeout '$(PROVERIF_PROVENANCE_TIMEOUT)' \
 		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
 		$(if $(PROVERIF_PROVENANCE_LOG_DIR),--log-dir '$(PROVERIF_PROVENANCE_LOG_DIR)')
+
+# Exact T0 delayed initial-response origin and its scoped source projection.
+check-proverif-delayed-response: check-proverif-extraction check-proverif-transcript-fidelity
+	python3 $(PROVERIF_DIR)/test-delayed-response-checker.py
+	python3 $(PROVERIF_DIR)/check-delayed-response.py \
+		--proverif '$(PROVERIF)' \
+		--timeout '$(PROVERIF_DELAYED_TIMEOUT)' \
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \
+		$(if $(PROVERIF_DELAYED_LOG_DIR),--log-dir '$(PROVERIF_DELAYED_LOG_DIR)')
 
 # Open differential controls: no additional protocol security claims.
 check-proverif-aead-differential: check-proverif-extraction check-proverif-transcript-fidelity
@@ -836,6 +849,7 @@ verify-proverif-extensions-in-shell:
 	$(MAKE) check-proverif-pending-registration
 	$(MAKE) check-proverif-aead-differential
 	$(MAKE) check-proverif-registration-provenance
+	$(MAKE) check-proverif-delayed-response
 	$(MAKE) check-proverif-generated-drift
 
 check-proverif-generated-drift:

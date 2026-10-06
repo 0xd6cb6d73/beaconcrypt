@@ -49,11 +49,11 @@ declare -A expected_category_counts=(
 	[generated-lean]=7
 	[generated-proverif]=1
 	[handwritten-lean]=1347
-	[handwritten-proverif]=213
+	[handwritten-proverif]=220
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=43
+	[validation]=46
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -136,6 +136,9 @@ printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
 	proofs/pro-verif/test-active-strong-secrecy-checker.py \
 	proofs/pro-verif/registration-provenance-theory.py \
 	proofs/pro-verif/check-registration-provenance.py \
+	proofs/pro-verif/check-delayed-response.py \
+	proofs/pro-verif/delayed-response-models.py \
+	proofs/pro-verif/test-delayed-response-checker.py \
 	proofs/pro-verif/test-registration-provenance-checker.py \
 	proofs/pro-verif/declaration-allowlist.tsv \
 	proofs/pro-verif/verdict-classes.tsv \
@@ -332,10 +335,10 @@ mapfile -t handwritten_proverif < <(
 reject_matches "handwritten ProVerif uses a forbidden generated helper" \
 	'(construct_fail|_from_bitstring|_default_value|_(?:default|err)\s*\(|nat_to_bitstring)' \
 	"${handwritten_proverif[@]}"
-require_occurrence_count 28 \
+require_occurrence_count 30 \
 	'beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring' \
 	"allowed generated ProVerif converter" "${handwritten_proverif[@]}"
-require_occurrence_count 31 '_to_bitstring' \
+require_occurrence_count 33 '_to_bitstring' \
 	"all handwritten _to_bitstring tokens including three initial-ratchet manifest facts" \
 	"${handwritten_proverif[@]}"
 
@@ -26411,6 +26414,11 @@ python3 proofs/pro-verif/check-active-strong-secrecy.py --check-only
 require_line_count 1 '^check-proverif-registration-provenance: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "signature-provenance serial runner"
 require_line_count 3 '^\t\$\(MAKE\) check-proverif-registration-provenance$' Makefile "signature-provenance verification steps"
 python3 proofs/pro-verif/check-registration-provenance.py --check-only
+
+# Claim-specific delayed initial-response origin retains its separate scope.
+require_line_count 1 '^check-proverif-delayed-response: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "delayed-response serial runner"
+require_line_count 3 '^\t\$\(MAKE\) check-proverif-delayed-response$' Makefile "delayed-response verification steps"
+python3 proofs/pro-verif/check-delayed-response.py --check-only
 
 # Separate serial CI dispatch, complete group prerequisites and generated drift.
 require_line_count 1 '^verify-proverif-fs verify-proverif-extensions: verify-proverif-%:$' Makefile "locked serial CI dispatch"

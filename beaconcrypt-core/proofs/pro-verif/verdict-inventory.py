@@ -186,6 +186,7 @@ def expected_verdicts(directory=HERE):
         "check-aead-differential",
         "check-active-strong-secrecy",
         "check-registration-provenance",
+        "check-delayed-response",
     ):
         driver = module(name, directory)
         if name != "check-primitive-fidelity":
