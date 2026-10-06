@@ -22554,7 +22554,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 	{
 		return Err("the fs group must never be a prerequisite of check-proverif".to_owned());
 	}
-	if count(makefile, "check-proverif-fs") != 4 + FS_SCENARIOS.len() {
+	if count(makefile, "check-proverif-fs") != 5 + FS_SCENARIOS.len() {
 		return Err("unexpected reference to the fs group in the Makefile".to_owned());
 	}
 	require_once(
@@ -25485,5 +25485,133 @@ fn hkdf_prefix_smoke_has_an_exact_source_projection_check() {
 		),
 	] {
 		assert!(validate_hkdf_prefix_source_fidelity(&model, &native).is_err());
+	}
+}
+
+fn validate_serial_proverif_ci(makefile: &str, workflow: &str) -> Result<(), String> {
+	let wrapper = make_recipe(
+		makefile,
+		"verify-proverif-fs verify-proverif-extensions: verify-proverif-%:",
+	)?;
+	let expected_wrapper = "$(NIX) --extra-experimental-features 'nix-command flakes' \\
+		develop --no-update-lock-file '$(PROOF_SHELL)' -c \\
+		$(MAKE) verify-proverif-$*-in-shell";
+	if compact(&wrapper.join("\n")) != compact(expected_wrapper) {
+		return Err("serial proof CI must use the locked proof environment".to_owned());
+	}
+	for (group, checks) in [
+		("fs", vec!["check-proverif-fs"]),
+		(
+			"extensions",
+			vec![
+				"check-proverif-primitive-fidelity",
+				"check-proverif-active-strong-secrecy",
+				"check-proverif-pending-registration",
+				"check-proverif-aead-differential",
+			],
+		),
+	] {
+		let expected = ["check-toolchain", "extract-proverif"]
+			.into_iter()
+			.chain(checks.iter().copied())
+			.chain(["check-proverif-generated-drift"])
+			.map(|target| format!("$(MAKE) {target}"))
+			.collect::<Vec<_>>();
+		if make_recipe(makefile, &format!("verify-proverif-{group}-in-shell:"))? != expected {
+			return Err(format!(
+				"{group} serial CI sequence, checks or drift gate changed"
+			));
+		}
+		for target in checks {
+			if !makefile
+				.lines()
+				.any(|line| line.starts_with(&format!("{target}:")))
+			{
+				return Err(format!("serial CI references missing target {target}"));
+			}
+		}
+	}
+	let drift = make_recipe(makefile, "check-proverif-generated-drift:")?;
+	let expected_drift = "git diff --exit-code -- proofs/pro-verif/extraction
+		@untracked=\"$$(git ls-files --others --exclude-standard -- \\
+		proofs/pro-verif/extraction)\"; \\
+		if [[ -n \"$$untracked\" ]]; then \\
+		echo 'untracked generated ProVerif proof artifacts:' >&2; \\
+		printf '%s\\n' \"$$untracked\" >&2; \\
+		exit 1; \\
+		fi";
+	if compact(&drift.join("\n")) != compact(expected_drift) {
+		return Err("serial CI must reject tracked and untracked extraction drift".to_owned());
+	}
+	for scenario in scenario_names(makefile)? {
+		if [
+			"fs",
+			"extensions",
+			"primitive-fidelity",
+			"active-strong-secrecy",
+			"pending-registration",
+			"aead-differential",
+		]
+		.contains(&scenario.as_str())
+		{
+			return Err("serial CI groups must stay outside the parallel roster".to_owned());
+		}
+	}
+	let workflow = compact(workflow);
+	for (group, timeout) in [("fs", 210), ("extensions", 180)] {
+		require_once(
+			&workflow,
+			&format!("target:verify-proverif-{group}timeout:{timeout}"),
+			"serial ProVerif CI entry and overall job allowance",
+		)?;
+	}
+	Ok(())
+}
+
+#[test]
+fn serial_proverif_ci_preserves_every_gate_and_separate_group() {
+	validate_serial_proverif_ci(CORE_MAKEFILE, FORMAL_WORKFLOW).unwrap();
+	for (label, changed) in [
+		(
+			"omit strong secrecy",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-active-strong-secrecy\n", ""),
+		),
+		(
+			"fork extension checks",
+			CORE_MAKEFILE.replace(
+				"$(MAKE) check-proverif-primitive-fidelity",
+				"$(MAKE) -j4 check-proverif-primitive-fidelity",
+			),
+		),
+		(
+			"bypass generated drift",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-generated-drift\n", ""),
+		),
+		(
+			"ignore tracked drift",
+			CORE_MAKEFILE.replace(
+				"git diff --exit-code -- proofs/pro-verif/extraction",
+				"git diff -- proofs/pro-verif/extraction",
+			),
+		),
+		(
+			"drop untracked drift",
+			CORE_MAKEFILE.replace(
+				"git ls-files --others --exclude-standard",
+				"git ls-files --exclude-standard",
+			),
+		),
+	] {
+		assert!(
+			validate_serial_proverif_ci(&changed, FORMAL_WORKFLOW).is_err(),
+			"{label}"
+		);
+	}
+	for group in ["fs", "extensions"] {
+		let changed = FORMAL_WORKFLOW.replace(&format!("target: verify-proverif-{group}\n"), "");
+		assert!(
+			validate_serial_proverif_ci(CORE_MAKEFILE, &changed).is_err(),
+			"missing {group} CI job"
+		);
 	}
 }

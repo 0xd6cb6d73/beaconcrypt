@@ -1,0 +1,17 @@
+{
+  "reviewer": "/root/r1_scheduler_closure",
+  "date_utc": "2026-10-06T00:15:38.412615+00:00",
+  "decision": "APPROVE",
+  "manifest_sha256": "53fcd82e1d54d08844490fff2a0b0a0971a1a0fd979e0800a97a485f2939cff8",
+  "scope": "Normal reconciliation of independently reviewed fail-stop and serial CI topics only. No fresh source theorem or solver result.",
+  "checks": [
+    "All seven frozen hashes match.",
+    "All1356 Lean-related files match d074f31a337c1fd99a621e430e21778a75c6e422; all235 ProVerif-related files match71e23c56c52134d86103e08674197ab724404976.",
+    "Workflow, Makefile, inventory checker, transcript tests and trust boundary are byte-identical to the CI parent.",
+    "Both reviewed appended analysis sections retained exactly; other incoming analysis changes are their already-reviewed source-parent changes.",
+    "Inventory changes relative CI parent record the existing fail-stop checker/model comment hashes.",
+    "Archive command/exit0 receipt matches exact decompressed log SHA;28FT and inventory pass, with3159 expectation rows/security167 unchanged.",
+    "Archive explicitly states no Lean/PV solver rerun or global composition completion."
+  ],
+  "tests_run_in_review": []
+}

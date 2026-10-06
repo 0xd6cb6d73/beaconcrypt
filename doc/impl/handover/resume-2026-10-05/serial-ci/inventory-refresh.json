@@ -1,0 +1,10 @@
+{
+  "changed_digests": [
+    "../.github/workflows/formal-verification.yml",
+    "Makefile",
+    "proofs/check-inventory.sh",
+    "proofs/trusted-boundary.md",
+    "tests/proverif_transcript_fidelity.rs"
+  ],
+  "counts_unchanged": true
+}

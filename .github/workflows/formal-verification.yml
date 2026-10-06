@@ -101,6 +101,12 @@ jobs:
             target: verify-proverif-live-private-application
           - name: ProVerif arbitrary KEM authentication and controls
             target: verify-proverif-kem-controller-auth
+          - name: ProVerif serial free-schedule group
+            target: verify-proverif-fs
+            timeout: 210
+          - name: ProVerif serial extension group
+            target: verify-proverif-extensions
+            timeout: 180
           - name: Formal proof inventory
             target: check-inventory
 

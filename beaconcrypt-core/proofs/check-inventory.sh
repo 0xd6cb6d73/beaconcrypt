@@ -899,7 +899,7 @@ require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
 	"$fidelity_test" "transcript-fidelity mutable source fixture"
-require_line_count 27 '^#\[test\]$' \
+require_line_count 28 '^#\[test\]$' \
 	"$fidelity_test" "transcript-fidelity test"
 for fidelity_test_name in \
 	production_manifest_symbolic_model_and_adapters_are_exact \
@@ -926,7 +926,8 @@ for fidelity_test_name in \
 	free_schedule_checker_loader_and_targets_are_pinned \
 	free_schedule_records_s2b_model_is_pinned \
 	free_schedule_records_b2s_model_is_pinned \
-	proverif_declarations_are_allowlisted; do
+	proverif_declarations_are_allowlisted \
+	serial_proverif_ci_preserves_every_gate_and_separate_group; do
 	require_line_count 1 "^fn ${fidelity_test_name}\\(\\) \\{\$" \
 		"$fidelity_test" "transcript-fidelity ${fidelity_test_name} test"
 done
@@ -26189,7 +26190,7 @@ require_line_count 1 '^theorem generated_not_inside([[:space:]]|$)' "$selected_s
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
-require_line_count 2 '^\t\$\(MAKE\) check-proverif-primitive-fidelity$' Makefile "primitive-fidelity verification steps"
+require_line_count 3 '^\t\$\(MAKE\) check-proverif-primitive-fidelity$' Makefile "primitive-fidelity verification steps"
 python3 proofs/pro-verif/check-primitive-fidelity.py --check-only
 
 # Exact classification is metadata validation, independent of solver evidence.
@@ -26201,17 +26202,27 @@ python3 proofs/pro-verif/check-verdict-classes.py
 
 # Finite pending-token operations retain their separate, non-security scope.
 require_line_count 1 '^check-proverif-pending-registration: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "pending-registration serial runner"
-require_line_count 2 '^\t\$\(MAKE\) check-proverif-pending-registration$' Makefile "pending-registration verification steps"
+require_line_count 3 '^\t\$\(MAKE\) check-proverif-pending-registration$' Makefile "pending-registration verification steps"
 python3 proofs/pro-verif/check-pending-registration.py --check-only
 
 # Open CTX differential controls remain separate from counted security results.
 require_line_count 1 '^check-proverif-aead-differential: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "open CTX serial runner"
-require_line_count 2 '^\t\$\(MAKE\) check-proverif-aead-differential$' Makefile "open CTX verification steps"
+require_line_count 3 '^\t\$\(MAKE\) check-proverif-aead-differential$' Makefile "open CTX verification steps"
 python3 proofs/pro-verif/check-aead-differential.py --check-only
 
 # Separate bounded equivalence and fresh-secret control group.
 require_line_count 1 '^check-proverif-active-strong-secrecy: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "active strong-secrecy serial runner"
-require_line_count 2 '^\t\$\(MAKE\) check-proverif-active-strong-secrecy$' Makefile "active strong-secrecy verification steps"
+require_line_count 3 '^\t\$\(MAKE\) check-proverif-active-strong-secrecy$' Makefile "active strong-secrecy verification steps"
 python3 proofs/pro-verif/check-active-strong-secrecy.py --check-only
+
+# Separate serial CI dispatch, complete group prerequisites and generated drift.
+require_line_count 1 '^verify-proverif-fs verify-proverif-extensions: verify-proverif-%:$' Makefile "locked serial CI dispatch"
+for group in fs extensions; do
+	require_line_count 1 "^verify-proverif-${group}-in-shell:\$" Makefile "serial ${group} CI recipe"
+	require_line_count 1 "^[[:space:]]+target: verify-proverif-${group}\$" ../.github/workflows/formal-verification.yml "serial ${group} CI job"
+done
+require_line_count 2 '^\t\$\(MAKE\) check-proverif-generated-drift$' Makefile "serial CI generated-drift steps"
+require_line_count 1 '^check-proverif-generated-drift:$' Makefile "serial CI generated-drift gate"
+require_line_count 1 '^fn validate_serial_proverif_ci\(' "$fidelity_test" "serial CI source validation"
 
 printf 'Formal-verification inventory matches the reviewed boundary.\n'
