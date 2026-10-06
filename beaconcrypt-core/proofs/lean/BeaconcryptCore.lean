@@ -1526,6 +1526,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentCompileFootprint
 
 import BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant
 
+import BeaconcryptCore.Computational.PqxdhDeploymentCompileGame
+
 /-!
 # Beaconcrypt-core verification root
 
