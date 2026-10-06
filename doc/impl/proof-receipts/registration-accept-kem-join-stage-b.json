@@ -37,15 +37,15 @@
   "files_sha256": {
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointAcceptKemCut.lean": "40dbbaa1dfad20f3ae18969fda28cbc4c68e255dc39ec57346f6abc4b3b69a35",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawChallenge.lean": "cc8f0d6abc8fde898447c84b63cf0f993c74f4896425d6bf0ad321b6cb4a572d",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawGame.lean": "adb42cea505a0df0ab1f75d77a849b9368aee88bbf331c7020f233719c2e7d11",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawCertified.lean": "5f16ce0651785c9e55cee54571cae3232b621a8a1d063032b950699e9ba0b26b",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawGame.lean": "c5907597008d70fc943feef55b880c5ea86074afe973493fbae760cedffe0563",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawCertified.lean": "d4a68a90af141f31c6e39a717459c35caf7d62c6775d71171dd5024e28bd7a5b",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawBills.lean": "ebc007f9d8d1362a5b261a9e8c12c4ba54f3cb3b5875c194d4969a063707f04a",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "3822dbb66c029b7691778520dc2f488b80adbb37e7da14bf3cb106ef25b64c86",
-    "beaconcrypt-core/proofs/check-inventory.sh": "e8733509da847287c35366065abddf606cf5277d46144b5e01d0b85e1383f1dd",
-    "beaconcrypt-core/proofs/reviewed-inventory.txt": "7e2465fd59e46a012d7de52606097ad19d5070a76b0b1bb0ad71fe5ced350f46",
-    "beaconcrypt-core/proofs/trusted-boundary.md": "a0b0a567b83840381b003c44626480b339419e5d695cdc6c96f649b313025480",
-    "doc/formal-verification-analysis.md": "c075b32b6980841e7288b91a6c4cf4924b726b4e7fd73af21f8e61b2d8cf296a",
-    "doc/impl/registration-accept-kem-join.md": "1b7f71cb809f988eba13ed9c8b8699b9d397d2f8efc41955d2aaf342b0a517b5"
+    "beaconcrypt-core/proofs/check-inventory.sh": "72fb00abe05917ab7f68845358e637b2ea03d199ef73a14ea2960137b3279942",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "6376c40cabc4a5c468bdc251495adf48f84cceb78cb8bf05bf3e25af2d6ed812",
+    "beaconcrypt-core/proofs/trusted-boundary.md": "d23c251bd467792aa719839f6e7acb703c11f9dfe92a66cab91d154fdff85594",
+    "doc/formal-verification-analysis.md": "3093fa98d6598e155f60f4b817fe2559f4e93382597413411116d58a656d9a35",
+    "doc/impl/registration-accept-kem-join.md": "cdf9a557ee30918b57bbb8b6e1b9162e4b42e77a61cc004063d8480dc0f9c698"
   },
   "modules": {
     "PqxdhRegistrationJointAcceptKemCut": {
@@ -84,6 +84,7 @@
     "PqxdhRegistrationJointKemRawGame": {
       "plan_id": "M7",
       "statements": [
+        "correctnessError_eq_kemError",
         "branchRaw_source",
         "branchRaw_real_error",
         "advantageRaw_error",
@@ -96,7 +97,9 @@
       "statements": [
         "prefix_erase",
         "branch_erase",
-        "advantage"
+        "advantage",
+        "ideal_close",
+        "real_le_ideal"
       ]
     },
     "PqxdhRegistrationJointKemRawBills": {
@@ -123,7 +126,7 @@
       ]
     }
   },
-  "statements": 49,
+  "statements": 52,
   "guards": [
     "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.handler_eq",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.actual_hide",
@@ -148,6 +151,7 @@
     "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.rawCut_shape",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.accepted_reached",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawChallenge.preRaw_source",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.correctnessError_eq_kemError",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branchRaw_source",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branchRaw_real_error",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.advantageRaw_error",
@@ -156,6 +160,8 @@
     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.prefix_erase",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.branch_erase",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.advantage",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.ideal_close",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.real_le_ideal",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_refl",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_all",
     "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_bind",
@@ -181,11 +187,11 @@
     "Quot.sound"
   ],
   "axiom_output": {
-    "source": "/tmp/bc-arc-scratch/accept-cut-join/stage-b/axioms/AxiomsB.lean",
-    "source_sha256": "492919df40f0b158890be3cce0d28ed908c4e7e5ad2be92e6291c6748cbb8d3e",
-    "log_sha256": "bcada33e63bf4289bd6b121feff0e6c070581ab05c3125af061f33e6c2ca6eb0",
-    "summary": "49 statements; 48 depend on [propext, Classical.choice, Quot.sound] and KemRawBills.uniform_cap on [propext]",
-    "utf8": "'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.handler_eq' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.actual_hide' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.free_hide' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.scan_free_bind' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.scan_bind_zero' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.support_simulate' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.commands_support' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.hide_free' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.scan_hide' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.before_callbacks' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.before_free' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.ordered_cut' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.ordered_complete' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.tail_none' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_scan' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.accept_scan' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_commands' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_actual' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.rawCut_finish' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.rawCut_shape' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.accepted_reached' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawChallenge.preRaw_source' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branchRaw_source' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branchRaw_real_error' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.advantageRaw_error' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.ideal_close' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.real_le_ideal' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.prefix_erase' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.branch_erase' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.advantage' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_refl' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_all' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_bind' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.exposeAt_hides' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.exposeAt_bills' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.residual_hook' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.preRaw_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.saved' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.uniform_cap' depends on axioms: [propext]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.adversary_post' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.scan_bills' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_uniform' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_excluded' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_decapsulations' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_base' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.annotated_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.adversary_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n"
+    "source": "/tmp/bc-arc-scratch/accept-cut-join/stage-b/axioms/AxiomsFix.lean",
+    "source_sha256": "ab0e7c86ad861d693a16d3ce69de31ce9953bad0e3222b8fabe85492d09dc9d7",
+    "log_sha256": "98f28f22b45a4e7e3ed51f8b1e3a45edfd127d58c8c00c40bde91aac2e9d2e1c",
+    "summary": "52 statements (49 of stage B plus the three review follow-up statements); 51 depend on [propext, Classical.choice, Quot.sound] and KemRawBills.uniform_cap on [propext]. The original 49-statement output (axioms/AxiomsB.lean) is superseded by this one.",
+    "utf8": "'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.handler_eq' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.actual_hide' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.free_hide' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.scan_free_bind' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.scan_bind_zero' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.support_simulate' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.commands_support' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.hide_free' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.scan_hide' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.before_callbacks' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.before_free' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.ordered_cut' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.ordered_complete' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.tail_none' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_scan' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.accept_scan' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_commands' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_actual' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.rawCut_finish' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.exposeAt_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.rawCut_shape' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.accepted_reached' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawChallenge.preRaw_source' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.correctnessError_eq_kemError' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branchRaw_source' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branchRaw_real_error' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.advantageRaw_error' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.ideal_close' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.real_le_ideal' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.prefix_erase' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.branch_erase' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.advantage' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.ideal_close' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.real_le_ideal' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_refl' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_all' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_bind' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.hides_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.exposeAt_hides' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.exposeAt_bills' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.residual_hook' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.preRaw_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.saved' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.uniform_cap' depends on axioms: [propext]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.adversary_post' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.scan_bills' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_uniform' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_excluded' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_decapsulations' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_base' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.annotated_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.adversary_bound' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n"
   },
   "leanpath": {
     "manifest": "/tmp/bc-arc-scratch/accept-cut-join/stage-b/leanpath",
@@ -241,10 +247,10 @@
     },
     {
       "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame",
-      "start": "2026-10-06T12:11:27.187020+00:00",
-      "end": "2026-10-06T12:11:31.524316+00:00",
+      "start": "2026-10-06T12:39:35.439615+00:00",
+      "end": "2026-10-06T12:39:39.474255+00:00",
       "exit": 0,
-      "source_sha256": "adb42cea505a0df0ab1f75d77a849b9368aee88bbf331c7020f233719c2e7d11",
+      "source_sha256": "c5907597008d70fc943feef55b880c5ea86074afe973493fbae760cedffe0563",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "command": [
         "flock",
@@ -260,14 +266,14 @@
         "/tmp/beaconcrypt-accept-kem-step/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawGame.lean"
       ],
       "leanpath_sha256": "74fa4cde85d2dfdb7552ce205ca34dc4a7d5b3ceb10c6aa6d29df24d3d9fe16c",
-      "artifact_sha256": "88a61925e3ca5cd5966dc46fd6430b1b7f87a2382a9486c2979c990af0b3ee0d"
+      "artifact_sha256": "05ab95c193945c0f64ef748c15ed339302cbb595c7a3ef207f34c4e1369c791f"
     },
     {
       "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified",
-      "start": "2026-10-06T12:11:31.559461+00:00",
-      "end": "2026-10-06T12:11:34.884317+00:00",
+      "start": "2026-10-06T12:39:39.508245+00:00",
+      "end": "2026-10-06T12:39:42.464879+00:00",
       "exit": 0,
-      "source_sha256": "5f16ce0651785c9e55cee54571cae3232b621a8a1d063032b950699e9ba0b26b",
+      "source_sha256": "d4a68a90af141f31c6e39a717459c35caf7d62c6775d71171dd5024e28bd7a5b",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "command": [
         "flock",
@@ -283,12 +289,12 @@
         "/tmp/beaconcrypt-accept-kem-step/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawCertified.lean"
       ],
       "leanpath_sha256": "74fa4cde85d2dfdb7552ce205ca34dc4a7d5b3ceb10c6aa6d29df24d3d9fe16c",
-      "artifact_sha256": "d8e7314e13f02c1ac84c76970c4b49d341f64dbcbbf718ae664ecb67775221ea"
+      "artifact_sha256": "d8ffab97b1aae249dafed13301bda73df2e21718776daa29d440bd11edba3935"
     },
     {
       "module": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills",
-      "start": "2026-10-06T12:11:34.919817+00:00",
-      "end": "2026-10-06T12:11:39.220682+00:00",
+      "start": "2026-10-06T12:39:42.499987+00:00",
+      "end": "2026-10-06T12:39:46.497183+00:00",
       "exit": 0,
       "source_sha256": "ebc007f9d8d1362a5b261a9e8c12c4ba54f3cb3b5875c194d4969a063707f04a",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -306,7 +312,7 @@
         "/tmp/beaconcrypt-accept-kem-step/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRawBills.lean"
       ],
       "leanpath_sha256": "74fa4cde85d2dfdb7552ce205ca34dc4a7d5b3ceb10c6aa6d29df24d3d9fe16c",
-      "artifact_sha256": "4d8fb6f8b117b455a6fb8377bbaa42490473d5c8943e53d1a328b235f0eb9efd"
+      "artifact_sha256": "b997c7cc4460cb28be2d259de6d8271c0f7db43eeaa2712907bfaa95cd7ef93b"
     }
   ],
   "root_checks": {
@@ -336,6 +342,11 @@
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "root-final": {
+      "exit": 0,
+      "source_sha256": "3822dbb66c029b7691778520dc2f488b80adbb37e7da14bf3cb106ef25b64c86",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "root-fix": {
       "exit": 0,
       "source_sha256": "3822dbb66c029b7691778520dc2f488b80adbb37e7da14bf3cb106ef25b64c86",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -392,9 +403,9 @@
     "exposeAt is generic in the observation observe : X × Tag → R instead of the decision D : X → Bool; the plan program is observe := decideTag D, for which observe <$> tag work index is decisionClient D work index. exposeAt takes identityIndex, publicIdentity, owners and state like KemEncapsulation.commands; rawScan instantiates them with the initialized Server like KemChallenge.pre.",
     "rawCut_shape gives the saved continuation in the literal form rawResume (source suffix, accept tail, hidden rest of the tagged client); the KemOpaqueResume.resume_reply form needs lane port L2 (stage D). It additionally records that the raw bytes come from a reached pending AcceptCut cut.",
     "accepted_reached is stated on the KEM cut: a completed cut has an outcome observe (result, tag) with accepted tag = false (the contrapositive reading of the plan sentence). Rejection after the hook gives accept reply none, hence accepted = false, by the definition of the tag; no separate statement is needed.",
-    "T3 is KemRawCertified.advantage for the proof-carrying adversary; KemRawGame.advantageRaw_error is the same bound for the plain adversary. εKEM is the definition KemRawGame.correctnessError, written with 𝒟[...] {true} because the VCVio revision deprecates probOutput and the Pr[= ...] notation.",
+    "T3 is KemRawCertified.advantage for the proof-carrying adversary; KemRawGame.advantageRaw_error is the same bound for the plain adversary. KemRawGame.ideal_close and KemRawGame.real_le_ideal are likewise for the plain adversary, which has no proved query bills; KemRawCertified.ideal_close and KemRawCertified.real_le_ideal (added after the stage B review) are the forms for the proof-carrying adversary whose bills KemRawBills.adversary_bound states, and stage C uses them. εKEM is the definition KemRawGame.correctnessError, written with 𝒟[...] {true} because the VCVio revision deprecates probOutput and the Pr[= ...] notation; KemRawGame.correctnessError_eq_kemError equates it with the existing PqxdhServerAuthNegativeControl.kemError (KemRawGame imports PqxdhServerAuthNegativeControl for this).",
     "The plan M8 post_bound is adversary_post, which uses the existing context-generic KemPostBills.post_bound; pre_bills are pre_uniform, pre_decapsulations and pre_base. M8 is split into KemRawCertified and KemRawBills (allowed by the plan).",
-    "Helper statements added and guarded: actual_hide, free_hide, support_simulate, commands_support, hide_free, scan_hide, before_callbacks, before_free, ordered_cut, ordered_complete, tail_none, exposeAt_scan, accept_scan, exposeAt_commands (M5); real_le_ideal (M7); hides_refl, hides_all, hides_bind, hides_bound, exposeAt_hides, exposeAt_bills, residual_hook, preRaw_bound, uniform_cap, scan_bills, pre_excluded, annotated_bound (M8).",
+    "Helper statements added and guarded: actual_hide, free_hide, support_simulate, commands_support, hide_free, scan_hide, before_callbacks, before_free, ordered_cut, ordered_complete, tail_none, exposeAt_scan, accept_scan, exposeAt_commands (M5); real_le_ideal and correctnessError_eq_kemError (M7); hides_refl, hides_all, hides_bind, hides_bound, exposeAt_hides, exposeAt_bills, residual_hook, preRaw_bound, uniform_cap, scan_bills, pre_excluded, annotated_bound, and KemRawCertified.ideal_close and KemRawCertified.real_le_ideal (M8).",
     "No planned statement was false or unprovable; none was weakened, and no existing theorem was modified."
   ],
   "not_proved": [
@@ -404,7 +415,7 @@
     "Handoff items 2-8, including the Extract/HKDF hybrid and context secrecy of the candidate, and the final validation matrix."
   ],
   "checks_not_run": "No lake build, make verify, nix-collect-garbage, ProVerif, Rust or mutation run; no production Rust or ProVerif change.",
-  "review": "Stage B (including the L1 port) is not yet independently reviewed. Not pushed.",
+  "review": "Stage B (including the L1 port) was independently reviewed under a semantic and a hygiene lens; both returned APPROVE_WITH_NITS. The findings are addressed by the follow-up recorded in review_followup. Not pushed.",
   "owner_decisions_2026_10_06": [
     "Decision 1: freshness read at the accept (stage A, unchanged).",
     "Decision 3: fixed public (i, k) target, no selection loss; stage B designates the raw-accept ordinal index and the KEM creation index selected.",
@@ -423,12 +434,79 @@
       "check-inventory",
       "SHELL=bash"
     ],
-    "state": "documentation commit with every file staged, including this receipt; only this focused_inventory_final record was edited afterwards",
+    "state": "review follow-up documentation commit with every file staged, including this receipt; only this focused_inventory_final record was edited afterwards",
     "exit": 0,
-    "start": "2026-10-06T12:20:00Z",
-    "end": "2026-10-06T12:21:04Z",
-    "log_sha256": "508df5d8c350930df5e089b54eb045d3ac043f8d90995b21039af4b9340c0f7e",
+    "start": "2026-10-06T12:46:06Z",
+    "end": "2026-10-06T12:47:12Z",
+    "log_sha256": "d3eb5ff15d21402158cf5dd8fe1f19aa1967f2b58d329cdd5a1512663140368b",
     "comm_warnings": 0,
     "handwritten_lean_count": 1477
+  },
+  "review_followup": {
+    "date": "2026-10-06T12:45:55.199405+00:00",
+    "review_source": {
+      "path": "/tmp/bc-arc-scratch/accept-cut-join/stage-b/review.json",
+      "sha256": "98803ea42e6aa73688afa77d7770bb9401946d0d7f311a8207a176d588aedf52",
+      "reviewed_head": "1cd1ad67",
+      "verdicts": {
+        "semantic": "APPROVE_WITH_NITS",
+        "hygiene": "APPROVE_WITH_NITS"
+      }
+    },
+    "commits": [
+      {
+        "commit": "5b7fe894a3a4f302f12fc5aae68a3c8e26ec959c",
+        "subject": "Add certified raw-ordinal KEM bounds and the correctness-error link"
+      },
+      {
+        "commit": "the documentation commit that contains this receipt",
+        "subject": "Address the stage B review in the accept/KEM documentation"
+      }
+    ],
+    "findings": [
+      "Semantic minor 1 (stage C roadmap paired the plain adversary's advantage with the certified adversary's bills): added KemRawCertified.ideal_close and KemRawCertified.real_le_ideal for KemRawCertified.adversary, proved from KemRawCertified.advantage as in the reviewer probe; the guide (M7 and M8 paragraphs, module table, stage C open item) now has stage C use KemRawCertified.real_le_ideal, and the deviations record that the KemRawGame forms are for the plain adversary. The KemRawGame docstrings say the same.",
+      "Semantic minor 2 and hygiene nit 2 (exposeAt_actual described with the challenger encapsulation): the analysis sentence now reads that interpreting the visible encapsulation with the real source encapsulator gives back exactly the real source program, and that replacing it by the challenger encapsulation is part of the open stage C source-to-KEM bridge. No other document used the wrong wording.",
+      "Semantic nit 3 (KDF-context wording read as a secrecy result): the guide (stage B accounting, and the parallel stage A sentence) and the analysis now say that the stage forms no KDF game and no SecretInputKdf.Context and that keeping the candidate out of the KDF distinguisher context remains open (handoff item 2).",
+      "Hygiene nit 1 (names note): the stage B names paragraph now lists the L1 collisions, above all KemSourceSuffix.handler against CutVerification.handler (reconciled by handler_eq), with exact module lists except for the 50 handler namespaces, whose full list is in collision_scan below; it also fixes the loose stage B attributions and names the KemRawGame/KemRawCertified adversary and ideal_close/real_le_ideal pairs.",
+      "Hygiene nit 3 (two names for εKEM): added KemRawGame.correctnessError_eq_kemError, proved by simp only [correctnessError, PqxdhServerAuthNegativeControl.kemError, evalDist_apply_singleton]."
+    ],
+    "new_statements": [
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.correctnessError_eq_kemError",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.ideal_close",
+      "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.real_le_ideal"
+    ],
+    "new_guards_utf8": "'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.correctnessError_eq_kemError' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.ideal_close' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.real_le_ideal' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]\n",
+    "direct_checks": "KemRawGame, KemRawCertified and KemRawBills re-checked in dependency order (tag fix) with exit 0 and empty logs; recorded in direct_checks_final. AcceptKemCut and KemRawChallenge are unchanged.",
+    "root_check": "root-fix: exit 0, empty log (BeaconcryptCore.lean unchanged).",
+    "hygiene": {
+      "unused_premises": "hygiene/PremisesFix.lean: no binder of the three new theorems is unused (exit 0)",
+      "constants": "hygiene/ConstsFix.lean: no axiom, opaque or quot constants in KemRawGame, KemRawCertified, KemRawBills (exit 0)",
+      "guard_liveness": "hygiene/LivenessFix.lean: one deliberately wrong guard per new statement fails (3 guard errors, exit 1 as expected)",
+      "forbidden_scan": "zero matches of the forbidden-token and correctness patterns of forbidden_scan and correctness_scan in KemRawGame and KemRawCertified",
+      "logs_sha256": {
+        "PremisesFix": "f8e761d518b31597cc61f67c1a07407a9f7c8899a78388e33ef54c3a7bc609a0",
+        "ConstsFix": "a2d051e168de4dbcb31ada824e3298e2aa6d5c4be1b08a3319ee0c5a386529d9",
+        "LivenessFix": "7a4323ea0f74df5e4431d6dc8492cb88f65e3114513971f4ff2941bd3862a2e8",
+        "CollideFix": "4d1cc1073497959be6503e5d7048574287e98fd6381fdb66b033aed79938ae8c"
+      }
+    },
+    "collision_scan": {
+      "source": "/tmp/bc-arc-scratch/accept-cut-join/stage-b/hygiene/CollideFix.lean",
+      "source_sha256": "97e317de0cba6ef7c63fd488da84d0ca621c70d51548d88b23b6687b34a43679",
+      "method": "all root imports; every L1 and stage B declaration directly in a BeaconcryptCore.Computational.* namespace (names containing eq_ skipped, as in the hygiene review scan) against every declaration directly in such a namespace; plus exact-name lookups for the three new statements",
+      "exit": 0,
+      "utf8": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected.afterEncapsulation collides with 2: [PqxdhCommonSharedDispatch, PqxdhSourceSharedPreparationResources]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes.accepted_input collides with 1: [PqxdhServerAuthPublicationAcceptance]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes.challenge_input collides with 1: [PqxdhLaterChallengeSendLog]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.handler collides with 50: [PqxdhInitialEvaluatedPost, PqxdhInitialHalfObserver, PqxdhInitialHalfObserverCompiler, PqxdhInitialHalfPrivateObserver, PqxdhInitialNativeAudit, PqxdhInitialNativeLog, PqxdhInitialOccurrencePaths, PqxdhInitialParentObserver, PqxdhInitialParentObserverAliases, PqxdhInitialParentObserverCompiler, PqxdhInitialParentPrivateObserver, PqxdhInitialPendingCurrent, PqxdhInitialPendingPost, PqxdhInitialRootAliases, PqxdhInitialSelectedBeacon, PqxdhLaterChallengeMonitor, PqxdhLaterChallengeRandomBackend, PqxdhLaterChallengeTwin, PqxdhRecordConfidentialityChallenge, PqxdhRegistrationCells, PqxdhRegistrationJointAttemptLedger, PqxdhRegistrationJointCutVerification, PqxdhRegistrationJointSchedule, PqxdhRegistrationJointServiceSchedule, PqxdhRegistrationSchedule, PqxdhSelectedPostDisclosure, PqxdhServerAuthCtxHandler, PqxdhServerAuthCtxSend, PqxdhServerAuthJointIdentityCompiler, PqxdhServerAuthPresealControl, PqxdhServerAuthPublicationFailure, PqxdhServerAuthPublicationHandler, PqxdhServerAuthPublicationReference, PqxdhServerAuthRootOccurrences, RawCtxFamilySourceFreshness, RawCtxGenericLiveRead, RawCtxPendingFamilyLiveQueries, RawCtxPendingFamilyNative, RawCtxPendingSelectiveFamily, RawCtxReachedParentCut, RawCtxSelectedAliasPrimitives, RawCtxSelectedAuthenticationObserver, RawCtxSelectedInitialMask, RawCtxSelectedLiveCompiler, RawCtxSelectedParentLive, RawCtxSelectedParentPrivate, RawCtxSelectiveChainGame, RawCtxSelectiveFamilyLog, RawCtxSelectiveSharedRom, RawCtxSharedPrefixBackend]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.suffix collides with 2: [PqxdhFirstBeaconRecordCtx, PqxdhLaterExecutableCompletion]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.ordered_source collides with 1: [PqxdhServerAuthPublicationOwnerFamily]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.preparation collides with 7: [PqxdhInitialCurrentBeacon, PqxdhPhase2KemHandles, PqxdhPhase2SharedKemHandles, PqxdhPreparedPrefixCallbacks, PqxdhPreparedSelectedCallbackBounds, PqxdhRegistrationJointNonSigningHistory, PqxdhRegistrationSchedule]\nBeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.hide collides with 1: [RawCtxSelectedChain]\nBeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.support_simulate collides with 1: [PqxdhFirstRecordReplay]\nBeaconcryptCore.Computational.PqxdhRegistrationJointAcceptKemCut.tagged collides with 2: [PqxdhLaterChallengeBuilderCoupling, PqxdhLaterChallengeScanCoupling]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.branch collides with 1: [PqxdhRegistrationJointKemGame]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.real_le_ideal collides with 1: [PqxdhRegistrationJointKemRawCertified]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.sourceReal collides with 1: [PqxdhRegistrationJointKemGame]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.ideal_close collides with 1: [PqxdhRegistrationJointKemRawCertified]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.adversary collides with 4: [PqxdhRegistrationJointKemCertified, PqxdhRegistrationJointKemGame, PqxdhRegistrationJointKemRawCertified, PqxdhServerAuthPresealControl]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.adversary collides with 4: [PqxdhRegistrationJointKemCertified, PqxdhRegistrationJointKemGame, PqxdhRegistrationJointKemRawGame, PqxdhServerAuthPresealControl]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.advantage collides with 6: [PqxdhCorrelatedExtractFamily, PqxdhJointDhExtractFamily, PqxdhJointGapDh, PqxdhJointIdentity, PqxdhRegistrationJointKemCertified, PqxdhRegistrationJointKemGame]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.branch_erase collides with 1: [PqxdhRegistrationJointKemCertified]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.Saved collides with 1: [PqxdhRegistrationJointKemCertified]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.real_le_ideal collides with 1: [PqxdhRegistrationJointKemRawGame]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.annotatedPre collides with 1: [PqxdhRegistrationJointKemCertified]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.ideal_close collides with 1: [PqxdhRegistrationJointKemRawGame]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.prefix_erase collides with 2: [PqxdhLaterChallengePreparedCapture, PqxdhRegistrationJointKemCertified]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_decapsulations collides with 1: [PqxdhRegistrationJointKemRouting]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_uniform collides with 2: [PqxdhDynamicKemJointBounds, PqxdhRegistrationJointKemCosts]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.saved collides with 1: [PqxdhRegistrationJointKemSavedBills]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.annotated_bound collides with 1: [PqxdhRegistrationJointKemReductionBills]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.pre_base collides with 2: [PqxdhDynamicKemJointBounds, PqxdhRegistrationJointKemCosts]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.scan_bills collides with 2: [PqxdhRegistrationJointKemCutInterpreted, PqxdhRegistrationJointKemPreBills]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.adversary_bound collides with 1: [PqxdhRegistrationJointKemReductionBills]\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills.adversary_post collides with 1: [PqxdhRegistrationJointKemPostBills]\nexact correctnessError_eq_kemError: [BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.correctnessError_eq_kemError]\nexact ideal_close: [BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.ideal_close, BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.ideal_close]\nexact real_le_ideal: [BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawCertified.real_le_ideal, BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawGame.real_le_ideal]\n"
+    },
+    "focused_inventory_lean_commit": {
+      "exit": 0,
+      "start": "2026-10-06T12:40:53Z",
+      "end": "2026-10-06T12:41:58Z",
+      "log_sha256": "37a429d2e27b31ab9521027fa8e8cae4327f4f4b8ce54da671ed7e2e9c16b639",
+      "comm_warnings": 0,
+      "state": "Lean follow-up commit with every file staged",
+      "handwritten_lean_count": 1477
+    },
+    "handwritten_lean_count": "unchanged at 1477 (no new module); theorem and guard counts in check-inventory.sh: KemRawGame 5 -> 6, KemRawCertified 3 -> 5",
+    "diff_check": "git diff --cached --check clean for both follow-up commits"
   }
 }
