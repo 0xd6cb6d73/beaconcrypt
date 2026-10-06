@@ -166,6 +166,24 @@ def extension_class_scope(name, target, driver):
             + ";".join(target.libraries())
         )
         return target.cls, scope
+    if name == "check-record-origin":
+        claim = {
+            "L2-origin": "ordinary successful-publication origin; injectivity additionally requires reviewed paper C3, not a solver verdict",
+            "L2-identity": "auxiliary selected-identity seed secrecy",
+            "L2-C-chain": "initial Beacon-chain disclosure negative control",
+            "L2-cache": "selected honest-context sequence2 then cached1 reachability; Kr2 prefix embeds into Kr3",
+        }[target.name]
+        scope = (
+            f"exact T0 source-profile near-event projection; {claim}; "
+            f"K_s=2, K_r={target.bound}; AnyPin selected Beacon; replicated arbitrary-candidate accepts and one-use pending builds; "
+            "actual Server/Beacon signing identities and assigned IDs; near Some/None plaintext replies; "
+            "opposite post-initial chain and Beacon chain3 disclosed; first-far public-computation projection; "
+            "selected Server identity and Beacon four private slots/root/initial Beacon materials protected except named control; "
+            "no full raw API/native-byte/computational theorem; "
+            f"process={target.process}; query={target.query}; libraries="
+            + ";".join(target.libraries())
+        )
+        return target.cls, scope
     if name == "check-exact-far":
         profile = "AnyPin" if target.base == "b2s-C4" else "honest pins"
         start = driver.first_far(target.direction)
@@ -245,6 +263,7 @@ def validate_scope(rows):
         "check-registration-provenance",
         "check-delayed-response",
         "check-exact-far",
+        "check-record-origin",
     ):
         driver = INVENTORY.module(name)
         targets = {target.name: target for target in driver.TARGETS}

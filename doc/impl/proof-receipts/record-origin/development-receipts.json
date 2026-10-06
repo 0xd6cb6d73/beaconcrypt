@@ -1,0 +1,2192 @@
+[
+  {
+    "date": "2026-10-06T02:24:09.123292+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=cache-ghost, Ks2 Kr3; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "5c61720ecee7b28b3a3ea302568f565de9692323a7779abf6d2f5cd4cd5558b4",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-cache.pv": "00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-ghost/l2-cache.pv"
+    ],
+    "seconds": 21.98214683192782,
+    "peak_rss_kib": 2539048,
+    "exit": 0,
+    "timeout": false,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [
+      "RESULT not (event(L2CachedAccepted(s,ed_public(k),kid,root_4,m)) && event(L2SelectedIdentity(k))) cannot be proved."
+    ],
+    "confirmed_traces": 0,
+    "log_sha256": "8ab9f1271fe206a8e880b75eb15c7fbaaf2ec5c1f9aaeadf193e620579a325bd",
+    "receipt_name": "cache-ghost-kr3-cache.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/5c61720ecee7b28b3a3ea302568f565de9692323a7779abf6d2f5cd4cd5558b4.gz",
+        "sha256": "d19ceacafbf1c63c6905cdfc7519c3338a6419faf398a8805def2f89a81813a5",
+        "raw_sha256": "5c61720ecee7b28b3a3ea302568f565de9692323a7779abf6d2f5cd4cd5558b4",
+        "bytes": 2678
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-cache.pv": {
+        "file": "inputs/00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b.gz",
+        "sha256": "23242c164aea5977b08927224dfc6d08355c1342d098a77933381510259bb275",
+        "raw_sha256": "00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b",
+        "bytes": 176
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/cache-ghost-kr3-cache.log.gz",
+      "sha256": "edc83fb613477114f47f5b0e8238b819a88523dade48fc14656f0637bf813dd9",
+      "raw_sha256": "8ab9f1271fe206a8e880b75eb15c7fbaaf2ec5c1f9aaeadf193e620579a325bd",
+      "bytes": 2676076
+    }
+  },
+  {
+    "date": "2026-10-06T02:30:52.306429+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=cache-precise-all, Ks2 Kr2; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "83411b75bd1011c6f14d0e864c57dfbdb7926c22fbd50db7fa4887e5eda8f2ec",
+      "l2-kr2.pvl": "6abbcdc3a639ce6235f49e8c876a92583a6627f988b432a8310c3f75f05d67b6",
+      "l2-sends.pvl": "03683b93f5081d4911b340cf601c28717efeed31daa038fcd4ac196fc8beaa29",
+      "l2-registration.pvl": "55b3de0b13c4bed69a58a85e201a1b39a26795b48f0ba38a01f3bf26193c3a68",
+      "l2-cache.pv": "00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/l2-kr2",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/l2-cache.pv"
+    ],
+    "seconds": 26.40881309704855,
+    "peak_rss_kib": 675044,
+    "exit": 0,
+    "timeout": false,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [
+      "RESULT not (event(L2CachedAccepted(s,ed_public(k),kid,root_4,m)) && event(L2SelectedIdentity(k))) is false."
+    ],
+    "confirmed_traces": 1,
+    "log_sha256": "e32f1d0991600798a2c413a0b97108f76394fc19082e4bc2a8a2038b0dc8a37f",
+    "receipt_name": "cache-precise-all-kr2-cache.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/83411b75bd1011c6f14d0e864c57dfbdb7926c22fbd50db7fa4887e5eda8f2ec.gz",
+        "sha256": "7d0e94134816bfd5689ccc9541d8107d9dc93a58b0b7cfc7768b480049500083",
+        "raw_sha256": "83411b75bd1011c6f14d0e864c57dfbdb7926c22fbd50db7fa4887e5eda8f2ec",
+        "bytes": 2688
+      },
+      "l2-kr2.pvl": {
+        "file": "inputs/6abbcdc3a639ce6235f49e8c876a92583a6627f988b432a8310c3f75f05d67b6.gz",
+        "sha256": "d34d23546ef501365742f71e9fc44b098288a4ca46a35f0afdf004c1527a91c1",
+        "raw_sha256": "6abbcdc3a639ce6235f49e8c876a92583a6627f988b432a8310c3f75f05d67b6",
+        "bytes": 79
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/03683b93f5081d4911b340cf601c28717efeed31daa038fcd4ac196fc8beaa29.gz",
+        "sha256": "96c8f3fa7446c2016da25531f126c34fcb8d305d6f8860bc670b45c4669a891c",
+        "raw_sha256": "03683b93f5081d4911b340cf601c28717efeed31daa038fcd4ac196fc8beaa29",
+        "bytes": 1886
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/55b3de0b13c4bed69a58a85e201a1b39a26795b48f0ba38a01f3bf26193c3a68.gz",
+        "sha256": "14d55936162335ab3126289dbe73441734d55645ecd2463f963f46fe32b52322",
+        "raw_sha256": "55b3de0b13c4bed69a58a85e201a1b39a26795b48f0ba38a01f3bf26193c3a68",
+        "bytes": 11441
+      },
+      "l2-cache.pv": {
+        "file": "inputs/00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b.gz",
+        "sha256": "23242c164aea5977b08927224dfc6d08355c1342d098a77933381510259bb275",
+        "raw_sha256": "00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b",
+        "bytes": 176
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/cache-precise-all-kr2-cache.log.gz",
+      "sha256": "19879a6fee4c996e758860891ddeae7b3b9659bf57de5ef20af611d043d11ef4",
+      "raw_sha256": "e32f1d0991600798a2c413a0b97108f76394fc19082e4bc2a8a2038b0dc8a37f",
+      "bytes": 703404
+    }
+  },
+  {
+    "date": "2026-10-06T02:30:25.898086+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=cache-precise-all, Ks2 Kr3; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "83411b75bd1011c6f14d0e864c57dfbdb7926c22fbd50db7fa4887e5eda8f2ec",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "03683b93f5081d4911b340cf601c28717efeed31daa038fcd4ac196fc8beaa29",
+      "l2-registration.pvl": "55b3de0b13c4bed69a58a85e201a1b39a26795b48f0ba38a01f3bf26193c3a68",
+      "l2-cache.pv": "00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise-all/l2-cache.pv"
+    ],
+    "seconds": 180.1110013939906,
+    "peak_rss_kib": 3118016,
+    "exit": -9,
+    "timeout": true,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [],
+    "confirmed_traces": 0,
+    "log_sha256": "56a6760ccf3b4a4db8371e5b2eab566357249c9e0ac2b6e68005490ec922c8b7",
+    "receipt_name": "cache-precise-all-kr3-cache.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/83411b75bd1011c6f14d0e864c57dfbdb7926c22fbd50db7fa4887e5eda8f2ec.gz",
+        "sha256": "7d0e94134816bfd5689ccc9541d8107d9dc93a58b0b7cfc7768b480049500083",
+        "raw_sha256": "83411b75bd1011c6f14d0e864c57dfbdb7926c22fbd50db7fa4887e5eda8f2ec",
+        "bytes": 2688
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/03683b93f5081d4911b340cf601c28717efeed31daa038fcd4ac196fc8beaa29.gz",
+        "sha256": "96c8f3fa7446c2016da25531f126c34fcb8d305d6f8860bc670b45c4669a891c",
+        "raw_sha256": "03683b93f5081d4911b340cf601c28717efeed31daa038fcd4ac196fc8beaa29",
+        "bytes": 1886
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/55b3de0b13c4bed69a58a85e201a1b39a26795b48f0ba38a01f3bf26193c3a68.gz",
+        "sha256": "14d55936162335ab3126289dbe73441734d55645ecd2463f963f46fe32b52322",
+        "raw_sha256": "55b3de0b13c4bed69a58a85e201a1b39a26795b48f0ba38a01f3bf26193c3a68",
+        "bytes": 11441
+      },
+      "l2-cache.pv": {
+        "file": "inputs/00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b.gz",
+        "sha256": "23242c164aea5977b08927224dfc6d08355c1342d098a77933381510259bb275",
+        "raw_sha256": "00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b",
+        "bytes": 176
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/cache-precise-all-kr3-cache.log.gz",
+      "sha256": "f15bad11560f0f62d887c5b91c5082bd9a0ca1c355cc6e2d7d2f75a013cdc068",
+      "raw_sha256": "56a6760ccf3b4a4db8371e5b2eab566357249c9e0ac2b6e68005490ec922c8b7",
+      "bytes": 1337554
+    }
+  },
+  {
+    "date": "2026-10-06T02:27:25.792255+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=cache-precise, Ks2 Kr3; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "83411b75bd1011c6f14d0e864c57dfbdb7926c22fbd50db7fa4887e5eda8f2ec",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-cache.pv": "00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-cache-precise/l2-cache.pv"
+    ],
+    "seconds": 101.1751811360009,
+    "peak_rss_kib": 2816988,
+    "exit": 0,
+    "timeout": false,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [
+      "RESULT not (event(L2CachedAccepted(s,ed_public(k),kid,root_4,m)) && event(L2SelectedIdentity(k))) cannot be proved."
+    ],
+    "confirmed_traces": 0,
+    "log_sha256": "968ecb5772b8f61f5324817858a5938e305522592f67e429d10c0fab0d842ca1",
+    "receipt_name": "cache-precise-kr3-cache.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/83411b75bd1011c6f14d0e864c57dfbdb7926c22fbd50db7fa4887e5eda8f2ec.gz",
+        "sha256": "7d0e94134816bfd5689ccc9541d8107d9dc93a58b0b7cfc7768b480049500083",
+        "raw_sha256": "83411b75bd1011c6f14d0e864c57dfbdb7926c22fbd50db7fa4887e5eda8f2ec",
+        "bytes": 2688
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-cache.pv": {
+        "file": "inputs/00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b.gz",
+        "sha256": "23242c164aea5977b08927224dfc6d08355c1342d098a77933381510259bb275",
+        "raw_sha256": "00c30f9b889965750336fbb07d0871ad0672b6e992e32e0f6167e12d8165f99b",
+        "bytes": 176
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/cache-precise-kr3-cache.log.gz",
+      "sha256": "7f182e2134292dcf9a0ac09b8654377288f958f9449a83af1c2c6827f307020e",
+      "raw_sha256": "968ecb5772b8f61f5324817858a5938e305522592f67e429d10c0fab0d842ca1",
+      "bytes": 6839398
+    }
+  },
+  {
+    "date": "2026-10-06T01:38:38.988550+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: Ks2 Kr1 exact ID and actual optional plaintext",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+      "l2-kr1.pvl": "b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ed6b6d4505d3364b52a54efcb8924032d016005f65e03a439a04586f01d5b235",
+      "l2-c2.pv": "52718326fabcae0419c20bbfbff09597fecb186df5d875483bc4af6c6a2287bf"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/l2-kr1",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-near/l2-c2.pv"
+    ],
+    "seconds": 180.07903730799444,
+    "peak_rss_kib": 2045376,
+    "exit": -9,
+    "timeout": true,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [],
+    "confirmed_traces": 0,
+    "log_sha256": "bc0af190d393b26af7cb8ce00eff0c45d90053f8f29f93858565c8d4e8d78770",
+    "receipt_name": "near-kr1-c2.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac.gz",
+        "sha256": "62875f789fb9ba5373a314a36eaebaa641ba30c406d296d3bc73fd863e924535",
+        "raw_sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+        "bytes": 2557
+      },
+      "l2-kr1.pvl": {
+        "file": "inputs/b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6.gz",
+        "sha256": "4a9be67d29a25453aa9831d4e88069cc873125c306de55a7e9210ced2f93b9a9",
+        "raw_sha256": "b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6",
+        "bytes": 41
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ed6b6d4505d3364b52a54efcb8924032d016005f65e03a439a04586f01d5b235.gz",
+        "sha256": "424209dc94a20fda4d97471434edd7a9177b90c7697ed16ce6882f14783142eb",
+        "raw_sha256": "ed6b6d4505d3364b52a54efcb8924032d016005f65e03a439a04586f01d5b235",
+        "bytes": 11301
+      },
+      "l2-c2.pv": {
+        "file": "inputs/52718326fabcae0419c20bbfbff09597fecb186df5d875483bc4af6c6a2287bf.gz",
+        "sha256": "89635613294b1ffce7f4a2e13b341a6d8fec961fbab2a5443b74c6a5ac957d72",
+        "raw_sha256": "52718326fabcae0419c20bbfbff09597fecb186df5d875483bc4af6c6a2287bf",
+        "bytes": 260
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/near-kr1-c2.log.gz",
+      "sha256": "20e09a74d021841d3ef620d83bc46a1e0237f36f038e81bddba9d7bb0726428d",
+      "raw_sha256": "bc0af190d393b26af7cb8ce00eff0c45d90053f8f29f93858565c8d4e8d78770",
+      "bytes": 92308
+    }
+  },
+  {
+    "date": "2026-10-06T01:31:58.415488+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: Ks2 Kr1 exact ID and actual optional plaintext",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "330115e2afb43bb5c2713f80948625783a48ddc3df11cf32f741a04217926f71",
+      "l2-kr1.pvl": "b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ed6b6d4505d3364b52a54efcb8924032d016005f65e03a439a04586f01d5b235",
+      "l2-c2.pv": "52718326fabcae0419c20bbfbff09597fecb186df5d875483bc4af6c6a2287bf"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/l2-kr1",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-no-precise/l2-c2.pv"
+    ],
+    "seconds": 180.09238136094064,
+    "peak_rss_kib": 2177740,
+    "exit": -9,
+    "timeout": true,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [],
+    "confirmed_traces": 0,
+    "log_sha256": "c92c0014681ef0b019a26af994640850b5e2a6edbdb04b81049d411c03e0953a",
+    "receipt_name": "no-precise-kr1-c2.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/330115e2afb43bb5c2713f80948625783a48ddc3df11cf32f741a04217926f71.gz",
+        "sha256": "36466b16fa60e3c990358e9a5b6552852010cc3a24527d8ccdc2dc122731784e",
+        "raw_sha256": "330115e2afb43bb5c2713f80948625783a48ddc3df11cf32f741a04217926f71",
+        "bytes": 87793
+      },
+      "l2-kr1.pvl": {
+        "file": "inputs/b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6.gz",
+        "sha256": "4a9be67d29a25453aa9831d4e88069cc873125c306de55a7e9210ced2f93b9a9",
+        "raw_sha256": "b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6",
+        "bytes": 41
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ed6b6d4505d3364b52a54efcb8924032d016005f65e03a439a04586f01d5b235.gz",
+        "sha256": "424209dc94a20fda4d97471434edd7a9177b90c7697ed16ce6882f14783142eb",
+        "raw_sha256": "ed6b6d4505d3364b52a54efcb8924032d016005f65e03a439a04586f01d5b235",
+        "bytes": 11301
+      },
+      "l2-c2.pv": {
+        "file": "inputs/52718326fabcae0419c20bbfbff09597fecb186df5d875483bc4af6c6a2287bf.gz",
+        "sha256": "89635613294b1ffce7f4a2e13b341a6d8fec961fbab2a5443b74c6a5ac957d72",
+        "raw_sha256": "52718326fabcae0419c20bbfbff09597fecb186df5d875483bc4af6c6a2287bf",
+        "bytes": 260
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/no-precise-kr1-c2.log.gz",
+      "sha256": "01938987cd1768a2e74bfd883e8445b1873d404c05aac5ee6a06086b14cb699d",
+      "raw_sha256": "c92c0014681ef0b019a26af994640850b5e2a6edbdb04b81049d411c03e0953a",
+      "bytes": 95712
+    }
+  },
+  {
+    "date": "2026-10-06T01:39:00.833065+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: Ks2 Kr1 exact ID and actual optional plaintext",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+      "l2-kr1.pvl": "b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-c2.pv": "ac130115e1369db76b1117f32f5005c0bd271d5c5fb93b253ab05d639ce4196d"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-kr1",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-c2.pv"
+    ],
+    "seconds": 21.84358945605345,
+    "peak_rss_kib": 503172,
+    "exit": 0,
+    "timeout": false,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [
+      "RESULT inj-event(FsReceived(beacon_to_server,s,ed_public(k),kid,root_4,t,m)) && event(L2SelectedIdentity(k)) ==> inj-event(L2Published(beacon_to_server,s,ed_public(k),kid,root_4,t,m)) is true."
+    ],
+    "confirmed_traces": 0,
+    "log_sha256": "b21434db4fcc7cb453fefa90b8bdb984d651653bfb4ef9ed648efa29df7ac237",
+    "receipt_name": "selected-kr1-c2.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac.gz",
+        "sha256": "62875f789fb9ba5373a314a36eaebaa641ba30c406d296d3bc73fd863e924535",
+        "raw_sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+        "bytes": 2557
+      },
+      "l2-kr1.pvl": {
+        "file": "inputs/b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6.gz",
+        "sha256": "4a9be67d29a25453aa9831d4e88069cc873125c306de55a7e9210ced2f93b9a9",
+        "raw_sha256": "b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6",
+        "bytes": 41
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-c2.pv": {
+        "file": "inputs/ac130115e1369db76b1117f32f5005c0bd271d5c5fb93b253ab05d639ce4196d.gz",
+        "sha256": "6d32c56648214778f380a7ab9acc039f2c79141d71744cbc187d40cdcb81c466",
+        "raw_sha256": "ac130115e1369db76b1117f32f5005c0bd271d5c5fb93b253ab05d639ce4196d",
+        "bytes": 277
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/selected-kr1-c2.log.gz",
+      "sha256": "390190e84889304ba9a178ebe2a99a70aeb645be73b2d4dbcacaa0f2a27f9b19",
+      "raw_sha256": "b21434db4fcc7cb453fefa90b8bdb984d651653bfb4ef9ed648efa29df7ac237",
+      "bytes": 824847
+    }
+  },
+  {
+    "date": "2026-10-06T01:42:17.535978+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: Ks2 Kr3 exact ID and actual optional plaintext",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-c2.pv": "ac130115e1369db76b1117f32f5005c0bd271d5c5fb93b253ab05d639ce4196d"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-c2.pv"
+    ],
+    "seconds": 180.11587431188673,
+    "peak_rss_kib": 3568404,
+    "exit": -9,
+    "timeout": true,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [],
+    "confirmed_traces": 0,
+    "log_sha256": "41591389be0f6bca2f8e6ddc146041e13c9b05f6119f752c15c4bc7631100d28",
+    "receipt_name": "selected-kr3-c2.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac.gz",
+        "sha256": "62875f789fb9ba5373a314a36eaebaa641ba30c406d296d3bc73fd863e924535",
+        "raw_sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+        "bytes": 2557
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-c2.pv": {
+        "file": "inputs/ac130115e1369db76b1117f32f5005c0bd271d5c5fb93b253ab05d639ce4196d.gz",
+        "sha256": "6d32c56648214778f380a7ab9acc039f2c79141d71744cbc187d40cdcb81c466",
+        "raw_sha256": "ac130115e1369db76b1117f32f5005c0bd271d5c5fb93b253ab05d639ce4196d",
+        "bytes": 277
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/selected-kr3-c2.log.gz",
+      "sha256": "3ecce471f08161a512cf35df821a2d609fbdfb14442b71e0f22918e79a164f88",
+      "raw_sha256": "41591389be0f6bca2f8e6ddc146041e13c9b05f6119f752c15c4bc7631100d28",
+      "bytes": 1295237
+    }
+  },
+  {
+    "date": "2026-10-06T02:18:54.191559+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=selected, Ks2 Kr3; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-cache-witness.pv": "7a38a2579fae7526431a3d0066754ef11d1ed8af2feb4d74c2931dbc70a922c4"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-cache-witness.pv"
+    ],
+    "seconds": 180.16088201105595,
+    "peak_rss_kib": 4091628,
+    "exit": -9,
+    "timeout": true,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [],
+    "confirmed_traces": 0,
+    "log_sha256": "bc98a29d256769f043ed300cdf38fe4015a9cec956602a2a9bafb6da554794be",
+    "receipt_name": "selected-kr3-cache-witness.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac.gz",
+        "sha256": "62875f789fb9ba5373a314a36eaebaa641ba30c406d296d3bc73fd863e924535",
+        "raw_sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+        "bytes": 2557
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-cache-witness.pv": {
+        "file": "inputs/7a38a2579fae7526431a3d0066754ef11d1ed8af2feb4d74c2931dbc70a922c4.gz",
+        "sha256": "3a83af5f6f0ad07012f343885d179000b3dbc467972814c0e102a60c1c0933d2",
+        "raw_sha256": "7a38a2579fae7526431a3d0066754ef11d1ed8af2feb4d74c2931dbc70a922c4",
+        "bytes": 305
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/selected-kr3-cache-witness.log.gz",
+      "sha256": "4e6975d2975c1d40cedd9f922b58343340605b78053cacec029ff21a3f3fcb79",
+      "raw_sha256": "bc98a29d256769f043ed300cdf38fe4015a9cec956602a2a9bafb6da554794be",
+      "bytes": 1307081
+    }
+  },
+  {
+    "date": "2026-10-06T02:15:54.029036+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=selected, Ks2 Kr3; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-control.pv": "f1caa9d06400df9ee7f7d9ac664de47adfcd8bcd3420ff75baf58ceeb9d2faa1"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-control.pv"
+    ],
+    "seconds": 180.1499421519693,
+    "peak_rss_kib": 3096400,
+    "exit": -9,
+    "timeout": true,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [],
+    "confirmed_traces": 0,
+    "log_sha256": "abda09234a42e85db4f6754f8634323fbffe0f84b4178920ae82eea3668ba655",
+    "receipt_name": "selected-kr3-control.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac.gz",
+        "sha256": "62875f789fb9ba5373a314a36eaebaa641ba30c406d296d3bc73fd863e924535",
+        "raw_sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+        "bytes": 2557
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-control.pv": {
+        "file": "inputs/f1caa9d06400df9ee7f7d9ac664de47adfcd8bcd3420ff75baf58ceeb9d2faa1.gz",
+        "sha256": "1f54f4b299305ae9cb3a7abf298e7b689e8bbeb9700f0eb44f91c6068f3f9b15",
+        "raw_sha256": "f1caa9d06400df9ee7f7d9ac664de47adfcd8bcd3420ff75baf58ceeb9d2faa1",
+        "bytes": 276
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/selected-kr3-control.log.gz",
+      "sha256": "440dcd8b78d468c263baf782acd64e6c7fca811df9e3e8a7658206811d41aeea",
+      "raw_sha256": "abda09234a42e85db4f6754f8634323fbffe0f84b4178920ae82eea3668ba655",
+      "bytes": 1297923
+    }
+  },
+  {
+    "date": "2026-10-06T01:42:19.260277+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=selected, Ks2 Kr3; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-identity.pv": "ac969e7214519547f4bdd4b5c59d3e479d6980e61cc6f5cf5ae8db3b99f4c80d"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-identity.pv"
+    ],
+    "seconds": 1.7239747268613428,
+    "peak_rss_kib": 170680,
+    "exit": 0,
+    "timeout": false,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [
+      "RESULT not (event(L2SelectedIdentity(k)) && attacker(k)) is true."
+    ],
+    "confirmed_traces": 0,
+    "log_sha256": "4810d1d9c14c71129510066ed2e7a112ee109de6d14ae63a2af64cb8f312e36b",
+    "receipt_name": "selected-kr3-identity.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac.gz",
+        "sha256": "62875f789fb9ba5373a314a36eaebaa641ba30c406d296d3bc73fd863e924535",
+        "raw_sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+        "bytes": 2557
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-identity.pv": {
+        "file": "inputs/ac969e7214519547f4bdd4b5c59d3e479d6980e61cc6f5cf5ae8db3b99f4c80d.gz",
+        "sha256": "3ec352a880a36fc9af1c697900b0ddde9fd64687a463d895447f81369c84c390",
+        "raw_sha256": "ac969e7214519547f4bdd4b5c59d3e479d6980e61cc6f5cf5ae8db3b99f4c80d",
+        "bytes": 86
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/selected-kr3-identity.log.gz",
+      "sha256": "8ba27458ee9b4195bcce6eff69bb8c2f000c3d0f0f0426b7eb95733f84ac64d3",
+      "raw_sha256": "4810d1d9c14c71129510066ed2e7a112ee109de6d14ae63a2af64cb8f312e36b",
+      "bytes": 1293488
+    }
+  },
+  {
+    "date": "2026-10-06T02:22:00.908934+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=selected, Ks2 Kr3; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-origin-control.pv": "9d3aa74519ac690b9cc61d8d633de4af602f31878186e6222f045a7080e30492"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-origin-control.pv"
+    ],
+    "seconds": 3.914171423064545,
+    "peak_rss_kib": 871016,
+    "exit": 0,
+    "timeout": false,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [
+      "RESULT event(FsReceived(beacon_to_server,s,ed_public(k),kid,root_4,t,m)) && event(L2SelectedIdentity(k)) ==> event(L2Published(beacon_to_server,s,ed_public(k),kid,root_4,t,m)) is false."
+    ],
+    "confirmed_traces": 1,
+    "log_sha256": "33e45081acf34e1e9bc863464e9152574ebef7abacc78cbf455ad90e1ced571e",
+    "receipt_name": "selected-kr3-origin-control.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac.gz",
+        "sha256": "62875f789fb9ba5373a314a36eaebaa641ba30c406d296d3bc73fd863e924535",
+        "raw_sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+        "bytes": 2557
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-origin-control.pv": {
+        "file": "inputs/9d3aa74519ac690b9cc61d8d633de4af602f31878186e6222f045a7080e30492.gz",
+        "sha256": "860636149a569078de4683c925cde1f15466d6a7c8eb0775220b3404f5a42247",
+        "raw_sha256": "9d3aa74519ac690b9cc61d8d633de4af602f31878186e6222f045a7080e30492",
+        "bytes": 268
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/selected-kr3-origin-control.log.gz",
+      "sha256": "1c94b8a9a7c4d7f81acb6394e615a72606fe066f6d5e1a5e59e844b8132ae49e",
+      "raw_sha256": "33e45081acf34e1e9bc863464e9152574ebef7abacc78cbf455ad90e1ced571e",
+      "bytes": 1417720
+    }
+  },
+  {
+    "date": "2026-10-06T02:18:56.866580+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=selected, Ks2 Kr3; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-origin.pv": "31f331d3bbdbed035d8eab14e77038fe7b3e6c0cb6c505033962a441d235e7fd"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-origin.pv"
+    ],
+    "seconds": 2.672422247007489,
+    "peak_rss_kib": 197440,
+    "exit": 0,
+    "timeout": false,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [
+      "RESULT event(FsReceived(beacon_to_server,s,ed_public(k),kid,root_4,t,m)) && event(L2SelectedIdentity(k)) ==> event(L2Published(beacon_to_server,s,ed_public(k),kid,root_4,t,m)) is true."
+    ],
+    "confirmed_traces": 0,
+    "log_sha256": "388e20f3bad1ca92dce788e111c08b352547d763e52a6b21f7b75da9b6e6298c",
+    "receipt_name": "selected-kr3-origin.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac.gz",
+        "sha256": "62875f789fb9ba5373a314a36eaebaa641ba30c406d296d3bc73fd863e924535",
+        "raw_sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+        "bytes": 2557
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-origin.pv": {
+        "file": "inputs/31f331d3bbdbed035d8eab14e77038fe7b3e6c0cb6c505033962a441d235e7fd.gz",
+        "sha256": "24023dfa3b5cf60b0de673d887fb81f53fe8c4f24cee73ae9986b3d609706c81",
+        "raw_sha256": "31f331d3bbdbed035d8eab14e77038fe7b3e6c0cb6c505033962a441d235e7fd",
+        "bytes": 269
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/selected-kr3-origin.log.gz",
+      "sha256": "710ac38f51cf988be042e9b11b75ba0c8d36f4c9538b56127b15ef55f1148680",
+      "raw_sha256": "388e20f3bad1ca92dce788e111c08b352547d763e52a6b21f7b75da9b6e6298c",
+      "bytes": 1311672
+    }
+  },
+  {
+    "date": "2026-10-06T02:21:56.994667+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=selected, Ks2 Kr3; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-replay.pv": "d8492791d2ab442ff77fdc57797acac15c804ecb45fff0a941ba7eeefea0e029"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-replay.pv"
+    ],
+    "seconds": 180.12574783689342,
+    "peak_rss_kib": 2908660,
+    "exit": -9,
+    "timeout": true,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [],
+    "confirmed_traces": 0,
+    "log_sha256": "9f364039d267ca25f1e240f9b71f09f0a3d10bedb558b67a1d788dd7f73bf8f9",
+    "receipt_name": "selected-kr3-replay.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac.gz",
+        "sha256": "62875f789fb9ba5373a314a36eaebaa641ba30c406d296d3bc73fd863e924535",
+        "raw_sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+        "bytes": 2557
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-replay.pv": {
+        "file": "inputs/d8492791d2ab442ff77fdc57797acac15c804ecb45fff0a941ba7eeefea0e029.gz",
+        "sha256": "87ffc2321137358c7a54094d9b96087dabcc82c1cc003f227195541d86d80703",
+        "raw_sha256": "d8492791d2ab442ff77fdc57797acac15c804ecb45fff0a941ba7eeefea0e029",
+        "bytes": 311
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/selected-kr3-replay.log.gz",
+      "sha256": "e39d787ce68ea96c4330c90101ec277424b91833c80c0979517a369c8ea29816",
+      "raw_sha256": "9f364039d267ca25f1e240f9b71f09f0a3d10bedb558b67a1d788dd7f73bf8f9",
+      "bytes": 1304270
+    }
+  },
+  {
+    "date": "2026-10-06T02:12:53.877460+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: variant=selected, Ks2 Kr3; near-only variants do not claim full far API equality",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+      "l2-kr3.pvl": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+      "l2-sends.pvl": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+      "l2-registration.pvl": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+      "l2-c2.pv": "ac130115e1369db76b1117f32f5005c0bd271d5c5fb93b253ab05d639ce4196d"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-kr3",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-c2.pv"
+    ],
+    "seconds": 1800.3167098350823,
+    "peak_rss_kib": 5653964,
+    "exit": -9,
+    "timeout": true,
+    "cap_seconds": 1800,
+    "address_space_kib": 10485760,
+    "results": [],
+    "confirmed_traces": 0,
+    "log_sha256": "2a84d0f272d8fc0ae80a77c0074bd73fcb97689629fea3c9379bfcfa133993cc",
+    "receipt_name": "selected-long-kr3-c2.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac.gz",
+        "sha256": "62875f789fb9ba5373a314a36eaebaa641ba30c406d296d3bc73fd863e924535",
+        "raw_sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac",
+        "bytes": 2557
+      },
+      "l2-kr3.pvl": {
+        "file": "inputs/b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a.gz",
+        "sha256": "0f2e1dc94c303279eb684e89f4623b9a3c8d9472394ef88df0f9a4c34009a00f",
+        "raw_sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a",
+        "bytes": 117
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1.gz",
+        "sha256": "b094658b42abc29555e1237ff38c0f30166c99a41ccf920b2b2245e7d7c742b9",
+        "raw_sha256": "626ae328df85c762d5646ba59bf5a6e762fe4b670b3aca0d34e8d745a98236e1",
+        "bytes": 1866
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d.gz",
+        "sha256": "cf05449ec1550fc6149d4e4caccbbced5ae418437cfc108a0832a6f1923ceb16",
+        "raw_sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d",
+        "bytes": 11391
+      },
+      "l2-c2.pv": {
+        "file": "inputs/ac130115e1369db76b1117f32f5005c0bd271d5c5fb93b253ab05d639ce4196d.gz",
+        "sha256": "6d32c56648214778f380a7ab9acc039f2c79141d71744cbc187d40cdcb81c466",
+        "raw_sha256": "ac130115e1369db76b1117f32f5005c0bd271d5c5fb93b253ab05d639ce4196d",
+        "bytes": 277
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/selected-long-kr3-c2.log.gz",
+      "sha256": "356fb93911f8d367a3f0063a40954df851dc2cd1c4c24d948e291a6d981b806a",
+      "raw_sha256": "2a84d0f272d8fc0ae80a77c0074bd73fcb97689629fea3c9379bfcfa133993cc",
+      "bytes": 1303239
+    }
+  },
+  {
+    "date": "2026-10-06T01:28:58.322939+00:00",
+    "basis": "08330ae2469497af3c74677686390ea9ad80fe74",
+    "scope": "Scratch only: Ks2 Kr1 exact ID and actual optional plaintext",
+    "inputs": {
+      "production-transcript-interface.pvl": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+      "crypto.pvl": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+      "extraction/lib.pvl": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+      "fs-common.pvl": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+      "fs-registration-binding.pvl": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+      "registration-set-admission.pvl": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+      "fs-pending-response.pvl": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+      "l2-receive.pvl": "0d0e062b2324e7f928cf02949a0a4d663955822802b3309d000f693a1fb34c8d",
+      "l2-kr1.pvl": "b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6",
+      "l2-sends.pvl": "03683b93f5081d4911b340cf601c28717efeed31daa038fcd4ac196fc8beaa29",
+      "l2-registration.pvl": "cb92e8e7aaed76d74014a42392f00f0bc359cec51e83efd3e56373a40754890e",
+      "l2-c2.pv": "52718326fabcae0419c20bbfbff09597fecb186df5d875483bc4af6c6a2287bf"
+    },
+    "command": [
+      "/nix/store/6sshb9zipvahsxadc92m1pp9jny547yx-proverif-2.05/bin/proverif",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/production-transcript-interface",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/crypto",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/extraction/lib",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/fs-common",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/fs-registration-binding",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/registration-set-admission",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/fs-pending-response",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/l2-receive",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/l2-kr1",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/l2-sends",
+      "-lib",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/l2-registration",
+      "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-v1/l2-c2.pv"
+    ],
+    "seconds": 180.13686938397586,
+    "peak_rss_kib": 4085388,
+    "exit": -9,
+    "timeout": true,
+    "cap_seconds": 180,
+    "address_space_kib": 10485760,
+    "results": [],
+    "confirmed_traces": 0,
+    "log_sha256": "23a8a569e8bc0ec391db11ae881924085a6fb5d7b40a1d18b6b1f20b4c348600",
+    "receipt_name": "v1-kr1-c2.json",
+    "evidence_class": "historical development only; never added to maintained security/verdict counts",
+    "portable_inputs": {
+      "production-transcript-interface.pvl": {
+        "file": "inputs/1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f.gz",
+        "sha256": "cd3950acfa853b39748a6182b3adc70741e853723f8e05109fc88cfee58076fd",
+        "raw_sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f",
+        "bytes": 65526
+      },
+      "crypto.pvl": {
+        "file": "inputs/e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36.gz",
+        "sha256": "c8c6fed044f6fe7237e703b94c6a6812a625179cc51e5bb3d4565ace3ee855ea",
+        "raw_sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36",
+        "bytes": 5876
+      },
+      "extraction/lib.pvl": {
+        "file": "inputs/8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5.gz",
+        "sha256": "e092fb141c4941602e098cac772d30fa27e42c07db16c3b755e5a866f2121616",
+        "raw_sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5",
+        "bytes": 16373
+      },
+      "fs-common.pvl": {
+        "file": "inputs/66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81.gz",
+        "sha256": "0aa461d29e9ff9db86b60d15c269fa2cb142d10e4ada086043c02ed65274997b",
+        "raw_sha256": "66a1f75ee86782158bce49352edae0422a99507f181a6315f2cc474c5266df81",
+        "bytes": 10722
+      },
+      "fs-registration-binding.pvl": {
+        "file": "inputs/b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd.gz",
+        "sha256": "73a1566e493b7540527980aa047cb501915efba6c906811b4bc74529779d7608",
+        "raw_sha256": "b4c6946124ea0db8cad19529cb93fd63e5dc39477816095b63f16b5e6f8409bd",
+        "bytes": 884
+      },
+      "registration-set-admission.pvl": {
+        "file": "inputs/57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1.gz",
+        "sha256": "62a70c3b0ef9ae6e19770539da9a40e1e6abd055ac408d79021dbb505306c149",
+        "raw_sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1",
+        "bytes": 7955
+      },
+      "fs-pending-response.pvl": {
+        "file": "inputs/1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650.gz",
+        "sha256": "401b03a1013c791baac67e0484179e6b409c01ced1841ce9d2b2ac79a5557e4a",
+        "raw_sha256": "1fb27f3fd3ef9b3d59fd8af4e55dab61fc2ab6af90afa39adcdae96bc5c5b650",
+        "bytes": 5787
+      },
+      "l2-receive.pvl": {
+        "file": "inputs/0d0e062b2324e7f928cf02949a0a4d663955822802b3309d000f693a1fb34c8d.gz",
+        "sha256": "f4e52787d108ea6913e95cf44224b94166416905bf9caae125ca20521e95e03e",
+        "raw_sha256": "0d0e062b2324e7f928cf02949a0a4d663955822802b3309d000f693a1fb34c8d",
+        "bytes": 87803
+      },
+      "l2-kr1.pvl": {
+        "file": "inputs/b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6.gz",
+        "sha256": "4a9be67d29a25453aa9831d4e88069cc873125c306de55a7e9210ced2f93b9a9",
+        "raw_sha256": "b53049cdfd4bfd0042a8f0874ff990b51af38414972c4ffac37096aca81a9ff6",
+        "bytes": 41
+      },
+      "l2-sends.pvl": {
+        "file": "inputs/03683b93f5081d4911b340cf601c28717efeed31daa038fcd4ac196fc8beaa29.gz",
+        "sha256": "96c8f3fa7446c2016da25531f126c34fcb8d305d6f8860bc670b45c4669a891c",
+        "raw_sha256": "03683b93f5081d4911b340cf601c28717efeed31daa038fcd4ac196fc8beaa29",
+        "bytes": 1886
+      },
+      "l2-registration.pvl": {
+        "file": "inputs/cb92e8e7aaed76d74014a42392f00f0bc359cec51e83efd3e56373a40754890e.gz",
+        "sha256": "c32c313d114aceec526205bb651f001a474bd62c97e551a8bc79c95f619038b6",
+        "raw_sha256": "cb92e8e7aaed76d74014a42392f00f0bc359cec51e83efd3e56373a40754890e",
+        "bytes": 11351
+      },
+      "l2-c2.pv": {
+        "file": "inputs/52718326fabcae0419c20bbfbff09597fecb186df5d875483bc4af6c6a2287bf.gz",
+        "sha256": "89635613294b1ffce7f4a2e13b341a6d8fec961fbab2a5443b74c6a5ac957d72",
+        "raw_sha256": "52718326fabcae0419c20bbfbff09597fecb186df5d875483bc4af6c6a2287bf",
+        "bytes": 260
+      }
+    },
+    "portable_log": {
+      "file": "diagnostics/v1-kr1-c2.log.gz",
+      "sha256": "15bf421254b80d53d03a08ade7057b08d28ac19dc55085e384c2c2822f697a26",
+      "raw_sha256": "23a8a569e8bc0ec391db11ae881924085a6fb5d7b40a1d18b6b1f20b4c348600",
+      "bytes": 101630
+    }
+  }
+]

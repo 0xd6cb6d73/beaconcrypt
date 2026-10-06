@@ -251,6 +251,35 @@ class ClassificationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.check(rows)
 
+    def test_record_origin_scope_roster_and_witness_bound_are_explicit(self):
+        driver = CHECK.INVENTORY.module("check-record-origin")
+        for target in driver.TARGETS:
+            selected = [
+                row
+                for row in self.rows
+                if row["checker"] == "check-record-origin.py"
+                and row["target"] == target.name
+            ]
+            self.assertEqual(len(selected), 1)
+            with self.assertRaises(ValueError):
+                self.check([row for row in self.rows if row is not selected[0]])
+            for field, value in (
+                ("class", "definitional"),
+                (
+                    "scope",
+                    "solver-proved injectivity for every unbounded protocol record",
+                ),
+            ):
+                rows = copy.deepcopy(self.rows)
+                next(
+                    row
+                    for row in rows
+                    if row["checker"] == "check-record-origin.py"
+                    and row["target"] == target.name
+                )[field] = value
+                with self.assertRaises(ValueError):
+                    self.check(rows)
+
 
 if __name__ == "__main__":
     unittest.main()

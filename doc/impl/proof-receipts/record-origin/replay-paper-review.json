@@ -1,0 +1,54 @@
+{
+  "reviewer": "/root/evolving_source_join",
+  "timestamp": "2026-10-06T02:24:04.012229+00:00",
+  "status": "APPROVE_SCOPED_SYMBOLIC_OCCURRENCE_ARGUMENT",
+  "files": [
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/replay-argument.md",
+      "sha256": "e57766152dad2246fdc805ef9076985882f5694ddd91f489e726081414080ff9"
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-registration.pvl",
+      "sha256": "ac077fae2f164f49cd3a85185a8080d0490071729ba1f52ece56669b410d9c9d"
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/registration-set-admission.pvl",
+      "sha256": "57715203f7929f44f3c267cb780522f245323a35563249b8334b7acaf0a3bee1"
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-receive.pvl",
+      "sha256": "256b4166f35e67e7c5e10a7eae8c9d0ed987750ac88fecd26ee62a90b734beac"
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/l2-kr3.pvl",
+      "sha256": "b37542fd20b437f22c965dc088acef2c301bba793d8c416a4f20b89e1377d36a"
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/crypto.pvl",
+      "sha256": "e9d415c58c1bc0537207d007bd7622f0f9e19903992aec8779fc1f0c6463da36"
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/production-transcript-interface.pvl",
+      "sha256": "1a38d3cd0a5b29ab5a1490b5e349f75f22973c8f814b387be7a980b79a0bc67f"
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/probe-selected/extraction/lib.pvl",
+      "sha256": "8cb49efa98fd52479a9cfd99c47104d30c33848b085743558885afa83c96f7b5"
+    }
+  ],
+  "findings": [],
+  "checked": [
+    "Fresh encapsulation coin occurs once per registration_set_root invocation, normalized HKDF/root input/KEM constructors are explicitly free in loaded T0; equal accept-produced root implies same accept occurrence without honest KEM premise.",
+    "A1Pending has exactly one nonreplicated build input; only its successful path installs exactly one L2Recv1 with the same root and exact fields. Repeated public labels cannot create another worker for that private pending occurrence.",
+    "All four reachable near receive states and exact cached/future success transitions remove exactly the accepted target. Every failure keeps entry state while consuming a Kr slot; no remaining-target set regains a consumed target. Both FsReceived and FsReceivedFrame arguments/order and actual optional opening plaintext were inspected.",
+    "The root/full-tuple equality of two receive events identifies one worker, and per-worker target uniqueness gives occurrence equality independently of plaintext. The selected marker is unnecessary for this local fact.",
+    "The separately reviewed far-known-recipe projection preserves selected near events before first far success, so it preserves a hypothetical selected C3 violation."
+  ],
+  "scope_limits": [
+    "Paper argument for exact local T0 process, not a mechanized operational semantics theorem.",
+    "HKDF/KEM constructor injectivity is an explicit idealization stronger than ordinary contracts; no computational zero-collision or end-to-end claim.",
+    "No publication origin or secrecy conclusion from this local uniqueness argument.",
+    "C3 solver timed out at180s without verdict according to lane report; this review claims no solver success."
+  ],
+  "builds_run": false
+}

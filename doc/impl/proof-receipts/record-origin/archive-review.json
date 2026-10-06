@@ -1,0 +1,18 @@
+{
+  "reviewer": "/root",
+  "date": "2026-10-06T02:51:46.902051+00:00",
+  "decision": "APPROVE_SCOPED_PORTABLE_EVIDENCE",
+  "archive_manifest_sha256": "7bf5adc88785b83dc37e34c994a251189b4762b18abd7bbb08c3c8db266db4ca",
+  "source_review_sha256": "070eeed9f1546cbf878d355522ab5cd5c9d2498e70fffc54eacc1608bb15d18c",
+  "verified": {
+    "frozen_archive_files": 78,
+    "unique_compressed_objects": 66,
+    "maintained_targets": 4,
+    "diagnostics_excluded_from_results": 16,
+    "maintained_source_inputs": "All target input blobs match exact maintained hashes already reviewed; source30 unchanged.",
+    "compressed_evidence": "Every compressed/raw digest and decompressed size in portable records reproduced; all target and diagnostic source/log links checked.",
+    "validation": "Read focused17classifier/30FT/inventory pass and final3181-verdict inventory pass; initial socket/test-anchor diagnostics separately retained.13dedicatedregressions independently rerun by root.",
+    "scope": "README distinguishes ordinaryorigin, auxiliaryidentity, chaincontrol andKr2witness. Paperinjectivity and16diagnostics are never counted as solver security results."
+  },
+  "findings": []
+}

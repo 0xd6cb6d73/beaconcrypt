@@ -22540,6 +22540,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"check-proverif-registration-provenance",
 			"check-proverif-delayed-response",
 			"check-proverif-exact-far",
+			"check-proverif-record-origin",
 			"extract-lean",
 			"check-lean",
 			"check-inventory",
@@ -22559,6 +22560,7 @@ fn validate_free_schedule_makefile(makefile: &str) -> Result<(), String> {
 			"check-proverif-registration-provenance",
 			"check-proverif-delayed-response",
 			"check-proverif-exact-far",
+			"check-proverif-record-origin",
 		]) {
 		return Err(
 			"verify-proverif-in-shell must run check-proverif-fs after check-proverif".to_owned(),
@@ -24196,14 +24198,14 @@ fn free_schedule_roster_and_serial_wiring_are_pinned() {
 		),
 		(
 			"fs group dropped from verify-in-shell",
-			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) extract-lean\n",
-			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) extract-lean\n",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\t$(MAKE) extract-lean\n",
 			"verify-in-shell must run check-proverif-fs",
 		),
 		(
 			"fs group dropped from verify-proverif-in-shell",
-			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\nverify-proverif-live-material:",
-			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-fs\n\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\nverify-proverif-live-material:",
+			"\t$(MAKE) check-proverif-primitive-fidelity\n\t$(MAKE) check-proverif-active-strong-secrecy\n\t$(MAKE) check-proverif-pending-registration\n\t$(MAKE) check-proverif-aead-differential\n\t$(MAKE) check-proverif-registration-provenance\n\t$(MAKE) check-proverif-delayed-response\n\t$(MAKE) check-proverif-exact-far\n\t$(MAKE) check-proverif-record-origin\n\nverify-proverif-live-material:",
 			"verify-proverif-in-shell must run check-proverif-fs",
 		),
 		(
@@ -25556,6 +25558,7 @@ fn validate_serial_proverif_ci(makefile: &str, workflow: &str) -> Result<(), Str
 				"check-proverif-registration-provenance",
 				"check-proverif-delayed-response",
 				"check-proverif-exact-far",
+				"check-proverif-record-origin",
 			],
 		),
 	] {
@@ -25605,6 +25608,19 @@ fn validate_serial_proverif_ci(makefile: &str, workflow: &str) -> Result<(), Str
 	if compact(&exact_far.join("\n")) != compact(expected_exact_far) {
 		return Err("exact-far exact runner and checker gates changed".to_owned());
 	}
+	let record_origin = make_recipe(
+		makefile,
+		"check-proverif-record-origin: check-proverif-extraction check-proverif-transcript-fidelity",
+	)?;
+	let expected_record_origin = "python3 $(PROVERIF_DIR)/test-record-origin-checker.py
+		python3 $(PROVERIF_DIR)/check-record-origin.py \\
+		--proverif '$(PROVERIF)' \\
+		--timeout '$(PROVERIF_RECORD_ORIGIN_TIMEOUT)' \\
+		--address-space-kib '$(PROVERIF_FS_ADDRESS_SPACE_KIB)' \\
+		$(if $(PROVERIF_RECORD_ORIGIN_LOG_DIR),--log-dir '$(PROVERIF_RECORD_ORIGIN_LOG_DIR)')";
+	if compact(&record_origin.join("\n")) != compact(expected_record_origin) {
+		return Err("record-origin exact runner and checker gates changed".to_owned());
+	}
 	let drift = make_recipe(makefile, "check-proverif-generated-drift:")?;
 	let expected_drift = "git diff --exit-code -- proofs/pro-verif/extraction
 		@untracked=\"$$(git ls-files --others --exclude-standard -- \\
@@ -25628,6 +25644,7 @@ fn validate_serial_proverif_ci(makefile: &str, workflow: &str) -> Result<(), Str
 			"registration-provenance",
 			"delayed-response",
 			"exact-far",
+			"record-origin",
 		]
 		.contains(&scenario.as_str())
 		{
@@ -25649,6 +25666,17 @@ fn validate_serial_proverif_ci(makefile: &str, workflow: &str) -> Result<(), Str
 fn serial_proverif_ci_preserves_every_gate_and_separate_group() {
 	validate_serial_proverif_ci(CORE_MAKEFILE, FORMAL_WORKFLOW).unwrap();
 	for (label, changed) in [
+		(
+			"omit selected record origin",
+			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-record-origin\n", ""),
+		),
+		(
+			"omit selected record checker regressions",
+			CORE_MAKEFILE.replace(
+				"\tpython3 $(PROVERIF_DIR)/test-record-origin-checker.py\n",
+				"",
+			),
+		),
 		(
 			"omit exact far material",
 			CORE_MAKEFILE.replace("\t$(MAKE) check-proverif-exact-far\n", ""),

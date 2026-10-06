@@ -1,0 +1,38 @@
+{
+  "reviewer": "/root/evolving_source_join",
+  "timestamp": "2026-10-06T01:59:01.304580+00:00",
+  "status": "APPROVE_SCOPED_SOURCE_PAPER",
+  "files": [
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/interface.md",
+      "sha256": "72e4ea8fe5023463606746a2a40055d5d00f2ef1fc3febf400c66a2ce1e0519d"
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/source-lifting.md",
+      "sha256": "28197e990b123a50ff66f2a1812121e854b2cf35626dbc42ac0f724868ef902c"
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/l2-exact-id/far-observation-note.md",
+      "sha256": "00dbcc97114a43d7c784df01aac281782ba616d635a848cb06c1ad8ab20cb672"
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/pv-work/a2-provenance/known-material/provenance.pvl",
+      "sha256": "3657d8a61b278402da340e74bf417f7ae1ddb342b859f6a2de0b5f6ee889f3f2"
+    }
+  ],
+  "scope": [
+    "Reviewed finite source profile and exact Ed25519 identity classification using existing A2 origin, including compound candidate terms and hidden imports.",
+    "Reviewed independent stronger identity-key reflection environment with all nonidentity secrets exposed and the existing arbitrary-peer, role-tagged DH service; exact selected-identity self-products remain under the audited private shared-DH barrier. No A1 or C2 origin premise is used.",
+    "Reviewed separation of the C2 forward recipe ledger from the A2 knowledge argument, all omitted outputs, nonempty-finish guard exception, reused application values, failed-seal allocation gaps and actual optional plaintext.",
+    "Reviewed far-call recipe elimination from disclosed literal chain3, exact associated data and original frame; only selected near events before first far success are preserved, not full API action traces or computational costs.",
+    "Reviewed backward successful-publication occurrence reflection and injective near-receive occurrence preservation."
+  ],
+  "limitations": [
+    "Paper argument under audited T0 and decoded-message interpretation, not Lean-checked global source theorem or computational reduction.",
+    "Kr3 final origin/control results and final maintained source transformation pins are still independent obligations.",
+    "No selected long-term/root/initial near-key reveal, no arbitrary secret-encoding applications or correlated hidden imports; exact documented profile remains required."
+  ],
+  "findings": [],
+  "resolved_finding": "Previous known-ephemeral blanket was invalid for arbitrary Beacon finish raw peers; revised proof reconstructs exact identity-DH through existing audited A2 service, including self-product.",
+  "builds_run": false
+}

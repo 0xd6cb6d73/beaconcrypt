@@ -90,3 +90,7 @@ proofs/pro-verif/delayed-response-wrong-binding.pvl	precise	4	[precise]	doc/form
 proofs/pro-verif/delayed-response-models.py	precise	3	[precise]	doc/formal-verification-analysis.md#claim-specific-delayed-initial-response-origin
 proofs/pro-verif/symbolic-name-order.py	precise	1	[precise]	doc/formal-verification-analysis.md#complete-symbolic-continuation-under-early-fresh-server-names
 proofs/pro-verif/test-symbolic-name-order.py	precise	2	[precise]	doc/formal-verification-analysis.md#complete-symbolic-continuation-under-early-fresh-server-names
+proofs/pro-verif/record-origin-cache.pvl	precise	5	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies
+proofs/pro-verif/record-origin-cache-sends.pvl	precise	2	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies
+proofs/pro-verif/record-origin-cache-receive.pvl	precise	1	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies
+proofs/pro-verif/record-origin-models.py	precise	3	[precise]	doc/formal-verification-analysis.md#selected-near-record-origin-with-exact-ids-and-plaintext-replies

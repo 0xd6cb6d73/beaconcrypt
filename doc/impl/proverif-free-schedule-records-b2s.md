@@ -239,3 +239,7 @@ The security results hold for unbounded Server objects, honest Beacons and attac
 ## Literal-material supplement for L3
 
 The [reviewed exact-far argument](proverif-exact-far-material.md) now supplies the local far-material step by running the complete finite family of actual HKDF terms and preserving the exact C4 formula. It does not identify the original free `fs_far_chain` constructor with the actual iterated chain. The original target files remain unchanged, and their old far-collapse explanation is superseded for source interpretation by that separate literal-material result and the non-far event/knowledge projection. The projection retains the same near-path continuation; chosen b2s C2 additionally uses E21. All remaining L1/L2/E19/global source obligations remain explicit, and no optional plaintext or result-bit equivalence follows.
+
+## Claim-specific exact-ID companion
+
+The separate [record-origin companion](proverif-record-origin.md) establishes near publication origin with actual signing identities, own/assigned IDs, optional opening plaintext and the selected source-profile classification. Its final security model keeps Kr3 and two selected sends; ordinary origin combines with separately reviewed T0 replay uniqueness for injectivity. The original fs C2/C3 queries and result scopes above remain unchanged. This companion does not retroactively make the old hidden-reply direction split a full API theorem, and its computational/global source bridge remains separate.

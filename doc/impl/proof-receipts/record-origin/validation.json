@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-06T02:46:35.648418+00:00",
+  "base": "2d2bb270971fde388a146d1e1d7c23a779013b32",
+  "scope": "Exact selected near source-event/knowledge projection, ordinary Kr3 publication origin and identity solver results; reviewed symbolic paper C3 supplies injectivity; ghost Kr2 cache trace embeds as Kr3 prefix. No full raw API or computational/global claim.",
+  "maintained_targets": 4,
+  "maintained_seconds": 40.33090410497971,
+  "maintained_peak_rss_kib": 871216,
+  "checks": {
+    "dedicated_regressions": {
+      "count": 13,
+      "exit": 0,
+      "note": "Final explicit bound-regression addition checked before final inventory."
+    },
+    "classification_regressions": {
+      "count": 17,
+      "exit": 0,
+      "log": "focused-make.log"
+    },
+    "transcript_fidelity": {
+      "count": 30,
+      "exit": 0,
+      "log": "focused-make.log"
+    },
+    "focused_make_exit": 0,
+    "final_inventory_exit": 0,
+    "cargo_fmt_exit": 0,
+    "git_diff_check_exit": 0
+  },
+  "logs": {
+    "focused-make.log": {
+      "file": "validation/focused-make.log.gz",
+      "sha256": "f2e8e742f1960f71ff648310e66911caf7c9466f0dadd898daa156053e0685df",
+      "raw_sha256": "e2a154ed643e24d9705e539a72d6c8a59c40923721038cbc3922f6319ef96ec4",
+      "bytes": 4008
+    },
+    "final-inventory.log": {
+      "file": "validation/final-inventory.log.gz",
+      "sha256": "f186912a8d50537ee93513680dbfe931dde44e27f4a51dc2147dc931768ea763",
+      "raw_sha256": "52751bbf00139b111893ad101a6f6cef98bdb8380c804657d88aff67df646068",
+      "bytes": 1295
+    },
+    "focused-make-socket-diagnostic.log": {
+      "file": "validation/focused-make-socket-diagnostic.log.gz",
+      "sha256": "15d22c5507f9a672a05572a6ae21ba2aee201daaf9df472226021ff1c06ad658",
+      "raw_sha256": "738631727e0e0edfc9e9a65d9be163488590c952b835b18dc43a8c05d51b9958",
+      "bytes": 186
+    },
+    "focused-make-anchor-diagnostic.log": {
+      "file": "validation/focused-make-anchor-diagnostic.log.gz",
+      "sha256": "8802becfdbf3dcf72b8b89938b370ce4dfd9d97eb0afbd9dd6352b7e5ff006f2",
+      "raw_sha256": "abc1507296f08acb361e277f5632c0c9922ea8397c0422351954dd131eb1163e",
+      "bytes": 3821
+    }
+  },
+  "diagnostics": [
+    "Initial sandbox Nix socket access failed before checks; authorized pinned-shell retry retained.",
+    "Initial focused Make retained29 passing FT tests and a stale fs negative-test anchor failure; both exact mutation anchors were updated and full30FT rerun passed.",
+    "Two initial checker regressions expected a unique send branch, but chosen/fresh branches contain two occurrences; fixture now explicitly expects2 and mutates one. No model/gate weakened.",
+    "Direct injective/C3 and larger/raw/cache prototype timeouts or unknowns remain historical diagnostics. None is counted as a positive or negative protocol result."
+  ],
+  "not_run": "No unchanged Lean, old ProVerif groups, production Rust suite, mutation campaign or garbage collection; final aggregate belongs to completed integration."
+}
