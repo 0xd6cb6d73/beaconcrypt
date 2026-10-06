@@ -1,0 +1,7 @@
+# Source encapsulation suffix and actual root bytes
+
+This archive binds three exact modules and two scope documents to fourteen standard-axiom guards, three empty successful focused logs and independent semantic review. Checks ran on the frozen source bytes before commit. Only the guide review-status sentence changed afterward, as recorded in `status-only-delta.json`; no theorem or scope changed and no identical-source rebuild was performed for the commit hash.
+
+The result is whole-program source collector/preparation/accept equality around the actual saved encapsulation callback, with every optional exit and complete continuation retained. The exact compiled suffix supplies the ordinary candidate in the fifth coordinate of the actual accepted192-byte root input. The production fixed-HKDF wrapper equation is functional correspondence only; the inherited restricted Extract-ROM backend and actual public-context/secret-input sampler obligations remain unchanged and explicit. The maintained guide is `doc/impl/registration-encapsulation-source-suffix.md`.
+
+The helper records Lean4.34, `-j1 -M8000` and the shared Lean lock. JSON paths identify original scratch files, whose exact logs and actual axiom output are retained here. Parent integration owns root imports and inventory. No Rust/model/primitive implementation/snapshot/persistence change or global security conclusion is included.

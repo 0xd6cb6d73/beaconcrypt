@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1469
+	[handwritten-lean]=1472
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28143,6 +28143,51 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem classify([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin theorem classify"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointAcceptOrigin\.protected_bound$' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin dependency BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin.protected_bound"
 require_line_count 1 '^theorem protected_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointAcceptOrigin theorem protected_bound"
+
+# Ported source-suffix14 cohort (lane commit 1881878f): actual saved encapsulation suffix, collector split and root-input bytes.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCollected.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemCollected root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemCollected theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemCollected guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemCollected\.after_fields$' "$selected_source_module" "PqxdhRegistrationJointKemCollected dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected.after_fields"
+require_line_count 1 '^theorem after_fields([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemCollected theorem after_fields"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemCollected\.collect_split$' "$selected_source_module" "PqxdhRegistrationJointKemCollected dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected.collect_split"
+require_line_count 1 '^theorem collect_split([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemCollected theorem collect_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemCollected\.interpreted_fields$' "$selected_source_module" "PqxdhRegistrationJointKemCollected dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected.interpreted_fields"
+require_line_count 1 '^theorem interpreted_fields([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemCollected theorem interpreted_fields"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootBytes.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemRootBytes root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemRootBytes theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemRootBytes guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRootBytes\.accepted_input$' "$selected_source_module" "PqxdhRegistrationJointKemRootBytes dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes.accepted_input"
+require_line_count 1 '^theorem accepted_input([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRootBytes theorem accepted_input"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRootBytes\.challenge_fields$' "$selected_source_module" "PqxdhRegistrationJointKemRootBytes dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes.challenge_fields"
+require_line_count 1 '^theorem challenge_fields([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRootBytes theorem challenge_fields"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRootBytes\.challenge_input$' "$selected_source_module" "PqxdhRegistrationJointKemRootBytes dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes.challenge_input"
+require_line_count 1 '^theorem challenge_input([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRootBytes theorem challenge_input"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSourceSuffix.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemSourceSuffix root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSourceSuffix\.ordered_source$' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.ordered_source"
+require_line_count 1 '^theorem ordered_source([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem ordered_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSourceSuffix\.preparation$' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.preparation"
+require_line_count 1 '^theorem preparation([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem preparation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSourceSuffix\.encapsulation_query$' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.encapsulation_query"
+require_line_count 1 '^theorem encapsulation_query([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem encapsulation_query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSourceSuffix\.suffix_cut$' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.suffix_cut"
+require_line_count 1 '^theorem suffix_cut([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem suffix_cut"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSourceSuffix\.suffix_support$' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.suffix_support"
+require_line_count 1 '^theorem suffix_support([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem suffix_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSourceSuffix\.root_bytes$' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.root_bytes"
+require_line_count 1 '^theorem root_bytes([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem root_bytes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSourceSuffix\.root_reply$' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.root_reply"
+require_line_count 1 '^theorem root_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem root_reply"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSourceSuffix\.accept_ordered$' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.accept_ordered"
+require_line_count 1 '^theorem accept_ordered([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSourceSuffix theorem accept_ordered"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

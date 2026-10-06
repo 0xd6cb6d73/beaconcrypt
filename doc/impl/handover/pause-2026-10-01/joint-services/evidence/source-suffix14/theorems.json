@@ -1,0 +1,22 @@
+{
+  "PqxdhRegistrationJointKemCollected": [
+    "after_fields",
+    "collect_split",
+    "interpreted_fields"
+  ],
+  "PqxdhRegistrationJointKemRootBytes": [
+    "accepted_input",
+    "challenge_fields",
+    "challenge_input"
+  ],
+  "PqxdhRegistrationJointKemSourceSuffix": [
+    "ordered_source",
+    "preparation",
+    "encapsulation_query",
+    "suffix_cut",
+    "suffix_support",
+    "root_bytes",
+    "root_reply",
+    "accept_ordered"
+  ]
+}

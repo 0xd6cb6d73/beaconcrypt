@@ -1,0 +1,76 @@
+{
+  "cohort": "SourceSuffix14",
+  "date": "2026-10-06T05:20:09.716025+00:00",
+  "source_files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCollected.lean",
+      "sha256": "74439aad5721d31837a0e87ae45c7644d1643a0e7138c5b8c86c4ae4b85a6ecd"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootBytes.lean",
+      "sha256": "54da6ff697362600a5d5651c5571c0df8f73685fbb300459f1fbd15103e9ee97"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSourceSuffix.lean",
+      "sha256": "3eaee131c18f7d3999eb0bfc6e9ebd009bb1720d2861c6b852556426d520c358"
+    },
+    {
+      "path": "doc/impl/registration-encapsulation-source-suffix.md",
+      "sha256": "7443c5ae545be5cb02910f3da09ce32c53da6b12e317a65d0c226af1e7aef7d6"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "05ecd529c23e767e6948cfbd0b40b328f8e1c80dcc69306623493a87f41e6222"
+    }
+  ],
+  "files": [
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/Axioms.lean",
+      "sha256": "e592fad4cd1e71c780e0fcf8a9af004eec4880a665fb22e7efb6d3cf0447f9a1"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/PqxdhRegistrationJointKemCollected-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/PqxdhRegistrationJointKemRootBytes-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/PqxdhRegistrationJointKemSourceSuffix-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/README.md",
+      "sha256": "04824b643ed7251eb42fbbc1a41fd98746c409ac463253144b79d49eb6e54382"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/axioms.log",
+      "sha256": "4e3addb9568bce99db0b3db987ec2bc985ed447215e512955064f2bb2346a0f1"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/check-svc.sh",
+      "sha256": "47dd4a8160375a9c0fba0a22f36655e5f57cdd0711dd9102c6056adc81f94760"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/direct-checks.json",
+      "sha256": "1a424a349dcea9d8fa79a178e172ffe00998c739964b38611a721c59d0252370"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/independent-review.json",
+      "sha256": "5bdd6828ff9428832c7743c6a8a1fa6f50592bc9cb92eb95745ef6bd85c5f322"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/review-manifest.json",
+      "sha256": "16638d892a1b36a1e9530e2d56e5dbfc2fdb35c0fc97718dd0efddf20138b0c2"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/status-only-delta.json",
+      "sha256": "3c3aa78e3695b05f00a5db75b3993bf1a32d9c211f64feecde4a18584e1be89a"
+    },
+    {
+      "path": "doc/impl/handover/pause-2026-10-01/joint-services/evidence/source-suffix14/theorems.json",
+      "sha256": "dced51e0ef9e5afb1bde9e31cb2d2a91423ad283ffe4747ae45ed0614a8f3b5f"
+    }
+  ]
+}

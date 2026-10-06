@@ -1,0 +1,92 @@
+{
+  "cohort": "SourceSuffix14",
+  "time": "2026-10-06T05:16:01.500546+00:00",
+  "worktree": "/tmp/beaconcrypt-registration-joint-service-composition",
+  "base_commit": "0f51137fac1f74abb38ef0a105f65a74ccecc4aa",
+  "files": [
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemCollected.lean",
+      "sha256": "74439aad5721d31837a0e87ae45c7644d1643a0e7138c5b8c86c4ae4b85a6ecd"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootBytes.lean",
+      "sha256": "54da6ff697362600a5d5651c5571c0df8f73685fbb300459f1fbd15103e9ee97"
+    },
+    {
+      "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSourceSuffix.lean",
+      "sha256": "3eaee131c18f7d3999eb0bfc6e9ebd009bb1720d2861c6b852556426d520c358"
+    },
+    {
+      "path": "doc/impl/registration-encapsulation-source-suffix.md",
+      "sha256": "0370e59c5ded0754957c8b55097f03981b586100ce49dbc2455e8139ff104f39"
+    },
+    {
+      "path": "doc/formal-verification-analysis.md",
+      "sha256": "05ecd529c23e767e6948cfbd0b40b328f8e1c80dcc69306623493a87f41e6222"
+    }
+  ],
+  "theorems": {
+    "PqxdhRegistrationJointKemCollected": [
+      "after_fields",
+      "collect_split",
+      "interpreted_fields"
+    ],
+    "PqxdhRegistrationJointKemRootBytes": [
+      "accepted_input",
+      "challenge_fields",
+      "challenge_input"
+    ],
+    "PqxdhRegistrationJointKemSourceSuffix": [
+      "ordered_source",
+      "preparation",
+      "encapsulation_query",
+      "suffix_cut",
+      "suffix_support",
+      "root_bytes",
+      "root_reply",
+      "accept_ordered"
+    ]
+  },
+  "guards": 14,
+  "checks": [
+    {
+      "module": "PqxdhRegistrationJointKemCollected",
+      "sha256": "74439aad5721d31837a0e87ae45c7644d1643a0e7138c5b8c86c4ae4b85a6ecd",
+      "start": "2026-10-06T05:15:35.360931+00:00",
+      "end": "2026-10-06T05:15:41.098542+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/source-suffix14/PqxdhRegistrationJointKemCollected-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemRootBytes",
+      "sha256": "54da6ff697362600a5d5651c5571c0df8f73685fbb300459f1fbd15103e9ee97",
+      "start": "2026-10-06T05:15:41.098780+00:00",
+      "end": "2026-10-06T05:15:44.180525+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/source-suffix14/PqxdhRegistrationJointKemRootBytes-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRegistrationJointKemSourceSuffix",
+      "sha256": "3eaee131c18f7d3999eb0bfc6e9ebd009bb1720d2861c6b852556426d520c358",
+      "start": "2026-10-06T05:15:44.180848+00:00",
+      "end": "2026-10-06T05:15:47.606937+00:00",
+      "exit": 0,
+      "log": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/source-suffix14/PqxdhRegistrationJointKemSourceSuffix-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "axioms": {
+    "path": "/tmp/bc-arc-scratch/joint-scheduler-resume-2026-10-05/source-suffix14/axioms.log",
+    "sha256": "4e3addb9568bce99db0b3db987ec2bc985ed447215e512955064f2bb2346a0f1",
+    "allowed": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ]
+  },
+  "scope": "Exact original collector split and full compiled preparation/accept equality; actual encapsulation scanner callback with arbitrary whole continuation; stateful suffix support; actual accepted192-byte root input and functional real HKDF reply.",
+  "limits": "No runtime/source change, independent-coordinate/honest-target assumption, query loss or crypto hop. Inherited restricted Extract-ROM backend unchanged; source-level event/target/freshness transport and actual real-HKDF sampler/public context secrecy remain open.",
+  "validation": "Three direct final guarded checks empty0;14 actual standard axiom outputs; forbidden/diff scan0. No full build/inventory/Rust/ProVerif/mutations. Parent integration owns aggregate checks."
+}

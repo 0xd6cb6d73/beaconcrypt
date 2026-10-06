@@ -1,0 +1,42 @@
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected.after_fields' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected.collect_split' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected.interpreted_fields' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes.accepted_input' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes.challenge_fields' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes.challenge_input' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.ordered_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.preparation' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.encapsulation_query' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.suffix_cut' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.suffix_support' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.root_bytes' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.root_reply' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix.accept_ordered' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]

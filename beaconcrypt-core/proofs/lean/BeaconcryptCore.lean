@@ -1477,6 +1477,10 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutReports
 import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutEuf
 import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptOrigin
 
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootBytes
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix
+
 /-!
 # Beaconcrypt-core verification root
 
