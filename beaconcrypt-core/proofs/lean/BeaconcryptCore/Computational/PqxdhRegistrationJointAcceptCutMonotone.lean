@@ -7,7 +7,7 @@ set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone
 open PqxdhServerAuthExperiment
 open PqxdhRegistrationJointRevealSchedule (Spec)
-open PqxdhRegistrationJointAcceptCut (Cut scan)
+open PqxdhRegistrationJointAcceptCut (Cut)
 open PqxdhRegistrationJointAcceptCutTag (Tag tagFinish)
 open PqxdhRegistrationJointAcceptCutReports (resume continuation split)
 open PqxdhRegistrationJointInitializedReports (ReportResult sourceResult)
