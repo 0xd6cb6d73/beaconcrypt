@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1582
+	[handwritten-lean]=1583
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32284,6 +32284,24 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem admitted_send_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem admitted_send_allowed"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.liftLookup_writesOnly$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.liftLookup_writesOnly"
 require_line_count 1 '^theorem liftLookup_writesOnly([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem liftLookup_writesOnly"
+
+# Exact private labeled source programs and full-state callback interpretation.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftOpaqueDrivers.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftOpaqueDrivers root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.receive_interpretation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.receive_interpretation"
+require_line_count 1 '^theorem receive_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem receive_interpretation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.send_interpretation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.send_interpretation"
+require_line_count 1 '^theorem send_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem send_interpretation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.receive_continuation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.receive_continuation"
+require_line_count 1 '^theorem receive_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem receive_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.send_continuation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.send_continuation"
+require_line_count 1 '^theorem send_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem send_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.admitted_receive_interpretation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.admitted_receive_interpretation"
+require_line_count 1 '^theorem admitted_receive_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem admitted_receive_interpretation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.admitted_send_interpretation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.admitted_send_interpretation"
+require_line_count 1 '^theorem admitted_send_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem admitted_send_interpretation"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
