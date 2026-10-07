@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1581
+	[handwritten-lean]=1582
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32252,6 +32252,66 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem lookup_uniform_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem lookup_uniform_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.lookup_lazy$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.lookup_lazy"
 require_line_count 1 '^theorem lookup_lazy([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem lookup_lazy"
+
+# Finite depth-major record callbacks with exact native KDF depth accounting.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainOrder.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftChainOrder root import"
+require_line_count 27 '^theorem ' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem inventory"
+require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftChainOrder guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.coordinate_cellOf$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.coordinate_cellOf"
+require_line_count 1 '^theorem coordinate_cellOf([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem coordinate_cellOf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.coordinate_bounded$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.coordinate_bounded"
+require_line_count 1 '^theorem coordinate_bounded([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem coordinate_bounded"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.cellOf_coordinate$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.cellOf_coordinate"
+require_line_count 1 '^theorem cellOf_coordinate([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem cellOf_coordinate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.at_index$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.at_index"
+require_line_count 1 '^theorem at_index([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem at_index"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.at_bounded$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.at_bounded"
+require_line_count 1 '^theorem at_bounded([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem at_bounded"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.index_at$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.index_at"
+require_line_count 1 '^theorem index_at([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem index_at"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.index_injective$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.index_injective"
+require_line_count 1 '^theorem index_injective([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem index_injective"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.selected_zero$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.selected_zero"
+require_line_count 1 '^theorem selected_zero([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem selected_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.selected_last$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.selected_last"
+require_line_count 1 '^theorem selected_last([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem selected_last"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.selected_bounded$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.selected_bounded"
+require_line_count 1 '^theorem selected_bounded([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem selected_bounded"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.selected_unchanged$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.selected_unchanged"
+require_line_count 1 '^theorem selected_unchanged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem selected_unchanged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.selected_step$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.selected_step"
+require_line_count 1 '^theorem selected_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem selected_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.index_value$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.index_value"
+require_line_count 1 '^theorem index_value([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem index_value"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.index_advance$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.index_advance"
+require_line_count 1 '^theorem index_advance([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem index_advance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.index_advance_lt$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.index_advance_lt"
+require_line_count 1 '^theorem index_advance_lt([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem index_advance_lt"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.lookup_agrees$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.lookup_agrees"
+require_line_count 1 '^theorem lookup_agrees([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem lookup_agrees"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.lookup_adjacent$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.lookup_adjacent"
+require_line_count 1 '^theorem lookup_adjacent([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem lookup_adjacent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.bounded_mono$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.bounded_mono"
+require_line_count 1 '^theorem bounded_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem bounded_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.available_bounded$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.available_bounded"
+require_line_count 1 '^theorem available_bounded([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem available_bounded"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.depth_record$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.depth_record"
+require_line_count 1 '^theorem depth_record([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem depth_record"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.depth_empty$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.depth_empty"
+require_line_count 1 '^theorem depth_empty([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem depth_empty"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.depth_mono$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.depth_mono"
+require_line_count 1 '^theorem depth_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem depth_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.lookup_depth$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.lookup_depth"
+require_line_count 1 '^theorem lookup_depth([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem lookup_depth"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.lookup_initial$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.lookup_initial"
+require_line_count 1 '^theorem lookup_initial([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem lookup_initial"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.lookup_terminal$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.lookup_terminal"
+require_line_count 1 '^theorem lookup_terminal([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem lookup_terminal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.selected_predecessor$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.selected_predecessor"
+require_line_count 1 '^theorem selected_predecessor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem selected_predecessor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.lookup_repeated$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.lookup_repeated"
+require_line_count 1 '^theorem lookup_repeated([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem lookup_repeated"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
