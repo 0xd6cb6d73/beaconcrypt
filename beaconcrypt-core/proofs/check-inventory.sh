@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1527
+	[handwritten-lean]=1528
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29919,6 +29919,57 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem branch_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque theorem branch_opaque"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerOpaque\.transfer$' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque.transfer"
 require_line_count 1 '^theorem transfer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque theorem transfer"
+
+# LQ-F spike: query bills of the KEM adversary at the logged exposure
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerBills root import"
+require_line_count 22 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem inventory"
+require_line_count 22 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerBills guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.flat_run$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.flat_run"
+require_line_count 1 '^theorem flat_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem flat_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.run_flat$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.run_flat"
+require_line_count 1 '^theorem run_flat([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem run_flat"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.step_source$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.step_source"
+require_line_count 1 '^theorem step_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem step_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.step_later$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.step_later"
+require_line_count 1 '^theorem step_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem step_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.weighted$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.weighted"
+require_line_count 1 '^theorem weighted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem weighted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.single_sum$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.single_sum"
+require_line_count 1 '^theorem single_sum([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem single_sum"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.total_single$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.total_single"
+require_line_count 1 '^theorem total_single([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem total_single"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.commands_bills$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.commands_bills"
+require_line_count 1 '^theorem commands_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem commands_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.exposeAt_hides$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.exposeAt_hides"
+require_line_count 1 '^theorem exposeAt_hides([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem exposeAt_hides"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.accept_bound$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.accept_bound"
+require_line_count 1 '^theorem accept_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem accept_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.exposeAt_bound$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.exposeAt_bound"
+require_line_count 1 '^theorem exposeAt_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem exposeAt_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.exposeAt_bills$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.exposeAt_bills"
+require_line_count 1 '^theorem exposeAt_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem exposeAt_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.pre_bound$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.pre_bound"
+require_line_count 1 '^theorem pre_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem pre_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.saved$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.saved"
+require_line_count 1 '^theorem saved([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem saved"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.adversary_post$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.adversary_post"
+require_line_count 1 '^theorem adversary_post([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem adversary_post"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.scan_bills$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.scan_bills"
+require_line_count 1 '^theorem scan_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem scan_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.pre_uniform$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.pre_uniform"
+require_line_count 1 '^theorem pre_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem pre_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.pre_excluded$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.pre_excluded"
+require_line_count 1 '^theorem pre_excluded([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem pre_excluded"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.pre_decapsulations$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.pre_decapsulations"
+require_line_count 1 '^theorem pre_decapsulations([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem pre_decapsulations"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.pre_base$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.pre_base"
+require_line_count 1 '^theorem pre_base([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem pre_base"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.annotated_bound$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.annotated_bound"
+require_line_count 1 '^theorem annotated_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem annotated_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBills\.adversary_bound$' "$selected_source_module" "PqxdhDeploymentLaterServerBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.adversary_bound"
+require_line_count 1 '^theorem adversary_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBills theorem adversary_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
