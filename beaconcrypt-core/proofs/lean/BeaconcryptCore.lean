@@ -1509,6 +1509,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemOpaqueCosts
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable
+import BeaconcryptCore.Computational.PqxdhRecordLiftSeed
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative

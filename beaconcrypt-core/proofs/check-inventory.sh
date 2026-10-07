@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1523
+	[handwritten-lean]=1524
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29941,6 +29941,34 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem run_draws_le_lookups([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem run_draws_le_lookups"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.run_budget$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.run_budget"
 require_line_count 1 '^theorem run_budget([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem run_budget"
+
+# Exact sequence-one seed kernels: complete extracted send and successful-open results.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeed.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftSeed$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftSeed root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhRecordLiftSeed theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftSeed guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.receiveOne_from_counters$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.receiveOne_from_counters"
+require_line_count 1 '^theorem receiveOne_from_counters([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem receiveOne_from_counters"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.initial_kernel$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.initial_kernel"
+require_line_count 1 '^theorem initial_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem initial_kernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.sendOne_from_counters$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.sendOne_from_counters"
+require_line_count 1 '^theorem sendOne_from_counters([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem sendOne_from_counters"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.response_step$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.response_step"
+require_line_count 1 '^theorem response_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem response_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.serverKernel_total$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.serverKernel_total"
+require_line_count 1 '^theorem serverKernel_total([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem serverKernel_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.beaconKernel_total$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.beaconKernel_total"
+require_line_count 1 '^theorem beaconKernel_total([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem beaconKernel_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.beacon_source$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.beacon_source"
+require_line_count 1 '^theorem beacon_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem beacon_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.server_source$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.server_source"
+require_line_count 1 '^theorem server_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem server_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.assembled_next$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.assembled_next"
+require_line_count 1 '^theorem assembled_next([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem assembled_next"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.beacon_source_parts$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.beacon_source_parts"
+require_line_count 1 '^theorem beacon_source_parts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem beacon_source_parts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.server_source_parts$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.server_source_parts"
+require_line_count 1 '^theorem server_source_parts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem server_source_parts"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
