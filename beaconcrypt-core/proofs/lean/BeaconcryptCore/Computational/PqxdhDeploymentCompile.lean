@@ -33,14 +33,15 @@ structure Local where
   owners : Nat → Option Kernel
   serverRaw : Nat
   ownerRaw : Nat → Nat
-  produced : List (Command × PqxdhDeploymentNative.Frame)
+  produced : List (PqxdhDeploymentInterface.FrameTag × PqxdhDeploymentNative.Frame)
 
 /-- The initial local state: empty log, no copies, zero counters, no produced frame. -/
 def Local.empty : Local := ⟨Log.empty, fun _ => none, fun _ => none, 0, fun _ => 0, []⟩
 
-/-- Append the frames produced by one local record command. -/
-def Local.produce (copies : Local) (command : Command) (frames : List PqxdhDeploymentNative.Frame) : Local :=
-  { copies with produced := copies.produced ++ frames.map fun frame => (command, frame) }
+/-- Append the frames produced by one local record command under its tag. -/
+def Local.produce (copies : Local) (tag : PqxdhDeploymentInterface.FrameTag) (frames : List PqxdhDeploymentNative.Frame) :
+    Local :=
+  { copies with produced := copies.produced ++ frames.map fun frame => (tag, frame) }
 
 /-- The 32-byte identity key read from Phase 1 bytes with the codec reader and the Server's identity parser. -/
 def identityOf (codec : Codec Reader Response) (bytes : Pqxdh.Bytes) : Option Identity := do
@@ -140,7 +141,7 @@ noncomputable def serverLocal (setup : Setup baseSpec KemSK) (codec : Codec Read
         ((RawCtxServerMixed.serverImpl (fun _ => setup.serverKeyId) route codec.frameRead query).run
           (localServer codec copies.log 0#u64 none copies.serverRaw)))
       pure (result.1.1, ({ copies with serverRaw := result.1.2.rawAttempts } : Local).produce
-        (PqxdhDeploymentNative.serverCommand query) result.2)
+        (PqxdhDeploymentNative.serverTag query) result.2)
   | some kid => do
       let kernel ← peerKernel copies kid
       let result ← simulateQ (localPrimitives setup codec) (PqxdhDeploymentNative.logged
@@ -148,7 +149,7 @@ noncomputable def serverLocal (setup : Setup baseSpec KemSK) (codec : Codec Read
           (localServer codec copies.log kid kernel copies.serverRaw)))
       pure (result.1.1, ({ copies with
         peers := Function.update copies.peers kid ((result.1.2.server.peers kid).map RawCtxServerRouting.Peer.kernel)
-        serverRaw := result.1.2.rawAttempts } : Local).produce (PqxdhDeploymentNative.serverCommand query) result.2)
+        serverRaw := result.1.2.rawAttempts } : Local).produce (PqxdhDeploymentNative.serverTag query) result.2)
 
 /-- Local Beacon record command: an uncreated handle is rejected; otherwise copy the owner if needed, run `beaconImpl` on the local owner behind the frame log with locally answered primitives, keep the returned kernel, counter and produced frames. -/
 noncomputable def beaconLocal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat)
@@ -162,7 +163,7 @@ noncomputable def beaconLocal (setup : Setup baseSpec KemSK) (codec : Codec Read
     pure (result.1.1, ({ copies with
       owners := Function.update copies.owners index (phaseKernel result.1.2.beacon.phase)
       ownerRaw := Function.update copies.ownerRaw index result.1.2.rawAttempts } : Local).produce
-        (PqxdhDeploymentNative.beaconCommand index query) result.2)
+        (PqxdhDeploymentNative.beaconTag index) result.2)
   else pure (PqxdhDeploymentNative.absent query, copies)
 
 /-- Record a successful reply in the public log. -/

@@ -2,13 +2,13 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 import BeaconcryptCore.Computational.RawCtxMixedShared
 
-/-! Native semantics of the common deployment experiment for coins and commands (CE-2). Registration commands, the public HMAC and BLAKE2b oracles are the source14 handler on the one live native Server and its dynamically created owners; `create` first applies the public 32-byte pin parse and does not re-run runtime initialization (deviation D1). Record commands run `RawCtxServerMixed.serverImpl` and `RawCtxBeaconLifecycle.beaconImpl` on the live Server peer map and the live owners, with real HKDF and AEAD, the codec frame reader and writer, and the shared BLAKE2b cache; their raw-attempt ghost counters are kept beside the native state. Every record program runs behind `frameLog`, which forwards each primitive call unchanged and records every frame handed to the frame writer, so the ghost list `produced` holds every sealed record with the command that produced it, including records whose writer then failed (`logged_forget`: logging changes no result). The game constructs the Server from a generated seed only. The secrecy commands and the transcript are added on top of this handler in `PqxdhDeploymentSecrecy`. No reveal, public getter or snapshot exists. No security claim is made here. -/
+/-! Native semantics of the common deployment experiment for coins and commands (CE-2). Registration commands, the public HMAC and BLAKE2b oracles are the source14 handler on the one live native Server and its dynamically created owners; `create` first applies the public 32-byte pin parse and does not re-run runtime initialization (deviation D1). Record commands run `RawCtxServerMixed.serverImpl` and `RawCtxBeaconLifecycle.beaconImpl` on the live Server peer map and the live owners, with real HKDF and AEAD, the codec frame reader and writer, and the shared BLAKE2b cache; their raw-attempt ghost counters are kept beside the native state. Every record program runs behind `frameLog`, which forwards each primitive call unchanged and records every frame handed to the frame writer, so the ghost list `produced` holds every sealed record with the handle of the command that produced it (`serverTag`, `beaconTag`), never its plaintext, including records whose writer then failed (`logged_forget`: logging changes no result). The game constructs the Server from a generated seed only. The secrecy commands and the transcript are added on top of this handler in `PqxdhDeploymentSecrecy`. No reveal, public getter or snapshot exists. No security claim is made here. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhDeploymentNative
 open PqxdhServerAuthExperiment PqxdhJointIdentity
-open PqxdhDeploymentInterface (Spec Command parsePin)
+open PqxdhDeploymentInterface (Spec Command FrameTag parsePin)
 abbrev Frame := RawCtxReceive.DecodedFrame
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X : Type}
 
@@ -17,7 +17,7 @@ structure State (KemSK : Type) where
   native : PqxdhRegistrationSchedule.State KemSK
   serverRaw : Nat
   ownerRaw : Nat → Nat
-  produced : List (Command × Frame)
+  produced : List (FrameTag × Frame)
 
 /-- Forward every record primitive call unchanged; a frame-writer call also records the frame handed to the writer, that is, one sealed record, whether or not the writer then succeeds. -/
 def frameLog : QueryImpl RawCtxMixedOwner.NativeSpec
@@ -39,19 +39,17 @@ def logged {Result : Type} (work : OracleComp RawCtxMixedOwner.NativeSpec Result
     OracleComp RawCtxMixedOwner.NativeSpec (Result × List Frame) :=
   (simulateQ frameLog work).run []
 
-/-- The command of a Server record query. -/
-def serverCommand : RawCtxServerMixed.SourceSpec.Domain → Command
-  | .inl (plaintext, keyId) => .serverSend keyId plaintext
-  | .inr raw => .serverRaw raw
+/-- The tag of the frames of a Server record query: the addressed peer of a send; a raw receive names no handle before routing. The plaintext never enters the tag. -/
+def serverTag : RawCtxServerMixed.SourceSpec.Domain → FrameTag
+  | .inl (_, keyId) => some (.peer keyId)
+  | .inr _ => none
 
-/-- The command of a Beacon record query on an owner handle. -/
-def beaconCommand (index : Nat) : RawCtxMixedOwner.SourceSpec.Domain → Command
-  | .inl plaintext => .beaconSend index plaintext
-  | .inr raw => .beaconRaw index raw
+/-- The tag of the frames of a Beacon record command on an owner handle: the owner handle. -/
+def beaconTag (index : Nat) : FrameTag := some (.owner index)
 
-/-- Append the frames produced by one command. -/
-def produce (command : Command) (frames : List Frame) (state : State KemSK) : State KemSK :=
-  { state with produced := state.produced ++ frames.map fun frame => (command, frame) }
+/-- Append the frames produced by one command under its tag. -/
+def produce (tag : FrameTag) (frames : List Frame) (state : State KemSK) : State KemSK :=
+  { state with produced := state.produced ++ frames.map fun frame => (tag, frame) }
 
 /-- A registration scheduler step leaves both raw-attempt counters untouched. -/
 def onNative {Result : Type} (work : PqxdhRegistrationSchedule.Game KemSK Result) :
@@ -88,7 +86,7 @@ noncomputable def serverStep (setup : Setup baseSpec KemSK) (codec : Codec Reade
     StateT (State KemSK) ProbComp (RawCtxServerMixed.SourceSpec.Range query) := fun state => do
   let result ← (record setup codec (logged ((RawCtxServerMixed.serverImpl (senderId state) route codec.frameRead query).run
     (serverView state)))).run state.native
-  pure (result.1.1.1, produce (serverCommand query) result.1.2 (withServer { state with native := result.2 } result.1.1.2))
+  pure (result.1.1.1, produce (serverTag query) result.1.2 (withServer { state with native := result.2 } result.1.1.2))
 
 /-- An owner handle that was never created has no Beacon object; the command is rejected without any effect. -/
 def absent (query : RawCtxMixedOwner.SourceSpec.Domain) : RawCtxMixedOwner.SourceSpec.Range query :=
@@ -105,7 +103,7 @@ noncomputable def beaconStep (setup : Setup baseSpec KemSK) (codec : Codec Reade
   | some owner => do
       let result ← (record setup codec (logged ((RawCtxBeaconLifecycle.beaconImpl codec.frameRead query).run
         ⟨owner.beacon, state.ownerRaw index⟩))).run state.native
-      pure (result.1.1.1, produce (beaconCommand index query) result.1.2 { state with
+      pure (result.1.1.1, produce (beaconTag index) result.1.2 { state with
         native := { result.2 with owners := result.2.owners.set index { owner with beacon := result.1.1.2.beacon } }
         ownerRaw := Function.update state.ownerRaw index result.1.1.2.rawAttempts })
 

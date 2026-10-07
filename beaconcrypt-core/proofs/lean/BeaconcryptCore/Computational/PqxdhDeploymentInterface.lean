@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointInitializedSchedule
 import BeaconcryptCore.Computational.RawCtxServerMixed
 import BeaconcryptCore.Computational.RawCtxBeaconLifecycle
 
-/-! Adversary interface of the common deployment experiment (CE-1). One generated Server and dynamically created Beacons answer raw registration commands, the two restricted random oracles of route R1, and record send and raw receive on every installed Server peer and every Beacon owner. `create` takes raw pin bytes; a pin of the wrong width is rejected before any draw. The secrecy commands `test` (send of one of two equal-length messages under a hidden bit) and `fresh` (send of an experiment-sampled uniform message of an adversary-chosen length) name a record handle. There is no reveal command, no public getter and no snapshot API; a post-run reveal phase would be added after the run, not as a command. Raw receive replies carry the actual optional plaintext (observation mode O); mode P is the success-bit wrapper `observe`, extended to the secrecy commands by `observeFull`. The module also fixes the transcript entries and their mode projection, the record logs `Logs` (the transcript and the produced frames, with publication and receipt read from the transcript), the final output `Output`, the fourteen query classes and the budgets with the fresh-message byte budget. No security claim is made here. -/
+/-! Adversary interface of the common deployment experiment (CE-1). One generated Server and dynamically created Beacons answer raw registration commands, the two restricted random oracles of route R1, and record send and raw receive on every installed Server peer and every Beacon owner. `create` takes raw pin bytes; a pin of the wrong width is rejected before any draw. The secrecy commands `test` (send of one of two equal-length messages under a hidden bit) and `fresh` (send of an experiment-sampled uniform message of an adversary-chosen length) name a record handle. There is no reveal command, no public getter and no snapshot API; a post-run reveal phase would be added after the run, not as a command. Raw receive replies carry the actual optional plaintext (observation mode O); mode P is the success-bit wrapper `observe`, extended to the secrecy commands by `observeFull`. Secrecy claims (left-or-right and fresh-message secrecy) are stated only for mode P; in mode O a raw receive returns the actual plaintext, so the secrecy commands are just sends there, and only authentication claims use mode O. The module also fixes the transcript entries and their mode projection, the record logs `Logs` (the transcript of mode O replies and the produced frames tagged with their record handle, with publication and receipt read from the transcript; both are analysis logs, not public views), the final output `Output`, the fourteen query classes and the budgets with the fresh-message byte budget. No security claim is made here. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -85,7 +85,7 @@ inductive Handle where
   | owner (index : Nat)
   deriving DecidableEq
 
-/-- Secrecy commands. `test handle left right` sends `left` or `right` on the handle according to a hidden bit drawn at the first admitted test; `fresh handle length` sends an experiment-sampled uniform message of `length` bytes that the adversary never sees. -/
+/-- Secrecy commands. `test handle left right` sends `left` or `right` on the handle according to a hidden bit drawn at the first admitted test; `fresh handle length` sends an experiment-sampled uniform message of `length` bytes that the adversary never sees. Claims about them are stated only in mode P: in mode O forwarding their ciphertext to the partner's raw receive returns the hidden message, so there they are just sends. -/
 inductive Secrecy where
   | test (handle : Handle) (left right : Pqxdh.Bytes)
   | fresh (handle : Handle) (length : Nat)
@@ -170,10 +170,13 @@ inductive Receiver where
   | owner (index : Nat)
   deriving DecidableEq
 
-/-- Record logs. `transcript` holds every adversary query with its mode O reply, oldest first; `produced` holds every frame a record seal handed to the frame writer, including frames whose writer then failed, with the command that produced it. -/
+/-- The tag of a produced record frame: the record handle of the command that sealed it, never its plaintext. A Server send is tagged with its peer key ID, every Beacon record command with its owner handle, and a Server raw receive, which names no handle before routing, with `none`. Frames sealed by `test` and `fresh` are tagged like any send on their handle, so their hidden plaintexts never enter the tag. -/
+abbrev FrameTag := Option Handle
+
+/-- Record logs, both analysis logs rather than public views. `transcript` holds every adversary query with its mode O reply, oldest first, so in mode P it contains the plaintexts of raw receives, which the adversary sees only as success bits; the adversary's view of an entry is `Entry.view mode`. `produced` holds every frame a record seal handed to the frame writer, including frames whose writer then failed and were never published, each with the `FrameTag` of the command that produced it; it carries no plaintext. -/
 structure Logs where
   transcript : List Entry
-  produced : List (Command × RawCtxReceive.DecodedFrame)
+  produced : List (FrameTag × RawCtxReceive.DecodedFrame)
 
 /-- The ciphertext of a successfully returned record of one entry, with its handle. -/
 def Entry.published (entry : Entry) : Option (Handle × RawCtxSourceSend.Encrypted) :=
