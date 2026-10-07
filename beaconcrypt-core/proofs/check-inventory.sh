@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1503
+	[handwritten-lean]=1504
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28965,6 +28965,37 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem secrecy_frame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSecrecy theorem secrecy_frame"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSecrecy\.ledgerImpl_forward$' "$selected_source_module" "PqxdhDeploymentSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.ledgerImpl_forward"
 require_line_count 1 '^theorem ledgerImpl_forward([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSecrecy theorem ledgerImpl_forward"
+
+# CE-3 remainder: CE-COMPILE for the complete experiment in both modes, and budget transport through the secrecy layer with the fresh-message byte budget.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileSecrecy.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentCompileSecrecy root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.compile_full_game$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_game"
+require_line_count 1 '^theorem compile_full_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_full_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.compile_full_source$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_source"
+require_line_count 1 '^theorem compile_full_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_full_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.queryClass_inl$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.queryClass_inl"
+require_line_count 1 '^theorem queryClass_inl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem queryClass_inl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.uniformBytes_bound$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.uniformBytes_bound"
+require_line_count 1 '^theorem uniformBytes_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem uniformBytes_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.drawBit_bound$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.drawBit_bound"
+require_line_count 1 '^theorem drawBit_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem drawBit_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.send_bound$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.send_bound"
+require_line_count 1 '^theorem send_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem send_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.wrap_step$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.wrap_step"
+require_line_count 1 '^theorem wrap_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem wrap_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.observe_bound$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.observe_bound"
+require_line_count 1 '^theorem observe_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem observe_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.asModeO_bound$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.asModeO_bound"
+require_line_count 1 '^theorem asModeO_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem asModeO_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.wrap_bound$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.wrap_bound"
+require_line_count 1 '^theorem wrap_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem wrap_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.compile_full_bound$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_bound"
+require_line_count 1 '^theorem compile_full_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_full_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.compile_full_no_secret_read$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_no_secret_read"
+require_line_count 1 '^theorem compile_full_no_secret_read([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_full_no_secret_read"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
