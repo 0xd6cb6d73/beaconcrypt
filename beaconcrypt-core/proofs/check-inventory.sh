@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1520
+	[handwritten-lean]=1521
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29722,6 +29722,33 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem branch_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem branch_eq"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.adversary_eq$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.adversary_eq"
 require_line_count 1 '^theorem adversary_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem adversary_eq"
+
+# LQ-F spike: logged source (Server ephemeral log, terminal Server read) projecting to source14
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerSource root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerSource guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.collectLogged_fst$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.collectLogged_fst"
+require_line_count 1 '^theorem collectLogged_fst([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem collectLogged_fst"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.collectLogged_some$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.collectLogged_some"
+require_line_count 1 '^theorem collectLogged_some([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem collectLogged_some"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.sourcePrepare_fst$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.sourcePrepare_fst"
+require_line_count 1 '^theorem sourcePrepare_fst([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem sourcePrepare_fst"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.acceptSource_fst$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.acceptSource_fst"
+require_line_count 1 '^theorem acceptSource_fst([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem acceptSource_fst"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.query_projection$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.query_projection"
+require_line_count 1 '^theorem query_projection([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem query_projection"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.program_projection$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.program_projection"
+require_line_count 1 '^theorem program_projection([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem program_projection"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.initialized_projection$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.initialized_projection"
+require_line_count 1 '^theorem initialized_projection([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem initialized_projection"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.later_read$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.later_read"
+require_line_count 1 '^theorem later_read([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem later_read"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.query_owned$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.query_owned"
+require_line_count 1 '^theorem query_owned([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem query_owned"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.program_owned$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.program_owned"
+require_line_count 1 '^theorem program_owned([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem program_owned"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
