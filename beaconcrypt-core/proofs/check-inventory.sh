@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1520
+	[handwritten-lean]=1521
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29754,6 +29754,61 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem source_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem source_map"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.source_support$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.source_support"
 require_line_count 1 '^theorem source_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem source_support"
+
+# Common deployment experiment per-target KEM transfer (CE-9, plan steps 9.1-9.4): compiled trace equals transcript registrations, bundle-to-pool KeyMatchFinal, eligibility equals T4's actual event, T4 + certified KEM hop + T6 per target with one IND-CCA advantage and one correctness error, transported bills, exact-sum headline (Phase1ReadBack, Phase2ReadBack, FunctionalDecapsulation).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemTransfer.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentKemTransfer root import"
+require_line_count 24 '^theorem ' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem inventory"
+require_line_count 24 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentKemTransfer guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.traceFrom_bind$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.traceFrom_bind"
+require_line_count 1 '^theorem traceFrom_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem traceFrom_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.traceFrom_quiet$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.traceFrom_quiet"
+require_line_count 1 '^theorem traceFrom_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem traceFrom_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.bundle_cost$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.bundle_cost"
+require_line_count 1 '^theorem bundle_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem bundle_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.accept_cost$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.accept_cost"
+require_line_count 1 '^theorem accept_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem accept_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.traceFrom_map$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.traceFrom_map"
+require_line_count 1 '^theorem traceFrom_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem traceFrom_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.traceFrom_query$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.traceFrom_query"
+require_line_count 1 '^theorem traceFrom_query([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem traceFrom_query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.forwardLogged_run$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.forwardLogged_run"
+require_line_count 1 '^theorem forwardLogged_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem forwardLogged_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.step_trace$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.step_trace"
+require_line_count 1 '^theorem step_trace([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem step_trace"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.registrations_append$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.registrations_append"
+require_line_count 1 '^theorem registrations_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem registrations_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.compiled_traceFrom$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.compiled_traceFrom"
+require_line_count 1 '^theorem compiled_traceFrom([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem compiled_traceFrom"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.compiled_trace$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.compiled_trace"
+require_line_count 1 '^theorem compiled_trace([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem compiled_trace"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.acceptOf_mem$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.acceptOf_mem"
+require_line_count 1 '^theorem acceptOf_mem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem acceptOf_mem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.designateIn_some$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.designateIn_some"
+require_line_count 1 '^theorem designateIn_some([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem designateIn_some"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.designate_keys$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.designate_keys"
+require_line_count 1 '^theorem designate_keys([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem designate_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.tag_support$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.tag_support"
+require_line_count 1 '^theorem tag_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem tag_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.keymatch_point$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.keymatch_point"
+require_line_count 1 '^theorem keymatch_point([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem keymatch_point"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.map_support_congr$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.map_support_congr"
+require_line_count 1 '^theorem map_support_congr([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem map_support_congr"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.eligible_actual$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.eligible_actual"
+require_line_count 1 '^theorem eligible_actual([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem eligible_actual"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.kem_transfer$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.kem_transfer"
+require_line_count 1 '^theorem kem_transfer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem kem_transfer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.kem_transfer_bills$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.kem_transfer_bills"
+require_line_count 1 '^theorem kem_transfer_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem kem_transfer_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.kem_transfer_billed$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.kem_transfer_billed"
+require_line_count 1 '^theorem kem_transfer_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem kem_transfer_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.kem_hop_close$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.kem_hop_close"
+require_line_count 1 '^theorem kem_hop_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem kem_hop_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.kem_transfer_sum$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.kem_transfer_sum"
+require_line_count 1 '^theorem kem_transfer_sum([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem kem_transfer_sum"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.transported_total$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.transported_total"
+require_line_count 1 '^theorem transported_total([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem transported_total"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
