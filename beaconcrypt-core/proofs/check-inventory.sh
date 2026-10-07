@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1507
+	[handwritten-lean]=1508
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29109,6 +29109,47 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem keymatch_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem keymatch_game"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.link_game$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.link_game"
 require_line_count 1 '^theorem link_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem link_game"
+
+# CE-5 freshness: annotated steps other than identity and KEM reads record no disclosure; approved_goodkem and kernel_reads_unrevealed for the tagged compiled program over the complete interface.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentQuiet.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentQuiet$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentQuiet root import"
+require_line_count 17 '^theorem ' "$selected_source_module" "PqxdhDeploymentQuiet theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentQuiet guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_identity$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_identity"
+require_line_count 1 '^theorem quiet_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_identity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_kem$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_kem"
+require_line_count 1 '^theorem quiet_kem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_kem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_create$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_create"
+require_line_count 1 '^theorem quiet_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_create"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_bundle$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_bundle"
+require_line_count 1 '^theorem quiet_bundle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_bundle"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.onAux_pool$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.onAux_pool"
+require_line_count 1 '^theorem onAux_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem onAux_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_accept$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_accept"
+require_line_count 1 '^theorem quiet_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_finish$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_finish"
+require_line_count 1 '^theorem quiet_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_step$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_step"
+require_line_count 1 '^theorem quiet_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_run$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_run"
+require_line_count 1 '^theorem quiet_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_birth$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_birth"
+require_line_count 1 '^theorem quiet_birth([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_birth"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_initialized$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_initialized"
+require_line_count 1 '^theorem quiet_initialized([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_initialized"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.goodKem_of_quiet$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.goodKem_of_quiet"
+require_line_count 1 '^theorem goodKem_of_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem goodKem_of_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.unrevealed_of_quiet$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.unrevealed_of_quiet"
+require_line_count 1 '^theorem unrevealed_of_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem unrevealed_of_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_empty$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_empty"
+require_line_count 1 '^theorem quiet_empty([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_empty"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.compiled_unread$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.compiled_unread"
+require_line_count 1 '^theorem compiled_unread([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem compiled_unread"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.approved_goodkem$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.approved_goodkem"
+require_line_count 1 '^theorem approved_goodkem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem approved_goodkem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.kernel_reads_unrevealed$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.kernel_reads_unrevealed"
+require_line_count 1 '^theorem kernel_reads_unrevealed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem kernel_reads_unrevealed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

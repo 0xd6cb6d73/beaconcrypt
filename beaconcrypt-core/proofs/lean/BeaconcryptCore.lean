@@ -1544,6 +1544,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentEligibility
 
 import BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch
 
+import BeaconcryptCore.Computational.PqxdhDeploymentQuiet
+
 /-!
 # Beaconcrypt-core verification root
 
