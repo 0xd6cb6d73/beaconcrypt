@@ -1512,6 +1512,7 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable
 import BeaconcryptCore.Computational.PqxdhRecordLiftSeed
 import BeaconcryptCore.Computational.PqxdhRecordLiftRoles
 import BeaconcryptCore.Computational.PqxdhRecordLiftInterface
+import BeaconcryptCore.Computational.PqxdhRecordLiftChainState
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative

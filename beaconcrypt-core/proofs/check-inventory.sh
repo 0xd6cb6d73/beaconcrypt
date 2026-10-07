@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1526
+	[handwritten-lean]=1527
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30013,6 +30013,40 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem server_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem server_reply"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftInterface\.beacon_reply$' "$selected_source_module" "PqxdhRecordLiftInterface dependency BeaconcryptCore.Computational.PqxdhRecordLiftInterface.beacon_reply"
 require_line_count 1 '^theorem beacon_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem beacon_reply"
+
+# Ghost chain coordinates follow actual source admission, skip/target callbacks and rollback.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainState.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftChainState$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftChainState root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhRecordLiftChainState theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftChainState guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.resume_tracked$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.resume_tracked"
+require_line_count 1 '^theorem resume_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem resume_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.begin_tracked$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.begin_tracked"
+require_line_count 1 '^theorem begin_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem begin_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.request_sequence$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.request_sequence"
+require_line_count 1 '^theorem request_sequence([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem request_sequence"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.future_sequence$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.future_sequence"
+require_line_count 1 '^theorem future_sequence([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem future_sequence"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.failed_open$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.failed_open"
+require_line_count 1 '^theorem failed_open([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem failed_open"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.failed_open_retry$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.failed_open_retry"
+require_line_count 1 '^theorem failed_open_retry([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem failed_open_retry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.send_begin_tracked$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.send_begin_tracked"
+require_line_count 1 '^theorem send_begin_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem send_begin_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.send_ready_kernel$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.send_ready_kernel"
+require_line_count 1 '^theorem send_ready_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem send_ready_kernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.send_ready_aligned$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.send_ready_aligned"
+require_line_count 1 '^theorem send_ready_aligned([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem send_ready_aligned"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.resume_erasure$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.resume_erasure"
+require_line_count 1 '^theorem resume_erasure([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem resume_erasure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.server_seed_erasure$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.server_seed_erasure"
+require_line_count 1 '^theorem server_seed_erasure([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem server_seed_erasure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.beacon_seed_erasure$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.beacon_seed_erasure"
+require_line_count 1 '^theorem beacon_seed_erasure([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem beacon_seed_erasure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.seeds_aligned$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.seeds_aligned"
+require_line_count 1 '^theorem seeds_aligned([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem seeds_aligned"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.admission_erasure$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.admission_erasure"
+require_line_count 1 '^theorem admission_erasure([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem admission_erasure"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
