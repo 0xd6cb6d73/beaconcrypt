@@ -1587,6 +1587,8 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemObserverFree
 
 import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish
 
+import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter
+
 /-!
 # Beaconcrypt-core verification root
 
