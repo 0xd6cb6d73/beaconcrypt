@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish
 /-!
 # The router of the marked branch no longer needs the candidate (item 2, stage S0b completion)
 
-This module completes stage S0b of the item 2 plan. In the marked branch of `PqxdhRegistrationJointBeaconOpaqueFinish`, every Beacon finish keeps only the presence of the router's reply to the decapsulation of the challenge ciphertext under the selected KEM creation index, but the post-challenge router still holds the KEM candidate. The main theorem `opaqueBranch_freeRouter` states that the opaque raw-ordinal branch of theorem T6 equals `freeRouterBranch`, in which the router holds the fixed public value `placeholder` instead. In that branch the candidate is an argument only of the Server's private resumption interpreter (as in T6) and of the private Beacon root interpreter `markedRoot`; no observer, no router state and no Beacon state holds it.
+This module completes stage S0b of the item 2 plan. In the marked branch of `PqxdhRegistrationJointBeaconOpaqueFinish`, every Beacon finish keeps only the presence of the router's reply to the decapsulation of the challenge ciphertext under the selected KEM creation index, but the post-challenge router still holds the KEM candidate. The main theorem `opaqueBranch_freeRouter` states that the opaque raw-ordinal branch of theorem T6 equals `freeRouterBranch`, in which the router holds the fixed public value `placeholder` instead. In that branch the candidate is an argument only of the Server's private resumption interpreter (as in T6) and of the private Beacon root interpreter `markedRoot`; no observer, no router state and no Beacon state holds it. It still remains in one place of the program state: both interpreters read the shared Extract table at the 192-byte input `padFF32 ‖ m ‖ candidate` (`PqxdhServerAuthNative.romRootBytes`, and `PqxdhServerAuthNative.sourceRoot` called by `markedRoot`) and store that input as a key of the table cache, which `PqxdhServerAuthNative.eraseObservers` keeps and which the adversary's public `.hmac` and every other root read consult. So the candidate is the 32-byte suffix of these cache keys until stage S1c, which removes this carrier with the random-oracle split `PqxdhExtractRomHiddenSuffix.hidden_suffix_bound`.
 
 Proof. By `router_moves`, the router holding `placeholder`, with its reply to that one request overwritten by the candidate (`markPool`), is the router holding the candidate. The overwriting is then pushed into the program (`markPool_actual`) and shown to change nothing (`markedResume_unmarked`):
 
@@ -57,10 +57,12 @@ instance {X Y : Type} (predicate : X → Prop) [DecidablePred predicate] :
   | .inl query => inferInstanceAs (Decidable (predicate query))
   | .inr _ => inferInstanceAs (Decidable False)
 
-@[simp] theorem onLeft_inl {X Y : Type} (predicate : X → Prop) (query : X) :
+@[simp]
+theorem onLeft_inl {X Y : Type} (predicate : X → Prop) (query : X) :
     onLeft (Y := Y) predicate (.inl query) = predicate query := rfl
 
-@[simp] theorem onLeft_inr {X Y : Type} (predicate : X → Prop) (query : Y) :
+@[simp]
+theorem onLeft_inr {X Y : Type} (predicate : X → Prop) (query : Y) :
     onLeft predicate (.inr query : X ⊕ Y) = False := rfl
 
 /-- The same request on the exposed encapsulation interface. -/
@@ -690,6 +692,14 @@ theorem opaqueBranch_freeRouter (setup : Setup baseSpec KemSK) (codec : Codec Re
 end Assembly
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.onLeft_inl' does not depend on any axioms -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.onLeft_inl
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.onLeft_inr' does not depend on any axioms -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.onLeft_inr
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.markPool_other' depends on axioms: [propext] -/
 #guard_msgs in

@@ -30098,8 +30098,12 @@ require_line_count 1 '^theorem opaqueBranch_marked([[:space:]]|$)' "$selected_so
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinishRouter.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointBeaconOpaqueFinishRouter root import"
-require_line_count 27 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter theorem inventory"
-require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter guarded dependencies"
+require_line_count 29 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter theorem inventory"
+require_line_count 29 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinishRouter\.onLeft_inl$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.onLeft_inl"
+require_line_count 1 '^theorem onLeft_inl([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter theorem onLeft_inl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinishRouter\.onLeft_inr$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.onLeft_inr"
+require_line_count 1 '^theorem onLeft_inr([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter theorem onLeft_inr"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinishRouter\.markPool_other$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.markPool_other"
 require_line_count 1 '^theorem markPool_other([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter theorem markPool_other"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinishRouter\.mark_free$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinishRouter dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.mark_free"

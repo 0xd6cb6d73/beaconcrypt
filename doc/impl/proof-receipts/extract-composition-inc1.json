@@ -1,5 +1,5 @@
 {
- "date": "2026-10-07T21:54:32.290420+00:00",
+ "date": "2026-10-07T22:35:03.339235+00:00",
  "scope": "Handoff item 2, increment 1: stages S0a and S0b (candidate removed from every observer, from the Beacon finish and from the post-challenge router; program equalities, loss 0) and the generic lemmas G1 (stage S1a), S3a and G2 (stage S4a) of the extract-design plan.",
  "basis": "4cc974c049a3d542fdec728982bf80594ce443d2",
  "topic": {
@@ -8,8 +8,8 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/extract-design/plan.md",
-  "sha256": "b02bdf6a93d6a9fa973fbacb51ddc44d1a1e6e67fe83bb75ee084bd3fba6135b",
-  "stages": "S0a, S0b, S1a (G1), S3a, S4a (G2); sections 3, 4, 9, 15-17"
+  "sha256": "b4ad531499d3411a6f1b72de1928677f43627b58d713b6ecf5fbce7adfbd8ebf",
+  "stages": "S0a, S0b, S1a (G1), S3a, S4a (G2); sections 3, 4, 7, 9, 15-17 and 19"
  },
  "commits": [
   {
@@ -39,20 +39,25 @@
   {
    "commit": "0a254e160026f751a9a0c277681a95fb361b42ff",
    "subject": "Replace the router's candidate in the marked KEM branch"
+  },
+  {
+   "commit": "2fb286d985658b6ac921b002403f4f7135e8b085",
+   "subject": "Document the completed S0b stage of item 2"
   }
  ],
+ "commits_note": "The commits from the base to the parent of the review-fix commit; the review-fix commit itself contains this receipt.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhKeyScheduleFromRoot.lean": "e26885683816b0f0b72d93f3874f26be2183fea85760e80ad03d4272b119cfb3",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRootFirstEntry.lean": "f6de1ba6c7af68e056cceb1643f24ea7ee1e62bfba63ce75f3fa498baf21d171",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhExtractRomHiddenSuffix.lean": "7638c361dd3700812c905dfbf31e0eb01abe3a010f24958ef16da55d25113da3",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemObserverFree.lean": "8fc7a90a70a9c011e20339a9a497e1e728d049553593ef2e4c13d873f8babf6a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhExtractRomHiddenSuffix.lean": "65b3f4d6d460bdb722df1cfcee6972fd5e31131db6fa0ee328e17d6a9bcff95f",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemObserverFree.lean": "9495b7be3b12e905fcb5822650a2dfaf224f47b384ea1f901d94b255245a143e",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinish.lean": "ffa2df1fc4e2437553b2c044c4387dd6dda7429a32a9ba76661d2dd59ce5ffda",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinishRouter.lean": "ad1005459969211eaa69b6ff0b2b6d1fd3d03b570ac3bf57302a04536123e57e",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinishRouter.lean": "02b01fb25f3cd4e8888bfcfcf2f3fab4ba4b81c093cea73d7897df46a75ffb80",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "8352dc8e272641a1429641472dc4c982f515fd3641e9944bba7fe89547300d37",
-  "beaconcrypt-core/proofs/check-inventory.sh": "7c888c3cbd0d1de67c39d5bd98fa6d67215c1413f7462905a4a33de2c42b1a9a",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "7997ddd902701287942c09117b45cd2b8d45ca04fb92a6d165f9e5163d837862",
-  "doc/impl/extract-composition.md": "80f7f1cbae060217856249ba488dfbc016f8a9404cae95cfae6855c42ee05093",
-  "doc/formal-verification-analysis.md": "10f20d648ef472c29cf1082cfef8dda11dd36748d046618aa2492907f8e1ace3"
+  "beaconcrypt-core/proofs/check-inventory.sh": "f575cc45f4869208b49ef5039bf0c6842410a70275f2a8f335015fd3498357a6",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "0c020bcab7e265e7867ecfdef3ec90932a60131cc3354593a7df10fc59d82652",
+  "doc/impl/extract-composition.md": "dabe4b29d0bc605d32e8444f3dc7fa88712c4e5e5929d6032fdba8bbe5943c4c",
+  "doc/formal-verification-analysis.md": "2c7a137e68b1c744e20716c1f7cbb69ed7a6bd4ba3a3d0158d1526a68c0510a3"
  },
  "modules": [
   {
@@ -67,6 +72,7 @@
     "Classical.choice, Quot.sound, propext": 2
    },
    "direct_check_final": {
+    "tag": "final",
     "exit": 0,
     "start": "2026-10-07T21:33:13.036690+00:00",
     "end": "2026-10-07T21:33:15.829293+00:00",
@@ -115,6 +121,7 @@
     "Classical.choice, Quot.sound, propext": 13
    },
    "direct_check_final": {
+    "tag": "final",
     "exit": 0,
     "start": "2026-10-07T21:33:15.879173+00:00",
     "end": "2026-10-07T21:33:25.001397+00:00",
@@ -181,18 +188,19 @@
     "Quot.sound, propext": 2
    },
    "direct_check_final": {
+    "tag": "fix",
     "exit": 0,
-    "start": "2026-10-07T21:33:25.047270+00:00",
-    "end": "2026-10-07T21:33:35.964182+00:00",
-    "source_sha256": "7638c361dd3700812c905dfbf31e0eb01abe3a010f24958ef16da55d25113da3",
+    "start": "2026-10-07T22:26:17.392914+00:00",
+    "end": "2026-10-07T22:26:25.568685+00:00",
+    "source_sha256": "65b3f4d6d460bdb722df1cfcee6972fd5e31131db6fa0ee328e17d6a9bcff95f",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "5fe4806410d8a3618058b0e6340eaea419b8dbce0c413bbecd5ec24b3d15d509",
+    "artifact_sha256": "dbd800d6b250d1ac681375e961f316a4d0060add0d45d2043182b3091cac29f7",
     "command": [
      "/tmp/bc-coord/coord.sh",
      "lean",
      "claude",
-     "inc1-PqxdhExtractRomHiddenSuffix-final",
+     "inc1-PqxdhExtractRomHiddenSuffix-fix",
      "--",
      "timeout",
      "180",
@@ -258,18 +266,19 @@
     "Classical.choice, Quot.sound, propext": 31
    },
    "direct_check_final": {
+    "tag": "fix",
     "exit": 0,
-    "start": "2026-10-07T21:33:36.010760+00:00",
-    "end": "2026-10-07T21:33:41.128229+00:00",
-    "source_sha256": "8fc7a90a70a9c011e20339a9a497e1e728d049553593ef2e4c13d873f8babf6a",
+    "start": "2026-10-07T22:26:25.603488+00:00",
+    "end": "2026-10-07T22:26:34.517051+00:00",
+    "source_sha256": "9495b7be3b12e905fcb5822650a2dfaf224f47b384ea1f901d94b255245a143e",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "5d78510008a98c3592cf221c2c3af9738bce2260826ffafa29a980f0addc51f6",
+    "artifact_sha256": "bfbeb2e36a0d31f1d12fdbf955d05e868c6bb4f97617375a717b0982aaa8cff9",
     "command": [
      "/tmp/bc-coord/coord.sh",
      "lean",
      "claude",
-     "inc1-PqxdhRegistrationJointKemObserverFree-final",
+     "inc1-PqxdhRegistrationJointKemObserverFree-fix",
      "--",
      "timeout",
      "180",
@@ -314,9 +323,10 @@
     "Classical.choice, Quot.sound, propext": 18
    },
    "direct_check_final": {
+    "tag": "fix",
     "exit": 0,
-    "start": "2026-10-07T21:50:15.543319+00:00",
-    "end": "2026-10-07T21:50:21.389726+00:00",
+    "start": "2026-10-07T22:26:34.551783+00:00",
+    "end": "2026-10-07T22:26:39.924341+00:00",
     "source_sha256": "ffa2df1fc4e2437553b2c044c4387dd6dda7429a32a9ba76661d2dd59ce5ffda",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
@@ -325,7 +335,7 @@
      "/tmp/bc-coord/coord.sh",
      "lean",
      "claude",
-     "inc1-PqxdhRegistrationJointBeaconOpaqueFinish-final",
+     "inc1-PqxdhRegistrationJointBeaconOpaqueFinish-fix",
      "--",
      "timeout",
      "180",
@@ -343,6 +353,8 @@
    "name": "PqxdhRegistrationJointBeaconOpaqueFinishRouter",
    "plan_stage": "S0b (router candidate)",
    "statements": [
+    "onLeft_inl",
+    "onLeft_inr",
     "markPool_other",
     "mark_free",
     "simulateQ_free",
@@ -371,25 +383,27 @@
     "markedPost_free",
     "opaqueBranch_freeRouter"
    ],
-   "statement_count": 27,
+   "statement_count": 29,
    "axiom_profile": {
+    "(none)": 2,
     "propext": 1,
     "Classical.choice, Quot.sound, propext": 24,
     "Quot.sound, propext": 2
    },
    "direct_check_final": {
+    "tag": "fix",
     "exit": 0,
-    "start": "2026-10-07T21:50:48.899945+00:00",
-    "end": "2026-10-07T21:50:57.658129+00:00",
-    "source_sha256": "ad1005459969211eaa69b6ff0b2b6d1fd3d03b570ac3bf57302a04536123e57e",
+    "start": "2026-10-07T22:26:39.961363+00:00",
+    "end": "2026-10-07T22:26:50.166816+00:00",
+    "source_sha256": "02b01fb25f3cd4e8888bfcfcf2f3fab4ba4b81c093cea73d7897df46a75ffb80",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "f6d29366c0f0eeb23f43b5da9a97201787610a85d1e815afb1f1c2b3572bbfbb",
+    "artifact_sha256": "525279d363832e866e7b689401aa3c2725583c43f3482f0631718cc3d984f11d",
     "command": [
      "/tmp/bc-coord/coord.sh",
      "lean",
      "claude",
-     "inc1-PqxdhRegistrationJointBeaconOpaqueFinishRouter-final",
+     "inc1-PqxdhRegistrationJointBeaconOpaqueFinishRouter-fix",
      "--",
      "timeout",
      "180",
@@ -404,7 +418,7 @@
    }
   }
  ],
- "statements_total": 131,
+ "statements_total": 133,
  "allowed_axioms": [
   "propext",
   "Classical.choice",
@@ -414,7 +428,7 @@
   "Classical.choice, Quot.sound, propext": 109,
   "propext": 7,
   "Quot.sound, propext": 11,
-  "(none)": 4
+  "(none)": 6
  },
  "exact_statements": {
   "PqxdhKeyScheduleFromRoot.fromRoot_bound": "theorem fromRoot_bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)\n    (correct : SourceFullCorrect source hmac) (distinguisher : Distinguisher) :\n    (rootHybrid source distinguisher).boolDistAdvantage\n        (PqxdhServerAuthKeySchedule.uniformGame distinguisher) ≤\n      (extractRealGame hmac uniform32 (initExtractReduction source hmac distinguisher)).boolDistAdvantage\n          (extractUniformGame uniform32 (initExtractReduction source hmac distinguisher)) +\n        (hmacPrfRealGame hmac (initExpandReduction source distinguisher)).boolDistAdvantage\n          (hmacPrfRandomGame (initExpandReduction source distinguisher)) +\n        (extractRealGame hmac uniform32 (stepExtractReduction hmac distinguisher)).boolDistAdvantage\n          (extractUniformGame uniform32 (stepExtractReduction hmac distinguisher)) +\n        (hmacPrfRealGame hmac (stepExpandReduction distinguisher)).boolDistAdvantage\n          (hmacPrfRandomGame (stepExpandReduction distinguisher))",
@@ -457,9 +471,14 @@
  "leanpath": {
   "manifest": "/tmp/bc-arc-scratch/extract-design/inc1/leanpath",
   "sha256": "e01968fb8a3857e59ed3de2eefb6858089b7589acb2f8b07a37140454e761a51",
-  "note": "First entry: the scratch prefix inc1/olean, a resolved symlink mirror (mirror.py) of the first prefix of the published LEAN_PATH of central 4cc974c0 (/tmp/bc-coord/leanpaths/4cc974c049a3d542fdec728982bf80594ce443d2.leanpath), followed by that LEAN_PATH. check.py unlinks an artifact before writing it, so no other prefix was written. Final checks rebuilt the five modules in import order."
+  "note": "First entry: the scratch prefix inc1/olean, a resolved symlink mirror (mirror.py) of the first prefix of the published LEAN_PATH of central 4cc974c0 (/tmp/bc-coord/leanpaths/4cc974c049a3d542fdec728982bf80594ce443d2.leanpath), followed by that LEAN_PATH. check.py unlinks an artifact before writing it, so no other prefix was written. Final checks rebuilt the five modules in import order. After the review fixes, G1, S0a, S0b and the S0b router module were checked again in import order with tag fix; S3a and G2 keep their final checks."
  },
  "root_checks": {
+  "root-fix": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "8352dc8e272641a1429641472dc4c982f515fd3641e9944bba7fe89547300d37"
+  },
   "root-router": {
    "exit": 0,
    "log_bytes": 0,
@@ -482,6 +501,13 @@
   }
  },
  "focused_inventory": {
+  "inv-fix": {
+   "exit": 0,
+   "log_bytes": 1925,
+   "start": "2026-10-07T22:32:29Z",
+   "end": "2026-10-07T22:33:42Z",
+   "log_sha256": "1c526b52ac097845c30f678274ee67cac7b80e22fc909d864c3c8ac245af651a"
+  },
   "inv-router": {
    "exit": 0,
    "log_bytes": 2035,
@@ -497,10 +523,11 @@
    "log_sha256": "93e0a48a9ac926fafb97d6fc5393fb63a165f7b0095edb9e96c75e7567f36b18"
   }
  },
- "focused_inventory_note": "check-inventory ran at the S0b commit 62d5ac45 (five modules) and on the tree of the S0b-completion commit 0a254e16 (all six modules) in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs; flake.nix and flake.lock identical to the worktree) under a coord.sh @nix lease. The earlier module commits were not checked separately; each only appends a module, its root import, its check-inventory block and its inventory row, recounted and rehashed with coord.sh inv. The documentation commit changes no inventoried file.",
+ "focused_inventory_note": "check-inventory ran at the S0b commit 62d5ac45 (five modules), on the tree of the S0b-completion commit 0a254e16 (all six modules) and on the tree of the review-fix commit (inv-fix: after coord.sh inv recount, which kept [handwritten-lean]=1531, and inv rehash of the three changed Lean rows and of check-inventory.sh) in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs; flake.nix and flake.lock identical to the worktree) under a coord.sh @nix lease. The earlier module commits were not checked separately; each only appends a module, its root import, its check-inventory block and its inventory row, recounted and rehashed with coord.sh inv. The documentation commit changes no inventoried file.",
  "forbidden_scan": "No sorry, admit, axiom, opaque, native_decide, implemented_by, extern or unsafe in the six modules. Scoped options: set_option linter.deprecated false in on 2 declarations of PqxdhRootFirstEntry and 8 of PqxdhExtractRomHiddenSuffix (VCVio probability notation evalSPMF/probEvent/probOutput only, checked by recompiling without the option: no deprecated lemma); set_option backward.isDefEq.respectTransparency false in on PqxdhRegistrationJointKemObserverFree.evaluate_map. Module-level options: autoImplicit false, maxRecDepth 100000.",
- "contamination_scan": "Exact-token grep of the plan risk-9 list: no hit. Direct-reference constant scan (scan/Scan.lean, a Lean metaprogram over the 470 declarations of the six modules): 0 references to the listed fixed-HKDF items; liveness case PqxdhCorrelatedExtractFamily.realGame detected.",
- "guard_liveness": "scan/GuardLiveness.lean with one deliberately wrong guard per module: exit 1, six guard mismatches.",
+ "contamination_scan": "Exact-token grep of the plan risk-9 list: no hit. Direct-reference constant scan (scan/Scan.lean, a Lean metaprogram over the 470 declarations of the six modules): 0 references to the listed fixed-HKDF items; liveness case PqxdhCorrelatedExtractFamily.realGame detected. References into PqxdhJointDhExtractFamily (fix/FamilyRefs.lean, types and values with opaque values included): 29 references from 18 declarations, all to the family-state types and constructors carried by PqxdhServerAuthNative.NativeState (State x18, State.mk x2, State.history x2, State.cache x2, History, Observation, Observation.derive, Observation.publicHmac, Message), from the S0a never-read lemmas (accept_neverRead, tail_oblivious, oblivious_*), freeResume, markedResume and their lemmas; no game, reduction or advantage of PqxdhJointDhExtractFamily (the hygiene review counted 31; the count depends on which equation lemmas have been generated).",
+ "guard_liveness": "scan/GuardLiveness.lean with one deliberately wrong guard per module: exit 1, six guard mismatches. After the fix, fix/GuardLiveness2.lean (the same six plus a wrong guard claiming onLeft_inl depends on propext): exit 1, seven guard mismatches.",
+ "guard_coverage": "The hygiene review found onLeft_inl and onLeft_inr of PqxdhRegistrationJointBeaconOpaqueFinishRouter without guards: written as @[simp] theorem on one line, they were missed by the ^theorem pattern of addprint.py and of the inventory count, so the earlier totals 27 and 131 were undercounts. Both now carry @[simp] on its own line and an exact guard (does not depend on any axioms); the router inventory block lists 29 theorems, 29 guards and both per-theorem rows. fix/OwnNames2.lean over the compiled modules: the set of theorem constants of each module equals the set of its guard names in all six modules (133 in all).",
  "deviations_from_plan": [
   "G1: binder prefix renamed start (Lean keyword); statement otherwise the plan's.",
   "S0a: the identity-pool transcript is erased rather than shown free of the candidate.",
@@ -509,12 +536,28 @@
   "No planned statement turned out false or unprovable; none was weakened; no existing module changed."
  ],
  "contracts_used": "None new. G2 has the approved functional contract SourceFullCorrect as a premise (owner decision 2026-10-06). G1 is a statistical lemma about a lazily sampled table (the R1 random-oracle model of the slice is its intended instance). S0a and S0b are program equalities without premises.",
+ "candidate_after_S0b": "In freeRouterBranch the candidate is an argument only of the Server private resumption interpreter (KemOpaqueResume.liftImpl) and of the private Beacon root interpreter markedRoot. It also remains in program state as the 32-byte suffix of keys of the shared Extract-table cache: both interpreters read the table at padFF32 || m || candidate (PqxdhServerAuthNative.romRootBytes; PqxdhServerAuthNative.sourceRoot called by markedRoot) and store that input in the cache, which eraseObservers keeps and which the public .hmac (PqxdhRegistrationJointPublicShared.hmac via publicFamily) and every other root read. Plan section 7 assigns this carrier to S1c: S1b flattens freeRouterBranch into G1 sharedGame with the candidate as secret and the reads of the two interpreters with the candidate as hidden reads at coordinates m; S1c instantiates hidden_suffix_bound, after which the hidden entries are in a coordinate-keyed table, no secret is drawn and no cache key carries the candidate, at cost (qHmac + qAccept + qFinish)/2^256 with covers and the cut-split of certified. No reduction is formed over this state before S1c.",
+ "state_field_survey": "Plan section 7 survey of the post-challenge state of freeRouterBranch: NativeState = PqxdhJointDhExtractFamily.State {history (erased by S0a), cache} x GameState {ctx (BLAKE2b cache), server, pending (selected token cleared, PqxdhRegistrationJointKemOpaqueCore.cleared_shape), beacon, sessions, ghost (erased by S0a)}; router state PqxdhDynamicKemJointSource.State = PqxdhDynamicIdentityPool.SourceState {seeds, transcript (erased by S0a)} x PqxdhDynamicKemRouter.State {created, history (erased by S0a), forbiddenReveal, exhausted}; Beacon owners list (List EncodedEntry). Surveyed by the semantic review (no carrier of the candidate, of a RootKeyInput built from it or of the selected decapsulation reply value other than the Extract-table cache keys); field lists rechecked against the definitions for this revision. Values computed from a root (pending tokens, installed kernels, the BLAKE2b cache, the table cache entries) are left to S1b, S1c and S3b.",
+ "names_for_consumers": "Headline names, to be used fully qualified (namespace BeaconcryptCore.Computational): PqxdhKeyScheduleFromRoot.fromRoot_bound, .fromRoot_bound_context; PqxdhRootFirstEntry.eager_first, .uniformGame_first; PqxdhExtractRomHiddenSuffix.hidden_suffix_bound, .sharedGame, .splitGame; PqxdhRegistrationJointKemObserverFree.opaqueBranch_free, .freeBranch; PqxdhRegistrationJointBeaconOpaqueFinish.opaqueBranch_marked, .markedBranch, .router_moves; PqxdhRegistrationJointBeaconOpaqueFinishRouter.opaqueBranch_freeRouter, .freeRouterBranch. Short names that another namespace also declares (fix/Central7609.lean over the root import of central 7609c3c8, and fix/OwnNames.lean over the six modules): resume_free (twice among the new modules), RootSpec, Shared, Secrets, interpret, placeholder, source_step, marked_step, simulateQ_free, evaluate_map, eraseOutcome, eraseObservers_idem, run_erase, State, eagerImpl, lazyImpl, trackedImpl, eager_done, Bad, view, logged, sharedImpl, splitGame, splitImpl; the guide lists the other namespaces. coordinate and overwrite coincide only with Lean namespaces. No rename.",
  "not_proved": [
   "Item 2 headlines T7 and T8.",
   "Stages S1b, S1c, S2, S3b, S4b, T, S7, S8, S5, S6, S9.",
   "Updates of composition-assumptions.md and trusted-boundary.md for the R1 scope extension (with T7/T8)."
  ],
- "re_estimate": "S0a, S0b (with the router candidate), S1a, S3a and S4a (plan 15.5-26 agent-days) were built in one working session. Remaining item 2 stages: about 20-41 agent-days (plan 38-67): S1b 5-10, S1c 2-4, S2 2-4, S3b 3-6, S4b 0.5-1, T 1-2, S7 1-3, S8 2-4, S5+S6 1.5-2.5, S9 3-5.",
+ "re_estimate": "S0a, S0b (with the router candidate), S1a, S3a and S4a (plan 15.5-26 agent-days) were built in one working session. Remaining item 2 stages: 21-41.5 agent-days, the sum of the per-stage figures (plan 38.5-66 for the same stages): S1b 5-10, S1c 2-4, S2 2-4, S3b 3-6, S4b 0.5-1, T 1-2, S7 1-3, S8 2-4, S5+S6 1.5-2.5, S9 3-5.",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change.",
- "review": "Not independently reviewed. Not integrated into central."
+ "review": {
+  "reviewed_commit": "2fb286d9",
+  "semantic": "/tmp/bc-arc-scratch/extract-design/inc1/review-1.json: APPROVE_WITH_NITS (1 minor, 2 nits)",
+  "hygiene": "/tmp/bc-arc-scratch/extract-design/inc1/review-2.json: APPROVE_WITH_NITS (1 minor, 2 nits)",
+  "fixes": [
+   "hygiene minor: exact guards for onLeft_inl and onLeft_inr; @[simp] on its own line; router inventory block 29; totals 133 (profile none 6) in guide, receipt and inventory.",
+   "semantic minor: the candidate remains the suffix of the shared Extract-table cache keys until S1c; corrected in the analysis section, the guide (Where the KEM candidate is after S0b, with what S1c must do and the section 7 state-field survey) and the S0a and S0b-router module docstrings.",
+   "semantic nit: G1 wording: the split removes the dependence of the hidden entries on the secret and their reachability by direct reads; their mutual independence comes from R1 (G1 module docstring, guide, analysis).",
+   "semantic nit: re-estimate totals 21-41.5 (plan 38.5-66), the sums of the per-stage rows (guide, receipt).",
+   "hygiene nit: Names for consumers section in the guide, checked against central 7609c3c8.",
+   "hygiene nit: contamination paragraph names the family-state types and constructors of PqxdhJointDhExtractFamily that the modules reference, and no games."
+  ],
+  "integration": "Not integrated into central; central 7609c3c8 not merged into the topic."
+ }
 }
