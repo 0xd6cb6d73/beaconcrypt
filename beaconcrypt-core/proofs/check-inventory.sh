@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1519
+	[handwritten-lean]=1520
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29689,6 +29689,71 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem compile_later_no_kem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterCompile theorem compile_later_no_kem"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterCompile\.continuation_no_accept$' "$selected_source_module" "PqxdhDeploymentLaterCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile.continuation_no_accept"
 require_line_count 1 '^theorem continuation_no_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterCompile theorem continuation_no_accept"
+
+# Common deployment experiment registration trace (CE-9): accept and bundle log of any source14 program, tag at the selected raw-accept ordinal records the logged accept, run invariant on the annotated execution (session counter, positional accept replies, verified accept bytes, published bundles carry the pool key at their creation index).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRegistrationTrace.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentRegistrationTrace root import"
+require_line_count 29 '^theorem ' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem inventory"
+require_line_count 29 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.traceFrom_query_bind$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.traceFrom_query_bind"
+require_line_count 1 '^theorem traceFrom_query_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem traceFrom_query_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.traceFrom_erase$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.traceFrom_erase"
+require_line_count 1 '^theorem traceFrom_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem traceFrom_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.scan_accept_zero$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.scan_accept_zero"
+require_line_count 1 '^theorem scan_accept_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem scan_accept_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.scan_accept_succ$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.scan_accept_succ"
+require_line_count 1 '^theorem scan_accept_succ([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem scan_accept_succ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.scan_other$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.scan_other"
+require_line_count 1 '^theorem scan_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem scan_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.acceptsOf_record_other$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.acceptsOf_record_other"
+require_line_count 1 '^theorem acceptsOf_record_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem acceptsOf_record_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.traceFrom_prefix$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.traceFrom_prefix"
+require_line_count 1 '^theorem traceFrom_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem traceFrom_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.scan_pure$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.scan_pure"
+require_line_count 1 '^theorem scan_pure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem scan_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.tag_pure$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.tag_pure"
+require_line_count 1 '^theorem tag_pure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem tag_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.tag_accept_zero$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.tag_accept_zero"
+require_line_count 1 '^theorem tag_accept_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem tag_accept_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.tag_accept_succ$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.tag_accept_succ"
+require_line_count 1 '^theorem tag_accept_succ([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem tag_accept_succ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.tag_other$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.tag_other"
+require_line_count 1 '^theorem tag_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem tag_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.tag_map$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.tag_map"
+require_line_count 1 '^theorem tag_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem tag_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.tag_traceFrom$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.tag_traceFrom"
+require_line_count 1 '^theorem tag_traceFrom([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem tag_traceFrom"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.traceFrom_support$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.traceFrom_support"
+require_line_count 1 '^theorem traceFrom_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem traceFrom_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.tag_traced$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.tag_traced"
+require_line_count 1 '^theorem tag_traced([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem tag_traced"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.keys_step$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.keys_step"
+require_line_count 1 '^theorem keys_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem keys_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.nativeAccept_session$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.nativeAccept_session"
+require_line_count 1 '^theorem nativeAccept_session([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem nativeAccept_session"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.native_sessions$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.native_sessions"
+require_line_count 1 '^theorem native_sessions([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem native_sessions"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.source_native$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.source_native"
+require_line_count 1 '^theorem source_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem source_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.trace_published$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.trace_published"
+require_line_count 1 '^theorem trace_published([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem trace_published"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.bundle_pooled$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.bundle_pooled"
+require_line_count 1 '^theorem bundle_pooled([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem bundle_pooled"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.pooled_extend$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.pooled_extend"
+require_line_count 1 '^theorem pooled_extend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem pooled_extend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.record_other$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.record_other"
+require_line_count 1 '^theorem record_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem record_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.traced_step$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.traced_step"
+require_line_count 1 '^theorem traced_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem traced_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.traced_run$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.traced_run"
+require_line_count 1 '^theorem traced_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem traced_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.traced_source$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.traced_source"
+require_line_count 1 '^theorem traced_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem traced_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.source_map$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.source_map"
+require_line_count 1 '^theorem source_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem source_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.source_support$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.source_support"
+require_line_count 1 '^theorem source_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem source_support"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
