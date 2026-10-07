@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1570
+	[handwritten-lean]=1571
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -31699,6 +31699,48 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem admitted_send_erasure([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCompiler theorem admitted_send_erasure"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCompiler\.real_send_erasure$' "$selected_source_module" "PqxdhRecordLiftChainCompiler dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCompiler.real_send_erasure"
 require_line_count 1 '^theorem real_send_erasure([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCompiler theorem real_send_erasure"
+
+# Reviewed complete local source coordinate and skipped-material invariants.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCoordinates.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftChainCoordinates root import"
+require_line_count 18 '^theorem ' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem inventory"
+require_line_count 18 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.finish_coordinates$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.finish_coordinates"
+require_line_count 1 '^theorem finish_coordinates([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem finish_coordinates"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.receive_coordinates$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.receive_coordinates"
+require_line_count 1 '^theorem receive_coordinates([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem receive_coordinates"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.admitted_receive_coordinates$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.admitted_receive_coordinates"
+require_line_count 1 '^theorem admitted_receive_coordinates([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem admitted_receive_coordinates"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.receive_origins$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.receive_origins"
+require_line_count 1 '^theorem receive_origins([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem receive_origins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.send_coordinates$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.send_coordinates"
+require_line_count 1 '^theorem send_coordinates([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem send_coordinates"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.admitted_send_coordinates$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.admitted_send_coordinates"
+require_line_count 1 '^theorem admitted_send_coordinates([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem admitted_send_coordinates"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.send_origins$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.send_origins"
+require_line_count 1 '^theorem send_origins([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem send_origins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.resume_future_send$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.resume_future_send"
+require_line_count 1 '^theorem resume_future_send([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem resume_future_send"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.begin_future_send$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.begin_future_send"
+require_line_count 1 '^theorem begin_future_send([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem begin_future_send"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.finish_aligned$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.finish_aligned"
+require_line_count 1 '^theorem finish_aligned([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem finish_aligned"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.receive_invariants$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.receive_invariants"
+require_line_count 1 '^theorem receive_invariants([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem receive_invariants"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.attributed_reanchor$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.attributed_reanchor"
+require_line_count 1 '^theorem attributed_reanchor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem attributed_reanchor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.admitted_receive_invariants$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.admitted_receive_invariants"
+require_line_count 1 '^theorem admitted_receive_invariants([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem admitted_receive_invariants"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.send_invariants$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.send_invariants"
+require_line_count 1 '^theorem send_invariants([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem send_invariants"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.admitted_send_invariants$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.admitted_send_invariants"
+require_line_count 1 '^theorem admitted_send_invariants([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem admitted_send_invariants"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.receive_certified$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.receive_certified"
+require_line_count 1 '^theorem receive_certified([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem receive_certified"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.send_certified$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.send_certified"
+require_line_count 1 '^theorem send_certified([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem send_certified"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainCoordinates\.seeds_certified$' "$selected_source_module" "PqxdhRecordLiftChainCoordinates dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates.seeds_certified"
+require_line_count 1 '^theorem seeds_certified([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainCoordinates theorem seeds_certified"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py

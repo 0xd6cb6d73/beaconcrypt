@@ -1525,6 +1525,7 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut
 import BeaconcryptCore.Computational.PqxdhRecordLiftOrigins
 import BeaconcryptCore.Computational.PqxdhRecordLiftRealTable
 import BeaconcryptCore.Computational.PqxdhRecordLiftChainCompiler
+import BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative
