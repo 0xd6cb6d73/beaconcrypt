@@ -1574,6 +1574,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer
 
 import BeaconcryptCore.Computational.PqxdhDeploymentTargetRange
 
+import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent
+
 /-!
 # Beaconcrypt-core verification root
 

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1522
+	[handwritten-lean]=1523
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29850,6 +29850,53 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem sum_last_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem sum_last_le"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.kem_transfer_create$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.kem_transfer_create"
 require_line_count 1 '^theorem kem_transfer_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem kem_transfer_create"
+
+# CE-8 initial-response-origin event CE-A1 on the registration view of the deployment transcript and of the source14 journal.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthEvent.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuthEvent root import"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.step_reg$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.step_reg"
+require_line_count 1 '^theorem step_reg([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem step_reg"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.foldl_regs$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.foldl_regs"
+require_line_count 1 '^theorem foldl_regs([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem foldl_regs"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.summarize_regs$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.summarize_regs"
+require_line_count 1 '^theorem summarize_regs([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem summarize_regs"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.failures_step$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.failures_step"
+require_line_count 1 '^theorem failures_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem failures_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.failures_foldl$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.failures_foldl"
+require_line_count 1 '^theorem failures_foldl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem failures_foldl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.summarizeReg_append$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.summarizeReg_append"
+require_line_count 1 '^theorem summarizeReg_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem summarizeReg_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.failures_append$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.failures_append"
+require_line_count 1 '^theorem failures_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem failures_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.acceptedFrom_append$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.acceptedFrom_append"
+require_line_count 1 '^theorem acceptedFrom_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem acceptedFrom_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.accepted_append$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.accepted_append"
+require_line_count 1 '^theorem accepted_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem accepted_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.acceptedFrom_prefix$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.acceptedFrom_prefix"
+require_line_count 1 '^theorem acceptedFrom_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem acceptedFrom_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.accepted_prefix$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.accepted_prefix"
+require_line_count 1 '^theorem accepted_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem accepted_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.acceptedFrom_late$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.acceptedFrom_late"
+require_line_count 1 '^theorem acceptedFrom_late([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem acceptedFrom_late"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.regsOfSource_append$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.regsOfSource_append"
+require_line_count 1 '^theorem regsOfSource_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem regsOfSource_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.summarizeReg_snoc$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.summarizeReg_snoc"
+require_line_count 1 '^theorem summarizeReg_snoc([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem summarizeReg_snoc"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.acceptedFrom_snoc$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.acceptedFrom_snoc"
+require_line_count 1 '^theorem acceptedFrom_snoc([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem acceptedFrom_snoc"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.accepted_snoc$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.accepted_snoc"
+require_line_count 1 '^theorem accepted_snoc([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem accepted_snoc"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.unmatched_stop$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.unmatched_stop"
+require_line_count 1 '^theorem unmatched_stop([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem unmatched_stop"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.untilFrom_spec$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.untilFrom_spec"
+require_line_count 1 '^theorem untilFrom_spec([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem untilFrom_spec"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.untilStop_spec$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.untilStop_spec"
+require_line_count 1 '^theorem untilStop_spec([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem untilStop_spec"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.unmatched_untilStop$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.unmatched_untilStop"
+require_line_count 1 '^theorem unmatched_untilStop([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem unmatched_untilStop"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
