@@ -28568,18 +28568,30 @@ require_line_count 1 '^theorem branchRaw_opaque([[:space:]]|$)' "$selected_sourc
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRawOpaque\.authenticated_selected_opaque$' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.authenticated_selected_opaque"
 require_line_count 1 '^theorem authenticated_selected_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRawOpaque theorem authenticated_selected_opaque"
 
-# Common deployment experiment interface (CE-1 subset for the CE-3 trial): commands, mode O and mode P specs, pin parse.
+# Common deployment experiment interface (CE-1): commands, secrecy commands, modes and projection, transcript entries and logs, output, query classes and budgets.
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentInterface.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentInterface$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentInterface root import"
-require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhDeploymentInterface theorem inventory"
-require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentInterface guarded dependencies"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhDeploymentInterface theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentInterface guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentInterface\.parsePin_isSome$' "$selected_source_module" "PqxdhDeploymentInterface dependency BeaconcryptCore.Computational.PqxdhDeploymentInterface.parsePin_isSome"
 require_line_count 1 '^theorem parsePin_isSome([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem parsePin_isSome"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentInterface\.observe_serverRaw$' "$selected_source_module" "PqxdhDeploymentInterface dependency BeaconcryptCore.Computational.PqxdhDeploymentInterface.observe_serverRaw"
 require_line_count 1 '^theorem observe_serverRaw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem observe_serverRaw"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentInterface\.observe_beaconRaw$' "$selected_source_module" "PqxdhDeploymentInterface dependency BeaconcryptCore.Computational.PqxdhDeploymentInterface.observe_beaconRaw"
 require_line_count 1 '^theorem observe_beaconRaw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem observe_beaconRaw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentInterface\.observeFull_serverRaw$' "$selected_source_module" "PqxdhDeploymentInterface dependency BeaconcryptCore.Computational.PqxdhDeploymentInterface.observeFull_serverRaw"
+require_line_count 1 '^theorem observeFull_serverRaw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem observeFull_serverRaw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentInterface\.observeFull_beaconRaw$' "$selected_source_module" "PqxdhDeploymentInterface dependency BeaconcryptCore.Computational.PqxdhDeploymentInterface.observeFull_beaconRaw"
+require_line_count 1 '^theorem observeFull_beaconRaw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem observeFull_beaconRaw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentInterface\.observeFull_secrecy$' "$selected_source_module" "PqxdhDeploymentInterface dependency BeaconcryptCore.Computational.PqxdhDeploymentInterface.observeFull_secrecy"
+require_line_count 1 '^theorem observeFull_secrecy([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem observeFull_secrecy"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentInterface\.project_raw$' "$selected_source_module" "PqxdhDeploymentInterface dependency BeaconcryptCore.Computational.PqxdhDeploymentInterface.project_raw"
+require_line_count 1 '^theorem project_raw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem project_raw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentInterface\.sends_eq$' "$selected_source_module" "PqxdhDeploymentInterface dependency BeaconcryptCore.Computational.PqxdhDeploymentInterface.sends_eq"
+require_line_count 1 '^theorem sends_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem sends_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentInterface\.targets_eq$' "$selected_source_module" "PqxdhDeploymentInterface dependency BeaconcryptCore.Computational.PqxdhDeploymentInterface.targets_eq"
+require_line_count 1 '^theorem targets_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentInterface theorem targets_eq"
 
 # Common deployment experiment native semantics (CE-2 subset for the CE-3 trial): live Server and owners, record ghost counters, generated-seed game.
 
