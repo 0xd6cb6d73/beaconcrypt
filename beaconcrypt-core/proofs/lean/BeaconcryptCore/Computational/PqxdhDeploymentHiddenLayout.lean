@@ -58,17 +58,25 @@ theorem factor_join (m : Material) (seed : PqxdhRecordLiftSeed.Seed) :
       (RawCtxKdfRequestTable.fullResponse (RawCtxKdfRequestTable.assemble (m.1, seed.1, m.2)), seed.2) :=
   rfl
 
-set_option linter.deprecated false in
-/-- The 108-byte split: a uniform output is independent uniform material and a uniform seed, through every continuation. -/
+/-- The 108-byte split: a uniform output is independent uniform material and a uniform seed, through every continuation. The proof transports the uniform measure along the bijection `joinEquiv` on the discrete measurable structure of the two finite types. -/
 theorem uniform_split {Result : Type} (k : PqxdhServerAuthKeySchedule.Output → ProbComp Result) :
     LawEq ($ᵗ PqxdhServerAuthKeySchedule.Output >>= k)
       (do let m ← $ᵗ Material; let seed ← $ᵗ PqxdhRecordLiftSeed.Seed; k (joinOutput m seed)) := by
   intro β _ cont
-  apply evalDist_eq_of_evalSPMF_eq
-  simp only [← PqxdhFullSecretInputKdf.pairSample, bind_assoc, pure_bind, joinOutput]
-  refine (RawCtxKdfRequestTable.full_partition
-    (fun full => ($ᵗ PqxdhSecretInputKdf.RootOutput) >>= fun right => k (full, right) >>= cont)).trans ?_
-  exact evalSPMF_bind_congr' _ (fun key => evalSPMF_bind_bind_swap _ _ _)
+  let : MeasurableSpace (Material × PqxdhRecordLiftSeed.Seed) := ⊤
+  let : DiscreteMeasurableSpace (Material × PqxdhRecordLiftSeed.Seed) :=
+    ⟨fun _ => MeasurableSpace.measurableSet_top⟩
+  let : MeasurableSpace PqxdhServerAuthKeySchedule.Output := ⊤
+  let : DiscreteMeasurableSpace PqxdhServerAuthKeySchedule.Output :=
+    ⟨fun _ => MeasurableSpace.measurableSet_top⟩
+  have split : (($ᵗ (Material × PqxdhRecordLiftSeed.Seed)) >>= fun x => k (joinEquiv x) >>= cont) =
+      ((do let m ← $ᵗ Material; let seed ← $ᵗ PqxdhRecordLiftSeed.Seed; k (joinOutput m seed)) >>= cont) := by
+    rw [← PqxdhFullSecretInputKdf.pairSample (A := Material) (B := PqxdhRecordLiftSeed.Seed)]
+    simp only [bind_assoc, pure_bind]
+    rfl
+  rw [← split, bind_assoc]
+  exact (evalDist_bind_bijective_uniform_cross _ _ SampleableType.evalDist_uniformSample
+    SampleableType.evalDist_uniformSample joinEquiv joinEquiv.bijective (fun o => k o >>= cont)).symm
 
 /-- m5: drawing the material costs at most 44 uniform queries. -/
 theorem material_bound : ($ᵗ Material : ProbComp Material).IsTotalQueryBound 44 := by

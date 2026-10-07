@@ -8,7 +8,7 @@ import VCVio.OracleComp.Constructions.SampleableType.MeasureCompatibility
 
 This generic component has no protocol content. Two probabilistic programs have the same law (`LawEq`) when every continuation into any measurable space sees the same `𝒟` measure. A lens focuses a lazily sampled cache inside a larger state. Completing one point of that cache is the lazy query at the point with its answer dropped. A step `Commutes` with the lens when completing any point before the step has the same law as completing it after the step.
 
-`discard_erase` is the global erasure: if every query of a handler is, in law, a pointed step followed by the completion of the point it reports, and every pointed step commutes with completions, then the handler and the pointed handler without completions have the same law under any continuation that is blind to completions. This is an equality in law of lazy sampling, not a statement about any concrete function, and it uses no independence premise.
+`discard_erase` is the global erasure: if every query of a handler is, in law, a pointed step followed by the completion of the point it reports, and every pointed step commutes with completions, then the handler and the pointed handler without completions have the same law under any continuation that is blind to completions. This is an equality in law of lazy sampling, not a statement about any concrete function. Its hypotheses `factor`, `oblivious` and `blind` (the continuation is `Blind`) are obligations on the given handler, pointed handler and continuation, proved for each instance; no probabilistic independence or noninterference assumption is taken.
 -/
 
 open OracleComp OracleSpec
@@ -58,23 +58,35 @@ theorem LawEq.evalDist_eq {α : Type} [MeasurableSpace α] {mx my : ProbComp α}
     𝒟[mx] = 𝒟[my] := by
   simpa only [bind_pure] using h α (pure : α → ProbComp α)
 
-set_option linter.deprecated false in
-/-- Two independent draws may be taken in either order. -/
+/-- Two independent draws may be taken in either order. The proof is an induction over both programs: every uniform draw of a probabilistic program has a finite index type, so VCVio's measure-level swap for countable draws applies one draw at a time. -/
 theorem lawEq_swap {α β γ : Type} (mx : ProbComp α) (my : ProbComp β) (f : α → β → ProbComp γ) :
     LawEq (mx >>= fun a => my >>= fun b => f a b) (my >>= fun b => mx >>= fun a => f a b) := by
   intro δ _ k
-  apply evalDist_eq_of_evalSPMF_eq
-  rw [evalSPMF_bind (mx >>= fun a => my >>= fun b => f a b) k,
-    evalSPMF_bind (my >>= fun b => mx >>= fun a => f a b) k, evalSPMF_bind_bind_swap mx my f]
+  simp only [bind_assoc]
+  have draw_swap : ∀ (n : ℕ) (my : ProbComp β) (g : Fin (n + 1) → β → ProbComp δ),
+      𝒟[$[0..n] >>= fun r => my >>= g r] = 𝒟[my >>= fun b => $[0..n] >>= fun r => g r b] := by
+    intro n my
+    induction my using ProbComp.inductionOn with
+    | pure b => intro g; simp only [pure_bind]
+    | query_bind n' c ih =>
+      intro g
+      simp only [bind_assoc]
+      refine (evalDist_bind_bind_swap_of_countable ($[0..n]) ($[0..n'])
+        (fun r r' => c r' >>= g r)).trans ?_
+      exact evalDist_bind_congr _ _ _ fun r' => ih r' g
+  induction mx using ProbComp.inductionOn with
+  | pure a => simp only [pure_bind]
+  | query_bind n c ih =>
+    simp only [bind_assoc]
+    refine (evalDist_bind_congr _ _ _ fun r => ih r).trans ?_
+    exact draw_swap n my (fun r b => c r >>= fun a => f a b >>= k)
 
-set_option linter.deprecated false in
 /-- An unused draw can be dropped, because a probabilistic program never fails. -/
 theorem lawEq_drop {α β : Type} (mx : ProbComp α) (my : ProbComp β) :
     LawEq (mx >>= fun _ => my) my := by
   intro γ _ k
-  apply evalDist_eq_of_evalSPMF_eq
-  rw [bind_assoc, OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails mx
-    (probFailure_eq_zero (mx := mx)) (my >>= k)]
+  rw [bind_assoc]
+  exact OracleComp.evalDist_bind_const mx (my >>= k)
 
 /-- A get/set lens with the three very-well-behaved laws. -/
 structure StateLens (σ ρ : Type) where
