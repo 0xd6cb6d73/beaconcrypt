@@ -1,5 +1,5 @@
 {
- "date": "2026-10-07T13:57:58.496351+00:00",
+ "date": "2026-10-07T14:37:54.702779+00:00",
  "scope": "CE-9 of the common deployment experiment (handoff item 3): plan section 9 steps 9.1-9.4 per target g = (raw-accept ordinal, KEM creation index), with the bundle-to-pool invariant that gives KeyMatchFinal, the KEM-reduction bills at the transported caps, the exact-sum headline over targets through UniformTargetSelection.split, and the designation range (open point of unit A).",
  "basis": "c29cea816d81bff913c28bcb3edd6df97c76cd8a",
  "topic": {
@@ -23,17 +23,25 @@
   {
    "commit": "785cc4a52849fe128ce5ebdea68060bca7ffd8d8",
    "subject": "Bound the designation range of the deployment experiment"
+  },
+  {
+   "commit": "09cca644a5b9bcc3ba1a1ec499a3ba93ca41bb39",
+   "subject": "Document the per-target KEM transfer of the deployment experiment"
+  },
+  {
+   "commit": "bac1b39a3e52cdd771496938281c9d06bfda6cf1",
+   "subject": "Tighten the designation range of the deployment experiment"
   }
  ],
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRegistrationTrace.lean": "078ea1549e027d671b4f886af752e5d669a7c0d7ba938e768ce9792ac74042e1",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemTransfer.lean": "726129d1528e6821c4ba5f93914f1567e5b04d0316a0b48e1746cbc2b520a248",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentTargetRange.lean": "8468f657f6b03dd6d5c77eb576d6c6832310801c466b1c2bc3d38ec7cff5d089",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemTransfer.lean": "d5851852cabe5ef66ffdae983579c3dcc890e2e86dbe914ee70200b3af9f9290",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentTargetRange.lean": "f09d55ab3c80cb890b9ebc54eac2c85445b67680e6f1c809cd4a4371d1aebf32",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "94dda0514f39ba26536c659973f43466f8f9b80e879b3429fb2f5814fe624223",
-  "beaconcrypt-core/proofs/check-inventory.sh": "c6e22d46a89a81963a7d2fcb91f7410e0aeaa84b3628f66b5312f3f04d19b645",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "9a803b964ea276aa094e5b8b98b4e1581e9b8f2b12cda3b362dce3be0b86f8d5",
-  "doc/impl/common-deployment-experiment.md": "2df0050f143044e9a17af229298e7514367646dba59ba48df4c19b74335a434d",
-  "doc/formal-verification-analysis.md": "f83afb7711965de2f0763df9b88bf5ca7aeff5e74fb7dbd5ee5a752010e35a62",
+  "beaconcrypt-core/proofs/check-inventory.sh": "10649457143c7284a3843d99147d4ac71d1747b246e67a5d594b9c34e794921e",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "0fa9fb5f06dcf69b13bfaf37a2a9a672e72da3ee5d28ddd20ce461be73afa013",
+  "doc/impl/common-deployment-experiment.md": "b8b5ab2c6dc3f8529bf681263c3edb24c61f063343c3f1747782a09bc9d21d34",
+  "doc/formal-verification-analysis.md": "66d8c71f4b2f9ec9c2c241d9cb3c957d3854065f3a7c95854be5ad2f2ea5d5c3",
   "doc/composition-assumptions.md": "5e168f794f58e7112deff849cabe26e2fd360ccf7f95acf148638749fdbcb3e9"
  },
  "modules": [
@@ -135,12 +143,12 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-07T13:53:51.001581+00:00",
-    "end": "2026-10-07T13:54:00.041623+00:00",
-    "source_sha256": "726129d1528e6821c4ba5f93914f1567e5b04d0316a0b48e1746cbc2b520a248",
+    "start": "2026-10-07T14:33:30.031608+00:00",
+    "end": "2026-10-07T14:33:38.810342+00:00",
+    "source_sha256": "d5851852cabe5ef66ffdae983579c3dcc890e2e86dbe914ee70200b3af9f9290",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "555d735cefe054882084a6f23f9dc29905d79adae7687be80d3d593c495aab90",
+    "artifact_sha256": "3b2f0889a695ee116908415a22fa9a52efa65cf4a55e07bc7d5ac1c3e160561c",
     "command": [
      "flock",
      "/tmp/bc-arc-scratch/lean.lock",
@@ -158,7 +166,7 @@
   },
   {
    "name": "PqxdhDeploymentTargetRange",
-   "plan_stage": "CE-9 (designation range, unit A open point; headline with unbudgeted eligibility)",
+   "plan_stage": "CE-9 (designation range, unit A open point; headlines with unbudgeted eligibility, over Fin qAccept x Fin (qCreate + 1) and over Fin qAccept x Fin qCreate)",
    "statements": [
     "ledger_step",
     "ledger_count",
@@ -167,25 +175,30 @@
     "step_owners",
     "owners_count",
     "designate_created",
+    "traced_range_create",
     "traced_range",
+    "range_game_create",
     "range_game",
     "designateIn_range",
     "eligible_designated",
-    "kem_transfer_eligible"
+    "kem_transfer_eligible",
+    "designated_create",
+    "sum_last_le",
+    "kem_transfer_create"
    ],
-   "statement_count": 12,
+   "statement_count": 17,
    "axiom_profile": {
-    "Classical.choice, Quot.sound, propext": 10,
+    "Classical.choice, Quot.sound, propext": 15,
     "propext": 2
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-07T13:54:00.080670+00:00",
-    "end": "2026-10-07T13:54:04.305781+00:00",
-    "source_sha256": "8468f657f6b03dd6d5c77eb576d6c6832310801c466b1c2bc3d38ec7cff5d089",
+    "start": "2026-10-07T14:33:38.847551+00:00",
+    "end": "2026-10-07T14:33:43.323917+00:00",
+    "source_sha256": "f09d55ab3c80cb890b9ebc54eac2c85445b67680e6f1c809cd4a4371d1aebf32",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "41079662408eb03c3bbc7fd0b3ca7c7c417b001ef602537fe1ce8e1cb44184a4",
+    "artifact_sha256": "bbfe5dc362e49705b23fa0f1a8052922c049e6b18afab49832aa081fe88bd77a",
     "command": [
      "flock",
      "/tmp/bc-arc-scratch/lean.lock",
@@ -202,8 +215,8 @@
    }
   }
  ],
- "statements": 65,
- "deployment_statements_total_after": 521,
+ "statements": 70,
+ "deployment_statements_total_after": 526,
  "deployment_statements_total_before": 456,
  "allowed_axioms": [
   "propext",
@@ -211,7 +224,7 @@
   "Quot.sound"
  ],
  "axiom_profile_from_guards": {
-  "Classical.choice, Quot.sound, propext": 59,
+  "Classical.choice, Quot.sound, propext": 64,
   "propext": 4,
   "Quot.sound, propext": 2
  },
@@ -243,11 +256,16 @@
   "PqxdhDeploymentTargetRange.ledger_count": "theorem ledger_count (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds)\n    (kind : Fin 14) (program : OracleComp FullSpec Result) (cap : Nat)\n    (bounded : program.IsQueryBoundP (fun query => queryClass query = kind) cap) (ledger : Ledger)\n    (result : Result × Ledger)\n    (reached : result ∈ support ((simulateQ (ledgerImpl crypto codec serverKid bounds) program).run ledger)) :\n    classCount kind result.2.transcript ≤ classCount kind ledger.transcript + cap",
   "PqxdhDeploymentTargetRange.accepts_count": "theorem accepts_count (transcript : List Entry) :\n    (acceptsOf (registrations transcript)).length = classCount 3 transcript",
   "PqxdhDeploymentTargetRange.owners_count": "theorem owners_count (transcript : List Entry) :\n    (PqxdhDeploymentTranscript.summarize transcript).owners.length ≤ classCount 1 transcript",
+  "PqxdhDeploymentTargetRange.traced_range_create": "theorem traced_range_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds)\n    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (runtime : A)\n    (outcome : PqxdhRegistrationJointInitializedSchedule.SourceOutcome KemSK (((X × Ledger) × Local) × List Logged))\n    (after : PqxdhRegistrationJointServerPrefix.State KemSK A)\n    (reached : (some outcome, after) ∈ support ((PqxdhRegistrationJointInitializedSchedule.source setup codec checks\n      ensureInit none (traceFrom (compileFull setup codec route bounds mode adversary) [])).run\n        ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)))\n    (handle : Handle) (session k : Nat)\n    (designated : PqxdhDeploymentTranscript.designate setup.source.crypto codec setup.serverKeyId\n      outcome.2.1.1.1.2.transcript handle = some (session, k)) :\n    session < budget.accept ∧ k < budget.create",
   "PqxdhDeploymentTargetRange.traced_range": "theorem traced_range (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds)\n    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (runtime : A)\n    (outcome : PqxdhRegistrationJointInitializedSchedule.SourceOutcome KemSK (((X × Ledger) × Local) × List Logged))\n    (after : PqxdhRegistrationJointServerPrefix.State KemSK A)\n    (reached : (some outcome, after) ∈ support ((PqxdhRegistrationJointInitializedSchedule.source setup codec checks\n      ensureInit none (traceFrom (compileFull setup codec route bounds mode adversary) [])).run\n        ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)))\n    (handle : Handle) (session k : Nat)\n    (designated : PqxdhDeploymentTranscript.designate setup.source.crypto codec setup.serverKeyId\n      outcome.2.1.1.1.2.transcript handle = some (session, k)) :\n    session < budget.accept ∧ k < budget.capacity",
+  "PqxdhDeploymentTargetRange.range_game_create": "theorem range_game_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (reached : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode\n      adversary).run runtime))\n    (observed : PqxdhDeploymentKemTransfer.Observed X) (found : PqxdhDeploymentKemTransfer.observeGame outcome.1 = some observed)\n    (handle : Handle) (session k : Nat)\n    (designated : PqxdhDeploymentTranscript.designate setup.source.crypto codec setup.serverKeyId\n      observed.2.1.transcript handle = some (session, k)) :\n    session < budget.accept ∧ k < budget.create",
   "PqxdhDeploymentTargetRange.range_game": "theorem range_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (reached : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode\n      adversary).run runtime))\n    (observed : PqxdhDeploymentKemTransfer.Observed X) (found : PqxdhDeploymentKemTransfer.observeGame outcome.1 = some observed)\n    (handle : Handle) (session k : Nat)\n    (designated : PqxdhDeploymentTranscript.designate setup.source.crypto codec setup.serverKeyId\n      observed.2.1.transcript handle = some (session, k)) :\n    session < budget.accept ∧ k < budget.capacity",
   "PqxdhDeploymentTargetRange.designateIn_range": "theorem designateIn_range (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64) (budget : Budget)\n    (transcript : List Entry) (handle : Handle) (session k : Nat)\n    (designated : PqxdhDeploymentTranscript.designate crypto codec serverKid transcript handle = some (session, k))\n    (sessionBound : session < budget.accept) (kBound : k < budget.capacity) :\n    PqxdhDeploymentTranscript.designateIn crypto codec serverKid budget transcript handle =\n      some (⟨session, sessionBound⟩, ⟨k, kBound⟩)",
   "PqxdhDeploymentTargetRange.eligible_designated": "theorem eligible_designated (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A)\n    (claim : PqxdhDeploymentKemTransfer.Observed X → Option Handle)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (reached : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode\n      adversary).run runtime)) :\n    (eligible setup.source.crypto codec setup.serverKeyId claim outcome).isSome =\n      (PqxdhDeploymentKemTransfer.designated setup.source.crypto codec setup.serverKeyId budget claim outcome).isSome",
-  "PqxdhDeploymentTargetRange.kem_transfer_eligible": "theorem kem_transfer_eligible (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)\n    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (event : PqxdhDeploymentKemTransfer.Observed X → Bool)\n    (claim : PqxdhDeploymentKemTransfer.Observed X → Option Handle) (runtime : A) :\n    𝒟[(fun outcome => decide (PqxdhDeploymentKemTransfer.happens event outcome = true ∧\n        (eligible setup.source.crypto codec setup.serverKeyId claim outcome).isSome)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤\n      ∑ g : Fin budget.accept × Fin budget.capacity,\n        (𝒟[PqxdhRegistrationJointKemRawOpaque.opaqueBranch setup codec checks ensureInit none\n          (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n          (compileFull setup codec route bounds mode adversary) runtime budget.create\n          (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val false] {true} +\n        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl\n            (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))\n          (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none\n            (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n            (compileFull setup codec route bounds mode adversary) runtime budget.create\n            (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val).toINDCCA +\n          PqxdhRegistrationJointKemRawGame.correctnessError setup))"
+  "PqxdhDeploymentTargetRange.kem_transfer_eligible": "theorem kem_transfer_eligible (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)\n    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (event : PqxdhDeploymentKemTransfer.Observed X → Bool)\n    (claim : PqxdhDeploymentKemTransfer.Observed X → Option Handle) (runtime : A) :\n    𝒟[(fun outcome => decide (PqxdhDeploymentKemTransfer.happens event outcome = true ∧\n        (eligible setup.source.crypto codec setup.serverKeyId claim outcome).isSome)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤\n      ∑ g : Fin budget.accept × Fin budget.capacity,\n        (𝒟[PqxdhRegistrationJointKemRawOpaque.opaqueBranch setup codec checks ensureInit none\n          (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n          (compileFull setup codec route bounds mode adversary) runtime budget.create\n          (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val false] {true} +\n        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl\n            (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))\n          (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none\n            (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n            (compileFull setup codec route bounds mode adversary) runtime budget.create\n            (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val).toINDCCA +\n          PqxdhRegistrationJointKemRawGame.correctnessError setup))",
+  "PqxdhDeploymentTargetRange.designated_create": "theorem designated_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A)\n    (claim : PqxdhDeploymentKemTransfer.Observed X → Option Handle)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (reached : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode\n      adversary).run runtime))\n    (g : Fin budget.accept × Fin budget.capacity)\n    (chosen : PqxdhDeploymentKemTransfer.designated setup.source.crypto codec setup.serverKeyId budget claim outcome =\n      some g) :\n    g.2.val < budget.create",
+  "PqxdhDeploymentTargetRange.sum_last_le": "theorem sum_last_le (n : Nat) (terms : Fin (n + 1) → ENNReal) (bound : Fin n → ENNReal)\n    (last : terms (Fin.last n) = 0) (each : ∀ k, terms k.castSucc ≤ bound k) : ∑ k, terms k ≤ ∑ k, bound k",
+  "PqxdhDeploymentTargetRange.kem_transfer_create": "theorem kem_transfer_create (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)\n    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (event : PqxdhDeploymentKemTransfer.Observed X → Bool)\n    (claim : PqxdhDeploymentKemTransfer.Observed X → Option Handle) (runtime : A) :\n    𝒟[(fun outcome => decide (PqxdhDeploymentKemTransfer.happens event outcome = true ∧\n        (eligible setup.source.crypto codec setup.serverKeyId claim outcome).isSome)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤\n      ∑ g : Fin budget.accept × Fin budget.create,\n        (𝒟[PqxdhRegistrationJointKemRawOpaque.opaqueBranch setup codec checks ensureInit none\n          (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim\n            (g.1, g.2.castSucc))\n          (compileFull setup codec route bounds mode adversary) runtime budget.create\n          (PqxdhDeploymentKemTransfer.selectedKem budget (g.1, g.2.castSucc)) g.1.val false] {true} +\n        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl\n            (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))\n          (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none\n            (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim\n              (g.1, g.2.castSucc))\n            (compileFull setup codec route bounds mode adversary) runtime budget.create\n            (PqxdhDeploymentKemTransfer.selectedKem budget (g.1, g.2.castSucc)) g.1.val).toINDCCA +\n          PqxdhRegistrationJointKemRawGame.correctnessError setup))"
  },
  "exact_definitions": {
   "PqxdhDeploymentRegistrationTrace.Logged": "inductive Logged where\n  | accept (raw : Pqxdh.Bytes) (reply : Option Nat)\n  | bundle (owner : Nat) (reply : Option Pqxdh.Bytes)",
@@ -273,7 +291,7 @@
  "leanpath": {
   "manifest": "/tmp/bc-arc-scratch/common-experiment/ce9/leanpath",
   "sha256": "22835d95320c522c45839038390abc4d077b4386663b5601e065533248d348b6",
-  "note": "The unit 3 LEAN_PATH with its first entry replaced by the fresh scratch prefix ce9/olean, a symlink mirror of the unit3/olean and lq/olean artifacts (1552 links), which together reproduce the merged central state c29cea81: every one of the 30 deployment artifacts was verified against its c29cea81 source sha256 and an exit-0 check log of ce3-trial, unit-a, unit3 or lq. check.py unlinks an artifact before writing it, so no earlier prefix was written. After the last source change the three CE-9 modules were rebuilt into ce9/olean in import order (direct_check_final)."
+  "note": "The unit 3 LEAN_PATH with its first entry replaced by the fresh scratch prefix ce9/olean, a symlink mirror of the unit3/olean and lq/olean artifacts (1552 links), which together reproduce the merged central state c29cea81: every one of the 30 deployment artifacts was verified against its c29cea81 source sha256 and an exit-0 check log of ce3-trial, unit-a, unit3 or lq. check.py unlinks an artifact before writing it, so no earlier prefix was written. After the last source change of the first pass the three CE-9 modules were rebuilt into ce9/olean in import order; after the last source change of the review fix pass PqxdhDeploymentKemTransfer (module docstring only) and PqxdhDeploymentTargetRange were rebuilt in import order (direct_check_final), and PqxdhDeploymentRegistrationTrace is unchanged, so its final check is that of the first pass."
  },
  "root_checks": {
   "root-PqxdhDeploymentRegistrationTrace": {
@@ -287,6 +305,11 @@
    "root_source_sha256": "0e9200fe242a41fa8c6283d03f6dabbf14207b4b366ba46b46b2ff3709958ae0"
   },
   "root-PqxdhDeploymentTargetRange": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "94dda0514f39ba26536c659973f43466f8f9b80e879b3429fb2f5814fe624223"
+  },
+  "root-fix-lean": {
    "exit": 0,
    "log_bytes": 0,
    "root_source_sha256": "94dda0514f39ba26536c659973f43466f8f9b80e879b3429fb2f5814fe624223"
@@ -310,6 +333,12 @@
    "start": "2026-10-07T13:52:05Z",
    "end": "2026-10-07T13:53:14Z",
    "log_sha256": "68332a6748d8fc35046ec4c1a8747c043c33d14defae046b82bfa851ea29ee31"
+  },
+  "inv-fix-lean": {
+   "exit": 0,
+   "start": "2026-10-07T14:34:37Z",
+   "end": "2026-10-07T14:35:44Z",
+   "log_sha256": "99214764668f94f208f1dd42135987d4d6215753fa338566caf899aee12a932f"
   }
  },
  "focused_inventory_note": "Each module commit was prepared with the other untracked files and other modified tracked files held aside and restored afterwards (commit.py), so check-inventory ran with exactly the files of that commit, in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs, flake.nix and flake.lock identical to the worktree). The documentation commit that adds this receipt is checked the same way.",
@@ -318,8 +347,8 @@
   "step_9_1": "PqxdhDeploymentKemTransfer.eligible_actual: Pr_CE[happens event ∧ designated claim = some g] = Pr_actual[Decided (decision g) ∧ GoodKem (selectedKem g) ∧ KeyMatchFinal (selectedKem g)] in the annotated initialized execution of tag (compileFull …) g.1 from empty pools, supplied = none; premises Phase1ReadBack, Phase2ReadBack; no budget.",
   "steps_9_2_to_9_4": "PqxdhDeploymentKemTransfer.kem_transfer: Pr_CE[happens event ∧ designated claim = some g] ≤ Pr[opaqueBranch … (decision g) (compileFull …) runtime qCreate (selectedKem g) g.1 false] + ofReal(IND_CCA_Advantage (KemRawCertified.adversary … (decision g) (compileFull …) runtime qCreate (selectedKem g) g.1) + correctnessError setup); premises FunctionalDecapsulation, Phase1ReadBack, Phase2ReadBack, budget.Respects.",
   "bills": "PqxdhDeploymentKemTransfer.kem_transfer_bills: KemRawBills.adversary_bound at transported bounds budget (prechallenge (qInit + 32) + (keygenCost * qCreate + V), decapsBase * qFinish, qFinish; postchallenge V, decapsBase * qFinish, qFinish; V = uniformCap caps qCreate qFinish (OpenUniform.total caps (transported bounds budget)) qAccept); transported_total gives OpenUniform.total in closed form.",
-  "headline": "PqxdhDeploymentKemTransfer.kem_transfer_sum (budgeted eligibility) and PqxdhDeploymentTargetRange.kem_transfer_eligible (unbudgeted eligibility): Pr_CE[happens event ∧ designated] ≤ Σ_{g : Fin qAccept × Fin (qCreate + 1)} (Pr[opaqueBranch_g false] + ofReal(Adv_g + correctnessError)).",
-  "range": "PqxdhDeploymentTargetRange.range_game: on every outcome of a budget-respecting adversary, every designation (i, k) of any handle has i < qAccept and k < qCreate + 1; eligible_designated: designated exactly when budgeted-designated."
+  "headline": "PqxdhDeploymentKemTransfer.kem_transfer_sum (budgeted eligibility) and PqxdhDeploymentTargetRange.kem_transfer_eligible (unbudgeted eligibility): Pr_CE[happens event ∧ designated] ≤ Σ_{g : Fin qAccept × Fin (qCreate + 1)} (Pr[opaqueBranch_g false] + ofReal(Adv_g + correctnessError)). PqxdhDeploymentTargetRange.kem_transfer_create (unbudgeted eligibility): the same bound with the sum over g : Fin qAccept × Fin qCreate, each g read as (g.1, g.2.castSucc), dropping the never-designated column k = qCreate and its qAccept per-target terms.",
+  "range": "PqxdhDeploymentTargetRange.range_game_create: on every outcome of a budget-respecting adversary, every designation (i, k) of any handle has i < qAccept and k < qCreate; range_game: the weakening to k < qCreate + 1; designated_create: a designated target has k < qCreate; eligible_designated: designated exactly when budgeted-designated."
  },
  "deviations_from_plan": [
   "Step 9.1 is proved as the equality the plan states. KeyMatchFinal and the accepted conjunct are obtained by tracing (reply provenance through a logging transformation) rather than an annotated version of the CE-3 per-step relation; the program-level facts need no handler and the handler-level invariant Traced is generic in the program.",
@@ -339,5 +368,11 @@
  ],
  "re_estimate": "CE-9 (estimated 3-7 by unit 3, 5-10 by unit A) was built with the range lemma in one working session. LQ-3 lowered to 0.5-1 agent-days; CE-9b keeps 3-6 (its precondition is now available through keymatch_point, but the remaining work is inside the selected-first game of T4). Item 3 proper without CE-9b, CE-10 and CE-12 about 23-41 agent-days remaining.",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change.",
- "review": "Not reviewed. Not pushed."
+ "review": "The first pass (HEAD 09cca644) was reviewed with a semantic and a hygiene lens: APPROVE_WITH_NITS with four nits. The review fix pass (the commits after 09cca644, the last of which adds this receipt) addresses all of them and is not reviewed. Not pushed.",
+ "review_fix_pass": [
+  "Range lemma stated k < qCreate + 1 while proving k < qCreate (semantic, nit): new traced_range_create and range_game_create with k < qCreate, from which traced_range and range_game are now derived with unchanged statements; new designated_create, sum_last_le and the headline kem_transfer_create over Fin qAccept x Fin qCreate; kem_transfer_sum and kem_transfer_eligible unchanged.",
+  "Module docstring premises (semantic nit, hygiene nit): PqxdhDeploymentTargetRange now separates the range results (Phase1ReadBack, Phase2ReadBack, budget) from kem_transfer_eligible and kem_transfer_create (also FunctionalDecapsulation, with the per-target IND-CCA and correctness terms of kem_transfer); PqxdhDeploymentKemTransfer adds the cost premises KemBound setup caps and initBound of the bills; inventory comments updated.",
+  "Names for consumers (hygiene, nit): the guide adds registrations and the new range names and says to use record and forwardLogged_run qualified.",
+  "No statement of the first pass changed (whitespace-normalized comparison with 09cca644); PqxdhDeploymentKemTransfer changed only in its module docstring; PqxdhDeploymentRegistrationTrace unchanged."
+ ]
 }
