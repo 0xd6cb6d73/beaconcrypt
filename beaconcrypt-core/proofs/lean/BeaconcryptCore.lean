@@ -1540,6 +1540,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy
 
 import BeaconcryptCore.Computational.UniformTargetSelection
 
+import BeaconcryptCore.Computational.PqxdhDeploymentEligibility
+
 /-!
 # Beaconcrypt-core verification root
 

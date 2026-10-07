@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1505
+	[handwritten-lean]=1506
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29019,6 +29019,71 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.UniformTarg
 require_line_count 1 '^theorem advantage([[:space:]]|$)' "$selected_source_module" "UniformTargetSelection theorem advantage"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.UniformTargetSelection\.signed$' "$selected_source_module" "UniformTargetSelection dependency BeaconcryptCore.Computational.UniformTargetSelection.signed"
 require_line_count 1 '^theorem signed([[:space:]]|$)' "$selected_source_module" "UniformTargetSelection theorem signed"
+
+# CE-5 publicity: run invariant between transcript and native state (phase classes, created bindings, honest bundle and build shapes); phase, owner, NoBundleFailure and designate read the native state.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEligibility.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentEligibility$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentEligibility root import"
+require_line_count 29 '^theorem ' "$selected_source_module" "PqxdhDeploymentEligibility theorem inventory"
+require_line_count 29 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentEligibility guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.nativePhase_view$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.nativePhase_view"
+require_line_count 1 '^theorem nativePhase_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem nativePhase_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.bundleShaped_alike$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.bundleShaped_alike"
+require_line_count 1 '^theorem bundleShaped_alike([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem bundleShaped_alike"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.agree_alike$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.agree_alike"
+require_line_count 1 '^theorem agree_alike([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem agree_alike"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.alike_refl$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.alike_refl"
+require_line_count 1 '^theorem alike_refl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem alike_refl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.alike_trans$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.alike_trans"
+require_line_count 1 '^theorem alike_trans([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem alike_trans"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.record_value$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.record_value"
+require_line_count 1 '^theorem record_value([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem record_value"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.serverImpl_identity$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.serverImpl_identity"
+require_line_count 1 '^theorem serverImpl_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem serverImpl_identity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.beaconImpl_view$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.beaconImpl_view"
+require_line_count 1 '^theorem beaconImpl_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem beaconImpl_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.serverStep_alike$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.serverStep_alike"
+require_line_count 1 '^theorem serverStep_alike([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem serverStep_alike"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.beaconStep_alike$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.beaconStep_alike"
+require_line_count 1 '^theorem beaconStep_alike([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem beaconStep_alike"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.create_support$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.create_support"
+require_line_count 1 '^theorem create_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem create_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.bundle_candidate$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.bundle_candidate"
+require_line_count 1 '^theorem bundle_candidate([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem bundle_candidate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.finish_failure$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.finish_failure"
+require_line_count 1 '^theorem finish_failure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem finish_failure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.agree_extend$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.agree_extend"
+require_line_count 1 '^theorem agree_extend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem agree_extend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.agree_update$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.agree_update"
+require_line_count 1 '^theorem agree_update([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem agree_update"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.onNative_support$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.onNative_support"
+require_line_count 1 '^theorem onNative_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem onNative_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.shared_alike$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.shared_alike"
+require_line_count 1 '^theorem shared_alike([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem shared_alike"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.build_shaped$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.build_shaped"
+require_line_count 1 '^theorem build_shaped([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem build_shaped"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.command_step$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.command_step"
+require_line_count 1 '^theorem command_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem command_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.coinSend_alike$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.coinSend_alike"
+require_line_count 1 '^theorem coinSend_alike([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem coinSend_alike"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.ledger_secrecy$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.ledger_secrecy"
+require_line_count 1 '^theorem ledger_secrecy([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem ledger_secrecy"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.handler_run$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.handler_run"
+require_line_count 1 '^theorem handler_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem handler_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.experiment_step$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.experiment_step"
+require_line_count 1 '^theorem experiment_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem experiment_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.agree_initial$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.agree_initial"
+require_line_count 1 '^theorem agree_initial([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem agree_initial"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.agree_game$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.agree_game"
+require_line_count 1 '^theorem agree_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem agree_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.phase_public$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.phase_public"
+require_line_count 1 '^theorem phase_public([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem phase_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.owner_public$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.owner_public"
+require_line_count 1 '^theorem owner_public([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem owner_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.failure_public$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.failure_public"
+require_line_count 1 '^theorem failure_public([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem failure_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.designate_owner_native$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.designate_owner_native"
+require_line_count 1 '^theorem designate_owner_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem designate_owner_native"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
