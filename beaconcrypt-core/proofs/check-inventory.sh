@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1512
+	[handwritten-lean]=1513
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29280,6 +29280,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem forgery_detected([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem forgery_detected"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.forgery_bound$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.forgery_bound"
 require_line_count 1 '^theorem forgery_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem forgery_bound"
+
+# Common deployment experiment Phase 1 provenance (CE-7, CE-A2): A2 report client with terminal batches, report run projection onto the experiment, factor-free signing-history bound.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProvenance.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentProvenance$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentProvenance root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentProvenance theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentProvenance guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.announceAll_bound$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.announceAll_bound"
+require_line_count 1 '^theorem announceAll_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem announceAll_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.client_creates$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.client_creates"
+require_line_count 1 '^theorem client_creates([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem client_creates"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.client_run$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.client_run"
+require_line_count 1 '^theorem client_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem client_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.client_transfer$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.client_transfer"
+require_line_count 1 '^theorem client_transfer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem client_transfer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.a2_bound$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.a2_bound"
+require_line_count 1 '^theorem a2_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem a2_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.report_game$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.report_game"
+require_line_count 1 '^theorem report_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem report_game"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

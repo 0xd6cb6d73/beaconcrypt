@@ -1554,6 +1554,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentReplay
 
 import BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection
 
+import BeaconcryptCore.Computational.PqxdhDeploymentProvenance
+
 /-!
 # Beaconcrypt-core verification root
 
