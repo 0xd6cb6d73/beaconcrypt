@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1567
+	[handwritten-lean]=1568
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -31574,6 +31574,52 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem reduction_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem reduction_bounds"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.challenger_bounds$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.challenger_bounds"
 require_line_count 1 '^theorem challenger_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem challenger_bounds"
+
+# Private installation provenance with exact World erasure: PqxdhRecordLiftOrigins.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftOrigins.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftOrigins$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftOrigins root import"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhRecordLiftOrigins theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftOrigins guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.handler_erase$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.handler_erase"
+require_line_count 1 '^theorem handler_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem handler_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.schedule_erase$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.schedule_erase"
+require_line_count 1 '^theorem schedule_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem schedule_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.initial_facts$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.initial_facts"
+require_line_count 1 '^theorem initial_facts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem initial_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.reply_facts$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.reply_facts"
+require_line_count 1 '^theorem reply_facts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem reply_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.update_property$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.update_property"
+require_line_count 1 '^theorem update_property([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem update_property"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.update_unique$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.update_unique"
+require_line_count 1 '^theorem update_unique([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem update_unique"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.marked_persists$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.marked_persists"
+require_line_count 1 '^theorem marked_persists([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem marked_persists"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.annotate_marked$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.annotate_marked"
+require_line_count 1 '^theorem annotate_marked([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem annotate_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.annotate_unique$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.annotate_unique"
+require_line_count 1 '^theorem annotate_unique([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem annotate_unique"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.handler_result$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.handler_result"
+require_line_count 1 '^theorem handler_result([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem handler_result"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.handler_facts$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.handler_facts"
+require_line_count 1 '^theorem handler_facts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem handler_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.schedule_facts$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.schedule_facts"
+require_line_count 1 '^theorem schedule_facts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem schedule_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.initial_schedule_facts$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.initial_schedule_facts"
+require_line_count 1 '^theorem initial_schedule_facts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem initial_schedule_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.server_success$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.server_success"
+require_line_count 1 '^theorem server_success([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem server_success"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.beacon_success$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.beacon_success"
+require_line_count 1 '^theorem beacon_success([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem beacon_success"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.server_refused$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.server_refused"
+require_line_count 1 '^theorem server_refused([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem server_refused"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.beacon_refused$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.beacon_refused"
+require_line_count 1 '^theorem beacon_refused([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem beacon_refused"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.append_result$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.append_result"
+require_line_count 1 '^theorem append_result([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem append_result"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.server_hidden_installed$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.server_hidden_installed"
+require_line_count 1 '^theorem server_hidden_installed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem server_hidden_installed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOrigins\.beacon_hidden_installed$' "$selected_source_module" "PqxdhRecordLiftOrigins dependency BeaconcryptCore.Computational.PqxdhRecordLiftOrigins.beacon_hidden_installed"
+require_line_count 1 '^theorem beacon_hidden_installed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOrigins theorem beacon_hidden_installed"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py

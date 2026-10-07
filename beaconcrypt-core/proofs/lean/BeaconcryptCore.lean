@@ -1522,6 +1522,7 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftWorld
 import BeaconcryptCore.Computational.PqxdhRecordLiftBudget
 import BeaconcryptCore.Computational.PqxdhRecordLiftMaterialTable
 import BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut
+import BeaconcryptCore.Computational.PqxdhRecordLiftOrigins
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative
