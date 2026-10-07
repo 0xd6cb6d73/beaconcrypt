@@ -90,6 +90,39 @@ theorem local_bound {Result : Type} (setup : Setup baseSpec KemSK) (codec : Code
         simp only [kindEq, reduceCtorEq, ite_false] at h
         exact ih _ bound h
 
+/-- The frame log issues exactly the record program's own primitive calls, so every query cap of the program carries over to the logged program. -/
+theorem logged_bound {Result : Type} (predicate : RawCtxMixedOwner.NativeSpec.Domain → Prop) [DecidablePred predicate]
+    (work : OracleComp RawCtxMixedOwner.NativeSpec Result) (bound : Nat) (frames : List PqxdhDeploymentNative.Frame)
+    (bounded : work.IsQueryBoundP predicate bound) :
+    ((simulateQ PqxdhDeploymentNative.frameLog work).run frames).IsQueryBoundP predicate bound := by
+  induction work using OracleComp.inductionOn generalizing bound frames with
+  | pure value =>
+      simp only [simulateQ_pure, StateT.run_pure]
+      trivial
+  | query_bind query next ih =>
+      rw [isQueryBoundP_query_bind_iff] at bounded
+      obtain ⟨allowed, rest⟩ := bounded
+      simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
+        StateT.run_bind]
+      rcases query with request | input | input | bytes | frame
+      · simp only [PqxdhDeploymentNative.frameLog, StateT.run_lift, bind_assoc, pure_bind]
+        rw [isQueryBoundP_query_bind_iff]
+        exact ⟨allowed, fun reply => ih reply _ _ (rest reply)⟩
+      · simp only [PqxdhDeploymentNative.frameLog, StateT.run_lift, bind_assoc, pure_bind]
+        rw [isQueryBoundP_query_bind_iff]
+        exact ⟨allowed, fun reply => ih reply _ _ (rest reply)⟩
+      · simp only [PqxdhDeploymentNative.frameLog, StateT.run_lift, bind_assoc, pure_bind]
+        rw [isQueryBoundP_query_bind_iff]
+        exact ⟨allowed, fun reply => ih reply _ _ (rest reply)⟩
+      · simp only [PqxdhDeploymentNative.frameLog, StateT.run_lift, bind_assoc, pure_bind]
+        rw [isQueryBoundP_query_bind_iff]
+        exact ⟨allowed, fun reply => ih reply _ _ (rest reply)⟩
+      · change OracleComp.IsQueryBoundP ((fun reply => (reply, frames ++ [frame])) <$>
+          (RawCtxMixedOwner.NativeSpec.query (.inr (.inr (.inr (.inr frame)))) : OracleComp RawCtxMixedOwner.NativeSpec _)
+            >>= _) _ _
+        rw [bind_map_left, isQueryBoundP_query_bind_iff]
+        exact ⟨allowed, fun reply => ih reply _ _ (rest reply)⟩
+
 /-- One source14 query, with its reply mapped, costs one query of its own kind. -/
 theorem single_bound {Result : Type} (kind : SourceKind) (request : (SourceSpec KemSK).Domain)
     (map : (SourceSpec KemSK).Range request → Result) (bound : Nat)
@@ -149,15 +182,15 @@ theorem serverLocal_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   cases target : PqxdhDeploymentCompile.serverTarget route query with
   | none =>
       rw [PqxdhDeploymentCompileRecords.serverLocal_none setup codec route query copies target, isQueryBoundP_map_iff]
-      have bound := local_bound setup codec kind _ 1 (server_hashes (fun _ => setup.serverKeyId) route codec.frameRead
-        query (PqxdhDeploymentCompile.localServer codec copies.log 0#u64 none copies.serverRaw))
+      have bound := local_bound setup codec kind _ 1 (logged_bound _ _ 1 [] (server_hashes (fun _ => setup.serverKeyId)
+        route codec.frameRead query (PqxdhDeploymentCompile.localServer codec copies.log 0#u64 none copies.serverRaw)))
       exact bound.mono (by omega)
   | some kid =>
       rw [PqxdhDeploymentCompileRecords.serverLocal_some setup codec route query copies kid target]
       refine isQueryBoundP_bind (peerKernel_bound kind copies kid) fun kernel _ => ?_
       rw [isQueryBoundP_map_iff]
-      have bound := local_bound setup codec kind _ 1 (server_hashes (fun _ => setup.serverKeyId) route codec.frameRead
-        query (PqxdhDeploymentCompile.localServer codec copies.log kid kernel copies.serverRaw))
+      have bound := local_bound setup codec kind _ 1 (logged_bound _ _ 1 [] (server_hashes (fun _ => setup.serverKeyId)
+        route codec.frameRead query (PqxdhDeploymentCompile.localServer codec copies.log kid kernel copies.serverRaw)))
       exact bound.mono (by omega)
 
 /-- A compiled Beacon record command costs at most one established-kernel read and one BLAKE2b query. -/
@@ -169,8 +202,8 @@ theorem beaconLocal_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   · rw [PqxdhDeploymentCompileRecords.beaconLocal_present setup codec index query copies inside]
     refine isQueryBoundP_bind (ownerKernel_bound kind copies index) fun kernel _ => ?_
     rw [isQueryBoundP_map_iff]
-    have bound := local_bound setup codec kind _ 1 (beacon_hashes codec.frameRead query
-      (PqxdhDeploymentCompile.localOwner codec copies.log index kernel (copies.ownerRaw index)))
+    have bound := local_bound setup codec kind _ 1 (logged_bound _ _ 1 [] (beacon_hashes codec.frameRead query
+      (PqxdhDeploymentCompile.localOwner codec copies.log index kernel (copies.ownerRaw index))))
     exact bound.mono (by omega)
   · rw [PqxdhDeploymentCompileRecords.beaconLocal_absent setup codec index query copies inside]
     trivial
@@ -230,6 +263,12 @@ end BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.local_bound
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.logged_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.logged_bound
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.single_bound' depends on axioms: [propext,
  Classical.choice,

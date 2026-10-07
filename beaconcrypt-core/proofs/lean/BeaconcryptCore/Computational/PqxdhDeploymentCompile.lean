@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentRecordCache
 
-/-! The compiled program of the CE-3 trial. A deployment adversary is turned into an ordinary source14 program: registration, HMAC and BLAKE2b commands are forwarded unchanged (a `create` pin is parsed locally first), and every record command is executed locally on a copy of the addressed Server peer or Beacon owner. A copy is built once, from public data and one source14 kernel read: the Server kernel reveal for a peer, the established-kernel field read for an owner. The public data are the program's own log of successful replies: created pins and key IDs, bundle bytes, finish inputs, accept bytes by returned session handle and build responses by assigned key ID. The reads are proof devices of the analysis and are never answered to the deployment adversary; no identity, KEM, prekey or one-time field is read. `merge` reassembles a deployment state from the compiled program's local copies and the source14 state. -/
+/-! The compiled program of the CE-3 trial. A deployment adversary is turned into an ordinary source14 program: registration, HMAC and BLAKE2b commands are forwarded unchanged (a `create` pin is parsed locally first), and every record command is executed locally on a copy of the addressed Server peer or Beacon owner, behind the same frame log as the native record commands. A copy is built once, from public data and one source14 kernel read: the Server kernel reveal for a peer, the established-kernel field read for an owner. The public data are the program's own log of successful replies: created pins and key IDs, bundle bytes, finish inputs, accept bytes by returned session handle and build responses by assigned key ID. The reads are proof devices of the analysis and are never answered to the deployment adversary; no identity, KEM, prekey or one-time field is read. `merge` reassembles a deployment state from the compiled program's local copies and the source14 state. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -26,16 +26,21 @@ structure Log where
 /-- The empty log. -/
 def Log.empty : Log := ⟨[], fun _ => none, fun _ => none, fun _ => none, fun _ => none⟩
 
-/-- The compiled program's local state: its public log, the live kernels of the peers and owners copied so far, and the raw-attempt counters. -/
+/-- The compiled program's local state: its public log, the live kernels of the peers and owners copied so far, the raw-attempt counters and the produced record frames. -/
 structure Local where
   log : Log
   peers : Std.U64 → Option Kernel
   owners : Nat → Option Kernel
   serverRaw : Nat
   ownerRaw : Nat → Nat
+  produced : List (Command × PqxdhDeploymentNative.Frame)
 
-/-- The initial local state: empty log, no copies, zero counters. -/
-def Local.empty : Local := ⟨Log.empty, fun _ => none, fun _ => none, 0, fun _ => 0⟩
+/-- The initial local state: empty log, no copies, zero counters, no produced frame. -/
+def Local.empty : Local := ⟨Log.empty, fun _ => none, fun _ => none, 0, fun _ => 0, []⟩
+
+/-- Append the frames produced by one local record command. -/
+def Local.produce (copies : Local) (command : Command) (frames : List PqxdhDeploymentNative.Frame) : Local :=
+  { copies with produced := copies.produced ++ frames.map fun frame => (command, frame) }
 
 /-- The 32-byte identity key read from Phase 1 bytes with the codec reader and the Server's identity parser. -/
 def identityOf (codec : Codec Reader Response) (bytes : Pqxdh.Bytes) : Option Identity := do
@@ -125,37 +130,39 @@ def forward (request : PqxdhRegistrationSchedule.Request) :
     OracleComp (SourceSpec KemSK) (PqxdhRegistrationSchedule.QuerySpec request) :=
   ((SourceSpec KemSK).query (.inl (.inr request)) : OracleComp (SourceSpec KemSK) _)
 
-/-- Local Server record command: copy the addressed peer if needed, run `serverImpl` on the local Server under the Server key ID with locally answered primitives, keep the returned kernel and counter. -/
+/-- Local Server record command: copy the addressed peer if needed, run `serverImpl` on the local Server under the Server key ID behind the frame log with locally answered primitives, keep the returned kernel, counter and produced frames. -/
 noncomputable def serverLocal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (query : RawCtxServerMixed.SourceSpec.Domain) :
     StateT Local (OracleComp (SourceSpec KemSK)) (RawCtxServerMixed.SourceSpec.Range query) := fun copies =>
   match serverTarget route query with
   | none => do
-      let result ← simulateQ (localPrimitives setup codec)
+      let result ← simulateQ (localPrimitives setup codec) (PqxdhDeploymentNative.logged
         ((RawCtxServerMixed.serverImpl (fun _ => setup.serverKeyId) route codec.frameRead query).run
-          (localServer codec copies.log 0#u64 none copies.serverRaw))
-      pure (result.1, { copies with serverRaw := result.2.rawAttempts })
+          (localServer codec copies.log 0#u64 none copies.serverRaw)))
+      pure (result.1.1, ({ copies with serverRaw := result.1.2.rawAttempts } : Local).produce
+        (PqxdhDeploymentNative.serverCommand query) result.2)
   | some kid => do
       let kernel ← peerKernel copies kid
-      let result ← simulateQ (localPrimitives setup codec)
+      let result ← simulateQ (localPrimitives setup codec) (PqxdhDeploymentNative.logged
         ((RawCtxServerMixed.serverImpl (fun _ => setup.serverKeyId) route codec.frameRead query).run
-          (localServer codec copies.log kid kernel copies.serverRaw))
-      pure (result.1, { copies with
-        peers := Function.update copies.peers kid ((result.2.server.peers kid).map RawCtxServerRouting.Peer.kernel)
-        serverRaw := result.2.rawAttempts })
+          (localServer codec copies.log kid kernel copies.serverRaw)))
+      pure (result.1.1, ({ copies with
+        peers := Function.update copies.peers kid ((result.1.2.server.peers kid).map RawCtxServerRouting.Peer.kernel)
+        serverRaw := result.1.2.rawAttempts } : Local).produce (PqxdhDeploymentNative.serverCommand query) result.2)
 
-/-- Local Beacon record command: an uncreated handle is rejected; otherwise copy the owner if needed, run `beaconImpl` on the local owner with locally answered primitives, keep the returned kernel and counter. -/
+/-- Local Beacon record command: an uncreated handle is rejected; otherwise copy the owner if needed, run `beaconImpl` on the local owner behind the frame log with locally answered primitives, keep the returned kernel, counter and produced frames. -/
 noncomputable def beaconLocal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat)
     (query : RawCtxMixedOwner.SourceSpec.Domain) :
     StateT Local (OracleComp (SourceSpec KemSK)) (RawCtxMixedOwner.SourceSpec.Range query) := fun copies =>
   if index < copies.log.owners.length then do
     let kernel ← ownerKernel copies index
-    let result ← simulateQ (localPrimitives setup codec)
+    let result ← simulateQ (localPrimitives setup codec) (PqxdhDeploymentNative.logged
       ((RawCtxBeaconLifecycle.beaconImpl codec.frameRead query).run
-        (localOwner codec copies.log index kernel (copies.ownerRaw index)))
-    pure (result.1, { copies with
-      owners := Function.update copies.owners index (phaseKernel result.2.beacon.phase)
-      ownerRaw := Function.update copies.ownerRaw index result.2.rawAttempts })
+        (localOwner codec copies.log index kernel (copies.ownerRaw index))))
+    pure (result.1.1, ({ copies with
+      owners := Function.update copies.owners index (phaseKernel result.1.2.beacon.phase)
+      ownerRaw := Function.update copies.ownerRaw index result.1.2.rawAttempts } : Local).produce
+        (PqxdhDeploymentNative.beaconCommand index query) result.2)
   else pure (PqxdhDeploymentNative.absent query, copies)
 
 /-- Record a successful reply in the public log. -/
@@ -216,7 +223,7 @@ def mergeOwner (kernel : Option Kernel) (owner : PqxdhRegistrationSchedule.Owner
       { owner with beacon := { owner.beacon with phase := .established control associatedData current } }
   | _, _ => owner
 
-/-- Reassemble a deployment state: the source14 state with every copied peer and owner kernel replaced by its live local copy, and the local counters. -/
+/-- Reassemble a deployment state: the source14 state with every copied peer and owner kernel replaced by its live local copy, the local counters and the local produced frames. -/
 def merge (copies : Local) (native : PqxdhRegistrationSchedule.State KemSK) : PqxdhDeploymentNative.State KemSK :=
   ⟨{ native with
       shared := (native.shared.1, { native.shared.2 with
@@ -224,11 +231,11 @@ def merge (copies : Local) (native : PqxdhRegistrationSchedule.State KemSK) : Pq
           server := { native.shared.2.server.server with
             peers := fun kid => (native.shared.2.server.server.peers kid).map (mergePeer (copies.peers kid)) } } })
       owners := native.owners.mapIdx fun index owner => mergeOwner (copies.owners index) owner },
-    copies.serverRaw, copies.ownerRaw⟩
+    copies.serverRaw, copies.ownerRaw, copies.produced⟩
 
-/-- With no local copies, merging changes nothing and the counters start at zero. -/
+/-- With no local copies, merging changes nothing, the counters start at zero and no frame is produced. -/
 theorem merge_empty (native : PqxdhRegistrationSchedule.State KemSK) :
-    merge Local.empty native = ⟨native, 0, fun _ => 0⟩ := by
+    merge Local.empty native = ⟨native, 0, fun _ => 0, []⟩ := by
   have peers : (fun kid => (native.shared.2.server.server.peers kid).map (mergePeer (Local.empty.peers kid))) =
       native.shared.2.server.server.peers := by
     funext kid

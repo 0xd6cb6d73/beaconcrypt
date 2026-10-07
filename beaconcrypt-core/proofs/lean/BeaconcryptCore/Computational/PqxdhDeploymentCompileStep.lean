@@ -209,7 +209,7 @@ theorem compile_run {X : Type} (setup : Setup baseSpec KemSK) (codec : Codec Rea
         (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
           (PqxdhDeploymentCompile.compile setup codec route adversary)).run native =
       (simulateQ (PqxdhDeploymentNative.handler setup codec checks route serverSeed) adversary).run
-        ⟨native, 0, fun _ => 0⟩ := by
+        ⟨native, 0, fun _ => 0, []⟩ := by
   rw [← PqxdhDeploymentCompile.merge_empty]
   exact compile_simulation setup codec checks route serverSeed Good sound preserved adversary Local.empty native start
 

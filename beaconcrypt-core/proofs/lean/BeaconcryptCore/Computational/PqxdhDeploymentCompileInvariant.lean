@@ -554,10 +554,10 @@ theorem serverLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
   | none =>
       rw [PqxdhDeploymentCompileRecords.serverLocal_none setup codec route query copies target,
         PqxdhDeploymentCompileRecords.serverImpl_absent _ route codec.frameRead query _
-          (fun kid found => by simp only [target, reduceCtorEq] at found)] at supported
+          (fun kid found => by simp only [target, reduceCtorEq] at found), PqxdhDeploymentNative.logged_pure] at supported
       simp only [simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff] at supported
       subst supported
-      exact ⟨⟨native.shared.2.ctx, rfl⟩, rfl, rfl, fun kid current found => Or.inl (by rw [found]; simp)⟩
+      exact ⟨⟨native.shared.2.ctx, rfl⟩, rfl, rfl, fun kid current found => Or.inl (by simp only [PqxdhDeploymentCompile.Local.produce] at found; rw [found]; simp)⟩
   | some kid =>
       rw [PqxdhDeploymentCompileRecords.serverLocal_some setup codec route query copies kid target] at supported
       simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
@@ -584,7 +584,7 @@ theorem serverLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
       refine ⟨⟨cache, cacheEq⟩, rfl, rfl, fun other current found => ?_⟩
       by_cases same : other = kid
       · subst same
-        simp only [Function.update_self, Option.map_eq_some_iff] at found
+        simp only [PqxdhDeploymentCompile.Local.produce, Function.update_self, Option.map_eq_some_iff] at found
         obtain ⟨peer, peerFound, _⟩ := found
         apply kernelOrigin
         cases kernel with
@@ -594,11 +594,11 @@ theorem serverLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
             rw [PqxdhDeploymentCompileRecords.serverImpl_absent _ route codec.frameRead query _ (fun other routed => by
                 simp only [target, Option.some.injEq] at routed
                 subst routed
-                simp [PqxdhDeploymentCompile.localServer]), PqxdhDeploymentCompileRecords.record_pure, support_pure,
-              Set.mem_singleton_iff] at recordedSupport
+                simp [PqxdhDeploymentCompile.localServer]), PqxdhDeploymentNative.logged_pure,
+              PqxdhDeploymentCompileRecords.record_pure, support_pure, Set.mem_singleton_iff] at recordedSupport
             subst recordedSupport
             simp [PqxdhDeploymentCompile.localServer] at peerFound
-      · simp only [Function.update_of_ne same] at found
+      · simp only [PqxdhDeploymentCompile.Local.produce, Function.update_of_ne same] at found
         exact Or.inl (by rw [found]; simp)
 
 /-- A compiled Beacon record command changes only the BLAKE2b cache of the source14 state, keeps the log and peers, and holds a local kernel only for an owner that had a local copy or is established. -/
@@ -645,7 +645,7 @@ theorem beaconLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
     refine ⟨⟨cache, cacheEq⟩, rfl, rfl, fun other current found => ?_⟩
     by_cases same : other = index
     · subst same
-      simp only [Function.update_self] at found
+      simp only [PqxdhDeploymentCompile.Local.produce, Function.update_self] at found
       apply kernelOrigin
       cases kernel with
       | some _ => rfl
@@ -654,13 +654,13 @@ theorem beaconLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
           have inactive : ¬ RawCtxBeaconLifecycle.Established
               (PqxdhDeploymentCompile.localOwner codec copies.log other none (copies.ownerRaw other)).beacon.phase := by
             simp [PqxdhDeploymentCompile.localOwner, RawCtxBeaconLifecycle.Established]
-          rw [RawCtxBeaconLifecycle.inactive codec.frameRead query _ inactive, PqxdhDeploymentCompileRecords.record_pure,
-            support_pure, Set.mem_singleton_iff] at recordedSupport
+          rw [RawCtxBeaconLifecycle.inactive codec.frameRead query _ inactive, PqxdhDeploymentNative.logged_pure,
+            PqxdhDeploymentCompileRecords.record_pure, support_pure, Set.mem_singleton_iff] at recordedSupport
           subst recordedSupport
           rcases query with plaintext | bytes <;>
             simp [RawCtxBeaconLifecycle.rejected, PqxdhDeploymentCompile.localOwner,
               PqxdhDeploymentCompile.phaseKernel] at found
-    · simp only [Function.update_of_ne same] at found
+    · simp only [PqxdhDeploymentCompile.Local.produce, Function.update_of_ne same] at found
       exact Or.inl (by rw [found]; simp)
   · rw [PqxdhDeploymentCompileRecords.beaconLocal_absent setup codec index query copies inside] at supported
     simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
@@ -824,7 +824,7 @@ theorem compile_native {X : Type} (setup : Setup baseSpec KemSK) (codec : Codec 
         (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
           (PqxdhDeploymentCompile.compile setup codec route adversary)).run native =
       (simulateQ (PqxdhDeploymentNative.handler setup codec checks route serverSeed) adversary).run
-        ⟨native, 0, fun _ => 0⟩ :=
+        ⟨native, 0, fun _ => 0, []⟩ :=
   PqxdhDeploymentCompileStep.compile_run setup codec checks route serverSeed (Good setup codec)
     (good_inv setup codec) (good_step setup codec checks route serverSeed phase1 phase2) adversary native
     (good_initial setup codec native keyId peers owners pending)
