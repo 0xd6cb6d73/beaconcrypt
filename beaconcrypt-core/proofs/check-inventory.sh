@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1528
+	[handwritten-lean]=1530
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30114,6 +30114,66 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem eager_waiting_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEager theorem eager_waiting_step"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEager\.swap$' "$selected_source_module" "PqxdhDeploymentServerAuthEager dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEager.swap"
 require_line_count 1 '^theorem swap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEager theorem swap"
+
+# CE-8 freezing a program at a stop of its journal.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthFreeze.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuthFreeze root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthFreeze\.journal_erase_from$' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.journal_erase_from"
+require_line_count 1 '^theorem journal_erase_from([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze theorem journal_erase_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthFreeze\.journal_erase$' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.journal_erase"
+require_line_count 1 '^theorem journal_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze theorem journal_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthFreeze\.frozen_pure$' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.frozen_pure"
+require_line_count 1 '^theorem frozen_pure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze theorem frozen_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthFreeze\.journal_extends$' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.journal_extends"
+require_line_count 1 '^theorem journal_extends([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze theorem journal_extends"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthFreeze\.map_const_support$' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.map_const_support"
+require_line_count 1 '^theorem map_const_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze theorem map_const_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthFreeze\.frozen_from$' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.frozen_from"
+require_line_count 1 '^theorem frozen_from([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze theorem frozen_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthFreeze\.frozen_journal$' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.frozen_journal"
+require_line_count 1 '^theorem frozen_journal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze theorem frozen_journal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthFreeze\.unmatched_frozen$' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.unmatched_frozen"
+require_line_count 1 '^theorem unmatched_frozen([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze theorem unmatched_frozen"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthFreeze\.stopAt_nil$' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.stopAt_nil"
+require_line_count 1 '^theorem stopAt_nil([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthFreeze theorem stopAt_nil"
+
+# CE-8 registration view of the compiled deployment program's source14 journal.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthTrace.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuthTrace root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.journalFrom_query_bind$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.journalFrom_query_bind"
+require_line_count 1 '^theorem journalFrom_query_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem journalFrom_query_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.journalFrom_bind$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.journalFrom_bind"
+require_line_count 1 '^theorem journalFrom_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem journalFrom_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.journalFrom_map$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.journalFrom_map"
+require_line_count 1 '^theorem journalFrom_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem journalFrom_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.journalFrom_query$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.journalFrom_query"
+require_line_count 1 '^theorem journalFrom_query([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem journalFrom_query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.regOfSource_other$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.regOfSource_other"
+require_line_count 1 '^theorem regOfSource_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem regOfSource_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.journal_quiet$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.journal_quiet"
+require_line_count 1 '^theorem journal_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem journal_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.journalFrom_support$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.journalFrom_support"
+require_line_count 1 '^theorem journalFrom_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem journalFrom_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.reg_cost$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.reg_cost"
+require_line_count 1 '^theorem reg_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem reg_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.forward_journal$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.forward_journal"
+require_line_count 1 '^theorem forward_journal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem forward_journal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.step_quiet$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.step_quiet"
+require_line_count 1 '^theorem step_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem step_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.step_regs$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.step_regs"
+require_line_count 1 '^theorem step_regs([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem step_regs"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.regsOf_append$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.regsOf_append"
+require_line_count 1 '^theorem regsOf_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem regsOf_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.compiled_regs_from$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.compiled_regs_from"
+require_line_count 1 '^theorem compiled_regs_from([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem compiled_regs_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.compiled_regs$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.compiled_regs"
+require_line_count 1 '^theorem compiled_regs([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem compiled_regs"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
