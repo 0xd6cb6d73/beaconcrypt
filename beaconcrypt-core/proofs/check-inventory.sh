@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1543
+	[handwritten-lean]=1544
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30615,6 +30615,56 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem call_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem call_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.call_bills$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.call_bills"
 require_line_count 1 '^theorem call_bills([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem call_bills"
+
+# Persistent full76 coordinate callbacks retain complete source effects and table state.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainTable.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftChainTable$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftChainTable root import"
+require_line_count 22 '^theorem ' "$selected_source_module" "PqxdhRecordLiftChainTable theorem inventory"
+require_line_count 22 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftChainTable guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.chain_mono$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.chain_mono"
+require_line_count 1 '^theorem chain_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem chain_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.available_mono$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.available_mono"
+require_line_count 1 '^theorem available_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem available_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.previous_advance$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.previous_advance"
+require_line_count 1 '^theorem previous_advance([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem previous_advance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.successor_available$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.successor_available"
+require_line_count 1 '^theorem successor_available([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem successor_available"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.successor_chain$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.successor_chain"
+require_line_count 1 '^theorem successor_chain([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem successor_chain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.pending_mono$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.pending_mono"
+require_line_count 1 '^theorem pending_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem pending_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.receive_lookup$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.receive_lookup"
+require_line_count 1 '^theorem receive_lookup([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem receive_lookup"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.receive_continuation$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.receive_continuation"
+require_line_count 1 '^theorem receive_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem receive_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.closed_empty$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.closed_empty"
+require_line_count 1 '^theorem closed_empty([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem closed_empty"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.closed_record$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.closed_record"
+require_line_count 1 '^theorem closed_record([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem closed_record"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.closed_lookup$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.closed_lookup"
+require_line_count 1 '^theorem closed_lookup([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem closed_lookup"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.send_pending_mono$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.send_pending_mono"
+require_line_count 1 '^theorem send_pending_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem send_pending_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.send_lookup$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.send_lookup"
+require_line_count 1 '^theorem send_lookup([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem send_lookup"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.rollback_lookup$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.rollback_lookup"
+require_line_count 1 '^theorem rollback_lookup([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem rollback_lookup"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.begin_available$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.begin_available"
+require_line_count 1 '^theorem begin_available([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem begin_available"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.resume_available$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.resume_available"
+require_line_count 1 '^theorem resume_available([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem resume_available"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.receive_lookup_available$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.receive_lookup_available"
+require_line_count 1 '^theorem receive_lookup_available([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem receive_lookup_available"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.seeds_available$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.seeds_available"
+require_line_count 1 '^theorem seeds_available([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem seeds_available"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.seeds_erasure$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.seeds_erasure"
+require_line_count 1 '^theorem seeds_erasure([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem seeds_erasure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.send_begin_available$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.send_begin_available"
+require_line_count 1 '^theorem send_begin_available([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem send_begin_available"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.send_lookup_available$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.send_lookup_available"
+require_line_count 1 '^theorem send_lookup_available([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem send_lookup_available"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.send_continuation$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.send_continuation"
+require_line_count 1 '^theorem send_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem send_continuation"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
