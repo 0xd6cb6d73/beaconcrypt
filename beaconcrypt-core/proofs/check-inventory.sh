@@ -28938,8 +28938,8 @@ require_line_count 1 '^theorem compile_bound([[:space:]]|$)' "$selected_source_m
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentTranscript.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentTranscript$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentTranscript root import"
-require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentTranscript theorem inventory"
-require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentTranscript guarded dependencies"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentTranscript theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentTranscript guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.summarize_append$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.summarize_append"
 require_line_count 1 '^theorem summarize_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem summarize_append"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.step_other$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.step_other"
@@ -28952,6 +28952,16 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem designate_peer_complete([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_peer_complete"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.designate_owner_complete$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_owner_complete"
 require_line_count 1 '^theorem designate_owner_complete([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_owner_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.view_respects$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.view_respects"
+require_line_count 1 '^theorem view_respects([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem view_respects"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.findSome_view$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.findSome_view"
+require_line_count 1 '^theorem findSome_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem findSome_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.summarize_view$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.summarize_view"
+require_line_count 1 '^theorem summarize_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem summarize_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.phase_view$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.phase_view"
+require_line_count 1 '^theorem phase_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem phase_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.designate_view$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_view"
+require_line_count 1 '^theorem designate_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_view"
 
 # Common deployment experiment (CE-2): secrecy layer with test, fresh and transcript, CE handler, mode-indexed game, mode P projection and secrecy frame.
 

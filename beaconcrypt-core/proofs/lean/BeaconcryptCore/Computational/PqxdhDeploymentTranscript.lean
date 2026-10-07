@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 import BeaconcryptCore.Computational.PqxdhRegistrationJointRawSignatures
 
-/-! Public functions of the transcript of the common deployment experiment (CE-1). Every function here reads only transcript entries, that is, adversary queries with their replies; none reads a secret, a root, a partner or a native ghost. `summarize` folds the transcript into the created owner bindings in creation order, the public lifecycle phase of every owner handle (Fresh after a successful create, InitSent after a successful bundle in Fresh, Established after a successful finish in InitSent, Aborted after a rejected finish in InitSent, unchanged otherwise) and the owners with a rejected bundle call in Fresh. `owner k` is the handle created `k`-th. `NoBundleFailure` says that no bundle call made in Fresh was rejected. `designate` maps a record handle to at most one target `(session, KEM creation index)` by comparing keys, not signed fields: a Server peer goes to the session whose build returned its key ID and the smallest owner whose published bundle carries the accepted identity field and, in its PQ field, the PQ key that the source attached verification of the accept bytes yields; an established Beacon pinned to the protected key ID goes to the smallest session whose build response carries its finish ciphertext and its pin as Server identity and whose accept bytes verify to the PQ key read from the Beacon's published bundle. Codec readers, the raw candidate of `PqxdhRegistrationJointRawSignatures`, the public attached verification of `Pqxdh.Crypto` and the PQ-message parser are applied to public bytes only; the published PQ key is read without a signature check. Because keys are compared, an accept that carries an honest owner's identity and published PQ key under a different valid signature is designated like the owner's own bytes. That these public functions agree with the native state is a separate obligation (CE-5); no security claim is made here. -/
+/-! Public functions of the transcript of the common deployment experiment (CE-1). Every function here reads only transcript entries, that is, adversary queries with their replies; none reads a secret, a root, a partner or a native ghost. `summarize` folds the transcript into the created owner bindings in creation order, the public lifecycle phase of every owner handle (Fresh after a successful create, InitSent after a successful bundle in Fresh, Established after a successful finish in InitSent, Aborted after a rejected finish in InitSent, unchanged otherwise) and the owners with a rejected bundle call in Fresh. `owner k` is the handle created `k`-th. `NoBundleFailure` says that no bundle call made in Fresh was rejected. `designate` maps a record handle to at most one target `(session, KEM creation index)` by comparing keys, not signed fields: a Server peer goes to the session whose build returned its key ID and the smallest owner whose published bundle carries the accepted identity field and, in its PQ field, the PQ key that the source attached verification of the accept bytes yields; an established Beacon pinned to the protected key ID goes to the smallest session whose build response carries its finish ciphertext and its pin as Server identity and whose accept bytes verify to the PQ key read from the Beacon's published bundle. Codec readers, the raw candidate of `PqxdhRegistrationJointRawSignatures`, the public attached verification of `Pqxdh.Crypto` and the PQ-message parser are applied to public bytes only; the published PQ key is read without a signature check. Because keys are compared, an accept that carries an honest owner's identity and published PQ key under a different valid signature is designated like the owner's own bytes (`designate_peer_complete`, `designate_owner_complete`). The transcript stores mode O replies, but every function here reads only queries and the replies of create, bundle, accept, build and finish commands, never a raw-receive reply, so each depends only on the mode P view of the transcript (`summarize_view`, `phase_view`, `designate_view`) and is public in mode P as well. That these public functions agree with the native state is a separate obligation (CE-5); no security claim is made here. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -301,6 +301,137 @@ theorem designate_owner_complete (crypto : Pqxdh.Crypto) (codec : Codec Reader R
     rw [firstFound]
     rfl
 
+/-- Two transcripts with the same mode P view: the same queries in the same order, with the same replies except that a raw receive is seen only through its success bit. -/
+def SameView (first second : List Entry) : Prop :=
+  first.map (Entry.view .P) = second.map (Entry.view .P)
+
+/-- A function of transcript entries that ignores the replies of raw receives takes equal values on entries with the same mode P view. -/
+theorem view_respects {β : Type} (f : Entry → β)
+    (serverRaw : ∀ raw reply reply', f ⟨.inl (.inr (.serverRaw raw)), reply⟩ = f ⟨.inl (.inr (.serverRaw raw)), reply'⟩)
+    (beaconRaw : ∀ owner raw reply reply',
+      f ⟨.inl (.inr (.beaconRaw owner raw)), reply⟩ = f ⟨.inl (.inr (.beaconRaw owner raw)), reply'⟩)
+    (first second : Entry) (same : first.view .P = second.view .P) : f first = f second := by
+  rcases first with ⟨query, reply⟩
+  rcases second with ⟨query', reply'⟩
+  simp only [Entry.view, PqxdhDeploymentInterface.PublicEntry.mk.injEq] at same
+  obtain ⟨rfl, same⟩ := same
+  have replies := eq_of_heq same
+  rcases query with (coin | command) | secrecy
+  · have equal : reply = reply' := replies
+    rw [equal]
+  · cases command with
+    | serverRaw raw => exact serverRaw raw reply reply'
+    | beaconRaw owner raw => exact beaconRaw owner raw reply reply'
+    | _ =>
+        have equal : reply = reply' := replies
+        rw [equal]
+  · have equal : reply = reply' := replies
+    rw [equal]
+
+/-- A search over transcript entries by a function that ignores raw-receive replies depends only on the mode P view. -/
+theorem findSome_view {β : Type} (f : Entry → Option β) (respects : ∀ first second : Entry,
+    first.view .P = second.view .P → f first = f second) :
+    ∀ first second : List Entry, SameView first second → first.findSome? f = second.findSome? f
+  | [], [], _ => rfl
+  | [], _ :: _, same => by simp [SameView] at same
+  | _ :: _, [], same => by simp [SameView] at same
+  | entry :: rest, other :: rest', same => by
+      simp only [SameView, List.map_cons, List.cons.injEq] at same
+      simp only [List.findSome?_cons, respects entry other same.1, findSome_view f respects rest rest' same.2]
+
+/-- The transcript summary depends only on the mode P view. -/
+theorem summarize_view (first second : List Entry) (same : SameView first second) :
+    summarize first = summarize second := by
+  have fold : ∀ (first second : List Entry), SameView first second → ∀ summary : Summary,
+      first.foldl step summary = second.foldl step summary := by
+    intro first
+    induction first with
+    | nil =>
+        intro second same summary
+        cases second with
+        | nil => rfl
+        | cons _ _ => simp [SameView] at same
+    | cons entry rest ih =>
+        intro second same summary
+        cases second with
+        | nil => simp [SameView] at same
+        | cons other rest' =>
+            simp only [SameView, List.map_cons, List.cons.injEq] at same
+            simp only [List.foldl_cons]
+            rw [view_respects (step summary) (fun _ _ _ => rfl) (fun _ _ _ _ => rfl) entry other same.1]
+            exact ih rest' same.2 _
+  exact fold first second same Summary.empty
+
+/-- The public phase, the owner numbering and `NoBundleFailure` depend only on the mode P view. -/
+theorem phase_view (first second : List Entry) (same : SameView first second) :
+    phase first = phase second ∧ owner first = owner second ∧ (NoBundleFailure first ↔ NoBundleFailure second) := by
+  have summary := summarize_view first second same
+  refine ⟨?_, ?_, ?_⟩
+  · funext index
+    simp only [phase, summary]
+  · funext k
+    simp only [owner, summary]
+  · simp only [NoBundleFailure, NoBundleFailureAt, summary]
+
+/-- The designation and its restriction to a budget's target domain depend only on the mode P view: raw-receive plaintexts never influence which target a handle names. -/
+theorem designate_view (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64)
+    (first second : List Entry) (same : SameView first second) :
+    designate crypto codec serverKid first = designate crypto codec serverKid second ∧
+      ∀ budget : Budget, designateIn crypto codec serverKid budget first = designateIn crypto codec serverKid budget second := by
+  have summary := summarize_view first second same
+  have bundles : bundleOf first = bundleOf second := funext fun _ =>
+    findSome_view _ (view_respects _ (fun _ _ _ => rfl) (fun _ _ _ _ => rfl)) first second same
+  have finishes : finishOf first = finishOf second := funext fun _ =>
+    findSome_view _ (view_respects _ (fun _ _ _ => rfl) (fun _ _ _ _ => rfl)) first second same
+  have accepts : acceptOf first = acceptOf second := funext fun _ =>
+    findSome_view _ (view_respects _ (fun _ _ _ => rfl) (fun _ _ _ _ => rfl)) first second same
+  have builds : buildOf first = buildOf second := funext fun _ =>
+    findSome_view _ (view_respects _ (fun _ _ _ => rfl) (fun _ _ _ _ => rfl)) first second same
+  have links : linkOf first = linkOf second := funext fun _ =>
+    findSome_view _ (view_respects _ (fun _ _ _ => rfl) (fun _ _ _ _ => rfl)) first second same
+  have counted : ∀ first second : List Entry, first.map Entry.query = second.map Entry.query →
+      acceptCount first = acceptCount second := by
+    intro first
+    induction first with
+    | nil =>
+        intro second queries
+        cases second with
+        | nil => rfl
+        | cons _ _ => simp at queries
+    | cons entry rest ih =>
+        intro second queries
+        cases second with
+        | nil => simp at queries
+        | cons other rest' =>
+            simp only [List.map_cons, List.cons.injEq] at queries
+            have tail := ih rest' queries.2
+            simp only [acceptCount, List.countP_cons] at tail ⊢
+            rw [queries.1, tail]
+  have count : acceptCount first = acceptCount second := by
+    apply counted
+    have mapped := congrArg (List.map PqxdhDeploymentInterface.PublicEntry.query) same
+    simpa [SameView, List.map_map, Function.comp_def, Entry.view] using mapped
+  have publishes : Publishes codec first = Publishes codec second := by
+    funext accepted pqKey k
+    rw [Publishes, Publishes, bundles]
+  have linked : Linked crypto codec first = Linked crypto codec second := by
+    funext ciphertext pin pqKey session
+    rw [Linked, Linked, builds, accepts]
+  have designated : designate crypto codec serverKid first = designate crypto codec serverKid second := by
+    funext handle
+    cases handle with
+    | peer keyId =>
+        simp only [designate]
+        rw [links, accepts, publishes, summary]
+    | owner index =>
+        have phases : phase first = phase second := (phase_view first second same).1
+        simp only [designate]
+        rw [phases, summary, finishes, bundles, count, linked]
+  refine ⟨designated, fun budget => ?_⟩
+  funext handle
+  unfold designateIn
+  rw [designated]
+
 end BeaconcryptCore.Computational.PqxdhDeploymentTranscript
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentTranscript.summarize_append' depends on axioms: [propext,
@@ -338,3 +469,29 @@ end BeaconcryptCore.Computational.PqxdhDeploymentTranscript
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_owner_complete
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentTranscript.view_respects' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentTranscript.view_respects
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentTranscript.findSome_view' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentTranscript.findSome_view
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentTranscript.summarize_view' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentTranscript.summarize_view
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentTranscript.phase_view' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentTranscript.phase_view
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_view' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_view
