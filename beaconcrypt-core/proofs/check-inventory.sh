@@ -30391,12 +30391,12 @@ require_line_count 1 '^theorem reduction_caps([[:space:]]|$)' "$selected_source_
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.ce_a1_billed$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.ce_a1_billed"
 require_line_count 1 '^theorem ce_a1_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem ce_a1_billed"
 
-# CE-8 identity-key collisions of the deployment owners and the collision finder.
+# CE-8 identity-key collisions of the deployment owners and the zero-query collision reduction.
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjective.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuthInjective root import"
-require_line_count 17 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem inventory"
-require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective guarded dependencies"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.owner_identity$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.owner_identity"
 require_line_count 1 '^theorem owner_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem owner_identity"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.bundle_identity$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.bundle_identity"
@@ -30423,8 +30423,14 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem owners_collision([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem owners_collision"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.joint_correct$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.joint_correct"
 require_line_count 1 '^theorem joint_correct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem joint_correct"
-require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.probEvent_le_bind$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.probEvent_le_bind"
-require_line_count 1 '^theorem probEvent_le_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem probEvent_le_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.collider_game$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collider_game"
+require_line_count 1 '^theorem collider_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem collider_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.lower_wins$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.lower_wins"
+require_line_count 1 '^theorem lower_wins([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem lower_wins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.lower_le_advantage$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.lower_le_advantage"
+require_line_count 1 '^theorem lower_le_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem lower_le_advantage"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.collision_lower$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collision_lower"
+require_line_count 1 '^theorem collision_lower([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem collision_lower"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.collision_bound$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collision_bound"
 require_line_count 1 '^theorem collision_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem collision_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.collider_queries$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collider_queries"

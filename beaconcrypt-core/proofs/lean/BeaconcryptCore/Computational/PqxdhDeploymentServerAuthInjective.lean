@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills
 
-/-! Identity-key collisions of the deployment owners (CE-8, `ε_inj`). Every native step other than a create keeps the identity seeds of all owners (`base_identities`, from `owner_identity` and `bundle_identity`). `seedEager` takes the identity seed of each create, in order, from a list drawn before the run; for a program with at most `count` creates the native run and the eager run on `count` independently drawn seeds have the same distribution (`seeds_eager`, the argument of `PqxdhDynamicIdentityPool.lazy_eager_complete` for the source14 constructor), and on the eager side the owners' identity seeds are a prefix of the list (`eager_identities`). Hence a collision of identity keys between two owners (`Collision`) is at most a collision among `count` drawn seeds (`owners_collision`). The collision finder `collider` sees a family of public identities and, when two distinct identities have equal Ed25519 keys, signs the empty message with the first through the family's signing oracle and returns that signature as a forgery for the second; by signing correctness (`joint_correct`, from the source wiring and the attached-signature correctness of the source primitives) it then wins, so a collision among `count + 1` seeds is at most the sum over the identity indices of the joint-use weak-EUF advantage of the family reduction of the collision finder (`collision_bound`, from `PqxdhJointIdentityFamily.family_advantage_le_sum`). The collision finder makes exactly one query, a signing query (`collider_queries`), so its family reduction `B^coll_t` at identity index `t` draws at most `32·count` uniform bytes for the other identities, makes at most one signing query and no static-DH query, and its whole joint-use weak-EUF game makes at most `32·(count + 1)` uniform queries (`collider_bills`, from `PqxdhJointIdentityFamily.reduction_query_bound` and `reductionGame_uniform_bound`). No distributional property of key generation is assumed. -/
+/-! Identity-key collisions of the deployment owners (CE-8, `ε_inj`). Every native step other than a create keeps the identity seeds of all owners (`base_identities`, from `owner_identity` and `bundle_identity`). `seedEager` takes the identity seed of each create, in order, from a list drawn before the run; for a program with at most `count` creates the native run and the eager run on `count` independently drawn seeds have the same distribution (`seeds_eager`, the argument of `PqxdhDynamicIdentityPool.lazy_eager_complete` for the source14 constructor), and on the eager side the owners' identity seeds are a prefix of the list (`eager_identities`). Hence a collision of identity keys between two owners (`Collision`) is at most a collision among `count` drawn seeds (`owners_collision`). The collision reduction `B^coll_t` (`collider`, owner input 17) is a joint-use weak-EUF adversary that receives the challenge identity at index `t`, draws the seeds of the other `count` identities itself and, when the challenge's Ed25519 key equals the key of one of its seeds at a lower index, signs the empty message with that colliding seed itself and returns the signature as a forgery; by signing correctness (`joint_correct`, from the source wiring and the attached-signature correctness of the source primitives) it then wins (`lower_wins`). Every collision among `count + 1` drawn seeds is a collision of its higher index with a lower one (`collision_lower`), and drawing the seed at index `t` first is a distribution equality (`PqxdhJointIdentityFamily.sampleFamily_target_first`), so a collision among `count + 1` seeds is at most the sum over the identity indices of the joint-use weak-EUF advantage of `B^coll_t` (`lower_le_advantage`, `collision_bound`). `B^coll_t` makes no signing and no static-DH query; it draws `32·count` uniform bytes, and its whole joint-use weak-EUF game makes at most `32·(count + 1)` uniform queries (`collider_queries`, `collider_bills`). No distributional property of key generation is assumed. -/
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -409,112 +409,128 @@ theorem joint_correct (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (mess
   split_ifs at verified with valid
   · exact valid
 
-/-- The collision finder: on a family of public identities, if two distinct identities have equal Ed25519 keys, it asks the first for one signature on the empty message and returns that signature as a forgery for the second; otherwise it returns a signature of identity zero for identity zero. It makes exactly one query, a signing query (`collider_queries`). -/
-noncomputable def collider (count : Nat) (publics : Fin (count + 1) → PublicIdentity) :
-    OracleComp (PqxdhJointIdentityFamily.FamilyAdversarySpec (count + 1))
-      (PqxdhJointIdentityFamily.FamilyForgery (count + 1)) := by
+/-- The identity at index `target` of a family of identity seeds has the Ed25519 key of an identity at a lower index. -/
+def LowerCollision (joint : Primitives) {count : Nat} (target : Fin count) (seeds : Fin count → IdentitySeed) : Prop :=
+  ∃ lower : Fin count, lower < target ∧
+    (joint.publicKeys (seeds lower)).ed25519 = (joint.publicKeys (seeds target)).ed25519
+
+/-- The forgery of `B^coll_t` (`collider`) from the challenge identity and the seeds it drew for the other `count` indices of the family, with the challenge at index `target`: if the challenge's Ed25519 key equals the key of a drawn seed whose family index is below `target`, the signature of the empty message under that seed, computed by the reduction itself; otherwise the all-zero signature of the empty message. -/
+noncomputable def colliderForgery (joint : Primitives) {count : Nat} (target : Fin (count + 1))
+    (jointPublic : PublicIdentity) (others : Fin count → IdentitySeed) : Forgery := by
   classical
-  exact if collision : ∃ pair : Fin (count + 1) × Fin (count + 1),
-      pair.1 ≠ pair.2 ∧ (publics pair.1).ed25519 = (publics pair.2).ed25519 then
-    (fun signature => ⟨(Classical.choose collision).2, ⟨[], signature⟩⟩) <$>
-      (liftM ((PqxdhJointIdentityFamily.FamilyAdversarySpec (count + 1)).query
-        (.inr ((Classical.choose collision).1, .sign []))) :
-          OracleComp (PqxdhJointIdentityFamily.FamilyAdversarySpec (count + 1)) PqxdhEd25519EufCma.Ed25519Signature)
-  else
-    (fun signature => ⟨0, ⟨[], signature⟩⟩) <$>
-      (liftM ((PqxdhJointIdentityFamily.FamilyAdversarySpec (count + 1)).query (.inr (0, .sign []))) :
-        OracleComp (PqxdhJointIdentityFamily.FamilyAdversarySpec (count + 1)) PqxdhEd25519EufCma.Ed25519Signature)
+  exact if found : ∃ other : Fin count, other.val < target.val ∧
+      (joint.publicKeys (others other)).ed25519 = jointPublic.ed25519 then
+    ⟨[], joint.sign (others (Classical.choose found)) []⟩
+  else ⟨[], List.Vector.replicate 64 0⟩
+
+/-- `B^coll_t`, the zero-query collision reduction of `ε_inj` at identity index `t = target` (plan section 10, owner input 17): a joint-use weak-EUF adversary that receives the challenge identity, draws the seeds of the other `count` identities of the family itself (the challenge at index `target`, the drawn seeds at the other indices in order) and, if the challenge's Ed25519 key equals the key of a drawn seed at a lower index, signs the empty message with that colliding seed itself and returns the signature as its forgery (`colliderForgery`). It makes no signing and no static-DH query; its only oracle queries are the `32·count` uniform bytes of the seeds it draws (`collider_queries`). -/
+noncomputable def collider (joint : Primitives) (count : Nat) (target : Fin (count + 1))
+    (jointPublic : PublicIdentity) : OracleComp AdversarySpec Forgery := do
+  let others ← OracleComp.liftComp (PqxdhJointIdentityFamily.sampleFamily count) AdversarySpec
+  pure (colliderForgery joint target jointPublic others)
+
+/-- The joint-use weak-EUF game of `B^coll_t` draws the challenge seed, then the reduction's own seeds, and tests the forgery against the empty signing history. -/
+theorem collider_game (joint : Primitives) (count : Nat) (target : Fin (count + 1)) :
+    game joint (collider joint count target) = (do
+      let seed ← sampleSeed
+      let others ← PqxdhJointIdentityFamily.sampleFamily count
+      pure (wins joint (joint.publicKeys seed) (colliderForgery joint target (joint.publicKeys seed) others) [])) := by
+  simp only [game, run, collider, simulateQ_bind, StateT.run_bind, PqxdhJointIdentityFamily.simulate_joint_uniform,
+    simulateQ_pure, StateT.run_pure, bind_map_left, bind_assoc, pure_bind]
+
+/-- If, in the family with the challenge seed at index `target` and the reduction's seeds at the other indices, the identity at `target` collides with a lower index, then `B^coll_t` wins: its forgery is a valid signature under the challenge key (signing correctness, `joint_correct`) on a message the challenger never signed. -/
+theorem lower_wins (setup : Setup baseSpec KemSK) (count : Nat) (target : Fin (count + 1)) (seed : IdentitySeed)
+    (others : Fin count → IdentitySeed) (lower : LowerCollision setup.joint target (target.insertNth seed others)) :
+    wins setup.joint (setup.joint.publicKeys seed)
+      (colliderForgery setup.joint target (setup.joint.publicKeys seed) others) [] = true := by
+  classical
+  obtain ⟨index, below, same⟩ := lower
+  have bound : index.val < count := lt_of_lt_of_le below (Nat.lt_succ_iff.mp target.isLt)
+  have position : target.succAbove ⟨index.val, bound⟩ = index := by
+    rw [Fin.succAbove_of_castSucc_lt _ _ (Fin.lt_def.mpr (Fin.lt_def.mp below))]
+    rfl
+  have found : ∃ other : Fin count, other.val < target.val ∧
+      (setup.joint.publicKeys (others other)).ed25519 = (setup.joint.publicKeys seed).ed25519 := by
+    refine ⟨⟨index.val, bound⟩, below, ?_⟩
+    rw [← position, Fin.insertNth_apply_succAbove, Fin.insertNth_apply_same] at same
+    exact same
+  have chosen := (Classical.choose_spec found).2
+  simp only [colliderForgery, dite_eq_left found, wins, signedMessages, List.filterMap_nil,
+    List.not_mem_nil, decide_false, Bool.not_false, Bool.and_true]
+  have valid := joint_correct setup (others (Classical.choose found)) []
+  rwa [chosen] at valid
 
 set_option linter.deprecated false in
-/-- An event that holds on every outcome of every continuation of the support points of another event is at least as likely. -/
-theorem probEvent_le_bind {α β : Type} (first : ProbComp α) (next : α → ProbComp β) (before : α → Prop)
-    (after : β → Prop) (always : ∀ value ∈ support first, before value → ∀ outcome ∈ support (next value), after outcome) :
-    Pr[before | first] ≤ Pr[after | first >>= next] := by
+/-- For every identity index `target`, the probability that, among `count + 1` independently drawn identity seeds, the identity at `target` collides with a lower index is at most the joint-use weak-EUF advantage of `B^coll_t`: drawing the seed at `target` first is a distribution equality (`PqxdhJointIdentityFamily.sampleFamily_target_first`), and then `lower_wins` applies on every draw. -/
+theorem lower_le_advantage (setup : Setup baseSpec KemSK) (count : Nat) (target : Fin (count + 1)) :
+    Pr[LowerCollision setup.joint target | PqxdhJointIdentityFamily.sampleFamily (count + 1)] ≤
+      advantage setup.joint (collider setup.joint count target) := by
   classical
-  rw [probEvent_eq_tsum_ite, probEvent_bind_eq_tsum]
-  refine ENNReal.tsum_le_tsum fun value => ?_
-  split_ifs with holds
-  · by_cases member : value ∈ support first
-    · have one : Pr[after | next value] = 1 := probEvent_eq_one ⟨by simp, always value member holds⟩
-      rw [one, mul_one]
-    · simp [probOutput_eq_zero_of_not_mem_support member]
-  · simp
+  have decided : Pr[LowerCollision setup.joint target | PqxdhJointIdentityFamily.sampleFamily (count + 1)] =
+      Pr[= true | PqxdhJointIdentityFamily.sampleFamily (count + 1) >>= fun seeds =>
+        pure (decide (LowerCollision setup.joint target seeds))] := by
+    rw [bind_pure_comp, probOutput_map]
+    simp only [decide_eq_true_eq]
+  have moved := evalSPMF_ext_iff.mp (PqxdhJointIdentityFamily.sampleFamily_target_first count target
+    (fun seeds => pure (decide (LowerCollision setup.joint target seeds)))) true
+  rw [decided, advantage, collider_game]
+  refine le_of_eq_of_le moved ?_
+  refine probOutput_bind_mono fun seed _ => probOutput_bind_mono fun others _ => ?_
+  by_cases lower : LowerCollision setup.joint target (target.insertNth seed others)
+  · rw [lower_wins setup count target seed others lower]
+    simp [lower]
+  · simp [lower]
 
-set_option linter.deprecated false in
-/-- A collision among `count + 1` independently drawn identity seeds is at most the sum, over the `count + 1` identity indices `t`, of the joint-use weak-EUF advantage of the family reduction of the collision finder at `t`. No assumption beyond joint-use weak-EUF is used: a collision gives a valid forgery by signing correctness. -/
-theorem collision_bound (setup : Setup baseSpec KemSK) (count : Nat) :
-    Pr[fun pool => Collision setup.joint pool | PqxdhDynamicIdentityPool.sampleSeeds (count + 1)] ≤
-      ∑ target : Fin (count + 1), advantage setup.joint
-        (PqxdhJointIdentityFamily.reduction setup.joint target (collider count)) := by
-  refine le_trans ?_ (PqxdhJointIdentityFamily.family_advantage_le_sum setup.joint count (collider count))
-  rw [PqxdhDynamicIdentityPool.sampleSeeds, probEvent_map]
-  unfold PqxdhJointIdentityFamily.familyRun
-  refine probEvent_le_bind _ _ _ _ fun seeds _ collision outcome member => ?_
+/-- A collision of the list of a family of identity seeds is a collision of some index with a lower index. -/
+theorem collision_lower (joint : Primitives) (count : Nat) (seeds : Fin count → IdentitySeed)
+    (collision : Collision joint (List.ofFn seeds)) :
+    ∃ target ∈ (Finset.univ : Finset (Fin count)), LowerCollision joint target seeds := by
   obtain ⟨first, second, different, left, right, leftFound, rightFound, same⟩ := collision
   simp only [List.getElem?_ofFn] at leftFound rightFound
   obtain ⟨firstBound, leftEq⟩ := Option.dite_none_right_eq_some.mp leftFound
   obtain ⟨secondBound, rightEq⟩ := Option.dite_none_right_eq_some.mp rightFound
-  have exists_ : ∃ pair : Fin (count + 1) × Fin (count + 1), pair.1 ≠ pair.2 ∧
-      (PqxdhJointIdentityFamily.familyPublic setup.joint seeds pair.1).ed25519 =
-        (PqxdhJointIdentityFamily.familyPublic setup.joint seeds pair.2).ed25519 :=
-    ⟨(⟨first, firstBound⟩, ⟨second, secondBound⟩), fun equal => different (congrArg Fin.val equal),
-      by
-        simp only [PqxdhJointIdentityFamily.familyPublic]
-        rw [Option.some.inj leftEq, Option.some.inj rightEq]
-        exact same⟩
-  obtain ⟨different', sameKey⟩ := Classical.choose_spec exists_
-  simp only [collider, dite_cond_eq_true (eq_true exists_), simulateQ_map, StateT.run_map,
-    mem_support_bind_iff, support_map, Set.mem_image] at member
-  obtain ⟨_, ⟨reply, replyMember, rfl⟩, outcomeMember⟩ := member
-  simp only [support_pure, Set.mem_singleton_iff] at outcomeMember
-  subst outcomeMember
-  change reply ∈ support (pure (PqxdhJointIdentity.primitiveReply setup.joint (seeds (Classical.choose exists_).1)
-    (.sign []), Function.update (PqxdhJointIdentityFamily.emptyHistory (count + 1)) (Classical.choose exists_).1
-      (PqxdhJointIdentityFamily.emptyHistory (count + 1) (Classical.choose exists_).1 ++
-        [PqxdhJointIdentity.requestEvent (.sign []) (PqxdhJointIdentity.primitiveReply setup.joint
-          (seeds (Classical.choose exists_).1) (.sign []))])) : ProbComp _) at replyMember
-  simp only [support_pure] at replyMember
-  subst replyMember
-  simp only [PqxdhJointIdentityFamily.familyTest, PqxdhJointIdentityFamily.targetTest, wins,
-    Function.update_of_ne (Ne.symm different'), PqxdhJointIdentityFamily.emptyHistory, signedMessages,
-    List.filterMap_nil, List.not_mem_nil, decide_false, Bool.not_false, Bool.and_true]
-  simp only [PqxdhJointIdentityFamily.familyPublic] at sameKey ⊢
-  rw [← sameKey]
-  exact joint_correct setup _ []
+  rcases Nat.lt_or_gt_of_ne different with less | greater
+  · exact ⟨⟨second, secondBound⟩, Finset.mem_univ _, ⟨first, firstBound⟩, less, by
+      rw [Option.some.inj leftEq, Option.some.inj rightEq]; exact same⟩
+  · exact ⟨⟨first, firstBound⟩, Finset.mem_univ _, ⟨second, secondBound⟩, greater, by
+      rw [Option.some.inj leftEq, Option.some.inj rightEq]; exact same.symm⟩
 
+set_option linter.deprecated false in
+/-- A collision among `count + 1` independently drawn identity seeds is at most the sum, over the `count + 1` identity indices `t`, of the joint-use weak-EUF advantage of the zero-query reduction `B^coll_t` (`collider`): a collision is a collision of its higher index with a lower one (`collision_lower`), the union bound sums over the higher index, and `lower_le_advantage` bounds each term. No assumption beyond joint-use weak-EUF is used: a collision gives a valid forgery by signing correctness. -/
+theorem collision_bound (setup : Setup baseSpec KemSK) (count : Nat) :
+    Pr[fun pool => Collision setup.joint pool | PqxdhDynamicIdentityPool.sampleSeeds (count + 1)] ≤
+      ∑ target : Fin (count + 1), advantage setup.joint (collider setup.joint count target) := by
+  rw [PqxdhDynamicIdentityPool.sampleSeeds, probEvent_map]
+  refine (probEvent_mono fun seeds _ collision => collision_lower setup.joint (count + 1) seeds collision).trans ?_
+  exact (probEvent_exists_finset_le_sum _ _ _).trans
+    (Finset.sum_le_sum fun target _ => lower_le_advantage setup count target)
 
-
-/-- The collision finder makes at most one query of each primitive class of the family's identities: one signing query, no uniform and no static-DH query. -/
-theorem collider_queries (count : Nat) (publics : Fin (count + 1) → PublicIdentity)
-    (kind : PqxdhJointIdentityFamily.Kind) :
-    (collider count publics).IsQueryBoundP
-      (PqxdhJointIdentityFamily.familyClass (PqxdhJointIdentityFamily.IsClass kind))
-      (if kind = .sign then 1 else 0) := by
+/-- `B^coll_t` makes, on every challenge identity, at most `32·count` uniform queries (the bytes of the seeds it draws) and no signing and no static-DH query. -/
+theorem collider_queries (joint : Primitives) (count : Nat) (target : Fin (count + 1))
+    (kind : PqxdhJointIdentityFamily.Kind) (jointPublic : PublicIdentity) :
+    (collider joint count target jointPublic).IsQueryBoundP (PqxdhJointIdentityFamily.IsClass kind)
+      (if kind = .uniform then 32 * count else 0) := by
   unfold collider
-  split <;>
-  · rw [OracleComp.isQueryBoundP_map_iff]
-    refine (OracleComp.isQueryBoundP_query_iff _ _ _).mpr ?_
-    cases kind <;> simp [PqxdhJointIdentityFamily.familyClass, PqxdhJointIdentityFamily.IsClass]
+  have bound := OracleComp.isQueryBoundP_bind (PqxdhJointIdentityFamily.sampleFamily_lift_bound count kind)
+    (fun others _ => isQueryBoundP_pure _ (colliderForgery joint target jointPublic others) 0)
+  rwa [Nat.add_zero] at bound
 
-/-- The bills of `B^coll_t`, the family reduction of the collision finder at identity index `t`: on every challenge identity it draws at most `32·count` uniform bytes (the other identities' seeds), makes at most one signing query and no static-DH query, and its whole joint-use weak-EUF game makes at most `32·(count + 1)` uniform queries. -/
+/-- The bills of `B^coll_t`: on every challenge identity at most `32·count` uniform queries, no signing query and no static-DH query; its whole joint-use weak-EUF game, with the challenger's own seed draw, makes at most `32·(count + 1)` uniform queries. -/
 theorem collider_bills (joint : Primitives) (count : Nat) (target : Fin (count + 1)) :
-    (∀ jointPublic, (PqxdhJointIdentityFamily.reduction joint target (collider count) jointPublic).IsQueryBoundP
+    (∀ jointPublic, (collider joint count target jointPublic).IsQueryBoundP
       (PqxdhJointIdentityFamily.IsClass .uniform) (32 * count)) ∧
-    (∀ jointPublic, (PqxdhJointIdentityFamily.reduction joint target (collider count) jointPublic).IsQueryBoundP
-      (PqxdhJointIdentityFamily.IsClass .sign) 1) ∧
-    (∀ jointPublic, (PqxdhJointIdentityFamily.reduction joint target (collider count) jointPublic).IsQueryBoundP
+    (∀ jointPublic, (collider joint count target jointPublic).IsQueryBoundP
+      (PqxdhJointIdentityFamily.IsClass .sign) 0) ∧
+    (∀ jointPublic, (collider joint count target jointPublic).IsQueryBoundP
       (PqxdhJointIdentityFamily.IsClass .staticDh) 0) ∧
-    (game joint (PqxdhJointIdentityFamily.reduction joint target (collider count))).IsTotalQueryBound
-      (32 * (count + 1)) := by
-  refine ⟨fun jointPublic => ?_, fun jointPublic => ?_, fun jointPublic => ?_, ?_⟩
-  · simpa using PqxdhJointIdentityFamily.reduction_query_bound joint target (collider count) .uniform _
-      (fun publics => collider_queries count publics .uniform) jointPublic
-  · simpa using PqxdhJointIdentityFamily.reduction_query_bound joint target (collider count) .sign _
-      (fun publics => collider_queries count publics .sign) jointPublic
-  · simpa using PqxdhJointIdentityFamily.reduction_query_bound joint target (collider count) .staticDh _
-      (fun publics => collider_queries count publics .staticDh) jointPublic
-  · simpa using PqxdhJointIdentityFamily.reductionGame_uniform_bound joint target (collider count) 0
-      (fun publics => by simpa using collider_queries count publics .uniform)
+    (game joint (collider joint count target)).IsTotalQueryBound (32 * (count + 1)) := by
+  refine ⟨fun jointPublic => by simpa using collider_queries joint count target .uniform jointPublic,
+    fun jointPublic => by simpa using collider_queries joint count target .sign jointPublic,
+    fun jointPublic => by simpa using collider_queries joint count target .staticDh jointPublic, ?_⟩
+  have counted := PqxdhJointIdentityFamily.jointGame_uniform_bound joint (collider joint count target) (32 * count)
+    fun jointPublic => by simpa using collider_queries joint count target .uniform jointPublic
+  convert counted using 1
+  omega
 
 end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective
 
@@ -590,11 +606,29 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.joint_correct
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.probEvent_le_bind' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collider_game' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.probEvent_le_bind
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collider_game
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.lower_wins' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.lower_wins
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.lower_le_advantage' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.lower_le_advantage
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collision_lower' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collision_lower
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collision_bound' depends on axioms: [propext,
  Classical.choice,
