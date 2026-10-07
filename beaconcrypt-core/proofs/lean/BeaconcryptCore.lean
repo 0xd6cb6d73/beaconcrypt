@@ -1528,6 +1528,7 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftChainCompiler
 import BeaconcryptCore.Computational.PqxdhRecordLiftChainCoordinates
 import BeaconcryptCore.Computational.PqxdhRecordLiftWorldBudget
 import BeaconcryptCore.Computational.PqxdhRecordLiftSeedCut
+import BeaconcryptCore.Computational.PqxdhRecordLiftNativeAdapters
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative
@@ -1655,6 +1656,18 @@ import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective
 
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame
+
+import BeaconcryptCore.Computational.PqxdhKeyScheduleFromRoot
+
+import BeaconcryptCore.Computational.PqxdhRootFirstEntry
+
+import BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix
+
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemObserverFree
+
+import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish
+
+import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter
 
 /-!
 # Beaconcrypt-core verification root
