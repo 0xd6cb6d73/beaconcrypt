@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1526
+	[handwritten-lean]=1527
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29861,6 +29861,39 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhKeySch
 require_line_count 1 '^theorem fromRoot_bound([[:space:]]|$)' "$selected_source_module" "PqxdhKeyScheduleFromRoot theorem fromRoot_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhKeyScheduleFromRoot\.fromRoot_bound_context$' "$selected_source_module" "PqxdhKeyScheduleFromRoot dependency BeaconcryptCore.Computational.PqxdhKeyScheduleFromRoot.fromRoot_bound_context"
 require_line_count 1 '^theorem fromRoot_bound_context([[:space:]]|$)' "$selected_source_module" "PqxdhKeyScheduleFromRoot theorem fromRoot_bound_context"
+
+# Item 2 stage S3a (extract-design plan section 9): eager sampling of the first fresh entry of a lazy uniform table (generic, PqxdhServerAuthEntryFactor.eager_run), specialized to the root table of PqxdhCorrelatedExpandHybrid.uniformGame; distribution equalities, no programming.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRootFirstEntry.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRootFirstEntry$' proofs/lean/BeaconcryptCore.lean "PqxdhRootFirstEntry root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhRootFirstEntry theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhRootFirstEntry guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.tracked_hit$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.tracked_hit"
+require_line_count 1 '^theorem tracked_hit([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem tracked_hit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.tracked_miss$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.tracked_miss"
+require_line_count 1 '^theorem tracked_miss([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem tracked_miss"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.eager_hit$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.eager_hit"
+require_line_count 1 '^theorem eager_hit([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem eager_hit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.eager_first_miss$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.eager_first_miss"
+require_line_count 1 '^theorem eager_first_miss([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem eager_first_miss"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.eager_later_miss$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.eager_later_miss"
+require_line_count 1 '^theorem eager_later_miss([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem eager_later_miss"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.tracked_project$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.tracked_project"
+require_line_count 1 '^theorem tracked_project([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem tracked_project"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.eager_done$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.eager_done"
+require_line_count 1 '^theorem eager_done([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem eager_done"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.eager_fresh$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.eager_fresh"
+require_line_count 1 '^theorem eager_fresh([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem eager_fresh"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.eager_first$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.eager_first"
+require_line_count 1 '^theorem eager_first([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem eager_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.lazy_first$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.lazy_first"
+require_line_count 1 '^theorem lazy_first([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem lazy_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.first_cached$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.first_cached"
+require_line_count 1 '^theorem first_cached([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem first_cached"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.uniformImpl_eq$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.uniformImpl_eq"
+require_line_count 1 '^theorem uniformImpl_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem uniformImpl_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.uniformGame_first$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.uniformGame_first"
+require_line_count 1 '^theorem uniformGame_first([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem uniformGame_first"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
