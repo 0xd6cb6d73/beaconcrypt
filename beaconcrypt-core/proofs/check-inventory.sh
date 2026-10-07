@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1502
+	[handwritten-lean]=1503
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28948,6 +28948,23 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem designate_peer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_peer"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.designate_owner$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_owner"
 require_line_count 1 '^theorem designate_owner([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_owner"
+
+# Common deployment experiment (CE-2): secrecy layer with test, fresh and transcript, CE handler, mode-indexed game, mode P projection and secrecy frame.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSecrecy.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentSecrecy$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSecrecy root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhDeploymentSecrecy theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSecrecy guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSecrecy\.run_wrap$' "$selected_source_module" "PqxdhDeploymentSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.run_wrap"
+require_line_count 1 '^theorem run_wrap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSecrecy theorem run_wrap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSecrecy\.game_wrap$' "$selected_source_module" "PqxdhDeploymentSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.game_wrap"
+require_line_count 1 '^theorem game_wrap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSecrecy theorem game_wrap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSecrecy\.observeFull_project$' "$selected_source_module" "PqxdhDeploymentSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.observeFull_project"
+require_line_count 1 '^theorem observeFull_project([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSecrecy theorem observeFull_project"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSecrecy\.secrecy_frame$' "$selected_source_module" "PqxdhDeploymentSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.secrecy_frame"
+require_line_count 1 '^theorem secrecy_frame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSecrecy theorem secrecy_frame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSecrecy\.ledgerImpl_forward$' "$selected_source_module" "PqxdhDeploymentSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.ledgerImpl_forward"
+require_line_count 1 '^theorem ledgerImpl_forward([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSecrecy theorem ledgerImpl_forward"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

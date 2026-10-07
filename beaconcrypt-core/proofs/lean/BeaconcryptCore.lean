@@ -1534,6 +1534,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget
 
 import BeaconcryptCore.Computational.PqxdhDeploymentTranscript
 
+import BeaconcryptCore.Computational.PqxdhDeploymentSecrecy
+
 /-!
 # Beaconcrypt-core verification root
 
