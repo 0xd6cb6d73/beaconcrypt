@@ -1,0 +1,308 @@
+{
+  "date": "2026-10-07T22:01:14.943341+00:00",
+  "basis": "a0827b192e956b7be9947b64d2aa9ec2f8d0d4ba",
+  "status": "All16 guarded statements, independent semantic/hygiene reviews and four focused checks passed on a0827b19. Ready for focused topic publication; grouped integration must merge CE8central7609c3c8 and validate exact combined tree.",
+  "scope": "Actual uniform lazy full76 miss, selected32 private mask, complete-continuation distributions, ordinary uniform32 Extract/HMAC next-child bound; no global source cut premise supplied",
+  "theorems": [
+    "restore_split",
+    "split_restore",
+    "split_uniform",
+    "split_continuation",
+    "realize_mask",
+    "miss_continuation",
+    "observed_delayed",
+    "candidate_bound",
+    "child_source",
+    "child_independent",
+    "child_bound",
+    "retained_bound",
+    "observer_bound",
+    "child_real_bound",
+    "reduction_bounds",
+    "challenger_bounds"
+  ],
+  "guards": 16,
+  "contracts": [
+    "SourceFullCorrect only for child_bound; ordinary uniform32 Extract and HMAC PRF endpoints occur as explicit advantage terms, not assumed protocol conclusions"
+  ],
+  "query_bounds": {
+    "prior": "qSample",
+    "observer": "qObserve",
+    "retained_context": "qSample+44",
+    "unit_observer": "qSample+44+qObserve",
+    "actual_child": "qSample+76+qObserve",
+    "HMAC_challenge": 2,
+    "HMAC_reduction_uniform": "32+qSample+44+qObserve",
+    "Extract_real_uniform": "32+qSample+44+qObserve",
+    "Extract_random_uniform": "32+64+qSample+44+qObserve",
+    "HMAC_real_uniform": "64+32+qSample+44+qObserve",
+    "HMAC_random_uniform": "32+64+64+qSample+44+qObserve",
+    "ideal_child_uniform": "qSample+44+76+qObserve"
+  },
+  "statistical_term": "qCandidates/2^256 for complete target-free masked observer at explicitly uniform cut only",
+  "remaining": [
+    "Global source masked compiler and cut reachability/distribution",
+    "Initial seed cut",
+    "Source candidate accounting, alias/collision/refusal probabilities",
+    "Global chain_lift and ctx_lift"
+  ],
+  "review": {
+    "semantic": {
+      "path": "/tmp/bc-arc-scratch/record-lift/reviews/projection-cut-semantic-2026-10-07.json",
+      "sha256": "9475d632c9ea2407a540702975ea6a5f4f7fb87e14950633fd465f973ac6d5f4",
+      "content": {
+        "reviewer": "Codex independent agent /root/record_interface_audit",
+        "author": "Codex parent /root",
+        "date_utc": "2026-10-07T21:59:51.882510+00:00",
+        "decision": "approve",
+        "scope": "Sixteen-statement actual persistent full76 cache-miss projection cut and ordinary uniform32 Extract/two-query HMAC component; no global source compiler or record-security endpoint.",
+        "files": [
+          {
+            "path": "/tmp/beaconcrypt-record-lift-projection-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftProjectionCut.lean",
+            "sha256": "cad4bfb5ce286e2050548d4d4b31dc527ba4b02fdc892e81d9317a2d9af413e0"
+          },
+          {
+            "path": "/tmp/beaconcrypt-record-lift-projection-cut/doc/impl/record-lift-projection-cut.md",
+            "sha256": "dee5a4809cf6ee652648f1d7017f981185a849447edca7f61acc94c8f140eacb"
+          }
+        ],
+        "findings": [],
+        "semantic_checks": [
+          "The chain/key split is an equivalence of the same full76 output: second32 versus first32, each retaining the other32 and nonce12. Reconstitution restores the literal full output and complete cache/counters.",
+          "AtMiss requires the chosen cache coordinate to be absent. Its source-context/state sampler executes before the new uniform miss. Retaining the whole previous table permits prior byte aliases without assuming distinctness or independence of previous entries.",
+          "The masked observer receives the pre-miss table and retained44, never the newly selected32. observed_delayed moves only that fresh32 after the complete observer result. This is a proved joint distribution for this constructed cut, not a hypothesis that the actual World continuation is target-free.",
+          "The unconditioned candidate membership bound charges the complete supported list length, including duplicates, and introduces no stopping/success/owner factor. Real-child candidates are not silently treated as independent uniform guesses.",
+          "child_source commutes the complete prior sampler and retained44 into unitObserver, so child_bound invokes the existing ordinary Unit-context uniform32 Extract game. No correlated public sampler context or new sampler-specific Extract endpoint is introduced.",
+          "The actual next ratchet derivation uses the same full76 output second32 at the fixed ratchet address. SourceFullCorrect is the sole explicit functional contract in child_bound; the two displayed security advantages each retain coefficient one.",
+          "The fullExpandReduction makes two fresh adaptive HMAC queries, preserves the complete first64 block and the final12-byte nonce prefix, and retains the whole continuation. All actual child/source joins outside this local component remain explicit.",
+          "Query bounds include qSample, retained44, qObserve, unused input32 in the HMAC reduction, real HMAC key64, and both complete random64 challenger answers. Deterministic local computation is not claimed to have zero runtime."
+        ],
+        "hygiene": {
+          "theorem_count": 16,
+          "exact_guard_count": 16,
+          "guard_names_match_theorems": true,
+          "allowed_axioms": [
+            "propext",
+            "Classical.choice",
+            "Quot.sound"
+          ],
+          "forbidden_H7_source_uses": [],
+          "placeholders_or_custom_axioms": [],
+          "production_or_Claude_owned_source_edits_by_reviewer": false,
+          "reviewer_builds": false
+        },
+        "validation": {
+          "author_check_receipt": "/tmp/bc-arc-scratch/record-lift/projection-cut/logs/15-guards.json",
+          "receipt_sha256": "70b660bc3ff70a58e73e8ce33e15432bc5d7521038bb93911747ba40be68bf05",
+          "exit": 0,
+          "source_hash_matches": true,
+          "artifact_hash_matches": true,
+          "log_hash_matches": true,
+          "leanpath_hash_matches": true,
+          "diagnostics": "Only disclosed VCVio compatibility deprecation warnings plus coordinator queue notices; no Lean errors or axiom-guard failures."
+        },
+        "remaining_boundaries": [
+          "Actual World reachability at the earlier hybrid distribution and a logical-label source compiler that removes every other selected32 copy.",
+          "Actual source/public candidate collector, costs, alias/refusal event correspondence and global ordered replacement bounds.",
+          "Publication root/inventory/receipt metadata review is separate from this semantic approval."
+        ]
+      }
+    },
+    "publication_hygiene": {
+      "path": "/tmp/bc-arc-scratch/record-lift/reviews/projection-cut-publication-hygiene-2026-10-07.json",
+      "sha256": "6491c79e7117c33e2e3b28f1b3ac987a899d84b159869d2802c298f771777245",
+      "content": {
+        "reviewer": "/root/record_interface_audit",
+        "author": "/root",
+        "date_utc": "2026-10-07T22:02:52.918368+00:00",
+        "decision": "approve",
+        "basis": "a0827b192e956b7be9947b64d2aa9ec2f8d0d4ba",
+        "scope": "Final publication metadata for the sixteen-statement ProjectionCut component; supplements the unchanged-source independent semantic approval.",
+        "findings": [],
+        "package_receipt": {
+          "path": "/tmp/beaconcrypt-record-lift-projection-cut/doc/impl/proof-receipts/record-lift-projection-cut.json",
+          "sha256": "3a90db7be1f7678f71f79c60a070279b79e8d74ef56fc1c9eb8725769f1fe7c9"
+        },
+        "semantic_receipt": {
+          "path": "/tmp/bc-arc-scratch/record-lift/reviews/projection-cut-semantic-2026-10-07.json",
+          "sha256": "9475d632c9ea2407a540702975ea6a5f4f7fb87e14950633fd465f973ac6d5f4"
+        },
+        "files_sha256": {
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftProjectionCut.lean": "cad4bfb5ce286e2050548d4d4b31dc527ba4b02fdc892e81d9317a2d9af413e0",
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "3311a611679e309eaad55748f47de633f1fbbea4a2f212bae85c030f8f8f8371",
+          "beaconcrypt-core/proofs/check-inventory.sh": "f2480725479246ab968ae392f01bce2170999d0a07db6ea85e906a403ebec7bb",
+          "beaconcrypt-core/proofs/reviewed-inventory.txt": "348ffaa3d4502ba685bc7f59b5fecccc44e49322c6482450e134ed2b616c24e2",
+          "doc/formal-verification-analysis.md": "4fd897446e1ddab8529afb45a1720e33e4573a3b7edd9f735b2073a637dba52f",
+          "doc/impl/record-lift-projection-cut.md": "1b0b0553a785aff93aee0aceb3a3cfbfcf76dd6bc0b014d6cd3e403e1609343f"
+        },
+        "checks": [
+          "Read complete root, inventory, gate and plain-English analysis diffs against a0827b19. Only owned anchors are extended. The old gate script is byte-for-byte restored by removing the new block and reverting the single 1549 to 1550 count adjustment.",
+          "Exactly one new root import, sixteen theorem gates and sixteen named axiom gates match the frozen source. All previous imports and inventory classifications remain present.",
+          "All 1550 handwritten Lean rows and all other inventory file hashes match the actual tree; only the new module, changed root and changed gate-script hash are refreshed.",
+          "All four checks have exit 0 and independently matching logs, source/artifact hashes where present and LEAN_PATH hashes. The publication mirror imports the exact guarded module artifact reused from the direct compile.",
+          "Root log is empty. The module warnings are only the disclosed VCVio probability compatibility deprecations and coordinator notices. Inventory reports the reviewed boundary matches. Fidelity explicitly passes 20 Python verdict tests and 30 Rust transcript/mutation tests.",
+          "Guide final paragraph alone changed from the semantic-review version; reconstructing the old paragraph reproduces its exact dee5a480 digest. Semantic guide paragraphs and source cad4bfb5 remain unchanged.",
+          "The package truthfully pins its checks to a0827b19 and requires a normal central reconciliation and exact final-group checks after newer CE changes. No stale check is presented as validating that future tree."
+        ],
+        "validation_files": {
+          "/tmp/bc-arc-scratch/record-lift/projection-cut/publication/logs/root.json": "06b5cb3308e0741c250585054017da692c62a840731ae41fd4c400bb0cd988c2",
+          "/tmp/bc-arc-scratch/record-lift/projection-cut/publication/logs/inventory.json": "d7dd74ebe7f263b6dc34ef2456aeab059ec6a68134225ebbe57edd9d5ac5f113",
+          "/tmp/bc-arc-scratch/record-lift/projection-cut/publication/logs/fidelity.json": "5cfba24e5428ded78b01efefab28ffc461361f363ff12b354948d9d092a36535"
+        },
+        "reviewer_builds": false,
+        "reviewer_source_writes": false,
+        "remaining": "Parent may incorporate this receipt/status and make the focused checkpoint; future group reconciliation and exact final-tree validation remain separate."
+      }
+    }
+  },
+  "checks": {
+    "module": {
+      "start": "2026-10-07T21:57:23.787443+00:00",
+      "end": "2026-10-07T21:57:30.454983+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "projection-cut-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-projection-cut/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/projection-cut/olean/BeaconcryptCore/Computational/PqxdhRecordLiftProjectionCut.olean",
+        "/tmp/beaconcrypt-record-lift-projection-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftProjectionCut.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/projection-cut/logs/module.log",
+      "log_sha256": "6557386d86fb8592f5536bc13184b932a9c3a3cd0a560d595d14179b6b7d43cc",
+      "leanpath_sha256": "1d0a027ac6248e5c64456b39cd0eae3a8f25051831b7da0ec49e34ced5a6dcb3",
+      "source_sha256": "cad4bfb5ce286e2050548d4d4b31dc527ba4b02fdc892e81d9317a2d9af413e0",
+      "artifact_sha256": "ac7ed145895cbd1673e46b81f94ea46ea607fe1cfeb462f08dd7c9a934190a61",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "root": {
+      "start": "2026-10-07T21:59:10.171174+00:00",
+      "end": "2026-10-07T21:59:13.438534+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "projection-cut-publication-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-projection-cut/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/projection-cut/publication/olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-projection-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/projection-cut/publication/logs/root.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "8bfef8378ad5e26205873eb9d5c6413df12bdb6fe6af1bac373c6e9dcefec3ee",
+      "source_sha256": "3311a611679e309eaad55748f47de633f1fbbea4a2f212bae85c030f8f8f8371",
+      "artifact_sha256": "3a4f907020c114e61fb7d35fe517e2e5a3c9cc2741ff1cfb53086ccbe24682d9",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "inventory": {
+      "start": "2026-10-07T21:59:10.172776+00:00",
+      "end": "2026-10-07T22:00:29.932343+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "projection-cut-publication-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-projection-cut/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/projection-cut/publication/logs/inventory.log",
+      "log_sha256": "3c3319018509899a420194c931ed32f1283c0400da40cb86448aa51b62bf24f2",
+      "leanpath_sha256": "8bfef8378ad5e26205873eb9d5c6413df12bdb6fe6af1bac373c6e9dcefec3ee",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/projection-cut/publication/target"
+    },
+    "fidelity": {
+      "start": "2026-10-07T21:59:10.172854+00:00",
+      "end": "2026-10-07T21:59:35.553052+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "projection-cut-publication-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-projection-cut/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/projection-cut/publication/logs/fidelity.log",
+      "log_sha256": "111876b0ee945db797da1048c1608ad478e57db9295759b702eef9ed170f2207",
+      "leanpath_sha256": "8bfef8378ad5e26205873eb9d5c6413df12bdb6fe6af1bac373c6e9dcefec3ee",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/projection-cut/publication/target"
+    }
+  },
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftProjectionCut.lean": "cad4bfb5ce286e2050548d4d4b31dc527ba4b02fdc892e81d9317a2d9af413e0",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "3311a611679e309eaad55748f47de633f1fbbea4a2f212bae85c030f8f8f8371",
+    "beaconcrypt-core/proofs/check-inventory.sh": "f2480725479246ab968ae392f01bce2170999d0a07db6ea85e906a403ebec7bb",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "348ffaa3d4502ba685bc7f59b5fecccc44e49322c6482450e134ed2b616c24e2",
+    "doc/formal-verification-analysis.md": "4fd897446e1ddab8529afb45a1720e33e4573a3b7edd9f735b2073a637dba52f",
+    "doc/impl/record-lift-projection-cut.md": "1b0b0553a785aff93aee0aceb3a3cfbfcf76dd6bc0b014d6cd3e403e1609343f"
+  },
+  "artifact_provenance": {
+    "development_path": "/tmp/bc-arc-scratch/record-lift/projection-cut/leanpath",
+    "development_path_sha256": "1d0a027ac6248e5c64456b39cd0eae3a8f25051831b7da0ec49e34ced5a6dcb3",
+    "publication_path": "/tmp/bc-arc-scratch/record-lift/projection-cut/publication/leanpath",
+    "publication_path_sha256": "8bfef8378ad5e26205873eb9d5c6413df12bdb6fe6af1bac373c6e9dcefec3ee",
+    "base_path": "/tmp/bc-coord/leanpaths/a0827b192e956b7be9947b64d2aa9ec2f8d0d4ba.leanpath",
+    "module_reuse": "Unchanged16-guard source reuses exact checked olean in new a0827b19 namespace mirror; root compiled there",
+    "module_artifact_sha256": "ac7ed145895cbd1673e46b81f94ea46ea607fe1cfeb462f08dd7c9a934190a61"
+  },
+  "guide_change_since_review": "Only final validation paragraph status; source and semantic guide text unchanged",
+  "compatibility_warnings": "Unsuppressed VCVio evalSPMF/probEvent deprecations in direct module; no errors, placeholder, custom axiom or disabled gate",
+  "production_changes": false,
+  "checks_not_run": [
+    "Full lake build",
+    "make verify",
+    "ProVerif",
+    "Rust mutation suite; no Rust changes"
+  ]
+}
