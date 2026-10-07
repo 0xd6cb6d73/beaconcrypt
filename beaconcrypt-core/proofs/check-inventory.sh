@@ -29755,7 +29755,7 @@ require_line_count 1 '^theorem source_map([[:space:]]|$)' "$selected_source_modu
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRegistrationTrace\.source_support$' "$selected_source_module" "PqxdhDeploymentRegistrationTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace.source_support"
 require_line_count 1 '^theorem source_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRegistrationTrace theorem source_support"
 
-# Common deployment experiment per-target KEM transfer (CE-9, plan steps 9.1-9.4): compiled trace equals transcript registrations, bundle-to-pool KeyMatchFinal, eligibility equals T4's actual event, T4 + certified KEM hop + T6 per target with one IND-CCA advantage and one correctness error, transported bills, exact-sum headline (Phase1ReadBack, Phase2ReadBack, FunctionalDecapsulation).
+# Common deployment experiment per-target KEM transfer (CE-9, plan steps 9.1-9.4): compiled trace equals transcript registrations, bundle-to-pool KeyMatchFinal, eligibility equals T4's actual event, T4 + certified KEM hop + T6 per target with one IND-CCA advantage and one correctness error, transported bills, exact-sum headline (Phase1ReadBack, Phase2ReadBack, FunctionalDecapsulation; KemBound and initBound for the bills).
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemTransfer.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentKemTransfer root import"
@@ -29810,12 +29810,12 @@ require_line_count 1 '^theorem kem_transfer_sum([[:space:]]|$)' "$selected_sourc
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTransfer\.transported_total$' "$selected_source_module" "PqxdhDeploymentKemTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer.transported_total"
 require_line_count 1 '^theorem transported_total([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTransfer theorem transported_total"
 
-# Common deployment experiment designation range (CE-9): budget-respecting runs designate sessions below qAccept and owners below qCreate + 1, designateIn agrees with designate, exact-sum key-transfer headline with unbudgeted eligibility (Phase1ReadBack, Phase2ReadBack).
+# Common deployment experiment designation range (CE-9): budget-respecting runs designate sessions below qAccept and owners below qCreate, designateIn agrees with designate, the column k = qCreate is never designated, exact-sum key-transfer headlines with unbudgeted eligibility over Fin qAccept x Fin (qCreate + 1) and Fin qAccept x Fin qCreate (Phase1ReadBack, Phase2ReadBack; FunctionalDecapsulation for the headlines).
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentTargetRange.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentTargetRange$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentTargetRange root import"
-require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentTargetRange theorem inventory"
-require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentTargetRange guarded dependencies"
+require_line_count 17 '^theorem ' "$selected_source_module" "PqxdhDeploymentTargetRange theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentTargetRange guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.ledger_step$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.ledger_step"
 require_line_count 1 '^theorem ledger_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem ledger_step"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.ledger_count$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.ledger_count"
@@ -29830,8 +29830,12 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem owners_count([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem owners_count"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.designate_created$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.designate_created"
 require_line_count 1 '^theorem designate_created([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem designate_created"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.traced_range_create$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.traced_range_create"
+require_line_count 1 '^theorem traced_range_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem traced_range_create"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.traced_range$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.traced_range"
 require_line_count 1 '^theorem traced_range([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem traced_range"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.range_game_create$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.range_game_create"
+require_line_count 1 '^theorem range_game_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem range_game_create"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.range_game$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.range_game"
 require_line_count 1 '^theorem range_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem range_game"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.designateIn_range$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.designateIn_range"
@@ -29840,6 +29844,12 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem eligible_designated([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem eligible_designated"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.kem_transfer_eligible$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.kem_transfer_eligible"
 require_line_count 1 '^theorem kem_transfer_eligible([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem kem_transfer_eligible"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.designated_create$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.designated_create"
+require_line_count 1 '^theorem designated_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem designated_create"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.sum_last_le$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.sum_last_le"
+require_line_count 1 '^theorem sum_last_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem sum_last_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.kem_transfer_create$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.kem_transfer_create"
+require_line_count 1 '^theorem kem_transfer_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem kem_transfer_create"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
