@@ -1,15 +1,16 @@
 {
-  "date": "2026-10-07T14:12:38.844028+00:00",
-  "scope": "LQ-F spike (3-5 agent-day time box) for the exact later-quantum profile (Server identity seed and Server ephemeral scalars revealed post-run, beyond LQ): a logged source (source14 with a logged accept and a terminal laterServer read) with its projection back to source14, and over SourceSpec + LaterRead the selected-first reservation, the monitor, the KEM cut carrying the selected accept ephemeral as an explicit value, T4, the KEM hop (generalized over the scanned program), T6, the composed KEM transfer and the bills of the KEM adversary. Not reviewed, not merged.",
+  "date": "2026-10-07T17:29:39.406488+00:00",
+  "scope": "LQ-F spike for the exact later-quantum profile (Server identity seed and Server ephemeral scalars revealed post-run, beyond LQ) and its review fix pass: a logged source (source14 with a logged accept and a Server read) with its projection back to source14, and over SourceSpec + LaterRead the selected-first reservation, the monitor, the KEM cut carrying the selected accept ephemeral as an explicit value, T4, the KEM hop (generalized over the scanned program), T6, the composed KEM transfer and the bills of the KEM adversary. The fix pass logs the ephemeral whenever generation was reached (design table), adds the transcript conjunct of later_read, renames the exposed flattened handler of LaterServerBills, and corrects docstrings. The spike was reviewed (semantic and hygiene, approve with nits); the fix pass is not reviewed; not merged.",
   "basis": "c29cea816d81bff913c28bcb3edd6df97c76cd8a",
+  "fix_commit": "17ef727fce7e6594dacf4bf7f66c833da85209bc",
   "topic": {
     "branch": "codex/deployment-lqf-spike",
     "worktree": "/tmp/beaconcrypt-deployment-lqf"
   },
   "plan": {
     "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-    "sha256": "47d16acd1b9b4b49d35a49b3e8f0745068db6e07a836553174e5f9f7198e3663",
-    "sections": "9, 14, 19-22"
+    "sha256": "b72e4d1286b5a1e6f3fd97d48ae51eb19f4533dc9826252b2eea133733b2fff3",
+    "sections": "9, 14, 19-23"
   },
   "design": {
     "path": "/tmp/bc-arc-scratch/common-experiment/reveal-mode-design.md",
@@ -44,25 +45,33 @@
     {
       "commit": "c02bdf14ec7e3db16199a7dc295a4e3e5f2c5556",
       "subject": "Bill the KEM adversary at the logged later-quantum exposure"
+    },
+    {
+      "commit": "4bf121476bb61424527294e1b657ab5779ddef0a",
+      "subject": "Document the LQ-F spike (guide, analysis, receipt)"
+    },
+    {
+      "commit": "17ef727fce7e6594dacf4bf7f66c833da85209bc",
+      "subject": "Log generated Server ephemerals and address the LQ-F review"
     }
   ],
-  "commits_note": "The documentation commit that adds this receipt follows these commits and is checked the same way (root import and focused inventory).",
+  "commits_note": "The documentation commit that adds this version of the receipt follows these commits and is checked the same way (root import and focused inventory).",
   "files_sha256": {
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.lean": "ff24193321504d9d1c0f99190d2980b75a6c2fa39f4f3267304f4e15f2a928cb",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.lean": "cb56005601d778f7178385e7617dadfb10c24ae42e2a89bb023c9fbc8101b203",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.lean": "bf4e6be3a5f566d10f699c1262379a60ef1d29d613cfe6e75dffba88e9908373",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.lean": "2c9483788a71f3cebe05f23797e1a2067f13b1b8568ae8a8fbbd5f2d7c2670cd",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.lean": "8190c1318db35f677f2bcc09ad55446e3ad4f5e875851e5a4c103c3223057525",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.lean": "0ed57f757b463ea08578fbb6c030245e2ffcc1da671c3cf8fdb9f614a82263e3",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.lean": "1cf9b84cf4db44dbcb8da29554c4db25c2a13ca766c4672bb9d08e3729ff9033",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.lean": "d1d5effbf7552a550dcd6f067d3edda54cc0976288b47c1524881a8831ba9cd6",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.lean": "dd1b70932f39527e9b54be8901f55c6d9e822b4a340410eb9c05f29244dbc379",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.lean": "27a7fc1632f10db1616ab84361a1e91456c110b0bd3948ec4861d9185f41f075",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.lean": "064eb71e226c75d91850e0ad0721d61a4c145a4667b8bbee5285f2fa45b1bb29",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.lean": "1fd2adc26db18b539f3bd1eb117aedf1f7cbf8072374ddf53df52b4603c4a7a4",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.lean": "2b2dc1ecec8c5235eb66981d72588396a692287211afcf9bf37346e0f4457622",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.lean": "6f7e8cd6f8caaf23c9c50ad03c1e78723ce0a3bf55e3cf477df185a9e558b30a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.lean": "b12121cae1ef4d5b8905977203a26e6a98a5b17a0251a0629b074d368fcf557a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.lean": "de6fa41056fe4c8bf0fa32586309cb52c426f29bf8597311284aa5d45213a822",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.lean": "7de8116095f1b7611c6a6181c24d859ba4437f8273df50295169eb38c3d4eade",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.lean": "2e757a2f002b2a0dfb13ce6f8b8d71be103dd04dacd7a606b586222d1114ce77",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "decc93875b163d640db90d08506f8c4f71073b4cdd6d3ba81e45cc0a53c066e0",
-    "beaconcrypt-core/proofs/check-inventory.sh": "b822ee64ba79872c2b8da68e5895f69512446891feaeaafd9969972334bc39d3",
-    "beaconcrypt-core/proofs/reviewed-inventory.txt": "c9463a262dcc93e49e02aa5084614605c4d33006f1b999cd24598b503153427f",
-    "doc/impl/later-quantum-lqf-spike.md": "132ac2c1ba86b6b2d8012522806c12c4233abb9ed698999db1f09556a60fcb1e",
-    "doc/impl/common-deployment-experiment.md": "183d2065a1ceba992dad8a070743629914bcd039eabcf2e1a249e97334ef8690",
-    "doc/formal-verification-analysis.md": "e0dfb21feb998af76818700b03a6a956f446f7030dd7462a434c9a4c23a49232"
+    "beaconcrypt-core/proofs/check-inventory.sh": "2deb7143de45e3ceedd2d9131aa1a1fcd935c3bf373bf255fbce00a2cec8fccb",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "e512e41be60139c8f7f16e314c1cf13e0390bf59e2aa80b7cb4785f21c63be19",
+    "doc/impl/later-quantum-lqf-spike.md": "728aec358636fe24e48b59bf27c4ab88e701328f77979e8c80d2ca5f1cf7f07c",
+    "doc/impl/common-deployment-experiment.md": "d8d738d293416b692496e59b44f7a4b18b8d6fdd9a9f4d773d3f4e02f23b8701",
+    "doc/formal-verification-analysis.md": "e8a998ad81b38386425a4ff40c299083211ec783c117af484dbf2610105f2141"
   },
   "modules": [
     {
@@ -87,13 +96,14 @@
         "Classical.choice, Quot.sound, propext": 13
       },
       "direct_check_final": {
+        "tag": "fix",
         "exit": 0,
-        "start": "2026-10-07T14:08:14.684896+00:00",
-        "end": "2026-10-07T14:08:18.663342+00:00",
-        "source_sha256": "ff24193321504d9d1c0f99190d2980b75a6c2fa39f4f3267304f4e15f2a928cb",
+        "start": "2026-10-07T17:24:34.685519+00:00",
+        "end": "2026-10-07T17:24:40.271617+00:00",
+        "source_sha256": "27a7fc1632f10db1616ab84361a1e91456c110b0bd3948ec4861d9185f41f075",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "75999215056a839af5e08ed43f87a8ac620550df177717877f5ed232862a5722",
+        "artifact_sha256": "b46ac350dbd118259a539b71aa2ae8078a482628cc5dd06c0bef500659df8a0f",
         "command": [
           "flock",
           "/tmp/bc-arc-scratch/lean.lock",
@@ -104,7 +114,7 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.lean"
         ]
       }
@@ -112,6 +122,8 @@
     {
       "name": "PqxdhDeploymentLaterServerSource",
       "statements": [
+        "beforeLogged_fst",
+        "beforeLogged_some",
         "collectLogged_fst",
         "collectLogged_some",
         "sourcePrepare_fst",
@@ -123,18 +135,19 @@
         "query_owned",
         "program_owned"
       ],
-      "statement_count": 10,
+      "statement_count": 12,
       "axiom_profile": {
-        "Classical.choice, Quot.sound, propext": 10
+        "Classical.choice, Quot.sound, propext": 12
       },
       "direct_check_final": {
+        "tag": "fix",
         "exit": 0,
-        "start": "2026-10-07T14:08:18.698075+00:00",
-        "end": "2026-10-07T14:08:22.962992+00:00",
-        "source_sha256": "cb56005601d778f7178385e7617dadfb10c24ae42e2a89bb023c9fbc8101b203",
+        "start": "2026-10-07T17:24:40.305422+00:00",
+        "end": "2026-10-07T17:24:45.514305+00:00",
+        "source_sha256": "064eb71e226c75d91850e0ad0721d61a4c145a4667b8bbee5285f2fa45b1bb29",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "a5da60fd1f639bc4f1665cd4627f59238bd3c90495013bd495cf93b4b39dcf7e",
+        "artifact_sha256": "2c072fcda7708f8b05d77987a965d8d66b05f2ce1f53878ff066be58df734d2b",
         "command": [
           "flock",
           "/tmp/bc-arc-scratch/lean.lock",
@@ -145,7 +158,7 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.lean"
         ]
       }
@@ -170,13 +183,14 @@
         "Classical.choice, Quot.sound, propext": 11
       },
       "direct_check_final": {
+        "tag": "fix",
         "exit": 0,
-        "start": "2026-10-07T14:08:22.995819+00:00",
-        "end": "2026-10-07T14:08:27.319509+00:00",
-        "source_sha256": "bf4e6be3a5f566d10f699c1262379a60ef1d29d613cfe6e75dffba88e9908373",
+        "start": "2026-10-07T17:24:45.548191+00:00",
+        "end": "2026-10-07T17:24:49.950811+00:00",
+        "source_sha256": "1fd2adc26db18b539f3bd1eb117aedf1f7cbf8072374ddf53df52b4603c4a7a4",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "02c1c10f1c09f1c51be306973f9ff96efbd9124f062e45f86b10e527159da5e0",
+        "artifact_sha256": "dbe143458c98d8d80dbce80136b2e09ce560fa45b0b0391fcaf96c7c81b2ae88",
         "command": [
           "flock",
           "/tmp/bc-arc-scratch/lean.lock",
@@ -187,7 +201,7 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.lean"
         ]
       }
@@ -198,6 +212,7 @@
         "support_nested",
         "run_support",
         "commands_support",
+        "beforeLogged_free",
         "ordered_cut",
         "ordered_complete",
         "accept_scan",
@@ -212,18 +227,19 @@
         "selected_first",
         "monitor"
       ],
-      "statement_count": 16,
+      "statement_count": 17,
       "axiom_profile": {
-        "Classical.choice, Quot.sound, propext": 16
+        "Classical.choice, Quot.sound, propext": 17
       },
       "direct_check_final": {
+        "tag": "fix",
         "exit": 0,
-        "start": "2026-10-07T14:08:27.356309+00:00",
-        "end": "2026-10-07T14:08:32.479565+00:00",
-        "source_sha256": "2c9483788a71f3cebe05f23797e1a2067f13b1b8568ae8a8fbbd5f2d7c2670cd",
+        "start": "2026-10-07T17:24:49.991216+00:00",
+        "end": "2026-10-07T17:24:55.175751+00:00",
+        "source_sha256": "2b2dc1ecec8c5235eb66981d72588396a692287211afcf9bf37346e0f4457622",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "1e2af7a85b1e83fd4161bc15d772237a670599c7dfb70007ffd2d3092da7eef0",
+        "artifact_sha256": "7754c606afa14f1e3604429ddfb86724e77bacdbc56d2244d703fd196add483b",
         "command": [
           "flock",
           "/tmp/bc-arc-scratch/lean.lock",
@@ -234,7 +250,7 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.lean"
         ]
       }
@@ -254,13 +270,14 @@
         "Classical.choice, Quot.sound, propext": 6
       },
       "direct_check_final": {
+        "tag": "fix",
         "exit": 0,
-        "start": "2026-10-07T14:08:32.513990+00:00",
-        "end": "2026-10-07T14:08:36.461230+00:00",
-        "source_sha256": "8190c1318db35f677f2bcc09ad55446e3ad4f5e875851e5a4c103c3223057525",
+        "start": "2026-10-07T17:24:55.210774+00:00",
+        "end": "2026-10-07T17:25:03.253884+00:00",
+        "source_sha256": "6f7e8cd6f8caaf23c9c50ad03c1e78723ce0a3bf55e3cf477df185a9e558b30a",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "50002d24b289f6a6cbbe714037ba782187ca16a10c234c62731c355ab838e477",
+        "artifact_sha256": "9a9284c94e2383747caf72535a37869c005287c6cf7bdb9f3f0a3856bdbff2cc",
         "command": [
           "flock",
           "/tmp/bc-arc-scratch/lean.lock",
@@ -271,7 +288,7 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.lean"
         ]
       }
@@ -301,13 +318,14 @@
         "Classical.choice, Quot.sound, propext": 16
       },
       "direct_check_final": {
+        "tag": "fix",
         "exit": 0,
-        "start": "2026-10-07T14:08:36.492390+00:00",
-        "end": "2026-10-07T14:08:40.829432+00:00",
-        "source_sha256": "0ed57f757b463ea08578fbb6c030245e2ffcc1da671c3cf8fdb9f614a82263e3",
+        "start": "2026-10-07T17:25:03.286895+00:00",
+        "end": "2026-10-07T17:25:07.643215+00:00",
+        "source_sha256": "b12121cae1ef4d5b8905977203a26e6a98a5b17a0251a0629b074d368fcf557a",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "04d87b84a4b1984bca34f0386cd2346141e0edf0d94281204146caed257cbebd",
+        "artifact_sha256": "b1f03ee99a1a27de60303c59f9361094323b87af7686d94900ccf53886db0734",
         "command": [
           "flock",
           "/tmp/bc-arc-scratch/lean.lock",
@@ -318,7 +336,7 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.lean"
         ]
       }
@@ -342,13 +360,14 @@
         "Classical.choice, Quot.sound, propext": 10
       },
       "direct_check_final": {
+        "tag": "fix",
         "exit": 0,
-        "start": "2026-10-07T14:08:40.864552+00:00",
-        "end": "2026-10-07T14:08:45.096384+00:00",
-        "source_sha256": "1cf9b84cf4db44dbcb8da29554c4db25c2a13ca766c4672bb9d08e3729ff9033",
+        "start": "2026-10-07T17:25:07.674908+00:00",
+        "end": "2026-10-07T17:25:11.989506+00:00",
+        "source_sha256": "de6fa41056fe4c8bf0fa32586309cb52c426f29bf8597311284aa5d45213a822",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "a63620c398ca596758da19df2d435a0103fe2e5ddab42ef129f16f8627909e76",
+        "artifact_sha256": "95b3bc07bd533e1363633d9af1e2ca8fd812daf486876dc55bffdede9f0dfa7e",
         "command": [
           "flock",
           "/tmp/bc-arc-scratch/lean.lock",
@@ -359,7 +378,7 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.lean"
         ]
       }
@@ -378,13 +397,14 @@
         "Classical.choice, Quot.sound, propext": 5
       },
       "direct_check_final": {
+        "tag": "fix",
         "exit": 0,
-        "start": "2026-10-07T14:08:45.135031+00:00",
-        "end": "2026-10-07T14:08:49.058379+00:00",
-        "source_sha256": "d1d5effbf7552a550dcd6f067d3edda54cc0976288b47c1524881a8831ba9cd6",
+        "start": "2026-10-07T17:25:12.022835+00:00",
+        "end": "2026-10-07T17:25:16.177146+00:00",
+        "source_sha256": "7de8116095f1b7611c6a6181c24d859ba4437f8273df50295169eb38c3d4eade",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "03f4795e35f8758f02f3a1e45e0f639a7c5bbad5ff15ae38aeb8f4915ae2abb3",
+        "artifact_sha256": "3a270af486c00b7bc54ee896d655abd63d976b1d3b2eac2de29f97c29eb87656",
         "command": [
           "flock",
           "/tmp/bc-arc-scratch/lean.lock",
@@ -395,7 +415,7 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.lean"
         ]
       }
@@ -403,10 +423,10 @@
     {
       "name": "PqxdhDeploymentLaterServerBills",
       "statements": [
-        "flat_run",
-        "run_flat",
-        "step_source",
-        "step_later",
+        "exposed_run",
+        "run_exposed",
+        "exposed_source",
+        "exposed_later",
         "weighted",
         "single_sum",
         "total_single",
@@ -431,13 +451,14 @@
         "Classical.choice, Quot.sound, propext": 22
       },
       "direct_check_final": {
+        "tag": "fix",
         "exit": 0,
-        "start": "2026-10-07T14:08:49.095478+00:00",
-        "end": "2026-10-07T14:08:54.083783+00:00",
-        "source_sha256": "dd1b70932f39527e9b54be8901f55c6d9e822b4a340410eb9c05f29244dbc379",
+        "start": "2026-10-07T17:25:16.209637+00:00",
+        "end": "2026-10-07T17:25:21.878061+00:00",
+        "source_sha256": "2e757a2f002b2a0dfb13ce6f8b8d71be103dd04dacd7a606b586222d1114ce77",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "a9fca220d675209d48e43bad0bd033c5a219e02289b225a35f38e908e952ba16",
+        "artifact_sha256": "d024d07352943cf83b89b770a123e0b6b08d41e744b840e871c7ff1808b1d7fe",
         "command": [
           "flock",
           "/tmp/bc-arc-scratch/lean.lock",
@@ -448,33 +469,36 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.lean"
         ]
       }
     }
   ],
-  "statements": 109,
+  "statements": 112,
   "allowed_axioms": [
     "propext",
     "Classical.choice",
     "Quot.sound"
   ],
   "axiom_profile_from_guards": {
-    "Classical.choice, Quot.sound, propext": 109
+    "Classical.choice, Quot.sound, propext": 112
   },
   "exact_statements": {
     "PqxdhDeploymentLaterServerKemHop.certified_advantage": "theorem certified_advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (scanned : Scanned KemSK)\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) :\n    (sourceReal setup ensureInit supplied scanned runtime count selected).boolDistAdvantage\n      (branch setup ensureInit supplied scanned runtime count selected false) ≤\n      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))\n        (certified setup ensureInit supplied scanned runtime count selected).toINDCCA +\n        PqxdhRegistrationJointKemRawGame.correctnessError setup",
     "PqxdhDeploymentLaterServerKemHop.real_le_ideal": "theorem real_le_ideal (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (scanned : Scanned KemSK)\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) :\n    𝒟[sourceReal setup ensureInit supplied scanned runtime count selected] {true} ≤\n      𝒟[branch setup ensureInit supplied scanned runtime count selected false] {true} +\n        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))\n          (certified setup ensureInit supplied scanned runtime count selected).toINDCCA +\n          PqxdhRegistrationJointKemRawGame.correctnessError setup)",
     "PqxdhDeploymentLaterServerKemHop.adversary_eq": "theorem adversary_eq (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)\n    (codec : PqxdhServerAuthExperiment.Codec Reader Response) (checks : PqxdhServerAuthExperiment.Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit supplied decision work runtime count\n      selected index =\n      certified setup ensureInit supplied (PqxdhRegistrationJointKemRawChallenge.rawScan setup codec checks decision work\n        index) runtime count selected",
+    "PqxdhDeploymentLaterServerSource.beforeLogged_fst": "theorem beforeLogged_fst {E Shared : Type} (verified : Verified Reader) :\n    Prod.fst <$> beforeLogged (E := E) (Shared := Shared) verified =\n      PqxdhRegistrationJointKemCollected.beforeEncapsulation verified",
+    "PqxdhDeploymentLaterServerSource.beforeLogged_some": "theorem beforeLogged_some {E Shared : Type} (verified : Verified Reader) (result : Option (Ephemeral E) × Option E)\n    (ephemeral : Ephemeral E) (reached : result ∈ support (beforeLogged (Shared := Shared) verified))\n    (found : result.1 = some ephemeral) : result.2 = some ephemeral.secret",
     "PqxdhDeploymentLaterServerSource.collectLogged_fst": "theorem collectLogged_fst {E Shared : Type} (raw : Pqxdh.Bytes) :\n    Prod.fst <$> collectLogged (Reader := Reader) (E := E) (Shared := Shared) raw = collect raw",
     "PqxdhDeploymentLaterServerSource.collectLogged_some": "theorem collectLogged_some {E Shared State : Type} {κ : Type} {target : OracleSpec κ}\n    (impl : QueryImpl (PqxdhServerRootPreparation.Spec Reader E Shared) (StateT State (OracleComp target)))\n    (raw : Pqxdh.Bytes) (before after : State) (input : Inputs Reader E Shared) (logged : Option E)\n    (reached : ((some input, logged), after) ∈ support ((simulateQ impl (collectLogged raw)).run before)) :\n    logged = some input.ephemeral.secret",
     "PqxdhDeploymentLaterServerSource.program_projection": "theorem program_projection (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (identityIndex : Nat) (program : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result)\n    (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log) :\n    (fun result => (result.1, result.2.1)) <$>\n      (simulateQ (source setup codec checks seed identityIndex) (simulateQ embed program)).run (state, log) =\n      (simulateQ (PqxdhRegistrationJointServerSchedule.source setup codec checks seed identityIndex) program).run state",
     "PqxdhDeploymentLaterServerSource.initialized_projection": "theorem initialized_projection (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (program : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result)\n    (state : PqxdhRegistrationJointServerPrefix.State KemSK A) :\n    (fun result => (result.1.map Prod.fst, result.2)) <$>\n      (initialized setup codec checks ensureInit supplied (simulateQ embed program)).run state =\n      (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied program).run state",
-    "PqxdhDeploymentLaterServerSource.later_read": "theorem later_read (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (identityIndex : Nat) (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log)\n    (slot : state.pool.1.seeds[identityIndex]? = some seed)\n    (result : Reveal × (PqxdhRegistrationJointSchedule.State KemSK × Log))\n    (reached : result ∈ support ((source setup codec checks seed identityIndex (.inr ())).run (state, log))) :\n    result.1 = (some seed, log) ∧ result.2.2 = log ∧ result.2.1.pool.1.seeds = state.pool.1.seeds ∧\n      result.2.1.pool.2 = state.pool.2 ∧ result.2.1.owners = state.owners ∧ result.2.1.shared = state.shared",
+    "PqxdhDeploymentLaterServerSource.later_read": "theorem later_read (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (identityIndex : Nat) (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log)\n    (slot : state.pool.1.seeds[identityIndex]? = some seed)\n    (result : Reveal × (PqxdhRegistrationJointSchedule.State KemSK × Log))\n    (reached : result ∈ support ((source setup codec checks seed identityIndex (.inr ())).run (state, log))) :\n    result.1 = (some seed, log) ∧ result.2.2 = log ∧ result.2.1.pool.1.seeds = state.pool.1.seeds ∧\n      result.2.1.pool.2 = state.pool.2 ∧ result.2.1.owners = state.owners ∧ result.2.1.shared = state.shared ∧\n      result.2.1.pool.1.transcript = state.pool.1.transcript ++ [⟨.inr (.reveal identityIndex), some seed⟩]",
     "PqxdhDeploymentLaterServerSource.program_owned": "theorem program_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (identityIndex : Nat) (program : OracleComp (Spec KemSK) Result)\n    (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log)\n    (result : Result × (PqxdhRegistrationJointSchedule.State KemSK × Log))\n    (owned : Owned seed identityIndex state)\n    (reached : result ∈ support ((simulateQ (source setup codec checks seed identityIndex) program).run (state, log))) :\n    Owned seed identityIndex result.2.1",
     "PqxdhDeploymentLaterServerCommands.commands_embed": "theorem commands_embed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity)\n    (work : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result)\n    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :\n    commands setup codec checks identityIndex publicIdentity (simulateQ embed work) owners log state =\n      PqxdhRegistrationJointKemEncapsulation.commands setup codec checks identityIndex publicIdentity work owners\n        state",
-    "PqxdhDeploymentLaterServerCut.ordered_cut": "theorem ordered_cut (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (raw : Pqxdh.Bytes) (consumed : List Pqxdh.Bytes) :\n    PqxdhRegistrationJointKemCut.scan setup ((ordered setup codec checks identityIndex raw).run consumed) 0 =\n      match PqxdhRegistrationJointRawSignatures.verified setup codec checks raw with\n      | none => pure (.complete ((none, none), consumed))\n      | some value => simulateQ (actual setup)\n          ((simulateQ (PqxdhRegistrationJointKemSourceSuffix.handler setup codec checks identityIndex raw)\n            (PqxdhRegistrationJointKemCollected.beforeEncapsulation value)).run consumed) >>= fun prepared =>\n          match prepared.1 with\n          | none => pure (.complete ((none, none), prepared.2))\n          | some ephemeral => pure (.pending (raw, value.keys.pqKey) fun reply =>\n              (fun input => ((input.1, some ephemeral.secret), input.2)) <$>\n                (PqxdhRegistrationJointKemSourceSuffix.suffix setup codec checks identityIndex raw value\n                  ephemeral reply).run prepared.2)",
+    "PqxdhDeploymentLaterServerCut.ordered_cut": "theorem ordered_cut (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (raw : Pqxdh.Bytes) (consumed : List Pqxdh.Bytes) :\n    PqxdhRegistrationJointKemCut.scan setup ((ordered setup codec checks identityIndex raw).run consumed) 0 =\n      match PqxdhRegistrationJointRawSignatures.verified setup codec checks raw with\n      | none => pure (.complete ((none, none), consumed))\n      | some value => simulateQ (actual setup)\n          ((simulateQ (PqxdhRegistrationJointKemSourceSuffix.handler setup codec checks identityIndex raw)\n            (PqxdhDeploymentLaterServerSource.beforeLogged value)).run consumed) >>= fun prepared =>\n          match prepared.1.1 with\n          | none => pure (.complete ((none, prepared.1.2), prepared.2))\n          | some ephemeral => pure (.pending (raw, value.keys.pqKey) fun reply =>\n              (fun input => ((input.1, some ephemeral.secret), input.2)) <$>\n                (PqxdhRegistrationJointKemSourceSuffix.suffix setup codec checks identityIndex raw value\n                  ephemeral reply).run prepared.2)",
+    "PqxdhDeploymentLaterServerCut.ordered_complete": "theorem ordered_complete (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (raw : Pqxdh.Bytes) (consumed : List Pqxdh.Bytes)\n    (collected : (Option (Inputs Reader ScalarBytes Word32) × Option ScalarBytes) × List Pqxdh.Bytes)\n    (reached : .complete collected ∈ support (PqxdhRegistrationJointKemCut.scan setup\n      ((ordered setup codec checks identityIndex raw).run consumed) 0)) :\n    collected.1.1 = none",
     "PqxdhDeploymentLaterServerCut.rawCut_shape": "theorem rawCut_shape (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)\n    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)\n    (state : NativeState KemSK) (request : PqxdhRegistrationJointKemCut.Request)\n    (resume : PqxdhRegistrationJointKemCut.Reply →\n      OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R))\n    (reached : .pending request resume ∈ support (PqxdhRegistrationJointKemCut.scan setup\n      (exposeAt setup codec checks identityIndex publicIdentity observe work index owners log state) 0)) :\n    ∃ raw next value ephemeral consumed native after logAt,\n      Cut.pending raw next ∈ support (scan work index) ∧\n      PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value ∧\n      request = (raw, value.keys.pqKey) ∧\n      resume = rawResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native\n        after logAt next",
     "PqxdhDeploymentLaterServerCut.exposeAt_actual": "theorem exposeAt_actual (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)\n    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)\n    (state : NativeState KemSK) :\n    simulateQ (actual setup) (exposeAt setup codec checks identityIndex publicIdentity observe work index owners log state) =\n      simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity\n        (observe <$> tag work index) owners log state)",
     "PqxdhDeploymentLaterServerCut.rawResume_opaque": "theorem rawResume_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)\n    (value : Verified Reader) (ephemeral : Ephemeral ScalarBytes) (consumed : List Pqxdh.Bytes)\n    (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)\n    (next : Option Nat → OracleComp (Spec KemSK) X) (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :\n    rawResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners log next\n      (PqxdhRegistrationJointKemResume.reply ciphertext candidate) =\n      opaqueResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners log\n        next ciphertext candidate",
@@ -495,9 +519,9 @@
     "codec_laws": "none"
   },
   "leanpath": {
-    "manifest": "/tmp/bc-arc-scratch/common-experiment/lqf/leanpath",
-    "sha256": "d73ce5b4d336c776255177f7e6fee4146162ae7a77d8899e715fda090a908b26",
-    "note": "The LQ LEAN_PATH with its first entry replaced by the fresh scratch prefix lqf/olean, a symlink mirror (1552 links, 0 broken) of the LQ prefix (resolved) plus the seven unit 3 deployment artifacts; the nine deployment artifacts of LQ and unit 3 were verified against the c29cea81 sources by their final check records. check.py unlinks an artifact before writing it, so no other prefix was written."
+    "manifest": "/tmp/bc-arc-scratch/common-experiment/lqfc/leanpath",
+    "sha256": "ef782905b6c9d7cc20e64cb1ac2d4a825339963d3ea229b47d534c672ad366c0",
+    "note": "The CE-9 LEAN_PATH with its first entry replaced by the fresh scratch prefix lqfc/olean, a symlink mirror (1555 links, 0 broken) of the CE-9 prefix (resolved), which holds the c29cea81 artifacts and the three CE-9 modules of e90d54d9 (final check records match those sources). check.py unlinks an artifact before writing it, so no other prefix was written. The spike commits were checked against the earlier prefix lqf/olean (same c29cea81 artifacts)."
   },
   "root_checks": {
     "root-kemhop": {
@@ -531,6 +555,16 @@
       "root_source_sha256": "5cac68249ea6326bceb1789ed99db1dce8c993e68a94b054b03c2ad885e9ff9b"
     },
     "root-bills": {
+      "exit": 0,
+      "log_bytes": 0,
+      "root_source_sha256": "decc93875b163d640db90d08506f8c4f71073b4cdd6d3ba81e45cc0a53c066e0"
+    },
+    "root-docs": {
+      "exit": 0,
+      "log_bytes": 0,
+      "root_source_sha256": "decc93875b163d640db90d08506f8c4f71073b4cdd6d3ba81e45cc0a53c066e0"
+    },
+    "root-fix-lean": {
       "exit": 0,
       "log_bytes": 0,
       "root_source_sha256": "decc93875b163d640db90d08506f8c4f71073b4cdd6d3ba81e45cc0a53c066e0"
@@ -585,10 +619,24 @@
       "end": "2026-10-07T14:08:01Z",
       "log_sha256": "6bfba90c5669837ab2cead75f0b960e339028bae9987648c98b1d0b2a9b4edf2",
       "last_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "inv-docs": {
+      "exit": 0,
+      "start": "2026-10-07T14:12:41Z",
+      "end": "2026-10-07T14:13:49Z",
+      "log_sha256": "2e007ddbc48ef1f76517325833dd763a689aadb542ba48943a5c524679dcb2e4",
+      "last_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "inv-fix-lean": {
+      "exit": 0,
+      "start": "2026-10-07T17:25:45Z",
+      "end": "2026-10-07T17:26:55Z",
+      "log_sha256": "2e007ddbc48ef1f76517325833dd763a689aadb542ba48943a5c524679dcb2e4",
+      "last_line": "Formal-verification inventory matches the reviewed boundary."
     }
   },
   "focused_inventory_note": "Each commit was prepared with the other untracked files held aside and restored afterwards (commit.py), so check-inventory ran in the locked minimal proof flake with exactly the files of that commit.",
-  "final_recheck_note": "After the last Lean commit all nine modules were re-checked in import order (tag final) with exit 0 and empty logs; the per-module rows above are those final checks.",
+  "final_recheck_note": "After the fix pass all nine modules were re-checked in import order (tag fix) with exit 0 and empty logs; the per-module rows above are those checks.",
   "forbidden_scan": "zero matches of \\b(sorry|admit|native_decide)\\b and no axiom, implemented_by, extern, unsafe or opaque declaration in the nine modules; set_option lines are autoImplicit false, and per-declaration backward.isDefEq.respectTransparency false and linter.deprecated false as in the modules they port; git diff --check c29cea81..HEAD clean",
   "not_run": "full lake build, make verify, nix-collect-garbage, mutation testing (no production Rust changed)"
 }
