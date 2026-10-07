@@ -1578,6 +1578,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCut
 
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerReserve
 
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized
+
 /-!
 # Beaconcrypt-core verification root
 

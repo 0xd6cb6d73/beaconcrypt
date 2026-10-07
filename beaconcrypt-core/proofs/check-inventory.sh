@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1524
+	[handwritten-lean]=1525
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29836,6 +29836,45 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem creations([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerReserve theorem creations"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerReserve\.selected_source$' "$selected_source_module" "PqxdhDeploymentLaterServerReserve dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerReserve.selected_source"
 require_line_count 1 '^theorem selected_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerReserve theorem selected_source"
+
+# LQ-F spike: logged source equals its interpreted command compiler; logged selected-first game
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerInitialized root import"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.prepare_actual$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.prepare_actual"
+require_line_count 1 '^theorem prepare_actual([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem prepare_actual"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.accept_actual$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.accept_actual"
+require_line_count 1 '^theorem accept_actual([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem accept_actual"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.prepare_pool$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.prepare_pool"
+require_line_count 1 '^theorem prepare_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem prepare_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.accept_pool$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.accept_pool"
+require_line_count 1 '^theorem accept_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem accept_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.execute_bind$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.execute_bind"
+require_line_count 1 '^theorem execute_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem execute_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.generic_core$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.generic_core"
+require_line_count 1 '^theorem generic_core([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem generic_core"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.generic_step$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.generic_step"
+require_line_count 1 '^theorem generic_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem generic_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.accept_step$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.accept_step"
+require_line_count 1 '^theorem accept_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem accept_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.later_step$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.later_step"
+require_line_count 1 '^theorem later_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem later_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.query_source$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.query_source"
+require_line_count 1 '^theorem query_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem query_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.program_source$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.program_source"
+require_line_count 1 '^theorem program_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem program_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.encode_factor$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.encode_factor"
+require_line_count 1 '^theorem encode_factor([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem encode_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.execute_commands$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.execute_commands"
+require_line_count 1 '^theorem execute_commands([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem execute_commands"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.initialized$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.initialized"
+require_line_count 1 '^theorem initialized([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem initialized"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.constructor_order$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.constructor_order"
+require_line_count 1 '^theorem constructor_order([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem constructor_order"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.actual_source_first$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.actual_source_first"
+require_line_count 1 '^theorem actual_source_first([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem actual_source_first"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
