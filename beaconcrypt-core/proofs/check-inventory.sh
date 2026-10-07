@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1535
+	[handwritten-lean]=1536
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30347,6 +30347,37 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem noFailure_a1At([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem noFailure_a1At"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.ce_a1$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.ce_a1"
 require_line_count 1 '^theorem ce_a1([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem ce_a1"
+
+# CE-8 bills of the reductions R_c and CE-A1 at the transported deployment budget.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthBills.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuthBills root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthBills guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.simulate_weighted$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.simulate_weighted"
+require_line_count 1 '^theorem simulate_weighted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem simulate_weighted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.query_weight$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.query_weight"
+require_line_count 1 '^theorem query_weight([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem query_weight"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.lift_weight$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.lift_weight"
+require_line_count 1 '^theorem lift_weight([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem lift_weight"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.coins_weight$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.coins_weight"
+require_line_count 1 '^theorem coins_weight([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem coins_weight"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.localCallbacks_weight$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.localCallbacks_weight"
+require_line_count 1 '^theorem localCallbacks_weight([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem localCallbacks_weight"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.localCreate_uniform$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.localCreate_uniform"
+require_line_count 1 '^theorem localCreate_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem localCreate_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.embed_weight$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.embed_weight"
+require_line_count 1 '^theorem embed_weight([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem embed_weight"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.freeze_bound$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.freeze_bound"
+require_line_count 1 '^theorem freeze_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem freeze_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.reduction_weight$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.reduction_weight"
+require_line_count 1 '^theorem reduction_weight([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem reduction_weight"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.sum_stepCost$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.sum_stepCost"
+require_line_count 1 '^theorem sum_stepCost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem sum_stepCost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.reduction_caps$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.reduction_caps"
+require_line_count 1 '^theorem reduction_caps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem reduction_caps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.ce_a1_billed$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.ce_a1_billed"
+require_line_count 1 '^theorem ce_a1_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem ce_a1_billed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
