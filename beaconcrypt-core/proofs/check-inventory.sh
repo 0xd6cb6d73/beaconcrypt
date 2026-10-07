@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1501
+	[handwritten-lean]=1502
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28923,6 +28923,21 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem step_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem step_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileBudget\.compile_bound$' "$selected_source_module" "PqxdhDeploymentCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.compile_bound"
 require_line_count 1 '^theorem compile_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileBudget theorem compile_bound"
+
+# Common deployment experiment transcript functions (CE-1): public summary, phase, owner, NoBundleFailure and target designation.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentTranscript.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentTranscript$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentTranscript root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhDeploymentTranscript theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentTranscript guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.summarize_append$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.summarize_append"
+require_line_count 1 '^theorem summarize_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem summarize_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.step_other$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.step_other"
+require_line_count 1 '^theorem step_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem step_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.designate_peer$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_peer"
+require_line_count 1 '^theorem designate_peer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_peer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.designate_owner$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_owner"
+require_line_count 1 '^theorem designate_owner([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_owner"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
