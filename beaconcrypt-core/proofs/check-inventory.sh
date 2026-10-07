@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1566
+	[handwritten-lean]=1567
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -31537,6 +31537,43 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem finish_certified([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaterialTable theorem finish_certified"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftMaterialTable\.send_lookup_present$' "$selected_source_module" "PqxdhRecordLiftMaterialTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftMaterialTable.send_lookup_present"
 require_line_count 1 '^theorem send_lookup_present([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaterialTable theorem send_lookup_present"
+# Actual uniform full76 miss cuts, whole-context masks and ordinary uniform32 child reduction.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftProjectionCut.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftProjectionCut root import"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftProjectionCut guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.restore_split$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.restore_split"
+require_line_count 1 '^theorem restore_split([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem restore_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.split_restore$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.split_restore"
+require_line_count 1 '^theorem split_restore([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem split_restore"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.split_uniform$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.split_uniform"
+require_line_count 1 '^theorem split_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem split_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.split_continuation$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.split_continuation"
+require_line_count 1 '^theorem split_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem split_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.realize_mask$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.realize_mask"
+require_line_count 1 '^theorem realize_mask([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem realize_mask"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.miss_continuation$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.miss_continuation"
+require_line_count 1 '^theorem miss_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem miss_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.observed_delayed$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.observed_delayed"
+require_line_count 1 '^theorem observed_delayed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem observed_delayed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.candidate_bound$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.candidate_bound"
+require_line_count 1 '^theorem candidate_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem candidate_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.child_source$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.child_source"
+require_line_count 1 '^theorem child_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem child_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.child_independent$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.child_independent"
+require_line_count 1 '^theorem child_independent([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem child_independent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.child_bound$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.child_bound"
+require_line_count 1 '^theorem child_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem child_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.retained_bound$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.retained_bound"
+require_line_count 1 '^theorem retained_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem retained_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.observer_bound$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.observer_bound"
+require_line_count 1 '^theorem observer_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem observer_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.child_real_bound$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.child_real_bound"
+require_line_count 1 '^theorem child_real_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem child_real_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.reduction_bounds$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.reduction_bounds"
+require_line_count 1 '^theorem reduction_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem reduction_bounds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProjectionCut\.challenger_bounds$' "$selected_source_module" "PqxdhRecordLiftProjectionCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftProjectionCut.challenger_bounds"
+require_line_count 1 '^theorem challenger_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProjectionCut theorem challenger_bounds"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
