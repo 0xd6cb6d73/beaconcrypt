@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1543
+	[handwritten-lean]=1544
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30615,6 +30615,38 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem call_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem call_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.call_bills$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.call_bills"
 require_line_count 1 '^theorem call_bills([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem call_bills"
+
+# Actual open-program effect and joint record bounds through startup, wrapper and environment.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftBudget.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftBudget$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftBudget root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhRecordLiftBudget theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftBudget guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.cost_sum$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.cost_sum"
+require_line_count 1 '^theorem cost_sum([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem cost_sum"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.environment_bound$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.environment_bound"
+require_line_count 1 '^theorem environment_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem environment_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.native_bound$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.native_bound"
+require_line_count 1 '^theorem native_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem native_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.wrapped_bound$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.wrapped_bound"
+require_line_count 1 '^theorem wrapped_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem wrapped_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.startup_bound$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.startup_bound"
+require_line_count 1 '^theorem startup_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem startup_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.program_bound$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.program_bound"
+require_line_count 1 '^theorem program_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem program_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.wrap_record_step$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.wrap_record_step"
+require_line_count 1 '^theorem wrap_record_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem wrap_record_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.wrap_record_bound$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.wrap_record_bound"
+require_line_count 1 '^theorem wrap_record_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem wrap_record_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.environment_record_bound$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.environment_record_bound"
+require_line_count 1 '^theorem environment_record_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem environment_record_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.native_record_step$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.native_record_step"
+require_line_count 1 '^theorem native_record_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem native_record_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.native_record_bound$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.native_record_bound"
+require_line_count 1 '^theorem native_record_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem native_record_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.startup_record_bound$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.startup_record_bound"
+require_line_count 1 '^theorem startup_record_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem startup_record_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftBudget\.program_record_bound$' "$selected_source_module" "PqxdhRecordLiftBudget dependency BeaconcryptCore.Computational.PqxdhRecordLiftBudget.program_record_bound"
+require_line_count 1 '^theorem program_record_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftBudget theorem program_record_bound"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
