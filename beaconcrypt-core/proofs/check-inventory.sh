@@ -29281,24 +29281,44 @@ require_line_count 1 '^theorem forgery_detected([[:space:]]|$)' "$selected_sourc
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.forgery_bound$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.forgery_bound"
 require_line_count 1 '^theorem forgery_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem forgery_bound"
 
-# Common deployment experiment Phase 1 provenance (CE-7, CE-A2): A2 report client with terminal batches, report run projection onto the experiment, factor-free signing-history bound.
+# Common deployment experiment Phase 1 provenance (CE-7, CE-A2): A2 report client with terminal batches, report run projection onto the experiment (Phase1ReadBack, Phase2ReadBack), factor-free signing-history bound, reveal qualifier discharged for the compiled program, T5b-form query bills of the A2 reductions.
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProvenance.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentProvenance$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentProvenance root import"
-require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentProvenance theorem inventory"
-require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentProvenance guarded dependencies"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhDeploymentProvenance theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentProvenance guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.announceAll_bound$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.announceAll_bound"
 require_line_count 1 '^theorem announceAll_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem announceAll_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.client_creates$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.client_creates"
 require_line_count 1 '^theorem client_creates([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem client_creates"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.client_class_bound$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.client_class_bound"
+require_line_count 1 '^theorem client_class_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem client_class_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.client_run$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.client_run"
 require_line_count 1 '^theorem client_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem client_run"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.client_transfer$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.client_transfer"
 require_line_count 1 '^theorem client_transfer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem client_transfer"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.a2_bound$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.a2_bound"
 require_line_count 1 '^theorem a2_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem a2_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.upto_unread$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.upto_unread"
+require_line_count 1 '^theorem upto_unread([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem upto_unread"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.stopped_unrevealed$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.stopped_unrevealed"
+require_line_count 1 '^theorem stopped_unrevealed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem stopped_unrevealed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.generated_forgery_iff$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.generated_forgery_iff"
+require_line_count 1 '^theorem generated_forgery_iff([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem generated_forgery_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.a2_generated_bound$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.a2_generated_bound"
+require_line_count 1 '^theorem a2_generated_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem a2_generated_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.report_game$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.report_game"
 require_line_count 1 '^theorem report_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem report_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.a2_service_bound$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.a2_service_bound"
+require_line_count 1 '^theorem a2_service_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem a2_service_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.a2_client_uniform$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.a2_client_uniform"
+require_line_count 1 '^theorem a2_client_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem a2_client_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.a2_reduction_uniform$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.a2_reduction_uniform"
+require_line_count 1 '^theorem a2_reduction_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem a2_reduction_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.a2_game_uniform$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.a2_game_uniform"
+require_line_count 1 '^theorem a2_game_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem a2_game_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProvenance\.a2_bills$' "$selected_source_module" "PqxdhDeploymentProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentProvenance.a2_bills"
+require_line_count 1 '^theorem a2_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProvenance theorem a2_bills"
 
 # Common deployment experiment signing history (CE-7): transcript-to-pool invariant along the stacked secrecy, compiler and annotated Server execution, NoBundleFailure signing-history lemma.
 
