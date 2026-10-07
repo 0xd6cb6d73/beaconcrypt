@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-07T21:32:13.097994+00:00",
+  "date": "2026-10-07T21:45:36.385141+00:00",
   "scope": "Reviewed operational record components staged for coherent central integration; global lifts remain incomplete.",
   "central_basis": "dd1efd6fc48eae94009bea201861501f2c94d8a0",
   "merged_topics": [
@@ -14,6 +14,10 @@
     {
       "branch": "codex/record-lift-world",
       "commit": "b2038af773aa97a5e008d36d0a1397c2deb5b363"
+    },
+    {
+      "branch": "codex/record-lift-budget",
+      "commit": "dfb87ea2240213732c6949706d157d1f8647d22f"
     }
   ],
   "rounds": [
@@ -452,7 +456,393 @@
       },
       "leanpath": "/tmp/bc-arc-scratch/record-lift/stage/round2/leanpath",
       "leanpath_sha256": "e6147ed24f4c1900f2a992d21d086aeb3962560c182dbaa97877ccce746fdb0d"
+    },
+    {
+      "stage": "Add jointly counted record requests; final grouped integration",
+      "proof_sources": "All six modules byte-identical to independently reviewed focused commits;93 guarded statements",
+      "resolution": "Exact additive union at Codex anchors; count1549; regenerated root/checker hashes",
+      "review": {
+        "path": "/tmp/bc-arc-scratch/record-lift/reviews/stage-final-integration-2026-10-07.json",
+        "sha256": "d9bca60e04e5f01502ae890b753f8cad29c945e5475900d754dc545f11d8ec7d",
+        "content": {
+          "date": "2026-10-07T21:44:36.419961+00:00",
+          "reviewer": "/root/record_seed_boundary",
+          "merge_author": "/root",
+          "result": "approved",
+          "findings": [],
+          "scope": "Independent review of final group metadata merge and reviewed-source identity: six modules and93 exact guards. This is not a new proof semantic review.",
+          "independence": "Reviewer did not resolve this merge. Reviewer authored Budget; its unchanged semantics and topic metadata are approved separately by /root and Claude69 as recorded below. No self-approval of Budget semantics is claimed.",
+          "HEAD": "d258867017c9bb85718d6341871ce68078479006",
+          "MERGE_HEAD": "dfb87ea2240213732c6949706d157d1f8647d22f",
+          "metadata": [
+            {
+              "path": "beaconcrypt-core/proofs/check-inventory.sh",
+              "sha256": "8166cf6d40762edacd7e8ff4fafd3b0004eeb3cc6c1d3c04f482dde6e2ea0c08",
+              "parent_union_preserved": true,
+              "index_equals_worktree": true
+            },
+            {
+              "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+              "sha256": "4b514b660e0f5248fb68b2e416cdfbaaa9b935e2c5c1b9f3bbc89c9cd5331658",
+              "parent_union_preserved": true,
+              "index_equals_worktree": true
+            },
+            {
+              "path": "beaconcrypt-core/proofs/reviewed-inventory.txt",
+              "sha256": "f1c3418fffadeeca3a6ad6723daf070297156b1180c5c64ef597b1322e1b9374",
+              "parent_union_preserved": true,
+              "index_equals_worktree": true
+            },
+            {
+              "path": "doc/formal-verification-analysis.md",
+              "sha256": "0caf01a4487c4b204c099699143ca51d6427d46296fa32f6a7d18a53da155229",
+              "parent_union_preserved": true,
+              "index_equals_worktree": true
+            }
+          ],
+          "proofs": [
+            {
+              "module": "PqxdhRecordLiftChainTable",
+              "sha256": "dd48d33124e6b12c0837599684ac6eb507e45fae62a029b0d9afa5ab948fa5e3",
+              "unchanged_from_topic": "5b20a858e42631d23162131daaa5764df59c240d",
+              "theorems_and_guards": 22
+            },
+            {
+              "module": "PqxdhRecordLiftCtxModes",
+              "sha256": "40c554103108d2eff6708d0a8000692c83da6ce606d890a33a7a9eeca944e518",
+              "unchanged_from_topic": "5b20a858e42631d23162131daaa5764df59c240d",
+              "theorems_and_guards": 8
+            },
+            {
+              "module": "PqxdhRecordLiftCtxModeBounds",
+              "sha256": "f2bd2a9ceb243ca15aea677bce48a49aa144e546e2596887b355a3cb64e34dc5",
+              "unchanged_from_topic": "5b20a858e42631d23162131daaa5764df59c240d",
+              "theorems_and_guards": 13
+            },
+            {
+              "module": "PqxdhRecordLiftBeacon",
+              "sha256": "3a930fe5f54e92b3cc0579d90f94e3e1c5ff3843712743e8095848eeae4ec10a",
+              "unchanged_from_topic": "b2038af773aa97a5e008d36d0a1397c2deb5b363",
+              "theorems_and_guards": 7
+            },
+            {
+              "module": "PqxdhRecordLiftWorld",
+              "sha256": "f08771606169225766f6922e2e73b3b68f8fe0c8e10eefd9d287f21ca635964d",
+              "unchanged_from_topic": "b2038af773aa97a5e008d36d0a1397c2deb5b363",
+              "theorems_and_guards": 30
+            },
+            {
+              "module": "PqxdhRecordLiftBudget",
+              "sha256": "b9ede84bb63c11f23bdf043e4ecbcceedb303f2213835c7d0b67ee16d8dc9fb0",
+              "unchanged_from_topic": "dfb87ea2240213732c6949706d157d1f8647d22f",
+              "theorems_and_guards": 13
+            }
+          ],
+          "guides_and_topic_receipts": [
+            {
+              "path": "doc/impl/record-lift-chain-table.md",
+              "sha256": "9131566531b6cc26cf5a7ef68fd75254febb192157d77ba87cd4e3382ab3ac59",
+              "unchanged_from_parent": "d258867017c9bb85718d6341871ce68078479006"
+            },
+            {
+              "path": "doc/impl/proof-receipts/record-lift-chain-table.json",
+              "sha256": "aa9ba276af47c26515ec565097ef54d005aeadefc48a4981b3816954ee2dfa86",
+              "unchanged_from_parent": "d258867017c9bb85718d6341871ce68078479006"
+            },
+            {
+              "path": "doc/impl/record-lift-ctx-modes.md",
+              "sha256": "fe1ce022a37380c77dae443a1c4f443abdec687d0bc7c1de36ef1999168affbd",
+              "unchanged_from_parent": "d258867017c9bb85718d6341871ce68078479006"
+            },
+            {
+              "path": "doc/impl/proof-receipts/record-lift-ctx-modes.json",
+              "sha256": "dbeb814f0eb918625de50434064d8bf21bc87a83e95517f7fc8b13dd6afce9cb",
+              "unchanged_from_parent": "d258867017c9bb85718d6341871ce68078479006"
+            },
+            {
+              "path": "doc/impl/record-lift-world.md",
+              "sha256": "f9f55e892e752a746b37e79ac3ce3870e65606d851044f940ed1602f53a97d17",
+              "unchanged_from_parent": "d258867017c9bb85718d6341871ce68078479006"
+            },
+            {
+              "path": "doc/impl/proof-receipts/record-lift-world.json",
+              "sha256": "53936ec5916cbf34d5c6773f64da5165ff6f81194123e460cc3e115f4f1d811f",
+              "unchanged_from_parent": "d258867017c9bb85718d6341871ce68078479006"
+            },
+            {
+              "path": "doc/impl/record-lift-budget.md",
+              "sha256": "28f7513152f32164d0591224838885a7ade7caf9da6461d730e7034f1091d31c",
+              "unchanged_from_parent": "dfb87ea2240213732c6949706d157d1f8647d22f"
+            },
+            {
+              "path": "doc/impl/proof-receipts/record-lift-budget.json",
+              "sha256": "dddcefafeea13fec45ccb3f3e39413744260efd59ec9ab583d104de038331346",
+              "unchanged_from_parent": "dfb87ea2240213732c6949706d157d1f8647d22f"
+            }
+          ],
+          "independent_topic_reviews": [
+            {
+              "path": "/tmp/bc-arc-scratch/record-lift/reviews/chain-table-semantic-2026-10-07.json",
+              "sha256": "e3977c9b3c8f5f42f5ad48c6ef3ef626d4311d176e6ef79950eb81b92a976b80"
+            },
+            {
+              "path": "/tmp/bc-arc-scratch/record-lift/reviews/chain-table-publication-hygiene-2026-10-07.json",
+              "sha256": "ffd5112cba565826f0aaa4b36291db84e5e7d23bbf3f7b10b2d9eeb4fb93f2ae"
+            },
+            {
+              "path": "/tmp/bc-arc-scratch/record-lift/reviews/ctx-modes-semantic-2026-10-07.json",
+              "sha256": "b328b2b703df2b12a43bf116aaf6c2619f75330d4cc48d2632f874b49b3b62fa"
+            },
+            {
+              "path": "/tmp/bc-arc-scratch/record-lift/reviews/ctx-modes-publication-hygiene-2026-10-07.json",
+              "sha256": "014bab167e9b88e6d133214960f9d6544b9ed91e24b4b354928e0aad363e1eee"
+            },
+            {
+              "path": "/tmp/bc-arc-scratch/record-lift/reviews/world-semantic-2026-10-07.json",
+              "sha256": "4c2b7eb6068ac9f6e1b78f8b6778117fa8a157ce76a807fb44eb107540b1f28d"
+            },
+            {
+              "path": "/tmp/bc-arc-scratch/record-lift/reviews/world-answer64-fix-review-2026-10-07.json",
+              "sha256": "a185a13d5b6e200c90461cb8757810e020eca5011629d1cfc367c8a96bffdb1c"
+            },
+            {
+              "path": "/tmp/bc-arc-scratch/record-lift/reviews/world-final-metadata-2026-10-07.json",
+              "sha256": "2d5a0d605eaa995cfa1611d97be5dfb2db0629a09a1399b3137a6636ea148bd4"
+            },
+            {
+              "path": "/tmp/bc-arc-scratch/record-lift/reviews/budget-semantic-2026-10-07.json",
+              "sha256": "e4dad5e9252b1db85aab6c18854d3e83f7c8b1658c233211014821dab8556065"
+            },
+            {
+              "path": "/tmp/bc-arc-scratch/record-lift/reviews/budget-joint-record-semantic-2026-10-07.json",
+              "sha256": "bddf23a9df0a3f41b9c378e5ce37e020a68f82580b4a158c7768d24ea8c3f336"
+            },
+            {
+              "path": "/tmp/bc-arc-scratch/record-lift/reviews/budget-publication-hygiene-2026-10-07.json",
+              "sha256": "92df9d49a2048a43b15127f811a25998863fa1c17b854d585abc6aefb7ee0add"
+            }
+          ],
+          "checks": [
+            {
+              "receipt": "/tmp/bc-arc-scratch/record-lift/stage/final/logs/root.json",
+              "receipt_sha256": "eea5d9cbff9959f47e7d58ae08ec71dac76d1c8d80e4aa216c2085e92e233421",
+              "verified": {
+                "start": "2026-10-07T21:42:55.318449+00:00",
+                "end": "2026-10-07T21:42:58.163941+00:00",
+                "exit": 0,
+                "command": [
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "record-stage-final-root",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "--root=/tmp/beaconcrypt-record-lift-stage/beaconcrypt-core/proofs/lean",
+                  "-o",
+                  "/tmp/bc-arc-scratch/record-lift/stage/final/olean/BeaconcryptCore.olean",
+                  "/tmp/beaconcrypt-record-lift-stage/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/record-lift/stage/final/logs/root.log",
+                "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "leanpath_sha256": "4bcbf2b3d1df6fe7d95ce54a10b61011ffd391e510c5dff9b834eea9c03bd91a",
+                "source_sha256": "4b514b660e0f5248fb68b2e416cdfbaaa9b935e2c5c1b9f3bbc89c9cd5331658",
+                "artifact_sha256": "547451798804a48e8ce0fa624ae7ca920efe08d1908f44deea8a9a68fcc0e7a3",
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            },
+            {
+              "receipt": "/tmp/bc-arc-scratch/record-lift/stage/final/logs/inventory.json",
+              "receipt_sha256": "39963c8e28f598fb47b460c5d6bc0c6d91e7bb8dd430c58f82cda1485288d578",
+              "verified": {
+                "start": "2026-10-07T21:42:55.327255+00:00",
+                "end": "2026-10-07T21:44:09.432997+00:00",
+                "exit": 0,
+                "command": [
+                  "/tmp/bc-coord/coord.sh",
+                  "lease",
+                  "mem",
+                  "codex",
+                  "@nix",
+                  "record-stage-final-inventory",
+                  "--eta",
+                  "20m",
+                  "--",
+                  "nix",
+                  "develop",
+                  "--no-update-lock-file",
+                  "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+                  "-c",
+                  "make",
+                  "-C",
+                  "/tmp/beaconcrypt-record-lift-stage/beaconcrypt-core",
+                  "check-inventory",
+                  "SHELL=bash"
+                ],
+                "log": "/tmp/bc-arc-scratch/record-lift/stage/final/logs/inventory.log",
+                "log_sha256": "ba262ac9fb8ba32b5c32ef1908df7f2877cc9ecddbf32469f479ff87998632b9",
+                "leanpath_sha256": "4bcbf2b3d1df6fe7d95ce54a10b61011ffd391e510c5dff9b834eea9c03bd91a",
+                "source_sha256": null,
+                "artifact_sha256": null,
+                "CARGO_BUILD_JOBS": "2",
+                "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/stage/final/target"
+              }
+            },
+            {
+              "receipt": "/tmp/bc-arc-scratch/record-lift/stage/final/logs/fidelity.json",
+              "receipt_sha256": "9c835767545ea3fba20480b4849800cf2b360b5912b8c66f2d53259ce7415181",
+              "verified": {
+                "start": "2026-10-07T21:42:55.324581+00:00",
+                "end": "2026-10-07T21:43:21.568940+00:00",
+                "exit": 0,
+                "command": [
+                  "/tmp/bc-coord/coord.sh",
+                  "lease",
+                  "mem",
+                  "codex",
+                  "@cargo",
+                  "record-stage-final-fidelity",
+                  "--eta",
+                  "20m",
+                  "--",
+                  "nix",
+                  "develop",
+                  "--no-update-lock-file",
+                  "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+                  "-c",
+                  "make",
+                  "-C",
+                  "/tmp/beaconcrypt-record-lift-stage/beaconcrypt-core",
+                  "check-proverif-transcript-fidelity",
+                  "SHELL=bash"
+                ],
+                "log": "/tmp/bc-arc-scratch/record-lift/stage/final/logs/fidelity.log",
+                "log_sha256": "fb83b9cde2d399264216d4f0e59f85701d2736c2f884ccb78857dbbc3ddfe4ba",
+                "leanpath_sha256": "4bcbf2b3d1df6fe7d95ce54a10b61011ffd391e510c5dff9b834eea9c03bd91a",
+                "source_sha256": null,
+                "artifact_sha256": null,
+                "CARGO_BUILD_JOBS": "2",
+                "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/stage/final/target"
+              }
+            }
+          ],
+          "reviewed": [
+            "Exact union of parent imports and manifest paths; count1549 and literal root/checker digests verified. All earlier gates and analysis blocks are preserved byte-for-byte.",
+            "All six source files remain identical to focused topic commits and independent review hashes. All93 theorem/axiom gates and six imports occur exactly once; H7 and placeholder/custom-axiom scans clear.",
+            "All four topic guides and receipts unchanged from reviewed parents; topic receipts describe topic metadata, while this receipt records the combined tree.",
+            "Analysis retains only local chain-table operational facts, ordinary selected CTX mixed-mode endpoints, executable World/source projection and open-program Budget request bounds. No new contract, fullgame security endpoint, fixed-HKDF interpretation or global cost theorem is introduced.",
+            "World and Budget CE cross-reviews64/69 are incorporated in topic receipts; C1/C2a/C7, real native support counters, seed/ROM uniform costs, chain compiler, aliases/refusals, global events and R6 remain explicit obligations.",
+            "Final combined root, Nix inventory and fidelity checks exit0. Actual root/artifact/log/path hashes checked; fidelity log confirms20 Python and30 Rust tests."
+          ],
+          "limitations": [
+            "No source, guide, metadata or stage edits and no reviewer builds.",
+            "Parent owns commit, remote verification, integration intent and central fast-forward. Approval covers the exact recorded merged tree and unchanged proof sources, not future edits."
+          ]
+        }
+      },
+      "checks": {
+        "root": {
+          "start": "2026-10-07T21:42:55.318449+00:00",
+          "end": "2026-10-07T21:42:58.163941+00:00",
+          "exit": 0,
+          "command": [
+            "/tmp/bc-coord/coord.sh",
+            "lean",
+            "codex",
+            "record-stage-final-root",
+            "--",
+            "timeout",
+            "180",
+            "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+            "-j1",
+            "-M8000",
+            "--root=/tmp/beaconcrypt-record-lift-stage/beaconcrypt-core/proofs/lean",
+            "-o",
+            "/tmp/bc-arc-scratch/record-lift/stage/final/olean/BeaconcryptCore.olean",
+            "/tmp/beaconcrypt-record-lift-stage/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+          ],
+          "log": "/tmp/bc-arc-scratch/record-lift/stage/final/logs/root.log",
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "leanpath_sha256": "4bcbf2b3d1df6fe7d95ce54a10b61011ffd391e510c5dff9b834eea9c03bd91a",
+          "source_sha256": "4b514b660e0f5248fb68b2e416cdfbaaa9b935e2c5c1b9f3bbc89c9cd5331658",
+          "artifact_sha256": "547451798804a48e8ce0fa624ae7ca920efe08d1908f44deea8a9a68fcc0e7a3",
+          "CARGO_BUILD_JOBS": null,
+          "CARGO_TARGET_DIR": null
+        },
+        "inventory": {
+          "start": "2026-10-07T21:42:55.327255+00:00",
+          "end": "2026-10-07T21:44:09.432997+00:00",
+          "exit": 0,
+          "command": [
+            "/tmp/bc-coord/coord.sh",
+            "lease",
+            "mem",
+            "codex",
+            "@nix",
+            "record-stage-final-inventory",
+            "--eta",
+            "20m",
+            "--",
+            "nix",
+            "develop",
+            "--no-update-lock-file",
+            "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+            "-c",
+            "make",
+            "-C",
+            "/tmp/beaconcrypt-record-lift-stage/beaconcrypt-core",
+            "check-inventory",
+            "SHELL=bash"
+          ],
+          "log": "/tmp/bc-arc-scratch/record-lift/stage/final/logs/inventory.log",
+          "log_sha256": "ba262ac9fb8ba32b5c32ef1908df7f2877cc9ecddbf32469f479ff87998632b9",
+          "leanpath_sha256": "4bcbf2b3d1df6fe7d95ce54a10b61011ffd391e510c5dff9b834eea9c03bd91a",
+          "source_sha256": null,
+          "artifact_sha256": null,
+          "CARGO_BUILD_JOBS": "2",
+          "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/stage/final/target"
+        },
+        "fidelity": {
+          "start": "2026-10-07T21:42:55.324581+00:00",
+          "end": "2026-10-07T21:43:21.568940+00:00",
+          "exit": 0,
+          "command": [
+            "/tmp/bc-coord/coord.sh",
+            "lease",
+            "mem",
+            "codex",
+            "@cargo",
+            "record-stage-final-fidelity",
+            "--eta",
+            "20m",
+            "--",
+            "nix",
+            "develop",
+            "--no-update-lock-file",
+            "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+            "-c",
+            "make",
+            "-C",
+            "/tmp/beaconcrypt-record-lift-stage/beaconcrypt-core",
+            "check-proverif-transcript-fidelity",
+            "SHELL=bash"
+          ],
+          "log": "/tmp/bc-arc-scratch/record-lift/stage/final/logs/fidelity.log",
+          "log_sha256": "fb83b9cde2d399264216d4f0e59f85701d2736c2f884ccb78857dbbc3ddfe4ba",
+          "leanpath_sha256": "4bcbf2b3d1df6fe7d95ce54a10b61011ffd391e510c5dff9b834eea9c03bd91a",
+          "source_sha256": null,
+          "artifact_sha256": null,
+          "CARGO_BUILD_JOBS": "2",
+          "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/stage/final/target"
+        }
+      },
+      "leanpath": "/tmp/bc-arc-scratch/record-lift/stage/final/leanpath",
+      "leanpath_sha256": "4bcbf2b3d1df6fe7d95ce54a10b61011ffd391e510c5dff9b834eea9c03bd91a"
     }
   ],
-  "pending": "Budget focused topic merge; final combined-tree gates, independent integration review and central publication. No global security theorem or final matrix claimed."
+  "pending": "Central publication only for this reviewed operational group. Global chain lift, source CTX compiler, ideal origin/hiding and later post-phase remain open; no final matrix claimed."
 }
